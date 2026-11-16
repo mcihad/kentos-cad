@@ -441,6 +441,48 @@ açılması; yetki ve yayımcı yönetim uçları (bugün yalnız komut); paket 
 yarım kalmış `staging` nesnelerinin temizliği; S3 uyumlu nesne deposu; tarayıcının hizmet kimliği; liste ve aramanın
 veritabanında yapılması (bugün kataloğun bütün kayıtları okunup süzülür); geri çekilen sürümün ortamının kaldırılması.
 
+## §14 Taklit denetimi: ad, kimlik ve simge (D13)
+
+**16 Kasım.** Kod: paylaşılan `resemblance.rs` (yeni: `skeleton`, `resemblances`, `imitations`, `sentences`); akışta
+`Listing` (sürüm kaydının adı ve simge özeti) ve `Release::imitations`; sunucu `acting.rs` (`imitation_gate`); kayıt
+defteri `imitation.rs` (yeni), `Review::resemblances`, `Registry::review_beside`; masaüstünün kurulum incelemesi.
+
+- **Sorun.** 2026'da bir düzenleyicinin pazarından kaldırılan 2.140 eklentinin 1.109'u taklitti; görünen adı benzersiz
+  olmayan bir biçimlendirici kopyası iki günde bine yakın kuruluma ulaştı
+  (`docs/research/2026-11-13-eklenti-ekosistemleri.md`, V14, V21). Yayımcı kapısı "ad, simge ve kimlik başkasınınkini
+  taklit etmez" diyordu (§4) ama onu denetleyen bir kural yoktu; masaüstüne e-postayla gelen `.kek`'i ise hiçbir kapı
+  görmez.
+- **Karar: okunan yüz.** İki metin baytlarıyla değil, okuyanın gördüğüyle karşılaştırılır (iskelet): küçük harf;
+  Türkçe harfler tabanlarıyla (ı, İ, i; ş, s …); Latin'e benzeyen Kiril ve Yunan harfleri o harf (а, е, о, р, с, і …);
+  harf yerine geçen rakam ve çiftler (0 → o; 1, l, I → i; rn → m; vv → w); harf ve rakam dışı her şey (boşluk, tire,
+  nokta, görünmez karakter) atılır. Aynı iskelet **taklittir**: göz ayırt edemez. Bir harf ya da yer değiştirmiş iki
+  harf uzaklık **benzerliktir**: çoğu zaman dürüst bir addır (iki belediyenin "Ula" ve "Urla"sı); söylenir, hiçbir
+  şeyi engellemez (D11: engelleyen kural az ve kesin). Benzerlikte 6 harften kısa ad ve 10 harften kısa kimlik
+  karşılaştırılmaz. Simgenin baytları aynıysa taklittir; KentOS iskeletinin her yeni eklentiye verdiği simge kimsenin
+  değildir.
+- **Katalogda: yayımcı kapısı, gönderimde.** Sürüm kaydı yüklemede paketinden adını ve simge özetini tutar
+  (`listing`; içerik yenilenince yenilenir). Gönderilen sürüm aynı katalogda başka bir yayımcının yayımlanmış
+  eklentisini taklit ediyorsa katalog kendisi (`kentos-katalog`, tarayıcı rolüyle) yayımcı kapısını bulgularıyla
+  engeller ve sürüm yazarına hemen döner: tarayıcı ya da inceleyici ona zaman harcamaz. Yayımcı kapısının kuralı
+  kesindir (kaldırılamaz): yazar adı ya da simgeyi değiştirip içeriği yeniler. Taklit bulunmaması kapıyı geçirmez (ad
+  alanının sahipliği tarayıcınındır), o yüzden temiz sonuç bildirilmez. Yayımcının kendi eklentileri birbiriyle
+  karşılaştırılmaz. Kayıt biçimi geriye uyumlu: `listing`'i olmayan eski kayıt okunur, karşılaştırılmaz.
+- **Masaüstünde: kurulum incelemesi.** Kurulacak paket kurulu eklentilerle ve okunan kataloğun girdileriyle
+  karşılaştırılır. E-postayla gelen `.kek`'in yayımcısını kimse denetlemediği için aynı ad alanı da karşılaştırılır;
+  yalnız güncellediği eklentinin kendisi karşılaştırılmaz. Taklit incelemenin en üstünde uyarıdır ve Kur, kişi
+  "Benzerliği okudum, yine de kur"u işaretleyene dek kapalıdır; benzerlik bilgi olarak söylenir. Bulgular öteki
+  eklenti başına tek cümle: "Adı, kimliği (tr.ornek.vltrin) ve simgesi “Eklenti Vitrini” (tr.ornek.vitrin)
+  eklentisininkilerle aynı okunuyor." İlk denemede aynı eklenti üç ayrı cümlede üç kez yazılıyordu.
+- **Gerçek pencere (KentOS GIS, yalıtılmış profil, Vitrin kurulu):** Vitrin'in kimliği `tr.ornek.vltrin`, adı
+  "EKLENTİ VİTRİNİ" yapılmış kopyası ayrı bir katalogdan incelendi: üç bulgu tek cümlede, Kur kapalı; kutu
+  işaretlenince açıldı; kurulunca listede ve şeritte iki "Vitrin" göründü.
+- **Sınamalar:** paylaşılan 5 (iskelet, taklit, benzerlik, simge, cümleler) ve akış 27; kayıt defteri 1 (31); masaüstü
+  1 (eklenti sınamaları 99); katalog API 1 (50; bellek deposunda; veritabanı türü yerel test veritabanının yönetici
+  adresi olmadığından atlandı).
+- **Kalan:** ad alanının doğrulanmış alan adına bağlanması (D13'ün öteki yarısı) ve tarayıcının yayımcı kapısında aynı
+  kuralı çalıştırması; inceleyicinin benzerlikleri görmesi (inceleme penceresi henüz yok); kurulu taklidin
+  ayrıntısında kalıcı bir işaret.
+
 ## Uygularken verilen kararlar (planda yazılı değildi)
 
 1. Kişisel katalogda sahibi kendi sürümünü inceleyip onaylar; kurum kataloğunda yazar onaylayamaz, yayımcının başka bir

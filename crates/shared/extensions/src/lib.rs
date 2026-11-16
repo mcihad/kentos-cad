@@ -40,6 +40,7 @@ pub mod provenance;
 mod python;
 mod python_rules;
 pub mod release;
+pub mod resemblance;
 pub mod revocations;
 #[cfg(all(test, feature = "schema"))]
 mod schema_check;

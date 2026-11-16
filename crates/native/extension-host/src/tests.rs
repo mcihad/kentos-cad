@@ -753,6 +753,58 @@ fn the_review_shows_what_changes_before_anything_is_installed() {
     assert!(!bad.installable && !bad.inspection.is_valid());
 }
 
+/// A package whose name or id reads as an installed extension's, or as a catalog's the desktop read, is said in the
+/// review (docs/adr/8059 §14): the imitations first, a resemblance said too, the same extension's update not compared;
+/// nothing is refused by it, the person answers.
+#[test]
+fn the_review_says_what_a_package_imitates() {
+    let temp = Temp::new("taklit");
+    let mut r = open(&temp.0);
+    let named = |id: &str, name: &str| {
+        let name = name.to_owned();
+        package_with(id, "1.0.0", &[], move |m| m["name"] = json!(name))
+    };
+    let codes = |review: &Review| -> Vec<(&'static str, String)> {
+        review
+            .resemblances
+            .iter()
+            .map(|x| (x.code(), x.other_id.clone()))
+            .collect()
+    };
+    install(&mut r, &named("tr.ornek.vitrin", "Vitrin"));
+    let update = package_with("tr.ornek.vitrin", "1.1.0", &[], |m| {
+        m["name"] = json!("Vitrin")
+    });
+    assert!(r.review(&update, &file_source()).resemblances.is_empty());
+    let copy = r.review(&named("tr.ornek.vltrin", "Vіtrin"), &file_source());
+    assert_eq!(
+        codes(&copy),
+        [
+            ("imitates_name", "tr.ornek.vitrin".to_owned()),
+            ("imitates_id", "tr.ornek.vitrin".to_owned())
+        ]
+    );
+    assert!(
+        copy.imitates() && copy.installable,
+        "said, never refused by it"
+    );
+    let entry = kentos_extensions::resemblance::Known {
+        id: "tr.kentos.mevzuat".into(),
+        name: "Türkiye mevzuatı".into(),
+        ..Default::default()
+    };
+    let near = r.review_beside(
+        &named("tr.baska.mevzuat", "Türkiye mevzuat"),
+        &file_source(),
+        vec![entry],
+    );
+    assert_eq!(
+        codes(&near),
+        [("resembles_name", "tr.kentos.mevzuat".to_owned())]
+    );
+    assert!(!near.imitates());
+}
+
 #[test]
 fn a_projects_extensions_open_restricted_until_ready() {
     let temp = Temp::new("proje");

@@ -270,7 +270,7 @@ fn moved_service(version: &str, path: &str) -> Vec<u8> {
 }
 
 /// Uploaded, scanned, sent and taken into review by Selin; the focus the server computed, then approved and published.
-async fn reviewed_and_published(app: &Router, version: &str, bytes: Vec<u8>) -> Value {
+pub(super) async fn reviewed_and_published(app: &Router, version: &str, bytes: Vec<u8>) -> Value {
     let (status, view) = upload(app, PUBLIC, "ayse", bytes).await;
     assert_eq!(status, StatusCode::CREATED, "{view}");
     let at = uri(PUBLIC, version);

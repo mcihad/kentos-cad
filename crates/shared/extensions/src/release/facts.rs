@@ -72,6 +72,19 @@ impl LockedPackage {
 }
 
 impl ReleaseFacts {
+    /// What a person sees of it in a catalog: its name, and its icon's SHA-256 from the integrity list.
+    pub fn listing(&self) -> super::Listing {
+        super::Listing {
+            name: self.manifest.name.clone(),
+            icon: self.manifest.icon.as_ref().and_then(|icon| {
+                self.files
+                    .iter()
+                    .find(|f| f.path == *icon)
+                    .map(|f| f.sha256.clone())
+            }),
+        }
+    }
+
     /// The facts of an opened package, as the inspector read it; a package that did not pass has none.
     pub fn of(opened: &Opened) -> Result<ReleaseFacts, Refusal> {
         let inspection = &opened.inspection;

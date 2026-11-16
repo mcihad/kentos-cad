@@ -8,11 +8,14 @@
 //! - [`watchdog`]: crashes in a row stop an extension for good; "Sorunlu eklentiyi bul" by halves.
 //! - [`policy`]: what IT allows (the user cannot loosen it) and the versions withdrawn.
 //! - [`journal`]: each extension's log, with levels, stable codes and the error as it came; secrets masked.
+//! - [`imitation`]: what a package being installed reads as among the installed extensions and a catalog's: said in
+//!   the install review before Kur (docs/adr/8059 §14).
 //!
 //! The registry reads and writes the user's extension folder only (`<veri>/kentos-cad/eklentiler` on the desktop);
 //! it runs no extension code: Python is ADIM 18A/19's.
 
 mod dry_run;
+pub mod imitation;
 pub mod journal;
 mod lease;
 pub mod places;

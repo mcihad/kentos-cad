@@ -1399,7 +1399,9 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
     yayımcı hızlı yolu yalnız yetenek/bağımlılık farkı olmayan sürümde; ret gerekçeleri hazır kodlarla ve ajanın tek
     adımda düzelteceği biçimde; inceleyici kapasitesi baştan planlanır (Obsidian kuyruğu 2.300'ü aştı) [D12].
   - **Yayımcı:** `id` öneki doğrulanmış alan adına bağlı; görünen ad, simge ve kimlik benzerliği (taklit) denetimi; yayın
-    kısa ömürlü kimlikle (OIDC), jetonlar önekli ve süreli; iletişim doğrulaması [D13].
+    kısa ömürlü kimlikle (OIDC), jetonlar önekli ve süreli; iletişim doğrulaması [D13]. — *kısmen (16 Kasım, ADR 8059
+    §14): ad, kimlik ve simge okunan yüzüyle karşılaştırılır; taklit katalogda gönderimde yayımcı kapısını engeller,
+    masaüstünün kurulum incelemesinde Kur'u kişinin onayına bağlar; benzerlik söylenir. Kalan: alan adı, OIDC, jeton.*
   - **Platform tekerlek deposu:** katalog onaylı kilitten platform başına tekerlekleri kendisi üretir, ikilileri tarar,
     özetlerini onay kaydına bağlar; masaüstü bu depodan dizine düşmeden kurar [D3].
   - **Kurum ve çevrimdışı katalog:** kiracı kataloğu, statik indeks, erişim jetonu, engel listesi; güvensiz varsayılan

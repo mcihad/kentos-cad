@@ -185,8 +185,19 @@ pub struct Review {
     /// Installed from another source: installing this one is the user's explicit choice.
     pub source_conflict: bool,
     pub capabilities: Vec<CapabilityLine>,
+    /// What it reads as among the installed extensions and the catalog's (docs/adr/8059 §14): its name, its id or its
+    /// icon, the imitations first. Said before Kur; an imitation installs only when the person says so.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub resemblances: Vec<kentos_extensions::resemblance::Resemblance>,
     /// It can be installed (it may still wait for a dependency).
     pub installable: bool,
+}
+
+impl Review {
+    /// Whether it imitates another extension: the person must say to install it anyway.
+    pub fn imitates(&self) -> bool {
+        self.resemblances.iter().any(|r| r.exact)
+    }
 }
 
 /// The capabilities of `new` against `old`'s.

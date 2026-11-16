@@ -612,7 +612,10 @@ impl App {
             || r.policy.is_some()
             || r.revoked.is_some()
             || r.cycle.is_some();
-        let can = r.installable && !blocked && (!r.source_conflict || p.replace_source);
+        let can = r.installable
+            && !blocked
+            && (!r.source_conflict || p.replace_source)
+            && (!r.imitates() || p.accept_imitation);
         let verb = match &r.installed {
             Some((v, _)) if manifest.is_some_and(|m| m.version != *v) => "Güncelle",
             Some(_) => "Yeniden kur",
@@ -630,8 +633,32 @@ impl App {
 }
 
 fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a, Message> {
+    use kentos_extensions::resemblance::sentences;
     let r = &p.review;
     let mut form = Form::new().label_width(120.0);
+    // What it reads as, first (docs/adr/8059 §14): an imitation a warning to answer, a resemblance said.
+    let (imitations, near): (Vec<_>, Vec<_>) = r.resemblances.iter().partition(|x| x.exact);
+    if !imitations.is_empty() {
+        let imitations: Vec<_> = imitations.into_iter().cloned().collect();
+        form = form
+            .wide(Banner::warning(format!(
+                "Başka bir eklentiyi taklit ediyor olabilir. {} Taklit paketler kullanıcıyı yanıltmak için yapılır: \
+                 nereden geldiğinden emin değilseniz kurmayın.",
+                sentences(&imitations).join(" ")
+            )))
+            .wide(words::check(
+                p.accept_imitation,
+                "Benzerliği okudum, yine de kur",
+                Some(msg(Event::AcceptImitation(!p.accept_imitation))),
+            ));
+    }
+    if !near.is_empty() {
+        let near: Vec<_> = near.into_iter().cloned().collect();
+        form = form.wide(Banner::info(format!(
+            "{} Aynı eklenti sanmayın.",
+            sentences(&near).join(" ")
+        )));
+    }
     if let Some(m) = manifest {
         form = form.section("Paket").wide(label::body(m.summary.clone()));
         if let Some(d) = &m.description {

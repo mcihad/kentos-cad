@@ -3,7 +3,8 @@
 //! fresh sign-in; a release that becomes published handed to the server's hook.
 
 use kentos_extensions::release::{
-    Actor, Channel, Refusal, Release, ReleaseFacts, ReleaseState, Timestamp,
+    Actor, Channel, GateKind, Refusal, Release, ReleaseFacts, ReleaseState, Role, ScanOutcome,
+    Timestamp,
 };
 
 use super::model::{changed, fresh_sign_in_required};
@@ -12,6 +13,9 @@ use super::{Account, Catalog, CatalogError, CatalogId, Move, ReleaseKey, now};
 
 /// How many times a move is made again on the newer record when another move was written first.
 const ATTEMPTS: usize = 4;
+
+/// The catalog itself when it reports a gate's rule it runs (docs/adr/8059 §14): a scanner that is no account.
+const CATALOG_SCANNER: &str = "kentos-katalog";
 
 /// What a review starts with (D12): the release's package, the version approved before it with its package, and
 /// whether the catalog trusts the publisher.
@@ -44,16 +48,48 @@ impl Catalog {
             return Err(CatalogError::Refused(fresh_sign_in_required(action)));
         }
         let mut before = None;
-        let release = self
+        let mut release = self
             .moved(key, &actor, |r| {
                 before = Some(r.state());
                 apply(r, &actor, request, review.as_ref(), now)
             })
             .await?;
+        if matches!(request, Move::Submit { .. }) {
+            release = self.imitation_gate(key, release).await?;
+        }
         if release.state() == ReleaseState::Published && before != Some(ReleaseState::Published) {
             self.published(&key.catalog, &release).await;
         }
         Ok((release, actor))
+    }
+
+    /// The publisher gate's imitation rule, run by the catalog itself when a version is sent (docs/adr/8059 §14, D13):
+    /// a release whose name, id or icon reads as another publisher's listed extension is blocked at once and goes back
+    /// to its author with the findings, before a scanner or a reviewer spends time on it. Finding none proves nothing
+    /// of the gate (whether the publisher owns the id's namespace is its scanner's), so nothing is reported then.
+    async fn imitation_gate(
+        &self,
+        key: &ReleaseKey,
+        release: Release,
+    ) -> Result<Release, CatalogError> {
+        let all = self.store.releases(&key.catalog).await?;
+        let found = release.imitations(&all);
+        if found.is_empty() {
+            return Ok(release);
+        }
+        let scanner = Actor::new(CATALOG_SCANNER, &[Role::Scanner], Channel::Program);
+        let content = release.content().package.clone();
+        let now = now();
+        self.moved(key, &scanner, |r| {
+            r.record_scan(
+                &scanner,
+                GateKind::Publisher,
+                &content,
+                ScanOutcome::Blocked(found.clone()),
+                now,
+            )
+        })
+        .await
     }
 
     /// Hands a release that became published to the server's hook, with its approved bytes. The move is kept already:

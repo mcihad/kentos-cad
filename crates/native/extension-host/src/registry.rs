@@ -1000,6 +1000,17 @@ impl Registry {
 
     /// Everything to show before the user decides; installs nothing.
     pub fn review(&self, bytes: &[u8], source: &Source) -> Review {
+        self.review_beside(bytes, source, Vec::new())
+    }
+
+    /// [`Registry::review`], the package compared also with `catalog` (the entries of the catalog the desktop read,
+    /// [`crate::imitation::of_entry`]): what it reads as among them and the installed extensions (docs/adr/8059 §14).
+    pub fn review_beside(
+        &self,
+        bytes: &[u8],
+        source: &Source,
+        catalog: Vec<kentos_extensions::resemblance::Known>,
+    ) -> Review {
         let opened = kentos_extensions::open(bytes, &self.options.limits);
         let mut inspection = opened.inspection;
         // The host's whole check of the tools: a tool it would not make is said before Kur, not after.
@@ -1020,6 +1031,7 @@ impl Registry {
             installed: None,
             source_conflict: false,
             capabilities: Vec::new(),
+            resemblances: Vec::new(),
             installable: false,
         };
         let Some(manifest) = manifest else {
@@ -1049,6 +1061,13 @@ impl Registry {
             .map(|d| self.dependency_status(d))
             .collect();
         review.cycle = self.cycle_with(&manifest);
+        let mut known: Vec<kentos_extensions::resemblance::Known> = self
+            .manifests
+            .values()
+            .map(|m| crate::imitation::installed(m, self.package_dir(&m.id).as_deref()))
+            .collect();
+        known.extend(catalog);
+        review.resemblances = crate::imitation::of_package(&manifest, &opened.files, known);
         if let Some(entry) = self.file.extensions.get(&manifest.id) {
             review.source_conflict = conflicts(&entry.source, source);
             review.installed = Some((entry.active.clone(), entry.source.clone()));

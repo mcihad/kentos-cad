@@ -239,6 +239,63 @@ fn an_updates_new_capability_is_shown_and_left_out_unless_granted() {
     let _ = std::fs::remove_dir_all(&root);
 }
 
+/// A package whose id, name and icon read as an installed extension's (docs/adr/8059 §14): the review says so and Kur
+/// waits for the person's answer; answered, it installs.
+#[test]
+fn an_imitation_installs_only_when_the_person_says_so() {
+    const COPY: &str = "tr.ornek.kent-rehberl";
+    let root = temp("taklit");
+    let mut gis = app(&root, Some(Module::Gis));
+    install(&mut gis, "kent-rehberi.kek", package("ornek-kent", |_| {}));
+    let installed = |app: &App, id: &str| {
+        app.extensions
+            .registry
+            .as_ref()
+            .and_then(|r| r.manifest(id))
+            .is_some()
+    };
+    let name = gis
+        .extensions
+        .registry
+        .as_ref()
+        .unwrap()
+        .manifest(KENT)
+        .unwrap()
+        .name
+        .clone();
+    let copy = package("ornek-kent", |m| {
+        m["id"] = serde_json::json!(COPY);
+        m["name"] = serde_json::json!(name.to_uppercase());
+    });
+    let _ = gis.extensions_event(Event::Picked(Some(("kent-rehberi.kek".into(), copy))));
+    let pending = gis.extensions.review.as_ref().expect("reviewed");
+    let said: Vec<&str> = pending
+        .review
+        .resemblances
+        .iter()
+        .map(|r| r.code())
+        .collect();
+    assert_eq!(
+        said,
+        ["imitates_name", "imitates_id", "imitates_icon"],
+        "its icon too"
+    );
+    let _ = gis.extension_review_window().expect("drawn");
+    let _ = gis.extensions_event(Event::Install);
+    assert!(
+        gis.extensions.review.is_some() && !installed(&gis, COPY),
+        "Kur waits for the answer"
+    );
+    let _ = gis.extensions_event(Event::AcceptImitation(true));
+    let _ = gis.extensions_event(Event::Install);
+    assert!(
+        gis.extensions.review.is_none() && installed(&gis, COPY),
+        "{:?}",
+        gis.extensions.note
+    );
+    let _ = std::fs::remove_dir_all(&root);
+}
+
 #[test]
 fn a_broken_package_is_reviewed_not_installed_and_the_windows_draw() {
     let root = temp("bozuk");

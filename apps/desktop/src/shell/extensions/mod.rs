@@ -101,6 +101,8 @@ pub(crate) struct Pending {
     /// The package has Python contributions at all.
     pub(crate) has_python: bool,
     pub(crate) replace_source: bool,
+    /// The person read that it imitates another extension and installs it anyway (docs/adr/8059 §14).
+    pub(crate) accept_imitation: bool,
     /// The agent whose workshop it comes from (Asistan, an agent on the link): its later changes are its own.
     pub(crate) agent: Option<String>,
 }
@@ -347,6 +349,8 @@ pub(crate) enum Event {
     Grant(Capability, bool),
     Python(bool),
     ReplaceSource(bool),
+    /// Install a package that imitates another anyway (docs/adr/8059 §14).
+    AcceptImitation(bool),
     Install,
     CancelReview,
     SafeNext(bool),
@@ -908,6 +912,11 @@ impl App {
                     p.replace_source = on;
                 }
             }
+            Event::AcceptImitation(on) => {
+                if let Some(p) = self.extensions.review.as_mut() {
+                    p.accept_imitation = on;
+                }
+            }
             Event::Install => self.install_reviewed(),
             Event::CancelReview => self.extensions.review = None,
             Event::SafeNext(on) => {
@@ -1230,7 +1239,21 @@ impl App {
             self.extensions_say(true, why);
             return;
         };
-        let review = registry.review(&bytes, &source);
+        // Compared with the installed extensions and the catalog read (docs/adr/8059 §14).
+        let catalog = self
+            .extensions
+            .catalog
+            .as_ref()
+            .map(|found| {
+                found
+                    .catalog
+                    .latest(true)
+                    .into_iter()
+                    .map(kentos_extension_host::imitation::of_entry)
+                    .collect()
+            })
+            .unwrap_or_default();
+        let review = registry.review_beside(&bytes, &source, catalog);
         let opened = kentos_extensions::open(&bytes, &Limits::default());
         let manifest = review.inspection.manifest.as_ref();
         let changelog = manifest
@@ -1251,6 +1274,7 @@ impl App {
             python: has_python,
             has_python,
             replace_source: false,
+            accept_imitation: false,
             agent: None,
         });
     }
@@ -1260,6 +1284,10 @@ impl App {
         let Some(pending) = self.extensions.review.as_ref() else {
             return;
         };
+        // An imitation installs only when the person said so (docs/adr/8059 §14): Kur is off until then.
+        if pending.review.imitates() && !pending.accept_imitation {
+            return;
+        }
         let Some(registry) = self.extensions.registry.as_mut() else {
             return;
         };
