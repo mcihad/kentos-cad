@@ -532,6 +532,7 @@ fn check_tree(files: &BTreeMap<String, Vec<u8>>, stage: Stage, out: &mut Inspect
             && let Ok(code) = std::str::from_utf8(data)
         {
             crate::python_rules::scan(&manifest, path, code, &mut out.problems, &mut out.warnings);
+            crate::sdk_surface::scan(path, code, &mut out.warnings);
         }
     }
     if manifest.changelog_file.is_none() {

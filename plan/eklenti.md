@@ -984,9 +984,10 @@ işçi, işçi meşgulken `Subscription::run(ticks)` (Toplu çalıştır'ın kal
   boştaki kapanır, "korumalı alan değildir" yazılı, süreç başına bellek ölçüldü, `modelDescription`; 16 Kasım: eklenti
   araçlarının başsız koşusu: MCP ve Python kitaplığı, tanımında `headless-python` bildiren aracı aynı kimlik, şema ve
   sonuçla, masaüstünün hazırladığı ortamda kendi sürecinde çalıştırır (masaüstüyle ortak `kentos-extension-tools`);
-  bildirmeyen başsızda listelenmez, süreç başlamadan nedeniyle reddedilir. Kalan: sunucu/bulut koşusu (kentosd'nin iş
-  çalıştırıcısının ayrı yolu, bu dilimin dışında), başsız koşunun eklenti günlüğüne ve çökme bekçisine yazılması,
-  başsız konaklarda ifade işlevleri.*
+  bildirmeyen başsızda listelenmez, süreç başlamadan nedeniyle reddedilir. Başsız koşu eklentinin günlüğüne yazar,
+  Python kitaplığı notları Python'un logging'iyle söyler; araç çalışırken sormaz, her konakta (§73: bu yolda işletim
+  sistemi penceresi gerekmedi). Kalan: sunucu/bulut koşusu (kentosd'nin iş çalıştırıcısının ayrı yolu, bu dilimin
+  dışında), bekçi sayacının başsız koşuyu da sayması, başsız konaklarda ifade işlevleri.*
 - **Kabul (birinci dikey dilim, [EKL §5 sıra 1]):** tek kullanıcıda yerel `.kek`; NumPy kullanan tek İşlemler
   algoritması ve KentOS parametre penceresi: uv seçimi, bağımlılık açıklığı, ayrı süreç, gerçek iptal, tipli sonuç, yeni
   katman, tek geri alma; Python/MCP eşdeğerliği. İlk mühendislik hedefleri (ölçülmüş garanti değil): iptal isteği 100
@@ -1203,6 +1204,11 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
     ve genel/kiracı katalog onları kullanan paketi reddeder [D7].
   - **Sürüm göçü:** `verify`'da kalıcı kimlikli göç kuralları ve `kentos kek upgrade` (otomatik dönüştürme); ajana
     geçiş notu. QGIS'te Qt6'ya geçişten 8 ay sonra paketlerin yalnız %42'si yeni sürümde [D7].
+    — *kısmen (ADR 8061, 16 Kasım): ilke yazılı (güvencedeki yüzey, kırılma yalnız protokol artışında, en az bir sürüm
+    eskime, deneysel yayımlanamaz, davranış kararlılığı, göç oranı ölçümü); eskiyen/deneysel ad kaydı ve Kapı 1
+    uyarıları (`sdk_deprecated`, `sdk_experimental`; bugün kayıt boş); `kentos kek upgrade` (düz yeniden adlandırmalar,
+    `--check`). Kalan: paket kapısı tarayıcısının deneysel kullanımı engellemesi (22A), JSON biçimlerinin `schemaVersion`
+    2 göçleri, göç oranı ölçümü.*
   - **AST kuralları:** çalışma anında paket kurma/indirme, kendi kendini güncelleme, `sys.path` oynama yasak; beyan
     edilmemiş yetenek kullanımı (ağ, dosya, alt süreç, pano) ret; görünmez Unicode ret [D5, D11, Ö·41].
     — *kısmen (ADR 8057 §72, 16 Kasım): çalışırken kurma, `sys.path` ve beyansız ağ ret, paketlemede ve kurulumda

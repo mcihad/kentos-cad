@@ -172,6 +172,9 @@ bütün panel `ui.panel(başlık, bileşenler)`); panelin şemasından üretilir
 - Bir katkı yeteneğini ister ve nedenini yazar (`requestedCapabilities`): kullanıcı kurarken her birini görüp onaylar.
   Ağa çıkan kod `network` ister; işletim sistemi komutu ve `eval`/`exec` uyarıdır.
 - Kütüphane `uv add <paket>` ile eklenir (`pyproject.toml` ve `uv.lock` birlikte yazılır); KentOS ortamı kilitten kurar.
+  Çalışırken `pip` ile kurmak ve `sys.path`'e dokunmak reddedilir.
+- `kentos.ext`, `kentos.ui_panel` ve JSON biçimleri kararlıdır: yalnız SDK protokolü artınca kırılır. Eskiyen ad
+  `sdk_deprecated` uyarısıdır, `kentos kek upgrade` yenisini yazar; deneysel ad (`sdk_experimental`) yayımlanamaz.
 - Bir hata eklentinin adıyla söylenir ve iz kaydıyla eklentinin günlüğüne yazılır; kullanıcıya bozuk bir çizim kalmaz.
 - Kurma, yetki verme ve yayımlama kullanıcınındır: ajan bunları sessizce geçmez, kurulu paketi ya da izni uydurmaz.
 "#;
@@ -289,6 +292,8 @@ fn verify_codes() -> Value {
         "python_sys_path": "sys.path değiştirme.",
         "python_os_command": "Uyarı: işletim sistemi komutu.",
         "python_eval": "Uyarı: eval/exec.",
+        "sdk_deprecated": "Uyarı: eskiyen SDK adı; yerini söyler, düz yeniden adlandırmayı kentos kek upgrade yazar.",
+        "sdk_experimental": "Uyarı: deneysel SDK adı; atölyede ve yerel kurulumda çalışır, katalogda yayımlanamaz.",
         "handler_missing": "İşleyicinin modülü pakette yok (paketin kendi denetimi).",
         "manifest_icon": "İkon yerleşik bir ad (küçük harf, tire) ya da paketteki bir .svg yolu değil.",
         "manifest_icon_unknown": "Uyarı: bu KentOS'ta böyle bir yerleşik ikon yok; en yakınları önerilir.",

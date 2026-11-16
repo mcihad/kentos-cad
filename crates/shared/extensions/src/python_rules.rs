@@ -46,7 +46,7 @@ const INSTALLS: [&str; 8] = [
 
 /// The lines of `text` that are code, with their numbers from 1: a string spanning lines (a docstring) skipped, a
 /// comment cut.
-fn code_lines(text: &str) -> Vec<(usize, String)> {
+pub(crate) fn code_lines(text: &str) -> Vec<(usize, String)> {
     let mut out = Vec::new();
     // The quotes of the string the line began in.
     let mut inside: Option<&'static str> = None;

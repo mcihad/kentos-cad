@@ -42,6 +42,7 @@ pub mod revocations;
 #[cfg(all(test, feature = "schema"))]
 mod schema_check;
 pub mod sdk_pack;
+pub mod sdk_surface;
 mod text;
 pub mod ui_panel;
 pub mod verify;

@@ -7,6 +7,7 @@
 //! kentos kek dump [--root <klasör>]
 //! kentos kek log [<kimlik>] [--son <n>] [--root <klasör>] [--json]
 //! kentos kek sdk [--part <bölüm>] [--json]
+//! kentos kek upgrade <klasör> [--check] [--json]
 //! ```
 //!
 //! The same inspector the installer, the catalog and `extension.verify` run (kentos_extensions): an author or an agent
@@ -21,6 +22,8 @@ use std::process::ExitCode;
 
 use kentos_extensions::{Limits, Manifest, Problem, catalog, inspect, pack};
 
+mod upgrade;
+
 const USAGE: &str = "Kullanım:
   kentos kek inspect <paket.kek> [--json]           paketi kodunu çalıştırmadan denetler
   kentos kek pack <klasör> [-o <paket.kek>] [--json] klasörü denetleyip paketler
@@ -31,6 +34,8 @@ const USAGE: &str = "Kullanım:
                                                     doğrulamadan geçen bir eklenti iskeleti yazar
   kentos kek sdk [--part <bölüm>] [--json]          eklenti yazma rehberi ve kentos.ext imzaları (--json: paketin
                                                     tamamı, ajanların kentos://sdk/ai-kek-pack'i)
+  kentos kek upgrade <klasör> [--check] [--json]    eskiyen SDK adlarını yenileriyle yazar (--check: yazmaz, değişecek
+                                                    bir şey varsa çıkış 1)
   kentos kek index <klasör> [--name <ad>]           klasördeki paketlerin katalog dizinini (index.json) yazar
   kentos kek dump [--root <klasör>]                 kurulu eklentileri ve katkılarını JSON olarak döker
   kentos kek log [<kimlik>] [--son <n>] [--root <klasör>] [--json]
@@ -75,6 +80,8 @@ fn main() -> ExitCode {
         ["kek", "index", folder] => index_folder(Path::new(folder), None),
         ["kek", "index", folder, "--name", name] => index_folder(Path::new(folder), Some(name)),
         ["kek", "log", rest @ ..] => log(rest, json),
+        ["kek", "upgrade", folder] => upgrade::run(Path::new(folder), false, json),
+        ["kek", "upgrade", folder, "--check"] => upgrade::run(Path::new(folder), true, json),
         _ => {
             eprintln!("{USAGE}");
             ExitCode::from(2)
