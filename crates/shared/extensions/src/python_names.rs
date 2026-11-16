@@ -7,7 +7,7 @@
 //! The list is the most installed packages of the index and the geospatial and data packages KentOS's extensions
 //! use, by their normalised names (PEP 503); it is data, kept short on purpose: a name not in it is never judged.
 
-use crate::python::normalized;
+pub use crate::python::normalized;
 
 /// Well-known names, normalised (lower case, `-` for runs of `-`, `_`, `.`).
 const KNOWN: &[&str] = &[

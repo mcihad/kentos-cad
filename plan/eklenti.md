@@ -788,7 +788,9 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   hazırlama (ADIM 22A); kurum izinli paket listesi [D14]; genel çevrimiçi erişim anahtarı kapalıyken `network` yeteneği
   aracıda reddedilir [Ö·43]. Ölçülecek: venv başına disk ve hazırlama süresi, vekil sunucu ve platform tekerleği matrisi.
   Alt yorumlayıcı yalıtım için kullanılmaz [Ö·23]. — *16 Kasım (ADR 8057 §83): soğuma süresi iskelette varsayılan
-  (`exclude-newer = "7 days"`); ajanın yazdığı paketin soğumasız kilidi `kek verify`'da ve incelemede uyarıdır.*
+  (`exclude-newer = "7 days"`); ajanın yazdığı paketin soğumasız kilidi `kek verify`'da ve incelemede uyarıdır. Kurum
+  izinli paket listesi (ADR 8057 §84): ilkede engelli ve izinli Python paketleri ile izinli paket depoları; inceleme,
+  kurulum ve kurulu eklentinin çalışması aynı kurala bakar.*
 - **Sürüyor (13 Kasım, ADR 8057 §5):** `crates/native/python-env`; Uygulama ayarları › Python ve eklentiler (varsayılan
   kapalı, kapalıyken hiçbir şey aranmaz); uv'nin arka planda algılanması ve sürüm denetimi; tek uyumluluk manifesti;
   resmî kurulum komutları (KentOS kurmaz); kabuksuz, süreli, sınırlı uv çağrısı; **Windows:** konsol penceresi yok,

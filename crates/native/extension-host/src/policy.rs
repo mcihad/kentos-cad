@@ -2,8 +2,9 @@
 //!
 //! The **policy** is IT's file in a system folder the user cannot write (`kentos.extension-policy` v1): sources,
 //! publishers and extensions allowed, extensions and capabilities blocked, the least version of an extension, whether
-//! data may go to an outside AI service. The user cannot loosen it; an installed extension it now refuses is stopped
-//! with the reason, its data kept.
+//! data may go to an outside AI service, and the Python packages an extension may bring: those blocked, the only ones
+//! allowed, the package indexes they may come from (D14; docs/adr/8057 §84). The user cannot loosen it; an installed
+//! extension it now refuses is stopped with the reason, its data kept.
 //!
 //! The **revocation list** (`kentos.extension-revocations` v1) names versions withdrawn for a reason (malware, a
 //! dangerous bug); syncing it stops them, never deletes the user's data. Its signature is checked by the catalog's
@@ -43,6 +44,16 @@ pub struct Policy {
     /// Whether an extension may send data to an outside AI service (`network.sendsDataToAi`); not written: yes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub allow_data_to_ai: Option<bool>,
+    /// Python packages no extension may install, by name (compared as PEP 503 normalises them).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub blocked_python_packages: Vec<String>,
+    /// When written, the only Python packages an extension may install.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub allowed_python_packages: Option<Vec<String>>,
+    /// When written, the only package indexes a Python package may come from (`https://pypi.org/simple`, the
+    /// organisation's mirror); a package from a repository or an address is then refused too.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub allowed_package_indexes: Option<Vec<String>>,
     /// The policy file is there but cannot be read: everything is refused with this reason (fail closed).
     #[serde(skip)]
     pub broken: Option<String>,
@@ -139,6 +150,47 @@ impl Policy {
 }
 
 impl Policy {
+    /// Why the policy refuses a package that installs these Python packages (its lock's, by normalised name; docs/adr/
+    /// 8057 §84); none when it allows them all.
+    pub fn package_refusal(
+        &self,
+        packages: &std::collections::BTreeMap<String, kentos_extensions::release::LockedPackage>,
+    ) -> Option<String> {
+        use kentos_extensions::python_names::normalized;
+        if let Some(reason) = &self.broken {
+            return Some(reason.clone());
+        }
+        let listed = |list: &[String], name: &str| list.iter().any(|n| normalized(n) == name);
+        for (name, p) in packages {
+            if listed(&self.blocked_python_packages, name) {
+                return Some(format!("Kurum ilkesi “{name}” Python paketini engelliyor."));
+            }
+            if let Some(allowed) = &self.allowed_python_packages
+                && !listed(allowed, name)
+            {
+                return Some(format!(
+                    "Kurum ilkesi yalnız izin verdiği Python paketlerini kurduruyor; “{name}” listede yok."
+                ));
+            }
+            if let Some(indexes) = &self.allowed_package_indexes {
+                let from = p
+                    .source
+                    .strip_prefix("registry ")
+                    .map(|url| url.trim_end_matches('/'));
+                let allowed =
+                    from.is_some_and(|url| indexes.iter().any(|i| i.trim_end_matches('/') == url));
+                if !allowed {
+                    return Some(format!(
+                        "Kurum ilkesi “{name}” paketinin geldiği yere ({}) izin vermiyor; izinli paket depoları: {}.",
+                        p.source,
+                        indexes.join(", ")
+                    ));
+                }
+            }
+        }
+        None
+    }
+
     /// A policy file that is there but cannot be read: it refuses everything, saying why (an unreadable policy must not
     /// mean "no policy").
     pub fn broken(reason: String) -> Policy {

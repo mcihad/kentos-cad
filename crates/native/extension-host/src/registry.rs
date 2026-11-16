@@ -154,6 +154,9 @@ pub struct Registry {
     revocations: Revocations,
     /// The version in use's manifest of every installed extension.
     manifests: BTreeMap<String, Manifest>,
+    /// The version in use's locked Python packages, read with its manifest: what the policy's package rules judge and
+    /// an update's review compares (docs/adr/8057 §81, §84).
+    locked: BTreeMap<String, BTreeMap<String, kentos_extensions::release::LockedPackage>>,
     leases: BTreeMap<String, ExtensionLease>,
     registered: Vec<Registered>,
     generation: u64,
@@ -322,6 +325,7 @@ impl Registry {
             file,
             revocations,
             manifests: BTreeMap::new(),
+            locked: BTreeMap::new(),
             leases: BTreeMap::new(),
             registered: Vec::new(),
             generation: 0,
@@ -340,16 +344,29 @@ impl Registry {
         match self.file.extensions.get(id) {
             Some(entry) => match read_manifest(&self.layout, id, &entry.active) {
                 Ok(manifest) => {
-                    self.manifests.insert(id.to_owned(), manifest);
+                    let active = entry.active.clone();
+                    self.remember(id, manifest, &active);
                 }
                 Err(_) => {
                     self.manifests.remove(id);
+                    self.locked.remove(id);
                 }
             },
             None => {
                 self.manifests.remove(id);
+                self.locked.remove(id);
             }
         }
+    }
+
+    /// Keeps the version in use's manifest and its locked Python packages (read from its package folder once, not each
+    /// time the list is drawn).
+    fn remember(&mut self, id: &str, manifest: Manifest, version: &str) {
+        match crate::packages::installed(&manifest, &self.layout.package(id, version)) {
+            Some(packages) => self.locked.insert(id.to_owned(), packages),
+            None => self.locked.remove(id),
+        };
+        self.manifests.insert(id.to_owned(), manifest);
     }
 
     /// A change of the registry: under the lock, the file read again (another process may have changed it), the
@@ -481,10 +498,10 @@ impl Registry {
             return Some(format!("{} sürümü geri çekildi: {reason}.", entry.active));
         }
         let manifest = self.manifests.get(id)?;
-        self.options
-            .policy
-            .as_ref()?
+        let policy = self.options.policy.as_ref()?;
+        policy
             .refusal(manifest, entry.source.kind)
+            .or_else(|| policy.package_refusal(self.locked.get(id)?))
     }
 
     fn dependency_problem(&self, manifest: &Manifest) -> Option<String> {
@@ -866,7 +883,8 @@ impl Registry {
         let (registered, skipped) = lease::contributions(&manifest, &entry.grant, &lease, &titles);
         self.registered.extend(registered);
         self.leases.insert(id.to_owned(), lease.clone());
-        self.manifests.insert(id.to_owned(), manifest);
+        let active = entry.active.clone();
+        self.remember(id, manifest, &active);
         let micros = u64::try_from(started.elapsed().as_micros()).unwrap_or(u64::MAX);
         let owner = id.to_owned();
         self.change(move |file| {
@@ -1087,12 +1105,20 @@ impl Registry {
             .as_ref()
             .and_then(|p| kentos_extensions::release::locked_packages(p, &opened.files))
         {
-            let old = self.manifests.get(&manifest.id).and_then(|m| {
-                let dir = self.package_dir(&m.id)?;
-                // An installed version without Python installs none of them.
-                Some(crate::packages::installed(m, &dir).unwrap_or_default())
-            });
+            // An installed version without Python installs none of them.
+            let old = self
+                .manifests
+                .contains_key(&manifest.id)
+                .then(|| self.locked.get(&manifest.id).cloned().unwrap_or_default());
             review.python_packages = crate::packages::lines(&new, old.as_ref());
+            // The organisation's package rules (docs/adr/8057 §84), said before Kur as its other rules are.
+            if review.policy.is_none() {
+                review.policy = self
+                    .options
+                    .policy
+                    .as_ref()
+                    .and_then(|p| p.package_refusal(&new));
+            }
         }
         if let Some(entry) = self.file.extensions.get(&manifest.id) {
             review.source_conflict = conflicts(&entry.source, source);
@@ -1169,12 +1195,16 @@ impl Registry {
         let id = manifest.id.clone();
         let version = manifest.version.clone();
         compatible(&manifest.compatibility, &self.host).map_err(one)?;
-        if let Some(reason) = self
-            .options
-            .policy
-            .as_ref()
-            .and_then(|p| p.refusal(&manifest, source.kind))
-        {
+        if let Some(reason) = self.options.policy.as_ref().and_then(|p| {
+            p.refusal(&manifest, source.kind).or_else(|| {
+                // Its Python packages by the organisation's package rules (docs/adr/8057 §84).
+                let project = manifest.python.as_ref()?;
+                p.package_refusal(&kentos_extensions::release::locked_packages(
+                    project,
+                    &opened.files,
+                )?)
+            })
+        }) {
             return Err(one(problem("registry_policy", reason)));
         }
         if let Some(reason) = self.revocations.reason(&id, &version) {

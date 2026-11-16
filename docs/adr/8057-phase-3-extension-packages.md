@@ -4475,3 +4475,27 @@ Schema'lar, `kentos_ext.pyi`; `tr.kentos.mevzuat` 0.4.1 (`kacis.py`, sekizinci �
 - **Sınamalar:** paylaşılan 157 (ajanın soğumasız kilidi uyarı; soğumalı ve sabit tarihli kilit ile insanın kilidi
   uyarısız), headless ajan araçları 20 (iskelet doğrulanır), extension-tools 11, masaüstünün eklenti sınamaları 99.
 - **Kalan:** kurum ilkesinde süre (D14); katalogun bağımlılık kapısının bunu kendisi denetlemesi.
+
+## §84. Kurum ilkesinde Python paketleri: engelli, izinli liste ve izinli paket depoları (`ADIM 17`, D14)
+
+**16 Kasım.** Kod: kayıt defteri `policy.rs` (`blockedPythonPackages`, `allowedPythonPackages`, `allowedPackageIndexes`,
+`Policy::package_refusal`), `registry.rs` (kurulu sürümün kilit paketleri bildirgesiyle bir kez okunur, `locked`;
+inceleme, kurulum ve çalıştırma aynı kurala bakar); paylaşılan `python_names::normalized` (PEP 503).
+
+- **Sorun.** Kurum ilkesi kaynağı, yayımcıyı, eklentiyi ve yeteneği sınırlıyordu; eklentinin kendi ortamına kuracağı
+  Python paketlerine hiçbir kural yoktu. `kek verify` PyPI dışı bir depodan gelen paket için "kurum ilkesi bu depoya
+  izin vermeli" diyordu ama ilkede böyle bir alan yoktu. Belediyenin bilgi işlemi kendi paket aynasını ya da bilinen
+  sorunlu bir paketi yasaklayamıyordu.
+- **Karar: üç alan, eklentininkilerle aynı anlam.** `blockedPythonPackages` adlarıyla (PEP 503 ile normalleştirilerek
+  karşılaştırılır: `NumPy` = `numpy`); `allowedPythonPackages` yazılırsa yalnız onlar; `allowedPackageIndexes` yazılırsa
+  paketler yalnız o depolardan (sondaki `/` önemsiz), depo dışı kaynak (git, adres) da reddedilir. Örnek:
+  `{"format": "kentos.extension-policy", "schemaVersion": 1,`
+  `"allowedPackageIndexes": ["https://pypi.ornek.bel.tr/simple"]}`.
+  Okunamayan ilke paketleri de reddeder (kapalı kalır).
+- **Üç yerde aynı kural:** inceleme Kur'dan önce söyler ve Kur'u kapatır (öbür ilke retleri gibi); kurulum reddeder
+  (`registry_policy`); ilke sonradan değişirse kurulu eklenti nedeniyle durur, silinmez. Kurulu sürümün paketleri
+  bildirgesiyle birlikte bir kez okunur: liste her çizildiğinde kilit dosyasını okumak gereksizdi; güncellemenin paket
+  farkı da (§81) artık bunu kullanır.
+- **Sınamalar:** kayıt defteri 33 (yeni: engelli paket, izinli liste, izinli depo; incelemenin sözü ve Kur'un reddi
+  aynı cümle; sondaki eğik çizgiyle izinli depo; sonradan engellenen paketle kurulu eklentinin durması).
+- **Kalan:** ilkede soğuma süresi (§83'ün kurum için zorunlu hâli); paket sürümü düzeyinde kural (bugün ad düzeyinde).

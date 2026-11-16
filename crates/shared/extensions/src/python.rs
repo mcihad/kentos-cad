@@ -446,7 +446,7 @@ fn insert(table: &mut Table, keys: &[String], value: Toml) -> Result<(), String>
 }
 
 /// A Python package's name normalised (PEP 503): lower case, runs of `-`, `_` and `.` one `-`.
-pub(crate) fn normalized(name: &str) -> String {
+pub fn normalized(name: &str) -> String {
     let mut out = String::with_capacity(name.len());
     let mut dash = false;
     for c in name.trim().chars() {

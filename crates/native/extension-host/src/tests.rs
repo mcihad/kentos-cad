@@ -676,6 +676,71 @@ fn the_review_lists_the_python_packages_and_an_updates_difference() {
     );
 }
 
+/// The organisation's Python package rules (docs/adr/8057 §84): a blocked package, a list of the only allowed ones and
+/// of the allowed indexes are said in the review and refuse Kur; set afterwards, they stop the installed extension.
+#[test]
+fn the_policy_judges_the_python_packages_a_package_brings() {
+    let temp = Temp::new("paket-ilkesi");
+    let folder = temp.0.join("mebis-kaynak");
+    mebis_folder(&folder);
+    let bytes = kentos_extensions::pack(&store::read_files(&folder).unwrap(), &Limits::default())
+        .unwrap()
+        .bytes;
+    let policy = |extra: Value| {
+        let mut p = json!({"format": "kentos.extension-policy", "schemaVersion": 1});
+        for (k, v) in extra.as_object().unwrap() {
+            p[k] = v.clone();
+        }
+        Options {
+            policy: Some(Policy::read(&p.to_string()).unwrap()),
+            ..Options::default()
+        }
+    };
+    let root = temp.0.join("kayit");
+    for (rule, said) in [
+        (
+            json!({"blockedPythonPackages": ["NumPy"]}),
+            "Kurum ilkesi “numpy” Python paketini engelliyor.",
+        ),
+        (
+            json!({"allowedPythonPackages": ["numpy", "shapely", "pygal", "zipp", "importlib-metadata"]}),
+            "Kurum ilkesi yalnız izin verdiği Python paketlerini kurduruyor; “lazy-importer” listede yok.",
+        ),
+        (
+            json!({"allowedPackageIndexes": ["https://pypi.ornek.bel.tr/simple"]}),
+            "Kurum ilkesi “importlib-metadata” paketinin geldiği yere (registry https://pypi.org/simple) izin \
+             vermiyor; izinli paket depoları: https://pypi.ornek.bel.tr/simple.",
+        ),
+    ] {
+        let mut r = open_with(&root, policy(rule));
+        let review = r.review(&bytes, &file_source());
+        assert_eq!(review.policy.as_deref(), Some(said));
+        assert!(!review.installable);
+        let refused = r
+            .install(&bytes, &file_source(), &all_granted())
+            .unwrap_err();
+        assert_eq!(
+            (refused[0].code, refused[0].message.as_str()),
+            ("registry_policy", said)
+        );
+    }
+    // Allowed: the index written with a slash, the names as the lock has them.
+    let mut r = open_with(
+        &root,
+        policy(json!({"allowedPackageIndexes": ["https://pypi.org/simple/"]})),
+    );
+    install(&mut r, &bytes);
+    drop(r);
+    // Blocked afterwards: the installed extension stops with the reason, it is not removed.
+    let r = open_with(&root, policy(json!({"blockedPythonPackages": ["shapely"]})));
+    assert!(
+        matches!(r.state("tr.ornek.mebis"), Some(State::Blocked { reason }) if reason.contains("“shapely”")),
+        "{:?}",
+        r.state("tr.ornek.mebis")
+    );
+    assert_eq!(r.extensions().len(), 1);
+}
+
 #[test]
 fn python_contributions_wait_for_the_choice_and_a_working_folder_reloads_cleanly() {
     let temp = Temp::new("gelistirici");
