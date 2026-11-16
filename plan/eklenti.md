@@ -1077,7 +1077,8 @@ cgroup ile kaçamaz sınır, sunucu ölünce sahipsiz kalan Python, işletim sis
 Landlock alanına girip çalışır: dosyalarda yalnız paketi, hazırlanmış ortamı, SDK'yı ve sistem kütüphanelerini okur,
 yalnız işin karalamasına yazar; TCP, alan dışına sinyal ve soyut UNIX soketi yasak. Kapatılamayan sunucuda varsayılan
 kuralı çalıştırmamaktır (`KENTOS_AUDIT_CONFINE=require`); `report` kuralı çalıştırır ve "kutu kapatılamadı" der.
-Kalan: UDP ve ABI 9'un altında yol adlı UNIX soketleri açık (seccomp ile `socket()` reddi), Windows ve macOS'ta kutu.
+Kalan (o gün): UDP ve ABI 9'un altında yol adlı UNIX soketleri açık; aynı gün §63'ün seccomp süzgeciyle kapandı
+(aşağıda). Kalan: Windows ve macOS'ta kutu.
 **Kutuda soket yok** (ADR 8057 §63, 16 Kasım): kutu kipi Landlock'tan sonra bir seccomp süzgeci kurar: `socket(2)` her
 aile için, UNIX datagram ve UNIX dışı çiftler ve `io_uring_setup(2)` reddedilir (x86_64 ve aarch64; x32 numaraları da),
 böylece UDP ve yol adlı UNIX soketleri de kapandı. Süzgeç kurulamayan kutu kapanmamış sayılır: `require` kuralı
@@ -1259,8 +1260,8 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   erişilebilirlik şeması (16 Kasım, §71): bileşen başına davranış tablosu (değer ve örneği, `onChange`/`command`,
   `ctx.panel.set/rows/focus`'un aldıkları, klavye, ad); panel oturumu ondan reddeder, klavye sütunu çizilen panelde
   ölçülür; Tab 13 türden 19'a çıktı (düğmeler, çipler, bölüm başlığı, Seçimi al, Haritada çiz, ek düğmeleri; işi süren
-  düğme odağı tutar; satırlar tek durak, ↑↓ imleç, Enter nesneyi gösterir: tablo, kart, ilişki listesi). Kalan: ağaç ve
-  göstergede klavye.* KentOS UI bileşenlerinin özellik/olay/eylem ve erişilebilirlik davranışı Python
+  düğme odağı tutar; satırlar tek durak, ↑↓ imleç, Enter nesneyi gösterir: tablo, kart, ilişki listesi); 16 Kasım:
+  ağaç (↑↓, ←→ aç/kapa, Enter) ve gösterge kartları (oklar, Enter) da klavyeyle.* KentOS UI bileşenlerinin özellik/olay/eylem ve erişilebilirlik davranışı Python
   şemasına eşlenir: düzen (yığın/satır/ızgara, sekme, grup, akordeon, kaydırma, bölücü, adımlayıcı), basit girdi
   (metin, sayı, tarih/saat, mantıksal, seçim, çoklu seçim), CBS girdisi (katman/nesne/alan seçici, koordinat/harita
   seçimi, CRS/birim, ilişki başvurusu), kaynak ve çıktı (dosya/eser seçici, ek, görsel önizleme, çıktı hedefi), veri
