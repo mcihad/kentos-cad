@@ -4987,3 +4987,24 @@ masaüstü `extensions/environment.rs` (`Context::not_to_build`); komut satırı
   boş parola, parolasız adres ve bilinmeyen şema sayılmaz), ortak kitaplığın bütün sınamaları (176), katalog API (58).
 - **Kalan:** yalıtılmış duman testi işçisi (PY-CLOUD-06; sunucunun ağ, dosya ve kiracı yalıtımı ECO-DEC-11, sahibin
   kararı).
+
+## §101. Çevrimdışı, sürümlü SDK belge paketi: `kentos kek docs` (`ADIM 21`, EKL-06)
+
+**16 Kasım.** Kod: komut satırı `docs.rs` (yeni), `main.rs` (komut ve yardım metni).
+
+- **Sorun.** EKL-06 "sürümlü Python API referansı … çevrimdışı belge paketi" ister. SDK'nın her parçası vardı (`kek sdk`,
+  `--part`, MCP'nin SDK aracı), ama ağsız bir makinede okunacak, bir yapay zekâ ajanına klasör olarak verilecek ve
+  hangi KentOS sürümünün olduğunu söyleyen bir paket yoktu.
+- **Karar.** `kentos kek docs <klasör>` aynı paketin parçalarını dosya dosya yazar: `llms.txt` (rehber ve `kentos.ext`
+  imzaları, `kek sdk --text`'in aynısı), `kentos_ext.pyi`, `sdk.json` (paketin tamamı), `semalar/` altında altı şema
+  (manifest, panel, katman şeması, İşlemler aracı, olgular, denetim örnekleri), yetenekler, programlar, katkılar,
+  doğrulama kodları, panel davranışı ve kurucuları, numaralı iş akışı, ikon adları, `ornek-eklenti/` (her katkı
+  türünün çalışan örneği), `surum.json` (`kentos.sdk-docs`, KentOS sürümü, SDK protokolü) ve Türkçe `BENIOKU.md`
+  (dizin; ajana önce `llms.txt`'nin verileceğini söyler). Aynı koddan üretildiği için paket programından ayrışamaz.
+- **Güvenli yazım:** boş olmayan ve belge paketi olmayan klasör reddedilir (`surum.json`'u olan paket yeniden yazılır);
+  örnek eklentinin yolları klasör dışına çıkamaz (`..`, kök, sürücü harfi).
+- **Söz:** dizin sayfası sürüme ek bağlamaz ("KentOS 0.1.0 sürümünün"): sayıya gelen ek okunuşuna göre değişirdi
+  ("0.1.0'ın", "0.2.1'in").
+- **Ölçüm:** 33 dosya, 444 KB; içindeki örnek eklenti `kentos kek verify`'dan geçer (kuru koşu 9 katkı, kalıntı yok).
+- **Sınamalar:** komut satırı 1 (her parça kendi dosyasında, JSON'lar okunur, sürüm ve dizin, örnek eklenti doğrulamadan
+  geçer, paket yeniden yazılır, yabancı klasör reddedilir, güvenli yol).

@@ -9,6 +9,7 @@
 //! kentos kek dump [--root <klasör>]
 //! kentos kek log [<kimlik>] [--son <n>] [--root <klasör>] [--json]
 //! kentos kek sdk [--part <bölüm>] [--json] [--text]
+//! kentos kek docs <klasör>
 //! kentos kek upgrade <klasör> [--check] [--json]
 //! ```
 //!
@@ -37,6 +38,7 @@ macro_rules! say {
     }};
 }
 
+mod docs;
 mod kek_test;
 mod upgrade;
 
@@ -56,6 +58,8 @@ const USAGE: &str = "Kullanım:
   kentos kek sdk [--part <bölüm>] [--json] [--text] eklenti yazma rehberi ve kentos.ext imzaları (--json: paketin
                                                     tamamı, ajanların kentos://sdk/ai-kek-pack'i; --text: tamamı tek
                                                     Markdown dosyası, llms.txt)
+  kentos kek docs <klasör>                          bu KentOS'un SDK'sını çevrimdışı belge paketi olarak yazar:
+                                                    rehber, Python imzaları, şemalar, kodlar, örnek eklenti
   kentos kek upgrade <klasör> [--check] [--json]    eskiyen SDK adlarını yenileriyle yazar (--check: yazmaz, değişecek
                                                     bir şey varsa çıkış 1)
   kentos kek index <klasör> [--name <ad>]           klasördeki paketlerin katalog dizinini (index.json) yazar
@@ -100,6 +104,7 @@ fn main() -> ExitCode {
         }
         ["kek", "new", folder, rest @ ..] => new_folder(Path::new(folder), rest),
         ["kek", "sdk"] => sdk(None, json),
+        ["kek", "docs", folder] => docs::run(Path::new(folder)),
         ["kek", "sdk", "--text"] => {
             say!("{}", kentos_extensions::sdk_text::llms_txt().trim_end());
             ExitCode::SUCCESS
