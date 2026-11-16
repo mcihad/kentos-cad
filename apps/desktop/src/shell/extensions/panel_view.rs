@@ -1405,6 +1405,14 @@ fn panel_stats<'a>(
     column![heading, tiles].spacing(6).into()
 }
 
+/// Now as this computer's clock has it: the pickers' today and Şimdi (the forms' too).
+fn local_now() -> kentos_ui::attribute::DateTime {
+    kentos_ui::attribute::DateTime::now(
+        kentos_interaction::time_version::LOCAL_OFFSET.load(std::sync::atomic::Ordering::Relaxed)
+            / 60,
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1559,12 +1567,4 @@ mod tests {
             "a button's rows go to the tree"
         );
     }
-}
-
-/// Now as this computer's clock has it: the pickers' today and Şimdi (the forms' too).
-fn local_now() -> kentos_ui::attribute::DateTime {
-    kentos_ui::attribute::DateTime::now(
-        kentos_interaction::time_version::LOCAL_OFFSET.load(std::sync::atomic::Ordering::Relaxed)
-            / 60,
-    )
 }

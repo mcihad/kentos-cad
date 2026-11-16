@@ -99,8 +99,7 @@ fn reach(app: &mut App, body: Vec<Value>) -> Reach {
         app.extension_panel_view(),
         Box::new(Survey(Arc::clone(&found))),
     );
-    let reach = *found.lock().expect("counted");
-    reach
+    *found.lock().expect("counted")
 }
 
 /// The components the measured ones name: a layer picker, a feature picker and a table.

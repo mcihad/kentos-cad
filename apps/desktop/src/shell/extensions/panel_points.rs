@@ -56,8 +56,7 @@ pub(super) fn point_field<'a>(
             pick,
             Tip::new("Haritadan seç").body("Noktayı haritada gösterin (kenetlenir); Esc vazgeçer."),
             iced::widget::tooltip::Position::Top,
-        )
-        .into(),
+        ),
         press,
     );
     row![field, pick]
@@ -98,8 +97,7 @@ pub(super) fn shape_field<'a>(
                 "Şekli haritada çizin (kenetlenir); Enter ya da çift tık bitirir, Esc vazgeçer.",
             ),
             iced::widget::tooltip::Position::Top,
-        )
-        .into(),
+        ),
         drawing,
     );
     let clear = super::panel_view::keyed(clear.into(), clearing);
