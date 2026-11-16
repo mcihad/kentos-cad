@@ -306,25 +306,32 @@ asma tavanla 2,60; bütün mahal gövdeleri kapalı), eğri binanın odaları ka
     (zar katmanı yok: kesitin plağı hacim ister; 0 katmanı kaldırır); toplam en çok 2 m; malzeme boş ya da kenarı
     boşluklu olamaz. `.kcad` mimari verisi 8.
 25. **Kesitte:** her yüzde her katman bir eğik plak, üstündekinin altında, kendi EK-4 katmanında (MM-CKAP-KIREMIT,
-    MM-CKAP-GENEL, MM-CKTA-CAM…: malzemesi, kaplamanınki verilmemişse çatının kaplaması, öbürlerininki GENEL); döşeme
-    katmanları gibi ısı yalıtımı SN55 ile taranır, mertek çatının taşıyıcısı olarak tek kalınlıktaki çatı gibi SN23 ile
-    ve kalın çizgiyle; öbürleri ince çizgiyle (kiremidin SN53'ü kitaplıkta yok, kaplama ağaç diye taranmaz). Pencere ve
-    kar siperliği çizgileri ve yüzey adı en üst katmandadır.
-26. **IFC'de:** katmanlı çatı tek malzeme yerine bir `IfcMaterialLayerSet` ("Çatı katmanları") taşır, katmanlar üstten
+    MM-CKAP-GENEL, MM-CKTA-CAM…: malzemesi, kaplamanınki verilmemişse çatının kaplaması, öbürlerininki GENEL); mertek
+    çatının taşıyıcısı olarak tek kalınlıktaki çatı gibi SN23 ile taranır ve kalın çizilir; öbürleri ince çizgiyle
+    (kiremidin SN53'ü kitaplıkta yok, kaplama ağaç diye taranmaz). Pencere ve kar siperliği çizgileri ve yüzey adı en üst
+    katmandadır.
+26. **Kesitte ısı yalıtımı katmana oturur** (`geom::zigzag::fitted`): kesilen her yalıtım bandı TS 5319 SN55'in tek
+    zikzağıdır, bandın iki uzun yüzü arasında, adımı kalınlığın yarısı, noktaları iki yüzde sırayla (ADR 8014'ün planda
+    duvar katmanı için koyduğu kural); bant, dışbükey zarfının en dar olduğu kenar boyunca uzanır, kalınlığı o
+    genişliktir; çizgi bandın çevresine kırpılır; kâğıtta 1 mm'den ince bant simgesiz kalır. Döşemelerin kesilen yalıtımı
+    da artık böyledir. Kitaplığın 2 mm'lik döşenmiş satırları ince ve eğik bantta kırık parçalara bölünüyordu (sahibin
+    16 Kasım 2026'daki uyarısı: "çizgiler kırık").
+27. **IFC'de:** katmanlı çatı tek malzeme yerine bir `IfcMaterialLayerSet` ("Çatı katmanları") taşır, katmanlar üstten
     aşağı: Name türün sözcüğü; Material verilen malzeme (kaplamanınki verilmemişse çatının kaplaması), verilmemişse boş;
     LayerThickness yüze dik kalınlık; Category IFC 4.3'ün sözcükleriyle: kaplama 'Outer finish', ısı yalıtımı
     'Insulation', mertek 'LoadBearing', öbürleri boş. Takım `IfcRoof`'a bağlanır; gövdesi çatının kendisindedir (ADR
     8044), her yüzün katmanları kapalı plaklardır.
-27. **Arayüz:** Öznitelikler'de "Çatı katmanları" bölümü: altı tür üstten aşağı, kalınlığı yazılan katman yerine girer
+28. **Arayüz:** Öznitelikler'de "Çatı katmanları" bölümü: altı tür üstten aşağı, kalınlığı yazılan katman yerine girer
     ya da değişir, boş ya da 0 kaldırır; katmanın hemen altında "Malzeme"; "Toplam kalınlık". Geometri'de "Kalınlık"
     katmansız çatıda yazılır, katmanlıda katmanlarının toplamıdır ("çatı yüzüne dik" notuyla). Her değişiklik
     `cad.arch.edit`'in `layers`'ı ile tek geri alma adımıdır; `cad.roofs.create` de `layers` alır. Yeni komut, araç ya da
     şerit düğmesi yok.
 
-**Sınama.** `kentos-ifc`'nin `a_layered_roof_is_one_material_layer_set`'i (adlar, boş malzeme, roller, bir malzeme bir
-kez); `roof_sections::a_layered_roof_is_its_layers_plates_cut_in_the_section_and_one_ifc_layer_set` (kesit binasının
+**Sınama.** `geom::zigzag`'ın dört sınaması (yatay, eğik, dik bant; ince bant simgesiz); `kentos-ifc`'nin
+`a_layered_roof_is_one_material_layer_set`'i (adlar, boş malzeme, roller, bir malzeme bir kez); `roof_sections::a_layered_roof_is_its_layers_plates_cut_in_the_section_and_one_ifc_layer_set` (kesit binasının
 %33'lük kırma çatısı beş katmanla: dört yüzde beşer plak, düşeyde t · √1,1089, her biri üstündekinin altında, EK-4
-katmanları; B-B'de SN55 ve SN23, her katmanın çizgisi; IFC'de takım; gövdeler kapalı); `curved_ifc_check.py`'nin çatı
+katmanları; B-B'de yalıtımın zikzağı her dişi √(0,05² + 0,025²) (döşemelerinki kendi kalınlıklarıyla), mertekte SN23,
+her katmanın çizgisi; IFC'de takım; gövdeler kapalı); `curved_ifc_check.py`'nin çatı
 bölümü `katmanli-cati.ifc`'yi IfcOpenShell'le okur: 0 bulgu, takım beş katmanıyla geri okunur, yüzey kapalı, hacim
 13,25 · 10,25 · 0,26 · √1,1089 (10⁻⁹), en alt 6,00 − 0,26 · √1,1089, en üst 6,00 + 0,33 · 10,25 / 2; `.kcad`'ın
 `a_layered_roof_round_trips_under_arch_data_8`'i (sırası bozuk ve kalınlığı ayrıca verilen reddedilir); masaüstünde

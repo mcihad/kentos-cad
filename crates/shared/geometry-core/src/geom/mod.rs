@@ -52,5 +52,6 @@ pub mod wall;
 pub mod wall_partition;
 pub mod wall_join;
 pub mod wall_network;
+pub mod zigzag;
 
 pub mod plot_outline;

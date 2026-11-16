@@ -254,7 +254,8 @@ fn covering_look(c: &kentos_commands::Covering, material: Option<&str>) -> Look 
     }
 }
 
-/// A slab layer's look: its element (EK-2 Tablo 2.3) and material; insulation hatched by TS 5319 (SN55).
+/// A slab layer's look: its element (EK-2 Tablo 2.3) and material; insulation TS 5319's SN55, drawn cut as one zigzag
+/// fitted between its sides (`geom::zigzag`, docs/adr/8071 §8).
 fn slab_layer_look(kind: SlabLayerKind, material: Option<&str>) -> Look {
     let (element, fill) = match kind {
         SlabLayerKind::Finish => ("ZMNK", None),
@@ -1227,9 +1228,10 @@ fn roof_look(r: &kentos_commands::RoofFields) -> Look {
 }
 
 /// A roof layer's look in a section (docs/adr/8071 §8): on its EK-2 element (Çatı Kaplama, Su Yalıtımı, Çatı Kaplama
-/// Tahtası, Isı Yalıtımı, Çatı Taşıyıcı) by its material (the covering's the roof's, else Genel); hatched as a slab's
-/// layers are, the insulation by TS 5319 SN55, and the rafters, the roof's structure, as the one build-up was (SN23
-/// "ağaç malzeme"), outlined heavy; the others outlined (a tile covering's SN53 "seramik" is not in the library).
+/// Tahtası, Isı Yalıtımı, Çatı Taşıyıcı) by its material (the covering's the roof's, else Genel); the insulation TS 5319
+/// SN55 as a slab's (its zigzag fitted between its sides), the rafters, the roof's structure, hatched as the one
+/// build-up was (SN23 "ağaç malzeme") and outlined heavy; the others outlined (a tile covering's SN53 "seramik" is not in
+/// the library).
 fn roof_layer_look(l: &kentos_commands::RoofLayer, r: &kentos_commands::RoofFields) -> Look {
     use kentos_commands::RoofLayerKind as K;
     let detail = match (&l.material, l.kind) {
@@ -2460,6 +2462,10 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
         (String, String),
         (Look, Vec<kentos_geometry_core::geom::arrangement::Area>),
     > = BTreeMap::new();
+    // TS 5319's insulation fitted to each cut layer (docs/adr/8014, 8071 §8): one zigzag between its two long sides, as
+    // a wall's in plan; the library's rows, tiled at 2 mm, break into pieces in a thinner or a sloping band.
+    let least = kentos_geometry_core::geom::wall::ZIGZAG_MIN_MM * plot / 1000.0;
+    let mut zigzags: Vec<(String, Option<String>, Vec<P>)> = Vec::new();
     for c in &s.cut {
         let look = &m.looks[c.solid];
         let area = area_of(&c.ring);
@@ -2468,7 +2474,15 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
             .or_insert_with(|| (look.clone(), Vec::new()))
             .1
             .push(area.clone());
-        if let Some(f) = &look.fill {
+        if let Some(f) = look
+            .fill
+            .as_ref()
+            .filter(|f| f.pattern.eq_ignore_ascii_case(kentos_geometry_core::geom::wall::FITTED_INSULATION))
+        {
+            for line in kentos_geometry_core::geom::zigzag::fitted(&c.ring, least) {
+                zigzags.push((format!("{}-T", look.layer), f.color.clone(), line));
+            }
+        } else if let Some(f) = &look.fill {
             let k = format!(
                 "{}|{}|{}|{}",
                 f.pattern,
@@ -2513,6 +2527,14 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
             }
             out.put(&format!("{}-T", look.layer), v);
         }
+    }
+    for (layer, color, line) in &zigzags {
+        let pts: Vec<Value> = line.iter().map(|q| json!({"x": q.x, "y": q.y})).collect();
+        let mut v = json!({"kind": "polyline", "pts": pts, "closed": false, "lineWeight": HATCH});
+        if let Some(c) = color {
+            v["color"] = json!(c);
+        }
+        out.put(layer, v);
     }
     for (look, areas) in outlines.values() {
         for a in kentos_geometry_core::geom::region::union_areas(areas) {

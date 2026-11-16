@@ -755,7 +755,8 @@ fn a_flue_in_its_walls_and_the_chimney_over_it_are_one_ifc_chimney_and_a_niche_a
 /// 3 cm, çam kaplama tahtası 2.5 cm, ısı yalıtımı 5 cm, çam mertek 12.5 cm — each thick across its face. Worked out here:
 /// on each of its four faces five plates, each under the one over it and upright its thickness × √(1 + 0.33²), on its
 /// EK-2 element's layer (MM-CKAP-KIREMIT, MM-CKAP-GENEL, MM-CKTA-CAM, MM-ISYA-GENEL, MM-CTAS-CAM); B-B cuts each one: the
-/// insulation hatched as insulation, the rafters as wood, the others outlined. In the IFC model the roof is one material
+/// insulation its zigzag fitted between its sides, the rafters hatched as wood, the others outlined. In the IFC model the
+/// roof is one material
 /// layer set of them in place of its material: each layer its kind's word, its material (unsaid where not given), its
 /// thickness and its role; its body closed (`KENTOS_WRITE_IFC_ROOF_LAYERS=1` writes fixtures/arch/v1/ifc/katmanli-cati.ifc
 /// for scripts/fixtures/curved_ifc_check.py's roof part).
@@ -808,7 +809,7 @@ fn a_layered_roof_is_its_layers_plates_cut_in_the_section_and_one_ifc_layer_set(
             assert_eq!(m.solids[i].finish.is_some(), n == 0, "its covering its top's finish");
         }
     }
-    // B-B cuts every layer: the insulation hatched as insulation, the rafters as wood, each outlined on its layer.
+    // B-B cuts every layer: the insulation its zigzag, the rafters hatched as wood, each outlined on its layer.
     let b = mark(&doc, ViewMarkForm::Section, "B");
     let out = derive(&mut doc, b);
     assert!(!out.left_out.iter().any(|l| l.why == BuildingSectionLeft::Roof), "{:?}", out.left_out);
@@ -819,7 +820,41 @@ fn a_layered_roof_is_its_layers_plates_cut_in_the_section_and_one_ifc_layer_set(
             _ => None,
         })
     };
-    assert!(hatch("mm-isya-genel-t").is_some_and(|p| p.contains("SN55")), "the insulation's hatch");
+    // The insulation: TS 5319's zigzag fitted between its sides (docs/adr/8014), one on each long face's band, every
+    // whole side of its vees 5 cm across and 2.5 cm along it (the slabs' insulation, on the same layer, theirs: the
+    // ground slab's 5 cm, the terrace's 8 cm with 8 and 4); no tiled rows broken by the sloping band.
+    let zigzags: Vec<Vec<(f64, f64)>> = block
+        .entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Polyline(p) if p.base.layer_id == "mm-isya-genel-t" && !p.closed => {
+                Some(p.pts.iter().map(|q| (q.x, q.y)).collect())
+            }
+            _ => None,
+        })
+        .collect();
+    let side = |t: f64| (t * t + t * t / 4.0).sqrt();
+    let mut roof_zigzags = 0;
+    for z in &zigzags {
+        let sides: Vec<f64> = z[1..z.len() - 1]
+            .windows(2)
+            .map(|w| ((w[1].0 - w[0].0).powi(2) + (w[1].1 - w[0].1).powi(2)).sqrt())
+            .collect();
+        let t = if sides.iter().all(|d| (d - side(0.05)).abs() < 1e-9) {
+            roof_zigzags += 1;
+            0.05
+        } else {
+            0.08
+        };
+        assert!(sides.iter().all(|d| (d - side(t)).abs() < 1e-9), "{t}: {sides:?}");
+        assert!(z.len() > 100, "{} points", z.len());
+    }
+    assert_eq!(roof_zigzags, 2 + 1, "the two long faces' bands and the ground slab's 5 cm insulation");
+    // The roof's two, from each eaves (+6.00 less the band's depth) up to the ridge (+7.69 less the layers over it).
+    let roof: Vec<&Vec<(f64, f64)>> = zigzags.iter().filter(|z| z.iter().all(|q| q.1 > 5.0)).collect();
+    assert_eq!(roof.len(), 2 + 1, "and the terrace's, under the eaves");
+    assert_eq!(roof.iter().filter(|z| z.iter().any(|q| q.1 > 7.0)).count(), 2);
+    assert!(hatch("mm-isya-genel-t").is_none(), "no tiled rows");
     assert!(hatch("mm-ctas-cam-t").is_some_and(|p| p.contains("SN23")), "the rafters' hatch");
     assert!(hatch("mm-ckap-kiremit-t").is_none(), "tiles are no wood");
     for layer in ["mm-ckap-kiremit", "mm-ckap-genel", "mm-ckta-cam", "mm-isya-genel", "mm-ctas-cam"] {
