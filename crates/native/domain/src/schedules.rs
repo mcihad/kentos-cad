@@ -162,6 +162,18 @@ impl Document {
                 .is_none_or(|ts| kind_of(e).is_some_and(|k| ts.contains(&k)))
     }
 
+    /// A curtain wall's cell in the doors and windows' schedule (docs/adr/8070 §9): its form Giydirme cephe, its width its
+    /// length, its type, height, area, storey, phase, count and attributes a wall's; what only an opening has (its number,
+    /// sill, head, wall, code and sizes) empty. Its cells are not written from the schedule: none is an opening's field.
+    fn curtain_value(&self, e: &Entity, place: &str, attr: Option<&str>) -> Option<ArchValue> {
+        match place {
+            "form" => Some(ArchValue::Text(crate::arch_values::CURTAIN_WALL.to_owned())),
+            "width" => self.arch_value(e, "length", None),
+            "type" | "height" | "area" | "level" | "phase" | "count" | "attr" => self.arch_value(e, place, attr),
+            _ => None,
+        }
+    }
+
     /// Whether an insert is a fixture a schedule lists: not an external reference's or an underlay's.
     fn fixture(&self, e: &Entity) -> bool {
         match e {
@@ -647,7 +659,9 @@ impl Document {
             if of == ScheduleOf::Units {
                 break;
             }
-            if e.kind() != of.kind()
+            // A curtain wall is joinery too: a row of the doors and windows' schedule (docs/adr/8070 §9).
+            let curtain = of == ScheduleOf::Openings && matches!(e, Entity::Wall(w) if w.wall.curtain.is_some());
+            if (e.kind() != of.kind() && !curtain)
                 || !self.fixture(e)
                 || !self.schedule_takes(e, filter)
                 || out.contains(&Slot(e.base().id))
@@ -661,6 +675,8 @@ impl Document {
                         share_of(e, c.field)
                     } else if matches!(c.field, ScheduleField::Doors | ScheduleField::Windows) {
                         opening_of(e, c.field)
+                    } else if curtain {
+                        self.curtain_value(e, c.field.name(), c.attr.as_deref())
                     } else {
                         self.arch_value(e, c.field.name(), c.attr.as_deref())
                     }

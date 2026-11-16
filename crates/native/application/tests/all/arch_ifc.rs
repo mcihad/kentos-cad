@@ -518,3 +518,76 @@ fn a_post_and_a_rail_are_ifc_members_of_their_types() {
         std::fs::write(path, &text).expect("the file kept");
     }
 }
+
+/// B9's first acceptance (plan/bim-plan.md BIM-09; docs/adr/8070 §9): the section building with a ramp, a curtain wall,
+/// the library's lift and a post and a rail. Its IFC model leaves nothing out; each new element has its body in the
+/// section model (so the section, the elevation and the 3D view draw it) and its object in the file; the curtain wall is
+/// a row of the doors and windows' schedule, the lift of the fixtures' and the post of the columns'.
+#[test]
+fn the_sample_building_with_a_ramp_a_curtain_wall_and_a_lift_leaves_nothing_out() {
+    use kentos_commands::{CallOp, ScheduleOf};
+    use kentos_native_application::{ExecutionContext, registry, sections};
+    let mut doc = building();
+    let run = |doc: &mut Document, name: &str, input: serde_json::Value| -> serde_json::Value {
+        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).unwrap();
+        assert_eq!(answer["status"], "completed", "{name}: {answer}");
+        answer
+    };
+    let uid = |answer: &serde_json::Value| {
+        answer["output"]["uids"][0]
+            .as_str()
+            .or_else(|| answer["output"]["uid"].as_str())
+            .unwrap()
+            .to_owned()
+    };
+    let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
+    let ramp = uid(&run(&mut doc, "cad.ramps.create", serde_json::json!({"layerId": "0", "ramps": [{
+        "pts": [p(30.0, 0.0), p(36.0, 0.0), p(36.0, 4.0)], "width": 1.5, "rise": 0.75, "arch": {"level": "zemin"}
+    }]})));
+    let curtain = uid(&run(&mut doc, "cad.walls.create", serde_json::json!({"layerId": "0", "walls": [{
+        "pts": [p(20.0, -3.0), p(26.0, -3.0)], "width": 0.15, "height": 3.0, "arch": {"level": "zemin"},
+        "curtain": {"spacing": 1.5, "rows": 1.2, "panel": "Cam", "frames": "Alüminyum"}
+    }]})));
+    let library = include_str!("../../../../../catalog/v1/blocks/kentos-temel.kblok");
+    run(&mut doc, "cad.blocks.edit", serde_json::json!({"operation": "import", "library": library}));
+    let lift = uid(&run(&mut doc, "cad.blocks.insert", serde_json::json!({
+        "name": "Asansör", "at": p(5.0, 6.0), "layerId": "0", "arch": {"level": "zemin"},
+        "attributes": {"KISI": "8", "YUK": "630"}
+    })));
+    let post = uid(&run(&mut doc, "cad.columns.create", serde_json::json!({"layerId": "0", "columns": [{
+        "at": p(28.0, 2.0), "width": 0.1, "height": 2.4, "material": "Çelik", "member": {"predefined": "POST"},
+        "arch": {"level": "zemin"}
+    }]})));
+    let rail = uid(&run(&mut doc, "cad.beams.create", serde_json::json!({"layerId": "0", "beams": [{
+        "pts": [p(27.0, 0.0), p(29.0, 0.0)], "width": 0.05, "height": 0.1, "baseOffset": 1.0, "material": "Çelik",
+        "member": {"predefined": "USERDEFINED", "name": "Kayıt"}, "arch": {"level": "zemin"}
+    }]})));
+    // Every new element's body in the section model.
+    let m = sections::model(&doc);
+    for (what, u) in [("rampa", &ramp), ("giydirme cephe", &curtain), ("asansör", &lift), ("dikme", &post), ("kayıt", &rail)] {
+        assert!(m.owners.iter().any(|o| o.as_deref() == Some(u.as_str())), "{what} kesit modelinde yok");
+    }
+    // The IFC model: nothing left out, each its class.
+    let (b, written) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
+    assert_eq!(written.left, Vec::new(), "the loss list is empty");
+    let class_of = |u: &str| {
+        let id = kentos_domain::Uuid::parse_str(u).unwrap().as_u128();
+        b.elements.iter().find(|e| e.id == Some(id)).map(|e| e.class)
+    };
+    assert_eq!(class_of(&ramp), Some(Class::Ramp));
+    assert_eq!(class_of(&curtain), Some(Class::CurtainWall));
+    assert_eq!(class_of(&lift), Some(Class::TransportElement));
+    assert_eq!(class_of(&post), Some(Class::Member));
+    assert_eq!(class_of(&rail), Some(Class::Member));
+    // The schedules: the curtain wall among the doors and windows, the lift among the fixtures, the post among the
+    // columns.
+    let listed = |of: ScheduleOf, u: &str| {
+        doc.schedule_rows(of, &of.default_columns(), None, &[], false, false)
+            .members
+            .iter()
+            .any(|row| row.iter().any(|m| m == u))
+    };
+    assert!(listed(ScheduleOf::Openings, &curtain), "the curtain wall in the doors and windows' schedule");
+    assert!(listed(ScheduleOf::Fixtures, &lift), "the lift in the fixtures' schedule");
+    assert!(listed(ScheduleOf::Columns, &post), "the post in the columns' schedule");
+}

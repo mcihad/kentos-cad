@@ -4,7 +4,8 @@
   [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-03; uygulama sırasında B9. Bu ADR maddenin bütün adımlarını tutar; her adım
   kendi bölümüdür ve koddaki "docs/adr/8070 §N" atıfları bu bölümleri gösterir: §1 rampanın gövdesi, §2 merdiven ve
   rampanın tipi ve malzemesi, §3 baca ve niş, §4 aks ızgarası, §5 kitaplık blokları, §6 kaplama, §7 giydirme cephe,
-  §8 dikme ve kayıt. Kararların numarası bölümler boyunca sürer (1–28). Birden çok adımın ortak sınamaları ve sıradaki
+  §8 dikme ve kayıt, §9 çizelgeler, dışa aktarmanın sayıları ve ilk kabul. Kararların numarası bölümler boyunca sürer
+  (1–31). Birden çok adımın ortak sınamaları ve sıradaki
   adımlar numarasız son bölümlerdedir (yeni adım numaralı bölüm olarak araya girer).
 - **Bağlam:** ADR [8047](8047-ifc-building-export.md) (binanın IFC'si, kayıp listesi), [8042](8042-section-derived-from-a-section-mark.md)
   (kesit modeli), [0705](0705-ramps-by-slope-and-railings.md) ve [0723](0723-ramp-landings-levels-accessibility.md) (rampa),
@@ -392,6 +393,50 @@
   iki kayıt ve dört ahşap mertek; plan, doğu görünüşü, kuzeydoğudan 3B; açık ve koyu) ve
   `.run/gui-evidence/ikon-dikme-kayit/secenekler.png`.
 
+## §9. Çizelgede, dışa aktarmanın sayıları ve ilk kabul
+
+**Araştırma.**
+
+- **Planın ilk kabulü** (bim-plan BIM-09): "rampalı, giydirme cepheli, asansörlü örnek binada dışa aktarmanın kayıp
+  listesi boş. Her yeni eleman planda, kesitte, 3B'de ve çizelgede"; giydirme cephe "doğrama listesinde".
+- **Doğrama listesi:** Türkiye'de planda doğrama kodu yazılır, doğrama listesi kapıları, pencereleri ve öbür doğramaları
+  kodlarıyla bir arada sayar (ADR 8028'in araştırması); KentOS'un doğrama listesi Kapı ve pencere çizelgesidir (ADR
+  0344). Yönetmeliğin eklerinde doğrama listesi yalnız EK-2'nin Doğrama (DOGR) öğesi olarak geçer.
+
+**Karar.**
+
+29. **Giydirme cephe doğrama listesinde:** Kapı ve pencere çizelgesi giydirme cepheleri de satır olarak alır, çizimin
+    sırasıyla açıklıkların arasında: Biçim "Giydirme cephe", Tür stilinin adı (stilsiz: "Giydirme cephe"), Genişlik boyu;
+    Yükseklik, Alan, Kat, Tadilat, Adet ve öznitelikler duvarınki; açıklığın kendi alanları (No, Denizlik, Lento, Duvar,
+    kod, ölçüler) boş (`Document::curtain_value`). Satırı salt okunurdur: hücrelerinden hiçbiri açıklığın alanı değil
+    (`cell_computed`). Biçim süzgeci verilince alınmaz (biçimlerden biri değil). Duvar çizelgesinde stilsiz giydirme
+    cephenin türü de "Giydirme cephe".
+30. **Dikme Kolon çizelgesinde,** türü kendi türü yoksa elemanın adı ("Dikme"). Kayıt bir çizelgede değildir: KentOS'un
+    kiriş çizelgesi yok, metrajın Kirişler tablosu da kaydı saymaz (karar 26). Rampa metrajın Rampalar tablosunda,
+    kitaplığın asansörü, vitrifiyesi ve mobilyası Donatı çizelgesinde; baca ve aks bir çizelgenin nesnesi değildir.
+31. **Dışa aktarmanın sayıları:** `IfcBuildingExported` rampa, baca (duvarın bacaları ve üstündeki çatı bacası bir),
+    giydirme cephe, eleman (dikme, kayıt, giydirme cephenin dikme ve kayıtları), donatı ve aks sayılarını da verir;
+    duvar, kolon ve kiriş sayıları giydirme cepheyi, dikmeyi ve kaydı saymaz (kendi sınıflarıdır). Masaüstünün iletisi
+    sıfır olmayanları ekler. Komutun `export_losses` anlatımındaki "rampa henüz yazılmıyor" düştü; tek yönlü akslar
+    eklendi.
+
+**Sınama.**
+
+- **İlk kabul** (`arch_ifc::the_sample_building_with_a_ramp_a_curtain_wall_and_a_lift_leaves_nothing_out`): bölüm
+  binasına L rampa, 6 m'lik giydirme cephe, kitaplığın Asansör'ü (8 kişi, 630 kg), bir dikme ve bir kayıt. Her birinin
+  kesit modelinde gövdesi var (kesit, görünüş ve 3B onu çizer); IFC'de IfcRamp, IfcCurtainWall, IfcTransportElement ve
+  iki IfcMember; kayıp listesi boş. Giydirme cephe Kapı ve pencere çizelgesinde, asansör Donatı çizelgesinde, dikme Kolon
+  çizelgesinde.
+- **Ortak durumlar** (başvuru `scripts/fixtures/tag_command_cases.py`, KentOS kodu olmadan): `cad.schedules.create`'e 6
+  (doğrama listesinde giydirme cephe: biçimi ve türü Giydirme cephe, genişliği 6,000, yüksekliği 3,000; türe göre grupta
+  18,00 m² ve adedi; biçim süzgeci almaz; kat süzgecinde kendi katı; Duvar çizelgesinde türü; Kolon çizelgesinde dikme),
+  `cad.schedules.edit`'e 2 (giydirme cephe satırının genişliği ve numarası yazılmaz). `cad.arch.ifc`'ye 1 (giydirme cephe,
+  dikme ve kayıt: 1 giydirme cephe, 23 eleman; duvar, kolon ve kiriş sayıları değişmez) ve bütün durumlarda yeni sayılar
+  (bölüm binasında 7 aks, tek yönlü takımda 0); başvurunun kuralları (`arch_ifc_cases.py`: giydirme cephenin çerçeve
+  sayısı, aksların iki yön kuralı) KentOS kodu olmadan. Etiket ve çizelge komutlarının bütün durumları ve `cad.arch.ifc`'nin
+  24 durumu geçti.
+- **Masaüstü:** kesişen süzgeçler ve IFC, çizelge sınamaları 246 sınamayla geçti.
+
 ## Ortak sınamalar
 
 - **Bağımsız okuyucu** (`scripts/fixtures/arch_ifc_check.py`, IfcOpenShell 0.9.0.post1, KentOS kodu olmadan): yeniden
@@ -406,10 +451,10 @@
 
 - Eğimli eleman (mertek, payanda): kirişin ekseni düzlemde; eğik gövde sonraki adım. Elemanların kendi çizelgesi ve
   metrajı; aks kesişimlerine dikme.
-- Giydirme cephenin panel yerine kapısı ve penceresi; doğrama listesinde yeri; köşede iki giydirme cephenin ortak
-  dikmesi; panelin kendi malzeme katmanları.
+- Giydirme cephenin panel yerine kapısı ve penceresi; doğrama kodu (GC1); köşede iki giydirme cephenin ortak dikmesi;
+  panelin kendi malzeme katmanları.
 - Elle çizilen kaplama, asma tavanın gövdesi (`IfcCovering`), duvar kaplamasının kalınlığı.
 - Rampanın korkulukları (merdivenin de) kesit modelinde yok.
 - Kitaplık bloklarının gövdesi kutudur; gerçek biçim (lavabo çanağı, asılı klozetin altı) ve EN 81-20'nin kabin
   yüksekliği kaynağı gelince.
-- `IfcBuildingExported` sınıf sayıları (rampa, baca, aks, donatı, giydirme cephe) çıktıda yok; dosyada var.
+- Kiriş çizelgesi (kirişler, lentolar, hatıllar ve kayıtlar); baca ve aksın çizelgesi gerekirse.

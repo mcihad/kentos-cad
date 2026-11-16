@@ -71066,7 +71066,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.arch.ifc` v1: the file's path (absolute, ending `.ifc`); `stamp` the file's date and time\n(`YYYY-MM-DDThh:mm:ss`; absent: now, UTC); `overwrite` writes over a file that is there.\n\nRefusals, in this order: `invalid_file_path` (empty, relative, not `.ifc`, its folder not there), `file_exists`\n(without `overwrite`), `invalid_ifc` (a stamp that does not read; nothing to write: no wall, slab, column, beam,\nroof, railing, stair or room with a body). Warnings: `export_losses` (an object of the building the file does not\nhold: one the section model gives no body, an opening without its outline through a written wall, a room without\nan area, a ramp, not written yet; a curved wall or stair written as straight pieces).",
+        "description": "Input of `cad.arch.ifc` v1: the file's path (absolute, ending `.ifc`); `stamp` the file's date and time\n(`YYYY-MM-DDThh:mm:ss`; absent: now, UTC); `overwrite` writes over a file that is there.\n\nRefusals, in this order: `invalid_file_path` (empty, relative, not `.ifc`, its folder not there), `file_exists`\n(without `overwrite`), `invalid_ifc` (a stamp that does not read; nothing to write: no wall, slab, column, beam,\nroof, railing, stair or room with a body). Warnings: `export_losses` (an object of the building the file does not\nhold: one the section model gives no body, an opening without its outline through a written wall, a room without\nan area, grid axes all in one direction on their storey; a curved wall or stair written as straight pieces).",
         "properties": {
           "overwrite": {
             "type": "boolean"
@@ -71103,13 +71103,48 @@
             "type": "integer",
             "x-unit": "bytes"
           },
+          "chimneys": {
+            "default": 0,
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "columns": {
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
           },
+          "curtainWalls": {
+            "default": 0,
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "doors": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "fixtures": {
+            "default": 0,
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "gridAxes": {
+            "default": 0,
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "members": {
+            "default": 0,
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -71125,6 +71160,13 @@
             "type": "string"
           },
           "railings": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "ramps": {
+            "default": 0,
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -71216,13 +71258,48 @@
             "type": "integer",
             "x-unit": "bytes"
           },
+          "chimneys": {
+            "default": 0,
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "columns": {
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
           },
+          "curtainWalls": {
+            "default": 0,
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "doors": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "fixtures": {
+            "default": 0,
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "gridAxes": {
+            "default": 0,
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "members": {
+            "default": 0,
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -71238,6 +71315,13 @@
             "type": "string"
           },
           "railings": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "ramps": {
+            "default": 0,
             "format": "uint32",
             "minimum": 0,
             "type": "integer",

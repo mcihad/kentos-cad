@@ -39152,7 +39152,7 @@ class ExportIfcBuilding(_Model):
     (without `overwrite`), `invalid_ifc` (a stamp that does not read; nothing to write: no wall, slab, column, beam,
     roof, railing, stair or room with a body). Warnings: `export_losses` (an object of the building the file does not
     hold: one the section model gives no body, an opening without its outline through a written wall, a room without
-    an area, a ramp, not written yet; a curved wall or stair written as straight pieces).
+    an area, grid axes all in one direction on their storey; a curved wall or stair written as straight pieces).
     """
     path: str
     overwrite: bool | Unset = UNSET
@@ -48042,6 +48042,12 @@ class IfcBuildingExported(_Model):
         railings: Unit: count.
         stairs: Unit: count.
         bytes: Unit: bytes.
+        chimneys: Unit: count.
+        curtain_walls: Unit: count.
+        fixtures: Unit: count.
+        grid_axes: Unit: count.
+        members: Unit: count.
+        ramps: Unit: count.
     """
     path: str
     schema: str
@@ -48059,6 +48065,12 @@ class IfcBuildingExported(_Model):
     stairs: int
     bytes: int
     sha256: str
+    chimneys: int = 0
+    curtain_walls: int = 0
+    fixtures: int = 0
+    grid_axes: int = 0
+    members: int = 0
+    ramps: int = 0
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -48078,6 +48090,12 @@ class IfcBuildingExported(_Model):
         out["stairs"] = self.stairs
         out["bytes"] = self.bytes
         out["sha256"] = self.sha256
+        out["chimneys"] = self.chimneys
+        out["curtainWalls"] = self.curtain_walls
+        out["fixtures"] = self.fixtures
+        out["gridAxes"] = self.grid_axes
+        out["members"] = self.members
+        out["ramps"] = self.ramps
         return out
 
     @classmethod
@@ -48099,6 +48117,12 @@ class IfcBuildingExported(_Model):
             stairs=data["stairs"],
             bytes=data["bytes"],
             sha256=data["sha256"],
+            chimneys=data["chimneys"] if "chimneys" in data else 0,
+            curtain_walls=data["curtainWalls"] if "curtainWalls" in data else 0,
+            fixtures=data["fixtures"] if "fixtures" in data else 0,
+            grid_axes=data["gridAxes"] if "gridAxes" in data else 0,
+            members=data["members"] if "members" in data else 0,
+            ramps=data["ramps"] if "ramps" in data else 0,
         )
 
 

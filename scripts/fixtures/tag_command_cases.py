@@ -297,7 +297,10 @@ def value(d, i, place, attr=None):
              "level": text(level_name(f.get("arch")))}
         return m.get(place)
     if k == "column":
-        m = {"tag": text(f.get("tag")), "place": text(f.get("place")), "type": text(f.get("type")),
+        # A post's type is its member's words unless it has a type of its own (ADR 8070 §9).
+        member = f.get("member")
+        kind = f.get("type") or (member and (member.get("name") or MEMBER_WORDS.get(member["predefined"], member["predefined"])))
+        m = {"tag": text(f.get("tag")), "place": text(f.get("place")), "type": text(kind),
              "width": ("length", f["width"]), "level": text(level_name(f.get("arch")))}
         return m.get(place)
     if k == "wall":
@@ -308,7 +311,9 @@ def value(d, i, place, attr=None):
         holes = sum(o[2]["width"] * (o[2]["head"] - o[2].get("sill", 0.0)) for o in d.objs.values()
                     if o[0] == "opening" and o[2]["host"] == me and o[2].get("head") is not None)
         net = length * h - holes if h is not None else None
-        m = {"type": text(f.get("style")), "style": text(f.get("style")), "thickness": ("length", f["width"]),
+        # A curtain wall without a style is a curtain wall (ADR 8070 §9).
+        kind = f.get("style") or (CURTAIN_WALL if f.get("curtain") else None)
+        m = {"type": text(kind), "style": text(kind), "thickness": ("length", f["width"]),
              "width": ("length", f["width"]), "length": ("length", length),
              "height": ("length", h) if h is not None else None,
              "area": ("area", net) if net is not None else None,
@@ -327,6 +332,25 @@ def value(d, i, place, attr=None):
         if place == "width":
             return ("length", f["width"])
         return None
+    return None
+
+
+# What a curtain wall is called in a schedule, and a member type's words (ADR 8070 §8, §9).
+CURTAIN_WALL = "Giydirme cephe"
+MEMBER_WORDS = {"POST": "Dikme", "PURLIN": "Aşık", "RAFTER": "Mertek", "COLLAR": "Kuşak", "BRACE": "Payanda",
+                "STRUT": "Basınç çubuğu", "STUD": "Ara dikme", "PLATE": "Başlık kaydı", "STRINGER": "Limon",
+                "CHORD": "Başlık çubuğu", "MEMBER": "Çubuk", "MULLION": "Cephe dikmesi", "USERDEFINED": "Kullanıcı tanımlı"}
+
+
+def curtain_value(d, i, place, attr=None):
+    """A curtain wall's cell in the doors and windows' schedule (ADR 8070 §9): its form Giydirme cephe, its width its
+    length; its type, height, area, storey, count and attributes a wall's; an opening's own fields empty."""
+    if place == "form":
+        return ("text", CURTAIN_WALL)
+    if place == "width":
+        return value(d, i, "length")
+    if place in ("type", "height", "area", "level", "phase", "count", "attr"):
+        return value(d, i, place, attr)
     return None
 
 
@@ -1278,7 +1302,7 @@ def takes(d, i, flt):
         return False
     if "phases" in flt and arch.get("phase") not in flt["phases"]:
         return False
-    if "forms" in flt and f.get("form", "door") not in flt["forms"]:
+    if "forms" in flt and (k != "opening" or f.get("form", "door") not in flt["forms"]):
         return False
     return True
 
@@ -1292,10 +1316,13 @@ def add(a, b):
 def schedule_rows(d, src):
     of, columns = src["of"], src["columns"]
     rows = []
-    for i, (k, _, _, _) in sorted(d.objs.items()):
-        if k != KIND[of] or not takes(d, i, src.get("filter")):
+    for i, (k, _, f, _) in sorted(d.objs.items()):
+        # A curtain wall is joinery too: a row of the doors and windows' schedule (ADR 8070 §9).
+        curtain = of == "openings" and k == "wall" and bool(f.get("curtain"))
+        if (k != KIND[of] and not curtain) or not takes(d, i, src.get("filter")):
             continue
-        vals = [value(d, i, c["field"], c.get("attr")) for c in columns]
+        read = curtain_value if curtain else value
+        vals = [read(d, i, c["field"], c.get("attr")) for c in columns]
         rows.append({"vals": vals, "texts": [value_text(v, False) if v else "" for v in vals], "uids": [uid_of(i)]})
 
     def cmp(a, b):
@@ -1433,6 +1460,21 @@ def screate_step(d, op, inp, non_finite=None, conflict=False):
     return s
 
 
+# A curtain wall and a post (ADR 8070 §9), written after the prelude by their own commands.
+CURTAIN = {"pts": [P(0, 10), P(6, 10)], "width": 0.15, "height": 3.0, "arch": {"level": "zemin"},
+           "curtain": {"spacing": 1.5, "rows": 1.5}}
+POST = {"at": P(42, 3), "width": 0.1, "member": {"predefined": "POST"}}
+
+
+def drawn(d, kind, layer, command, key, f):
+    """An object another command writes after the prelude (ADR 8070 §9): its step (its result not this file's to say),
+    the reference drawing's copy of it."""
+    d.objs[d.next] = (kind, layer, copy.deepcopy(f), {})
+    d.next += 1
+    return {"op": "execute", "command": command, "note": "çizelgenin yeni satırı", "input": {"layerId": layer, key: [f]},
+            "result": ANY, "expect": {"revision": "changed"}}
+
+
 def screate_cases():
     c = Cases()
     one = {"layerId": "cizelge", "at": P(0, -10), "of": "openings"}
@@ -1495,6 +1537,21 @@ def screate_cases():
     next(e for e in setup["entities"] if e["id"] == 1).pop("style")
     c.cases.append({"name": "stilsiz duvardaki açıklıkların Duvar sütunu duvarın kalınlığını söyler", "setup": setup,
                     "steps": copy.deepcopy(PRELUDE) + [screate_step(d, "execute", one)]})
+    # A curtain wall among the doors and windows (ADR 8070 §9): its form and type Giydirme cephe, its width its length.
+    for name, inp in [
+        ("kapı ve pencere çizelgesinde giydirme cephe: biçimi ve türü Giydirme cephe, genişliği boyu", one),
+        ("giydirme cephenin alanı ve adedi türüne göre gruplanır",
+         {**one, "columns": [{"field": "type"}, {"field": "width"}, {"field": "area"}, {"field": "count"}], "group": True, "total": True}),
+        ("biçim süzgeci giydirme cepheyi almaz", {**one, "filter": {"forms": ["door", "window"]}}),
+        ("yalnız Zemin kat: giydirme cephenin katı kendi katı", {**one, "filter": {"levels": ["zemin"]}}),
+        ("duvar çizelgesinde giydirme cephenin türü Giydirme cephe", {"layerId": "cizelge", "at": P(0, -40), "of": "walls"}),
+    ]:
+        d = Drawing()
+        wall = drawn(d, "wall", "duvar", "cad.walls.create", "walls", CURTAIN)
+        c.add(name, [wall, screate_step(d, "execute", inp)])
+    d = Drawing()
+    post = drawn(d, "column", "kolon", "cad.columns.create", "columns", POST)
+    c.add("kolon çizelgesinde dikmenin türü Dikme", [post, screate_step(d, "execute", {"layerId": "cizelge", "at": P(0, -30), "of": "columns"})])
     return c.cases
 
 # ── Çizelgeyi düzenle ──────────────────────────────────────────────────────────────────────────────────────────
@@ -1669,6 +1726,14 @@ def sedit_cell_step(d, op, made, row, column, value):
 def sedit_cases():
     c = Cases()
     cell = lambda i, row, col, v: {"uid": uid_of(i), "operation": {"kind": "cell", "row": row, "column": col, "value": v}}
+    # A curtain wall's row is read only (ADR 8070 §9): none of its cells is an opening's field.
+    for name, col, v in [("giydirme cephe satırının genişliği yazılmaz", 3, "5"),
+                         ("giydirme cephe satırının numarası yazılmaz", 0, "GC1")]:
+        d = Drawing()
+        wall = drawn(d, "wall", "duvar", "cad.walls.create", "walls", CURTAIN)
+        made, i = created(d)
+        # Its row the sixth: the broken opening's, the four openings', then it.
+        c.add(name, [wall, made, sedit_step(d, "execute", cell(i, 6, col, v))])
     setop = lambda i, **kw: {"uid": uid_of(i), "operation": {"kind": "set", **kw}}
     d = Drawing()
     made, i = created(d)

@@ -52,11 +52,24 @@ impl App {
         };
         let result = arch_ifc::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
+            // The other classes it holds, those it has (docs/adr/8070 §9).
+            let more: String = [
+                (out.ramps, "rampa"),
+                (out.chimneys, "baca"),
+                (out.curtain_walls, "giydirme cephe"),
+                (out.members, "eleman"),
+                (out.fixtures, "donatı"),
+                (out.grid_axes, "aks"),
+            ]
+            .iter()
+            .filter(|(n, _)| *n > 0)
+            .map(|(n, what)| format!(", {n} {what}"))
+            .collect();
             self.say(
                 Level::Success,
                 format!(
                     "IFC 4.3 yazıldı: {} kat, {} duvar, {} kapı, {} pencere, {} mahal, {} döşeme, {} kolon, {} kiriş, \
-                     {} merdiven ({}).",
+                     {} merdiven{more} ({}).",
                     out.storeys,
                     out.walls,
                     out.doors,

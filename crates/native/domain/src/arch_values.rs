@@ -26,6 +26,10 @@ use kentos_geometry_core::geom::bulge::{bulge_at, bulge_path_length, segment_mid
 use crate::document::Document;
 use crate::text_fields::number_text;
 
+/// What a curtain wall is called in a schedule: its type without a style, its form among the doors and windows
+/// (docs/adr/8070 §9).
+pub const CURTAIN_WALL: &str = "Giydirme cephe";
+
 /// A value an object gives a tag or a schedule.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ArchValue {
@@ -368,7 +372,8 @@ impl Document {
                 match place {
                     "tag" => text(&x.tag),
                     "place" => text(&x.place),
-                    "type" => text(&x.kind),
+                    // A post's type is its member's words unless it has a type of its own (docs/adr/8070 §9).
+                    "type" => text(&x.kind).or_else(|| x.member.as_ref().map(|m| Text(m.words()))),
                     // Its size as its plan writes it (docs/adr/8041 §2): 30/50, Ø40.
                     "size" => Some(Text(x.size_text())),
                     "width" => Some(Length(x.width)),
@@ -381,9 +386,10 @@ impl Document {
                 let x = &w.wall;
                 let faces = || self.wall_faces(self.uid_of_entity(e).as_deref(), x);
                 match place {
-                    "type" | "style" => {
-                        text(&x.style).map(|_| Text(self.wall_style_name(x.style.as_deref())))
-                    }
+                    // A curtain wall without a style is a curtain wall (docs/adr/8070 §9).
+                    "type" | "style" => text(&x.style)
+                        .map(|_| Text(self.wall_style_name(x.style.as_deref())))
+                        .or_else(|| x.curtain.as_ref().map(|_| Text(CURTAIN_WALL.to_owned()))),
                     "thickness" | "width" => Some(Length(x.width)),
                     "length" => Some(Length(faces().0)),
                     "height" => self.wall_height(x).map(Length),

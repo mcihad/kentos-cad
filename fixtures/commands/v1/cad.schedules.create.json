@@ -8482,6 +8482,1776 @@
           }
         }
       ]
+    },
+    {
+      "name": "kapı ve pencere çizelgesinde giydirme cephe: biçimi ve türü Giydirme cephe, genişliği boyu",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 10.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 10.0
+                  }
+                ],
+                "width": 0.15,
+                "height": 3.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.5
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 0.0,
+              "y": -10.0
+            },
+            "of": "openings"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 18,
+              "rows": 6,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "table",
+                "id": 18,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 0.0,
+                  "y": -10.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "No",
+                    "Biçim",
+                    "Tür",
+                    "Genişlik (m)",
+                    "Yükseklik (m)",
+                    "Denizlik (m)",
+                    "Duvar"
+                  ],
+                  [
+                    "B1",
+                    "Boşluk",
+                    "",
+                    "0.600",
+                    "2.100",
+                    "0.000",
+                    ""
+                  ],
+                  [
+                    "K01",
+                    "Kapı",
+                    "Kapı 90",
+                    "0.900",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "P01",
+                    "Pencere",
+                    "Pencere 120",
+                    "1.200",
+                    "1.300",
+                    "0.900",
+                    "D20"
+                  ],
+                  [
+                    "K01",
+                    "Kapı",
+                    "Kapı 90",
+                    "0.900",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "",
+                    "Kapı",
+                    "Kapı 80",
+                    "0.800",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "",
+                    "Giydirme cephe",
+                    "Giydirme cephe",
+                    "6.000",
+                    "3.000",
+                    "",
+                    ""
+                  ]
+                ],
+                "header": true,
+                "source": {
+                  "kind": "schedule",
+                  "of": "openings",
+                  "columns": [
+                    {
+                      "field": "number"
+                    },
+                    {
+                      "field": "form"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "width"
+                    },
+                    {
+                      "field": "height"
+                    },
+                    {
+                      "field": "sill"
+                    },
+                    {
+                      "field": "wall"
+                    }
+                  ],
+                  "members": [
+                    [
+                      "$uidOf:10"
+                    ],
+                    [
+                      "$uidOf:12"
+                    ],
+                    [
+                      "$uidOf:13"
+                    ],
+                    [
+                      "$uidOf:14"
+                    ],
+                    [
+                      "$uidOf:15"
+                    ],
+                    [
+                      "$uidOf:17"
+                    ]
+                  ]
+                },
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "right",
+                  "right",
+                  "right",
+                  "left"
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 6,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 6,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 6,
+                    "rows": 6,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "giydirme cephenin alanı ve adedi türüne göre gruplanır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 10.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 10.0
+                  }
+                ],
+                "width": 0.15,
+                "height": 3.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.5
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 0.0,
+              "y": -10.0
+            },
+            "of": "openings",
+            "columns": [
+              {
+                "field": "type"
+              },
+              {
+                "field": "width"
+              },
+              {
+                "field": "area"
+              },
+              {
+                "field": "count"
+              }
+            ],
+            "group": true,
+            "total": true
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 18,
+              "rows": 5,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "table",
+                "id": 18,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 0.0,
+                  "y": -10.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Tür",
+                    "Genişlik (m)",
+                    "Alan (m²)",
+                    "Adet"
+                  ],
+                  [
+                    "",
+                    "0.600",
+                    "1.26",
+                    "1"
+                  ],
+                  [
+                    "Kapı 90",
+                    "0.900",
+                    "3.78",
+                    "2"
+                  ],
+                  [
+                    "Pencere 120",
+                    "1.200",
+                    "1.56",
+                    "1"
+                  ],
+                  [
+                    "Kapı 80",
+                    "0.800",
+                    "1.68",
+                    "1"
+                  ],
+                  [
+                    "Giydirme cephe",
+                    "6.000",
+                    "18.00",
+                    "1"
+                  ],
+                  [
+                    "Toplam",
+                    "",
+                    "26.28",
+                    "6"
+                  ]
+                ],
+                "header": true,
+                "source": {
+                  "kind": "schedule",
+                  "of": "openings",
+                  "columns": [
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "width"
+                    },
+                    {
+                      "field": "area"
+                    },
+                    {
+                      "field": "count"
+                    }
+                  ],
+                  "group": true,
+                  "total": true,
+                  "members": [
+                    [
+                      "$uidOf:10"
+                    ],
+                    [
+                      "$uidOf:12",
+                      "$uidOf:14"
+                    ],
+                    [
+                      "$uidOf:13"
+                    ],
+                    [
+                      "$uidOf:15"
+                    ],
+                    [
+                      "$uidOf:17"
+                    ]
+                  ]
+                },
+                "aligns": [
+                  "left",
+                  "right",
+                  "right",
+                  "right"
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 2,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 3,
+                    "rows": 5,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 6,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 4,
+                    "bold": true
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "biçim süzgeci giydirme cepheyi almaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 10.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 10.0
+                  }
+                ],
+                "width": 0.15,
+                "height": 3.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.5
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 0.0,
+              "y": -10.0
+            },
+            "of": "openings",
+            "filter": {
+              "forms": [
+                "door",
+                "window"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 18,
+              "rows": 4,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "table",
+                "id": 18,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 0.0,
+                  "y": -10.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "No",
+                    "Biçim",
+                    "Tür",
+                    "Genişlik (m)",
+                    "Yükseklik (m)",
+                    "Denizlik (m)",
+                    "Duvar"
+                  ],
+                  [
+                    "K01",
+                    "Kapı",
+                    "Kapı 90",
+                    "0.900",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "P01",
+                    "Pencere",
+                    "Pencere 120",
+                    "1.200",
+                    "1.300",
+                    "0.900",
+                    "D20"
+                  ],
+                  [
+                    "K01",
+                    "Kapı",
+                    "Kapı 90",
+                    "0.900",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "",
+                    "Kapı",
+                    "Kapı 80",
+                    "0.800",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ]
+                ],
+                "header": true,
+                "source": {
+                  "kind": "schedule",
+                  "of": "openings",
+                  "columns": [
+                    {
+                      "field": "number"
+                    },
+                    {
+                      "field": "form"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "width"
+                    },
+                    {
+                      "field": "height"
+                    },
+                    {
+                      "field": "sill"
+                    },
+                    {
+                      "field": "wall"
+                    }
+                  ],
+                  "filter": {
+                    "forms": [
+                      "door",
+                      "window"
+                    ]
+                  },
+                  "members": [
+                    [
+                      "$uidOf:12"
+                    ],
+                    [
+                      "$uidOf:13"
+                    ],
+                    [
+                      "$uidOf:14"
+                    ],
+                    [
+                      "$uidOf:15"
+                    ]
+                  ]
+                },
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "right",
+                  "right",
+                  "right",
+                  "left"
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 4,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 4,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 6,
+                    "rows": 4,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yalnız Zemin kat: giydirme cephenin katı kendi katı",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 10.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 10.0
+                  }
+                ],
+                "width": 0.15,
+                "height": 3.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.5
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 0.0,
+              "y": -10.0
+            },
+            "of": "openings",
+            "filter": {
+              "levels": [
+                "zemin"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 18,
+              "rows": 3,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "table",
+                "id": 18,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 0.0,
+                  "y": -10.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "No",
+                    "Biçim",
+                    "Tür",
+                    "Genişlik (m)",
+                    "Yükseklik (m)",
+                    "Denizlik (m)",
+                    "Duvar"
+                  ],
+                  [
+                    "K01",
+                    "Kapı",
+                    "Kapı 90",
+                    "0.900",
+                    "2.100",
+                    "0.000",
+                    "D20"
+                  ],
+                  [
+                    "P01",
+                    "Pencere",
+                    "Pencere 120",
+                    "1.200",
+                    "1.300",
+                    "0.900",
+                    "D20"
+                  ],
+                  [
+                    "",
+                    "Giydirme cephe",
+                    "Giydirme cephe",
+                    "6.000",
+                    "3.000",
+                    "",
+                    ""
+                  ]
+                ],
+                "header": true,
+                "source": {
+                  "kind": "schedule",
+                  "of": "openings",
+                  "columns": [
+                    {
+                      "field": "number"
+                    },
+                    {
+                      "field": "form"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "width"
+                    },
+                    {
+                      "field": "height"
+                    },
+                    {
+                      "field": "sill"
+                    },
+                    {
+                      "field": "wall"
+                    }
+                  ],
+                  "filter": {
+                    "levels": [
+                      "zemin"
+                    ]
+                  },
+                  "members": [
+                    [
+                      "$uidOf:12"
+                    ],
+                    [
+                      "$uidOf:13"
+                    ],
+                    [
+                      "$uidOf:17"
+                    ]
+                  ]
+                },
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "right",
+                  "right",
+                  "right",
+                  "left"
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 6,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "duvar çizelgesinde giydirme cephenin türü Giydirme cephe",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "duvar",
+            "walls": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 10.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 10.0
+                  }
+                ],
+                "width": 0.15,
+                "height": 3.0,
+                "arch": {
+                  "level": "zemin"
+                },
+                "curtain": {
+                  "spacing": 1.5,
+                  "rows": 1.5
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 0.0,
+              "y": -40.0
+            },
+            "of": "walls"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 18,
+              "rows": 3,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "table",
+                "id": 18,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 0.0,
+                  "y": -40.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Tür",
+                    "Kalınlık (m)",
+                    "Uzunluk (m)",
+                    "Yükseklik (m)",
+                    "Alan (m²)",
+                    "Hacim (m³)"
+                  ],
+                  [
+                    "D20",
+                    "0.200",
+                    "10.000",
+                    "3.000",
+                    "26.55",
+                    "5.31"
+                  ],
+                  [
+                    "D20",
+                    "0.200",
+                    "10.000",
+                    "",
+                    "",
+                    ""
+                  ],
+                  [
+                    "Giydirme cephe",
+                    "0.150",
+                    "6.000",
+                    "3.000",
+                    "18.00",
+                    "2.70"
+                  ]
+                ],
+                "header": true,
+                "source": {
+                  "kind": "schedule",
+                  "of": "walls",
+                  "columns": [
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "thickness"
+                    },
+                    {
+                      "field": "length"
+                    },
+                    {
+                      "field": "height"
+                    },
+                    {
+                      "field": "area"
+                    },
+                    {
+                      "field": "volume"
+                    }
+                  ],
+                  "members": [
+                    [
+                      "$uidOf:1"
+                    ],
+                    [
+                      "$uidOf:2"
+                    ],
+                    [
+                      "$uidOf:17"
+                    ]
+                  ]
+                },
+                "aligns": [
+                  "left",
+                  "right",
+                  "right",
+                  "right",
+                  "right",
+                  "right"
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 2,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 3,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 5,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kolon çizelgesinde dikmenin türü Dikme",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "note": "açıklıklar: kurulum kalıcı kimlik veremez",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "type": "Kapı 90",
+                "number": "K01",
+                "attrs": {
+                  "Malzeme": "Ahşap"
+                }
+              },
+              {
+                "host": "$uidOf:1",
+                "at": 6.0,
+                "type": "Pencere 120",
+                "number": "P01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 3.0,
+                "type": "Kapı 90",
+                "number": "K01"
+              },
+              {
+                "host": "$uidOf:2",
+                "at": 8.0,
+                "type": "Kapı 80"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.tags.create",
+          "note": "ilk açıklığın etiketi",
+          "input": {
+            "layerId": "etiket",
+            "tags": [
+              {
+                "of": "$uidOf:12",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.0
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.columns.create",
+          "note": "çizelgenin yeni satırı",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 42.0,
+                  "y": 3.0
+                },
+                "width": 0.1,
+                "member": {
+                  "predefined": "POST"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 0.0,
+              "y": -30.0
+            },
+            "of": "columns"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uid": "$uid",
+              "id": 18,
+              "rows": 3,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "entities": {
+              "18": {
+                "kind": "table",
+                "id": 18,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 0.0,
+                  "y": -30.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Etiket",
+                    "Konum",
+                    "Tür",
+                    "Genişlik (m)",
+                    "Kat"
+                  ],
+                  [
+                    "S1",
+                    "",
+                    "C30",
+                    "0.400",
+                    ""
+                  ],
+                  [
+                    "S2",
+                    "",
+                    "",
+                    "0.300",
+                    ""
+                  ],
+                  [
+                    "",
+                    "",
+                    "Dikme",
+                    "0.100",
+                    ""
+                  ]
+                ],
+                "header": true,
+                "source": {
+                  "kind": "schedule",
+                  "of": "columns",
+                  "columns": [
+                    {
+                      "field": "tag"
+                    },
+                    {
+                      "field": "place"
+                    },
+                    {
+                      "field": "type"
+                    },
+                    {
+                      "field": "width"
+                    },
+                    {
+                      "field": "level"
+                    }
+                  ],
+                  "members": [
+                    [
+                      "$uidOf:5"
+                    ],
+                    [
+                      "$uidOf:6"
+                    ],
+                    [
+                      "$uidOf:17"
+                    ]
+                  ]
+                },
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "right",
+                  "left"
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 1,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 1,
+                    "col": 4,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
     }
   ]
 }

@@ -12,6 +12,7 @@ building writes nothing. The file's content is arch_ifc_check.py's: IfcOpenShell
 """
 
 import copy
+import math
 import json
 import sys
 from pathlib import Path
@@ -49,23 +50,73 @@ def case(name, steps, setup=None):
     return c
 
 
+def curtain_frames(w):
+    """A curtain wall's mullions and transoms (ADR 8070 §7), worked out here: each straight stretch in as many equal bays
+    as leave none wider than its spacing, its height in as many equal rows likewise; a mullion on every vertical line of
+    a stretch (its two ends among them), a transom in each bay on every horizontal line (its foot and top among them)."""
+    pts = w["pts"] + ([w["pts"][0]] if w.get("closed") else [])
+    g, h = w["curtain"], w["height"]
+    rows = max(1, math.ceil(h / g["rows"] - 1e-9))
+    n = 0
+    for a, b in zip(pts, pts[1:]):
+        bays = max(1, math.ceil(math.hypot(b["x"] - a["x"], b["y"] - a["y"]) / g["spacing"] - 1e-9))
+        n += (bays + 1) + bays * (rows + 1)
+    return n
+
+
+def grid_axes(ents):
+    """The grid axes written (ADR 8070 §4): a storey's (none: the building's) axes make a grid when they run two ways,
+    those parallel to its first straight one and the rest; one way alone, none."""
+    by = {}
+    for e in ents:
+        if e["kind"] == "grid":
+            by.setdefault(e.get("arch", {}).get("level"), []).append(e)
+    n = 0
+    for gs in by.values():
+        first = next((g for g in gs if not g.get("bulges")), None)
+        if first is None:
+            continue
+        (a, b) = first["pts"]
+        ux, uy = b["x"] - a["x"], b["y"] - a["y"]
+
+        def parallel(g):
+            (p, q) = g["pts"]
+            return not g.get("bulges") and abs(ux * (q["y"] - p["y"]) - uy * (q["x"] - p["x"])) <= 1e-9
+        if any(not parallel(g) for g in gs):
+            n += len(gs)
+    return n
+
+
 def counts(d):
-    """How many of each class the file holds: the definition's objects by kind."""
+    """How many of each class the file holds: the definition's objects by kind; a curtain wall its own class and its
+    frames members, a post or a rail a member (ADR 8070 §8, §9)."""
     ents = d["entities"]
     kind = lambda k: [e for e in ents if e["kind"] == k]  # noqa: E731
     openings = kind("opening")
+    curtains = [w for w in kind("wall") if w.get("curtain")]
+    # No case has a chimney or a library block: their rules (the flue and the stack over it one; the card's class) are
+    # the application tests'.
+    assert not any(o["form"] == "flue" for o in openings) and not any(r.get("parts") for r in kind("roof"))
+    assert not kind("insert")
     return {"storeys": max(len(d["settings"].get("arch", {}).get("levels", [])), 1),
-            "walls": len(kind("wall")),
+            "walls": len(kind("wall")) - len(curtains),
             "doors": sum(o["form"] == "door" for o in openings),
             "windows": sum(o["form"] == "window" for o in openings),
             "openings": len(openings),
             "spaces": len(kind("space")),
             "slabs": len(kind("slab")),
-            "columns": len(kind("column")),
-            "beams": len(kind("beam")),
+            "columns": sum(1 for e in kind("column") if not e.get("member")),
+            "beams": sum(1 for e in kind("beam") if not e.get("member")),
             "roofs": len(kind("roof")),
             "railings": len(kind("railing")),
-            "stairs": len(kind("stair"))}
+            "stairs": len(kind("stair")),
+            "ramps": len(kind("ramp")),
+            "chimneys": 0,
+            "curtainWalls": len(curtains),
+            "members": sum(1 for e in kind("column") + kind("beam") if e.get("member"))
+            + sum(curtain_frames(w) for w in curtains),
+            "fixtures": 0,
+            "gridAxes": grid_axes(ents)}
 
 
 def output(path, d=SETUP):
@@ -80,6 +131,26 @@ def with_ramp():
                           "pts": [{"x": 5.3, "y": 12.0}, {"x": 5.3, "y": 9.25}], "width": 1.2, "rise": 0.15,
                           "slope": 5.0, "arch": {"level": "zemin"}})
     d["uids"].append(sb.uid(n))
+    return d
+
+
+def with_members():
+    """The building with a curtain wall south of it, a post and a rail (ADR 8070 §7, §8): the curtain wall one, its 5
+    mullions and 16 transoms members (6 m at 1.50: 4 bays; 3 m at 1.20: 3 rows), the post and the rail two more."""
+    d = copy.deepcopy(SETUP)
+    n = max(e["id"] for e in d["entities"]) + 1
+    P = lambda x, y: {"x": x, "y": y}  # noqa: E731
+    for k, e in enumerate([
+        {"kind": "wall", "layerId": "cizim", "pts": [P(20.0, -3.0), P(26.0, -3.0)], "width": 0.15, "height": 3.0,
+         "arch": {"level": "zemin"}, "curtain": {"spacing": 1.5, "rows": 1.2, "panel": "Cam", "frames": "Alüminyum"}},
+        {"kind": "column", "layerId": "kolon", "at": P(28.0, 2.0), "width": 0.1, "height": 2.4, "material": "Çelik",
+         "member": {"predefined": "POST"}, "arch": {"level": "zemin"}},
+        {"kind": "beam", "layerId": "kiris", "pts": [P(27.0, 0.0), P(29.0, 0.0)], "width": 0.05, "height": 0.1,
+         "baseOffset": 1.0, "material": "Çelik", "member": {"predefined": "USERDEFINED", "name": "Kayıt"},
+         "arch": {"level": "zemin"}},
+    ]):
+        d["entities"].append({"id": n + k, "attrs": {}, **e})
+        d["uids"].append(sb.uid(n + k))
     return d
 
 
@@ -125,6 +196,7 @@ def cases():
     path_words = "IFC'nin yolu boş ya da göreli; mutlak bir .ifc yolu verin."
     there = "$fixture:arch/v1/ifc/var.ifc"
     ramp = with_ramp()
+    members = with_members()
     lone = one_way()
     ground = ground_only()
     nothing = without_building()
@@ -144,6 +216,10 @@ def cases():
              [step("execute", {"path": "$tmp:bina-5.ifc", "stamp": STAMP},
                    completed(output("$tmp:bina-5.ifc", ramp)))],
              setup=ramp),
+        case("Giydirme cephe, dikme ve kayıt: kendi sınıflarıyla sayılır",
+             [step("execute", {"path": "$tmp:bina-21.ifc", "stamp": STAMP},
+                   completed(output("$tmp:bina-21.ifc", members)))],
+             setup=members),
         case("Tek yönde akslar ızgara olmaz ve söylenir",
              [step("execute", {"path": "$tmp:bina-20.ifc", "stamp": STAMP},
                    completed(output("$tmp:bina-20.ifc", lone),

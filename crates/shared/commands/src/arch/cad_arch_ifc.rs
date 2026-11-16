@@ -20,7 +20,7 @@ pub const CAD_ARCH_IFC_VERSION: u32 = 1;
 /// (without `overwrite`), `invalid_ifc` (a stamp that does not read; nothing to write: no wall, slab, column, beam,
 /// roof, railing, stair or room with a body). Warnings: `export_losses` (an object of the building the file does not
 /// hold: one the section model gives no body, an opening without its outline through a written wall, a room without
-/// an area, a ramp, not written yet; a curved wall or stair written as straight pieces).
+/// an area, grid axes all in one direction on their storey; a curved wall or stair written as straight pieces).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -71,6 +71,27 @@ pub struct IfcBuildingExported {
     pub railings: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub stairs: u32,
+    // Its ramps, chimneys (the flues in walls and the roof's stack over them one each), curtain walls, members (posts,
+    // rails and the curtain walls' mullions and transoms), fixtures (the library's blocks that are building elements:
+    // lifts, sanitary terminals, furniture) and grid axes (docs/adr/8070 §9).
+    #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub ramps: u32,
+    #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub chimneys: u32,
+    #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub curtain_walls: u32,
+    #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub members: u32,
+    #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub fixtures: u32,
+    #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub grid_axes: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: u64,
     pub sha256: String,

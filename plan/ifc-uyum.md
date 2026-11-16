@@ -320,7 +320,8 @@ nesnesiyle; bağımsız okuyucu şema kurallarında 0 bulgu; çatının ve merdi
 rampa, baca, niş, aks ızgarası, asansör, vitrifiye ve mobilya sınıfları; merdivenin tipi; kaplama mahal setiyle (K44);
 bağımsız okuyucu (IfcOpenShell) bölüm binasının dosyasında 0 bulgu; giydirme cephe (`IfcCurtainWall`, gövdesi panelleri:
 K45) ve dikme ile kayıtları (`IfcMember` MULLION, `IfcRelAggregates`), doğrulayıcıda 0 bulgu; dikme ve kayıt (`IfcMember`
-POST ve USERDEFINED, K46), doğrulayıcıda 0 bulgu. **Kalan:** DIGER durumu; kayıp listesinin örnek binada boşalması.
+POST ve USERDEFINED, K46), doğrulayıcıda 0 bulgu; rampalı, giydirme cepheli, asansörlü örnek binada kayıp listesi boş,
+`cad.arch.ifc` yeni sınıfları da sayar (ADR 8070 §9). **Kalan:** DIGER durumu.
 
 **Kullanıcı sonucu:** Modeldeki her yapı nesnesi kendi sınıfıyla dışa gider; emsal alanları ve bağımsız bölümler dosyadadır.
 Nesneleri BIM-08 ve BIM-09'dan gelir.

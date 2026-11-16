@@ -480,6 +480,13 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
         roofs: n(written.roofs),
         railings: n(written.railings),
         stairs: n(written.stairs),
+        // The elements of docs/adr/8070 (§9).
+        ramps: n(written.ramps),
+        chimneys: n(written.chimneys),
+        curtain_walls: n(written.curtain_walls),
+        members: n(written.members),
+        fixtures: n(written.fixtures),
+        grid_axes: n(written.grid_axes),
         bytes: text.len() as u64,
         sha256,
     };

@@ -5,4 +5,4 @@
  * openings are the `IfcOpeningElement`s, the doors and the windows filling them among them), its size and its
  * SHA-256.
  */
-export type IfcBuildingExported = { path: string, schema: string, storeys: number, walls: number, doors: number, windows: number, openings: number, spaces: number, slabs: number, columns: number, beams: number, roofs: number, railings: number, stairs: number, bytes: bigint, sha256: string, };
+export type IfcBuildingExported = { path: string, schema: string, storeys: number, walls: number, doors: number, windows: number, openings: number, spaces: number, slabs: number, columns: number, beams: number, roofs: number, railings: number, stairs: number, ramps: number, chimneys: number, curtainWalls: number, members: number, fixtures: number, gridAxes: number, bytes: bigint, sha256: string, };

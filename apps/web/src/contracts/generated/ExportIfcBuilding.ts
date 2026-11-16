@@ -8,6 +8,6 @@
  * (without `overwrite`), `invalid_ifc` (a stamp that does not read; nothing to write: no wall, slab, column, beam,
  * roof, railing, stair or room with a body). Warnings: `export_losses` (an object of the building the file does not
  * hold: one the section model gives no body, an opening without its outline through a written wall, a room without
- * an area, a ramp, not written yet; a curved wall or stair written as straight pieces).
+ * an area, grid axes all in one direction on their storey; a curved wall or stair written as straight pieces).
  */
 export type ExportIfcBuilding = { path: string, stamp?: string, overwrite?: boolean, };
