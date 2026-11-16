@@ -67,6 +67,13 @@ pub trait Host {
         None
     }
 
+    /// The agent this host serves, as a package its workshop packs records it (`generated`, docs/adr/8057 §76):
+    /// KentOS Asistan with its profile's model, or an MCP client by the name it gave; none for a host that serves no
+    /// agent (a test).
+    fn author(&self) -> Option<Author> {
+        None
+    }
+
     /// Opens a package for the user's review (the desktop's "Gözden geçir ve kur"): nothing is installed by it.
     fn review_package(&mut self, path: &std::path::Path) -> Result<Value, HeadlessError> {
         Err(HeadlessError::new(
@@ -1604,6 +1611,43 @@ fn through_link(folder: &std::path::Path, path: &str) -> Option<String> {
     None
 }
 
+/// The agent a host serves: its name and, when the host knows it, its model.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Author {
+    pub agent: String,
+    pub model: Option<String>,
+}
+
+/// The workshop folder's manifest stamped with who wrote it (docs/adr/8057 §76, plan D17), before it is packed:
+/// KentOS's word, the agent's own value replaced. Nothing when the host serves no agent or the manifest is not readable
+/// (the verification then says why).
+fn stamp_author(host: &dyn Host, folder: &std::path::Path) -> Result<(), HeadlessError> {
+    let Some(author) = host.author() else {
+        return Ok(());
+    };
+    let path = folder.join(kentos_extensions::manifest::FILE);
+    let Ok(text) = std::fs::read_to_string(&path) else {
+        return Ok(());
+    };
+    let generated = kentos_extensions::provenance::Generated {
+        agent: author.agent,
+        model: author.model,
+        kentos: env!("CARGO_PKG_VERSION").to_owned(),
+    };
+    let Ok(stamped) = kentos_extensions::provenance::stamp(&text, &generated) else {
+        return Ok(());
+    };
+    if stamped != text {
+        std::fs::write(&path, stamped).map_err(|e| {
+            HeadlessError::new(
+                "write_failed",
+                format!("{} yazılamadı: {e}", path.display()),
+            )
+        })?;
+    }
+    Ok(())
+}
+
 /// `extension.workshop.write` (docs/adr/8057 §22): an agent's files into its workshop folder, each path a package's;
 /// nothing outside it, nothing run.
 fn workshop_write(host: &dyn Host, args: &Value) -> Result<Value, HeadlessError> {
@@ -1751,6 +1795,7 @@ fn workshop_read(host: &dyn Host, args: &Value) -> Result<Value, HeadlessError> 
 fn workshop_review(host: &mut dyn Host, args: &Value) -> Result<Value, HeadlessError> {
     let id = text(args, "id")?;
     let folder = workshop_folder(host, id)?;
+    stamp_author(host, &folder)?;
     let limits = kentos_extensions::Limits::default();
     let files = read_folder(&folder, &limits)?;
     let v = kentos_extensions::verify(&files, &limits);
@@ -1797,6 +1842,7 @@ fn workshop_review(host: &mut dyn Host, args: &Value) -> Result<Value, HeadlessE
 fn workshop_reload(host: &mut dyn Host, args: &Value) -> Result<Value, HeadlessError> {
     let id = text(args, "id")?;
     let folder = workshop_folder(host, id)?;
+    stamp_author(host, &folder)?;
     let limits = kentos_extensions::Limits::default();
     let files = read_folder(&folder, &limits)?;
     let v = kentos_extensions::verify(&files, &limits);

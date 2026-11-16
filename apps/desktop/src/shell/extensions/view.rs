@@ -341,8 +341,12 @@ impl App {
                             .map(|p| format!(" ({p})"))
                             .unwrap_or_default()
                     )),
-                )
-                .field("Lisans", label::body(m.license.clone()));
+                );
+            // Who wrote it when an agent did (docs/adr/8057 §76): KentOS's record, not the agent's word.
+            if let Some(g) = &m.generated {
+                form = form.field("Yazan", label::body(g.words()));
+            }
+            form = form.field("Lisans", label::body(m.license.clone()));
         }
         form = form
             .field("Kimlik", label::caption(e.id.clone()))
@@ -547,7 +551,11 @@ impl App {
         }
         form = form
             .field("Programlar", label::body(modules(&entry.modules)))
-            .field("Yayımcı", label::body(entry.authors.join(", ")))
+            .field("Yayımcı", label::body(entry.authors.join(", ")));
+        if let Some(g) = &entry.generated {
+            form = form.field("Yazan", label::body(g.words()));
+        }
+        form = form
             .field("Lisans", label::body(entry.license.clone()))
             .field("Sürüm", label::body(entry.version.clone()))
             .field(
@@ -645,21 +653,28 @@ fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a
         form = form
             .field("Tür", label::body(kind_words(m)))
             .field("Programlar", label::body(modules(&m.modules)))
-            .field("Yayımcı", label::body(m.authors.join(", ")))
-            .field("Lisans", label::body(m.license.clone()))
-            .field(
-                "Kaynak",
-                label::body(format!(
-                    "{} — {}",
-                    p.source.kind.words(),
-                    // A working folder is where its reloads come from; the package made of it is a passing file.
-                    if p.source.kind == kentos_extension_host::store::SourceKind::DeveloperFolder {
-                        &p.source.location
-                    } else {
-                        &p.file
-                    }
-                )),
-            );
+            .field("Yayımcı", label::body(m.authors.join(", ")));
+        // An agent wrote it (docs/adr/8057 §76, plan D17): said before the user decides, as a plain fact.
+        if let Some(g) = &m.generated {
+            // Only what is known: a catalog may have reviewed it, the workshop's own banner says where it comes from.
+            form = form.field("Yazan", label::body(g.words())).wide(Banner::info(
+                "Bu eklentiyi bir yapay zekâ ajanı yazdı. İstediği yetenekleri okuyup karar verin: kurulursa kodu \
+                 sizin haklarınızla çalışır.",
+            ));
+        }
+        form = form.field("Lisans", label::body(m.license.clone())).field(
+            "Kaynak",
+            label::body(format!(
+                "{} — {}",
+                p.source.kind.words(),
+                // A working folder is where its reloads come from; the package made of it is a passing file.
+                if p.source.kind == kentos_extension_host::store::SourceKind::DeveloperFolder {
+                    &p.source.location
+                } else {
+                    &p.file
+                }
+            )),
+        );
         if let Some((version, _)) = &r.installed {
             form = form.field("Kurulu sürüm", label::body(version.clone()));
         }

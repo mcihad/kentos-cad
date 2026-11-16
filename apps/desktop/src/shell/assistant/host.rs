@@ -3,7 +3,7 @@
 //! offer, the fields the drawing hides and the log's “Ajan: …” lines are the link's; the assistant needs no link.
 
 use kentos_headless::HeadlessError;
-use kentos_headless::agent_tools::Host;
+use kentos_headless::agent_tools::{Author, Host};
 use serde_json::{Value, json};
 
 use crate::app::App;
@@ -20,6 +20,15 @@ impl Host for AppHost<'_> {
 
     fn not_offered(&self, command: &str) -> Option<String> {
         self.0.product_not_offered(command)
+    }
+
+    /// Asistan, with its profile's provider and model, as a package its workshop packs records it (docs/adr/8057 §76).
+    fn author(&self) -> Option<Author> {
+        let model = &self.0.assistant.shown.1;
+        Some(Author {
+            agent: "KentOS Asistan".to_owned(),
+            model: (!model.trim().is_empty()).then(|| model.clone()),
+        })
     }
 
     /// The agents' extension workshop beside this app's extension folder (docs/adr/8057 §22).

@@ -54,6 +54,10 @@ pub struct Manifest {
     pub keywords: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub changelog_file: Option<String>,
+    /// Who wrote it when an agent did, in KentOS's workshop (docs/adr/8057 §76): KentOS writes it when the workshop
+    /// packs the folder; an agent does not.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub generated: Option<crate::provenance::Generated>,
     /// A 20×20 SVG in the package.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub icon: Option<String>,
@@ -1694,6 +1698,9 @@ impl Manifest {
                 "Paket hiçbir şey eklemiyor: bir komut, form, veri kaynağı ya da yerleşik komuta bağlı bir şerit \
                  düğmesi ekleyin.",
             );
+        }
+        if let Some(generated) = &m.generated {
+            c.problems.extend(generated.problems(FILE));
         }
         (c.problems, c.warnings)
     }

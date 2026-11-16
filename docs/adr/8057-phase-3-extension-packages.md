@@ -4227,3 +4227,36 @@ komut satırı `kek_test.rs` (`rules_of`); masaüstü `examples.rs` (`ext_exampl
 - **Uygularken verilen kararlar (planda yazılı değildi):** örnek ayrı dosyada ve manifestte adıyla; mimari olgu veri
   olarak; `has`'ın nesnesi `features`'taki sırayla; eksik bulguda gelenlerin ilk üçü; dosyanın biçimi `format` ve
   `schemaVersion` taşır (öbür biçimler gibi); mevzuat 0.3.1 yalnız örnek ekler.
+
+## §76. Yapay zekânın yazdığı eklentinin kökeni: `generated`, KentOS'un damgası (`ADIM 21`, "Üretim kökeni"; D17)
+
+**16 Kasım.** Kod: paylaşılan `kentos_extensions::provenance` (yeni: `Generated`, `stamp`, `words`), `manifest.rs`
+(`Manifest::generated`, denetimi), `catalog.rs` (`CatalogEntry::generated`), manifestin JSON Schema'sı; başsız
+`agent_tools.rs` (`Host::author`, `Author`, `stamp_author`; `workshop.review` ve `.reload`); masaüstü
+`assistant/host.rs` (Asistan'ın profili ve modeli), `extensions/view.rs` (inceleme, kurulu eklenti, katalog girdisi);
+MCP `server.rs` (`clientInfo`, `client_of`), `tools.rs` (`WithWorkshop::author`); komut satırı (`kek inspect`,
+`kek verify` "Yazan:" satırı).
+
+- **Karar: köken KentOS'un sözü, ajanın değil.** Atölyede paketlenen her şeyi bir ajan yazmıştır; KentOS atölyeyi
+  paketlerken (`extension.workshop.review`, `.reload`) klasörün manifestine `generated` yazar: ajan (KentOS Asistan ya
+  da MCP istemcisi, `initialize`'da kendini tanıttığı adıyla), konak biliyorsa modeli (Asistan'ın profili: "DeepSeek ·
+  deepseek-chat"; MCP modeli söylemez) ve atölyenin KentOS'u (ajanın okuduğu SDK ve iskelet onunkidir; planın
+  "blueprint sürümü"). Ajanın kendi yazdığı değer değiştirilir. Başka yerden gelen paketteki değer yazarlar listesi gibi
+  üreticisinin beyanıdır.
+- **Zaman yazılmaz:** aynı klasör yeniden paketlenince aynı paket (içerik özeti kararlı); zamanı kayıt defterinin kurulum
+  anı ve kataloğun yükleme kaydı tutar.
+- **Kullanıcı karar verirken görür:** kurulum incelemesinde "Yazan: Yapay zekâ: KentOS Asistan (DeepSeek ·
+  deepseek-chat), KentOS 0.1.0 atölyesinde" ve "Bu eklentiyi bir yapay zekâ ajanı yazdı. İstediği yetenekleri okuyup
+  karar verin: kurulursa kodu sizin haklarınızla çalışır." (yalnız bilinen: yapay zekânın yazdığı bir paket bir katalogun
+  incelemesinden geçmiş olabilir; atölyeden kurulurken atölyenin kendi şeridi nereden geldiğini söyler);
+  kurulu eklentinin ayrıntısında ve kataloğun girdisinde aynı "Yazan" satırı. Yıldız, puan yok: düz bir olgu (D17).
+- **Katalog kaydında:** manifestle birlikte (`ReleaseFacts.manifest`) ve dizinin girdisinde (`CatalogEntry`); listede
+  süzgeç ve karnede gösterim ADIM 22A'nın katalog yüzeyinin.
+- **Kapı 1:** ajanın ve modelin adı 1–120 karakter, `kentos` bir sürüm (`manifest_generated`, yeriyle).
+- **Sınamalar:** paylaşılan crate 1 (damga ajanın değerini değiştirir, kalanı korur, ikinci damga aynı bayt; sözü;
+  kuralları yerleriyle), başsız atölye (paketin ve klasörün manifestinde konağın ajanı, modeli ve KentOS'u), masaüstü
+  Asistan (kullanıcının kurduğu eklentinin kaydında "KentOS Asistan").
+- **Kalan:** kataloğun listesinde "yapay zekâ üretimi" süzgeci ve karnede gösterim (22A); MCP istemcisinin modeli
+  (protokol söylemiyor).
+- **Uygularken verilen kararlar (planda yazılı değildi):** köken manifestte, atölye paketlerken klasöre yazar; zaman
+  yok; MCP istemcisinin kendi verdiği ad; kurulum incelemesinde bilgi şeridi.

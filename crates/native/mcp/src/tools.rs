@@ -658,6 +658,8 @@ pub fn compact(catalog: &Value) -> Vec<Value> {
 struct WithWorkshop<'a> {
     inner: &'a mut dyn kentos_headless::agent_tools::Host,
     workshop: Option<std::path::PathBuf>,
+    /// The client by the name it gave (`initialize`), as a package its workshop packs records it (§76).
+    client: Option<String>,
 }
 
 impl kentos_headless::agent_tools::Host for WithWorkshop<'_> {
@@ -675,6 +677,17 @@ impl kentos_headless::agent_tools::Host for WithWorkshop<'_> {
 
     fn workshop(&self) -> Option<std::path::PathBuf> {
         self.workshop.clone()
+    }
+
+    /// The MCP client by the name it gave; its model is not said over MCP.
+    fn author(&self) -> Option<kentos_headless::agent_tools::Author> {
+        Some(kentos_headless::agent_tools::Author {
+            agent: match &self.client {
+                Some(name) => format!("MCP istemcisi {name}"),
+                None => "MCP istemcisi (adını söylemedi)".to_owned(),
+            },
+            model: None,
+        })
     }
 
     /// On a desktop's link the package opens in the user's review there, its changes load and its look is read
@@ -730,20 +743,29 @@ fn agent_call(server: &mut Server, name: &str, args: &Value) -> Result<Value, Va
         desktops,
         guards,
         workshop_root,
+        client,
         ..
     } = server;
     let guard = guards.entry(handle.clone()).or_default();
-    let workshop = workshop_root.clone();
+    let (workshop, client) = (workshop_root.clone(), client.clone());
     let result = if let Some(s) = drawings.get_mut(&handle) {
         kentos_headless::agent_tools::call(
-            &mut WithWorkshop { inner: s, workshop },
+            &mut WithWorkshop {
+                inner: s,
+                workshop,
+                client,
+            },
             guard,
             name,
             &args,
         )
     } else if let Some(d) = desktops.get_mut(&handle) {
         kentos_headless::agent_tools::call(
-            &mut WithWorkshop { inner: d, workshop },
+            &mut WithWorkshop {
+                inner: d,
+                workshop,
+                client,
+            },
             guard,
             name,
             &args,

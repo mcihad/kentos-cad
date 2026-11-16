@@ -41,6 +41,9 @@ pub struct CatalogEntry {
     pub authors: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub publisher_id: Option<String>,
+    /// Who wrote it when an agent did (docs/adr/8057 §76): said in the catalog as in the install review.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub generated: Option<crate::provenance::Generated>,
     pub license: String,
     #[serde(default, skip_serializing_if = "Links::is_empty")]
     pub links: Links,
@@ -251,6 +254,7 @@ fn entry(
         keywords: m.keywords,
         authors: m.authors,
         publisher_id: m.publisher_id,
+        generated: m.generated,
         license: m.license,
         links: m.links,
         compatibility: m.compatibility,

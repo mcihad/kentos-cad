@@ -36,6 +36,7 @@ pub mod manifest;
 mod paths;
 mod pointer;
 mod problem;
+pub mod provenance;
 mod python;
 mod python_rules;
 pub mod release;

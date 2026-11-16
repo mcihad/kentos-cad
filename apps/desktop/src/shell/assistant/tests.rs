@@ -712,6 +712,16 @@ fn the_agent_runs_an_extensions_audit_rule_and_applies_its_fix() {
         agent_tools::call(&mut host, &mut guard, name, &args).unwrap();
     }
     let _ = app.extensions_event(crate::extensions::Event::Install);
+    // Who wrote it, KentOS's record as the review showed it (docs/adr/8057 §76): Asistan, kept with the extension.
+    let generated = app
+        .extensions
+        .registry
+        .as_ref()
+        .and_then(|r| r.manifest(ID))
+        .and_then(|m| m.generated.clone())
+        .expect("Asistan's stamp");
+    assert_eq!(generated.agent, "KentOS Asistan");
+    assert_eq!(generated.kentos, env!("CARGO_PKG_VERSION"));
     // Among the checks, its Python not ready here.
     let providers = agent_tools::call(
         &mut super::host::AppHost(&mut app),

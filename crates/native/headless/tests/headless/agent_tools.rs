@@ -746,6 +746,13 @@ impl Host for WithWorkshop<'_> {
         Some(self.root.clone())
     }
 
+    fn author(&self) -> Option<agent_tools::Author> {
+        Some(agent_tools::Author {
+            agent: "Sınama ajanı".to_owned(),
+            model: Some("sınama-modeli".to_owned()),
+        })
+    }
+
     fn review_package(&mut self, path: &std::path::Path) -> Result<Value, HeadlessError> {
         self.reviewed.push(path.to_owned());
         Ok(json!({ "opened": true }))
@@ -891,6 +898,30 @@ fn an_agent_writes_an_extension_in_its_workshop_and_opens_it_for_review() {
     assert_eq!(review["valid"], true, "{review:#}");
     let package = root.join("tr.ornek.mezarlik-0.1.0.kek");
     assert!(package.is_file());
+    // Who wrote it, KentOS's word (docs/adr/8057 §76): in the package the user reviews, and in the folder.
+    let opened = kentos_extensions::open(
+        &std::fs::read(&package).unwrap(),
+        &kentos_extensions::Limits::default(),
+    );
+    let generated = opened
+        .inspection
+        .manifest
+        .and_then(|m| m.generated)
+        .expect("the workshop's stamp");
+    assert_eq!(
+        (
+            generated.agent.as_str(),
+            generated.model.as_deref(),
+            generated.kentos.as_str()
+        ),
+        (
+            "Sınama ajanı",
+            Some("sınama-modeli"),
+            env!("CARGO_PKG_VERSION")
+        )
+    );
+    let folder = std::fs::read_to_string(root.join("tr.ornek.mezarlik/manifest.json")).unwrap();
+    assert!(folder.contains("Sınama ajanı"), "{folder}");
     assert_eq!(host.reviewed, [package]);
     // A function that lost its mark: not packed, said.
     let logic = call(

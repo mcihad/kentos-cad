@@ -456,6 +456,32 @@
       ],
       "type": "object"
     },
+    "Generated": {
+      "additionalProperties": false,
+      "description": "Who wrote a package in KentOS's workshop.",
+      "properties": {
+        "agent": {
+          "description": "The agent: KentOS Asistan, or an MCP client by the name it gave. Written by KentOS's workshop when it packs the\nfolder; an agent does not write it.",
+          "type": "string"
+        },
+        "kentos": {
+          "description": "The KentOS whose workshop packed it: its SDK and blueprint are what the agent read.",
+          "type": "string"
+        },
+        "model": {
+          "description": "Its model, when the host knows it (Asistan's profile); none from an MCP client, which does not say.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "agent",
+        "kentos"
+      ],
+      "type": "object"
+    },
     "ItemSize": {
       "enum": [
         "small",
@@ -1010,6 +1036,17 @@
     },
     "format": {
       "const": "kentos.extension"
+    },
+    "generated": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Generated"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Who wrote it when an agent did, in KentOS's workshop (docs/adr/8057 §76): KentOS writes it when the workshop\npacks the folder; an agent does not."
     },
     "icon": {
       "description": "A 20×20 SVG in the package.",

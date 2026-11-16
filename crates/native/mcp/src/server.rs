@@ -105,6 +105,28 @@ pub struct Server {
     pub(crate) extensions_root: Option<std::path::PathBuf>,
     /// The agents' extension workshop beside it (`extension.workshop.*`, docs/adr/8057 §22).
     pub(crate) workshop_root: Option<std::path::PathBuf>,
+    /// The client by the name and version it gave at `initialize` (`clientInfo`): a package its workshop packs records
+    /// it (docs/adr/8057 §76). Its own words, a name only.
+    pub(crate) client: Option<String>,
+}
+
+/// The client's name and version as it gave them at `initialize` (`clientInfo`), printable characters only and at most
+/// 80; none when it gave no name.
+fn client_of(params: &Value) -> Option<String> {
+    let info = params.get("clientInfo")?;
+    let name = info.get("name").and_then(Value::as_str)?.trim();
+    let version = info
+        .get("version")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .trim();
+    let said: String = format!("{name} {version}")
+        .chars()
+        .filter(|c| !c.is_control())
+        .take(80)
+        .collect();
+    let said = said.trim().to_owned();
+    (!name.is_empty()).then_some(said)
 }
 
 impl Default for Server {
@@ -147,6 +169,7 @@ impl Server {
             watch: None,
             extensions_root: kentos_extension_host::places::user_root(),
             workshop_root: kentos_extension_host::places::workshop_root(),
+            client: None,
         }
     }
 
@@ -332,6 +355,7 @@ impl Server {
             .copied()
             .unwrap_or(LEGACY[0]);
         self.legacy = Some(version.to_owned());
+        self.client = client_of(params);
         success(
             id,
             json!({

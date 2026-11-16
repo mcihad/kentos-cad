@@ -1226,6 +1226,9 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
     pakete benzeyen bağımlılığı işaretler (uydurulmuş paket adı saldırısı) [D18].
   - **Üretim kökeni:** AI ile üretilen paket hangi ajan/model ve hangi `blueprint` sürümüyle üretildiğini katalog
     kaydına yazar; kullanıcıya dürüst gösterilir [D17].
+    — *tamamlandı (ADR 8057 §76, 16 Kasım): atölye paketlerken manifestin `generated`'ını KentOS yazar (ajan, model,
+    atölyenin KentOS'u); kurulum incelemesi, kurulu eklenti ve katalog girdisi "Yazan" der, inceleme bilgi şeridiyle;
+    kataloğun listesinde süzgeci 22A'nın.*
 - **Kabul:** A01–A03 (§5). Uygulama içi ajan ve bağımsız bir dış MCP istemcisi aynı küçük eklentiyi kurulu belgeden
   üretip doğrular; README ya da çizim metni kod yürütme/kurulum/yayın yetkisi değildir. Kod üretimi başarısı, anlamsal
   araç doğruluğu ve niyeti doğru anlama ayrı değerlendirilir [PY-AI-14, ECO-QA-16].

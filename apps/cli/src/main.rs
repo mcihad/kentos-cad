@@ -130,6 +130,9 @@ fn inspect_file(file: &Path, json: bool) -> ExitCode {
     } else {
         if let Some(m) = &inspection.manifest {
             println!("{} {} — {}", m.id, m.version, m.name);
+            if let Some(g) = &m.generated {
+                println!("Yazan: {}", g.words());
+            }
         }
         if let Some(digest) = &inspection.digest {
             println!("İçerik özeti: {digest}");
@@ -396,6 +399,9 @@ fn verify_folder(folder: &Path, json: bool) -> ExitCode {
     } else {
         if let Some(m) = &v.manifest {
             println!("{} {} — {}", m.id, m.version, m.name);
+            if let Some(g) = &m.generated {
+                println!("Yazan: {}", g.words());
+            }
         }
         print_placed(&v);
         if v.is_valid() {
