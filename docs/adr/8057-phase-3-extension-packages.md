@@ -4033,6 +4033,10 @@ aldığı yalnız ret iletilerinden öğreniliyordu.
     3. Tab'da kırmızı). Gerçek pencerede panel her düğmeye kaydı.
 - **Erişilebilirlik sınırı:** iced'de ekran okuyucu ağacı yok; tablonun "erişilebilirlik" payı klavye ve ad. Ad, KentOS'un
   bileşeni andığı yerdeki adıdır (hata iletisi, alanın yanındaki yazı).
+- **SDK bölümü** (16 Kasım): tablo `extension.sdk part=panelBehaviour` ya da `kentos kek sdk --part panelBehaviour`
+  ile JSON verilir (28 satır: `type`, `value`, `example`, `events`, `sets`, `rows`, `focus`, `keys`, `namedBy`, `note`).
+  SDK paketi Asistan'ın araç sonucu sınırındaydı (47.998 / 48.000 bayt): yer açmak için `verifyCodes` da kendi bölümüne
+  alındı (1,3 KB; pakette yalnız nasıl alınacağı kalır, her bulgu zaten iletisi ve yeriyle gelir). Paket 47.153 bayt.
 
 ## §72. Python'un yapmaması gerekenler kurulumda da: çalışırken paket kurma, `sys.path`, beyansız ağ (`ADIM 21`, "AST kuralları")
 

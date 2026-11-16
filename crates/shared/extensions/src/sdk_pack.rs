@@ -212,7 +212,7 @@ pub const TOOL_SCHEMA: &str = include_str!("../sdk/kentos-processing-tool.schema
 pub const FACTS_SCHEMA: &str = include_str!("../sdk/kentos-audit-facts.schema.json");
 
 /// The pack's parts an agent may ask for alone (`extension.sdk`'s `part`, `kentos kek sdk --part`).
-pub const PARTS: [&str; 16] = [
+pub const PARTS: [&str; 17] = [
     "guide",
     "api",
     "capabilities",
@@ -225,6 +225,7 @@ pub const PARTS: [&str; 16] = [
     "icons",
     "panelSchema",
     "panelBuilders",
+    "panelBehaviour",
     "manifestSchema",
     "layerSchema",
     "toolSchema",
@@ -260,10 +261,41 @@ pub fn sdk_part(part: &str) -> Option<Value> {
     if part == "example" {
         return serde_json::to_value(example()).ok();
     }
+    if part == "verifyCodes" {
+        return Some(verify_codes());
+    }
+    // Each panel component's behaviour (docs/adr/8057 §71): the table the panel session refuses by.
+    if part == "panelBehaviour" {
+        return serde_json::to_value(crate::ui_panel::behaviour::TABLE).ok();
+    }
     if !PARTS.contains(&part) {
         return None;
     }
     sdk_pack().get_mut(part).map(Value::take)
+}
+
+/// What each code `verify` says means, a part of its own since 16 November 2026 (1,3 KB): the pack was at the size the
+/// desktop's Asistan gives a tool's result, and every finding comes with its own message and place anyway.
+fn verify_codes() -> Value {
+    json!({
+        "python_function_missing": "İşleyicinin işlevi modülde yok (en yakını önerilir).",
+        "python_decorator_missing": "İşlev işaretsiz: üstüne türünün işaretini yazın.",
+        "python_decorator_kind": "İşaretin türü manifestteki giriş noktasıyla uyuşmuyor.",
+        "python_decorator_id": "İşaretin kimliği manifestteki yerel kimlikle uyuşmuyor.",
+        "python_decorator_twice": "Bir işlevde birden çok @ext işareti.",
+        "python_id_twice": "Aynı kimlik iki işlevde.",
+        "python_network_undeclared": "network istemeden ağ kitaplığı.",
+        "python_runtime_install": "Çalışırken pip ile kurma.",
+        "python_sys_path": "sys.path değiştirme.",
+        "python_os_command": "Uyarı: işletim sistemi komutu.",
+        "python_eval": "Uyarı: eval/exec.",
+        "handler_missing": "İşleyicinin modülü pakette yok (paketin kendi denetimi).",
+        "manifest_icon": "İkon yerleşik bir ad (küçük harf, tire) ya da paketteki bir .svg yolu değil.",
+        "manifest_icon_unknown": "Uyarı: bu KentOS'ta böyle bir yerleşik ikon yok; en yakınları önerilir.",
+        "layer_schema": "schema.json'da bir kural bozuk; işaretçi yeri, ileti kuralı söyler.",
+        "ui_panel": "Panel tanımında bir kural bozuk; işaretçi yeri söyler.",
+        "layer_schema_outside": "Uyarı: ilişki şemanın kurmadığı bir katmana bağlı; projede olmalı."
+    })
 }
 
 /// The working example: a blueprint with every contribution, a package that verifies without a finding. A part of its
@@ -339,23 +371,13 @@ pub fn sdk_pack() -> Value {
                       bir layer parametresini adlandırır (o parametre default: {newName: \"…\"} ile yeni katman önerir)."
         },
         "verifyCodes": {
-            "python_function_missing": "İşleyicinin işlevi modülde yok (en yakını önerilir).",
-            "python_decorator_missing": "İşlev işaretsiz: üstüne türünün işaretini yazın.",
-            "python_decorator_kind": "İşaretin türü manifestteki giriş noktasıyla uyuşmuyor.",
-            "python_decorator_id": "İşaretin kimliği manifestteki yerel kimlikle uyuşmuyor.",
-            "python_decorator_twice": "Bir işlevde birden çok @ext işareti.",
-            "python_id_twice": "Aynı kimlik iki işlevde.",
-            "python_network_undeclared": "network istemeden ağ kitaplığı.",
-            "python_runtime_install": "Çalışırken pip ile kurma.",
-            "python_sys_path": "sys.path değiştirme.",
-            "python_os_command": "Uyarı: işletim sistemi komutu.",
-            "python_eval": "Uyarı: eval/exec.",
-            "handler_missing": "İşleyicinin modülü pakette yok (paketin kendi denetimi).",
-            "manifest_icon": "İkon yerleşik bir ad (küçük harf, tire) ya da paketteki bir .svg yolu değil.",
-            "manifest_icon_unknown": "Uyarı: bu KentOS'ta böyle bir yerleşik ikon yok; en yakınları önerilir.",
-            "layer_schema": "schema.json'da bir kural bozuk; işaretçi yeri, ileti kuralı söyler.",
-            "ui_panel": "Panel tanımında bir kural bozuk; işaretçi yeri söyler.",
-            "layer_schema_outside": "Uyarı: ilişki şemanın kurmadığı bir katmana bağlı; projede olmalı."
+            "how": "Doğrulama kodlarının anlamı (ret; Uyarı: diyenler uyarı): extension.sdk part=verifyCodes ya da \
+                    kentos kek sdk --part verifyCodes. Her bulgu iletisi ve yeriyle gelir.",
+        },
+        "panelBehaviour": {
+            "how": "Her panel bileşeninin değeri ve örneği, kodu başlatan olayı (onChange, command), \
+                    ctx.panel.set/rows/focus'un aldıkları, klavyesi: extension.sdk part=panelBehaviour ya da kentos \
+                    kek sdk --part panelBehaviour.",
         },
         "workflow": [
             "İsteği ve parametrelerini netleştirin; kurulu eklentileri ve yetenekleri kentos://extensions/installed'dan okuyun.",
@@ -1008,6 +1030,14 @@ mod tests {
             "{:#?}",
             v.problems
         );
+        // The panel behaviour part is the table the panel session refuses by (docs/adr/8057 §71).
+        let behaviour = sdk_part("panelBehaviour").expect("the part");
+        let rows = behaviour.as_array().expect("a list");
+        assert_eq!(rows.len(), crate::ui_panel::component_types().count());
+        assert_eq!(rows[3]["type"], "textField");
+        assert_eq!(rows[3]["keys"], "type");
+        assert_eq!(rows[3]["sets"], json!(["value", "enabled"]));
+        assert_eq!(rows[3]["namedBy"], "label");
         // Its parts are the ones it says, each there.
         let keys: Vec<&str> = pack
             .as_object()
