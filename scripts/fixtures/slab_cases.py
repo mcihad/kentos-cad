@@ -234,6 +234,38 @@ def layers_of(given):
     return {side: [dict(lay) for lay in given[side]] for side in ("over", "under") if given.get(side)}
 
 
+# IFC 4.3's covering types (IFC4X3_ADD2's IfcCoveringTypeEnum, EK-6 Tablo 6.20's list), USERDEFINED last (ADR 8070 §10).
+COVERING_TYPES = ["CEILING", "CLADDING", "COPING", "FLOORING", "INSULATION", "MEMBRANE", "MOLDING", "ROOFING",
+                  "SKIRTINGBOARD", "SLEEVING", "TOPPING", "WRAPPING", "USERDEFINED"]
+
+
+def covering_problem(s, prefix):
+    """A covering's rule and words (ADR 8070 §10): its type IFC's, a user-defined one named; no layers, no edge, no
+    balcony or terrace."""
+    c = s.get("covering")
+    if c is None:
+        return None
+    t = c["predefined"]
+    if t not in COVERING_TYPES:
+        return refusal("invalid_slab", f"“{t}” kaplamanın tiplerinden biri değil ({', '.join(COVERING_TYPES)}).",
+                       f"{prefix}.covering.predefined")
+    name = c.get("name")
+    if name is not None and (not name.strip() or name.strip() != name or any(ord(ch) < 32 or 127 <= ord(ch) < 160 for ch in name)
+                             or len(name) > 120):
+        return refusal("invalid_slab", "Kaplamanın adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 120 karakter.",
+                       f"{prefix}.covering.name")
+    if t == "USERDEFINED" and name is None:
+        return refusal("invalid_slab", "Kullanıcı tanımlı kaplamanın ne olduğu adında yazılır (USERDEFINED'ın nesne tipi); bir ad "
+                                       "verin ya da listeden bir tip seçin.", f"{prefix}.covering.name")
+    if s.get("layers"):
+        return refusal("invalid_slab", "Kaplamanın katmanları olmaz: kalınlığı kendisinindir; katmanları kaldırın.", f"{prefix}.covering")
+    if s.get("edge") is not None:
+        return refusal("invalid_slab", "Kaplamanın kenarı (korkuluk, parapet) olmaz.", f"{prefix}.covering")
+    if s.get("role", "floor") != "floor":
+        return refusal("invalid_slab", "Balkon ve teras kaplama olamaz; kaplamanın türü Döşeme olmalı.", f"{prefix}.covering")
+    return None
+
+
 def problem(s, prefix):
     if "parts" in s:
         for i, (o, hs) in enumerate(s["parts"]):
@@ -259,6 +291,9 @@ def problem(s, prefix):
             if not (math.isfinite(t) and 0 < t <= 1):
                 return refusal("invalid_slab", f"{LAYER[lay['kind']]} katmanının kalınlığı sıfırdan büyük, en çok 1 m olmalı; {num(t)} verildi.",
                                f"{prefix}.layers.{side}[{i}].thickness")
+    r = covering_problem(s, prefix)
+    if r:
+        return r
     e = s.get("edge")
     if e is not None and not (math.isfinite(e["width"]) and 0 < e["width"] <= 2):
         return refusal("invalid_slab", f"{WHOSE[e['kind']]} eni sıfırdan büyük, en çok 2 m olmalı; {num(e['width'])} verildi.", f"{prefix}.edge.width")
@@ -291,6 +326,8 @@ def stored(d, s):
         out["excluded"] = True
     if s.get("layers"):
         out["layers"] = s["layers"]
+    if s.get("covering"):
+        out["covering"] = s["covering"]
     return out
 
 
@@ -366,7 +403,7 @@ def create(d, inp, conflict=False):
             js = None
         s = {"parts": parts, "json": js, "role": n.get("role", "floor"), "thickness": n.get("thickness", 0.15),
              "offset": n.get("offset", 0.0), "arch": arch, "material": n.get("material"), "excluded": n.get("excluded", False),
-             "attrs": n.get("attrs", {}), "layers": layers_of(n.get("layers"))}
+             "attrs": n.get("attrs", {}), "layers": layers_of(n.get("layers")), "covering": n.get("covering")}
         if "edge" in n:
             s["edge"] = {"kind": n["edge"]["kind"], "width": n["edge"].get("width", WIDTH[n["edge"]["kind"]])}
         r = problem(s, at)
@@ -445,7 +482,7 @@ def edit(d, inp, conflict=False):
     if kind == "set":
         ch = {k: v for k, v in op.items() if k != "kind"}
         if not ch:
-            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar, katmanlar ya da metraj dışı seçimlerinden birini verin.", "operation"), None
+            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar, katmanlar, kaplama ya da metraj dışı seçimlerinden birini verin.", "operation"), None
         for key, name in (("thickness", "Kalınlık"), ("offset", "Kot farkı")):
             if key in ch and not math.isfinite(ch[key]):
                 return not_finite(name, f"operation.{key}"), None
@@ -458,6 +495,9 @@ def edit(d, inp, conflict=False):
                     s[k] = ch[k]
             if "layers" in ch:
                 s["layers"] = layers_of(ch["layers"])
+            # A covering or a slab again (ADR 8070 §10).
+            if "covering" in ch:
+                s["covering"] = ch["covering"]
             arch = dict(s.get("arch", {}))
             for k in ("level", "phase"):
                 if k in ch:
@@ -633,9 +673,37 @@ def create_cases():
         ("çizimde olmayan katman reddedilir", one(layer="yok", parts=[box_json(20, 0, 24, 3)]), {}),
         ("katman grubuna yazılmaz", one(layer="pafta", parts=[box_json(20, 0, 24, 3)]), {}),
         ("kilitli katmana yazılmaz", one(layer="kilitli", parts=[box_json(20, 0, 24, 3)]), {}),
+        # A covering's refusals (ADR 8070 §10).
+        ("NOTDEFINED kaplamanın tipi değildir", one(parts=[box_json(20, 0, 24, 3)], covering={"predefined": "NOTDEFINED"}), {}),
+        ("küçük harfli kaplama tipi reddedilir", one(parts=[box_json(20, 0, 24, 3)], covering={"predefined": "ceiling"}), {}),
+        ("adsız kullanıcı tanımlı kaplama reddedilir", one(parts=[box_json(20, 0, 24, 3)], covering={"predefined": "USERDEFINED"}), {}),
+        ("boş kaplama adı reddedilir", one(parts=[box_json(20, 0, 24, 3)], covering={"predefined": "FLOORING", "name": ""}), {}),
+        ("121 karakterlik kaplama adı reddedilir",
+         one(parts=[box_json(20, 0, 24, 3)], covering={"predefined": "FLOORING", "name": "k" * 121}), {}),
+        ("katmanlı kaplama reddedilir", one(parts=[box_json(20, 0, 24, 3)], covering={"predefined": "FLOORING"},
+                                           layers={"over": [{"kind": "finish", "thickness": 0.02}]}), {}),
+        ("korkuluklu kaplama reddedilir", one(parts=[BALCONY], covering={"predefined": "FLOORING"}, edge={"kind": "railing"}), {}),
+        ("balkon kaplama olamaz", one(parts=[BALCONY], role="balcony", covering={"predefined": "FLOORING"}), {}),
+        ("teras kaplama olamaz", one(parts=[box_json(20, 10, 26, 14)], role="terrace", covering={"predefined": "ROOFING"}), {}),
     ]:
         d = sc.Drawing()
         c.add(name, [create_step(d, "execute", inp, **kw)])
+    # Kaplama (ADR 8070 §10): a covering written as given; no floor of the building, not counted as a slab.
+    for name, n in [
+        ("asma tavan: CEILING, kalınlığı, kotu ve malzemesiyle; metrajda döşeme sayılmaz",
+         {"parts": [box_json(20, 0, 24, 3)], "thickness": 0.0125, "offset": 2.6, "material": "Alçıpan",
+          "covering": {"predefined": "CEILING", "name": "Asma tavan"}}),
+        ("zemin kaplaması: FLOORING, adı tipinden", {"parts": [box_json(20, 0, 24, 3)], "thickness": 0.02, "offset": 0.02,
+                                                    "covering": {"predefined": "FLOORING"}}),
+        ("kullanıcı tanımlı kaplama adıyla", {"parts": [box_json(20, 0, 24, 3)], "thickness": 0.01,
+                                             "covering": {"predefined": "USERDEFINED", "name": "Halı"}}),
+        ("çatı kaplaması: ROOFING, katlı", {"parts": [box_json(20, 0, 24, 3)], "thickness": 0.03, "offset": 6.2,
+                                          "arch": {"level": "zemin"}, "covering": {"predefined": "ROOFING"}}),
+        ("ısı yalıtımı: INSULATION, metraj dışı", {"parts": [box_json(20, 0, 24, 3)], "thickness": 0.05, "excluded": True,
+                                                 "covering": {"predefined": "INSULATION"}}),
+    ]:
+        d = sc.Drawing()
+        c.add(name, [create_step(d, "execute", one(**n)), quant(d)])
     d = sc.Drawing()
     room = sc.create_step(d, "execute", {"layerId": "mahal", "spaces": [{"seed": LEFT}]}, command="cad.spaces.create")
     stale = create_step(d, "execute", dict(one(parts=[box_json(20, 0, 24, 3)]), expectedRevision="$prepared"), conflict=True)
@@ -687,6 +755,16 @@ def edit_cases():
          {"kind": "subtract", "seed": RIGHT, "boundary": "room"}),
         ("bitişik alan eklenir", {"parts": [box_json(20, 0, 24, 3)]}, {"kind": "add", "parts": [box_json(24, 0, 26, 3)]}),
         ("ayrık alan eklenir: iki parça", {"parts": [box_json(20, 0, 24, 3)]}, {"kind": "add", "parts": [box_json(30, 0, 31, 1)]}),
+        # Kaplama (ADR 8070 §10): a slab made a covering and back, its type and name, its thickness and top.
+        ("döşeme asma tavan olur: metrajdan çıkar", {"parts": [box_json(20, 0, 24, 3)]},
+         {"kind": "set", "covering": {"predefined": "CEILING", "name": "Asma tavan"}, "thickness": 0.0125, "offset": 2.6}),
+        ("kaplama döşemeye döner: metraja girer", {"parts": [box_json(20, 0, 24, 3)], "covering": {"predefined": "FLOORING"}},
+         {"kind": "set", "covering": None}),
+        ("kaplamanın tipi ve adı değişir", {"parts": [box_json(20, 0, 24, 3)], "covering": {"predefined": "FLOORING"}},
+         {"kind": "set", "covering": {"predefined": "USERDEFINED", "name": "Parke"}}),
+        ("kaplamanın kalınlığı ve kotu değişir", {"parts": [box_json(20, 0, 24, 3)], "covering": {"predefined": "CEILING", "name": "Asma tavan"},
+                                                  "thickness": 0.0125, "offset": 2.6},
+         {"kind": "set", "thickness": 0.015, "offset": 2.7}),
     ]:
         d, made = fresh(**n)
         c.add(name, [made, ed(d, op), quant(d)])
@@ -713,6 +791,15 @@ def edit_cases():
         ("sonsuz öteleme reddedilir", {"parts": [box_json(20, 0, 24, 3)]}, {"kind": "offset", "distance": 0.2}, {"non_finite": {"operation.distance": "Infinity"}}),
         ("sonsuz iç nokta reddedilir", {"parts": [box_json(20, 0, 24, 3)]}, {"kind": "subtract", "seed": P(2, 2)}, {"non_finite": {"operation.seed.y": "NaN"}}),
         ("geçersiz beklenen sürüm reddedilir", {"parts": [box_json(20, 0, 24, 3)]}, {"kind": "set", "thickness": 0.3}, {"revision": "07"}),
+        # A covering's (ADR 8070 §10).
+        ("katmanlı döşeme kaplama olamaz", {"parts": [box_json(20, 0, 24, 3)], "layers": {"over": [{"kind": "finish", "thickness": 0.02}]}},
+         {"kind": "set", "covering": {"predefined": "FLOORING"}}, {}),
+        ("kaplamaya katman verilmez", {"parts": [box_json(20, 0, 24, 3)], "covering": {"predefined": "FLOORING"}},
+         {"kind": "set", "layers": {"over": [{"kind": "screed", "thickness": 0.05}]}}, {}),
+        ("kaplamaya korkuluk verilmez", {"parts": [BALCONY], "covering": {"predefined": "FLOORING"}},
+         {"kind": "set", "edge": {"kind": "railing"}}, {}),
+        ("adsız kullanıcı tanımlı kaplama reddedilir", {"parts": [box_json(20, 0, 24, 3)]},
+         {"kind": "set", "covering": {"predefined": "USERDEFINED"}}, {}),
     ]:
         d, made = fresh(**n)
         inp = {"uids": [uid_of(first)], "operation": op}

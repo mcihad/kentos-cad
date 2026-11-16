@@ -48,6 +48,8 @@ pub enum Kind {
     /// A post and a rail (docs/adr/8070 §8): EK-2 Tablo 2.3 has neither; Diğer (DIGR), MM-DIGR-DIKME and MM-DIGR-KAYIT.
     Post,
     Rail,
+    /// A covering (docs/adr/8070 §10), by its type's EK-2 element (Asma Tavan, Zemin Kaplama …): MM-ASTV-GENEL.
+    Covering(&'static str),
     Grid,
     /// Kitchen units (Mutfak).
     Casework,
@@ -87,6 +89,7 @@ impl Kind {
             Kind::Elevator => "ASAN",
             Kind::CurtainWall => "GIYC",
             Kind::Post | Kind::Rail => "DIGR",
+            Kind::Covering(element) => element,
             Kind::Grid => "AKSS",
             Kind::Casework | Kind::Furniture(_) => "TEFR",
             Kind::Space
@@ -119,6 +122,7 @@ impl Kind {
             Kind::Beam(_) => String::new(),
             Kind::Post => word("DIKME"),
             Kind::Rail => word("KAYIT"),
+            Kind::Covering(_) => String::new(),
             Kind::Railing(infill) => word(infill.layer_word()),
             Kind::Door
             | Kind::Window
@@ -175,6 +179,7 @@ impl Kind {
             Kind::CurtainWall => "Giydirme cephe",
             Kind::Post => "Dikme",
             Kind::Rail => "Kayıt",
+            Kind::Covering(_) => "Kaplama",
             Kind::Grid => "Aks",
             Kind::Casework => "Mutfak",
             Kind::Furniture(_) => "Donatı",
@@ -209,6 +214,7 @@ impl Kind {
             Kind::CurtainWall => "giydirme cephe",
             Kind::Post => "dikme",
             Kind::Rail => "kayıt",
+            Kind::Covering(_) => "kaplama",
             Kind::Grid => "aks",
             Kind::Casework => "mutfak dolabı",
             Kind::Furniture(_) => "donatı",
@@ -231,6 +237,7 @@ impl Kind {
         match self {
             Kind::Wall(_) | Kind::Column | Kind::Post => look("ink", 0.5),
             Kind::Slab(_) | Kind::Roof(_) => look("ink", 0.35),
+            Kind::Covering(_) => look("ink", 0.18),
             Kind::Door
             | Kind::Window
             | Kind::Void
@@ -446,6 +453,7 @@ mod tests {
             Kind::CurtainWall,
             Kind::Post,
             Kind::Rail,
+            Kind::Covering("ASTV"),
         ];
         let names: Vec<String> = kinds.iter().map(Kind::layer_name).collect();
         for n in &names {
@@ -483,7 +491,8 @@ mod tests {
                 "MM-ASAN-GENEL",
                 "MM-GIYC-GENEL",
                 "MM-DIGR-DIKME",
-                "MM-DIGR-KAYIT"
+                "MM-DIGR-KAYIT",
+                "MM-ASTV-GENEL"
             ]
         );
         assert_eq!(Kind::Wall(Some("Tuğla".into())).layer_id(), "mm-duva-tugla");

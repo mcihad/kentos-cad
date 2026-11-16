@@ -2661,6 +2661,20 @@
       "status": "implemented"
     },
     {
+      "id": "tool.covering",
+      "title": "Kaplama",
+      "icon": "covering",
+      "description": "Bir kaplama çizer: asma tavan, elle çizilen döşeme kaplaması, çatı kaplaması; döşeme değildir, duvar ve mahal yüksekliği ona göre değişmez, IFC'de kaplama olarak yazılır. Sınır (S): Mahal tıklanan mahalin sınırını alır ve onu izler, Köşeleri çiz köşelerle (Enter kapatır). Tip (P: Asma tavan ile başlar), Kalınlık (E: asma tavan 12,5 mm, öbürleri 2 cm ile başlar), Kot farkı (F: Oto iken tavan mahalin tavanında, öbürleri tabanında), Malzeme (M).",
+      "aliases": [
+        "KAPLAMA",
+        "COVERING",
+        "ASMATAVAN"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.spaceRebound",
       "title": "Mahali yeniden sınırla",
       "short": "Yeniden sınırla",
@@ -5324,6 +5338,7 @@
     {"id": "extensions.install", "title": "Eklenti paketi yükle…", "short": "Paket yükle", "icon": "import", "description": "Bir .kek eklenti paketini seçtirir ve kurmadan önce gözden geçirtir: paket kodu çalıştırılmadan denetlenir, sorunları dosyası ve yeriyle söylenir; geçerliyse açıklaması, değişiklik notu, bağımlılıkları ve gerekçeli yetenekleri görünür, kurulu bir sürüm varsa farkıyla. Dosyaya çift tıklamak kurmaz.", "aliases": ["EKLENTIYUKLE", "EKLENTİYÜKLE", "KEK", "PAKETYUKLE", "PAKETYÜKLE"], "shortcuts": [], "category": "Eklentiler", "status": "implemented"}
   ],
   "icons": {
+    "covering": "<path d=\"M2.5 6.5 10 2.5l7.5 4-7.5 4z\"/><path d=\"M2.5 11.5 10 15.5l7.5-4\" stroke-width=\"1\"/><path d=\"M2.5 14 10 18l7.5-4\" stroke-width=\"1\"/>",
     "post": "<rect x=\"8.5\" y=\"3.5\" width=\"3\" height=\"13\"/><path d=\"M4.5 16.5h11M6.5 3.5h7\"/>",
     "rail": "<rect x=\"2.5\" y=\"8.5\" width=\"15\" height=\"3\"/><path d=\"M6 11.5v4M14 11.5v4\" stroke-width=\"1\"/>",
     "curtainWall": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\"/><path d=\"M7.5 2.5v15M12.5 2.5v15M2.5 7.5h15M2.5 12.5h15\" stroke-width=\"1\"/><path d=\"m3.8 6.2 2.4-2.4M8.8 11.2l2.4-2.4M13.8 16.2l2.4-2.4\" stroke-width=\"0.7\"/>",

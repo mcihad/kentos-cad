@@ -774,6 +774,7 @@ __all__ = [
     "CountExplodeDensity",
     "CountExtractValue",
     "CountScope",
+    "Covering",
     "CreateBlockChange",
     "CreateDomainsOp",
     "CreateFeatureChange",

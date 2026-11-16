@@ -591,3 +591,85 @@ fn the_sample_building_with_a_ramp_a_curtain_wall_and_a_lift_leaves_nothing_out(
     assert!(listed(ScheduleOf::Fixtures, &lift), "the lift in the fixtures' schedule");
     assert!(listed(ScheduleOf::Columns, &post), "the post in the columns' schedule");
 }
+
+/// Kaplama (docs/adr/8070 §10; EK-6 Tablo 6.20): an asma tavan drawn from one of the section building's rooms (bound to
+/// it, 12.5 mm Alçıpan, its top 2.60 over its storey's floor) and a floor covering drawn by hand. Worked out here: the
+/// ceiling a plate from 2.5875 to 2.60 on EK-2's Asma Tavan (MM-ASTV-ALCIPAN), its outline the room's. Neither is a floor
+/// of the building: the walls' heights and the rooms' ceilings stay as they were. In the IFC model an IfcCovering
+/// CEILING named MM-KPL-Asma_tavan and an IfcCovering FLOORING; no IfcSlab more; nothing left out.
+#[test]
+fn a_ceiling_from_a_room_and_a_floor_covering_are_ifc_coverings() {
+    use kentos_commands::CallOp;
+    use kentos_geometry_core::geom::section::Height;
+    use kentos_native_application::{ExecutionContext, registry, sections};
+    let mut doc = building();
+    let (room, room_fields) = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| match e {
+            Entity::Space(s) if !s.space.void && s.space.arch.level.as_deref() == Some("zemin") => {
+                Some((u.to_string(), s.space.clone()))
+            }
+            _ => None,
+        })
+        .expect("a ground storey room");
+    let walls_before: Vec<Option<f64>> = doc
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Wall(w) => Some(doc.wall_height(&w.wall)),
+            _ => None,
+        })
+        .collect();
+    let ceiling_before = doc.room_height(&room_fields).map(|h| h.ceiling);
+    let (_, before) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
+    let run = |doc: &mut Document, input: serde_json::Value| {
+        let answer = registry::run(&mut ExecutionContext::new(doc), "cad.slabs.create", CallOp::Execute, input).unwrap();
+        assert_eq!(answer["status"], "completed", "{answer}");
+        answer["output"]["uids"][0].as_str().unwrap().to_owned()
+    };
+    let ceiling = run(&mut doc, serde_json::json!({"layerId": "0", "slabs": [{
+        "space": room, "thickness": 0.0125, "offset": 2.6, "material": "Alçıpan",
+        "arch": {"level": "zemin"}, "covering": {"predefined": "CEILING", "name": "Asma tavan"}
+    }]}));
+    let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
+    let floor = run(&mut doc, serde_json::json!({"layerId": "0", "slabs": [{
+        "parts": [{"outer": {"pts": [p(20.0, 0.0), p(24.0, 0.0), p(24.0, 3.0), p(20.0, 3.0)]}}],
+        "thickness": 0.02, "offset": 0.02, "arch": {"level": "zemin"}, "covering": {"predefined": "FLOORING"}
+    }]}));
+    // Not a floor of the building.
+    let walls_after: Vec<Option<f64>> = doc
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Wall(w) => Some(doc.wall_height(&w.wall)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(walls_after, walls_before, "the walls do not stop at a covering");
+    assert_eq!(doc.room_height(&room_fields).map(|h| h.ceiling), ceiling_before, "nor the room's ceiling");
+    // Its plate in the section model.
+    let m = sections::model(&doc);
+    let i = (0..m.solids.len()).find(|&i| m.owners[i].as_deref() == Some(ceiling.as_str())).expect("its plate");
+    let Height::Prism { bottom, top } = m.solids[i].height else {
+        panic!("a prism")
+    };
+    assert!((bottom - 2.5875).abs() < 1e-9 && (top - 2.6).abs() < 1e-9, "{bottom} {top}");
+    assert_eq!(m.looks[i].layer, "MM-ASTV-ALCIPAN");
+    assert!(!m.looks[i].heavy);
+    // The IFC model.
+    let (b, written) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
+    assert_eq!(written.left, Vec::new());
+    assert_eq!((written.coverings, written.slabs), (2, before.slabs));
+    let element = |uid: &str| {
+        let id = kentos_domain::Uuid::parse_str(uid).unwrap().as_u128();
+        b.elements.iter().find(|e| e.id == Some(id)).expect("its element")
+    };
+    let c = element(&ceiling);
+    assert_eq!((c.class, c.predefined, c.name.as_str()), (Class::Covering, "CEILING", "MM-KPL-Asma_tavan"));
+    assert_eq!(c.material.as_deref(), Some("Alçıpan"));
+    let f = element(&floor);
+    assert_eq!((f.class, f.predefined, f.name.as_str()), (Class::Covering, "FLOORING", "MM-KPL-Zemin_kaplaması"));
+    let text = kentos_ifc::building::write(&b);
+    assert_eq!(text.matches("IFCCOVERING(").count(), 2);
+    if let Some(path) = std::env::var_os("KENTOS_WRITE_IFC_COVERINGS") {
+        std::fs::write(path, &text).expect("the file kept");
+    }
+}

@@ -377,6 +377,9 @@ pub enum Field {
     SlabOffset(Slot),
     SlabEdgeWidth(Slot),
     SlabMaterial(Slot),
+    /// A covering's name (docs/adr/8070 §10): its IFC name's words, a user-defined one's object type; empty: its type's
+    /// word.
+    SlabCoveringName(Slot),
     /// A slab's layer's thickness (docs/adr/8040 §2): over its structure (true) or under it, by its place from the top;
     /// 0 takes the layer away.
     SlabLayer(Slot, bool, usize),

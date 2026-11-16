@@ -2787,6 +2787,7 @@
        "members": 0,
        "fixtures": 0,
        "gridAxes": 7,
+       "coverings": 0,
        "bytes": "$any",
        "sha256": "$any"
       },
@@ -2833,6 +2834,7 @@
        "members": 0,
        "fixtures": 0,
        "gridAxes": 7,
+       "coverings": 0,
        "bytes": "$any",
        "sha256": "$any"
       },
@@ -2901,6 +2903,7 @@
        "members": 0,
        "fixtures": 0,
        "gridAxes": 7,
+       "coverings": 0,
        "bytes": "$any",
        "sha256": "$any"
       },
@@ -2964,6 +2967,7 @@
        "members": 0,
        "fixtures": 0,
        "gridAxes": 7,
+       "coverings": 0,
        "bytes": "$any",
        "sha256": "$any"
       },
@@ -3010,6 +3014,7 @@
        "members": 0,
        "fixtures": 0,
        "gridAxes": 7,
+       "coverings": 0,
        "bytes": "$any",
        "sha256": "$any"
       },
@@ -5828,6 +5833,7 @@
        "members": 23,
        "fixtures": 0,
        "gridAxes": 7,
+       "coverings": 0,
        "bytes": "$any",
        "sha256": "$any"
       },
@@ -8699,6 +8705,7 @@
        "members": 0,
        "fixtures": 0,
        "gridAxes": 0,
+       "coverings": 0,
        "bytes": "$any",
        "sha256": "$any"
       },
@@ -11965,6 +11972,7 @@
        "members": 0,
        "fixtures": 0,
        "gridAxes": 7,
+       "coverings": 0,
        "bytes": "$any",
        "sha256": "$any"
       },
@@ -17996,6 +18004,7 @@
        "members": 0,
        "fixtures": 0,
        "gridAxes": 7,
+       "coverings": 0,
        "bytes": "$any",
        "sha256": "$any"
       },
@@ -18042,6 +18051,7 @@
        "members": 0,
        "fixtures": 0,
        "gridAxes": 7,
+       "coverings": 0,
        "bytes": "$any",
        "sha256": "$any"
       },
@@ -18088,6 +18098,7 @@
        "members": 0,
        "fixtures": 0,
        "gridAxes": 7,
+       "coverings": 0,
        "bytes": "$any",
        "sha256": "$any"
       },
@@ -18133,6 +18144,7 @@
        "members": 0,
        "fixtures": 0,
        "gridAxes": 7,
+       "coverings": 0,
        "bytes": "$any",
        "sha256": "$any"
       },
@@ -18179,6 +18191,7 @@
        "members": 0,
        "fixtures": 0,
        "gridAxes": 7,
+       "coverings": 0,
        "bytes": "$any",
        "sha256": "$any"
       },

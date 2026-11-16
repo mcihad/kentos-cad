@@ -101,8 +101,10 @@
     - Dikme ve kayıt kolonun ve kirişin eleman rolüdür (K46): `IfcMember` POST ve USERDEFINED "Kayıt", EK-2 Diğer
       (MM-DIGR-DIKME, MM-DIGR-KAYIT); kolon kendi yüksekliğini alabilir; `.kcad` mimari verisi 4.
     - Giydirme cephe Kapı ve pencere çizelgesinin salt okunur satırı (doğrama listesi), dikme Kolon çizelgesinde;
-      `cad.arch.ifc` yeni sınıfları da sayar; örnek binada kayıp listesi boş (ilk kabul). Kalan: kiriş çizelgesi, eğimli
-      eleman, elle çizilen kaplama ve asma tavan gövdesi.
+      `cad.arch.ifc` yeni sınıfları da sayar; örnek binada kayıp listesi boş (ilk kabul).
+    - Kaplama döşemenin rolüdür (K47): asma tavan, zemin, çatı kaplaması; mahale bağlı türer ya da elle çizilir; yapı
+      değildir (duvar, kolon, mahal yüksekliği ve metraj onu görmez); `IfcCovering`; `.kcad` mimari verisi 5. Kalan:
+      kiriş ve kaplama çizelgesi, eğimli eleman, duvar kaplamasının kalınlığı.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

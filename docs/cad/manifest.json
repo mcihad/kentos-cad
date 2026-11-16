@@ -11880,6 +11880,22 @@
    "tests": 1
   },
   {
+   "id": "tool.covering",
+   "kind": "command",
+   "title": "Kaplama",
+   "level": "semantic",
+   "via": [
+    "cad.slabs.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.slabs.create",
+   "mcp": "cad.slabs.create",
+   "note": "Tıklanan mahalin kalıcı kimliği (space) ya da çizilen köşeler, kalınlık, kot farkı, malzeme ve kaplamanın tipi (covering) komuta verilir; mahale bağlı sınır ve gövde komutun ve belgenin (ADR 8070 §10).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.curtainWall",
    "kind": "command",
    "title": "Giydirme cephe",

@@ -213,6 +213,8 @@ impl SlabTool {
             space: None,
             // Its layers are picked in Öznitelikler (docs/adr/8040 §2).
             layers: None,
+            // A covering is Kaplama's (docs/adr/8070 §10).
+            covering: None,
         }
     }
 

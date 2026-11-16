@@ -217,6 +217,19 @@ fn material_look(element: &str, material: Option<&str>, fill: Option<Fill>) -> L
     }
 }
 
+/// A covering's look (docs/adr/8070 §10): on its type's EK-2 element by its material (MM-ASTV-ALCIPAN; none: GENEL),
+/// light and unhatched: a thin plate, no mass to hatch.
+fn covering_look(c: &kentos_commands::Covering, material: Option<&str>) -> Look {
+    let element = kentos_commands::Covering::element(&c.predefined);
+    let m = material.map(str::trim).filter(|m| !m.is_empty()).unwrap_or_default();
+    Look {
+        key: format!("{element}:{}", fold(m)),
+        layer: kentos_commands::ek4_layer(element, m),
+        heavy: false,
+        fill: None,
+    }
+}
+
 /// A slab layer's look: its element (EK-2 Tablo 2.3) and material; insulation hatched by TS 5319 (SN55).
 fn slab_layer_look(kind: SlabLayerKind, material: Option<&str>) -> Look {
     let (element, fill) = match kind {
@@ -313,10 +326,11 @@ pub fn model(doc: &Document) -> Model {
     }
     m.left.insert((Left::NaturalGround, None));
     let entities: Vec<(Uuid, &Entity)> = doc.entities_with_uids().collect();
+    // The building's floors: a covering is none (docs/adr/8070 §10).
     let slabs: Vec<SlabAt> = entities
         .iter()
         .filter_map(|(_, e)| match e {
-            Entity::Slab(s) => Some(&s.slab),
+            Entity::Slab(s) if s.slab.covering.is_none() => Some(&s.slab),
             _ => None,
         })
         .map(|s| {
@@ -795,12 +809,12 @@ fn slab(
         );
         z -= l.thickness;
     }
-    push(
-        m,
-        solid(z - s.thickness, z),
-        material_look("DOSM", s.material.as_deref(), None),
-        owner.clone(),
-    );
+    // A covering's plate on its type's EK-2 element (docs/adr/8070 §10).
+    let look = match &s.covering {
+        Some(c) => covering_look(c, s.material.as_deref()),
+        None => material_look("DOSM", s.material.as_deref(), None),
+    };
+    push(m, solid(z - s.thickness, z), look, owner.clone());
     z -= s.thickness;
     for l in &s.layers.under {
         push(

@@ -509,6 +509,11 @@ pub struct SlabFields {
     #[serde(default, skip_serializing_if = "SlabLayers::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<SlabLayers>", optional))]
     pub layers: SlabLayers,
+    /// A covering (docs/adr/8070 §10): a plate covering another element (a suspended ceiling, a floor covering drawn by
+    /// hand), written as an `IfcCovering` of its type; no floor of the building. Absent: a slab.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub covering: Option<crate::Covering>,
 }
 
 /// A slab (docs/adr/0722).
@@ -608,6 +613,27 @@ impl SlabFields {
         }
         if let Some(problem) = self.layers.problem() {
             return Some(problem);
+        }
+        // A covering is a plate of its own (docs/adr/8070 §10): no layers, no edge, no balcony or terrace.
+        if let Some(c) = &self.covering {
+            if let Some(problem) = c.problem() {
+                return Some(problem);
+            }
+            if !self.layers.is_empty() {
+                return Some((
+                    "covering".into(),
+                    "Kaplamanın katmanları olmaz: kalınlığı kendisinindir; katmanları kaldırın.".into(),
+                ));
+            }
+            if self.edge.is_some() {
+                return Some(("covering".into(), "Kaplamanın kenarı (korkuluk, parapet) olmaz.".into()));
+            }
+            if self.role != SlabRole::Floor {
+                return Some((
+                    "covering".into(),
+                    "Balkon ve teras kaplama olamaz; kaplamanın türü Döşeme olmalı.".into(),
+                ));
+            }
         }
         if let Some(e) = &self.edge {
             if !(e.width.is_finite() && e.width > 0.0 && e.width <= MAX_SLAB_EDGE) {

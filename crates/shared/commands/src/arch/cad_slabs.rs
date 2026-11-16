@@ -139,6 +139,10 @@ pub struct NewSlab {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<crate::SlabLayers>,
+    /// A covering (docs/adr/8070 §10): its IFC type and name; absent: a slab.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub covering: Option<crate::Covering>,
 }
 
 /// Input of `cad.slabs.create` v1: slabs on a named layer, written as one undo step “Döşeme”.
@@ -237,6 +241,11 @@ pub struct SlabChange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<crate::SlabLayers>,
+    /// A covering's type and name (docs/adr/8070 §10); null: a slab again.
+    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::Covering>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<crate::Covering>"))]
+    pub covering: Option<Option<crate::Covering>>,
 }
 
 /// What `cad.slabs.edit` does to the slabs (docs/adr/0722 §4).

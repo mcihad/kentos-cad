@@ -60,6 +60,7 @@ impl App {
                 (out.members, "eleman"),
                 (out.fixtures, "donatı"),
                 (out.grid_axes, "aks"),
+                (out.coverings, "kaplama"),
             ]
             .iter()
             .filter(|(n, _)| *n > 0)

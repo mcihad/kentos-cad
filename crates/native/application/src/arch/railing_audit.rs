@@ -166,6 +166,10 @@ pub(crate) fn findings(doc: &Document, push: &mut impl FnMut(Said, Vec<Slot>, V,
     }
     for e in doc.entities() {
         let Entity::Slab(s) = e else { continue };
+        // A covering has no free edge to guard (docs/adr/8070 §10).
+        if s.slab.covering.is_some() {
+            continue;
+        }
         let x: &SlabFields = &s.slab;
         let slot = Slot(s.base.id);
         let level = x.arch.level.as_deref();

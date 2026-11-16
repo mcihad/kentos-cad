@@ -104,7 +104,7 @@ def counts(d):
             "windows": sum(o["form"] == "window" for o in openings),
             "openings": len(openings),
             "spaces": len(kind("space")),
-            "slabs": len(kind("slab")),
+            "slabs": sum(1 for e in kind("slab") if not e.get("covering")),
             "columns": sum(1 for e in kind("column") if not e.get("member")),
             "beams": sum(1 for e in kind("beam") if not e.get("member")),
             "roofs": len(kind("roof")),
@@ -116,7 +116,8 @@ def counts(d):
             "members": sum(1 for e in kind("column") + kind("beam") if e.get("member"))
             + sum(curtain_frames(w) for w in curtains),
             "fixtures": 0,
-            "gridAxes": grid_axes(ents)}
+            "gridAxes": grid_axes(ents),
+            "coverings": sum(1 for e in kind("slab") if e.get("covering"))}
 
 
 def output(path, d=SETUP):

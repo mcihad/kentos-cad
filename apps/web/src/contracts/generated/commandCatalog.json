@@ -71116,6 +71116,14 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "coverings": {
+            "default": 0,
+            "description": "Its coverings (docs/adr/8070 §10): the slabs that are one; `slabs` does not count them.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "curtainWalls": {
             "default": 0,
             "format": "uint32",
@@ -71266,6 +71274,14 @@
             "x-unit": "count"
           },
           "columns": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "coverings": {
+            "default": 0,
+            "description": "Its coverings (docs/adr/8070 §10): the slabs that are one; `slabs` does not count them.",
             "format": "uint32",
             "minimum": 0,
             "type": "integer",
@@ -134809,6 +134825,27 @@
       },
       "type": "object"
     },
+    "Covering": {
+      "additionalProperties": false,
+      "description": "What makes a slab a covering (docs/adr/8070 §10).",
+      "properties": {
+        "name": {
+          "description": "What it is in words (\"Asma tavan\", \"Parke\"): its IFC name's words, and its object type when its type is\n`USERDEFINED`, which needs it; absent: its type's own word ([`Covering::word`]).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "predefined": {
+          "description": "Its IFC 4.3 type ([`Covering::TYPES`]): `CEILING` a ceiling (asma tavan), `FLOORING` a floor covering…;\n`USERDEFINED` takes `name` as its object type.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "predefined"
+      ],
+      "type": "object"
+    },
     "CreateOperation": {
       "description": "The drawing tool or Hesap window whose step has its own name; without\none the step is “Ekle”, as for every object a drawing tool adds.",
       "oneOf": [
@@ -169539,6 +169576,17 @@
             }
           ],
           "description": "Which faces of the walls round `seed` it runs along; absent: their outer faces."
+        },
+        "covering": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Covering"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A covering (docs/adr/8070 §10): its IFC type and name; absent: a slab."
         },
         "edge": {
           "anyOf": [
@@ -204593,6 +204641,17 @@
             "null"
           ]
         },
+        "covering": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Covering"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A covering (docs/adr/8070 §10): a plate covering another element (a suspended ceiling, a floor covering drawn by\nhand), written as an `IfcCovering` of its type; no floor of the building. Absent: a slab."
+        },
         "edge": {
           "anyOf": [
             {
@@ -205067,6 +205126,17 @@
           "additionalProperties": false,
           "description": "Değiştir: the fields given, on every slab named.",
           "properties": {
+            "covering": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Covering"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "A covering's type and name (docs/adr/8070 §10); null: a slab again."
+            },
             "edge": {
               "anyOf": [
                 {

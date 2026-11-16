@@ -92,6 +92,10 @@ pub struct IfcBuildingExported {
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub grid_axes: u32,
+    /// Its coverings (docs/adr/8070 §10): the slabs that are one; `slabs` does not count them.
+    #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub coverings: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: u64,
     pub sha256: String,

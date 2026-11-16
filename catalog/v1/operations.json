@@ -2253,6 +2253,13 @@
       ],
       "note": "Tıklanan merkez ve yakın kesişimin iki aksı ya da görünen aksların kesişimleri komuta verilir; kesişim ve konum yazısı komutun hesabı (ADR 0343 §3–§5)."
     },
+    "tool.covering": {
+      "level": "semantic",
+      "via": [
+        "cad.slabs.create"
+      ],
+      "note": "Tıklanan mahalin kalıcı kimliği (space) ya da çizilen köşeler, kalınlık, kot farkı, malzeme ve kaplamanın tipi (covering) komuta verilir; mahale bağlı sınır ve gövde komutun ve belgenin (ADR 8070 §10)."
+    },
     "tool.post": {
       "level": "semantic",
       "via": [

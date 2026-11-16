@@ -470,6 +470,9 @@ pub mod space_tools;
 // Döşeme (docs/adr/0722).
 #[path = "arch/slab_tools.rs"]
 pub mod slab_tools;
+// Kaplama (docs/adr/8070 §10).
+#[path = "arch/covering_tool.rs"]
+pub mod covering_tool;
 #[path = "arch/space_discover.rs"]
 pub mod space_discover;
 #[path = "arch/space_number.rs"]

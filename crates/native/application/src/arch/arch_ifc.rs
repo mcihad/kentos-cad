@@ -487,6 +487,7 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
         members: n(written.members),
         fixtures: n(written.fixtures),
         grid_axes: n(written.grid_axes),
+        coverings: n(written.coverings),
         bytes: text.len() as u64,
         sha256,
     };

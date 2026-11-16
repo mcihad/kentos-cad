@@ -96,7 +96,7 @@ kimliği; test bağlantısı.
 | IfcStair | MRD | Merdiven | ✓ tipi kollarından, Betonarme (ADR 8070) | yangın; acil çıkış beyanla (ADR 8068) | IFC-02 |
 | IfcRamp | RMP | Rampa | ✓ eğik kollar ve sahanlıklar, tipi kollarından (ADR 8070) | korkulukları | IFC-03 |
 | IfcRailing | KRK | Korkuluk | ✓ | — | — |
-| IfcCovering | KPL | Kaplama, asma tavan (BIM-09) | — mahalin seti adları ve döşeme/tavan kalınlıklarıyla (K44, ADR 8070) | duvar kalınlığı; elle çizilen kaplama | IFC-03 |
+| IfcCovering | KPL | Kaplama, asma tavan (BIM-09) | ✓ döşemenin kaplama rolü (mahale bağlı ya da elle, tipi ve gövdesiyle; K47) ve mahalin seti adları ve kalınlıklarıyla (K44, ADR 8070) | duvar kalınlığı; `IfcRelCoversSpaces`; katman takımı | IFC-03 |
 | IfcChimney | BAC | Çatı bacası, duvardaki baca | ✓ tek eleman, duvarın boşluğunu doldurur (ADR 8070) | — | IFC-03 |
 | IfcGridAxis | AKS | Aks | ✓ `IfcGrid` U/V (ADR 8070); tek yönlü takım kayıpta | RADIAL | IFC-03 |
 | IfcGroup | GRP | — | ✗ | kataloğun ne için istediği belli olunca | IFC-03 |
@@ -107,7 +107,7 @@ kimliği; test bağlantısı.
 | IfcSign | TBL | — | ✗ | gerek çıkınca | — |
 
 `building.rs`'in `Class` listesindeki taşıma elemanı, mobilya, sıhhi tesisat ucu, baca, rampa, giydirme cephe ve onun
-dikme ve kayıtları, dikme ve kayıt (eleman) artık kuruluyor (ADR 8070); kaplama henüz kurulmuyor.
+dikme ve kayıtları, dikme ve kayıt (eleman) ve kaplama artık kuruluyor (ADR 8070).
 
 **Mekânsal yapı.** `IfcProject` → `IfcSite` → `IfcBuilding` → `IfcBuildingStorey` (`IfcRelAggregates`); eleman katında
 (`IfcRelContainedInSpatialStructure`); mahal katının parçası. Çok kata uzanan elemanın birincil katı bellidir, öbür katlar

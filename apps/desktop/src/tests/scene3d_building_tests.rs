@@ -632,3 +632,102 @@ fn member_screens() {
         send(&mut app, W::Close);
     }
 }
+
+/// The facade building with an asma tavan in every ground storey room (docs/adr/8070 §10): each a 12.5 mm Alçıpan
+/// covering bound to its room, its underside 2.60 over the storey's floor; then section A derived 20 m east.
+fn with_ceilings() -> kentos_commands::DocumentSnapshotV2 {
+    use kentos_native_application::{ExecutionContext, registry, sections_edit};
+    let snap = kentos_kcad::decode(include_bytes!("../../../../fixtures/arch/v1/facade-building.kcad")).expect("decodes");
+    let mut doc = kentos_domain::Document::from_snapshot_v2(snap).expect("opens");
+    let rooms: Vec<String> = doc
+        .entities_with_uids()
+        .filter_map(|(u, e)| match e {
+            Entity::Space(s) if !s.space.void && s.space.arch.level.as_deref() == Some("zemin") => Some(u.to_string()),
+            _ => None,
+        })
+        .collect();
+    let slabs: Vec<serde_json::Value> = rooms
+        .iter()
+        .map(|r| {
+            serde_json::json!({"space": r, "thickness": 0.0125, "offset": 2.6125, "material": "Alçıpan",
+                               "arch": {"level": "zemin"}, "covering": {"predefined": "CEILING", "name": "Asma tavan"}})
+        })
+        .collect();
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.slabs.create",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"layerId": "0", "slabs": slabs}),
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let section = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| match e {
+            Entity::ViewMark(v) if v.mark.form == kentos_commands::ViewMarkForm::Section && v.mark.mark == "A" => Some(u),
+            _ => None,
+        })
+        .expect("section A");
+    let derived = sections_edit::execute(
+        &mut ExecutionContext::new(&mut doc),
+        kentos_commands::BuildingSectionsEdit {
+            operation: kentos_commands::BuildingSectionsOperation::Derive {
+                mark: section.to_string(),
+                at: Some(kentos_commands::Vec2 { x: 20.0, y: 0.0 }),
+            },
+            expected_revision: None,
+        },
+    );
+    assert!(matches!(derived, kentos_commands::CommandResult::Completed { .. }), "{derived:?}");
+    doc.to_snapshot_v2()
+}
+
+/// Kaplama in section and in 3D (docs/adr/8070 §10): section A with the asma tavan under each ground storey room's
+/// slab, and the ground storey alone in 3D from the south-west and from above. `.run/gui-evidence/kaplama-8070/`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib scene3d_building_tests::covering_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn covering_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kaplama-8070");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 700.0), "koyu")] {
+        let mut app = open(with_ceilings());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let fit = |app: &mut App, min: [f64; 2], max: [f64; 2]| {
+            app.viewport.camera.fit(
+                &kentos_render_wgpu::Bounds { min_x: min[0], min_y: min[1], max_x: max[0], max_y: max[1] },
+                24.0,
+            );
+        };
+        shot(&mut app, "0-acilis");
+        fit(&mut app, [18.0, -2.0], [38.0, 9.0]);
+        shot(&mut app, "1-kesit-a");
+        let _ = app.update(Message::Run("scene3d.view"));
+        send(&mut app, W::Storey(1));
+        send(&mut app, W::Rooms);
+        send(&mut app, W::View(1));
+        shot(&mut app, "2-3b-zemin-kat-guneybati");
+        send(&mut app, W::View(3));
+        shot(&mut app, "3-3b-zemin-kat-ustten");
+        send(&mut app, W::Close);
+    }
+}

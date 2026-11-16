@@ -2181,8 +2181,20 @@
         ]
        },
        {
-        "command": "tool.slab",
-        "size": "small"
+        "key": "archSlabs",
+        "size": "small",
+        "split": [
+         {
+          "command": "tool.slab",
+          "title": "Döşeme",
+          "label": "Döşeme"
+         },
+         {
+          "command": "tool.covering",
+          "title": "Döşeme",
+          "label": "Kaplama"
+         }
+        ]
        }
       ]
      },

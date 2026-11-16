@@ -800,3 +800,48 @@ fn a_column_becomes_a_post_and_a_beam_a_rail() {
     let Entity::Beam(b) = entity(&app, beam) else { panic!("a beam") };
     assert_eq!(b.beam.member, None);
 }
+
+/// Kaplama in Öznitelikler (docs/adr/8070 §10): a slab's Tür Kaplama makes it an asma tavan (CEILING), its Kaplama tipi
+/// and Kaplama adı rows then shown and its Döşeme türü row gone; Kaplama adı typed keeps its type; Tür Döşeme makes it a
+/// slab again.
+#[test]
+fn a_slab_becomes_a_covering_and_back() {
+    use kentos_commands::{Covering, SlabChange, SlabsOperation, Workspace};
+    use serde_json::json;
+    let mut app = objects();
+    let doc = &mut app.document.as_mut().unwrap().model;
+    let mut settings = doc.settings().clone();
+    settings.workspace = Some(Workspace::Cad);
+    settings.srid = 0;
+    doc.set_settings(settings);
+    let slab = add(&mut app, serde_json::from_value(json!({
+        "kind":"slab", "id":0, "layerId":"parsel", "attrs":{},
+        "parts":[{"outer":{"pts":[{"x":0.,"y":0.},{"x":4.,"y":0.},{"x":4.,"y":3.},{"x":0.,"y":3.}]}}],
+        "thickness":0.0125, "offset":2.6
+    })).unwrap());
+    select(&mut app, &[slab]);
+    let labels = |app: &App| -> Vec<String> {
+        rows(app).into_iter().flat_map(|(_, r)| r).map(|r| r.label.to_string()).collect()
+    };
+    assert_eq!(noted(&app, "Tür").0, "Döşeme");
+    assert!(labels(&app).iter().any(|l| l == "Döşeme türü"));
+    event(&mut app, Event::Slab(Slot(slab), SlabsOperation::Set(SlabChange {
+        covering: Some(Some(Covering::ceiling())),
+        ..Default::default()
+    })));
+    let Entity::Slab(s) = entity(&app, slab) else { panic!("a slab") };
+    assert_eq!(s.slab.covering, Some(Covering::ceiling()));
+    assert_eq!(noted(&app, "Tür").0, "Kaplama");
+    assert_eq!(noted(&app, "Kaplama tipi").0, "Asma tavan (CEILING)");
+    assert_eq!(noted(&app, "Kaplama adı").0, "Asma tavan");
+    assert!(!labels(&app).iter().any(|l| l == "Döşeme türü"));
+    event(&mut app, Event::Commit(Field::SlabCoveringName(Slot(slab)), "Metal asma tavan".into()));
+    let Entity::Slab(s) = entity(&app, slab) else { panic!("a slab") };
+    assert_eq!(
+        s.slab.covering,
+        Some(Covering { predefined: "CEILING".into(), name: Some("Metal asma tavan".into()) })
+    );
+    event(&mut app, Event::Slab(Slot(slab), SlabsOperation::Set(SlabChange { covering: Some(None), ..Default::default() })));
+    let Entity::Slab(s) = entity(&app, slab) else { panic!("a slab") };
+    assert_eq!(s.slab.covering, None);
+}

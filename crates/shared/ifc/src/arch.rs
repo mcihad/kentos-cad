@@ -312,6 +312,8 @@ pub struct Written {
     pub fixtures: usize,
     /// The curtain walls and their frames written (docs/adr/8070 §7).
     pub curtain_walls: usize,
+    /// The coverings written (docs/adr/8070 §10).
+    pub coverings: usize,
     pub members: usize,
     /// The grids' axes written (docs/adr/8070 §4).
     pub grid_axes: usize,
@@ -809,7 +811,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             Entity::Beam(b) => b.beam.member.as_ref(),
             _ => None,
         };
-        let as_member = member.map(|m| {
+        let mut as_member = member.map(|m| {
             let t = kentos_contracts::Member::TYPES
                 .iter()
                 .find(|t| **t == m.predefined)
@@ -819,6 +821,18 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         });
         if let Some(m) = member {
             object_type = m.object_type();
+        }
+        // A covering (docs/adr/8070 §10; EK-6 Tablo 6.20): an IfcCovering of its type, its name's words.
+        if let Entity::Slab(sl) = e
+            && let Some(c) = &sl.slab.covering
+        {
+            let t = kentos_contracts::Covering::TYPES
+                .iter()
+                .find(|t| **t == c.predefined)
+                .copied()
+                .unwrap_or("NOTDEFINED");
+            as_member = Some((Class::Covering, t, c.words()));
+            object_type = c.object_type();
         }
         let (class, predefined, words): (Class, &'static str, String) = if let Some(found) = as_member {
             found
@@ -867,12 +881,13 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             Class::Stair => written.stairs += 1,
             Class::Ramp => written.ramps += 1,
             Class::Member => written.members += 1,
+            Class::Covering => written.coverings += 1,
             _ => {}
         }
         // EK-6's properties the drawing knows: a balcony's or a terrace's slab is outside (Tablo 6.56), a roof is
         // (Tablo 6.52), a column carries (Tablo 6.16: KentOS's column is the frame's, Betonarme unless said).
         let psets = match e {
-            Entity::Slab(s) => vec![Pset {
+            Entity::Slab(s) if s.slab.covering.is_none() => vec![Pset {
                 name: "Pset_SlabCommon".into(),
                 props: vec![(
                     "IsExternal".into(),

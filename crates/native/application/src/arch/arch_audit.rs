@@ -187,7 +187,12 @@ impl Audit<'_> {
             out.push(finding(
                 ArchAuditCheck::Spaces,
                 codes::ARCH_SLAB_BROKEN,
-                format!("{}: {}", s.slab.role.label(), why.words()),
+                // A covering bound to its room says so (docs/adr/8070 §10).
+                format!(
+                    "{}: {}",
+                    if s.slab.covering.is_some() { "Kaplama" } else { s.slab.role.label() },
+                    why.words()
+                ),
                 "Kaynağa bağla ile döşemeyi yeniden bağlayın ya da Ayır ile son sınırını bağımsız kontur yapın.",
                 vec![uid],
                 space_point(&s.slab.parts),

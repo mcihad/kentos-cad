@@ -100,7 +100,7 @@ fn modules_of(doc: &DocumentSnapshotV2) -> ModuleVersions {
     let mut out = ModuleVersions::default();
     // Architecture 1 (docs/adr/8068): fire resistance, exit roles, strengths, the building's performance; 2
     // (docs/adr/8070 §5): a block card's building element; 3 (§7) a curtain wall; 4 (§8) a post, a rail, a column's
-    // own height.
+    // own height; 5 (§10) a covering.
     let arch = crate::arch_version(doc);
     if arch > 0 {
         out.modules.push(("arch".to_owned(), arch));

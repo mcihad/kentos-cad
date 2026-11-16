@@ -35,11 +35,59 @@ pub(super) fn rows(k: &Kit, sl: &kentos_commands::SlabEntity) -> Vec<Row> {
             items,
         })
     };
+    // Döşeme or Kaplama (docs/adr/8070 §10): a covering is no floor of the building, an IfcCovering of its type.
+    {
+        use kentos_commands::Covering;
+        let kind = if x.covering.is_some() { "Kaplama" } else { "Döşeme" };
+        let kinds = vec![
+            pick("Döşeme".into(), x.covering.is_none(), set(SlabChange { covering: Some(None), ..Default::default() }), None),
+            pick(
+                "Kaplama".into(),
+                x.covering.is_some(),
+                set(SlabChange {
+                    covering: Some(Some(x.covering.clone().unwrap_or_else(Covering::ceiling))),
+                    // A covering has no layers and no edge.
+                    layers: (!x.layers.is_empty()).then(Default::default),
+                    edge: x.edge.is_some().then_some(None),
+                    role: (x.role != SlabRole::Floor).then_some(SlabRole::Floor),
+                    ..Default::default()
+                }),
+                None,
+            ),
+        ];
+        geo.push(Row::text("Tür", kind).editor(select(kind.into(), kinds)));
+        if let Some(c) = &x.covering {
+            let shown = |t: &str| format!("{} ({t})", if t == "CEILING" { "Asma tavan" } else { Covering::word(t) });
+            let types = Covering::TYPES
+                .iter()
+                .map(|&t| {
+                    let name = if t == "USERDEFINED" {
+                        Some(c.name.clone().unwrap_or_else(|| Covering::word(&c.predefined).to_owned()))
+                    } else {
+                        c.name.clone()
+                    };
+                    pick(
+                        shown(t),
+                        t == c.predefined,
+                        set(SlabChange {
+                            covering: Some(Some(Covering { predefined: t.to_owned(), name })),
+                            ..Default::default()
+                        }),
+                        None,
+                    )
+                })
+                .collect();
+            geo.push(Row::text("Kaplama tipi", shown(&c.predefined)).editor(select(shown(&c.predefined), types)));
+            geo.push(Row::text("Kaplama adı", c.words()).editor(edit(Editor::Text(Field::SlabCoveringName(slot)))));
+        }
+    }
     let roles = SlabRole::ALL
         .iter()
         .map(|&r| pick(r.label().into(), r == x.role, set(SlabChange { role: Some(r), ..Default::default() }), Some("slab")))
         .collect();
-    geo.push(Row::text("Döşeme türü", x.role.label()).editor(select(x.role.label().into(), roles)));
+    if x.covering.is_none() {
+        geo.push(Row::text("Döşeme türü", x.role.label()).editor(select(x.role.label().into(), roles)));
+    }
     // Sınır (docs/adr/0771 §4, 0791): an outline of its own, bound to its walls or to a space of its level.
     let spaces = super::super::wall_parts::space_choices(&doc.model, x);
     let bound_now = super::super::wall_parts::bound_text(x, &spaces);

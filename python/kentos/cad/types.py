@@ -27813,6 +27813,33 @@ class CountScope(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class Covering(_Model):
+    """What makes a slab a covering (docs/adr/8070 §10).
+    Attributes:
+        predefined: Its IFC 4.3 type ([`Covering::TYPES`]): `CEILING` a ceiling (asma tavan), `FLOORING` a floor covering…;
+            `USERDEFINED` takes `name` as its object type.
+        name: What it is in words ("Asma tavan", "Parke"): its IFC name's words, and its object type when its type is
+            `USERDEFINED`, which needs it; absent: its type's own word ([`Covering::word`]).
+    """
+    predefined: str
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["predefined"] = self.predefined
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Covering:
+        return cls(
+            predefined=data["predefined"],
+            name=data.get("name", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CrossfallZero(_Model):
     """A station where a side's first lane's crossfall is zero.
     Attributes:
@@ -48043,6 +48070,7 @@ class IfcBuildingExported(_Model):
         stairs: Unit: count.
         bytes: Unit: bytes.
         chimneys: Unit: count.
+        coverings: Its coverings (docs/adr/8070 §10): the slabs that are one; `slabs` does not count them. Unit: count.
         curtain_walls: Unit: count.
         fixtures: Unit: count.
         grid_axes: Unit: count.
@@ -48066,6 +48094,7 @@ class IfcBuildingExported(_Model):
     bytes: int
     sha256: str
     chimneys: int = 0
+    coverings: int = 0
     curtain_walls: int = 0
     fixtures: int = 0
     grid_axes: int = 0
@@ -48091,6 +48120,7 @@ class IfcBuildingExported(_Model):
         out["bytes"] = self.bytes
         out["sha256"] = self.sha256
         out["chimneys"] = self.chimneys
+        out["coverings"] = self.coverings
         out["curtainWalls"] = self.curtain_walls
         out["fixtures"] = self.fixtures
         out["gridAxes"] = self.grid_axes
@@ -48118,6 +48148,7 @@ class IfcBuildingExported(_Model):
             bytes=data["bytes"],
             sha256=data["sha256"],
             chimneys=data["chimneys"] if "chimneys" in data else 0,
+            coverings=data["coverings"] if "coverings" in data else 0,
             curtain_walls=data["curtainWalls"] if "curtainWalls" in data else 0,
             fixtures=data["fixtures"] if "fixtures" in data else 0,
             grid_axes=data["gridAxes"] if "gridAxes" in data else 0,
@@ -62943,6 +62974,7 @@ class NewSlab(_Model):
         bound: Kaynağa bağlı (docs/adr/0771 §4): with `seed`, the slab keeps its walls: its outline found again round the
             point, by `boundary` and moved by `edgeOffset`, whenever they change. Absent or false: its outline is its own.
         boundary: Which faces of the walls round `seed` it runs along; absent: their outer faces.
+        covering: A covering (docs/adr/8070 §10): its IFC type and name; absent: a slab.
         edge: A railing or a parapet along its free sides; the document draws it along the sides no wall runs along.
         edge_offset: Every edge of its outline moved by this much, out of it when positive (a slab under the walls, a cantilever),
             in when negative; at most 10 m either way. Unit: length.
@@ -62959,6 +62991,7 @@ class NewSlab(_Model):
     attrs: dict[str, str] | None | Unset = UNSET
     bound: bool | None | Unset = UNSET
     boundary: SlabBoundary | SlabBoundaryName | None | Unset = UNSET
+    covering: Covering | None | Unset = UNSET
     edge: NewSlabEdge | None | Unset = UNSET
     edge_offset: float | None | Unset = UNSET
     excluded: bool | None | Unset = UNSET
@@ -62981,6 +63014,8 @@ class NewSlab(_Model):
             out["bound"] = self.bound
         if self.boundary is not UNSET:
             out["boundary"] = None if self.boundary is None else _enum_out(self.boundary)
+        if self.covering is not UNSET:
+            out["covering"] = None if self.covering is None else self.covering.to_json()
         if self.edge is not UNSET:
             out["edge"] = None if self.edge is None else self.edge.to_json()
         if self.edge_offset is not UNSET:
@@ -63012,6 +63047,7 @@ class NewSlab(_Model):
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             bound=data.get("bound", UNSET),
             boundary=UNSET if "boundary" not in data else None if data["boundary"] is None else _enum_in(SlabBoundary, data["boundary"]),
+            covering=UNSET if "covering" not in data else None if data["covering"] is None else Covering.from_json(data["covering"]),
             edge=UNSET if "edge" not in data else None if data["edge"] is None else NewSlabEdge.from_json(data["edge"]),
             edge_offset=UNSET if "edgeOffset" not in data else None if data["edgeOffset"] is None else float(data["edgeOffset"]),
             excluded=data.get("excluded", UNSET),
@@ -96261,6 +96297,8 @@ class SlabEntity(Entity):
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
+        covering: A covering (docs/adr/8070 §10): a plate covering another element (a suspended ceiling, a floor covering drawn by
+            hand), written as an `IfcCovering` of its type; no floor of the building. Absent: a slab.
         excluded: Left out of the quantities' totals: listed, not summed.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -96296,6 +96334,7 @@ class SlabEntity(Entity):
     bound: SlabBound | None | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
+    covering: Covering | None | Unset = UNSET
     edge: SlabEdge | None | Unset = UNSET
     excluded: bool | Unset = UNSET
     label: str | None | Unset = UNSET
@@ -96331,6 +96370,8 @@ class SlabEntity(Entity):
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
             out["color"] = self.color
+        if self.covering is not UNSET:
+            out["covering"] = None if self.covering is None else self.covering.to_json()
         if self.edge is not UNSET:
             out["edge"] = None if self.edge is None else self.edge.to_json()
         if self.excluded is not UNSET:
@@ -96380,6 +96421,7 @@ class SlabEntity(Entity):
             bound=UNSET if "bound" not in data else None if data["bound"] is None else SlabBound.from_json(data["bound"]),
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
+            covering=UNSET if "covering" not in data else None if data["covering"] is None else Covering.from_json(data["covering"]),
             edge=UNSET if "edge" not in data else None if data["edge"] is None else SlabEdge.from_json(data["edge"]),
             excluded=data.get("excluded", UNSET),
             label=data.get("label", UNSET),
@@ -137157,12 +137199,14 @@ class CustomSheetTemplateSource(SheetTemplateSource):
 class SetSlabsOperation(SlabsOperation):
     """Değiştir: the fields given, on every slab named.
     Attributes:
+        covering: A covering's type and name (docs/adr/8070 §10); null: a slab again.
         edge: Its edge's kind and width; null: no edge.
         layers: Its layers besides its structure, all of them (docs/adr/8040 §2); empty lists take them away.
         offset: Unit: elevation.
         thickness: Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "set"
+    covering: Covering | None | Unset = UNSET
     edge: NewSlabEdge | None | Unset = UNSET
     excluded: bool | None | Unset = UNSET
     layers: SlabLayers | None | Unset = UNSET
@@ -137175,6 +137219,8 @@ class SetSlabsOperation(SlabsOperation):
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "set"}
+        if self.covering is not UNSET:
+            out["covering"] = None if self.covering is None else self.covering.to_json()
         if self.edge is not UNSET:
             out["edge"] = None if self.edge is None else self.edge.to_json()
         if self.excluded is not UNSET:
@@ -137198,6 +137244,7 @@ class SetSlabsOperation(SlabsOperation):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SetSlabsOperation:
         return cls(
+            covering=UNSET if "covering" not in data else None if data["covering"] is None else Covering.from_json(data["covering"]),
             edge=UNSET if "edge" not in data else None if data["edge"] is None else NewSlabEdge.from_json(data["edge"]),
             excluded=data.get("excluded", UNSET),
             layers=UNSET if "layers" not in data else None if data["layers"] is None else SlabLayers.from_json(data["layers"]),
@@ -142101,6 +142148,7 @@ __all__ = [
     "CountExplodeDensity",
     "CountExtractValue",
     "CountScope",
+    "Covering",
     "CreateBlockChange",
     "CreateDomainsOp",
     "CreateFeatureChange",

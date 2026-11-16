@@ -10,6 +10,7 @@ mod arrange;
 mod beam_tool;
 mod curtain_wall_tool;
 mod member_tools;
+mod covering_tool;
 mod roof_part_tool;
 mod railing_tool;
 mod roof_tool;

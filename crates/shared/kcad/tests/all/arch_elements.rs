@@ -167,3 +167,38 @@ fn a_post_and_a_rail_round_trip_under_arch_data_4() {
     let refused = kentos_kcad::encode(&nameless).expect_err("a user-defined member says what it is");
     assert!(refused.message.contains("USERDEFINED"), "{}", refused.message);
 }
+
+/// Architecture data 5 (docs/adr/8070 §10): a covering (a slab's `covering`) is written with `modules.arch = 5` and read
+/// back as it was; one with layers is refused when written.
+#[test]
+fn a_covering_round_trips_under_arch_data_5() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_coverings(&doc));
+    let slab = doc
+        .entities
+        .iter_mut()
+        .find_map(|e| match e {
+            kentos_contracts::Entity::Slab(s) => Some(s),
+            _ => None,
+        })
+        .expect("a slab");
+    slab.slab.layers = Default::default();
+    slab.slab.edge = None;
+    slab.slab.role = kentos_contracts::SlabRole::Floor;
+    slab.slab.covering = Some(kentos_contracts::Covering::ceiling());
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_COVERINGS);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the covering read back");
+    let mut layered = doc.clone();
+    if let Some(kentos_contracts::Entity::Slab(s)) =
+        layered.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Slab(s) if s.slab.covering.is_some()))
+    {
+        s.slab.layers.over.push(kentos_contracts::SlabLayer {
+            kind: kentos_contracts::SlabLayerKind::Finish,
+            thickness: 0.02,
+            material: None,
+        });
+    }
+    let refused = kentos_kcad::encode(&layered).expect_err("a covering has no layers");
+    assert!(refused.message.contains("Kaplamanın katmanları"), "{}", refused.message);
+}

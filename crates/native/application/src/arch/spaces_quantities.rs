@@ -230,7 +230,8 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     },
                 });
             }
-            Entity::Slab(sl) if input.usages.is_none() => {
+            // A covering is no slab of the building (docs/adr/8070 §10).
+            Entity::Slab(sl) if input.usages.is_none() && sl.slab.covering.is_none() => {
                 if takes(e, &sl.slab.arch) {
                     let r = crate::slab_quantities::slab_row(doc, uid(e), &sl.slab, &voids);
                     slab_parts.push((&sl.slab, r.net_area, r.volume, !r.excluded));

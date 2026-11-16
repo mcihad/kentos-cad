@@ -1,11 +1,11 @@
-# ADR 8070: Eksik yapı elemanları — rampa, merdiven ve rampa tipleri, baca ve niş, aks ızgarası, kitaplık blokları, kaplama, giydirme cephe, dikme ve kayıt
+# ADR 8070: Eksik yapı elemanları — rampa, merdiven ve rampa tipleri, baca ve niş, aks ızgarası, kitaplık blokları, kaplama, giydirme cephe, dikme ve kayıt, kaplama nesnesi
 
 - **Durum:** kısmen uygulandı (16 Kasım 2026). Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-09,
   [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-03; uygulama sırasında B9. Bu ADR maddenin bütün adımlarını tutar; her adım
   kendi bölümüdür ve koddaki "docs/adr/8070 §N" atıfları bu bölümleri gösterir: §1 rampanın gövdesi, §2 merdiven ve
   rampanın tipi ve malzemesi, §3 baca ve niş, §4 aks ızgarası, §5 kitaplık blokları, §6 kaplama, §7 giydirme cephe,
-  §8 dikme ve kayıt, §9 çizelgeler, dışa aktarmanın sayıları ve ilk kabul. Kararların numarası bölümler boyunca sürer
-  (1–31). Birden çok adımın ortak sınamaları ve sıradaki
+  §8 dikme ve kayıt, §9 çizelgeler, dışa aktarmanın sayıları ve ilk kabul, §10 kaplama ve asma tavan nesnesi. Kararların
+  numarası bölümler boyunca sürer (1–37). Birden çok adımın ortak sınamaları ve sıradaki
   adımlar numarasız son bölümlerdedir (yeni adım numaralı bölüm olarak araya girer).
 - **Bağlam:** ADR [8047](8047-ifc-building-export.md) (binanın IFC'si, kayıp listesi), [8042](8042-section-derived-from-a-section-mark.md)
   (kesit modeli), [0705](0705-ramps-by-slope-and-railings.md) ve [0723](0723-ramp-landings-levels-accessibility.md) (rampa),
@@ -437,6 +437,83 @@
   24 durumu geçti.
 - **Masaüstü:** kesişen süzgeçler ve IFC, çizelge sınamaları 246 sınamayla geçti.
 
+## §10. Kaplama ve asma tavan (K47)
+
+**Araştırma.**
+
+- **EK-6 Tablo 6.20 (kaplama, `IfcCovering`, PDF s. 59):** "başka bir elemanın bir kısmını örten ve tamamen o elemana
+  bağlı olan bir eleman"; tip listesi CEILING, CLADDING, COPING, FLOORING, INSULATION, MEMBRANE, MOLDING, ROOFING,
+  SKIRTING BOARD, SLEEVING, TOPPING, WRAPPING, USERDEFINED, NOTDEFINED. Zorunlular ön tanımlı tip, ad (EK-5), etiket,
+  malzeme; kaplamanın malzemesi ve kalınlığı iki yoldan biriyle (mahalin seti ya da `IfcCovering`'in katmanı, §6).
+- **IFC 4.3'ün tip tanımları** (IFC4.3.x-development deposu, `IfcCoveringTypeEnum.md`): CEILING tavanı, FLOORING döşeme
+  kaplamasını, ROOFING çatı örtüsünü, TOPPING "a layer of material used for leveling or flattening a surface" temsil
+  eder.
+- **EK-5 Tablo 5.1:** kaplama KPL. **EK-2 Tablo 2.3:** Asma Tavan ASTV, Zemin Kaplama ZMNK, Duvar Kaplama DUVK, Çatı
+  Kaplama CKAP, Isı Yalıtımı ISYA, Su Yalıtımı SUYA, Kartonpiyer KARP, Süpürgelik SUPR, Harpuşta HARP, Tesviye Betonu TSVY.
+- **Başka uygulamalar:** asma tavan mahalden ayrı bir nesnedir (ADR 8040'ın araştırması).
+- **Asma tavanın ilk kalınlığı:** alçı levha üreticilerinin veri sayfaları yaygın kalınlıkları 9,5, 12,5 ve 15 mm verir
+  (ör. GYPFOR'un ürün broşürü); NHBC'nin iç duvar kılavuzu 600 mm aralık için 12,5 mm ve üstünü önerir, bir yapı
+  malzemesi satıcısının notu tavanlarda 9,5–12,5 mm der. EN 520'nin kendi metni okunamadı (ücretli): KentOS'un ilk
+  değeri olarak 12,5 mm, bir standardın istediği söylenmez.
+
+**Karar.**
+
+32. **Kaplama döşemenin bir roldür (K47):** `SlabFields.covering` (`Covering { predefined, name }`: IFC 4.3'ün 13 tipi,
+    NOTDEFINED tip değil, USERDEFINED'ın ne olduğu adında); döşemenin sınırı, kalınlığı, kotu, malzemesi ve kaynağa bağlı
+    sınırı kullanılır, ayrı nesne türü kurulmaz (dikme ve kayıt gibi, §8). **Mahalden türeyen nesne:** mahale bağlı
+    kaplamanın sınırı mahalin halkalarıdır ve mahal değişince yeniden bulunur (ADR 0771 §4); elle de köşeleriyle
+    çizilir. Kaplama katmansız, kenarsız ve türü Döşeme'dir (`SlabFields::problem`).
+33. **Yapı değildir:** duvarın yüksekliği, kolonun ve kirişin gövdesi, mahalin tavanı ve döşemesi onu görmez (yapı dizini
+    `structure_index`, kesit modelinin döşeme listesi); metrajın döşeme satırları ve korkuluk denetimi onu saymaz.
+    Mahalin kendi asma tavanı (`suspendedCeiling`, ADR 8040 §3) yüksekliği söyler; kaplama onun gövdesidir.
+34. **Kesit, plan ve 3B:** kesitte tipinin EK-2 öğesinde, malzemesiyle (MM-ASTV-ALCIPAN; malzemesiz GENEL), ince ve
+    taramasız bir plaka; planda katman anahtarıyla tipinin öğesi (MM-ASTV-GENEL, MM-ZMNK-GENEL); 3B'de döşemenin
+    renginde.
+35. **IFC:** `IfcCovering`, tipi, adı EK-5'e göre (KPL ve adı, yoksa tipin Türkçe sözcüğü: MM-KPL-Asma_tavan,
+    MM-KPL-Zemin_kaplaması), USERDEFINED'ın nesne tipi adı, malzemesi, etiketi kimliği; `Pset_SlabCommon` yazılmaz,
+    FireRating beyandan (`Pset_CoveringCommon`). Katman takımı (`IfcMaterialLayerSet`, LayerThickness) yazılmaz, kalınlık
+    gövdededir (katmanlı malzeme IFC-04'ün işi); mahale bağ (`IfcRelCoversSpaces`) sonraki adım. Dışa aktarmanın
+    sayılarında `coverings`; `slabs` kaplamayı saymaz.
+36. **Sürüm:** `.kcad`'de kaplama mimari veri sürüm 5'tir (`ARCH_WITH_COVERINGS`; 1–4'ün verisini de içerir).
+37. **Komut, araç ve pencere:** `cad.slabs.create` `covering`'i, `cad.slabs.edit` nullable `covering`'i alır. Araç
+    **Kaplama** (`tool.covering`, yazılı adı KM; şeritte Mimari › Mahal'de Döşeme ▾ (Döşeme, Kaplama); ikonu seçenek
+    sayfasından A, katmanlı plakalar): Sınır (S: Mahal tıklanan mahale bağlar, Köşeleri çiz), Tip (P: Asma tavan ile
+    başlar), Kalınlık (E: asma tavan 12,5 mm, öbürleri 2 cm, ADR 8040'ın döşeme dizilişindeki kaplama), Kot farkı (F; Oto:
+    tavan mahalin tavanında, öbürleri tabanında, üstü kalınlığı kadar yukarıda), Malzeme (M). Öznitelikler'de Tür
+    (Döşeme, Kaplama: kaplamaya çevirince katmanlar ve kenar kalkar, türü Döşeme olur), Kaplama tipi, Kaplama adı;
+    kaplamada Döşeme türü satırı yok. Tiplerin Türkçe sözcükleri (`Covering::word`): CEILING Tavan kaplaması (araç ve
+    pencere "Asma tavan" der), FLOORING Zemin kaplaması, CLADDING Duvar kaplaması, ROOFING Çatı kaplaması, INSULATION Isı
+    yalıtımı, MEMBRANE Su yalıtımı, MOLDING Kartonpiyer, SKIRTINGBOARD Süpürgelik, COPING Harpuşta, TOPPING Tesviye
+    betonu, SLEEVING Kılıf, WRAPPING Sargı.
+
+**Sınama.**
+
+- **Sözleşme** (`covering::tests`): asma tavan geçerli, adı "Asma tavan"; FLOORING'in sözcüğü; CEILING ASTV'de, SLEEVING
+  Diğer'de; NOTDEFINED ve adsız USERDEFINED reddedilir.
+- **Uygulama** (`arch_ifc::a_ceiling_from_a_room_and_a_floor_covering_are_ifc_coverings`): bölüm binasının zemin kattaki
+  bir mahaline bağlı 12,5 mm Alçıpan asma tavan (üstü 2,60) ve elle çizilmiş zemin kaplaması. Elle: plaka 2,5875–2,60,
+  MM-ASTV-ALCIPAN, ince. Duvarların yükseklikleri ve mahalin tavanı değişmez. IFC'de IfcCovering CEILING
+  (MM-KPL-Asma_tavan, Alçıpan) ve FLOORING (MM-KPL-Zemin_kaplaması); IfcSlab sayısı aynı; kayıp listesi boş.
+- **Bağımsız okuyucu:** yazılan dosya (`KENTOS_WRITE_IFC_COVERINGS`) IfcOpenShell 0.9.0.post1'in doğrulayıcısından 0
+  bulguyla geçti; iki kaplama zemin katta, gövdeleri kuruluyor.
+- **`.kcad`** (`arch_elements::a_covering_round_trips_under_arch_data_5`): kaplama `modules.arch = 5` ile gidip gelir;
+  katmanlı kaplama yazılırken reddedilir.
+- **Etkileşim** (`covering_tool::the_covering_tool_draws_a_ceiling_and_a_floor_covering`): seçenekler Sınır, Tip,
+  Kalınlık, Kot farkı, Malzeme; köşelerle 12,5 mm Alçıpan asma tavan (Kot farkı 2,6) MM-ASTV-GENEL'de; Tip FLOORING'de
+  2 cm, Oto kotla tabanında (0,02), MM-ZMNK-GENEL'de; sıfır kalınlık reddedilir.
+- **Masaüstü** (`properties::tests::arch::a_slab_becomes_a_covering_and_back`): Tür Kaplama asma tavan yapar, Kaplama
+  tipi "Asma tavan (CEILING)" ve Kaplama adı gelir, Döşeme türü gider; ad yazılır, tip kalır; Tür Döşeme geri döndürür.
+  Kesişen süzgeçler 251 sınamayla geçti.
+- **Ortak durumlar** (başvuru `scripts/fixtures/slab_cases.py`, metrajın kuralı `space_command_cases.py`, KentOS kodu
+  olmadan): `cad.slabs.create`'e 14 (asma tavan, zemin kaplaması, adıyla kullanıcı tanımlı, katlı çatı kaplaması, metraj
+  dışı ısı yalıtımı, her biri metrajda döşeme sayılmadan; NOTDEFINED, küçük harfli tip, adsız USERDEFINED, boş ve 121
+  karakterlik ad, katmanlı, korkuluklu, balkon ve teras kaplama reddi), `cad.slabs.edit`'e 8 (döşeme asma tavan olur ve
+  metrajdan çıkar, kaplama döşemeye döner ve metraja girer, tipi ve adı, kalınlığı ve kotu; katmanlı döşeme kaplama
+  olamaz, kaplamaya katman ve korkuluk verilmez, adsız USERDEFINED). "Değiştirilecek alan yok" iletisi kaplamayı da sayar.
+  Döşeme, bağlı döşeme, metraj ve dışa aktarma komutlarının bütün durumları geçti.
+- **Resimler:** `.run/gui-evidence/kaplama-8070/` (görünüş binasının zemin katındaki her mahalde asma tavan: A-A kesiti,
+  yalnız zemin kat 3B güneybatıdan ve üstten; açık ve koyu) ve `.run/gui-evidence/ikon-kaplama/secenekler.png`.
+
 ## Ortak sınamalar
 
 - **Bağımsız okuyucu** (`scripts/fixtures/arch_ifc_check.py`, IfcOpenShell 0.9.0.post1, KentOS kodu olmadan): yeniden
@@ -453,7 +530,8 @@
   metrajı; aks kesişimlerine dikme.
 - Giydirme cephenin panel yerine kapısı ve penceresi; doğrama kodu (GC1); köşede iki giydirme cephenin ortak dikmesi;
   panelin kendi malzeme katmanları.
-- Elle çizilen kaplama, asma tavanın gövdesi (`IfcCovering`), duvar kaplamasının kalınlığı.
+- Duvar kaplamasının kalınlığı; kaplamanın mahale bağı (`IfcRelCoversSpaces`) ve katman takımı; mahale bağlı asma
+  tavanın kotunun mahalin asma tavan yüksekliğini izlemesi.
 - Rampanın korkulukları (merdivenin de) kesit modelinde yok.
 - Kitaplık bloklarının gövdesi kutudur; gerçek biçim (lavabo çanağı, asılı klozetin altı) ve EN 81-20'nin kabin
   yüksekliği kaynağı gelince.

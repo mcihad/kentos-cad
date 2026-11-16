@@ -66,6 +66,8 @@ pub mod slab;
 pub mod beam;
 #[path = "arch/member.rs"]
 pub mod member;
+#[path = "arch/covering.rs"]
+pub mod covering;
 #[path = "arch/roof.rs"]
 pub mod roof;
 #[path = "arch/railing.rs"]
@@ -345,6 +347,7 @@ pub use arch_options::*;
 pub use slab::*;
 pub use beam::*;
 pub use member::*;
+pub use covering::*;
 pub use roof::*;
 pub use railing::*;
 pub use space::*;

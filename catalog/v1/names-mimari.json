@@ -13,6 +13,7 @@
     { "name": "PN", "command": "tool.window" },
     { "name": "MH", "command": "tool.space" },
     { "name": "DS", "command": "tool.slab" },
+    { "name": "KM", "command": "tool.covering" },
     { "name": "KL", "command": "tool.column" },
     { "name": "DK", "command": "tool.post" },
     { "name": "AK", "command": "tool.grid" },

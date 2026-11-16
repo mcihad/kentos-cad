@@ -401,7 +401,8 @@ def room_inside(d, s):
     holding = []
     for _, (ly, sl, _) in sorted(d.slabs.items()):
         parts = sl.get("parts")
-        if parts is None or not any(sp.inside(o, at) and not any(sp.inside(h, at) for h in hs) for o, hs in parts):
+        # A covering is no floor of the building (ADR 8070 §10).
+        if sl.get("covering") or parts is None or not any(sp.inside(o, at) and not any(sp.inside(h, at) for h in hs) for o, hs in parts):
             continue
         slv = next((x for x in LEVELS if x["id"] == sl.get("arch", {}).get("level")), None)
         holding.append((sl, slv["elevation"] if slv else 0.0))
@@ -695,7 +696,7 @@ def quantities(d, inp):
                 row["baseboard"] = float(baseboard(s["parts"], arch.get("level"), all_passages))
                 rooms.append((uid_of(i), arch.get("level"), s["parts"], s.get("finishes", {}).get("floor")))
             spaces_rows.append({k: v for k, v in row.items() if v is not None})
-        elif i in d.slabs and inp.get("usages") is None:
+        elif i in d.slabs and inp.get("usages") is None and not d.slabs[i][1].get("covering"):
             layer_id, s, _ = d.slabs[i]
             if takes(layer_id, s.get("arch", {})):
                 slab_rows.append(slab_row(d, i, s))

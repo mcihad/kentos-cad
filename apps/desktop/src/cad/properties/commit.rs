@@ -1185,6 +1185,25 @@ pub(super) fn commit(
             };
             return properties::edit_space(model, *slot, SpacesOperation::Set(change));
         }
+        // A covering's name, its type kept (docs/adr/8070 §10).
+        Field::SlabCoveringName(slot) => {
+            use kentos_commands::{SlabChange, SlabsOperation};
+            let Some(Entity::Slab(s)) = model.get(*slot) else {
+                return Vec::new();
+            };
+            let Some(c) = s.slab.covering.clone() else {
+                return Vec::new();
+            };
+            let t = kentos_interaction::js_trim(text);
+            let change = SlabChange {
+                covering: Some(Some(kentos_commands::Covering {
+                    name: (!t.is_empty()).then(|| t.to_owned()),
+                    ..c
+                })),
+                ..Default::default()
+            };
+            return properties::edit_slab(model, *slot, SlabsOperation::Set(change));
+        }
         Field::SlabThickness(slot)
         | Field::SlabOffset(slot)
         | Field::SlabEdgeWidth(slot)
@@ -1463,6 +1482,7 @@ pub(super) fn commit(
         | Field::SlabEdgeWidth(_)
         | Field::SlabLayer(..)
         | Field::SlabMaterial(_)
+        | Field::SlabCoveringName(_)
         | Field::Arch(..)
         | Field::Elevation(..)
         | Field::PolylineWidth(_)

@@ -88,6 +88,8 @@ impl StructureIndex {
         let mut beams = Vec::new();
         for stored in store.iter() {
             match &*stored.entity {
+                // A covering is no floor of the building: walls, columns and rooms do not stop at it (docs/adr/8070 §10).
+                Entity::Slab(s) if s.slab.covering.is_some() => {}
                 Entity::Slab(s) => slabs.push(Outline::new(
                     stored.slot(),
                     s.slab
@@ -195,7 +197,7 @@ mod tests {
         let p = V::new(at.x, at.y);
         doc.entities()
             .filter_map(|e| match e {
-                Entity::Slab(s) => Some(&s.slab),
+                Entity::Slab(s) if s.slab.covering.is_none() => Some(&s.slab),
                 _ => None,
             })
             .filter(|s| {
