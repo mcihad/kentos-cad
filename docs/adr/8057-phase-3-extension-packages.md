@@ -4657,12 +4657,15 @@ masaüstünün kurulum incelemesi (`Çalıştığı yerler` bölümü).
   (`runtimes`: masaüstü, başsız, bulut) güncellemede sessizce değişebiliyordu: başsız çalışmayı bırakan bir sürüm
   MCP ajanlarının ve Python kitaplığının kullandığı araçlarını götürür, kullanıcı bunu kurduktan sonra öğrenirdi.
 - **Karar.** Güncellemenin incelemesi kurulu sürümle farkı cümleyle söyler, önce bıraktıklarını: "Artık şu sistemlerde
-  çalışmıyor: Windows.", "Artık başsız (MCP ajanları ve KentOS'un Python kitaplığı) çalışmıyor.", sonra eklediklerini
+  çalışmıyor: Windows.", "Artık MCP ajanlarında ve KentOS'un Python kitaplığında çalışmıyor.", sonra eklediklerini
   ("Artık bulutta (sunucunun işlerinde) da çalışıyor."). Hiç sistem yazılmamışsa her sistemdir; ilk kurulum ve aynı
   yerler bir şey söylemez. Bu bilgisayarın sistemini bırakan sürüm zaten kurulamaz (uyumluluk: `incompatible`); cümle
   öbür sistemleri kullananlar için de doğruyu söyler (kurum aynı paketi Windows'ta da dağıtıyorsa).
 - **Sınamalar:** kayıt defteri `view::tests` 1 (bırakma ve ekleme, ilk kurulum, aynı yerler), kayıt defterinin hepsi
   (36), masaüstünün eklenti sınamaları (102).
+- **Söz (aynı gün):** cümle önce "başsız (MCP ajanları ve KentOS'un Python kitaplığı)" diyordu; "başsız" arayüzde
+  başka hiçbir yerde geçmeyen bir geliştirici sözcüğü: yerine kullanıcının bildiği yerler yazıldı ("MCP ajanlarında ve
+  KentOS'un Python kitaplığında").
 
 ## §91. Paketin SBOM'u, Python bağımlılıklarının listesi: `kentos kek sbom` (`ADIM 18A`, PY-UV-29)
 

@@ -302,7 +302,7 @@ pub fn platform_lines(new: &Manifest, old: Option<&Manifest>) -> Vec<String> {
     }
     let runtime = |r: Runtime| match r {
         Runtime::Desktop => "KentOS masaüstünde",
-        Runtime::Headless => "başsız (MCP ajanları ve KentOS'un Python kitaplığı)",
+        Runtime::Headless => "MCP ajanlarında ve KentOS'un Python kitaplığında",
         Runtime::Cloud => "bulutta (sunucunun işlerinde)",
     };
     for r in [Runtime::Desktop, Runtime::Headless, Runtime::Cloud] {
@@ -369,7 +369,7 @@ mod tests {
             platform_lines(&two, Some(&every)),
             [
                 "Artık şu sistemlerde çalışmıyor: Windows.",
-                "Artık başsız (MCP ajanları ve KentOS'un Python kitaplığı) çalışmıyor.",
+                "Artık MCP ajanlarında ve KentOS'un Python kitaplığında çalışmıyor.",
                 "Artık bulutta (sunucunun işlerinde) da çalışıyor."
             ]
         );
@@ -378,7 +378,7 @@ mod tests {
             [
                 "Artık bulutta (sunucunun işlerinde) çalışmıyor.",
                 "Artık şu sistemlerde de çalışıyor: Windows.",
-                "Artık başsız (MCP ajanları ve KentOS'un Python kitaplığı) da çalışıyor."
+                "Artık MCP ajanlarında ve KentOS'un Python kitaplığında da çalışıyor."
             ]
         );
         assert!(platform_lines(&two, None).is_empty(), "a first install");
