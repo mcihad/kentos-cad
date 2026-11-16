@@ -6,10 +6,10 @@
 //!   digest, id and version the request's, or nothing runs; its files are put in the folder (`extension/`) and the rule
 //!   is found by its local id in the manifest's audits.
 //! - **No network capability:** a package that asks for `network` is refused.
-//! - **The box** (`crate::kutu`, docs/adr/8057 §61): on Linux the rule's process runs in a Landlock domain: the files
-//!   it needs and its scratch only, no TCP; UDP is outside what Landlock closes. Where the box cannot close, the
-//!   server's policy decides: the rule does not run (`require`, the default) or runs and the job's summary says so
-//!   (`report`).
+//! - **The box** (`crate::kutu`, docs/adr/8057 §61, §63): on Linux the rule's process runs in a Landlock domain behind
+//!   a seccomp filter: the files it needs and its scratch only, no socket. Where the box cannot be whole, the server's
+//!   policy decides: the rule does not run (`require`, the default) or runs with what closes and the job's summary
+//!   says what is open (`report`).
 //! - **Its Python** is the environment the server prepared for that extension version, given by the request
 //!   (`python`), run offline: isolated (`-I`), its bytecode in the folder, with an empty environment as the whole
 //!   process has. Without one the rule cannot run and the job says so.
@@ -137,38 +137,22 @@ fn interpreter_args(pycache: &Path) -> Vec<std::ffi::OsString> {
     ]
 }
 
-/// Where the rule's process runs (docs/adr/8057 §61): what this system's box closes, in words for the job runner's
-/// error output, or why it cannot close; and the server's policy for the latter.
-struct Confinement {
-    level: Result<String, String>,
-    policy: crate::kutu::Policy,
-}
-
-impl Confinement {
-    /// This system's box and the server's setting.
-    fn here() -> Self {
-        Confinement {
-            level: crate::kutu::level(),
-            policy: crate::kutu::policy(),
-        }
-    }
-}
-
 /// The request's rule on the folder's drawing; what it found.
 pub fn run_audit(
     dir: &Path,
     run: AuditRun,
     runner: &dyn RuleRunner,
 ) -> Result<Processed, ProcessFailure> {
-    run_audit_in(dir, run, runner, Confinement::here())
+    run_audit_in(dir, run, runner, crate::kutu::here())
 }
 
-/// [`run_audit`] with the box given (the tests give it).
+/// [`run_audit`] with the box's plan given (the tests give it): how the rule's process starts, or why it may not
+/// (docs/adr/8057 §61, §63).
 fn run_audit_in(
     dir: &Path,
     run: AuditRun,
     runner: &dyn RuleRunner,
-    confinement: Confinement,
+    plan: Result<crate::kutu::Plan, String>,
 ) -> Result<Processed, ProcessFailure> {
     if let Some((path, message)) = check_audit_run(&run) {
         return Err(invalid(format!("{path}: {message}")));
@@ -224,22 +208,19 @@ fn run_audit_in(
             "Bu sunucuda eklentinin Python ortamı hazırlanmadı: kural çalıştırılamaz.",
         ));
     };
-    // Where the box cannot close (docs/adr/8057 §61) the rule runs only if the server allows it; refused here, before
-    // the package is unpacked or the drawing measured.
-    let level = match confinement.level {
-        Ok(level) => Ok(level),
-        Err(why) if confinement.policy == crate::kutu::Policy::Report => Err(why),
-        Err(why) => {
-            return Err(ProcessFailure::new(
-                "tool_unavailable",
-                format!(
-                    "Bulut denetim kutusu kapatılamadı: {why}. Sunucu kuralı kutusuz çalıştırmaz; yönetici {} \
-                     ayarını report yaparsa kural kutusuz çalışır ve iş bunu söyler.",
-                    crate::kutu::POLICY_ENV
-                ),
-            ));
-        }
-    };
+    // Where the box cannot be whole the rule runs only if the server allows it; refused here, before the package is
+    // unpacked or the drawing measured.
+    let plan = plan.map_err(|why| {
+        ProcessFailure::new(
+            "tool_unavailable",
+            format!(
+                "Bulut denetim kutusu kapatılamadı: {why}. Sunucu kuralı yarım kutuda ya da kutusuz çalıştırmaz; \
+                 yönetici {} ayarını report yaparsa kural kutunun kapanan kısmıyla çalışır ve iş neyin açık kaldığını \
+                 söyler.",
+                crate::kutu::POLICY_ENV
+            ),
+        )
+    })?;
     let source = dir.join(UNPACKED);
     for (path, data) in &opened.files {
         if kentos_extensions::path_problem(path).is_some() {
@@ -268,12 +249,12 @@ fn run_audit_in(
     invoke["local"] = json!(entry.id);
     invoke["handler"] = json!(entry.handler);
     invoke["document"] = json!(false);
-    // The rule's process: the box mode around the interpreter where the box closes (docs/adr/8057 §61), restricted to
-    // what the rule needs; the interpreter alone where the server allows that.
+    // The rule's process: the box mode around the interpreter, restricted to what the rule needs (without the filter
+    // where the server allows that); the interpreter alone where Landlock cannot close and the server allows that.
     let interpreter = std::path::PathBuf::from(&python);
     let args = interpreter_args(&dir.join(BYTECODE));
-    let (program, args, open) = match level {
-        Ok(level) => {
+    let (program, args) = match &plan {
+        crate::kutu::Plan::Whole(words) | crate::kutu::Plan::LandlockOnly(words) => {
             let tmp = dir.join(crate::kutu::SCRATCH);
             for scratch in [&tmp, &dir.join(BYTECODE)] {
                 std::fs::create_dir_all(scratch).map_err(|e| {
@@ -283,13 +264,13 @@ fn run_audit_in(
             let allowed = crate::kutu::allowed(dir, &interpreter, &source);
             let program = crate::kutu::program()
                 .map_err(|why| ProcessFailure::new("tool_unavailable", why))?;
-            eprintln!("kutu: {level}");
-            let (program, args) = crate::kutu::wrap(&program, &allowed, &tmp, &interpreter, &args);
-            (program, args, None)
+            eprintln!("kutu: {words}");
+            let filter = matches!(plan, crate::kutu::Plan::Whole(_));
+            crate::kutu::wrap(&program, &allowed, filter, &tmp, &interpreter, &args)
         }
-        Err(why) => {
+        crate::kutu::Plan::Outside(why) => {
             eprintln!("kutu kapatılamadı: {why}");
-            (interpreter, args, Some(why))
+            (interpreter, args)
         }
     };
     let start = Start {
@@ -332,8 +313,8 @@ fn run_audit_in(
         entry.title,
         counts(findings.iter().map(|f| f.severity))
     );
-    if let Some(why) = open {
-        summary.push_str(&format!(" (kutu kapatılamadı: {why})"));
+    if let Some(note) = plan.note() {
+        summary.push_str(&note);
     }
     let report = AuditReport {
         rule: RuleRef {

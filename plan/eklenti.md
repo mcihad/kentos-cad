@@ -1060,6 +1060,10 @@ Landlock alanına girip çalışır: dosyalarda yalnız paketi, hazırlanmış o
 yalnız işin karalamasına yazar; TCP, alan dışına sinyal ve soyut UNIX soketi yasak. Kapatılamayan sunucuda varsayılan
 kuralı çalıştırmamaktır (`KENTOS_AUDIT_CONFINE=require`); `report` kuralı çalıştırır ve "kutu kapatılamadı" der.
 Kalan: UDP ve ABI 9'un altında yol adlı UNIX soketleri açık (seccomp ile `socket()` reddi), Windows ve macOS'ta kutu.
+**Kutuda soket yok** (ADR 8057 §63, 16 Kasım): kutu kipi Landlock'tan sonra bir seccomp süzgeci kurar: `socket(2)` her
+aile için, UNIX datagram ve UNIX dışı çiftler ve `io_uring_setup(2)` reddedilir (x86_64 ve aarch64; x32 numaraları da),
+böylece UDP ve yol adlı UNIX soketleri de kapandı. Süzgeç kurulamayan kutu kapanmamış sayılır: `require` kuralı
+çalıştırmaz, `report` Landlock'la çalıştırır ve neyin açık kaldığını söyler.
 
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 

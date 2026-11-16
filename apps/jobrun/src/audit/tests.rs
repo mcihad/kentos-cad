@@ -147,10 +147,7 @@ fn a_job_runs_the_package_s_rule_on_the_measured_facts() {
     let (bytes, digest, manifest) = package(false);
     let dir = folder("stand-in", &bytes);
     let runner = StandIn::default();
-    let boxed = Confinement {
-        level: Ok("sınamanın kutusu".into()),
-        policy: crate::kutu::Policy::Require,
-    };
+    let boxed = Ok(crate::kutu::Plan::Whole("sınamanın kutusu".into()));
     let done = run_audit_in(
         &dir,
         request(&digest, &manifest, "/opt/kentos/python/bin/python"),
@@ -161,6 +158,10 @@ fn a_job_runs_the_package_s_rule_on_the_measured_facts() {
     let (start, invoke) = runner.given.borrow_mut().take().unwrap();
     assert_eq!(start.python, crate::kutu::program().unwrap());
     assert_eq!(start.args[0], crate::kutu::ARG);
+    assert!(
+        !start.args.iter().any(|a| a == crate::kutu::NO_FILTER),
+        "the whole box: Landlock and the filter"
+    );
     let split = start.args.iter().position(|a| a == "--").unwrap();
     let given = |word: &str| -> Vec<PathBuf> {
         start.args[..split]
@@ -318,10 +319,11 @@ fn the_desktop_and_the_job_give_the_same_report() {
             &ExtHost::default(),
         )
         .unwrap();
-        // Where this system cannot close the box, the job runs only under `report` and says so (docs/adr/8057 §61).
-        let open = crate::kutu::level()
-            .err()
-            .map(|why| format!(" (kutu kapatılamadı: {why})"))
+        // Where this system's box is not whole, the job runs only under `report` and says what is open (docs/adr/8057
+        // §61, §63).
+        let open = crate::kutu::here()
+            .ok()
+            .and_then(|plan| plan.note())
             .unwrap_or_default();
         assert_eq!(
             done.summary,

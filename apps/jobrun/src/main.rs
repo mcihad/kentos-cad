@@ -423,7 +423,8 @@ fn run_task(dir: &Path) -> Result<Processed, ProcessFailure> {
 /// The child's whole life; the exit code (0: answered, 1: the answer could not be written, 2: failed with a reason in
 /// the folder, 3: the parent went away).
 fn main() {
-    // The box mode (docs/adr/8057 §61): a process of its own that restricts itself and becomes the rule's interpreter.
+    // The box mode (docs/adr/8057 §61, §63): a process of its own that restricts itself, installs the filter and
+    // becomes the rule's interpreter.
     let mut argv = std::env::args_os().skip(1).peekable();
     if argv.peek().is_some_and(|a| a == kutu::ARG) {
         argv.next();

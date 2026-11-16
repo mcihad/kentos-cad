@@ -3458,3 +3458,91 @@ Kapı 1), `ui_panel/rules.rs`, şema ve Python kurucusu (`ui.shape_picker`), SDK
   noktası işaretli, çizgi açık, gizlenen ve yanlış yazılan işaretsiz; değişikliğin eksik alanla sessiz beklemesi, eski
   satırların gitmesi, düğmenin eksiği söylemesi); Vitrin'in sayıları (15 komut, 5 panel) ve şerit etiketleri; gerçek
   pencere 48-alan.
+
+## §63. Bulut denetim kutusunda soket yok: seccomp süzgeci (`ADIM 20`, §61'in açık bıraktığı ağ)
+
+**16 Kasım.** Kod: iş çalıştırıcısı `apps/jobrun/src/kutu.rs` (`NO_FILTER`, `Landlock`, `Plan`, `plan`, `here`,
+`landlock`, `filter`; `wrap` süzgeci söyler, `enter` kurar), yeni `kutu/seccomp.rs` (`program`, `available`,
+`install`), `kutu/linux.rs` (§61'in Landlock'u kendi dosyasında; `level` yerine `landlock`), `audit.rs` (`run_audit_in`
+kutunun planını alır); bağımlılık `seccompiler = "=0.5.0"` ve çağrı numaraları için `libc` (yalnız iş
+çalıştırıcısında, yalnız Linux'ta, yalnız x86_64 ve aarch64 için); sınamalar `kutu/tests.rs`, `audit/kutu_tests.rs`,
+`audit/tests.rs`.
+
+- **Bugünkü uygulama (§61, ölçüldü):** Landlock TCP'yi kapatıyor; UDP ve öteki soket türleri açıktı (kutudaki kuralın
+  UDP'si sınamaya ulaştı), yol adlı UNIX soketleri ABI 9'un altında açıktı (bu makine ABI 8: kural, okuyamadığı bir
+  klasördeki sokete bağlandı). io_uring de açıktı: bu makinede `kernel.io_uring_disabled = 0` ve bir halka soketi
+  kendisi açabilir (`IORING_OP_SOCKET`), `socket(2)` çağrılmadan.
+- **Karar: kutu kipi Landlock'tan sonra, `exec`'ten önce bir seccomp süzgeci kurar.** Reddedilen çağrı `EACCES` ile
+  döner, Landlock'un reddi gibi (Python'da `PermissionError`):
+  - `socket(2)`: her aile için.
+  - `socketpair(2)`: yalnız UNIX akış ya da sıralı paket çifti olarak açık. asyncio'nun kendi borusu (self-pipe) bu
+    çifttir ve iki ucu da kutunun içindedir. UNIX datagram çifti reddedilir: bağlı olsa bile adıyla herhangi bir yol
+    adlı datagram soketine gönderebilir (ör. sistem günlüğünün `/dev/log`'u); UNIX dışı aileler de reddedilir. Süzgeç
+    türe bayraklarından ayırarak bakar (`SOCK_NONBLOCK`, `SOCK_CLOEXEC`: `type & 0xf`).
+  - `io_uring_setup(2)`: halka kurulamaz, soketi o da açamaz.
+  - x86_64'te aynı üç çağrı x32 numaralarıyla da (`0x40000000 |`): x32 ABI'siyle derlenmiş bir çekirdek onlara
+    cevap verir (bu makinenin çekirdeğinde x32 yok; süzgeç çekirdeğe bakmadan kapatır).
+  - Başka bir mimarinin çağrısı (32 bit uyumluluk) süreci bitirir: süzgecin ilk sınaması.
+  - Gerisi açık: süzgeç bir ret listesidir, izin listesi değil. Python'un ve kütüphanelerin çağrılarını tek tek saymak
+    her sürümde kırılırdı; kutunun dosya ve süreç tarafı Landlock'ta.
+
+  Süzgeç `exec`'ten geçer, kuralın başlattığı her sürece kalıtılır ve kaldırılamaz (`no_new_privs`: Landlock zaten
+  açmıştı). TCP artık iki kilitle kapalı: soket açılamaz, açılsa Landlock bağlatmazdı. Sonucu kural yazarı da görür:
+  asyncio çalışır; soket açan her şey (`multiprocessing`'in yöneticisi, sistem günlüğüne yazan işleyici)
+  `PermissionError` alır, ad çözümü de çalışmaz. Bulut kuralının bunlara ihtiyacı yok; masaüstünde değişen bir şey yok.
+- **Bağımlılık:** çalışma alanında da std'de de seccomp süzgeci kuran bir şey yok; elle yazılmış BPF ve `prctl` ise
+  güvensiz kod isterdi (iş çalıştırıcısı `forbid(unsafe_code)`). `seccompiler` (Apache-2.0 ya da BSD-3-Clause) saf
+  Rust'tır, sistem kütüphanesi istemez, tek bağımlılığı `libc`'dir (JSON özelliği kapalı); süzgeci kurallardan derler
+  (`SeccompFilter` → `BpfProgram`) ve güvenli bir arayüzle kurar (`apply_filter`). Çalışma alanının kuralıyla tam
+  sürüme sabitlendi; yalnız `apps/jobrun`'da, yalnız `target_os = "linux"` ve x86_64 ya da aarch64 için. Çağrı ve
+  sabit numaraları hedefin kendi `libc`'sinden (`SYS_socket`, `AF_UNIX`, `EACCES`; yalnız sabitler), sürümü çalışma
+  alanınınki. Kilide yalnız `seccompiler` eklendi. `scripts/arch/deps.mjs` temiz.
+- **Mimariler:** x86_64'te 41, 53, 425; aarch64'te 198, 199, 425. Başka bir mimaride ya da Linux dışında süzgeç kurulmuş
+  sayılmaz ve bu açıkça söylenir: "seccomp süzgeci yalnız Linux'ta x86_64 ve aarch64 için var; bu sistem linux
+  riscv64".
+- **Seçim: süzgeç kurulamayan kutu "kapatılamayan kutu" sayılır,** Landlock'un yokluğu gibi. Süzgeç yoksa UDP ve
+  öteki soket türleri açık kalır; kutunun sözü ise ağ yok. `require` (varsayılan) kuralı çalıştırmaz, `tool_unavailable`
+  ile neden çalışmadığını söyler. `report` kuralı kutunun kapanan kısmıyla çalıştırır: Landlock kapanıyorsa yalnız
+  Landlock'la (kutu kipi `--suzgecsiz`: §61'in kutusu, oradan geriye gidilmez), Landlock da yoksa kutusuz (§61 gibi).
+  İşin özeti neyin açık kaldığını söyler: "(kutu tam kapatılamadı: seccomp süzgeci …; dosyalar ve TCP kapalı; …; UDP ve
+  öteki soket türleri açık)" ya da "(kutu kapatılamadı: …)". Karar tek yerde, sınanabilir: `kutu::plan(landlock,
+  filter, policy)`. Süzgecin kurulabileceği, sunucu kendine kurmadan sorulur: mimari, çekirdeğin
+  `/proc/sys/kernel/seccomp/actions_avail`'i (`allow`, `errno`, `kill_process`; Linux 4.14'ten beri) ve süzgecin
+  derlenmesi. Kutu kipi yine de kuramazsa `KENTOS-KUTU` imiyle söyler ve iş `tool_unavailable` olur (§61).
+- **Söz:** bütün kutu iş çalıştırıcısının hata çıktısına şunu yazar: "dosyalar kapalı; ağ kapalı (soket açılamaz):
+  TCP, UDP, yol adlı ve soyut UNIX soketleri, öteki türler, io_uring; yalnız kutunun içinde kalan UNIX akış çifti
+  açılır; sinyaller kutuda". Landlock ABI 6'nın altındaysa son kısım "sinyaller açık (Landlock ABI 6 yok)" olur: soyut
+  UNIX soketleri artık süzgeçle kapalı, sinyaller değil. Sınama bu sözü kuralın gördüğüyle karşılaştırır.
+- **Kapanmayanlar:** (1) Landlock ABI 6'nın altında sinyaller: kural sunucunun kullanıcısının süreçlerini
+  sinyalleyebilir (`kill(-1, …)`). (2) Yolların varlığı ve üst verisi (`stat`, §61). (3) Kutunun içi: kuralın kendi
+  süreçleri kendi akış çiftleri üzerinden konuşabilir. (4) Windows ve macOS'ta kutu yok (`require` orada kuralı
+  çalıştırmaz).
+- **Ölçüm (hata ayıklama derlemesi, 16 Kasım):** kutu kipi `/usr/bin/true`'nun çevresinde (30 koşunun ortancası):
+  yalnız Landlock'la 6.91 ms, bütün kutuyla 7.30 ms; süzgecin payı (derlenmesi ve kurulması) 0.38 ms. Kutunun kendi
+  maliyeti 6.76 ms, çoğu iş çalıştırıcısının hata ayıklama derlemesinin açılışı (6.25 ms). Ortamın Python'unun
+  SDK'nın konağını yüklemesi (`import kentos.ext_host`, sırayla 10'ar koşu, ortanca, duvar = işlemci): kutusuz 977 ms,
+  Landlock'ta 989 ms, bütün kutuda 986 ms; süzgecin payı ölçülemiyor (-3 ms, gürültü), her çağrıda koşan süzgecin
+  maliyeti görünmüyor. Olağan kuralın işi baştan sona (sınama tek başına, iki koşu; §58 ve §61'in ölçümü): 1.90-1.93 sn
+  işlemci (§61: 1.91-1.92; kutusuz §58: 1.89-1.90), en çok 497.9-503.2 MB, 1.96 sn. Bütçe bütün kutuyla da tutuyor:
+  işlemciyi yakan kural 3 sn'lik bütçede 3.07 sn'de, belleği dolduran 803 MB'lık bütçede 2.06 sn'de durdu.
+- **Sınamalar:** iş çalıştırıcısının `audit` ve `kutu` sınamaları 23/23. Gerçek Python'la
+  `the_whole_box_opens_no_socket_and_no_file_beyond_the_rule_s_own`: bütün kutudaki kuralda TCP, UDP, yol adlı UNIX
+  soketi, UNIX datagram çifti ve io_uring halkası `PermissionError`; asyncio'nun döngüsü (kendi akış çifti) çalışıyor;
+  kutunun dışındaki dosyalar ve işin kendi dosyaları `PermissionError`, karalama yazılıyor; sınamanın TCP, UDP ve UNIX
+  dinleyicilerine hiçbir şey ulaşmadı. Aynı kural kutunun dışında hepsini açıyor (bu makinede io_uring de) ve üçü de
+  dinleyicilere ulaşıyor: farkı kutu yapıyor. Sözün UDP'yi ve yol adlı UNIX soketlerini kapalı saydığı da sınanıyor.
+  Python'suz ve her sistemde: planın bütün tablosu
+  (`a_box_that_is_not_whole_runs_only_under_report_and_says_what_is_open`: Landlock ve süzgeç → bütün kutu; süzgeç
+  yok → `require` reddeder, `report` Landlock'la ve "UDP ve öteki soket türleri açık" der; Landlock yok → kutusuz;
+  ikisi de yok → iki neden birlikte); işin üç yolu
+  (`where_the_box_cannot_be_whole_…`: `require` paketi açmadan reddeder, Landlock'suz `report` yorumlayıcıyı kendisi
+  başlatır ve "(kutu kapatılamadı: …)", süzgeçsiz `report` kutu kipini `--suzgecsiz` ile başlatır ve "(kutu tam
+  kapatılamadı: …)" der); kutu kipinin komut satırında `--suzgecsiz` yalnız istenince var. Eski sınamalar bütün kutuda
+  da geçiyor: masaüstünün kutusuz raporu ile işin bütün kutudaki raporu bayt bayt aynı, ulusal kurallar aynı bulguları
+  veriyor. `kentosd`'nin işlemci sınamaları 26/26 (denetim işleri ve §58'in bütçe sınamaları bütün kutudan geçiyor).
+  Clippy (`--tests --no-deps`), rustfmt ve `scripts/arch/deps.mjs` temiz.
+- **Kalan ve öneri:** (1) Süzgeçle ağ için Landlock'un ABI 4'üne gerek kalmadı. Dosyalar için ABI 3 yeter (`truncate`
+  ABI 3'te geldi; altında yol adıyla `truncate(2)` Landlock'un dışındadır); süzgeç yol adıyla `truncate(2)`'yi de
+  reddederse ABI 1 yeter ve kutu 5.15 ile 6.1 LTS çekirdeklerinde de bütün kapanır. Bugün asgari ABI 4 (değişmedi; ayrı
+  karar). (2) ABI 6'nın altında sinyaller (süzgeçle `kill` ailesini kendi süreciyle sınırlamak). (3) `kentosd`'nin
+  açılışta kutunun düzeyini günlüğüne yazması (§61).
