@@ -65,6 +65,11 @@ pub struct Policy {
     /// file's `upload-time` in the lock): a malicious release is usually found and taken down within days (D18).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub minimum_package_age_days: Option<u32>,
+    /// Whether an extension's code may be sent from this computer to run on the KentOS server: an İşlemler tool of an
+    /// extension run as a server job (docs/adr/8057 §96, PY-OPT-12); not written: yes. The user's choice of the place
+    /// does not widen it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub allow_extensions_on_server: Option<bool>,
     /// The policy file is there but cannot be read: everything is refused with this reason (fail closed).
     #[serde(skip)]
     pub broken: Option<String>,
@@ -174,6 +179,20 @@ impl Policy {
 }
 
 impl Policy {
+    /// Why the policy keeps the İşlemler tool `tool` off the KentOS server, in a few words for the place's row
+    /// (docs/adr/8057 §96): an extension's tool (`ext.…`) when extensions' code may not go there, or when the policy
+    /// cannot be read (fail closed); none for KentOS's own tools and when it may.
+    pub fn server_refusal(&self, tool: &str) -> Option<&'static str> {
+        if !tool.starts_with("ext.") {
+            return None;
+        }
+        if self.broken.is_some() {
+            return Some("kurum ilkesi okunamıyor");
+        }
+        (self.allow_extensions_on_server == Some(false))
+            .then_some("kurum ilkesi eklenti kodunun sunucuda çalışmasına izin vermiyor")
+    }
+
     /// Why the policy keeps the desktop's AI agent `name` from sending a drawing to `address` (docs/adr/8056 §7); none
     /// when it may. An agent on this computer (`local`) sends nothing out and is never refused; a policy that cannot be
     /// read refuses every other.
@@ -436,5 +455,31 @@ mod tests {
             "yz.ornek.bel.tr",
             "https://yz.ornek.bel.tr"
         ));
+    }
+
+    /// `allowExtensionsOnServer: false` keeps an extension's tool off the server, KentOS's own tools not; not written,
+    /// they go; an unreadable policy keeps an extension's code here (docs/adr/8057 §96).
+    #[test]
+    fn the_policy_says_whether_an_extension_s_code_goes_to_the_server() {
+        let open = policy(r#"{"format": "kentos.extension-policy", "schemaVersion": 1}"#);
+        assert_eq!(open.server_refusal("ext.tr.ornek.vitrin.taks"), None);
+        let closed = policy(
+            r#"{"format": "kentos.extension-policy", "schemaVersion": 1, "allowExtensionsOnServer": false}"#,
+        );
+        assert_eq!(
+            closed.server_refusal("ext.tr.ornek.vitrin.taks"),
+            Some("kurum ilkesi eklenti kodunun sunucuda çalışmasına izin vermiyor")
+        );
+        assert_eq!(closed.server_refusal("annotation.edgeLengths"), None);
+        let allowed = policy(
+            r#"{"format": "kentos.extension-policy", "schemaVersion": 1, "allowExtensionsOnServer": true}"#,
+        );
+        assert_eq!(allowed.server_refusal("ext.tr.ornek.vitrin.taks"), None);
+        let broken = Policy::broken("okunamadı".to_owned());
+        assert_eq!(
+            broken.server_refusal("ext.tr.ornek.vitrin.taks"),
+            Some("kurum ilkesi okunamıyor")
+        );
+        assert_eq!(broken.server_refusal("annotation.edgeLengths"), None);
     }
 }

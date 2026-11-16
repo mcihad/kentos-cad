@@ -4858,3 +4858,30 @@ masaüstü `python_personal/add_to.rs` (yeni: `AddTo`, `Developed`, `developed_e
   yüklenir, bildirim), masaüstünün eklenti, Asistan ve Python sınamaları (159).
 - **Kalan:** kurulu olmayan bir klasöre (geliştiricinin kendi projesi) eklemek; isteğe bağlı bir özelliğe (extra)
   eklemek.
+
+## §96. Kurum ilkesi eklenti kodunu sunucudan uzak tutabilir (`ADIM 18A`, PY-OPT-12)
+
+**16 Kasım.** Kod: kayıt defteri `policy.rs` (`allowExtensionsOnServer`, `Policy::server_refusal`), `registry.rs`
+(`Registry::policy`, `set_policy`); masaüstü `gis/processing/server.rs` (`server_place_for`, `processing_server_place`;
+Çalıştır'da ikinci denetim), `window.rs`, `mod.rs`; `kentos_ui::widget::radio` (uzun not adın altında).
+
+- **Sorun.** PY-OPT-12: "kurum politikası dış dizin ya da bulut yürütme sınırı koyabilir, kullanıcı onayı politikayı
+  genişletemez." Dış dizin §84'te yapılmıştı (izinli paket depoları); bulut yürütme yoktu. Masaüstünden eklenti
+  kodunun sunucuya gidebildiği yol İşlemler penceresidir: açık bulut veritabanı projesinde her aracın "Nerede
+  çalışır"ında "KentOS sunucusunda" vardır (ADR 0559 §5), eklentinin aracı (`ext.…`) dahil. Asistan ve bağlantıdaki
+  ajanlar sunucu işi başlatmaz, modeller sunucuya gitmez.
+- **Karar.** İlkede `allowExtensionsOnServer: false`: eklentinin aracında sunucunun satırı kapalı ve nedeniyle ("kurum
+  ilkesi eklenti kodunun sunucuda çalışmasına izin vermiyor"); pencerenin hatırladığı seçim bunu aşamaz (kapalı yer
+  seçilemez) ve Çalıştır göndermeden önce bir kez daha sorar. KentOS'un kendi araçları etkilenmez; yazılmamışsa evet.
+  Okunamayan ilke eklenti kodunu burada tutar (kapalı başarısızlık), KentOS'un araçlarını değil.
+- **Bileşen düzeltmesi (aynı iş).** "Nerede çalışır"ın ortak `RadioGroup::notes_at_end` satırı uzun notu satır sonuna
+  yazınca adı sıkıştırıyor, ad ile not üst üste çiziliyordu. İlkenin sözüyle görüldü; var olan "yetkiniz yok
+  (project.jobs.run)" notu da 1100×650'de aynı çakışmayı yapıyordu. Kural bileşende: ad ve not birlikte 34 harften
+  uzunsa not adın altına, küçük ve sönük iner; kısalar ("Otomatik" · "şimdi: bu bilgisayarda", 30) satır sonunda kalır.
+- **Resim:** İşlemler'in ekran sınamasına "ilke" görünümü eklendi (Vitrin kurulu, bulut projesi, ilke kapalı, yan
+  panel Nerede çalışır'a kaydırılmış): `.run/shots/islem-sunucu-ilke-1440x900*.png`. Gerçek pencere çalışan bir KentOS
+  sunucusu ve oturum ister.
+- **Sınamalar:** kayıt defteri 1 (kapalı, yazılmamış, açık, okunamayan; KentOS'un aracı), masaüstü 1 (yer: kapalı
+  ilkede eklentinin aracı kapalı ve sözüyle, KentOS'un aracı açık; yazılmamış ve ilkesiz açık; okunamayan; yerel
+  çizimde yok; Vitrin'in TAKS penceresinde satır kapalı ve notuyla), bileşen kitaplığının sınamaları (366),
+  masaüstünün İşlemler ve eklenti sınamaları (217).

@@ -723,16 +723,17 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   ağacı, önbellek; 16 Kasım: kurulu paketin satırından "Eklentiye ekle…": geliştirilen eklentinin projesine denenen
   sürüm ve serisi yazılır ve kilitlenir (uv, eklentinin kendi ayarlarıyla), eklenti klasöründen yeniden yüklenir.
   Betikler kişisel ortamda çalışır: onların bağımlılığı ortamın kendisidir.*
-- [ ] Paket seçimi yayımlanmış eklentinin ortamını değiştirmez [PY-OPT-07]; gerekli/isteğe bağlı paketler ve hangi
+- [x] Paket seçimi yayımlanmış eklentinin ortamını değiştirmez [PY-OPT-07]; gerekli/isteğe bağlı paketler ve hangi
   özelliğin hangisini istediği görünür [PY-OPT-08]; "yalnız form görüntüle", "analizi çalıştır", "geliştirici modu"
   farklı gereksinim taşıyabilir [PY-OPT-09]. Reddedilen bağımlılık eklentiyi nedenli pasif bırakır; her açılışta indirme
   ya da onay baskısı yok [PY-OPT-10]. Seçimler kullanıcı kapsamında hatırlanır [PY-OPT-11]; kurum politikası dış dizin ya
   da bulut yürütme sınırı koyabilir, kullanıcı onayı politikayı genişletemez [PY-OPT-12]. Kaldırma, silinecek dosya ve
   çıktıların kapsamını gösterir; kişisel betikler varsayılan temizliğe girmez [PY-OPT-13]. Her kurulum akışında ilk
   kullanıcı hazır araçlarla devam edebilir [PY-OPT-14].
-  — *kısmen (ADR 8057 §5): eklenti başına ortam, isteğe bağlı özellikler, reddedilen bağımlılık nedenli pasif,
-  eklentiyle kaldırma; kalan: kurum politikası [PY-OPT-12]. 16 Kasım (ADR 8057 §84): ilke izinli paket depolarını
-  ve paketleri sınırlar, kullanıcının onayı genişletemez; kalan: bulut yürütme sınırı.*
+  — *tamamlandı (ADR 8057 §5, §84, §96): eklenti başına ortam, isteğe bağlı özellikler, reddedilen bağımlılık nedenli
+  pasif, eklentiyle kaldırma; ilke izinli paket depolarını ve paketleri sınırlar (§84); 16 Kasım: bulut yürütme
+  sınırı (`allowExtensionsOnServer`): eklentinin İşlemler aracında "KentOS sunucusunda" kapalı ve nedeniyle,
+  kullanıcının seçimi aşamaz (§96).*
 
 **Algılama ve kurulum:**
 - [x] PATH'ten ve kullanıcının seçtiği yoldan uv; sürüm/platform/mimari destek matrisiyle karşılaştırılır [PY-UV-01];

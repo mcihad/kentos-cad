@@ -641,7 +641,7 @@ impl App {
     /// another thread, the window showing how far it is (background.rs).
     fn run_processing(&mut self) -> Task<Message> {
         let variables = self.expression_variables();
-        let server = self.server_place();
+        let server = self.processing_server_place();
         // Analiz ortamı (environment.rs): a number that does not read keeps the run from starting.
         let environment = match self.processing_environment_resolved() {
             Ok(e) => e,

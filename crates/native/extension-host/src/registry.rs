@@ -663,6 +663,17 @@ impl Registry {
     }
 
     /// The version in use's manifest.
+    /// The organisation's policy the registry judges by, when there is one.
+    pub fn policy(&self) -> Option<&Policy> {
+        self.options.policy.as_ref()
+    }
+
+    /// The organisation's policy read again by the host (its file changed; a test): installed extensions it now refuses
+    /// are judged at their next start.
+    pub fn set_policy(&mut self, policy: Option<Policy>) {
+        self.options.policy = policy;
+    }
+
     pub fn manifest(&self, id: &str) -> Option<&Manifest> {
         self.manifests.get(id)
     }

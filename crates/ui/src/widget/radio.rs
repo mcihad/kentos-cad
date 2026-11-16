@@ -32,6 +32,12 @@ use crate::theme::{Tokens, typography};
 /// Radyo düğmesinin çapı.
 const DOT: f32 = 16.0;
 
+/// The most characters a name and its note take on one row with [`RadioGroup::notes_at_end`] (“Otomatik” and “şimdi:
+/// bu bilgisayarda”, 30); longer, the note goes under the name. At the row's end a long note took the row from the
+/// name until the two were drawn over each other: İşlemler's narrow side panel, “KentOS sunucusunda” beside “yetkiniz
+/// yok (project.jobs.run)” (49) at 1100×650 and beside an organisation's policy's words.
+const ONE_ROW: usize = 34;
+
 /// Radyo grubu.
 pub struct RadioGroup<'a, T, Message> {
     selected: Option<T>,
@@ -102,7 +108,9 @@ impl<'a, T: Copy + PartialEq + 'a, Message: Clone + 'a> RadioGroup<'a, T, Messag
     }
 
     /// Açıklamalar adın altında değil, satırın sonunda küçük ve sönük
-    /// yazılır; seçenekler bütün genişliği alır.
+    /// yazılır; seçenekler bütün genişliği alır. Adıyla birlikte uzun
+    /// açıklama ([`ONE_ROW`] harften çok) adı sıkıştırmasın diye adın
+    /// altına iner.
     pub fn notes_at_end(mut self) -> Self {
         self.notes_at_end = true;
         self
@@ -140,12 +148,25 @@ impl<'a, T: Copy + PartialEq + 'a, Message: Clone + 'a> From<RadioGroup<'a, T, M
                 hint,
             } = item;
             let selected = group.selected == Some(value);
+            let long = description
+                .as_ref()
+                .is_some_and(|d| d.chars().count() + name.chars().count() > ONE_ROW);
             let name = if enabled {
                 label::body(name)
             } else {
                 label::body(name).style(style::text::disabled)
             };
-            let content: Element<'a, Message> = if at_end {
+            let content: Element<'a, Message> = if at_end && long {
+                // Under the name, small and muted as at the end, the mark beside the first line.
+                let mut text = Column::new().spacing(1).push(name.width(Fill));
+                if let Some(description) = description {
+                    text = text.push(label::caption(description).style(style::text::muted));
+                }
+                row![dot(selected, enabled), text]
+                    .spacing(8)
+                    .align_y(Alignment::Start)
+                    .into()
+            } else if at_end {
                 let mut line = row![dot(selected, enabled), name.width(Fill)]
                     .spacing(8)
                     .align_y(Alignment::Center);
