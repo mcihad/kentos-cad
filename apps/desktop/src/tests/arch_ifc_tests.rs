@@ -53,3 +53,21 @@ fn a_file_name_without_its_extension_gets_ifc() {
     assert!(written.exists(), "{} written", written.display());
     let _ = std::fs::remove_file(written);
 }
+
+/// IFC dışa aktar (bina, kesilmiş gövde) (docs/adr/8071 §4): the same building with its bodies already cut, its
+/// openings 'Reference' shapes, its header ReferenceView; the message says so.
+#[test]
+fn the_cut_bodies_go_out_as_a_reference_view() {
+    let mut app = app();
+    let out = std::env::temp_dir().join(format!("kentos-desktop-bina-kesik-{}.ifc", std::process::id()));
+    let _ = app.update(Message::IfcBuildingExportCut(Some(out.clone())));
+    let text = std::fs::read_to_string(&out).expect("written");
+    assert!(text.contains("ViewDefinition [ReferenceView]"));
+    assert_eq!(text.matches("=IFCWALL(").count(), 16);
+    assert_eq!(text.matches("=IFCOPENINGELEMENT(").count(), 14);
+    assert_eq!(text.matches(",'Reference','SweptSolid',").count(), 14, "each opening a 'Reference' shape");
+    let said = app.log.last().expect("said");
+    assert_eq!(said.level, Level::Success);
+    assert!(said.text.starts_with("IFC 4.3 yazıldı (gövdeler açıklıkları kesilmiş): 2 kat, 16 duvar"), "{}", said.text);
+    let _ = std::fs::remove_file(out);
+}

@@ -6,34 +6,42 @@ curved_building.py works out without KentOS code (fixtures/arch/v1/curved-buildi
     uv run --no-project --python 3.11 --with ifcopenshell==0.9.0.post1 --with pytest --with lark \\
         python -I scripts/fixtures/curved_ifc_check.py [FILE]
 
-It checks, in fixtures/arch/v1/ifc/egri-bina.ifc:
+It checks fixtures/arch/v1/ifc/egri-bina.ifc (Design Transfer: bodies whole, openings 'Body') and egri-bina-referans.ifc
+(Reference View: bodies already cut, openings 'Reference', docs/adr/8071 §4), or FILE alone, by its header:
+- the header's view definition is what the file holds: every opening's shape 'Body' in a Design Transfer View,
+  'Reference' only in a Reference View;
 - the schema is IFC 4.3 and IfcOpenShell's validator (attributes, EXPRESS rules) finds nothing;
 - every wall's Qto_WallBaseQuantities and every slab's Qto_SlabBaseQuantities is its closed form (1e-9 relative);
 - each room's Qto_SpaceBaseQuantities.NetFloorArea is its closed form;
 - the curved walls' and the slabs' profiles are indexed curves with arc segments (IfcArcIndex), the window through each
-  curved wall too: arcs written as arcs;
+  curved wall too: arcs written as arcs (a Reference View's cut wall has them in every band);
 - IfcOpenShell's own geometry of every wall, slab and room is a closed, oriented surface (each edge of its triangles
   met as often one way as the other), standing where the closed form puts it (its lowest and highest point over ±0.00), and encloses the closed
   form's volume less what its triangles leave of its arcs (IfcOpenShell meshes them at a 0.005 rad step; within
-  0.05 %): a wall's its net volume, the openings taken out by IfcOpenShell's own booleans."""
+  0.05 %): a wall's its net volume, the openings taken out by IfcOpenShell's own booleans in a Design Transfer View and
+  by KentOS's cut in a Reference View."""
 import json
 import sys
 import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-FILE = ROOT / "fixtures/arch/v1/ifc/egri-bina.ifc"
+FILES = [ROOT / "fixtures/arch/v1/ifc/egri-bina.ifc", ROOT / "fixtures/arch/v1/ifc/egri-bina-referans.ifc"]
 EXPECTED = ROOT / "fixtures/arch/v1/curved-building.json"
 
 
 def main() -> int:
+    paths = [Path(sys.argv[1]).resolve()] if len(sys.argv) > 1 else FILES
+    return max(check(p) for p in paths)
+
+
+def check(path: Path) -> int:
     import ifcopenshell
     import ifcopenshell.geom
     import ifcopenshell.guid
     import ifcopenshell.util.element as ue
     import ifcopenshell.validate
 
-    path = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else FILE
     f = ifcopenshell.open(str(path))
     want = json.loads(EXPECTED.read_text(encoding="utf-8"))
     bad: list[str] = []
@@ -46,6 +54,14 @@ def main() -> int:
     ifcopenshell.validate.validate(f, log, express_rules=True)
     ensure(f.schema_identifier == "IFC4X3_ADD2", f"schema {f.schema_identifier}")
     ensure(not log.statements, f"validator: {[s.get('message', s) for s in log.statements[:5]]}")
+
+    # The header's view and the openings' shapes.
+    view = " ".join(f.header.file_description.description)
+    reference = "ViewDefinition [ReferenceView]" in view
+    ensure(reference or "ViewDefinition [DesignTransferView]" in view, f"header: {view}")
+    for o in f.by_type("IfcOpeningElement"):
+        ids = {r.RepresentationIdentifier for r in (o.Representation.Representations if o.Representation else [])}
+        ensure(ids == ({"Reference"} if reference else {"Body"}), f"{o.Name}: shapes {sorted(ids)} in {view}")
 
     by_id = {}
     for o in f.by_type("IfcProduct"):
@@ -86,7 +102,8 @@ def main() -> int:
     curved_walls = [by_id[u] for u, q in want["walls"].items() if q["Length"] not in (10.0, 6.0)]
     ensure(len(curved_walls) == 2, f"curved walls {len(curved_walls)}")
     for w in curved_walls:
-        ensure(arcs(w) == 2, f"{w.Name}: {arcs(w)} arc segments, its two faces' arcs")
+        n = arcs(w)
+        ensure(n >= 2 if reference else n == 2, f"{w.Name}: {n} arc segments, its two faces' arcs")
         for rel in w.HasOpenings:
             o = rel.RelatedOpeningElement
             if o.HasFillings and o.HasFillings[0].RelatedBuildingElement.is_a("IfcWindow"):
@@ -171,7 +188,8 @@ def main() -> int:
             print("✗", b)
         return 1
     shown = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path.name
-    print(f"✓ {shown}: IFC4X3_ADD2, 0 validator findings; {len(want['walls'])} walls, {len(want['slabs'])} slabs and "
+    print(f"✓ {shown} ({'Reference View' if reference else 'Design Transfer View'}): IFC4X3_ADD2, 0 validator findings; "
+          f"{len(want['walls'])} walls, {len(want['slabs'])} slabs and "
           f"{len(want['spaces'])} rooms their closed forms; {checked} closed surfaces of IfcOpenShell's own, their "
           f"volumes the closed forms' within {worst:.2e}.")
     return 0

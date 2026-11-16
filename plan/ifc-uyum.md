@@ -368,10 +368,14 @@ sayılır. Kotu bilinmeyen ±0.00 eksik olarak bildirilir.
 
 #### IFC-06 — Geometri ve görünüm tanımı [ ]
 
-**Gövde tarafında yapılan (16 Kasım 2026, [ADR 8071](../docs/adr/8071-geometry-accuracy.md), BIM-10):** yay profilde
-gerçek yay (`IfcIndexedPolyCurve`, `IfcArcIndex`); duvar, döşeme, kolon, kiriş ve kaplamanın miktar setleri kaynaktan;
-kapalılık denetimi; eğri cepheli örnekte bağımsız okuyucu (IfcOpenShell) 0 bulgu, hacimler kapalı formlarla aynı.
-Profiller, görünüm adı ve gelişim seviyesi kanıtı açık.
+**Yapılan (16 Kasım 2026, [ADR 8071](../docs/adr/8071-geometry-accuracy.md), BIM-10 ile):** yay profilde gerçek yay
+(`IfcIndexedPolyCurve`, `IfcArcIndex`); duvar, döşeme, kolon, kiriş ve kaplamanın miktar setleri kaynaktan; kapalılık
+denetimi (`ifc_open_body` uyarısı); **iki çıktı profili:** Tasarım aktarımı (gövde bütün, açıklık 'Body', başlık
+`DesignTransferView`) ve kesilmiş gövde (Reference View: gövde bantlarla kesik, açıklık 'Reference', başlık
+`ReferenceView`), `cad.arch.ifc`'nin `view`'ı ve Dosya › Dışa aktar'da iki eylem; eğri cepheli örnekte iki dosya da
+IfcOpenShell'de 0 bulgu, eleman sayıları eşit, hacimler kapalı formlarla aynı (5,8·10⁻⁷ ve 5,2·10⁻⁷). **Kalan:** gelişim
+seviyesi kanıtının müellif incelemesi kaydı (IFC-08/BIM-14 ile); açık kural takımı denetimi (servis ya da kural takımı
+sahibin onayıyla); ruhsat profilinin seçimi (§8).
 
 **Kullanıcı sonucu:** İki çıktı profili (§8) iki bağımsız okuyucuda aynı sayıları ve hacimleri verir; başlıktaki görünüm adı
 dosyanın içeriğiyle uyuşur. Gövdeleri BIM-10'dan gelir.

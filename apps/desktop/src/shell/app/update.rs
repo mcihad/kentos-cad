@@ -620,7 +620,12 @@ impl App {
             Message::LandxmlMachine(path) => return self.landxml_machine_chosen(path),
             Message::LandxmlAlignments(path) => return self.landxml_alignments_chosen(path),
             Message::IfcExport(path) => return self.ifc_chosen(path),
-            Message::IfcBuildingExport(path) => return self.ifc_building_chosen(path),
+            Message::IfcBuildingExport(path) => {
+                return self.ifc_building_chosen(path, kentos_commands::IfcView::DesignTransfer);
+            }
+            Message::IfcBuildingExportCut(path) => {
+                return self.ifc_building_chosen(path, kentos_commands::IfcView::Reference);
+            }
             Message::GltfExport(path) => return self.gltf_chosen(path),
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
             Message::TableStyleDefs(event) => return self.table_style_window_event(event),

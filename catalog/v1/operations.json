@@ -3407,6 +3407,13 @@
       ],
       "note": "IFC dışa aktar (bina) dosyanın yerini sorar ve cad.arch.ifc ile yazar; çizim değişmez (plan/architecture-advanced.md M47, ADR 8047)."
     },
+    "arch.ifcExportCut": {
+      "level": "semantic",
+      "via": [
+        "cad.arch.ifc"
+      ],
+      "note": "IFC dışa aktar (bina, kesilmiş gövde) dosyanın yerini sorar ve cad.arch.ifc'yi view: reference ile çalıştırır; çizim değişmez (plan/bim-plan.md BIM-10, ADR 8071 §4)."
+    },
     "landxml.export": {
       "level": "semantic",
       "via": [

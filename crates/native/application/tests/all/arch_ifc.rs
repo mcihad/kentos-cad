@@ -744,8 +744,9 @@ fn beam_and_covering_schedules_list_their_own_and_round_trip_under_arch_data_6()
 /// (curved-building.json): every wall's and slab's base quantities, its body's bottom and top over ±0.00, each room's
 /// net floor area. The curved wall's and the slabs' arcs are written as arcs (no chords: nothing said about them), the
 /// window through the curved wall runs along its faces' arcs, and every body is closed.
-/// `KENTOS_WRITE_IFC_CURVED=1` writes fixtures/arch/v1/ifc/egri-bina.ifc, which `scripts/fixtures/curved_ifc_check.py`
-/// reads with IfcOpenShell against the same closed forms.
+/// The cut body of every wall (its Reference View's) is its net volume. `KENTOS_WRITE_IFC_CURVED=1` writes
+/// fixtures/arch/v1/ifc/egri-bina.ifc (Design Transfer) and egri-bina-referans.ifc (Reference View), which
+/// `scripts/fixtures/curved_ifc_check.py` reads with IfcOpenShell against the same closed forms.
 #[test]
 fn the_curved_building_s_bodies_are_their_closed_forms() {
     use kentos_commands::CallOp;
@@ -827,8 +828,25 @@ fn the_curved_building_s_bodies_are_their_closed_forms() {
     assert_eq!(answer["status"], "completed", "{answer}");
     let said = answer["warnings"].to_string();
     assert!(!said.contains("düz parçalarla"), "{said}");
+    // The cut body (docs/adr/8071 §4): each wall less its openings is its net volume, each band closed, its arcs kept.
+    for (u, want) in expected["walls"].as_object().unwrap() {
+        let k = b.elements.iter().position(|e| e.id == Some(kentos_domain::Uuid::parse_str(u).unwrap().as_u128())).unwrap();
+        let hosted: Vec<&kentos_ifc::building::Opening> = b.openings.iter().filter(|o| o.host == k).collect();
+        let body = kentos_ifc::quantities::cut(&b.elements[k].shapes, &hosted);
+        let v: f64 = body.iter().map(kentos_ifc::quantities::volume).sum();
+        let net = want["NetVolume"].as_f64().unwrap();
+        assert!(near(v, net), "{}: the cut body {v}, the closed form {net}", b.elements[k].name);
+        for s in &body {
+            assert_eq!(kentos_ifc::closed::faults(s), Vec::<String>::new(), "{}", b.elements[k].name);
+        }
+    }
+    let mut reference = b.clone();
+    reference.view = kentos_ifc::building::View::Reference;
+    let cut_text = kentos_ifc::building::write(&reference);
+    assert!(cut_text.contains("ViewDefinition [ReferenceView]") && cut_text.contains(",'Reference','SweptSolid',"));
     if std::env::var_os("KENTOS_WRITE_IFC_CURVED").is_some() {
-        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc/egri-bina.ifc");
-        std::fs::write(out, &text).expect("the file kept");
+        let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc");
+        std::fs::write(dir.join("egri-bina.ifc"), &text).expect("the file kept");
+        std::fs::write(dir.join("egri-bina-referans.ifc"), &cut_text).expect("the file kept");
     }
 }

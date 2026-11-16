@@ -1878,7 +1878,7 @@ fn clip(ring: &[P], keep: &dyn Fn(P) -> f64) -> Vec<P> {
     let n = ring.len();
     let mut out: Vec<P> = Vec::new();
     let same = |p: P, q: P| (p.x - q.x).abs() <= 1e-12 && (p.y - q.y).abs() <= 1e-12;
-    let mut put = |p: P, out: &mut Vec<P>| {
+    let put = |p: P, out: &mut Vec<P>| {
         if out.last().is_none_or(|q| !same(*q, p)) {
             out.push(p);
         }

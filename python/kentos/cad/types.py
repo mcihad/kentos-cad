@@ -3288,6 +3288,19 @@ HeightMethodName = Literal["none", "unchanged", "same", "unit", "ellipsoidal", "
 """The names of :class:`HeightMethod`, for a plain string."""
 
 
+class IfcView(_StrEnum):
+    """What an IFC file's bodies are, its header's view definition (docs/adr/8071 §4): `designTransfer` (the first value)
+    writes each body whole and its openings' bodies for the reader to take out of their walls; `reference` writes each
+    body already cut, its openings there as 'Reference' shapes, not taken out again.
+    """
+    DESIGN_TRANSFER = "designTransfer"
+    REFERENCE = "reference"
+
+
+IfcViewName = Literal["designTransfer", "reference"]
+"""The names of :class:`IfcView`, for a plain string."""
+
+
 class ImpactTarget(_StrEnum):
     """A look's source.
 
@@ -39177,17 +39190,21 @@ class ExportIfc(_Model):
 @dataclass(kw_only=True, slots=True)
 class ExportIfcBuilding(_Model):
     """Input of `cad.arch.ifc` v1: the file's path (absolute, ending `.ifc`); `stamp` the file's date and time
-    (`YYYY-MM-DDThh:mm:ss`; absent: now, UTC); `overwrite` writes over a file that is there.
+    (`YYYY-MM-DDThh:mm:ss`; absent: now, UTC); `overwrite` writes over a file that is there; `view` what its bodies
+    are (absent: `designTransfer`).
 
     Refusals, in this order: `invalid_file_path` (empty, relative, not `.ifc`, its folder not there), `file_exists`
     (without `overwrite`), `invalid_ifc` (a stamp that does not read; nothing to write: no wall, slab, column, beam,
     roof, railing, stair or room with a body). Warnings: `export_losses` (an object of the building the file does not
     hold: one the section model gives no body, an opening without its outline through a written wall, a room without
-    an area, grid axes all in one direction on their storey; a curved wall or stair written as straight pieces).
+    an area, grid axes all in one direction on their storey; a curved stair written as straight pieces, or a curved
+    object whose arcs the model could not take back); `ifc_open_body` (a body written that is not a closed, simple
+    solid, with the object's name and why).
     """
     path: str
     overwrite: bool | Unset = UNSET
     stamp: str | None | Unset = UNSET
+    view: IfcView | IfcViewName | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -39196,6 +39213,8 @@ class ExportIfcBuilding(_Model):
             out["overwrite"] = self.overwrite
         if self.stamp is not UNSET:
             out["stamp"] = self.stamp
+        if self.view is not UNSET:
+            out["view"] = _enum_out(self.view)
         return out
 
     @classmethod
@@ -39204,6 +39223,7 @@ class ExportIfcBuilding(_Model):
             path=data["path"],
             overwrite=data.get("overwrite", UNSET),
             stamp=data.get("stamp", UNSET),
+            view=_enum_in(IfcView, data["view"]) if "view" in data else UNSET,
         )
 
 
@@ -48056,9 +48076,9 @@ class IfcAlignmentWritten(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class IfcBuildingExported(_Model):
-    """Output of `cad.arch.ifc` v1, and its plan: the file, its schema, how many of each class it holds (the
-    openings are the `IfcOpeningElement`s, the doors and the windows filling them among them), its size and its
-    SHA-256.
+    """Output of `cad.arch.ifc` v1, and its plan: the file, its schema, what its bodies are (`view`), how many of each
+    class it holds (the openings are the `IfcOpeningElement`s, the doors and the windows filling them among them), its
+    size and its SHA-256.
     Attributes:
         storeys: Unit: count.
         walls: Unit: count.
@@ -48104,6 +48124,7 @@ class IfcBuildingExported(_Model):
     grid_axes: int = 0
     members: int = 0
     ramps: int = 0
+    view: IfcView | IfcViewName = IfcView.DESIGN_TRANSFER
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -48130,6 +48151,7 @@ class IfcBuildingExported(_Model):
         out["gridAxes"] = self.grid_axes
         out["members"] = self.members
         out["ramps"] = self.ramps
+        out["view"] = _enum_out(self.view)
         return out
 
     @classmethod
@@ -48158,6 +48180,7 @@ class IfcBuildingExported(_Model):
             grid_axes=data["gridAxes"] if "gridAxes" in data else 0,
             members=data["members"] if "members" in data else 0,
             ramps=data["ramps"] if "ramps" in data else 0,
+            view=_enum_in(IfcView, data["view"]) if "view" in data else IfcView.DESIGN_TRANSFER,
         )
 
 
@@ -142973,6 +142996,8 @@ __all__ = [
     "IfcAlignmentWritten",
     "IfcBuildingExported",
     "IfcExported",
+    "IfcView",
+    "IfcViewName",
     "ImageClipBy",
     "ImageEntity",
     "ImageEntityGeometry",

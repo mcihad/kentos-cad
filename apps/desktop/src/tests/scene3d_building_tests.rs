@@ -491,6 +491,41 @@ fn curved_screens() {
     }
 }
 
+/// Dosya › Dışa aktar with the curved building open (docs/adr/8071 §4): IFC dışa aktar (bina) and, beside it, IFC dışa
+/// aktar (bina, kesilmiş gövde). `.run/gui-evidence/egri-bina-8071/5-disa-aktar-*.png`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib scene3d_building_tests::ifc_export_menu_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn ifc_export_menu_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/egri-bina-8071");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 700.0), "koyu")] {
+        let mut app = open(
+            kentos_kcad::decode(include_bytes!("../../../../fixtures/arch/v1/curved-building.kcad")).expect("decodes"),
+        );
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        app.tab = "file";
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        crate::tools_screens::open_ribbon_menu(&mut snapshot, &mut app, "Dışa aktar");
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("5-disa-aktar-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
 /// The facade building (fixtures/arch/v1/facade-building.kcad) with a curtain wall 1.5 m east of its east facade
 /// (docs/adr/8070 §7): 9 m long, 6 m high from the ground floor, at most 1.50 m between mullions and transoms (6 bays,
 /// 4 rows), and its east elevation (mark 3, looking west) drawn at (20, 0).

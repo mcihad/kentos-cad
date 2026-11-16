@@ -1605,6 +1605,8 @@ __all__ = [
     "IfcAlignmentWritten",
     "IfcBuildingExported",
     "IfcExported",
+    "IfcView",
+    "IfcViewName",
     "ImageClipBy",
     "ImageEntity",
     "ImageEntityGeometry",

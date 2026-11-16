@@ -6,7 +6,7 @@
 
 use std::path::{Path, PathBuf};
 
-use kentos_commands::{CommandResult, CommandWarning, ExportIfcBuilding, IfcBuildingExported};
+use kentos_commands::{CommandResult, CommandWarning, ExportIfcBuilding, IfcBuildingExported, IfcView};
 use kentos_commands::{SiteEdgeKind, VariableValue};
 use kentos_domain::Document;
 use kentos_ifc::arch::{Gap, Input, Particulars, Why, Written};
@@ -429,11 +429,16 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
             format!("{d}T{t}")
         }
     };
-    let (b, written, curved) = made(
+    let (mut b, written, curved) = made(
         doc,
         &stamp,
         &format!("KentOS Mimari {}", env!("CARGO_PKG_VERSION")),
     );
+    // Its bodies whole, or already cut (docs/adr/8071 §4).
+    b.view = match input.view {
+        IfcView::DesignTransfer => kentos_ifc::building::View::DesignTransfer,
+        IfcView::Reference => kentos_ifc::building::View::Reference,
+    };
     let held = written.walls
         + written.slabs
         + written.columns
@@ -471,6 +476,21 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
             "{curved} eğri merdiven ya da yayı alınamayan eğri nesne IFC'ye düz parçalarla yazıldı."
         )));
     }
+    // Every body a closed, simple solid (docs/adr/8071 §3): a body that is not one is said, with the first thing wrong.
+    let open = kentos_ifc::closed::open_bodies(&b);
+    if !open.is_empty() {
+        let shown: Vec<String> = open.iter().take(5).map(|(name, why)| format!("{name}: {why}")).collect();
+        let more = if open.len() > 5 { format!(" ve {} nesne daha", open.len() - 5) } else { String::new() };
+        warnings.push(CommandWarning {
+            code: codes::IFC_OPEN_BODY.into(),
+            message: format!(
+                "{} nesnenin gövdesi kapalı bir katı değil: {}{more}. Nesneyi düzeltip yeniden aktarın.",
+                open.len(),
+                shown.join("; ")
+            ),
+            path: None,
+        });
+    }
     let text = kentos_ifc::building::write(&b);
     let sha256 = Sha256::digest(text.as_bytes())
         .iter()
@@ -480,6 +500,7 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
     let out = IfcBuildingExported {
         path: path.display().to_string(),
         schema: "IFC4X3_ADD2".into(),
+        view: input.view,
         storeys: n(written.storeys),
         walls: n(written.walls),
         doors: n(written.doors),

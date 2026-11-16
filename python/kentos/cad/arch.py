@@ -33,6 +33,8 @@ from .types import (  # noqa: F401
     ArchRecognized,
     ExportIfcBuilding,
     IfcBuildingExported,
+    IfcView,
+    IfcViewName,
     PerformanceOperation,
     PlanLayerRole,
 )
@@ -846,9 +848,17 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
     IfcOpeningElement ve onu dolduran IfcDoor ya da IfcWindow (etiketi çizimdeki
     numarası); mahaller IfcSpace. Adlar EK-5 §5.5'in Disiplin-KategoriKodu-Açıklama
     kalıbında (MM-DVR-Dış_duvar_25, MM-KAP-K01); EK-6'dan çizimin bildikleri:
-    IsExternal, LoadBearing, malzeme, mahal kaplamaları, net alanlar, emsal ve TAKS.
+    IsExternal, LoadBearing, malzeme, mahal kaplamaları, net alanlar, emsal ve TAKS;
+    duvar, döşeme, kolon, kiriş ve kaplamanın miktar setleri (Qto_…BaseQuantities)
+    kaynaktan, IFC 4.3'ün tanımlarıyla (duvarın brüt hacmi birleşimsiz kendi gövdesi,
+    neti açıklık ve girintiler çıkmış yazılan gövde). Eğri duvarın, döşemenin, mahalin
+    ve eğri duvardaki açıklığın yayları yay olarak yazılır (IfcIndexedPolyCurve,
+    IfcArcIndex). view: designTransfer (varsayılan; gövdeler bütün, açıklığın gövdesini
+    okuyucu duvardan çıkarır; başlıkta DesignTransferView) ya da reference (gövdeler
+    açıklıkları çıkarılmış, açıklık Reference gösterimiyle; başlıkta ReferenceView).
     GlobalId nesnenin KentOS kimliğidir. Uzunluk metre. stamp tarih ve saat. Gövdesi
-    olmayan nesne yazılmaz ve söylenir (export_losses). Bütün yazılır ya da hiç; çizimi
+    olmayan nesne yazılmaz ve söylenir (export_losses); gövdesi kapalı bir katı olmayan
+    nesne adı ve nedeniyle söylenir (ifc_open_body). Bütün yazılır ya da hiç; çizimi
     değiştirmez. Retler: invalid_file_path, file_exists, invalid_ifc.
     """
     __slots__ = ()
@@ -868,6 +878,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         path: str,
         overwrite: bool | Unset = UNSET,
         stamp: str | None | Unset = UNSET,
+        view: IfcView | IfcViewName | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> IfcBuildingExported:
@@ -879,9 +890,17 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         IfcDoor ya da IfcWindow (etiketi çizimdeki numarası); mahaller IfcSpace. Adlar EK-5
         §5.5'in Disiplin-KategoriKodu-Açıklama kalıbında (MM-DVR-Dış_duvar_25, MM-KAP-K01);
         EK-6'dan çizimin bildikleri: IsExternal, LoadBearing, malzeme, mahal kaplamaları,
-        net alanlar, emsal ve TAKS. GlobalId nesnenin KentOS kimliğidir. Uzunluk metre.
-        stamp tarih ve saat. Gövdesi olmayan nesne yazılmaz ve söylenir (export_losses).
-        Bütün yazılır ya da hiç; çizimi değiştirmez. Retler: invalid_file_path, file_exists,
+        net alanlar, emsal ve TAKS; duvar, döşeme, kolon, kiriş ve kaplamanın miktar setleri
+        (Qto_…BaseQuantities) kaynaktan, IFC 4.3'ün tanımlarıyla (duvarın brüt hacmi
+        birleşimsiz kendi gövdesi, neti açıklık ve girintiler çıkmış yazılan gövde). Eğri
+        duvarın, döşemenin, mahalin ve eğri duvardaki açıklığın yayları yay olarak yazılır
+        (IfcIndexedPolyCurve, IfcArcIndex). view: designTransfer (varsayılan; gövdeler
+        bütün, açıklığın gövdesini okuyucu duvardan çıkarır; başlıkta DesignTransferView) ya
+        da reference (gövdeler açıklıkları çıkarılmış, açıklık Reference gösterimiyle;
+        başlıkta ReferenceView). GlobalId nesnenin KentOS kimliğidir. Uzunluk metre. stamp
+        tarih ve saat. Gövdesi olmayan nesne yazılmaz ve söylenir (export_losses); gövdesi
+        kapalı bir katı olmayan nesne adı ve nedeniyle söylenir (ifc_open_body). Bütün
+        yazılır ya da hiç; çizimi değiştirmez. Retler: invalid_file_path, file_exists,
         invalid_ifc.
 
         Args:
@@ -889,6 +908,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
             path:
             overwrite:
             stamp:
+            view:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -905,6 +925,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
             path=path,
             overwrite=overwrite,
             stamp=stamp,
+            view=view,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -915,6 +936,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         path: str,
         overwrite: bool | Unset = UNSET,
         stamp: str | None | Unset = UNSET,
+        view: IfcView | IfcViewName | Unset = UNSET,
     ) -> IfcBuildingExported:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -923,6 +945,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
             path=path,
             overwrite=overwrite,
             stamp=stamp,
+            view=view,
         ))
 
     def validate(
@@ -933,6 +956,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         path: str,
         overwrite: bool | Unset = UNSET,
         stamp: str | None | Unset = UNSET,
+        view: IfcView | IfcViewName | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -941,6 +965,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
             path=path,
             overwrite=overwrite,
             stamp=stamp,
+            view=view,
         ))
 
     def answer(
@@ -951,6 +976,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         path: str,
         overwrite: bool | Unset = UNSET,
         stamp: str | None | Unset = UNSET,
+        view: IfcView | IfcViewName | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -964,6 +990,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
             path=path,
             overwrite=overwrite,
             stamp=stamp,
+            view=view,
         ), op=op, request_id=request_id, expected=expected)
 
 

@@ -1760,6 +1760,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         .collect();
     let grids = grids_of(&entities, &storey_of, &mut written);
     let building = Building {
+        view: Default::default(),
         file: k.file_stem(&title),
         stamp: stamp.to_owned(),
         application: application.to_owned(),

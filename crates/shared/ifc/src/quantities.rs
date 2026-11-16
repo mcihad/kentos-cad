@@ -87,11 +87,12 @@ fn cut_area(o: &Opening) -> Vec<Area> {
     )
 }
 
-/// What is left of `shapes` once `cuts` are taken out of their prisms (each opening's prism from its bottom to its top,
-/// over the same floor): each prism cut in bands at the openings' sills and heads, each band's footprint less the
-/// openings standing in it, by the overlay, arcs kept.
-pub fn net_volume(shapes: &[Shape], cuts: &[&Opening]) -> f64 {
-    let mut v = 0.0;
+/// `shapes` with `cuts` taken out (docs/adr/8071 §4; each opening's prism from its bottom to its top, over the same
+/// floor): each prism cut in bands at the openings' sills and heads, each band's footprint less the openings standing
+/// in it, by the overlay, arcs kept; the bands no opening stands in stay whole, as one prism each run. Faces stay as
+/// they are. The cut body of a Reference View and of the 3D view, and the net volume's.
+pub fn cut(shapes: &[Shape], cuts: &[&Opening]) -> Vec<Shape> {
+    let mut out = Vec::new();
     for s in shapes {
         let Shape::Prism {
             rings,
@@ -100,10 +101,9 @@ pub fn net_volume(shapes: &[Shape], cuts: &[&Opening]) -> f64 {
             top,
         } = s
         else {
-            v += volume(s);
+            out.push(s.clone());
             continue;
         };
-        let base = areas(rings, bulges);
         let mut levels = vec![*bottom, *top];
         for c in cuts {
             for z in [c.bottom, c.top] {
@@ -114,6 +114,14 @@ pub fn net_volume(shapes: &[Shape], cuts: &[&Opening]) -> f64 {
         }
         levels.sort_by(f64::total_cmp);
         levels.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
+        let whole = |from: f64, to: f64| Shape::Prism {
+            rings: rings.clone(),
+            bulges: bulges.clone(),
+            bottom: from,
+            top: to,
+        };
+        let base = areas(rings, bulges);
+        let mut run: Option<f64> = None; // where the bands no opening stands in began
         for w in levels.windows(2) {
             let mid = (w[0] + w[1]) / 2.0;
             let cutters: Vec<Area> = cuts
@@ -121,15 +129,46 @@ pub fn net_volume(shapes: &[Shape], cuts: &[&Opening]) -> f64 {
                 .filter(|c| c.bottom < mid && mid < c.top)
                 .flat_map(|c| cut_area(c))
                 .collect();
-            let band: f64 = if cutters.is_empty() {
-                base.iter().map(net_area).sum()
-            } else {
-                subtract_areas(&base, &cutters).iter().map(net_area).sum()
-            };
-            v += band * (w[1] - w[0]);
+            if cutters.is_empty() {
+                run.get_or_insert(w[0]);
+                continue;
+            }
+            if let Some(from) = run.take() {
+                out.push(whole(from, w[0]));
+            }
+            out.extend(
+                subtract_areas(&base, &cutters)
+                    .iter()
+                    .map(|a| prism_of(a, w[0], w[1])),
+            );
+        }
+        if let Some(from) = run {
+            out.push(whole(from, *top));
         }
     }
-    v
+    out
+}
+
+/// An overlay's area as a prism between two heights: its outer ring and its holes, their arcs.
+fn prism_of(a: &Area, bottom: f64, top: f64) -> Shape {
+    let rings: Vec<&Ring> = std::iter::once(&a.outer).chain(&a.holes).collect();
+    Shape::Prism {
+        rings: rings
+            .iter()
+            .map(|r| r.pts.iter().map(|p| [p.x, p.y]).collect())
+            .collect(),
+        bulges: rings
+            .iter()
+            .map(|r| r.bulges.clone().unwrap_or_else(|| vec![0.0; r.pts.len()]))
+            .collect(),
+        bottom,
+        top,
+    }
+}
+
+/// What is left of `shapes` once `cuts` are taken out: the volume of their cut body.
+pub fn net_volume(shapes: &[Shape], cuts: &[&Opening]) -> f64 {
+    cut(shapes, cuts).iter().map(volume).sum()
 }
 
 /// How long the path of `edges` runs inside `area`: each edge cut where it crosses the area's rings, each piece whose
@@ -429,6 +468,58 @@ mod tests {
             "{net} {}",
             gross - piece
         );
+    }
+
+    /// The same wall cut (docs/adr/8071 §4): whole under the window's sill and over its head, two pieces of the ring
+    /// beside it, each with its arcs; together the net volume, each a closed body.
+    #[test]
+    fn a_curved_wall_s_cut_body_is_its_bands_with_their_arcs() {
+        let (r1, r2) = (6.15, 5.85);
+        let quarter = (std::f64::consts::PI / 8.0).tan();
+        let shapes = vec![Shape::Prism {
+            rings: vec![vec![[r1, 0.0], [0.0, r1], [0.0, r2], [r2, 0.0]]],
+            bulges: vec![vec![quarter, 0.0, -quarter, 0.0]],
+            bottom: 0.0,
+            top: 3.0,
+        }];
+        let at = |r: f64, deg: f64| {
+            let a: f64 = deg.to_radians();
+            [r * a.cos(), r * a.sin()]
+        };
+        let ten = (10f64.to_radians() / 4.0).tan();
+        let window = opening(
+            vec![at(r1, 30.0), at(r2, 30.0), at(r2, 40.0), at(r1, 40.0)],
+            vec![0.0, ten, 0.0, -ten],
+            0.9,
+            2.1,
+        );
+        let body = cut(&shapes, &[&window]);
+        let spans: Vec<(f64, f64)> = body
+            .iter()
+            .map(|s| match s {
+                Shape::Prism { bottom, top, .. } => (*bottom, *top),
+                Shape::Faces { .. } => panic!("faces"),
+            })
+            .collect();
+        assert_eq!(
+            spans,
+            vec![(0.0, 0.9), (0.9, 2.1), (0.9, 2.1), (2.1, 3.0)],
+            "{body:?}"
+        );
+        for s in &body {
+            assert_eq!(crate::closed::faults(s), Vec::<String>::new(), "{s:?}");
+            let Shape::Prism { bulges, .. } = s else {
+                unreachable!()
+            };
+            assert!(
+                bulges.iter().flatten().any(|b| *b != 0.0),
+                "its arcs kept: {s:?}"
+            );
+        }
+        let gross = (r1 * r1 - r2 * r2) / 2.0 * std::f64::consts::FRAC_PI_2 * 3.0;
+        let piece = (r1 * r1 - r2 * r2) / 2.0 * 10f64.to_radians() * 1.2;
+        let v: f64 = body.iter().map(volume).sum();
+        assert!((v - (gross - piece)).abs() < 1e-9, "{v}");
     }
 
     /// A straight wall 5 m long, 0.25 m wide, 3 m high on its centre line, a 1 m window from 0.9 to 2.1 m through it and

@@ -454,6 +454,7 @@
     "scene3d.view",
     "arch.program",
     "arch.ifcExport",
+    "arch.ifcExportCut",
     "lineTypes.manage",
     "hatchPatterns.manage",
     "tool.layerMatch",

@@ -71047,7 +71047,7 @@
       "id": "cad.arch.ifc",
       "version": 1,
       "title": "Binayı IFC'ye aktar",
-      "summary": "Çizimin binasını IFC 4.3 (IFC4X3_ADD2) dosyasına yazar (Dijital Proje Yönetmeliği EK-5 §5.4): proje, saha, bina ve her kat bir IfcBuildingStorey; duvarlar, döşemeler, kolonlar, kirişler (lento), çatılar, korkuluklar ve merdivenler kesit modelinin gövdeleriyle (duvar katman katman, kolonun yüzünde ve kirişin altında biter); her açıklık duvarını oyan bir IfcOpeningElement ve onu dolduran IfcDoor ya da IfcWindow (etiketi çizimdeki numarası); mahaller IfcSpace. Adlar EK-5 §5.5'in Disiplin-KategoriKodu-Açıklama kalıbında (MM-DVR-Dış_duvar_25, MM-KAP-K01); EK-6'dan çizimin bildikleri: IsExternal, LoadBearing, malzeme, mahal kaplamaları, net alanlar, emsal ve TAKS. GlobalId nesnenin KentOS kimliğidir. Uzunluk metre. stamp tarih ve saat. Gövdesi olmayan nesne yazılmaz ve söylenir (export_losses). Bütün yazılır ya da hiç; çizimi değiştirmez. Retler: invalid_file_path, file_exists, invalid_ifc.",
+      "summary": "Çizimin binasını IFC 4.3 (IFC4X3_ADD2) dosyasına yazar (Dijital Proje Yönetmeliği EK-5 §5.4): proje, saha, bina ve her kat bir IfcBuildingStorey; duvarlar, döşemeler, kolonlar, kirişler (lento), çatılar, korkuluklar ve merdivenler kesit modelinin gövdeleriyle (duvar katman katman, kolonun yüzünde ve kirişin altında biter); her açıklık duvarını oyan bir IfcOpeningElement ve onu dolduran IfcDoor ya da IfcWindow (etiketi çizimdeki numarası); mahaller IfcSpace. Adlar EK-5 §5.5'in Disiplin-KategoriKodu-Açıklama kalıbında (MM-DVR-Dış_duvar_25, MM-KAP-K01); EK-6'dan çizimin bildikleri: IsExternal, LoadBearing, malzeme, mahal kaplamaları, net alanlar, emsal ve TAKS; duvar, döşeme, kolon, kiriş ve kaplamanın miktar setleri (Qto_…BaseQuantities) kaynaktan, IFC 4.3'ün tanımlarıyla (duvarın brüt hacmi birleşimsiz kendi gövdesi, neti açıklık ve girintiler çıkmış yazılan gövde). Eğri duvarın, döşemenin, mahalin ve eğri duvardaki açıklığın yayları yay olarak yazılır (IfcIndexedPolyCurve, IfcArcIndex). view: designTransfer (varsayılan; gövdeler bütün, açıklığın gövdesini okuyucu duvardan çıkarır; başlıkta DesignTransferView) ya da reference (gövdeler açıklıkları çıkarılmış, açıklık Reference gösterimiyle; başlıkta ReferenceView). GlobalId nesnenin KentOS kimliğidir. Uzunluk metre. stamp tarih ve saat. Gövdesi olmayan nesne yazılmaz ve söylenir (export_losses); gövdesi kapalı bir katı olmayan nesne adı ve nedeniyle söylenir (ifc_open_body). Bütün yazılır ya da hiç; çizimi değiştirmez. Retler: invalid_file_path, file_exists, invalid_ifc.",
       "aliases": [
         "ifcbina",
         "ifcbuilding"
@@ -71066,7 +71066,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.arch.ifc` v1: the file's path (absolute, ending `.ifc`); `stamp` the file's date and time\n(`YYYY-MM-DDThh:mm:ss`; absent: now, UTC); `overwrite` writes over a file that is there.\n\nRefusals, in this order: `invalid_file_path` (empty, relative, not `.ifc`, its folder not there), `file_exists`\n(without `overwrite`), `invalid_ifc` (a stamp that does not read; nothing to write: no wall, slab, column, beam,\nroof, railing, stair or room with a body). Warnings: `export_losses` (an object of the building the file does not\nhold: one the section model gives no body, an opening without its outline through a written wall, a room without\nan area, grid axes all in one direction on their storey; a curved wall or stair written as straight pieces).",
+        "description": "Input of `cad.arch.ifc` v1: the file's path (absolute, ending `.ifc`); `stamp` the file's date and time\n(`YYYY-MM-DDThh:mm:ss`; absent: now, UTC); `overwrite` writes over a file that is there; `view` what its bodies\nare (absent: `designTransfer`).\n\nRefusals, in this order: `invalid_file_path` (empty, relative, not `.ifc`, its folder not there), `file_exists`\n(without `overwrite`), `invalid_ifc` (a stamp that does not read; nothing to write: no wall, slab, column, beam,\nroof, railing, stair or room with a body). Warnings: `export_losses` (an object of the building the file does not\nhold: one the section model gives no body, an opening without its outline through a written wall, a room without\nan area, grid axes all in one direction on their storey; a curved stair written as straight pieces, or a curved\nobject whose arcs the model could not take back); `ifc_open_body` (a body written that is not a closed, simple\nsolid, with the object's name and why).",
         "properties": {
           "overwrite": {
             "type": "boolean"
@@ -71079,6 +71079,9 @@
               "string",
               "null"
             ]
+          },
+          "view": {
+            "$ref": "#/$defs/IfcView"
           }
         },
         "required": [
@@ -71089,7 +71092,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.arch.ifc` v1, and its plan: the file, its schema, how many of each class it holds (the\nopenings are the `IfcOpeningElement`s, the doors and the windows filling them among them), its size and its\nSHA-256.",
+        "description": "Output of `cad.arch.ifc` v1, and its plan: the file, its schema, what its bodies are (`view`), how many of each\nclass it holds (the openings are the `IfcOpeningElement`s, the doors and the windows filling them among them), its\nsize and its SHA-256.",
         "properties": {
           "beams": {
             "format": "uint32",
@@ -71215,6 +71218,10 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "view": {
+            "$ref": "#/$defs/IfcView",
+            "default": "designTransfer"
           },
           "walls": {
             "format": "uint32",
@@ -71252,7 +71259,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.arch.ifc` v1, and its plan: the file, its schema, how many of each class it holds (the\nopenings are the `IfcOpeningElement`s, the doors and the windows filling them among them), its size and its\nSHA-256.",
+        "description": "Output of `cad.arch.ifc` v1, and its plan: the file, its schema, what its bodies are (`view`), how many of each\nclass it holds (the openings are the `IfcOpeningElement`s, the doors and the windows filling them among them), its\nsize and its SHA-256.",
         "properties": {
           "beams": {
             "format": "uint32",
@@ -71378,6 +71385,10 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "view": {
+            "$ref": "#/$defs/IfcView",
+            "default": "designTransfer"
           },
           "walls": {
             "format": "uint32",
@@ -71429,6 +71440,13 @@
           "input": {
             "overwrite": true,
             "path": "/veri/bina.ifc"
+          }
+        },
+        {
+          "title": "Açıklıkları kesilmiş gövdelerle (Reference View)",
+          "input": {
+            "path": "/veri/bina-referans.ifc",
+            "view": "reference"
           }
         }
       ]
@@ -115302,6 +115320,12 @@
       "meaning": "Bazı nesneler dosyaya yazılamadı ya da yaklaşık yazıldı; çıktı sayılarını verir."
     },
     {
+      "code": "ifc_open_body",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bir nesnenin gövdesi kapalı bir katı değil (kendini kesen ya da kapanmayan halka, eşlenmeyen yüz); nesneyi düzeltip yeniden aktarın."
+    },
+    {
       "code": "package_incomplete",
       "kind": "failed",
       "retryable": false,
@@ -154634,6 +154658,14 @@
         "verticalSegments"
       ],
       "type": "object"
+    },
+    "IfcView": {
+      "description": "What an IFC file's bodies are, its header's view definition (docs/adr/8071 §4): `designTransfer` (the first value)\nwrites each body whole and its openings' bodies for the reader to take out of their walls; `reference` writes each\nbody already cut, its openings there as 'Reference' shapes, not taken out again.",
+      "enum": [
+        "designTransfer",
+        "reference"
+      ],
+      "type": "string"
     },
     "ImageClipBy": {
       "description": "The part of the picture shown.",

@@ -2769,6 +2769,104 @@
       "output": {
        "path": "$tmp:bina-1.ifc",
        "schema": "IFC4X3_ADD2",
+       "view": "designTransfer",
+       "storeys": 2,
+       "walls": 16,
+       "doors": 5,
+       "windows": 9,
+       "openings": 14,
+       "spaces": 10,
+       "slabs": 3,
+       "columns": 16,
+       "beams": 8,
+       "roofs": 0,
+       "railings": 0,
+       "stairs": 1,
+       "ramps": 0,
+       "chimneys": 0,
+       "curtainWalls": 0,
+       "members": 0,
+       "fixtures": 0,
+       "gridAxes": 7,
+       "coverings": 0,
+       "bytes": "$any",
+       "sha256": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Reference View: gövdeler açıklıkları kesilmiş, sayılar aynı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$tmp:bina-22.ifc",
+      "stamp": "2026-11-11T12:00:00",
+      "view": "reference"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:bina-22.ifc",
+       "schema": "IFC4X3_ADD2",
+       "view": "reference",
+       "storeys": 2,
+       "walls": 16,
+       "doors": 5,
+       "windows": 9,
+       "openings": 14,
+       "spaces": 10,
+       "slabs": 3,
+       "columns": 16,
+       "beams": 8,
+       "roofs": 0,
+       "railings": 0,
+       "stairs": 1,
+       "ramps": 0,
+       "chimneys": 0,
+       "curtainWalls": 0,
+       "members": 0,
+       "fixtures": 0,
+       "gridAxes": 7,
+       "coverings": 0,
+       "bytes": "$any",
+       "sha256": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Planı: Reference View",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "path": "$tmp:bina-23.ifc",
+      "view": "reference"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:bina-23.ifc",
+       "schema": "IFC4X3_ADD2",
+       "view": "reference",
        "storeys": 2,
        "walls": 16,
        "doors": 5,
@@ -2816,6 +2914,7 @@
       "output": {
        "path": "$tmp:bina-2.ifc",
        "schema": "IFC4X3_ADD2",
+       "view": "designTransfer",
        "storeys": 2,
        "walls": 16,
        "doors": 5,
@@ -2885,6 +2984,7 @@
       "output": {
        "path": "$tmp:bina-4.ifc",
        "schema": "IFC4X3_ADD2",
+       "view": "designTransfer",
        "storeys": 2,
        "walls": 16,
        "doors": 5,
@@ -2949,6 +3049,7 @@
       "output": {
        "path": "$tmp:bina-4.ifc",
        "schema": "IFC4X3_ADD2",
+       "view": "designTransfer",
        "storeys": 2,
        "walls": 16,
        "doors": 5,
@@ -2996,6 +3097,7 @@
       "output": {
        "path": "$tmp:bina-5.ifc",
        "schema": "IFC4X3_ADD2",
+       "view": "designTransfer",
        "storeys": 2,
        "walls": 16,
        "doors": 5,
@@ -5815,6 +5917,7 @@
       "output": {
        "path": "$tmp:bina-21.ifc",
        "schema": "IFC4X3_ADD2",
+       "view": "designTransfer",
        "storeys": 2,
        "walls": 16,
        "doors": 5,
@@ -8687,6 +8790,7 @@
       "output": {
        "path": "$tmp:bina-20.ifc",
        "schema": "IFC4X3_ADD2",
+       "view": "designTransfer",
        "storeys": 2,
        "walls": 16,
        "doors": 5,
@@ -11954,6 +12058,7 @@
       "output": {
        "path": "$tmp:bina-8.ifc",
        "schema": "IFC4X3_ADD2",
+       "view": "designTransfer",
        "storeys": 2,
        "walls": 16,
        "doors": 5,
@@ -17986,6 +18091,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/var.ifc",
        "schema": "IFC4X3_ADD2",
+       "view": "designTransfer",
        "storeys": 2,
        "walls": 16,
        "doors": 5,
@@ -18033,6 +18139,7 @@
       "output": {
        "path": "$tmp:BINA-11.IFC",
        "schema": "IFC4X3_ADD2",
+       "view": "designTransfer",
        "storeys": 2,
        "walls": 16,
        "doors": 5,
@@ -18080,6 +18187,7 @@
       "output": {
        "path": "$tmp:bina-12.ifc",
        "schema": "IFC4X3_ADD2",
+       "view": "designTransfer",
        "storeys": 2,
        "walls": 16,
        "doors": 5,
@@ -18126,6 +18234,7 @@
       "output": {
        "path": "$tmp:bina-13.ifc",
        "schema": "IFC4X3_ADD2",
+       "view": "designTransfer",
        "storeys": 2,
        "walls": 16,
        "doors": 5,
@@ -18173,6 +18282,7 @@
       "output": {
        "path": "$tmp:bina-14.ifc",
        "schema": "IFC4X3_ADD2",
+       "view": "designTransfer",
        "storeys": 2,
        "walls": 8,
        "doors": 3,

@@ -518,6 +518,8 @@ pub enum Message {
     IfcExport(Option<std::path::PathBuf>),
     /// IFC dışa aktar (bina): the file chosen (arch_ifc.rs, docs/adr/8047).
     IfcBuildingExport(Option<std::path::PathBuf>),
+    /// IFC dışa aktar (bina, kesilmiş gövde): the file chosen (arch_ifc.rs, docs/adr/8071 §4).
+    IfcBuildingExportCut(Option<std::path::PathBuf>),
     GltfExport(Option<std::path::PathBuf>),
     AnnotationStyles(crate::annotation_styles::Event),
     TableStyleDefs(crate::table_style_window::Event),

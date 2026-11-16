@@ -320,6 +320,8 @@ pub use crate::crs::Crs;
 pub struct Building {
     /// The file's name, without its extension.
     pub file: String,
+    /// What its bodies are: whole with openings the reader takes out, or already cut (docs/adr/8071 §4).
+    pub view: View,
     /// `YYYY-MM-DDThh:mm:ss`.
     pub stamp: String,
     pub application: String,
@@ -343,6 +345,17 @@ pub struct Building {
     /// The grids (EK-6 Tablo 6.36's axes, docs/adr/8070 §4).
     pub grids: Vec<Grid>,
     pub crs: Option<Crs>,
+}
+
+/// What the file's bodies are, its header's view definition (docs/adr/8071 §4; IFC 4.3, `IfcRelVoidsElement`): Design
+/// Transfer writes each body whole and its openings' bodies as 'Body', which the reader takes out of their hosts; a
+/// Reference View writes each body already cut (`quantities::cut`) and its openings as 'Reference', "not subtracted",
+/// there "in addition to the hole in the Body shape representation of the voided element".
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum View {
+    #[default]
+    DesignTransfer,
+    Reference,
 }
 
 /// A grid (`IfcGrid`): its name, its storey (none: the building's, on every storey), its axes in two directions (U and
@@ -613,6 +626,12 @@ impl Writer {
 
     /// A product's body: its shapes' items in one representation.
     fn body(&mut self, shapes: &[Shape]) -> Option<usize> {
+        self.shape("Body", shapes)
+    }
+
+    /// A product's shape: its shapes' items in one representation named `identifier` ('Body', or an opening's
+    /// 'Reference' in a Reference View).
+    fn shape(&mut self, identifier: &str, shapes: &[Shape]) -> Option<usize> {
         let mut items = Vec::new();
         let mut faces = false;
         for s in shapes {
@@ -624,7 +643,7 @@ impl Writer {
         }
         let kind = if faces { "Tessellation" } else { "SweptSolid" };
         let rep = self.st.add(format!(
-            "IFCSHAPEREPRESENTATION(#{},'Body','{kind}',({}))",
+            "IFCSHAPEREPRESENTATION(#{},'{identifier}','{kind}',({}))",
             self.body,
             Step::refs(&items)
         ));
@@ -872,13 +891,23 @@ pub fn write(b: &Building) -> String {
     let mut contained: Vec<Vec<usize>> = vec![Vec::new(); b.storeys.len()];
     let mut products = Vec::new();
     let mut materials: Vec<(String, Vec<usize>)> = Vec::new();
-    for e in &b.elements {
+    for (i, e) in b.elements.iter().enumerate() {
         let Some(&parent) = storey_places.get(e.storey) else {
             products.push(0);
             continue;
         };
         let place = w.placement(Some(parent), 0.0);
-        let shape = w.body(&e.shapes).map_or("$".into(), |s| format!("#{s}"));
+        // A Reference View's body is already cut (docs/adr/8071 §4).
+        let cut;
+        let shapes: &[Shape] = match b.view {
+            View::DesignTransfer => &e.shapes,
+            View::Reference => {
+                let hosted: Vec<&Opening> = b.openings.iter().filter(|o| o.host == i && o.ring.len() >= 2).collect();
+                cut = crate::quantities::cut(&e.shapes, &hosted);
+                &cut
+            }
+        };
+        let shape = w.body(shapes).map_or("$".into(), |s| format!("#{s}"));
         let g = w.id(e.id);
         let head = format!(
             "{g},$,{},{},{},#{place},{shape},{}",
@@ -946,13 +975,20 @@ pub fn write(b: &Building) -> String {
             continue;
         };
         let place = w.placement(Some(parent), 0.0);
+        let identifier = match b.view {
+            View::DesignTransfer => "Body",
+            View::Reference => "Reference",
+        };
         let shape = w
-            .body(&[Shape::Prism {
-                rings: vec![o.ring.clone()],
-                bulges: vec![o.bulges.clone()],
-                bottom: o.bottom,
-                top: o.top,
-            }])
+            .shape(
+                identifier,
+                &[Shape::Prism {
+                    rings: vec![o.ring.clone()],
+                    bulges: vec![o.bulges.clone()],
+                    bottom: o.bottom,
+                    top: o.top,
+                }],
+            )
             .map_or("$".into(), |s| format!("#{s}"));
         let g = w.id(o.id);
         let opening = w.st.add(format!(
@@ -1142,11 +1178,14 @@ pub fn write(b: &Building) -> String {
             Step::refs(list)
         ));
     }
-    // Design Transfer, not Reference View: an opening's body is subtracted from its wall's by the reader (IFC 4.3,
-    // IfcRelVoidsElement: a 'Body' opening is a Boolean difference); a Reference View holds the walls already cut and
-    // its openings as 'Reference' only (docs/adr/8047).
+    // The header says what the bodies are (docs/adr/8047, 8071 §4): Design Transfer, an opening's body subtracted from
+    // its wall's by the reader (IFC 4.3, IfcRelVoidsElement: a 'Body' opening is a Boolean difference); a Reference View
+    // holds the walls already cut and their openings as 'Reference' only.
     w.st.file(
-        "ViewDefinition [DesignTransferView]",
+        match b.view {
+            View::DesignTransfer => "ViewDefinition [DesignTransferView]",
+            View::Reference => "ViewDefinition [ReferenceView]",
+        },
         &format!("{}.ifc", b.file),
         &b.stamp,
         &b.application,
@@ -1315,9 +1354,30 @@ mod tests {
         assert!(!f.contains("IFCPOLYLINE("), "no chords");
     }
 
+    /// A Reference View (docs/adr/8071 §4): its header says so, the wall's body is already cut (the door's band two
+    /// pieces, the band over it whole) and the opening's shape is 'Reference', not 'Body'.
     #[test]
-    fn a_wall_with_a_door_is_voided_and_filled() {
-        let b = Building {
+    fn a_reference_view_writes_the_wall_cut_and_its_opening_as_reference() {
+        let mut b = door_building();
+        b.view = View::Reference;
+        let f = write(&b);
+        assert!(f.contains("FILE_DESCRIPTION(('ViewDefinition [ReferenceView]'),'2;1');"), "{}", &f[..200]);
+        let opening = f.lines().find(|l| l.contains("IFCOPENINGELEMENT(")).expect("the opening");
+        let shape = opening.split(',').nth(6).expect("its shape").trim_start_matches('#').to_owned();
+        let product = f.lines().find(|l| l.starts_with(&format!("#{shape}="))).expect("its product shape");
+        let rep = product.split("(#").nth(1).and_then(|r| r.split(')').next()).expect("its representation");
+        let rep_line = f.lines().find(|l| l.starts_with(&format!("#{rep}="))).expect("the representation");
+        assert!(rep_line.contains(",'Reference','SweptSolid',"), "{rep_line}");
+        assert_eq!(f.matches("IFCEXTRUDEDAREASOLID(").count(), 1 + 3, "the opening's and the wall's three bands");
+        // Design Transfer: whole, 'Body'.
+        let f = write(&door_building());
+        assert!(f.contains("ViewDefinition [DesignTransferView]") && !f.contains("'Reference'"));
+        assert_eq!(f.matches("IFCEXTRUDEDAREASOLID(").count(), 2);
+    }
+
+    /// A 5 m wall with a 0.9 m door through it, on one storey.
+    fn door_building() -> Building {
+        Building {
             file: "Ev".into(),
             stamp: "2026-11-11T12:00:00".into(),
             application: "KentOS".into(),
@@ -1397,7 +1457,12 @@ mod tests {
                 predefined: "OPENING",
             }],
             ..Building::default()
-        };
+        }
+    }
+
+    #[test]
+    fn a_wall_with_a_door_is_voided_and_filled() {
+        let b = door_building();
         let f = write(&b);
         // `KENTOS_IFC_BUILDING_SAMPLE=path` keeps it for an independent validator (scripts/fixtures/arch_ifc_check.py).
         if let Ok(path) = std::env::var("KENTOS_IFC_BUILDING_SAMPLE") {

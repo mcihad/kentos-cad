@@ -3,7 +3,8 @@
 - **Durum:** kısmen uygulandı (16 Kasım 2026). Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-10,
   [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-06'nın gövde kısmı (§8 "Gövdeler"); uygulama sırasında B10. Bu ADR maddenin
   bütün adımlarını tutar; koddaki "docs/adr/8071 §N" atıfları bölümleri gösterir: §1 gerçek yay, §2 kaynaktan miktar,
-  §3 kapalı gövde ve ilk kabul. Kararların numarası bölümler boyunca sürer. Ortak sınamalar ve sıradaki adımlar
+  §3 kapalı gövde ve ilk kabul, §4 açıklığı kesilmiş gövde ve iki çıktı (IFC-06). Kararların numarası bölümler boyunca
+  sürer. Ortak sınamalar ve sıradaki adımlar
   numarasız son bölümlerdedir (yeni adım numaralı bölüm olarak araya girer).
 - **Bağlam:** ADR [8047](8047-ifc-building-export.md) (binanın IFC'si, kayıp listesi), [8042](8042-section-derived-from-a-section-mark.md)
   (kesit modeli), [0340](0340-wall-joins-and-edits.md) (duvar birleşimleri), [8040](8040-vertical-model.md) (duvarın
@@ -140,6 +141,47 @@ IfcOpenShell'in kendi geometrisi (açıklıkları kendi Boole işlemleriyle çı
 formlara 5,8·10⁻⁷ içinde. B9'un örnek binasında (rampa, giydirme cephe, asansör, dikme, kayıt, asma tavan) ve çatılı
 kesit binasında (çatı yüzleri, baca) bütün gövdeler kapalı.
 
+## §4. Açıklığı kesilmiş gövde ve iki çıktı
+
+**Araştırma.**
+
+- **IFC 4.3, `IfcOpeningElement` ve `IfcRelVoidsElement`:** açıklığın 'Body' gösterimi oyduğu elemanın gövdesinden
+  çıkarılır (örtük Boole farkı); 'Reference' gösterimi "is not subtracted. It is provided in addition to the hole in
+  the Body shape representation of the voided element". buildingSMART'ın "Element Openings" kavramı da Reference
+  gösterimini dışa aktarırken boşluğu zaten içeren gövdeyle anlatır.
+- **ADR 8047 §6 ve ifc-uyum.md §8:** başlık bugün `DesignTransferView` (gövde bütün, açıklığı okuyucu çıkarır); hedef iki
+  çıktı profili, başlıktaki görünüm adı dosyanın içeriğini söyler; ruhsat profilinin hangisi olacağı B1'in sayfa okuması
+  ve pilot idarenin cevabıyla seçilir, o güne kadar ikisi de sınanır.
+- **Üreticiler (karşılaştırma için):** Archicad'in "Export gross geometry of elements (Export holes separately)"
+  seçeneği gövdeyi bütün, deliği `IfcOpeningElement` olarak ayrı yazar; kapalıyken "extruded elements with holes are
+  exported as BREP". KentOS'ta kesilmiş gövde de ekstrüzyon kalır: bantlara ayrılmış, her bandın profili yaylarıyla.
+
+**Karar.**
+
+12. **Kesilmiş gövde** (`kentos_ifc::quantities::cut`): gövde açıklıkların denizlik ve lento kotlarında bantlara ayrılır,
+    her bandın tabanından o bantta duran açıklıklar çekirdeğin örtüşme işlemiyle çıkarılır (yaylar yay kalır); açıklığın
+    durmadığı ardışık bantlar tek prizma kalır. Net hacim (§2), 3B ağ (ADR 8067'nin bant kesimi artık bu işlev; yayları
+    ağ kendi adımıyla böler) ve Reference View aynı işlevi kullanır: dört görüntü aynı gövdeyi gösterir.
+13. **İki çıktı** (`Building::view`): Tasarım aktarımı (varsayılan) gövdeyi bütün, açıklığı 'Body' yazar, başlık
+    `ViewDefinition [DesignTransferView]`; Reference View gövdeyi kesilmiş, açıklığı 'Reference' yazar, başlık
+    `ViewDefinition [ReferenceView]`. Nesneler, kimlikler, miktar setleri ve hacimler ikisinde aynıdır.
+14. **Komut ve pencere:** `cad.arch.ifc`'nin girdisinde `view` (`designTransfer` | `reference`), çıktısında yazılan
+    görünüm; dosyaya yazılan her gövde (ve mahal) kapalılık denetiminden geçer, kapalı olmayan adı ve ilk kusuruyla
+    `ifc_open_body` uyarısıdır. Masaüstünde Dosya › Dışa aktar › Bina modeli'nde "IFC dışa aktar (bina, kesilmiş
+    gövde)…" (`arch.ifcExportCut`, simgesi seçenek sayfasının A'sı: kutunun yüzünde açıklık) var olan "IFC dışa aktar
+    (bina)…"nın yanında; ikincisinin açıklaması gövdelerin bütün yazıldığını söyler.
+15. **Ruhsatın profili açık:** varsayılan Tasarım aktarımı kalır; hangisinin ruhsat profili olacağı plan §8'in koşuluyla
+    seçilir.
+
+**Sınama.** `quantities::tests::a_curved_wall_s_cut_body_is_its_bands_with_their_arcs` (pencereli çeyrek halka: lentonun
+altı ve üstü bütün, pencere bandı iki yaylı parça, hepsi kapalı, toplamları net hacim),
+`building::tests::a_reference_view_writes_the_wall_cut_and_its_opening_as_reference` (başlık, 'Reference', kapılı duvarın
+üç bandı), `arch_ifc::the_curved_building_s_bodies_are_their_closed_forms` (her duvarın kesilmiş gövdesi kapalı formun net
+hacmi; Reference View dosyası `egri-bina-referans.ifc`), `curved_ifc_check.py` iki dosyayı da okur (Reference View'da
+IfcOpenShell'in ağları kapalı formlara 5,2·10⁻⁷ içinde, açıklıklar yalnız 'Reference'), masaüstünde
+`arch_ifc_tests::the_cut_bodies_go_out_as_a_reference_view`, ortak durumlar `cad.arch.ifc` (26; ikisi Reference View).
+Resim: `scene3d_building_tests::ifc_export_menu_screens` (`5-disa-aktar-*.png`).
+
 ## Ortak sınamalar
 
 - `cargo test -p kentos-ifc --lib` (42), `-p kentos-geometry-core` (1 117), `-p kentos-interaction wall` (81),
@@ -153,8 +195,9 @@ kesit binasında (çatı yüzleri, baca) bütün gövdeler kapalı.
 
 ## Sıradaki adımlar
 
-- **Açıklığı kesilmiş gövde** (BIM-10'un ikinci maddesi; IFC-06'nın kesilmiş gövde profili bunu kullanır): §2'nin
-  bantlarıyla gövde; açıklık nesnesi `Reference` gösterimiyle.
+- **IFC-06'nın kalanı:** gelişim seviyesi kanıtının müellif incelemesi kaydı (EK-9 formuyla, IFC-08 ve BIM-14);
+  "sentetik örnek açık kural takımından uyarısız geçer" kabulü buildingSMART'ın doğrulama servisini ya da açık kural
+  takımını ister: dosyayı servise yüklemek ya da kural takımını indirmek sahibin onayıyla.
 - **Döşemede boşluk ve şaft:** deliğin ve boşluk mahalinin açıklık nesnesi; eğimli döşeme; çatının katmanları ve içe
   dönen saçak (ADR 8044'ün kalanı).
 - **Döner merdiven gerçek yayla:** eğri merdivenin basamakları ve kolu.

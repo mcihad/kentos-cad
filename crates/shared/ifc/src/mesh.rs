@@ -5,9 +5,9 @@
 //!
 //! - **A prism** (an extrusion: a wall, a slab, a column, a beam, a stair's tread): its footprint's rings (even-odd, as the
 //!   file writes them; an arc flattened at the drawing's step, docs/adr/8071 §1) triangulated for its caps, a quad up
-//!   each edge. Where openings go through it, its height is cut
-//!   at their sills and heads and each band's footprint is the rings less the openings' footprints standing in it
-//!   (the geometry core's overlay), so a window is a hole, its sill and head faces drawn.
+//!   each edge. Where openings go through it, its cut body (`quantities::cut`, a Reference View's, docs/adr/8071 §4):
+//!   its height cut at their sills and heads, each band's footprint the rings less the openings' footprints standing in
+//!   it (the geometry core's overlay, arcs kept), so a window is a hole, its sill and head faces drawn.
 //! - **Faces** (a roof's face): each face as the file has it, outward; a face not seen edge-on from above triangulated
 //!   by its plan, a vertical one as a fan.
 //! - **Heights** are over ±0.00: an element's storey's elevation added to its shapes' own.
@@ -16,7 +16,6 @@ use std::ops::Range;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
-use kentos_geometry_core::geom::region::subtract_areas;
 use kentos_geometry_core::triangulate::triangulate_into;
 
 use crate::building::{Building, Class, Opening, Shape, flat_rings, nest};
@@ -64,10 +63,11 @@ pub fn meshes(b: &Building) -> Vec<Mesh> {
         let floor = b.storeys.get(e.storey).map_or(0.0, |s| s.elevation);
         let cuts: Vec<&Opening> = b.openings.iter().filter(|o| o.host == i && o.ring.len() >= 3).collect();
         let mut m = Mesh::new(e.object.or(e.id), Kind::Element(e.class), e.storey, &e.name);
-        for shape in &e.shapes {
+        // Its cut body (docs/adr/8071 §4): the Reference View's and the net volume's, each band's arcs flattened here.
+        for shape in &crate::quantities::cut(&e.shapes, &cuts) {
             match shape {
                 Shape::Prism { rings, bulges, bottom, top } => {
-                    prism(&mut m, &flat_rings(rings, bulges), floor + bottom, floor + top, &cuts, floor)
+                    prism(&mut m, &flat_rings(rings, bulges), floor + bottom, floor + top)
                 }
                 Shape::Faces { vertices, faces } => polyhedron(&mut m, vertices, faces, floor),
             }
@@ -79,7 +79,7 @@ pub fn meshes(b: &Building) -> Vec<Mesh> {
     for s in &b.spaces {
         let floor = b.storeys.get(s.storey).map_or(0.0, |x| x.elevation);
         let mut m = Mesh::new(s.id, Kind::Space, s.storey, s.long_name.as_deref().unwrap_or(&s.name));
-        prism(&mut m, &flat_rings(&s.rings, &s.bulges), floor + s.bottom, floor + s.top, &[], floor);
+        prism(&mut m, &flat_rings(&s.rings, &s.bulges), floor + s.bottom, floor + s.top);
         if !m.triangles.is_empty() {
             out.push(m);
         }
@@ -115,37 +115,13 @@ fn areas(rings: &[Vec<[f64; 2]>]) -> Vec<Area> {
         .collect()
 }
 
-/// A prism of `rings` between `bottom` and `top`, the openings `cuts` (their heights over `floor`) taken out.
-fn prism(m: &mut Mesh, rings: &[Vec<[f64; 2]>], bottom: f64, top: f64, cuts: &[&Opening], floor: f64) {
+/// A prism of `rings` (straight, even-odd) between `bottom` and `top`.
+fn prism(m: &mut Mesh, rings: &[Vec<[f64; 2]>], bottom: f64, top: f64) {
     if top - bottom <= 1e-9 {
         return;
     }
-    let base = areas(rings);
-    if base.is_empty() {
-        return;
-    }
-    let mut levels = vec![bottom, top];
-    for c in cuts {
-        for z in [floor + c.bottom, floor + c.top] {
-            if z > bottom + 1e-6 && z < top - 1e-6 {
-                levels.push(z);
-            }
-        }
-    }
-    levels.sort_by(f64::total_cmp);
-    levels.dedup_by(|a, b| (*a - *b).abs() < 1e-6);
-    for w in levels.windows(2) {
-        let (z0, z1) = (w[0], w[1]);
-        let mid = (z0 + z1) / 2.0;
-        let cutters: Vec<Area> = cuts
-            .iter()
-            .filter(|c| floor + c.bottom < mid && mid < floor + c.top)
-            .flat_map(|c| areas(&flat_rings(std::slice::from_ref(&c.ring), std::slice::from_ref(&c.bulges))))
-            .collect();
-        let band = if cutters.is_empty() { base.clone() } else { subtract_areas(&base, &cutters) };
-        for a in &band {
-            band_of(m, a, z0, z1);
-        }
+    for a in &areas(rings) {
+        band_of(m, a, bottom, top);
     }
 }
 

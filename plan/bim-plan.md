@@ -494,8 +494,10 @@ duvarın brüt hacmi birleşimsiz kendi gövdesi, neti yazılan gövde eksi aç�
 Kapalılık denetimi (`kentos_ifc::closed`); rampa sahanlığındaki art arda aynı köşe giderildi. **İlk kabul:** eğri
 cepheli, iki farklı kotlu örnekte (`fixtures/arch/v1/curved-building.kcad`) bütün gövdelerin hacmi bağımsız kapalı
 formlara 10⁻⁹ içinde eşit, açıklıklı duvarın neti dolu eksi açıklık, bütün gövdeler kapalı; IfcOpenShell 0 bulgu, kendi
-geometrisiyle hacimler 5,8·10⁻⁷ içinde. **Kalan:** açıklığı kesilmiş gövde (IFC-06'nın profili), döşemede boşluk ve şaft,
-eğimli döşeme, çatının katmanları ve içe dönen saçak, döner merdivenin yayı, mahalin kapalı hacmi.
+geometrisiyle hacimler 5,8·10⁻⁷ içinde. Açıklığı kesilmiş gövde (ADR 8071 §4): tek kesme işlevi net hacmi, 3B'yi ve
+IFC'nin Reference View çıktısını verir (Dosya › Dışa aktar › IFC dışa aktar (bina, kesilmiş gövde)…; `cad.arch.ifc`
+`view: reference`). **Kalan:** döşemede boşluk ve şaft, eğimli döşeme, çatının katmanları ve içe dönen saçak, döner
+merdivenin yayı, mahalin kapalı hacmi.
 
 **Kullanıcı sonucu:** Kesit, görünüş, 3B ve dışa aktarılan model aynı gövdeyi gösterir ve o gövde çizilen yapıyla aynıdır:
 eğri duvar eğridir, açıklık duvardan kesilmiştir, döşemenin boşluğu boştur. Dayanak Md. 14; EK-8; EK-9/14; Z6.

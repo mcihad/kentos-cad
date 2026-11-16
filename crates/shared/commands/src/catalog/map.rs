@@ -1367,7 +1367,7 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
             id: crate::CAD_ARCH_IFC.into(),
             version: crate::CAD_ARCH_IFC_VERSION,
             title: "Binayı IFC'ye aktar".into(),
-            summary: "Çizimin binasını IFC 4.3 (IFC4X3_ADD2) dosyasına yazar (Dijital Proje Yönetmeliği EK-5 §5.4): proje, saha, bina ve her kat bir IfcBuildingStorey; duvarlar, döşemeler, kolonlar, kirişler (lento), çatılar, korkuluklar ve merdivenler kesit modelinin gövdeleriyle (duvar katman katman, kolonun yüzünde ve kirişin altında biter); her açıklık duvarını oyan bir IfcOpeningElement ve onu dolduran IfcDoor ya da IfcWindow (etiketi çizimdeki numarası); mahaller IfcSpace. Adlar EK-5 §5.5'in Disiplin-KategoriKodu-Açıklama kalıbında (MM-DVR-Dış_duvar_25, MM-KAP-K01); EK-6'dan çizimin bildikleri: IsExternal, LoadBearing, malzeme, mahal kaplamaları, net alanlar, emsal ve TAKS. GlobalId nesnenin KentOS kimliğidir. Uzunluk metre. stamp tarih ve saat. Gövdesi olmayan nesne yazılmaz ve söylenir (export_losses). Bütün yazılır ya da hiç; çizimi değiştirmez. \
+            summary: "Çizimin binasını IFC 4.3 (IFC4X3_ADD2) dosyasına yazar (Dijital Proje Yönetmeliği EK-5 §5.4): proje, saha, bina ve her kat bir IfcBuildingStorey; duvarlar, döşemeler, kolonlar, kirişler (lento), çatılar, korkuluklar ve merdivenler kesit modelinin gövdeleriyle (duvar katman katman, kolonun yüzünde ve kirişin altında biter); her açıklık duvarını oyan bir IfcOpeningElement ve onu dolduran IfcDoor ya da IfcWindow (etiketi çizimdeki numarası); mahaller IfcSpace. Adlar EK-5 §5.5'in Disiplin-KategoriKodu-Açıklama kalıbında (MM-DVR-Dış_duvar_25, MM-KAP-K01); EK-6'dan çizimin bildikleri: IsExternal, LoadBearing, malzeme, mahal kaplamaları, net alanlar, emsal ve TAKS; duvar, döşeme, kolon, kiriş ve kaplamanın miktar setleri (Qto_…BaseQuantities) kaynaktan, IFC 4.3'ün tanımlarıyla (duvarın brüt hacmi birleşimsiz kendi gövdesi, neti açıklık ve girintiler çıkmış yazılan gövde). Eğri duvarın, döşemenin, mahalin ve eğri duvardaki açıklığın yayları yay olarak yazılır (IfcIndexedPolyCurve, IfcArcIndex). view: designTransfer (varsayılan; gövdeler bütün, açıklığın gövdesini okuyucu duvardan çıkarır; başlıkta DesignTransferView) ya da reference (gövdeler açıklıkları çıkarılmış, açıklık Reference gösterimiyle; başlıkta ReferenceView). GlobalId nesnenin KentOS kimliğidir. Uzunluk metre. stamp tarih ve saat. Gövdesi olmayan nesne yazılmaz ve söylenir (export_losses); gövdesi kapalı bir katı olmayan nesne adı ve nedeniyle söylenir (ifc_open_body). Bütün yazılır ya da hiç; çizimi değiştirmez. \
                       Retler: invalid_file_path, file_exists, invalid_ifc."
                 .into(),
             aliases: vec!["ifcbina".into(), "ifcbuilding".into()],
@@ -1385,6 +1385,10 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
             examples: vec![CommandExample {
                 title: "Binanın modeli".into(),
                 input: json!({ "path": "/veri/bina.ifc", "overwrite": true }),
+                output: None,
+            }, CommandExample {
+                title: "Açıklıkları kesilmiş gövdelerle (Reference View)".into(),
+                input: json!({ "path": "/veri/bina-referans.ifc", "view": "reference" }),
                 output: None,
             }],
         },

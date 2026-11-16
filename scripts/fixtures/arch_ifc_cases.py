@@ -120,8 +120,10 @@ def counts(d):
             "coverings": sum(1 for e in kind("slab") if e.get("covering"))}
 
 
-def output(path, d=SETUP):
-    return {"path": path, "schema": "IFC4X3_ADD2", **counts(d), "bytes": "$any", "sha256": "$any"}
+def output(path, d=SETUP, view="designTransfer"):
+    """What the export says: its bodies whole (designTransfer) or already cut (reference, docs/adr/8071 §4); the same
+    objects either way."""
+    return {"path": path, "schema": "IFC4X3_ADD2", "view": view, **counts(d), "bytes": "$any", "sha256": "$any"}
 
 
 def with_ramp():
@@ -204,6 +206,12 @@ def cases():
     return [
         case("Bölüm binası: iki kat, duvarlar, kapılar, pencereler, mahaller, döşemeler, kolonlar, kirişler, merdiven",
              [step("execute", {"path": "$tmp:bina-1.ifc", "stamp": STAMP}, completed(output("$tmp:bina-1.ifc")))]),
+        case("Reference View: gövdeler açıklıkları kesilmiş, sayılar aynı",
+             [step("execute", {"path": "$tmp:bina-22.ifc", "stamp": STAMP, "view": "reference"},
+                   completed(output("$tmp:bina-22.ifc", view="reference")))]),
+        case("Planı: Reference View",
+             [step("plan", {"path": "$tmp:bina-23.ifc", "view": "reference"},
+                   completed(output("$tmp:bina-23.ifc", view="reference")))]),
         case("Planı: dosya yazılmadan",
              [step("plan", {"path": "$tmp:bina-2.ifc", "stamp": STAMP}, completed(output("$tmp:bina-2.ifc")))]),
         case("Yalnız doğrulama", [step("validate", {"path": "$tmp:bina-3.ifc"}, completed(None))]),

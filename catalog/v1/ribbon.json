@@ -160,7 +160,8 @@
          {
           "label": "Bina modeli",
           "items": [
-           "arch.ifcExport"
+           "arch.ifcExport",
+           "arch.ifcExportCut"
           ],
           "works": [
            "architecture"
@@ -3240,7 +3241,8 @@
          {
           "label": "Bina modeli",
           "items": [
-           "arch.ifcExport"
+           "arch.ifcExport",
+           "arch.ifcExportCut"
           ],
           "works": [
            "architecture"

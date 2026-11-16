@@ -13,7 +13,7 @@ use kentos_geometry_core::geom::bulge::bulge_path_edges;
 use kentos_geometry_core::geom::intersect::intersect_edges;
 use kentos_geometry_core::geom::region::ring_area;
 
-use crate::building::{Shape, flat_rings};
+use crate::building::{Building, Opening, Shape, View, flat_rings};
 
 /// What keeps `shape` from being a closed solid, in words; empty when it is one.
 pub fn faults(shape: &Shape) -> Vec<String> {
@@ -26,6 +26,40 @@ pub fn faults(shape: &Shape) -> Vec<String> {
         } => prism(rings, bulges, *bottom, *top),
         Shape::Faces { vertices, faces } => face_set(vertices.len(), faces),
     }
+}
+
+/// The bodies of `b` as its file writes them (a Reference View's cut, docs/adr/8071 §4) that are not closed solids,
+/// its elements' and its spaces': each one's name and the first thing wrong with it.
+pub fn open_bodies(b: &Building) -> Vec<(String, String)> {
+    let mut out = Vec::new();
+    for (i, e) in b.elements.iter().enumerate() {
+        let shapes = match b.view {
+            View::DesignTransfer => e.shapes.clone(),
+            View::Reference => {
+                let hosted: Vec<&Opening> = b
+                    .openings
+                    .iter()
+                    .filter(|o| o.host == i && o.ring.len() >= 2)
+                    .collect();
+                crate::quantities::cut(&e.shapes, &hosted)
+            }
+        };
+        if let Some(f) = shapes.iter().flat_map(faults).next() {
+            out.push((e.name.clone(), f));
+        }
+    }
+    for s in &b.spaces {
+        let body = Shape::Prism {
+            rings: s.rings.clone(),
+            bulges: s.bulges.clone(),
+            bottom: s.bottom,
+            top: s.top,
+        };
+        if let Some(f) = faults(&body).into_iter().next() {
+            out.push((s.name.clone(), f));
+        }
+    }
+    out
 }
 
 fn prism(rings: &[Vec<[f64; 2]>], bulges: &[Vec<f64>], bottom: f64, top: f64) -> Vec<String> {

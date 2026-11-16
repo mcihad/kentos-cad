@@ -112,8 +112,12 @@
     - Birleşimde yay biten çizgi kendi çemberinde uzar (teğetiyle değil).
     - Miktar setleri kaynaktan, IFC 4.3'ün tanımlarıyla: duvarın brüt hacmi birleşimsiz kendi gövdesi, neti yazılan
       gövde eksi açıklık ve girintiler; döşemenin deliği onun açıklığıdır (brüt alana girer). Üçgen ölçü kaynağı olmaz.
-    - Her gövde kapalı ve kendini kesmeyen katı (`kentos_ifc::closed`); kesit eğri duvarı yine "düz parçalarla" der, IFC
-      demez. Kalan: kesilmiş gövde, döşeme boşluğu ve şaft, eğimli döşeme, çatı katmanları, döner merdiven, mahal hacmi.
+    - Her gövde kapalı ve kendini kesmeyen katı (`kentos_ifc::closed`, `ifc_open_body`); kesit eğri duvarı yine "düz
+      parçalarla" der, IFC demez.
+    - Kesilmiş gövde tek işlevdir (`quantities::cut`): net hacim, 3B ve Reference View aynı gövdeyi kullanır. IFC iki
+      profille yazılır: Tasarım aktarımı (varsayılan; gövde bütün, açıklık 'Body') ve Reference View (gövde kesik,
+      açıklık 'Reference'); başlık görünümün adını söyler; ruhsat profilinin seçimi açık. Kalan: döşeme boşluğu ve şaft,
+      eğimli döşeme, çatı katmanları, döner merdiven, mahal hacmi.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

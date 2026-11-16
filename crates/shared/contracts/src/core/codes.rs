@@ -2333,6 +2333,8 @@ codes! {
     STYLE_LAYER_NOT_FOUND = "style_layer_not_found", Failed, false, "Stilde istenen katman için bir stil katmanı yok: metadata kentos:layer, source-layer ya da id katmanın kimliği ya da adı olmalı (ya da from verin).";
     /// Objects a file format has no place for, or written approximately (docs/adr/0502).
     EXPORT_LOSSES = "export_losses", Warning, false, "Bazı nesneler dosyaya yazılamadı ya da yaklaşık yazıldı; çıktı sayılarını verir.";
+    /// A body written to an IFC file that is not a closed, simple solid (docs/adr/8071 §3).
+    IFC_OPEN_BODY = "ifc_open_body", Warning, false, "Bir nesnenin gövdesi kapalı bir katı değil (kendini kesen ya da kapanmayan halka, eşlenmeyen yüz); nesneyi düzeltip yeniden aktarın.";
     /// The PDF could not be made.
     PACKAGE_INCOMPLETE = "package_incomplete", Failed, false, "Teslimin kaynakları eksik veya taşınamıyor; kaynak raporunu düzeltin.";
     PUBLISH_BLOCKED = "publish_blocked", Failed, false, "Pafta seti eksik kaynak veya ön denetim hatası nedeniyle yayınlanmadı; pafta bazlı plan raporunu düzeltip yeniden deneyin.";

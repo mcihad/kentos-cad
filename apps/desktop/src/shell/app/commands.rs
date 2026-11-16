@@ -679,7 +679,8 @@ impl App {
             "ifc.export" => return self.export_ifc(),
             "gltf.export" => return self.export_gltf(),
             // IFC dışa aktar (bina) (arch_ifc.rs, docs/adr/8047).
-            "arch.ifcExport" => return self.export_ifc_building(),
+            "arch.ifcExport" => return self.export_ifc_building(kentos_commands::IfcView::DesignTransfer),
+            "arch.ifcExportCut" => return self.export_ifc_building(kentos_commands::IfcView::Reference),
             // Bina programı (program_window.rs, docs/adr/0773).
             "arch.program" => self.open_program(),
             // Çizgi tipleri (docs/adr/0313 §7).
