@@ -810,3 +810,9 @@ impl Input for kentos_commands::ExportIfcBuilding {
         None
     }
 }
+
+impl Input for kentos_commands::IfcInspect {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}

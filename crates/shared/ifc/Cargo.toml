@@ -24,7 +24,10 @@ serde_json = { workspace = true }
 ifc-lite-core = { version = "=28.3.0", optional = true }
 ifc-lite-geometry = { version = "=28.3.0", optional = true }
 rustc-hash = { version = "2", optional = true }
+# The model viewer's core (docs/adr/8073 §1): `view` turns a file read into its input.
+kentos-model-view = { path = "../model-view", optional = true }
 
 [features]
 read = ["dep:ifc-lite-core"]
 geometry = ["read", "dep:ifc-lite-geometry", "dep:rustc-hash"]
+view = ["geometry", "dep:kentos-model-view"]

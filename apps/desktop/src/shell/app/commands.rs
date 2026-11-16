@@ -672,6 +672,7 @@ impl App {
             "route.finder" => self.open_route(),
             "junction.editor" => self.open_junctions(),
             "scene3d.view" => self.open_scene3d(),
+            "ifc.view" => return self.pick_ifc_model(),
             // LandXML ver (road_exchange.rs, plan/road.md Y10.2).
             "landxml.export" => return self.export_landxml(),
             "landxml.machine" => return self.export_landxml_machine(),

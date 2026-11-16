@@ -47,6 +47,8 @@ kentos-native-application = { path = "../../crates/native/application" }
 kentos-road = { path = "../../crates/shared/road" }
 # The 3D view's tiles, camera and selection (scene3d_window.rs, docs/adr/0910 §4).
 kentos-scene3d = { path = "../../crates/shared/scene3d" }
+kentos-model-view = { path = "../../crates/shared/model-view" }
+kentos-model-view-ui = { path = "../../crates/model-view-ui" }
 # İşlemler (docs/PROCESSING.md): the processing tools and models over the document, held to
 # the web's by fixtures/processing/v1 (docs/adr/0084).
 kentos-processing = { path = "../../crates/native/processing" }
@@ -116,7 +118,8 @@ unicode-segmentation = "=1.13.3"
 # comparison; the dated scope decision's inputs and calendar (docs/adr/8063). The model quality control form's header
 # in the tests reads kentos-ifc too (EK-9, docs/adr/8047 §10).
 kentos-digital-project = { path = "../../crates/shared/digital-project" }
-kentos-ifc = { path = "../../crates/shared/ifc" }
+# The IFC viewer reads files through the reading face and its engine (docs/adr/8061 §11, docs/adr/8073 §5).
+kentos-ifc = { path = "../../crates/shared/ifc", features = ["view"] }
 
 [dev-dependencies]
 # App boot and font-sensitive widget tests share a reentrant test-only guard.

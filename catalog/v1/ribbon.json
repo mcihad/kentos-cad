@@ -143,6 +143,12 @@
           "works": [
            "map"
           ]
+         },
+         {
+          "label": "Bina modeli",
+          "items": [
+           "ifc.view"
+          ]
          }
         ]
        },
@@ -2489,6 +2495,10 @@
        },
        {
         "command": "scene3d.view",
+        "size": "small"
+       },
+       {
+        "command": "ifc.view",
         "size": "small"
        },
        {

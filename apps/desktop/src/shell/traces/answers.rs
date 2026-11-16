@@ -186,6 +186,7 @@ impl App {
                 crate::junction_window::TITLE.to_owned()
             }
             Dialog::Scene3d => crate::scene3d_window::TITLE.to_owned(),
+            Dialog::IfcViewer => crate::ifc_viewer::TITLE.to_owned(),
             Dialog::Arch(arch::ArchDialogKind::Program) => crate::program_window::TITLE.to_owned(),
             Dialog::Arch(arch::ArchDialogKind::SpaceMerge) => {
                 crate::quantities::MERGE_TITLE.to_owned()
@@ -440,6 +441,7 @@ impl App {
             Some(Dialog::Road(road::RoadDialogKind::Route)) => self.route_control(control),
             Some(Dialog::Road(road::RoadDialogKind::Junctions)) => self.junction_control(control),
             Some(Dialog::Scene3d) => self.scene3d_control(control),
+            Some(Dialog::IfcViewer) => self.ifc_viewer_control(control),
             Some(Dialog::Arch(arch::ArchDialogKind::Program)) => self.program_control(control),
             Some(Dialog::Gis(gis::GisDialogKind::TableStyles)) => {
                 self.table_styles_control(control)

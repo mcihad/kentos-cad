@@ -1156,6 +1156,10 @@ pub mod wall_distances;
 #[cfg(feature = "mod-arch")]
 #[path = "arch/arch_ifc.rs"]
 pub mod arch_ifc;
+// Bir IFC dosyasını okuyup anlatır: görüntüleyicinin okuma yüzü (plan/ifc-uyum.md IFC-12, docs/adr/8073 §6).
+#[cfg(feature = "mod-arch")]
+#[path = "arch/ifc_inspect.rs"]
+pub mod ifc_inspect;
 // IFC dosyalarının koordinat sistemi ve harita dönüşümü: binanın ve yolun ortak kaynağı (docs/adr/8072 §3).
 pub mod ifc_system;
 #[cfg(feature = "mod-arch")]
@@ -2583,6 +2587,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_ARCH_IFC,
         kentos_commands::CAD_ARCH_IFC_VERSION,
+    ),
+    (
+        kentos_commands::CAD_IFC_INSPECT,
+        kentos_commands::CAD_IFC_INSPECT_VERSION,
     ),
     (
         kentos_commands::FILE_EXPORT_GLTF,

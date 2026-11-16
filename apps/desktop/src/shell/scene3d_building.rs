@@ -127,6 +127,7 @@ impl Building3d {
     }
 
     /// How many rooms.
+    #[cfg(test)]
     pub(crate) fn rooms_count(&self) -> usize {
         self.meshes.iter().filter(|m| m.kind == Kind::Space).count()
     }

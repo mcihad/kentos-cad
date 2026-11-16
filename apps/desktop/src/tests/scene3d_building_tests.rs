@@ -16,14 +16,14 @@ const SELECTED: u32 = 11;
 const FOUND: u32 = 12;
 const FOUND_ROOM: u32 = 14;
 
-fn open(snapshot: kentos_commands::DocumentSnapshotV2) -> App {
+pub(crate) fn open(snapshot: kentos_commands::DocumentSnapshotV2) -> App {
     let (mut app, _) = App::boot(None);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
 }
 
-fn building() -> kentos_commands::DocumentSnapshotV2 {
+pub(crate) fn building() -> kentos_commands::DocumentSnapshotV2 {
     kentos_kcad::decode(include_bytes!("../../../../fixtures/arch/v1/section-building.kcad")).expect("decodes")
 }
 
@@ -32,7 +32,7 @@ fn send(app: &mut App, e: W) {
 }
 
 /// The STEP record's arguments at the top level (strings with their quotes, lists with their parentheses).
-fn arguments(record: &str) -> Vec<String> {
+pub(crate) fn arguments(record: &str) -> Vec<String> {
     let inner = record.split_once('(').map_or("", |(_, r)| r);
     let inner = inner.trim_end().trim_end_matches(';').trim_end_matches(')');
     let (mut out, mut cur, mut depth, mut quoted) = (Vec::new(), String::new(), 0, false);

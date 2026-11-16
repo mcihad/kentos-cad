@@ -58,6 +58,19 @@ pub fn guid(n: u128) -> String {
     out
 }
 
+/// The 128-bit number of an IFC GlobalId, the inverse of [`guid`]: KentOS writes an element's GlobalId from its
+/// persistent id, so a file it wrote leads back to the drawing's objects. None for 22 characters that are not a
+/// GlobalId's (another character, or a first one worth more than 2 bits).
+pub fn unguid(s: &str) -> Option<u128> {
+    let b = s.as_bytes();
+    if b.len() != 22 {
+        return None;
+    }
+    let digit = |c: u8| GUID.iter().position(|&g| g == c).map(|i| i as u128);
+    let first = digit(b[0]).filter(|&d| d < 4)?;
+    b[1..].iter().try_fold(first, |n, &c| Some((n << 6) | digit(c)?))
+}
+
 /// FNV-1a over 128 bits: the GlobalIds are the same for the same file.
 pub(crate) fn fnv(seed: &str, k: u64) -> u128 {
     let mut h: u128 = 0x6c62272e07bb014262b821756295c58d;
@@ -123,6 +136,17 @@ impl Step {
 
 #[cfg(test)]
 mod tests {
+
+    #[test]
+    fn a_global_id_reads_back_to_its_number() {
+        for n in [0u128, 1, 7, u128::MAX, 0x0123_4567_89ab_cdef_fedc_ba98_7654_3210, 1 << 126] {
+            assert_eq!(unguid(&guid(n)), Some(n), "{n:x}");
+        }
+        assert_eq!(unguid("0000000000000000000000"), Some(0));
+        assert_eq!(unguid("4000000000000000000000"), None, "the first character holds 2 bits");
+        assert_eq!(unguid("000000000000000000000"), None, "21 characters");
+        assert_eq!(unguid("00000000000000000000-0"), None, "not a GlobalId's character");
+    }
     use super::*;
 
     #[test]

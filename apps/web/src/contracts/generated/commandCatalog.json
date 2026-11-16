@@ -71063,7 +71063,7 @@
       "id": "file.export.ifc",
       "version": 1,
       "title": "IFC dışa aktar",
-      "summary": "Yol projesinin akslarını ve boykesitlerini IFC 4.3 (IFC4X3_ADD2) dosyasına yazar: iş mantığı (IfcAlignmentHorizontal ve IfcAlignmentVertical, IfcAlignmentSegment'leri ve tasarım değerleri: başlangıç noktası ve doğrultusu, yarıçaplar (saat yönü tersine artı, 0 sonsuz), boy; düşeyde başlangıç uzaklığı, yatay boy, kot, eğimler, yarıçap) ve geometri (IfcCompositeCurve ve IfcGradientCurve: IfcCurveSegment'ler IfcLine, IfcCircle, IfcClothoid, IfcPolynomialCurve üstünde; IfcOpenShell'in eşlemesi); her düzen sıfır boylu parçayla biter. İlk boykesit aksın, öbürleri alt aksların düşeyidir. Başlangıç km'si ve km denklemleri Pset_Stationing'li IfcReferent'tir; projenin sistemi IfcProjectedCRS'e harita dönüşümüyle (yerel sistem tabanına döndürülüp ölçeklenerek, IfcMapConversionScaled; yazılamayan sistem export_losses). Uzunluk metre, açı radyan. alignments id ya da adla (yoksa hepsi); withoutProfiles boykesitleri yazmaz; stamp tarih ve saat. Paralel aks yazılmaz (export_losses). Bütün yazılır ya da hiç; çizimi değiştirmez. Retler: not_a_road_project, invalid_file_path, file_exists, unknown_alignment, invalid_ifc.",
+      "summary": "Yol projesinin akslarını ve boykesitlerini IFC 4.3 (IFC4X3_ADD2) dosyasına yazar: iş mantığı (IfcAlignmentHorizontal ve IfcAlignmentVertical, IfcAlignmentSegment'leri ve tasarım değerleri: başlangıç noktası ve doğrultusu, yarıçaplar (saat yönü tersine artı, 0 sonsuz), boy; düşeyde başlangıç uzaklığı, yatay boy, kot, eğimler, yarıçap) ve geometri (IfcCompositeCurve ve IfcGradientCurve: IfcCurveSegment'ler IfcLine, IfcCircle, IfcClothoid, IfcPolynomialCurve üstünde); her düzen sıfır boylu parçayla biter. İlk boykesit aksın, öbürleri alt aksların düşeyidir. Başlangıç km'si ve km denklemleri Pset_Stationing'li IfcReferent'tir; projenin sistemi IfcProjectedCRS'e harita dönüşümüyle (yerel sistem tabanına döndürülüp ölçeklenerek, IfcMapConversionScaled; yazılamayan sistem export_losses). Uzunluk metre, açı radyan. alignments id ya da adla (yoksa hepsi); withoutProfiles boykesitleri yazmaz; stamp tarih ve saat. Paralel aks yazılmaz (export_losses). Bütün yazılır ya da hiç; çizimi değiştirmez. Retler: not_a_road_project, invalid_file_path, file_exists, unknown_alignment, invalid_ifc.",
       "aliases": [
         "ifcver",
         "ifcout"
@@ -71634,6 +71634,223 @@
           "input": {
             "path": "/veri/bina-referans.ifc",
             "view": "reference"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.ifc.inspect",
+      "version": 1,
+      "title": "IFC dosyasını incele",
+      "summary": "Bir IFC dosyasını (IFC 4.3, IFC4, IFC2x3) okur ve anlatır; hiçbir şey yazmaz, çizimi değiştirmez. Çıktı: başlığın bildirdiği şema, DATA bölümünün kayıt sayısı, nesneler (her IfcObjectDefinition: proje, mekân yapısı, elemanlar, tipler, gruplar) ve sınıflara göre sayıları, projenin uzunluk, alan, hacim ve açı birimleri (önek ve ad yazıldığı gibi), katlar dosyadaki sırasıyla ve her katın doğrudan içerdiği nesne sayısı, okumayı durdurmayan bozukluklar (kod, düzey, kayıt, satır, ileti). object ile GlobalId'si verilen nesnenin öznitelikleri (sınıf, ad, açıklama, nesne türü, uzun ad, etiket, ön tanımlı tür), tipinin ve katının adı ve setleri: önce kendi özellik ve miktar setleri dosyadaki sırasıyla, sonra tipininkiler; her değer dosyada yazdığı gibi, sayının ölçü türüyle (IFCLENGTHMEASURE), kendi birimi varsa onunla; dönüştürülmez, üçgen ağdan ölçü alınmaz. Retler: invalid_file_path (boş, göreli, .ifc değil, dosya yok), ifc_unreadable (STEP değil, şema tanınmıyor, DATA yok, sınır aşıldı; ileti nedenini ve satırını söyler), ifc_object_not_found. Uyarı: ifc_read_findings.",
+      "aliases": [
+        "ifcincele",
+        "ifcinspect"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.ifc.inspect` v1: the file (absolute, ending `.ifc`) and, by its GlobalId, the object whose details are\nasked for.\n\nRefusals, in this order: `invalid_file_path` (empty, relative, not `.ifc`, not there), `ifc_unreadable` (not a STEP\nfile, a schema the reader does not know, no DATA section, past a limit; the message says which and where),\n`ifc_object_not_found` (`object` names no object of the file). Warning: `ifc_read_findings` (damage that did not\nstop the read; the findings list it).",
+        "properties": {
+          "object": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "IfcInspect",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.ifc.inspect` v1, and its plan: the file as its header declares it, what it holds, and the object\nasked for.",
+        "properties": {
+          "classes": {
+            "additionalProperties": {
+              "format": "uint64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "How many objects of each class, the class as the schema spells it.",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "findings": {
+            "description": "Damage that did not stop the read, in the file's order.",
+            "items": {
+              "$ref": "#/$defs/IfcInspectedFinding"
+            },
+            "type": "array"
+          },
+          "object": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/IfcInspectedObject"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "objects": {
+            "description": "Its objects (every `IfcObjectDefinition`: the project, the spatial structure, elements, types, groups).",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "path": {
+            "type": "string"
+          },
+          "records": {
+            "description": "The records of its DATA section.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "schema": {
+            "description": "The schema as the header declares it (`IFC4X3_ADD2`).",
+            "type": "string"
+          },
+          "storeys": {
+            "description": "Its building storeys in the file's order, each with the objects it contains directly.",
+            "items": {
+              "$ref": "#/$defs/IfcInspectedStorey"
+            },
+            "type": "array"
+          },
+          "units": {
+            "$ref": "#/$defs/IfcInspectedUnits"
+          }
+        },
+        "required": [
+          "path",
+          "schema",
+          "records",
+          "objects",
+          "classes",
+          "units",
+          "storeys",
+          "findings"
+        ],
+        "title": "IfcInspected",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.ifc.inspect` v1, and its plan: the file as its header declares it, what it holds, and the object\nasked for.",
+        "properties": {
+          "classes": {
+            "additionalProperties": {
+              "format": "uint64",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "How many objects of each class, the class as the schema spells it.",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "findings": {
+            "description": "Damage that did not stop the read, in the file's order.",
+            "items": {
+              "$ref": "#/$defs/IfcInspectedFinding"
+            },
+            "type": "array"
+          },
+          "object": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/IfcInspectedObject"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "objects": {
+            "description": "Its objects (every `IfcObjectDefinition`: the project, the spatial structure, elements, types, groups).",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "path": {
+            "type": "string"
+          },
+          "records": {
+            "description": "The records of its DATA section.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "schema": {
+            "description": "The schema as the header declares it (`IFC4X3_ADD2`).",
+            "type": "string"
+          },
+          "storeys": {
+            "description": "Its building storeys in the file's order, each with the objects it contains directly.",
+            "items": {
+              "$ref": "#/$defs/IfcInspectedStorey"
+            },
+            "type": "array"
+          },
+          "units": {
+            "$ref": "#/$defs/IfcInspectedUnits"
+          }
+        },
+        "required": [
+          "path",
+          "schema",
+          "records",
+          "objects",
+          "classes",
+          "units",
+          "storeys",
+          "findings"
+        ],
+        "title": "IfcInspected",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "ifc_unreadable",
+          "ifc_object_not_found"
+        ],
+        "warnings": [
+          "ifc_read_findings"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Dosyanın özeti",
+          "input": {
+            "path": "/veri/bina.ifc"
+          }
+        },
+        {
+          "title": "Bir duvarın özellik ve miktar setleri",
+          "input": {
+            "object": "01alMXGa9m080000000001",
+            "path": "/veri/bina.ifc"
           }
         }
       ]
@@ -111557,6 +111774,24 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "IFC dosyası yazılamıyor."
+    },
+    {
+      "code": "ifc_unreadable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "IFC dosyası okunamadı: STEP dosyası değil, şeması tanınmıyor, bozuk ya da bir sınırı aşıyor; ileti nedenini ve yerini söyler."
+    },
+    {
+      "code": "ifc_object_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "GlobalId'si verilen nesne dosyada yok."
+    },
+    {
+      "code": "ifc_read_findings",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Dosyada okumayı durdurmayan bozukluklar var; bulgular listesi onları kayıt ve satırıyla verir."
     },
     {
       "code": "invalid_gltf",
@@ -154868,6 +155103,422 @@
         "verticalSegments"
       ],
       "type": "object"
+    },
+    "IfcInspectedFinding": {
+      "description": "Damage that did not stop the read: its code, `error` or `warning`, its record and line, what it says.",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "line": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "index"
+        },
+        "message": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string"
+        },
+        "step": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "id"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "message"
+      ],
+      "type": "object"
+    },
+    "IfcInspectedObject": {
+      "description": "An object: its GlobalId, record number, class and attributes as written, its type's and its storey's names, and its\nsets: its own in the file's order, then its type's.",
+      "properties": {
+        "class": {
+          "type": "string"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "globalId": {
+          "type": "string"
+        },
+        "longName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "objectType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "predefinedType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sets": {
+          "items": {
+            "$ref": "#/$defs/IfcInspectedSet"
+          },
+          "type": "array"
+        },
+        "step": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "storey": {
+          "description": "The storey it stands on: the nearest up its parts and containers.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tag": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "typeName": {
+          "description": "Its type object's name (`IfcRelDefinesByType`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "globalId",
+        "step",
+        "class",
+        "sets"
+      ],
+      "type": "object"
+    },
+    "IfcInspectedSet": {
+      "description": "A property set (`properties`), a quantity set (`quantities`) or another property definition (`other`, its name\nonly): its name, whether it came from the object's type, its values in the file's order.",
+      "properties": {
+        "fromType": {
+          "type": "boolean"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "$ref": "#/$defs/IfcInspectedValue"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "fromType",
+        "values"
+      ],
+      "type": "object"
+    },
+    "IfcInspectedStorey": {
+      "description": "A building storey: its GlobalId, its name and how many objects it contains directly\n(`IfcRelContainedInSpatialStructure`).",
+      "properties": {
+        "contains": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "globalId": {
+          "type": "string"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "globalId",
+        "contains"
+      ],
+      "type": "object"
+    },
+    "IfcInspectedUnits": {
+      "description": "The project's units for length, area, volume and plane angle, each its prefix and name as written\n(`MILLIMETRE`, `METRE`, a conversion's `foot`); none where the file gives none.",
+      "properties": {
+        "area": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "length": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "planeAngle": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "volume": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "IfcInspectedValue": {
+      "description": "One property or quantity: its name, its class (`IfcPropertySingleValue`, `IfcQuantityLength`), its value, and its\nown unit (prefix and name as written) when it has one.",
+      "properties": {
+        "class": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": {
+          "$ref": "#/$defs/IfcValue"
+        }
+      },
+      "required": [
+        "name",
+        "class",
+        "value"
+      ],
+      "type": "object"
+    },
+    "IfcValue": {
+      "description": "A value as the file writes it: a text; a real or an integer with the measure it is typed with (upper case as the\nfile writes it; a quantity's is its value attribute's, `IFCLENGTHMEASURE`); a logical (`null`: unknown); an\nenumeration's items; a list's items (each in words, a number as the shortest decimal that reads back to it); a\nbounded value's ends; the record a reference value names; nothing.",
+      "oneOf": [
+        {
+          "properties": {
+            "kind": {
+              "const": "text",
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "number",
+              "type": "string"
+            },
+            "measure": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "number": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "value"
+            }
+          },
+          "required": [
+            "kind",
+            "number"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "integer": {
+              "format": "int64",
+              "type": "integer",
+              "x-unit": "value"
+            },
+            "kind": {
+              "const": "integer",
+              "type": "string"
+            },
+            "measure": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "integer"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "logical",
+              "type": "string"
+            },
+            "logical": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "enumeration",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "items"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "list",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "items"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "bounded",
+              "type": "string"
+            },
+            "lower": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "value"
+            },
+            "measure": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "upper": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "value"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "reference",
+              "type": "string"
+            },
+            "step": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "id"
+            }
+          },
+          "required": [
+            "kind",
+            "step"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "empty",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "IfcView": {
       "description": "What an IFC file's bodies are, its header's view definition (docs/adr/8071 §4): `designTransfer` (the first value)\nwrites each body whole and its openings' bodies for the reader to take out of their walls; `reference` writes each\nbody already cut, its openings there as 'Reference' shapes, not taken out again.",

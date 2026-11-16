@@ -955,6 +955,14 @@ codes! {
     /// An IFC file that cannot be written: a stamp that does not read, nothing to write, a chosen alignment that does
     /// not build (docs/adr/0908 §8).
     INVALID_IFC = "invalid_ifc", Failed, false, "IFC dosyası yazılamıyor.";
+    /// An IFC file that cannot be read: not a STEP file, a schema the reader does not know, no DATA section, past a
+    /// limit (plan/ifc-uyum.md IFC-12, docs/adr/8073 §6).
+    IFC_UNREADABLE = "ifc_unreadable", Failed, false, "IFC dosyası okunamadı: STEP dosyası değil, şeması tanınmıyor, bozuk ya da bir sınırı aşıyor; ileti nedenini ve yerini söyler.";
+    /// No object of the IFC file has the GlobalId given.
+    IFC_OBJECT_NOT_FOUND = "ifc_object_not_found", Failed, false, "GlobalId'si verilen nesne dosyada yok.";
+    /// Damage in an IFC file that did not stop its reading: a record that does not decode, a reference to nothing, a
+    /// cycle, a GlobalId missing or said twice.
+    IFC_READ_FINDINGS = "ifc_read_findings", Warning, false, "Dosyada okumayı durdurmayan bozukluklar var; bulgular listesi onları kayıt ve satırıyla verir.";
     /// A glTF scene that cannot be written: a chosen surface or corridor that does not build or has no surface,
     /// nothing to write (docs/adr/0910 §3).
     INVALID_GLTF = "invalid_gltf", Failed, false, "glTF sahnesi yazılamıyor.";

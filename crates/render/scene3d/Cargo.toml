@@ -1,0 +1,14 @@
+[package]
+name = "kentos-render-scene3d"
+description = "KentOS's 3D scene on wgpu (docs/adr/0910 §5, docs/adr/8073 §2): the tiles kentos-scene3d selects drawn with a reversed depth buffer, their contents kept within budgets; no Iced, no window, no drawing document"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Native only and pure of the 2D pipeline: the 3D views and the IFC viewer's component (crates/model-view-ui) draw with
+# it; kentos-render-wgpu re-exports it for its own users.
+[dependencies]
+kentos-scene3d = { path = "../../shared/scene3d" }
+wgpu = { workspace = true }
+bytemuck = { workspace = true, features = ["derive"] }

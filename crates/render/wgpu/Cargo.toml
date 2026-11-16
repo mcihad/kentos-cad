@@ -12,8 +12,10 @@ publish.workspace = true
 [dependencies]
 kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
-# The 3D scene's camera, tiles and contents (docs/adr/0910 §4–§5): its scene3d module draws them.
+# The 3D scene's camera, tiles and contents (docs/adr/0910 §4–§5), and their renderer in its own package (docs/adr/8073
+# §2), re-exported as `scene3d`.
 kentos-scene3d = { path = "../../shared/scene3d" }
+kentos-render-scene3d = { path = "../scene3d" }
 # The styled layers it draws: the style engine's batches with their colours and images (docs/adr/0090).
 kentos-native-style = { path = "../../native/style" }
 wgpu = { workspace = true }

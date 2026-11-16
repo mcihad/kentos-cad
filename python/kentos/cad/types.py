@@ -10790,6 +10790,37 @@ class HatchRegion(_Union):
         return _variant(_HATCH_REGION, "HatchRegion", "kind", data).from_json(data)
 
 
+class IfcValue(_Union):
+    """A value as the file writes it: a text; a real or an integer with the measure it is typed with (upper case as the
+    file writes it; a quantity's is its value attribute's, `IFCLENGTHMEASURE`); a logical (`null`: unknown); an
+    enumeration's items; a list's items (each in words, a number as the shortest decimal that reads back to it); a
+    bounded value's ends; the record a reference value names; nothing.
+
+    One of:
+
+    - :class:`TextIfcValue` (``kind: text``)
+    - :class:`NumberIfcValue` (``kind: number``)
+    - :class:`IntegerIfcValue` (``kind: integer``)
+    - :class:`LogicalIfcValue` (``kind: logical``)
+    - :class:`EnumerationIfcValue` (``kind: enumeration``)
+    - :class:`ListIfcValue` (``kind: list``)
+    - :class:`BoundedIfcValue` (``kind: bounded``)
+    - :class:`ReferenceIfcValue` (``kind: reference``)
+    - :class:`EmptyIfcValue` (``kind: empty``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcValue:
+        return _variant(_IFC_VALUE, "IfcValue", "kind", data).from_json(data)
+
+
 class ImageClipBy(_Union):
     """The part of the picture shown.
 
@@ -48246,6 +48277,301 @@ class IfcExported(_Model):
             bytes=data["bytes"],
             sha256=data["sha256"],
             crs=data.get("crs", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IfcInspect(_Model):
+    """Input of `cad.ifc.inspect` v1: the file (absolute, ending `.ifc`) and, by its GlobalId, the object whose details are
+    asked for.
+
+    Refusals, in this order: `invalid_file_path` (empty, relative, not `.ifc`, not there), `ifc_unreadable` (not a STEP
+    file, a schema the reader does not know, no DATA section, past a limit; the message says which and where),
+    `ifc_object_not_found` (`object` names no object of the file). Warning: `ifc_read_findings` (damage that did not
+    stop the read; the findings list it).
+    """
+    path: str
+    object: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.object is not UNSET:
+            out["object"] = self.object
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcInspect:
+        return cls(
+            path=data["path"],
+            object=data.get("object", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IfcInspected(_Model):
+    """Output of `cad.ifc.inspect` v1, and its plan: the file as its header declares it, what it holds, and the object
+    asked for.
+    Attributes:
+        schema: The schema as the header declares it (`IFC4X3_ADD2`).
+        records: The records of its DATA section. Unit: count.
+        objects: Its objects (every `IfcObjectDefinition`: the project, the spatial structure, elements, types, groups). Unit: count.
+        classes: How many objects of each class, the class as the schema spells it. Unit: count.
+        storeys: Its building storeys in the file's order, each with the objects it contains directly.
+        findings: Damage that did not stop the read, in the file's order.
+    """
+    path: str
+    schema: str
+    records: int
+    objects: int
+    classes: dict[str, int]
+    units: IfcInspectedUnits
+    storeys: list[IfcInspectedStorey]
+    findings: list[IfcInspectedFinding]
+    object: IfcInspectedObject | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["schema"] = self.schema
+        out["records"] = self.records
+        out["objects"] = self.objects
+        out["classes"] = dict(self.classes)
+        out["units"] = self.units.to_json()
+        out["storeys"] = [e0.to_json() for e0 in self.storeys]
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        if self.object is not UNSET:
+            out["object"] = None if self.object is None else self.object.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcInspected:
+        return cls(
+            path=data["path"],
+            schema=data["schema"],
+            records=data["records"],
+            objects=data["objects"],
+            classes=dict(data["classes"]),
+            units=IfcInspectedUnits.from_json(data["units"]),
+            storeys=[IfcInspectedStorey.from_json(e0) for e0 in data["storeys"]],
+            findings=[IfcInspectedFinding.from_json(e0) for e0 in data["findings"]],
+            object=UNSET if "object" not in data else None if data["object"] is None else IfcInspectedObject.from_json(data["object"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IfcInspectedFinding(_Model):
+    """Damage that did not stop the read: its code, `error` or `warning`, its record and line, what it says.
+    Attributes:
+        line: Unit: index.
+        step: Unit: id.
+    """
+    code: str
+    severity: str
+    message: str
+    line: int | None | Unset = UNSET
+    step: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["code"] = self.code
+        out["severity"] = self.severity
+        out["message"] = self.message
+        if self.line is not UNSET:
+            out["line"] = self.line
+        if self.step is not UNSET:
+            out["step"] = self.step
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcInspectedFinding:
+        return cls(
+            code=data["code"],
+            severity=data["severity"],
+            message=data["message"],
+            line=data.get("line", UNSET),
+            step=data.get("step", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IfcInspectedObject(_Model):
+    """An object: its GlobalId, record number, class and attributes as written, its type's and its storey's names, and its
+    sets: its own in the file's order, then its type's.
+    Attributes:
+        step: Unit: id.
+        storey: The storey it stands on: the nearest up its parts and containers.
+        type_name: Its type object's name (`IfcRelDefinesByType`).
+    """
+    global_id: str
+    step: int
+    class_: str
+    sets: list[IfcInspectedSet]
+    description: str | None | Unset = UNSET
+    long_name: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    object_type: str | None | Unset = UNSET
+    predefined_type: str | None | Unset = UNSET
+    storey: str | None | Unset = UNSET
+    tag: str | None | Unset = UNSET
+    type_name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["globalId"] = self.global_id
+        out["step"] = self.step
+        out["class"] = self.class_
+        out["sets"] = [e0.to_json() for e0 in self.sets]
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.long_name is not UNSET:
+            out["longName"] = self.long_name
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.object_type is not UNSET:
+            out["objectType"] = self.object_type
+        if self.predefined_type is not UNSET:
+            out["predefinedType"] = self.predefined_type
+        if self.storey is not UNSET:
+            out["storey"] = self.storey
+        if self.tag is not UNSET:
+            out["tag"] = self.tag
+        if self.type_name is not UNSET:
+            out["typeName"] = self.type_name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcInspectedObject:
+        return cls(
+            global_id=data["globalId"],
+            step=data["step"],
+            class_=data["class"],
+            sets=[IfcInspectedSet.from_json(e0) for e0 in data["sets"]],
+            description=data.get("description", UNSET),
+            long_name=data.get("longName", UNSET),
+            name=data.get("name", UNSET),
+            object_type=data.get("objectType", UNSET),
+            predefined_type=data.get("predefinedType", UNSET),
+            storey=data.get("storey", UNSET),
+            tag=data.get("tag", UNSET),
+            type_name=data.get("typeName", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IfcInspectedSet(_Model):
+    """A property set (`properties`), a quantity set (`quantities`) or another property definition (`other`, its name
+    only): its name, whether it came from the object's type, its values in the file's order.
+    """
+    name: str
+    kind: str
+    from_type: bool
+    values: list[IfcInspectedValue]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["kind"] = self.kind
+        out["fromType"] = self.from_type
+        out["values"] = [e0.to_json() for e0 in self.values]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcInspectedSet:
+        return cls(
+            name=data["name"],
+            kind=data["kind"],
+            from_type=data["fromType"],
+            values=[IfcInspectedValue.from_json(e0) for e0 in data["values"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IfcInspectedStorey(_Model):
+    """A building storey: its GlobalId, its name and how many objects it contains directly
+    (`IfcRelContainedInSpatialStructure`).
+    Attributes:
+        contains: Unit: count.
+    """
+    global_id: str
+    contains: int
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["globalId"] = self.global_id
+        out["contains"] = self.contains
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcInspectedStorey:
+        return cls(
+            global_id=data["globalId"],
+            contains=data["contains"],
+            name=data.get("name", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IfcInspectedUnits(_Model):
+    """The project's units for length, area, volume and plane angle, each its prefix and name as written
+    (`MILLIMETRE`, `METRE`, a conversion's `foot`); none where the file gives none.
+    """
+    area: str | None | Unset = UNSET
+    length: str | None | Unset = UNSET
+    plane_angle: str | None | Unset = UNSET
+    volume: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.area is not UNSET:
+            out["area"] = self.area
+        if self.length is not UNSET:
+            out["length"] = self.length
+        if self.plane_angle is not UNSET:
+            out["planeAngle"] = self.plane_angle
+        if self.volume is not UNSET:
+            out["volume"] = self.volume
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcInspectedUnits:
+        return cls(
+            area=data.get("area", UNSET),
+            length=data.get("length", UNSET),
+            plane_angle=data.get("planeAngle", UNSET),
+            volume=data.get("volume", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IfcInspectedValue(_Model):
+    """One property or quantity: its name, its class (`IfcPropertySingleValue`, `IfcQuantityLength`), its value, and its
+    own unit (prefix and name as written) when it has one.
+    """
+    name: str
+    class_: str
+    value: IfcValue
+    unit: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["class"] = self.class_
+        out["value"] = self.value.to_json()
+        if self.unit is not UNSET:
+            out["unit"] = self.unit
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcInspectedValue:
+        return cls(
+            name=data["name"],
+            class_=data["class"],
+            value=IfcValue.from_json(data["value"]),
+            unit=data.get("unit", UNSET),
         )
 
 
@@ -128778,6 +129104,190 @@ class ObjectsHatchRegion(HatchRegion):
 
 
 @dataclass(kw_only=True, slots=True)
+class TextIfcValue(IfcValue):
+    TAG_VALUE: ClassVar[str] = "text"
+    text: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "text"}
+        out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TextIfcValue:
+        return cls(
+            text=data["text"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NumberIfcValue(IfcValue):
+    """
+    Attributes:
+        number: Unit: value.
+    """
+    TAG_VALUE: ClassVar[str] = "number"
+    number: float
+    measure: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "number"}
+        out["number"] = float(self.number)
+        if self.measure is not UNSET:
+            out["measure"] = self.measure
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NumberIfcValue:
+        return cls(
+            number=float(data["number"]),
+            measure=data.get("measure", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IntegerIfcValue(IfcValue):
+    """
+    Attributes:
+        integer: Unit: value.
+    """
+    TAG_VALUE: ClassVar[str] = "integer"
+    integer: int
+    measure: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "integer"}
+        out["integer"] = self.integer
+        if self.measure is not UNSET:
+            out["measure"] = self.measure
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IntegerIfcValue:
+        return cls(
+            integer=data["integer"],
+            measure=data.get("measure", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LogicalIfcValue(IfcValue):
+    TAG_VALUE: ClassVar[str] = "logical"
+    logical: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "logical"}
+        if self.logical is not UNSET:
+            out["logical"] = self.logical
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LogicalIfcValue:
+        return cls(
+            logical=data.get("logical", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EnumerationIfcValue(IfcValue):
+    TAG_VALUE: ClassVar[str] = "enumeration"
+    items: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "enumeration"}
+        out["items"] = list(self.items)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EnumerationIfcValue:
+        return cls(
+            items=list(data["items"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ListIfcValue(IfcValue):
+    TAG_VALUE: ClassVar[str] = "list"
+    items: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "list"}
+        out["items"] = list(self.items)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ListIfcValue:
+        return cls(
+            items=list(data["items"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BoundedIfcValue(IfcValue):
+    """
+    Attributes:
+        lower: Unit: value.
+        upper: Unit: value.
+    """
+    TAG_VALUE: ClassVar[str] = "bounded"
+    lower: float | None | Unset = UNSET
+    measure: str | None | Unset = UNSET
+    upper: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "bounded"}
+        if self.lower is not UNSET:
+            out["lower"] = None if self.lower is None else float(self.lower)
+        if self.measure is not UNSET:
+            out["measure"] = self.measure
+        if self.upper is not UNSET:
+            out["upper"] = None if self.upper is None else float(self.upper)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BoundedIfcValue:
+        return cls(
+            lower=UNSET if "lower" not in data else None if data["lower"] is None else float(data["lower"]),
+            measure=data.get("measure", UNSET),
+            upper=UNSET if "upper" not in data else None if data["upper"] is None else float(data["upper"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReferenceIfcValue(IfcValue):
+    """
+    Attributes:
+        step: Unit: id.
+    """
+    TAG_VALUE: ClassVar[str] = "reference"
+    step: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "reference"}
+        out["step"] = self.step
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReferenceIfcValue:
+        return cls(
+            step=data["step"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EmptyIfcValue(IfcValue):
+    TAG_VALUE: ClassVar[str] = "empty"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "empty"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EmptyIfcValue:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
 class RectangleImageClipBy(ImageClipBy):
     """Dikdörtgen: the rectangle of two opposite corners `a` and `b`, along the drawing's axes.
     Attributes:
@@ -141598,6 +142108,9 @@ _HATCH_ORIGIN: dict[str, type[HatchOrigin]] = {"world": WorldHatchOrigin, "point
 _HATCH_REGION: dict[str, type[HatchRegion]] = {"point": PointHatchRegion, "objects": ObjectsHatchRegion}
 
 
+_IFC_VALUE: dict[str, type[IfcValue]] = {"text": TextIfcValue, "number": NumberIfcValue, "integer": IntegerIfcValue, "logical": LogicalIfcValue, "enumeration": EnumerationIfcValue, "list": ListIfcValue, "bounded": BoundedIfcValue, "reference": ReferenceIfcValue, "empty": EmptyIfcValue}
+
+
 _IMAGE_CLIP_BY: dict[str, type[ImageClipBy]] = {"rectangle": RectangleImageClipBy, "polygon": PolygonImageClipBy, "remove": RemoveImageClipBy}
 
 
@@ -142324,6 +142837,7 @@ __all__ = [
     "BoundaryFormName",
     "BoundaryLengthRow",
     "BoundaryProblem",
+    "BoundedIfcValue",
     "Bounds",
     "BoxCorner",
     "BoxCornerName",
@@ -142939,6 +143453,7 @@ __all__ = [
     "Ellipsoid",
     "EmbedImagesOperation",
     "EmptyCell",
+    "EmptyIfcValue",
     "EmptyInput",
     "EmptyResult",
     "EmptyResultName",
@@ -143021,6 +143536,7 @@ __all__ = [
     "Entity",
     "EntityEdit",
     "EntityGeometry",
+    "EnumerationIfcValue",
     "EpochSource",
     "EpochSourceName",
     "EqualConstraintRule",
@@ -143428,6 +143944,15 @@ __all__ = [
     "IfcAlignmentWritten",
     "IfcBuildingExported",
     "IfcExported",
+    "IfcInspect",
+    "IfcInspected",
+    "IfcInspectedFinding",
+    "IfcInspectedObject",
+    "IfcInspectedSet",
+    "IfcInspectedStorey",
+    "IfcInspectedUnits",
+    "IfcInspectedValue",
+    "IfcValue",
     "IfcView",
     "IfcViewName",
     "ImageClipBy",
@@ -143508,6 +144033,7 @@ __all__ = [
     "InspectionGroupName",
     "InspectionSeverity",
     "InspectionSeverityName",
+    "IntegerIfcValue",
     "InteriorColumns",
     "InteriorColumnsName",
     "InteriorFaces",
@@ -143806,6 +144332,7 @@ __all__ = [
     "LinkDomainsOp",
     "LinkSourcesEditOp",
     "LinkTablesOperation",
+    "ListIfcValue",
     "ListPaperMapLayers",
     "ListedConstraint",
     "LocalCrsSystem",
@@ -143814,6 +144341,7 @@ __all__ = [
     "LocalRulesName",
     "LocationFormItem",
     "LockPaperOp",
+    "LogicalIfcValue",
     "LookLeaderEdit",
     "LookPart",
     "LookPartName",
@@ -144063,6 +144591,7 @@ __all__ = [
     "NorthDirection",
     "NorthPlan",
     "NoteFormItem",
+    "NumberIfcValue",
     "NumberPlace",
     "NumberPlaceName",
     "NumberRule",
@@ -144961,6 +145490,7 @@ __all__ = [
     "RectangleImageClipBy",
     "RectanglePaperViewportClip",
     "RectangleRevcloudFrame",
+    "ReferenceIfcValue",
     "RefreshBuildingSectionsOperation",
     "RefreshElevationsOperation",
     "RefreshMapWorkOperation",
@@ -145959,6 +146489,7 @@ __all__ = [
     "TextFinding",
     "TextFindingKind",
     "TextFindingKindName",
+    "TextIfcValue",
     "TextLayoutEngine",
     "TextLayoutEngineName",
     "TextPaperItemKind",

@@ -1800,15 +1800,15 @@ class _FileExportIfc(LocalCommand[ExportIfc, IfcExported, IfcExported]):
     noktası ve doğrultusu, yarıçaplar (saat yönü tersine artı, 0 sonsuz), boy; düşeyde
     başlangıç uzaklığı, yatay boy, kot, eğimler, yarıçap) ve geometri (IfcCompositeCurve
     ve IfcGradientCurve: IfcCurveSegment'ler IfcLine, IfcCircle, IfcClothoid,
-    IfcPolynomialCurve üstünde; IfcOpenShell'in eşlemesi); her düzen sıfır boylu
-    parçayla biter. İlk boykesit aksın, öbürleri alt aksların düşeyidir. Başlangıç km'si
-    ve km denklemleri Pset_Stationing'li IfcReferent'tir; projenin sistemi
-    IfcProjectedCRS'e harita dönüşümüyle (yerel sistem tabanına döndürülüp ölçeklenerek,
-    IfcMapConversionScaled; yazılamayan sistem export_losses). Uzunluk metre, açı
-    radyan. alignments id ya da adla (yoksa hepsi); withoutProfiles boykesitleri yazmaz;
-    stamp tarih ve saat. Paralel aks yazılmaz (export_losses). Bütün yazılır ya da hiç;
-    çizimi değiştirmez. Retler: not_a_road_project, invalid_file_path, file_exists,
-    unknown_alignment, invalid_ifc.
+    IfcPolynomialCurve üstünde); her düzen sıfır boylu parçayla biter. İlk boykesit
+    aksın, öbürleri alt aksların düşeyidir. Başlangıç km'si ve km denklemleri
+    Pset_Stationing'li IfcReferent'tir; projenin sistemi IfcProjectedCRS'e harita
+    dönüşümüyle (yerel sistem tabanına döndürülüp ölçeklenerek, IfcMapConversionScaled;
+    yazılamayan sistem export_losses). Uzunluk metre, açı radyan. alignments id ya da
+    adla (yoksa hepsi); withoutProfiles boykesitleri yazmaz; stamp tarih ve saat.
+    Paralel aks yazılmaz (export_losses). Bütün yazılır ya da hiç; çizimi değiştirmez.
+    Retler: not_a_road_project, invalid_file_path, file_exists, unknown_alignment,
+    invalid_ifc.
     """
     __slots__ = ()
     id = "file.export.ifc"
@@ -1838,15 +1838,15 @@ class _FileExportIfc(LocalCommand[ExportIfc, IfcExported, IfcExported]):
         yarıçaplar (saat yönü tersine artı, 0 sonsuz), boy; düşeyde başlangıç uzaklığı,
         yatay boy, kot, eğimler, yarıçap) ve geometri (IfcCompositeCurve ve
         IfcGradientCurve: IfcCurveSegment'ler IfcLine, IfcCircle, IfcClothoid,
-        IfcPolynomialCurve üstünde; IfcOpenShell'in eşlemesi); her düzen sıfır boylu
-        parçayla biter. İlk boykesit aksın, öbürleri alt aksların düşeyidir. Başlangıç km'si
-        ve km denklemleri Pset_Stationing'li IfcReferent'tir; projenin sistemi
-        IfcProjectedCRS'e harita dönüşümüyle (yerel sistem tabanına döndürülüp ölçeklenerek,
-        IfcMapConversionScaled; yazılamayan sistem export_losses). Uzunluk metre, açı
-        radyan. alignments id ya da adla (yoksa hepsi); withoutProfiles boykesitleri yazmaz;
-        stamp tarih ve saat. Paralel aks yazılmaz (export_losses). Bütün yazılır ya da hiç;
-        çizimi değiştirmez. Retler: not_a_road_project, invalid_file_path, file_exists,
-        unknown_alignment, invalid_ifc.
+        IfcPolynomialCurve üstünde); her düzen sıfır boylu parçayla biter. İlk boykesit
+        aksın, öbürleri alt aksların düşeyidir. Başlangıç km'si ve km denklemleri
+        Pset_Stationing'li IfcReferent'tir; projenin sistemi IfcProjectedCRS'e harita
+        dönüşümüyle (yerel sistem tabanına döndürülüp ölçeklenerek, IfcMapConversionScaled;
+        yazılamayan sistem export_losses). Uzunluk metre, açı radyan. alignments id ya da
+        adla (yoksa hepsi); withoutProfiles boykesitleri yazmaz; stamp tarih ve saat.
+        Paralel aks yazılmaz (export_losses). Bütün yazılır ya da hiç; çizimi değiştirmez.
+        Retler: not_a_road_project, invalid_file_path, file_exists, unknown_alignment,
+        invalid_ifc.
 
         Args:
             doc: The drawing it works on.

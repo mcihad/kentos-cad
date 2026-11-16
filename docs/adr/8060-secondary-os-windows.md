@@ -214,7 +214,9 @@ bekliyor; neden kesin bulunmadı (§8).
 - **Önce:** her yüzey ayırma ve geri getirmeyi kendi kodunda yazıyordu. Başlık düğmesi, Esc/Tab, iz yanıtları ve
   `windows/app.rs`'teki altı `match` kolu da yüzeye özeldi. İşlemler ile 3B görünüm aynı kodu iki kez taşıyordu.
 - **Sözleşme:** `OwnWindow` (`apps/desktop/src/shell/windows/surface.rs`). Her yüzey bunu kendi modülünde, bir birim
-  yapı için yazar: İşlemler'de `gis/processing/apart.rs::ToolWindow`, 3B görünümde `shell/scene3d_view.rs::View3d`.
+  yapı için yazar: İşlemler'de `gis/processing/apart.rs::ToolWindow`, 3B görünümde `shell/scene3d_view.rs::View3d`,
+  IFC modelinde `shell/ifc_viewer.rs::IfcView` (16 Kasım, [ADR 8073](8073-ifc-viewer-first-slice.md) §5; kendiliğinden
+  ayrı açılır, anahtarı `ifc-modeli`).
   Sözleşmenin parçaları:
   - Zorunlu: seçimin anahtarı (`kept_as`), boylar, iletideki adı (`what`), iki düğmenin açıklaması, çizimin üstündeki
     `Dialog` türü, açık olup olmadığı, başlığı, görünümü ve kapanışı.

@@ -252,6 +252,8 @@ pub enum Dialog {
     Propose,
     /// 3B görünüm (scene3d_window.rs, plan/road.md Y12.3d); the window is `App::scene3d_window`.
     Scene3d,
+    /// IFC modeli (ifc_viewer.rs, plan/ifc-uyum.md IFC-12); the window is `App::ifc_viewer`.
+    IfcViewer,
     /// Yazı stilleri and Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5); the window is
     /// `App::annotation_styles`.
     AnnotationStyles,
@@ -508,6 +510,8 @@ pub enum Message {
     PictureWritten(Option<Result<(std::path::PathBuf, u32, u32), String>>),
     /// An event of 3B görünüm (scene3d_window.rs, plan/road.md Y12.3d).
     Scene3d(crate::scene3d_window::Event),
+    /// An event of IFC modeli (ifc_viewer.rs, plan/ifc-uyum.md IFC-12).
+    IfcViewer(crate::ifc_viewer::Event),
     /// LandXML ver's file, or none when the dialog was closed (road_exchange.rs, plan/road.md Y10.2).
     LandxmlExport(Option<std::path::PathBuf>),
     /// Makine kontrolüne ver's file, or none (road_exchange.rs, docs/adr/1031).
@@ -994,6 +998,8 @@ pub struct App {
     pub(crate) propose_window: Option<Box<crate::propose_window::Window>>,
     /// 3B görünüm (scene3d_window.rs, plan/road.md Y12.3d).
     pub(crate) scene3d_window: Option<Box<crate::scene3d_window::Window>>,
+    /// IFC modeli (ifc_viewer.rs, plan/ifc-uyum.md IFC-12): none until a file is opened in it.
+    pub(crate) ifc_viewer: Option<Box<crate::ifc_viewer::IfcWindow>>,
     /// Mahalleri birleştir asked: its input and its decision's words (docs/adr/0773 §4).
     pub(crate) space_merging: Option<(kentos_commands::SpacesEdit, String)>,
     /// The object a drawing tool has just written: its form opens (forms/mod.rs, docs/adr/0403 §4).

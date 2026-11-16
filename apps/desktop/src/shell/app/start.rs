@@ -211,6 +211,7 @@ impl App {
             form_clipboard: None,
             propose_window: None,
             scene3d_window: None,
+            ifc_viewer: None,
             space_merging: None,
             form_on_create: None,
             annotation_styles: None,

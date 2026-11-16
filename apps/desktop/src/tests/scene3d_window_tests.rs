@@ -42,22 +42,22 @@ fn the_window_opens_on_the_scene_and_its_camera_follows() {
     assert_eq!(app.scene3d_window.as_ref().expect("the window").scene_triangles(), 928);
     send(&mut app, W::Cut);
     let w = app.scene3d_window.as_ref().expect("the window");
-    let before = (w.azimuth, w.elevation, w.distance);
+    let before = (w.orbit.azimuth, w.orbit.elevation, w.orbit.distance);
     send(&mut app, W::Orbit(50.0, 20.0));
     let w = app.scene3d_window.as_ref().expect("the window");
-    assert!((w.azimuth - (before.0 - 20.0)).abs() < 1e-9 && (w.elevation - (before.1 + 6.0)).abs() < 1e-9);
+    assert!((w.orbit.azimuth - (before.0 - 20.0)).abs() < 1e-9 && (w.orbit.elevation - (before.1 + 6.0)).abs() < 1e-9);
     send(&mut app, W::Dolly(2.0));
     let w = app.scene3d_window.as_ref().expect("the window");
-    assert!(w.distance < before.2);
+    assert!(w.orbit.distance < before.2);
     send(&mut app, W::View(3));
     let w = app.scene3d_window.as_ref().expect("the window");
-    assert_eq!((w.azimuth, w.elevation), (VIEWS[3].1, VIEWS[3].2));
+    assert_eq!((w.orbit.azimuth, w.orbit.elevation), (VIEWS[3].1, VIEWS[3].2));
     // The exaggeration is the view's: the camera's target is shown higher, its real height the same.
-    let real = w.target;
+    let real = w.orbit.target;
     let low = w.camera().target[2];
     send(&mut app, W::Exaggeration("6".into()));
     let w = app.scene3d_window.as_ref().expect("the window");
-    assert_eq!(w.target, real);
+    assert_eq!(w.orbit.target, real);
     assert!(w.camera().target[2] > low);
     send(&mut app, W::Exaggeration("yok".into()));
     assert_eq!(app.scene3d_window.as_ref().expect("the window").exaggeration().factor, 1.0);
@@ -65,7 +65,7 @@ fn the_window_opens_on_the_scene_and_its_camera_follows() {
     send(&mut app, W::View(0));
     send(&mut app, W::North);
     let w = app.scene3d_window.as_ref().expect("the window");
-    assert_eq!((w.azimuth, w.elevation), (-90.0, VIEWS[0].2));
+    assert_eq!((w.orbit.azimuth, w.orbit.elevation), (-90.0, VIEWS[0].2));
     send(&mut app, W::Legend);
     assert!(!app.scene3d_window.as_ref().expect("the window").legend);
     send(&mut app, W::Legend);

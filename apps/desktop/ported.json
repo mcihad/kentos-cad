@@ -452,6 +452,7 @@
     "ifc.export",
     "gltf.export",
     "scene3d.view",
+    "ifc.view",
     "arch.program",
     "arch.ifcExport",
     "arch.ifcExportCut",

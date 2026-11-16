@@ -82,6 +82,7 @@ pub mod sizable;
 pub mod stat_card;
 pub mod status;
 pub mod status_bar;
+pub mod strip;
 pub mod status_tree;
 pub mod suggest;
 #[cfg(all(test, feature = "snapshot"))]

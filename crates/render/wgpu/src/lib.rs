@@ -43,7 +43,8 @@ pub mod layout;
 pub mod precision;
 pub mod renderer;
 pub mod scene;
-pub mod scene3d;
+/// The 3D scene's renderer, in its own package since the IFC viewer's component draws with it too (docs/adr/8073 §2).
+pub use kentos_render_scene3d as scene3d;
 pub mod settings;
 pub mod shader;
 pub mod stats;

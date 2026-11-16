@@ -1,0 +1,13 @@
+[package]
+name = "kentos-model-view"
+description = "KentOS's model viewer core (docs/adr/8061 §3, docs/adr/8073 §2): a 3D model's objects and their tree, what shows and what is chosen, the orbit camera and the scene's source meshes in their parts' colours, whatever the model comes from (an IFC file read, KentOS's own building); no window, GPU, file or clock"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure, like the other shared cores (CLAUDE.md §14), native and wasm32 (docs/adr/8061 §3.3 rule 1): the viewer's Iced
+# component (crates/model-view-ui) draws what it gives; an adapter fills its input (kentos-ifc's `view` feature for a
+# file). It knows no IFC name: the adapter gives each object its category.
+[dependencies]
+kentos-scene3d = { path = "../scene3d" }

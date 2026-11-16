@@ -78,6 +78,7 @@ impl App {
         };
         if plans.len() > 1 {
             let mut written = Vec::new();
+            let files: Vec<PathBuf> = plans.iter().map(|p| p.2.clone()).collect();
             for (id, name, file) in plans {
                 let input = ExportIfcBuilding {
                     path: file.display().to_string(),
@@ -96,6 +97,9 @@ impl App {
                 }
             }
             self.say(Level::Success, format!("IFC 4.3, {} bina ayrı dosyalara yazıldı: {}.", written.len(), written.join("; ")));
+            if let Some(first) = files.first() {
+                self.offer_ifc_view(first.clone(), format!("{} bina IFC 4.3 olarak yazıldı", written.len()));
+            }
             return Task::none();
         }
         let Some(doc) = self.document.as_mut() else {
@@ -142,8 +146,15 @@ impl App {
                     path.display()
                 ),
             );
+            self.offer_ifc_view(path, "IFC 4.3 yazıldı".to_owned());
         }
         Task::none()
+    }
+
+    /// The file written, with Görüntüle: it opens in IFC modeli (ifc_viewer.rs, plan/ifc-uyum.md IFC-12).
+    fn offer_ifc_view(&mut self, path: PathBuf, title: String) {
+        let open = Message::IfcViewer(crate::ifc_viewer::Event::Open(path.clone()));
+        self.toast(kentos_ui::widget::Toast::success(title).body(path.display().to_string()).action("Görüntüle", open));
     }
 }
 

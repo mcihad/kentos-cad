@@ -4701,6 +4701,20 @@
    "tests": 0
   },
   {
+   "id": "ifc.view",
+   "kind": "command",
+   "title": "IFC modeli görüntüle…",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "IFC modeli yalnız görüntüler: dosya okuma yüzüyle (kentos_ifc::read) okunur, görüntüleyici bileşeninde (crates/model-view-ui) gösterilir; seçim, gizleme ve kesit oturumundur; dosyayı KentOS bu çizimden yazdıysa seçilen nesne planda da seçilir; çizim değişmez (plan/ifc-uyum.md IFC-12, ADR 8061, ADR 8073).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "junction.editor",
    "kind": "command",
    "title": "Kavşak…",

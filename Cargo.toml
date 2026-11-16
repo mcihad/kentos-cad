@@ -40,6 +40,7 @@ members = [
     "crates/shared/road",
     # The 3D scene core (plan/3d.md D1, docs/adr/0910 §3): camera, tiles, LOD selection, chunking; no GPU.
     "crates/shared/scene3d",
+    "crates/shared/model-view",
     # The forms core (docs/adr/0401): a form's preflight, rules and a record's validation.
     "crates/shared/forms",
     # The 2026 digital project regulation as data (docs/adr/8062): its annexes' rules with their pages, the profile's
@@ -116,11 +117,13 @@ members = [
     # Sheet layouts on the desktop (docs/sheet/design.md §11): the KentOS UI components over
     # the shared sheet core; desktop-only like the above.
     "crates/sheet-ui",
+    "crates/model-view-ui",
     "apps/ui-showcase",
     "apps/desktop",
     # KentOS Launcher (docs/adr/0800): KentOS's programs and others from their manifests, in one window.
     "apps/launcher",
     # The desktop's own wgpu drawing pipeline (docs/adr/0019); desktop-only like the above.
+    "crates/render/scene3d",
     "crates/render/wgpu",
 ]
 default-members = [
@@ -143,6 +146,7 @@ default-members = [
     "crates/shared/expression",
     "crates/shared/road",
     "crates/shared/scene3d",
+    "crates/shared/model-view",
     "crates/shared/forms",
     "crates/shared/digital-project",
     "crates/shared/sheet",

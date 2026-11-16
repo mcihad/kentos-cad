@@ -652,6 +652,13 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &["export_losses"],
         targets: none,
     },
+    // An IFC file read and described (plan/ifc-uyum.md IFC-12, docs/adr/8073 §6).
+    Entry {
+        id: "cad.ifc.inspect",
+        refusals: &[&["invalid_file_path", "ifc_unreadable", "ifc_object_not_found"]],
+        warnings: &["ifc_read_findings"],
+        targets: none,
+    },
     // Planı tanı: an exploded plan read as walls and openings (plan/architecture-advanced.md M48, docs/adr/8048).
     Entry {
         id: "cad.arch.recognize",

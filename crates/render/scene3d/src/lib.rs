@@ -2,13 +2,19 @@
 //! selects drawn with a depth buffer. It knows no Iced and no window: a host hands it the device, the queue and a
 //! render pass whose colour target it owns and whose depth target is a [`DepthTarget`].
 //!
+//! Its own package (docs/adr/8073 §2): the 3D views (the building's, the road's, the IFC viewer's) use it without the
+//! 2D drawing pipeline of `kentos-render-wgpu`, whose style engine would bring the drawing document along; that
+//! package re-exports it as `kentos_render_wgpu::scene3d`.
+//!
 //! - Each content (a tile's mesh) is uploaded once, as a vertex buffer (position float32 × 3, part u32, normal snorm8 × 4: 20 bytes)
 //!   and an index buffer, and kept by [`Residency`] within two budgets (bytes resident, bytes uploaded a frame); the
 //!   longest unused go to make room. A frame draws only what is resident: the host's selection keeps the parent in
 //!   place until its children are (SCENE-STREAM-05).
 //! - Per tile, a 16-byte block at a dynamic offset holds the tile's origin as shown minus the eye, computed in f64 by
 //!   the camera and only then made float32 (SCENE-PREC-05, 08). The view block holds the projection times the
-//!   rotation (no translation), the light and the exaggeration.
+//!   rotation (no translation), the light, the exaggeration and the section's planes (docs/adr/8073 §3): each taken
+//!   relative to the eye in f64 (its constant the eye's distance from it), so a fragment on the side a plane cuts away
+//!   is discarded with small numbers only. The cut faces are not capped.
 //! - Opaque ranges first, nearest tile first (early depth rejection), writing depth; the see-through ranges (a part
 //!   whose style has alpha below 1) after, farthest first, testing depth without writing it, premultiplied, biased a
 //!   hair nearer so that one lying on an opaque face covers it evenly.
@@ -25,8 +31,8 @@ use wgpu::util::DeviceExt;
 pub use residency::{Budgets, Plan, Residency};
 
 /// The scene's WGSL (`shaders/wgsl/scene3d/mesh.wgsl`) and its layout contract.
-pub const SCENE3D_WGSL: &str = include_str!("../../../../../shaders/wgsl/scene3d/mesh.wgsl");
-pub const SCENE3D_LAYOUT_JSON: &str = include_str!("../../../../../shaders/wgsl/scene3d.layout.json");
+pub const SCENE3D_WGSL: &str = include_str!("../../../../shaders/wgsl/scene3d/mesh.wgsl");
+pub const SCENE3D_LAYOUT_JSON: &str = include_str!("../../../../shaders/wgsl/scene3d.layout.json");
 /// The depth buffer's format and the value it is cleared to (reversed: far is 0).
 pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
 pub const DEPTH_CLEAR: f32 = 0.0;
@@ -39,7 +45,11 @@ struct ViewBlock {
     clip: [f32; 16],
     light: [f32; 4],
     look: [f32; 4],
+    planes: [[f32; 4]; MAX_PLANES],
 }
+
+/// The most planes a section clips with: a box's six.
+pub const MAX_PLANES: usize = 6;
 
 #[repr(C)]
 #[derive(Clone, Copy, Pod, Zeroable)]
@@ -57,7 +67,8 @@ pub struct Style {
 
 /// What a frame draws: the camera and its view, the tiles' contents (resident ones are drawn, the others are uploaded
 /// as the budgets allow, in the order given), the parts' styles (indexed by part), the light (towards it, in the shown
-/// space) and its ambient share.
+/// space) and its ambient share, and the half-spaces a section keeps (`[a, b, c, d]` keeping a·x + b·y + c·z + d ≥ 0
+/// in the shown space, at most [`MAX_PLANES`]; none: nothing is cut).
 pub struct Frame<'a> {
     pub camera: &'a Camera,
     pub exaggeration: Exaggeration,
@@ -66,6 +77,7 @@ pub struct Frame<'a> {
     pub styles: &'a [Style],
     pub light: [f64; 3],
     pub ambient: f32,
+    pub clip: &'a [[f64; 4]],
 }
 
 /// What a frame did.
@@ -392,10 +404,19 @@ impl Scene3dRenderer {
         // The view.
         let aspect = frame.viewport.aspect();
         let light = math::normalize(frame.light);
+        // A plane about the eye: a·(eye + r) + d = a·r + (a·eye + d), its constant the eye's distance from it.
+        let eye = frame.camera.eye;
+        let mut planes = [[0.0f32; 4]; MAX_PLANES];
+        let used = frame.clip.len().min(MAX_PLANES);
+        for (out, p) in planes.iter_mut().zip(frame.clip) {
+            let w = p[0] * eye[0] + p[1] * eye[1] + p[2] * eye[2] + p[3];
+            *out = [p[0] as f32, p[1] as f32, p[2] as f32, w as f32];
+        }
         let block = ViewBlock {
             clip: frame.camera.rotation_projection(aspect).to_f32(),
             light: [light[0] as f32, light[1] as f32, light[2] as f32, frame.ambient],
-            look: [frame.exaggeration.factor as f32, 0.0, 0.0, 0.0],
+            look: [frame.exaggeration.factor as f32, used as f32, 0.0, 0.0],
+            planes,
         };
         queue.write_buffer(&self.view, 0, bytemuck::bytes_of(&block));
         let n = frame.styles.len().max(1) as u64;

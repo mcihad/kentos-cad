@@ -3386,6 +3386,10 @@
       "level": "session",
       "note": "3B görünüm yalnız görüntüler: arazi yüzeyleri ve koridorlar ya da binanın IFC gövdeleri ortak 3B çekirdekle seçilip çizilir; binada tıklanan nesne planda seçilir (seçim oturumundur); çizim değişmez, kamera oturumundur (plan/road.md Y12.3d, ADR 0910 §6, ADR 8067)."
     },
+    "ifc.view": {
+      "level": "session",
+      "note": "IFC modeli yalnız görüntüler: dosya okuma yüzüyle (kentos_ifc::read) okunur, görüntüleyici bileşeninde (crates/model-view-ui) gösterilir; seçim, gizleme ve kesit oturumundur; dosyayı KentOS bu çizimden yazdıysa seçilen nesne planda da seçilir; çizim değişmez (plan/ifc-uyum.md IFC-12, ADR 8061, ADR 8073)."
+    },
     "gltf.export": {
       "level": "semantic",
       "via": [

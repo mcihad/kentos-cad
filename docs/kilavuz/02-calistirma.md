@@ -34,6 +34,11 @@ apps/desktop/scripts/cloud-live.sh   # masaüstünün bulut arayüzü gerçek ke
 cargo test -p kentos-desktop cloud::file_follow_tests::revision_screens -- --ignored --nocapture   # dosya projesinin revizyon resimleri, .run/shots/bulut-revizyon-* (ADR 0119)
 cargo test -p kentos-processing   # işlem araçlarının ortak durumları masaüstünde (fixtures/processing/v1, ADR 0084)
 cargo test -p kentos-native-application   # ürün komutlarının durumları masaüstünde (fixtures/commands, ADR 0022, 0027, 0029, 0032, 0037, 0047, 0057, 0066)
+cargo run -p kentos-model-view-ui --example viewer -- fixtures/arch/v1/ifc/kesit-binasi.ifc   # model görüntüleyicisi uygulama olmadan, tek pencerede (ADR 8073 §4)
+KENTOS_SNAPSHOT_BACKEND=wgpu cargo test -p kentos-model-view-ui --test screens -- --ignored --nocapture   # görüntüleyicinin resimleri uygulama olmadan, .run/gui-evidence/model-view-ui/
+KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib ifc_viewer_tests::screens -- --ignored --nocapture   # IFC modeli uygulamada: şerit, ayrı pencere, kesit, çizimin üstü, .run/gui-evidence/ifc-modeli-8073/
+cargo build -p kentos-model-view -p kentos-ifc --features kentos-ifc/view --target wasm32-unknown-unknown   # görüntüleyicinin çekirdeği ve okuma yüzü wasm32'de (ADR 8061 §3.3)
+uv run --offline --no-project --python 3.11 --with ifcopenshell==0.9.0.post1 python -I scripts/fixtures/ifc_inspect_cases.py --check   # cad.ifc.inspect'in durumları bağımsız okuyucudan (ADR 8073 §6)
 make test-module MOD=gis   # uygulama katmanının testleri tek modülle: arch | map | gis | road (testler CBS'yi kendileri açar; ADR 8054 §11)
 make fixtures-changed   # yalnız değişenin ortak komut durumları: değişen durum dosyaları ve işleyicisi değişen komutlar, tek disiplinse o modülün derlemesiyle (BASE=origin/main, FILES=a,b; komutlara eşlenemeyen değişiklikte hepsi)
 python3 scripts/fixtures/transform_command_cases.py --check   # cad.entities.transform durumlarını dönüşümlerin tanımından denetle (ADR 0037; Kauçuk levha'nınkiler levhanın çekirdekle aynı işlem sırasıyla Python ikizinden, sheet_f64.py, ADR 0158)

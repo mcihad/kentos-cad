@@ -46,6 +46,17 @@ impl Model {
     /// Every body of the file read from `bytes` (the same bytes), asking `cancel` now and then whether to stop.
     /// Openings are not bodies: they cut their hosts.
     pub fn bodies(&self, bytes: &[u8], cancel: &dyn Fn() -> bool) -> Result<Bodies, ReadError> {
+        self.made(bytes, cancel, false)
+    }
+
+    /// The openings' own volumes (every `IfcFeatureElementSubtraction` with a shape), uncut: what the bodies have
+    /// cut from their hosts, for a viewer to show see-through when asked.
+    pub fn opening_bodies(&self, bytes: &[u8], cancel: &dyn Fn() -> bool) -> Result<Bodies, ReadError> {
+        self.made(bytes, cancel, true)
+    }
+
+    /// The bodies, or the openings' volumes.
+    fn made(&self, bytes: &[u8], cancel: &dyn Fn() -> bool, openings: bool) -> Result<Bodies, ReadError> {
         let schema = header::version(self.summary.family);
         guarded(|| {
             let mut decoder = EntityDecoder::with_arc_index(bytes, self.index.clone());
@@ -62,11 +73,11 @@ impl Model {
                 (0.0, 0.0, 0.0)
             };
             let router = GeometryRouter::with_scale_and_rtc(scale, anchor);
-            let voids = self.voids(schema);
+            let voids = if openings { FxHashMap::default() } else { self.voids(schema) };
             let mut out = Bodies::default();
             let mut n = 0;
             for (i, o) in self.objects.iter().enumerate() {
-                if !o.has_shape || schema.is_subtype_of(&o.class, "IfcFeatureElementSubtraction") {
+                if !o.has_shape || schema.is_subtype_of(&o.class, "IfcFeatureElementSubtraction") != openings {
                     continue;
                 }
                 n += 1;

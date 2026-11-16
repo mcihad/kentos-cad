@@ -12,11 +12,14 @@ apps/launcher/         KentOS Launcher (kentos-launcher): manifestlerden uygulam
 apps/ui-showcase/      KentOS UI bileşen vitrini
 python/                Python SDK'sı: paket `kentos`, tipli katman `kentos.cad` (katalogdan üretilir), testleri
 crates/ui/             KentOS UI bileşen kütüphanesi (kentos-ui)
+crates/model-view-ui/  model görüntüleyicisinin Iced bileşeni (kentos-model-view-ui): 3B sahne, görünüş, ağaç, özellikler; tek pencere örneği (ADR 8073)
 crates/native/         native belge (domain), ürün komutları (application), araç oturumu (interaction), işlem araçları (processing), proje modeli (project), başsız komut sunucusu (headless), Python eklentisi (python), MCP sunucusu (mcp) ve bulut istemcisi (cloud); web'e derlenmez
 crates/render/wgpu/    native wgpu çizim hattı (Iced bilmez)
+crates/render/scene3d/ 3B sahnenin çizicisi (kentos-render-scene3d; kesit düzlemleriyle, ADR 8073 §3)
 shaders/wgsl/          paylaşılabilir WGSL ve sürümlü düzen sözleşmesi
 crates/shared/         contracts, commands (komut türleri ve katalog), geometry-core, expression, style-core, svg-core, formats, kcad, raster;
-                       digital-project (Dijital Proje Yönetmeliği'nin kural kataloğu, kararları ve profil katmanları; ADR 8062), ifc
+                       digital-project (Dijital Proje Yönetmeliği'nin kural kataloğu, kararları ve profil katmanları; ADR 8062), ifc,
+                       scene3d (3B sahne çekirdeği), model-view (model görüntüleyicisinin saf çekirdeği; ADR 8073)
 crates/wasm/           yalnız hesap/codec bağlayıcıları
 crates/server/         application ve postgres
 fixtures/              sürümlü ortak test verisi

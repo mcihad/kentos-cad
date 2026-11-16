@@ -1,0 +1,144 @@
+//! A file read as the model viewer's input (feature `view`; docs/adr/8061 §3.2, docs/adr/8073 §2): the IFC code that
+//! turns the reading face's objects and the engine's bodies into the viewer core's plain input, so the core knows no
+//! IFC name. Each object's category comes from its class by the file's own schema's inheritance (an `IfcWallStandardCase`
+//! is a wall; a spatial zone a see-through volume like a space); its tree parent is what it is a part of, else the
+//! structure that contains it, an opening's the body it cuts; its storey the nearest storey above it; its label its
+//! name (a storey's and a space's long name beside it), else its class.
+
+use std::sync::Arc;
+
+use kentos_model_view::{BodyIn, Category, Input, ObjectIn};
+
+use super::bodies::Bodies;
+use super::{Model, header};
+
+/// The classes whose objects are which category, the first the object is a kind of winning.
+const CATEGORIES: [(&str, Category); 26] = [
+    ("IfcProject", Category::Project),
+    ("IfcFeatureElementSubtraction", Category::Opening),
+    ("IfcSpatialZone", Category::Space),
+    ("IfcSite", Category::Site),
+    ("IfcBuilding", Category::Building),
+    ("IfcFacility", Category::Building),
+    ("IfcBuildingStorey", Category::Storey),
+    ("IfcFacilityPart", Category::Storey),
+    ("IfcSpace", Category::Space),
+    ("IfcCurtainWall", Category::Window),
+    ("IfcWall", Category::Wall),
+    ("IfcSlab", Category::Slab),
+    ("IfcCovering", Category::Slab),
+    ("IfcPlate", Category::Slab),
+    ("IfcColumn", Category::Column),
+    ("IfcBeam", Category::Beam),
+    ("IfcMember", Category::Beam),
+    ("IfcRoof", Category::Roof),
+    ("IfcStair", Category::Stair),
+    ("IfcStairFlight", Category::Stair),
+    ("IfcRamp", Category::Stair),
+    ("IfcRampFlight", Category::Stair),
+    ("IfcRailing", Category::Railing),
+    ("IfcDoor", Category::Door),
+    ("IfcWindow", Category::Window),
+    ("IfcFurnishingElement", Category::Furnishing),
+];
+
+/// The viewer's input of `model` (read from a file named `title`) and its `bodies`, the openings' volumes among them
+/// when the host made them ([`Model::opening_bodies`]).
+pub fn input(title: &str, model: &Model, bodies: &Bodies) -> Input {
+    let schema = header::version(model.summary.family);
+    let category = |class: &str| {
+        CATEGORIES
+            .iter()
+            .find(|(of, _)| schema.is_subtype_of(class, of))
+            .map_or_else(|| furnishing(schema, class), |(_, c)| *c)
+    };
+    let mut objects: Vec<ObjectIn> = model
+        .objects
+        .iter()
+        .map(|o| ObjectIn {
+            key: o.global_id.clone(),
+            class: o.class.clone(),
+            label: label(o),
+            category: category(&o.class),
+            parent: o.parent.or(o.container),
+            storey: None,
+        })
+        .collect();
+    // An opening hangs under the body it cuts (`IfcRelVoidsElement`), not at the tree's root.
+    for r in model.relations.iter().filter(|r| schema.is_subtype_of(&r.class, "IfcRelVoidsElement")) {
+        let host = r.relating.and_then(|h| model.index_of(h));
+        for o in r.related.iter().filter_map(|&o| model.index_of(o)) {
+            if objects[o].parent.is_none() && host != Some(o) {
+                objects[o].parent = host;
+            }
+        }
+    }
+    let n = objects.len();
+    for i in 0..n {
+        let mut at = objects[i].parent;
+        for _ in 0..n {
+            let Some(p) = at.filter(|&p| p < n) else { break };
+            if objects[p].category == Category::Storey {
+                objects[i].storey = Some(p);
+                break;
+            }
+            at = objects[p].parent;
+        }
+    }
+    Input {
+        title: title.to_owned(),
+        objects,
+        bodies: bodies
+            .bodies
+            .iter()
+            .map(|b| BodyIn { object: b.object, positions: Arc::new(b.positions.clone()), triangles: b.triangles.clone() })
+            .collect(),
+        not_shown: bodies.not_shown.iter().map(|n| (n.object, n.reason.clone())).collect(),
+    }
+}
+
+/// The blocks that are building elements beside the furniture (a sanitary fixture, a lift): furnishings' colour.
+fn furnishing(schema: ifc_lite_core::SchemaVersion, class: &str) -> Category {
+    if ["IfcSanitaryTerminal", "IfcTransportElement", "IfcFurniture"].iter().any(|of| schema.is_subtype_of(class, of)) {
+        Category::Furnishing
+    } else {
+        Category::Other
+    }
+}
+
+/// What the tree says of an object: its name, a storey's and a space's long name beside it, else its class.
+fn label(o: &super::Object) -> String {
+    let name = o.name.as_deref().filter(|s| !s.trim().is_empty());
+    let long = o.long_name.as_deref().filter(|s| !s.trim().is_empty() && Some(*s) != name);
+    match (name, long) {
+        (Some(n), Some(l)) => format!("{n} — {l}"),
+        (Some(n), None) => n.to_owned(),
+        (None, Some(l)) => l.to_owned(),
+        (None, None) => o.class.clone(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::tests::{WRITTEN, never, read_ok};
+    use super::*;
+
+    #[test]
+    fn the_section_building_becomes_the_viewer_s_input_whole() {
+        let (name, bytes) = WRITTEN[0];
+        let m = read_ok(bytes);
+        let b = m.bodies(bytes, &never).expect("the bodies");
+        let input = input(name, &m, &b);
+        assert_eq!(input.objects.len(), m.objects.len());
+        assert_eq!(input.bodies.len(), 70, "every body the file holds");
+        let storeys: Vec<&str> =
+            input.objects.iter().filter(|o| o.category == Category::Storey).map(|o| o.label.as_str()).collect();
+        assert_eq!(storeys.len(), 2, "{storeys:?}");
+        let view = kentos_model_view::View::new(input.clone());
+        let roots: Vec<Category> = view.roots().iter().map(|&r| input.objects[r].category).collect();
+        assert!(roots.contains(&Category::Project), "{roots:?}");
+        // Every wall is on a storey and has the wall's category.
+        let walls: Vec<&ObjectIn> = input.objects.iter().filter(|o| o.class == "IfcWall").collect();
+        assert!(!walls.is_empty() && walls.iter().all(|w| w.category == Category::Wall && w.storey.is_some()));
+    }
+}

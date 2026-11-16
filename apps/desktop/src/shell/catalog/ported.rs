@@ -483,7 +483,7 @@ pub const PORTED: &[&str] = &[
     "style.legend",
     // SVG çizim düzenleyicisi, its import, export, document properties and tracing (docs/adr/0095).
     "style.svgEditor",
-    // Netcad NCZ in, through the same window as DXF (exchange/drawing_import.rs, docs/adr/0138).
+    // NCZ in, through the same window as DXF (exchange/drawing_import.rs, docs/adr/0138).
     "file.import.ncz",
     // Navigation of docs/adr/0141 (navigation.rs): the views left, and the objects far from the drawing.
     "view.previous",
@@ -651,6 +651,8 @@ pub const PORTED: &[&str] = &[
     // plan/road.md Y12.3: glTF ver (road_exchange.rs) and 3B görünüm (scene3d_window.rs).
     "gltf.export",
     "scene3d.view",
+    // plan/ifc-uyum.md IFC-12: IFC modeli görüntüle (ifc_viewer.rs).
+    "ifc.view",
     // docs/adr/0773: Bina programı (program_window.rs).
     "arch.program",
     // docs/adr/8047: IFC dışa aktar (bina) (arch_ifc.rs); docs/adr/8071 §4: its cut bodies.

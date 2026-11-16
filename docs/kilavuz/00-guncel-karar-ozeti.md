@@ -168,7 +168,8 @@
     elemanlar, geometri, çok bina (B6–B11) → dosyadan doğrulama ve tek paket (B12–B17) → dış disiplin ve belediyenin inceleme
     tarafı (B18–B20).
   - **IFC görüntüleyici ve okuma motoru (15 Kasım 2026; [ADR 8061](../adr/8061-ifc-viewer-and-reading-engine.md), IFC-07,
-    IFC-12, sıra B12 ve B12b; okuma yüzü ve deneme 16 Kasım'da yapıldı, görüntüleyici yapılmadı):**
+    IFC-12, sıra B12 ve B12b; okuma yüzü ve deneme 16 Kasım'da yapıldı, görüntüleyicinin ilk dilimi de 16 Kasım'da,
+    [ADR 8073](../adr/8073-ifc-viewer-first-slice.md)):**
     - Sahibin kararı: görüntüleyici uygulamanın içinde gelir ama gevşek bağlıdır; gerektiğinde hızlıca ayrı program olur
       ya da WASM ile web'de çalışır. Ayrı program ve web şimdi yapılmaz.
     - Üç katman: `kentos-ifc`'in okuma yüzü ve gövde ağları; saf görüntüleyici çekirdeği (yerel ve wasm32; kaynağını
@@ -181,6 +182,11 @@
       Profil yayları motorda kaba üçgenleniyor ve gösterim sınırı olarak kabul edildi (§11.6). Gövdeler her modelde
       modelin ortasına göre yapılır; yoksa TUREF koordinatında 0,16 m kayıyor.
     - Çizim mevcut 3B sahnedir; üçgen ağ ölçü kaynağı değildir; katı modelleme çekirdeği kararı (yukarıda) değişmez.
+    - İlk dilim (ADR 8073): çekirdek `kentos-model-view`, bileşen `kentos-model-view-ui` (`Viewer`, `Host`; sahne, görünüş,
+      ağaç, özellikler), 3B çizici `kentos-render-scene3d`, uygulamada `ifc_viewer.rs` (`Surface::IfcViewer`, `ifc.view`).
+      Binanın ve yolun 3B görünümü aynı sahneyi, yörünge kamerasını ve görünüşü kullanır: ikinci sahne kodu yazılmaz.
+      Kesit çekirdeğin `Section`'ıdır; çizici en çok altı düzlemle kırpar, seçme kesilen tarafı tutmaz. Salt okunur ürün
+      komutu `cad.ifc.inspect`'tir (37 bağımsız durum). Seçim plana GlobalId'den kimliğe dönerek geçer (`step::unguid`).
     - Araştırma: [not](../research/2026-11-15-ifc-goruntuleyici.md). Ölçümler:
       [docs/perf/ifc-okuma-denemesi-2026-11-16.md](../perf/ifc-okuma-denemesi-2026-11-16.md).
 

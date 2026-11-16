@@ -3063,6 +3063,7 @@ mod tests {
                     crate::CAD_ARCH_IFC => {
                         serde_json::from_value::<crate::ExportIfcBuilding>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_IFC_INSPECT => serde_json::from_value::<crate::IfcInspect>(e.input.clone()).map(|_| ()),
                     crate::FILE_EXPORT_GLTF => serde_json::from_value::<crate::ExportGltf>(e.input.clone()).map(|_| ()),
                     crate::ROAD_STAKEOUT_SEND => {
                         serde_json::from_value::<crate::StakeoutSend>(e.input.clone()).map(|_| ())
@@ -4062,6 +4063,9 @@ mod tests {
                         }
                         crate::CAD_ARCH_IFC => {
                             serde_json::from_value::<crate::IfcBuildingExported>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_IFC_INSPECT => {
+                            serde_json::from_value::<crate::IfcInspected>(output.clone()).map(|_| ())
                         }
                         crate::FILE_EXPORT_GLTF => {
                             serde_json::from_value::<crate::GltfExported>(output.clone()).map(|_| ())

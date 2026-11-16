@@ -674,6 +674,8 @@ mod junction_window;
 mod scene3d_window;
 #[path = "shell/scene3d_building.rs"]
 mod scene3d_building;
+#[path = "shell/ifc_viewer.rs"]
+mod ifc_viewer;
 #[cfg(test)]
 #[path = "tests/junction_window_tests.rs"]
 mod junction_window_tests;
@@ -683,6 +685,9 @@ mod scene3d_window_tests;
 #[cfg(test)]
 #[path = "tests/scene3d_building_tests.rs"]
 mod scene3d_building_tests;
+#[cfg(test)]
+#[path = "tests/ifc_viewer_tests.rs"]
+mod ifc_viewer_tests;
 #[cfg(test)]
 #[path = "tests/performance_tests.rs"]
 mod performance_tests;

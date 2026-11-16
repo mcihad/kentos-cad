@@ -1,0 +1,429 @@
+//! IFC modeli (plan/ifc-uyum.md IFC-12, docs/adr/8061 §4–§5, docs/adr/8073 §5): the application's adapter of the
+//! model viewer (crates/model-view-ui). It opens an IFC file in a window of its own, beside the plan until the user
+//! brings it over the drawing (shell/windows/, docs/adr/8060 §10), reads it on a thread of its own with the reading
+//! face (`kentos_ifc::read`): the file's summary and objects, their bodies and the openings' volumes, handed to the
+//! viewer as its plain input; the chosen object's details are read from the file when it is chosen. A read still
+//! running gives way to a new one; İptal and the window's close stop it, and what it would have given never shows.
+//!
+//! The viewer and the plan choose together when KentOS wrote the file from the open drawing: an element's GlobalId is
+//! its persistent id (`kentos_ifc::step::guid`), so a choice in either finds the other's object. A file another program
+//! wrote chooses nothing in the plan. The viewer never changes the drawing. Its look is the component's; this file
+//! gives it the drawing area's sky, the numbers' format and, apart, Ana pencereye al.
+
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+
+use iced::futures::channel::mpsc;
+use iced::widget::space;
+use iced::{Element, Size, Task, Theme};
+use kentos_domain::Uuid;
+use kentos_ifc::read::{self as ifc, Limits, Model};
+use kentos_interaction::Level;
+use kentos_model_view::Input;
+use kentos_model_view_ui::{Host, Out, Stage, Viewer};
+use kentos_ui::widget::Dialog as Frame;
+
+use crate::app::{App, Dialog, Message};
+use crate::traces::Control;
+use crate::windows::{OwnWindow, Surface};
+
+/// The window's title, which a trace names it by.
+pub(crate) const TITLE: &str = "IFC modeli";
+const SURFACE: Surface = Surface::IfcViewer;
+
+/// The open viewer: its file, the read under way (its number and its stop), the file read, and the plan's selection
+/// it last took.
+pub(crate) struct IfcWindow {
+    pub(crate) viewer: Viewer,
+    pub(crate) path: PathBuf,
+    id: u64,
+    stop: Arc<AtomicBool>,
+    file: Option<(Arc<Vec<u8>>, Arc<Model>)>,
+    taken: u64,
+}
+
+impl std::fmt::Debug for IfcWindow {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("IfcWindow").field("path", &self.path).field("viewer", &self.viewer).finish_non_exhaustive()
+    }
+}
+
+/// A file read: its bytes, the model, the viewer's input and what the status bar says of it.
+#[derive(Debug)]
+pub(crate) struct Read {
+    bytes: Arc<Vec<u8>>,
+    model: Arc<Model>,
+    input: Input,
+}
+
+#[derive(Debug, Clone)]
+pub enum Event {
+    Viewer(kentos_model_view_ui::Message),
+    /// The file IFC modeli görüntüle… asked for; none when the dialog was closed.
+    Picked(Option<PathBuf>),
+    /// A file opened in the viewer (IFC dışa aktar's Görüntüle).
+    Open(PathBuf),
+    Progress { id: u64, phase: &'static str },
+    Done { id: u64, result: Result<Arc<Read>, String> },
+}
+
+fn msg(event: Event) -> Message {
+    Message::IfcViewer(event)
+}
+
+static NEXT: AtomicU64 = AtomicU64::new(1);
+
+/// The phases the status names while the file is read.
+const READING: &str = "Dosya okunuyor";
+const MODEL: &str = "Nesneler ve ilişkiler okunuyor";
+const BODIES: &str = "Gövdeler üçgenleniyor";
+
+/// Reads the file: the model, its bodies and its openings' volumes, the viewer's input; none when it was stopped.
+fn read(path: &Path, stop: &AtomicBool, tell: &mut dyn FnMut(&'static str)) -> Option<Result<Read, String>> {
+    let cancel = || stop.load(Ordering::Relaxed);
+    let stopped = |e: &ifc::ReadError| matches!(e, ifc::ReadError::Cancelled);
+    tell(READING);
+    let bytes = match std::fs::read(path) {
+        Ok(b) => b,
+        Err(e) => return Some(Err(format!("{} okunamadı: {e}. Dosyanın yerini ve okuma iznini denetleyin.", path.display()))),
+    };
+    tell(MODEL);
+    let model = match ifc::read(&bytes, &Limits::default(), &cancel) {
+        Ok(m) => m,
+        Err(e) if stopped(&e) => return None,
+        Err(e) => return Some(Err(e.to_string())),
+    };
+    tell(BODIES);
+    let made = model.bodies(&bytes, &cancel).and_then(|mut b| {
+        let openings = model.opening_bodies(&bytes, &cancel)?;
+        b.bodies.extend(openings.bodies);
+        b.not_shown.extend(openings.not_shown);
+        Ok(b)
+    });
+    let bodies = match made {
+        Ok(b) => b,
+        Err(e) if stopped(&e) => return None,
+        Err(e) => return Some(Err(e.to_string())),
+    };
+    let name = path.file_name().map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned());
+    let input = ifc::view::input(&name, &model, &bodies);
+    Some(Ok(Read { bytes: Arc::new(bytes), model: Arc::new(model), input }))
+}
+
+impl App {
+    /// IFC modeli görüntüle…: asks for the file, then opens it.
+    pub(crate) fn pick_ifc_model(&mut self) -> Task<Message> {
+        Task::perform(
+            async {
+                let file = rfd::AsyncFileDialog::new().set_title("IFC modeli görüntüle").add_filter("IFC (.ifc)", &["ifc"]).pick_file().await?;
+                Some(file.path().to_path_buf())
+            },
+            |path| msg(Event::Picked(path)),
+        )
+    }
+
+    /// Opens `path` in the viewer, a read still running giving way; the file is read on a thread of its own.
+    pub(crate) fn open_ifc_model(&mut self, path: PathBuf) -> Task<Message> {
+        if let Some(w) = self.ifc_viewer.take() {
+            w.stop.store(true, Ordering::Relaxed);
+        }
+        let id = NEXT.fetch_add(1, Ordering::Relaxed);
+        let stop = Arc::new(AtomicBool::new(false));
+        let title = path.file_name().map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned());
+        self.ifc_viewer = Some(Box::new(IfcWindow {
+            viewer: Viewer::new(title),
+            path: path.clone(),
+            id,
+            stop: stop.clone(),
+            file: None,
+            taken: self.selection.version(),
+        }));
+        self.show_surface(SURFACE);
+        iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
+            let mut tell = |phase: &'static str| {
+                let _ = out.try_send(msg(Event::Progress { id, phase }));
+            };
+            let result = read(&path, &stop, &mut tell);
+            // Stopped: what it would have given is never shown.
+            let Some(result) = result.filter(|_| !stop.load(Ordering::Relaxed)) else { return };
+            let done = msg(Event::Done { id, result: result.map(Arc::new) });
+            let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(&mut out, done));
+        })
+    }
+
+    /// The viewer closes: its read stops, its model and scene go (the GPU's copy with its window), and the main
+    /// window's dialog when it was over the drawing.
+    pub(crate) fn ifc_viewer_gone(&mut self) {
+        if let Some(w) = self.ifc_viewer.take() {
+            w.stop.store(true, Ordering::Relaxed);
+        }
+        self.surface_away(SURFACE);
+    }
+
+    pub(crate) fn ifc_viewer_event(&mut self, event: Event) -> Task<Message> {
+        match event {
+            Event::Picked(Some(path)) | Event::Open(path) => return self.open_ifc_model(path),
+            Event::Picked(None) => {}
+            Event::Progress { id, phase } => {
+                if let Some(w) = self.ifc_viewer.as_mut().filter(|w| w.id == id) {
+                    w.viewer.progress(phase, 0, 0);
+                }
+            }
+            Event::Done { id, result } => {
+                let Some(w) = self.ifc_viewer.as_mut().filter(|w| w.id == id) else { return Task::none() };
+                match result {
+                    Ok(read) => {
+                        let read = Arc::try_unwrap(read).unwrap_or_else(|r| Read {
+                            bytes: r.bytes.clone(),
+                            model: r.model.clone(),
+                            input: r.input.clone(),
+                        });
+                        let s = &read.model.summary;
+                        let mut facts = vec![(s.schema.clone(), schema_tip(&read.model))];
+                        let findings = read.model.findings.len();
+                        if findings > 0 {
+                            facts.push((
+                                format!("{findings} okuma bulgusu"),
+                                "Dosyada okumayı durdurmayan bozukluklar var (çözülemeyen kayıt, olmayan başvuru, yinelenen GlobalId); ayrıntısı İncele'dedir.".to_owned(),
+                            ));
+                        }
+                        w.viewer.load(read.input, facts);
+                        w.file = Some((read.bytes, read.model));
+                        self.follow_ifc_viewer();
+                    }
+                    Err(why) => w.viewer.failed(why),
+                }
+            }
+            Event::Viewer(m) => {
+                let Some(w) = self.ifc_viewer.as_mut() else { return Task::none() };
+                match w.viewer.update(m) {
+                    Some(Out::Chosen(chosen)) => self.ifc_viewer_chosen(chosen),
+                    Some(Out::Cancel) => {
+                        self.ifc_viewer_gone();
+                        self.say(Level::Info, "IFC modelinin okunması durduruldu.");
+                    }
+                    Some(Out::Close) => self.ifc_viewer_gone(),
+                    None => {}
+                }
+            }
+        }
+        Task::none()
+    }
+
+    /// An object chosen in the viewer: its details read from the file, and the plan's object chosen when the file is
+    /// the drawing's (a choice of nothing, or of what the drawing has no object for, leaves the plan as it is).
+    fn ifc_viewer_chosen(&mut self, chosen: Option<(usize, String)>) {
+        let Some(w) = self.ifc_viewer.as_mut() else { return };
+        let Some((object, key)) = chosen else { return };
+        if let Some((bytes, model)) = &w.file {
+            match model.details(bytes, object) {
+                Ok(d) => w.viewer.set_details(object, d),
+                Err(e) => self.say(Level::Warn, format!("Nesnenin özellikleri okunamadı: {e}")),
+            }
+        }
+        let Some(doc) = self.document.as_ref() else { return };
+        let Some(slot) = kentos_ifc::step::unguid(&key).map(Uuid::from_u128).and_then(|u| doc.model.slot_of(u)) else { return };
+        self.selection.set(vec![slot]);
+        if let Some(w) = self.ifc_viewer.as_mut() {
+            // Taken now: following the plan does not choose it again.
+            w.taken = self.selection.version();
+        }
+    }
+
+    /// The viewer follows the plan's selection (shell/app/update.rs, after every message): the first object chosen in
+    /// the plan is chosen in the viewer when the file holds it.
+    pub(crate) fn follow_ifc_viewer(&mut self) {
+        let version = self.selection.version();
+        let Some(w) = self.ifc_viewer.as_mut().filter(|w| w.taken != version && w.viewer.stage == Stage::Shown) else { return };
+        w.taken = version;
+        let Some(doc) = self.document.as_ref() else { return };
+        let Some(uuid) = self.selection.ids().iter().find_map(|s| doc.model.uid(*s)) else { return };
+        let key = kentos_ifc::step::guid(uuid.as_u128());
+        if w.viewer.choose_key(&key)
+            && let Some(object) = w.viewer.view().and_then(|v| v.selected())
+            && let Some((bytes, model)) = &w.file
+            && let Ok(d) = model.details(bytes, object)
+        {
+            w.viewer.set_details(object, d);
+        }
+    }
+
+    /// The viewer, as its host shows it.
+    fn ifc_viewer_layout(&self, apart: bool) -> Element<'_, Message> {
+        let Some(w) = &self.ifc_viewer else { return space().into() };
+        let f = self.format();
+        let end = if apart { vec![crate::windows::return_button(SURFACE)] } else { Vec::new() };
+        w.viewer.layout(Host {
+            to: |m| msg(Event::Viewer(m)),
+            end,
+            sky: crate::scene3d_window::sky(self.canvas()),
+            coordinate: Box::new(move |v| f.coord(v)),
+            east: f.east_label(),
+            north: f.north_label(),
+        })
+    }
+
+    /// Over the drawing: a window like the others, the viewer framed in it.
+    pub(crate) fn ifc_viewer_view(&self) -> Element<'_, Message> {
+        if self.ifc_viewer.is_none() {
+            return space().into();
+        }
+        let height = (self.window_size.height - kentos_ui::theme::typography::scaled(200.0)).max(420.0);
+        let viewer = iced::widget::container(self.ifc_viewer_layout(false)).height(height);
+        crate::windows::placed(Frame::new(TITLE).fill(viewer).width(1280.0), SURFACE, false, msg(Event::Viewer(kentos_model_view_ui::Message::Close)))
+    }
+
+    /// Beside the plan: the whole of its own window.
+    pub(crate) fn ifc_viewer_window_view(&self) -> Element<'_, Message> {
+        iced::widget::container(self.ifc_viewer_layout(true))
+            .style(|t: &Theme| iced::widget::container::Style {
+                background: Some(iced::Background::Color(kentos_ui::theme::Tokens::of(t).surface)),
+                ..Default::default()
+            })
+            .into()
+    }
+
+    pub(crate) fn ifc_viewer_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+        use kentos_model_view_ui::Message as V;
+        let Some(w) = self.ifc_viewer.as_ref() else {
+            return Err(format!("{TITLE} penceresi açık değil"));
+        };
+        let viewer = |m: V| Some(msg(Event::Viewer(m)));
+        Ok(match control {
+            Control::Press("Kapat") => viewer(V::Close),
+            Control::Press("İptal") => viewer(V::Cancel),
+            Control::Press("Sığdır") => viewer(V::Fit),
+            Control::Press("Seçime yaklaş") => viewer(V::Focus),
+            Control::Press("Gizle") => viewer(V::Hide),
+            Control::Press("Yalnız bırak") => viewer(V::Isolate),
+            Control::Press("Hepsini göster") => viewer(V::ShowAll),
+            Control::Press("Mahaller") => viewer(V::Spaces),
+            Control::Press("Açıklıklar") => viewer(V::Openings),
+            Control::Press("Saydam") => viewer(V::SeeThrough),
+            Control::Press("Kuzeye bak") => viewer(V::North),
+            Control::Press("Yatay kesit") => viewer(V::Cut(kentos_model_view::Cut::Level)),
+            Control::Press("Kuzey–güney düşey kesiti") => viewer(V::Cut(kentos_model_view::Cut::NorthSouth)),
+            Control::Press("Doğu–batı düşey kesiti") => viewer(V::Cut(kentos_model_view::Cut::EastWest)),
+            Control::Press("Seçimin çevresinde kutu") => viewer(V::Boxed),
+            Control::Press("Kesiti kaldır") => viewer(V::Uncut),
+            Control::Press("Öbür yanı") => viewer(V::Flip),
+            Control::Press("Yapı") => viewer(V::Panel(kentos_model_view_ui::Panel::Structure)),
+            Control::Press("Sınıf") => viewer(V::Panel(kentos_model_view_ui::Panel::Class)),
+            Control::Press("Gösterilemeyen") => viewer(V::Panel(kentos_model_view_ui::Panel::NotShown)),
+            Control::Press(name) if kentos_model_view::VIEWS.iter().any(|v| v.0 == name) => {
+                viewer(V::View(kentos_model_view::VIEWS.iter().position(|v| v.0 == name).unwrap_or(0)))
+            }
+            Control::Press(name) => {
+                // A tree row by its words: the object chosen.
+                let o = w.viewer.view().and_then(|v| v.input().objects.iter().position(|o| o.label == name));
+                match o {
+                    Some(o) => viewer(V::Choose(Some(o))),
+                    None => return Err(format!("“{TITLE}” penceresinde {name} yok")),
+                }
+            }
+            other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
+        })
+    }
+}
+
+#[cfg(test)]
+impl App {
+    /// The read under way done here and now, as its thread would give it (a test runs no task).
+    pub(crate) fn ifc_viewer_read_now(&mut self) {
+        let Some(w) = self.ifc_viewer.as_ref() else { return };
+        let (id, path, stop) = (w.id, w.path.clone(), w.stop.clone());
+        if let Some(result) = read(&path, &stop, &mut |_| {}) {
+            let _ = self.ifc_viewer_event(Event::Done { id, result: result.map(Arc::new) });
+        }
+    }
+
+    /// The read under way's number: a test gives a late result with it.
+    pub(crate) fn ifc_viewer_id(&self) -> Option<u64> {
+        self.ifc_viewer.as_ref().map(|w| w.id)
+    }
+
+    /// A late result for read `id`, as its thread would give it.
+    pub(crate) fn ifc_viewer_late(&mut self, id: u64, path: &Path) {
+        let stop = AtomicBool::new(false);
+        if let Some(result) = read(path, &stop, &mut |_| {}) {
+            let _ = self.ifc_viewer_event(Event::Done { id, result: result.map(Arc::new) });
+        }
+    }
+
+    /// What a picture of IFC modeli shows: its own window while it is open beside the plan, else the main window.
+    pub(crate) fn ifc_viewer_shown(&self) -> Element<'_, Message> {
+        match self.windows.of(SURFACE) {
+            Some(w) if self.surface_wanted(SURFACE) => self.window_view(w.id),
+            _ => self.view(),
+        }
+    }
+}
+
+/// What the schema readout's tip says: the schema, the program that wrote the file, its units.
+fn schema_tip(m: &Model) -> String {
+    let s = &m.summary;
+    let by = s.header.originating_system.as_deref().or(s.header.preprocessor.as_deref()).unwrap_or("bilinmiyor");
+    let length = s.units.length.as_ref().map_or_else(|| "yazılmamış".to_owned(), |u| format!("{}{}", u.prefix.as_deref().unwrap_or(""), u.name));
+    format!("Şema {} ({} kayıt). Yazan program: {by}. Uzunluk birimi: {length}. Koordinatlar dosyadaki gibidir; görüntüleyici dönüştürmez.", s.schema, s.records)
+}
+
+/// IFC modeli as a window of its own (shell/windows/surface.rs): it opens beside the plan until the user brings it over
+/// the drawing; Esc and its close button close it.
+pub(crate) struct IfcView;
+
+impl OwnWindow for IfcView {
+    fn kept_as(&self) -> &'static str {
+        "ifc-modeli"
+    }
+
+    fn sizes(&self) -> (Size, Size) {
+        (Size::new(1400.0, 860.0), Size::new(900.0, 560.0))
+    }
+
+    /// A model is looked at beside the plan, often on another screen.
+    fn opens_apart(&self) -> bool {
+        true
+    }
+
+    fn what(&self) -> &'static str {
+        "IFC modelini"
+    }
+
+    fn apart_tip(&self) -> &'static str {
+        "IFC modelini kendi penceresinde açar: pencereyi başka bir ekrana taşıyıp çizerken modeli izleyebilirsiniz. Sonraki açılışlar da ayrı pencerede olur."
+    }
+
+    fn return_tip(&self) -> &'static str {
+        "IFC modelini yeniden ana pencerede, çizimin üstünde açar. Sonraki açılışlar da orada olur."
+    }
+
+    fn dialog(&self) -> Dialog {
+        Dialog::IfcViewer
+    }
+
+    fn is_open(&self, app: &App) -> bool {
+        app.ifc_viewer.is_some()
+    }
+
+    fn title(&self, app: &App) -> String {
+        app.ifc_viewer.as_ref().map_or_else(|| TITLE.to_owned(), |w| format!("{} — {TITLE}", w.viewer.title))
+    }
+
+    fn view<'a>(&self, app: &'a App) -> Element<'a, Message> {
+        app.ifc_viewer_window_view()
+    }
+
+    fn close(&self, app: &mut App) -> Task<Message> {
+        app.ifc_viewer_gone();
+        Task::none()
+    }
+
+    fn trace_title(&self, _app: &App) -> Option<String> {
+        Some(TITLE.to_owned())
+    }
+
+    fn trace_control(&self, app: &App, control: Control<'_>) -> Option<Result<Option<Message>, String>> {
+        Some(app.ifc_viewer_control(control))
+    }
+}

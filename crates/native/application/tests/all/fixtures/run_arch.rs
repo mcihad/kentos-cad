@@ -156,6 +156,10 @@ macro_rules! arch_cases {
             kentos_commands::CAD_ARCH_IFC => {
                 $then!(arch_ifc, kentos_commands::ExportIfcBuilding)
             }
+            kentos_commands::CAD_IFC_INSPECT => {
+                use kentos_native_application::ifc_inspect;
+                $then!(ifc_inspect, kentos_commands::IfcInspect)
+            }
             kentos_commands::CAD_VIEWS_EDIT => $then!(views_edit, ViewsEdit),
             _ => $else,
         }

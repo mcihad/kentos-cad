@@ -316,6 +316,7 @@ impl App {
             Asking::Road(inner) => self.road_dialog_view(inner),
             Asking::Propose => self.propose_view(),
             Asking::Scene3d => self.scene3d_view(),
+            Asking::IfcViewer => self.ifc_viewer_view(),
             Asking::AnnotationStyles => self.annotation_styles_view(),
             Asking::TableStyleDefs => self.table_style_window_view(),
             Asking::SheetSet => self.sheet_set_view(),

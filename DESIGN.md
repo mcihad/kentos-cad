@@ -672,6 +672,37 @@ arasındaki bütün yeri alır, bantlar ana pencerenin kendi diliyle çizilir.
   sağda gösterilen miktar (“29 yapı elemanı (58 içinden), 6 mahal”; üçgen ve karo sayısı ipucunda), bulgulu nesne varken
   kırmızı “2 nesnede bulgu”, en sağda “Fare” (gezinme ipucu). “A · B · C” satırı yoktur (§13).
 - **Tuşlar:** ayrı pencerede Esc kapatır, Tab alanlar arasında döner. Pencere kapanınca ya da çizim kapanınca sahne gider.
+- **Ortak parçalar:** sahne, kuzey oku, lejant, gök ve bakışlar menüsü görüntüleyici bileşeninindir
+  (`kentos_model_view_ui::{scene, look}`, [ADR 8073](docs/adr/8073-ifc-viewer-first-slice.md) §2); IFC modeli aynılarını
+  giyer (§7.21). Birinde değişen öbüründe de değişir.
+
+### 7.21 IFC modeli
+
+Bir IFC dosyasının görüntüleyicisi ([ADR 8073](docs/adr/8073-ifc-viewer-first-slice.md), [ADR 8061](docs/adr/8061-ifc-viewer-and-reading-engine.md)
+§5). 3B görünümün dilindedir (§7.20): üstte tek araç şeridi, altta durum çubuğu, aralarında üç bölme.
+
+- **Yer:** kendiliğinden işletim sisteminin ayrı penceresinde açılır (1400 × 860); “Ana pencereye al” onu çizimin üstüne
+  getirir. Başlığı dosyanın adı ve “IFC modeli”.
+- **Araç şeridi:** kamera (“Görünüş ▾”, “Sığdır”, “Seçime yaklaş”), ince ayraç, görünürlük (“Gizle”, “Yalnız bırak”,
+  “Hepsini göster”; seçim yokken ilk ikisi sönük), ayraç, anahtarlar (“Mahaller”, “Açıklıklar”, “Saydam”), ayraç, “Kesit ▾”
+  (yatay, kuzey–güney düşey, doğu–batı düşey, seçilen varken “Seçimin çevresinde kutu”, “Kesiti kaldır”). Düzlem keserken
+  yanında ekseninin adı (Kot ya da projenin doğu ve kuzey adları), kaydırıcı, değeri eş aralıklı yazıyla ve “Öbür yanı”.
+  Sağ uçta ev sahibinin işleri (ayrıyken “Ana pencereye al”). Okunurken yalnız kamera grubu görünür.
+- **Sol bölme** (280 px, 12 px yazıda): “Yapı | Sınıf | Gösterilemeyen” (kitin bölmeli düğmesi; gösterilemeyen yokken
+  üçüncüsü sönük), altında kitin ağacı, sanal satırlarla. Satırın sağında öğe sayısı ve göz; sayısı olmayan satırda da
+  sayı sütunu durur ki gözler tek sütunda kalsın. Gizli satır sönük, seçili satır vurgu zemininde. Açılışta proje, saha ve
+  bina açık, katlar kapalı. Modelde tıklanan nesnenin dalları açılır.
+- **Orta:** sahne §7.20'deki gibi (gök, kuzey oku, lejant, seçilen noktanın halkası). Parça renkleri kategorinindir;
+  seçilen turuncu, bulgulu kırmızı; mahal, mekân bölgesi ve açıklık saydam hacimdir ve tıklama içlerinden geçer.
+- **Sağ bölme** (300 px): “Özellikler” başlığı, altında kitin özellik tablosu (`PropertySheet`): ilk grup “Nesne” (sınıf,
+  GlobalId, ad, açıklama, nesne türü, uzun ad, etiket, ön tanımlı tür, tip, kat, malzeme, kayıt), sonra setler dosyadaki
+  sırasıyla, tipten gelenin başlığı “(tipten)” ile; başlık grubu daraltır. Değer dosyadaki gibi yazılır, sayı eş aralıklı,
+  birim sönük sağda. Seçim yokken boş durum ne yapılacağını söyler.
+- **Durum çubuğu:** solda seçilen noktanın nesnesi ve koordinatları (projenin eksen adlarıyla), seçim yokken tıklamanın
+  ne yaptığı sönük; sağda “70/70 gövde” (üçgen ve karo sayısı ipucunda; açıklık hacmi gövde sayılmaz), gösterilemeyen varken
+  uyarı renginde “1 gösterilemeyen”, okuma bulgusu varken sayısı, şema adı (ipucunda yazan program ve birim), “Fare”.
+- **Okunurken ve reddedilince:** bölmelerin yerinde ortada evre, ince ilerleme çubuğu ve “İptal”; reddedilen dosyada hata
+  durumu (kırmızı simge, nedeni ve çözümü) ve “Kapat”.
 
 ### 7.13 Kontroller (genel)
 

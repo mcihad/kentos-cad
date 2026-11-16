@@ -1,0 +1,2390 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.ifc.inspect",
+ "commandVersion": 1,
+ "title": "IFC dosyasını incele",
+ "note": "scripts/fixtures/ifc_inspect_cases.py yazar; beklenenler IfcOpenShell 0.9.0.post1'in aynı dosyaları okuyuşundan, KentOS kodu ve KentOS'un okuma motoru olmadan; bozuk dosyalar sağlam birinden betikte yapılır, bulgunun kaydı ve satırı yapılışından bilinir.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "IFC incelemesi",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 100,
+   "workspace": "cad"
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "entities": []
+ },
+ "cases": [
+  {
+   "name": "Özet: Kesit binası (KentOS)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 2929,
+       "objects": 91,
+       "classes": {
+        "IfcBeam": 8,
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 2,
+        "IfcColumn": 16,
+        "IfcDoor": 5,
+        "IfcGrid": 1,
+        "IfcOpeningElement": 15,
+        "IfcProject": 1,
+        "IfcSite": 1,
+        "IfcSlab": 3,
+        "IfcSpace": 10,
+        "IfcSpatialZone": 2,
+        "IfcStair": 1,
+        "IfcWall": 16,
+        "IfcWindow": 9
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": "RADIAN"
+       },
+       "storeys": [
+        {
+         "globalId": "3ydGVFlwnjBYgl8a9xXv7Y",
+         "name": "MM-BNK-Zemin_kat",
+         "contains": 29
+        },
+        {
+         "globalId": "2v8zbZ9wnjAEbjpi6u0vu1",
+         "name": "MM-BNK-1._kat",
+         "contains": 29
+        }
+       ],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: Kesit binası künyeli (KentOS)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:arch/v1/ifc/kesit-binasi-kunye.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:arch/v1/ifc/kesit-binasi-kunye.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 2956,
+       "objects": 92,
+       "classes": {
+        "IfcActor": 1,
+        "IfcBeam": 8,
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 2,
+        "IfcColumn": 16,
+        "IfcDoor": 5,
+        "IfcGrid": 1,
+        "IfcOpeningElement": 15,
+        "IfcProject": 1,
+        "IfcSite": 1,
+        "IfcSlab": 3,
+        "IfcSpace": 10,
+        "IfcSpatialZone": 2,
+        "IfcStair": 1,
+        "IfcWall": 16,
+        "IfcWindow": 9
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": "RADIAN"
+       },
+       "storeys": [
+        {
+         "globalId": "3FHGcBJNOjRXvUo$uJedII",
+         "name": "MM-BNK-Zemin_kat",
+         "contains": 29
+        },
+        {
+         "globalId": "2BoziUjNOjQDqTU7rG7e2n",
+         "name": "MM-BNK-1._kat",
+         "contains": 29
+        }
+       ],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: İki bloklu proje, A bloğu (KentOS)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:arch/v1/ifc/blok-a.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:arch/v1/ifc/blok-a.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 2962,
+       "objects": 93,
+       "classes": {
+        "IfcBeam": 8,
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 3,
+        "IfcColumn": 16,
+        "IfcDoor": 5,
+        "IfcGrid": 1,
+        "IfcOpeningElement": 15,
+        "IfcProject": 1,
+        "IfcSite": 1,
+        "IfcSlab": 4,
+        "IfcSpace": 10,
+        "IfcSpatialZone": 2,
+        "IfcStair": 1,
+        "IfcWall": 16,
+        "IfcWindow": 9
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": "RADIAN"
+       },
+       "storeys": [
+        {
+         "globalId": "3fQ87615CRb$eangsDbcj5",
+         "name": "MM-BNK-Zemin_kat",
+         "contains": 29
+        },
+        {
+         "globalId": "2pr0qBp5CRfxtemI$O8aRe",
+         "name": "MM-BNK-1._kat",
+         "contains": 29
+        },
+        {
+         "globalId": "1_FvXHb5CRju6ikx8YhYAB",
+         "name": "MM-BNK-Bodrum_kat",
+         "contains": 1
+        }
+       ],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: İki bloklu proje, B bloğu (KentOS)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:arch/v1/ifc/blok-b.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:arch/v1/ifc/blok-b.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 206,
+       "objects": 11,
+       "classes": {
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 1,
+        "IfcGrid": 1,
+        "IfcProject": 1,
+        "IfcSite": 1,
+        "IfcSpace": 1,
+        "IfcSpatialZone": 1,
+        "IfcWall": 4
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": "RADIAN"
+       },
+       "storeys": [
+        {
+         "globalId": "0arK3$LlsrWO4i0a3pac4_",
+         "name": "MM-BNK-B_zemin_kat",
+         "contains": 4
+        }
+       ],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: Çatı altında mahal (KentOS)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:arch/v1/ifc/cati-alti-mahal.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:arch/v1/ifc/cati-alti-mahal.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 2912,
+       "objects": 91,
+       "classes": {
+        "IfcBeam": 8,
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 2,
+        "IfcColumn": 16,
+        "IfcDoor": 5,
+        "IfcGrid": 1,
+        "IfcOpeningElement": 15,
+        "IfcProject": 1,
+        "IfcRoof": 1,
+        "IfcSite": 1,
+        "IfcSlab": 2,
+        "IfcSpace": 10,
+        "IfcSpatialZone": 2,
+        "IfcStair": 1,
+        "IfcWall": 16,
+        "IfcWindow": 9
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": "RADIAN"
+       },
+       "storeys": [
+        {
+         "globalId": "1ffSBbF_0qDLYugzhTx3Wz",
+         "name": "MM-BNK-Zemin_kat",
+         "contains": 29
+        },
+        {
+         "globalId": "2j7l5Hr_0qEfdv$rkXS2mU",
+         "name": "MM-BNK-1._kat",
+         "contains": 29
+        }
+       ],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: Eğimli döşeme (KentOS)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:arch/v1/ifc/egimli-doseme.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:arch/v1/ifc/egimli-doseme.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 2978,
+       "objects": 93,
+       "classes": {
+        "IfcBeam": 8,
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 2,
+        "IfcColumn": 16,
+        "IfcDoor": 5,
+        "IfcGrid": 1,
+        "IfcOpeningElement": 15,
+        "IfcProject": 1,
+        "IfcSite": 1,
+        "IfcSlab": 4,
+        "IfcSpace": 10,
+        "IfcSpatialZone": 2,
+        "IfcStair": 1,
+        "IfcWall": 17,
+        "IfcWindow": 9
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": "RADIAN"
+       },
+       "storeys": [
+        {
+         "globalId": "1ffSBbF_0qDLYugzhTx3Wz",
+         "name": "MM-BNK-Zemin_kat",
+         "contains": 31
+        },
+        {
+         "globalId": "2j7l5Hr_0qEfdv$rkXS2mU",
+         "name": "MM-BNK-1._kat",
+         "contains": 29
+        }
+       ],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: Eğri bina (KentOS)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:arch/v1/ifc/egri-bina.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:arch/v1/ifc/egri-bina.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 715,
+       "objects": 34,
+       "classes": {
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 2,
+        "IfcDoor": 2,
+        "IfcOpeningElement": 7,
+        "IfcProject": 1,
+        "IfcSite": 1,
+        "IfcSlab": 3,
+        "IfcSpace": 2,
+        "IfcSpatialZone": 2,
+        "IfcStair": 1,
+        "IfcWall": 8,
+        "IfcWindow": 4
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": "RADIAN"
+       },
+       "storeys": [
+        {
+         "globalId": "1PgpDO88klfGdVM9eRowva",
+         "name": "MM-BNK-Zemin_kat",
+         "contains": 9
+        },
+        {
+         "globalId": "0a5hwTw8kljCsZKnncLue7",
+         "name": "MM-BNK-1._kat",
+         "contains": 9
+        }
+       ],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: Eğri bina, kesilmiş gövdeler (KentOS)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:arch/v1/ifc/egri-bina-referans.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:arch/v1/ifc/egri-bina-referans.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 855,
+       "objects": 34,
+       "classes": {
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 2,
+        "IfcDoor": 2,
+        "IfcOpeningElement": 7,
+        "IfcProject": 1,
+        "IfcSite": 1,
+        "IfcSlab": 3,
+        "IfcSpace": 2,
+        "IfcSpatialZone": 2,
+        "IfcStair": 1,
+        "IfcWall": 8,
+        "IfcWindow": 4
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": "RADIAN"
+       },
+       "storeys": [
+        {
+         "globalId": "1PgpDO88klfGdVM9eRowva",
+         "name": "MM-BNK-Zemin_kat",
+         "contains": 9
+        },
+        {
+         "globalId": "0a5hwTw8kljCsZKnncLue7",
+         "name": "MM-BNK-1._kat",
+         "contains": 9
+        }
+       ],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: Katmanlı çatı (KentOS)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:arch/v1/ifc/katmanli-cati.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:arch/v1/ifc/katmanli-cati.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 3096,
+       "objects": 92,
+       "classes": {
+        "IfcBeam": 8,
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 2,
+        "IfcColumn": 16,
+        "IfcDoor": 5,
+        "IfcGrid": 1,
+        "IfcOpeningElement": 15,
+        "IfcProject": 1,
+        "IfcRoof": 1,
+        "IfcSite": 1,
+        "IfcSlab": 3,
+        "IfcSpace": 10,
+        "IfcSpatialZone": 2,
+        "IfcStair": 1,
+        "IfcWall": 16,
+        "IfcWindow": 9
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": "RADIAN"
+       },
+       "storeys": [
+        {
+         "globalId": "1ffSBbF_0qDLYugzhTx3Wz",
+         "name": "MM-BNK-Zemin_kat",
+         "contains": 29
+        },
+        {
+         "globalId": "2j7l5Hr_0qEfdv$rkXS2mU",
+         "name": "MM-BNK-1._kat",
+         "contains": 30
+        }
+       ],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: Yerel sistemde bina (KentOS)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:arch/v1/ifc/yerel-sistem.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 2931,
+       "objects": 91,
+       "classes": {
+        "IfcBeam": 8,
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 2,
+        "IfcColumn": 16,
+        "IfcDoor": 5,
+        "IfcGrid": 1,
+        "IfcOpeningElement": 15,
+        "IfcProject": 1,
+        "IfcSite": 1,
+        "IfcSlab": 3,
+        "IfcSpace": 10,
+        "IfcSpatialZone": 2,
+        "IfcStair": 1,
+        "IfcWall": 16,
+        "IfcWindow": 9
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": "RADIAN"
+       },
+       "storeys": [
+        {
+         "globalId": "1ffSBbF_0qDLYugzhTx3Wz",
+         "name": "MM-BNK-Zemin_kat",
+         "contains": 29
+        },
+        {
+         "globalId": "2j7l5Hr_0qEfdv$rkXS2mU",
+         "name": "MM-BNK-1._kat",
+         "contains": 29
+        }
+       ],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: Yolun ekseni ve boykesiti (KentOS)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:road/v1/ifc/out/yol.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:road/v1/ifc/out/yol.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 382,
+       "objects": 44,
+       "classes": {
+        "IfcAlignment": 4,
+        "IfcAlignmentHorizontal": 3,
+        "IfcAlignmentSegment": 29,
+        "IfcAlignmentVertical": 4,
+        "IfcProject": 1,
+        "IfcReferent": 3
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": null,
+        "planeAngle": "RADIAN"
+       },
+       "storeys": [],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: Başka bir programın IFC4 dosyası",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:ifc/v1/acik/ifcopenshell-ifc4.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:ifc/v1/acik/ifcopenshell-ifc4.ifc",
+       "schema": "IFC4",
+       "records": 178,
+       "objects": 13,
+       "classes": {
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 1,
+        "IfcDoor": 1,
+        "IfcOpeningElement": 1,
+        "IfcProject": 1,
+        "IfcSite": 1,
+        "IfcSlab": 1,
+        "IfcSpace": 1,
+        "IfcWall": 4,
+        "IfcWallType": 1
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": null
+       },
+       "storeys": [
+        {
+         "globalId": "2cM4kbvZzJDwN$bDP5iPx4",
+         "name": "Zemin kat",
+         "contains": 6
+        }
+       ],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: Başka bir programın IFC 4.3 dosyası",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:ifc/v1/acik/ifcopenshell-ifc4x3.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:ifc/v1/acik/ifcopenshell-ifc4x3.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 178,
+       "objects": 13,
+       "classes": {
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 1,
+        "IfcDoor": 1,
+        "IfcOpeningElement": 1,
+        "IfcProject": 1,
+        "IfcSite": 1,
+        "IfcSlab": 1,
+        "IfcSpace": 1,
+        "IfcWall": 4,
+        "IfcWallType": 1
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": null
+       },
+       "storeys": [
+        {
+         "globalId": "3x3asqaS5K6O8qf4s86mfg",
+         "name": "Zemin kat",
+         "contains": 6
+        }
+       ],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: Gerçek örnek: IFC 4.3 bina",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 369,
+       "objects": 37,
+       "classes": {
+        "IfcBuilding": 1,
+        "IfcBuildingElementProxy": 2,
+        "IfcBuildingElementProxyType": 2,
+        "IfcBuildingStorey": 1,
+        "IfcChimney": 1,
+        "IfcChimneyType": 1,
+        "IfcEarthworksFill": 1,
+        "IfcFurniture": 1,
+        "IfcFurnitureType": 1,
+        "IfcProject": 1,
+        "IfcRoof": 1,
+        "IfcRoofType": 1,
+        "IfcSite": 2,
+        "IfcSlab": 3,
+        "IfcSlabType": 3,
+        "IfcSpace": 2,
+        "IfcSpaceType": 2,
+        "IfcSpatialZone": 1,
+        "IfcSpatialZoneType": 1,
+        "IfcWall": 4,
+        "IfcWallType": 4,
+        "IfcZone": 1
+       },
+       "units": {
+        "length": "MILLIMETRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": null
+       },
+       "storeys": [
+        {
+         "globalId": "1Ano2ZUxnEIvVQ_beukl8b",
+         "name": "00 groundfloor",
+         "contains": 6
+        }
+       ],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: Gerçek örnek: IFC 4.3 yol",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-infra-road.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-infra-road.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 894,
+       "objects": 101,
+       "classes": {
+        "IfcBuildingElementProxy": 1,
+        "IfcBuildingElementProxyType": 1,
+        "IfcCourse": 16,
+        "IfcCourseType": 6,
+        "IfcEarthworksFill": 16,
+        "IfcElementAssembly": 2,
+        "IfcElementAssemblyType": 1,
+        "IfcProject": 1,
+        "IfcRoad": 5,
+        "IfcRoadPart": 26,
+        "IfcSite": 6,
+        "IfcSurfaceFeature": 20
+       },
+       "units": {
+        "length": "MILLIMETRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": null
+       },
+       "storeys": [],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: Gerçek örnek: IFC 4.3 demiryolu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-infra-rail.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-infra-rail.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 726,
+       "objects": 91,
+       "classes": {
+        "IfcBuildingElementProxy": 1,
+        "IfcBuildingElementProxyType": 1,
+        "IfcCourse": 2,
+        "IfcCourseType": 1,
+        "IfcElementAssembly": 2,
+        "IfcElementAssemblyType": 1,
+        "IfcProject": 1,
+        "IfcRail": 4,
+        "IfcRailType": 1,
+        "IfcRailway": 2,
+        "IfcRailwayPart": 2,
+        "IfcSite": 6,
+        "IfcTrackElement": 66,
+        "IfcTrackElementType": 1
+       },
+       "units": {
+        "length": "MILLIMETRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": null
+       },
+       "storeys": [],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: Gerçek örnek: IFC4 açıklıklı duvar ve pencere",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:ifc/v1/disaridan/bsi-ifc4-wall-with-opening-and-window.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:ifc/v1/disaridan/bsi-ifc4-wall-with-opening-and-window.ifc",
+       "schema": "IFC4",
+       "records": 127,
+       "objects": 9,
+       "classes": {
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 1,
+        "IfcOpeningElement": 1,
+        "IfcProject": 1,
+        "IfcProjectLibrary": 1,
+        "IfcSite": 1,
+        "IfcWall": 1,
+        "IfcWindow": 1,
+        "IfcWindowType": 1
+       },
+       "units": {
+        "length": "MILLIMETRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": "DEGREE"
+       },
+       "storeys": [
+        {
+         "globalId": "2GNgSHJ5j9BRUjqT$7tE8w",
+         "name": "Default Building Storey",
+         "contains": 2
+        }
+       ],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: Gerçek örnek: IFC4 lavabo",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:ifc/v1/disaridan/bsi-ifc4-basin-tessellation.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:ifc/v1/disaridan/bsi-ifc4-basin-tessellation.ifc",
+       "schema": "IFC4",
+       "records": 44,
+       "objects": 4,
+       "classes": {
+        "IfcBuilding": 1,
+        "IfcProject": 1,
+        "IfcSanitaryTerminal": 1,
+        "IfcSanitaryTerminalType": 1
+       },
+       "units": {
+        "length": "MILLIMETRE",
+        "area": null,
+        "volume": null,
+        "planeAngle": "RADIAN"
+       },
+       "storeys": [],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: Gerçek örnek: IFC4 kolon",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:ifc/v1/disaridan/bsi-ifc4-column-straight-rectangle-tessellation.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:ifc/v1/disaridan/bsi-ifc4-column-straight-rectangle-tessellation.ifc",
+       "schema": "IFC4",
+       "records": 26,
+       "objects": 3,
+       "classes": {
+        "IfcColumn": 1,
+        "IfcProject": 1,
+        "IfcSite": 1
+       },
+       "units": {
+        "length": "inch",
+        "area": null,
+        "volume": null,
+        "planeAngle": null
+       },
+       "storeys": [],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özet: Gerçek örnek: IFC2x3 bina",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:ifc/v1/disaridan/bsi-ifc2x3-building-architecture.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:ifc/v1/disaridan/bsi-ifc2x3-building-architecture.ifc",
+       "schema": "IFC2X3",
+       "records": 2046,
+       "objects": 36,
+       "classes": {
+        "IfcBuilding": 1,
+        "IfcBuildingElementProxy": 5,
+        "IfcBuildingElementProxyType": 5,
+        "IfcBuildingStorey": 1,
+        "IfcFurnishingElement": 1,
+        "IfcFurnishingElementType": 1,
+        "IfcProject": 1,
+        "IfcRoof": 1,
+        "IfcSite": 1,
+        "IfcSlab": 3,
+        "IfcSlabType": 3,
+        "IfcSpace": 2,
+        "IfcSpaceType": 2,
+        "IfcWall": 4,
+        "IfcWallType": 4,
+        "IfcZone": 1
+       },
+       "units": {
+        "length": "MILLIMETRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": null
+       },
+       "storeys": [
+        {
+         "globalId": "1Ano2ZUxnEIvVQ_beukl8b",
+         "name": "00 groundfloor",
+         "contains": 6
+        }
+       ],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bir dış duvar: öznitelikleri, Pset_WallCommon ve miktarları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
+      "object": "01alMXGa9m080000000001"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 2929,
+       "objects": 91,
+       "classes": {
+        "IfcBeam": 8,
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 2,
+        "IfcColumn": 16,
+        "IfcDoor": 5,
+        "IfcGrid": 1,
+        "IfcOpeningElement": 15,
+        "IfcProject": 1,
+        "IfcSite": 1,
+        "IfcSlab": 3,
+        "IfcSpace": 10,
+        "IfcSpatialZone": 2,
+        "IfcStair": 1,
+        "IfcWall": 16,
+        "IfcWindow": 9
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": "RADIAN"
+       },
+       "storeys": [
+        {
+         "globalId": "3ydGVFlwnjBYgl8a9xXv7Y",
+         "name": "MM-BNK-Zemin_kat",
+         "contains": 29
+        },
+        {
+         "globalId": "2v8zbZ9wnjAEbjpi6u0vu1",
+         "name": "MM-BNK-1._kat",
+         "contains": 29
+        }
+       ],
+       "findings": [],
+       "object": {
+        "globalId": "01alMXGa9m080000000001",
+        "step": 157,
+        "class": "IfcWall",
+        "name": "MM-DVR-Dış_duvar_25",
+        "description": null,
+        "objectType": null,
+        "longName": null,
+        "tag": "0192f5a1-4242-7000-8000-000000000001",
+        "predefinedType": "STANDARD",
+        "typeName": null,
+        "storey": "MM-BNK-Zemin_kat",
+        "sets": [
+         {
+          "name": "Pset_WallCommon",
+          "kind": "properties",
+          "fromType": false,
+          "values": [
+           {
+            "name": "IsExternal",
+            "class": "IfcPropertySingleValue",
+            "value": {
+             "kind": "logical",
+             "logical": true
+            },
+            "unit": null
+           }
+          ]
+         },
+         {
+          "name": "Qto_WallBaseQuantities",
+          "kind": "quantities",
+          "fromType": false,
+          "values": [
+           {
+            "name": "Length",
+            "class": "IfcQuantityLength",
+            "value": {
+             "kind": "number",
+             "number": 12.0,
+             "measure": "IFCLENGTHMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "Width",
+            "class": "IfcQuantityLength",
+            "value": {
+             "kind": "number",
+             "number": 0.25,
+             "measure": "IFCLENGTHMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "Height",
+            "class": "IfcQuantityLength",
+            "value": {
+             "kind": "number",
+             "number": 2.56,
+             "measure": "IFCLENGTHMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "NetSideArea",
+            "class": "IfcQuantityArea",
+            "value": {
+             "kind": "number",
+             "number": 28.74,
+             "measure": "IFCAREAMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "GrossVolume",
+            "class": "IfcQuantityVolume",
+            "value": {
+             "kind": "number",
+             "number": 7.68,
+             "measure": "IFCVOLUMEMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "NetVolume",
+            "class": "IfcQuantityVolume",
+            "value": {
+             "kind": "number",
+             "number": 6.609,
+             "measure": "IFCVOLUMEMEASURE"
+            },
+            "unit": null
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bir mahal: kaplamaları ve alanları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
+      "object": "01alMXGa9m08000000000G"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 2929,
+       "objects": 91,
+       "classes": {
+        "IfcBeam": 8,
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 2,
+        "IfcColumn": 16,
+        "IfcDoor": 5,
+        "IfcGrid": 1,
+        "IfcOpeningElement": 15,
+        "IfcProject": 1,
+        "IfcSite": 1,
+        "IfcSlab": 3,
+        "IfcSpace": 10,
+        "IfcSpatialZone": 2,
+        "IfcStair": 1,
+        "IfcWall": 16,
+        "IfcWindow": 9
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": "RADIAN"
+       },
+       "storeys": [
+        {
+         "globalId": "3ydGVFlwnjBYgl8a9xXv7Y",
+         "name": "MM-BNK-Zemin_kat",
+         "contains": 29
+        },
+        {
+         "globalId": "2v8zbZ9wnjAEbjpi6u0vu1",
+         "name": "MM-BNK-1._kat",
+         "contains": 29
+        }
+       ],
+       "findings": [],
+       "object": {
+        "globalId": "01alMXGa9m08000000000G",
+        "step": 2534,
+        "class": "IfcSpace",
+        "name": "MM-MHL-001_Yatak_odası",
+        "description": null,
+        "objectType": null,
+        "longName": "Yatak odası",
+        "tag": null,
+        "predefinedType": "INTERNAL",
+        "typeName": null,
+        "storey": "MM-BNK-Zemin_kat",
+        "sets": [
+         {
+          "name": "Pset_SpaceCoveringRequirements",
+          "kind": "properties",
+          "fromType": false,
+          "values": [
+           {
+            "name": "FloorCoveringThickness",
+            "class": "IfcPropertySingleValue",
+            "value": {
+             "kind": "number",
+             "number": 0.02,
+             "measure": "IFCPOSITIVELENGTHMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "CeilingCoveringThickness",
+            "class": "IfcPropertySingleValue",
+            "value": {
+             "kind": "number",
+             "number": 0.02,
+             "measure": "IFCPOSITIVELENGTHMEASURE"
+            },
+            "unit": null
+           }
+          ]
+         },
+         {
+          "name": "Qto_SpaceBaseQuantities",
+          "kind": "quantities",
+          "fromType": false,
+          "values": [
+           {
+            "name": "NetFloorArea",
+            "class": "IfcQuantityArea",
+            "value": {
+             "kind": "number",
+             "number": 17.850624999999997,
+             "measure": "IFCAREAMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "Height",
+            "class": "IfcQuantityLength",
+            "value": {
+             "kind": "number",
+             "number": 2.7600000000000002,
+             "measure": "IFCLENGTHMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "GrossFloorArea",
+            "class": "IfcQuantityArea",
+            "value": {
+             "kind": "number",
+             "number": 17.850624999999997,
+             "measure": "IFCAREAMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "GrossPerimeter",
+            "class": "IfcQuantityLength",
+            "value": {
+             "kind": "number",
+             "number": 16.9,
+             "measure": "IFCLENGTHMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "GrossVolume",
+            "class": "IfcQuantityVolume",
+            "value": {
+             "kind": "number",
+             "number": 49.267725,
+             "measure": "IFCVOLUMEMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "NetVolume",
+            "class": "IfcQuantityVolume",
+            "value": {
+             "kind": "number",
+             "number": 49.267725,
+             "measure": "IFCVOLUMEMEASURE"
+            },
+            "unit": null
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bir kat: miktarları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
+      "object": "3ydGVFlwnjBYgl8a9xXv7Y"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 2929,
+       "objects": 91,
+       "classes": {
+        "IfcBeam": 8,
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 2,
+        "IfcColumn": 16,
+        "IfcDoor": 5,
+        "IfcGrid": 1,
+        "IfcOpeningElement": 15,
+        "IfcProject": 1,
+        "IfcSite": 1,
+        "IfcSlab": 3,
+        "IfcSpace": 10,
+        "IfcSpatialZone": 2,
+        "IfcStair": 1,
+        "IfcWall": 16,
+        "IfcWindow": 9
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": "RADIAN"
+       },
+       "storeys": [
+        {
+         "globalId": "3ydGVFlwnjBYgl8a9xXv7Y",
+         "name": "MM-BNK-Zemin_kat",
+         "contains": 29
+        },
+        {
+         "globalId": "2v8zbZ9wnjAEbjpi6u0vu1",
+         "name": "MM-BNK-1._kat",
+         "contains": 29
+        }
+       ],
+       "findings": [],
+       "object": {
+        "globalId": "3ydGVFlwnjBYgl8a9xXv7Y",
+        "step": 29,
+        "class": "IfcBuildingStorey",
+        "name": "MM-BNK-Zemin_kat",
+        "description": null,
+        "objectType": null,
+        "longName": "Zemin kat",
+        "tag": null,
+        "predefinedType": null,
+        "typeName": null,
+        "storey": null,
+        "sets": [
+         {
+          "name": "Qto_BuildingStoreyBaseQuantities",
+          "kind": "quantities",
+          "fromType": false,
+          "values": [
+           {
+            "name": "GrossHeight",
+            "class": "IfcQuantityLength",
+            "value": {
+             "kind": "number",
+             "number": 3.0,
+             "measure": "IFCLENGTHMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "NetFloorArea",
+            "class": "IfcQuantityArea",
+            "value": {
+             "kind": "number",
+             "number": 95.91250000000002,
+             "measure": "IFCAREAMEASURE"
+            },
+            "unit": null
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başka bir programın duvarı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:ifc/v1/acik/ifcopenshell-ifc4x3.ifc",
+      "object": "0XnDwHAVDMCBDXGNOBbSjV"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:ifc/v1/acik/ifcopenshell-ifc4x3.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 178,
+       "objects": 13,
+       "classes": {
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 1,
+        "IfcDoor": 1,
+        "IfcOpeningElement": 1,
+        "IfcProject": 1,
+        "IfcSite": 1,
+        "IfcSlab": 1,
+        "IfcSpace": 1,
+        "IfcWall": 4,
+        "IfcWallType": 1
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": null
+       },
+       "storeys": [
+        {
+         "globalId": "3x3asqaS5K6O8qf4s86mfg",
+         "name": "Zemin kat",
+         "contains": 6
+        }
+       ],
+       "findings": [],
+       "object": {
+        "globalId": "0XnDwHAVDMCBDXGNOBbSjV",
+        "step": 58,
+        "class": "IfcWall",
+        "name": "Duvar 2 — dış",
+        "description": null,
+        "objectType": null,
+        "longName": null,
+        "tag": null,
+        "predefinedType": null,
+        "typeName": "Tuğla duvar 20",
+        "storey": "Zemin kat",
+        "sets": []
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Gerçek örneğin duvarı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+      "object": "0OfZwWc8j9QP5uX8xPTxDH"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 369,
+       "objects": 37,
+       "classes": {
+        "IfcBuilding": 1,
+        "IfcBuildingElementProxy": 2,
+        "IfcBuildingElementProxyType": 2,
+        "IfcBuildingStorey": 1,
+        "IfcChimney": 1,
+        "IfcChimneyType": 1,
+        "IfcEarthworksFill": 1,
+        "IfcFurniture": 1,
+        "IfcFurnitureType": 1,
+        "IfcProject": 1,
+        "IfcRoof": 1,
+        "IfcRoofType": 1,
+        "IfcSite": 2,
+        "IfcSlab": 3,
+        "IfcSlabType": 3,
+        "IfcSpace": 2,
+        "IfcSpaceType": 2,
+        "IfcSpatialZone": 1,
+        "IfcSpatialZoneType": 1,
+        "IfcWall": 4,
+        "IfcWallType": 4,
+        "IfcZone": 1
+       },
+       "units": {
+        "length": "MILLIMETRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": null
+       },
+       "storeys": [
+        {
+         "globalId": "1Ano2ZUxnEIvVQ_beukl8b",
+         "name": "00 groundfloor",
+         "contains": 6
+        }
+       ],
+       "findings": [],
+       "object": {
+        "globalId": "0OfZwWc8j9QP5uX8xPTxDH",
+        "step": 201,
+        "class": "IfcWall",
+        "name": "house - outer wall - house left",
+        "description": "A solid outer wall, forming the left side of the house.",
+        "objectType": "solidwall",
+        "longName": null,
+        "tag": "454425.1027891.979946.932083.920032",
+        "predefinedType": null,
+        "typeName": "house - outer wall - house left",
+        "storey": "00 groundfloor",
+        "sets": [
+         {
+          "name": "Qto_WallBaseQuantities",
+          "kind": "quantities",
+          "fromType": false,
+          "values": [
+           {
+            "name": "NetVolume",
+            "class": "IfcQuantityVolume",
+            "value": {
+             "kind": "number",
+             "number": 4.230883117545889,
+             "measure": "IFCVOLUMEMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "Width",
+            "class": "IfcQuantityLength",
+            "value": {
+             "kind": "number",
+             "number": 200.0,
+             "measure": "IFCLENGTHMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "Length",
+            "class": "IfcQuantityLength",
+            "value": {
+             "kind": "number",
+             "number": 6000.0,
+             "measure": "IFCLENGTHMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "NetSideArea",
+            "class": "IfcQuantityArea",
+            "value": {
+             "kind": "number",
+             "number": 21.154415587728412,
+             "measure": "IFCAREAMEASURE"
+            },
+            "unit": null
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tipinden gelen setler, kendi setlerinden sonra",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+      "object": "3zR0BOEcLADRKln4HYporH"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 369,
+       "objects": 37,
+       "classes": {
+        "IfcBuilding": 1,
+        "IfcBuildingElementProxy": 2,
+        "IfcBuildingElementProxyType": 2,
+        "IfcBuildingStorey": 1,
+        "IfcChimney": 1,
+        "IfcChimneyType": 1,
+        "IfcEarthworksFill": 1,
+        "IfcFurniture": 1,
+        "IfcFurnitureType": 1,
+        "IfcProject": 1,
+        "IfcRoof": 1,
+        "IfcRoofType": 1,
+        "IfcSite": 2,
+        "IfcSlab": 3,
+        "IfcSlabType": 3,
+        "IfcSpace": 2,
+        "IfcSpaceType": 2,
+        "IfcSpatialZone": 1,
+        "IfcSpatialZoneType": 1,
+        "IfcWall": 4,
+        "IfcWallType": 4,
+        "IfcZone": 1
+       },
+       "units": {
+        "length": "MILLIMETRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": null
+       },
+       "storeys": [
+        {
+         "globalId": "1Ano2ZUxnEIvVQ_beukl8b",
+         "name": "00 groundfloor",
+         "contains": 6
+        }
+       ],
+       "findings": [],
+       "object": {
+        "globalId": "3zR0BOEcLADRKln4HYporH",
+        "step": 53,
+        "class": "IfcSlab",
+        "name": "floor",
+        "description": "A solid, site-cast concrete floor, providing a strong foundation.",
+        "objectType": "slab on grade",
+        "longName": null,
+        "tag": "454425.1027891.979946.932083.920025",
+        "predefinedType": null,
+        "typeName": "house - groundfloor",
+        "storey": "00 groundfloor",
+        "sets": [
+         {
+          "name": "Pset_SlabCommon",
+          "kind": "properties",
+          "fromType": false,
+          "values": [
+           {
+            "name": "IsExternal",
+            "class": "IfcPropertySingleValue",
+            "value": {
+             "kind": "logical",
+             "logical": true
+            },
+            "unit": null
+           },
+           {
+            "name": "LoadBearing",
+            "class": "IfcPropertySingleValue",
+            "value": {
+             "kind": "logical",
+             "logical": false
+            },
+            "unit": null
+           },
+           {
+            "name": "FireRating",
+            "class": "IfcPropertySingleValue",
+            "value": {
+             "kind": "text",
+             "text": "REI30"
+            },
+            "unit": null
+           },
+           {
+            "name": "AcousticRating",
+            "class": "IfcPropertySingleValue",
+            "value": {
+             "kind": "text",
+             "text": "29dB Rw"
+            },
+            "unit": null
+           }
+          ]
+         },
+         {
+          "name": "Qto_SlabBaseQuantities",
+          "kind": "quantities",
+          "fromType": false,
+          "values": [
+           {
+            "name": "NetVolume",
+            "class": "IfcQuantityVolume",
+            "value": {
+             "kind": "number",
+             "number": 6.437500000000378,
+             "measure": "IFCVOLUMEMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "Depth",
+            "class": "IfcQuantityLength",
+            "value": {
+             "kind": "number",
+             "number": 250.0,
+             "measure": "IFCLENGTHMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "NetArea",
+            "class": "IfcQuantityArea",
+            "value": {
+             "kind": "number",
+             "number": 25.749999999991743,
+             "measure": "IFCAREAMEASURE"
+            },
+            "unit": null
+           }
+          ]
+         },
+         {
+          "name": "Pset_SlabCommon",
+          "kind": "properties",
+          "fromType": true,
+          "values": [
+           {
+            "name": "FireRating",
+            "class": "IfcPropertySingleValue",
+            "value": {
+             "kind": "text",
+             "text": "REI60"
+            },
+            "unit": null
+           },
+           {
+            "name": "SurfaceSpreadOfFlame",
+            "class": "IfcPropertySingleValue",
+            "value": {
+             "kind": "text",
+             "text": "A2 s1 d0"
+            },
+            "unit": null
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Planı: aynı özet, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
+       "schema": "IFC4X3_ADD2",
+       "records": 2929,
+       "objects": 91,
+       "classes": {
+        "IfcBeam": 8,
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 2,
+        "IfcColumn": 16,
+        "IfcDoor": 5,
+        "IfcGrid": 1,
+        "IfcOpeningElement": 15,
+        "IfcProject": 1,
+        "IfcSite": 1,
+        "IfcSlab": 3,
+        "IfcSpace": 10,
+        "IfcSpatialZone": 2,
+        "IfcStair": 1,
+        "IfcWall": 16,
+        "IfcWindow": 9
+       },
+       "units": {
+        "length": "METRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": "RADIAN"
+       },
+       "storeys": [
+        {
+         "globalId": "3ydGVFlwnjBYgl8a9xXv7Y",
+         "name": "MM-BNK-Zemin_kat",
+         "contains": 29
+        },
+        {
+         "globalId": "2v8zbZ9wnjAEbjpi6u0vu1",
+         "name": "MM-BNK-1._kat",
+         "contains": 29
+        }
+       ],
+       "findings": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Denetle: dosya okunuyor",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yol boş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": ""
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yol göreli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "bina.ifc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": ".ifc değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:arch/v1/section-building.kcad"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dosya yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:ifc/v1/yok.ifc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nesne dosyada yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
+      "object": "0000000000000000000000"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "ifc_object_not_found",
+       "message": "$any",
+       "path": "object"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "STEP dosyası değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:ifc/v1/bozuk/step-degil.ifc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "ifc_unreadable",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Şeması tanınmıyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:ifc/v1/bozuk/bilinmeyen-sema.ifc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "ifc_unreadable",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan kayda başvuru: okunur, bulgusu satırıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:ifc/v1/bozuk/olmayan-basvuru.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:ifc/v1/bozuk/olmayan-basvuru.ifc",
+       "schema": "IFC4",
+       "records": 127,
+       "objects": 9,
+       "classes": {
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 1,
+        "IfcOpeningElement": 1,
+        "IfcProject": 1,
+        "IfcProjectLibrary": 1,
+        "IfcSite": 1,
+        "IfcWall": 1,
+        "IfcWindow": 1,
+        "IfcWindowType": 1
+       },
+       "units": {
+        "length": "MILLIMETRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": "DEGREE"
+       },
+       "storeys": [
+        {
+         "globalId": "2GNgSHJ5j9BRUjqT$7tE8w",
+         "name": "Default Building Storey",
+         "contains": 2
+        }
+       ],
+       "findings": [
+        {
+         "code": "reference_missing",
+         "severity": "error",
+         "step": 102,
+         "line": 156,
+         "message": "$any"
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "ifc_read_findings",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki nesnede aynı GlobalId: okunur, bulgusu satırıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:ifc/v1/bozuk/ayni-globalid.ifc"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:ifc/v1/bozuk/ayni-globalid.ifc",
+       "schema": "IFC4",
+       "records": 127,
+       "objects": 9,
+       "classes": {
+        "IfcBuilding": 1,
+        "IfcBuildingStorey": 1,
+        "IfcOpeningElement": 1,
+        "IfcProject": 1,
+        "IfcProjectLibrary": 1,
+        "IfcSite": 1,
+        "IfcWall": 1,
+        "IfcWindow": 1,
+        "IfcWindowType": 1
+       },
+       "units": {
+        "length": "MILLIMETRE",
+        "area": "SQUARE_METRE",
+        "volume": "CUBIC_METRE",
+        "planeAngle": "DEGREE"
+       },
+       "storeys": [
+        {
+         "globalId": "2GNgSHJ5j9BRUjqT$7tE8w",
+         "name": "Default Building Storey",
+         "contains": 2
+        }
+       ],
+       "findings": [
+        {
+         "code": "global_id_duplicate",
+         "severity": "error",
+         "step": 102,
+         "line": 156,
+         "message": "$any"
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "ifc_read_findings",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

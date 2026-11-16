@@ -1,0 +1,21 @@
+[package]
+name = "kentos-model-view-ui"
+description = "KentOS's model viewer component (docs/adr/8061 §3, docs/adr/8073 §2): the 3D scene on Iced's shader widget, the viewer's tool strip, structure tree, properties and status bar over the viewer core; no application, file or command"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Native, like the other Iced components (crates/sheet-ui): the application's 3B görünüm and its IFC viewer draw with
+# it, and so does its single-window example (docs/adr/8061 §3.3). It talks to its host only through its messages.
+[dependencies]
+iced = { workspace = true, features = ["canvas", "advanced", "image-without-codecs", "svg"] }
+kentos-ui = { path = "../ui", default-features = false, features = ["fonts"] }
+kentos-scene3d = { path = "../shared/scene3d" }
+kentos-render-scene3d = { path = "../render/scene3d" }
+kentos-model-view = { path = "../shared/model-view" }
+
+[dev-dependencies]
+# The example and the pictures read a file through the reading face (docs/adr/8061 §11).
+kentos-ifc = { path = "../shared/ifc", features = ["view"] }
+kentos-ui = { path = "../ui", default-features = false, features = ["fonts", "snapshot"] }

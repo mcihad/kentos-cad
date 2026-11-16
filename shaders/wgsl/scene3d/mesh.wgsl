@@ -6,13 +6,15 @@
 // (signed 8-bit; the exaggeration turns them by its inverse transpose, diag(1, 1, 1/k)); a flat mesh's are zero and
 // its faces' normals come from the position's derivatives (glTF asks a reader to make them so for a mesh without
 // normals). Both faces are lit. A part's colour is its style; a style with alpha below 1 is drawn in the see-through
-// pass. Version 2: the normal (20-byte vertices).
+// pass. A section's planes (docs/adr/8073 §3) come relative to the eye: a fragment a plane cuts away is discarded,
+// after the derivatives are taken; the cut faces are not capped. Version 2: the normal (20-byte vertices).
 const LAYOUT_VERSION: u32 = 2u;
 
 struct View {
-  clip: mat4x4f,  // the projection times the camera's rotation, column-major
-  light: vec4f,   // xyz: towards the light, unit, in the shown space; w: the ambient share
-  look: vec4f,    // x: the vertical exaggeration; yzw: unused
+  clip: mat4x4f,              // the projection times the camera's rotation, column-major
+  light: vec4f,               // xyz: towards the light, unit, in the shown space; w: the ambient share
+  look: vec4f,                // x: the vertical exaggeration; y: the section's planes in use; zw: unused
+  planes: array<vec4f, 6>,    // xyz: a plane's unit normal (the kept side), w: its constant about the eye
 };
 struct Tile {
   offset: vec4f,  // xyz: the tile's origin as shown minus the eye (m); w: unused
@@ -44,5 +46,9 @@ struct MeshOut {
   if (dot(n, i.rel) > 0.0) { n = -n; }
   let lit = view.light.w + (1.0 - view.light.w) * max(dot(n, view.light.xyz), 0.0);
   let c = styles[i.part];
+  for (var k = 0u; k < u32(view.look.y); k = k + 1u) {
+    let q = view.planes[k];
+    if (dot(q.xyz, i.rel) + q.w < 0.0) { discard; }
+  }
   return vec4f(c.rgb * lit * c.a, c.a);
 }

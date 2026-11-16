@@ -36,16 +36,19 @@ pub(crate) enum Surface {
     ProcessingTool,
     /// 3B görünüm (scene3d_view.rs): the building or the road project in 3D, beside the plan.
     Scene3d,
+    /// IFC modeli (ifc_viewer.rs): an IFC file in the model viewer, beside the plan.
+    IfcViewer,
 }
 
 impl Surface {
-    pub(crate) const ALL: [Surface; 2] = [Surface::ProcessingTool, Surface::Scene3d];
+    pub(crate) const ALL: [Surface; 3] = [Surface::ProcessingTool, Surface::Scene3d, Surface::IfcViewer];
 
     /// What the surface is: its own module's [`OwnWindow`].
     pub(crate) fn spec(self) -> &'static dyn OwnWindow {
         match self {
             Surface::ProcessingTool => &crate::processing::apart::ToolWindow,
             Surface::Scene3d => &crate::scene3d_window::View3d,
+            Surface::IfcViewer => &crate::ifc_viewer::IfcView,
         }
     }
 

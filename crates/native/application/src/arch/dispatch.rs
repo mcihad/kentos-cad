@@ -13,6 +13,9 @@ macro_rules! arch_commands {
                     kentos_commands::ExportIfcBuilding
                 )
             }
+            kentos_commands::CAD_IFC_INSPECT => {
+                crate::arch_dispatch::arch_arm!($command, $then, ifc_inspect, kentos_commands::IfcInspect)
+            }
             kentos_commands::CAD_WALLS_CREATE => {
                 crate::arch_dispatch::arch_arm!($command, $then, walls_create, WallsCreate)
             }

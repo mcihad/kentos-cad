@@ -518,7 +518,7 @@ dosyaları kaybını söyleyerek okur. [BIM-16](bim-plan.md#5-iş-paketleri) ile
 **İlk kabul:** iki pilot paketi en az iki bağımsız model okuyucusundan ve bağımsız PDF/A doğrulayıcısından geçer; idarenin
 cevabındaki her madde kataloğa ya da bir pakete bağlanır.
 
-#### IFC-12 — IFC görüntüleyici [ ]
+#### IFC-12 — IFC görüntüleyici [~]
 
 **Kullanıcı sonucu:** Bir IFC dosyası KentOS'un içinde, kendi penceresinde açılır: model döndürülür, yapı ağacından kat ve
 nesne seçilir, tıklanan nesnenin özellikleri okunur, kesit düzlemiyle içine bakılır. Mimar dışa aktardığı dosyayı tek
@@ -551,6 +551,24 @@ tıkla görür. Karar ve kurallar [ADR 8061](../docs/adr/8061-ifc-viewer-and-rea
 gösterilemeyenlerin listesiyle açılır; bozuk dosya açık iletiyle reddedilir; iptal edilen okuma pencereye yazmaz; pencere
 kapanınca bellek ve GPU kaynağı bırakılır. wasm32 derlemesi ve tek pencere örneği yeşil. Gerçek pencerede, gerçek fare ve
 klavyeyle kabul; resimler.
+
+**Durum (16 Kasım 2026, [ADR 8073](../docs/adr/8073-ifc-viewer-first-slice.md)):**
+
+- Yapılanlar:
+  - Paketler ADR 8061 §3.2'deki gibi: çekirdek `kentos-model-view` (yerel ve wasm32), bileşen `kentos-model-view-ui` ve
+    tek pencere örneği, 3B çizici kendi paketinde (`kentos-render-scene3d`), uygulamada tek bağdaştırıcı (`ifc_viewer.rs`).
+    Binanın ve yolun 3B görünümü aynı sahneyi, kamerayı ve görünüşü kullanıyor. `deps.mjs`'e iki grup yazıldı.
+  - Pencere: yapı ve sınıf ağacı, gösterilemeyenler sekmesi, sahne, özellikler (öznitelikler, tip, kat, malzeme, setler
+    dosyadaki gibi); gizle, yalnız bırak, hepsini göster, ağaçta göz; mahaller ve açıklıklar ayrı; saydam; yatay ve iki
+    düşey kesit düzlemi, seçimin çevresinde kutu (çizicide kırpma, seçme de uyuyor); dört bakış; okuma evresi ve İptal.
+  - Kendi işletim sistemi penceresinde açılır; Mimari › Proje › IFC modeli ve Dosya › İçe aktar › Bina modeli; dışa
+    aktarımın bildiriminde Görüntüle; KentOS'un yazdığı dosyada seçim planla birlikte.
+  - `cad.ifc.inspect`: katalog, 37 bağımsız durum (IfcOpenShell'den), Python, MCP (salt okunur).
+  - İlk kabulün maddeleri ADR 8073 §8'de: gerçek pencerede kabul dışında hepsi sağlandı; wasm32 derlemesi ve tek pencere
+    örneği yeşil.
+- Kalanlar (ADR 8073 §9): gerçek pencerede kabul; kesit düzlemini yüze tıklayarak kurmak ve sürüklemek, kutunun
+  tutamakları, kesilen yüzün kapağı; gösterilemeyen nesnenin kutusu; ilk gövdelerle sahne; seçimde yeniden kurmadan boyama;
+  denetim bulgusundan “Modelde göster” (B13 ile).
 
 ## 11. Örnekler ve regresyon
 

@@ -8,6 +8,8 @@
 //!   depth; with the usual 1 − near/d the two depths are within one float32 step at that distance).
 //! - A square at 1 240 m exaggerated threefold about 1 200 m lands where the camera projects its shown corners.
 //! - An upload budget of one content a frame leaves the second content waiting a frame.
+//! - A section's plane at TM coordinates cuts a 100 m square where the camera projects the plane's line, within one
+//!   pixel; a box keeps only its inside; with no plane nothing is cut.
 //!
 //! Also `scene3d_timing`: a 4 million triangle terrain at TM coordinates drawn through the selection, every frame.
 
@@ -44,6 +46,19 @@ fn draw(gpu: &Gpu, r: &mut Scene3dRenderer, camera: &Camera, ex: Exaggeration, d
     draw_lit(gpu, r, camera, ex, draws, size, (&STYLES, [0.0, 0.0, 1.0], 1.0))
 }
 
+/// As `draw`, cut by the half-spaces `clip`.
+fn draw_cut(gpu: &Gpu, r: &mut Scene3dRenderer, camera: &Camera, draws: &[&Content], size: (u32, u32), clip: &[[f64; 4]]) -> Vec<u8> {
+    CLIP.with(|c| *c.borrow_mut() = clip.to_vec());
+    let out = draw(gpu, r, camera, Exaggeration::NONE, draws, size).0;
+    CLIP.with(|c| c.borrow_mut().clear());
+    out
+}
+
+thread_local! {
+    /// The planes the next draw is cut by.
+    static CLIP: std::cell::RefCell<Vec<[f64; 4]>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+
 /// As `draw`, with the parts' styles, the light and its ambient share.
 fn draw_lit(
     gpu: &Gpu,
@@ -68,6 +83,7 @@ fn draw_lit(
     let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
     let mut depth = None;
     let depth = DepthTarget::ensure(&mut depth, &gpu.device, width, height);
+    let clip = CLIP.with(|c| c.borrow().clone());
     let frame = Frame {
         camera,
         exaggeration: ex,
@@ -76,6 +92,7 @@ fn draw_lit(
         styles: look.0,
         light: look.1,
         ambient: look.2,
+        clip: &clip,
     };
     let stats = r.prepare(&gpu.device, &gpu.queue, &frame);
     let mut encoder = gpu.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
@@ -219,6 +236,34 @@ pub(crate) fn the_3d_scene_draws_precisely(gpu: &mut Gpu) {
     assert_eq!((first.tiles, first.waiting), (1, 1));
     let (_, second) = draw(gpu, &mut r, &top, Exaggeration::NONE, &draws, size);
     assert_eq!((second.tiles, second.waiting, second.resident_contents), (2, 0, 2));
+
+    // A section: a 100 m square at TM coordinates seen from above, cut along the north–south line 20 m east of its
+    // middle (the west side kept), then by a box about its south-west quarter.
+    let mut r = Scene3dRenderer::new(&gpu.device, FORMAT);
+    let sq = square(E - 50.0, N - 50.0, 100.0, 1234.5);
+    let c = contents(&[(0, sq.clone())], 40);
+    let draws: Vec<&Content> = c.iter().collect();
+    let above = Camera {
+        eye: [E, N, 1334.5],
+        target: [E, N, 1234.5],
+        up: [0.0, 1.0, 0.0],
+        projection: Projection::Orthographic { height: 128.0, depth: 400.0 },
+    };
+    let whole = covered(&draw_cut(gpu, &mut r, &above, &draws, size, &[]), 256).expect("drawn");
+    within_a_pixel(whole, projected(&above, &vp, &sq.0), "nothing cut");
+    let west = covered(&draw_cut(gpu, &mut r, &above, &draws, size, &[[-1.0, 0.0, 0.0, E + 20.0]]), 256).expect("drawn");
+    let kept = [[E - 50.0, N - 50.0, 1234.5], [E + 20.0, N + 50.0, 1234.5]];
+    within_a_pixel(west, projected(&above, &vp, &kept), "west of the plane");
+    let quarter = [
+        [1.0, 0.0, 0.0, -(E - 50.0)],
+        [-1.0, 0.0, 0.0, E],
+        [0.0, 1.0, 0.0, -(N - 50.0)],
+        [0.0, -1.0, 0.0, N],
+        [0.0, 0.0, 1.0, -1234.0],
+        [0.0, 0.0, -1.0, 1235.0],
+    ];
+    let boxed = covered(&draw_cut(gpu, &mut r, &above, &draws, size, &quarter), 256).expect("drawn");
+    within_a_pixel(boxed, projected(&above, &vp, &[[E - 50.0, N - 50.0, 1234.5], [E, N, 1234.5]]), "inside the box");
 }
 
 /// A 4 million triangle terrain at TM coordinates through the selection: the frames' CPU and GPU time.

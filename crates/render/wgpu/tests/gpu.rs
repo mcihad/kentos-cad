@@ -471,6 +471,17 @@ fn on_a_real_gpu() {
     compose::layer_composition_and_effects_match_the_reference(&mut gpu);
     hatch::dense_hairlines_do_not_disappear(&mut gpu);
     weights::paper_widths_are_held(&mut gpu);
+}
+
+/// The 3D scene's renderer on its own (it is its own package, docs/adr/8073): a 2D check failing before it does not
+/// hide it.
+#[test]
+fn the_3d_scene_on_a_real_gpu() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1; a skipped test is not a pass");
+        return;
+    }
+    let mut gpu = Gpu::open();
     scene3d::the_3d_scene_draws_precisely(&mut gpu);
 }
 

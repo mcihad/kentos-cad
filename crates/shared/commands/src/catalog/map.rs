@@ -1342,7 +1342,7 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
             id: crate::FILE_EXPORT_IFC.into(),
             version: crate::FILE_EXPORT_IFC_VERSION,
             title: "IFC dışa aktar".into(),
-            summary: "Yol projesinin akslarını ve boykesitlerini IFC 4.3 (IFC4X3_ADD2) dosyasına yazar: iş mantığı (IfcAlignmentHorizontal ve IfcAlignmentVertical, IfcAlignmentSegment'leri ve tasarım değerleri: başlangıç noktası ve doğrultusu, yarıçaplar (saat yönü tersine artı, 0 sonsuz), boy; düşeyde başlangıç uzaklığı, yatay boy, kot, eğimler, yarıçap) ve geometri (IfcCompositeCurve ve IfcGradientCurve: IfcCurveSegment'ler IfcLine, IfcCircle, IfcClothoid, IfcPolynomialCurve üstünde; IfcOpenShell'in eşlemesi); her düzen sıfır boylu parçayla biter. İlk boykesit aksın, öbürleri alt aksların düşeyidir. Başlangıç km'si ve km denklemleri Pset_Stationing'li IfcReferent'tir; projenin sistemi IfcProjectedCRS'e harita dönüşümüyle (yerel sistem tabanına döndürülüp ölçeklenerek, IfcMapConversionScaled; yazılamayan sistem export_losses). Uzunluk metre, açı radyan. alignments id ya da adla (yoksa hepsi); withoutProfiles boykesitleri yazmaz; stamp tarih ve saat. Paralel aks yazılmaz (export_losses). Bütün yazılır ya da hiç; çizimi değiştirmez. \
+            summary: "Yol projesinin akslarını ve boykesitlerini IFC 4.3 (IFC4X3_ADD2) dosyasına yazar: iş mantığı (IfcAlignmentHorizontal ve IfcAlignmentVertical, IfcAlignmentSegment'leri ve tasarım değerleri: başlangıç noktası ve doğrultusu, yarıçaplar (saat yönü tersine artı, 0 sonsuz), boy; düşeyde başlangıç uzaklığı, yatay boy, kot, eğimler, yarıçap) ve geometri (IfcCompositeCurve ve IfcGradientCurve: IfcCurveSegment'ler IfcLine, IfcCircle, IfcClothoid, IfcPolynomialCurve üstünde); her düzen sıfır boylu parçayla biter. İlk boykesit aksın, öbürleri alt aksların düşeyidir. Başlangıç km'si ve km denklemleri Pset_Stationing'li IfcReferent'tir; projenin sistemi IfcProjectedCRS'e harita dönüşümüyle (yerel sistem tabanına döndürülüp ölçeklenerek, IfcMapConversionScaled; yazılamayan sistem export_losses). Uzunluk metre, açı radyan. alignments id ya da adla (yoksa hepsi); withoutProfiles boykesitleri yazmaz; stamp tarih ve saat. Paralel aks yazılmaz (export_losses). Bütün yazılır ya da hiç; çizimi değiştirmez. \
                       Retler: not_a_road_project, invalid_file_path, file_exists, unknown_alignment, invalid_ifc."
                 .into(),
             aliases: vec!["ifcver".into(), "ifcout".into()],
@@ -1389,6 +1389,45 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
             }, CommandExample {
                 title: "Açıklıkları kesilmiş gövdelerle (Reference View)".into(),
                 input: json!({ "path": "/veri/bina-referans.ifc", "view": "reference" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_IFC_INSPECT.into(),
+            version: crate::CAD_IFC_INSPECT_VERSION,
+            title: "IFC dosyasını incele".into(),
+            summary: "Bir IFC dosyasını (IFC 4.3, IFC4, IFC2x3) okur ve anlatır; hiçbir şey yazmaz, çizimi değiştirmez. \
+                      Çıktı: başlığın bildirdiği şema, DATA bölümünün kayıt sayısı, nesneler (her IfcObjectDefinition: proje, \
+                      mekân yapısı, elemanlar, tipler, gruplar) ve sınıflara göre sayıları, projenin uzunluk, alan, hacim ve \
+                      açı birimleri (önek ve ad yazıldığı gibi), katlar dosyadaki sırasıyla ve her katın doğrudan içerdiği \
+                      nesne sayısı, okumayı durdurmayan bozukluklar (kod, düzey, kayıt, satır, ileti). object ile GlobalId'si \
+                      verilen nesnenin öznitelikleri (sınıf, ad, açıklama, nesne türü, uzun ad, etiket, ön tanımlı tür), \
+                      tipinin ve katının adı ve setleri: önce kendi özellik ve miktar setleri dosyadaki sırasıyla, sonra \
+                      tipininkiler; her değer dosyada yazdığı gibi, sayının ölçü türüyle (IFCLENGTHMEASURE), kendi birimi \
+                      varsa onunla; dönüştürülmez, üçgen ağdan ölçü alınmaz. \
+                      Retler: invalid_file_path (boş, göreli, .ifc değil, dosya yok), ifc_unreadable (STEP değil, şema \
+                      tanınmıyor, DATA yok, sınır aşıldı; ileti nedenini ve satırını söyler), ifc_object_not_found. \
+                      Uyarı: ifc_read_findings."
+                .into(),
+            aliases: vec!["ifcincele".into(), "ifcinspect".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::IfcInspect>(),
+            output: schema::<crate::IfcInspected>(),
+            plan: Some(schema::<crate::IfcInspected>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Dosyanın özeti".into(),
+                input: json!({ "path": "/veri/bina.ifc" }),
+                output: None,
+            }, CommandExample {
+                title: "Bir duvarın özellik ve miktar setleri".into(),
+                input: json!({ "path": "/veri/bina.ifc", "object": "01alMXGa9m080000000001" }),
                 output: None,
             }],
         },

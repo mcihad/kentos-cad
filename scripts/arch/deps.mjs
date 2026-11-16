@@ -130,20 +130,27 @@ const GROUPS = [
   // Sheet layouts on the desktop (docs/sheet/design.md §11): the UI components over the shared
   // sheet core. No drawing document, renderer or runtime of its own: the host paints the maps.
   { name: 'sheet-ui', path: 'crates/sheet-ui/', targets: [HOST], uses: ['shared', 'ui'], forbid: [...RUNTIMES, ...BROWSER, 'pyo3*'] },
+  // The model viewer's component (docs/adr/8061 §3, docs/adr/8073 §2): the 3D scene, the tree, the details over the
+  // viewer core, with the UI library and the 3D renderer. It talks to its host only through its messages: no drawing
+  // document, product command, tool session or application (the single-window example's build keeps it so).
+  { name: 'model-view-ui', path: 'crates/model-view-ui/', targets: [HOST], uses: ['shared', 'ui', 'render3d'], forbid: [...RUNTIMES, ...BROWSER, 'pyo3*'] },
+  // The 3D scene's renderer (docs/adr/0910 §5, docs/adr/8073 §2): wgpu over the shared 3D core alone, so the 3D views
+  // take it without the 2D drawing pipeline and its style engine. Listed before `render`, whose path contains it.
+  { name: 'render3d', path: 'crates/render/scene3d/', targets: [HOST], uses: ['shared'], forbid: [...RUNTIMES, ...BROWSER, 'iced*', 'winit', 'pyo3*', 'schemars*'] },
   // The native renderer (docs/adr/0019): wgpu on the host's device, fed by the shared core.
   // No Iced or window system (the desktop app plugs it into Iced), no runtime, no browser.
   // It draws the style crate's batches (docs/adr/0090).
   // Through the style crate and the read-only viewer core (docs/adr/8054 §8): no authoring crate, DWG codec, GeoPackage
   // or schema generator.
-  { name: 'render', path: 'crates/render/', targets: [HOST], uses: ['shared', 'domain', 'project', 'scene-query', 'style', 'stylelib'], forbid: [...RUNTIMES, ...BROWSER, 'iced*', 'winit', 'pyo3*', 'schemars*'], formats: [] },
+  { name: 'render', path: 'crates/render/', targets: [HOST], uses: ['shared', 'domain', 'project', 'scene-query', 'style', 'stylelib', 'render3d'], forbid: [...RUNTIMES, ...BROWSER, 'iced*', 'winit', 'pyo3*', 'schemars*'], formats: [] },
   // Desktop programs: Iced's executor may be tokio; no server framework, no browser bindings.
   // The desktop's Python console (docs/adr/0132) answers its script's requests through the
   // headless host's `rpc`; the Python itself runs in a process of its own, never in the app.
-  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'interaction', 'processing', 'project', 'headless', 'native', 'ui', 'render', 'style', 'sheet-ui', 'plot', 'stylelib', 'geopackage', 'postgis', 'launch', 'agent', 'extension-host', 'python-env'], forbid: ['axum*', 'pyo3*', ...BROWSER] },
+  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'interaction', 'processing', 'project', 'headless', 'native', 'ui', 'render', 'render3d', 'model-view-ui', 'style', 'sheet-ui', 'plot', 'stylelib', 'geopackage', 'postgis', 'launch', 'agent', 'extension-host', 'python-env'], forbid: ['axum*', 'pyo3*', ...BROWSER] },
   // KentOS Launcher (docs/adr/0800): starts KentOS's programs and others from their manifests. The UI library and the
   // shared launch contract only: no drawing, KentOS renderer, server runtime or browser; a program it starts is a process of its own.
   { name: 'launcher', path: 'apps/launcher/', targets: [HOST], uses: ['ui', 'launch'], forbid: ['axum*', 'sqlx*', 'pyo3*', ...BROWSER] },
-  { name: 'desktop', path: 'apps/ui-showcase/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'interaction', 'native', 'ui', 'render', 'style', 'stylelib'], forbid: ['axum*', ...BROWSER] },
+  { name: 'desktop', path: 'apps/ui-showcase/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'interaction', 'native', 'ui', 'render', 'render3d', 'style', 'stylelib'], forbid: ['axum*', ...BROWSER] },
 ];
 
 const meta = JSON.parse(cargo(['metadata', '--format-version', '1', '--locked', '--no-deps']));

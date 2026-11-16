@@ -21,11 +21,15 @@ mod bodies_tests;
 #[cfg(all(test, feature = "geometry"))]
 mod outside_tests;
 mod checks;
+#[cfg(feature = "view")]
+mod details;
 mod graph;
 mod header;
 mod scan;
 mod sets;
 mod units;
+#[cfg(feature = "view")]
+pub mod view;
 #[cfg(test)]
 mod reference_tests;
 #[cfg(test)]

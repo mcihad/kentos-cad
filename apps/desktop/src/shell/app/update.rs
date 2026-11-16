@@ -244,6 +244,7 @@ impl App {
             // drawing first, so a window it closes goes in the same pass (scene3d_window.rs).
             {
                 self.follow_scene3d();
+                self.follow_ifc_viewer();
                 self.follow_windows()
             },
         ]);
@@ -620,6 +621,7 @@ impl App {
             Message::SavePicture(saved) => return self.save_picture(saved),
             Message::PictureWritten(written) => self.picture_written(written),
             Message::Scene3d(event) => return self.scene3d_event(event),
+            Message::IfcViewer(event) => return self.ifc_viewer_event(event),
             Message::LandxmlExport(path) => return self.landxml_chosen(path),
             Message::LandxmlMachine(path) => return self.landxml_machine_chosen(path),
             Message::LandxmlAlignments(path) => return self.landxml_alignments_chosen(path),
