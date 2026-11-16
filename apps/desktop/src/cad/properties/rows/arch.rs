@@ -39,6 +39,46 @@ fn select(text: String, items: Vec<Choice>) -> Editor {
     }
 }
 
+/// A post's or a rail's rows (docs/adr/8070 §8): its IFC type, picked from IFC 4.3's list ("Dikme (POST)"), and its
+/// name; a user-defined one keeps its name, else takes its old type's word.
+fn member_rows(
+    slot: Slot,
+    m: &kentos_commands::Member,
+    edit: &dyn Fn(Editor) -> Option<Editor>,
+) -> Vec<Row> {
+    use kentos_commands::Member;
+    let shown = |t: &str| format!("{} ({t})", Member::word(t));
+    let types = Member::TYPES
+        .iter()
+        .map(|&t| {
+            let name = if t == "USERDEFINED" {
+                Some(m.name.clone().unwrap_or_else(|| Member::word(&m.predefined).to_owned()))
+            } else {
+                m.name.clone()
+            };
+            pick(
+                shown(t),
+                t == m.predefined,
+                set(
+                    slot,
+                    ArchChange {
+                        member: Some(Some(Member {
+                            predefined: t.to_owned(),
+                            name,
+                        })),
+                        ..Default::default()
+                    },
+                ),
+                None,
+            )
+        })
+        .collect();
+    vec![
+        Row::text("Eleman tipi", shown(&m.predefined)).editor(edit(select(shown(&m.predefined), types))),
+        Row::text("Eleman adı", m.words()).editor(edit(Editor::Text(Field::Arch(slot, ArchField::MemberName)))),
+    ]
+}
+
 /// Korkuluk (docs/adr/0705 §2): none, left, right or both, written by `cad.arch.edit`.
 fn railings_row(
     slot: Slot,
@@ -299,6 +339,30 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
         }
         Entity::Column(c) => {
             let x = &c.column;
+            // Kolon or Dikme (docs/adr/8070 §8): a post is a member, written as an IfcMember.
+            let kind = if x.member.is_some() { "Dikme" } else { "Kolon" };
+            let kinds = [("Kolon", None), ("Dikme", Some(kentos_commands::Member::post()))]
+                .into_iter()
+                .map(|(label, member)| {
+                    let chosen = member.is_some() == x.member.is_some();
+                    pick(
+                        label.to_owned(),
+                        chosen,
+                        set(
+                            slot,
+                            ArchChange {
+                                member: Some(member),
+                                ..Default::default()
+                            },
+                        ),
+                        None,
+                    )
+                })
+                .collect();
+            out.push(Row::text("Tür", kind).editor(edit(select(kind.to_owned(), kinds))));
+            if let Some(m) = &x.member {
+                out.extend(member_rows(slot, m, &edit));
+            }
             let shapes = ColumnShape::ALL
                 .iter()
                 .map(|&s| {
@@ -334,6 +398,15 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             ));
             if x.shape != ColumnShape::Round {
                 out.push(length("Boy", x.depth(), ArchField::Depth));
+            }
+            // Its own height (docs/adr/8070 §8); empty: its storey's.
+            out.push(
+                Row::figure("Yükseklik", x.height.map_or_else(String::new, |v| f.length_bare(v)))
+                    .unit(f.length_unit_label())
+                    .editor(edit(Editor::Number(Field::Arch(slot, ArchField::OwnHeight)))),
+            );
+            if x.height.is_none() {
+                out.push(Row::note("Boş: katın yüksekliği"));
             }
             if let Some([a, b]) = x.legs {
                 out.push(length("Alt kol kalınlığı", a, ArchField::LegA));
@@ -611,17 +684,18 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                 x.tag.clone().unwrap_or_default(),
                 ArchField::Tag,
             ));
-            // Kiriş, lento ya da hatıl (docs/adr/8041 §3).
-            let roles = kentos_commands::BeamRole::ALL
+            // Kiriş, lento ya da hatıl (docs/adr/8041 §3); Kayıt, a rail (docs/adr/8070 §8): a beam that is a member.
+            let mut roles: Vec<Choice> = kentos_commands::BeamRole::ALL
                 .iter()
                 .map(|&r| {
                     pick(
                         r.label().to_owned(),
-                        r == x.role,
+                        r == x.role && x.member.is_none(),
                         set(
                             slot,
                             ArchChange {
                                 role: Some(r),
+                                member: x.member.is_some().then_some(None),
                                 ..Default::default()
                             },
                         ),
@@ -629,10 +703,24 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                     )
                 })
                 .collect();
-            out.push(
-                Row::text("Tür", x.role.label())
-                    .editor(edit(select(x.role.label().to_owned(), roles))),
-            );
+            roles.push(pick(
+                "Kayıt".to_owned(),
+                x.member.is_some(),
+                set(
+                    slot,
+                    ArchChange {
+                        role: (x.role != kentos_commands::BeamRole::Beam).then_some(kentos_commands::BeamRole::Beam),
+                        member: Some(Some(kentos_commands::Member::rail())),
+                        ..Default::default()
+                    },
+                ),
+                None,
+            ));
+            let kind = if x.member.is_some() { "Kayıt" } else { x.role.label() };
+            out.push(Row::text("Tür", kind).editor(edit(select(kind.to_owned(), roles))));
+            if let Some(m) = &x.member {
+                out.extend(member_rows(slot, m, &edit));
+            }
             out.push(length("Genişlik", x.width, ArchField::Width));
             out.push(length("Yükseklik", x.height, ArchField::BeamHeight));
             let justify = kentos_commands::WallJustify::ALL

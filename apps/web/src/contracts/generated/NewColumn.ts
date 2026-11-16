@@ -2,6 +2,7 @@
 import type { ArchInfo } from "./ArchInfo";
 import type { ColumnAnchor } from "./ColumnAnchor";
 import type { ColumnShape } from "./ColumnShape";
+import type { Member } from "./Member";
 import type { Vec2 } from "./Vec2";
 
 /**
@@ -49,4 +50,12 @@ tag?: string, fill?: boolean,
 /**
  * Its material (docs/adr/8041 §2); absent: Betonarme.
  */
-material?: string, arch?: ArchInfo, attrs?: { [key in string]: string }, };
+material?: string, 
+/**
+ * Its own height over its floor (docs/adr/8070 §8: a post's); absent: its storey's.
+ */
+height?: number, 
+/**
+ * A post (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's column.
+ */
+member?: Member, arch?: ArchInfo, attrs?: { [key in string]: string }, };

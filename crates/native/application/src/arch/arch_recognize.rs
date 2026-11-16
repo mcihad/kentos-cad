@@ -386,6 +386,8 @@ fn column_of(outline: Result<(V, f64), Vec<V>>, arch: &ArchInfo) -> Option<Colum
             grids: None,
             place: None,
             broken: None,
+            height: None,
+            member: None,
             arch: arch.clone(),
         };
     let mut pts = match outline {

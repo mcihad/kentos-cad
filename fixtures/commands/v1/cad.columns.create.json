@@ -1332,6 +1332,445 @@
       ]
     },
     {
+      "name": "dikme: POST tipi, kendi yüksekliği ve malzemesiyle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "width": 0.1,
+                "depth": 0.1,
+                "height": 2.4,
+                "material": "Çelik",
+                "member": {
+                  "predefined": "POST"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "width": 0.1,
+                "depth": 0.1,
+                "material": "Çelik",
+                "height": 2.4,
+                "member": {
+                  "predefined": "POST"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kullanıcı tanımlı dikme adıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "width": 0.12,
+                "member": {
+                  "predefined": "USERDEFINED",
+                  "name": "Pergola dikmesi"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "width": 0.12,
+                "member": {
+                  "predefined": "USERDEFINED",
+                  "name": "Pergola dikmesi"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ara dikme: STUD tipi ve adı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "width": 0.05,
+                "depth": 0.1,
+                "member": {
+                  "predefined": "STUD",
+                  "name": "Ara dikme"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "width": 0.05,
+                "depth": 0.1,
+                "member": {
+                  "predefined": "STUD",
+                  "name": "Ara dikme"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kendi yüksekliği olan kolon eleman değildir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "width": 0.3,
+                "height": 4.5
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "width": 0.3,
+                "height": 4.5
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katlı dikme, katın yüksekliği",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "width": 0.1,
+                "member": {
+                  "predefined": "POST"
+                },
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "width": 0.1,
+                "member": {
+                  "predefined": "POST"
+                },
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "akslara bağlı dikme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "grids": [
+                  "$uidOf:3",
+                  "$uidOf:1"
+                ],
+                "width": 0.1,
+                "member": {
+                  "predefined": "POST"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.1,
+                "grids": [
+                  "$uidOf:3",
+                  "$uidOf:1"
+                ],
+                "member": {
+                  "predefined": "POST"
+                },
+                "place": "A-1"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
       "name": "kolon ve kesişim verilmezse reddedilir",
       "steps": [
         {
@@ -1976,6 +2415,411 @@
               "code": "level_not_found",
               "message": "Projede “yok” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.",
               "path": "columns[0].arch.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "NOTDEFINED dikmenin tipi değildir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.1,
+                "member": {
+                  "predefined": "NOTDEFINED"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "“NOTDEFINED” elemanın tiplerinden biri değil (ARCH_SEGMENT, BRACE, CHORD, COLLAR, MEMBER, MULLION, PLATE, POST, PURLIN, RAFTER, STAY_CABLE, STIFFENING_RIB, STRINGER, STRUCTURALCABLE, STRUT, STUD, SUSPENDER, SUSPENSION_CABLE, TIEBAR, USERDEFINED).",
+              "path": "columns[0].member.predefined"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "küçük harfli eleman tipi reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.1,
+                "member": {
+                  "predefined": "post"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "“post” elemanın tiplerinden biri değil (ARCH_SEGMENT, BRACE, CHORD, COLLAR, MEMBER, MULLION, PLATE, POST, PURLIN, RAFTER, STAY_CABLE, STIFFENING_RIB, STRINGER, STRUCTURALCABLE, STRUT, STUD, SUSPENDER, SUSPENSION_CABLE, TIEBAR, USERDEFINED).",
+              "path": "columns[0].member.predefined"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "adsız kullanıcı tanımlı dikme reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.1,
+                "member": {
+                  "predefined": "USERDEFINED"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "Kullanıcı tanımlı elemanın ne olduğu adında yazılır (USERDEFINED'ın nesne tipi); bir ad verin ya da listeden bir tip seçin.",
+              "path": "columns[0].member.name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş eleman adı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.1,
+                "member": {
+                  "predefined": "POST",
+                  "name": ""
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "Elemanın adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 120 karakter.",
+              "path": "columns[0].member.name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kenarı boşluklu eleman adı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.1,
+                "member": {
+                  "predefined": "POST",
+                  "name": " Dikme"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "Elemanın adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 120 karakter.",
+              "path": "columns[0].member.name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "121 karakterlik eleman adı reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.1,
+                "member": {
+                  "predefined": "POST",
+                  "name": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "Elemanın adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 120 karakter.",
+              "path": "columns[0].member.name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır yükseklikli kolon reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.3,
+                "height": 0.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "Kolonun yüksekliği 0; sıfırdan büyük, en çok 100 olmalı.",
+              "path": "columns[0].height"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "100 m'den yüksek kolon reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.3,
+                "height": 101.0
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "Kolonun yüksekliği 101; sıfırdan büyük, en çok 100 olmalı.",
+              "path": "columns[0].height"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz yükseklik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.3,
+                "height": 3.0
+              }
+            ]
+          },
+          "nonFinite": {
+            "columns[0].height": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Yükseklik sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "columns[0].height"
             }
           },
           "expect": {

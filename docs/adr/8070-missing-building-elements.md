@@ -1,10 +1,11 @@
-# ADR 8070: Eksik yapı elemanları — rampa, merdiven ve rampa tipleri, baca ve niş, aks ızgarası, kitaplık blokları, kaplama, giydirme cephe
+# ADR 8070: Eksik yapı elemanları — rampa, merdiven ve rampa tipleri, baca ve niş, aks ızgarası, kitaplık blokları, kaplama, giydirme cephe, dikme ve kayıt
 
 - **Durum:** kısmen uygulandı (16 Kasım 2026). Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-09,
   [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-03; uygulama sırasında B9. Bu ADR maddenin bütün adımlarını tutar; her adım
   kendi bölümüdür ve koddaki "docs/adr/8070 §N" atıfları bu bölümleri gösterir: §1 rampanın gövdesi, §2 merdiven ve
-  rampanın tipi ve malzemesi, §3 baca ve niş, §4 aks ızgarası, §5 kitaplık blokları, §6 kaplama, §7 giydirme cephe.
-  Kararların numarası bölümler boyunca sürer (1–21). Birden çok adımın ortak sınamaları §8'de, sıradaki adımlar §9'da.
+  rampanın tipi ve malzemesi, §3 baca ve niş, §4 aks ızgarası, §5 kitaplık blokları, §6 kaplama, §7 giydirme cephe,
+  §8 dikme ve kayıt. Kararların numarası bölümler boyunca sürer (1–28). Birden çok adımın ortak sınamaları ve sıradaki
+  adımlar numarasız son bölümlerdedir (yeni adım numaralı bölüm olarak araya girer).
 - **Bağlam:** ADR [8047](8047-ifc-building-export.md) (binanın IFC'si, kayıp listesi), [8042](8042-section-derived-from-a-section-mark.md)
   (kesit modeli), [0705](0705-ramps-by-slope-and-railings.md) ve [0723](0723-ramp-landings-levels-accessibility.md) (rampa),
   [8044](8044-roof-and-roof-plan.md) §6 (çatı bacası), [8045](8045-balanced-stairs-and-special-elements.md) §5 (asansör
@@ -299,7 +300,99 @@
 - **Resimler:** `.run/gui-evidence/giydirme-cephe-8070/` (plan, doğu görünüşü, kuzeydoğudan 3B; açık tema) ve ikon
   seçenek sayfası.
 
-## §8. Ortak sınamalar
+## §8. Dikme ve kayıt (K46)
+
+**Araştırma.**
+
+- **EK-6 Tablo 6.40 (eleman, `IfcMember`, PDF s. 79):** "destek noktaları arasında veya ötesinde yük taşımak üzere
+  tasarlanmış yapısal bir elemandır. Taşıyıcı olması zorunlu değildir"; `IfcBeam` ya da `IfcColumn` olarak ifade
+  edilemiyorsa kullanılır. Zorunlular: ön tanımlı tip, ad, etiket, malzeme ("Malzeme İsmi_Dayanım"),
+  `Pset_MemberCommon.IsExternal`. Tip listesi ARCH_SEGMENT … TIEBAR, USERDEFINED, NOTDEFINED.
+- **IFC 4.3'ün tip tanımları** (buildingSMART, IFC4.3.x-development deposu, `IfcMemberTypeEnum.md`): POST "a linear
+  (usually vertical) member used to support something or to mark a point"; PURLIN çatıda merteği taşıyan yatay eleman;
+  RAFTER çatı örtüsünü taşıyan, çoğu eğimli eleman; MULLION giydirme cephede panelleri bağlayan eleman (§7). Bir cephenin
+  ya da pergolanın kaydının listede karşılığı yok.
+- **EK-5 Tablo 5.1:** eleman ELM. **EK-2 Tablo 2.3:** dikmenin ve kaydın kendi öğesi yok; "Diğer (Diğer ögeler için)"
+  DIGR.
+- **Üretici belgeleri** (yalnız iş akışı için): Archicad'in yerleşik IFC tip eşlemesi kirişi `IfcBeam`, kolonu
+  `IfcColumn` yazar; `IfcMember` elemanın sınıflandırmasından ya da tip eşlemesinden gelir (Graphisoft yardımı, "Built-in
+  IFC Type Mapping for ARCHICAD", AC 25, 121_IFC-50). Revit'te ailenin ya da örneğin `IfcExportAs` parametresi sınıfı ve
+  ön tanımlı tipi birlikte söyler ("IfcMember.POST" gibi; OSArch wiki, "Revit setup for OpenBIM"; Autodesk yardımı,
+  "Specifying IFC Entities for Families", 2014). İkisinde de dikme ve kayıt kolon ve kiriş aracıyla çizilir, sınıfı
+  sonradan söylenir.
+
+**Karar.**
+
+22. **Eleman bir roldür (K46):** dikme, eleman olan kolondur (`ColumnFields.member`), kayıt eleman olan kiriştir
+    (`BeamFields.member`); ayrı nesne türü kurulmaz: kolonun ve kirişin gövdesi, planı, aksları, katı ve Öznitelikler'i
+    zaten var, üreticiler de sınıfı sonradan söyletir. `Member { predefined, name }`: tip IFC 4.3'ün listesinden
+    (`Member::TYPES`, 20; NOTDEFINED tip değildir); USERDEFINED'ın ne olduğu adında yazılır (nesne tipi), adsız
+    reddedilir; ad boş, kenarı boşluklu, denetim karakterli ya da 120 karakterden uzun olamaz. Yalnız Kiriş türündeki
+    kiriş kayıt olur; lento ve hatıl olamaz.
+23. **Kolonun kendi yüksekliği** (`ColumnFields.height`): dikmenin (pergola, saçak) yüksekliği; yoksa katın yüksekliği,
+    çerçevenin kolonu gibi. Her kolon alabilir, en çok 100 m. Kesit modelinde gövde döşemesinin taşıyıcısının üstünden
+    katın tabanı + kendi yüksekliğine çıkar (oraya yakın bir döşeme varsa onun taşıyıcısında durur, kolonun kuralı).
+24. **Malzeme ve katman:** malzemesiz eleman, kolon ve kiriş gibi Betonarme'dir (veri anlamı değişmez); araçlar ilk
+    malzemeyi "Çelik" yazar (KentOS'un kendi ilk değeri, M ile değişir). Kesitte EK-2'nin Diğer öğesinde, malzemesiyle
+    (MM-DIGR-CELIK; Betonarme beton görünüşüyle); planda katman anahtarıyla MM-DIGR-DIKME ve MM-DIGR-KAYIT.
+25. **IFC:** `IfcMember`, tipi ve adı EK-5'e göre (ELM ve adı, ad yoksa tipin Türkçe sözcüğü: "MM-ELM-Dikme",
+    "MM-ELM-Aşık"), USERDEFINED'ın nesne tipi adı, malzemesi, etiketi kimliği. Katın duvar, kolon ve elemanlarının dış
+    hattına değen eleman dışarıdadır (`Pset_MemberCommon.IsExternal`); duvarların arasında kalan değildir.
+    `LoadBearing` yazılmaz (çizim söylemiyor; EK-6 da istemiyor); çerçevenin kolonu `IfcColumn` ve LoadBearing olarak
+    kalır. FireRating beyandan (ADR 8068, `Pset_MemberCommon`).
+26. **Metraj:** kayıt "Kirişler" metraj tablosuna girmez (çerçevenin kirişi değil); elemanların kendi çizelgesi sonraki
+    adımdır.
+27. **Sürüm:** `.kcad`'de eleman ve kolonun kendi yüksekliği mimari veri sürüm 4'tür (`ARCH_WITH_MEMBERS`; 1–3'ün
+    verisini de içerir); daha küçük sürüm diyen dosyadaki eleman reddedilir; belge şeması değişmez.
+28. **Komut, araç ve pencere:** `cad.columns.create` `height` ve `member`, `cad.beams.create` `member` alır;
+    `cad.arch.edit` `member`'ı (kolon, kiriş; `null` çerçevenin kolonuna ya da kirişine döndürür), kolonun `height`'ını
+    ve `heightFromLevel: true`'yu (kolonu katın yüksekliğine döndürür; `height` ile birlikte reddedilir) alır. Araçlar:
+    **Dikme** (`tool.post`, yazılı adı DK): Kolon aracının kipi; 10/10, içi doldurulmaz, Çelik; Yükseklik (Ü; boş ya da
+    Kat: katın), Malzeme (M); Aks kesişimleri yok. **Kayıt** (`tool.rail`, KY): Kiriş aracının kipi; 5/10, 1,00 m
+    kattan yükseklikte, Çelik; Tür yok. Şeritte Mimari › Yerleştir'de Kolon ▾ (Kolon, Dikme) ve Kiriş ▾ (Kiriş, Kayıt);
+    ikonları seçenek sayfasından Dikme A (başlığı ve tabanıyla dikme) ve Kayıt B (iki dayanağı üstünde kayıt).
+    Öznitelikler'de Tür (Kolon, Dikme; Kiriş, Lento, Hatıl, Kayıt), Eleman tipi ("Dikme (POST)" listesi), Eleman adı,
+    kolonun Yükseklik'i (boş: katın); her biri bir geri alma. Tiplerin Türkçe sözcükleri (terim sözlüğü,
+    `Member::word`): POST Dikme, PURLIN Aşık, RAFTER Mertek, COLLAR Kuşak, BRACE Payanda, STRUT Basınç çubuğu, STUD Ara
+    dikme, PLATE Başlık kaydı, STRINGER Limon, CHORD Başlık çubuğu, MEMBER Çubuk, MULLION Cephe dikmesi; köprü
+    elemanları (askı, kablolar, gergi çubuğu, berkitme, kemer parçası) da listede, okunur.
+
+**Sınama.**
+
+- **Sözleşme** (`member::tests`): dikme ve kayıt geçerli; "Dikme" adı, kaydın nesne tipi "Kayıt"; NOTDEFINED, adsız
+  USERDEFINED ve kenarı boşluklu ad reddedilir.
+- **Uygulama** (`arch_ifc::a_post_and_a_rail_are_ifc_members_of_their_types`): bölüm binasının doğusunda 10/10 Çelik
+  dikme (kendi yüksekliği 2,40, katınki 3,00 değil) ve y = 0'da x 20–26 arasında, alt yüzü 1,00 m'de 5/10 Çelik kayıt.
+  Elle: dikme 0–2,40, kayıt 1,00–1,10, ikisi de MM-DIGR-CELIK. IFC'de ikisi de `IfcMember` (POST; USERDEFINED "Kayıt"),
+  Çelik, dışarıda, `Pset_ColumnCommon` yok; kayıp listesi boş, çerçevenin kolon ve kiriş sayısı değişmedi; dosyada 2
+  IFCMEMBER.
+- **Bağımsız okuyucu:** bu sınamanın yazdığı dosya (`KENTOS_WRITE_IFC_MEMBERS`) IfcOpenShell 0.9.0.post1'in
+  doğrulayıcısından 0 bulguyla geçti; iki eleman da zemin katta, IsExternal doğru, malzemesi Çelik, gövdeleri kuruluyor.
+- **`.kcad`** (`arch_elements::a_post_and_a_rail_round_trip_under_arch_data_4`; kodlayıcının birim sınaması): dikme ve
+  kayıt `modules.arch = 4` ile gidip gelir; yalnız kendi yüksekliği de sürüm 4 ister; NOTDEFINED ve adsız USERDEFINED
+  yazılırken reddedilir; sürüm 3 diyen dosyadaki dikme okunurken reddedilir.
+- **Etkileşim** (`member_tools`, 2): Dikme'nin seçenekleri Yükseklik ve Malzeme, Aks kesişimleri yok; ilk dikme
+  katın yüksekliğinde, 10/10 Çelik, dolgusuz, MM-DIGR-DIKME'de, "1 dikme konuldu."; 2,4 ve Ahşap yazılır, 0 reddedilir;
+  Kat katın yüksekliğine döndürür. Kayıt'ın seçenekleri Kattan yükseklik ve Malzeme, Tür ve Kot farkı yok; iki tıklama
+  ve Enter 5/10, 0,90 m'de, Çelik, MM-DIGR-KAYIT'ta kayıt yazar, "Kayıt çizildi: 5/10.". Katman türleri listesine
+  MM-DIGR-DIKME ve MM-DIGR-KAYIT eklendi.
+- **Masaüstü** (`properties::tests::arch::a_column_becomes_a_post_and_a_beam_a_rail`): kolonun Tür'ü Dikme yapınca
+  Eleman tipi "Dikme (POST)" ve Eleman adı satırları gelir; Yükseklik 2,4 yazılır, boşaltınca katınki; Eleman adı tipi
+  korur; kirişin Tür'ü Kayıt, sonra çerçevenin kirişi. Kesişen süzgeçler (şerit, modüller, geçmiş metinleri, katalog,
+  ayarlar, Öznitelikler, 3B) 239 sınamayla geçti.
+- **Ortak durumlar:** 31 yeni durum, başvuruları `scripts/fixtures/arch_command_cases.py`'nin ADR'den yazılmış
+  kurallarından: `cad.columns.create`'e 15 (POST, adıyla USERDEFINED, STUD, kendi yüksekliği, katlı ve akslara bağlı
+  dikme; NOTDEFINED, küçük harfli tip, adsız USERDEFINED, boş, kenarı boşluklu ve 121 karakterlik ad, sıfır, 101 m ve
+  sonsuz yükseklik reddi), `cad.beams.create`'e 7 (kayıt, aşık, asılı kayıt; lento ve hatıl kayıt olamaz, listede olmayan
+  tip, adsız USERDEFINED), `cad.arch.edit`'e 9 (kolon dikme olur ve geri döner, tipi ve adı, kendi yüksekliği ve
+  katınkine dönüşü, dikmenin yüksekliği, ikisi birlikte reddi, adsız USERDEFINED reddi, kiriş kayıt olur ve geri döner,
+  kayıt lentoya çevrilemez, merdivene eleman verilmez). Üç komutun 263 durumu geçti; üreticiye bağlı sekiz üretici
+  başvurularıyla aynı.
+- **Resimler:** `.run/gui-evidence/dikme-kayit-8070/` (görünüş binasının doğusunda pergola: dört dikme 2,60 m, üstünde
+  iki kayıt ve dört ahşap mertek; plan, doğu görünüşü, kuzeydoğudan 3B; açık ve koyu) ve
+  `.run/gui-evidence/ikon-dikme-kayit/secenekler.png`.
+
+## Ortak sınamalar
 
 - **Bağımsız okuyucu** (`scripts/fixtures/arch_ifc_check.py`, IfcOpenShell 0.9.0.post1, KentOS kodu olmadan): yeniden
   yazılan `fixtures/arch/v1/ifc/kesit-binasi.ifc` ve künyeli eşi IFC4X3_ADD2, doğrulayıcı (öznitelikler, EXPRESS
@@ -309,9 +402,10 @@
 - **Ortak durumlar:** `cad.arch.ifc` durumları: rampa yazılır ve bir şey söylenmez; tek yönde akslar ızgara olmaz ve
   söylenir; "bina yok" iletisi rampayı da sayar. §1–§6'da dokunulan komutların 365 durumu geçti.
 
-## §9. Sıradaki adımlar
+## Sıradaki adımlar
 
-- Tek başına dikme ve kayıt (pergola dikmesi, cephe kayıtı) `IfcMember` olarak.
+- Eğimli eleman (mertek, payanda): kirişin ekseni düzlemde; eğik gövde sonraki adım. Elemanların kendi çizelgesi ve
+  metrajı; aks kesişimlerine dikme.
 - Giydirme cephenin panel yerine kapısı ve penceresi; doğrama listesinde yeri; köşede iki giydirme cephenin ortak
   dikmesi; panelin kendi malzeme katmanları.
 - Elle çizilen kaplama, asma tavanın gövdesi (`IfcCovering`), duvar kaplamasının kalınlığı.

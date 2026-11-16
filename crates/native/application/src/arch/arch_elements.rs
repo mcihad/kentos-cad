@@ -613,6 +613,8 @@ fn system_made(
                 ]),
                 place: Some(arch_follow::place_of(&gx.label, &gy.label)),
                 broken: None,
+                height: None,
+                member: None,
                 arch: info.clone(),
             };
             column_valid(&column, "system.columns")?;
@@ -829,6 +831,8 @@ fn radial_made(
                 grids: Some(vec![grid_ids[i].to_string(), grid_ids[radial.len() + k].to_string()]),
                 place: Some(arch_follow::place_of(&gr.label, &ga.label)),
                 broken: None,
+                height: None,
+                member: None,
                 arch: info.clone(),
             };
             column_valid(&column, "radial.columns")?;
@@ -880,6 +884,7 @@ fn columns_check(doc: &Document, input: &ColumnsCreate) -> Result<Checked, Stop>
                 (n.legs.map(|l| l[0]), "legs[0]", "L kolonun kolu"),
                 (n.legs.map(|l| l[1]), "legs[1]", "L kolonun kolu"),
                 (n.rotation, "rotation", "Dönüş"),
+                (n.height, "height", "Yükseklik"),
             ],
             &at,
         )?;
@@ -905,6 +910,8 @@ fn columns_check(doc: &Document, input: &ColumnsCreate) -> Result<Checked, Stop>
             grids: n.grids.clone(),
             place: None,
             broken: None,
+            height: n.height,
+            member: n.member.clone(),
             arch: n.arch.clone().unwrap_or_default(),
         };
         column_valid(&c, &at)?;
@@ -962,6 +969,8 @@ fn columns_check(doc: &Document, input: &ColumnsCreate) -> Result<Checked, Stop>
                         grids: Some(vec![ua.clone(), ub.clone()]),
                         place: Some(arch_follow::place_of(&ga.label, &gb.label)),
                         broken: None,
+                        height: None,
+                        member: None,
                         arch: arch.clone(),
                     };
                     column_valid(&c, "crossings")?;
@@ -1451,6 +1460,7 @@ fn beams_check(doc: &Document, input: &kentos_commands::BeamsCreate) -> Result<C
             base_offset: n.base_offset,
             tag: n.tag.clone(),
             material: n.material.clone(),
+            member: n.member.clone(),
             arch: n.arch.clone().unwrap_or_default(),
         };
         if let Some((field, words)) = b.problem() {

@@ -456,9 +456,10 @@ kesitte; baca (`IfcChimney`: duvar bacası ve üstündeki çatı bacası tek ele
 asansör, vitrifiye ve mobilya kitaplık bloğunun kartında yapı sınıfı ve gövdesi (asansör kapasitesiyle); mahalin kaplama
 kalınlıkları (EK-6 Tablo 6.20'nin birinci yolu, `IfcCovering` yazılmaz: K44); giydirme cephe (çizgisi, yüksekliği, en
 büyük dikme ve kayıt aralığı, çerçevesi, paneli; planda, kesitte, görünüşte, 3B'de; `IfcCurtainWall` gövdesi panelleri,
-dikme ve kayıtları `IfcMember` MULLION: K45; Giydirme cephe aracı GC, `.kcad` mimari verisi 3). **Kalan:** tek başına
-dikme ve kayıt (`IfcMember`), giydirme cephenin doğrama listesinde yeri ve panel yerine kapısı, elle çizilen kaplama ve
-asma tavan gövdesi, duvar kaplamasının kalınlığı.
+dikme ve kayıtları `IfcMember` MULLION: K45; Giydirme cephe aracı GC, `.kcad` mimari verisi 3); dikme ve kayıt (kolonun
+ve kirişin eleman rolü, kolonun kendi yüksekliği; `IfcMember` POST ve USERDEFINED "Kayıt"; Dikme DK ve Kayıt KY araçları,
+`.kcad` mimari verisi 4: K46). **Kalan:** giydirme cephenin doğrama listesinde yeri ve panel yerine kapısı, elemanların
+çizelgesi ve eğimli eleman, elle çizilen kaplama ve asma tavan gövdesi, duvar kaplamasının kalınlığı.
 
 **Kullanıcı sonucu:** Konut ve karma kullanımlı bir binada karşılaşılan her eleman modelde kendi nesnesidir ve kendi
 sınıfıyla dışa gider. "Modele girmeyen nesne" listesi boşalır. Dayanak EK-5 Tablo 5.1; EK-6 §6.1.3 ve 6.14, 6.20, 6.21,

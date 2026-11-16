@@ -2054,12 +2054,36 @@
         ]
        },
        {
-        "command": "tool.column",
-        "size": "small"
+        "key": "archColumns",
+        "size": "small",
+        "split": [
+         {
+          "command": "tool.column",
+          "title": "Kolon",
+          "label": "Kolon"
+         },
+         {
+          "command": "tool.post",
+          "title": "Kolon",
+          "label": "Dikme"
+         }
+        ]
        },
        {
-        "command": "tool.beam",
-        "size": "small"
+        "key": "archBeams",
+        "size": "small",
+        "split": [
+         {
+          "command": "tool.beam",
+          "title": "Kiriş",
+          "label": "Kiriş"
+         },
+         {
+          "command": "tool.rail",
+          "title": "Kiriş",
+          "label": "Kayıt"
+         }
+        ]
        },
        {
         "key": "archRoofs",

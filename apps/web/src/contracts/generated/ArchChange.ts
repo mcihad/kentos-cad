@@ -4,6 +4,7 @@ import type { BeamRole } from "./BeamRole";
 import type { ColumnAnchor } from "./ColumnAnchor";
 import type { ColumnShape } from "./ColumnShape";
 import type { GridBubbles } from "./GridBubbles";
+import type { Member } from "./Member";
 import type { RailingInfill } from "./RailingInfill";
 import type { Railings } from "./Railings";
 import type { RoofPart } from "./RoofPart";
@@ -76,7 +77,8 @@ risers?: number,
 riserHeight?: number, 
 /**
  * A stair's (docs/adr/0724 §1): true, its rise is its level's height (its riser height that height over its
- * risers, followed); false, freed, its riser height staying. Not with `riserHeight`.
+ * risers, followed); false, freed, its riser height staying. Not with `riserHeight`. A column's (docs/adr/8070 §8):
+ * true, its height is its storey's again (its own taken away); not with `height`.
  */
 heightFromLevel?: boolean, 
 /**
@@ -127,7 +129,8 @@ base?: number | null,
  */
 baseOffset?: number | null, 
 /**
- * A beam's height (docs/adr/8041 §1); a railing's top over its floor (docs/adr/8045 §3).
+ * A beam's height (docs/adr/8041 §1); a railing's top over its floor (docs/adr/8045 §3); a column's own height over
+ * its floor (docs/adr/8070 §8).
  */
 height?: number, 
 /**
@@ -147,6 +150,11 @@ role?: BeamRole,
  * A column's or a beam's material (docs/adr/8041 §2), null: Betonarme; a roof's covering, null: Kiremit.
  */
 material?: string | null, 
+/**
+ * A column's or a beam's member (docs/adr/8070 §8): a post's or a rail's type and name; null: the frame's column or
+ * beam again.
+ */
+member?: Member | null, 
 /**
  * A roof's slopes, one for each edge of its eaves line, per cent; null: a gable end (docs/adr/8044 §1).
  */

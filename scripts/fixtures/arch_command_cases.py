@@ -402,6 +402,30 @@ def grid_problem(g, path):
     return None
 
 
+# IFC 4.3's member types (IFC4X3_ADD2's IfcMemberTypeEnum, EK-6 Tablo 6.40's list), USERDEFINED last (docs/adr/8070 §8).
+MEMBER_TYPES = ["ARCH_SEGMENT", "BRACE", "CHORD", "COLLAR", "MEMBER", "MULLION", "PLATE", "POST", "PURLIN", "RAFTER",
+                "STAY_CABLE", "STIFFENING_RIB", "STRINGER", "STRUCTURALCABLE", "STRUT", "STUD", "SUSPENDER",
+                "SUSPENSION_CABLE", "TIEBAR", "USERDEFINED"]
+
+
+def member_problem(m, code, path):
+    """A post's or a rail's type and name (docs/adr/8070 §8): Member::problem's rule and words, in its order."""
+    if m is None:
+        return None
+    t = m["predefined"]
+    if t not in MEMBER_TYPES:
+        return refusal(code, f"“{t}” elemanın tiplerinden biri değil ({', '.join(MEMBER_TYPES)}).", f"{path}.member.predefined")
+    name = m.get("name")
+    if name is not None and (not name.strip() or name.strip() != name or any(ord(ch) < 32 or 127 <= ord(ch) < 160 for ch in name)
+                             or len(name) > 120):
+        return refusal(code, "Elemanın adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 120 karakter.",
+                       f"{path}.member.name")
+    if t == "USERDEFINED" and name is None:
+        return refusal(code, "Kullanıcı tanımlı elemanın ne olduğu adında yazılır (USERDEFINED'ın nesne tipi); bir ad verin ya da "
+                             "listeden bir tip seçin.", f"{path}.member.name")
+    return None
+
+
 def column_problem(c, path):
     code = "invalid_column"
     r = positive(c["width"], "width", "Kolonun eni", 100, code, path)
@@ -426,6 +450,14 @@ def column_problem(c, path):
     g = c.get("grids")
     if g is not None and (len(g) != 2 or g[0] == g[1]):
         return refusal(code, "Kolon iki ayrı aksın kesişimine bağlanır.", f"{path}.grids")
+    # Its own height and a post's type (docs/adr/8070 §8).
+    if c.get("height") is not None:
+        r = positive(c["height"], "height", "Kolonun yüksekliği", 100, code, path)
+        if r:
+            return r
+    r = member_problem(c.get("member"), code, path)
+    if r:
+        return r
     return (blank(c.get("type"), "type", code, path) or blank(c.get("tag"), "tag", code, path)
             or blank(c.get("material"), "material", code, path))
 
@@ -845,7 +877,8 @@ def column_numbers(n):
     """A column's numbers in the order their finiteness is checked: width, depth, legs, rotation."""
     legs = n.get("legs") or [None, None]
     return [(n["width"], "width", "En"), (n.get("depth"), "depth", "Boy"), (legs[0], "legs[0]", "L kolonun kolu"),
-            (legs[1], "legs[1]", "L kolonun kolu"), (n.get("rotation"), "rotation", "Dönüş")]
+            (legs[1], "legs[1]", "L kolonun kolu"), (n.get("rotation"), "rotation", "Dönüş"),
+            (n.get("height"), "height", "Yükseklik")]
 
 
 def radial_made(s, made):
@@ -1012,6 +1045,10 @@ def column_fields(n, tag, at):
         c["material"] = n["material"]
     if n.get("grids") is not None:
         c["grids"] = n["grids"]
+    # Its own height and a post's type and name (docs/adr/8070 §8).
+    for k in ("height", "member"):
+        if n.get(k) is not None:
+            c[k] = n[k]
     if n.get("arch"):
         c["arch"] = n["arch"]
     return c
@@ -1469,7 +1506,8 @@ def beam_fields(n):
         f["role"] = n["role"]
     if n.get("baseOffset") is not None:
         f["baseOffset"] = n["baseOffset"]
-    for k in ("tag", "material"):
+    # A rail's type and name (docs/adr/8070 §8).
+    for k in ("tag", "material", "member"):
         if n.get(k) is not None:
             f[k] = n[k]
     if n.get("arch"):
@@ -1497,6 +1535,13 @@ def beam_problem(f, path):
             return refusal("invalid_beam", "Kattan yüksekliği olan kirişin kot farkı olmaz: biri ya da öbürü verilir.", f"{path}.offset")
     if not (math.isfinite(o) and abs(o) <= 10.0):
         return refusal("invalid_beam", f"Kirişin kot farkı {num(o)}; en çok ±10 m olmalı.", f"{path}.offset")
+    # A rail is a beam's, not a lintel's or a bond beam's (docs/adr/8070 §8).
+    if f.get("member") is not None:
+        r = member_problem(f["member"], "invalid_beam", path)
+        if r:
+            return r
+        if f.get("role", "beam") != "beam":
+            return refusal("invalid_beam", "Lento ve hatıl eleman (kayıt) olamaz; türü Kiriş olmalı.", f"{path}.member")
     for k in ("tag", "material"):
         v = f.get(k)
         if v is not None and (not v.strip() or v.strip() != v or any(ord(ch) < 32 or 127 <= ord(ch) < 160 for ch in v) or len(v) > 120):
@@ -2172,6 +2217,17 @@ def column_cases():
         ("tek kolon ve kesişimler birlikte", {"layerId": "kolon", "columns": [{"at": P(9, 9), "width": 0.25}], "crossings": {"grids": [uid_of(2), uid_of(4)], "width": 0.3}}),
         # Its material (docs/adr/8041 §2).
         ("çelik kolon", col([{"at": P(4, 4), "width": 0.3, "material": "Çelik"}])),
+        # Dikme (docs/adr/8070 §8): a member of its type, of its own height.
+        ("dikme: POST tipi, kendi yüksekliği ve malzemesiyle", col([{"at": P(4, 4), "width": 0.1, "depth": 0.1, "height": 2.4,
+                                                                     "material": "Çelik", "member": {"predefined": "POST"}}])),
+        ("kullanıcı tanımlı dikme adıyla", col([{"at": P(4, 4), "width": 0.12, "member": {"predefined": "USERDEFINED",
+                                                                                            "name": "Pergola dikmesi"}}])),
+        ("ara dikme: STUD tipi ve adı", col([{"at": P(4, 4), "width": 0.05, "depth": 0.1,
+                                             "member": {"predefined": "STUD", "name": "Ara dikme"}}])),
+        ("kendi yüksekliği olan kolon eleman değildir", col([{"at": P(4, 4), "width": 0.3, "height": 4.5}])),
+        ("katlı dikme, katın yüksekliği", col([{"at": P(4, 4), "width": 0.1, "member": {"predefined": "POST"},
+                                               "arch": {"level": "zemin"}}])),
+        ("akslara bağlı dikme", col([{"grids": [uid_of(3), uid_of(1)], "width": 0.1, "member": {"predefined": "POST"}}])),
     ]:
         c.add(name, [create_step(Drawing(), COLUMNS, "execute", inp)])
     refusals(c, COLUMNS, [
@@ -2191,6 +2247,16 @@ def column_cases():
         ("tek akslı kesişim isteği reddedilir", {"layerId": "kolon", "crossings": {"grids": [uid_of(1)], "width": 0.3}}, {}),
         ("kesişimde aks olmayan nesne reddedilir", {"layerId": "kolon", "crossings": {"grids": [uid_of(1), uid_of(8)], "width": 0.3}}, {}),
         ("olmayan kat reddedilir", col([{"at": P(0, 0), "width": 0.3, "arch": {"level": "yok"}}]), {}),
+        # docs/adr/8070 §8.
+        ("NOTDEFINED dikmenin tipi değildir", col([{"at": P(0, 0), "width": 0.1, "member": {"predefined": "NOTDEFINED"}}]), {}),
+        ("küçük harfli eleman tipi reddedilir", col([{"at": P(0, 0), "width": 0.1, "member": {"predefined": "post"}}]), {}),
+        ("adsız kullanıcı tanımlı dikme reddedilir", col([{"at": P(0, 0), "width": 0.1, "member": {"predefined": "USERDEFINED"}}]), {}),
+        ("boş eleman adı reddedilir", col([{"at": P(0, 0), "width": 0.1, "member": {"predefined": "POST", "name": ""}}]), {}),
+        ("kenarı boşluklu eleman adı reddedilir", col([{"at": P(0, 0), "width": 0.1, "member": {"predefined": "POST", "name": " Dikme"}}]), {}),
+        ("121 karakterlik eleman adı reddedilir", col([{"at": P(0, 0), "width": 0.1, "member": {"predefined": "POST", "name": "d" * 121}}]), {}),
+        ("sıfır yükseklikli kolon reddedilir", col([{"at": P(0, 0), "width": 0.3, "height": 0.0}]), {}),
+        ("100 m'den yüksek kolon reddedilir", col([{"at": P(0, 0), "width": 0.3, "height": 101.0}]), {}),
+        ("sonsuz yükseklik reddedilir", col([{"at": P(0, 0), "width": 0.3, "height": 3.0}]), {"non_finite": {"columns[0].height": "NaN"}}),
     ])
     common_refusals(c, COLUMNS, one)
     # The document keeps a column with its grids (ADR 0343 §3).
@@ -2490,6 +2556,11 @@ def beam_cases():
         ("kapının başında lento: kattan yüksekliğiyle", beam(width=0.2, height=0.2, role="lintel", baseOffset=2.1, tag="L101")),
         ("duvarın içinde hatıl", beam(width=0.2, height=0.2, role="bondBeam", baseOffset=1.0, tag="H101")),
         ("kirişin varsayılan türü yazılmaz", beam(role="beam")),
+        # Kayıt (docs/adr/8070 §8): a member of its type.
+        ("kayıt: kullanıcı tanımlı Kayıt, kattan yüksekliğiyle", beam(width=0.05, height=0.1, baseOffset=1.0, material="Çelik",
+                                                                    member={"predefined": "USERDEFINED", "name": "Kayıt"})),
+        ("aşık: PURLIN tipiyle", beam(width=0.08, height=0.16, member={"predefined": "PURLIN"})),
+        ("asılı kayıt, kot farkıyla", beam(width=0.05, height=0.1, offset=-0.2, member={"predefined": "USERDEFINED", "name": "Cephe kaydı"})),
     ]:
         c.add(name, [create_step(Drawing(), BEAMS, "execute", inp)])
     refusals(c, BEAMS, [
@@ -2508,6 +2579,11 @@ def beam_cases():
         ("sonsuz kattan yükseklik reddedilir", beam(baseOffset=1.0), {"non_finite": {"beams[0].baseOffset": "NaN"}}),
         ("boşluklu numara reddedilir", beam(tag=" K1"), {}),
         ("olmayan kat reddedilir", beam(arch={"level": "yok"}), {}),
+        # docs/adr/8070 §8.
+        ("lento kayıt olamaz", beam(width=0.2, height=0.2, role="lintel", baseOffset=2.1, member={"predefined": "USERDEFINED", "name": "Kayıt"}), {}),
+        ("hatıl kayıt olamaz", beam(width=0.2, height=0.2, role="bondBeam", baseOffset=1.0, member={"predefined": "PURLIN"}), {}),
+        ("listede olmayan kayıt tipi reddedilir", beam(member={"predefined": "RAIL"}), {}),
+        ("adsız kullanıcı tanımlı kayıt reddedilir", beam(member={"predefined": "USERDEFINED"}), {}),
     ])
     common_refusals(c, BEAMS, beam())
     return c.cases
@@ -2830,7 +2906,8 @@ FIELDS = [  # wire name, kinds, nullable
     ("label", ("grid",), False), ("bubbles", ("grid",), False), ("bubbleSize", ("grid",), True), ("ends", ("grid",), True),
     ("shape", ("column",), False), ("width", ("column", "stair", "ramp", "beam", "railing"), False), ("depth", ("column",), True),
     ("legs", ("column",), False), ("anchor", ("column",), False), ("rotation", ("column",), False), ("type", ("column",), True), ("tag", ("column", "beam"), True), ("fill", ("column",), False),
-    ("risers", ("stair",), False), ("riserHeight", ("stair",), False), ("heightFromLevel", ("stair",), False),
+    # A column's: its storey's height again (docs/adr/8070 §8).
+    ("risers", ("stair",), False), ("riserHeight", ("stair",), False), ("heightFromLevel", ("stair", "column"), False),
     ("post", ("stair",), True), ("tread", ("stair",), False),
     ("landing", ("stair", "ramp"), True), ("cut", ("stair",), True), ("winders", ("stair",), True),
     ("numbering", ("stair",), False),
@@ -2839,9 +2916,12 @@ FIELDS = [  # wire name, kinds, nullable
     # A beam's (docs/adr/8041 §1).
     # A beam's (docs/adr/8041 §1); a roof's offset its eaves over its storey's top (docs/adr/8044 §1).
     # A railing's height its top over its floor, its offset its floor over its storey's (docs/adr/8045 §3).
-    ("height", ("beam", "railing"), False), ("justify", ("beam",), False), ("offset", ("beam", "roof", "railing"), False), ("role", ("beam",), False),
+    # A column's own height (docs/adr/8070 §8).
+    ("height", ("beam", "railing", "column"), False), ("justify", ("beam",), False), ("offset", ("beam", "roof", "railing"), False), ("role", ("beam",), False),
     # A column's, a beam's (docs/adr/8041 §2) or a roof's.
     ("material", ("column", "beam", "roof"), True),
+    # A post's or a rail's type and name (docs/adr/8070 §8); null: the frame's column or beam again.
+    ("member", ("column", "beam"), True),
     # A roof's (docs/adr/8044 §1, §6).
     ("slopes", ("roof",), False), ("thickness", ("roof",), True), ("overhang", ("roof",), True),
     ("gutter", ("roof",), True), ("snowGuard", ("roof",), True), ("parts", ("roof",), False),
@@ -2943,12 +3023,20 @@ def edit(d, inp, conflict=False):
         if "riserHeight" in op and op.get("heightFromLevel") is True:
             return refusal("invalid_stair", "Rıht yüksekliği ya kendisi (riserHeight) ya katın yüksekliğinden (heightFromLevel) "
                                             "verilir; ikisi birden verilmez.", "operation.heightFromLevel"), None
+        if "height" in op and op.get("heightFromLevel") is True:
+            return refusal("invalid_column", "Kolonun yüksekliği ya kendisi (height) ya da katın yüksekliğinden (heightFromLevel) "
+                                             "verilir; ikisi birden verilmez.", "operation.heightFromLevel"), None
         if "base" in op and "baseOffset" in op:
             return refusal("invalid_ramp", BOTH_BASES, "operation.baseOffset"), None
         for i, oid in found:
             kind, ly, f = d.objs[oid]
             f = copy.deepcopy(f)
             for n, _, _ in given:
+                # A column's height of its own, or its storey's again (docs/adr/8070 §8).
+                if kind == "column" and n == "heightFromLevel":
+                    if op[n] is True:
+                        f.pop("height", None)
+                    continue
                 set_field(f, n, op[n])
             path = f"uids[{i}]"
             r = problem_of(kind, f, path)
@@ -3115,6 +3203,33 @@ def edit_cases():
     c.add("Değiştir: sonsuz kot farkı reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "offset": 0.2}, non_finite={"operation.offset": "NaN"})])
     d = Drawing()
     c.add("Değiştir: kolona kirişin yüksekliği reddedilir", [one(d, [uid_of(9)], {"kind": "set", "height": 0.5})])
+    # Dikme ve kayıt (docs/adr/8070 §8): a column a post and back, its own height and its storey's again; a beam a rail.
+    d, made, k = with_column()
+    c.add("Değiştir: kolon dikme olur, null kolona döndürür",
+          [made, one(d, [uid_of(k)], {"kind": "set", "member": {"predefined": "POST"}, "material": "Çelik"}),
+           one(d, [uid_of(k)], {"kind": "set", "member": None})])
+    d, made, k = with_column(member={"predefined": "POST"})
+    c.add("Değiştir: dikmenin tipi ve adı", [made, one(d, [uid_of(k)], {"kind": "set", "member": {"predefined": "USERDEFINED",
+                                                                                                    "name": "Saçak dikmesi"}})])
+    d, made, k = with_column()
+    c.add("Değiştir: kolonun kendi yüksekliği, heightFromLevel katınkine döndürür",
+          [made, one(d, [uid_of(k)], {"kind": "set", "height": 2.4}),
+           one(d, [uid_of(k)], {"kind": "set", "heightFromLevel": True})])
+    d, made, k = with_column(height=2.4, member={"predefined": "POST"})
+    c.add("Değiştir: dikmenin yüksekliği", [made, one(d, [uid_of(k)], {"kind": "set", "height": 3.2})])
+    d, made, k = with_column()
+    c.add("Değiştir: kolonun yüksekliği ve heightFromLevel birlikte reddedilir",
+          [made, one(d, [uid_of(k)], {"kind": "set", "height": 2.4, "heightFromLevel": True})])
+    d, made, k = with_column()
+    c.add("Değiştir: adsız kullanıcı tanımlı dikme reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "member": {"predefined": "USERDEFINED"}})])
+    d, made, k = with_beam()
+    c.add("Değiştir: kiriş kayıt olur, null kirişe döndürür",
+          [made, one(d, [uid_of(k)], {"kind": "set", "member": {"predefined": "USERDEFINED", "name": "Kayıt"}}),
+           one(d, [uid_of(k)], {"kind": "set", "member": None})])
+    d, made, k = with_beam(member={"predefined": "USERDEFINED", "name": "Kayıt"})
+    c.add("Değiştir: kayıt lentoya çevrilemez", [made, one(d, [uid_of(k)], {"kind": "set", "role": "lintel", "baseOffset": 2.1})])
+    d = Drawing()
+    c.add("Değiştir: merdivene eleman reddedilir", [one(d, [uid_of(8)], {"kind": "set", "member": {"predefined": "POST"}})])
     d, made, k = with_beam()
     c.add("Değiştir: kirişe kolonun dolgusu reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "fill": True})])
     # A roof's fields and parts (docs/adr/8044 §1, §6): its chimneys and windows written whole, as the tools add them.

@@ -249,6 +249,11 @@ pub enum ArchField {
     SnowGuard,
     /// A roof's chimney, vent, window or downpipe at this place among its parts: its size typed as “width × depth”.
     RoofPart(u16),
+    /// A column's own height over its floor (docs/adr/8070 §8); empty: its storey's.
+    OwnHeight,
+    /// A post's or a rail's name (docs/adr/8070 §8): its IFC name's words, a user-defined one's object type; empty: its
+    /// type's word.
+    MemberName,
 }
 
 /// The value a cell edits.

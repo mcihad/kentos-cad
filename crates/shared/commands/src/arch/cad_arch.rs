@@ -435,6 +435,15 @@ pub struct NewColumn {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
+    /// Its own height over its floor (docs/adr/8070 §8: a post's); absent: its storey's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub height: Option<f64>,
+    /// A post (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's column.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub member: Option<crate::Member>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
@@ -865,6 +874,11 @@ pub struct NewBeam {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
+    /// A rail (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's beam. Only a
+    /// beam's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub member: Option<crate::Member>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
@@ -1237,7 +1251,8 @@ pub struct ArchChange {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub riser_height: Option<f64>,
     /// A stair's (docs/adr/0724 §1): true, its rise is its level's height (its riser height that height over its
-    /// risers, followed); false, freed, its riser height staying. Not with `riserHeight`.
+    /// risers, followed); false, freed, its riser height staying. Not with `riserHeight`. A column's (docs/adr/8070 §8):
+    /// true, its height is its storey's again (its own taken away); not with `height`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub height_from_level: Option<bool>,
@@ -1337,7 +1352,8 @@ pub struct ArchChange {
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub base_offset: Option<Option<f64>>,
-    /// A beam's height (docs/adr/8041 §1); a railing's top over its floor (docs/adr/8045 §3).
+    /// A beam's height (docs/adr/8041 §1); a railing's top over its floor (docs/adr/8045 §3); a column's own height over
+    /// its floor (docs/adr/8070 §8).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -1365,6 +1381,16 @@ pub struct ArchChange {
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub material: Option<Option<String>>,
+    /// A column's or a beam's member (docs/adr/8070 §8): a post's or a rail's type and name; null: the frame's column or
+    /// beam again.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::Member>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<crate::Member>"))]
+    pub member: Option<Option<crate::Member>>,
     /// A roof's slopes, one for each edge of its eaves line, per cent; null: a gable end (docs/adr/8044 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

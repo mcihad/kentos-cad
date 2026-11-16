@@ -45,6 +45,9 @@ pub enum Kind {
     Elevator,
     /// A curtain wall (docs/adr/8070 §7): EK-2 Tablo 2.3's Giydirme Cephe (GIYC), MM-GIYC-GENEL.
     CurtainWall,
+    /// A post and a rail (docs/adr/8070 §8): EK-2 Tablo 2.3 has neither; Diğer (DIGR), MM-DIGR-DIKME and MM-DIGR-KAYIT.
+    Post,
+    Rail,
     Grid,
     /// Kitchen units (Mutfak).
     Casework,
@@ -83,6 +86,7 @@ impl Kind {
             Kind::Railing(_) => "KORK",
             Kind::Elevator => "ASAN",
             Kind::CurtainWall => "GIYC",
+            Kind::Post | Kind::Rail => "DIGR",
             Kind::Grid => "AKSS",
             Kind::Casework | Kind::Furniture(_) => "TEFR",
             Kind::Space
@@ -113,6 +117,8 @@ impl Kind {
             Kind::Schedule => word("CIZELGE"),
             Kind::Beam(kentos_commands::BeamRole::Beam) => word("KIRIS"),
             Kind::Beam(_) => String::new(),
+            Kind::Post => word("DIKME"),
+            Kind::Rail => word("KAYIT"),
             Kind::Railing(infill) => word(infill.layer_word()),
             Kind::Door
             | Kind::Window
@@ -167,6 +173,8 @@ impl Kind {
             Kind::Railing(_) => "Korkuluk",
             Kind::Elevator => "Asansör",
             Kind::CurtainWall => "Giydirme cephe",
+            Kind::Post => "Dikme",
+            Kind::Rail => "Kayıt",
             Kind::Grid => "Aks",
             Kind::Casework => "Mutfak",
             Kind::Furniture(_) => "Donatı",
@@ -199,6 +207,8 @@ impl Kind {
             Kind::Railing(_) => "korkuluk",
             Kind::Elevator => "asansör",
             Kind::CurtainWall => "giydirme cephe",
+            Kind::Post => "dikme",
+            Kind::Rail => "kayıt",
             Kind::Grid => "aks",
             Kind::Casework => "mutfak dolabı",
             Kind::Furniture(_) => "donatı",
@@ -219,7 +229,7 @@ impl Kind {
             ..default_style()
         };
         match self {
-            Kind::Wall(_) | Kind::Column => look("ink", 0.5),
+            Kind::Wall(_) | Kind::Column | Kind::Post => look("ink", 0.5),
             Kind::Slab(_) | Kind::Roof(_) => look("ink", 0.35),
             Kind::Door
             | Kind::Window
@@ -231,6 +241,7 @@ impl Kind {
             | Kind::Railing(_)
             | Kind::Elevator
             | Kind::CurtainWall
+            | Kind::Rail
             | Kind::Beam(_) => look("ink", 0.25),
             Kind::Grid => LayerStyle {
                 line_type: LineType::Dashdot,
@@ -433,6 +444,8 @@ mod tests {
             Kind::Railing(kentos_commands::RailingInfill::Solid),
             Kind::Elevator,
             Kind::CurtainWall,
+            Kind::Post,
+            Kind::Rail,
         ];
         let names: Vec<String> = kinds.iter().map(Kind::layer_name).collect();
         for n in &names {
@@ -460,10 +473,18 @@ mod tests {
             ("MM-CATI-KIREMIT", "MM-CATI-GENEL")
         );
         // A railing (docs/adr/8045 §3): EK-2's Korkuluk, by its infill; an elevator's block (§5) its Asansör; a curtain
-        // wall (docs/adr/8070 §7) its Giydirme Cephe.
+        // wall (docs/adr/8070 §7) its Giydirme Cephe; a post and a rail (§8) Diğer.
         assert_eq!(
             &names[25..],
-            ["MM-KORK-CUBUK", "MM-KORK-CAM", "MM-KORK-DOLU", "MM-ASAN-GENEL", "MM-GIYC-GENEL"]
+            [
+                "MM-KORK-CUBUK",
+                "MM-KORK-CAM",
+                "MM-KORK-DOLU",
+                "MM-ASAN-GENEL",
+                "MM-GIYC-GENEL",
+                "MM-DIGR-DIKME",
+                "MM-DIGR-KAYIT"
+            ]
         );
         assert_eq!(Kind::Wall(Some("Tuğla".into())).layer_id(), "mm-duva-tugla");
     }

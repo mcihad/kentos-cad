@@ -276,7 +276,7 @@ impl Input for kentos_commands::GridsCreate {
 }
 
 impl Input for kentos_commands::ColumnsCreate {
-    /// `columns[0].width`, `.at.x` and `.y`, `lineWeight` (docs/adr/0343).
+    /// `columns[0].width`, `.at.x` and `.y`, `.legs[k]`, `.height`, `lineWeight` (docs/adr/0343, 8070 §8).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
             return self.line_weight.as_mut();
@@ -290,6 +290,8 @@ impl Input for kentos_commands::ColumnsCreate {
             // An L's legs (docs/adr/0725 §3).
             "legs[0]" => c.legs.as_mut().map(|l| &mut l[0]),
             "legs[1]" => c.legs.as_mut().map(|l| &mut l[1]),
+            // Its own height (docs/adr/8070 §8).
+            "height" => c.height.as_mut(),
             _ => None,
         }
     }

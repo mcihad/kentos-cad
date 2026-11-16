@@ -20109,6 +20109,8 @@ class BeamEntity(Entity):
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
         material: Its material; absent: Betonarme.
+        member: A rail (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's beam. Only a
+            beam's (not a lintel's or a bond beam's).
         offset: Its top over where it hangs (the structure's top of the slab over its storey, else its storey's top), metres;
             absent: 0. Unit: elevation.
         order: Its place in its layer's drawing order: lower first, equals in the
@@ -20140,6 +20142,7 @@ class BeamEntity(Entity):
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     material: str | None | Unset = UNSET
+    member: Member | None | Unset = UNSET
     offset: float | Unset = UNSET
     order: int | None | Unset = UNSET
     role: BeamRole | BeamRoleName | Unset = UNSET
@@ -20182,6 +20185,8 @@ class BeamEntity(Entity):
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.material is not UNSET:
             out["material"] = self.material
+        if self.member is not UNSET:
+            out["member"] = None if self.member is None else self.member.to_json()
         if self.offset is not UNSET:
             out["offset"] = float(self.offset)
         if self.order is not UNSET:
@@ -20220,6 +20225,7 @@ class BeamEntity(Entity):
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             material=data.get("material", UNSET),
+            member=UNSET if "member" not in data else None if data["member"] is None else Member.from_json(data["member"]),
             offset=float(data["offset"]) if "offset" in data else UNSET,
             order=data.get("order", UNSET),
             role=_enum_in(BeamRole, data["role"]) if "role" in data else UNSET,
@@ -25187,6 +25193,8 @@ class ColumnEntity(Entity):
         color: Colour override; absent = the layer's colour ("katmana göre").
         depth: Along, metres; absent: its width. Unit: length.
         grids: The two grids it stands where they cross, by their persistent ids.
+        height: Its own height over its floor, metres (docs/adr/8070 §8: a post's, a pergola's); absent: its storey's, as the
+            frame's column. Unit: length.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
         legs: An L's legs (docs/adr/0725 §3), metres: the thickness of the one along its width (measured along its depth),
@@ -25201,6 +25209,7 @@ class ColumnEntity(Entity):
             object (docs/adr/0139). Unit: paper-mm.
         material: Its material (docs/adr/8041 §2); absent: Betonarme. Where it meets a wall's layer of the same material the two
             are one section, hatched alike with no line between them.
+        member: A post (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's column.
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         place: Its place by its grids' labels (“B-3”), which the document writes.
@@ -25226,6 +25235,7 @@ class ColumnEntity(Entity):
     depth: float | None | Unset = UNSET
     fill: bool | Unset = UNSET
     grids: list[str] | None | Unset = UNSET
+    height: float | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
     legs: list[float] | None | Unset = UNSET
@@ -25234,6 +25244,7 @@ class ColumnEntity(Entity):
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     material: str | None | Unset = UNSET
+    member: Member | None | Unset = UNSET
     order: int | None | Unset = UNSET
     place: str | None | Unset = UNSET
     rotation: float | Unset = UNSET
@@ -25269,6 +25280,8 @@ class ColumnEntity(Entity):
             out["fill"] = self.fill
         if self.grids is not UNSET:
             out["grids"] = None if self.grids is None else list(self.grids)
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
         if self.label is not UNSET:
             out["label"] = self.label
         if self.label_pins is not UNSET:
@@ -25285,6 +25298,8 @@ class ColumnEntity(Entity):
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.material is not UNSET:
             out["material"] = self.material
+        if self.member is not UNSET:
+            out["member"] = None if self.member is None else self.member.to_json()
         if self.order is not UNSET:
             out["order"] = self.order
         if self.place is not UNSET:
@@ -25322,6 +25337,7 @@ class ColumnEntity(Entity):
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
             fill=data.get("fill", UNSET),
             grids=UNSET if "grids" not in data else None if data["grids"] is None else list(data["grids"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             legs=UNSET if "legs" not in data else None if data["legs"] is None else [float(e0) for e0 in data["legs"]],
@@ -25330,6 +25346,7 @@ class ColumnEntity(Entity):
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             material=data.get("material", UNSET),
+            member=UNSET if "member" not in data else None if data["member"] is None else Member.from_json(data["member"]),
             order=data.get("order", UNSET),
             place=data.get("place", UNSET),
             rotation=float(data["rotation"]) if "rotation" in data else UNSET,
@@ -59015,6 +59032,33 @@ class MeasuredRefraction(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class Member(_Model):
+    """What makes a column a post or a beam a rail (docs/adr/8070 §8).
+    Attributes:
+        predefined: Its IFC 4.3 type ([`Member::TYPES`]): `POST` a post (dikme), `PURLIN` an aşık, `RAFTER` a mertek…;
+            `USERDEFINED` takes `name` as its object type.
+        name: What it is in words ("Pergola dikmesi", "Cephe kaydı"): its IFC name's words, and its object type when its type is
+            `USERDEFINED`, which needs it; absent: its type's own word ([`Member::word`]).
+    """
+    predefined: str
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["predefined"] = self.predefined
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Member:
+        return cls(
+            predefined=data["predefined"],
+            name=data.get("name", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class MergeReport(_Model):
     """What the merge did on one layer.
     Attributes:
@@ -62196,6 +62240,8 @@ class NewBeam(_Model):
             hangs (a beam's). Not with an offset. Unit: length.
         justify: How it lies on its axis; absent: centred.
         material: Its material; absent: Betonarme.
+        member: A rail (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's beam. Only a
+            beam's.
         offset: Its top over where it hangs (the structure's top of the slab over its storey, else its storey's top); absent: 0. Unit: elevation.
         role: What it is (docs/adr/8041 §3): absent a beam; a lintel; a bond beam.
         tag: Its number ("K101").
@@ -62208,6 +62254,7 @@ class NewBeam(_Model):
     base_offset: float | None | Unset = UNSET
     justify: WallJustify | WallJustifyName | None | Unset = UNSET
     material: str | None | Unset = UNSET
+    member: Member | None | Unset = UNSET
     offset: float | None | Unset = UNSET
     role: BeamRole | BeamRoleName | None | Unset = UNSET
     tag: str | None | Unset = UNSET
@@ -62227,6 +62274,8 @@ class NewBeam(_Model):
             out["justify"] = None if self.justify is None else _enum_out(self.justify)
         if self.material is not UNSET:
             out["material"] = self.material
+        if self.member is not UNSET:
+            out["member"] = None if self.member is None else self.member.to_json()
         if self.offset is not UNSET:
             out["offset"] = None if self.offset is None else float(self.offset)
         if self.role is not UNSET:
@@ -62246,6 +62295,7 @@ class NewBeam(_Model):
             base_offset=UNSET if "baseOffset" not in data else None if data["baseOffset"] is None else float(data["baseOffset"]),
             justify=UNSET if "justify" not in data else None if data["justify"] is None else _enum_in(WallJustify, data["justify"]),
             material=data.get("material", UNSET),
+            member=UNSET if "member" not in data else None if data["member"] is None else Member.from_json(data["member"]),
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
             role=UNSET if "role" not in data else None if data["role"] is None else _enum_in(BeamRole, data["role"]),
             tag=data.get("tag", UNSET),
@@ -62262,9 +62312,11 @@ class NewColumn(_Model):
         at: Where it stands: its centre, or the point of its box its `anchor` names; with `grids`, the crossing nearest it. Unit: length.
         depth: Along, metres; absent: its width. Unit: length.
         grids: The two grids it stands where they cross, by their persistent ids; it follows them.
+        height: Its own height over its floor (docs/adr/8070 §8: a post's); absent: its storey's. Unit: length.
         legs: An L's legs, metres (docs/adr/0725 §3): the thickness of the one along its width, then of the one along its
             depth; only with `shape` L, which needs them. Unit: length.
         material: Its material (docs/adr/8041 §2); absent: Betonarme.
+        member: A post (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's column.
         rotation: Its turn, radians counter-clockwise. Unit: rad.
         tag: Absent: from `tagStart` on, else none.
         type: Its type's name.
@@ -62277,8 +62329,10 @@ class NewColumn(_Model):
     depth: float | None | Unset = UNSET
     fill: bool | None | Unset = UNSET
     grids: list[str] | None | Unset = UNSET
+    height: float | None | Unset = UNSET
     legs: list[float] | None | Unset = UNSET
     material: str | None | Unset = UNSET
+    member: Member | None | Unset = UNSET
     rotation: float | None | Unset = UNSET
     shape: ColumnShape | ColumnShapeName | None | Unset = UNSET
     tag: str | None | Unset = UNSET
@@ -62301,10 +62355,14 @@ class NewColumn(_Model):
             out["fill"] = self.fill
         if self.grids is not UNSET:
             out["grids"] = None if self.grids is None else list(self.grids)
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
         if self.legs is not UNSET:
             out["legs"] = None if self.legs is None else [float(e0) for e0 in self.legs]
         if self.material is not UNSET:
             out["material"] = self.material
+        if self.member is not UNSET:
+            out["member"] = None if self.member is None else self.member.to_json()
         if self.rotation is not UNSET:
             out["rotation"] = None if self.rotation is None else float(self.rotation)
         if self.shape is not UNSET:
@@ -62326,8 +62384,10 @@ class NewColumn(_Model):
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
             fill=data.get("fill", UNSET),
             grids=UNSET if "grids" not in data else None if data["grids"] is None else list(data["grids"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             legs=UNSET if "legs" not in data else None if data["legs"] is None else [float(e0) for e0 in data["legs"]],
             material=data.get("material", UNSET),
+            member=UNSET if "member" not in data else None if data["member"] is None else Member.from_json(data["member"]),
             rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
             shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(ColumnShape, data["shape"]),
             tag=data.get("tag", UNSET),
@@ -120205,9 +120265,11 @@ class SetArchOperation(ArchOperation):
         fill: A column's.
         gap: A railing's balusters' clear gap (docs/adr/8045 §3); null: PAİY 38/4's 0.10 m. Unit: length.
         gutter: A roof's gutter, its width outside every sloping eaves edge (docs/adr/8044 §8); null: none. Unit: length.
-        height: A beam's height (docs/adr/8041 §1); a railing's top over its floor (docs/adr/8045 §3). Unit: length.
+        height: A beam's height (docs/adr/8041 §1); a railing's top over its floor (docs/adr/8045 §3); a column's own height over
+            its floor (docs/adr/8070 §8). Unit: length.
         height_from_level: A stair's (docs/adr/0724 §1): true, its rise is its level's height (its riser height that height over its
-            risers, followed); false, freed, its riser height staying. Not with `riserHeight`.
+            risers, followed); false, freed, its riser height staying. Not with `riserHeight`. A column's (docs/adr/8070 §8):
+            true, its height is its storey's again (its own taken away); not with `height`.
         infill: A railing's infill (docs/adr/8045 §3): upright balusters, glass or a solid panel.
         justify: A beam's justification on its axis.
         label: A grid's.
@@ -120215,6 +120277,8 @@ class SetArchOperation(ArchOperation):
         legs: An L column's legs (docs/adr/0725 §3). Unit: length.
         level: Any kind's.
         material: A column's or a beam's material (docs/adr/8041 §2), null: Betonarme; a roof's covering, null: Kiremit.
+        member: A column's or a beam's member (docs/adr/8070 §8): a post's or a rail's type and name; null: the frame's column or
+            beam again.
         numbering: A stair's.
         offset: A beam's top over where it hangs; a roof's eaves over its storey's top (docs/adr/8044 §1); a railing's floor over
             its storey's (docs/adr/8045 §3). Unit: elevation.
@@ -120262,6 +120326,7 @@ class SetArchOperation(ArchOperation):
     legs: list[float] | None | Unset = UNSET
     level: str | None | Unset = UNSET
     material: str | None | Unset = UNSET
+    member: Member | None | Unset = UNSET
     numbering: bool | None | Unset = UNSET
     offset: float | None | Unset = UNSET
     overhang: float | None | Unset = UNSET
@@ -120327,6 +120392,8 @@ class SetArchOperation(ArchOperation):
             out["level"] = self.level
         if self.material is not UNSET:
             out["material"] = self.material
+        if self.member is not UNSET:
+            out["member"] = None if self.member is None else self.member.to_json()
         if self.numbering is not UNSET:
             out["numbering"] = self.numbering
         if self.offset is not UNSET:
@@ -120396,6 +120463,7 @@ class SetArchOperation(ArchOperation):
             legs=UNSET if "legs" not in data else None if data["legs"] is None else [float(e0) for e0 in data["legs"]],
             level=data.get("level", UNSET),
             material=data.get("material", UNSET),
+            member=UNSET if "member" not in data else None if data["member"] is None else Member.from_json(data["member"]),
             numbering=data.get("numbering", UNSET),
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
             overhang=UNSET if "overhang" not in data else None if data["overhang"] is None else float(data["overhang"]),
@@ -143285,6 +143353,7 @@ __all__ = [
     "MeasuredRefraction",
     "MedianRoadWork",
     "Meeting",
+    "Member",
     "MergeDuplicates",
     "MergeDuplicatesName",
     "MergeMatched",

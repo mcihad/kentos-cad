@@ -369,10 +369,23 @@ pub struct ColumnFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub broken: Option<ColumnBreak>,
+    /// Its own height over its floor, metres (docs/adr/8070 §8: a post's, a pergola's); absent: its storey's, as the
+    /// frame's column.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub height: Option<f64>,
+    /// A post (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's column.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub member: Option<crate::Member>,
     #[serde(default, skip_serializing_if = "ArchInfo::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<ArchInfo>", optional))]
     pub arch: ArchInfo,
 }
+
+/// The tallest a column's own height is, metres.
+pub const MAX_COLUMN_HEIGHT: f64 = 100.0;
 
 impl ColumnFields {
     /// Its depth: its own, else its width.
@@ -719,6 +732,14 @@ impl ColumnFields {
                 "grids".into(),
                 "Kolon iki ayrı aksın kesişimine bağlanır.".into(),
             ));
+        }
+        if let Some(h) = self.height
+            && let Some(found) = positive(h, "height", "Kolonun yüksekliği", MAX_COLUMN_HEIGHT)
+        {
+            return Some(found);
+        }
+        if let Some(found) = self.member.as_ref().and_then(crate::Member::problem) {
+            return Some(found);
         }
         blank(&self.kind, "type")
             .or_else(|| blank(&self.tag, "tag"))

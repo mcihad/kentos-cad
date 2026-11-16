@@ -53,7 +53,9 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     const RAMP_BEAM: &[&str] = &["ramp", "beam"];
     const TAGGED: &[&str] = &["column", "beam"];
     const BEAM_ROOF: &[&str] = &["beam", "roof", "railing"];
-    const TALL: &[&str] = &["beam", "railing"];
+    // A column's own height (docs/adr/8070 §8).
+    const TALL: &[&str] = &["beam", "railing", "column"];
+    const STAIR_COLUMN: &[&str] = &["stair", "column"];
     const RAILING: &[&str] = &["railing"];
     const MADE_OF: &[&str] = &["column", "beam", "roof"];
     const ROOF: &[&str] = &["roof"];
@@ -79,7 +81,8 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.fill.is_some(), "fill", COLUMN);
     add(c.risers.is_some(), "risers", STAIR);
     add(c.riser_height.is_some(), "riserHeight", STAIR);
-    add(c.height_from_level.is_some(), "heightFromLevel", STAIR);
+    // A column's: its storey's height again (docs/adr/8070 §8).
+    add(c.height_from_level.is_some(), "heightFromLevel", STAIR_COLUMN);
     add(c.post.is_some(), "post", STAIR);
     add(c.tread.is_some(), "tread", STAIR);
     add(c.landing.is_some(), "landing", FLIGHT);
@@ -100,6 +103,8 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.offset.is_some(), "offset", BEAM_ROOF);
     add(c.role.is_some(), "role", BEAM);
     add(c.material.is_some(), "material", MADE_OF);
+    // A post's or a rail's type and name (docs/adr/8070 §8).
+    add(c.member.is_some(), "member", TAGGED);
     add(c.slopes.is_some(), "slopes", ROOF);
     add(c.thickness.is_some(), "thickness", ROOF);
     add(c.overhang.is_some(), "overhang", ROOF);
@@ -232,6 +237,16 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
             if let Some(v) = &c.material {
                 f.material.clone_from(v);
             }
+            // Its own height, or its storey's again; a post or the frame's column (docs/adr/8070 §8).
+            if let Some(v) = c.height {
+                f.height = Some(v);
+            }
+            if c.height_from_level == Some(true) {
+                f.height = None;
+            }
+            if let Some(v) = &c.member {
+                f.member.clone_from(v);
+            }
         }
         Entity::Stair(s) => {
             let f = &mut s.stair;
@@ -329,6 +344,10 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
             }
             if let Some(v) = &c.material {
                 f.material.clone_from(v);
+            }
+            // A rail or the frame's beam (docs/adr/8070 §8).
+            if let Some(v) = &c.member {
+                f.member.clone_from(v);
             }
         }
         // A roof's (docs/adr/8044 §1); its parts all of them, as the tools write them (§6).
@@ -525,6 +544,15 @@ fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
                 return Err(fail(
                     codes::INVALID_STAIR,
                     "Rıht yüksekliği ya kendisi (riserHeight) ya katın yüksekliğinden (heightFromLevel) verilir; ikisi birden verilmez."
+                        .into(),
+                    "operation.heightFromLevel",
+                ));
+            }
+            if c.height.is_some() && c.height_from_level == Some(true) {
+                return Err(fail(
+                    codes::INVALID_COLUMN,
+                    "Kolonun yüksekliği ya kendisi (height) ya da katın yüksekliğinden (heightFromLevel) verilir; ikisi \
+                     birden verilmez."
                         .into(),
                     "operation.heightFromLevel",
                 ));

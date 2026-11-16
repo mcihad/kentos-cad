@@ -988,7 +988,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_CURTAIN_WALLS),
+    ("arch", "mimari", ARCH_WITH_MEMBERS),
     ("gis", "CBS", GIS_WITH_EXTENSION_DERIVATIONS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -1038,10 +1038,27 @@ pub fn uses_curtain_walls(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     doc.entities.iter().any(wall) || doc.blocks.iter().any(|b| b.entities.iter().any(wall))
 }
 
-/// The architecture data version `doc` needs: 3 for a curtain wall, 2 for a block's building element, 1 for the
-/// performance declarations, else 0 (not raised).
+/// Architecture data version 4 (docs/adr/8070 §8): a post or a rail (a column's or a beam's `member`) and a column's own
+/// height. Version 4 holds versions 1–3's data too. The document schema stays as it is.
+pub const ARCH_WITH_MEMBERS: u16 = 4;
+
+/// Whether `doc` holds architecture data 4 ([`ARCH_WITH_MEMBERS`]): a post, a rail or a column of its own height, in
+/// the drawing or a block.
+pub fn uses_members(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    let member = |e: &kentos_contracts::Entity| match e {
+        kentos_contracts::Entity::Column(c) => c.column.member.is_some() || c.column.height.is_some(),
+        kentos_contracts::Entity::Beam(b) => b.beam.member.is_some(),
+        _ => false,
+    };
+    doc.entities.iter().any(member) || doc.blocks.iter().any(|b| b.entities.iter().any(member))
+}
+
+/// The architecture data version `doc` needs: 4 for a post, a rail or a column's own height, 3 for a curtain wall, 2
+/// for a block's building element, 1 for the performance declarations, else 0 (not raised).
 pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
-    if uses_curtain_walls(doc) {
+    if uses_members(doc) {
+        ARCH_WITH_MEMBERS
+    } else if uses_curtain_walls(doc) {
         ARCH_WITH_CURTAIN_WALLS
     } else if uses_elements(doc) {
         ARCH_WITH_ELEMENTS

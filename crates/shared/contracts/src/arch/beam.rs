@@ -110,6 +110,11 @@ pub struct BeamFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
+    /// A rail (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's beam. Only a
+    /// beam's (not a lintel's or a bond beam's).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub member: Option<crate::Member>,
     #[serde(default, skip_serializing_if = "ArchInfo::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<ArchInfo>", optional))]
     pub arch: ArchInfo,
@@ -210,6 +215,17 @@ impl BeamFields {
                     self.offset
                 ),
             ));
+        }
+        if let Some(m) = &self.member {
+            if let Some(found) = m.problem() {
+                return Some(found);
+            }
+            if self.role != BeamRole::Beam {
+                return Some((
+                    "member".into(),
+                    "Lento ve hatıl eleman (kayıt) olamaz; türü Kiriş olmalı.".into(),
+                ));
+            }
         }
         for (name, v) in [("tag", &self.tag), ("material", &self.material)] {
             if let Some(t) = v

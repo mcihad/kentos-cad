@@ -1426,6 +1426,268 @@
       ]
     },
     {
+      "name": "kayıt: kullanıcı tanımlı Kayıt, kattan yüksekliğiyle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.05,
+                "height": 0.1,
+                "baseOffset": 1.0,
+                "material": "Çelik",
+                "member": {
+                  "predefined": "USERDEFINED",
+                  "name": "Kayıt"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "beam",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.05,
+                "height": 0.1,
+                "baseOffset": 1.0,
+                "material": "Çelik",
+                "member": {
+                  "predefined": "USERDEFINED",
+                  "name": "Kayıt"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aşık: PURLIN tipiyle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.08,
+                "height": 0.16,
+                "member": {
+                  "predefined": "PURLIN"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "beam",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.08,
+                "height": 0.16,
+                "member": {
+                  "predefined": "PURLIN"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "asılı kayıt, kot farkıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.05,
+                "height": 0.1,
+                "offset": -0.2,
+                "member": {
+                  "predefined": "USERDEFINED",
+                  "name": "Cephe kaydı"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "beam",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.05,
+                "height": 0.1,
+                "offset": -0.2,
+                "member": {
+                  "predefined": "USERDEFINED",
+                  "name": "Cephe kaydı"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
       "name": "kiriş verilmezse reddedilir",
       "steps": [
         {
@@ -2149,6 +2411,219 @@
               "code": "level_not_found",
               "message": "Projede “yok” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.",
               "path": "beams[0].arch.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "lento kayıt olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.2,
+                "height": 0.2,
+                "role": "lintel",
+                "baseOffset": 2.1,
+                "member": {
+                  "predefined": "USERDEFINED",
+                  "name": "Kayıt"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_beam",
+              "message": "Lento ve hatıl eleman (kayıt) olamaz; türü Kiriş olmalı.",
+              "path": "beams[0].member"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hatıl kayıt olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.2,
+                "height": 0.2,
+                "role": "bondBeam",
+                "baseOffset": 1.0,
+                "member": {
+                  "predefined": "PURLIN"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_beam",
+              "message": "Lento ve hatıl eleman (kayıt) olamaz; türü Kiriş olmalı.",
+              "path": "beams[0].member"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "listede olmayan kayıt tipi reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.25,
+                "height": 0.5,
+                "member": {
+                  "predefined": "RAIL"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_beam",
+              "message": "“RAIL” elemanın tiplerinden biri değil (ARCH_SEGMENT, BRACE, CHORD, COLLAR, MEMBER, MULLION, PLATE, POST, PURLIN, RAFTER, STAY_CABLE, STIFFENING_RIB, STRINGER, STRUCTURALCABLE, STRUT, STUD, SUSPENDER, SUSPENSION_CABLE, TIEBAR, USERDEFINED).",
+              "path": "beams[0].member.predefined"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "adsız kullanıcı tanımlı kayıt reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "beams": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 5.0,
+                    "y": 50.0
+                  }
+                ],
+                "width": 0.25,
+                "height": 0.5,
+                "member": {
+                  "predefined": "USERDEFINED"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_beam",
+              "message": "Kullanıcı tanımlı elemanın ne olduğu adında yazılır (USERDEFINED'ın nesne tipi); bir ad verin ya da listeden bir tip seçin.",
+              "path": "beams[0].member.name"
             }
           },
           "expect": {

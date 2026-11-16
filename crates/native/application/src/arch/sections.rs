@@ -827,7 +827,9 @@ fn column(
     let Some(foot) = kentos_geometry_core::geom::column_join::Foot::of(at, &column) else {
         return;
     };
-    let (floor, height) = floor_of(&m.levels, c.arch.level.as_deref());
+    let (floor, storey) = floor_of(&m.levels, c.arch.level.as_deref());
+    // Its own height (a post's, docs/adr/8070 §8), else its storey's.
+    let height = c.height.or(storey);
     let centre = P::new(
         foot.ring.iter().map(|q| q.x).sum::<f64>() / foot.ring.len() as f64,
         foot.ring.iter().map(|q| q.y).sum::<f64>() / foot.ring.len() as f64,
@@ -856,13 +858,14 @@ fn column(
         marks: Vec::new(),
         finish: None,
     };
-    push(
-        m,
-        solid,
-        material_look("KOLN", c.material.as_deref(), None),
-        owner,
-    );
+    // A post on EK-2's Diğer (docs/adr/8070 §8): not the frame's column.
+    let element = if c.member.is_some() { MEMBER_ELEMENT } else { "KOLN" };
+    push(m, solid, material_look(element, c.material.as_deref(), None), owner);
 }
+
+/// The EK-2 element a post or a rail is drawn on (docs/adr/8070 §8): Diğer (Diğer ögeler için), EK-2 having no post's or
+/// rail's own.
+pub const MEMBER_ELEMENT: &str = "DIGR";
 
 /// A beam between its underside and its top (docs/adr/8041 §1); a lintel and a bond beam alike.
 fn beam(doc: &Document, b: &kentos_commands::BeamFields, owner: Option<String>, m: &mut Model) {
@@ -878,10 +881,13 @@ fn beam(doc: &Document, b: &kentos_commands::BeamFields, owner: Option<String>, 
         return;
     }
     let element = match b.role {
+        // A rail (docs/adr/8070 §8), by its material.
+        _ if b.member.is_some() => MEMBER_ELEMENT,
         BeamRole::Beam => "TASI",
         BeamRole::Lintel => "LENT",
         BeamRole::BondBeam => "HATL",
     };
+    let made_of = b.member.as_ref().and(b.material.as_deref());
     let solid = Solid {
         rings: vec![ring],
         height: Height::Prism { bottom, top },
@@ -889,7 +895,7 @@ fn beam(doc: &Document, b: &kentos_commands::BeamFields, owner: Option<String>, 
         marks: Vec::new(),
         finish: None,
     };
-    push(m, solid, material_look(element, None, None), owner);
+    push(m, solid, material_look(element, made_of, None), owner);
 }
 
 /// A railing's look in a section (docs/adr/8045 §3): on its infill's layer (EK-2 Korkuluk: MM-KORK-CUBUK), outlined

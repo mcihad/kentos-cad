@@ -8,6 +8,8 @@
 //! - Kolon: a click its reference point; near where two grids cross it stands there, tied to them. Biçim (B:
 //!   Dikdörtgen, Daire, L), En (E), Boy (Y), L kolları (L), Döndür (D), Hiza (H: which of its box's nine points stands
 //!   there, docs/adr/0725 §2), Etiket (K); Aks kesişimleri (A) puts one at every crossing of the grids shown.
+//! - Dikme (docs/adr/8070 §8): Kolon writing a post, a member of type POST: its own Yükseklik (Ü; empty: its storey's)
+//!   and Malzeme (M; Çelik until changed), 10/10 until changed, not darkened; no grid crossings.
 //! - Merdiven and Rampa: the walking line's points (two to four), Enter writes. A stair from its Yükseklik (Y; Etkin
 //!   kat's height until one is typed, docs/adr/0713): En fazla
 //!   rıht (R), Rıht sayısı (S, else from the height), Basamak (D), Genişlik (G), Sahanlık (H), Kesme (K), Numaralar
@@ -42,6 +44,8 @@ use crate::tool_settings::Setting;
 
 pub const GRID_ID: &str = "grid";
 pub const COLUMN_ID: &str = "column";
+/// Dikme (docs/adr/8070 §8).
+pub const POST_ID: &str = "post";
 pub const STAIR_ID: &str = "stair";
 /// Döner merdiven (docs/adr/0709): the stair tool started curved.
 pub const SPIRAL_ID: &str = "stairCurved";
@@ -129,6 +133,10 @@ enum Ask {
     Ends,
     /// A balanced stair's winders either side of each turn (docs/adr/8045 §1).
     Winders,
+    /// A post's own height (docs/adr/8070 §8).
+    OwnHeight,
+    /// A post's material (docs/adr/8070 §8).
+    Material,
 }
 
 fn ask_words(ask: Ask) -> &'static str {
@@ -152,6 +160,8 @@ fn ask_words(ask: Ask) -> &'static str {
         Ask::Legs => "L kolonun iki kolunun kalınlığını yazın (0.25 0.30; boş: yarısı)",
         Ask::Ends => "kesik aksın uçlarını kâğıtta mm olarak yazın (boş ya da 0: bütün aks)",
         Ask::Winders => "dönüşün iki yanında dengelenecek basamak sayısını yazın (boş: sahanlık)",
+        Ask::OwnHeight => "dikmenin yüksekliğini yazın (boş: katın yüksekliği)",
+        Ask::Material => "malzemesini yazın (Çelik, Ahşap gibi; boş: Betonarme)",
     }
 }
 
@@ -563,6 +573,12 @@ pub struct ColumnTool {
     drawn: Preview,
     why: Option<String>,
     place: Option<String>,
+    /// Dikme (docs/adr/8070 §8): a post, a member of type POST, of its own height and material.
+    post: bool,
+    /// A post's own height; none: its storey's.
+    height: Option<f64>,
+    /// A post's material; none: Betonarme, as a column's.
+    material: Option<String>,
 }
 
 impl Default for ColumnTool {
@@ -580,6 +596,9 @@ impl Default for ColumnTool {
             drawn: Preview::default(),
             why: None,
             place: None,
+            post: false,
+            height: None,
+            material: None,
         }
     }
 }
@@ -587,6 +606,32 @@ impl Default for ColumnTool {
 impl ColumnTool {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Dikme (docs/adr/8070 §8): 10/10 Çelik until changed, KentOS's own first values; its storey's height until one is
+    /// typed.
+    pub fn post() -> Self {
+        Self {
+            width: 0.1,
+            depth: Some(0.1),
+            post: true,
+            material: Some("Çelik".into()),
+            ..Self::default()
+        }
+    }
+
+    /// Its name: Kolon or Dikme.
+    fn name(&self) -> &'static str {
+        if self.post { "Dikme" } else { "Kolon" }
+    }
+
+    /// Its objects' layer kind (docs/adr/8008, 8070 §8).
+    fn kind(&self) -> crate::arch_layer::Kind {
+        if self.post {
+            crate::arch_layer::Kind::Post
+        } else {
+            crate::arch_layer::Kind::Column
+        }
     }
 
     /// The crossing of two grids shown nearest `at` within reach: the grids' ids.
@@ -631,8 +676,12 @@ impl ColumnTool {
             rotation: (self.turn != 0.0).then_some(self.turn),
             tag: None,
             // Its inside darkened, as Mimarlar Odası asks of a bearing element on a plan (§14.5.3 i); at 1:20 its
-            // concrete is TS 5319's SN46 instead (docs/adr/8014).
-            fill: Some(true),
+            // concrete is TS 5319's SN46 instead (docs/adr/8014). A post is not the frame's: not darkened.
+            fill: Some(!self.post),
+            // A post's own height, material and type (docs/adr/8070 §8).
+            height: self.height.filter(|_| self.post),
+            material: self.material.clone().filter(|_| self.post),
+            member: self.post.then(kentos_commands::Member::post),
             // Etkin kat (docs/adr/0713).
             arch: cx.new_arch(),
             ..NewColumn::default()
@@ -646,8 +695,8 @@ impl ColumnTool {
         cx: &Context<'_>,
     ) -> ColumnsCreate {
         ColumnsCreate {
-            // The columns' layer (docs/adr/8008).
-            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Column, cx),
+            // The columns' layer (docs/adr/8008); a post's Diğer (docs/adr/8070 §8).
+            layer_id: crate::arch_layer::planned(&self.kind(), cx),
             columns,
             crossings,
             tag_start: self.tag.clone(),
@@ -674,7 +723,8 @@ impl ColumnTool {
 
     fn write(&mut self, input: ColumnsCreate, cx: &mut Context<'_>) {
         let mut out = None;
-        crate::arch_layer::writing(&crate::arch_layer::Kind::Column, cx, |layer, cx| {
+        let kind = self.kind();
+        crate::arch_layer::writing(&kind, cx, |layer, cx| {
             let input = ColumnsCreate {
                 layer_id: layer.to_owned(),
                 ..input
@@ -685,7 +735,7 @@ impl ColumnTool {
         });
         if let Some(out) = out {
             let n = out.ids.len();
-            cx.say(Level::Success, format!("{n} kolon konuldu."));
+            cx.say(Level::Success, format!("{n} {} konuldu.", self.kind().what()));
             if let Some(t) = &self.tag {
                 let mut next = t.clone();
                 for _ in 0..n {
@@ -699,7 +749,7 @@ impl ColumnTool {
 
 impl Tool for ColumnTool {
     fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
-        Some(crate::arch_layer::Kind::Column)
+        Some(self.kind())
     }
 
     fn point_count(&self) -> usize {
@@ -711,11 +761,11 @@ impl Tool for ColumnTool {
     }
 
     fn id(&self) -> &'static str {
-        COLUMN_ID
+        if self.post { POST_ID } else { COLUMN_ID }
     }
 
     fn label(&self) -> &'static str {
-        "Kolon"
+        self.name()
     }
 
     fn cursor(&self) -> Cursor {
@@ -724,12 +774,16 @@ impl Tool for ColumnTool {
 
     fn prompt(&self) -> Prompt {
         if let Some(ask) = self.ask {
-            return Prompt::new("Kolon", ask_words(ask)).option("Geri", "G");
+            return Prompt::new(self.name(), ask_words(ask)).option("Geri", "G");
         }
         let fmt = |v: f64| v.to_string();
         let mut p = Prompt::new(
-            "Kolon",
-            "kolonun merkezine ya da iki aksın kesişimine tıklayın",
+            self.name(),
+            if self.post {
+                "dikmenin yerine tıklayın"
+            } else {
+                "kolonun merkezine ya da iki aksın kesişimine tıklayın"
+            },
         )
         .option_with("Biçim", "B", self.shape.label())
         .option_with("En", "E", fmt(self.width));
@@ -741,14 +795,22 @@ impl Tool for ColumnTool {
         if let Some([a, b]) = self.legs_now() {
             p = p.option_with("L kolları", "L", format!("{} {}", fmt(a), fmt(b)));
         }
-        p.option_with("Hiza", "H", self.anchor.label())
-        .option_with(
+        p = p.option_with("Hiza", "H", self.anchor.label());
+        if self.post {
+            // A post's own height and material (docs/adr/8070 §8).
+            p = p
+                .option_with("Yükseklik", "Ü", self.height.map_or_else(|| "Kat".into(), fmt))
+                .option_with("Malzeme", "M", self.material.clone().unwrap_or_else(|| "Betonarme".into()));
+        }
+        p = p.option_with(
             "İlk etiket",
             "K",
             self.tag.clone().unwrap_or_else(|| "Yok".into()),
-        )
-        .option("Aks kesişimleri", "A")
-        .option("Bitir", "Enter")
+        );
+        if !self.post {
+            p = p.option("Aks kesişimleri", "A");
+        }
+        p.option("Bitir", "Enter")
     }
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -791,6 +853,14 @@ impl Tool for ColumnTool {
                     self.configure("L", text, cx);
                     return true;
                 }
+                Ask::OwnHeight => {
+                    self.configure("Ü", text, cx);
+                    return true;
+                }
+                Ask::Material => {
+                    self.configure("M", text, cx);
+                    return true;
+                }
                 _ => match cx.typed_length(text).filter(|v| *v > 0.0) {
                     Some(v) if ask == Ask::Width => self.width = v,
                     Some(v) => self.depth = Some(v),
@@ -821,7 +891,9 @@ impl Tool for ColumnTool {
                 self.anchor = all[(at + 1) % all.len()];
             }
             "K" => self.ask = Some(Ask::Label),
-            "A" => {
+            "Ü" if self.post => self.ask = Some(Ask::OwnHeight),
+            "M" if self.post => self.ask = Some(Ask::Material),
+            "A" if !self.post => {
                 let grids: Vec<String> = grids_shown(cx).into_iter().map(|(_, u, _)| u).collect();
                 if grids.len() < 2 {
                     cx.say(
@@ -902,13 +974,30 @@ impl Tool for ColumnTool {
             "Hiza",
             crate::tool_settings::choices(&ColumnAnchor::ALL.map(|a| (a.name(), a.label())), self.anchor.name()),
         ));
+        if self.post {
+            rows.push(Setting::text(
+                "Ü",
+                "Yükseklik",
+                self.height.map_or_else(|| "Katın yüksekliği".into(), |h| f.length(h)),
+            ));
+            rows.push(Setting::text("M", "Malzeme", self.material.clone().unwrap_or_else(|| "Betonarme".into())));
+        }
         rows.push(Setting::text("K", "İlk etiket", self.tag.clone().unwrap_or_else(|| "Yok".into())));
-        rows.push(Setting::hint(
-            "T",
-            "Kolon",
-            "Tıklanan nokta kolonun hiza noktasıdır; iki aksın kesişimine yakın tıklanırsa kolon o noktasıyla \
-             kesişime bağlanır, aks taşınınca izler. L kolonun kolları kutusunun alt ve sol yanıdır.",
-        ));
+        rows.push(if self.post {
+            Setting::hint(
+                "T",
+                "Dikme",
+                "Pergola, saçak ya da cephe dikmesi: çerçevenin kolonu değildir, IFC'de eleman (dikme) olarak yazılır. \
+                 Yüksekliği boşsa katın yüksekliğidir.",
+            )
+        } else {
+            Setting::hint(
+                "T",
+                "Kolon",
+                "Tıklanan nokta kolonun hiza noktasıdır; iki aksın kesişimine yakın tıklanırsa kolon o noktasıyla \
+                 kesişime bağlanır, aks taşınınca izler. L kolonun kolları kutusunun alt ve sol yanıdır.",
+            )
+        });
         if let Some(why) = &self.why {
             rows.push(Setting::notice("W", "Konamıyor", why.clone()));
         }
@@ -989,6 +1078,26 @@ impl Tool for ColumnTool {
                 self.tag = (!t.is_empty() && words != "YOK").then(|| t.to_owned());
                 true
             }
+            // A post's own height (docs/adr/8070 §8): empty or Kat its storey's.
+            "Ü" if self.post => {
+                if words.is_empty() || words.starts_with("KAT") {
+                    self.height = None;
+                    true
+                } else {
+                    match cx.typed_length(value).filter(|v| v.is_finite() && *v > 0.0) {
+                        Some(v) => {
+                            self.height = Some(v);
+                            true
+                        }
+                        None => false,
+                    }
+                }
+            }
+            "M" if self.post => {
+                let t = js_trim(value);
+                self.material = (!t.is_empty() && words != "BETONARME").then(|| t.to_owned());
+                true
+            }
             _ => false,
         };
         if ok {
@@ -998,6 +1107,7 @@ impl Tool for ColumnTool {
             cx.say(
                 Level::Warn,
                 match key {
+                    "Ü" => "Dikmenin yüksekliği sıfırdan büyük bir uzunluk olmalı; boş: katın yüksekliği.",
                     "L" => "L kolonun iki kolunu sıfırdan büyük uzunluklar olarak boşlukla yazın (0.25 0.30); boş: yarısı.",
                     "E" | "Y" => "Kolon ölçüsü sıfırdan büyük bir uzunluk olmalı.",
                     "D" => "Dönüşü derece olarak bir sayıyla yazın; örneğin 30.",
@@ -1010,12 +1120,13 @@ impl Tool for ColumnTool {
 
     fn preview(&self, _format: &Format) -> Preview {
         let mut out = self.drawn.clone();
+        let name = self.name();
         out.tag = self.hover.map(|at| Tag {
             at,
             lines: match (&self.why, &self.place) {
-                (Some(why), _) => vec!["Kolon".into(), why.clone()],
-                (None, Some(p)) => vec![format!("Kolon · {p}")],
-                _ => vec!["Kolon".into()],
+                (Some(why), _) => vec![name.into(), why.clone()],
+                (None, Some(p)) => vec![format!("{name} · {p}")],
+                _ => vec![name.into()],
             },
         });
         out.tag_tone = if self.why.is_some() {

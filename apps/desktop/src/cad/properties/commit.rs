@@ -807,6 +807,7 @@ pub(super) fn commit(
                     | ArchField::BeamHeight
                     | ArchField::BeamOffset
                     | ArchField::BeamBase
+                    | ArchField::OwnHeight
                     | ArchField::RailingGap
                     | ArchField::Overhang
                     | ArchField::Gutter
@@ -882,7 +883,11 @@ pub(super) fn commit(
                 && !n.is_finite()
                 && !matches!(
                     which,
-                    ArchField::Label | ArchField::Tag | ArchField::Type | ArchField::Material
+                    ArchField::Label
+                        | ArchField::Tag
+                        | ArchField::Type
+                        | ArchField::Material
+                        | ArchField::MemberName
                 )
             {
                 return Vec::new();
@@ -915,6 +920,35 @@ pub(super) fn commit(
                     base_offset: Some(words.map(|_| n)),
                     ..Default::default()
                 },
+                // A column's own height; empty: its storey's (docs/adr/8070 §8).
+                ArchField::OwnHeight => match words {
+                    Some(_) => ArchChange {
+                        height: Some(n),
+                        ..Default::default()
+                    },
+                    None => ArchChange {
+                        height_from_level: Some(true),
+                        ..Default::default()
+                    },
+                },
+                // A post's or a rail's name, its type kept (docs/adr/8070 §8).
+                ArchField::MemberName => {
+                    let member = match model.get(*slot) {
+                        Some(kentos_commands::Entity::Column(c)) => c.column.member.clone(),
+                        Some(kentos_commands::Entity::Beam(b)) => b.beam.member.clone(),
+                        _ => None,
+                    };
+                    let Some(m) = member else {
+                        return Vec::new();
+                    };
+                    ArchChange {
+                        member: Some(Some(kentos_commands::Member {
+                            name: words,
+                            ..m
+                        })),
+                        ..Default::default()
+                    }
+                }
                 ArchField::RailingGap => ArchChange {
                     gap: Some(words.map(|_| n)),
                     ..Default::default()

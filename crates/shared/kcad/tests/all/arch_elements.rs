@@ -1,4 +1,6 @@
-//! Architecture data 2 (docs/adr/8070 §5): a block card's building element (its class, type and body) is written with
+//! Architecture data 2–4 (docs/adr/8070 §5, §7, §8): a block card's building element (its class, type and body), a
+//! curtain wall's grid, a post and a rail are written with their version (`modules.arch`) and read back as they were.
+//! Architecture data 2: a block card's building element is written with
 //! `modules.arch = 2` and read back as it was; a type its class does not have is refused when written and when read.
 
 use kentos_contracts::{BlockDefinition, BlockElement, BlockElementClass};
@@ -108,4 +110,60 @@ fn a_curtain_wall_round_trips_under_arch_data_3() {
     }
     let refused = kentos_kcad::encode(&bad).expect_err("a frame wider than half a bay");
     assert!(refused.message.contains("çerçevesi"), "{}", refused.message);
+}
+
+/// Architecture data 4 (docs/adr/8070 §8): a post (a column of type POST, of its own height) and a rail (a beam,
+/// USERDEFINED "Kayıt") are written with `modules.arch = 4` and read back as they were; a type IFC 4.3 has not, and a
+/// user-defined member without its name, are refused when written.
+#[test]
+fn a_post_and_a_rail_round_trip_under_arch_data_4() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_members(&doc));
+    let column = doc
+        .entities
+        .iter_mut()
+        .find_map(|e| match e {
+            kentos_contracts::Entity::Column(c) => Some(c),
+            _ => None,
+        })
+        .expect("a column");
+    column.column.member = Some(kentos_contracts::Member::post());
+    column.column.height = Some(2.4);
+    column.column.material = Some("Çelik".into());
+    let beam = doc
+        .entities
+        .iter_mut()
+        .find_map(|e| match e {
+            kentos_contracts::Entity::Beam(b) => Some(b),
+            _ => None,
+        })
+        .expect("a beam");
+    beam.beam.member = Some(kentos_contracts::Member::rail());
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_MEMBERS);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the post and the rail read back");
+    // A column of its own height alone needs version 4 too.
+    let mut tall = sample();
+    if let Some(kentos_contracts::Entity::Column(c)) =
+        tall.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Column(_)))
+    {
+        c.column.height = Some(4.5);
+    }
+    assert_eq!(kentos_kcad::arch_version(&tall), kentos_kcad::ARCH_WITH_MEMBERS);
+    let mut bad = doc.clone();
+    if let Some(kentos_contracts::Entity::Column(c)) =
+        bad.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Column(c) if c.column.member.is_some()))
+    {
+        c.column.member = Some(kentos_contracts::Member { predefined: "NOTDEFINED".into(), name: None });
+    }
+    let refused = kentos_kcad::encode(&bad).expect_err("NOTDEFINED is no type");
+    assert!(refused.message.contains("NOTDEFINED"), "{}", refused.message);
+    let mut nameless = doc.clone();
+    if let Some(kentos_contracts::Entity::Beam(b)) =
+        nameless.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Beam(b) if b.beam.member.is_some()))
+    {
+        b.beam.member = Some(kentos_contracts::Member { predefined: "USERDEFINED".into(), name: None });
+    }
+    let refused = kentos_kcad::encode(&nameless).expect_err("a user-defined member says what it is");
+    assert!(refused.message.contains("USERDEFINED"), "{}", refused.message);
 }

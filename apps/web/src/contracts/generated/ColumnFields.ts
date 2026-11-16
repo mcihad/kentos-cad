@@ -3,6 +3,7 @@ import type { ArchInfo } from "./ArchInfo";
 import type { ColumnAnchor } from "./ColumnAnchor";
 import type { ColumnBreak } from "./ColumnBreak";
 import type { ColumnShape } from "./ColumnShape";
+import type { Member } from "./Member";
 import type { Vec2 } from "./Vec2";
 
 /**
@@ -51,4 +52,13 @@ grids?: Array<string>,
 /**
  * Its place by its grids' labels (“B-3”), which the document writes.
  */
-place?: string, broken?: ColumnBreak, arch?: ArchInfo, };
+place?: string, broken?: ColumnBreak, 
+/**
+ * Its own height over its floor, metres (docs/adr/8070 §8: a post's, a pergola's); absent: its storey's, as the
+ * frame's column.
+ */
+height?: number, 
+/**
+ * A post (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's column.
+ */
+member?: Member, arch?: ArchInfo, };

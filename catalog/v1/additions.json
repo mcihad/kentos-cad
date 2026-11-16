@@ -2779,6 +2779,19 @@
       "status": "implemented"
     },
     {
+      "id": "tool.post",
+      "title": "Dikme",
+      "icon": "post",
+      "description": "Tıklanan yere bir dikme koyar: pergola, saçak ya da cephe dikmesi; çerçevenin kolonu değildir, IFC'de eleman (dikme, POST) olarak yazılır. Biçim (B), En (E), Boy (Y), Açı (D), Hiza (H), Yükseklik (Ü: boş ya da Kat, katın yüksekliği), Malzeme (M: Çelik ile başlar), İlk etiket (K); 10/10 ile başlar, içi doldurulmaz. Kesitte, görünüşte ve 3B'de kendi yüksekliğiyle görünür; Öznitelikler'de tipi ve adı değişir.",
+      "aliases": [
+        "DIKME",
+        "POST"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.stair",
       "title": "Merdiven",
       "icon": "stair",
@@ -2828,6 +2841,19 @@
         "BEAM",
         "KIRIS",
         "KİRİŞ"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.rail",
+      "title": "Kayıt",
+      "icon": "rail",
+      "description": "Eksenin noktalarına bir kayıt çizer: cephe, pergola ya da saçak kaydı; çerçevenin kirişi değildir, IFC'de eleman (kullanıcı tanımlı “Kayıt”) olarak yazılır. Genişlik (E), Yükseklik (Y), Hiza (H), Kattan yükseklik (A: alt yüzünün katın döşemesinden yüksekliği), Malzeme (M: Çelik ile başlar), Numara (N); Enter yazar. 5/10 ve 1,00 m ile başlar.",
+      "aliases": [
+        "KAYIT",
+        "RAIL"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -5298,6 +5324,8 @@
     {"id": "extensions.install", "title": "Eklenti paketi yükle…", "short": "Paket yükle", "icon": "import", "description": "Bir .kek eklenti paketini seçtirir ve kurmadan önce gözden geçirtir: paket kodu çalıştırılmadan denetlenir, sorunları dosyası ve yeriyle söylenir; geçerliyse açıklaması, değişiklik notu, bağımlılıkları ve gerekçeli yetenekleri görünür, kurulu bir sürüm varsa farkıyla. Dosyaya çift tıklamak kurmaz.", "aliases": ["EKLENTIYUKLE", "EKLENTİYÜKLE", "KEK", "PAKETYUKLE", "PAKETYÜKLE"], "shortcuts": [], "category": "Eklentiler", "status": "implemented"}
   ],
   "icons": {
+    "post": "<rect x=\"8.5\" y=\"3.5\" width=\"3\" height=\"13\"/><path d=\"M4.5 16.5h11M6.5 3.5h7\"/>",
+    "rail": "<rect x=\"2.5\" y=\"8.5\" width=\"15\" height=\"3\"/><path d=\"M6 11.5v4M14 11.5v4\" stroke-width=\"1\"/>",
     "curtainWall": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\"/><path d=\"M7.5 2.5v15M12.5 2.5v15M2.5 7.5h15M2.5 12.5h15\" stroke-width=\"1\"/><path d=\"m3.8 6.2 2.4-2.4M8.8 11.2l2.4-2.4M13.8 16.2l2.4-2.4\" stroke-width=\"0.7\"/>",
     "openReport": "<path d=\"M5 2.5h7l3 3v12H5z\"/><path d=\"M12 2.5v3h3\"/><path d=\"M7.5 9h5M7.5 11.5h5M7.5 14h3\" stroke-width=\"1\"/>",
     "assistant": "<path d=\"M4 4.5h12a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5H9.2l-3.7 3v-3H4A1.5 1.5 0 0 1 2.5 13V6A1.5 1.5 0 0 1 4 4.5z\"/><path d=\"m10 6.6.75 1.75 1.75.75-1.75.75L10 11.6l-.75-1.75L7.5 9.1l1.75-.75z\" stroke-width=\"1\"/>",

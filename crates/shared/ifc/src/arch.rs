@@ -667,6 +667,7 @@ fn common_set(class: Class) -> Option<&'static str> {
         Class::Covering => "Pset_CoveringCommon",
         Class::Ramp => "Pset_RampCommon",
         Class::CurtainWall => "Pset_CurtainWallCommon",
+        Class::Member => "Pset_MemberCommon",
         _ => return None,
     })
 }
@@ -802,38 +803,59 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             continue;
         }
         let mut object_type = None;
-        let (class, predefined, words): (Class, &'static str, String) = match e {
-            // Its style's name (Dış duvar 25), as the plan's legend and the layer key name it.
-            Entity::Wall(w) => (
-                Class::Wall,
-                "STANDARD",
-                wall_style_name(w.wall.style.as_deref()),
-            ),
-            Entity::Slab(_) => (Class::Slab, "FLOOR", "Döşeme".into()),
-            Entity::Column(c) => (
-                Class::Column,
-                "COLUMN",
-                c.column.kind.clone().unwrap_or_else(|| "Kolon".into()),
-            ),
-            Entity::Beam(b) => match b.beam.role {
-                BeamRole::Lintel => (Class::Beam, "LINTEL", "Lento".into()),
-                BeamRole::BondBeam => (Class::Beam, "BEAM", "Hatıl".into()),
-                _ => (Class::Beam, "BEAM", "Kiriş".into()),
-            },
-            Entity::Roof(_) => (Class::Roof, "NOTDEFINED", "Çatı".into()),
-            Entity::Railing(_) => (Class::Railing, "BALUSTRADE", "Korkuluk".into()),
-            // Its type from its walking line's flights and turns (docs/adr/8070 §2).
-            Entity::Stair(s) => {
-                let (t, words) = crate::turns::of_stair(&s.stair);
-                object_type = words;
-                (Class::Stair, t, "Merdiven".into())
+        // A post or a rail (docs/adr/8070 §8; EK-6 Tablo 6.40): an IfcMember of its type, its name's words.
+        let member = match e {
+            Entity::Column(c) => c.column.member.as_ref(),
+            Entity::Beam(b) => b.beam.member.as_ref(),
+            _ => None,
+        };
+        let as_member = member.map(|m| {
+            let t = kentos_contracts::Member::TYPES
+                .iter()
+                .find(|t| **t == m.predefined)
+                .copied()
+                .unwrap_or("NOTDEFINED");
+            (Class::Member, t, m.words())
+        });
+        if let Some(m) = member {
+            object_type = m.object_type();
+        }
+        let (class, predefined, words): (Class, &'static str, String) = if let Some(found) = as_member {
+            found
+        } else {
+            match e {
+                // Its style's name (Dış duvar 25), as the plan's legend and the layer key name it.
+                Entity::Wall(w) => (
+                    Class::Wall,
+                    "STANDARD",
+                    wall_style_name(w.wall.style.as_deref()),
+                ),
+                Entity::Slab(_) => (Class::Slab, "FLOOR", "Döşeme".into()),
+                Entity::Column(c) => (
+                    Class::Column,
+                    "COLUMN",
+                    c.column.kind.clone().unwrap_or_else(|| "Kolon".into()),
+                ),
+                Entity::Beam(b) => match b.beam.role {
+                    BeamRole::Lintel => (Class::Beam, "LINTEL", "Lento".into()),
+                    BeamRole::BondBeam => (Class::Beam, "BEAM", "Hatıl".into()),
+                    _ => (Class::Beam, "BEAM", "Kiriş".into()),
+                },
+                Entity::Roof(_) => (Class::Roof, "NOTDEFINED", "Çatı".into()),
+                Entity::Railing(_) => (Class::Railing, "BALUSTRADE", "Korkuluk".into()),
+                // Its type from its walking line's flights and turns (docs/adr/8070 §2).
+                Entity::Stair(s) => {
+                    let (t, words) = crate::turns::of_stair(&s.stair);
+                    object_type = words;
+                    (Class::Stair, t, "Merdiven".into())
+                }
+                Entity::Ramp(r) => {
+                    let (t, words) = crate::turns::of_ramp(&r.ramp);
+                    object_type = words;
+                    (Class::Ramp, t, "Rampa".into())
+                }
+                _ => continue,
             }
-            Entity::Ramp(r) => {
-                let (t, words) = crate::turns::of_ramp(&r.ramp);
-                object_type = words;
-                (Class::Ramp, t, "Rampa".into())
-            }
-            _ => continue,
         };
         match class {
             Class::Wall => written.walls += 1,
@@ -844,6 +866,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             Class::Railing => written.railings += 1,
             Class::Stair => written.stairs += 1,
             Class::Ramp => written.ramps += 1,
+            Class::Member => written.members += 1,
             _ => {}
         }
         // EK-6's properties the drawing knows: a balcony's or a terrace's slab is outside (Tablo 6.56), a roof is
@@ -856,7 +879,8 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                     Value::Bool(s.slab.role != SlabRole::Floor),
                 )],
             }],
-            Entity::Column(_) => vec![Pset {
+            // A post carries nothing of the frame's that the drawing knows: no LoadBearing (docs/adr/8070 §8).
+            Entity::Column(_) if member.is_none() => vec![Pset {
                 name: "Pset_ColumnCommon".into(),
                 props: vec![("LoadBearing".into(), Value::Bool(true))],
             }],
@@ -1002,12 +1026,12 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             let k = whose[i];
             match elements[k].class {
                 Class::Wall => exterior[k] = true,
-                // A curtain wall is outside where one of its frames is on the outline.
-                Class::Member => {
-                    if let Some(whole) = elements[k].part_of {
-                        exterior[whole] = true;
-                    }
-                }
+                // A curtain wall is outside where one of its frames is on the outline; a post or a rail where it is
+                // (docs/adr/8070 §8).
+                Class::Member => match elements[k].part_of {
+                    Some(whole) => exterior[whole] = true,
+                    None => exterior[k] = true,
+                },
                 _ => {}
             }
         }
@@ -1022,7 +1046,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         let set = match (el.class, el.part_of) {
             (Class::Wall, _) => "Pset_WallCommon",
             (Class::CurtainWall, _) => "Pset_CurtainWallCommon",
-            (Class::Member, Some(_)) => "Pset_MemberCommon",
+            (Class::Member, _) => "Pset_MemberCommon",
             _ => continue,
         };
         el.psets.push(Pset {

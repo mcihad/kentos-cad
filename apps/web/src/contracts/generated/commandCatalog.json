@@ -122101,7 +122101,7 @@
               "x-unit": "length"
             },
             "height": {
-              "description": "A beam's height (docs/adr/8041 §1); a railing's top over its floor (docs/adr/8045 §3).",
+              "description": "A beam's height (docs/adr/8041 §1); a railing's top over its floor (docs/adr/8045 §3); a column's own height over\nits floor (docs/adr/8070 §8).",
               "format": "double",
               "type": [
                 "number",
@@ -122110,7 +122110,7 @@
               "x-unit": "length"
             },
             "heightFromLevel": {
-              "description": "A stair's (docs/adr/0724 §1): true, its rise is its level's height (its riser height that height over its\nrisers, followed); false, freed, its riser height staying. Not with `riserHeight`.",
+              "description": "A stair's (docs/adr/0724 §1): true, its rise is its level's height (its riser height that height over its\nrisers, followed); false, freed, its riser height staying. Not with `riserHeight`. A column's (docs/adr/8070 §8):\ntrue, its height is its storey's again (its own taken away); not with `height`.",
               "type": [
                 "boolean",
                 "null"
@@ -122185,6 +122185,17 @@
                 "string",
                 "null"
               ]
+            },
+            "member": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Member"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "A column's or a beam's member (docs/adr/8070 §8): a post's or a rail's type and name; null: the frame's column or\nbeam again."
             },
             "numbering": {
               "description": "A stair's.",
@@ -126186,6 +126197,17 @@
             "string",
             "null"
           ]
+        },
+        "member": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Member"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A rail (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's beam. Only a\nbeam's (not a lintel's or a bond beam's)."
         },
         "offset": {
           "description": "Its top over where it hangs (the structure's top of the slab over its storey, else its storey's top), metres;\nabsent: 0.",
@@ -131692,6 +131714,15 @@
             "null"
           ]
         },
+        "height": {
+          "description": "Its own height over its floor, metres (docs/adr/8070 §8: a post's, a pergola's); absent: its storey's, as the\nframe's column.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
         "id": {
           "format": "uint32",
           "minimum": 0,
@@ -131772,6 +131803,17 @@
             "string",
             "null"
           ]
+        },
+        "member": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Member"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A post (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's column."
         },
         "order": {
           "description": "Its place in its layer's drawing order: lower first, equals in the\ndocument's order; absent: 0; a 32-bit integer. Only a drawing's object has it.",
@@ -164352,6 +164394,27 @@
         }
       ]
     },
+    "Member": {
+      "additionalProperties": false,
+      "description": "What makes a column a post or a beam a rail (docs/adr/8070 §8).",
+      "properties": {
+        "name": {
+          "description": "What it is in words (\"Pergola dikmesi\", \"Cephe kaydı\"): its IFC name's words, and its object type when its type is\n`USERDEFINED`, which needs it; absent: its type's own word ([`Member::word`]).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "predefined": {
+          "description": "Its IFC 4.3 type ([`Member::TYPES`]): `POST` a post (dikme), `PURLIN` an aşık, `RAFTER` a mertek…;\n`USERDEFINED` takes `name` as its object type.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "predefined"
+      ],
+      "type": "object"
+    },
     "MergeDuplicates": {
       "description": "What a key the source gives more than one row does (docs/adr/0439 §4's words).",
       "oneOf": [
@@ -168364,6 +168427,17 @@
             "null"
           ]
         },
+        "member": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Member"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A rail (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's beam. Only a\nbeam's."
+        },
         "offset": {
           "description": "Its top over where it hangs (the structure's top of the slab over its storey, else its storey's top); absent: 0.",
           "format": "double",
@@ -168485,6 +168559,15 @@
             "null"
           ]
         },
+        "height": {
+          "description": "Its own height over its floor (docs/adr/8070 §8: a post's); absent: its storey's.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
         "legs": {
           "description": "An L's legs, metres (docs/adr/0725 §3): the thickness of the one along its width, then of the one along its\ndepth; only with `shape` L, which needs them.",
           "items": {
@@ -168505,6 +168588,17 @@
             "string",
             "null"
           ]
+        },
+        "member": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Member"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A post (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's column."
         },
         "rotation": {
           "description": "Its turn, radians counter-clockwise.",

@@ -2253,6 +2253,13 @@
       ],
       "note": "Tıklanan merkez ve yakın kesişimin iki aksı ya da görünen aksların kesişimleri komuta verilir; kesişim ve konum yazısı komutun hesabı (ADR 0343 §3–§5)."
     },
+    "tool.post": {
+      "level": "semantic",
+      "via": [
+        "cad.columns.create"
+      ],
+      "note": "Kolon'un tıklanan merkezi ve ölçüleri, kendi yüksekliği, malzemesi ve eleman tipi (POST) komuta verilir; gövdesi ve IFC'deki sınıfı komutun ve modelin (ADR 8070 §8)."
+    },
     "tool.stair": {
       "level": "semantic",
       "via": [
@@ -2280,6 +2287,13 @@
         "cad.beams.create"
       ],
       "note": "Eksenin noktaları, genişlik, yükseklik, hiza, kot farkı ve numara komuta verilir; tepesinin nerede asıldığı ve altındaki duvarın kirişin altında bitmesi belgenin kuralı (ADR 8041 §1)."
+    },
+    "tool.rail": {
+      "level": "semantic",
+      "via": [
+        "cad.beams.create"
+      ],
+      "note": "Kiriş'in ekseni ve ölçüleri, kattan yüksekliği, malzemesi ve eleman tipi (kullanıcı tanımlı “Kayıt”) komuta verilir; gövdesi ve IFC'deki sınıfı komutun ve modelin (ADR 8070 §8)."
     },
     "tool.railing": {
       "level": "semantic",

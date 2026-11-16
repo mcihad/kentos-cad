@@ -532,3 +532,103 @@ fn curtain_wall_screens() {
         send(&mut app, W::Close);
     }
 }
+
+/// The facade building with a pergola east of it (docs/adr/8070 §8): four 10/10 Çelik posts 2.60 m tall (their own
+/// height) at x 12.6 and 14.6, y 1 and 4; two 5/10 rails on them (y 1 and 4, their undersides at 2.50) and four 4/8
+/// rafters across (RAFTER, over the rails at 2.60); then the east elevation derived 20 m east.
+fn with_a_pergola() -> kentos_commands::DocumentSnapshotV2 {
+    use kentos_native_application::{ExecutionContext, registry, sections_edit};
+    let snap = kentos_kcad::decode(include_bytes!("../../../../fixtures/arch/v1/facade-building.kcad")).expect("decodes");
+    let mut doc = kentos_domain::Document::from_snapshot_v2(snap).expect("opens");
+    let mut run = |name: &str, input: serde_json::Value| {
+        let answer = registry::run(&mut ExecutionContext::new(&mut doc), name, kentos_commands::CallOp::Execute, input)
+            .expect("runs");
+        assert_eq!(answer["status"], "completed", "{answer}");
+    };
+    let post = |x: f64, y: f64| {
+        serde_json::json!({"at": {"x": x, "y": y}, "width": 0.1, "depth": 0.1, "height": 2.6, "material": "Çelik",
+                           "member": {"predefined": "POST"}, "arch": {"level": "zemin"}})
+    };
+    run("cad.columns.create", serde_json::json!({"layerId": "0", "columns": [
+        post(12.6, 1.0), post(14.6, 1.0), post(12.6, 4.0), post(14.6, 4.0)
+    ]}));
+    let rail = |y: f64| {
+        serde_json::json!({"pts": [{"x": 12.5, "y": y}, {"x": 14.7, "y": y}], "width": 0.05, "height": 0.1,
+                           "baseOffset": 2.5, "material": "Çelik",
+                           "member": {"predefined": "USERDEFINED", "name": "Kayıt"}, "arch": {"level": "zemin"}})
+    };
+    let rafter = |x: f64| {
+        serde_json::json!({"pts": [{"x": x, "y": 0.7}, {"x": x, "y": 4.3}], "width": 0.04, "height": 0.08,
+                           "baseOffset": 2.6, "material": "Ahşap", "member": {"predefined": "RAFTER"},
+                           "arch": {"level": "zemin"}})
+    };
+    run("cad.beams.create", serde_json::json!({"layerId": "0", "beams": [
+        rail(1.0), rail(4.0), rafter(12.9), rafter(13.4), rafter(13.9), rafter(14.4)
+    ]}));
+    let east = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| match e {
+            Entity::ViewMark(v) if v.mark.form == kentos_commands::ViewMarkForm::Elevation && v.mark.mark == "3" => Some(u),
+            _ => None,
+        })
+        .expect("mark 3");
+    let derived = sections_edit::execute(
+        &mut ExecutionContext::new(&mut doc),
+        kentos_commands::BuildingSectionsEdit {
+            operation: kentos_commands::BuildingSectionsOperation::Derive {
+                mark: east.to_string(),
+                at: Some(kentos_commands::Vec2 { x: 20.0, y: 0.0 }),
+            },
+            expected_revision: None,
+        },
+    );
+    assert!(matches!(derived, kentos_commands::CommandResult::Completed { .. }), "{derived:?}");
+    doc.to_snapshot_v2()
+}
+
+/// Dikme ve kayıt in plan, in the east elevation and in 3D (docs/adr/8070 §8): the pergola's posts and rails in plan, the
+/// same over the east facade in its elevation, and the building from the north-east. `.run/gui-evidence/dikme-kayit-8070/`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib scene3d_building_tests::member_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn member_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/dikme-kayit-8070");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 700.0), "koyu")] {
+        let mut app = open(with_a_pergola());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let fit = |app: &mut App, min: [f64; 2], max: [f64; 2]| {
+            app.viewport.camera.fit(
+                &kentos_render_wgpu::Bounds { min_x: min[0], min_y: min[1], max_x: max[0], max_y: max[1] },
+                24.0,
+            );
+        };
+        shot(&mut app, "0-acilis");
+        fit(&mut app, [10.5, 0.0], [16.0, 5.0]);
+        shot(&mut app, "1-plan");
+        fit(&mut app, [18.0, -2.0], [34.0, 9.0]);
+        shot(&mut app, "2-dogu-gorunusu");
+        let _ = app.update(Message::Run("scene3d.view"));
+        shot(&mut app, "3-3b-kuzeydogu");
+        send(&mut app, W::Close);
+    }
+}

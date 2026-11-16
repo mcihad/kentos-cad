@@ -97,8 +97,10 @@
       yazılmaz.
     - Giydirme cephe ızgaralı bir duvardır (en büyük aralıkla eşit bölmeler; çerçeve 0,05, panel 0,024 m KentOS'un
       kendi ölçüsü); `IfcCurtainWall`'un gövdesi panelleri, dikme ve kayıtları `IfcMember` MULLION (K45: EK-5'te
-      `IfcPlate` yok); giydirme cepheye açıklık konmaz; `.kcad` mimari verisi 3. Kalan: tek başına `IfcMember`, elle
-      çizilen kaplama.
+      `IfcPlate` yok); giydirme cepheye açıklık konmaz; `.kcad` mimari verisi 3.
+    - Dikme ve kayıt kolonun ve kirişin eleman rolüdür (K46): `IfcMember` POST ve USERDEFINED "Kayıt", EK-2 Diğer
+      (MM-DIGR-DIKME, MM-DIGR-KAYIT); kolon kendi yüksekliğini alabilir; `.kcad` mimari verisi 4. Kalan: elemanların
+      çizelgesi, eğimli eleman, elle çizilen kaplama.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

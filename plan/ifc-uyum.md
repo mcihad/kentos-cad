@@ -89,7 +89,7 @@ kimliği; test bağlantısı.
 | IfcRoof | CAT | Çatı | ◐ tipi `NOTDEFINED` | türü; yangın | IFC-02 |
 | IfcColumn | KLN | Kolon | ◐ | yangın; dayanım | IFC-02 |
 | IfcBeam | KRS | Kiriş, lento, hatıl | ◐ | yangın; dayanım | IFC-02 |
-| IfcMember | ELM | Dikme, cephe kaydı (BIM-09) | ◐ giydirme cephenin dikme ve kayıtları MULLION (ADR 8070) | tek başına dikme ve kayıt | IFC-03 |
+| IfcMember | ELM | Dikme, cephe kaydı (BIM-09) | ✓ dikme (POST) ve kayıt (USERDEFINED "Kayıt") kolonun ve kirişin eleman rolüyle; giydirme cephenin çerçeveleri MULLION (K46, ADR 8070) | eğimli eleman | IFC-03 |
 | IfcDoor | KAP | Kapı | ◐ | yangın; acil çıkış | IFC-02 |
 | IfcWindow | PNC | Pencere | ✓ | — | — |
 | IfcOpeningElement | ACL | Açıklık, niş | ✓ | döşeme boşluğu | IFC-06 |
@@ -107,7 +107,7 @@ kimliği; test bağlantısı.
 | IfcSign | TBL | — | ✗ | gerek çıkınca | — |
 
 `building.rs`'in `Class` listesindeki taşıma elemanı, mobilya, sıhhi tesisat ucu, baca, rampa, giydirme cephe ve onun
-dikme ve kayıtları (eleman) artık kuruluyor (ADR 8070); kaplama ve tek başına eleman henüz kurulmuyor.
+dikme ve kayıtları, dikme ve kayıt (eleman) artık kuruluyor (ADR 8070); kaplama henüz kurulmuyor.
 
 **Mekânsal yapı.** `IfcProject` → `IfcSite` → `IfcBuilding` → `IfcBuildingStorey` (`IfcRelAggregates`); eleman katında
 (`IfcRelContainedInSpatialStructure`); mahal katının parçası. Çok kata uzanan elemanın birincil katı bellidir, öbür katlar
@@ -319,8 +319,8 @@ nesnesiyle; bağımsız okuyucu şema kurallarında 0 bulgu; çatının ve merdi
 (`IfcZone`, mahalleri `IfcRelAssignsToGroup` ile). **Yapıldı ([ADR 8070](../docs/adr/8070-missing-building-elements.md)):**
 rampa, baca, niş, aks ızgarası, asansör, vitrifiye ve mobilya sınıfları; merdivenin tipi; kaplama mahal setiyle (K44);
 bağımsız okuyucu (IfcOpenShell) bölüm binasının dosyasında 0 bulgu; giydirme cephe (`IfcCurtainWall`, gövdesi panelleri:
-K45) ve dikme ile kayıtları (`IfcMember` MULLION, `IfcRelAggregates`), doğrulayıcıda 0 bulgu. **Kalan:** tek başına
-dikme ve kayıt; DIGER durumu; kayıp listesinin örnek binada boşalması.
+K45) ve dikme ile kayıtları (`IfcMember` MULLION, `IfcRelAggregates`), doğrulayıcıda 0 bulgu; dikme ve kayıt (`IfcMember`
+POST ve USERDEFINED, K46), doğrulayıcıda 0 bulgu. **Kalan:** DIGER durumu; kayıp listesinin örnek binada boşalması.
 
 **Kullanıcı sonucu:** Modeldeki her yapı nesnesi kendi sınıfıyla dışa gider; emsal alanları ve bağımsız bölümler dosyadadır.
 Nesneleri BIM-08 ve BIM-09'dan gelir.

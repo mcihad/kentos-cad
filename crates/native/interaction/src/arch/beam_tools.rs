@@ -7,8 +7,11 @@
 //! - Lento: a door or a window clicked, a lintel over it: as wide as its wall, its Oturma beyond each jamb (TBDY 2018
 //!   11.5.3: at least 20 cm), its Yükseklik high (at least 15 cm; 20 until changed), at the opening's head.
 //!
-//! Each on Etkin kat, on its EK-4 layer (MM-TASI-KIRIS, MM-LENT-GENEL, MM-HATL-GENEL; docs/adr/8008), its number from
-//! Numara and the next the next one (K101 → K102).
+//! - Kayıt (docs/adr/8070 §8): a rail, a member written as an IfcMember (USERDEFINED "Kayıt"): drawn as a bond beam at
+//!   its Kattan yükseklik, its Malzeme (M) Çelik and 5/10 at 1.00 m until changed, KentOS's own first values; no Tür.
+//!
+//! Each on Etkin kat, on its EK-4 layer (MM-TASI-KIRIS, MM-LENT-GENEL, MM-HATL-GENEL, a rail MM-DIGR-KAYIT;
+//! docs/adr/8008), its number from Numara and the next the next one (K101 → K102).
 
 use kentos_commands::{BeamRole, BeamsCreate, Entity, NewBeam, WallJustify};
 use kentos_domain::Slot;
@@ -26,6 +29,8 @@ use crate::tool::{Context, Cursor, Flow, OptionChoice, Pointer, Preview, Tag, To
 use crate::tool_settings::Setting;
 
 pub const BEAM_ID: &str = "beam";
+/// Kayıt (docs/adr/8070 §8).
+pub const RAIL_ID: &str = "rail";
 
 /// What the tool asks for in words.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -36,6 +41,8 @@ enum Ask {
     Base,
     Bearing,
     Tag,
+    /// A rail's material (docs/adr/8070 §8).
+    Material,
 }
 
 /// Kiriş.
@@ -58,6 +65,10 @@ pub struct BeamTool {
     ask: Option<Ask>,
     drawn: Preview,
     why: Option<String>,
+    /// Kayıt (docs/adr/8070 §8): a rail, a member, at its base as a bond beam.
+    rail: bool,
+    /// A rail's material; none: Betonarme, as a beam's.
+    material: Option<String>,
 }
 
 impl Default for BeamTool {
@@ -77,6 +88,8 @@ impl Default for BeamTool {
             ask: None,
             drawn: Preview::default(),
             why: None,
+            rail: false,
+            material: None,
         }
     }
 }
@@ -100,6 +113,23 @@ fn role_key(r: BeamRole) -> &'static str {
 impl BeamTool {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Kayıt (docs/adr/8070 §8): 5/10 Çelik at 1.00 m until changed.
+    pub fn rail() -> Self {
+        BeamTool {
+            width: 0.05,
+            height: 0.1,
+            base: 1.0,
+            rail: true,
+            material: Some("Çelik".into()),
+            ..Self::default()
+        }
+    }
+
+    /// Its name: its role's, or Kayıt.
+    fn name(&self) -> &'static str {
+        if self.rail { "Kayıt" } else { self.role.label() }
     }
 
     /// Its role taken, with that role's sizes until changed.
@@ -131,14 +161,19 @@ impl BeamTool {
     /// A beam or a bond beam on the axis `pts`.
     fn along(&self, pts: &[Vec2], cx: &Context<'_>) -> NewBeam {
         let bond = self.role == BeamRole::BondBeam;
+        // A bond beam and a rail stand at their base over the storey's floor.
+        let sits = bond || self.rail;
         NewBeam {
             pts: points::wire_all(pts),
             width: self.width,
             height: self.height,
             justify: (self.justify != WallJustify::Center).then_some(self.justify),
-            offset: (!bond && self.offset != 0.0).then_some(self.offset),
+            offset: (!sits && self.offset != 0.0).then_some(self.offset),
             role: bond.then_some(BeamRole::BondBeam),
-            base_offset: bond.then_some(self.base),
+            base_offset: sits.then_some(self.base),
+            // A rail's type and material (docs/adr/8070 §8).
+            member: self.rail.then(kentos_commands::Member::rail),
+            material: self.material.clone().filter(|_| self.rail),
             tag: self.tag.clone(),
             // Etkin kat (docs/adr/0713).
             arch: cx.new_arch(),
@@ -176,7 +211,11 @@ impl BeamTool {
     }
 
     fn kind(&self) -> crate::arch_layer::Kind {
-        crate::arch_layer::Kind::Beam(self.role)
+        if self.rail {
+            crate::arch_layer::Kind::Rail
+        } else {
+            crate::arch_layer::Kind::Beam(self.role)
+        }
     }
 
     /// What the plan would write now: a lintel over the opening under the pointer, else the axis so far.
@@ -243,6 +282,7 @@ impl BeamTool {
             return;
         }
         let what = match self.role {
+            _ if self.rail => "Kayıt çizildi",
             BeamRole::Beam => "Kiriş çizildi",
             BeamRole::Lintel => "Lento kondu",
             BeamRole::BondBeam => "Hatıl çizildi",
@@ -279,6 +319,13 @@ impl BeamTool {
         let length =
             |cx: &mut Context<'_>| cx.typed_length(value).filter(|v| v.is_finite() && *v > 0.0);
         match key {
+            "T" if self.rail => false,
+            // A rail's material (docs/adr/8070 §8): empty or Betonarme, none.
+            "M" if self.rail => {
+                let t = js_trim(value);
+                self.material = (!t.is_empty() && upper_tr(t) != "BETONARME").then(|| t.to_owned());
+                true
+            }
             "T" => match value {
                 "beam" => {
                     self.set_role(BeamRole::Beam);
@@ -342,11 +389,11 @@ impl Tool for BeamTool {
     }
 
     fn id(&self) -> &'static str {
-        BEAM_ID
+        if self.rail { RAIL_ID } else { BEAM_ID }
     }
 
     fn label(&self) -> &'static str {
-        "Kiriş"
+        if self.rail { "Kayıt" } else { "Kiriş" }
     }
 
     fn cursor(&self) -> Cursor {
@@ -374,7 +421,7 @@ impl Tool for BeamTool {
     }
 
     fn prompt(&self) -> Prompt {
-        let name = self.role.label();
+        let name = self.name();
         if let Some(ask) = self.ask {
             let words = match ask {
                 Ask::Width => "gövde genişliğini yazın",
@@ -383,6 +430,7 @@ impl Tool for BeamTool {
                 Ask::Base => "alt yüzünün katın döşemesinden yüksekliğini yazın",
                 Ask::Bearing => "lentonun her iki yanda duvara oturma boyunu yazın (en az 20 cm)",
                 Ask::Tag => "numarasını yazın (K101, L101, H101 gibi; boş: yok)",
+                Ask::Material => "malzemesini yazın (Çelik, Alüminyum, Ahşap gibi; boş: Betonarme)",
             };
             return Prompt::new(name, words).option("Geri", "G");
         }
@@ -400,15 +448,23 @@ impl Tool for BeamTool {
             1 => "sonraki noktaya tıklayın",
             _ => "sonraki noktaya tıklayın ya da Enter ile yazın",
         };
-        let p = Prompt::new(name, step)
-            .option_with("Tür", "T", name)
+        let mut p = Prompt::new(name, step);
+        if !self.rail {
+            p = p.option_with("Tür", "T", name);
+        }
+        let p = p
             .option_with("Genişlik", "E", n(self.width))
             .option_with("Yükseklik", "Y", n(self.height))
             .option_with("Hiza", "H", self.justify.label());
-        let p = if self.role == BeamRole::BondBeam {
+        let p = if self.role == BeamRole::BondBeam || self.rail {
             p.option_with("Kattan yükseklik", "A", n(self.base))
         } else {
             p.option_with("Kot farkı", "F", n(self.offset))
+        };
+        let p = if self.rail {
+            p.option_with("Malzeme", "M", self.material.clone().unwrap_or_else(|| "Betonarme".into()))
+        } else {
+            p
         };
         p.option_with("Numara", "N", tag).option("Bitir", "Enter")
     }
@@ -472,6 +528,7 @@ impl Tool for BeamTool {
                 Ask::Base => "A",
                 Ask::Bearing => "O",
                 Ask::Tag => "N",
+                Ask::Material => "M",
             };
             if !self.apply(field, text, cx) {
                 cx.say(
@@ -486,7 +543,7 @@ impl Tool for BeamTool {
         }
         let lintel = self.role == BeamRole::Lintel;
         self.ask = match key.as_str() {
-            "T" => {
+            "T" if !self.rail => {
                 let next = match self.role {
                     BeamRole::Beam => BeamRole::Lintel,
                     BeamRole::Lintel => BeamRole::BondBeam,
@@ -498,8 +555,9 @@ impl Tool for BeamTool {
             }
             "E" if !lintel => Some(Ask::Width),
             "Y" => Some(Ask::Height),
-            "F" if self.role == BeamRole::Beam => Some(Ask::Offset),
-            "A" if self.role == BeamRole::BondBeam => Some(Ask::Base),
+            "F" if self.role == BeamRole::Beam && !self.rail => Some(Ask::Offset),
+            "A" if self.role == BeamRole::BondBeam || self.rail => Some(Ask::Base),
+            "M" if self.rail => Some(Ask::Material),
             "O" if lintel => Some(Ask::Bearing),
             "N" => Some(Ask::Tag),
             "H" if !lintel => {
@@ -524,14 +582,17 @@ impl Tool for BeamTool {
     }
 
     fn settings(&self, f: &Format) -> Vec<Setting> {
-        let mut out = vec![Setting::choice(
-            "T",
-            "Tür",
-            crate::tool_settings::choices(
-                &[("beam", "Kiriş"), ("lintel", "Lento"), ("bondBeam", "Hatıl")],
-                role_key(self.role),
-            ),
-        )];
+        let mut out = Vec::new();
+        if !self.rail {
+            out.push(Setting::choice(
+                "T",
+                "Tür",
+                crate::tool_settings::choices(
+                    &[("beam", "Kiriş"), ("lintel", "Lento"), ("bondBeam", "Hatıl")],
+                    role_key(self.role),
+                ),
+            ));
+        }
         let tag = Setting::text(
             "N",
             "Numara",
@@ -562,7 +623,18 @@ impl Tool for BeamTool {
                 ),
             ),
         ]);
-        if self.role == BeamRole::BondBeam {
+        if self.rail {
+            out.extend([
+                Setting::text("A", "Kattan yükseklik", f.length(self.base)),
+                Setting::text("M", "Malzeme", self.material.clone().unwrap_or_else(|| "Betonarme".into())),
+                tag,
+                Setting::hint(
+                    "P",
+                    "Kayıt",
+                    "Cephe, pergola ya da saçak kaydı: çerçevenin kirişi değildir, IFC'de eleman (kayıt) olarak yazılır. Alt yüzü katın döşemesinden kattan yükseklik kadar yukarıdadır.",
+                ),
+            ]);
+        } else if self.role == BeamRole::BondBeam {
             out.extend([
                 Setting::text("A", "Kattan yükseklik", f.length(self.base)),
                 tag,
@@ -649,7 +721,7 @@ impl Tool for BeamTool {
             out.path = self.axis();
         }
         out.tag = self.hover.map(|at| {
-            let mut lines = vec![format!("{} {}", self.role.label(), self.size())];
+            let mut lines = vec![format!("{} {}", self.name(), self.size())];
             if let Some(why) = &self.why {
                 lines.push(why.clone());
             }

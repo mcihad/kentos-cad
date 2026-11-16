@@ -13705,6 +13705,22 @@
    "tests": 17
   },
   {
+   "id": "tool.post",
+   "kind": "command",
+   "title": "Dikme",
+   "level": "semantic",
+   "via": [
+    "cad.columns.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.columns.create",
+   "mcp": "cad.columns.create",
+   "note": "Kolon'un tıklanan merkezi ve ölçüleri, kendi yüksekliği, malzemesi ve eleman tipi (POST) komuta verilir; gövdesi ve IFC'deki sınıfı komutun ve modelin (ADR 8070 §8).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.quickDimension",
    "kind": "tool",
    "title": "Hızlı ölçü",
@@ -13719,6 +13735,22 @@
    "scope": "cad",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "tool.rail",
+   "kind": "command",
+   "title": "Kayıt",
+   "level": "semantic",
+   "via": [
+    "cad.beams.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.beams.create",
+   "mcp": "cad.beams.create",
+   "note": "Kiriş'in ekseni ve ölçüleri, kattan yüksekliği, malzemesi ve eleman tipi (kullanıcı tanımlı “Kayıt”) komuta verilir; gövdesi ve IFC'deki sınıfı komutun ve modelin (ADR 8070 §8).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.railing",

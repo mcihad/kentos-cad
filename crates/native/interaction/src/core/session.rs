@@ -126,11 +126,13 @@ pub const TOOLS: &[&str] = &[
     space_tools::SOURCES_ID,
     arch_tools::GRID_ID,
     arch_tools::COLUMN_ID,
+    arch_tools::POST_ID,
     arch_tools::STAIR_ID,
     arch_tools::SPIRAL_ID,
     arch_tools::RAMP_ID,
     // docs/adr/8041 §1: Kiriş.
     crate::beam_tools::BEAM_ID,
+    crate::beam_tools::RAIL_ID,
     // docs/adr/8044 §4: Çatı; §6: Çatı bacası, Çatı penceresi.
     crate::roof_tools::ROOF_ID,
     crate::roof_part_tools::CHIMNEY_ID,
@@ -562,10 +564,13 @@ impl Session {
             space_tools::REBOUND_ID => Box::new(space_tools::SpaceReboundTool::default()),
             arch_tools::GRID_ID => Box::new(arch_tools::GridTool::new()),
             arch_tools::COLUMN_ID => Box::new(arch_tools::ColumnTool::new()),
+            // Dikme and Kayıt (docs/adr/8070 §8): Kolon's and Kiriş's members.
+            arch_tools::POST_ID => Box::new(arch_tools::ColumnTool::post()),
             arch_tools::STAIR_ID => Box::new(arch_tools::FlightTool::stair()),
             arch_tools::SPIRAL_ID => Box::new(arch_tools::FlightTool::curved_stair()),
             arch_tools::RAMP_ID => Box::new(arch_tools::FlightTool::ramp()),
             crate::beam_tools::BEAM_ID => Box::new(crate::beam_tools::BeamTool::new()),
+            crate::beam_tools::RAIL_ID => Box::new(crate::beam_tools::BeamTool::rail()),
             crate::roof_tools::ROOF_ID => Box::new(crate::roof_tools::RoofTool::new()),
             crate::railing_tools::RAILING_ID => Box::new(crate::railing_tools::RailingTool::new()),
             crate::roof_part_tools::CHIMNEY_ID => {

@@ -446,3 +446,75 @@ fn a_room_carries_its_floor_finish_and_ceiling_plaster_thicknesses() {
     let text = kentos_ifc::building::write(&b);
     assert!(text.contains("IFCPOSITIVELENGTHMEASURE(0.02)"));
 }
+
+/// Dikme ve kayıt (docs/adr/8070 §8; EK-6 Tablo 6.40): east of the section building a 10/10 Çelik post 2.40 m tall
+/// (its own height, not the storey's 3.00) and a 5/10 Çelik rail along y = 0 from x 20 to 26, its underside 1.00 m over
+/// the floor. Worked out here: the post a prism from 0 to 2.40, the rail from 1.00 to 1.10, both on EK-2's Diğer
+/// (MM-DIGR-CELIK). In the IFC model each an IfcMember, the post POST, the rail USERDEFINED "Kayıt", Çelik, outside
+/// (`Pset_MemberCommon.IsExternal`), with no `Pset_ColumnCommon.LoadBearing`; neither left out, the frame's columns as
+/// many as before.
+#[test]
+fn a_post_and_a_rail_are_ifc_members_of_their_types() {
+    use kentos_commands::CallOp;
+    use kentos_geometry_core::geom::section::Height;
+    use kentos_native_application::{ExecutionContext, registry, sections};
+    let mut doc = building();
+    let (_, before) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
+    let run = |doc: &mut Document, name: &str, input: serde_json::Value| {
+        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).unwrap();
+        assert_eq!(answer["status"], "completed", "{answer}");
+        answer["output"]["uids"][0].as_str().unwrap().to_owned()
+    };
+    let post = run(&mut doc, "cad.columns.create", serde_json::json!({"layerId": "0", "columns": [{
+        "at": {"x": 20.0, "y": 2.0}, "width": 0.1, "depth": 0.1, "height": 2.4, "material": "Çelik",
+        "member": {"predefined": "POST"}, "arch": {"level": "zemin"}
+    }]}));
+    let rail = run(&mut doc, "cad.beams.create", serde_json::json!({"layerId": "0", "beams": [{
+        "pts": [{"x": 20.0, "y": 0.0}, {"x": 26.0, "y": 0.0}], "width": 0.05, "height": 0.1, "baseOffset": 1.0,
+        "material": "Çelik", "member": {"predefined": "USERDEFINED", "name": "Kayıt"}, "arch": {"level": "zemin"}
+    }]}));
+    let m = sections::model(&doc);
+    let body = |uid: &str| {
+        let i = (0..m.solids.len()).find(|&i| m.owners[i].as_deref() == Some(uid)).expect("its solid");
+        let Height::Prism { bottom, top } = m.solids[i].height else {
+            panic!("a prism")
+        };
+        (bottom, top, m.looks[i].layer.clone())
+    };
+    let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
+    let (b0, t0, layer) = body(&post);
+    assert!(near(b0, 0.0) && near(t0, 2.4), "{b0} {t0}");
+    assert_eq!(layer, "MM-DIGR-CELIK");
+    let (b1, t1, layer) = body(&rail);
+    assert!(near(b1, 1.0) && near(t1, 1.1), "{b1} {t1}");
+    assert_eq!(layer, "MM-DIGR-CELIK");
+    let (b, written) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
+    assert_eq!(written.left, Vec::new(), "every object written");
+    assert_eq!((written.members, written.columns, written.beams), (2, before.columns, before.beams));
+    let element = |uid: &str| {
+        let id = kentos_domain::Uuid::parse_str(uid).unwrap().as_u128();
+        b.elements.iter().find(|e| e.id == Some(id)).expect("its element")
+    };
+    let p = element(&post);
+    assert_eq!((p.class, p.predefined, p.object_type.as_deref()), (Class::Member, "POST", None));
+    assert_eq!((p.name.as_str(), p.material.as_deref()), ("MM-ELM-Dikme", Some("Çelik")));
+    let r = element(&rail);
+    assert_eq!((r.class, r.predefined, r.object_type.as_deref()), (Class::Member, "USERDEFINED", Some("Kayıt")));
+    assert_eq!(r.name, "MM-ELM-Kayıt");
+    for e in [p, r] {
+        let outside = e
+            .psets
+            .iter()
+            .find(|s| s.name == "Pset_MemberCommon")
+            .and_then(|s| s.props.iter().find(|(k, _)| k == "IsExternal"))
+            .map(|(_, v)| v.clone());
+        assert_eq!(outside, Some(Value::Bool(true)), "{}", e.name);
+        assert!(!e.psets.iter().any(|s| s.name == "Pset_ColumnCommon"), "{}", e.name);
+    }
+    let text = kentos_ifc::building::write(&b);
+    assert_eq!(text.matches("IFCMEMBER(").count(), 2);
+    // `KENTOS_WRITE_IFC_MEMBERS=<path>` keeps the file for an outside reader (IfcOpenShell's validator).
+    if let Some(path) = std::env::var_os("KENTOS_WRITE_IFC_MEMBERS") {
+        std::fs::write(path, &text).expect("the file kept");
+    }
+}

@@ -5,6 +5,7 @@ import type { BeamRole } from "./BeamRole";
 import type { LabelPin } from "./LabelPin";
 import type { LineType } from "./LineType";
 import type { LookPart } from "./LookPart";
+import type { Member } from "./Member";
 import type { Vec2 } from "./Vec2";
 import type { WallJustify } from "./WallJustify";
 import type { Wipeout } from "./Wipeout";
@@ -112,4 +113,9 @@ tag?: string,
 /**
  * Its material; absent: Betonarme.
  */
-material?: string, arch?: ArchInfo, };
+material?: string, 
+/**
+ * A rail (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's beam. Only a
+ * beam's (not a lintel's or a bond beam's).
+ */
+member?: Member, arch?: ArchInfo, };

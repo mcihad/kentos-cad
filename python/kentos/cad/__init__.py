@@ -2068,6 +2068,7 @@ __all__ = [
     "Measures",
     "MedianRoadWork",
     "Meeting",
+    "Member",
     "MergeDuplicates",
     "MergeDuplicatesName",
     "MergeMatched",

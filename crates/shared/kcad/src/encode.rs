@@ -99,7 +99,8 @@ fn modules_of(doc: &DocumentSnapshotV2) -> ModuleVersions {
     }
     let mut out = ModuleVersions::default();
     // Architecture 1 (docs/adr/8068): fire resistance, exit roles, strengths, the building's performance; 2
-    // (docs/adr/8070 §5): a block card's building element.
+    // (docs/adr/8070 §5): a block card's building element; 3 (§7) a curtain wall; 4 (§8) a post, a rail, a column's
+    // own height.
     let arch = crate::arch_version(doc);
     if arch > 0 {
         out.modules.push(("arch".to_owned(), arch));
@@ -1578,6 +1579,30 @@ mod tests {
         };
         let refused = crate::decode(&file).expect_err("architecture data 2 named 1");
         assert!(refused.message.contains("sürüm 2"), "{}", refused.message);
+        // Architecture data 4 (docs/adr/8070 §8): a post in a file that names version 3 only.
+        let mut posted = crate::decode(include_bytes!("../../../../fixtures/arch/v1/section-building.kcad"))
+            .expect("the section building");
+        if let Some(Entity::Column(c)) = posted.entities.iter_mut().find(|e| matches!(e, Entity::Column(_))) {
+            c.column.member = Some(kentos_contracts::Member::post());
+        }
+        let three = ModuleVersions {
+            modules: vec![("arch".into(), 3)],
+            extensions: Vec::new(),
+        };
+        let file = {
+            let mut quiet = crate::watch::Quiet;
+            let mut e = Encoder {
+                w: Writer::default(),
+                path: Vec::new(),
+                depth: 0,
+                watch: &mut quiet,
+                objs: Objs::Plain(&posted.entities),
+            };
+            e.root_with(&posted, &three).expect("written");
+            crate::header::write(&e.w.out).expect("a file")
+        };
+        let refused = crate::decode(&file).expect_err("architecture data 4 named 3");
+        assert!(refused.message.contains("sürüm 4"), "{}", refused.message);
         let refused = crate::decode(&write(&ext)).expect_err("an extension's data");
         assert_eq!(refused.code, Code::SchemaVersion);
         assert!(

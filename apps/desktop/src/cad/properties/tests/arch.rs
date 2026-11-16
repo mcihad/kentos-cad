@@ -738,3 +738,65 @@ fn roof_properties_screens() {
     snap.settle(&mut app, App::view, &mut update);
     snap.render(app.view(), &app.theme()).save(out.join("cati-ozellikleri.png")).unwrap();
 }
+
+/// Dikme ve kayıt in Öznitelikler (docs/adr/8070 §8): a column's Tür Dikme makes it a post (POST), its Eleman tipi and
+/// Eleman adı rows then shown; Yükseklik typed is its own height, emptied its storey's again; Eleman adı typed keeps its
+/// type. A beam's Tür Kayıt makes it a rail (USERDEFINED "Kayıt"), Kiriş the frame's beam again. Each one step.
+#[test]
+fn a_column_becomes_a_post_and_a_beam_a_rail() {
+    use super::super::ArchField as A;
+    use kentos_commands::{ArchChange, ArchOperation, Member, Workspace};
+    use serde_json::json;
+    let mut app = objects();
+    let doc = &mut app.document.as_mut().unwrap().model;
+    let mut settings = doc.settings().clone();
+    settings.workspace = Some(Workspace::Cad);
+    settings.srid = 0;
+    doc.set_settings(settings);
+    let column = add(&mut app, serde_json::from_value(json!({
+        "kind":"column", "id":0, "layerId":"parsel", "attrs":{}, "at":{"x":0.,"y":0.}, "width":0.1, "depth":0.1
+    })).unwrap());
+    let beam = add(&mut app, serde_json::from_value(json!({
+        "kind":"beam", "id":0, "layerId":"parsel", "attrs":{},
+        "pts":[{"x":0.,"y":0.},{"x":5.,"y":0.}], "width":0.05, "height":0.1, "baseOffset":1.0
+    })).unwrap());
+    let labels = |app: &App| -> Vec<String> {
+        rows(app).into_iter().flat_map(|(_, r)| r).map(|r| r.label.to_string()).collect()
+    };
+    let set = |app: &mut App, slot: u32, c: ArchChange| {
+        event(app, Event::Arch(Slot(slot), ArchOperation::Set(Box::new(c))));
+    };
+    select(&mut app, &[column]);
+    assert_eq!(noted(&app, "Tür").0, "Kolon");
+    assert!(!labels(&app).iter().any(|l| l == "Eleman tipi"));
+    assert_eq!(noted(&app, "Yükseklik"), (String::new(), Some("Boş: katın yüksekliği".into())));
+    set(&mut app, column, ArchChange { member: Some(Some(Member::post())), ..Default::default() });
+    let Entity::Column(c) = entity(&app, column) else { panic!("a column") };
+    assert_eq!(c.column.member, Some(Member::post()));
+    assert_eq!(noted(&app, "Tür").0, "Dikme");
+    assert_eq!(noted(&app, "Eleman tipi").0, "Dikme (POST)");
+    assert_eq!(noted(&app, "Eleman adı").0, "Dikme");
+    event(&mut app, Event::Commit(Field::Arch(Slot(column), A::OwnHeight), "2.4".into()));
+    let Entity::Column(c) = entity(&app, column) else { panic!("a column") };
+    assert_eq!(c.column.height, Some(2.4));
+    event(&mut app, Event::Commit(Field::Arch(Slot(column), A::MemberName), "Pergola dikmesi".into()));
+    let Entity::Column(c) = entity(&app, column) else { panic!("a column") };
+    assert_eq!(
+        c.column.member,
+        Some(Member { predefined: "POST".into(), name: Some("Pergola dikmesi".into()) })
+    );
+    event(&mut app, Event::Commit(Field::Arch(Slot(column), A::OwnHeight), "".into()));
+    let Entity::Column(c) = entity(&app, column) else { panic!("a column") };
+    assert_eq!(c.column.height, None, "its storey's height again");
+    assert_eq!(undo_label(&mut app).as_deref(), Some("Mimari nesneyi düzenle"));
+    select(&mut app, &[beam]);
+    assert_eq!(noted(&app, "Tür").0, "Kiriş");
+    set(&mut app, beam, ArchChange { member: Some(Some(Member::rail())), ..Default::default() });
+    let Entity::Beam(b) = entity(&app, beam) else { panic!("a beam") };
+    assert_eq!(b.beam.member, Some(Member::rail()));
+    assert_eq!(noted(&app, "Tür").0, "Kayıt");
+    assert_eq!(noted(&app, "Eleman tipi").0, "Kullanıcı tanımlı (USERDEFINED)");
+    set(&mut app, beam, ArchChange { member: Some(None), ..Default::default() });
+    let Entity::Beam(b) = entity(&app, beam) else { panic!("a beam") };
+    assert_eq!(b.beam.member, None);
+}
