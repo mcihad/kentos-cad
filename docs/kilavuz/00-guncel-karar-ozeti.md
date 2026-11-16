@@ -189,6 +189,19 @@
       komutu `cad.ifc.inspect`'tir (37 bağımsız durum). Seçim plana GlobalId'den kimliğe dönerek geçer (`step::unguid`).
     - Araştırma: [not](../research/2026-11-15-ifc-goruntuleyici.md). Ölçümler:
       [docs/perf/ifc-okuma-denemesi-2026-11-16.md](../perf/ifc-okuma-denemesi-2026-11-16.md).
+  - **EK-9 yazılmış dosyadan (16 Kasım 2026; [ADR 8074](../adr/8074-ek9-from-the-written-file.md), IFC-08, sıra B13; ilk
+    dilim):**
+    - Rust ölçer, Python karar verir: `kentos-ifc` dosyanın olgularını verir (`read::file_facts`, `kentos.ifcFacts` 1:
+      nesneler, EK-7 kayıtları, zorunlu alan eksikleri, set denetimi, kodlar, kaynak yazıları, gövdeler); ev sahibi kaynağın
+      beklentisini (`kentos_ifc::expected`) ve dışa aktarımın bıraktıklarını ekler. Formun 21 sorusu
+      `dijital_proje.form`'dadır; resmî cevap (Evet, Hayır, boş) ile kanıt (geçti, kaldı, inceleme) ayrıdır, inceleme Evet
+      olmaz.
+    - Masaüstü dosyayı bellekte yazıp okur (eşleme pencerenin, gerisi kuralın iş parçacığında); Mimari denetim, çizimdeki
+      form ve Ruhsat takımı aynı olguları kullanır. Rust `digital_audit` ve `quality`'nin cevapları kalktı; `cad.arch.audit`
+      `digital_*` vermez. Bulgu IFC modeli penceresinde nesnesini boyar.
+    - Katalogdan IDS 1.0: `crates/shared/ifc/data/temel-2026.ids` (77 tanım, 356 gereklilik). Bağımsız denetleyici
+      (IfcTester) indirme onayı bekliyor; KentOS'un kendi okuması eksikleri kuralla aynı buluyor.
+    - Kararlar K48 (kullanıcı tanımlı rol), K49 (açıklaması boş ad inceleme), K50 (proje tipi yapı türünden).
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

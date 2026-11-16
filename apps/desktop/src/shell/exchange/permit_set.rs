@@ -112,8 +112,8 @@ pub const GROUPS: [(&str, &[&str]); 5] = [
         ],
     ),
     (
-        "Dijital teslim (EK-1, EK-2)",
-        &["proje_kodu", "bina_kodu", "revizyon_no", "proje_no"],
+        "Dijital teslim (EK-1, EK-2, EK-7)",
+        &["proje_kodu", "bina_kodu", "revizyon_no", "proje_no", "proje_aciklama"],
     ),
     ("Denetim", &["denetciler", "yapi_denetim"]),
 ];
@@ -244,7 +244,7 @@ impl App {
                     &input.values,
                 );
                 doc.model.set_settings(settings);
-                let tables = kentos_interaction::calc_tables::ensure(&mut doc.model);
+                let tables = kentos_interaction::calc_tables::ensure(&mut doc.model, &crate::ifc_facts::form_rows);
                 if let Ok(t) = &tables {
                     // The room list a sheet of its own (docs/adr/8038), the rest the calculation sheet's.
                     let plot = doc.model.settings().plot_scale.round().max(1.0) as u32;

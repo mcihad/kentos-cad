@@ -48,4 +48,6 @@ mod-road = ["kentos-native-application/mod-road", "kentos-plot/mod-road"]
 
 [dev-dependencies]
 miniz_oxide = { workspace = true }
+# The written file read back with its bodies and facts, for EK-9's baseline (tests/headless/ifc_timing.rs).
+kentos-ifc = { path = "../../shared/ifc", features = ["geometry"] }
 kentos-geopackage = { path = "../geopackage" }

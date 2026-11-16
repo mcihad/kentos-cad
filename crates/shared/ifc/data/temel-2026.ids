@@ -1,0 +1,3763 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ids xmlns="http://standards.buildingsmart.org/IDS" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://standards.buildingsmart.org/IDS http://standards.buildingsmart.org/IDS/1.0/ids.xsd">
+  <info>
+    <title>Mimarlık ve Mühendislik Projelerinin Dijital Olarak Hazırlanması Hakkında Yönetmelik: Temel profil (EK-6, EK-7)</title>
+    <version>2026.1</version>
+    <description>RG 5.8.2026/33331: zorunlu IFC sınıflarının zorunlu öznitelik ve özellikleri (Md. 12, 13; EK-6, EK-7). KentOS'un kural kataloğundan (temel-2026) yazılmıştır.</description>
+    <purpose>Ruhsat modelinin teslimi</purpose>
+  </info>
+  <specifications>
+    <specification name="EK-6 Tablo 6.1 IfcAirTerminal (Havalandırma Menfezi)" ifcVersion="IFC4X3_ADD2" identifier="T6.1" description="IfcAirTerminal Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.1 · PDF s. 36">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCAIRTERMINAL</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.1 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.1 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="DIFFUSER"/>
+              <xs:enumeration value="GRILLE"/>
+              <xs:enumeration value="LOUVRE"/>
+              <xs:enumeration value="REGISTER"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.1 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.1 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCVOLUMETRICFLOWRATEMEASURE" instructions="Hava Akış Debisi Aralığı (Tablo 6.1 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_AirTerminalTypeCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>AirFlowRateRange</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.2 IfcAudioVisualAppliance (Görüntü ve Ses Cihaz)" ifcVersion="IFC4X3_ADD2" identifier="T6.2" description="IfcAudioVisualAppliance Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.2 · PDF s. 37">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCAUDIOVISUALAPPLIANCE</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.2 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="AMPLIFIER"/>
+              <xs:enumeration value="CAMERA"/>
+              <xs:enumeration value="COMMUNICATIONTERMINAL"/>
+              <xs:enumeration value="DISPLAY"/>
+              <xs:enumeration value="MICROPHONE"/>
+              <xs:enumeration value="PLAYER"/>
+              <xs:enumeration value="PROJECTOR"/>
+              <xs:enumeration value="RECEIVER"/>
+              <xs:enumeration value="RECORDINGEQUIPMENT"/>
+              <xs:enumeration value="SPEAKER"/>
+              <xs:enumeration value="SWITCHER"/>
+              <xs:enumeration value="TELEPHONE"/>
+              <xs:enumeration value="TUNER"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.2 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.2 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.3 IfcBeam (Kiriş)" ifcVersion="IFC4X3_ADD2" identifier="T6.3" description="IfcBeam Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.3 · PDF s. 38">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCBEAM</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.3 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="BEAM"/>
+              <xs:enumeration value="CORNICE"/>
+              <xs:enumeration value="DIAPHRAGM"/>
+              <xs:enumeration value="EDGEBEAM"/>
+              <xs:enumeration value="GIRDER_SEGMENT"/>
+              <xs:enumeration value="HATSTONE"/>
+              <xs:enumeration value="HOLLOWCORE"/>
+              <xs:enumeration value="JOIST"/>
+              <xs:enumeration value="LINTEL"/>
+              <xs:enumeration value="PIERCAP"/>
+              <xs:enumeration value="SPANDREL"/>
+              <xs:enumeration value="T_BEAM"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.3 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.3 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Yangın Dayanım Sınıfı (Tablo 6.3 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_BeamCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>FireRating</simpleValue>
+          </baseName>
+        </property>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.3 satır 4)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.4 IfcBoiler (Kazan)" ifcVersion="IFC4X3_ADD2" identifier="T6.4" description="IfcBoiler Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.4 · PDF s. 39">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCBOILER</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.4 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.4 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="STEAM"/>
+              <xs:enumeration value="WATER"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.4 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.4 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCPOWERMEASURE" instructions="Nominal Enerji Tüketimi (Tablo 6.4 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_BoilerTypeCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NominalEnergyConsumption</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.5 IfcBridge (Köprü)" ifcVersion="IFC4X3_ADD2" identifier="T6.5" description="IfcBridge Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.5 · PDF s. 40">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCBRIDGE</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.5 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="ARCHED"/>
+              <xs:enumeration value="CABLE_STAYED"/>
+              <xs:enumeration value="CANTILEVER"/>
+              <xs:enumeration value="CULVERT"/>
+              <xs:enumeration value="FRAMEWORK"/>
+              <xs:enumeration value="GIRDER"/>
+              <xs:enumeration value="SUSPENSION"/>
+              <xs:enumeration value="TRUSS"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.5 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.5 satır 3)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.6 IfcBridgePart (Köprü Parçası)" ifcVersion="IFC4X3_ADD2" identifier="T6.6" description="IfcBridgePart Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.6 · PDF s. 41">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCBRIDGEPART</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.6 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="ABUTMENT"/>
+              <xs:enumeration value="DECK"/>
+              <xs:enumeration value="DECK_SEGMENT"/>
+              <xs:enumeration value="FOUNDATION"/>
+              <xs:enumeration value="PIER"/>
+              <xs:enumeration value="PIER_SEGMENT"/>
+              <xs:enumeration value="PYLON"/>
+              <xs:enumeration value="SUBSTRUCTURE"/>
+              <xs:enumeration value="SUPERSTRUCTURE"/>
+              <xs:enumeration value="SURFACESTRUCTURE"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.6 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.6 satır 3)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.7 IfcBuilding (Bina)" ifcVersion="IFC4X3_ADD2" identifier="T6.7" description="IfcBuilding Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.7 · PDF s. 42–43–44">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCBUILDING</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Uzun İsim (Tablo 6.7 satır 1)">
+          <name>
+            <simpleValue>LongName</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.7 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCIDENTIFIER" instructions="Bina Kimliği (Tablo 6.7 satır 3)">
+          <propertySet>
+            <simpleValue>Pset_BuildingCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>BuildingID</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCBOOLEAN" instructions="Kalıcı Kimlik (Tablo 6.7 satır 4)">
+          <propertySet>
+            <simpleValue>Pset_BuildingCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>IsPermanentID</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Yapım Yöntemi (Tablo 6.7 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_BuildingCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>ConstructionMethod</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Yangın Koruma Sınıfı (Tablo 6.7 satır 6)">
+          <propertySet>
+            <simpleValue>Pset_BuildingCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>FireProtectionClass</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Kullanım Türü (Tablo 6.7 satır 7)">
+          <propertySet>
+            <simpleValue>Pset_BuildingCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>OccupancyType</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCAREAMEASURE" instructions="Brüt Planlanan Alan (Tablo 6.7 satır 8)">
+          <propertySet>
+            <simpleValue>Pset_BuildingCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>GrossPlannedArea</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCAREAMEASURE" instructions="Net Planlanan Alan (Tablo 6.7 satır 9)">
+          <propertySet>
+            <simpleValue>Pset_BuildingCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NetPlannedArea</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCCOUNTMEASURE" instructions="Kat Sayısı (Tablo 6.7 satır 10)">
+          <propertySet>
+            <simpleValue>Pset_BuildingCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NumberOfStoreys</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Adres Satırları (Tablo 6.7 satır 11)">
+          <propertySet>
+            <simpleValue>Pset_Address</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>AddressLines</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLABEL" instructions="iI / Kasaba (Tablo 6.7 satır 12)">
+          <propertySet>
+            <simpleValue>Pset_Address</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>Town</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Bölge / İlçe (Tablo 6.7 satır 13)">
+          <propertySet>
+            <simpleValue>Pset_Address</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>Region</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Posta Kutusu (Tablo 6.7 satır 19)">
+          <propertySet>
+            <simpleValue>Pset_Address</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>PostalBox</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLENGTHMEASURE" instructions="Yükseklik (Tablo 6.7 satır 14)">
+          <propertySet>
+            <simpleValue>Qto_BuildingBaseQuantities</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>Height</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLENGTHMEASURE" instructions="Saçak Yüksekliği (Tablo 6.7 satır 15)">
+          <propertySet>
+            <simpleValue>Qto_BuildingBaseQuantities</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>EavesHeight</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCAREAMEASURE" instructions="Taban Alanı (Tablo 6.7 satır 16)">
+          <propertySet>
+            <simpleValue>Qto_BuildingBaseQuantities</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>FootPrintArea</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCAREAMEASURE" instructions="Brüt Kat Alanı (Tablo 6.7 satır 17)">
+          <propertySet>
+            <simpleValue>Qto_BuildingBaseQuantities</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>GrossFloorArea</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCAREAMEASURE" instructions="Net Kat Alanı (Tablo 6.7 satır 18)">
+          <propertySet>
+            <simpleValue>Qto_BuildingBaseQuantities</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NetFloorArea</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.8 IfcBuildingStorey (Bina Katı)" ifcVersion="IFC4X3_ADD2" identifier="T6.8" description="IfcBuildingStorey Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.8 · PDF s. 45">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCBUILDINGSTOREY</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.8 satır 1)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCLENGTHMEASURE" instructions="Taşıyıcı Döşeme Üst Kotu (Tablo 6.8 satır 3)">
+          <propertySet>
+            <simpleValue>Pset_BuildingStoreyCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>ElevationOfSSLRelative</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCAREAMEASURE" instructions="Net Kat Alanı (Tablo 6.8 satır 2)">
+          <propertySet>
+            <simpleValue>Qto_BuildingStoreyBaseQuantities</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NetFloorArea</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.9 IfcBurner (Brülör)" ifcVersion="IFC4X3_ADD2" identifier="T6.9" description="IfcBurner Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.9 · PDF s. 46">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCBURNER</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.9 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.9 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.9 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.9 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCPOWERMEASURE" instructions="Nominal Güç Tüketimi (Tablo 6.9 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_ElectricalDeviceCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NominalPowerConsumption</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.10 IfcCableCarrierFitting" ifcVersion="IFC4X3_ADD2" identifier="T6.10" description="IfcCableCarrierFitting Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.10 · PDF s. 47">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCCABLECARRIERFITTING</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.10 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="BEND"/>
+              <xs:enumeration value="CONNECTOR"/>
+              <xs:enumeration value="CROSS"/>
+              <xs:enumeration value="JUNCTION"/>
+              <xs:enumeration value="REDUCER"/>
+              <xs:enumeration value="TEE"/>
+              <xs:enumeration value="TRANSITION"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.10 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.10 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.11 IfcCableCarrierSegment (Kablo Taşıyıcı Segment)" ifcVersion="IFC4X3_ADD2" identifier="T6.11" description="IfcCableCarrierSegment Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.11 · PDF s. 48">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCCABLECARRIERSEGMENT</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.11 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.11 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="CABLEBRACKET"/>
+              <xs:enumeration value="CABLELADDERSEGMENT"/>
+              <xs:enumeration value="CABLETRAYSEGMENT"/>
+              <xs:enumeration value="CABLETRUNKINGSEGMENT"/>
+              <xs:enumeration value="CATENARYWIRE"/>
+              <xs:enumeration value="CONDUITSEGMENT"/>
+              <xs:enumeration value="DROPPER"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.11 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.11 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.12 IfcCaissonFoundation (Keson Temeli)" ifcVersion="IFC4X3_ADD2" identifier="T6.12" description="IfcCaissonFoundation Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.12 · PDF s. 49">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCCAISSONFOUNDATION</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.12 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="CAISSON"/>
+              <xs:enumeration value="WELL"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.12 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.12 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.12 satır 4)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.13 IfcChiller (Soğutma Grubu)" ifcVersion="IFC4X3_ADD2" identifier="T6.13" description="IfcChiller Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.13 · PDF s. 50">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCCHILLER</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.13 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.13 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="AIRCOOLED"/>
+              <xs:enumeration value="HEATRECOVERY"/>
+              <xs:enumeration value="WATERCOOLED"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.13 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.13 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCPOWERMEASURE" instructions="Soğutucu Kapasitesi (Tablo 6.13 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_ChillerTypeCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>ChillerCapacity</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCPOWERMEASURE" instructions="Nominal Güç Tüketimi (Tablo 6.13 satır 6)">
+          <propertySet>
+            <simpleValue>Pset_ElectricalDeviceCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NominalPowerConsumption</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.14 IfcChimney" ifcVersion="IFC4X3_ADD2" identifier="T6.14" description="IfcChimney Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.14 · PDF s. 51">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCCHIMNEY</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.14 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.14 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.14 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.14 satır 4)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.15 IfcCoil (Serpantin)" ifcVersion="IFC4X3_ADD2" identifier="T6.15" description="IfcCoil Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.15 · PDF s. 52">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCCOIL</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.15 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.15 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="DXCOOLINGCOIL"/>
+              <xs:enumeration value="ELECTRICHEATINGCOIL"/>
+              <xs:enumeration value="GASHEATINGCOIL"/>
+              <xs:enumeration value="HYDRONICCOIL"/>
+              <xs:enumeration value="STEAMHEATINGCOIL"/>
+              <xs:enumeration value="WATERCOOLINGCOIL"/>
+              <xs:enumeration value="WATERHEATINGCOIL"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.15 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.15 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCPOWERMEASURE" instructions="Nominal Gizli Kapasite (Tablo 6.15 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_CoilTypeCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NominalLatentCapacity</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCPOWERMEASURE" instructions="Nominal Hissedilir Kapasite (Tablo 6.15 satır 6)">
+          <propertySet>
+            <simpleValue>Pset_CoilTypeCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NominalSensibleCapacity</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.16 IfcColumn (Kolon)" ifcVersion="IFC4X3_ADD2" identifier="T6.16" description="IfcColumn Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.16 · PDF s. 53–54">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCCOLUMN</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.16 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="COLUMN"/>
+              <xs:enumeration value="PIERSTEM"/>
+              <xs:enumeration value="PIERSTEM_SEGMENT"/>
+              <xs:enumeration value="PILASTER"/>
+              <xs:enumeration value="STANDCOLUMN"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.16 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.16 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Yangın Dayanım Sınıfı (Tablo 6.16 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_ColumnCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>FireRating</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCBOOLEAN" instructions="Taşıyıcı (Tablo 6.16 satır 6)">
+          <propertySet>
+            <simpleValue>Pset_ColumnCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>LoadBearing</simpleValue>
+          </baseName>
+        </property>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.16 satır 4)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.17 IfcCommunicationsAppliance (İletişim Cihazı)" ifcVersion="IFC4X3_ADD2" identifier="T6.17" description="IfcCommunicationsAppliance Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.17 · PDF s. 55">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCCOMMUNICATIONSAPPLIANCE</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.17 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="ANTENNA"/>
+              <xs:enumeration value="AUTOMATON"/>
+              <xs:enumeration value="COMPUTER"/>
+              <xs:enumeration value="FAX"/>
+              <xs:enumeration value="GATEWAY"/>
+              <xs:enumeration value="INTELLIGENTPERIPHERAL"/>
+              <xs:enumeration value="IPNETWORKEQUIPMENT"/>
+              <xs:enumeration value="LINESIDEELECTRONICUNIT"/>
+              <xs:enumeration value="MODEM"/>
+              <xs:enumeration value="NETWORKAPPLIANCE"/>
+              <xs:enumeration value="NETWORKBRIDGE"/>
+              <xs:enumeration value="NETWORKHUB"/>
+              <xs:enumeration value="OPTICALLINETERMINAL"/>
+              <xs:enumeration value="OPTICALNETWORKUNIT"/>
+              <xs:enumeration value="PRINTER"/>
+              <xs:enumeration value="RADIOBLOCKCENTER"/>
+              <xs:enumeration value="REPEATER"/>
+              <xs:enumeration value="ROUTER"/>
+              <xs:enumeration value="SCANNER"/>
+              <xs:enumeration value="TELECOMMAND"/>
+              <xs:enumeration value="TELEPHONYEXCHANGE"/>
+              <xs:enumeration value="TRANSITIONCOMPONENT"/>
+              <xs:enumeration value="TRANSPONDER"/>
+              <xs:enumeration value="TRANSPORTEQUIPMENT"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.17 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.17 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.18 IfcCondenser (Kondenser)" ifcVersion="IFC4X3_ADD2" identifier="T6.18" description="IfcCondenser Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.18 · PDF s. 56">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCCONDENSER</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.18 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.18 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="AIRCOOLED"/>
+              <xs:enumeration value="EVAPORATIVECOOLED"/>
+              <xs:enumeration value="WATERCOOLED"/>
+              <xs:enumeration value="WATERCOOLEDBRAZEDPLATE"/>
+              <xs:enumeration value="WATERCOOLEDSHELLCOIL"/>
+              <xs:enumeration value="WATERCOOLEDSHELLTUBE"/>
+              <xs:enumeration value="WATERCOOLEDTUBEINTUBE"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.18 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.18 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCPOWERMEASURE" instructions="Nominal Güç Tüketimi (Tablo 6.18 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_ElectricalDeviceCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NominalPowerConsumption</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.19 IfcCoolingTower (Soğutma Kulesi)" ifcVersion="IFC4X3_ADD2" identifier="T6.19" description="IfcCoolingTower Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.19 · PDF s. 57">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCCOOLINGTOWER</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.19 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.19 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="MECHANICALFORCEDDRAFT"/>
+              <xs:enumeration value="MECHANICALINDUCEDDRAFT"/>
+              <xs:enumeration value="NATURALDRAFT"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.19 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.19 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCPOWERMEASURE" instructions="Nominal Kapasite (Tablo 6.19 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_CoolingTowerTypeCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NominalCapacity</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.20 IfcCovering (Kaplama)" ifcVersion="IFC4X3_ADD2" identifier="T6.20" description="IfcCovering Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.20 · PDF s. 58–59">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCCOVERING</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.20 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="CEILING"/>
+              <xs:enumeration value="CLADDING"/>
+              <xs:enumeration value="COPING"/>
+              <xs:enumeration value="FLOORING"/>
+              <xs:enumeration value="INSULATION"/>
+              <xs:enumeration value="MEMBRANE"/>
+              <xs:enumeration value="MOLDING"/>
+              <xs:enumeration value="ROOFING"/>
+              <xs:enumeration value="SKIRTINGBOARD"/>
+              <xs:enumeration value="SLEEVING"/>
+              <xs:enumeration value="TOPPING"/>
+              <xs:enumeration value="WRAPPING"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.20 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.20 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Yangın Dayanım Sınıfı (Tablo 6.20 satır 7)">
+          <propertySet>
+            <simpleValue>Pset_CoveringCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>FireRating</simpleValue>
+          </baseName>
+        </property>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.20 satır 4)"/>
+        <material cardinality="required" instructions="Kaplama Malzemesi (Tablo 6.20 satır 5)"/>
+        <material cardinality="required" instructions="Kaplama Kalınlığı (Tablo 6.20 satır 6)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.21 IfcCurtainWall (Giydirme Cephe)" ifcVersion="IFC4X3_ADD2" identifier="T6.21" description="IfcCurtainWall Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.21 · PDF s. 60">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCCURTAINWALL</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.21 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.21 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.21 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Yangın Dayanım Sınıfı (Tablo 6.21 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_CurtainWallCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>FireRating</simpleValue>
+          </baseName>
+        </property>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.21 satır 4)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.22 IfcDamper (Damper)" ifcVersion="IFC4X3_ADD2" identifier="T6.22" description="IfcDamper Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.22 · PDF s. 61">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCDAMPER</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.22 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.22 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="BACKDRAFTDAMPER"/>
+              <xs:enumeration value="BALANCINGDAMPER"/>
+              <xs:enumeration value="BLASTDAMPER"/>
+              <xs:enumeration value="CONTROLDAMPER"/>
+              <xs:enumeration value="FIREDAMPER"/>
+              <xs:enumeration value="FIRESMOKEDAMPER"/>
+              <xs:enumeration value="FUMEHOODEXHAUST"/>
+              <xs:enumeration value="GRAVITYDAMPER"/>
+              <xs:enumeration value="GRAVITYRELIEFDAMPER"/>
+              <xs:enumeration value="RELIEFDAMPER"/>
+              <xs:enumeration value="SMOKEDAMPER"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.22 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.22 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.23 IfcDistributionBoard (Dağıtım Panosu)" ifcVersion="IFC4X3_ADD2" identifier="T6.23" description="IfcDistributionBoard Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.23 · PDF s. 62">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCDISTRIBUTIONBOARD</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.23 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.23 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="CONSUMERUNIT"/>
+              <xs:enumeration value="DISPATCHINGBOARD"/>
+              <xs:enumeration value="DISTRIBUTIONBOARD"/>
+              <xs:enumeration value="DISTRIBUTIONFRAME"/>
+              <xs:enumeration value="MOTORCONTROLCENTRE"/>
+              <xs:enumeration value="SWITCHBOARD"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.23 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.23 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCPOWERMEASURE" instructions="Nominal Güç Tüketimi (Tablo 6.23 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_ElectricalDeviceCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NominalPowerConsumption</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.24 IfcDistributionSystem (Dağıtım Sistemi)" ifcVersion="IFC4X3_ADD2" identifier="T6.24" description="IfcDistributionSystem Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.24 · PDF s. 63">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCDISTRIBUTIONSYSTEM</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tür (Tablo 6.24 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="AIRCONDITIONING"/>
+              <xs:enumeration value="AUDIOVISUAL"/>
+              <xs:enumeration value="CATENARY_SYSTEM"/>
+              <xs:enumeration value="CHEMICAL"/>
+              <xs:enumeration value="CHILLEDWATER"/>
+              <xs:enumeration value="COMMUNICATION"/>
+              <xs:enumeration value="COMPRESSEDAIR"/>
+              <xs:enumeration value="CONDENSERWATER"/>
+              <xs:enumeration value="CONTROL"/>
+              <xs:enumeration value="CONVEYING"/>
+              <xs:enumeration value="DATA"/>
+              <xs:enumeration value="DISPOSAL"/>
+              <xs:enumeration value="DOMESTICCOLDWATER"/>
+              <xs:enumeration value="DOMESTICHOTWATER"/>
+              <xs:enumeration value="DRAINAGE"/>
+              <xs:enumeration value="EARTHING"/>
+              <xs:enumeration value="ELECTRICAL"/>
+              <xs:enumeration value="ELECTROACOUSTIC"/>
+              <xs:enumeration value="EXHAUST"/>
+              <xs:enumeration value="FIREPROTECTION"/>
+              <xs:enumeration value="FIXEDTRANSMISSIONNETWORK"/>
+              <xs:enumeration value="FUEL"/>
+              <xs:enumeration value="GAS"/>
+              <xs:enumeration value="HAZARDOUS"/>
+              <xs:enumeration value="HEATING"/>
+              <xs:enumeration value="LIGHTING"/>
+              <xs:enumeration value="LIGHTNINGPROTECTION"/>
+              <xs:enumeration value="MOBILENETWORK"/>
+              <xs:enumeration value="MONITORINGSYSTEM"/>
+              <xs:enumeration value="MUNICIPALSOLIDWASTE"/>
+              <xs:enumeration value="OIL"/>
+              <xs:enumeration value="OPERATIONAL"/>
+              <xs:enumeration value="OPERATIONALTELEPHONYSYSTEM"/>
+              <xs:enumeration value="OVERHEAD_CONTACTLINE_SYSTEM"/>
+              <xs:enumeration value="POWERGENERATION"/>
+              <xs:enumeration value="RAINWATER"/>
+              <xs:enumeration value="REFRIGERATION"/>
+              <xs:enumeration value="RETURN_CIRCUIT"/>
+              <xs:enumeration value="SECURITY"/>
+              <xs:enumeration value="SEWAGE"/>
+              <xs:enumeration value="SIGNAL"/>
+              <xs:enumeration value="STORMWATER"/>
+              <xs:enumeration value="TELEPHONE"/>
+              <xs:enumeration value="TV"/>
+              <xs:enumeration value="VACUUM"/>
+              <xs:enumeration value="VENT"/>
+              <xs:enumeration value="VENTILATION"/>
+              <xs:enumeration value="WASTEWATER"/>
+              <xs:enumeration value="WATERSUPPLY"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="Uzun İsim (Tablo 6.24 satır 2)">
+          <name>
+            <simpleValue>LongName</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.24 satır 3)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.25 IfcDoor (Kapı)" ifcVersion="IFC4X3_ADD2" identifier="T6.25" description="IfcDoor Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.25 · PDF s. 64">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCDOOR</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.25 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="BOOM_BARRIER"/>
+              <xs:enumeration value="DOOR"/>
+              <xs:enumeration value="GATE"/>
+              <xs:enumeration value="TRAPDOOR"/>
+              <xs:enumeration value="TURNSTILE"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.25 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.25 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCBOOLEAN" instructions="Dışarıda (Tablo 6.25 satır 4)">
+          <propertySet>
+            <simpleValue>Pset_DoorCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>IsExternal</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Yangın Dayanım Sınıfı (Tablo 6.25 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_DoorCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>FireRating</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCBOOLEAN" instructions="Acil Çıkış (Tablo 6.25 satır 6)">
+          <propertySet>
+            <simpleValue>Pset_DoorCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>FireExit</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.26 IfcDuctFitting (Kanal Bağlantı Parçası)" ifcVersion="IFC4X3_ADD2" identifier="T6.26" description="IfcDuctFitting Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.26 · PDF s. 65">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCDUCTFITTING</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.26 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.26 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="BEND"/>
+              <xs:enumeration value="CONNECTOR"/>
+              <xs:enumeration value="ENTRY"/>
+              <xs:enumeration value="EXIT"/>
+              <xs:enumeration value="JUNCTION"/>
+              <xs:enumeration value="OBSTRUCTION"/>
+              <xs:enumeration value="TRANSITION"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.26 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.26 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.27 IfcDuctSegment (Kanal Segmenti)" ifcVersion="IFC4X3_ADD2" identifier="T6.27" description="IfcDuctSegment Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.27 · PDF s. 66">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCDUCTSEGMENT</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.27 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.27 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="FLEXIBLESEGMENT"/>
+              <xs:enumeration value="RIGIDSEGMENT"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.27 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.27 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.28 IfcDuctSilencer (Kanal Susturucusu)" ifcVersion="IFC4X3_ADD2" identifier="T6.28" description="IfcDuctSilencer Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.28 · PDF s. 67">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCDUCTSILENCER</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.28 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.28 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="FLATOVAL"/>
+              <xs:enumeration value="RECTANGULAR"/>
+              <xs:enumeration value="ROUND"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.28 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.28 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.29 IfcElectricAppliance (Elektrikli Cihaz)" ifcVersion="IFC4X3_ADD2" identifier="T6.29" description="IfcElectricAppliance Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.29 · PDF s. 68">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCELECTRICAPPLIANCE</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.29 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="DISHWASHER"/>
+              <xs:enumeration value="ELECTRICCOOKER"/>
+              <xs:enumeration value="FREESTANDINGELECTRICHEATER"/>
+              <xs:enumeration value="FREESTANDINGFAN"/>
+              <xs:enumeration value="FREESTANDINGWATERCOOLER"/>
+              <xs:enumeration value="FREESTANDINGWATERHEATER"/>
+              <xs:enumeration value="FREEZER"/>
+              <xs:enumeration value="FRIDGE_FREEZER"/>
+              <xs:enumeration value="HANDDRYER"/>
+              <xs:enumeration value="KITCHENMACHINE"/>
+              <xs:enumeration value="MICROWAVE"/>
+              <xs:enumeration value="PHOTOCOPIER"/>
+              <xs:enumeration value="REFRIGERATOR"/>
+              <xs:enumeration value="TUMBLEDRYER"/>
+              <xs:enumeration value="VENDINGMACHINE"/>
+              <xs:enumeration value="WASHINGMACHINE"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.29 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.29 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.30 IfcElectricGenerator (Elektrik Jeneratörü)" ifcVersion="IFC4X3_ADD2" identifier="T6.30" description="IfcElectricGenerator Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.30 · PDF s. 69">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCELECTRICGENERATOR</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.30 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.30 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="CHP"/>
+              <xs:enumeration value="ENGINEGENERATOR"/>
+              <xs:enumeration value="STANDALONE"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.30 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.30 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.31 IfcEvaporator (Evaporatör)" ifcVersion="IFC4X3_ADD2" identifier="T6.31" description="IfcEvaporator Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.31 · PDF s. 70">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCEVAPORATOR</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.31 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.31 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="DIRECTEXPANSION"/>
+              <xs:enumeration value="DIRECTEXPANSIONBRAZEDPLATE"/>
+              <xs:enumeration value="DIRECTEXPANSIONSHELLANDTUBE"/>
+              <xs:enumeration value="DIRECTEXPANSIONTUBEINTUBE"/>
+              <xs:enumeration value="FLOODEDSHELLANDTUBE"/>
+              <xs:enumeration value="SHELLANDCOIL"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.31 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.31 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCPOWERMEASURE" instructions="Nominal Güç Tüketimi (Tablo 6.31 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_ElectricalDeviceCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NominalPowerConsumption</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.32 IfcFan (Fan)" ifcVersion="IFC4X3_ADD2" identifier="T6.32" description="IfcFan Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.32 · PDF s. 71">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCFAN</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.32 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.32 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="CENTRIFUGALAIRFOIL"/>
+              <xs:enumeration value="CENTRIFUGALBACKWARDINCLINEDCURVED"/>
+              <xs:enumeration value="CENTRIFUGALFORWARDCURVED"/>
+              <xs:enumeration value="CENTRIFUGALRADIAL"/>
+              <xs:enumeration value="PROPELLORAXIAL"/>
+              <xs:enumeration value="TUBEAXIAL"/>
+              <xs:enumeration value="VANEAXIAL"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.32 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.32 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCPRESSUREMEASURE" instructions="Nominal Toplam Basınç (Tablo 6.32 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_FanTypeCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NominalTotalPressure</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCVOLUMETRICFLOWRATEMEASURE" instructions="Nominal Hava Debisi (Tablo 6.32 satır 6)">
+          <propertySet>
+            <simpleValue>Pset_FanTypeCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NominalAirFlowRate</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.33 IfcFireSuppressionTerminal (Yangın Söndürme Terminali)" ifcVersion="IFC4X3_ADD2" identifier="T6.33" description="IfcFireSuppressionTerminal Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.33 · PDF s. 72">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCFIRESUPPRESSIONTERMINAL</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.33 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.33 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="BREECHINGINLET"/>
+              <xs:enumeration value="FIREHYDRANT"/>
+              <xs:enumeration value="FIREMONITOR"/>
+              <xs:enumeration value="HOSEREEL"/>
+              <xs:enumeration value="SPRINKLER"/>
+              <xs:enumeration value="SPRINKLERDEFLECTOR"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.33 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.33 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.34 IfcFooting (Temel)" ifcVersion="IFC4X3_ADD2" identifier="T6.34" description="IfcFooting Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.34 · PDF s. 73">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCFOOTING</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.34 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="CAISSON_FOUNDATION"/>
+              <xs:enumeration value="FOOTING_BEAM"/>
+              <xs:enumeration value="PAD_FOOTING"/>
+              <xs:enumeration value="PILE_CAP"/>
+              <xs:enumeration value="STRIP_FOOTING"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.34 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.34 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.34 satır 4)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.35 IfcFurniture (Mobilya)" ifcVersion="IFC4X3_ADD2" identifier="T6.35" description="IfcFurniture Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.35 · PDF s. 74">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCFURNITURE</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.35 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="BED"/>
+              <xs:enumeration value="CHAIR"/>
+              <xs:enumeration value="DESK"/>
+              <xs:enumeration value="FILECABINET"/>
+              <xs:enumeration value="SHELF"/>
+              <xs:enumeration value="SOFA"/>
+              <xs:enumeration value="TABLE"/>
+              <xs:enumeration value="TECHNICALCABINET"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.35 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.35 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.36 IfcGridAxis (Aks)" ifcVersion="IFC4X3_ADD2" identifier="T6.36" description="IfcGridAxis Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.36 · PDF s. 75">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCGRIDAXIS</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Aks Etiketi (Tablo 6.36 satır 1)">
+          <name>
+            <simpleValue>AxisTag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.37 IfcGroup (Grup)" ifcVersion="IFC4X3_ADD2" identifier="T6.37" description="IfcGroup Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.37 · PDF s. 76">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCGROUP</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.37 satır 1)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.37 satır 2)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.38 IfcHeatExchanger (Isı Eşanjörü)" ifcVersion="IFC4X3_ADD2" identifier="T6.38" description="IfcHeatExchanger Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.38 · PDF s. 77">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCHEATEXCHANGER</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.38 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.38 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="PLATE"/>
+              <xs:enumeration value="SHELLANDTUBE"/>
+              <xs:enumeration value="TURNOUTHEATING"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.38 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.38 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.39 IfcLightFixture (Aydınlatma Armatürü)" ifcVersion="IFC4X3_ADD2" identifier="T6.39" description="IfcLightFixture Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.39 · PDF s. 78">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCLIGHTFIXTURE</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.39 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.39 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="DIRECTIONSOURCE"/>
+              <xs:enumeration value="POINTSOURCE"/>
+              <xs:enumeration value="SECURITYLIGHTING"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.39 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.39 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCPOWERMEASURE" instructions="Nominal Güç Tüketimi (Tablo 6.39 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_ElectricalDeviceCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NominalPowerConsumption</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.40 IfcMember (Eleman)" ifcVersion="IFC4X3_ADD2" identifier="T6.40" description="IfcMember Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.40 · PDF s. 79">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCMEMBER</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.40 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="ARCH_SEGMENT"/>
+              <xs:enumeration value="BRACE"/>
+              <xs:enumeration value="CHORD"/>
+              <xs:enumeration value="COLLAR"/>
+              <xs:enumeration value="MEMBER"/>
+              <xs:enumeration value="MULLION"/>
+              <xs:enumeration value="PLATE"/>
+              <xs:enumeration value="POST"/>
+              <xs:enumeration value="PURLIN"/>
+              <xs:enumeration value="RAFTER"/>
+              <xs:enumeration value="STAY_CABLE"/>
+              <xs:enumeration value="STIFFENING_RIB"/>
+              <xs:enumeration value="STRINGER"/>
+              <xs:enumeration value="STRUCTURALCABLE"/>
+              <xs:enumeration value="STRUT"/>
+              <xs:enumeration value="STUD"/>
+              <xs:enumeration value="SUSPENDER"/>
+              <xs:enumeration value="SUSPENSION_CABLE"/>
+              <xs:enumeration value="TIEBAR"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.40 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.40 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCBOOLEAN" instructions="Dışarıda (Tablo 6.40 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_MemberCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>IsExternal</simpleValue>
+          </baseName>
+        </property>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.40 satır 4)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.41 IfcOpeningElement (Açıklık Elemanı)" ifcVersion="IFC4X3_ADD2" identifier="T6.41" description="IfcOpeningElement Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.41 · PDF s. 80">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCOPENINGELEMENT</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.41 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="OPENING"/>
+              <xs:enumeration value="RECESS"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.41 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.42 IfcOutlet (Priz)" ifcVersion="IFC4X3_ADD2" identifier="T6.42" description="IfcOutlet Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.42 · PDF s. 81">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCOUTLET</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.42 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.42 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="AUDIOVISUALOUTLET"/>
+              <xs:enumeration value="COMMUNICATIONSOUTLET"/>
+              <xs:enumeration value="DATAOUTLET"/>
+              <xs:enumeration value="POWEROUTLET"/>
+              <xs:enumeration value="TELEPHONEOUTLET"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.42 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.42 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.43 IfcPavement (Asfalt)" ifcVersion="IFC4X3_ADD2" identifier="T6.43" description="IfcPavement Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.43 · PDF s. 82">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCPAVEMENT</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.43 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="FLEXIBLE"/>
+              <xs:enumeration value="RIGID"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.43 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.43 satır 3)"/>
+        <material cardinality="required" instructions="Kaplama Malzemesi (Tablo 6.43 satır 4)"/>
+        <material cardinality="required" instructions="Kaplama Kalınlığı (Tablo 6.43 satır 5)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.44 IfcPile (Kazık)" ifcVersion="IFC4X3_ADD2" identifier="T6.44" description="IfcPile Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.44 · PDF s. 83">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCPILE</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.44 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="BORED"/>
+              <xs:enumeration value="COHESION"/>
+              <xs:enumeration value="DRIVEN"/>
+              <xs:enumeration value="FRICTION"/>
+              <xs:enumeration value="JETGROUTING"/>
+              <xs:enumeration value="SUPPORT"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.44 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.44 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.44 satır 4)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.45 IfcPipeFitting (Boru Bağlantı Parçası)" ifcVersion="IFC4X3_ADD2" identifier="T6.45" description="IfcPipeFitting Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.45 · PDF s. 84">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCPIPEFITTING</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.45 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.45 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="BEND"/>
+              <xs:enumeration value="CONNECTOR"/>
+              <xs:enumeration value="ENTRY"/>
+              <xs:enumeration value="EXIT"/>
+              <xs:enumeration value="JUNCTION"/>
+              <xs:enumeration value="OBSTRUCTION"/>
+              <xs:enumeration value="TRANSITION"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.45 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.45 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.46 IfcPipeSegment (Boru Segmenti)" ifcVersion="IFC4X3_ADD2" identifier="T6.46" description="IfcPipeSegment Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.46 · PDF s. 85">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCPIPESEGMENT</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.46 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.46 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="CULVERT"/>
+              <xs:enumeration value="FLEXIBLESEGMENT"/>
+              <xs:enumeration value="GUTTER"/>
+              <xs:enumeration value="RIGIDSEGMENT"/>
+              <xs:enumeration value="SPOOL"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.46 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.46 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCPOSITIVELENGTHMEASURE" instructions="Nominal Çap (Tablo 6.46 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_PipeSegmentTypeCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NominalDiameter</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.47 IfcPump (Pompa)" ifcVersion="IFC4X3_ADD2" identifier="T6.47" description="IfcPump Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.47 · PDF s. 86">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCPUMP</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.47 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.47 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="CIRCULATOR"/>
+              <xs:enumeration value="ENDSUCTION"/>
+              <xs:enumeration value="SPLITCASE"/>
+              <xs:enumeration value="SUBMERSIBLEPUMP"/>
+              <xs:enumeration value="SUMPPUMP"/>
+              <xs:enumeration value="VERTICALINLINE"/>
+              <xs:enumeration value="VERTICALTURBINE"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.47 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.47 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCMASSFLOWRATEMEASURE" instructions="Akış Debisi Aralığı (Tablo 6.47 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_PumpTypeCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>FlowRateRange</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCPOWERMEASURE" instructions="Nominal Güç Tüketimi (Tablo 6.47 satır 6)">
+          <propertySet>
+            <simpleValue>Pset_ElectricalDeviceCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>NominalPowerConsumption</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.48 IfcRailing (Korkuluk)" ifcVersion="IFC4X3_ADD2" identifier="T6.48" description="IfcRailing Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.48 · PDF s. 87">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCRAILING</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.48 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="BALUSTRADE"/>
+              <xs:enumeration value="FENCE"/>
+              <xs:enumeration value="GUARDRAIL"/>
+              <xs:enumeration value="HANDRAIL"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.48 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.48 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.49 IfcRamp (Rampa)" ifcVersion="IFC4X3_ADD2" identifier="T6.49" description="IfcRamp Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.49 · PDF s. 88">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCRAMP</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.49 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="HALF_TURN_RAMP"/>
+              <xs:enumeration value="QUARTER_TURN_RAMP"/>
+              <xs:enumeration value="SPIRAL_RAMP"/>
+              <xs:enumeration value="STRAIGHT_RUN_RAMP"/>
+              <xs:enumeration value="TWO_QUARTER_TURN_RAMP"/>
+              <xs:enumeration value="TWO_STRAIGHT_RUN_RAMP"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.49 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.49 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.49 satır 4)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.50 IfcRoad (Yol)" ifcVersion="IFC4X3_ADD2" identifier="T6.50" description="IfcRoad Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.50 · PDF s. 89">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCROAD</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.50 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.50 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.50 satır 3)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.51 IfcRoadPart (Yol Parçası)" ifcVersion="IFC4X3_ADD2" identifier="T6.51" description="IfcRoadPart Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.51 · PDF s. 90">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCROADPART</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.51 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="BICYCLECROSSING"/>
+              <xs:enumeration value="BUS_STOP"/>
+              <xs:enumeration value="CARRIAGEWAY"/>
+              <xs:enumeration value="CENTRALISLAND"/>
+              <xs:enumeration value="CENTRALRESERVE"/>
+              <xs:enumeration value="HARDSHOULDER"/>
+              <xs:enumeration value="INTERSECTION"/>
+              <xs:enumeration value="LAYBY"/>
+              <xs:enumeration value="PARKINGBAY"/>
+              <xs:enumeration value="PASSINGBAY"/>
+              <xs:enumeration value="PEDESTRIAN_CROSSING"/>
+              <xs:enumeration value="RAILWAYCROSSING"/>
+              <xs:enumeration value="REFUGEISLAND"/>
+              <xs:enumeration value="ROADSEGMENT"/>
+              <xs:enumeration value="ROADSIDE"/>
+              <xs:enumeration value="ROADSIDEPART"/>
+              <xs:enumeration value="ROADWAYPLATEAU"/>
+              <xs:enumeration value="ROUNDABOUT"/>
+              <xs:enumeration value="SHOULDER"/>
+              <xs:enumeration value="SIDEWALK"/>
+              <xs:enumeration value="SOFTSHOULDER"/>
+              <xs:enumeration value="TOLLPLAZA"/>
+              <xs:enumeration value="TRAFFICISLAND"/>
+              <xs:enumeration value="TRAFFICLANE"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.51 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.51 satır 3)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.52 IfcRoof (Çatı)" ifcVersion="IFC4X3_ADD2" identifier="T6.52" description="IfcRoof Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.52 · PDF s. 91">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCROOF</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.52 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="BARREL_ROOF"/>
+              <xs:enumeration value="BUTTERFLY_ROOF"/>
+              <xs:enumeration value="DOME_ROOF"/>
+              <xs:enumeration value="FLAT_ROOF"/>
+              <xs:enumeration value="FREEFORM"/>
+              <xs:enumeration value="GABLE_ROOF"/>
+              <xs:enumeration value="GAMBREL_ROOF"/>
+              <xs:enumeration value="HIPPED_GABLE_ROOF"/>
+              <xs:enumeration value="HIP_ROOF"/>
+              <xs:enumeration value="MANSARD_ROOF"/>
+              <xs:enumeration value="PAVILION_ROOF"/>
+              <xs:enumeration value="RAINBOW_ROOF"/>
+              <xs:enumeration value="SHED_ROOF"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.52 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.52 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCBOOLEAN" instructions="Dışarıda (Tablo 6.52 satır 4)">
+          <propertySet>
+            <simpleValue>Pset_RoofCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>IsExternal</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Yangın Dayanım Sınıfı (Tablo 6.52 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_RoofCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>FireRating</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.53 IfcSanitaryTerminal (Sıhhi Terminal)" ifcVersion="IFC4X3_ADD2" identifier="T6.53" description="IfcSanitaryTerminal Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.53 · PDF s. 92">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCSANITARYTERMINAL</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.53 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="BATH"/>
+              <xs:enumeration value="BIDET"/>
+              <xs:enumeration value="CISTERN"/>
+              <xs:enumeration value="SANITARYFOUNTAIN"/>
+              <xs:enumeration value="SHOWER"/>
+              <xs:enumeration value="SINK"/>
+              <xs:enumeration value="TOILETPAN"/>
+              <xs:enumeration value="URINAL"/>
+              <xs:enumeration value="WASHHANDBASIN"/>
+              <xs:enumeration value="WCSEAT"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.53 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.53 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.54 IfcSign (Tabela)" ifcVersion="IFC4X3_ADD2" identifier="T6.54" description="IfcSign Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.54 · PDF s. 93">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCSIGN</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.54 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="MARKER"/>
+              <xs:enumeration value="MIRROR"/>
+              <xs:enumeration value="PICTORAL"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.54 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.54 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.55 IfcSite (Saha)" ifcVersion="IFC4X3_ADD2" identifier="T6.55" description="IfcSite Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.55 · PDF s. 94–95">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCSITE</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Nesne Tipi (Tablo 6.55 satır 1)">
+          <name>
+            <simpleValue>ObjectType</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Uzun İsim (Tablo 6.55 satır 2)">
+          <name>
+            <simpleValue>LongName</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.55 satır 3)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Referans Kotu (Tablo 6.55 satır 4)">
+          <name>
+            <simpleValue>RefElevation</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCPOSITIVERATIOMEASURE" instructions="Kat Alanı Oranı (Tablo 6.55 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_SiteCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>FloorAreaRatio</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCPOSITIVERATIOMEASURE" instructions="Saha Kapsama Oranı (Tablo 6.55 satır 6)">
+          <propertySet>
+            <simpleValue>Pset_SiteCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>SiteCoverageRatio</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCAREAMEASURE" instructions="Toplam Alan (Tablo 6.55 satır 7)">
+          <propertySet>
+            <simpleValue>Pset_SiteCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>TotalArea</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Adres Satırları (Tablo 6.55 satır 8)">
+          <propertySet>
+            <simpleValue>Pset_Address</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>AddressLines</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLABEL" instructions="I1 / Kasaba (Tablo 6.55 satır 9)">
+          <propertySet>
+            <simpleValue>Pset_Address</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>Town</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Bölge / İlçe (Tablo 6.55 satır 10)">
+          <propertySet>
+            <simpleValue>Pset_Address</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>Region</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCIDENTIFIER" instructions="Parsel Numarası (Tablo 6.55 satır 11)">
+          <propertySet>
+            <simpleValue>Pset_LandRegistration</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>LandID</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCIDENTIFIER" instructions="Tapu Numarası (Tablo 6.55 satır 12)">
+          <propertySet>
+            <simpleValue>Pset_LandRegistration</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>LandTitleID</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" instructions=" (Tablo 6.55 satır 13)">
+          <propertySet>
+            <simpleValue>TREpys_ParselOzellikSeti</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>TAKS</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" instructions=" (Tablo 6.55 satır 14)">
+          <propertySet>
+            <simpleValue>TREpys_ParselOzellikSeti</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>KAKS</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" instructions=" (Tablo 6.55 satır 15)">
+          <propertySet>
+            <simpleValue>TREpys_ParselOzellikSeti</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>CekmeOn</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" instructions=" (Tablo 6.55 satır 16)">
+          <propertySet>
+            <simpleValue>TREpys_ParselOzellikSeti</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>CekmeYan</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" instructions=" (Tablo 6.55 satır 17)">
+          <propertySet>
+            <simpleValue>TREpys_ParselOzellikSeti</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>CekmeArka</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.56 IfcSlab (Döşeme)" ifcVersion="IFC4X3_ADD2" identifier="T6.56" description="IfcSlab Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.56 · PDF s. 96">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCSLAB</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.56 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="APPROACH_SLAB"/>
+              <xs:enumeration value="BASESLAB"/>
+              <xs:enumeration value="FLOOR"/>
+              <xs:enumeration value="LANDING"/>
+              <xs:enumeration value="PAVING"/>
+              <xs:enumeration value="ROOF"/>
+              <xs:enumeration value="SIDEWALK"/>
+              <xs:enumeration value="TRACKSLAB"/>
+              <xs:enumeration value="WEARING"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.56 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.56 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCBOOLEAN" instructions="Dışarıda (Tablo 6.56 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_SlabCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>IsExternal</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Yangın Dayanım Sınıfı (Tablo 6.56 satır 6)">
+          <propertySet>
+            <simpleValue>Pset_SlabCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>FireRating</simpleValue>
+          </baseName>
+        </property>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.56 satır 4)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.57 IfcSolarDevice (Güneş Enerjisi Cihazı)" ifcVersion="IFC4X3_ADD2" identifier="T6.57" description="IfcSolarDevice Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.57 · PDF s. 97">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCSOLARDEVICE</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.57 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.57 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="SOLARCOLLECTOR"/>
+              <xs:enumeration value="SOLARPANEL"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.57 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.57 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.58 IfcSpace (Mahal)" ifcVersion="IFC4X3_ADD2" identifier="T6.58" description="IfcSpace Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.58 · PDF s. 98–99">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCSPACE</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.58 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="BERTH"/>
+              <xs:enumeration value="EXTERNAL"/>
+              <xs:enumeration value="GFA"/>
+              <xs:enumeration value="INTERNAL"/>
+              <xs:enumeration value="PARKING"/>
+              <xs:enumeration value="SPACE"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.58 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Zemin Kaplaması (Tablo 6.58 satır 3)">
+          <propertySet>
+            <simpleValue>Pset_SpaceCoveringRequirements</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>FloorCovering</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCPOSITIVELENGTHMEASURE" instructions="Zemin Kaplama Kalınlığı (Tablo 6.58 satır 4)">
+          <propertySet>
+            <simpleValue>Pset_SpaceCoveringRequirements</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>FloorCoveringThickness</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Duvar Kaplaması (Tablo 6.58 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_SpaceCoveringRequirements</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>WallCovering</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCPOSITIVELENGTHMEASURE" instructions="Duvar Kaplama Kalınlığı (Tablo 6.58 satır 6)">
+          <propertySet>
+            <simpleValue>Pset_SpaceCoveringRequirements</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>WallCoveringThickness</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Tavan Kaplaması (Tablo 6.58 satır 7)">
+          <propertySet>
+            <simpleValue>Pset_SpaceCoveringRequirements</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>CeilingCovering</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCPOSITIVELENGTHMEASURE" instructions="Tavan Kaplama Kalınlığı (Tablo 6.58 satır 8)">
+          <propertySet>
+            <simpleValue>Pset_SpaceCoveringRequirements</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>CeilingCoveringThickness</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.59 IfcSpaceHeater (Mekan Isıtıcısı)" ifcVersion="IFC4X3_ADD2" identifier="T6.59" description="IfcSpaceHeater Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.59 · PDF s. 100">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCSPACEHEATER</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.59 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.59 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="CONVECTOR"/>
+              <xs:enumeration value="RADIATOR"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.59 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.59 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCPOWERMEASURE" instructions="Çıkış Kapasitesi (Tablo 6.59 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_SpaceHeaterTypeCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>OutputCapacity</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.60 IfcSpatialZone (Mekansal Zon)" ifcVersion="IFC4X3_ADD2" identifier="T6.60" description="IfcSpatialZone Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.60 · PDF s. 101">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCSPATIALZONE</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Açıklama (Tablo 6.60 satır 1)">
+          <name>
+            <simpleValue>Description</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Uzun İsim (Tablo 6.60 satır 2)">
+          <name>
+            <simpleValue>LongName</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.60 satır 3)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" instructions=" (Tablo 6.60 satır 4)">
+          <propertySet>
+            <simpleValue>TREpys_EmsalOzellikSeti</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>EmsalDurumu</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.61 IfcStair (Merdiven)" ifcVersion="IFC4X3_ADD2" identifier="T6.61" description="IfcStair Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.61 · PDF s. 102">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCSTAIR</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.61 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="CURVED_RUN_STAIR"/>
+              <xs:enumeration value="DOUBLE_RETURN_STAIR"/>
+              <xs:enumeration value="HALF_TURN_STAIR"/>
+              <xs:enumeration value="HALF_WINDING_STAIR"/>
+              <xs:enumeration value="LADDER"/>
+              <xs:enumeration value="QUARTER_TURN_STAIR"/>
+              <xs:enumeration value="QUARTER_WINDING_STAIR"/>
+              <xs:enumeration value="SPIRAL_STAIR"/>
+              <xs:enumeration value="STRAIGHT_RUN_STAIR"/>
+              <xs:enumeration value="THREE_QUARTER_TURN_STAIR"/>
+              <xs:enumeration value="THREE_QUARTER_WINDING_STAIR"/>
+              <xs:enumeration value="TWO_CURVED_RUN_STAIR"/>
+              <xs:enumeration value="TWO_QUARTER_TURN_STAIR"/>
+              <xs:enumeration value="TWO_QUARTER_WINDING_STAIR"/>
+              <xs:enumeration value="TWO_STRAIGHT_RUN_STAIR"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.61 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.61 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Yangın Dayanım Sınıfı (Tablo 6.61 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_StairCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>FireRating</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCBOOLEAN" instructions="Acil Çıkış (Tablo 6.61 satır 6)">
+          <propertySet>
+            <simpleValue>Pset_StairCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>FireExit</simpleValue>
+          </baseName>
+        </property>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.61 satır 4)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.62 IfcTank (Tank)" ifcVersion="IFC4X3_ADD2" identifier="T6.62" description="IfcTank Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.62 · PDF s. 103">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCTANK</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.62 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="BASIN"/>
+              <xs:enumeration value="BREAKPRESSURE"/>
+              <xs:enumeration value="EXPANSION"/>
+              <xs:enumeration value="FEEDANDEXPANSION"/>
+              <xs:enumeration value="OILRETENTIONTRAY"/>
+              <xs:enumeration value="PRESSUREVESSEL"/>
+              <xs:enumeration value="STORAGE"/>
+              <xs:enumeration value="VESSEL"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.62 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.62 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCVOLUMEMEASURE" instructions="Tank Nominal Kapasitesi (Tablo 6.62 satır 4)">
+          <propertySet>
+            <simpleValue>Pset_TankTypeCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>TankNominalCapacity</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.63 IfcTransformer (Transformatör)" ifcVersion="IFC4X3_ADD2" identifier="T6.63" description="IfcTransformer Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.63 · PDF s. 104">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCTRANSFORMER</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.63 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="CHOPPER"/>
+              <xs:enumeration value="COMBINED"/>
+              <xs:enumeration value="CURRENT"/>
+              <xs:enumeration value="FREQUENCY"/>
+              <xs:enumeration value="INVERTER"/>
+              <xs:enumeration value="RECTIFIER"/>
+              <xs:enumeration value="VOLTAGE"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.63 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.63 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCPOWERMEASURE" instructions="Maksimum Görünen Güç (Tablo 6.63 satır 4)">
+          <propertySet>
+            <simpleValue>Pset_TransformerTypeCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>MaximumApparentPower</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.64 IfcTransportElement (Taşıma Elemanı)" ifcVersion="IFC4X3_ADD2" identifier="T6.64" description="IfcTransportElement Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.64 · PDF s. 105">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCTRANSPORTELEMENT</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.64 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="CRANEWAY"/>
+              <xs:enumeration value="ELEVATOR"/>
+              <xs:enumeration value="ESCALATOR"/>
+              <xs:enumeration value="HAULINGGEAR"/>
+              <xs:enumeration value="LIFTINGGEAR"/>
+              <xs:enumeration value="MOVINGWALKWAY"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.64 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.64 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCCOUNTMEASURE" instructions="İnsan Kapasitesi (Tablo 6.64 satır 4)">
+          <propertySet>
+            <simpleValue>Pset_TransportElementCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>CapacityPeople</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCMASSMEASURE" instructions="Ağırlık Kapasitesi (Tablo 6.64 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_TransportElementCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>CapacityWeight</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.65 IfcValve (Vana)" ifcVersion="IFC4X3_ADD2" identifier="T6.65" description="IfcValve Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.65 · PDF s. 106">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCVALVE</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required" instructions="Sistem (Tablo 6.65 satır 4)">
+          <entity>
+            <name>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="IFCDISTRIBUTIONCIRCUIT"/>
+                <xs:enumeration value="IFCDISTRIBUTIONSYSTEM"/>
+                <xs:enumeration value="IFCSYSTEM"/>
+                <xs:enumeration value="IFCZONE"/>
+              </xs:restriction>
+            </name>
+          </entity>
+        </partOf>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.65 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="AIRRELEASE"/>
+              <xs:enumeration value="ANTIVACUUM"/>
+              <xs:enumeration value="CHANGEOVER"/>
+              <xs:enumeration value="CHECK"/>
+              <xs:enumeration value="COMMISSIONING"/>
+              <xs:enumeration value="DIVERTING"/>
+              <xs:enumeration value="DOUBLECHECK"/>
+              <xs:enumeration value="DOUBLEREGULATING"/>
+              <xs:enumeration value="DRAWOFFCOCK"/>
+              <xs:enumeration value="FAUCET"/>
+              <xs:enumeration value="FLUSHING"/>
+              <xs:enumeration value="GASCOCK"/>
+              <xs:enumeration value="GASTAP"/>
+              <xs:enumeration value="ISOLATING"/>
+              <xs:enumeration value="MIXING"/>
+              <xs:enumeration value="PRESSUREREDUCING"/>
+              <xs:enumeration value="PRESSURERELIEF"/>
+              <xs:enumeration value="REGULATING"/>
+              <xs:enumeration value="SAFETYCUTOFF"/>
+              <xs:enumeration value="STEAMTRAP"/>
+              <xs:enumeration value="STOPCOCK"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.65 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.65 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCPOSITIVELENGTHMEASURE" instructions="Boyut (Tablo 6.65 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_ValveTypeCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>Size</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.66 IfcWall (Duvar)" ifcVersion="IFC4X3_ADD2" identifier="T6.66" description="IfcWall Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.66 · PDF s. 107">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCWALL</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.66 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="ELEMENTEDWALL"/>
+              <xs:enumeration value="MOVABLE"/>
+              <xs:enumeration value="PARAPET"/>
+              <xs:enumeration value="PARTITIONING"/>
+              <xs:enumeration value="PLUMBINGWALL"/>
+              <xs:enumeration value="POLYGONAL"/>
+              <xs:enumeration value="RETAININGWALL"/>
+              <xs:enumeration value="SHEAR"/>
+              <xs:enumeration value="SOLIDWALL"/>
+              <xs:enumeration value="STANDARD"/>
+              <xs:enumeration value="WAVEWALL"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.66 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.66 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCBOOLEAN" instructions="Dışarıda (Tablo 6.66 satır 5)">
+          <propertySet>
+            <simpleValue>Pset_WallCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>IsExternal</simpleValue>
+          </baseName>
+        </property>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Yangın Dayanım Sınıfı (Tablo 6.66 satır 6)">
+          <propertySet>
+            <simpleValue>Pset_WallCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>FireRating</simpleValue>
+          </baseName>
+        </property>
+        <material cardinality="required" instructions="Malzeme (Tablo 6.66 satır 4)"/>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.67 IfcWindow (Pencere)" ifcVersion="IFC4X3_ADD2" identifier="T6.67" description="IfcWindow Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.67 · PDF s. 108">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCWINDOW</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 6.67 satır 1)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="LIGHTDOME"/>
+              <xs:enumeration value="SKYLIGHT"/>
+              <xs:enumeration value="WINDOW"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.67 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Etiket (Tablo 6.67 satır 3)">
+          <name>
+            <simpleValue>Tag</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCBOOLEAN" instructions="Dışarıda (Tablo 6.67 satır 4)">
+          <propertySet>
+            <simpleValue>Pset_WindowCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>IsExternal</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-6 Tablo 6.68 IfcZone (Zon)" ifcVersion="IFC4X3_ADD2" identifier="T6.68" description="IfcZone Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-6 Tablo 6.68 · PDF s. 109">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCZONE</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Uzun İsim (Tablo 6.68 satır 1)">
+          <name>
+            <simpleValue>LongName</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 6.68 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Nesne Tipi (Tablo 6.68 satır 3)">
+          <name>
+            <simpleValue>ObjectType</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-7 Tablo 7.1 IfcProject (Proje)" ifcVersion="IFC4X3_ADD2" identifier="T7.1" description="IfcProject Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-7 Tablo 7.1 · PDF s. 222">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCPROJECT</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Açıklama (Tablo 7.1 satır 1)">
+          <name>
+            <simpleValue>Description</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 7.1 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <property cardinality="required" dataType="IFCLABEL" instructions="Proje Tipi (Tablo 7.1 satır 3)">
+          <propertySet>
+            <simpleValue>Pset_ProjectCommon</simpleValue>
+          </propertySet>
+          <baseName>
+            <simpleValue>ProjectType</simpleValue>
+          </baseName>
+        </property>
+      </requirements>
+    </specification>
+    <specification name="EK-7 Tablo 7.2 IfcPerson (Kişi)" ifcVersion="IFC4X3_ADD2" identifier="T7.2" description="IfcPerson Sınıfı Zorunlu Öznitelik ve Özellik Listesi (IfcProject içerisinde tariflenir)" instructions="Dijital Proje Yön. EK-7 Tablo 7.2 · PDF s. 223">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCPERSON</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Kimlik No (Tablo 7.2 satır 1)">
+          <name>
+            <simpleValue>Identification</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Aile Adı (Tablo 7.2 satır 2)">
+          <name>
+            <simpleValue>FamilyName</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Ad (Tablo 7.2 satır 3)">
+          <name>
+            <simpleValue>GivenName</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Rol (Tablo 7.2 satır 4)">
+          <name>
+            <simpleValue>Roles</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-7 Tablo 7.3 IfcPersonAndOrganization (Kişi ve Organizasyon)" ifcVersion="IFC4X3_ADD2" identifier="T7.3" description="IfcPersonAndOrganization Sınıfı Zorunlu Öznitelik ve Özellik Listesi (IfcProject içerisinde tariflenir)" instructions="Dijital Proje Yön. EK-7 Tablo 7.3 · PDF s. 224">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCPERSONANDORGANIZATION</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Kişi (Tablo 7.3 satır 1)">
+          <name>
+            <simpleValue>ThePerson</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Organizasyon (Tablo 7.3 satır 2)">
+          <name>
+            <simpleValue>TheOrganization</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-7 Tablo 7.4 IfcOrganization (Organizasyon)" ifcVersion="IFC4X3_ADD2" identifier="T7.4" description="IfcOrganization Sınıfı Zorunlu Öznitelik ve Özellik Listesi (IfcProject içerisinde tariflenir)" instructions="Dijital Proje Yön. EK-7 Tablo 7.4 · PDF s. 225">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCORGANIZATION</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Firma Vergi No (Tablo 7.4 satır 1)">
+          <name>
+            <simpleValue>Identification</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="İsim (Tablo 7.4 satır 2)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Rol (Tablo 7.4 satır 3)">
+          <name>
+            <simpleValue>Roles</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Adres (Tablo 7.4 satır 4)">
+          <name>
+            <simpleValue>Addresses</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-7 Tablo 7.5 IfcActorRole (Rol)" ifcVersion="IFC4X3_ADD2" identifier="T7.5" description="IfcActorRole Sınıfı Zorunlu Öznitelik Listesi (IfcProject içerisinde tariflenir)" instructions="Dijital Proje Yön. EK-7 Tablo 7.5 · PDF s. 226">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCACTORROLE</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Rol (Tablo 7.5 satır 1)">
+          <name>
+            <simpleValue>Role</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Kullanıcı Tanımlı Rol (Tablo 7.5 satır 2)">
+          <name>
+            <simpleValue>UserDefinedRole</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Açıklama (Tablo 7.5 satır 3)">
+          <name>
+            <simpleValue>Description</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-7 Tablo 7.6 IfcProjectedCRS (Yansıtılmış Koordinat Referans Sistemi)" ifcVersion="IFC4X3_ADD2" identifier="T7.6" description="IfcProjectedCRS Sınıfı Zorunlu Öznitelik Listesi" instructions="Dijital Proje Yön. EK-7 Tablo 7.6 · PDF s. 227–228">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCPROJECTEDCRS</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="İsim (Tablo 7.6 satır 1)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Açıklama (Tablo 7.6 satır 2)">
+          <name>
+            <simpleValue>Description</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Jeodezik Datum (Tablo 7.6 satır 3)">
+          <name>
+            <simpleValue>GeodeticDatum</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Yansıtılmış Koordinat Referans Sistemi (Düşey Datum) (Tablo 7.6 satır 4)">
+          <name>
+            <simpleValue>VerticalDatum</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Yansıtılmış Koordinat Referans Sistemi (Harita Projeksiyonu) (Tablo 7.6 satır 5)">
+          <name>
+            <simpleValue>MapProjection</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Yansıtılmış Koordinat Referans Sistemi (Harita Zonu) (Tablo 7.6 satır 6)">
+          <name>
+            <simpleValue>MapZone</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Yansıtılmış Koordinat Referans Sistemi (Harita Birimi) (Tablo 7.6 satır 7)">
+          <name>
+            <simpleValue>MapUnit</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-7 Tablo 7.7 IfcMapConversion (Harita Dönüşümü)" ifcVersion="IFC4X3_ADD2" identifier="T7.7" description="IfcMapConversion Sınıfı Zorunlu Öznitelik Listesi" instructions="Dijital Proje Yön. EK-7 Tablo 7.7 · PDF s. 229–230">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCMAPCONVERSION</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Harita Dönüşümü (Doğu) (Tablo 7.7 satır 1)">
+          <name>
+            <simpleValue>Eastings</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Harita Dönüşümü (Kuzey) (Tablo 7.7 satır 2)">
+          <name>
+            <simpleValue>Northings</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Harita Dönüşümü (Düşey Yükseklik) (Tablo 7.7 satır 3)">
+          <name>
+            <simpleValue>OrthogonalHeight</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Harita Dönüşümü (Yerel X Ekseninin Doğu Bileşeni) (Tablo 7.7 satır 4)">
+          <name>
+            <simpleValue>XAxisAbscissa</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Harita Dönüşümü (Yerel X Ekseninin Kuzey Bileşeni) (Tablo 7.7 satır 5)">
+          <name>
+            <simpleValue>XAxisOrdinate</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Harita Dönüşümü (Ölçek Değeri) (Tablo 7.7 satır 6)">
+          <name>
+            <simpleValue>Scale</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-7 Tablo 7.8 IfcGeometricRepresentationContext (Geometrik Temsil Bağlamı)" ifcVersion="IFC4X3_ADD2" identifier="T7.8" description="IfcGeometricRepresentationContext Sınıfı Zorunlu Öznitelik Listesi" instructions="Dijital Proje Yön. EK-7 Tablo 7.8 · PDF s. 231–232">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCGEOMETRICREPRESENTATIONCONTEXT</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Geometrik Temsil Bağlamı (Koordinat Uzayı Boyutu) (Tablo 7.8 satır 1)">
+          <name>
+            <simpleValue>CoordinateSpaceDimension</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Geometrik Temsil Bağlamı (Hassasiyet) (Tablo 7.8 satır 2)">
+          <name>
+            <simpleValue>Precision</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Geometrik Temsil Bağlamı (Dünya Koordinat Sistemi) (Tablo 7.8 satır 3)">
+          <name>
+            <simpleValue>WorldCoordinateSystem</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Geometrik Temsil Bağlamı (Gerçek Kuzey Yönü) (Tablo 7.8 satır 4)">
+          <name>
+            <simpleValue>TrueNorth</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-7 Tablo 7.9 IfcAnnotation (Anotasyon)" ifcVersion="IFC4X3_ADD2" identifier="T7.9" description="IfcAnnotation Sınıfı Zorunlu Öznitelik Listesi" instructions="Dijital Proje Yön. EK-7 Tablo 7.9 · PDF s. 233">
+      <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCANNOTATION</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="İsim (Tablo 7.9 satır 1)">
+          <name>
+            <simpleValue>Name</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Açıklama (Tablo 7.9 satır 2)">
+          <name>
+            <simpleValue>Description</simpleValue>
+          </name>
+        </attribute>
+        <attribute cardinality="required" instructions="Ön Tanımlı Tip (Tablo 7.9 satır 3)">
+          <name>
+            <simpleValue>PredefinedType</simpleValue>
+          </name>
+          <value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="CONTOURLINE"/>
+              <xs:enumeration value="DIMENSION"/>
+              <xs:enumeration value="ISOBAR"/>
+              <xs:enumeration value="ISOLUX"/>
+              <xs:enumeration value="ISOTHERM"/>
+              <xs:enumeration value="LEADER"/>
+              <xs:enumeration value="SURVEY"/>
+              <xs:enumeration value="SYMBOL"/>
+              <xs:enumeration value="TEXT"/>
+              <xs:enumeration value="USERDEFINED"/>
+            </xs:restriction>
+          </value>
+        </attribute>
+      </requirements>
+    </specification>
+  </specifications>
+</ids>

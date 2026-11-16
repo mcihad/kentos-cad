@@ -375,7 +375,7 @@ impl App {
 
     /// What the findings shown in 3D depend on, as one number: the check (its drawing's state and how many it
     /// found), the rows chosen, the group shown and whether the drawing changed since.
-    fn building3d_found_key(&self) -> u64 {
+    pub(crate) fn building3d_found_key(&self) -> u64 {
         use std::hash::{Hash, Hasher};
         let a = &self.arch.arch_audit;
         let mut h = std::collections::hash_map::DefaultHasher::new();
@@ -396,7 +396,7 @@ impl App {
     /// The objects of the findings chosen in Denetim, else of all it lists (its last check, while the drawing is as it
     /// saw it): a drawing's findings (a layer's name, a room's number) can name nearly every object, so the rows chosen
     /// say what to look at.
-    fn building3d_found(&self) -> BTreeSet<String> {
+    pub(crate) fn building3d_found(&self) -> BTreeSet<String> {
         if self.arch_audit_stale() {
             return BTreeSet::new();
         }

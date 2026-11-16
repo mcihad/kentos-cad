@@ -461,13 +461,15 @@ pub fn particulars(doc: &Document) -> Particulars {
             .map(|r| r.levels.iter().map(|l| l.all()).sum::<f64>()),
         footprint: zoning.as_ref().map(|r| r.footprint),
         setbacks,
-        // The künye's building kind (Ruhsat takımı › Dijital teslim kapsamı) as the construction action.
+        // The künye's building kind (Ruhsat takımı › Dijital teslim kapsamı: yeni bina, tadilat, ilave) as the
+        // construction action.
         construction: get("yapi_turu").map(|k| match k.as_str() {
-            "yeni" => "Yeni yapı".to_owned(),
+            "yeni" | "yeni bina" => "Yeni yapı".to_owned(),
             "ilave" => "İlave".to_owned(),
             "tadilat" => "Tadilat".to_owned(),
             _ => k,
         }),
+        description: get("proje_aciklama"),
     }
 }
 
@@ -487,18 +489,11 @@ pub fn file_name(doc: &Document) -> String {
     format!("{}.ifc", particulars(doc).file_stem(doc.name()))
 }
 
-/// The model as `cad.arch.ifc` writes it, what it left out, and the künye it read: for Mimari denetim's Dijital proje
-/// findings (`digital_audit`, EK-9).
+/// The model as `cad.arch.ifc` writes it, what it left out, and the künye it read: for the 3D view and the audit's
+/// facts.
 pub fn model(doc: &Document) -> (Building, Written, Particulars) {
     let (b, written, _) = made(doc, "", "KentOS Mimari");
     (b, written, particulars(doc))
-}
-
-/// EK-9's model quality control form as a table's rows (`kentos_ifc::quality::form_rows`): its header, each group's
-/// title and its questions answered from the model `cad.arch.ifc` writes now.
-pub fn form_rows(doc: &Document) -> Vec<Vec<String>> {
-    let (b, written, k) = model(doc);
-    kentos_ifc::quality::form_rows(&kentos_ifc::quality::ek9(&b, &written, &k))
 }
 
 /// The building to write: `stamp` its time (`YYYY-MM-DDThh:mm:ss`), `application` KentOS's name.

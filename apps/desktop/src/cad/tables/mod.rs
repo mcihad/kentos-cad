@@ -190,14 +190,40 @@ impl crate::app::App {
     }
 
     /// Model kalite kontrol formu (`arch.qualityForm`, docs/adr/8047 §10): EK-9's model quality control form, its answers
-    /// the IFC model's now (`kentos_ifc::quality`, through the application), placed from the cursor. Ruhsat takımı
-    /// writes its answers again and gives it a sheet of its own (EK-2 FR/MKF).
-    pub(crate) fn place_quality_form(&mut self) {
+    /// the standards package's from the file KentOS would write now (`crate::ifc_facts`, docs/adr/8074), placed from the
+    /// cursor once they come. Ruhsat takımı writes its answers again and gives it a sheet of its own (EK-2 FR/MKF). The
+    /// file is written, read back and answered off the window's thread.
+    pub(crate) fn place_quality_form(&mut self) -> iced::Task<crate::app::Message> {
+        let Some(doc) = &self.document else {
+            return iced::Task::none();
+        };
+        let planned = crate::ifc_facts::plan(&doc.model);
+        self.say(kentos_interaction::Level::Info, "Model kalite kontrol formu: IFC modeli yazılıp okunuyor…");
+        iced::Task::perform(
+            async move {
+                let (sent, got) = iced::futures::channel::oneshot::channel();
+                std::thread::spawn(move || {
+                    let _ = sent.send(crate::ifc_facts::form_rows_of(planned));
+                });
+                got.await.unwrap_or_else(|_| Err("Kuralın süreci cevap vermeden kapandı.".to_owned()))
+            },
+            crate::app::Message::QualityFormRows,
+        )
+    }
+
+    /// The form's rows come: its table placed from the cursor, or why there is none.
+    pub(crate) fn quality_form_rows(&mut self, rows: Result<Vec<Vec<String>>, String>) {
+        let rows = match rows {
+            Ok(rows) => rows,
+            Err(why) => {
+                self.warn(format!("Model kalite kontrol formu yazılamadı: {why}"));
+                return;
+            }
+        };
         let Some(doc) = &self.document else {
             return;
         };
         let model = &doc.model;
-        let rows = kentos_native_application::arch_ifc::form_rows(model);
         let look = kentos_interaction::table::Look {
             header: true,
             height: 2.5 / 1000.0 * model.settings().plot_scale,

@@ -1000,6 +1000,8 @@ mod road_views_window;
 mod road_exchange;
 #[path = "arch/arch_ifc.rs"]
 mod arch_ifc;
+#[path = "arch/ifc_facts.rs"]
+mod ifc_facts;
 #[cfg(test)]
 #[path = "tests/alignment_window_tests.rs"]
 mod alignment_window_tests;

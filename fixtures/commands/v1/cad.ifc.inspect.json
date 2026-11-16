@@ -122,7 +122,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi-kunye.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2956,
+       "records": 2960,
        "objects": 92,
        "classes": {
         "IfcActor": 1,
@@ -150,12 +150,12 @@
        },
        "storeys": [
         {
-         "globalId": "3FHGcBJNOjRXvUo$uJedII",
+         "globalId": "18Kgoo7NOjOvlS9FoCcepG",
          "name": "MM-BNK-Zemin_kat",
          "contains": 29
         },
         {
-         "globalId": "2BoziUjNOjQDqTU7rG7e2n",
+         "globalId": "0Wel6gHNOjY6IbRO7bDZVt",
          "name": "MM-BNK-1._kat",
          "contains": 29
         }

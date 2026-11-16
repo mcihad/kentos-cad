@@ -256,6 +256,8 @@ pub struct Particulars {
     /// The construction action (EK-6 Tablo 6.7 `ConstructionMethod`: yeni yapı, ilave, tadilat), the künye's
     /// building kind (docs/adr/8068).
     pub construction: Option<String>,
+    /// The project's description (EK-7 Tablo 7.1 `IfcProject.Description`): the künye's words, none when not given.
+    pub description: Option<String>,
 }
 
 impl Particulars {
@@ -311,6 +313,17 @@ impl Particulars {
             role: "ARCHITECT",
             role_description: self.architect_title.clone(),
         })
+    }
+
+    /// The project's type (EK-7 Tablo 7.1 `Pset_ProjectCommon.ProjectType`, IFC 4.3's `PEnum_ProjectType`) from the
+    /// construction action (docs/adr/8074 §3): a new building `NEWBUILD`, an addition or an alteration of a standing one
+    /// `MODIFICATION` ("the modification of a facility"); none for another action or none.
+    pub fn project_type(&self) -> Option<&'static str> {
+        match self.construction.as_deref()? {
+            "Yeni yapı" => Some("NEWBUILD"),
+            "İlave" | "Tadilat" => Some("MODIFICATION"),
+            _ => None,
+        }
     }
 
     /// The model file's name without its extension (EK-2 Tablo 2.1: `crate::naming::model_file`), or the drawing's
@@ -2018,6 +2031,16 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             id: scope.as_ref().map(|_| crate::step::fnv(&format!("kentos-proje:{project_seed}"), 0)),
             name: project_name,
             long_name: Some(work.clone()),
+            // EK-7 Tablo 7.1 (docs/adr/8074 §3): the künye's description and the construction action's project type.
+            description: k.description.clone(),
+            psets: k
+                .project_type()
+                .map(|t| Pset {
+                    name: "Pset_ProjectCommon".into(),
+                    props: vec![("ProjectType".into(), Value::Label(t.into()))],
+                })
+                .into_iter()
+                .collect(),
             ..Place::default()
         },
         actors,

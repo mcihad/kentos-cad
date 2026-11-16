@@ -368,7 +368,7 @@ pub const NOTES: &str = "1. Ölçüler santimetre, kotlar metre cinsindendir.\n2
 
 /// The drawing's variables a set's title block and information table read (docs/adr/8037): name, label and the value a
 /// drawing that lacks it gets; none: it must be given (the sheet says it is missing).
-pub const PARTICULARS: [(&str, &str, Option<&str>); 29] = [
+pub const PARTICULARS: [(&str, &str, Option<&str>); 30] = [
     ("proje_adi", "İşin adı", None),
     ("yapi_sahibi", "Yapı sahibi", None),
     ("il", "İl", None),
@@ -404,6 +404,8 @@ pub const PARTICULARS: [(&str, &str, Option<&str>); 29] = [
     ),
     ("bina_kodu", "Bina kodu (tek binada 00)", Some("00")),
     ("revizyon_no", "Revizyon no (revizyonsuz 000)", Some("000")),
+    // The IFC model's project description (Dijital Proje Yön. EK-7 Tablo 7.1, docs/adr/8074 §3): no sheet reads it.
+    ("proje_aciklama", "Proje açıklaması (IFC modelinde)", Some("—")),
 ];
 
 /// EK-2 Tablo 2.14: each storey's code by its place: the one at ±0.00 (else the lowest above it) K00, those above K01,

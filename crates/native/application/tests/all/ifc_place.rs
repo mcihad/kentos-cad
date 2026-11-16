@@ -120,9 +120,8 @@ fn a_local_model_is_turned_and_scaled_onto_its_base() {
     let text = kentos_ifc::building::write(&b);
     assert!(text.contains("IFCPROJECTEDCRS('EPSG:5256','TUREF / TM36 (EPSG:5256)','TUREF','Antalya height (EPSG:5775)'"));
     assert_eq!(text.matches("IFCMAPCONVERSIONSCALED(").count(), 1);
-    let form = arch_ifc::form_rows(&doc);
-    let sixth = form.iter().find(|r| r.iter().any(|v| v.contains("EPSG:5256"))).expect("question 6 answered");
-    assert!(sixth.iter().any(|v| v.contains("döndürülmüş") && v.contains("1285.40")), "{sixth:?}");
+    // EK-9's sixth question on this file is the standards package's (docs/adr/8074): its facts are
+    // fixtures/ifc/v1/olgular/yerel-sistem.json, its answer catalog/standards/dijital-proje/tests/test_form.py's.
     // The road's alignments in the same place: the same plane, their heights the project's own.
     let road = ifc_system::of(&doc, Some(0.0)).expect("the road's system");
     assert_eq!((road.origin, road.x_axis, road.factors), ([east, north, 0.0], crs.x_axis, crs.factors));
@@ -150,8 +149,7 @@ fn what_the_file_cannot_say_is_said_and_nothing_is_assumed() {
     assert_eq!(said.len(), 1, "{said:?}");
     assert_eq!(said[0]["code"], "export_losses");
     assert!(said[0]["message"].as_str().unwrap().contains("konum") && said[0]["message"].as_str().unwrap().contains("İmar durumu"));
-    let form = arch_ifc::form_rows(&doc);
-    assert!(form.iter().any(|r| r.iter().any(|v| v.contains("±0,00'ın mutlak kotu bilinmiyor"))));
+    // The reason is the export's, and EK-9's sixth question says it (the package's test_form.py, docs/adr/8074).
     assert!(ifc_system::of(&doc, Some(0.0)).is_ok(), "the road's heights are the project's own");
     // A shear: no similarity is fitted in its place.
     let sheared = placed(|_| CrsPlane::Affine { a: 1.0, b: 0.01, c: 587_000.0, d: 0.0, e: 1.0, f: 4_400_000.0 }, Some(1285.4));

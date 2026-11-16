@@ -3058,6 +3058,7 @@ dependencies = [
  "kentos-formats",
  "kentos-geometry-core",
  "kentos-geopackage",
+ "kentos-ifc",
  "kentos-kcad",
  "kentos-maplibre",
  "kentos-native-application",

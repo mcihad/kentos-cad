@@ -32,8 +32,8 @@ use crate::windows::{OwnWindow, Surface};
 pub(crate) const TITLE: &str = "IFC modeli";
 const SURFACE: Surface = Surface::IfcViewer;
 
-/// The open viewer: its file, the read under way (its number and its stop), the file read, and the plan's selection
-/// it last took.
+/// The open viewer: its file, the read under way (its number and its stop), the file read, the plan's selection it
+/// last took and the Denetim findings it last painted.
 pub(crate) struct IfcWindow {
     pub(crate) viewer: Viewer,
     pub(crate) path: PathBuf,
@@ -41,6 +41,7 @@ pub(crate) struct IfcWindow {
     stop: Arc<AtomicBool>,
     file: Option<(Arc<Vec<u8>>, Arc<Model>)>,
     taken: u64,
+    found: Option<u64>,
 }
 
 impl std::fmt::Debug for IfcWindow {
@@ -138,6 +139,7 @@ impl App {
             stop: stop.clone(),
             file: None,
             taken: self.selection.version(),
+            found: None,
         }));
         self.show_surface(SURFACE);
         iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
@@ -232,8 +234,11 @@ impl App {
     }
 
     /// The viewer follows the plan's selection (shell/app/update.rs, after every message): the first object chosen in
-    /// the plan is chosen in the viewer when the file holds it.
+    /// the plan is chosen in the viewer when the file holds it. The objects of Denetim's findings (the rows chosen,
+    /// else all it lists: what 3B görünüm paints) are painted as found when the file is the drawing's (its GlobalIds
+    /// the drawing's ids, docs/adr/8074 §2).
     pub(crate) fn follow_ifc_viewer(&mut self) {
+        self.follow_ifc_viewer_found();
         let version = self.selection.version();
         let Some(w) = self.ifc_viewer.as_mut().filter(|w| w.taken != version && w.viewer.stage == Stage::Shown) else { return };
         w.taken = version;
@@ -246,6 +251,24 @@ impl App {
             && let Ok(d) = model.details(bytes, object)
         {
             w.viewer.set_details(object, d);
+        }
+    }
+
+    /// Denetim's findings painted, when they changed since the viewer last took them.
+    fn follow_ifc_viewer_found(&mut self) {
+        let key = self.building3d_found_key();
+        if self.ifc_viewer.as_ref().is_none_or(|w| w.found == Some(key) || w.viewer.stage != Stage::Shown) {
+            return;
+        }
+        let keys: Vec<String> = self
+            .building3d_found()
+            .iter()
+            .filter_map(|u| Uuid::parse_str(u).ok())
+            .map(|u| kentos_ifc::step::guid(u.as_u128()))
+            .collect();
+        if let Some(w) = self.ifc_viewer.as_mut() {
+            w.found = Some(key);
+            w.viewer.set_found(keys.iter().map(String::as_str));
         }
     }
 

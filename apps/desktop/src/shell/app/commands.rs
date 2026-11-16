@@ -311,7 +311,7 @@ impl App {
             // Emsal ve TAKS tablosu (docs/adr/8030).
             "arch.zoningTable" => self.place_zoning_table(),
             // Model kalite kontrol formu (EK-9, docs/adr/8047 §10).
-            "arch.qualityForm" => self.place_quality_form(),
+            "arch.qualityForm" => return self.place_quality_form(),
             // Dijital proje kuralları (digital_rules.rs, docs/adr/8062).
             "arch.digitalRules" => self.open_digital_rules(),
             // Otopark and Sığınak hesabı (docs/adr/8036).

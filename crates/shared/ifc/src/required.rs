@@ -33,19 +33,28 @@ pub struct Gap {
     pub of: usize,
 }
 
-/// One object as the rows read it.
-struct Object<'a> {
-    id: Option<u128>,
-    name: &'a str,
-    long_name: Option<&'a str>,
-    description: Option<&'a str>,
-    object_type: Option<&'a str>,
-    predefined: Option<&'a str>,
-    tag: Option<&'a str>,
-    material: Option<&'a str>,
-    psets: &'a [Pset],
-    qtos: &'a [Qto],
-    elevation: bool,
+/// One object as the rows read it, whatever it comes from: the model the writer makes (here) or a file read
+/// (`crate::read::facts`). Its properties are (set, name, whether it holds a value), its quantities (set, name).
+pub struct Carrier<'a> {
+    pub id: Option<u128>,
+    pub name: &'a str,
+    pub long_name: Option<&'a str>,
+    pub description: Option<&'a str>,
+    pub object_type: Option<&'a str>,
+    pub predefined: Option<&'a str>,
+    pub tag: Option<&'a str>,
+    pub material: Option<&'a str>,
+    pub props: Vec<(&'a str, &'a str, bool)>,
+    pub quantities: Vec<(&'a str, &'a str)>,
+    pub elevation: bool,
+}
+
+/// A mandatory row some objects do not carry: the row, those objects (indices into the list asked about) and how many
+/// of its class there are.
+pub struct Missing {
+    pub requirement: &'static Requirement,
+    pub objects: Vec<usize>,
+    pub of: usize,
 }
 
 fn word(s: Option<&str>) -> bool {
@@ -60,16 +69,16 @@ fn valued(v: &Value) -> bool {
     }
 }
 
-impl Object<'_> {
+impl Carrier<'_> {
     fn carries(&self, r: &Requirement) -> Option<bool> {
         Some(match r.kind {
             Kind::Property => {
                 let set = r.set.as_deref()?;
-                self.psets.iter().any(|p| p.name == set && p.props.iter().any(|(k, v)| *k == r.name && valued(v)))
+                self.props.iter().any(|(s, n, v)| *s == set && *n == r.name && *v)
             }
             Kind::Quantity => {
                 let set = r.set.as_deref()?;
-                self.qtos.iter().any(|q| q.name == set && q.quantities.iter().any(|(k, _)| *k == r.name))
+                self.quantities.iter().any(|(s, n)| *s == set && *n == r.name)
             }
             Kind::Material => word(self.material),
             Kind::Attribute => match r.name.trim_start_matches("Attribute:").trim() {
@@ -90,14 +99,23 @@ impl Object<'_> {
     }
 }
 
+/// A model object's sets as the rows read them.
+fn props(psets: &[Pset]) -> Vec<(&str, &str, bool)> {
+    psets.iter().flat_map(|p| p.props.iter().map(move |(k, v)| (p.name.as_str(), k.as_str(), valued(v)))).collect()
+}
+
+fn quantities(qtos: &[Qto]) -> Vec<(&str, &str)> {
+    qtos.iter().flat_map(|q| q.quantities.iter().map(move |(k, _)| (q.name.as_str(), k.as_str()))).collect()
+}
+
 /// The objects of the model by their class, as EK-6 names it.
-fn objects(b: &Building) -> Vec<(String, Object<'_>)> {
+fn objects(b: &Building) -> Vec<(String, Carrier<'_>)> {
     let mut out = Vec::new();
     for e in &b.elements {
         let class = entity_class(e.class.entity());
         out.push((
             class,
-            Object {
+            Carrier {
                 id: e.id,
                 name: &e.name,
                 long_name: None,
@@ -106,8 +124,8 @@ fn objects(b: &Building) -> Vec<(String, Object<'_>)> {
                 predefined: Some(e.predefined),
                 tag: e.tag.as_deref(),
                 material: e.material.as_deref(),
-                psets: &e.psets,
-                qtos: &e.qtos,
+                props: props(&e.psets),
+                quantities: quantities(&e.qtos),
                 elevation: false,
             },
         ));
@@ -115,7 +133,7 @@ fn objects(b: &Building) -> Vec<(String, Object<'_>)> {
     for s in &b.spaces {
         out.push((
             "IfcSpace".to_owned(),
-            Object {
+            Carrier {
                 id: s.id,
                 name: &s.name,
                 long_name: s.long_name.as_deref(),
@@ -124,8 +142,8 @@ fn objects(b: &Building) -> Vec<(String, Object<'_>)> {
                 predefined: Some(s.predefined),
                 tag: None,
                 material: None,
-                psets: &s.psets,
-                qtos: &s.qtos,
+                props: props(&s.psets),
+                quantities: quantities(&s.qtos),
                 elevation: false,
             },
         ));
@@ -133,7 +151,7 @@ fn objects(b: &Building) -> Vec<(String, Object<'_>)> {
     for s in &b.storeys {
         out.push((
             "IfcBuildingStorey".to_owned(),
-            Object {
+            Carrier {
                 id: s.id,
                 name: &s.name,
                 long_name: s.long_name.as_deref(),
@@ -142,8 +160,8 @@ fn objects(b: &Building) -> Vec<(String, Object<'_>)> {
                 predefined: None,
                 tag: None,
                 material: None,
-                psets: &s.psets,
-                qtos: &s.qtos,
+                props: props(&s.psets),
+                quantities: quantities(&s.qtos),
                 elevation: true,
             },
         ));
@@ -151,7 +169,7 @@ fn objects(b: &Building) -> Vec<(String, Object<'_>)> {
     for z in &b.zones {
         out.push((
             "IfcSpatialZone".to_owned(),
-            Object {
+            Carrier {
                 id: z.id,
                 name: &z.name,
                 long_name: z.long_name.as_deref(),
@@ -160,8 +178,8 @@ fn objects(b: &Building) -> Vec<(String, Object<'_>)> {
                 predefined: Some(z.predefined),
                 tag: None,
                 material: None,
-                psets: &z.psets,
-                qtos: &[],
+                props: props(&z.psets),
+                quantities: Vec::new(),
                 elevation: false,
             },
         ));
@@ -169,7 +187,7 @@ fn objects(b: &Building) -> Vec<(String, Object<'_>)> {
     for g in &b.groups {
         out.push((
             "IfcZone".to_owned(),
-            Object {
+            Carrier {
                 id: g.id,
                 name: &g.name,
                 long_name: g.long_name.as_deref(),
@@ -178,8 +196,8 @@ fn objects(b: &Building) -> Vec<(String, Object<'_>)> {
                 predefined: None,
                 tag: None,
                 material: None,
-                psets: &g.psets,
-                qtos: &[],
+                props: props(&g.psets),
+                quantities: Vec::new(),
                 elevation: false,
             },
         ));
@@ -188,7 +206,7 @@ fn objects(b: &Building) -> Vec<(String, Object<'_>)> {
     for a in b.grids.iter().flat_map(|g| g.u.iter().chain(&g.v)) {
         out.push((
             "IfcGridAxis".to_owned(),
-            Object {
+            Carrier {
                 id: a.id,
                 name: &a.tag,
                 long_name: None,
@@ -197,8 +215,8 @@ fn objects(b: &Building) -> Vec<(String, Object<'_>)> {
                 predefined: None,
                 tag: Some(&a.tag),
                 material: None,
-                psets: &[],
-                qtos: &[],
+                props: Vec::new(),
+                quantities: Vec::new(),
                 elevation: false,
             },
         ));
@@ -210,7 +228,7 @@ fn objects(b: &Building) -> Vec<(String, Object<'_>)> {
     ] {
         out.push((
             class.to_owned(),
-            Object {
+            Carrier {
                 id: p.id,
                 name: &p.name,
                 long_name: p.long_name.as_deref(),
@@ -219,8 +237,8 @@ fn objects(b: &Building) -> Vec<(String, Object<'_>)> {
                 predefined: None,
                 tag: None,
                 material: None,
-                psets: &p.psets,
-                qtos: &p.qtos,
+                props: props(&p.psets),
+                quantities: quantities(&p.qtos),
                 elevation,
             },
         ));
@@ -229,7 +247,7 @@ fn objects(b: &Building) -> Vec<(String, Object<'_>)> {
 }
 
 /// `IFCWALL` as EK-6 writes it: `IfcWall` (the catalog's own spelling, case aside).
-fn entity_class(entity: &str) -> String {
+pub fn entity_class(entity: &str) -> String {
     let folded = entity.to_lowercase();
     catalog::base()
         .tables
@@ -238,40 +256,52 @@ fn entity_class(entity: &str) -> String {
         .map_or_else(|| entity.to_owned(), |t| t.class.clone())
 }
 
-/// The mandatory rows some objects of the model do not carry, in the catalog's order.
-pub fn gaps(b: &Building) -> Vec<Gap> {
-    let objects = objects(b);
+/// The mandatory rows some of `objects` (each with its class, as EK-6 names it) do not carry, in the catalog's order;
+/// a class none of them is of is asked nothing.
+pub fn missing(objects: &[(String, Carrier<'_>)]) -> Vec<Missing> {
     let mut out = Vec::new();
     for r in catalog::base().requirements.iter().filter(|r| r.level == Level::Mandatory) {
-        let of: Vec<&Object<'_>> = objects.iter().filter(|(c, _)| c.eq_ignore_ascii_case(&r.class)).map(|(_, o)| o).collect();
+        let of: Vec<usize> = (0..objects.len()).filter(|&i| objects[i].0.eq_ignore_ascii_case(&r.class)).collect();
         if of.is_empty() {
             continue;
         }
-        let mut missing = Vec::new();
+        let mut lacking = Vec::new();
         let mut judged = false;
-        for o in &of {
-            match o.carries(r) {
+        for &i in &of {
+            match objects[i].1.carries(r) {
                 Some(true) => judged = true,
                 Some(false) => {
                     judged = true;
-                    missing.push(o.id);
+                    lacking.push(i);
                 }
                 None => {}
             }
         }
-        if judged && !missing.is_empty() {
-            out.push(Gap {
+        if judged && !lacking.is_empty() {
+            out.push(Missing { requirement: r, objects: lacking, of: of.len() });
+        }
+    }
+    out
+}
+
+/// The mandatory rows some objects of the model do not carry, in the catalog's order.
+pub fn gaps(b: &Building) -> Vec<Gap> {
+    let objects = objects(b);
+    missing(&objects)
+        .into_iter()
+        .map(|m| {
+            let r = m.requirement;
+            Gap {
                 class: r.class.clone(),
                 path: r.path(),
                 tr: r.tr.clone(),
                 table: r.table.clone(),
                 page: r.page,
-                missing,
-                of: of.len(),
-            });
-        }
-    }
-    out
+                missing: m.objects.iter().map(|&i| objects[i].1.id).collect(),
+                of: m.of,
+            }
+        })
+        .collect()
 }
 
 #[cfg(test)]

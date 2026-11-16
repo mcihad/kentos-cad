@@ -739,7 +739,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 |---|---|---|---|
 | B12 ✓ | Okuma yüzü ve motor denemesi | IFC-07 | Yazılan dosya geri okunur; motor kararı ADR 8061'de (§11; gerçek dünyadan 35 dosya da aynı okunur) |
 | B12b ~ | IFC görüntüleyici | IFC-12 | Dosya kendi penceresinde: ağaç, özellikler, kesit; dışa aktarılan tek tıkla görülür (ilk dilim ADR 8073; gerçek pencerede kabul ve kesitin tutamakları kaldı) |
-| B13 | Yazılmış dosyadan doğrulama, IDS ve kontrol formu | IFC-08 | 21 sorunun kanıtı dosyadan |
+| B13 ~ | Yazılmış dosyadan doğrulama, IDS ve kontrol formu | IFC-08 | 21 sorunun kanıtı dosyadan (ilk dilim ADR 8074; bağımsız IDS denetleyicisi ve ikinci okuyucu kaldı) |
 | B14 | BIM ruhsat paketi | BIM-14 | Tek komut, tek revizyon, tek paket |
 | B15 | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti |
 | B16 | Bilgi yönetimi ve teslim kaydı | BIM-15 | Teslim ve iade kayıtlı |
@@ -784,7 +784,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | Şema kuralları, bağımsız okuyucu | 0 bulgu (bölüm binası) | 0 bulgu, her örnekte | 2, 3 |
 | Türkiye profili, bağımsız ikinci okuyucu | ölçülmedi | 0 hata | 3 |
 | Kontrol formunda dosyadan kanıtlanan soru | 0 / 21 | makinece denetlenebilenlerin hepsi | 3 |
-| Büyük modelde (100 daire) dışa aktarma süresi ve belleği | ölçülmedi | B13'te taban, sonra bütçe | 3 |
+| Büyük modelde (100 daire) dışa aktarma süresi ve belleği | 4 202 nesne: model eşlemesi 3,1 s, yazma 19 ms, geri okuma ve olgular 324 ms (tepe 158 MB), form 54 ms (ADR 8074 §6) | Bütçe sıradaki iş; eşleme pencerenin iş parçacığından çıkar | 3 |
 | 2+1 daire, gerçek pencere | 82 etkileşim, 121,3 s | ≤ 80, ≤ 100 s | sürekli |
 
 | Kapı | Yasal en geç | Koşul |

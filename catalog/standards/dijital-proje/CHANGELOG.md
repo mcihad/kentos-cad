@@ -1,5 +1,14 @@
 # Değişiklikler
 
+## 0.7.0 — 16 Kasım 2026
+
+- Yeni kural: model kalite kontrol formu yazılmış dosyadan (`form`, docs/adr/8074; Md. 15, EK-9 Tablo 9.1). 21 sorunun
+  cevabı KentOS'un yazdığı IFC'nin olgularından; resmî cevap ile kanıt (geçti, kaldı, inceleme) ayrı. Eski Rust
+  denetiminin bulguları (`digital_project_info_missing`, `digital_project_code_missing`, `digital_space_unnamed`,
+  `digital_system_wrong`, `digital_no_spaces`, `digital_model_loss`) aynı kodlarla buradadır; yenileri her sorunun kendi
+  kodudur. `form.tablo` çizimdeki formun satırlarını verir. `mimari.denetle` ikinci girdi olarak dosyanın olgularını
+  alır; verilince EK-9 dosyadan cevaplanır, `kalite` ve `zorunlu` yinelenmez.
+
 ## 0.6.0 — 16 Kasım 2026
 
 - Yeni kural: modelin zorunlu alanları (`zorunlu`, docs/adr/8068; Md. 12/1, 13; EK-6, EK-7; EK-9 satır 9). KentOS'un

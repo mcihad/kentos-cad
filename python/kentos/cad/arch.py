@@ -151,31 +151,24 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     (4/1-ç), umumi binada (konutsuz, büro ya da dükkân bölümlü) her 20 yerde 1 ve en az
     1 engelli yeri yoksa parking_disabled_short (4/1-ı), zorunlu otopark 20 ve
     üstündeyse %5'i ve en az 1 şarjlı yer yoksa parking_charging_short (5/1-j;
-    düzeltmesi bir binek yerini Şarjlı yapar). Dijital Proje Yönetmeliği (RG
-    5.8.2026/33331) EK-9 model kalite kontrol formunun çizimin bozduğu soruları,
-    cad.arch.ifc'nin yazdığı modelden: künyede EK-7'nin proje bilgileri eksikse
-    digital_project_info_missing (Md. 13), proje kodu yoksa ya da 000000 ise
-    digital_project_code_missing (Md. 6, EK-1), numarası ya da adı olmayan mahaller
-    digital_space_unnamed (Md. 10), projenin sistemi yoksa, IFC'ye yazılamıyorsa
-    (coğrafi; yerel sistemin dönüşümü kaydırıyor ya da aynalıyorsa), TUREF 3° dilimi
-    (EPSG:5253–5259) değilse ya da ±0.00'ın kotu yoksa digital_system_wrong (EK-7 Tablo
-    7.6–7.7; yerel sistem dilimin üstünde döndürülüp ölçeklenerek yazılır), modelde
-    mahal yoksa digital_no_spaces, IFC'ye girmeyen nesneler (rampa, gövdesiz nesne)
-    digital_model_loss (Md. 9; nesneleri bulgunun); duvarsız çizimde hiçbiri. Projenin
-    yerel imar yönetmeliği (settings.arch.localRules: sivas) varsa değerleri PAİY'nin
-    üstüne okunur (PAİY 69/3): sıkı olan bağlar ve iletide öbürü de yazılır (Sivas ortak
-    merdiven ve ara sahanlık 1,30 m, 3 katta asansör, konutta kat yüksekliği 3,60 m);
-    ölçü yerel yönetmeliğe uyup PAİY'ye uymuyorsa regulation_conflict (Sivas hava bacası
-    0,30 m ve 0,36 m², tuvalet ve balkon kapısı 0,80 m; rule iki maddeyi taşır).
-    Merdiven ve rampa bulgularının düzeltmesi cad.arch.edit (genişlik, sahanlık, iki
-    yana korkuluk). Yangın (Binaların Yangından Korunması Hakkında Yönetmelik): kaçış
-    yolu mahallerin net içinden, kapı ve boşluklardan, mahal ayırıcılardan yürünür; en
-    uzak nokta duvardan 0,40 m içeride (32/6), köşeler de 0,40 m'den dönülür; kat çıkışı
-    Merdiven adlı mahal, açık merdivenin ayağı (üst katta başı) ya da ±0,00 ve altında
-    dışarı açılan kapı; bir bölümün yolu başka bölümün mahallerinden geçmez (33/6-b).
-    Konut olmayan mahalde tek çıkışta bütün yol, iki çıkışta tek yönlü kısım ve bütün
-    yol Ek-5/B'yi aşarsa bykhy_escape_distance_over (büro 15/45 m, yağmurlamada 30/75
-    …), koridorun çıkmaz kısmı 15 m (yağmurlamada 20, 4/i); konutta daire içi 20 m
+    düzeltmesi bir binek yerini Şarjlı yapar). Dijital Proje Yönetmeliği'nin (RG
+    5.8.2026/33331) bulguları, EK-9 model kalite kontrol formununkiler de, bu komutun
+    değildir: standart kural paketinin (dijital-proje) Python kuralları onları çizimin
+    ve cad.arch.ifc'nin yazacağı dosyanın olgularından verir. Projenin yerel imar
+    yönetmeliği (settings.arch.localRules: sivas) varsa değerleri PAİY'nin üstüne okunur
+    (PAİY 69/3): sıkı olan bağlar ve iletide öbürü de yazılır (Sivas ortak merdiven ve
+    ara sahanlık 1,30 m, 3 katta asansör, konutta kat yüksekliği 3,60 m); ölçü yerel
+    yönetmeliğe uyup PAİY'ye uymuyorsa regulation_conflict (Sivas hava bacası 0,30 m ve
+    0,36 m², tuvalet ve balkon kapısı 0,80 m; rule iki maddeyi taşır). Merdiven ve rampa
+    bulgularının düzeltmesi cad.arch.edit (genişlik, sahanlık, iki yana korkuluk).
+    Yangın (Binaların Yangından Korunması Hakkında Yönetmelik): kaçış yolu mahallerin
+    net içinden, kapı ve boşluklardan, mahal ayırıcılardan yürünür; en uzak nokta
+    duvardan 0,40 m içeride (32/6), köşeler de 0,40 m'den dönülür; kat çıkışı Merdiven
+    adlı mahal, açık merdivenin ayağı (üst katta başı) ya da ±0,00 ve altında dışarı
+    açılan kapı; bir bölümün yolu başka bölümün mahallerinden geçmez (33/6-b). Konut
+    olmayan mahalde tek çıkışta bütün yol, iki çıkışta tek yönlü kısım ve bütün yol
+    Ek-5/B'yi aşarsa bykhy_escape_distance_over (büro 15/45 m, yağmurlamada 30/75 …),
+    koridorun çıkmaz kısmı 15 m (yağmurlamada 20, 4/i); konutta daire içi 20 m
     (yağmurlamada 30, 48/2) ve daire kapısından kat çıkışına Ek-5/B apartman (48/4) —
     bodrum dahil 4 kata kadar konutta ve tek evde aranmaz (48/1); çıkışa ulaşmayan mahal
     bykhy_escape_no_route; kişi yükü Ek-5/A (salon sıraları net, öbürleri eksen
@@ -332,31 +325,24 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         (4/1-ç), umumi binada (konutsuz, büro ya da dükkân bölümlü) her 20 yerde 1 ve en az
         1 engelli yeri yoksa parking_disabled_short (4/1-ı), zorunlu otopark 20 ve
         üstündeyse %5'i ve en az 1 şarjlı yer yoksa parking_charging_short (5/1-j;
-        düzeltmesi bir binek yerini Şarjlı yapar). Dijital Proje Yönetmeliği (RG
-        5.8.2026/33331) EK-9 model kalite kontrol formunun çizimin bozduğu soruları,
-        cad.arch.ifc'nin yazdığı modelden: künyede EK-7'nin proje bilgileri eksikse
-        digital_project_info_missing (Md. 13), proje kodu yoksa ya da 000000 ise
-        digital_project_code_missing (Md. 6, EK-1), numarası ya da adı olmayan mahaller
-        digital_space_unnamed (Md. 10), projenin sistemi yoksa, IFC'ye yazılamıyorsa
-        (coğrafi; yerel sistemin dönüşümü kaydırıyor ya da aynalıyorsa), TUREF 3° dilimi
-        (EPSG:5253–5259) değilse ya da ±0.00'ın kotu yoksa digital_system_wrong (EK-7 Tablo
-        7.6–7.7; yerel sistem dilimin üstünde döndürülüp ölçeklenerek yazılır), modelde
-        mahal yoksa digital_no_spaces, IFC'ye girmeyen nesneler (rampa, gövdesiz nesne)
-        digital_model_loss (Md. 9; nesneleri bulgunun); duvarsız çizimde hiçbiri. Projenin
-        yerel imar yönetmeliği (settings.arch.localRules: sivas) varsa değerleri PAİY'nin
-        üstüne okunur (PAİY 69/3): sıkı olan bağlar ve iletide öbürü de yazılır (Sivas ortak
-        merdiven ve ara sahanlık 1,30 m, 3 katta asansör, konutta kat yüksekliği 3,60 m);
-        ölçü yerel yönetmeliğe uyup PAİY'ye uymuyorsa regulation_conflict (Sivas hava bacası
-        0,30 m ve 0,36 m², tuvalet ve balkon kapısı 0,80 m; rule iki maddeyi taşır).
-        Merdiven ve rampa bulgularının düzeltmesi cad.arch.edit (genişlik, sahanlık, iki
-        yana korkuluk). Yangın (Binaların Yangından Korunması Hakkında Yönetmelik): kaçış
-        yolu mahallerin net içinden, kapı ve boşluklardan, mahal ayırıcılardan yürünür; en
-        uzak nokta duvardan 0,40 m içeride (32/6), köşeler de 0,40 m'den dönülür; kat çıkışı
-        Merdiven adlı mahal, açık merdivenin ayağı (üst katta başı) ya da ±0,00 ve altında
-        dışarı açılan kapı; bir bölümün yolu başka bölümün mahallerinden geçmez (33/6-b).
-        Konut olmayan mahalde tek çıkışta bütün yol, iki çıkışta tek yönlü kısım ve bütün
-        yol Ek-5/B'yi aşarsa bykhy_escape_distance_over (büro 15/45 m, yağmurlamada 30/75
-        …), koridorun çıkmaz kısmı 15 m (yağmurlamada 20, 4/i); konutta daire içi 20 m
+        düzeltmesi bir binek yerini Şarjlı yapar). Dijital Proje Yönetmeliği'nin (RG
+        5.8.2026/33331) bulguları, EK-9 model kalite kontrol formununkiler de, bu komutun
+        değildir: standart kural paketinin (dijital-proje) Python kuralları onları çizimin
+        ve cad.arch.ifc'nin yazacağı dosyanın olgularından verir. Projenin yerel imar
+        yönetmeliği (settings.arch.localRules: sivas) varsa değerleri PAİY'nin üstüne okunur
+        (PAİY 69/3): sıkı olan bağlar ve iletide öbürü de yazılır (Sivas ortak merdiven ve
+        ara sahanlık 1,30 m, 3 katta asansör, konutta kat yüksekliği 3,60 m); ölçü yerel
+        yönetmeliğe uyup PAİY'ye uymuyorsa regulation_conflict (Sivas hava bacası 0,30 m ve
+        0,36 m², tuvalet ve balkon kapısı 0,80 m; rule iki maddeyi taşır). Merdiven ve rampa
+        bulgularının düzeltmesi cad.arch.edit (genişlik, sahanlık, iki yana korkuluk).
+        Yangın (Binaların Yangından Korunması Hakkında Yönetmelik): kaçış yolu mahallerin
+        net içinden, kapı ve boşluklardan, mahal ayırıcılardan yürünür; en uzak nokta
+        duvardan 0,40 m içeride (32/6), köşeler de 0,40 m'den dönülür; kat çıkışı Merdiven
+        adlı mahal, açık merdivenin ayağı (üst katta başı) ya da ±0,00 ve altında dışarı
+        açılan kapı; bir bölümün yolu başka bölümün mahallerinden geçmez (33/6-b). Konut
+        olmayan mahalde tek çıkışta bütün yol, iki çıkışta tek yönlü kısım ve bütün yol
+        Ek-5/B'yi aşarsa bykhy_escape_distance_over (büro 15/45 m, yağmurlamada 30/75 …),
+        koridorun çıkmaz kısmı 15 m (yağmurlamada 20, 4/i); konutta daire içi 20 m
         (yağmurlamada 30, 48/2) ve daire kapısından kat çıkışına Ek-5/B apartman (48/4) —
         bodrum dahil 4 kata kadar konutta ve tek evde aranmaz (48/1); çıkışa ulaşmayan mahal
         bykhy_escape_no_route; kişi yükü Ek-5/A (salon sıraları net, öbürleri eksen

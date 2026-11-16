@@ -488,6 +488,7 @@ impl App {
                 }
                 crate::table_write::Outcome::Failed(why) => self.warn(why),
             },
+            Message::QualityFormRows(rows) => self.quality_form_rows(rows),
             Message::Search(event) => return self.data_event(event),
             Message::History(event) => return self.calls_event(event),
             Message::Arch(inner) => return self.arch_event(inner),

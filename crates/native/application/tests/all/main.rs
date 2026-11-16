@@ -40,7 +40,6 @@ mod blocks_areas;
 mod arch_recognize;
 // Runs a building's walls and rooms through the registry by name (docs/adr/8054 §11).
 #[cfg(feature = "mod-arch")]
-mod digital_audit;
 #[cfg(feature = "mod-arch")]
 mod facades;
 mod blocks_find;

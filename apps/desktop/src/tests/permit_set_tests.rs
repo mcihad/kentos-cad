@@ -150,7 +150,7 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
     }
     let doc = &mut app.document.as_mut().expect("a drawing").model;
     // The calculation tables the drawing lacks, made beside it (docs/adr/8037 §3).
-    let tables = kentos_interaction::calc_tables::ensure(doc).expect("the tables");
+    let tables = kentos_interaction::calc_tables::ensure(doc, &crate::ifc_facts::form_rows).expect("the tables");
     let labels: Vec<&str> = tables.iter().map(|t| t.label).collect();
     assert_eq!(
         labels,
@@ -174,7 +174,7 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
         [Some("MHL"), None, None, None, None, None]
     );
     // Found, not made again.
-    let again = kentos_interaction::calc_tables::ensure(doc).expect("the tables");
+    let again = kentos_interaction::calc_tables::ensure(doc, &crate::ifc_facts::form_rows).expect("the tables");
     assert_eq!(again, tables);
     assert_eq!(
         doc.entities()

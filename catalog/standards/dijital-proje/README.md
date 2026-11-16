@@ -48,3 +48,19 @@ Olgular KentOS'un `cad` bölümündendir (`kentos.auditFacts` 1); kural yalnız 
 
 `mimari.denetle` masaüstünün Denetim sekmesi için `ek34`, `turetim`, `kalite` ve `zorunlu`'yu; `ruhsat.denetle` ruhsat yayınının
 kapısı için `turetim` ve `paket`'i birlikte verir.
+
+## Model kalite kontrol formu, yazılmış dosyadan (`form`, ADR 8074)
+
+EK-9 Tablo 9.1'in 21 sorusu KentOS'un yazdığı IFC dosyasının olgularından (`kentos.ifcFacts` 1: nesneler, EK-7 kayıtları,
+zorunlu alan eksikleri, set denetimi, EK-5 kodları, kaynak yazıları, gövdeler) ve ev sahibinin eklediklerinden
+(`expected`: kaynak modelin nesneleri; `export`: dışa aktarımın bıraktıkları) cevaplanır. Her satır iki şey yazar:
+formun resmî cevabı (Evet, Hayır, boş) ve KentOS'un kanıtı (geçti, kaldı, inceleme); inceleme Evet'e çevrilmez.
+
+- `form.cevapla(olgular)`: 21 satır, her biri cevabı, kanıtı, gerekçesi ve bulgularıyla.
+- `form.denetle(olgular)`: kalan satırların bulguları (Denetim'in Mevzuat grubu); her bulgu nesnelerini GlobalId'leri ve
+  çizimdeki kimlikleriyle, maddeyi, ek satırını ve sayfayı söyler.
+- `form.tablo(olgular)`: formun çizimdeki tablosu (Ruhsat takımı'nın FR/MKF paftası).
+
+Dosyanın olguları verilince `mimari.denetle(cizim, dosya)` EK-9'un sorularını dosyadan cevaplar; `kalite` ve `zorunlu`
+çizimin olgularıyla yalnız dosya yokken çalışır. Okuma kararları K48 (kullanıcı tanımlı rol), K49 (açıklaması boş ad
+incelemedir), K50 (proje tipi yapı türünden).

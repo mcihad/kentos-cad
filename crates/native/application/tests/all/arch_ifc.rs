@@ -81,7 +81,7 @@ fn the_drawing_s_walls_doors_windows_and_rooms_are_the_files() {
 }
 
 /// The künye a permit set writes into the drawing's variables (docs/adr/8037), as an office fills it.
-const KUNYE: [(&str, &str); 15] = [
+const KUNYE: [(&str, &str); 17] = [
     ("proje_kodu", "260123"),
     ("bina_kodu", "00"),
     ("revizyon_no", "000"),
@@ -97,6 +97,9 @@ const KUNYE: [(&str, &str); 15] = [
     ("buro_adi", "Örnek Mimarlık"),
     ("vergi_no", "1234567890"),
     ("buro_adres", "Atatürk Cad. No:1 Sivas"),
+    // EK-7 Tablo 7.1 (docs/adr/8074 §3): the project's description, and the building kind its project type.
+    ("proje_aciklama", "İki katlı konut, kesit örneği"),
+    ("yapi_turu", "yeni bina"),
 ];
 
 fn with_kunye() -> Document {
@@ -140,6 +143,12 @@ fn the_kunye_is_the_project_s_people_and_place() {
     assert_eq!(
         arch_ifc::file_name(&doc),
         "260123_00_MM_XXXX_MD_XXX_NNN_01_000.ifc"
+    );
+    // EK-7 Tablo 7.1: the künye's description, the building kind a new build (IFC 4.3's PEnum_ProjectType).
+    assert_eq!(b.project.description.as_deref(), Some("İki katlı konut, kesit örneği"));
+    assert_eq!(
+        b.project.psets.iter().find(|p| p.name == "Pset_ProjectCommon").map(|p| p.props.clone()),
+        Some(vec![("ProjectType".to_owned(), Value::Label("NEWBUILD".into()))])
     );
     // EK-7: the architect, their registration, their office and its tax number.
     let a = &b.actors[0];

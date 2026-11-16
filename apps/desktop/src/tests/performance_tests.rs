@@ -133,7 +133,7 @@ fn a_wall_style_s_class_reaches_its_walls_and_taken_away_they_are_in_the_finding
 fn ek9_s_9th_question_is_read_from_the_model() {
     let app = app();
     let row9 = |app: &App| {
-        let rows = kentos_native_application::arch_ifc::form_rows(&app.document.as_ref().expect("the building").model);
+        let rows = crate::ifc_facts::form_rows(&app.document.as_ref().expect("the building").model).expect("the form");
         rows.into_iter().find(|r| r.first().is_some_and(|c| c == "9")).expect("row 9").join(" | ")
     };
     let before = row9(&app);

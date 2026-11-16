@@ -840,10 +840,16 @@ pub fn write(b: &Building) -> String {
         Writer::opt(&b.phase)
     ));
     w.psets(project, &b.project.psets, &b.project.qtos);
-    // Those who act on it (EK-7): person, organisation, role, assigned to the project.
+    // Those who act on it (EK-7): person, organisation, role, assigned to the project. The role is the person's and
+    // the organisation's too: EK-7 Tablo 7.2 and 7.4 make their `Roles` mandatory (docs/adr/8074 §3).
     for a in &b.actors {
+        let role = w.st.add(format!(
+            "IFCACTORROLE(.{}.,$,{})",
+            a.role,
+            Writer::opt(&a.role_description)
+        ));
         let person = w.st.add(format!(
-            "IFCPERSON({},{},{},$,$,$,$,$)",
+            "IFCPERSON({},{},{},$,$,$,(#{role}),$)",
             Writer::opt(&a.identification),
             Writer::opt(&a.family),
             Writer::opt(&a.given)
@@ -857,19 +863,14 @@ pub fn write(b: &Building) -> String {
                     format!("({address})")
                 };
                 let org = w.st.add(format!(
-                    "IFCORGANIZATION({},{},$,$,{addresses})",
+                    "IFCORGANIZATION({},{},$,(#{role}),{addresses})",
                     Writer::opt(&o.identification),
                     text(&o.name)
                 ));
-                w.st.add(format!("IFCPERSONANDORGANIZATION(#{person},#{org},$)"))
+                w.st.add(format!("IFCPERSONANDORGANIZATION(#{person},#{org},(#{role}))"))
             }
             None => person,
         };
-        let role = w.st.add(format!(
-            "IFCACTORROLE(.{}.,$,{})",
-            a.role,
-            Writer::opt(&a.role_description)
-        ));
         let g = w.st.gid();
         let actor = w.st.add(format!("IFCACTOR({g},$,$,$,$,#{who})"));
         let g = w.st.gid();

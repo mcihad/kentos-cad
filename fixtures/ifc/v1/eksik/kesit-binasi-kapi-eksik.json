@@ -1,0 +1,18 @@
+{
+  "source": "fixtures/arch/v1/ifc/kesit-binasi.ifc",
+  "removed": {
+    "globalId": "01alMXGa9m08000000000E",
+    "class": "IfcDoor",
+    "tag": "K02",
+    "name": "MM-KAP-K02"
+  },
+  "records": {
+    "before": 2929,
+    "after": 2911
+  },
+  "doors": {
+    "before": 5,
+    "after": 4
+  },
+  "validator": []
+}

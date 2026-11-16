@@ -115,7 +115,7 @@ fn the_apartment_s_joinery_list_draws_each_type_and_follows_the_drawing() {
     assert!(words(&app).iter().any(|x| x == "1,6"));
     // The permit set: the list a sheet of its own at 1/50 after the room list (EK-2 LS/MMC).
     let doc = &mut app.document.as_mut().expect("a drawing").model;
-    let tables = kentos_interaction::calc_tables::ensure(doc).expect("the tables");
+    let tables = kentos_interaction::calc_tables::ensure(doc, &crate::ifc_facts::form_rows).expect("the tables");
     let joinery = tables
         .iter()
         .find(|t| t.label == "Doğrama listesi")

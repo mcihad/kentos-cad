@@ -295,8 +295,10 @@ ADR'de.
 katalogdaki EK-6 ve EK-7 zorunlu satırlarını yazılacak modelle karşılaştırır (öznitelik, özellik ve miktar seti, malzeme;
 `NOTDEFINED` tip değil, boş söz değer değil); eksikler `cad.modelGaps` olgusu, `dijital_proje.zorunlu` nesneleriyle hata;
 EK-9/9 modelden. Yangın sınıfı, acil çıkış, yapım eylemi, yangın koruma sınıfı, net planlanan alan ve `Ad_Dayanım` yazılıyor.
-**Kalan:** sahanın TAKS/KAKS/çekme/toplam alanı, katların SSL kotu, mahal kaplamaları, merdivenin tipi ve malzemesi, projenin
-açıklaması ve tipi, aktör rolleri, TrueNorth, PostalBox, FootPrintArea yazımı.
+Projenin açıklaması (künyenin "Proje açıklaması (IFC modelinde)" kutusu), tipi (`Pset_ProjectCommon.ProjectType`, yapı
+türünden, K50) ve aktör rolleri 16 Kasım'da ([ADR 8074](../docs/adr/8074-ek9-from-the-written-file.md) §3).
+**Kalan:** sahanın TAKS/KAKS/çekme/toplam alanı, katların SSL kotu, mahal kaplamaları, merdivenin tipi ve malzemesi,
+TrueNorth, PostalBox, FootPrintArea yazımı.
 
 **Kullanıcı sonucu:** Yazılan her sınıf, yönetmeliğin o sınıf için istediği bütün alanları taşır; taşıyamadığını nesnesiyle
 söyler. Verisi BIM-07 ve BIM-08'den gelir.
@@ -447,7 +449,18 @@ açık IFC 4.3 örnekleri okunur; ölçeklenmiş modelde süre ve bellek tabanı
   yayları gösterim sınırı olarak kabul edildi.
 - Kalan yok. Okuma yüzünü ürüne görüntüleyici (IFC-12) ve dosyadan doğrulama (IFC-08) bağlar.
 
-#### IFC-08 — Yazılmış dosyadan doğrulama, IDS ve kontrol formu [ ]
+#### IFC-08 — Yazılmış dosyadan doğrulama, IDS ve kontrol formu [~]
+
+**Yapıldı (16 Kasım 2026, ilk dilim, [ADR 8074](../docs/adr/8074-ek9-from-the-written-file.md)):** `kentos-ifc` dosyanın
+olgularını verir (`read::file_facts`, `kentos.ifcFacts` 1; gövdelerle), kaynağın beklentisini `expected` verir; formun 21
+sorusu `dijital_proje.form`'dadır (resmî cevap ile kanıt ayrı; her bulgu nesnesi, maddesi, ek satırı ve sayfasıyla).
+Masaüstü dosyayı bellekte yazıp okur: Mimari denetim, çizimdeki form ve Ruhsat takımı aynı olgulardan. Bugünkü
+`kentos_ifc::quality` ve `digital_audit.rs` taşındı. Katalogdan IDS 1.0 (`crates/shared/ifc/data/temel-2026.ids`, 77 tanım,
+356 gereklilik; yapısı ve eksikleri KentOS'un kendi okumasında kuralla aynı). Eksik kapı durumu: IfcOpenShell K02'yi ve
+başvurularını çıkarır, şema 0 bulgu, EK-9/8 kapıyı kaynak kimliğiyle bulur. Bulgu IFC modelinde boyanır. 100 dairede taban
+(§6 ölçümü). Kararlar K48–K50.
+**Kalan:** ikinci bağımsız denetleyici (IfcTester; indirme sahibin onayında) ve IfcOpenShell'le ikinci okuyucu; son yazılan
+dosyanın denetimi ve bulut işi; beş sonucun ayrı raporu (B14); model eşlemesinin bütçesi; EK-9 Tablo 9.2.
 
 **Kullanıcı sonucu:** Model kalite kontrol formunun her cevabı diske yazılmış dosyadan gelir; her "hayır" nesnesini seçer.
 Şeması temiz bir dosyanın Türkiye profilinden kaldığı görülebilir.

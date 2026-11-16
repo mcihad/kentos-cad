@@ -1,5 +1,6 @@
-//! Model kalite kontrol formu (docs/adr/8047 §10): EK-9's form placed in the drawing is the permit set's sheet of its
-//! own, EK-2's FR/MKF; Ruhsat takımı writes its answers again from the IFC model as it is when the set is made.
+//! Model kalite kontrol formu (docs/adr/8047 §10, 8074): EK-9's form placed in the drawing is the permit set's sheet of
+//! its own, EK-2's FR/MKF; Ruhsat takımı writes its answers again from the IFC file KentOS would write when the set is
+//! made, read back and answered by the standards package (`dijital_proje.form.tablo`).
 
 use crate::permit_set_tests::{building, particulars, texts};
 
@@ -87,7 +88,7 @@ fn the_form_in_the_drawing_is_the_set_s_fr_mkf_sheet_with_its_answers_now() {
         &particulars(),
     );
     doc.set_settings(settings);
-    let tables = kentos_interaction::calc_tables::ensure(doc).expect("the tables");
+    let tables = kentos_interaction::calc_tables::ensure(doc, &crate::ifc_facts::form_rows).expect("the tables");
     let last = tables.last().expect("tables");
     assert_eq!(
         (last.label, last.list),
@@ -108,11 +109,12 @@ fn the_form_in_the_drawing_is_the_set_s_fr_mkf_sheet_with_its_answers_now() {
             .cloned()
             .expect("a question")
     };
-    // The künye lacks the office's name and tax number; the drawing is in local coordinates.
+    // The künye lacks the office (so the file has no organisation), the project's description and the building kind;
+    // the drawing is in local coordinates.
     let info = answer("2");
     assert_eq!(info[4], "Hayır");
     assert!(
-        info[5].contains("büronun adı, büronun vergi kimlik no"),
+        info[5].contains("Künyede eksik: Proje açıklaması (IFC modelinde), Dijital teslim kapsamı › Yapı, Büronun adı"),
         "{}",
         info[5]
     );
@@ -121,7 +123,7 @@ fn the_form_in_the_drawing_is_the_set_s_fr_mkf_sheet_with_its_answers_now() {
     assert_eq!(answer("1")[4], "", "the architect answers the file size");
     // No IFC was exported here: the delivered file's version is the architect's to check, not an Evet (UR-052).
     assert_eq!(answer("18")[4], "", "{:?}", answer("18"));
-    assert!(answer("18")[5].starts_with("Teslim edilen dosyayı denetleyin"));
+    assert!(answer("18")[5].starts_with("Teslim edilen dosyayı denetleyin"), "{:?}", answer("18"));
     // The set: the form a sheet of its own after the plans, named by EK-2's form and model control form.
     let input = kentos_native_application::permit_set::PermitSet {
         phase: kentos_sheet::permit::Phase::Permit,

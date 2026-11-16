@@ -1,8 +1,10 @@
-//! The Denetim tab's EK-3 and EK-4 findings (docs/adr/8064; plan/bim-plan.md BIM-03), the sheets-from-the-model ones
-//! (docs/adr/8065, BIM-04) and EK-9's measured on the model (docs/adr/8067, BIM-06): the standards package's Python rules (`dijital_proje.mimari.denetle`, bim-plan K10) on the drawing's CAD facts (`kentos_processing::audit_facts::cad`),
-//! asked after each check of the whole drawing and listed in the Mevzuat group beside the regulation's other findings,
-//! each naming Dijital Proje Yön. 7 and the annex's clause and page. A fix is the rule's KentOS command, run as any
-//! finding's: one undo step.
+//! The Denetim tab's Dijital proje findings: EK-3 and EK-4's (docs/adr/8064; plan/bim-plan.md BIM-03), the
+//! sheets-from-the-model ones (docs/adr/8065, BIM-04) and the model quality control form's (EK-9, docs/adr/8074), the
+//! standards package's Python rules (`dijital_proje.mimari.denetle`, bim-plan K10) on the drawing's CAD facts
+//! (`kentos_processing::audit_facts::cad`) and on the facts of the IFC file KentOS would write now, read back
+//! (`crate::ifc_facts`). Asked after each check of the whole drawing and listed in the Mevzuat group beside the
+//! regulation's other findings, each naming the article and the annex's clause and page. A fix is the rule's KentOS
+//! command, run as any finding's: one undo step.
 //!
 //! - **Never in the way:** the rule runs in its own short process, off the window's thread; an answer to an older ask
 //!   (its generation) is dropped, and the last answer is put back after each check until the new one comes.
@@ -22,23 +24,30 @@ const PACKAGE: &str = "dijital-proje";
 const MODULE: &str = "dijital_proje.mimari";
 const FUNCTION: &str = "denetle";
 
-/// The findings this module adds, by their codes' starts: EK-3 and EK-4's, the sheets-from-the-model rule's
-/// (docs/adr/8065), EK-9's measured on the model (docs/adr/8067: rooms that overlap) and the model's mandatory fields
-/// (docs/adr/8068).
-const CODES: [&str; 5] = ["digital_ek", "digital_derived", "digital_free", "digital_quality", "digital_required"];
+/// The findings this module adds, by their codes' start: every Dijital proje finding is the package's (EK-3, EK-4, the
+/// sheets from the model, the model quality control form's 21 questions).
+const CODES: &str = "digital_";
 
 /// Whether a finding is this module's.
 fn ours(code: &str) -> bool {
-    CODES.iter().any(|c| code.starts_with(c))
+    code.starts_with(CODES)
 }
 
 impl App {
-    /// The facts the rule reads: the CAD drawing's section alone (the rule reads nothing else).
+    /// The facts the rule reads first: the CAD drawing's section alone.
     pub(crate) fn arch_audit_standards_facts(&self) -> Option<Value> {
         let doc = &self.document.as_ref()?.model;
         let facts = ProjectAuditFacts::new(0.0, Vec::new(), false)
             .with_cad(kentos_processing::audit_facts::cad::measure(doc));
         serde_json::to_value(facts).ok()
+    }
+
+    /// Both facts the rule reads: the drawing's, and the model the written file's are taken from (none for a drawing
+    /// without walls, whose rule then reads the drawing's alone).
+    fn arch_audit_standards_input(&self) -> Option<(Value, Option<crate::ifc_facts::Planned>)> {
+        let facts = self.arch_audit_standards_facts()?;
+        let doc = &self.document.as_ref()?.model;
+        Some((facts, crate::ifc_facts::plan(doc)))
     }
 
     /// After a check: the last answer put back, and the rule asked again when the check was the whole drawing's.
@@ -59,7 +68,8 @@ impl App {
         if !std::mem::take(&mut self.arch.arch_audit.standards_due) {
             return Task::none();
         }
-        let Some(facts) = self.arch_audit_standards_facts() else {
+        // The drawing's facts and the model now, on this thread; the file written and read back, and the rule, off it.
+        let Some((facts, planned)) = self.arch_audit_standards_input() else {
             return Task::none();
         };
         self.arch.arch_audit.standards_generation += 1;
@@ -68,7 +78,7 @@ impl App {
             async move {
                 let (sent, got) = iced::futures::channel::oneshot::channel();
                 std::thread::spawn(move || {
-                    let _ = sent.send(crate::standards::call(PACKAGE, MODULE, FUNCTION, vec![facts]));
+                    let _ = sent.send(answer(facts, planned));
                 });
                 got.await.unwrap_or_else(|_| Err("Kuralın süreci cevap vermeden kapandı.".to_owned()))
             },
@@ -106,15 +116,22 @@ impl App {
     /// The rule's ask and answer now, on this thread: what the tab's task does (tests and pictures).
     #[cfg(test)]
     pub(crate) fn arch_audit_standards_settle(&mut self) {
-        let Some(facts) = self.arch_audit_standards_facts() else {
+        let Some((facts, planned)) = self.arch_audit_standards_input() else {
             return;
         };
         self.arch.arch_audit.standards_due = false;
         self.arch.arch_audit.standards_generation += 1;
         let generation = self.arch.arch_audit.standards_generation;
-        let answer = crate::standards::call(PACKAGE, MODULE, FUNCTION, vec![facts]);
+        let answer = answer(facts, planned);
         self.arch_audit_standards_answer(generation, answer);
     }
+}
+
+/// The rule's answer for the drawing's facts and the model: the file written and read back first (its failure the
+/// answer's), then the rule on both.
+fn answer(facts: Value, planned: Option<crate::ifc_facts::Planned>) -> Result<Value, String> {
+    let ifc = planned.map(crate::ifc_facts::Planned::facts).transpose()?.unwrap_or(Value::Null);
+    crate::standards::call(PACKAGE, MODULE, FUNCTION, vec![facts, ifc])
 }
 
 /// The rule's findings as the tab's: the Mevzuat group's, the key `code:uids`, the rule's words, its fix as one step.

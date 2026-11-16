@@ -116,7 +116,7 @@ fn resident() -> f64 {
 }
 
 /// The resident memory's peak while `work` runs, MB: `ps` read every 5 ms on a thread.
-fn peak<T>(work: impl FnOnce() -> T) -> (T, f64) {
+pub(crate) fn peak<T>(work: impl FnOnce() -> T) -> (T, f64) {
     use std::sync::atomic::{AtomicBool, Ordering};
     let stop = std::sync::Arc::new(AtomicBool::new(false));
     let watch = {

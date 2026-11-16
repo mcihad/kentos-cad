@@ -3,11 +3,10 @@
 //! own, then its type's) as the file writes them, each value with its unit: its own, else the project's for the
 //! measure it is written with. Nothing is converted and nothing is measured from the triangles (CLAUDE.md §23.3).
 
-use ifc_lite_core::{AttributeValue, EntityDecoder, SchemaVersion};
+use ifc_lite_core::SchemaVersion;
 use kentos_model_view::{Details, Group, Line};
 
-use super::graph::named;
-use super::{Model, ReadError, Units, Value, ValueKind, guarded, header};
+use super::{Model, ReadError, Units, Value, ValueKind, header};
 
 impl Model {
     /// The details of object `object` (an index into [`Model::objects`]); `bytes` are the bytes it was read from.
@@ -30,7 +29,7 @@ impl Model {
         add("Ön tanımlı tür", o.predefined.clone());
         add("Tip", o.type_object.map(|t| &self.objects[t]).map(|t| format!("{} ({})", t.name.as_deref().unwrap_or("adsız"), t.class)));
         add("Kat", self.storey_of(schema, object).map(|s| s.name.clone().unwrap_or_else(|| s.class.clone())));
-        add("Malzeme", guarded(|| Ok(self.material(bytes, schema, object))).ok().flatten());
+        add("Malzeme", self.materials(bytes, object).ok().filter(|m| !m.is_empty()).map(|m| m.join("; ")));
         add("Kayıt", Some(format!("#{}", o.step)));
         let mut groups = vec![own];
         for set in self.property_sets(bytes, object)? {
@@ -52,53 +51,6 @@ impl Model {
         }
         None
     }
-
-    /// The object's material, by the names the file gives it (`IfcRelAssociatesMaterial`).
-    fn material(&self, bytes: &[u8], schema: SchemaVersion, object: usize) -> Option<String> {
-        let o = self.objects.get(object)?;
-        let mut decoder = EntityDecoder::with_arc_index(bytes, self.index.clone());
-        let names: Vec<String> = self
-            .relations_of(o.step)
-            .iter()
-            .map(|&r| &self.relations[r])
-            .filter(|r| schema.is_subtype_of(&r.class, "IfcRelAssociatesMaterial") && r.related.contains(&o.step))
-            .filter_map(|r| material_name(&mut decoder, schema, r.relating?, 0))
-            .collect();
-        (!names.is_empty()).then(|| names.join("; "))
-    }
-}
-
-/// A material record's name: its own, its layer set's, a usage's set's, or its members' names.
-fn material_name(decoder: &mut EntityDecoder, schema: SchemaVersion, step: u32, depth: usize) -> Option<String> {
-    if depth > 3 {
-        return None;
-    }
-    let e = decoder.decode_by_id(step).ok()?;
-    let text = |name: &str| named(schema, &e, name).and_then(AttributeValue::as_string).filter(|s| !s.trim().is_empty());
-    if let Some(n) = text("Name").or_else(|| text("LayerSetName")) {
-        return Some(n.to_owned());
-    }
-    for usage in ["ForLayerSet", "ForProfileSet"] {
-        if let Some(set) = named(schema, &e, usage).and_then(AttributeValue::as_entity_ref) {
-            return material_name(decoder, schema, set, depth + 1);
-        }
-    }
-    let members: Vec<u32> = ["Materials", "MaterialLayers", "MaterialConstituents", "MaterialProfiles"]
-        .iter()
-        .find_map(|n| named(schema, &e, n).and_then(AttributeValue::as_list))
-        .map(|l| l.iter().filter_map(AttributeValue::as_entity_ref).collect())
-        .unwrap_or_default();
-    let names: Vec<String> = members
-        .into_iter()
-        .filter_map(|m| {
-            let part = decoder.decode_by_id(m).ok()?;
-            match named(schema, &part, "Material").and_then(AttributeValue::as_entity_ref) {
-                Some(material) => material_name(decoder, schema, material, depth + 1),
-                None => named(schema, &part, "Name").and_then(AttributeValue::as_string).map(str::to_owned),
-            }
-        })
-        .collect();
-    (!names.is_empty()).then(|| names.join(", "))
 }
 
 /// A property or a quantity as a line: its value as written, its unit.

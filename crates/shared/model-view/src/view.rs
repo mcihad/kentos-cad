@@ -95,6 +95,11 @@ impl View {
         self.found = found.into_iter().collect();
     }
 
+    /// The objects painted as found.
+    pub fn found(&self) -> &BTreeSet<usize> {
+        &self.found
+    }
+
     /// Whether `object` itself is hidden (not through its parent).
     pub fn is_hidden(&self, object: usize) -> bool {
         self.hidden.contains(&object)

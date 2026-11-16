@@ -23,8 +23,14 @@ mod outside_tests;
 mod checks;
 #[cfg(feature = "view")]
 mod details;
+mod facts;
+#[cfg(feature = "geometry")]
+mod facts_bodies;
+#[cfg(all(test, feature = "geometry"))]
+mod facts_tests;
 mod graph;
 mod header;
+mod material;
 mod scan;
 mod sets;
 mod units;
@@ -39,6 +45,8 @@ use std::collections::{BTreeMap, HashMap};
 use std::fmt;
 use std::sync::Arc;
 
+#[cfg(feature = "geometry")]
+pub use facts_bodies::file_facts;
 pub use sets::{PropertySet, SetKind, Value, ValueKind};
 
 /// How much a read may take; past a limit the read stops with an error that names it. The defaults are KentOS's

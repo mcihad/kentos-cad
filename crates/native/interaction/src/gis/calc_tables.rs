@@ -75,11 +75,13 @@ fn form(doc: &Document) -> Option<(String, kentos_commands::Vec2)> {
         .last()
 }
 
-/// The form's table with its answers as the model gives them now, at `at` (its top left): the one there taken away.
+/// The form's table with its answers now (`rows`, the standards package's: docs/adr/8074), at `at` (its top left): the
+/// one there taken away.
 fn form_written(
     doc: &mut Document,
     old: Option<String>,
     at: kentos_commands::Vec2,
+    rows: Vec<Vec<String>>,
 ) -> Result<(), String> {
     if let Some(uid) = old {
         let input = kentos_commands::EntitiesDelete {
@@ -94,7 +96,6 @@ fn form_written(
             _ => return Err("Model kalite kontrol formu yenilenemedi.".into()),
         }
     }
-    let rows = kentos_native_application::arch_ifc::form_rows(doc);
     let look = crate::table::Look {
         header: true,
         height: 2.5 / 1000.0 * doc.settings().plot_scale,
@@ -303,8 +304,12 @@ fn live(doc: &mut Document, source: TableSource, at: [f64; 2]) -> Result<(), Str
 
 /// The drawing's calculation tables in the sheet's order, the ones it lacks made beside it (to the right of everything
 /// drawn, one under another); a table the drawing cannot fill (no İmar durumu, no independent unit, no room) is left
-/// out.
-pub fn ensure(doc: &mut Document) -> Result<Vec<CalcTable>, String> {
+/// out. `form` gives the model quality control form's rows for the drawing as it is (the standards package's rule,
+/// which this crate does not run: docs/adr/8074); it is asked only when the drawing has the form.
+pub fn ensure(
+    doc: &mut Document,
+    form_rows: &dyn Fn(&Document) -> Result<Vec<Vec<String>>, String>,
+) -> Result<Vec<CalcTable>, String> {
     let units = doc.program().units.iter().any(|u| u.kind == UnitKind::Unit);
     let zoning = doc
         .settings()
@@ -314,9 +319,10 @@ pub fn ensure(doc: &mut Document) -> Result<Vec<CalcTable>, String> {
         .is_some();
     let rooms = doc.entities().any(|e| matches!(e, Entity::Space(_)));
     let joinery = !doc.joinery_rows().is_empty();
-    // The form, when the drawing has it, its answers the model's now (docs/adr/8047 §10).
+    // The form, when the drawing has it, its answers the written file's now (docs/adr/8047 §10, 8074).
     if let Some((uid, at)) = form(doc) {
-        form_written(doc, Some(uid), at)?;
+        let rows = form_rows(doc)?;
+        form_written(doc, Some(uid), at, rows)?;
     }
     let quality = form(doc).is_some();
     let wanted = [
@@ -356,7 +362,10 @@ pub fn ensure(doc: &mut Document) -> Result<Vec<CalcTable>, String> {
                     Kind::Zoning => live(doc, TableSource::Zoning {}, [x, y])?,
                     Kind::Parking => live(doc, TableSource::Parking {}, [x, y])?,
                     Kind::Shelter => live(doc, TableSource::Shelter {}, [x, y])?,
-                    Kind::QualityForm => form_written(doc, None, kentos_commands::Vec2 { x, y })?,
+                    Kind::QualityForm => {
+                        let rows = form_rows(doc)?;
+                        form_written(doc, None, kentos_commands::Vec2 { x, y }, rows)?
+                    }
                 }
                 let b = found(doc, kind).ok_or_else(|| format!("{label} yazılamadı."))?;
                 y = b[1] - gap;

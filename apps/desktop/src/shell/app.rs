@@ -421,6 +421,8 @@ pub enum Message {
     BottomTab(crate::bottom::BottomTab),
     /// A table written as a file (docs/adr/0223 §2): what was written, or why not.
     TableWritten(crate::table_write::Outcome),
+    /// Model kalite kontrol formu's rows (docs/adr/8074), answered off the window: its table is placed, or why not.
+    QualityFormRows(Result<Vec<Vec<String>>, String>),
     /// The Arama tab (search/, docs/adr/0178).
     Search(crate::search::Event),
     /// A call's buttons in Komut geçmişi (history/, docs/adr/0284).

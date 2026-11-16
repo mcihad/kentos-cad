@@ -3015,6 +3015,9 @@ mod flat_timing;
 
 #[path = "headless/flat_pieces.rs"]
 mod flat_pieces;
+
+#[path = "headless/ifc_timing.rs"]
+mod ifc_timing;
 #[test]
 fn nested_dynamic_exports_keep_default_visibility_values_transforms_and_reuse_static_variants() {
     use kentos_commands::{BlockDefinition, DrawingUnit, DxfReadOptions, Entity};

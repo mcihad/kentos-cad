@@ -24,6 +24,8 @@ pub mod catalog;
 pub mod catalog_schema;
 pub mod closed;
 pub mod crs;
+pub mod expected;
+pub mod ids;
 mod math;
 pub mod mesh;
 pub mod naming;

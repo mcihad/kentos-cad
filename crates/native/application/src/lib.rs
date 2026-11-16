@@ -1167,8 +1167,6 @@ pub mod ifc_system;
 pub mod arch_recognize;
 // Dijital proje denetimi: EK-9'un modelin cevapladığı soruları (docs/adr/8047 §9).
 #[cfg(feature = "mod-arch")]
-#[path = "arch/digital_audit.rs"]
-pub mod digital_audit;
 // Kolonun geçici ölçüleri (docs/adr/0712).
 #[cfg(feature = "mod-arch")]
 #[path = "arch/column_distances.rs"]
