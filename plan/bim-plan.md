@@ -422,6 +422,11 @@ silinince o stilin duvarları bulguda. Girilmemiş değer dosyaya boş metin ola
 
 #### BIM-08 — Mahal, zon ve emsal modeli [ ]
 
+**Sürüyor (16 Kasım 2026, [ADR 8069](../docs/adr/8069-room-zone-far-model.md)):** ilk adım balkonların sınırı: PAİY 22/1-l
+resmî metinden doğrulandı (bağımsız bölüm net alanının %20'si; ADR 8030'un "katlar alanının %20'si" okuması düzeltildi);
+aşan kısım emsale girer, bölümün balkonları arasında alanlarıyla paylaşılır; iki bölümlü elle denetlenen örnekte sınandı.
+Kalan: emsal zonları ve IFC'si, tabloyla kat ve sınıf bazında karşılaştırma, gruplar, mahal hacmi, çizimde denetim.
+
 **Kullanıcı sonucu:** Emsal ve TAKS tablosu ile modeldeki alanlar aynı çokgenlerden gelir. Her emsal alanı dahil, hariç ya
 da öbürü diye maddesiyle işaretlidir. Bağımsız bölüm ve ortak alan modelde gruptur. Mahalin hacmi kapalıdır ve üstü doğru
 yerde biter. Dayanak EK-6 6.58, 6.60, 6.68; EK-9/10, 12–14; PAİY 4, 5/8, 20–22; Z3.

@@ -16,8 +16,11 @@
 //! parcel, the emsal and the area it allows against the drawing's, the emsal harici allowance, TAKS and the footprint,
 //! the construction area, and each storey's area counted in and out.
 //!
+//! - **Balconies** (22/1-l, docs/adr/8069): an independent unit's open balconies (an outdoor room named or used as a
+//!   balcony, of a unit) are out up to 20 % of its net area; what passes counts in.
+//!
 //! A ratio is the drawing's measure, not an approval; the plan's own notes and the regulation's other limits (the
-//! balconies' 20 %, the storage's 50 %, the caretaker's 70 m²) are the next step.
+//! storage's 50 %, the caretaker's 70 m²) are the next step.
 
 use kentos_contracts::{
     AreaUnit, CellRange, CellStyle, EmsalCount, Entity, SpaceMethod, TableAlign, Zoning,
@@ -54,7 +57,13 @@ pub struct ZoningReport {
     /// The footprint's outline: the ground storey's rooms it counts, their contours together (the site plan's oturum,
     /// docs/adr/8032).
     pub footprint_shape: Vec<Area>,
+    /// The independent units' balconies past 20 % of their net areas (22/1-l, docs/adr/8069), counted in `included`.
+    pub balcony_over: f64,
 }
+
+/// The share of an independent unit's net area its open balconies may take out of katlar alanı (PAİY 22/1-l, as amended
+/// RG 11/7/2021-31538).
+pub const BALCONY_SHARE: f64 = 0.20;
 
 /// One storey's rooms as the ratios count them, m².
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -120,6 +129,25 @@ struct Room {
     outdoor: bool,
     gross: Vec<Area>,
     axis: Vec<Area>,
+    /// Its independent unit, by the program's unit id (docs/adr/8069).
+    unit: Option<String>,
+    /// An outdoor room that is a balcony by its name or use (22/1-l), not a terrace.
+    balcony: bool,
+    /// Its net area, between its walls' faces (PAİY 4/1-ğ-3).
+    net: f64,
+}
+
+/// Whether `name` or `usage` says a balcony, Turkish letters folded.
+fn says_balcony(name: Option<&str>, usage: Option<&str>) -> bool {
+    [name, usage].into_iter().flatten().any(|t| {
+        t.chars()
+            .map(|c| match c {
+                'ı' | 'I' | 'İ' | 'i' => 'i',
+                c => c.to_lowercase().next().unwrap_or(c),
+            })
+            .collect::<String>()
+            .contains("balkon")
+    })
 }
 
 fn measured(
@@ -188,6 +216,11 @@ impl Document {
                 None if outdoor => EmsalCount::Exempt,
                 None => kentos_contracts::emsal_by_use(x.name.as_deref(), x.usage.as_deref()),
             };
+            let net = if x.void {
+                0.0
+            } else {
+                kentos_geometry_core::geom::space::area(&measured(&mut search, x, SpaceMethod::Net))
+            };
             rooms.push(Room {
                 level: x.arch.level.clone(),
                 void: x.void,
@@ -199,6 +232,9 @@ impl Document {
                     measured(&mut search, x, SpaceMethod::Gross)
                 },
                 axis: measured(&mut search, x, SpaceMethod::Centerline),
+                unit: x.unit.clone(),
+                balcony: outdoor && says_balcony(x.name.as_deref(), x.usage.as_deref()),
+                net,
             });
         }
         // Each room's contour on its level, a shared wall's façade corner halved between two rooms.
@@ -248,6 +284,35 @@ impl Document {
                 }
             }
         }
+        // 22/1-l (docs/adr/8069): an independent unit's open balconies are out up to 20 % of its net area (its own
+        // indoor rooms counted in, 4/1-ğ-3: balconies, terraces, annexes and common areas not in it); what passes counts
+        // in, shared among its balconies by their areas. A balcony of no unit, or of a common area, keeps its count.
+        let mut moved = vec![0.0; rooms.len()];
+        let mut units: Vec<&String> = rooms.iter().filter(|r| r.balcony).filter_map(|r| r.unit.as_ref()).collect();
+        units.sort();
+        units.dedup();
+        for u in units {
+            let kind = program.units.iter().find(|x| &x.id == u).map(|x| x.kind);
+            if kind != Some(kentos_contracts::UnitKind::Unit) {
+                continue;
+            }
+            let mine = |r: &Room| r.unit.as_ref() == Some(u) && !r.void;
+            let net: f64 = rooms
+                .iter()
+                .filter(|r| mine(r) && !r.outdoor && r.count == EmsalCount::Included)
+                .map(|r| r.net)
+                .sum();
+            let balconies: Vec<usize> = (0..rooms.len())
+                .filter(|&i| mine(&rooms[i]) && rooms[i].balcony && rooms[i].count == EmsalCount::Exempt)
+                .collect();
+            let total: f64 = balconies.iter().map(|&i| gross[i]).sum();
+            let excess = (total - BALCONY_SHARE * net).max(0.0);
+            if excess > 0.0 && total > 0.0 {
+                for &i in &balconies {
+                    moved[i] = gross[i] * excess / total;
+                }
+            }
+        }
         let parcel = zoning.map_or(0.0, |z| z.parcel_area);
         let mut out = ZoningReport {
             parcel,
@@ -264,7 +329,7 @@ impl Document {
                 .unwrap_or(usize::MAX - 1),
             None => usize::MAX,
         };
-        for (r, g) in rooms.iter().zip(&gross) {
+        for ((r, g), m) in rooms.iter().zip(&gross).zip(&moved) {
             if r.void {
                 continue;
             }
@@ -285,8 +350,12 @@ impl Document {
                     level.included += g;
                 }
                 EmsalCount::Exempt => {
-                    out.exempt += g;
-                    level.exempt += g;
+                    // A balcony's part past its unit's 20 % counts in (22/1-l).
+                    out.exempt += g - m;
+                    level.exempt += g - m;
+                    out.included += m;
+                    level.included += m;
+                    out.balcony_over += m;
                 }
                 EmsalCount::Outside => {
                     out.outside += g;
