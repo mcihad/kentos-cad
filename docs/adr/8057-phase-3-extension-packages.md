@@ -4663,3 +4663,27 @@ masaüstünün kurulum incelemesi (`Çalıştığı yerler` bölümü).
   öbür sistemleri kullananlar için de doğruyu söyler (kurum aynı paketi Windows'ta da dağıtıyorsa).
 - **Sınamalar:** kayıt defteri `view::tests` 1 (bırakma ve ekleme, ilk kurulum, aynı yerler), kayıt defterinin hepsi
   (36), masaüstünün eklenti sınamaları (102).
+
+## §91. Paketin yazılım malzeme listesi: `kentos kek sbom` (`ADIM 18A`, PY-UV-29)
+
+**16 Kasım.** Kod: paylaşılan `sbom.rs` (yeni: `cyclonedx`, `without_credentials`, `utc_text`); komut satırı
+`kentos kek sbom <klasör|paket.kek> [-o <dosya>]`.
+
+- **Sorun.** Plan: "Sır içermeyen kilit/ortam/SBOM raporu dışa aktarılır". Kurumun bilgi işlemi kurduğu her eklenti için
+  hangi Python paketlerinin, hangi sürümle, nereden ve hangi dosyalarla geldiğini standart bir biçimde saklamak ister
+  (tedarik zinciri denetimi, açık bildirimleriyle karşılaştırma); bunun bir yolu yoktu.
+- **Karar: kilitten CycloneDX 1.6 JSON.** Ortam kilitten kurulur ve her dosya kilitteki özetine karşı denetlenir (§5),
+  yani kilit ortamın listesidir; Python çalıştırılmaz, katalog da aynı listeyi üretebilir. Her paket bir bileşen: purl
+  (`pkg:pypi/numpy@2.5.4`; başka dizinde `?repository_url=`, depodan `?vcs_url=`), dağıtım dosyalarının adresi ve
+  SHA-256'sı (`externalReferences`), kaynağı (`kentos:source`); kilidin bağımlılık ağacı `dependencies`'te; eklentinin
+  kendisi `metadata.component` (kimlik, sürüm, yayımcı, lisans ifadesi). Projenin kendisi bileşen değildir.
+- **Sır yok:** adreslerdeki kullanıcı adı ve parola (`https://kullanici:parola@ayna/simple`) her yerden atılır.
+- **Aynı paket, aynı rapor:** seri numarası (`urn:uuid:`, RFC 4122 sürüm 5 bitleri) paketin içeriğinden; yalnız zaman
+  damgası değişir.
+- **Python'suz paket** listelenecek bir şey olmadığını söyler, dosya yazılmaz (çıkış 1).
+- **Ölçüm:** Vitrin 1.0.54: numpy 2.5.4 (11 dosya), shapely 2.0.7 (7 dosya; numpy'a bağlı); mevzuat 0.5.0: bağımlılık
+  yok (boş liste).
+- **Sınamalar:** paylaşılan 3 (bileşenler, purl'ler, dosya özetleri, ağaç, parolasız adres, aynı seri numarası;
+  parolanın her biçimde atılması; zaman), komut satırı 1 (Vitrin klasöründen iki paket; Python'suz pakette dosya yok).
+- **Kalan:** Python paketlerinin lisansları (kilitte yok; kurulu ortamın üst verisinden okunur), masaüstünde ve katalogda
+  "SBOM'u indir" (aynı işlev).

@@ -45,6 +45,7 @@ pub mod resemblance;
 pub mod revocations;
 #[cfg(all(test, feature = "schema"))]
 mod schema_check;
+pub mod sbom;
 pub mod sdk_pack;
 pub mod secrets;
 pub mod sdk_surface;

@@ -59,6 +59,8 @@ const USAGE: &str = "Kullanım:
   kentos kek upgrade <klasör> [--check] [--json]    eskiyen SDK adlarını yenileriyle yazar (--check: yazmaz, değişecek
                                                     bir şey varsa çıkış 1)
   kentos kek index <klasör> [--name <ad>]           klasördeki paketlerin katalog dizinini (index.json) yazar
+  kentos kek sbom <klasör|paket.kek> [-o <dosya>]   paketin Python paketlerinin listesi (SBOM, CycloneDX 1.6 JSON):
+                                                    sürüm, kaynak, dosyaların SHA-256'sı; adreslerde parola yok
   kentos kek dump [--root <klasör>]                 kurulu eklentileri ve katkılarını JSON olarak döker
   kentos kek log [<kimlik>] [--son <n>] [--root <klasör>] [--json]
                                                     bir eklentinin günlüğü (kimliksiz: kayıt defterininki)";
@@ -109,6 +111,8 @@ fn main() -> ExitCode {
         ["kek", "dump"] => dump(None),
         ["kek", "dump", "--root", root] => dump(Some(PathBuf::from(root))),
         ["kek", "index", folder] => index_folder(Path::new(folder), None),
+        ["kek", "sbom", target] => sbom(Path::new(target), None),
+        ["kek", "sbom", target, "-o", out] => sbom(Path::new(target), Some(PathBuf::from(out))),
         ["kek", "index", folder, "--name", name] => index_folder(Path::new(folder), Some(name)),
         ["kek", "log", rest @ ..] => log(rest, json),
         ["kek", "upgrade", folder] => upgrade::run(Path::new(folder), false, json),
@@ -482,6 +486,66 @@ fn print_dry_run(dry: &kentos_extension_host::DryRun) {
     }
 }
 
+/// `kentos kek sbom`: the package's (a folder packed as `pack` packs it, or a `.kek`) software bill of materials from
+/// its lock (`kentos_extensions::sbom`, PY-UV-29), printed or written to `out`.
+fn sbom(target: &Path, out: Option<PathBuf>) -> ExitCode {
+    let bytes = if target.is_dir() {
+        let files = match read_folder(target) {
+            Ok((files, _)) => files,
+            Err(message) => return fail(message),
+        };
+        match pack(&files, &Limits::default()) {
+            Ok(packed) => packed.bytes,
+            Err(problems) => {
+                print_list("Sorunlar", &problems);
+                say!("Paketlenmedi: {} sorun.", problems.len());
+                return ExitCode::from(1);
+            }
+        }
+    } else {
+        match std::fs::read(target) {
+            Ok(bytes) => bytes,
+            Err(e) => return fail(format!("{} okunamadı: {e}", target.display())),
+        }
+    };
+    let opened = kentos_extensions::open(&bytes, &Limits::default());
+    let Some(manifest) = opened
+        .inspection
+        .manifest
+        .as_ref()
+        .filter(|_| opened.inspection.is_valid())
+    else {
+        print_list("Sorunlar", &opened.inspection.problems);
+        say!("Paket geçersiz: SBOM yazılmadı.");
+        return ExitCode::from(1);
+    };
+    let now = kentos_extensions::sbom::utc_text(std::time::SystemTime::now());
+    let Some(bom) = kentos_extensions::sbom::cyclonedx(
+        manifest,
+        &opened.files,
+        &now,
+        env!("CARGO_PKG_VERSION"),
+    ) else {
+        say!(
+            "{} Python kullanmıyor ya da kilidi okunmuyor: listelenecek paket yok.",
+            manifest.id
+        );
+        return ExitCode::from(1);
+    };
+    let text = serde_json::to_string_pretty(&bom).unwrap_or_default();
+    match out {
+        Some(out) => {
+            if let Err(e) = std::fs::write(&out, format!("{text}\n")) {
+                return fail(format!("{} yazılamadı: {e}", out.display()));
+            }
+            let count = bom["components"].as_array().map_or(0, Vec::len);
+            say!("SBOM yazıldı: {} ({count} Python paketi).", out.display());
+        }
+        None => say!("{text}"),
+    }
+    ExitCode::SUCCESS
+}
+
 fn pack_folder(folder: &Path, out: Option<PathBuf>, json: bool) -> ExitCode {
     let (files, not_read) = match read_folder(folder) {
         Ok(read) => read,
@@ -758,6 +822,41 @@ mod tests {
             "{:#?}",
             v.problems
         );
+    }
+
+    /// `kek sbom` on the example extension's folder writes its lock's two Python packages as CycloneDX; a package
+    /// without Python writes nothing (ADR 8057 §91).
+    #[test]
+    fn sbom_lists_the_locked_python_packages() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let out = std::env::temp_dir().join(format!("kentos-sbom-{}.cdx.json", std::process::id()));
+        let _ = std::fs::remove_file(&out);
+        let _ = super::sbom(
+            &root.join("samples/eklenti-vitrini/eklenti"),
+            Some(out.clone()),
+        );
+        let bom: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&out).expect("written")).unwrap();
+        assert_eq!(bom["bomFormat"], "CycloneDX");
+        let purls: Vec<&str> = bom["components"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|c| c["purl"].as_str())
+            .collect();
+        assert!(
+            purls.iter().any(|p| p.starts_with("pkg:pypi/numpy@"))
+                && purls.iter().any(|p| p.starts_with("pkg:pypi/shapely@")),
+            "{purls:?}"
+        );
+        let _ = std::fs::remove_file(&out);
+        let none =
+            std::env::temp_dir().join(format!("kentos-sbom-yok-{}.json", std::process::id()));
+        let _ = super::sbom(
+            &root.join("fixtures/extensions/v1/ornek-altlik"),
+            Some(none.clone()),
+        );
+        assert!(!none.exists(), "nothing to list, nothing written");
     }
 
     #[test]
