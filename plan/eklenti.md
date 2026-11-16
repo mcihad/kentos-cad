@@ -1411,7 +1411,9 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
   — *kısmen (ADR 8059): açık onay, yazar kendi genel sürümünü onaylayamaz, içerik değişince onay düşer, onay ve yayın
   ayrı izin, ret gerekçe koduyla; 16 Kasım (ADR 8059 §15): sır taraması: dosyanın içine yazılmış anahtar (sağlayıcı
   biçimleri, özel anahtar) paketlemede ve kurulumda uyarı, katalogda sır kapısını engeller, değer hiçbir yerde
-  söylenmez; kalan: tarayıcının daha geniş sır kuralları ve yalıtılmış duman testi işçisi [PY-CLOUD-05, 06].*
+  söylenmez; 16 Kasım (ADR 8057 §100): yeni sağlayıcı biçimleri (OpenRouter, Groq, xAI, Perplexity, Replicate, NVIDIA,
+  Google OAuth, Mapbox, Docker Hub, Shopify) ve bağlantı adresine yazılmış parola (veritabanı, paket deposu, FTP);
+  kalan: yalıtılmış duman testi işçisi [PY-CLOUD-06; ECO-DEC-11, sahibin kararı].*
 - [ ] Liste sürüm durumu, uyumluluk, Python/yerel bağımlılık ve gerekli izinlerle süzülür [PY-CLOUD-12]; kurma ve
   çalıştırma tüketicinin seçimidir, onaylı olmak kişinin bağımlılık/izin kararını atlatmaz [PY-CLOUD-13]; güncelleme yeni
   bağımlılık/yetenek/platform farkını gösterir, eski sürüm denetimli korunur [PY-CLOUD-14]; askıya alma/geri çekme yeni

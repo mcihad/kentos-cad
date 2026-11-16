@@ -4962,3 +4962,28 @@ masaüstü `extensions/environment.rs` (`Context::not_to_build`); komut satırı
   python-env 1 (aynı ortam sınamasında `find_published`), katalog API 1 (iki depoda: tekerlek klasöründeki numpy'nin
   lisansı listede, tekerleği olmayan shapely lisanssız), masaüstünün SBOM sınamaları (2; taşınan okuyucuyla).
 - **Kalan:** tekerlek klasörü olmayan sunucuda lisans (paket dizininden tekerlek indirmek bir ağ kararı).
+
+## §100. Sır taraması genişledi: yeni sağlayıcılar ve bağlantı adresindeki parola (`ADIM 22A`, PY-CLOUD-05; D11)
+
+**16 Kasım.** Kod: paylaşılan `secrets.rs` (`FORMS`'a on biçim; `SCHEMES`, `stands_in`, `passwords_in_addresses`).
+
+- **Sorun.** ADR 8059 §15'in taraması sağlayıcıların anahtar biçimlerini ve özel anahtarı tanıyordu. İki boşluk vardı:
+  eklentilerin kodunun çağırdığı yeni yapay zekâ sağlayıcılarının ve kurumların ulaştığı birkaç hizmetin biçimleri,
+  bir de en olası sızıntı: belediyenin PostGIS'ine bağlanan eklentinin koduna ajanın yazdığı
+  `postgresql://kullanici:parola@sunucu/veritabani`. Hiçbir sağlayıcı biçimine uymaz, paylaşılan paketle gider.
+- **Yeni biçimler:** OpenRouter (`sk-or-v1-`), Groq (`gsk_`), xAI (`xai-`), Perplexity (`pplx-`), Replicate (`r8_`),
+  NVIDIA (`nvapi-`), Google OAuth istemci sırrı (`GOCSPX-`), Mapbox gizli jetonu (`sk.eyJ…`; açık `pk.` jetonu sır
+  değil), Docker Hub (`dckr_pat_`), Shopify (`shpat_`, `shpss_`). Her biri öneki, harf kümesi ve uzunluğuyla; kural
+  az ve kesin kalır (D11).
+- **Bağlantı adresindeki parola:** bilinen şemalar (PostgreSQL/PostGIS, MySQL/MariaDB, SQL Server, Oracle, MongoDB,
+  Redis, AMQP, FTP/SFTP, SMTP, HTTP/HTTPS: paket deposu ya da parolalı WMS) ve `kullanici:parola@` biçimi. Parolanın
+  yerini tutan değer sayılmaz: değişken (`${PGPASSWORD}`, `%s`, `{sifre}`, `<parola>`), yalnız onu adlandıran sözcük
+  ("password", "parola", "şifre"…; sözcüğün tamamı, gerçek parola "Compass2024" gibi bir parçayı taşıyabilir),
+  yıldızlar, örnek değer. Söz değeri hiç söylemez: "bağlantı adresindeki parola", satırıyla. Paketlemede ve kurulumda
+  uyarı (`secret_in_text`), katalogda sır kapısını engeller (`secret_found`), atölye ve `kek verify` de aynı sözü alır.
+- **Ölçüm:** depodaki paketlerde (Vitrin, Türkiye mevzuatı, MEBİS, örnek imar, örnek altlık) yeni uyarı yok.
+- **Sınamalar:** paylaşılan 2 (yeni biçimler çalışma anında kurulan değerlerle: depo anahtar biçiminde bir değer
+  taşımaz; bağlantı adresindeki parola, port ve sorgu dizesiyle, kapının sözünde değer yok; değişken, sözcük, yıldız,
+  boş parola, parolasız adres ve bilinmeyen şema sayılmaz), ortak kitaplığın bütün sınamaları (176), katalog API (58).
+- **Kalan:** yalıtılmış duman testi işçisi (PY-CLOUD-06; sunucunun ağ, dosya ve kiracı yalıtımı ECO-DEC-11, sahibin
+  kararı).

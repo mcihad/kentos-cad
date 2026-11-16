@@ -42,6 +42,15 @@ fn upper(c: u8) -> bool {
     c.is_ascii_uppercase() || c.is_ascii_digit()
 }
 
+fn hex(c: u8) -> bool {
+    c.is_ascii_hexdigit()
+}
+
+/// A signed token's characters (base64url and its dots): Mapbox's secret tokens are JWTs.
+fn dotted(c: u8) -> bool {
+    token(c) || c == b'.'
+}
+
 const fn form(
     words: &'static str,
     prefix: &'static str,
@@ -61,6 +70,7 @@ const fn form(
 /// The shapes, the narrower before the wider (an Anthropic key before any `sk-` key).
 const FORMS: &[Form] = &[
     form("Anthropic API anahtarı", "sk-ant-", token, 32, 256),
+    form("OpenRouter API anahtarı", "sk-or-v1-", alnum, 64, 64),
     form("OpenAI API anahtarı", "sk-proj-", token, 40, 320),
     form("OpenAI API anahtarı", "sk-svcacct-", token, 40, 320),
     form("Stripe gizli anahtarı", "sk_live_", alnum, 24, 128),
@@ -84,7 +94,97 @@ const FORMS: &[Form] = &[
     form("Hugging Face jetonu", "hf_", alnum, 30, 40),
     form("PyPI jetonu", "pypi-AgE", token, 50, 400),
     form("npm jetonu", "npm_", alnum, 36, 36),
+    // AI providers an extension's code calls, and the services a municipality's tools reach (docs/adr/8057 §100).
+    form("Groq API anahtarı", "gsk_", alnum, 52, 52),
+    form("xAI API anahtarı", "xai-", alnum, 80, 80),
+    form("Perplexity API anahtarı", "pplx-", alnum, 48, 48),
+    form("Replicate jetonu", "r8_", alnum, 37, 37),
+    form("NVIDIA API anahtarı", "nvapi-", token, 64, 64),
+    form("Google OAuth istemci sırrı", "GOCSPX-", token, 28, 28),
+    form("Mapbox gizli jetonu", "sk.eyJ", dotted, 60, 400),
+    form("Docker Hub jetonu", "dckr_pat_", token, 27, 27),
+    form("Shopify jetonu", "shpat_", hex, 32, 32),
+    form("Shopify jetonu", "shpss_", hex, 32, 32),
 ];
+
+/// The schemes a password in an address reaches: databases, queues, file and mail servers, web services (a package
+/// index or a WMS behind a password).
+const SCHEMES: &[&str] = &[
+    "postgres",
+    "postgresql",
+    "postgis",
+    "mysql",
+    "mariadb",
+    "mssql",
+    "sqlserver",
+    "oracle",
+    "mongodb",
+    "mongodb+srv",
+    "redis",
+    "rediss",
+    "amqp",
+    "amqps",
+    "ftp",
+    "ftps",
+    "sftp",
+    "smtp",
+    "smtps",
+    "http",
+    "https",
+];
+
+/// A password that stands for one in an example or comes from elsewhere: a word for it, a variable (`${PGPASSWORD}`,
+/// `%s`, `{sifre}`, `<parola>`), stars.
+fn stands_in(password: &str) -> bool {
+    let lower = password.to_lowercase();
+    // Whole words only: a real password may hold one (“Compass2024”).
+    [
+        "password",
+        "parola",
+        "sifre",
+        "şifre",
+        "secret",
+        "pass",
+        "pwd",
+        "sifreniz",
+        "parolaniz",
+    ]
+    .contains(&lower.as_str())
+        || password.chars().all(|c| matches!(c, '*' | 'x' | 'X'))
+        || password.contains(['$', '{', '}', '<', '>', '%'])
+        || placeholder(password)
+}
+
+/// The places of a password written into an address (`postgresql://cbs:…@10.0.0.5/kent`), with the address's start.
+fn passwords_in_addresses(text: &str) -> Vec<usize> {
+    let bytes = text.as_bytes();
+    let mut out = Vec::new();
+    let mut from = 0;
+    while let Some(at) = text[from..].find("://").map(|i| i + from) {
+        from = at + 3;
+        let start = text[..at]
+            .rfind(|c: char| !(c.is_ascii_alphanumeric() || matches!(c, '+' | '.' | '-')))
+            .map_or(0, |i| i + 1);
+        let scheme = text[start..at].to_ascii_lowercase();
+        if !SCHEMES.contains(&scheme.as_str()) {
+            continue;
+        }
+        let rest = &text[from..];
+        let end = rest
+            .find(|c: char| c.is_whitespace() || matches!(c, '/' | '"' | '\'' | '`' | '?' | '#'))
+            .unwrap_or(rest.len());
+        let Some((user_info, _)) = rest[..end].rsplit_once('@') else {
+            continue;
+        };
+        let Some((_, password)) = user_info.split_once(':') else {
+            continue;
+        };
+        if !password.is_empty() && !stands_in(password) && start < bytes.len() {
+            out.push(start);
+        }
+    }
+    out
+}
 
 /// A key found: its kind in words and its line (from 1).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -142,6 +242,12 @@ pub fn found(text: &str) -> Vec<Found> {
             }
             taken.push((i, start + run));
             out.push((i, f.words));
+        }
+    }
+    // A password written into an address: a database's, a package index's (docs/adr/8057 §100).
+    for at in passwords_in_addresses(text) {
+        if !taken.iter().any(|(a, b)| at >= *a && at < *b) {
+            out.push((at, "bağlantı adresindeki parola"));
         }
     }
     // A private key's armour: “-----BEGIN … PRIVATE KEY-----” (RSA, EC, OPENSSH, ENCRYPTED, PKCS#8).
@@ -280,7 +386,50 @@ mod tests {
                 "Hugging Face jetonu",
             ),
         ];
-        for (key, words) in cases {
+        const HEX: &[u8] = b"0a1b2c3d4e5f6789";
+        let more = [
+            (
+                format!("{}{}", "sk-or-", "v1-") + &body(64, ALNUM),
+                "OpenRouter API anahtarı",
+            ),
+            (
+                format!("{}{}", "gs", "k_") + &body(52, ALNUM),
+                "Groq API anahtarı",
+            ),
+            (
+                format!("{}{}", "xa", "i-") + &body(80, ALNUM),
+                "xAI API anahtarı",
+            ),
+            (
+                format!("{}{}", "pp", "lx-") + &body(48, ALNUM),
+                "Perplexity API anahtarı",
+            ),
+            (
+                format!("{}{}", "r", "8_") + &body(37, ALNUM),
+                "Replicate jetonu",
+            ),
+            (
+                format!("{}{}", "nva", "pi-") + &body(64, ALNUM),
+                "NVIDIA API anahtarı",
+            ),
+            (
+                format!("{}{}", "GOC", "SPX-") + &body(28, ALNUM),
+                "Google OAuth istemci sırrı",
+            ),
+            (
+                format!("{}{}", "sk.", "eyJ") + &body(70, ALNUM) + "." + &body(22, ALNUM),
+                "Mapbox gizli jetonu",
+            ),
+            (
+                format!("{}{}", "dckr_", "pat_") + &body(27, ALNUM),
+                "Docker Hub jetonu",
+            ),
+            (
+                format!("{}{}", "shp", "at_") + &body(32, HEX),
+                "Shopify jetonu",
+            ),
+        ];
+        for (key, words) in cases.into_iter().chain(more) {
             let text = format!("import os\n\nANAHTAR = \"{key}\"\n");
             assert_eq!(found(&text), [Found { words, line: 3 }], "{words}");
         }
@@ -292,6 +441,55 @@ mod tests {
                 line: 1
             }]
         );
+    }
+
+    /// A password written into an address is said, with the address's line; a variable, a word for it, stars, an
+    /// address without a password and a scheme that carries none are not (docs/adr/8057 §100).
+    #[test]
+    fn a_password_in_an_address_is_said() {
+        let secret = format!("{}{}", "Gz8", "kQ2m");
+        for (text, line) in [
+            (
+                format!("DSN = \"postgresql://cbs:{secret}@10.0.0.5:5432/kent\"\n"),
+                1,
+            ),
+            (
+                format!("x = 1\nINDEX = 'https://ayna:{secret}@pypi.ornek.bel.tr/simple'\n"),
+                2,
+            ),
+            (
+                format!("mongodb+srv://kayit:{secret}@kume.ornek.bel.tr/?retryWrites=true"),
+                1,
+            ),
+        ] {
+            assert_eq!(
+                found(&text),
+                [Found {
+                    words: "bağlantı adresindeki parola",
+                    line
+                }],
+                "{text}"
+            );
+            assert!(
+                !gate_findings(&BTreeMap::from([("a.py".to_owned(), text.into_bytes())]))[0]
+                    .2
+                    .contains(&secret)
+            );
+        }
+        for text in [
+            "postgresql://cbs:${PGPASSWORD}@db/kent",
+            "postgresql://cbs@db/kent",
+            "https://kullanici:password@ornek.bel.tr",
+            "mysql://root:****@localhost/x",
+            "postgres://u:parola@h/x",
+            "postgres://u:{sifre}@h/x",
+            "ftp://anonymous:@ftp.ornek.bel.tr/",
+            "https://pypi.org/simple",
+            "http://localhost:8080/wms?SERVICE=WMS",
+            "kentos://ayar:deger@yer",
+        ] {
+            assert!(found(text).is_empty(), "{text}");
+        }
     }
 
     /// Not keys: a placeholder, a short or long run, a word after `sk-`, a prefix inside a longer word, a name.
