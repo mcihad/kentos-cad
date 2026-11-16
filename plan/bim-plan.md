@@ -420,12 +420,15 @@ hiçbiri varsayılanla dolmaz. Dayanak EK-6 6.3, 6.7, 6.16, 6.20, 6.25, 6.52, 6.
 **İlk kabul:** bölüm binasında bütün zorunlu yangın alanları dolunca formun 9. sorusu evet. Bir duvar stilinin sınıfı
 silinince o stilin duvarları bulguda. Girilmemiş değer dosyaya boş metin olarak yazılmaz; eksik sayılır.
 
-#### BIM-08 — Mahal, zon ve emsal modeli [ ]
+#### BIM-08 — Mahal, zon ve emsal modeli [~]
 
-**Sürüyor (16 Kasım 2026, [ADR 8069](../docs/adr/8069-room-zone-far-model.md)):** ilk adım balkonların sınırı: PAİY 22/1-l
-resmî metinden doğrulandı (bağımsız bölüm net alanının %20'si; ADR 8030'un "katlar alanının %20'si" okuması düzeltildi);
-aşan kısım emsale girer, bölümün balkonları arasında alanlarıyla paylaşılır; iki bölümlü elle denetlenen örnekte sınandı.
-Kalan: emsal zonları ve IFC'si, tabloyla kat ve sınıf bazında karşılaştırma, gruplar, mahal hacmi, çizimde denetim.
+**Yapıldı (16 Kasım 2026, [ADR 8069](../docs/adr/8069-room-zone-far-model.md)):** balkonların sınırı (PAİY 22/1-l, resmî
+metinden: bağımsız bölüm net alanının %20'si; ADR 8030'un okuması düzeltildi), aşan kısım emsale ve tabloda kendi satırına;
+her kat ve sayılış biçimi için emsal zonu (`IfcSpatialZone`, `TREpys_EmsalOzellikSeti.EmsalDurumu` DAHIL/HARIC, dayanağı
+Description'da; balkonun dahil kısmı açıklamada, K41); bina programının bölümleri `IfcZone` ile mahallerini gruplar. İki
+bölümlü örnekte zonların emsale dahil alanı tablonun emsale esas alanına eşit (bağımsız başvuru). **Kalan:** katlar arasında
+yer değiştiren alanın denetimi (teslim edilen dosyada, IFC-08), eğik çatı altında kesilmiş mahal hacmi, mahalin türü,
+elle düzeltilen emsal durumu, kot aralığı denetimi.
 
 **Kullanıcı sonucu:** Emsal ve TAKS tablosu ile modeldeki alanlar aynı çokgenlerden gelir. Her emsal alanı dahil, hariç ya
 da öbürü diye maddesiyle işaretlidir. Bağımsız bölüm ve ortak alan modelde gruptur. Mahalin hacmi kapalıdır ve üstü doğru

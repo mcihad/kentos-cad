@@ -5,8 +5,8 @@
 //! gap is a finding, and how it is said, is the standards package's rule (bim-plan K10); EK-9's 9th question reads
 //! them too ([`crate::quality`]).
 //!
-//! - **Objects:** the elements by their class's entity, the spaces (`IfcSpace`), the storeys, the building, the site
-//!   and the project; a class the model does not write is asked nothing (EK-6 Tablo 6.1's note: a class's fields are
+//! - **Objects:** the elements by their class's entity, the spaces (`IfcSpace`), the emsal zones (`IfcSpatialZone`), the
+//!   units' groups (`IfcZone`), the storeys, the building, the site and the project; a class the model does not write is asked nothing (EK-6 Tablo 6.1's note: a class's fields are
 //!   asked when it is in the building).
 //! - **What counts:** a predefined type `NOTDEFINED` is no type (IFC-02: a roof's and a stair's type given); an empty
 //!   word is no value. A relation row (`IfcRelAssignsToGroup>IfcSystem`) is not read here: it is not a field.
@@ -143,6 +143,42 @@ fn objects(b: &Building) -> Vec<(String, Object<'_>)> {
                 psets: &s.psets,
                 qtos: &s.qtos,
                 elevation: true,
+            },
+        ));
+    }
+    for z in &b.zones {
+        out.push((
+            "IfcSpatialZone".to_owned(),
+            Object {
+                id: z.id,
+                name: &z.name,
+                long_name: z.long_name.as_deref(),
+                description: z.description.as_deref(),
+                object_type: z.object_type.as_deref(),
+                predefined: Some(z.predefined),
+                tag: None,
+                material: None,
+                psets: &z.psets,
+                qtos: &[],
+                elevation: false,
+            },
+        ));
+    }
+    for g in &b.groups {
+        out.push((
+            "IfcZone".to_owned(),
+            Object {
+                id: g.id,
+                name: &g.name,
+                long_name: g.long_name.as_deref(),
+                description: None,
+                object_type: g.object_type.as_deref(),
+                predefined: None,
+                tag: None,
+                material: None,
+                psets: &g.psets,
+                qtos: &[],
+                elevation: false,
             },
         ));
     }

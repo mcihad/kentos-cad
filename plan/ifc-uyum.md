@@ -312,7 +312,12 @@ söyler. Verisi BIM-07 ve BIM-08'den gelir.
 **İlk kabul:** künyeli bölüm binasında katalogdaki zorunlu satırların hepsi dolu; bilerek boş bırakılan her alan bulguda
 nesnesiyle; bağımsız okuyucu şema kurallarında 0 bulgu; çatının ve merdivenin tipi dolu.
 
-#### IFC-03 — Eksik sınıflar ve zonlar [ ]
+#### IFC-03 — Eksik sınıflar ve zonlar [~]
+
+**Yapıldı (16 Kasım 2026, [ADR 8069](../docs/adr/8069-room-zone-far-model.md)):** emsal zonları (`IfcSpatialZone`,
+`TREpys_EmsalOzellikSeti.EmsalDurumu`, katına `IfcRelReferencedInSpatialStructure` ile) ve bina programının bölümleri
+(`IfcZone`, mahalleri `IfcRelAssignsToGroup` ile). **Kalan:** rampa, giydirme cephe, kaplama, baca, aks ızgarası, asansör,
+vitrifiye ve mobilya sınıfları; DIGER durumu; kayıp listesinin boşalması.
 
 **Kullanıcı sonucu:** Modeldeki her yapı nesnesi kendi sınıfıyla dışa gider; emsal alanları ve bağımsız bölümler dosyadadır.
 Nesneleri BIM-08 ve BIM-09'dan gelir.

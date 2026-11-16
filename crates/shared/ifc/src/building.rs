@@ -288,7 +288,39 @@ pub struct Building {
     pub elements: Vec<Element>,
     pub openings: Vec<Opening>,
     pub spaces: Vec<Space>,
+    /// The spatial zones (EK-6 Tablo 6.60): each storey's emsal areas (docs/adr/8069).
+    pub zones: Vec<Zone>,
+    /// The groups of spaces (EK-6 Tablo 6.68): an independent unit, an annex, a common area (docs/adr/8069).
+    pub groups: Vec<Group>,
     pub crs: Option<Crs>,
+}
+
+/// A spatial zone (`IfcSpatialZone`): its footprint's rings between two heights over its storey's floor, its words, its
+/// predefined type (`USERDEFINED` with its object type for an emsal zone) and its property sets.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Zone {
+    pub id: Option<u128>,
+    pub name: String,
+    pub long_name: Option<String>,
+    pub description: Option<String>,
+    pub object_type: Option<String>,
+    pub predefined: &'static str,
+    pub storey: usize,
+    pub rings: Vec<Vec<[f64; 2]>>,
+    pub bottom: f64,
+    pub top: f64,
+    pub psets: Vec<Pset>,
+}
+
+/// A group of spaces (`IfcZone`): its words and its spaces, by index into [`Building::spaces`].
+#[derive(Clone, Debug, PartialEq)]
+pub struct Group {
+    pub id: Option<u128>,
+    pub name: String,
+    pub long_name: Option<String>,
+    pub object_type: Option<String>,
+    pub spaces: Vec<usize>,
+    pub psets: Vec<Pset>,
 }
 
 /// Which of `rings` are outer rings and which holes (even-odd: a ring inside an odd number of others is a hole), each
@@ -778,8 +810,10 @@ pub fn write(b: &Building) -> String {
         }
     }
     // The spaces on their storeys.
+    let mut space_ids: Vec<Option<usize>> = Vec::with_capacity(b.spaces.len());
     for s in &b.spaces {
         let Some(&parent) = storey_places.get(s.storey) else {
+            space_ids.push(None);
             continue;
         };
         let place = w.placement(Some(parent), 0.0);
@@ -798,11 +832,62 @@ pub fn write(b: &Building) -> String {
             s.predefined
         ));
         w.psets(n, &s.psets, &s.qtos);
+        space_ids.push(Some(n));
         // A space is part of its storey (IfcRelAggregates), not contained in it.
         let g = w.st.gid();
         w.st.add(format!(
             "IFCRELAGGREGATES({g},$,$,$,#{},(#{n}))",
             storeys[s.storey]
+        ));
+    }
+    // The spatial zones, each referenced in its storey (IfcRelReferencedInSpatialStructure: a zone is no part of the
+    // spatial decomposition; IFC 4.3).
+    for z in &b.zones {
+        let Some(&parent) = storey_places.get(z.storey) else {
+            continue;
+        };
+        let place = w.placement(Some(parent), 0.0);
+        let shape = w
+            .body(&[Shape::Prism {
+                rings: z.rings.clone(),
+                bottom: z.bottom,
+                top: z.top,
+            }])
+            .map_or("$".into(), |x| format!("#{x}"));
+        let g = w.id(z.id);
+        let n = w.st.add(format!(
+            "IFCSPATIALZONE({g},$,{},{},{},#{place},{shape},{},.{}.)",
+            text(&z.name),
+            Writer::opt(&z.description),
+            Writer::opt(&z.object_type),
+            Writer::opt(&z.long_name),
+            z.predefined
+        ));
+        w.psets(n, &z.psets, &[]);
+        let g = w.st.gid();
+        w.st.add(format!(
+            "IFCRELREFERENCEDINSPATIALSTRUCTURE({g},$,$,$,(#{n}),#{})",
+            storeys[z.storey]
+        ));
+    }
+    // The groups: each its spaces (IfcRelAssignsToGroup); a group with none of its spaces written is left out.
+    for gr in &b.groups {
+        let members: Vec<usize> = gr.spaces.iter().filter_map(|i| space_ids.get(*i).copied().flatten()).collect();
+        if members.is_empty() {
+            continue;
+        }
+        let g = w.id(gr.id);
+        let z = w.st.add(format!(
+            "IFCZONE({g},$,{},$,{},{})",
+            text(&gr.name),
+            Writer::opt(&gr.object_type),
+            Writer::opt(&gr.long_name)
+        ));
+        w.psets(z, &gr.psets, &[]);
+        let g = w.st.gid();
+        w.st.add(format!(
+            "IFCRELASSIGNSTOGROUP({g},$,$,$,({}),$,#{z})",
+            Step::refs(&members)
         ));
     }
     for (i, list) in contained.iter().enumerate().filter(|(_, l)| !l.is_empty()) {
@@ -850,6 +935,79 @@ mod tests {
         let mut n = nest(&rings);
         n.sort();
         assert_eq!(n, vec![(0, vec![1]), (2, vec![])]);
+    }
+
+    /// An emsal zone is a spatial zone referenced in its storey with its state; a unit groups its spaces (docs/adr/8069).
+    #[test]
+    fn an_emsal_zone_and_a_unit_s_group_are_written_with_their_relations() {
+        let room = Space {
+            id: Some(21),
+            name: "MM-MHL-001_Salon".into(),
+            long_name: Some("Salon".into()),
+            storey: 0,
+            rings: vec![square(0.0, 0.0, 4.0)],
+            bottom: 0.0,
+            top: 2.8,
+            predefined: "INTERNAL",
+            psets: vec![],
+            qtos: vec![],
+        };
+        let b = Building {
+            file: "Ev".into(),
+            stamp: "2026-11-16T12:00:00".into(),
+            application: "KentOS".into(),
+            project: Place { name: "Ev".into(), ..Place::default() },
+            site: Place { name: "MM-SAH-Parsel".into(), ..Place::default() },
+            building: Place { name: "MM-BNA-Ev".into(), ..Place::default() },
+            storeys: vec![Storey {
+                id: None,
+                name: "MM-BNK-Zemin_kat".into(),
+                long_name: Some("Zemin kat".into()),
+                elevation: 0.0,
+                psets: vec![],
+                qtos: vec![],
+            }],
+            spaces: vec![room],
+            zones: vec![Zone {
+                id: None,
+                name: "MM-MZN-Emsal_DAHIL_Zemin_kat".into(),
+                long_name: Some("Zemin kat emsale dahil alan".into()),
+                description: Some("Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21".into()),
+                object_type: Some("EMSAL".into()),
+                predefined: "USERDEFINED",
+                storey: 0,
+                rings: vec![square(0.0, 0.0, 4.0)],
+                bottom: 0.0,
+                top: 2.8,
+                psets: vec![Pset {
+                    name: "TREpys_EmsalOzellikSeti".into(),
+                    props: vec![("EmsalDurumu".into(), Value::Label("DAHIL".into()))],
+                }],
+            }],
+            groups: vec![Group {
+                id: None,
+                name: "MM-ZON-1".into(),
+                long_name: Some("Daire 1".into()),
+                object_type: Some("Bağımsız bölüm".into()),
+                spaces: vec![0],
+                psets: vec![],
+            }],
+            ..Building::default()
+        };
+        let f = write(&b);
+        let line = |prefix: &str| {
+            f.lines().find(|l| l.split_once('=').is_some_and(|(_, r)| r.starts_with(prefix))).unwrap_or_else(|| panic!("{prefix}"))
+        };
+        let zone = line("IFCSPATIALZONE(");
+        assert!(zone.contains("'EMSAL'") && zone.contains(".USERDEFINED.") && zone.contains("'Zemin kat emsale dahil alan'"), "{zone}");
+        let zone_id = zone.split_once('=').map(|(i, _)| i.trim().to_owned()).expect("an id");
+        assert!(line("IFCRELREFERENCEDINSPATIALSTRUCTURE(").contains(&format!("({zone_id})")));
+        assert!(f.contains("'TREpys_EmsalOzellikSeti'") && f.contains("IFCLABEL('DAHIL')"));
+        let space_id = line("IFCSPACE(").split_once('=').map(|(i, _)| i.trim().to_owned()).expect("an id");
+        let group = line("IFCZONE(");
+        // Its object type “Bağımsız bölüm”, its Turkish letters in STEP's \\X2\\ escape.
+        assert!(group.contains("'MM-ZON-1'") && group.contains("'Daire 1'") && group.contains("\\X2\\011F0131\\X0\\"), "{group}");
+        assert!(line("IFCRELASSIGNSTOGROUP(").contains(&format!("({space_id})")));
     }
 
     #[test]

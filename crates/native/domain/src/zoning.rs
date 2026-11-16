@@ -59,6 +59,21 @@ pub struct ZoningReport {
     pub footprint_shape: Vec<Area>,
     /// The independent units' balconies past 20 % of their net areas (22/1-l, docs/adr/8069), counted in `included`.
     pub balcony_over: f64,
+    /// Each room as the ratios count it (docs/adr/8069: the model's emsal zones are made of them), in the drawing's
+    /// order; voids left out.
+    pub rooms: Vec<ZoningRoom>,
+}
+
+/// A room as the ratios count it: its persistent id, its storey, how it counts, its contour's area and shape, and the
+/// part of it a balcony's 20 % moved into katlar alanı.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ZoningRoom {
+    pub uid: String,
+    pub level: Option<String>,
+    pub count: EmsalCount,
+    pub gross: f64,
+    pub moved: f64,
+    pub shape: Vec<Area>,
 }
 
 /// The share of an independent unit's net area its open balconies may take out of katlar alanı (PAİY 22/1-l, as amended
@@ -206,8 +221,10 @@ impl Document {
         let program = &arch.program;
         let mut search = SpaceSearch::new(self);
         let mut rooms = Vec::new();
-        for e in self.entities() {
+        let mut uids = Vec::new();
+        for (uid, e) in self.entities_with_uids() {
             let Entity::Space(s) = e else { continue };
+            uids.push(uid.to_string());
             let x = &s.space;
             let brief = x.usage.as_deref().and_then(|u| program.brief(u));
             let outdoor = brief.is_some_and(|b| b.outdoor);
@@ -363,6 +380,19 @@ impl Document {
                 }
             }
         }
+        out.rooms = rooms
+            .iter()
+            .enumerate()
+            .filter(|(_, r)| !r.void)
+            .map(|(i, r)| ZoningRoom {
+                uid: uids[i].clone(),
+                level: r.level.clone(),
+                count: r.count,
+                gross: gross[i],
+                moved: moved[i],
+                shape: shapes[i].clone(),
+            })
+            .collect();
         out.levels.sort_by_key(|l| order(&l.level));
         out.cap = out.far_limit.map(|f| 0.30 * f * parcel);
         out.over = out.cap.map_or(0.0, |c| (out.exempt - c).max(0.0));
@@ -405,6 +435,13 @@ impl Document {
             region::union_areas(&outline)
         };
         out
+    }
+
+    /// Each room as the ratios count it, with or without the parcel's zoning (docs/adr/8069): what the model's emsal zones
+    /// are made of.
+    pub fn zoning_rooms(&self) -> Vec<ZoningRoom> {
+        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning);
+        self.zoning_measured(zoning).rooms
     }
 
     /// The building's footprint as the ratios count it (docs/adr/8032): its area and outline, with or without a zoning.

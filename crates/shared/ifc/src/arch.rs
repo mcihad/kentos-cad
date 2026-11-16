@@ -16,8 +16,8 @@ use kentos_geometry_core::geom::opening::HoleFrame;
 use kentos_geometry_core::geom::section::{Flight, Height, Sloped, Solid};
 
 use crate::building::{
-    Actor, Address, Building, Class, Element, Opening, Organization, Place, Pset, Qto, Shape,
-    Space, Storey, Value,
+    Actor, Address, Building, Class, Element, Group, Opening, Organization, Place, Pset, Qto, Shape,
+    Space, Storey, Value, Zone,
 };
 use crate::naming::name;
 
@@ -53,6 +53,60 @@ pub struct Input<'a> {
     pub particulars: Particulars,
     /// The project's system (EK-7 Tablo 7.6–7.7; `crate::crs::projected`), none for a drawing in local coordinates.
     pub crs: Option<crate::crs::Crs>,
+    /// Each storey's emsal areas as the ratios count the rooms (docs/adr/8069): the spatial zones' grounds.
+    pub emsal: Vec<EmsalArea>,
+    /// The building program's units with their rooms (docs/adr/8069): the groups of spaces.
+    pub groups: Vec<UnitGroup>,
+}
+
+/// An emsal area of a storey (docs/adr/8069; EK-6 Tablo 6.60): its storey's level id, how its rooms count, its rings
+/// (even-odd, the rooms' contours together) and, counted in, the part of its storey's balconies past their units' 20 %
+/// (m²; PAİY 22/1-l).
+#[derive(Clone, Debug, PartialEq)]
+pub struct EmsalArea {
+    pub level: Option<String>,
+    pub count: kentos_contracts::EmsalCount,
+    pub rings: Vec<Vec<[f64; 2]>>,
+    pub moved: f64,
+}
+
+/// A unit of the building program (docs/adr/8069; EK-6 Tablo 6.68): its id's bits, its number and name, its kind and its
+/// rooms (their ids' bits).
+#[derive(Clone, Debug, PartialEq)]
+pub struct UnitGroup {
+    pub id: Option<u128>,
+    pub number: String,
+    pub name: Option<String>,
+    pub kind: kentos_contracts::UnitKind,
+    pub rooms: Vec<u128>,
+}
+
+/// An emsal zone's state as EK-6 Tablo 6.60 writes it and the clauses it rests on.
+fn emsal_state(count: kentos_contracts::EmsalCount, moved: f64) -> (&'static str, &'static str, String) {
+    use kentos_contracts::EmsalCount as C;
+    match count {
+        C::Included => (
+            "DAHIL",
+            "emsale dahil alan",
+            if moved > 0.0 {
+                format!(
+                    "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil; 22/1-l: bağımsız bölüm net alanının %20'sini aşan {moved:.2} m² balkon da dahil"
+                )
+            } else {
+                "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil".to_owned()
+            },
+        ),
+        C::Exempt => (
+            "HARIC",
+            "emsal harici alan",
+            "Planlı Alanlar İmar Yönetmeliği 22/1: katlar alanına dahil edilmeyen; 5/8: emsale esas alanın %30'u içinde".to_owned(),
+        ),
+        C::Outside => (
+            "HARIC",
+            "emsal harici alan (%30 dışında)",
+            "Planlı Alanlar İmar Yönetmeliği 5/8: yangın merdiveni, korunumlu koridor, yangın güvenlik holü; %30 sınırının dışında".to_owned(),
+        ),
+    }
 }
 
 /// Why an object of the drawing's building is not in the file.
@@ -471,6 +525,8 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         arch,
         particulars,
         crs,
+        emsal,
+        groups,
     } = input;
     let mut written = Written::default();
     // The storeys, by their level id; a drawing without levels has one, Zemin kat at ±0.00.
@@ -1032,6 +1088,65 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             }
         }
     }
+    // The emsal zones (docs/adr/8069): each storey's rooms by how they count, between its floor and its rooms' tops.
+    let zones: Vec<Zone> = emsal
+        .iter()
+        .filter(|a| a.rings.iter().any(|r| r.len() >= 3))
+        .map(|a| {
+            let storey = storey_of(a.level.as_deref());
+            let (state, words, description) = emsal_state(a.count, a.moved);
+            let storey_name = storeys.get(storey).map_or_else(String::new, |s| s.long_name.clone().unwrap_or_else(|| s.name.clone()));
+            let top = spaces
+                .iter()
+                .filter(|s| s.storey == storey)
+                .map(|s| s.top)
+                .fold(levels.get(storey).and_then(|l| l.3).unwrap_or(0.0), f64::max);
+            Zone {
+                id: None,
+                name: name("MZN", &format!("Emsal {state} {storey_name}")),
+                long_name: Some(format!("{storey_name} {words}")),
+                description: Some(description),
+                object_type: Some("EMSAL".into()),
+                predefined: "USERDEFINED",
+                storey,
+                rings: a.rings.clone(),
+                bottom: 0.0,
+                top: if top > 0.0 { top } else { 3.0 },
+                psets: vec![Pset {
+                    name: "TREpys_EmsalOzellikSeti".into(),
+                    props: vec![("EmsalDurumu".into(), Value::Label(state.into()))],
+                }],
+            }
+        })
+        .collect();
+    // The units as groups of their rooms (EK-6 Tablo 6.68): an independent unit, an annex, a common area.
+    let group_list: Vec<Group> = groups
+        .iter()
+        .map(|g| {
+            use kentos_contracts::UnitKind as K;
+            let kind = match g.kind {
+                K::Unit => "Bağımsız bölüm",
+                K::Annex => "Eklenti",
+                K::Common => "Ortak alan",
+                K::Outdoor => "Dış alan",
+            };
+            let spaces_of: Vec<usize> = spaces
+                .iter()
+                .enumerate()
+                .filter(|(_, s)| s.id.is_some_and(|id| g.rooms.contains(&id)))
+                .map(|(i, _)| i)
+                .collect();
+            Group {
+                id: g.id,
+                name: name("ZON", &g.number),
+                long_name: Some(g.name.clone().unwrap_or_else(|| format!("{kind} {}", g.number))),
+                object_type: Some(kind.into()),
+                spaces: spaces_of,
+                psets: Vec::new(),
+            }
+        })
+        .filter(|g| !g.spaces.is_empty())
+        .collect();
     let building = Building {
         file: k.file_stem(&title),
         stamp: stamp.to_owned(),
@@ -1071,6 +1186,8 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         elements,
         openings,
         spaces,
+        zones,
+        groups: group_list,
         crs,
     };
     (building, written)

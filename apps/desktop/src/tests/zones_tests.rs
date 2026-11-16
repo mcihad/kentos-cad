@@ -96,3 +96,81 @@ fn a_unit_s_balconies_past_20_percent_of_its_net_area_count_in() {
     assert!(r.balcony_over.abs() < 1e-9, "5 m² is within 5.1425: {r:?}");
     assert!((r.included - 90.0).abs() < 1e-6, "{r:?}");
 }
+
+/// A polygon's area by the shoelace formula, its rings even-odd (a hole's area taken away by its turn).
+fn area(rings: &[Vec<[f64; 2]>]) -> f64 {
+    let signed = |r: &[[f64; 2]]| {
+        let n = r.len();
+        (0..n).map(|i| r[i][0] * r[(i + 1) % n][1] - r[(i + 1) % n][0] * r[i][1]).sum::<f64>() / 2.0
+    };
+    // The outer rings and the holes as the union writes them: the outer counterclockwise, the holes clockwise.
+    rings.iter().map(|r| signed(r)).sum::<f64>().abs()
+}
+
+/// The model's emsal zones and groups (EK-6 Tablo 6.60, 6.68): the ground storey's counted-in rooms one zone, its
+/// balconies another; the counted-in zone's ground and the balcony part it names make the table's Emsale konu alan
+/// (independently: 15 × 6 + 7.5 − 0.20 × 4.675 × 5.5 = 92.3575 m²); each unit groups its rooms and balcony.
+#[test]
+fn the_model_s_emsal_zones_make_the_table_s_floor_area_and_the_units_group_their_rooms() {
+    let app = building(1.5);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let (b, _, _) = kentos_native_application::arch_ifc::model(doc);
+    let state = |z: &kentos_ifc::building::Zone| {
+        z.psets.iter().flat_map(|p| p.props.iter()).find_map(|(k, v)| match (k.as_str(), v) {
+            ("EmsalDurumu", kentos_ifc::building::Value::Label(s)) => Some(s.clone()),
+            _ => None,
+        })
+    };
+    let dahil: Vec<_> = b.zones.iter().filter(|z| state(z).as_deref() == Some("DAHIL")).collect();
+    let haric: Vec<_> = b.zones.iter().filter(|z| state(z).as_deref() == Some("HARIC")).collect();
+    assert_eq!((dahil.len(), haric.len()), (1, 1), "{:?}", b.zones);
+    assert!((area(&dahil[0].rings) - 90.0).abs() < 1e-6, "the three rooms' contours: 15 × 6");
+    assert!((area(&haric[0].rings) - 11.5).abs() < 1e-6, "the two balconies: 7.5 + 4");
+    let words = dahil[0].description.as_deref().unwrap_or_default();
+    assert!(words.contains("22/1-l") && words.contains("2.36 m² balkon"), "{words}");
+    let r = report(&app);
+    assert!((area(&dahil[0].rings) + r.balcony_over - r.floors).abs() < 1e-6, "zones + named balcony part = Emsale konu alan");
+    assert!((r.floors - 92.3575).abs() < 1e-6, "{r:?}");
+    // The units: unit 1 its room and balcony, the hall alone, unit 2 its room and balcony.
+    let sizes: Vec<(String, usize)> = b.groups.iter().map(|g| (g.name.clone(), g.spaces.len())).collect();
+    assert_eq!(sizes, [("MM-ZON-1".to_owned(), 2), ("MM-ZON-O".to_owned(), 1), ("MM-ZON-2".to_owned(), 2)], "{sizes:?}");
+    // EK-6's mandatory rows of the zones and groups are carried.
+    let gaps = kentos_ifc::required::gaps(&b);
+    assert!(!gaps.iter().any(|g| g.class == "IfcSpatialZone" || g.class == "IfcZone"), "{gaps:?}");
+}
+
+/// The two-unit plan with its balconies and Emsal ve TAKS tablosu beside it, the balconies' part past 20 % on its own
+/// row, light and dark; `.run/gui-evidence/emsal-zon-8069/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib zones_tests::screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/emsal-zon-8069");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")] {
+        let mut app = building(1.5);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("arch.zoningTable"));
+        let _ = app.submit_line("17,6");
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        // Fitted once the canvas has its size.
+        app.selection.set(Vec::new());
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-plan-ve-emsal-tablosu-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

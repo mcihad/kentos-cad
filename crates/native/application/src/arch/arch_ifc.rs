@@ -19,6 +19,65 @@ use crate::codes;
 use crate::exchange_files::{fail, now, stamp_of, write_file};
 use crate::sections::{self, Left};
 
+/// Each storey's emsal areas (docs/adr/8069): the rooms as the ratios count them (`zoning_rooms`), by storey and by how
+/// they count, their contours together; an arc of a contour as its chord. The part of a storey's balconies past their
+/// units' 20 % goes with its counted-in area.
+fn emsal_areas(doc: &Document) -> Vec<kentos_ifc::arch::EmsalArea> {
+    use kentos_commands::EmsalCount;
+    let rooms = doc.zoning_rooms();
+    let mut keys: Vec<(Option<String>, u8)> = Vec::new();
+    let rank = |c: EmsalCount| match c {
+        EmsalCount::Included => 0u8,
+        EmsalCount::Exempt => 1,
+        EmsalCount::Outside => 2,
+    };
+    for r in &rooms {
+        let k = (r.level.clone(), rank(r.count));
+        if !keys.contains(&k) {
+            keys.push(k);
+        }
+    }
+    keys.into_iter()
+        .map(|(level, rank_of)| {
+            let count = rooms.iter().find(|r| r.level == level && rank(r.count) == rank_of).map_or(EmsalCount::Included, |r| r.count);
+            let shapes: Vec<kentos_geometry_core::geom::arrangement::Area> = rooms
+                .iter()
+                .filter(|r| r.level == level && r.count == count)
+                .flat_map(|r| r.shape.iter().cloned())
+                .collect();
+            let union = kentos_geometry_core::geom::region::union_areas(&shapes);
+            let ring = |r: &kentos_geometry_core::geom::arrangement::Ring| r.pts.iter().map(|p| [p.x, p.y]).collect::<Vec<[f64; 2]>>();
+            let rings = union.iter().flat_map(|a| std::iter::once(ring(&a.outer)).chain(a.holes.iter().map(ring))).collect();
+            let moved = if count == EmsalCount::Included {
+                rooms.iter().filter(|r| r.level == level).map(|r| r.moved).sum()
+            } else {
+                0.0
+            };
+            kentos_ifc::arch::EmsalArea { level, count, rings, moved }
+        })
+        .collect()
+}
+
+/// The building program's units with their rooms (docs/adr/8069), in the program's order.
+fn unit_groups(doc: &Document) -> Vec<kentos_ifc::arch::UnitGroup> {
+    let Some(arch) = doc.settings().arch.as_ref() else { return Vec::new() };
+    arch.program
+        .units
+        .iter()
+        .map(|u| kentos_ifc::arch::UnitGroup {
+            id: None,
+            number: u.number.clone(),
+            name: u.name.clone(),
+            kind: u.kind,
+            rooms: doc
+                .entities_with_uids()
+                .filter(|(_, e)| matches!(e, kentos_commands::Entity::Space(s) if s.space.unit.as_deref() == Some(u.id.as_str())))
+                .map(|(id, _)| id.as_u128())
+                .collect(),
+        })
+        .collect()
+}
+
 /// The building and what was written, with the walls and stairs the section model drew as chords.
 fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, usize) {
     let model = sections::model(doc);
@@ -60,6 +119,8 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
         arch: doc.settings().arch.as_ref(),
         particulars: particulars(doc),
         crs: crs(doc),
+        emsal: emsal_areas(doc),
+        groups: unit_groups(doc),
     });
     (b, written, curved)
 }
