@@ -1,11 +1,12 @@
 # ADR 8071: Geometri doğruluğu — gerçek yay, kaynaktan miktar, kapalı gövde
 
-- **Durum:** kısmen uygulandı (16 Kasım 2026). Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-10,
+- **Durum:** uygulandı (16 Kasım 2026): BIM-10'un bütün maddeleri ve ilk kabulü; IFC-06'nın kalanı ve ayrıntılar "Sıradaki
+  adımlar"da. Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-10,
   [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-06'nın gövde kısmı (§8 "Gövdeler"); uygulama sırasında B10. Bu ADR maddenin
   bütün adımlarını tutar; koddaki "docs/adr/8071 §N" atıfları bölümleri gösterir: §1 gerçek yay, §2 kaynaktan miktar,
   §3 kapalı gövde ve ilk kabul, §4 açıklığı kesilmiş gövde ve iki çıktı (IFC-06), §5 döşemede boşluk ve şaft, §6 eğimli
-  döşeme, §7 kapalı mahal hacmi, §8 çatının katmanları, §9 döner merdiven gerçek yayla, §10 içe dönen saçak. Kararların
-  numarası bölümler boyunca sürer. Ortak sınamalar ve sıradaki adımlar
+  döşeme, §7 kapalı mahal hacmi, §8 çatının katmanları, §9 döner merdiven gerçek yayla, §10 içe dönen saçak, §11 çatı
+  altındaki mahal. Kararların numarası bölümler boyunca sürer. Ortak sınamalar ve sıradaki adımlar
   numarasız son bölümlerdedir (yeni adım numaralı bölüm olarak araya girer).
 - **Bağlam:** ADR [8047](8047-ifc-building-export.md) (binanın IFC'si, kayıp listesi), [8042](8042-section-derived-from-a-section-mark.md)
   (kesit modeli), [0340](0340-wall-joins-and-edits.md) (duvar birleşimleri), [8040](8040-vertical-model.md) (duvarın
@@ -417,6 +418,43 @@ plak, dere iç köşeye, B-B çatıyı çizer, IFC gövdesi kapalı ve hacmi L'n
 (`cad.roofs.create`: L, kanatları kalkanlı T, L'de baca kabul; kendini kesen ve aynı doğruda farklı eğimli saçak
 reddi). Resimler: `l_roof_screens` (`.run/gui-evidence/ic-donen-sacak-8071/`: plan, güneybatı, kuzeydoğu).
 
+## §11. Çatı altındaki mahal
+
+**Araştırma.**
+
+- **EK-9 satır 14:** "Mahaller kapalı olarak ve üst sınırları doğru tanımlandı mı?" Üstünde döşeme olmayan, çatının
+  altındaki mahalin üst sınırı çatının alt yüzüdür; §7'de bu mahal kattan kata bir prizmaydı, hacmi yazılmıyordu.
+- **IFC 4.3 `Qto_SpaceBaseQuantities`** (buildingSMART IFC4.3.x-development, `reference_schemas/psd`): Height "To be
+  provided only if the space has a constant height"; FinishCeilingHeight yalnız sabit yükseklikte asma tavanda;
+  GrossCeilingArea ve NetCeilingArea eğik tavanda gerçek alan; GrossVolume ve NetVolume mahalin çevrelediği hacim.
+- **EK-6 Tablo 6.125:** Yükseklik "Karakteristik yükseklik"; tavan alanları "gerçek alandır (izdüşüm alanı değil; örneğin
+  eğimli tavanlarda)".
+- **ADR 8040 §3:** mahalin tavanı asma tavan, yazılı iç yükseklik, üstündeki döşemenin sıvalı altı, yoksa katın üstü
+  ("tavan bilinmiyor"); **ADR 8044 §1:** çatı katının üstünde (ve kot farkında) durur.
+
+**Karar.**
+
+34. **Tavanı başka yoldan bilinmeyen mahal** (asma tavanı, yazılı yüksekliği, üstünde döşemesi yok) kendi katında duran
+    bir çatının altındaysa çatının alt yüzüne kadar yükselir (`kentos_ifc::under_roof`): planı çatının yüzleriyle
+    parçalanır (yaylar korunur), her parça tabanından o yüzün alt düzlemine kadar kapalı bir yüz kümesidir. Alt düzlem
+    üst düzlemden yapısı kadar aşağıdadır: tek kalınlık düşey ölçülür, katmanlar yüze dik (× √(1 + eğim²)), kesit
+    modelinin plakları gibi; düz çatı tek düzlemdir. Mahalin bir kısmı hiçbir yüzün altında değilse ya da bir parçasında
+    delik varsa mahal eskisi gibi prizma kalır.
+35. **Miktarlar:** Height yazılmaz (sabit değil); GrossVolume her parçanın alanı çarpı alt düzlemin parçanın ağırlık
+    merkezindeki tabana yüksekliği (bir düzlemin bir alan üstündeki ortalaması ağırlık merkezindeki değeridir: yaylarla
+    birlikte tam); NetVolume net alan brüte eşitse aynı, değilse yazılmaz (düşülen elemanların hangi yükseklikte durduğu
+    bilinmiyor; değer uydurulmaz). Tavan alanları henüz yazılmıyor.
+36. **Kapsam:** IFC gövdesi ve miktarları ile 3B ağı. Mahalin iç yüksekliği (PAİY 28 denetimi), metraj ve kesit
+    değişmez: eğik tavanlı mahalin yükseklik kuralı ayrı karardır, kaynağı bekleniyor.
+
+**Sınama.** `under_roof`'un iki sınaması (4 × 3 m mahal tek eğimli çatı altında 39 m³, iki parça, kapalı; yarım daire
+mahal tam yayıyla); `roof_sections::a_room_with_no_slab_over_it_rises_to_the_roof` (kesit binası teras döşemesiz ve
+kırma çatılı: 1. katın beş mahalinin GrossVolume'u çatının alt zarfının 1 200 × 1 200 ızgarada tümlenmesiyle 10⁻⁵
+içinde, NetVolume aynı, Height yok, gövde parçaları kapalı ve hacmi aynı; zemin kat prizma); `curved_ifc_check.py`'nin
+çatı altı bölümü `cati-alti-mahal.ifc`'yi IfcOpenShell'le okur: 0 bulgu, yüzeyler kapalı, GrossVolume Python'un kendi
+ızgarasıyla 10⁻⁵ ve IfcOpenShell'in hacmiyle 10⁻⁹ içinde, Height yok. Resim yok: 3B'de mahaller çatının ve duvarların
+içinde kalıyor, görünümün kesit kutusu henüz yok (B6'nın kalanı).
+
 ## Ortak sınamalar
 
 - `cargo test -p kentos-ifc --lib` (45), `-p kentos-geometry-core` (1 117), `-p kentos-interaction wall` (81),
@@ -440,6 +478,7 @@ reddi). Resimler: `l_roof_screens` (`.run/gui-evidence/ic-donen-sacak-8071/`: pl
   (ADR 8044 düşey ölçüyor; örnek çizimler değişir: sahibin kararı).
 - Eğimli döşemenin planda eğim oku simgesi; delikli eğimli döşeme (kesitin eğik yüz çizimi deliği tutarsa).
 - Döner merdivenin helis alt yüzü (şimdi ADR 8045 §2'nin kademeli alt yüzü) ve kesitte yayının kendi çizimi.
-- Çatıyla kesilmiş mahal hacmi; mahalin Net Çevre'si (kapı ve sanal sınırlar düşülmüş) ve duvar ve tavan alanları.
+- Mahalin Net Çevre'si (kapı ve sanal sınırlar düşülmüş), duvar ve tavan alanları (çatı altında gerçek alan); eğik
+  tavanlı mahalin iç yükseklik kuralı (PAİY 28; kaynak bekleniyor).
 - Kapının açıklığı bitmiş döşemeden (±0,00) başlar, duvar yapısal döşemeden; kapının altında kaplama kalınlığında duvar
   kalır (zemin katta 5 cm). Açıklığın alt kotu duvarın ayağına mı inmeli, ayrı karar.

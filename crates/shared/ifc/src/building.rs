@@ -258,6 +258,20 @@ pub struct Space {
     pub predefined: &'static str,
     pub psets: Vec<Pset>,
     pub qtos: Vec<Qto>,
+    /// Its body under a roof (docs/adr/8071 §11): its pieces up to the roof's underside, each a closed face set; empty:
+    /// its prism from its bottom to its top.
+    pub body: Vec<Shape>,
+}
+
+impl Space {
+    /// Its body as written: its pieces under a roof, else its prism.
+    pub fn shapes(&self) -> Vec<Shape> {
+        if self.body.is_empty() {
+            vec![Shape::Prism { rings: self.rings.clone(), bulges: self.bulges.clone(), bottom: self.bottom, top: self.top }]
+        } else {
+            self.body.clone()
+        }
+    }
 }
 
 /// A storey: its name, its floor's elevation over ±0.00, its own properties and quantities.
@@ -1039,14 +1053,7 @@ pub fn write(b: &Building) -> String {
             continue;
         };
         let place = w.placement(Some(parent), 0.0);
-        let shape = w
-            .body(&[Shape::Prism {
-                rings: s.rings.clone(),
-                bulges: s.bulges.clone(),
-                bottom: s.bottom,
-                top: s.top,
-            }])
-            .map_or("$".into(), |x| format!("#{x}"));
+        let shape = w.body(&s.shapes()).map_or("$".into(), |x| format!("#{x}"));
         let g = w.id(s.id);
         let n = w.st.add(format!(
             "IFCSPACE({g},$,{},$,$,#{place},{shape},{},.ELEMENT.,.{}.,$)",
@@ -1285,6 +1292,7 @@ mod tests {
             predefined: "INTERNAL",
             psets: vec![],
             qtos: vec![],
+            body: Vec::new(),
         };
         let b = Building {
             file: "Ev".into(),

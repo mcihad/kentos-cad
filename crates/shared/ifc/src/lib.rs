@@ -31,3 +31,4 @@ pub mod required;
 pub mod rules;
 pub mod step;
 pub mod turns;
+pub mod under_roof;

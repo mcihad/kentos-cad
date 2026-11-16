@@ -78,13 +78,16 @@ pub struct Input<'a> {
 
 /// A room's floor and ceiling, metres over ±0.00 (docs/adr/8040 §3): its finished floor; its ceiling (its asma tavan,
 /// its height typed, the plastered underside of the slab over it, else its storey's top) and whether it is one (not
-/// its storey's top alone) and an asma tavan.
-#[derive(Clone, Copy, Debug, PartialEq)]
+/// its storey's top alone) and an asma tavan; with none, the roof over it (docs/adr/8071 §11).
+#[derive(Clone, Debug, PartialEq)]
 pub struct RoomLevels {
     pub floor: f64,
     pub ceiling: f64,
     pub known: bool,
     pub suspended: bool,
+    /// The faces of the roof over it when no slab, asma tavan or height of its own bounds it (docs/adr/8071 §11): each
+    /// face's outline in plan and its underside's plane over ±0.00; empty: none.
+    pub roof: Vec<crate::under_roof::UnderFace>,
 }
 
 /// A void's part over a floor slab (docs/adr/8071 §5): the slab's persistent id, the void's (a space, docs/adr/0708),
@@ -1539,6 +1542,13 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 (bottom, bottom + f.height.or(levels[storey].3).unwrap_or(2.8))
             }
         };
+        // Under a roof (docs/adr/8071 §11): its ceiling known no other way, its pieces up to the roof's underside.
+        let elevation = levels[storey].2;
+        let under = found.filter(|r| !r.known && !r.roof.is_empty()).and_then(|r| {
+            let faces: Vec<crate::under_roof::UnderFace> =
+                r.roof.iter().map(|(ring, (c, dx, dy))| (ring.clone(), (c - elevation, *dx, *dy))).collect();
+            crate::under_roof::pieces(&rings, &bulges, &faces)
+        });
         let blank = |v: &Option<String>| v.as_deref().is_none_or(|t| t.trim().is_empty());
         if blank(&f.number) || blank(&f.name) {
             written.unnamed.push(uid.clone());
@@ -1608,8 +1618,20 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             if let Some(a) = net {
                 q.push(("NetVolume".into(), Value::Volume(a * height)));
             }
+        } else if let Some(p) = &under {
+            // Its height not constant: no Height (IFC 4.3: "only if the space has a constant height"); its volume up to
+            // the roof, net the same when nothing is taken out of its area (what is, stands at heights not known).
+            let v = crate::under_roof::volume(p, bottom);
+            q.push(("GrossVolume".into(), Value::Volume(v)));
+            if net.is_some_and(|a| (a - gross).abs() <= 1e-9 * gross.max(1.0)) {
+                q.push(("NetVolume".into(), Value::Volume(v)));
+            }
         }
         let qtos = vec![Qto { name: "Qto_SpaceBaseQuantities".into(), quantities: q }];
+        let (top, body) = match &under {
+            Some(p) => (crate::under_roof::top(p), crate::under_roof::shapes(p, bottom)),
+            None => (top, Vec::new()),
+        };
         spaces.push(Space {
             id: Some(*bits),
             name: name("MHL", if words.is_empty() { "Mahal" } else { &words }),
@@ -1622,6 +1644,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             predefined: "INTERNAL",
             psets,
             qtos,
+            body,
         });
     }
     written.spaces = spaces.len();

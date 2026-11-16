@@ -79,7 +79,16 @@ pub fn meshes(b: &Building) -> Vec<Mesh> {
     for s in &b.spaces {
         let floor = b.storeys.get(s.storey).map_or(0.0, |x| x.elevation);
         let mut m = Mesh::new(s.id, Kind::Space, s.storey, s.long_name.as_deref().unwrap_or(&s.name));
-        prism(&mut m, &flat_rings(&s.rings, &s.bulges), floor + s.bottom, floor + s.top);
+        // Under a roof its pieces (docs/adr/8071 §11), else its prism.
+        if s.body.is_empty() {
+            prism(&mut m, &flat_rings(&s.rings, &s.bulges), floor + s.bottom, floor + s.top);
+        } else {
+            for shape in &s.body {
+                if let Shape::Faces { vertices, faces } = shape {
+                    polyhedron(&mut m, vertices, faces, floor);
+                }
+            }
+        }
         if !m.triangles.is_empty() {
             out.push(m);
         }

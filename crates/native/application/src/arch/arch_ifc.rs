@@ -203,7 +203,8 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
                 _ => None,
             })
             .collect(),
-        // Each room's floor and ceiling (docs/adr/8040 §3, 8071 §7).
+        // Each room's floor and ceiling (docs/adr/8040 §3, 8071 §7); with none known, the roofs on its storey
+        // (docs/adr/8071 §11).
         rooms: doc
             .entities_with_uids()
             .filter_map(|(u, e)| match e {
@@ -215,6 +216,11 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
                             ceiling: h.ceiling,
                             known: h.ceiling_known(),
                             suspended: h.ceiling_from == kentos_domain::CeilingFrom::Suspended,
+                            roof: if h.ceiling_known() {
+                                Vec::new()
+                            } else {
+                                undersides(doc, s.space.arch.level.as_deref())
+                            },
                         },
                     )
                 }),
@@ -223,6 +229,47 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
             .collect(),
     });
     (b, written, curved)
+}
+
+/// The faces of the roofs standing on a storey (docs/adr/8071 §11), each its outline in plan and its underside's plane
+/// over ±0.00: its top's plane less its build-up, upright as the section model stacks it (one build-up its thickness;
+/// layers across the face, each × √(1 + slope²)); a flat roof one face over its eaves.
+fn undersides(doc: &Document, level: Option<&str>) -> Vec<kentos_ifc::under_roof::UnderFace> {
+    use kentos_geometry_core::entity::Shape;
+    use kentos_geometry_core::geom::roof as core;
+    let Some(level) = level else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for (_, e) in doc.entities_with_uids() {
+        let kentos_commands::Entity::Roof(r) = e else {
+            continue;
+        };
+        if r.roof.arch.level.as_deref() != Some(level) {
+            continue;
+        }
+        let Shape::Roof { pts, roof: spec } = crate::geometry::roof_shape(r, doc.settings()) else {
+            continue;
+        };
+        let depth = |dx: f64, dy: f64| {
+            if r.roof.layers.is_empty() {
+                r.roof.thickness_m()
+            } else {
+                r.roof.layers.iter().map(|l| l.thickness).sum::<f64>() * (1.0 + dx * dx + dy * dy).sqrt()
+            }
+        };
+        let ring = |q: &[kentos_geometry_core::Vec2]| q.iter().map(|p| [p.x, p.y]).collect::<Vec<[f64; 2]>>();
+        match core::face_planes(&pts, &spec) {
+            Ok(faces) if !faces.is_empty() => {
+                for (f, (c, dx, dy)) in faces {
+                    out.push((ring(&f.ring), (c - depth(dx, dy), dx, dy)));
+                }
+            }
+            Ok(_) => out.push((ring(&pts), (spec.base - depth(0.0, 0.0), 0.0, 0.0))),
+            Err(_) => {}
+        }
+    }
+    out
 }
 
 /// The drawing's künye (the permit set's particulars, docs/adr/8037) and the measures its title block reads, for the

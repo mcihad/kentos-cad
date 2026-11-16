@@ -87,6 +87,7 @@ fn building() -> Building {
             predefined: "INTERNAL",
             psets: vec![],
             qtos: vec![],
+            body: vec![],
         }],
         ..Default::default()
     }

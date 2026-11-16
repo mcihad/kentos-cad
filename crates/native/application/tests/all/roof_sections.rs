@@ -949,3 +949,80 @@ fn an_l_roof_turns_in_with_a_valley_through_the_section_and_the_ifc() {
     let want = (13.25 * 4.625 + 6.625 * 5.625) * 0.25;
     assert!((v - want).abs() < 1e-9, "{v}, the closed form {want}");
 }
+
+/// Çatı altındaki mahal (docs/adr/8071 §11): the section building without its terrace slab and with its hip roof over
+/// the 1. kat (eaves 50 cm out of the walls at +6.00, 33 %, 25 cm upright). The 1. kat's rooms have no slab over them:
+/// each rises to the roof's underside. Worked out here another way than the IFC's pieces: the roof's lower envelope less
+/// its build-up integrated over each room on a fine grid. Each such room's GrossVolume is that (10⁻⁵), its NetVolume the
+/// same, no Height (it is not constant), its body closed pieces of that volume; the ground floor's rooms stay prisms. `KENTOS_WRITE_IFC_UNDER_ROOF=1` writes fixtures/arch/v1/ifc/cati-alti-mahal.ifc for
+/// scripts/fixtures/curved_ifc_check.py's part.
+#[test]
+fn a_room_with_no_slab_over_it_rises_to_the_roof() {
+    use kentos_commands::SlabRole;
+    use kentos_ifc::building::Value;
+    let mut doc = building();
+    let terrace = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| match e {
+            Entity::Slab(s) if s.slab.role == SlabRole::Terrace => Some(u),
+            _ => None,
+        })
+        .expect("the terrace slab");
+    let slot = doc.slot_of(terrace).expect("its slot");
+    assert_eq!(doc.remove(&[slot]), 1);
+    let doc = roofed(&doc);
+    let (b, written) = kentos_native_application::arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
+    assert_eq!(written.left, Vec::new());
+    let (x0, y0, x1, y1) = (-0.625, -0.625, 12.625, 9.625);
+    let under = |x: f64, y: f64| 6.0 - 0.25 + 0.33 * (x - x0).min(x1 - x).min(y - y0).min(y1 - y);
+    let quantity = |s: &kentos_ifc::building::Space, k: &str| {
+        s.qtos.iter().flat_map(|q| &q.quantities).find(|(n, _)| n == k).map(|(_, v)| match v {
+            Value::Length(x) | Value::Area(x) | Value::Volume(x) => *x,
+            other => panic!("{other:?}"),
+        })
+    };
+    let mut roofed_rooms = 0;
+    for s in &b.spaces {
+        let elevation = b.storeys[s.storey].elevation;
+        if elevation < 1.0 {
+            // No roof on the ground floor's storey: its rooms are prisms (the hall, under the stair's hole, without
+            // a height as before).
+            assert!(s.body.is_empty(), "{}: a prism", s.name);
+            continue;
+        }
+        roofed_rooms += 1;
+        let floor = elevation + s.bottom;
+        let (mut lo, mut hi) = ([f64::MAX; 2], [f64::MIN; 2]);
+        for p in &s.rings[0] {
+            for k in 0..2 {
+                lo[k] = lo[k].min(p[k]);
+                hi[k] = hi[k].max(p[k]);
+            }
+        }
+        let n = 1200;
+        let (dx, dy) = ((hi[0] - lo[0]) / n as f64, (hi[1] - lo[1]) / n as f64);
+        let mut want = 0.0;
+        for i in 0..n {
+            for j in 0..n {
+                let (x, y) = (lo[0] + (i as f64 + 0.5) * dx, lo[1] + (j as f64 + 0.5) * dy);
+                want += (under(x, y) - floor) * dx * dy;
+            }
+        }
+        let gross = quantity(s, "GrossVolume").unwrap_or_else(|| panic!("{}: its volume", s.name));
+        assert!((gross - want).abs() <= 1e-5 * want, "{}: {gross}, the grid's {want}", s.name);
+        assert_eq!(quantity(s, "NetVolume"), Some(gross), "{}", s.name);
+        assert_eq!(quantity(s, "Height"), None, "{}: no constant height", s.name);
+        assert!(!s.body.is_empty(), "{}: its pieces", s.name);
+        let v: f64 = s.body.iter().map(kentos_ifc::quantities::volume).sum();
+        assert!((v - gross).abs() <= 1e-9 * gross, "{}: {v}", s.name);
+        for shape in &s.body {
+            assert_eq!(kentos_ifc::closed::faults(shape), Vec::<String>::new(), "{}", s.name);
+        }
+    }
+    assert_eq!(roofed_rooms, 5, "the 1. kat's five rooms");
+    assert_eq!(kentos_ifc::closed::open_bodies(&b), Vec::<(String, String)>::new());
+    if std::env::var_os("KENTOS_WRITE_IFC_UNDER_ROOF").is_some() {
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc/cati-alti-mahal.ifc");
+        std::fs::write(out, kentos_ifc::building::write(&b)).expect("the file kept");
+    }
+}

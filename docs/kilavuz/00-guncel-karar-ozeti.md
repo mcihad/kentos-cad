@@ -106,7 +106,7 @@
       değildir (duvar, kolon, mahal yüksekliği ve metraj onu görmez); `IfcCovering`; `.kcad` mimari verisi 5.
     - Kiriş çizelgesi (kiriş, lento, hatıl, kayıt) ve Kaplama çizelgesi (yalnız kaplamalar); `.kcad` mimari verisi 6.
       Kalan: eğimli eleman, duvar kaplamasının kalınlığı, giydirme cephenin kapısı.
-  - **B10 kısmen yapıldı (16 Kasım 2026; [ADR 8071](../adr/8071-geometry-accuracy.md); BIM-10 `[~]`):**
+  - **B10 yapıldı (16 Kasım 2026; [ADR 8071](../adr/8071-geometry-accuracy.md); BIM-10 `[x]`):**
     - Yayın kaynağı kesit modelidir (`Model::exact`): döşeme ve mahal parçalarından, duvar düz parçalı gövdesinden geri
       alınarak (`arc_recover`); IFC profili `IfcIndexedPolyCurve` + `IfcArcIndex`; parça sayısı görüntünün işidir.
     - Birleşimde yay biten çizgi kendi çemberinde uzar (teğetiyle değil).
@@ -130,7 +130,9 @@
       silindir; IFC'de SPIRAL_STAIR / CURVED_RUN_STAIR. 3B'de yarı saydam yüz opak yüzün kılı kadar önünde çizilir.
     - İçe dönen (L, T) saçakta yüzler ağırlıklı düz iskeletten (`geom::roof_skeleton`, kaba kuvvetli kinetik benzetim);
       dışbükey saçak alt zarf yöntemiyle kalır. Kendini kesen saçak ve aynı doğruda farklı eğimli kenar reddedilir.
-      Kalan: çatıyla kesilmiş mahal hacmi, çatının yüz başına `IfcSlab`'e ayrılması.
+    - Tavanı başka yoldan bilinmeyen mahal kendi katındaki çatının alt yüzüne kadar yükselir (`kentos_ifc::under_roof`):
+      IFC'de parçaları, hacmi kapalı formdan, Height yok (IFC 4.3: yalnız sabit yükseklikte); iç yükseklik denetimi,
+      metraj ve kesit değişmez. Sonraki ayrıntılar: çatının yüz başına `IfcSlab`'e ayrılması, tavan alanları.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

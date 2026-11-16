@@ -45,6 +45,7 @@ ROOT = Path(__file__).resolve().parents[2]
 FILES = [ROOT / "fixtures/arch/v1/ifc/egri-bina.ifc", ROOT / "fixtures/arch/v1/ifc/egri-bina-referans.ifc"]
 SLOPED = ROOT / "fixtures/arch/v1/ifc/egimli-doseme.ifc"
 ROOF_LAYERS = ROOT / "fixtures/arch/v1/ifc/katmanli-cati.ifc"
+UNDER_ROOF = ROOT / "fixtures/arch/v1/ifc/cati-alti-mahal.ifc"
 EXPECTED = ROOT / "fixtures/arch/v1/curved-building.json"
 
 
@@ -53,8 +54,11 @@ def main() -> int:
         path = Path(sys.argv[1]).resolve()
         if path.name == SLOPED.name:
             return check_sloped(path)
+        if path.name == UNDER_ROOF.name:
+            return check_under_roof(path)
         return check_roof_layers(path) if path.name == ROOF_LAYERS.name else check(path)
-    return max([check(p) for p in FILES] + [check_sloped(SLOPED), check_roof_layers(ROOF_LAYERS)])
+    return max([check(p) for p in FILES]
+               + [check_sloped(SLOPED), check_roof_layers(ROOF_LAYERS), check_under_roof(UNDER_ROOF)])
 
 
 def surface(f, product):
@@ -90,6 +94,63 @@ def closed_volume(place, tris):
                    + a[2] * (b[0] * c[1] - b[1] * c[0])) / 6.0
                   for a, b, c in ((place[x], place[y], place[z]) for x, y, z in tris)))
     return closed, vol
+
+
+def check_under_roof(path: Path) -> int:
+    """The section building without its terrace slab, its hip roof over the 1. kat (eaves 50 cm out of the 12 × 9 m
+    grid's 25 cm walls at +6.00, 33 %, 25 cm upright): each 1. kat room rises to the roof's underside. Its GrossVolume
+    is the underside (the roof's lower envelope, 33 % in from each eaves edge, less 0.25) over its floor integrated here
+    on a grid over the room's outline as IfcOpenShell meshes it; NetVolume the same; no Height (not constant);
+    IfcOpenShell's own surface of it closed, enclosing its GrossVolume."""
+    import ifcopenshell
+    import ifcopenshell.util.element as ue
+    import ifcopenshell.validate
+
+    f = ifcopenshell.open(str(path))
+    bad: list[str] = []
+    log = ifcopenshell.validate.json_logger()
+    ifcopenshell.validate.validate(f, log, express_rules=True)
+    if log.statements:
+        bad.append(f"validator: {[s.get('message', s) for s in log.statements[:5]]}")
+    near = lambda a, b, rel: a is not None and abs(a - b) <= rel * max(abs(b), 1.0)
+    face = 0.25 / 2
+    x0, y0, x1, y1 = -face - 0.5, -face - 0.5, 12 + face + 0.5, 9 + face + 0.5
+    under = lambda x, y: 6.0 - 0.25 + 0.33 * min(x - x0, x1 - x, y - y0, y1 - y)
+    rooms = 0
+    for space in f.by_type("IfcSpace"):
+        storey = ue.get_aggregate(space)
+        if round(storey.Elevation, 6) != 3.0:
+            continue
+        rooms += 1
+        q = ue.get_pset(space, "Qto_SpaceBaseQuantities") or {}
+        pts, place, tris = surface(f, space)
+        closed, vol = closed_volume(place, tris)
+        if not closed:
+            bad.append(f"{space.Name}: IfcOpenShell's surface of it is not closed")
+        xs, ys, zs = [p[0] for p in pts], [p[1] for p in pts], [p[2] for p in pts]
+        floor = min(zs)
+        n = 600
+        dx, dy = (max(xs) - min(xs)) / n, (max(ys) - min(ys)) / n
+        want = sum((under(min(xs) + (i + 0.5) * dx, min(ys) + (j + 0.5) * dy) - floor) * dx * dy
+                   for i in range(n) for j in range(n))
+        if not near(q.get("GrossVolume"), want, 1e-5):
+            bad.append(f"{space.Name}: GrossVolume {q.get('GrossVolume')}, the grid's {want}")
+        if q.get("NetVolume") != q.get("GrossVolume"):
+            bad.append(f"{space.Name}: NetVolume {q.get('NetVolume')}")
+        if "Height" in q:
+            bad.append(f"{space.Name}: a Height {q['Height']} for a room whose height is not constant")
+        if not near(vol, q.get("GrossVolume") or 0.0, 1e-9):
+            bad.append(f"{space.Name}: IfcOpenShell's volume {vol}, its GrossVolume {q.get('GrossVolume')}")
+    if rooms != 5:
+        bad.append(f"{rooms} rooms on the 1. kat, not 5")
+    if bad:
+        for b in bad:
+            print("✗", b)
+        return 1
+    shown = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path.name
+    print(f"✓ {shown}: IFC4X3_ADD2, 0 validator findings; the 1. kat's 5 rooms up to the roof, their volumes the grid's "
+          "and IfcOpenShell's, no Height.")
+    return 0
 
 
 def check_roof_layers(path: Path) -> int:

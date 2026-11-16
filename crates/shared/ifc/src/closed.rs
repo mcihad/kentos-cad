@@ -49,13 +49,7 @@ pub fn open_bodies(b: &Building) -> Vec<(String, String)> {
         }
     }
     for s in &b.spaces {
-        let body = Shape::Prism {
-            rings: s.rings.clone(),
-            bulges: s.bulges.clone(),
-            bottom: s.bottom,
-            top: s.top,
-        };
-        if let Some(f) = faults(&body).into_iter().next() {
+        if let Some(f) = s.shapes().iter().flat_map(faults).next() {
             out.push((s.name.clone(), f));
         }
     }
