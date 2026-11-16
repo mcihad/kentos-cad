@@ -66,7 +66,7 @@ fn vitrin_version() -> String {
 }
 
 /// samples/eklenti-vitrini's extension packed from its source, as `hazirla.sh` packs it.
-fn vitrin_package() -> Vec<u8> {
+pub(super) fn vitrin_package() -> Vec<u8> {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../samples/eklenti-vitrini/eklenti");
     let files: std::collections::BTreeMap<String, Vec<u8>> =
         kentos_extension_host::store::read_files(&root)

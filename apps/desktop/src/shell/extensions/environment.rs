@@ -453,6 +453,19 @@ impl App {
             return form;
         };
         form = form.section("Python ortamı");
+        // Its Python packages' list for the organisation's IT (docs/adr/8057 §91), whether or not it is prepared: the
+        // lock says what would be installed. In this section, not among the actions: their row stays one line.
+        form = form.wide(
+            row![
+                words::secondary(
+                    "Malzeme listesini kaydet…",
+                    Some(super::msg(super::Event::SaveBom(id.to_owned())))
+                ),
+                label::caption("Python paketleri, sürümleri ve dosya özetleri (SBOM, CycloneDX)."),
+            ]
+            .spacing(10)
+            .align_y(iced::Center),
+        );
         if !registry.grant(id).is_some_and(|g| g.python) {
             return form.wide(label::caption(
                 "Python işlevleri kurulumda seçilmedi; bu eklenti için ortam hazırlanmaz.",

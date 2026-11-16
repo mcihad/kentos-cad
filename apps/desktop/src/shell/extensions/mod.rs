@@ -41,6 +41,7 @@ mod panel_values;
 mod trial;
 mod tool_pins;
 mod bisect;
+mod bom;
 mod browse;
 pub(crate) mod environment;
 mod examples;
@@ -342,6 +343,9 @@ pub(crate) enum Event {
     ResetData(String),
     /// Its tools' examples run on drawings of their own (examples.rs, docs/adr/8057 §48).
     RunExamples(String),
+    /// Malzeme listesini kaydet… (bom.rs, docs/adr/8057 §91), and where it went (none: cancelled).
+    SaveBom(String),
+    BomSaved(Option<Result<String, String>>),
     PickPackage,
     /// The chosen `.kek`: its name and bytes; none when the user cancelled.
     Picked(Option<(String, Vec<u8>)>),
@@ -804,6 +808,12 @@ impl App {
                 }
                 self.extensions_changed();
             }
+            Event::SaveBom(id) => return self.save_extension_bom(&id),
+            Event::BomSaved(None) => {}
+            Event::BomSaved(Some(Ok(path))) => {
+                self.extensions_say(false, format!("Malzeme listesi kaydedildi: {path}"));
+            }
+            Event::BomSaved(Some(Err(why))) => self.extensions_say(true, why),
             Event::RunExamples(id) => match self.ext_examples_start(&id, true) {
                 Ok((_, task)) => return task,
                 Err((_, why)) => self.extensions_say(true, why),

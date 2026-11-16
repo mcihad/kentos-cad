@@ -4688,5 +4688,10 @@ masaüstünün kurulum incelemesi (`Çalıştığı yerler` bölümü).
 - **Katalogda (aynı gün):** `GET …/releases/{eklenti}/{sürüm}/sbom` onaylı sürümün baytlarından aynı listeyi verir
   (`application/vnd.cyclonedx+json`, `{kimlik}-{sürüm}.cdx.json`); sürümü kurabilen okur; Python'suz pakette
   `sbom_empty` (422) nedeniyle. Katalog API sınaması 1 (yayımlanmış sürümde numpy ve shapely; Python'suzda 422).
-- **Kalan:** Python paketlerinin lisansları (kilitte yok; kurulu ortamın üst verisinden okunur), masaüstünde "SBOM'u
-  kaydet" (aynı işlev).
+- **Masaüstünde (aynı gün):** Eklentiler › kurulu eklentinin ayrıntısı › Python ortamı: "Malzeme listesini kaydet…"
+  (`bom.rs`): kurulu paketin kilidinden aynı liste, kaydetme penceresinde önerilen ad `{kimlik}-{sürüm}.cdx.json`;
+  ortam hazırlanmamış olsa da (kilit kurulacak olanı söyler). Düğme eylem satırına değil Python bölümüne kondu: eylem
+  satırı zaten dar ("Kaldır" ikinci satıra iniyordu; bu değişiklikten önce de). Sınama: masaüstü 1 (Vitrin kurulunca
+  numpy ve shapely; kurulu olmayan eklentide neden). Gerçek pencerede düğme ve açıklaması görüldü; kaydetme penceresi
+  oturumda açılmaz (oturum D-Bus'sız).
+- **Kalan:** Python paketlerinin lisansları (kilitte yok; kurulu ortamın üst verisinden okunur).

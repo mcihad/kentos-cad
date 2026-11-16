@@ -11,6 +11,7 @@ use kentos_launch::Module;
 use super::ribbon::Action;
 use super::*;
 
+mod bom;
 mod demo;
 mod python;
 
