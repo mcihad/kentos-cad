@@ -164,9 +164,11 @@ def objects_of(f):
 
 
 def records_of(f):
+    """EK-7's records, each class itself (a context's sub-contexts derive their fields), a map conversion with its
+    scaled kind (a local system's)."""
     out = {}
     for name in sorted(RECORDS):
-        for e in f.by_type(name):
+        for e in f.by_type(name, include_subtypes=(name == "IfcMapConversion")):
             info = e.get_info(include_identifier=False, recursive=False)
             info.pop("type", None)
             out.setdefault(name, []).append({"step": e.id(), "class": e.is_a(),

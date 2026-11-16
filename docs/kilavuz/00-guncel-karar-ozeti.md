@@ -199,10 +199,13 @@
     - Masaüstü dosyayı bellekte yazıp okur (eşleme pencerenin, gerisi kuralın iş parçacığında); Mimari denetim, çizimdeki
       form ve Ruhsat takımı aynı olguları kullanır. Rust `digital_audit` ve `quality`'nin cevapları kalktı; `cad.arch.audit`
       `digital_*` vermez. Bulgu IFC modeli penceresinde nesnesini boyar.
-    - Katalogdan IDS 1.0: `crates/shared/ifc/data/temel-2026.ids` (77 tanım, 356 gereklilik). Bağımsız denetleyici
-      (IfcTester) indirme onayı bekliyor; KentOS'un kendi okuması eksikleri kuralla aynı buluyor. İkinci okuyucu
-      (IfcOpenShell, `scripts/fixtures/ifc_form_reference.py`) dört dosyada formun 21 satırını ve bulgularını aynı veriyor.
-    - Kararlar K48 (kullanıcı tanımlı rol), K49 (açıklaması boş ad inceleme), K50 (proje tipi yapı türünden).
+    - Katalogdan IDS 1.0: `crates/shared/ifc/data/temel-2026.ids` (78 tanım, 356 gereklilik). Bağımsız denetleyici
+      IfcTester 0.9.0 (sahibin onayıyla) dört dosyada eksikleri KentOS'un kuralıyla aynı buluyor
+      (`scripts/fixtures/ids_ifctester_check.py`); ikinci okuyucu (IfcOpenShell, `scripts/fixtures/ifc_form_reference.py`)
+      formun 21 satırını ve bulgularını aynı veriyor. Standart özellikler IFC 4.3 şablonunun türüyle yazılır
+      (`catalog_schema::mistyped`).
+    - Kararlar K48 (kullanıcı tanımlı rol), K49 (açıklaması boş ad inceleme), K50 (proje tipi yapı türünden), K51 (EK-7'nin
+      sınıfları her modelde).
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

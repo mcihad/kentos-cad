@@ -1781,12 +1781,13 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     if let Some(p) = address_pset(&address) {
         site_psets.push(p.clone());
     }
+    // Both identifiers (IFC 4.3's template: `IfcIdentifier`; docs/adr/8074 §5, found by the profile's IDS).
     let mut land = Vec::new();
     if let Some(id) = k.land_id() {
-        land.push(("LandID".to_owned(), label(&id)));
+        land.push(("LandID".to_owned(), Value::Id(id)));
     }
     if let Some(t) = &k.title_deed {
-        land.push(("LandTitleID".to_owned(), label(t)));
+        land.push(("LandTitleID".to_owned(), Value::Id(t.clone())));
     }
     if !land.is_empty() {
         site_psets.push(Pset {

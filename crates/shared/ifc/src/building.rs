@@ -43,6 +43,26 @@ pub enum Value {
 }
 
 impl Value {
+    /// The IFC type it is written with (`IfcLabel`; a list of labels its items'), as IFC 4.3's templates name a
+    /// property's measure.
+    pub fn ifc_type(&self) -> &'static str {
+        match self {
+            Value::Bool(_) => "IfcBoolean",
+            Value::Label(_) | Value::Labels(_) => "IfcLabel",
+            Value::Text(_) => "IfcText",
+            Value::Id(_) => "IfcIdentifier",
+            Value::Length(_) => "IfcLengthMeasure",
+            Value::PositiveLength(_) => "IfcPositiveLengthMeasure",
+            Value::Area(_) => "IfcAreaMeasure",
+            Value::Volume(_) => "IfcVolumeMeasure",
+            Value::Ratio(_) => "IfcRatioMeasure",
+            Value::Count(_) => "IfcCountMeasure",
+            Value::Real(_) => "IfcReal",
+            Value::Mass(_) => "IfcMassMeasure",
+            Value::PlaneAngle(_) => "IfcPlaneAngleMeasure",
+        }
+    }
+
     fn step(&self) -> String {
         match self {
             Value::Bool(b) => format!("IFCBOOLEAN(.{}.)", if *b { "T" } else { "F" }),

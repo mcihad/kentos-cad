@@ -455,13 +455,14 @@ açık IFC 4.3 örnekleri okunur; ölçeklenmiş modelde süre ve bellek tabanı
 olgularını verir (`read::file_facts`, `kentos.ifcFacts` 1; gövdelerle), kaynağın beklentisini `expected` verir; formun 21
 sorusu `dijital_proje.form`'dadır (resmî cevap ile kanıt ayrı; her bulgu nesnesi, maddesi, ek satırı ve sayfasıyla).
 Masaüstü dosyayı bellekte yazıp okur: Mimari denetim, çizimdeki form ve Ruhsat takımı aynı olgulardan. Bugünkü
-`kentos_ifc::quality` ve `digital_audit.rs` taşındı. Katalogdan IDS 1.0 (`crates/shared/ifc/data/temel-2026.ids`, 77 tanım,
+`kentos_ifc::quality` ve `digital_audit.rs` taşındı. Katalogdan IDS 1.0 (`crates/shared/ifc/data/temel-2026.ids`, 78 tanım,
 356 gereklilik; yapısı ve eksikleri KentOS'un kendi okumasında kuralla aynı). Eksik kapı durumu: IfcOpenShell K02'yi ve
 başvurularını çıkarır, şema 0 bulgu, EK-9/8 kapıyı kaynak kimliğiyle bulur. İkinci okuyucu (IfcOpenShell) dört dosyada formun
-21 satırını, bulgularını ve nesnelerini aynı verir. Bulgu IFC modelinde boyanır. 100 dairede taban (§6 ölçümü). Kararlar
-K48–K50.
-**Kalan:** bağımsız IDS denetleyicisi (IfcTester; indirme sahibin onayında); son yazılan dosyanın denetimi ve bulut işi; beş
-sonucun ayrı raporu (B14); model eşlemesinin bütçesi; EK-9 Tablo 9.2.
+21 satırını, bulgularını ve nesnelerini aynı verir. Bağımsız IDS denetleyicisi (IfcTester 0.9.0) IDS'i şemasıyla açar, dört
+dosyada eksikleri KentOS'un kuralıyla satır ve nesne düzeyinde aynı bulur; ilk koşuda bulduğu yazıcı hatası (arazi ve tapu
+kimliği `IfcLabel` yazılıyordu) düzeltildi. Bulgu IFC modelinde boyanır. 100 dairede taban (§6 ölçümü). Kararlar K48–K51.
+**Kalan:** son yazılan dosyanın denetimi ve bulut işi; beş sonucun ayrı raporu (B14); model eşlemesinin bütçesi; gerçek
+kuzeyin yazımı (IFC-02); EK-9 Tablo 9.2.
 
 **Kullanıcı sonucu:** Model kalite kontrol formunun her cevabı diske yazılmış dosyadan gelir; her "hayır" nesnesini seçer.
 Şeması temiz bir dosyanın Türkiye profilinden kaldığı görülebilir.

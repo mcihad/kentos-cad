@@ -86,6 +86,70 @@ pub fn dictionary() -> &'static Dictionary {
     })
 }
 
+/// A quantity template's kind's measure (`Q_LENGTH` → `IfcLengthMeasure`): what its value is written with.
+fn quantity_measure(kind: &str) -> Option<&'static str> {
+    Some(match kind {
+        "Q_LENGTH" => "IfcLengthMeasure",
+        "Q_AREA" => "IfcAreaMeasure",
+        "Q_VOLUME" => "IfcVolumeMeasure",
+        "Q_COUNT" => "IfcCountMeasure",
+        "Q_WEIGHT" => "IfcMassMeasure",
+        "Q_TIME" => "IfcTimeMeasure",
+        _ => return None,
+    })
+}
+
+/// The standard properties and quantities a building to write gives another type than IFC 4.3's template asks
+/// (docs/adr/8074 §5: the profile's IDS asks the template's data type; an independent checker found the land
+/// registration's identifiers written as labels): the set, the item, the type written and the template's, each once.
+/// The national sets (`TREpys_…`) are not the schema's and have no template.
+pub fn mistyped(b: &crate::building::Building) -> Vec<(String, String, &'static str, String)> {
+    use crate::building::{Pset, Qto};
+    let d = dictionary();
+    let mut out = Vec::new();
+    let mut psets: Vec<&Pset> = Vec::new();
+    let mut qtos: Vec<&Qto> = Vec::new();
+    for p in [&b.project, &b.site, &b.building] {
+        psets.extend(&p.psets);
+        qtos.extend(&p.qtos);
+    }
+    for s in &b.storeys {
+        psets.extend(&s.psets);
+        qtos.extend(&s.qtos);
+    }
+    for e in &b.elements {
+        psets.extend(&e.psets);
+        qtos.extend(&e.qtos);
+    }
+    for s in &b.spaces {
+        psets.extend(&s.psets);
+        qtos.extend(&s.qtos);
+    }
+    for z in &b.zones {
+        psets.extend(&z.psets);
+    }
+    for g in &b.groups {
+        psets.extend(&g.psets);
+    }
+    let sets = psets
+        .iter()
+        .map(|p| (&p.name, &p.props))
+        .chain(qtos.iter().map(|q| (&q.name, &q.quantities)));
+    for (set, items) in sets {
+        let Some(def) = d.sets.get(set.as_str()) else { continue };
+        for (item, value) in items {
+            let Some((kind, measure)) = def.item(item) else { continue };
+            let Some(want) = measure.or_else(|| quantity_measure(&kind).map(str::to_owned)) else { continue };
+            if !want.eq_ignore_ascii_case(value.ifc_type()) {
+                out.push((set.clone(), item.clone(), value.ifc_type(), want));
+            }
+        }
+    }
+    out.sort();
+    out.dedup();
+    out
+}
+
 /// A difference between the catalog and the schema.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Finding {
@@ -502,5 +566,27 @@ mod tests {
             assert!(keys.iter().any(|x| x == k), "{k} not found");
         }
         assert_eq!(nearest("Qto_BuildingBaseQuantity", ["Qto_BuildingBaseQuantities", "Qto_Other"].into_iter()).as_deref(), Some("Qto_BuildingBaseQuantities"));
+    }
+
+    /// A label where the template asks an identifier is found; the identifier, a national set and an item the template
+    /// does not have are not.
+    #[test]
+    fn a_property_of_another_type_than_its_template_s_is_found() {
+        use crate::building::{Building, Place, Pset, Value};
+        let site = |id: Value| Place {
+            psets: vec![
+                Pset { name: "Pset_LandRegistration".into(), props: vec![("LandID".into(), id)] },
+                Pset { name: "TREpys_ParselOzellikSeti".into(), props: vec![("TAKS".into(), Value::Label("0.4".into()))] },
+                Pset { name: "Pset_LandRegistration".into(), props: vec![("Renk".into(), Value::Label("kırmızı".into()))] },
+            ],
+            ..Place::default()
+        };
+        let b = Building { site: site(Value::Label("1234/5".into())), ..Building::default() };
+        assert_eq!(
+            mistyped(&b),
+            [("Pset_LandRegistration".to_owned(), "LandID".to_owned(), "IfcLabel", "IfcIdentifier".to_owned())]
+        );
+        let b = Building { site: site(Value::Id("1234/5".into())), ..Building::default() };
+        assert_eq!(mistyped(&b), Vec::new());
     }
 }

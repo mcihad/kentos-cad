@@ -7,7 +7,9 @@
   denetiminin bulguları (`digital_project_info_missing`, `digital_project_code_missing`, `digital_space_unnamed`,
   `digital_system_wrong`, `digital_no_spaces`, `digital_model_loss`) aynı kodlarla buradadır; yenileri her sorunun kendi
   kodudur. `form.tablo` çizimdeki formun satırlarını verir. `mimari.denetle` ikinci girdi olarak dosyanın olgularını
-  alır; verilince EK-9 dosyadan cevaplanır, `kalite` ve `zorunlu` yinelenmez.
+  alır; verilince EK-9 dosyadan cevaplanır, `kalite` ve `zorunlu` yinelenmez. 9. soru modelin bağlamının kayıttaki
+  zorunlu alanlarını da sayar (EK-7 Tablo 7.8). Formun cevapları başka bir okuyucunun (IfcOpenShell) olgularında ve
+  profilin IDS'inin bağımsız denetleyicisinde (IfcTester) aynı çıkar.
 
 ## 0.6.0 — 16 Kasım 2026
 

@@ -68,7 +68,7 @@ def yapi(kok: ET.Element) -> list[dict]:
         if parca != ["applicability", "requirements"]:
             hata(f"{s.get('name')}: {parca}")
         app, req = s[0], s[1]
-        if app.get("minOccurs") != "0" or app.get("maxOccurs") != "unbounded":
+        if app.get("minOccurs") not in ("0", "1") or app.get("maxOccurs") != "unbounded":
             hata(f"{s.get('name')}: applicability {app.attrib}")
         siniflar = degerler(app.find(f"{N}entity/{N}name"))
         sira = [FACETS.index(yerel(f)) for f in req]

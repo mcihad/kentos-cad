@@ -1,6 +1,7 @@
 //! The profile's mandatory rows as an Information Delivery Specification (buildingSMART IDS 1.0; docs/adr/8074 §5;
 //! plan/ifc-uyum.md IFC-08): each EK-6 and EK-7 table with mandatory rows is a specification for its class in IFC 4.3
-//! (`IFC4X3_ADD2`), applicable when the file has the class (EK-5 §5.1: a class is asked when the design has it), each
+//! (`IFC4X3_ADD2`), applicable when the file has the class (EK-5 §5.1: a class is asked when the design has it; EK-7's
+//! project, people, system and context, Tablo 7.1–7.8, are in every model and must be there: K51), each
 //! mandatory row a requirement: an attribute, a property of its set, a quantity, the material, the group it is part
 //! of. The file is data/temel-2026.ids, written from the catalog (a test keeps it current): a second checker opens it
 //! beside KentOS's own (`crate::required`, the form's 9th question), so that what both read is the same list.
@@ -10,6 +11,9 @@
 //!   measure; a national set's (`TREpys_…`, EK-6 §6.5) is not the schema's, so none is said. Nothing else is asked of a
 //!   value: the regulation asks that it be given.
 //! - **Groups:** “IfcRelAssignsToGroup>IfcSystem” is a part-of facet whose group is IfcSystem or one of its subtypes.
+//! - **Rows asked under a condition:** a user-defined role (EK-7 Tablo 7.5) is given exactly when the role is
+//!   USERDEFINED (the schema's own rule, `IfcActorRole` WR1; K48): it is a specification of its own, applicable to the
+//!   roles whose `Role` is USERDEFINED.
 //!
 //! Geometry, overlaps, names' patterns and a file's agreement with its source are not IDS's (its manual's scope): they
 //! are the form's own questions.
@@ -56,32 +60,89 @@ pub fn write() -> String {
     out.push_str("  <specifications>\n");
     for ((_, _, class), rows) in &tables {
         let Some(t) = c.tables.iter().find(|t| t.table == rows[0].table && t.class == *class) else { continue };
-        let pages = t.pages.iter().map(u32::to_string).collect::<Vec<_>>().join("–");
-        let annex = t.table.split('.').next().unwrap_or("");
-        let name = format!("EK-{annex} Tablo {} {}{}", t.table, t.class, t.tr.as_ref().map_or(String::new(), |tr| format!(" ({tr})")));
-        out.push_str(&format!(
-            "    <specification name=\"{}\" ifcVersion=\"{VERSION}\" identifier=\"{}\" description=\"{}\" \
-             instructions=\"Dijital Proje Yön. EK-{annex} Tablo {} · PDF s. {pages}\">\n",
-            esc(&name),
-            esc(&t.id),
-            esc(&t.title),
-            esc(&t.table)
-        ));
-        out.push_str("      <applicability minOccurs=\"0\" maxOccurs=\"unbounded\">\n");
-        out.push_str(&format!("        <entity>\n          <name>\n            <simpleValue>{}</simpleValue>\n          </name>\n        </entity>\n", class.to_ascii_uppercase()));
-        out.push_str("      </applicability>\n");
-        out.push_str("      <requirements>\n");
-        // IDS's facet order: part of, attribute, property, material.
-        for kind in [Kind::Relation, Kind::Attribute, Kind::Property, Kind::Quantity, Kind::Material] {
-            for r in rows.iter().filter(|r| r.kind == kind) {
-                out.push_str(&facet(r));
-            }
+        let plain: Vec<&Requirement> = rows.iter().copied().filter(|r| condition(r).is_none()).collect();
+        if !plain.is_empty() {
+            out.push_str(&specification(t, &plain, None));
         }
-        out.push_str("      </requirements>\n");
-        out.push_str("    </specification>\n");
+        let mut conditions: Vec<(&str, &str)> = rows.iter().filter_map(|r| condition(r)).collect();
+        conditions.dedup();
+        for when in conditions {
+            let under: Vec<&Requirement> = rows.iter().copied().filter(|r| condition(r) == Some(when)).collect();
+            out.push_str(&specification(t, &under, Some(when)));
+        }
     }
     out.push_str("  </specifications>\n");
     out.push_str("</ids>\n");
+    out
+}
+
+/// The attribute and its value a row is asked under, when it is asked only so (K48: a user-defined role when the role is
+/// USERDEFINED).
+fn condition(r: &Requirement) -> Option<(&'static str, &'static str)> {
+    (r.class == "IfcActorRole" && r.kind == Kind::Attribute && r.name.trim_start_matches("Attribute:").trim() == "UserDefinedRole")
+        .then_some(("Role", "USERDEFINED"))
+}
+
+/// A table's specification for `rows`, applicable to its class (and, `when` given, to its objects whose attribute has
+/// that value).
+fn specification(t: &catalog::Table, rows: &[&Requirement], when: Option<(&str, &str)>) -> String {
+    let pages = t.pages.iter().map(u32::to_string).collect::<Vec<_>>().join("–");
+    let annex = t.table.split('.').next().unwrap_or("");
+    let mut name = format!("EK-{annex} Tablo {} {}{}", t.table, t.class, t.tr.as_ref().map_or(String::new(), |tr| format!(" ({tr})")));
+    let mut id = t.id.clone();
+    if let Some((attribute, value)) = when {
+        name.push_str(&format!(", {attribute} {value} iken"));
+        id.push_str(&format!("/{attribute}={value}"));
+    }
+    let mut out = format!(
+        "    <specification name=\"{}\" ifcVersion=\"{VERSION}\" identifier=\"{}\" description=\"{}\" \
+         instructions=\"Dijital Proje Yön. EK-{annex} Tablo {} · PDF s. {pages}\">\n",
+        esc(&name),
+        esc(&id),
+        esc(&t.title),
+        esc(&t.table)
+    );
+    // K51: EK-7's classes but the survey annotation (Tablo 7.9) are in every model.
+    let least = u8::from(t.table.starts_with("7.") && t.class != "IfcAnnotation" && when.is_none());
+    out.push_str(&format!("      <applicability minOccurs=\"{least}\" maxOccurs=\"unbounded\">\n"));
+    match entities(&t.class).as_slice() {
+        [one] => out.push_str(&format!(
+            "        <entity>\n          <name>\n            <simpleValue>{one}</simpleValue>\n          </name>\n        </entity>\n"
+        )),
+        many => {
+            out.push_str("        <entity>\n          <name>\n            <xs:restriction base=\"xs:string\">\n");
+            for e in many {
+                out.push_str(&format!("              <xs:enumeration value=\"{e}\"/>\n"));
+            }
+            out.push_str("            </xs:restriction>\n          </name>\n        </entity>\n");
+        }
+    }
+    if let Some((attribute, value)) = when {
+        out.push_str(&format!(
+            "        <attribute>\n          <name>\n            <simpleValue>{attribute}</simpleValue>\n          </name>\n          <value>\n            <simpleValue>{value}</simpleValue>\n          </value>\n        </attribute>\n"
+        ));
+    }
+    out.push_str("      </applicability>\n");
+    out.push_str("      <requirements>\n");
+    // IDS's facet order: part of, attribute, property, material.
+    for kind in [Kind::Relation, Kind::Attribute, Kind::Property, Kind::Quantity, Kind::Material] {
+        for r in rows.iter().filter(|r| r.kind == kind) {
+            out.push_str(&facet(r));
+        }
+    }
+    out.push_str("      </requirements>\n");
+    out.push_str("    </specification>\n");
+    out
+}
+
+/// The entities a table's class is written as: itself, and a map conversion its scaled kind too (a local system's,
+/// docs/adr/8072 §3; IDS names an entity exactly, not its subtypes, and other subtypes are not the class: a context's
+/// sub-contexts derive their attributes).
+fn entities(class: &str) -> Vec<String> {
+    let mut out = vec![class.to_ascii_uppercase()];
+    if class == "IfcMapConversion" {
+        out.push("IFCMAPCONVERSIONSCALED".to_owned());
+    }
     out
 }
 
@@ -221,5 +282,16 @@ mod tests {
         assert!(wall.contains("<xs:enumeration value=\"STANDARD\"/>") && !wall.contains("value=\"NOTDEFINED\""), "{wall}");
         assert!(wall.contains("dataType=\"IFCLABEL\"") && wall.contains("<simpleValue>FireRating</simpleValue>"), "{wall}");
         assert_eq!(esc("a<b & \"c\""), "a&lt;b &amp; &quot;c&quot;");
+        // K48: the user-defined role in a specification of its own, for the roles that are USERDEFINED.
+        let role = text.split("<specification ").find(|s| s.contains("/Role=USERDEFINED")).expect("the role's");
+        assert!(role.contains("<simpleValue>Role</simpleValue>") && role.contains("<simpleValue>UserDefinedRole</simpleValue>"));
+        assert!(role.contains("minOccurs=\"0\""), "asked of the USERDEFINED roles there are");
+        // K51: a person is in every model; a survey annotation only where there is one.
+        let person = text.split("<specification ").find(|s| s.contains("<simpleValue>IFCPERSON</simpleValue>")).expect("the person's");
+        assert!(person.contains("minOccurs=\"1\""), "{person}");
+        let note = text.split("<specification ").find(|s| s.contains("<simpleValue>IFCANNOTATION</simpleValue>")).expect("the annotation's");
+        assert!(note.contains("minOccurs=\"0\""), "{note}");
+        // A local system's scaled conversion is a map conversion.
+        assert!(text.contains("<xs:enumeration value=\"IFCMAPCONVERSIONSCALED\"/>"));
     }
 }

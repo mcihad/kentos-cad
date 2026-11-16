@@ -465,20 +465,39 @@ class _Dosya:
 
     def s9(self):
         """Md. 13, EK-6 ve EK-7: katalogun zorunlu satırları dosyanın her nesnesinde dolu. Projenin kendi alanları
-        (Tablo 7.1) 2. sorunun bulgusudur: burada sayılır, yinelenmez."""
-        gaps = self.ifc.get("gaps") or []
+        (Tablo 7.1) 2. sorunun bulgusudur: burada sayılır, yinelenmez. Modelin bağlamının alanları (Tablo 7.8) kayıttan
+        okunur: 2. soru Tablo 7.1–7.5'i, 6. soru 7.6–7.7'yi okur."""
+        gaps = list(self.ifc.get("gaps") or [])
+        kayitlar = self.ifc.get("records") or {}
+        for r in self.ifc.get("rows") or []:
+            if not r.get("mandatory") or not r.get("attribute") or str(r["table"]) != "7.8":
+                continue
+            eksik = [k for k in kayitlar.get(r["class"]) or [] if not _dolu((k.get("attributes") or {}).get(r["name"]))]
+            if eksik:
+                gaps.append({"id": r["id"], "class": r["class"], "path": r["name"], "tr": r["tr"], "table": "7.8",
+                             "page": r["page"], "missing": [], "of": len(kayitlar.get(r["class"]) or []),
+                             "records": [f"#{k['step']}" for k in eksik]})
         bulgular = []
         for g in gaps:
             if g["class"] == "IfcProject" and str(g["table"]).startswith("7.1"):
                 continue
             ek = "EK-7" if str(g["table"]).startswith("7.") else "EK-6"
             n = len(g.get("missing") or [])
+            if g.get("records"):
+                # A record's field (the context's): no object of the drawing to name; KentOS does not write it yet.
+                bulgular.append(self.bulgu(
+                    "digital_required_field",
+                    f"{g['class']} {', '.join(g['records'])}: {g['tr']} ({g['path']}) yok",
+                    f"KentOS bu alanı ({g['path']}, {ek} Tablo {g['table']}) IFC'ye henüz yazmıyor; yazıldığında bu bulgu "
+                    "kapanır.", [], f"{ek} Tablo {g['table']} · PDF s. {g['page']}"))
+                continue
             bulgular.append(self.bulgu(
                 "digital_required_field",
                 f"{n}/{g['of']} {g['class']} nesnesinde {g['tr']} ({g['path']}) yok",
                 zorunlu._onarim(g), list(g.get("missing") or []), f"{ek} Tablo {g['table']} · PDF s. {g['page']}"))
         if gaps:
-            ilk = ", ".join(f"{g['class']} {g['tr']} ({len(g.get('missing') or [])}/{g['of']})" for g in gaps[:4])
+            ilk = ", ".join(f"{g['class']} {g['tr']} ({len(g.get('missing') or g.get('records') or [])}/{g['of']})"
+                            for g in gaps[:4])
             fazla = f" ve {len(gaps) - 4} başka" if len(gaps) > 4 else ""
             return KALDI, f"{len(gaps)} zorunlu alan eksik: {ilk}{fazla}", bulgular
         return GECTI, "EK-6 ve EK-7'nin zorunlu alanları dosyanın her nesnesinde dolu.", []

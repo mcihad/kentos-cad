@@ -191,11 +191,11 @@ fn the_kunye_is_the_project_s_people_and_place() {
     );
     assert_eq!(
         prop(&b.site.psets, "Pset_LandRegistration", "LandID"),
-        Some(Value::Label("1234/5".into()))
+        Some(Value::Id("1234/5".into()))
     );
     assert_eq!(
         prop(&b.site.psets, "Pset_LandRegistration", "LandTitleID"),
-        Some(Value::Label("12/345".into()))
+        Some(Value::Id("12/345".into()))
     );
     // EK-6 Tablo 6.7: the building's temporary id.
     assert_eq!(
@@ -233,6 +233,17 @@ fn the_kunye_is_the_project_s_people_and_place() {
         let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../../fixtures/arch/v1/ifc/kesit-binasi-kunye.ifc");
         std::fs::write(out, &text).expect("the file kept");
+    }
+}
+
+/// Every standard property and quantity the section building's model writes, with its künye, has the type IFC 4.3's
+/// template asks (docs/adr/8074 §5: the profile's IDS checks it; an independent checker found the land registration's
+/// identifiers written as labels).
+#[test]
+fn every_standard_property_has_its_template_s_type() {
+    for doc in [with_kunye(), building()] {
+        let (b, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
+        assert_eq!(kentos_ifc::catalog_schema::mistyped(&b), Vec::new());
     }
 }
 

@@ -142,6 +142,21 @@ class IkinciOkuyucu(unittest.TestCase):
                 self.assertEqual(a, b, f"{ad}: soru {a['no']}")
 
 
+class BagimsizIds(unittest.TestCase):
+    """Profilin IDS'i bağımsız bir denetleyicide (IfcTester; scripts/fixtures/ids_ifctester_check.py) dört dosyada
+    koşuldu: bulduğu eksikler KentOS'un okuduğu olgulardaki eksiklerle satır ve nesne düzeyinde aynı."""
+
+    def test_dort_dosyada_ifctester_ile_ayni(self):
+        for ad in ("kesit-binasi", "kesit-binasi-kunye", "yerel-sistem", "kesit-binasi-kapi-eksik"):
+            ref = json.loads((KOK / "fixtures/ifc/v1/ids-sonuc" / f"{ad}.json").read_text(encoding="utf-8"))
+            self.assertEqual(ref["differ"], {}, ad)
+            f = olgular(ad)
+            bizim = {g["id"]: sorted(g["missing"]) for g in f["gaps"] if not g["class"].startswith(("IfcPerson",
+                     "IfcOrganization", "IfcActorRole", "IfcPostalAddress", "IfcProjectedCRS", "IfcMapConversion",
+                     "IfcGeometricRepresentationContext"))}
+            self.assertEqual(bizim, ref["rows"]["gaps"], ad)
+
+
 class EksikKapi(unittest.TestCase):
     """Üç kapıdan biri ve ilgili başvuruları dosyadan çıkarıldı: şema geçerli, kalan kapıların zorunlu alan (IDS) sonucu
     değişmedi; EK-9/8 eksik kapıyı kaynağın kimliğiyle bulur."""
@@ -282,7 +297,13 @@ class Sorular(unittest.TestCase):
 
     def test_9_zorunlu_alan(self):
         self.assertEqual(set(kodlar(BINA, 9)), {"digital_required_field"})
-        self.assertEqual(kanit(degis(BINA, gaps=[]), 9), form.GECTI)
+        # Modelin bağlamının gerçek kuzeyi (EK-7 Tablo 7.8) kayıttan; KentOS henüz yazmıyor.
+        kuzey = [b for b in satir(BINA, 9)["bulgular"] if "(TrueNorth)" in b["message"]]
+        self.assertEqual(len(kuzey), 1)
+        self.assertIn("henüz yazmıyor", kuzey[0]["repair"])
+        f = degis(BINA, gaps=[])
+        f["records"]["IfcGeometricRepresentationContext"][0]["attributes"]["TrueNorth"] = "#99"
+        self.assertEqual(kanit(f, 9), form.GECTI)
 
     def test_10_zon_yoksa_kalir(self):
         f = copy.deepcopy(BINA)

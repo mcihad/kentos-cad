@@ -3464,7 +3464,7 @@
       </requirements>
     </specification>
     <specification name="EK-7 Tablo 7.1 IfcProject (Proje)" ifcVersion="IFC4X3_ADD2" identifier="T7.1" description="IfcProject Sınıfı Zorunlu Öznitelik ve Özellik Listesi" instructions="Dijital Proje Yön. EK-7 Tablo 7.1 · PDF s. 222">
-      <applicability minOccurs="0" maxOccurs="unbounded">
+      <applicability minOccurs="1" maxOccurs="unbounded">
         <entity>
           <name>
             <simpleValue>IFCPROJECT</simpleValue>
@@ -3493,7 +3493,7 @@
       </requirements>
     </specification>
     <specification name="EK-7 Tablo 7.2 IfcPerson (Kişi)" ifcVersion="IFC4X3_ADD2" identifier="T7.2" description="IfcPerson Sınıfı Zorunlu Öznitelik ve Özellik Listesi (IfcProject içerisinde tariflenir)" instructions="Dijital Proje Yön. EK-7 Tablo 7.2 · PDF s. 223">
-      <applicability minOccurs="0" maxOccurs="unbounded">
+      <applicability minOccurs="1" maxOccurs="unbounded">
         <entity>
           <name>
             <simpleValue>IFCPERSON</simpleValue>
@@ -3524,7 +3524,7 @@
       </requirements>
     </specification>
     <specification name="EK-7 Tablo 7.3 IfcPersonAndOrganization (Kişi ve Organizasyon)" ifcVersion="IFC4X3_ADD2" identifier="T7.3" description="IfcPersonAndOrganization Sınıfı Zorunlu Öznitelik ve Özellik Listesi (IfcProject içerisinde tariflenir)" instructions="Dijital Proje Yön. EK-7 Tablo 7.3 · PDF s. 224">
-      <applicability minOccurs="0" maxOccurs="unbounded">
+      <applicability minOccurs="1" maxOccurs="unbounded">
         <entity>
           <name>
             <simpleValue>IFCPERSONANDORGANIZATION</simpleValue>
@@ -3545,7 +3545,7 @@
       </requirements>
     </specification>
     <specification name="EK-7 Tablo 7.4 IfcOrganization (Organizasyon)" ifcVersion="IFC4X3_ADD2" identifier="T7.4" description="IfcOrganization Sınıfı Zorunlu Öznitelik ve Özellik Listesi (IfcProject içerisinde tariflenir)" instructions="Dijital Proje Yön. EK-7 Tablo 7.4 · PDF s. 225">
-      <applicability minOccurs="0" maxOccurs="unbounded">
+      <applicability minOccurs="1" maxOccurs="unbounded">
         <entity>
           <name>
             <simpleValue>IFCORGANIZATION</simpleValue>
@@ -3576,7 +3576,7 @@
       </requirements>
     </specification>
     <specification name="EK-7 Tablo 7.5 IfcActorRole (Rol)" ifcVersion="IFC4X3_ADD2" identifier="T7.5" description="IfcActorRole Sınıfı Zorunlu Öznitelik Listesi (IfcProject içerisinde tariflenir)" instructions="Dijital Proje Yön. EK-7 Tablo 7.5 · PDF s. 226">
-      <applicability minOccurs="0" maxOccurs="unbounded">
+      <applicability minOccurs="1" maxOccurs="unbounded">
         <entity>
           <name>
             <simpleValue>IFCACTORROLE</simpleValue>
@@ -3589,11 +3589,6 @@
             <simpleValue>Role</simpleValue>
           </name>
         </attribute>
-        <attribute cardinality="required" instructions="Kullanıcı Tanımlı Rol (Tablo 7.5 satır 2)">
-          <name>
-            <simpleValue>UserDefinedRole</simpleValue>
-          </name>
-        </attribute>
         <attribute cardinality="required" instructions="Açıklama (Tablo 7.5 satır 3)">
           <name>
             <simpleValue>Description</simpleValue>
@@ -3601,8 +3596,32 @@
         </attribute>
       </requirements>
     </specification>
-    <specification name="EK-7 Tablo 7.6 IfcProjectedCRS (Yansıtılmış Koordinat Referans Sistemi)" ifcVersion="IFC4X3_ADD2" identifier="T7.6" description="IfcProjectedCRS Sınıfı Zorunlu Öznitelik Listesi" instructions="Dijital Proje Yön. EK-7 Tablo 7.6 · PDF s. 227–228">
+    <specification name="EK-7 Tablo 7.5 IfcActorRole (Rol), Role USERDEFINED iken" ifcVersion="IFC4X3_ADD2" identifier="T7.5/Role=USERDEFINED" description="IfcActorRole Sınıfı Zorunlu Öznitelik Listesi (IfcProject içerisinde tariflenir)" instructions="Dijital Proje Yön. EK-7 Tablo 7.5 · PDF s. 226">
       <applicability minOccurs="0" maxOccurs="unbounded">
+        <entity>
+          <name>
+            <simpleValue>IFCACTORROLE</simpleValue>
+          </name>
+        </entity>
+        <attribute>
+          <name>
+            <simpleValue>Role</simpleValue>
+          </name>
+          <value>
+            <simpleValue>USERDEFINED</simpleValue>
+          </value>
+        </attribute>
+      </applicability>
+      <requirements>
+        <attribute cardinality="required" instructions="Kullanıcı Tanımlı Rol (Tablo 7.5 satır 2)">
+          <name>
+            <simpleValue>UserDefinedRole</simpleValue>
+          </name>
+        </attribute>
+      </requirements>
+    </specification>
+    <specification name="EK-7 Tablo 7.6 IfcProjectedCRS (Yansıtılmış Koordinat Referans Sistemi)" ifcVersion="IFC4X3_ADD2" identifier="T7.6" description="IfcProjectedCRS Sınıfı Zorunlu Öznitelik Listesi" instructions="Dijital Proje Yön. EK-7 Tablo 7.6 · PDF s. 227–228">
+      <applicability minOccurs="1" maxOccurs="unbounded">
         <entity>
           <name>
             <simpleValue>IFCPROJECTEDCRS</simpleValue>
@@ -3648,10 +3667,13 @@
       </requirements>
     </specification>
     <specification name="EK-7 Tablo 7.7 IfcMapConversion (Harita Dönüşümü)" ifcVersion="IFC4X3_ADD2" identifier="T7.7" description="IfcMapConversion Sınıfı Zorunlu Öznitelik Listesi" instructions="Dijital Proje Yön. EK-7 Tablo 7.7 · PDF s. 229–230">
-      <applicability minOccurs="0" maxOccurs="unbounded">
+      <applicability minOccurs="1" maxOccurs="unbounded">
         <entity>
           <name>
-            <simpleValue>IFCMAPCONVERSION</simpleValue>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="IFCMAPCONVERSION"/>
+              <xs:enumeration value="IFCMAPCONVERSIONSCALED"/>
+            </xs:restriction>
           </name>
         </entity>
       </applicability>
@@ -3689,7 +3711,7 @@
       </requirements>
     </specification>
     <specification name="EK-7 Tablo 7.8 IfcGeometricRepresentationContext (Geometrik Temsil Bağlamı)" ifcVersion="IFC4X3_ADD2" identifier="T7.8" description="IfcGeometricRepresentationContext Sınıfı Zorunlu Öznitelik Listesi" instructions="Dijital Proje Yön. EK-7 Tablo 7.8 · PDF s. 231–232">
-      <applicability minOccurs="0" maxOccurs="unbounded">
+      <applicability minOccurs="1" maxOccurs="unbounded">
         <entity>
           <name>
             <simpleValue>IFCGEOMETRICREPRESENTATIONCONTEXT</simpleValue>

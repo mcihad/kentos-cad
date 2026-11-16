@@ -1,6 +1,7 @@
 # ADR 8074: EK-9'un cevapları yazılmış dosyadan — dosya olguları, Python formu ve katalogdan IDS
 
-- **Durum:** ilk dilim yapıldı (16 Kasım 2026); bağımsız IDS denetleyicisi açık (§8). Plan: [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-08; [bim-plan.md](../../plan/bim-plan.md)
+- **Durum:** yapıldı (16 Kasım 2026); kalan işler §8'de (son yazılan dosya, beş sonucun raporu, eşlemenin bütçesi,
+  Tablo 9.2). Plan: [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-08; [bim-plan.md](../../plan/bim-plan.md)
   sırası B13.
 - **Bağlam:** ADR [8047](8047-ifc-building-export.md) §9–§10 (EK-9 formu bugün bellekteki modelden, `kentos_ifc::quality`;
   Mimari denetimin Dijital proje bulguları `digital_audit.rs`), [8062](8062-digital-project-rule-catalog.md) (kural
@@ -19,7 +20,7 @@
 | EK-9 Tablo 9.1 ve 9.2 | Formun her satırı bir Evet/Hayır sorusudur; mimari 21, öbür disiplinler 16 soru | Formun resmî cevabı (Evet, Hayır, boş) ile KentOS'un kanıt durumu (geçti, kaldı, inceleme) ayrı saklanır; inceleme Evet'e çevrilmez |
 | buildingSMART IDS 1.0 ([kullanım kılavuzu](https://github.com/buildingSMART/IDS/blob/development/Documentation/UserManual/specifications.md), [şema](https://raw.githubusercontent.com/buildingSMART/IDS/development/Schema/ids.xsd)) | Kök `ids` (ad alanı `http://standards.buildingsmart.org/IDS`): `info`, `specifications`; her `specification`'ın `ifcVersion`'ı (IFC2X3, IFC4, IFC4X3_ADD2), `applicability`'si ve `requirements`'i; altı yön sırayla `entity`, `partOf`, `classification`, `attribute`, `property`, `material`; gereklilikte `cardinality` (required, optional, prohibited); değer `simpleValue` ya da `xs:restriction`. Geometri, çakışma, hesaplanan değer ve dosyalar arası uyum IDS'in dışındadır | Katalogun zorunlu satırlarından IDS üretilir (§5); geometri (kapalılık, örtüşme, kot), dosyalar arası uyum ve adların kalıbı formun kendi denetimlerindedir |
 | buildingSMART doğrulama servisi ([kılavuz](https://buildingsmart.github.io/validate/user/index.html)) | Şema ve normatif kurallar; 256 MB sınırı; ülkeye özgü kuralı denetlemez | Gerçek ruhsat modeli dışarı yüklenmez; denetim çevrimdışıdır |
-| IfcTester ([PyPI](https://pypi.org/project/ifctester/0.0.230918)) | IDS'i okur, bir IFC'yi ona karşı denetler, raporu JSON, HTML, BCF verir | Üretilen IDS'in ikinci bağımsız denetleyicisi adayıdır; çevrimdışı önbellekte yok, indirilmesi sahibin onayını bekler (§8) |
+| IfcTester ([PyPI](https://pypi.org/project/ifctester/0.9.0/), 0.9.0, 29.9.2026) | IDS'i okur (IDS 1.0 şemasıyla doğrulayarak), bir IFC'yi ona karşı denetler, raporu JSON, HTML, BCF verir. Öznitelik yönünde boş değer, yön isteğe bağlı olsa da kalır; varlık adı tam eşleşir, alt türleri kapsamaz | Üretilen IDS'in bağımsız denetleyicisi (sahibin 16 Kasım onayıyla indirildi, uv önbelleğinde; ürünle dağıtılmaz); koşullu satır kendi tanımında, ölçekli dönüşüm adıyla (§5) |
 
 ## §2. Karar
 
@@ -129,11 +130,44 @@ satırlar:
 - malzeme `material` (gerekli);
 - `IfcRelAssignsToGroup>IfcSystem` bir `partOf`: grup IfcSystem ya da alt türü.
 
+- **Koşullu satır:** kullanıcı tanımlı rol (Tablo 7.5) kendi tanımındadır: yalnız `Role`'ü USERDEFINED olan rollere
+  uygulanır ve orada gereklidir (K48; IFC'nin WR1'i). IDS 1.0'da öznitelik yönünün "isteğe bağlı"sı bunu söyleyemez:
+  denetleyici boş özniteliği isteğe bağlı yönde de kaldırır.
+- **Her modelde olan sınıflar** (K51): EK-7 Tablo 7.1–7.8'in sınıfları (proje, kişi, kişi-kuruluş, kuruluş, rol,
+  koordinat sistemi, harita dönüşümü, bağlam) en az bir kez bulunur (`minOccurs="1"`); 7.9'un ölçüm notu
+  (`IfcAnnotation` SURVEY) ve EK-6'nın sınıfları yalnız varsa sorulur.
+- **Ölçekli harita dönüşümü:** IDS varlığı adıyla eşler, alt türünü kapsamaz; harita dönüşümünün tanımı yerel sistemin
+  ölçekli dönüşümüne (`IfcMapConversionScaled`, ADR 8072 §3) de uygulanır. Öbür alt türler katılmaz: bağlamın alt
+  bağlamları alanlarını üst bağlamdan türetir.
+
 Her gerekliliğin `instructions`'ı satırın Türkçe adı, tablosu ve satırıdır. scripts/fixtures/ids_check.py (yalnız Python'un
 kendi XML okuyucusu) dosyanın IDS 1.0 yapısını (info, specifications, yönlerin sırası, cardinality, dataType kalıbı)
 denetler ve gerekliliklerini KentOS'un dört dosyasının olgularına uygular: eksikler KentOS'un kuralınınkiyle satır ve
-nesne düzeyinde aynıdır (kesit binası 45, künyeli 30, yerel sistem 44, kapısı eksik 45). Bu KentOS'un kendi okumasıdır;
-bağımsız denetleyici (§8) sahibin onayını bekler.
+nesne düzeyinde aynıdır (kesit binası 45, künyeli 30, yerel sistem 44, kapısı eksik 45).
+
+**Bağımsız denetleyici** (scripts/fixtures/ids_ifctester_check.py; IfcTester 0.9.0, IfcOpenShell 0.9.0.post1): IDS'i
+IDS 1.0 şemasıyla doğrulayarak açar (78 tanım) ve dört dosyada koşar. Bulduğu her eksik, KentOS'un kuralının satırı
+ve nesnesiyle aynıdır; EK-7 kayıtlarının eksikleri (2., 6. ve 9. soruların okuduğu) ve hiç bulunmayan EK-7 sınıfları da
+aynıdır; KentOS'un ölçmediği satırlarda (grup, yerleşim gibi öznitelikler) IfcTester'ın kaldırdığı bir şey yoktur.
+
+| Dosya | Eksik satır (EK-6, EK-7) | EK-7 kaydında eksik | Hiç bulunmayan EK-7 sınıfı | Ayrışan |
+|---|---|---|---|---|
+| Kesit binası | 45 | 1 (bağlamın gerçek kuzeyi) | 6 | 0 |
+| Künyeli kesit binası | 30 | 1 | 0 | 0 |
+| Yerel sistem | 44 | 1 | 4 | 0 |
+| Kapısı eksik | 45 | 1 | 6 | 0 |
+
+İlk koşuda ayrışan üç satır vardı, üçü de düzeltildi:
+
+- **Arazi kimliği ve tapu kimliği** (`Pset_LandRegistration.LandID`, `LandTitleID`, Tablo 6.55): IFC 4.3'ün şablonu
+  `IfcIdentifier` ister, KentOS `IfcLabel` yazıyordu. Yazıcı düzeltildi; `catalog_schema::mistyped` yazılacak binanın her
+  standart özelliğini ve miktarını şablonun türüyle karşılaştırır, uygulamanın testi kesit binasında boş liste ister.
+- **Kullanıcı tanımlı rol:** IDS satırı olduğu gibi zorunlu sayıyordu; K48 koşullu tanımla yazıldı.
+- **Bağlamın gerçek kuzeyi** (Tablo 7.8 `TrueNorth`) iki tarafta da eksikti ama formun hiçbir sorusu söylemiyordu: 9. soru
+  artık bağlamın kayıttaki zorunlu alanlarını da sayar ("KentOS bu alanı IFC'ye henüz yazmıyor").
+
+IfcTester'ın satır ve nesne sonuçları fixtures/ifc/v1/ids-sonuc/'dadır; paketin testi KentOS'un olgularını onlarla
+karşılaştırır (IfcTester olmadan da koşar).
 
 ## §6. Ölçümler
 
@@ -164,15 +198,15 @@ kat büyür; Denetle her seferinde iki kez kurar (çizimin olguları ve dosyanı
 | 21 sorunun her biri için geçen ve kalan örnek | 18 soru iki yönüyle (gerçek dosyalar ve tek değişiklikli olgular, test_form.py); 1 ve 7 doğası gereği inceleme; 10 kalan ya da inceleme (karşılaştırma müellifin) |
 | Üç kapıdan biri ve başvuruları çıkarılır; şema geçerli, IDS olumlu iken EK-9/8 eksik kapıyı kaynak kimliğiyle bulur | scripts/fixtures/ifc_missing_door_case.py IfcOpenShell'le K02 kapısını ve yalnız onun andığı 18 kaydı çıkarır; denetleyici (EXPRESS kurallarıyla) 0 bulgu; kalan nesnelerin eksikleri (IDS'in okuduğu) aynı; EK-9/8 kaldı, bulgunun nesnesi `0192f5a1-4242-7000-8000-00000000000e`. Kesit binasının kapılarında yangın dayanımı ve acil çıkış yok: IDS'in kapı satırları olumlu değil, değişmedi |
 | Bulgu planda ve 3B'de nesneyi seçer | Denetim'in bulgusu nesnelerini seçer; 3B görünüm ve IFC modeli onları boyar (test: duvarların yangın dayanımı bulgusu IFC modelinde yalnız o duvarları boyar) |
-| İkinci bağımsız denetleyiciyle ayrışan satır kalmaz | İkinci okuyucu: scripts/fixtures/ifc_form_reference.py IfcOpenShell'le dört dosyanın olgularını kendi yoluyla kurar (nesneler, kayıtlar, katalog verisinden zorunlu alan kuralı, IfcOpenShell'in IFC 4.3 şablonlarıyla set denetimi, kendi üçgenlemesinden gövdeler, üçgen üçgen örtüşme); form iki okuyucuda 21 satırın kanıtında, bulguların kodunda ve nesnelerinde aynı (kesit binasında 9. sorunun 43 bulgusu, 127 nesne; test_form.py). Bağımsız IDS denetleyicisi açık (§8): IfcTester çevrimdışı önbellekte yok |
+| İkinci bağımsız denetleyiciyle ayrışan satır kalmaz | IDS denetleyicisi: IfcTester dört dosyada KentOS'un kuralıyla satır ve nesne düzeyinde aynı (§5; ilk koşuda bulduğu yazıcı hatası düzeltildi). İkinci okuyucu: scripts/fixtures/ifc_form_reference.py IfcOpenShell'le dört dosyanın olgularını kendi yoluyla kurar (nesneler, kayıtlar, katalog verisinden zorunlu alan kuralı, IfcOpenShell'in IFC 4.3 şablonlarıyla set denetimi, kendi üçgenlemesinden gövdeler, üçgen üçgen örtüşme); form iki okuyucuda 21 satırın kanıtında, bulguların kodunda ve nesnelerinde aynı (kesit binasında 9. sorunun 43 bulgusu, 127 nesne; test_form.py). |
 
 Resimler: .run/gui-evidence/ek9-dosyadan-8074/ (açık ve koyu): Denetim › Mevzuat'ta formun bulgusu; IFC modelinde
 bulgunun duvarları; çizimdeki form iki yarısıyla; Ruhsat takımı'nın yeni kutusu.
 
 ## §8. Açık işler
 
-- **Bağımsız IDS denetleyicisi:** IfcTester (ya da eşdeğeri) indirilmesi sahibin onayını bekler; onaydan sonra üretilen IDS
-  dört dosyada çalıştırılır, sonuçlar formun 9. sorusuyla karşılaştırılır.
+- **Gerçek kuzey** (EK-7 Tablo 7.8 `TrueNorth`): yazıcı yazmıyor; kuzey okundan ve projenin sisteminin meridyen
+  yakınsamasından (IFC-02).
 - **Son yazılan dosya:** Denetim'in bellekteki dosya yerine diske yazılan ya da teslim edilecek dosyayı okuması (K4'ün
   "diske yazılan"ı); bulut işinin aynı betiği çalıştırması.
 - **Beş sonucun ayrı raporu** (ifc-uyum §1: okunuyor, şema, Türkiye profili, model–pafta, idare): ruhsat paketinde (B14).
@@ -197,3 +231,8 @@ bulgunun duvarları; çizimdeki form iki yarısıyla; Ruhsat takımı'nın yeni 
   [buildingSMART IFC4.3.x-development, PEnum_ProjectType](https://github.com/buildingSMART/IFC4.3.x-development/blob/master/docs/schemas/core/IfcKernel/PropertyEnumerations/PEnum_ProjectType.md)).
   KentOS künyenin Yapı'sından yazar: yeni bina NEWBUILD; ilave ve tadilat mevcut yapının değiştirilmesidir, MODIFICATION.
   Yenileme (RENOVATION) ve onarım (REPAIR) ruhsat türü olarak künyede yok; seçilmemiş yapı türünde değer yazılmaz.
+- **K51 — EK-7'nin sınıfları her modelde.** EK-7 7.1–7.4 projenin, kişinin, kuruluşun, rolün, koordinat sisteminin ve
+  harita dönüşümünün zorunlu sınıflar olduğunu söyler; bağlam her modelde vardır. IDS bu sınıfları en az bir kez ister
+  (`minOccurs="1"`). Tablo 7.9'un `IfcAnnotation`'ı (ön tanımlı tipi yalnız SURVEY: ölçüm noktası, kot eğrisi) ancak
+  modelde ölçüm notu varsa sorulur. Yerel koordinatlı modelde koordinat sistemi ile harita dönüşümünün yokluğu IDS'te de
+  bulgudur; 6. sorunun Hayır'ıyla aynı.
