@@ -1111,8 +1111,9 @@ impl App {
             );
             return Task::none();
         };
+        // In the interface's language when the package translates it (docs/adr/8057 §106).
         let definition = registry
-            .package_file(ext, &entry.definition)
+            .localized_file(ext, &entry.definition, &format!("ui.{}", entry.id))
             .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
             .and_then(|value| kentos_extensions::ui_panel::read(&value));
         let Some(definition) = definition else {

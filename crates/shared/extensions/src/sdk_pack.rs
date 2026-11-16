@@ -174,6 +174,8 @@ bütün panel `ui.panel(başlık, bileşenler)`); panelin şemasından üretilir
   Ağa çıkan kod `network` ister; işletim sistemi komutu ve `eval`/`exec` uyarıdır.
 - Kütüphane `uv add <paket>` ile eklenir (`pyproject.toml` ve `uv.lock` birlikte yazılır); KentOS ortamı kilitten kurar.
   Çalışırken `pip` ile kurmak ve `sys.path`'e dokunmak reddedilir.
+- Çeviri `l10n/<dil>.json`: düz nesne, anahtar metnin yeri (`"entrypoints.commands.<kimlik>.title"`, panelde
+  `"ui.<panel>.body.<bileşen>.label"`), değer çevirisi; manifestin dili (`l10n.default`) dosyasızdır.
 - `kentos.ext`, `kentos.ui_panel` ve JSON biçimleri kararlıdır: yalnız SDK protokolü artınca kırılır. Eskiyen ad
   `sdk_deprecated` uyarısıdır, `kentos kek upgrade` yenisini yazar; deneysel ad (`sdk_experimental`) yayımlanamaz.
 - Bir hata eklentinin adıyla söylenir ve iz kaydıyla eklentinin günlüğüne yazılır; kullanıcıya bozuk bir çizim kalmaz.
@@ -318,7 +320,10 @@ fn verify_codes() -> Value {
         "ui_panel": "Panel tanımında bir kural bozuk; işaretçi yeri söyler.",
         "layer_schema_outside": "Uyarı: ilişki şemanın kurmadığı bir katmana bağlı; projede olmalı.",
         "secret_in_text": "Uyarı: metinde API anahtarı, jeton ya da özel anahtar biçiminde bir değer; katalog yayımlamaz. \
-                           Değeri çıkarın, kullanıcının ayarından okuyun."
+                           Değeri çıkarın, kullanıcının ayarından okuyun.",
+        "l10n_file": "Çeviri dosyası okunmuyor: düz bir nesne, her metnin yeri ve çevirisi (\"name\": \"…\", \
+                      \"entrypoints.commands.<kimlik>.title\": \"…\", panelde \"ui.<panel>.body.<bileşen>.label\").",
+        "l10n_stale": "Uyarı: çevirinin yerinde metin yok (yeri değişmiş): yeni yeriyle yazın."
     })
 }
 

@@ -31,6 +31,7 @@ pub mod compat;
 mod icon;
 pub mod icon_names;
 pub mod integrity;
+pub mod l10n;
 pub mod layer_schema;
 pub mod manifest;
 mod paths;

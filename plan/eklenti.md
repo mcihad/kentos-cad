@@ -1361,9 +1361,13 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   panelini, iki İşlemler aracını, bir MapTool'u ve bir denetim kuralını sunar; şerit, Eklentiler, İşlemler, Denetim,
   komut arama ve MCP aynı kimliğe gider; devre dışı bırakılınca hepsi hayalet komut/geri çağırma bırakmadan kalkar
   [EKL-02 kabulü].
-- [ ] **Derslerden (13 Kasım):** UI bildirimseldir ve araç takımından bağımsızdır: Python'a çizim nesnesi ya da araç
+- [x] **Derslerden (13 Kasım):** UI bildirimseldir ve araç takımından bağımsızdır: Python'a çizim nesnesi ya da araç
   takımı tipi verilmez, özel bileşen kaçış yolu da vermez (QGIS'te Qt değişince paketlerin %58'i geride kaldı) [D7];
   `l10n` anahtarları panel ve form metinlerine bağlanır.
+  — *tamam (ADR 8057 §24–25, §106, 16 Kasım): paneller şemalı JSON, araç takımı tipi ya da özel bileşen yok (§25'te
+  sınır olarak yazılı); çeviri MEBİS'in biçimiyle (anahtar metnin yeri) manifeste, şeride, panellere, formlara, İşlemler
+  araçlarına ve kurulum incelemesine bağlı; Kapı 1 bozuk çeviriyi reddeder, yerinde metni olmayanı uyarır. Katman
+  şemasının alan adlarını Python kurar: orada çeviri yok.*
 - **Kabul** — *kısmen (ADR 8057 §24–25, 15 Kasım): koyu tema, 16 px, 1100×650'de panel gerçek fare ve klavyeyle
   sınandı: dar yerde etiket alanın üstünde (ortak Form), Enter birincil düğme, Tab/Shift+Tab alanlar arasında, Boşluk
   onay kutusunu işaretler; komut yanıt verirken yazılan alan odağını ve metnini korur; yanlış sayı adıyla söylenir;

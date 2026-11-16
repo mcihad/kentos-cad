@@ -16,6 +16,7 @@ mod audit_picker;
 mod bom;
 mod builds;
 mod demo;
+mod l10n;
 mod python;
 
 fn temp(name: &str) -> PathBuf {

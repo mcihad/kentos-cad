@@ -267,9 +267,22 @@ pub fn verify_installed(dir: &Path, digest: &str) -> Result<(), String> {
 }
 
 fn read_manifest(layout: &Layout, id: &str, version: &str) -> Result<Manifest, Problem> {
-    let path = layout.package(id, version).join("manifest.json");
+    let dir = layout.package(id, version);
+    let path = dir.join("manifest.json");
     let text = fs::read_to_string(&path).map_err(|e| store::io("Manifest okunamadı", &path, &e))?;
-    Manifest::read(&text)
+    // Shown in the interface's language when the package translates its texts to it (docs/adr/8057 §106).
+    Ok(kentos_extensions::l10n::localized(
+        Manifest::read(&text)?,
+        |file| package_path(&dir, file).and_then(|p| fs::read(p).ok()),
+    ))
+}
+
+/// `file`'s place in the package folder `dir`, when it stays inside it.
+fn package_path(dir: &Path, file: &str) -> Option<PathBuf> {
+    (!file.split('/').any(|p| p.is_empty() || p == "..")).then(|| {
+        file.split('/')
+            .fold(dir.to_path_buf(), |d, part| d.join(part))
+    })
 }
 
 impl Registry {
@@ -711,6 +724,26 @@ impl Registry {
             return fs::read(full).ok();
         }
         None
+    }
+
+    /// The translation `id`'s texts are shown with in the interface's language (docs/adr/8057 §106): a panel's, a
+    /// tool's file read through it ([`kentos_extensions::l10n::localized_json`]). None when it is written in that
+    /// language or does not translate to it.
+    pub fn texts(&self, id: &str) -> Option<kentos_extensions::l10n::Texts> {
+        kentos_extensions::l10n::for_interface(self.manifest(id)?, |file| {
+            self.package_file(id, file)
+        })
+    }
+
+    /// A file of `id`'s package as the interface shows it: a panel's, a tool's, the layer schema's texts translated
+    /// (`prefix`, its places' beginning: `ui.<panel>`, `tools.<tool>`, `schema`).
+    pub fn localized_file(&self, id: &str, path: &str, prefix: &str) -> Option<Vec<u8>> {
+        let bytes = self.package_file(id, path)?;
+        Some(kentos_extensions::l10n::localized_json(
+            bytes,
+            self.texts(id).as_ref(),
+            prefix,
+        ))
     }
 
     /// The lease of a running extension.

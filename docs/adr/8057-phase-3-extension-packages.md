@@ -5161,3 +5161,44 @@ headless `agent_tools.rs` (`PYTHON_RUNS`, `Host::python_refusal`); masaüstü `a
 - **İnsan için de:** `kentos kek new` iskeleti yazınca sık kullanılan paketlerin adlarını söyler.
 - **Sınamalar:** `python_names` 1 (öneriler tanınmış adlar, her biri bir kez ve amacıyla; ilke listesi süzer ve ekler,
   gereksinimden ad); headless 2 (iskelet yanıtında paketler ve not; ilkeli host yalnız izinlileri önerir).
+
+## §106. Eklentinin çevirisi manifeste, panellere ve formlara bağlandı (`ADIM 22`, "Derslerden")
+
+**16 Kasım.** Kod: `l10n.rs` (yeni), `archive.rs` (Kapı 1), `sdk_pack.rs` (rehber, kodlar), `sdk/llms.txt`; kayıt
+defteri `registry.rs` (`read_manifest`, `texts`, `localized_file`); araçlar `plan.rs`; masaüstü `extensions/` (kurulum
+incelemesi, panel, form, atölye ön izlemesi).
+
+- **Sorun.** Plan: "`l10n` anahtarları panel ve form metinlerine bağlanır"; paket düzeni `l10n/<dil>.json`'u "manifest,
+  şerit, panel ve form metinlerinin çevirileri" diye tanımlar. Manifestin `l10n` alanı (varsayılan dil, dil → dosya)
+  denetleniyordu ama dosyalar hiçbir metne uygulanmıyordu: İngilizce yazılıp Türkçeye çevrilmiş bir eklenti KentOS'ta
+  İngilizce görünürdü.
+- **Biçim MEBİS'in dosyasıdır.** Referans paketin `l10n/en.json`'u plan aşamasında yazılmıştı: düz bir nesne, anahtar
+  metnin yeri (`"entrypoints.commands.init-schema.title"`, `"contributions.ribbonTabs.mebis.label"`), değer çevirisi.
+  Karar onu izler; önce düşündüğüm "kaynak metin anahtardır" biçimi bırakıldı: aynı metin iki yerde iki çeviri
+  isteyebilir, metin değişince çeviri sessizce düşerdi. Yer: nesnenin anahtarı; listenin öğesi `id`'siyle, yoksa `name`,
+  yoksa `value` (seçeneğin), yoksa sırasıyla. Manifestin yerleri olduğu gibi; panelinkiler `ui.<panel>`, İşlemler
+  aracınınkiler `tools.<araç>`, formunkiler `forms.<form>`, katman şemasınınkiler `schema` ile başlar, yerel
+  kimliklerle.
+- **Metinler** kullanıcının okuduklarıdır: dosyanın kökündeki `name` (manifestin, form paketinin) ve nerede olursa olsun
+  `label`, `title`, `summary`, `description`, `help`, `text`, `reason`, `alias`, `placeholder`, `tooltip`. Kimlik,
+  komut, değer, ifade hiçbiri değildir (kökün altındaki `name` şema alanının kimliğidir).
+- **Ne zaman:** KentOS'un arayüzü Türkçe. Başka dilde yazılıp Türkçeye çevrilmiş eklenti Türkçe görünür; Türkçe yazılmış
+  eklenti yazıldığı gibi görünür, başka dillere çevirisi arayüz o dili konuştuğunda kullanılır.
+- **Nerede:** kayıt defteri manifesti çevirerek okur (ad, özet, şerit, menüler, yetenek gerekçeleri: hepsi aynı
+  manifestten); kurulum incelemesi paketin dosyasından çevirir (ad, özet, açıklama, inceleme satırlarındaki yetenek
+  gerekçeleri); panel, form ve İşlemler aracı tanımı açılırken `Registry::localized_file` ve `texts` ile çevrilir;
+  atölyenin ön izlemesi (`extension.workshop.preview`) kullanıcının gördüğünü söyler.
+- **Kapı 1:** biçimi bozuk çeviri ret (`l10n_file`); yerinde metin olmayan çeviri uyarı (`l10n_stale`: metin yer
+  değiştirmiş, çeviri geride kalmış). Çevrilmemiş metin hata değildir: yazıldığı gibi gösterilir ve çeviri adım adım
+  büyür (MEBİS'in İngilizcesi 57 metnin 4'ünü çevirir, dördünün yeri de yerinde: sınamayla).
+- **SDK:** rehberde biçim tek madde; doğrulama kodlarında iki kod.
+- **Sınır:** katman şemasını eklentinin Python'u kurar (`ctx.apply_declarative_schema`, §23); şemadaki alan adlarının
+  (`alias`) çevirisi orada uygulanmadı.
+- **Gerçek pencere:** İngilizce yazılmış örnek eklenti (`Grave lookup`, `l10n/tr.json`), bağlı ajanın açtığı kurulum
+  incelemesinde "Mezar arama", Türkçe özet, açıklama ve yetenek gerekçeleriyle; kurulunca şeritte "Mezarlar" sekmesi,
+  "Arama" grubu, "Katmanları listele"; panelde "Mezar arama", "Mezar no", "Durum: Dolu/Boş", "Yalnız bu ada"; Python
+  uyarısı eklentinin çevrilmiş adıyla. `kek verify` 0 uyarı; kuru koşu katkıları Türkçe adlarıyla söyler.
+- **Sınamalar:** `l10n` 4 (yerler; kimlik, komut, değer ve ifade çevrilmez; boş çeviri yok sayılır; form paketinin adı,
+  şema alanı; dosya biçimi; Kapı 1'in uyarısı; MEBİS'in İngilizcesinin her yeri yerinde); kayıt defteri 1 (İngilizce
+  yazılmış paketin manifesti ve paneli Türkçe, başka panelin yerleri karışmaz; Türkçe yazılmış paket yazıldığı gibi);
+  masaüstü 1 (inceleme: ad, özet, gerekçe).

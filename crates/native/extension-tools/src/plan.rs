@@ -164,11 +164,19 @@ pub fn read_tools(registry: &Registry, contributions: &[Registered], environment
         let Some(plan) = Plan::of(registry, &ext, &local, &entry.handler) else {
             continue;
         };
+        // Its texts in the interface's language when the package translates them (docs/adr/8057 §106).
+        let texts = registry.texts(&ext);
         let read = std::fs::read_to_string(plan.source.join(&entry.descriptor))
             .map_err(|e| format!("{} okunamadı: {e}", entry.descriptor))
             .and_then(|text| {
                 serde_json::from_str::<Value>(&text)
                     .map_err(|e| format!("{} JSON değil: {e}", entry.descriptor))
+            })
+            .map(|mut descriptor| {
+                if let Some(texts) = &texts {
+                    texts.apply(&mut descriptor, &format!("tools.{local}"));
+                }
+                descriptor
             })
             .and_then(|descriptor| {
                 external::from_descriptor(&ext, &manifest.name, &plan.version, &local, &descriptor)

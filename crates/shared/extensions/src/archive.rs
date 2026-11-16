@@ -679,12 +679,30 @@ fn check_references(manifest: &Manifest, files: &BTreeMap<String, Vec<u8>>, out:
                     }
                 }
             },
-            FileRole::Translation => {
-                if let Err(why) = json(data) {
-                    out.problems
-                        .push(problem("reference_json", format!("Dosya {why}.")));
+            // A translation (docs/adr/8057 §106): refused when it does not read; a place no text of the package
+            // stands at said (a text left untranslated is shown as written).
+            FileRole::Translation => match crate::l10n::Texts::read(data) {
+                Err(why) => out
+                    .problems
+                    .push(problem("l10n_file", format!("Çeviri dosyası {why}."))),
+                Ok(translation) => {
+                    let read = |path: &str| {
+                        files
+                            .get(path)
+                            .and_then(|b| serde_json::from_slice::<serde_json::Value>(b).ok())
+                    };
+                    let mut texts = read(manifest::FILE)
+                        .map(|m| crate::l10n::texts_at(&m, ""))
+                        .unwrap_or_default();
+                    for (file, prefix) in crate::l10n::files(manifest) {
+                        if let Some(value) = read(&file) {
+                            texts.extend(crate::l10n::texts_at(&value, &prefix));
+                        }
+                    }
+                    out.warnings
+                        .extend(crate::l10n::check(path, &translation, &texts));
                 }
-            }
+            },
             FileRole::ToolDescriptor => {
                 let id = manifest
                     .entrypoints

@@ -1171,7 +1171,8 @@ impl App {
             return;
         };
         let part = format!("form “{local}”");
-        let text = match registry.package_file(ext, &definition) {
+        // Its texts in the interface's language when the package translates them (docs/adr/8057 §106).
+        let text = match registry.localized_file(ext, &definition, &format!("forms.{local}")) {
             None => {
                 self.extension_failed(
                     ext,
@@ -1284,8 +1285,26 @@ impl App {
                     .collect()
             })
             .unwrap_or_default();
-        let review = registry.review_beside(&bytes, &source, catalog);
+        let mut review = registry.review_beside(&bytes, &source, catalog);
         let opened = kentos_extensions::open(&bytes, &Limits::default());
+        // Read in the interface's language when the package translates its texts (docs/adr/8057 §106): its name, what
+        // it says it does and why it asks for each capability.
+        review.inspection.manifest =
+            review.inspection.manifest.take().map(|m| {
+                kentos_extensions::l10n::localized(m, |path| opened.files.get(path).cloned())
+            });
+        // The review's own lines carry the reasons as written: they are read from the translated manifest too.
+        if let Some(m) = &review.inspection.manifest {
+            for line in &mut review.capabilities {
+                if let Some(asked) = m
+                    .requested_capabilities
+                    .iter()
+                    .find(|c| c.id == line.capability)
+                {
+                    line.reason.clone_from(&asked.reason);
+                }
+            }
+        }
         let manifest = review.inspection.manifest.as_ref();
         let changelog = manifest
             .and_then(|m| m.changelog_file.as_ref())

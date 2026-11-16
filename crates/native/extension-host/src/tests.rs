@@ -1475,3 +1475,5 @@ fn the_demo_extension_binds_whole_in_a_dry_run() {
         assert!(ids.contains(&want), "{want}: {ids:?}");
     }
 }
+
+mod l10n;

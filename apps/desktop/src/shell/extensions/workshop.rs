@@ -217,8 +217,9 @@ impl App {
             .into_iter()
             .flat_map(|m| &m.entrypoints.panels)
             .map(|entry| {
+                // As the user sees it: translated when the package translates it (docs/adr/8057 §106).
                 let definition = registry
-                    .package_file(id, &entry.definition)
+                    .localized_file(id, &entry.definition, &format!("ui.{}", entry.id))
                     .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
                     .and_then(|value| kentos_extensions::ui_panel::read(&value));
                 let side = serde_json::to_value(entry.side).unwrap_or(Value::Null);
