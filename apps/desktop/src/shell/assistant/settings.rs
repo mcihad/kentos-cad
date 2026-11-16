@@ -437,14 +437,22 @@ impl App {
             };
             rows = rows.push(
                 row![
-                    column![
-                        label::strong(p.name.clone()),
-                        label::caption(facts).style(style::text::muted),
-                        label::caption(spending_words(p, self.assistant.ledger.spent(&p.id, &day)))
+                    {
+                        let mut said = column![
+                            label::strong(p.name.clone()),
+                            label::caption(facts).style(style::text::muted),
+                            label::caption(spending_words(
+                                p,
+                                self.assistant.ledger.spent(&p.id, &day)
+                            ))
                             .style(style::text::muted)
-                    ]
-                    .spacing(2)
-                    .width(Fill),
+                        ];
+                        // The organisation's policy, where the user picks the agent: not first in the chat.
+                        if let Some(why) = self.assistant.refusal(p) {
+                            said = said.push(label::caption(why).style(style::text::warning));
+                        }
+                        said.spacing(2).width(Fill)
+                    },
                     badge,
                     words::secondary("Düzenle", Some(msg(AgentsEdit::Change(p.id.clone())))),
                     words::secondary("Sil", Some(msg(AgentsEdit::Remove(p.id.clone())))),

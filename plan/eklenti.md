@@ -1189,8 +1189,10 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   yetki sınıflarıdır [PY-AI-11]; sağlayıcıya gönderilecek veri kullanıcı/kiracı politikasıyla sınırlanır, bağımlılık
   kurma isteği veri gönderme onayı sayılmaz [PY-AI-13]. Anahtarlar ADR 8056 §4'teki gibi ayarlardan ayrı, günlük ve
   pakette yok.
-  — *kısmen (ADR 8057 §31; ADR 8056 §4): eklentinin sözleri ajana veridir, gizli alanlar kesilir, anahtarlar
-  ayarlardan ayrı; kalan: yetki sınıflarının ayrımı ve sağlayıcıya gidecek verinin politikası [PY-AI-11, 13].*
+  — *kısmen (ADR 8057 §31; ADR 8056 §4, §7): eklentinin sözleri ajana veridir, gizli alanlar kesilir, anahtarlar
+  ayarlardan ayrı; kurum ilkesinin "dış yapay zekâya veri" izni Asistan'ı da bağlar, izinli yapay zekâ adresleriyle
+  (16 Kasım); kalan: yetki sınıflarının ayrımı [PY-AI-11], izinli sağlayıcıya öznitelik değerlerini göndermeme
+  seçeneği [PY-AI-13].*
 - [ ] **Yüzeyler:** uygulama içi ajan (Asistan) ve dış MCP aynı komut, belge kapsamı, gizli alan ayıklaması, önizleme ve
   izinleri kullanır [EKL-06]; çalışan işler, maliyet/istek bütçesi ve gönderilecek çizim verisinin kapsamı kullanıcıya
   anlaşılır gösterilir. Sürümlü Python API referansı, kavramsal başlangıç, KentOS UI ve İşlemler rehberi, paketleme, hata

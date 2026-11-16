@@ -1,7 +1,9 @@
-//! The user's token limits in Asistan (docs/adr/8056 §6), against a provider on this computer: an agent calling tools
-//! past its conversation's limit stops there and the next turn is refused until a new conversation; a day that spent
-//! its limit refuses the agent until tomorrow; the agent's form keeps the limits and says what is not one.
+//! The limits on Asistan (docs/adr/8056 §6, §7), against a provider on this computer: an agent calling tools past its
+//! conversation's limit stops there and the next turn is refused until a new conversation; a day that spent its limit
+//! refuses the agent until tomorrow; the agent's form keeps the limits and says what is not one. The organisation's
+//! policy keeps the drawing from an agent outside this computer, before a key is asked.
 
+use kentos_agent::{AgentProfile, KeySource, ProviderKind};
 use kentos_ui::widget::ai::{AiEvent, Phase, PromptState};
 use serde_json::json;
 
@@ -128,4 +130,46 @@ fn the_agents_form_keeps_its_limits_and_says_what_is_not_one() {
         (kept.conversation_tokens, kept.daily_tokens),
         (None, Some(1_000_000))
     );
+}
+
+#[test]
+fn the_organisations_policy_keeps_the_drawing_from_an_agent_outside_this_computer() {
+    let provider = Provider::start(|_, _| says("Merhaba."));
+    let mut app = chatting(&provider);
+    app.assistant.policy = Some(
+        kentos_extension_host::Policy::read(
+            r#"{"format": "kentos.extension-policy", "schemaVersion": 1, "allowDataToAi": false}"#,
+        )
+        .expect("a policy"),
+    );
+    // The agent on this computer still answers.
+    let (message, task) = send(&mut app, "Merhaba");
+    drive(&mut app, task);
+    let said = app.assistant.chat.message(message).expect("the answer");
+    assert_eq!(said.phase, Phase::Complete, "{said:?}");
+    // One outside is refused before its key is asked and before any request.
+    let store = &app.assistant.store;
+    let outside = store
+        .add(AgentProfile {
+            key: KeySource::Session,
+            ..AgentProfile::new(ProviderKind::DeepSeek, "DeepSeek", "deepseek-chat")
+        })
+        .expect("added");
+    store.set_default(&outside.id).expect("the default");
+    app.assistant.refresh();
+    let why = refused(&mut app, "Çizimi özetle.");
+    assert!(
+        why.contains("bu bilgisayarın dışındaki")
+            && why.contains("“DeepSeek” https://api.deepseek.com"),
+        "{why}"
+    );
+    assert!(
+        !why.contains("API anahtarı"),
+        "the policy, not the key: {why}"
+    );
+    assert_eq!(provider.bodies().len(), 1);
+    // The settings say it on the agent's row.
+    let _ = app.update(crate::app::Message::Run("tools.options"));
+    assert!(app.assistant.refusal(&outside).is_some());
+    let _ = app.ai_section();
 }

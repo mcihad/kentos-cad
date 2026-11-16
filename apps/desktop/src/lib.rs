@@ -1857,6 +1857,9 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
             // The user's AI agents, in a file of their own readable by the user alone (docs/adr/8056 §4).
             app.assistant.store = kentos_agent::ProfileStore::device();
             app.assistant.ledger = kentos_agent::UsageLedger::device();
+            app.assistant.policy = kentos_extension_host::places::load_policy(
+                &kentos_extension_host::places::policy_path(),
+            );
             app.assistant.refresh();
             if let Some(kept) = app.assistant.store.take_set_aside() {
                 app.output(format!(

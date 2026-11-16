@@ -236,10 +236,52 @@ hiçbir yerde görünmüyordu.
   DeepSeek yanıtı (346 + 135 token, iki çağrı) 400 tokenlık sohbeti aşınca masaüstüne çağrı gelmez, ikisi de neden
   çalışmadığını alır, sağlayıcıya ikinci istek gitmez; günü 990'dan sürdüren 1 000 sınırında turu bitiren yanıt bütün
   gelir, 600'den sürdüren ve araç çağıran yanıt durdurulur.
-- Masaüstü `assistant::budget_tests` (3): 150 tokenlık araç çağrısı 100 sınırında durur, gün de sayar; sonraki istek
+- Masaüstü `assistant::limits_tests` (3): 150 tokenlık araç çağrısı 100 sınırında durur, gün de sayar; sonraki istek
   başlamadan "Yeni sohbet" der; Yeni sohbet sıfırlar ve yanıtın satırı sınırı taşır; günlük 1 000'i harcamış ajan
   reddedilir, sağlayıcıya istek gitmez; form "1,5"i kaydetmez, "200.000" ve "1 000 000"u tutar, boşaltılan sınır
   kalkar. `kentos-ui` `an_answer_says_its_tokens_and_the_conversations`.
 - Gerçek pencere (yukarıdaki ölçüm düzeni, ajanın sınırı 20 000): "Çizimin özetini oku, sonra her katmandaki nesneleri
   tek tek incele…" isteğinde ajan iki aracı (Çizimin özeti, Katmanlar) çalıştırdı, üçüncü yanıtta 20.562 / 20.000'de
   durdu; "Devam et." başlamadan reddedildi. Ayarlarda ajan satırı ve form yukarıdaki gibi.
+
+## §7. Kurum ilkesi Asistan'ı da bağlar: çizim yalnız izinli yapay zekâ adreslerine (`ADIM 21`, [PY-AI-13])
+
+**İstek.** `plan/eklenti.md` ADIM 21 › Güvenlik: "sağlayıcıya gönderilecek veri kullanıcı/kiracı politikasıyla
+sınırlanır" [PY-AI-13]. Durum: kurum ilkesinde (`kentos.extension-policy`, ADR 8057 karar 9) "dış yapay zekâya veri"
+izni (`allowDataToAi`) vardı ama yalnız eklentilere uygulanıyordu (`network.sendsDataToAi` isteyen eklenti durur).
+Uygulamanın kendi ajanı aynı çizimi, ilke ne derse desin, kullanıcının seçtiği sağlayıcıya gönderiyordu. Belediye
+çiziminin öznitelikleri kişisel veri taşıyabilir (malik adı, kimlik numarası, adres) ve sağlayıcıların çoğu yurt
+dışında (DeepSeek'in gizlilik notu: "Veriler Çin Halk Cumhuriyeti'nde işlenir"); kurumun "dışarı veri gitmez" kararı
+eklentide işleyip yerleşik ajanda işlemezse karar yarımdır.
+
+**Karar.**
+- `allowDataToAi: false` uygulama içi ajanı da bağlar: sunucusu bu bilgisayarın dışında olan ajana tur başlamaz.
+  Bu bilgisayardaki sunucu (`localhost`, geri döngü adresi; Ollama, LM Studio) serbesttir: gönderilen bu bilgisayarda
+  kalır (`AgentProfile::on_this_computer`, adresin denetimiyle aynı işlev).
+- Yeni, isteğe bağlı `allowedAiAddresses`: yazılınca ajan bu bilgisayarın dışında yalnız bu adreslere (ve altlarına)
+  bağlanır; `allowDataToAi: false` ile birlikte kurumun kendi sunucusunu açar (`https://yz.ornek.bel.tr`), tek başına
+  sağlayıcıları seçer. Eşleşme sınırda: şema ve sunucu (kapısıyla) aynı, yol aynı ya da altı, büyük/küçük harf şema ve
+  sunucuda fark etmez (`https://yz.ornek.bel.tr` ⊃ `https://YZ.ornek.bel.tr/v1`; `…bel.tr.baska.com`, başka kapı, `http`,
+  `/v10` değil). Ad, eklenti ilkesinin diğer alanları gibi; eski KentOS bilinmeyen alanı görünce ilkeyi kapalı okur
+  (ADR 8057 §84'teki yol).
+- **Denetim turdan önce, anahtardan önce:** ilkenin kapattığı ajana anahtar sorulmaz, sağlayıcıya istek gitmez; sohbet
+  nedenini ve yolunu söyler. Ayarlardaki ajan satırı aynı cümleyi uyarı renginde yazar: kullanıcı ajanı seçtiği yerde
+  görür, ilk mesajında değil. Okunamayan ilke dışarıyı kapatır (eklentilerdeki gibi kapalı başarısızlık); bu bilgisayardaki
+  ajan çalışır.
+- "Bağlantıyı dene" ve "Listeyi getir" çizim göndermez (anahtar ve kısa bir istek ya da model listesi): ilke onları
+  kapatmaz.
+- **Kapsam dışı (sonraki adım):** ilkenin izin verdiği sağlayıcıya öznitelik değerlerini göndermemek (bütün alanlara
+  çizimin gizli alan perdesi, `kentos_headless::Veil`); dış MCP istemcileri (verinin nereye gittiğini KentOS bilemez,
+  bağlantı ayrı bir izin).
+
+**Sözler.** "Kurum ilkesi çizim verisinin bu bilgisayarın dışındaki yapay zekâ hizmetlerine gitmesine izin vermiyor;
+“DeepSeek (deneme)” https://api.deepseek.com adresine bağlanıyor. Bu bilgisayarda çalışan bir sunucuyla (Ollama, LM
+Studio) bir ajan tanımlayın ya da bilgi işlem biriminize danışın." Liste yazılıysa: "Kurum ilkesi yapay zekâ ajanlarının
+yalnız şu adreslere bağlanmasına izin veriyor: …".
+
+**Doğrulama.** `kentos-extension-host` `policy::tests` (2): yerel ajan hep geçer; `allowDataToAi: false` dışarıyı
+kapatır, kurumun adresi açılır; yalnız listeli sağlayıcı; okunamayan ilke dışarıyı kapatır; sınırda eşleşme (7 durum).
+Masaüstü `assistant::limits_tests::the_organisations_policy_keeps_the_drawing_from_an_agent_outside_this_computer`:
+bu bilgisayardaki sahte sağlayıcı yanıt verir, DeepSeek ajanı anahtarı sorulmadan reddedilir, sağlayıcıya tek istek
+(ilkinin) gider. Gerçek pencere (`allowDataToAi: false`, DeepSeek ajanı): sohbet ve ayarlar yukarıdaki cümleyi yazdı,
+sağlayıcıya istek gitmedi.

@@ -4,7 +4,8 @@
 //! publishers and extensions allowed, extensions and capabilities blocked, the least version of an extension, whether
 //! data may go to an outside AI service, and the Python packages an extension may bring: those blocked, the only ones
 //! allowed, the package indexes they may come from (D14; docs/adr/8057 §84). The user cannot loosen it; an installed
-//! extension it now refuses is stopped with the reason, its data kept.
+//! extension it now refuses is stopped with the reason, its data kept. Whether data may go to an outside AI service
+//! binds the desktop's own AI agent too, with the addresses it may reach (docs/adr/8056 §7).
 //!
 //! The **revocation list** (`kentos.extension-revocations` v1) names versions withdrawn for a reason (malware, a
 //! dangerous bug); syncing it stops them, never deletes the user's data. Its signature is checked by the catalog's
@@ -41,9 +42,14 @@ pub struct Policy {
     /// An extension's least version: older ones are stopped (a known bug).
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
     pub minimum_versions: std::collections::BTreeMap<String, String>,
-    /// Whether an extension may send data to an outside AI service (`network.sendsDataToAi`); not written: yes.
+    /// Whether data may go to an outside AI service: an extension's (`network.sendsDataToAi`) and the drawing the
+    /// desktop's AI agent reads; not written: yes. An agent on this computer sends nothing out.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub allow_data_to_ai: Option<bool>,
+    /// When written, the only addresses the desktop's AI agent may reach besides this computer (the organisation's own
+    /// server, `https://yz.ornek.bel.tr/v1`; a provider's): each one with what follows it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub allowed_ai_addresses: Option<Vec<String>>,
     /// Python packages no extension may install, by name (compared as PEP 503 normalises them), or one version of
     /// one (`ultralytics==8.3.41`: a release taken over and withdrawn, the others allowed).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -168,6 +174,45 @@ impl Policy {
 }
 
 impl Policy {
+    /// Why the policy keeps the desktop's AI agent `name` from sending a drawing to `address` (docs/adr/8056 §7); none
+    /// when it may. An agent on this computer (`local`) sends nothing out and is never refused; a policy that cannot be
+    /// read refuses every other.
+    pub fn agent_refusal(&self, name: &str, address: &str, local: bool) -> Option<String> {
+        if local {
+            return None;
+        }
+        let elsewhere = "Bu bilgisayarda çalışan bir sunucuyla (Ollama, LM Studio) bir ajan tanımlayın ya da bilgi \
+                         işlem biriminize danışın.";
+        if self.broken.is_some() {
+            return Some(format!(
+                "Kurum ilkesi okunamıyor; ilke düzelene dek çizim bu bilgisayarın dışındaki yapay zekâ hizmetlerine \
+                 gönderilmez (“{name}” {address} adresine bağlanıyor). {elsewhere}"
+            ));
+        }
+        let listed = self
+            .allowed_ai_addresses
+            .as_ref()
+            .map(|list| list.iter().any(|a| address_within(address, a)));
+        if listed == Some(false) {
+            let list = self
+                .allowed_ai_addresses
+                .as_deref()
+                .unwrap_or_default()
+                .join(", ");
+            return Some(format!(
+                "Kurum ilkesi yapay zekâ ajanlarının yalnız şu adreslere bağlanmasına izin veriyor: {list}. “{name}\
+                 ” {address} adresine bağlanıyor. {elsewhere}"
+            ));
+        }
+        if self.allow_data_to_ai == Some(false) && listed != Some(true) {
+            return Some(format!(
+                "Kurum ilkesi çizim verisinin bu bilgisayarın dışındaki yapay zekâ hizmetlerine gitmesine izin \
+                 vermiyor; “{name}” {address} adresine bağlanıyor. {elsewhere}"
+            ));
+        }
+        None
+    }
+
     /// Why the policy refuses a package that installs these Python packages (its lock's, by normalised name; docs/adr/
     /// 8057 §84); none when it allows them all. `installing`: the moment a package is reviewed or installed, when the
     /// packages' age is judged too (§85); an installed extension is not stopped by its packages' age.
@@ -266,5 +311,130 @@ impl Policy {
             )),
             ..Policy::default()
         }
+    }
+}
+
+/// Whether `address` is `allowed` or under it: the same scheme and host (with its port), the path the same or below,
+/// letters' case aside in the scheme and host (`https://yz.ornek.bel.tr` holds `https://YZ.ornek.bel.tr/v1`, never
+/// `https://yz.ornek.bel.tr.baska.com`).
+fn address_within(address: &str, allowed: &str) -> bool {
+    fn parts(url: &str) -> Option<(String, String, String)> {
+        let (scheme, rest) = url.trim().split_once("://")?;
+        let (host, path) = rest.split_once('/').unwrap_or((rest, ""));
+        let path = path.trim_end_matches('/');
+        Some((scheme.to_lowercase(), host.to_lowercase(), path.to_owned()))
+    }
+    let (Some((scheme, host, path)), Some((a_scheme, a_host, a_path))) =
+        (parts(address), parts(allowed))
+    else {
+        return false;
+    };
+    scheme == a_scheme
+        && host == a_host
+        && (a_path.is_empty() || path == a_path || path.starts_with(&format!("{a_path}/")))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn policy(text: &str) -> Policy {
+        Policy::read(text).expect("a policy")
+    }
+
+    /// The agent on this computer always goes; outside, `allowDataToAi: false` keeps the drawing in, the addresses the
+    /// organisation lists let it reach them alone; an unreadable policy keeps it in.
+    #[test]
+    fn the_policy_says_where_the_agent_may_send_a_drawing() {
+        let open = policy(r#"{"format": "kentos.extension-policy", "schemaVersion": 1}"#);
+        assert_eq!(
+            open.agent_refusal("A", "https://api.deepseek.com", false),
+            None
+        );
+        let closed = policy(
+            r#"{"format": "kentos.extension-policy", "schemaVersion": 1, "allowDataToAi": false}"#,
+        );
+        assert_eq!(
+            closed.agent_refusal("Yerel", "http://localhost:11434/v1", true),
+            None
+        );
+        let said = closed
+            .agent_refusal("DeepSeek", "https://api.deepseek.com", false)
+            .expect("refused");
+        assert!(
+            said.contains("bu bilgisayarın dışındaki")
+                && said.contains("“DeepSeek” https://api.deepseek.com"),
+            "{said}"
+        );
+        let own = policy(
+            r#"{"format": "kentos.extension-policy", "schemaVersion": 1, "allowDataToAi": false,
+                "allowedAiAddresses": ["https://yz.ornek.bel.tr"]}"#,
+        );
+        assert_eq!(
+            own.agent_refusal("Kurum", "https://YZ.ornek.bel.tr/v1", false),
+            None
+        );
+        assert!(
+            own.agent_refusal("DeepSeek", "https://api.deepseek.com", false)
+                .is_some()
+        );
+        let listed = policy(
+            r#"{"format": "kentos.extension-policy", "schemaVersion": 1,
+                "allowedAiAddresses": ["https://api.anthropic.com/"]}"#,
+        );
+        assert_eq!(
+            listed.agent_refusal("Claude", "https://api.anthropic.com", false),
+            None
+        );
+        let said = listed
+            .agent_refusal("DeepSeek", "https://api.deepseek.com", false)
+            .expect("not listed");
+        assert!(
+            said.contains("yalnız şu adreslere") && said.contains("https://api.anthropic.com/"),
+            "{said}"
+        );
+        let broken = Policy::broken("Okunamadı.".into());
+        assert!(
+            broken
+                .agent_refusal("A", "https://api.deepseek.com", false)
+                .is_some()
+        );
+        assert_eq!(
+            broken.agent_refusal("A", "http://127.0.0.1:1234/v1", true),
+            None
+        );
+    }
+
+    /// An address is under another only at a boundary: the host whole, the path by its parts.
+    #[test]
+    fn an_address_is_within_another_at_a_boundary() {
+        assert!(address_within(
+            "https://yz.ornek.bel.tr/v1",
+            "https://yz.ornek.bel.tr"
+        ));
+        assert!(address_within(
+            "https://yz.ornek.bel.tr/v1/",
+            "https://yz.ornek.bel.tr/v1"
+        ));
+        assert!(!address_within(
+            "https://yz.ornek.bel.tr.baska.com/v1",
+            "https://yz.ornek.bel.tr"
+        ));
+        assert!(!address_within(
+            "https://yz.ornek.bel.tr:8443/v1",
+            "https://yz.ornek.bel.tr"
+        ));
+        assert!(!address_within(
+            "http://yz.ornek.bel.tr/v1",
+            "https://yz.ornek.bel.tr"
+        ));
+        assert!(!address_within(
+            "https://yz.ornek.bel.tr/v10",
+            "https://yz.ornek.bel.tr/v1"
+        ));
+        assert!(!address_within(
+            "yz.ornek.bel.tr",
+            "https://yz.ornek.bel.tr"
+        ));
     }
 }

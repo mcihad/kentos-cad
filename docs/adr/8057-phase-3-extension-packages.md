@@ -189,8 +189,9 @@ geçerli), `packages/<id>/<sürüm>/` (salt okunur dosyalar), `staging/` (hazır
    seçimiyle değişir. Güven: Yerel (dosya, geliştirici klasörü), Kurum, Onaylı (genel katalog; imzası ADIM 22A'nın),
    Bütünlüğü bozuk, Engelli.
 9. **Kurum ilkesi** (`kentos.extension-policy` v1): izinli kaynaklar, yayımcılar, eklentiler; engelli eklentiler ve
-   yetenekler; eklenti başına en düşük sürüm; dış yapay zekâya veri izni. Host sistem klasöründen okur, kullanıcı
-   gevşetemez; kurulu bir eklentiyi sonradan yasaklarsa eklenti durur, silinmez.
+   yetenekler; eklenti başına en düşük sürüm; dış yapay zekâya veri izni (uygulama içi ajanı da bağlar, izinli yapay
+   zekâ adresleriyle: ADR 8056 §7). Host sistem klasöründen okur, kullanıcı gevşetemez; kurulu bir eklentiyi sonradan
+   yasaklarsa eklenti durur, silinmez.
 10. **Geri çekme listesi** (`kentos.extension-revocations` v1): kimlik, sürüm aralığı, gerekçe; aralıktaki önizleme de
     geri çekilmiş sayılır (`VersionReq::contains`). Kullanılan sürüm durur, verisi kalır, o sürüm yeniden kurulamaz;
     düzeltilmiş sürüm kurulur. İmza denetimi kataloğun güven köküyle (ADIM 22A).

@@ -98,6 +98,12 @@ impl AgentProfile {
         self.kind.preset()
     }
 
+    /// Whether the agent's server is on this computer (`localhost`, a loopback address): what it is sent stays here
+    /// (docs/adr/8056 §7).
+    pub fn on_this_computer(&self) -> bool {
+        crate::http::endpoint(self).is_ok_and(|e| e.local)
+    }
+
     /// The address requests go to: the agent's own, else the provider's; none when neither is there.
     pub fn endpoint(&self) -> Option<String> {
         self.base_url

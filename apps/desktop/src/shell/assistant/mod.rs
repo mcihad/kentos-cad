@@ -9,7 +9,7 @@
 //! and answers its tool calls here, on the interface thread, where the drawing is.
 
 #[cfg(test)]
-mod budget_tests;
+mod limits_tests;
 mod host;
 mod settings;
 #[cfg(test)]
@@ -73,6 +73,8 @@ pub(crate) struct Assistant {
     pub(crate) ledger: UsageLedger,
     /// The tokens this conversation spent, in and out, whichever agent answered: what its limit counts.
     pub(crate) spent: u64,
+    /// The organisation's policy (`main` reads IT's file): where an agent may send the drawing (docs/adr/8056 §7).
+    pub(crate) policy: Option<kentos_extension_host::Policy>,
     /// Uygulama ayarları › Yapay zekâ's form.
     pub(crate) agents: Agents,
     /// What the panel shows.
@@ -99,6 +101,7 @@ impl Default for Assistant {
             store: ProfileStore::in_memory(),
             ledger: UsageLedger::in_memory(),
             spent: 0,
+            policy: None,
             agents: Agents::default(),
             chat: ai::Conversation::default(),
             chosen: None,
@@ -191,6 +194,15 @@ impl Assistant {
             .as_deref()
             .and_then(|id| self.store.get(id))
             .or_else(|| self.store.default_profile())
+    }
+
+    /// Why the organisation's policy keeps `agent` from being sent the drawing; none when it may.
+    pub(crate) fn refusal(&self, agent: &AgentProfile) -> Option<String> {
+        self.policy.as_ref()?.agent_refusal(
+            &agent.name,
+            &agent.endpoint().unwrap_or_default(),
+            agent.on_this_computer(),
+        )
     }
 
     #[cfg(test)]
@@ -427,6 +439,11 @@ impl App {
             );
             return Task::none();
         };
+        // The organisation's policy first: no key is asked of an agent it keeps from the drawing (docs/adr/8056 §7).
+        if let Some(why) = self.assistant.refusal(&profile) {
+            self.assistant.chat.fail(message, &why);
+            return Task::none();
+        }
         let key = self.assistant.store.key_for(&profile);
         if key.is_none() && profile.preset().needs_key {
             let env = profile.preset().key_env.unwrap_or("ortam değişkeni");
