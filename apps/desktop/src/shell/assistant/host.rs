@@ -22,6 +22,13 @@ impl Host for AppHost<'_> {
         self.0.product_not_offered(command)
     }
 
+    /// The user's Kataloğa gönder window on the extension (docs/adr/8057 §107): the user sends.
+    fn submit_extension(&mut self, id: &str) -> Result<Value, HeadlessError> {
+        self.0
+            .agent_submit(id, "Asistan")
+            .map_err(|why| HeadlessError::new("invalid_input", why))
+    }
+
     /// The organisation's list of the only Python packages an extension may install (docs/adr/8057 §105).
     fn allowed_packages(&self) -> Option<Vec<String>> {
         self.0

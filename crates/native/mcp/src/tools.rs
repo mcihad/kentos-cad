@@ -700,6 +700,10 @@ impl kentos_headless::agent_tools::Host for WithWorkshop<'_> {
         kentos_headless::agent_tools::link_review_workshop(&mut *self.inner, package, folder)
     }
 
+    fn submit_extension(&mut self, id: &str) -> Result<Value, kentos_headless::HeadlessError> {
+        kentos_headless::agent_tools::link_submit(&mut *self.inner, id)
+    }
+
     fn reload_extension(&mut self, id: &str) -> Result<Value, kentos_headless::HeadlessError> {
         let folder = self.workshop.as_ref().map(|w| w.join(id)).ok_or_else(|| {
             kentos_headless::HeadlessError::new("not_offered", "Bu sunucunun eklenti atölyesi yok.")

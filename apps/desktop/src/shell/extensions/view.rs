@@ -503,6 +503,15 @@ impl App {
                 (!running).then(|| msg(Event::RunExamples(id.clone()))),
             ));
         }
+        // One the user develops goes to a catalog from its folder (submit.rs, docs/adr/8057 §107).
+        if e.source.kind == kentos_extension_host::SourceKind::DeveloperFolder {
+            actions = actions.push(words::secondary(
+                "Kataloğa gönder…",
+                Some(msg(Event::Submit(super::submit::SubmitEvent::Open(
+                    id.clone(),
+                )))),
+            ));
+        }
         actions = actions
             .push(words::ghost(
                 "Verisini sıfırla",

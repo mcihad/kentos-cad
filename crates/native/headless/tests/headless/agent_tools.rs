@@ -862,12 +862,27 @@ fn an_agent_writes_an_extension_in_its_workshop_and_opens_it_for_review() {
             "extension.workshop.review",
             "extension.workshop.reload",
             "extension.workshop.preview",
+            "extension.workshop.submit",
             "extension.workshop.trial"
         ]
     );
     let call = |host: &mut WithWorkshop, guard: &mut Guard, name: &str, args: Value| {
         agent_tools::call(host, guard, name, &args)
     };
+    // docs/adr/8057 §107: a host that cannot open the user's Kataloğa gönder window says where it can be opened.
+    let refused = call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.submit",
+        json!({ "id": "tr.ornek.mezarlik" }),
+    )
+    .unwrap_err();
+    assert_eq!(refused.code, "not_offered");
+    assert!(
+        refused.message.contains("desktop.attach"),
+        "{}",
+        refused.message
+    );
     // The next step a host with a workshop is told: write there, not to a folder of the user's.
     let told = call(
         &mut host,

@@ -5202,3 +5202,35 @@ incelemesi, panel, form, atölye ön izlemesi).
   şema alanı; dosya biçimi; Kapı 1'in uyarısı; MEBİS'in İngilizcesinin her yeri yerinde); kayıt defteri 1 (İngilizce
   yazılmış paketin manifesti ve paneli Türkçe, başka panelin yerleri karışmaz; Türkçe yazılmış paket yazıldığı gibi);
   masaüstü 1 (inceleme: ad, özet, gerekçe).
+
+## §107. Kataloğa gönder: geliştirilen eklenti klasöründen kataloğa, incelemeye (`ADIM 21`, Akış, EKL-06)
+
+**16–17 Kasım.** Kod: bulut istemcisi `api/extension_catalog.rs` (yeni: `upload_release`, `submit_release`),
+`tests/extension_catalog.rs`; masaüstü `extensions/submit.rs` (yeni), `view.rs` (düğme), `mod.rs`, `shell/view.rs`,
+`tests/submit.rs`; ajan araçları `agent_tools.rs` (`extension.workshop.submit`, `Host::submit_extension`),
+`link_workshop.rs` (`link_submit`); MCP `tools.rs`; masaüstü bağlantısı `python/agents.rs`, Asistan `host.rs`.
+
+- **Sorun.** Akışın son adımı "istenirse yayına gönderme" yoktu: sunucunun katalog uçları (ADR 8059 §10, §13) yükleme ve
+  incelemeye göndermeyi programlara açıyordu, ama masaüstünde onları kullanan bir istemci yoktu. Eklentiyi atölyede
+  geliştiren kişi ya da ajan, kataloğa ancak web'den elle yükleyerek ulaşabiliyordu.
+- **Karar.** Çalışma klasöründen kurulmuş eklentinin ayrıntısında "Kataloğa gönder…": katalog (hesabın kişisel kataloğu,
+  kurumlarının katalogları, genel katalog) ve inceleyiciye isteğe bağlı bir not; Gönder klasörü `kentos kek pack` gibi
+  paketler (kapılardan geçmeyen gönderilmez, ilk sorunu söylenir), kataloğa taslak olarak yükler (`POST
+  /v1/extension-catalogs/{katalog}/releases`, baytlar olduğu gibi) ve incelemeye gönderir (`…/moves`, `{"action":
+  "submit", "note": …}`). Sonuç bildirimle ve eklentinin günlüğünde (`release_submitted`: ne, nereye, hangi durumda).
+- **Masaüstü yalnız gönderir:** istekler program kanalından gider (`x-kentos-client: desktop`); onay, değişiklik isteme
+  ve yayımlama kişinin web penceresindeki kararıdır (ADR 8059, `decision_by_program`). Hangi kataloğa gönderebileceğini
+  sunucu söyler: yetkisizse gönderim sunucunun sözüyle reddedilir.
+- **Oturum yoksa** pencere söyler ve "Oturum aç…" düğmesini verir; Gönder kapalıdır.
+- **Ajan:** `extension.workshop.submit` kullanıcının atölyeden kurduğu eklenti için pencereyi açar ("{ajan} bu eklentiyi
+  kataloğa göndermek istiyor. Göndermek sizin kararınız."); kataloğu kullanıcı seçer ve gönderir. Ajan hiçbir şey
+  göndermez (PY-AI-05). MCP'nin bağlı ajanı da masaüstünün `submit_extension` isteğiyle aynı pencereyi açar; masaüstüne
+  bağlı olmayan bir sunucu çizimi `desktop.attach`'i söyler.
+- **Sınır:** dosyadan kurulmuş eklenti buradan gönderilmez (geliştirildiği klasörü yoktur); söylenir.
+- **Gerçek pencere:** atölyeden kurulan örnek eklentinin ayrıntısında "Kataloğa gönder…"; pencere oturum yokken uyarı ve
+  "Oturum aç…" ile. Oturumlu akış sahte katalog sunucusuyla sınandı (yerelde çalışan bir KentOS sunucusu ve hesabı
+  kurulmadı).
+- **Sınamalar:** bulut 2 (yükleme yolu ve baytları, program başlığı, gönderme hareketi ve notu; sunucunun reddi
+  sözüyle); masaüstü 2 (oturumsuz uyarı; kurum kataloğuna notla gönderim: paketin kimliği, iki istek, günlük kaydı,
+  pencere kapanır; dosyadan kurulmuş eklentide ajanın isteği nedeniyle reddedilir); headless 1 (araç atölyeyle sunulur,
+  pencere açamayan host yerini söyler).

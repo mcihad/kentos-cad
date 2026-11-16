@@ -305,6 +305,16 @@ impl App {
                 };
                 return answer.map_err(|why| refused("invalid_input", &why));
             }
+            // Its Kataloğa gönder window for the user (extensions/submit.rs, docs/adr/8057 §107): the user sends.
+            "submit_extension" => {
+                let id = params
+                    .get("id")
+                    .and_then(Value::as_str)
+                    .ok_or_else(|| refused("invalid_request", "id gerekli: eklentinin kimliği."))?;
+                return self
+                    .agent_submit(id, who_agent(who))
+                    .map_err(|why| refused("invalid_input", &why));
+            }
             "preview_extension" => {
                 let id = params
                     .get("id")

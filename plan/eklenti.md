@@ -1192,13 +1192,14 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   sekmenin, panellerin, araçların ve kapalı düğme nedenlerinin düzen özetini yazıyla verir (görüntü ayrı iş).*
   Doğrulanan eklenti uygulama kapanmadan yüklenir; oluşan sekmenin ve panelin görüntüsü/düzen özeti ajana kanıt olarak
   döner.
-- [ ] **Akış:** kurulu yetenek/API/belge keşfi → isteğin ve parametrelerin açıklığı → taslak → bağımlılık/izin planı →
+- [x] **Akış:** kurulu yetenek/API/belge keşfi → isteğin ve parametrelerin açıklığı → taslak → bağımlılık/izin planı →
   doğrulama/test → `.kek` → kullanıcı incelemesi ve yerel etkinleştirme → istenirse yayına gönderme [EKL-06]. Kullanıcı
   seçimi gerektiren aşama (bağımlılık kurma, izin, yayın) ajan tarafından sessizce geçilmez [PY-AI-05]; ajan kurulu
   paketi ya da izni uydurmaz, yetenek sorgusundan öğrenir [PY-AI-06]; araç çağrıları sürüm/özet/kaynak anlık görüntüsüyle
   bağlanır, eskiyen sonuç fark edilir [PY-AI-07].
-  — *kısmen (ADR 8057 §22, §30, §37): keşif (SDK), taslak, doğrulama, deneme, paket ve kullanıcının incelemesi; kalan:
-  yayına gönderme (ADIM 22A).*
+  — *tamam (ADR 8057 §22, §30, §37, §107): keşif (SDK), taslak, doğrulama, deneme, paket ve kullanıcının incelemesi;
+  istenirse yayına gönderme: geliştirilen eklenti klasöründen kataloğa taslak olarak yüklenir ve incelemeye gönderilir
+  (Kataloğa gönder…); ajan yalnız pencereyi açar, gönderen kullanıcı, onay ve yayın kataloğun inceleyicisinin.*
 - [ ] **Üretim:** AI kullanıcının isteğinden eklenti iskeleti, taşınabilir UI ve İşlemler tanımı üretir, paket
   gereksinimlerini açıkça listeler [PY-AI-02]; eklentideki form/domain/ilişki taslakları form derleyicisinin ve
   politikasının kurallarına uyar, kaynak yetkisini genişletmez [PY-AI-03]; üretilen Python ayrı bir test koşusuyla

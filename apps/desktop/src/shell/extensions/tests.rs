@@ -18,6 +18,7 @@ mod builds;
 mod demo;
 mod l10n;
 mod python;
+mod submit;
 
 fn temp(name: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!("kentos-eklentiler-{name}-{}", std::process::id()));

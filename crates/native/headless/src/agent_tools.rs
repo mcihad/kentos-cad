@@ -43,7 +43,7 @@ pub use workshop_trial::{
     MOST_TOOLS as TRIAL_MOST_TOOLS, steps_given as trial_steps_given, trial_outcome,
 };
 
-pub use link_workshop::{link_preview, link_reload, link_review_workshop};
+pub use link_workshop::{link_preview, link_reload, link_review_workshop, link_submit};
 
 pub use extension_audits::audit_outcome;
 use extension_audits::{
@@ -105,6 +105,16 @@ pub trait Host {
     /// (`allowedPythonPackages`): the blueprint offers those alone (docs/adr/8057 §105). None: no such list.
     fn allowed_packages(&self) -> Option<Vec<String>> {
         None
+    }
+
+    /// Opens the user's Kataloğa gönder window on the extension `id` the user installed from the workshop
+    /// (docs/adr/8057 §107): the user chooses the catalog and sends; the agent sends nothing.
+    fn submit_extension(&mut self, _id: &str) -> Result<Value, HeadlessError> {
+        Err(HeadlessError::new(
+            "not_offered",
+            "Bu bağlantı kataloğa gönderme penceresini açamaz: ajanı KentOS masaüstüne bağlayın (desktop.attach) ya da \
+             masaüstünün Asistan'ında çalışın.",
+        ))
     }
 
     /// Why this host's agent may run no Python it wrote (docs/adr/8057 §104, PY-AI-11: its own trusted Python a class
@@ -786,6 +796,21 @@ pub fn tools() -> Vec<Tool> {
         read_only: true,
         destructive: false,
     });
+    list.push(Tool {
+        name: "extension.workshop.submit",
+        title: "Kataloğa göndermeyi öner",
+        description: "Kullanıcının atölyeden kurduğu eklenti için Kataloğa gönder penceresini açar: kullanıcı kataloğu \
+                      (kişisel, kurum, genel) seçer ve gönderir; paket klasörden yeniden paketlenir, taslak olarak \
+                      yüklenir ve incelemeye gönderilir. Ajan bir şey göndermez; onay ve yayın kataloğun \
+                      inceleyicisinindir. Kullanıcı yayın istediğinde kullanın."
+            .into(),
+        input: object(
+            json!({ "id": { "type": "string", "description": "Eklentinin kimliği" } }),
+            &["id"],
+        ),
+        read_only: false,
+        destructive: false,
+    });
     // Kapı 3's part that runs code: the installed extension on a synthetic drawing (docs/adr/8057 §37).
     list.push(workshop_trial::tool());
     list.push(Tool {
@@ -1011,6 +1036,7 @@ pub fn call(
         "extension.workshop.review" => workshop_review(host, args),
         "extension.workshop.reload" => workshop_reload(host, args),
         "extension.workshop.preview" => host.preview_extension(text(args, "id")?),
+        "extension.workshop.submit" => host.submit_extension(text(args, "id")?),
         "extension.workshop.trial" => workshop_trial::trial(host, args),
         "extension.blueprint" => extension_blueprint(host, args),
         "extension.sdk" => extension_sdk(args),

@@ -53,6 +53,7 @@ mod problems;
 mod ribbon;
 pub(crate) mod runner;
 mod search;
+pub(crate) mod submit;
 pub(crate) mod tools;
 mod view;
 
@@ -127,6 +128,8 @@ pub(crate) struct Extensions {
     pub(crate) chosen: Option<String>,
     pub(crate) catalog: Option<CatalogFolder>,
     pub(crate) review: Option<Pending>,
+    /// Kataloğa gönder's window while it is open (submit.rs, docs/adr/8057 §107).
+    pub(crate) submit: Option<submit::Submit>,
     /// The last action's outcome: an error or not, and its words.
     pub(crate) note: Option<(bool, String)>,
     /// The extensions' ribbon tabs, rebuilt from the registry when it changes (ribbon.rs).
@@ -232,6 +235,7 @@ impl Default for Extensions {
             chosen: None,
             catalog: None,
             review: None,
+            submit: None,
             note: None,
             tabs: Vec::new(),
             menus: Vec::new(),
@@ -317,6 +321,8 @@ pub(crate) enum Event {
     Choose(String),
     /// An extension's Python environment (environment.rs).
     Env(environment::EnvEvent),
+    /// Kataloğa gönder's controls (submit.rs).
+    Submit(submit::SubmitEvent),
     /// An extension's contribution run in its process: extension, kind (`command`), local id (runner.rs).
     Run(String, String, String),
     /// A right-click menu's command run on what the menu was opened on: its `ctx.params` (`{"layer": …}`).
@@ -688,6 +694,7 @@ impl App {
                 return self.env_look(&id);
             }
             Event::Env(event) => return self.env_event(event),
+            Event::Submit(event) => return self.ext_submit_event(event),
             Event::Run(ext, kind, local) => return self.ext_run(&ext, &kind, &local),
             Event::RunOn(ext, kind, local, params) => {
                 self.extensions.target_params = Some((ext.clone(), local.clone(), params));
