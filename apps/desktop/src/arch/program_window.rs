@@ -1,20 +1,5 @@
 //! Bina programı (docs/adr/0773, `arch.program`): the building's groups of spaces and the design brief, and the
-//! program read against the drawing.
-//!
-//! ```text
-//! ┌ Bina programı ───────────────────────────────────────────────────────────────────────────┐
-//! │ [Binalar | Bölümler | Hedefler | Durum]   Ortak alan payı [Net ▾]  Hedeflerin sürümü [ ] │
-//! │ Binalar: Ad [A Blok] Katlar ☑ Zemin ☑ 1. kat [Kanat ekle] [Sil]; kanatlar altında         │
-//! │ No [1 ] Ad [Daire 1     ] Tür [Bağımsız bölüm ▾] Kayıtlı alan [60   ] 2 kat · 5 mahal … │
-//! │ … [Seçilenleri ver] [Sil]                                                                │
-//! │   Bina [A Blok ▾] Kanat [Doğu ▾] Niteliği [Daire] Değer katsayısı [1] Pay ağırlığı [120]  │
-//! │   (an annex: Bölümü [1 Daire 1 ▾] in place of Değer katsayısı)                           │
-//! │ [Bölüm ekle]                                                                             │
-//! │ Hedefler: Kullanım, En az, En çok, Net en, Geçiş, Komşu, Ulaşım, Dış                     │
-//! │ Durum: Paylar (net, pay, brüt; ortak alanlar); mahaller (alan, hedef, fark, …); bulgular  │
-//! │ Denetleniyor… %40  [Durdur]                                        [Vazgeç] [Kaydet]    │
-//! └──────────────────────────────────────────────────────────────────────────────────────────┘
-//! ```
+//! program read against the drawing. Its look is `program_view.rs` (the list/details pattern, DESIGN.md §7.9).
 //!
 //! The window edits a copy of the program; Kaydet writes it through `cad.program.edit`, Seçilenleri ver gives the
 //! selected spaces to a group at once (one undo step each). Denetle reads the program against the drawing through
@@ -34,20 +19,19 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use iced::futures::channel::mpsc;
-use iced::widget::{Column, column, container, row, space, text};
-use iced::{Center, Element, Fill, Length, Task};
+use iced::Task;
 use kentos_commands::{
     BuildingProgram, CommandResult, ProgramAssign, ProgramBuilding, ProgramCheck, ProgramChecked, ProgramEdit,
     ProgramUnit, ProgramWing, ShareRule, SpaceBrief, UnitKind,
 };
 use kentos_native_application::{ExecutionContext, program_check, program_edit};
-use kentos_ui::label;
-use kentos_ui::widget::Dialog as Frame;
-use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::segmented::Segmented;
 
 use crate::app::{App, Dialog, Message};
-use crate::exchange::words::{self, Kind};
+
+// The window's look: its parts, lists and forms (DESIGN.md §7.9).
+#[path = "program_view.rs"]
+mod view;
+use crate::exchange::words::Kind;
 use crate::traces::Control;
 
 /// The window's title, which a trace names it by.
@@ -154,11 +138,21 @@ pub struct Window {
     opened: Option<Result<BuildingProgram, String>>,
     /// Closed with unsaved changes: “Kaydedilmemiş değişiklikler” asks.
     closing: bool,
+    /// The building, its wing, the unit and the brief chosen in their lists (DESIGN.md §7.9).
+    building: usize,
+    wing: usize,
+    unit: usize,
+    brief: usize,
 }
 
 #[derive(Debug, Clone)]
 pub enum Event {
     Tab(Tab),
+    /// A row chosen in a part's list: a building, one of its wings, a unit, a brief.
+    ChooseBuilding(usize),
+    ChooseWing(usize),
+    ChooseUnit(usize),
+    ChooseBrief(usize),
     Version(String),
     Rule(Option<ShareRule>),
     AddBuilding,
@@ -374,6 +368,15 @@ impl App {
         };
         match event {
             Event::Tab(t) => w.tab = t,
+            Event::ChooseBuilding(i) => {
+                if i != w.building {
+                    w.wing = 0;
+                }
+                w.building = i;
+            }
+            Event::ChooseWing(k) => w.wing = k,
+            Event::ChooseUnit(i) => w.unit = i,
+            Event::ChooseBrief(i) => w.brief = i,
             Event::Version(t) => w.version = t,
             Event::Rule(r) => w.share_rule = r,
             Event::AddBuilding => {
@@ -387,6 +390,7 @@ impl App {
                 let n = w.buildings.len() + 1;
                 w.buildings.push(ProgramBuilding { id, name: format!("{n}. bina"), ..Default::default() });
                 w.zeros.push(String::new());
+                (w.building, w.wing) = (w.buildings.len() - 1, 0);
             }
             Event::RemoveBuilding(i) => {
                 let Some(b) = w.buildings.get(i) else { return Task::none() };
@@ -404,6 +408,8 @@ impl App {
                     if i < w.zeros.len() {
                         w.zeros.remove(i);
                     }
+                    w.building = w.building.min(w.buildings.len().saturating_sub(1));
+                    w.wing = 0;
                 } else {
                     let why = format!(
                         "“{}” binası kaldırılamaz: {} bölümü ona bağlı; önce Bölümler'de başka binaya verin.",
@@ -456,6 +462,7 @@ impl App {
                 if let Some(b) = w.buildings.get_mut(i) {
                     let n = b.wings.len() + 1;
                     b.wings.push(ProgramWing { id, name: format!("{n}. kanat"), levels: Vec::new() });
+                    (w.building, w.wing) = (i, b.wings.len() - 1);
                 }
             }
             Event::RemoveWing(i, k) => {
@@ -464,6 +471,7 @@ impl App {
                 if users.is_empty() {
                     if let Some(b) = w.buildings.get_mut(i) {
                         b.wings.remove(k);
+                        w.wing = w.wing.min(b.wings.len().saturating_sub(1));
                     }
                 } else {
                     let why = format!(
@@ -561,10 +569,12 @@ impl App {
                     nature: String::new(),
                     factor: String::new(),
                 });
+                w.unit = w.units.len() - 1;
             }
             Event::RemoveUnit(i) => {
                 if i < w.units.len() {
                     w.units.remove(i);
+                    w.unit = w.unit.min(w.units.len().saturating_sub(1));
                 }
             }
             Event::Give(i) => return self.give_to_unit(i),
@@ -584,11 +594,13 @@ impl App {
                 }
             }
             Event::AddBrief => {
-                w.briefs.push(BriefRow::of(SpaceBrief { usage: "Yeni kullanım".into(), ..Default::default() }))
+                w.briefs.push(BriefRow::of(SpaceBrief { usage: "Yeni kullanım".into(), ..Default::default() }));
+                w.brief = w.briefs.len() - 1;
             }
             Event::RemoveBrief(i) => {
                 if i < w.briefs.len() {
                     w.briefs.remove(i);
+                    w.brief = w.brief.min(w.briefs.len().saturating_sub(1));
                 }
             }
             Event::Check => return self.check_program(),
@@ -789,395 +801,6 @@ impl App {
         }
     }
 
-    pub(crate) fn program_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.arch.program_window else {
-            return space::horizontal().into();
-        };
-        let tabs = Segmented::new(
-            [Tab::Buildings, Tab::Units, Tab::Briefs, Tab::Status],
-            w.tab,
-            |t| msg(Event::Tab(t)),
-        );
-        let version = kentos_ui::widget::text_field("Hedeflerin sürümü", &w.version)
-            .on_input(|t| msg(Event::Version(t)))
-            .width(220);
-        let rules: [Option<ShareRule>; 4] =
-            [None, Some(ShareRule::Equal), Some(ShareRule::Net), Some(ShareRule::Weight)];
-        let rule = Select::new(
-            rules.iter().map(|r| Choice::new(r.map_or("Paylaştırma", ShareRule::label))),
-            rules.iter().position(|r| *r == w.share_rule),
-            move |k| msg(Event::Rule(rules[k])),
-        )
-        .searchable(false);
-        let land_total = kentos_ui::widget::text_field("Parsel alanı", &w.land_total)
-            .on_input(|t| msg(Event::LandTotal(t)))
-            .width(120);
-        let head = row![
-            words::field("Gösterilen", tabs, None),
-            space::horizontal().width(Fill),
-            words::field("Ortak alan payı", container(rule).width(170), None),
-            words::field("Arsa payı paydası", land_total, None),
-            words::field("Hedeflerin sürümü", version, None),
-        ]
-        .spacing(16)
-        .align_y(iced::Bottom);
-        let body: Element<'_, Message> = match w.tab {
-            Tab::Buildings => self.program_buildings_view(w),
-            Tab::Units => self.program_units_view(w),
-            Tab::Briefs => program_briefs_view(w),
-            Tab::Status => program_status_view(w, self),
-        };
-        let mut foot = row![].spacing(8).align_y(Center);
-        match &w.running {
-            Some(r) => {
-                let share = (r.done * 100).checked_div(r.total).unwrap_or(0);
-                foot = foot
-                    .push(words::text_line(Kind::Info, format!("Denetleniyor… %{share}")))
-                    .push(words::secondary(STOP, Some(msg(Event::Stop))));
-            }
-            None => {
-                foot = foot.push(words::secondary(CHECK, Some(msg(Event::Check))));
-                if let Some((kind, said)) = &w.said {
-                    foot = foot.push(container(words::text_line(*kind, said.clone())).width(Length::Shrink));
-                }
-            }
-        }
-        let foot = foot
-            .push(space::horizontal().width(Fill))
-            .push(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-            .push(words::primary(SAVE, Some(msg(Event::Save))));
-        // The body scrolls with the window and grows resized or full screen; the buttons are the footer (ADR 0746 eki).
-        let window = Frame::new(TITLE)
-            .push(head)
-            .scroll(container(body).padding(iced::Padding::ZERO.right(14)))
-            .footer(foot)
-            .width(1000.0)
-            .modal(msg(Event::Close));
-        if !w.closing {
-            return window;
-        }
-        use crate::unsaved_close::Answer;
-        let question = kentos_ui::widget::unsaved(
-            TITLE,
-            msg(Event::Answer(Answer::Discard)),
-            msg(Event::Answer(Answer::Stay)),
-            Some(msg(Event::Answer(Answer::Save))),
-        );
-        iced::widget::stack![window, question].into()
-    }
-
-    fn program_units_view<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
-        let checked = w.checked.as_deref();
-        let level_name = |id: &str| -> String {
-            self.document
-                .as_ref()
-                .and_then(|d| d.model.settings().arch.as_ref())
-                .and_then(|a| a.levels.iter().find(|l| l.id == id).map(|l| l.name.clone()))
-                .unwrap_or_else(|| id.to_owned())
-        };
-        let mut list = Column::new().spacing(10);
-        for (i, r) in w.units.iter().enumerate() {
-            let kinds = UnitKind::ALL;
-            let kind = Select::new(
-                kinds.iter().map(|k| Choice::new(k.label())),
-                kinds.iter().position(|k| *k == r.unit.kind),
-                move |k| msg(Event::UnitKind(i, kinds[k])),
-            )
-            .searchable(false);
-            let fields = row![
-                words::field(
-                    "No",
-                    kentos_ui::widget::text_field("1", &r.unit.number).on_input(move |t| msg(Event::UnitNumber(i, t))).width(70),
-                    None
-                ),
-                words::field(
-                    "Ad",
-                    kentos_ui::widget::text_field("Daire 1", &r.name).on_input(move |t| msg(Event::UnitName(i, t))).width(200),
-                    None
-                ),
-                words::field("Tür", container(kind).width(170), None),
-                words::field(
-                    "Kayıtlı alan (m²)",
-                    kentos_ui::widget::text_field("Tapu, ruhsat", &r.area).on_input(move |t| msg(Event::UnitArea(i, t))).width(130),
-                    None
-                ),
-                space::horizontal().width(Fill),
-                words::secondary(GIVE, Some(msg(Event::Give(i)))),
-                words::secondary("Sil", Some(msg(Event::RemoveUnit(i)))),
-            ]
-            .spacing(10)
-            .align_y(iced::Bottom);
-            let mut block = column![fields, self.program_unit_place(w, i, r)].spacing(4);
-            if let Some(u) = checked.and_then(|c| c.units.iter().find(|u| u.id == r.unit.id)) {
-                let levels: Vec<String> = u.levels.iter().map(|l| level_name(l)).collect();
-                let methods: Vec<&str> = u.methods.iter().map(|m| m.label()).collect();
-                let mut words_ = format!(
-                    "{} mahal · odalar {} m² · dış {} m² · şaft {} m²",
-                    u.spaces,
-                    fixed2(u.rooms),
-                    fixed2(u.outdoor),
-                    fixed2(u.voids)
-                );
-                if !levels.is_empty() {
-                    words_.push_str(&format!(" · {}", levels.join(" + ")));
-                }
-                if !methods.is_empty() {
-                    words_.push_str(&format!(" · {}", methods.join(", ")));
-                }
-                if let (Some(a), Some(d)) = (u.recorded_area, u.recorded_difference) {
-                    words_.push_str(&format!(" · kayıtlı {} m², fark {} m²", fixed2(a), fixed2(d)));
-                }
-                if let Some(sh) = &u.share {
-                    words_.push_str(&format!(" · pay {} m², brüt {} m²", sh.share, sh.gross));
-                }
-                block = block.push(label::caption(words_));
-            }
-            list = list.push(block);
-        }
-        list = list.push(row![words::secondary(ADD_UNIT, Some(msg(Event::AddUnit)))]);
-        if let Some(c) = checked {
-            let t = &c.totals;
-            list = list.push(words::summary(vec![words::text_line(
-                Kind::Info,
-                format!(
-                    "Bağımsız bölümler {} m² (dış {} m²) · ortak {} m² · dış alan {} m² · şaft {} m² · bölümsüz {} m² · hepsi {} m²; her mahal bir kez sayılır.",
-                    fixed2(t.units),
-                    fixed2(t.unit_outdoor),
-                    fixed2(t.common),
-                    fixed2(t.outdoor),
-                    fixed2(t.voids),
-                    fixed2(t.unassigned),
-                    fixed2(t.all)
-                ),
-            )]));
-        }
-        list.into()
-    }
-
-    /// The project's levels: id and name, in its order.
-    fn program_levels(&self) -> Vec<(String, String)> {
-        self.document
-            .as_ref()
-            .and_then(|d| d.model.settings().arch.as_ref())
-            .map(|a| a.levels.iter().map(|l| (l.id.clone(), l.name.clone())).collect())
-            .unwrap_or_default()
-    }
-
-    /// Binalar: each building and its wings, with the levels they span (docs/adr/0784 §1).
-    fn program_buildings_view<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
-        let levels = self.program_levels();
-        let checks = |chosen: &[String], on: &dyn Fn(String) -> Message| -> Element<'a, Message> {
-            let mut r = row![].spacing(12).align_y(Center);
-            if levels.is_empty() {
-                return label::caption("Projede kat yok: Proje ayarları › Mimari'de ekleyin.").into();
-            }
-            for (id, name) in &levels {
-                r = r.push(words::check(chosen.contains(id), name.clone(), Some(on(id.clone()))));
-            }
-            r.into()
-        };
-        let mut list = Column::new().spacing(12);
-        for (i, b) in w.buildings.iter().enumerate() {
-            let users = w.users_of(&b.id);
-            let top = row![
-                words::field(
-                    "Bina",
-                    kentos_ui::widget::text_field("A Blok", &b.name).on_input(move |t| msg(Event::BuildingName(i, t))).width(200),
-                    None
-                ),
-                words::field("Katları", checks(&b.levels, &move |l| msg(Event::BuildingLevel(i, l))), None),
-                space::horizontal().width(Fill),
-                words::secondary(ADD_WING, Some(msg(Event::AddWing(i)))),
-                words::secondary("Sil", Some(msg(Event::RemoveBuilding(i)))),
-            ]
-            .spacing(12)
-            .align_y(iced::Bottom);
-            // Its code (EK-2 §2.3), its use and its ±0.00 over the project's (docs/adr/8072 §1).
-            let place = row![
-                words::field(
-                    "Kodu",
-                    kentos_ui::widget::text_field("A1", b.code.as_deref().unwrap_or(""))
-                        .on_input(move |t| msg(Event::BuildingCode(i, t)))
-                        .width(64),
-                    None
-                ),
-                words::field(
-                    "Kullanım türü",
-                    kentos_ui::widget::text_field("Konut", b.usage.as_deref().unwrap_or(""))
-                        .on_input(move |t| msg(Event::BuildingUsage(i, t)))
-                        .width(176),
-                    None
-                ),
-                words::field(
-                    "±0.00, projeninkine göre (m)",
-                    kentos_ui::widget::text_field("0", w.zeros.get(i).map_or("", String::as_str))
-                        .on_input(move |t| msg(Event::BuildingZero(i, t)))
-                        .width(96),
-                    None
-                ),
-            ]
-            .spacing(12)
-            .align_y(iced::Bottom);
-            let mut block = column![top, place].spacing(6);
-            block = block.push(label::caption(if users.is_empty() {
-                "Bölümü yok.".to_owned()
-            } else {
-                format!("Bölümleri: {}", users.join(", "))
-            }));
-            for (k, x) in b.wings.iter().enumerate() {
-                let wing_users = w.users_of(&x.id);
-                let line = row![
-                    space::horizontal().width(24),
-                    words::field(
-                        "Kanat",
-                        kentos_ui::widget::text_field("Doğu kanadı", &x.name)
-                            .on_input(move |t| msg(Event::WingName(i, k, t)))
-                            .width(176),
-                        None
-                    ),
-                    words::field("Katları", checks(&x.levels, &move |l| msg(Event::WingLevel(i, k, l))), None),
-                    space::horizontal().width(Fill),
-                    label::caption(if wing_users.is_empty() { "Bölümü yok".to_owned() } else { wing_users.join(", ") }),
-                    words::secondary("Sil", Some(msg(Event::RemoveWing(i, k)))),
-                ]
-                .spacing(12)
-                .align_y(iced::Bottom);
-                block = block.push(line);
-            }
-            list = list.push(block);
-        }
-        // Ortak katlar (docs/adr/8072 §1): each level two or more buildings span, the building it counts in.
-        let mut spanned: Vec<(String, String)> = Vec::new();
-        for (id, name) in &levels {
-            if w.buildings.iter().filter(|b| b.levels.contains(id)).count() > 1 {
-                spanned.push((id.clone(), name.clone()));
-            }
-        }
-        if !spanned.is_empty() {
-            let mut shared = Column::new().spacing(6).push(label::caption("Ortak katlar: alanı bir kez, seçilen binada sayılır."));
-            for (id, name) in spanned {
-                let owners: Vec<&ProgramBuilding> = w.buildings.iter().filter(|b| b.levels.contains(&id)).collect();
-                let chosen = w.shared.iter().find(|sh| sh.level == id).map(|sh| sh.building.clone());
-                let at = owners.iter().position(|b| Some(&b.id) == chosen.as_ref());
-                let ids: Vec<String> = owners.iter().map(|b| b.id.clone()).collect();
-                let level = id.clone();
-                let pick = Select::new(owners.iter().map(|b| Choice::new(b.name.clone())), at, move |k| {
-                    msg(Event::SharedBuilding(level.clone(), ids.get(k).cloned().unwrap_or_default()))
-                });
-                let note = if at.is_none() { "Seçilmedi: alanı hangi binada sayılacağı belli değil." } else { "" };
-                shared = shared.push(
-                    row![
-                        words::field("Kat", label::body(name), None),
-                        words::field("Sayıldığı bina", container(pick).width(Length::Fixed(220.0)), None),
-                        label::caption(note)
-                    ]
-                        .spacing(12)
-                        .align_y(iced::Bottom),
-                );
-            }
-            list = list.push(shared);
-        }
-        list = list.push(row![words::secondary(ADD_BUILDING, Some(msg(Event::AddBuilding)))]);
-        list = list.push(label::caption(
-            "Bir bina ya da kanadın katları boşsa her katta olabilir. Kanadın katları binasının katlarından seçilir. Bir bölüme bağlı bina ya da kanat silinmez; önce Bölümler'de başka binaya verin. Denetle, bölümünün binasının ya da kanadının katında olmayan mahali söyler.",
-        ));
-        list.into()
-    }
-
-    /// A unit's building, wing and weight.
-    fn program_unit_place<'a>(&'a self, w: &'a Window, i: usize, r: &'a UnitRow) -> Element<'a, Message> {
-        let ids: Vec<Option<String>> =
-            std::iter::once(None).chain(w.buildings.iter().map(|b| Some(b.id.clone()))).collect();
-        let names: Vec<String> =
-            std::iter::once("—".to_owned()).chain(w.buildings.iter().map(|b| b.name.clone())).collect();
-        let at = ids.iter().position(|x| *x == r.unit.building);
-        let chosen = ids.clone();
-        let building = Select::new(names.into_iter().map(Choice::new), at, move |k| {
-            msg(Event::UnitBuilding(i, chosen.get(k).cloned().flatten()))
-        })
-        .searchable(false);
-        let wings: Vec<&ProgramWing> = r
-            .unit
-            .building
-            .as_deref()
-            .and_then(|b| w.buildings.iter().find(|x| x.id == b))
-            .map(|b| b.wings.iter().collect())
-            .unwrap_or_default();
-        let wing_ids: Vec<Option<String>> = std::iter::once(None).chain(wings.iter().map(|x| Some(x.id.clone()))).collect();
-        let wing_names: Vec<String> = std::iter::once("—".to_owned()).chain(wings.iter().map(|x| x.name.clone())).collect();
-        let wat = wing_ids.iter().position(|x| *x == r.unit.wing);
-        let wing = Select::new(wing_names.into_iter().map(Choice::new), wat, move |k| {
-            msg(Event::UnitWing(i, wing_ids.get(k).cloned().flatten()))
-        })
-        .searchable(false);
-        let mut line = row![
-            space::horizontal().width(4),
-            words::field("Bina", container(building).width(170), None),
-            words::field("Kanat", container(wing).width(170), None),
-        ]
-        .spacing(10)
-        .align_y(iced::Bottom);
-        // Niteliği (KMK 12/a: "kat, daire, iş bürosu gibi nevi") is a unit's and an annex's, not a common area's.
-        if matches!(r.unit.kind, UnitKind::Unit | UnitKind::Annex) {
-            line = line.push(words::field(
-                "Niteliği",
-                kentos_ui::widget::text_field(
-                    if r.unit.kind == UnitKind::Annex {
-                        "Depo"
-                    } else {
-                        "Daire"
-                    },
-                    &r.nature,
-                )
-                .on_input(move |t| msg(Event::UnitNature(i, t)))
-                .width(140),
-                None,
-            ));
-        }
-        // Kat irtifakı (docs/adr/8031): an annex's unit; an independent unit's value factor in the land shares.
-        if r.unit.kind == UnitKind::Annex {
-            let units: Vec<&UnitRow> = w
-                .units
-                .iter()
-                .filter(|x| x.unit.kind == UnitKind::Unit)
-                .collect();
-            let ids: Vec<String> = units.iter().map(|x| x.unit.id.clone()).collect();
-            let names: Vec<String> = units
-                .iter()
-                .map(|x| {
-                    if x.name.trim().is_empty() {
-                        x.unit.number.clone()
-                    } else {
-                        format!("{} {}", x.unit.number, x.name.trim())
-                    }
-                })
-                .collect();
-            let at = ids.iter().position(|x| Some(x) == r.unit.annex_of.as_ref());
-            let of = Select::new(names.into_iter().map(Choice::new), at, move |k| {
-                msg(Event::UnitAnnexOf(i, ids.get(k).cloned()))
-            })
-            .searchable(false);
-            line = line.push(words::field("Bölümü", container(of).width(170), None));
-        }
-        if r.unit.kind == UnitKind::Unit {
-            line = line.push(words::field(
-                "Değer katsayısı",
-                kentos_ui::widget::text_field("1", &r.factor)
-                    .on_input(move |t| msg(Event::UnitFactor(i, t)))
-                    .width(110),
-                None,
-            ));
-        }
-        if w.share_rule == Some(ShareRule::Weight) && r.unit.kind == UnitKind::Unit {
-            line = line.push(words::field(
-                "Pay ağırlığı",
-                kentos_ui::widget::text_field("120", &r.weight).on_input(move |t| msg(Event::UnitWeight(i, t))).width(110),
-                None,
-            ));
-        }
-        line.into()
-    }
-
     /// The window's controls by their words (a trace's `dialog` step).
     pub(crate) fn program_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.arch.program_window.is_none() {
@@ -1202,182 +825,4 @@ impl App {
 
 fn fixed2(v: f64) -> String {
     kentos_geometry_core::display::fixed(v, 2)
-}
-
-fn program_briefs_view(w: &Window) -> Element<'_, Message> {
-    let mut list = Column::new().spacing(10);
-    for (i, r) in w.briefs.iter().enumerate() {
-        let field = |title: &'static str, k: usize, place: &'static str, width: f32| {
-            words::field(
-                title,
-                kentos_ui::widget::text_field(place, &r.texts[k]).on_input(move |t| msg(Event::BriefText(i, k, t))).width(width),
-                None,
-            )
-        };
-        let outdoor = words::check(r.brief.outdoor, "Dış mahal (balkon, teras)", Some(msg(Event::BriefOutdoor(i))));
-        let top = row![
-            words::field(
-                "Kullanım",
-                kentos_ui::widget::text_field("Yatak odası", &r.brief.usage).on_input(move |t| msg(Event::BriefUsage(i, t))).width(170),
-                None
-            ),
-            field("En az alan (m²)", 0, "12", 110.0),
-            field("En çok alan (m²)", 1, "16", 110.0),
-            field("Net en (m)", 2, "2.8", 90.0),
-            field("Net geçiş (m)", 3, "1.2", 90.0),
-            space::horizontal().width(Fill),
-            words::secondary("Sil", Some(msg(Event::RemoveBrief(i)))),
-        ]
-        .spacing(10)
-        .align_y(iced::Bottom);
-        let bottom = row![
-            field("Komşu kullanımlar (virgülle)", 4, "Mutfak", 260.0),
-            field("Geçilen kullanımlar (virgülle)", 5, "Salon", 260.0),
-            container(outdoor).padding([6, 0]),
-        ]
-        .spacing(10)
-        .align_y(iced::Bottom);
-        list = list.push(column![top, bottom].spacing(6));
-    }
-    list = list.push(row![words::secondary(ADD_BRIEF, Some(msg(Event::AddBrief)))]);
-    list = list.push(label::caption(
-        "Hedefler tasarımcının kendi brief'idir; yönetmelik ya da yasal sınır değildir. Bulgular hedeflerin sürümünü ve ölçüm kuralını söyler.",
-    ));
-    list.into()
-}
-
-fn cell<'a>(t: impl Into<String>, width: f32) -> Element<'a, Message> {
-    container(text(t.into()).size(kentos_ui::theme::typography::body())).width(width).into()
-}
-
-fn program_status_view<'a>(w: &'a Window, app: &'a App) -> Element<'a, Message> {
-    let Some(c) = w.checked.as_deref() else {
-        return label::body("Henüz denetlenmedi: Denetle'ye basın.").into();
-    };
-    let unit_no = |id: &Option<String>| -> String {
-        id.as_deref()
-            .map(|u| c.units.iter().find(|x| x.id == u).map_or_else(|| format!("{u}?"), |x| x.number.clone()))
-            .unwrap_or_else(|| "—".into())
-    };
-    let level = |id: &Option<String>| -> String {
-        id.as_deref()
-            .and_then(|l| {
-                app.document
-                    .as_ref()
-                    .and_then(|d| d.model.settings().arch.as_ref())
-                    .and_then(|a| a.levels.iter().find(|x| x.id == l).map(|x| x.name.clone()))
-            })
-            .unwrap_or_else(|| "—".into())
-    };
-    let heads = [
-        ("No", 60.0),
-        ("Ad", 140.0),
-        ("Bölüm", 60.0),
-        ("Kat", 90.0),
-        ("Yöntem", 120.0),
-        ("Alan m²", 80.0),
-        ("Hedef m²", 110.0),
-        ("Fark m²", 80.0),
-        ("Net en", 70.0),
-        ("Geçiş", 70.0),
-        ("Kapı", 50.0),
-    ];
-    let mut list = Column::new().spacing(4);
-    list = list.push(
-        heads
-            .iter()
-            .fold(row![].spacing(6), |r, (h, wd)| r.push(container(label::caption(*h)).width(*wd))),
-    );
-    for s in &c.spaces {
-        let target = match (s.target_min, s.target_max) {
-            (Some(a), Some(b)) => format!("{}–{}", fixed2(a), fixed2(b)),
-            (Some(a), None) => format!("≥ {}", fixed2(a)),
-            (None, Some(b)) => format!("≤ {}", fixed2(b)),
-            (None, None) => "—".into(),
-        };
-        let diff = s.target_difference.map_or_else(|| "—".into(), |d| if d > 0.0 { format!("+{}", fixed2(d)) } else { fixed2(d) });
-        let method = if s.void { "Şaft (boşluk)".to_owned() } else { s.method.label().to_owned() };
-        let r = row![
-            cell(s.number.clone().unwrap_or_default(), 60.0),
-            cell(s.name.clone().or(s.usage.clone()).unwrap_or_default(), 140.0),
-            cell(unit_no(&s.unit), 60.0),
-            cell(level(&s.level), 90.0),
-            cell(method, 120.0),
-            cell(fixed2(s.area), 80.0),
-            cell(target, 110.0),
-            cell(diff, 80.0),
-            cell(fixed2(s.width), 70.0),
-            cell(s.passage.map_or_else(|| "—".into(), fixed2), 70.0),
-            cell(s.doors.to_string(), 50.0),
-        ]
-        .spacing(6);
-        list = list.push(r);
-    }
-    let mut found = Column::new().spacing(4);
-    for f in &c.findings {
-        found = found.push(words::text_line(Kind::Warn, f.message.clone()));
-    }
-    let mut parts = column![].spacing(12);
-    if let Some(sh) = &c.shares {
-        parts = parts.push(shares_view(c, sh));
-    }
-    parts
-        .push(list)
-        .push(label::caption(format!("Kural: {}", c.rule)))
-        .push(found)
-        .into()
-}
-
-/// Paylar (docs/adr/0784 §2): each independent unit's net, share and gross; each common area's pool and its shares, or
-/// why it is not shared; the totals, which add up exactly.
-fn shares_view<'a>(c: &'a ProgramChecked, sh: &'a kentos_commands::ProgramShares) -> Element<'a, Message> {
-    let heads = [("Bölüm", 180.0), ("Net m²", 90.0), ("Pay m²", 90.0), ("Brüt m²", 90.0), ("Kayıtlı m²", 90.0)];
-    let mut table = Column::new().spacing(4);
-    table = table.push(heads.iter().fold(row![].spacing(6), |r, (h, wd)| r.push(container(label::caption(*h)).width(*wd))));
-    for u in &c.units {
-        let Some(p) = &u.share else { continue };
-        let name = match &u.name {
-            Some(n) => format!("{} {n}", u.number),
-            None => u.number.clone(),
-        };
-        table = table.push(
-            row![
-                cell(name, 180.0),
-                cell(p.net.clone(), 90.0),
-                cell(p.share.clone(), 90.0),
-                cell(p.gross.clone(), 90.0),
-                cell(u.recorded_area.map_or_else(|| "—".into(), fixed2), 90.0),
-            ]
-            .spacing(6),
-        );
-    }
-    table = table.push(
-        row![
-            cell("Toplam", 180.0),
-            cell(sh.net.clone(), 90.0),
-            cell(sh.shared.clone(), 90.0),
-            cell(sh.gross.clone(), 90.0),
-        ]
-        .spacing(6),
-    );
-    let number = |id: &str| c.units.iter().find(|u| u.id == id).map_or_else(|| id.to_owned(), |u| u.number.clone());
-    let mut pools = Column::new().spacing(4);
-    for p in &sh.pools {
-        let line = match &p.unshared {
-            Some(why) => words::text_line(Kind::Warn, format!("{} ({} m²): {why}", p.number, p.area)),
-            None => {
-                let parts: Vec<String> = p.shares.iter().map(|s| format!("{} {}", number(&s.unit), s.share)).collect();
-                words::text_line(Kind::Info, format!("{} ({} m²) → {}", p.number, p.area, parts.join(" · ")))
-            }
-        };
-        pools = pools.push(line);
-    }
-    let mut out = column![label::body(format!("Paylar: {}", sh.rule)), table, pools].spacing(8);
-    if sh.unshared != "0.00" {
-        out = out.push(label::caption(format!("Paylaştırılmayan ortak alan {} m².", sh.unshared)));
-    }
-    out.push(label::caption(
-        "0,01 m² adım; artan adımlar en büyük kalanlara, eşitlikte programdaki sıraya. Paylar her ortak alanın alanına tam eşittir; kayıtlı alan yalnız okunur, hesapla yazılmaz.",
-    ))
-    .into()
 }
