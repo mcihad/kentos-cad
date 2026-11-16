@@ -79,6 +79,8 @@ impl Object<'_> {
                 "ObjectType" => word(self.object_type),
                 "PredefinedType" => self.predefined.is_some_and(|p| !p.is_empty() && p != "NOTDEFINED"),
                 "Tag" => word(self.tag),
+                // An axis's tag (EK-6 Tablo 6.36): what its object's tag holds.
+                "AxisTag" => word(self.tag),
                 "RefElevation" => self.elevation,
                 // A field this measure does not read (an object's place, its context's north): not judged here.
                 _ => return None,
@@ -177,6 +179,25 @@ fn objects(b: &Building) -> Vec<(String, Object<'_>)> {
                 tag: None,
                 material: None,
                 psets: &g.psets,
+                qtos: &[],
+                elevation: false,
+            },
+        ));
+    }
+    // A grid's axes (EK-6 Tablo 6.36): each its tag; its id its grid line's, an axis has no GlobalId of its own.
+    for a in b.grids.iter().flat_map(|g| g.u.iter().chain(&g.v)) {
+        out.push((
+            "IfcGridAxis".to_owned(),
+            Object {
+                id: a.id,
+                name: &a.tag,
+                long_name: None,
+                description: None,
+                object_type: None,
+                predefined: None,
+                tag: Some(&a.tag),
+                material: None,
+                psets: &[],
                 qtos: &[],
                 elevation: false,
             },

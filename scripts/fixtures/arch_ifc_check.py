@@ -28,6 +28,8 @@ It checks, in fixtures/arch/v1/ifc/kesit-binasi.ifc:
 - a column carries (Pset_ColumnCommon.LoadBearing), a terrace slab is outside and a floor slab is not
   (Pset_SlabCommon.IsExternal);
 - materials (EK-6): walls their core layer's (Tuğla), slabs theirs (Betonarme), columns and beams Betonarme;
+- the grids (docs/adr/8070 §4) are one rectangular IfcGrid of the building, its U and V axes the definition's lines with
+  their names and points; the U stair is a HALF_TURN_STAIR of Betonarme (§2);
 - every element and room gives IfcOpenShell a shape."""
 import math
 import re
@@ -225,6 +227,44 @@ def main() -> int:
         common = ue.get_pset(building, "Pset_BuildingCommon") or {}
         ensure((common.get("BuildingID"), common.get("IsPermanentID")) ==
                (f"{k['proje_kodu']}_{k['bina_kodu']}", False), f"Pset_BuildingCommon {common}")
+
+    # Grids (docs/adr/8070 §4; EK-6 Tablo 6.36): the definition's grids, on no storey, are one IfcGrid of the building;
+    # the lines parallel to the first one its U axes, the others its V, each its name and its two points.
+    grid_defs = kind("grid")
+    grids = f.by_type("IfcGrid")
+    ensure(len(grids) == (1 if grid_defs else 0), f"IfcGrid {len(grids)}")
+    if grids and grid_defs:
+        g = grids[0]
+        c = ue.get_container(g)
+        ensure(c is not None and c.is_a("IfcBuilding"), f"the grid in {c}")
+
+        def direction(e):
+            (a, b) = e["pts"][:2]
+            return (b["x"] - a["x"], b["y"] - a["y"])
+
+        first = direction(grid_defs[0])
+        par = lambda d: abs(first[0] * d[1] - first[1] * d[0]) < 1e-9
+        want_u = [(e["name"], [(p["x"], p["y"]) for p in e["pts"][:2]]) for e in grid_defs if par(direction(e))]
+        want_v = [(e["name"], [(p["x"], p["y"]) for p in e["pts"][:2]]) for e in grid_defs if not par(direction(e))]
+        got = lambda axes: [(a.AxisTag, [tuple(p) for p in a.AxisCurve.Points.CoordList]) for a in axes]
+        ensure(got(g.UAxes) == want_u, f"U axes {got(g.UAxes)}")
+        ensure(got(g.VAxes or []) == want_v, f"V axes {got(g.VAxes or [])}")
+        ensure(g.PredefinedType == "RECTANGULAR", f"grid type {g.PredefinedType}")
+    # The stair's type and material (docs/adr/8070 §2, K42): the definition's U stair (up, across, down, its landing
+    # longer than the line across) turns twice to one side on one landing: HALF_TURN_STAIR; concrete.
+    for st in f.by_type("IfcStair"):
+        e = by_guid[st.GlobalId]
+        pts = [(p["x"], p["y"]) for p in e["pts"]]
+        turns = []
+        for a, b, c2 in zip(pts, pts[1:], pts[2:]):
+            u, v = (b[0] - a[0], b[1] - a[1]), (c2[0] - b[0], c2[1] - b[1])
+            turns.append(math.degrees(math.atan2(u[0] * v[1] - u[1] * v[0], u[0] * v[0] + u[1] * v[1])))
+        across = math.dist(pts[1], pts[2]) if len(pts) == 4 else None
+        u_stair = len(turns) == 2 and all(abs(t - turns[0]) < 1e-9 and abs(abs(t) - 90) < 1e-9 for t in turns)
+        if u_stair and across is not None and e.get("landing", e["width"]) >= across:
+            ensure(st.PredefinedType == "HALF_TURN_STAIR", f"{st.Name}: {st.PredefinedType}")
+        mats = [m.Name for m in [ue.get_material(st)] if m is not None]
+        ensure(mats == ["Betonarme"], f"{st.Name}: material {mats}")
 
     # Shapes.
     settings = ifcopenshell.geom.settings()

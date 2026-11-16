@@ -16,8 +16,8 @@ use kentos_geometry_core::geom::opening::{HoleFrame, Recess};
 use kentos_geometry_core::geom::section::{Flight, Height, Sloped, Solid};
 
 use crate::building::{
-    Actor, Address, Building, Class, Element, Group, Opening, Organization, Place, Pset, Qto, Shape,
-    Space, Storey, Value, Zone,
+    Actor, Address, Axis, Building, Class, Element, Grid, Group, Opening, Organization, Place, Pset,
+    Qto, Shape, Space, Storey, Value, Zone,
 };
 use crate::naming::name;
 
@@ -121,6 +121,8 @@ pub enum Why {
     NoWall,
     /// A room without an area.
     NoArea,
+    /// A grid's axes on a storey all in one direction: an `IfcGrid` asks axes in two (docs/adr/8070 §4).
+    OneWay,
 }
 
 /// An object of the drawing's building the file does not hold: its persistent id, what it is ("duvar", "kapı" …) and
@@ -274,6 +276,8 @@ pub struct Written {
     pub stairs: usize,
     pub ramps: usize,
     pub chimneys: usize,
+    /// The grids' axes written (docs/adr/8070 §4).
+    pub grid_axes: usize,
     pub left: Vec<Left>,
     /// The rooms without a number or a name (Md. 10, EK-3), by their persistent ids.
     pub unnamed: Vec<String>,
@@ -365,6 +369,88 @@ fn sloped(rings: &[Vec<P>], s: &Sloped, floor: f64) -> Vec<Shape> {
 }
 
 /// A model solid's shapes over its storey's floor.
+/// The drawing's grids (EK-6 Tablo 6.36; docs/adr/8070 §4): its axes by storey (none: shown on every storey, the
+/// building's), an axis's lines parallel to the first straight one U, the others V; rectangular when each set is
+/// parallel and the two square to each other, else irregular. A storey's axes in one direction only make no grid (IFC
+/// 4.3 asks both sets): they are left out, said.
+fn grids_of(
+    entities: &[(u128, String, &Entity)],
+    storey_of: &dyn Fn(Option<&str>) -> usize,
+    written: &mut Written,
+) -> Vec<Grid> {
+    let mut by_level: Vec<(Option<String>, Vec<(u128, &String, &kentos_contracts::GridFields)>)> = Vec::new();
+    for (bits, uid, e) in entities {
+        let Entity::Grid(g) = e else { continue };
+        let level = g.grid.arch.level.clone();
+        match by_level.iter_mut().find(|(l, _)| *l == level) {
+            Some((_, list)) => list.push((*bits, uid, &g.grid)),
+            None => by_level.push((level, vec![(*bits, uid, &g.grid)])),
+        }
+    }
+    let cross = |a: [f64; 2], b: [f64; 2]| a[0] * b[1] - a[1] * b[0];
+    let mut out = Vec::new();
+    for (level, list) in by_level {
+        let axes: Vec<(&String, Axis, Option<[f64; 2]>)> = list
+            .iter()
+            .filter_map(|(bits, uid, g)| {
+                let (a, b) = (g.pts.first()?, g.pts.get(1)?);
+                let (dx, dy) = (b.x - a.x, b.y - a.y);
+                let len = libm::hypot(dx, dy);
+                if len < 1e-9 {
+                    return None;
+                }
+                // An arc's middle: the chord's middle moved by the sagitta, to the chord's right for a positive bulge.
+                let bulge = g.bulges.as_ref().and_then(|v| v.first().copied()).unwrap_or(0.0);
+                let through = (bulge != 0.0).then(|| {
+                    [(a.x + b.x) / 2.0 + dy * bulge / 2.0, (a.y + b.y) / 2.0 - dx * bulge / 2.0]
+                });
+                Some((
+                    *uid,
+                    Axis {
+                        id: Some(*bits),
+                        tag: g.label.trim().to_owned(),
+                        from: [a.x, a.y],
+                        to: [b.x, b.y],
+                        through,
+                    },
+                    (bulge == 0.0).then_some([dx / len, dy / len]),
+                ))
+            })
+            .collect();
+        let first = axes.iter().find_map(|(_, _, d)| *d);
+        let parallel = |a: Option<[f64; 2]>, b: Option<[f64; 2]>| {
+            a.zip(b).is_some_and(|(a, b)| cross(a, b).abs() < 1e-6)
+        };
+        let (u, v): (Vec<_>, Vec<_>) = axes.iter().partition(|(_, _, d)| parallel(first, *d));
+        if u.is_empty() || v.is_empty() {
+            for (uid, ..) in &axes {
+                written.left.push(Left {
+                    id: (*uid).clone(),
+                    what: "aks",
+                    why: Why::OneWay,
+                });
+            }
+            continue;
+        }
+        let across = v.iter().find_map(|(_, _, d)| *d);
+        let rectangular = v.iter().all(|(_, _, d)| parallel(across, *d))
+            && first
+                .zip(across)
+                .is_some_and(|(a, b)| (a[0] * b[0] + a[1] * b[1]).abs() < 1e-6);
+        written.grid_axes += axes.len();
+        let seed = axes.iter().map(|(uid, ..)| uid.as_str()).min().unwrap_or_default();
+        out.push(Grid {
+            id: Some(crate::step::fnv(seed, 3)),
+            name: name("AKS", "Aks"),
+            storey: level.as_deref().map(|l| storey_of(Some(l))),
+            u: u.into_iter().map(|(_, a, _)| a.clone()).collect(),
+            v: v.into_iter().map(|(_, a, _)| a.clone()).collect(),
+            predefined: if rectangular { "RECTANGULAR" } else { "IRREGULAR" },
+        });
+    }
+    out
+}
+
 /// A piece of a chimney (docs/adr/8070 §3): a flue's hollow in a wall or a roof's stack, its outline in plan between
 /// two heights over ±0.00.
 struct Piece {
@@ -1383,6 +1469,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         })
         .filter(|g| !g.spaces.is_empty())
         .collect();
+    let grids = grids_of(&entities, &storey_of, &mut written);
     let building = Building {
         file: k.file_stem(&title),
         stamp: stamp.to_owned(),
@@ -1424,6 +1511,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         spaces,
         zones,
         groups: group_list,
+        grids,
         crs,
     };
     (building, written)

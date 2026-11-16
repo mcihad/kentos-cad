@@ -242,3 +242,57 @@ fn without_a_kunye_the_drawing_names_the_project_and_the_file() {
     );
     assert_eq!(arch_ifc::file_name(&doc), "Kesit binası.ifc");
 }
+
+/// Aks ızgarası (docs/adr/8070 §4; EK-6 Tablo 6.36): the section building's grids A–D (north–south) and 1–3 (east–west),
+/// on no storey, are one rectangular IfcGrid of the building: A–D its U axes, 1–3 its V, each axis its tag and its line.
+/// Its footprint is drawn in a plan context made only for it. Left with A–D alone (one direction), the grid is no
+/// IfcGrid and its axes are on the loss list.
+#[test]
+fn the_grids_are_one_rectangular_ifc_grid_and_one_direction_alone_is_left_out() {
+    let doc = building();
+    let (b, written) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
+    assert_eq!(b.grids.len(), 1, "{:?}", b.grids);
+    let g = &b.grids[0];
+    let tags = |axes: &[kentos_ifc::building::Axis]| axes.iter().map(|a| a.tag.clone()).collect::<Vec<_>>();
+    assert_eq!(tags(&g.u), ["A", "B", "C", "D"]);
+    assert_eq!(tags(&g.v), ["1", "2", "3"]);
+    assert_eq!((g.predefined, g.storey), ("RECTANGULAR", None));
+    assert_eq!(written.grid_axes, 7);
+    assert!(g.u.iter().chain(&g.v).all(|a| a.through.is_none()));
+    assert_eq!((g.u[1].from, g.u[1].to), ([4.5, -2.0], [4.5, 11.0]));
+    let text = kentos_ifc::building::write(&b);
+    assert_eq!(text.matches("IFCGRIDAXIS(").count(), 7);
+    assert_eq!(text.matches("IFCGRID(").count(), 1);
+    assert!(text.contains("IFCGRIDAXIS('B',"), "the axes' tags");
+    assert!(text.contains(".RECTANGULAR.)"));
+    assert!(text.contains("'FootPrint','GeometricCurveSet'"));
+    // The grid's axes carry their tags: no axis is missing one.
+    let gaps = kentos_ifc::required::gaps(&b);
+    assert!(!gaps.iter().any(|g| g.class == "IfcGridAxis"), "{gaps:?}");
+    // One direction alone.
+    let mut snap = kentos_kcad::decode(include_bytes!("../../../../../fixtures/arch/v1/section-building.kcad")).unwrap();
+    let keep: Vec<bool> = snap
+        .entities
+        .iter()
+        .map(|e| !matches!(e, Entity::Grid(g) if g.grid.label.chars().all(|c| c.is_ascii_digit())))
+        .collect();
+    let mut k = 0;
+    snap.entities.retain(|_| {
+        k += 1;
+        keep[k - 1]
+    });
+    let mut k = 0;
+    snap.uids.retain(|_| {
+        k += 1;
+        keep[k - 1]
+    });
+    for (i, e) in snap.entities.iter_mut().enumerate() {
+        e.base_mut().id = i as u32 + 1;
+    }
+    let one = kentos_domain::Document::from_snapshot_v2(snap).unwrap();
+    let (b, written) = arch_ifc::building(&one, "2026-11-11T12:00:00", "KentOS Mimari");
+    assert!(b.grids.is_empty());
+    let left: Vec<&kentos_ifc::arch::Left> = written.left.iter().filter(|l| l.what == "aks").collect();
+    assert_eq!(left.len(), 4, "{:?}", written.left);
+    assert!(left.iter().all(|l| l.why == kentos_ifc::arch::Why::OneWay));
+}

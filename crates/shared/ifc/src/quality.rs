@@ -293,7 +293,7 @@ pub fn system_problem(crs: Option<&Crs>, elevation: Option<f64>) -> Option<Strin
 /// What the model left out, `why`'s kinds with how many in the order the export says them: "2 duvar, 1 kapı".
 pub fn left_words(written: &Written) -> String {
     let mut out: Vec<String> = Vec::new();
-    for why in [Why::NoBody, Why::NoWall, Why::NoArea] {
+    for why in [Why::NoBody, Why::NoWall, Why::NoArea, Why::OneWay] {
         for what in [
             "duvar",
             "döşeme",
@@ -307,6 +307,7 @@ pub fn left_words(written: &Written) -> String {
             "pencere",
             "açıklık",
             "mahal",
+            "aks",
         ] {
             let n = written
                 .left

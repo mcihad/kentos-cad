@@ -271,7 +271,7 @@ fn losses(message: String) -> CommandWarning {
 
 /// What was left out for `why`, its kinds in this order with how many ("2 duvar, 1 kapı"); empty: nothing.
 fn counted(written: &Written, why: Why) -> String {
-    const ORDER: [&str; 12] = [
+    const ORDER: [&str; 13] = [
         "duvar",
         "döşeme",
         "kolon",
@@ -284,6 +284,7 @@ fn counted(written: &Written, why: Why) -> String {
         "pencere",
         "açıklık",
         "mahal",
+        "aks",
     ];
     ORDER
         .iter()
@@ -387,6 +388,7 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
         (Why::NoBody, "kesit modeli gövdesini kuramadı"),
         (Why::NoWall, "duvarı yazılmadı"),
         (Why::NoArea, "alanı yok"),
+        (Why::OneWay, "katında hep bir yönde; IFC'nin aks ızgarası iki yönde aks ister"),
     ] {
         let list = counted(&written, why);
         if !list.is_empty() {

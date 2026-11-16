@@ -297,7 +297,33 @@ pub struct Building {
     pub zones: Vec<Zone>,
     /// The groups of spaces (EK-6 Tablo 6.68): an independent unit, an annex, a common area (docs/adr/8069).
     pub groups: Vec<Group>,
+    /// The grids (EK-6 Tablo 6.36's axes, docs/adr/8070 §4).
+    pub grids: Vec<Grid>,
     pub crs: Option<Crs>,
+}
+
+/// A grid (`IfcGrid`): its name, its storey (none: the building's, on every storey), its axes in two directions (U and
+/// V: IFC 4.3 asks at least one of each) and its predefined type.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Grid {
+    pub id: Option<u128>,
+    pub name: String,
+    pub storey: Option<usize>,
+    pub u: Vec<Axis>,
+    pub v: Vec<Axis>,
+    pub predefined: &'static str,
+}
+
+/// A grid's axis (`IfcGridAxis`, EK-6 Tablo 6.36): its tag (A, 1) and its line in plan, from `from` to `to`; an arc
+/// through `through`, the point halfway along it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Axis {
+    /// Its KentOS object's id (the grid's): not written, an axis has no GlobalId; what a missing tag names.
+    pub id: Option<u128>,
+    pub tag: String,
+    pub from: [f64; 2],
+    pub to: [f64; 2],
+    pub through: Option<[f64; 2]>,
 }
 
 /// A spatial zone (`IfcSpatialZone`): its footprint's rings between two heights over its storey's floor, its words, its
@@ -896,12 +922,84 @@ pub fn write(b: &Building) -> String {
             Step::refs(&members)
         ));
     }
+    // The grids (EK-6 Tablo 6.36; docs/adr/8070 §4): each axis its tag and its line, an arc an indexed curve's arc
+    // segment; the grid's footprint their lines. A grid on a storey is its storey's, else the building's.
+    let mut in_building = Vec::new();
+    let mut footprint = None;
+    for grid in b.grids.iter().filter(|g| !g.u.is_empty() && !g.v.is_empty()) {
+        let context = *footprint.get_or_insert_with(|| {
+            w.st.add(format!(
+                "IFCGEOMETRICREPRESENTATIONSUBCONTEXT('FootPrint','Model',*,*,*,*,#{model},$,.PLAN_VIEW.,$)"
+            ))
+        });
+        let parent = grid
+            .storey
+            .and_then(|s| storey_places.get(s).copied())
+            .unwrap_or(building_place);
+        let place = w.placement(Some(parent), 0.0);
+        let mut curves = Vec::new();
+        let mut axes = |w: &mut Writer, list: &[Axis]| -> Vec<usize> {
+            list.iter()
+                .map(|a| {
+                    let pts: Vec<[f64; 2]> = match a.through {
+                        Some(m) => vec![a.from, m, a.to],
+                        None => vec![a.from, a.to],
+                    };
+                    let coords: Vec<String> = pts
+                        .iter()
+                        .map(|p| format!("({},{})", real(p[0]), real(p[1])))
+                        .collect();
+                    let list = w
+                        .st
+                        .add(format!("IFCCARTESIANPOINTLIST2D(({}),$)", coords.join(",")));
+                    let segment = if a.through.is_some() {
+                        "IFCARCINDEX((1,2,3))"
+                    } else {
+                        "IFCLINEINDEX((1,2))"
+                    };
+                    let curve = w
+                        .st
+                        .add(format!("IFCINDEXEDPOLYCURVE(#{list},({segment}),.F.)"));
+                    curves.push(curve);
+                    w.st.add(format!("IFCGRIDAXIS({},#{curve},.T.)", text(&a.tag)))
+                })
+                .collect()
+        };
+        let u = axes(&mut w, &grid.u);
+        let v = axes(&mut w, &grid.v);
+        let set = w
+            .st
+            .add(format!("IFCGEOMETRICCURVESET(({}))", Step::refs(&curves)));
+        let rep = w.st.add(format!(
+            "IFCSHAPEREPRESENTATION(#{context},'FootPrint','GeometricCurveSet',(#{set}))"
+        ));
+        let shape = w.st.add(format!("IFCPRODUCTDEFINITIONSHAPE($,$,(#{rep}))"));
+        let g = w.id(grid.id);
+        let n = w.st.add(format!(
+            "IFCGRID({g},$,{},$,$,#{place},#{shape},({}),({}),$,.{}.)",
+            text(&grid.name),
+            Step::refs(&u),
+            Step::refs(&v),
+            grid.predefined
+        ));
+        match grid.storey {
+            Some(s) if s < contained.len() => contained[s].push(n),
+            _ => in_building.push(n),
+        }
+    }
     for (i, list) in contained.iter().enumerate().filter(|(_, l)| !l.is_empty()) {
         let g = w.st.gid();
         w.st.add(format!(
             "IFCRELCONTAINEDINSPATIALSTRUCTURE({g},$,$,$,({}),#{})",
             Step::refs(list),
             storeys[i]
+        ));
+    }
+    if !in_building.is_empty() {
+        let g = w.st.gid();
+        w.st.add(format!(
+            "IFCRELCONTAINEDINSPATIALSTRUCTURE({g},$,$,$,({}),#{building})",
+            Step::refs(&in_building)
         ));
     }
     for (name, list) in &materials {

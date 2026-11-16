@@ -1,4 +1,4 @@
-# ADR 8070: Eksik yapı elemanları — rampa gövdesi, merdiven ve rampa tipleri, baca, aks, kitaplık blokları
+# ADR 8070: Eksik yapı elemanları — rampa gövdesi, merdiven ve rampa tipleri, baca ve niş, aks ızgarası, kitaplık blokları
 
 - **Durum:** kısmen uygulandı (16 Kasım 2026). Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-09,
   [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-03; uygulama sırasında B9. Bu ADR maddenin bütün adımlarını tutar; her adım
@@ -63,6 +63,13 @@
    taramasıyla çizdiği gibi "Tuğla" (ADR 8044 §6). İdarenin teyidi beklenir.
 7. **Niş (`IfcOpeningElement` RECESS):** duvarını boşaltır, dolduranı yoktur; GlobalId nişin kimliği. Niş ve baca
    kayıp listesinden çıktı.
+8. **Aks ızgarası (`IfcGrid`, `IfcGridAxis`; EK-6 Tablo 6.36):** çizimin aksları katlarına göre (katı olmayan, her katta
+   görünen aks binanındır) bir ızgara olur. İlk düz aksa paralel olanlar U, ötekiler V ekseni; her takım kendi içinde
+   paralel ve ikisi birbirine dik ise RECTANGULAR, değilse IRREGULAR (RADIAL ayrıca denetlenmedikçe yazılmaz). Her eksen
+   etiketi (`AxisTag`: A, 1) ve çizgisiyle; yay aks `IfcIndexedPolyCurve`'ün yay parçasıyla (başı, ortası, sonu), tam.
+   Izgaranın planda izi (`FootPrint`, `GeometricCurveSet`) yalnız ızgara varken açılan kendi bağlamında. IFC 4.3
+   (IFC4X3_ADD2) U ve V'nin ikisini de zorunlu tuttuğundan bir katın hep aynı yöndeki aksları ızgara olamaz: kayıp
+   listesine "aks" olarak, nedeniyle girer (`Why::OneWay`). Etiketsiz aks zorunlu alan eksiği olarak denetlenir.
 
 ## §3. Sınamalar
 
@@ -81,13 +88,20 @@
   "Duman bacası", MM-BAC-…, GlobalId zemin katın bacası), üç gövde (0,00; +3,00; +6,00'dan), iki OPENING onu dolduruyor,
   niş RECESS ve dolduransız; hiçbiri kayıp listesinde değil; dosyada IFCCHIMNEY ve her dolan açıklık için bir
   IFCRELFILLSELEMENT.
+- **Uygulama** (`arch_ifc::the_grids_are_one_rectangular_ifc_grid_and_one_direction_alone_is_left_out`): bölüm
+  binasının katsız A–D ve 1–3 aksları binanın tek RECTANGULAR ızgarası (U: A–D, V: 1–3, 7 eksen, B (4,5; −2)–(4,5; 11));
+  dosyada 7 IFCGRIDAXIS, FootPrint; hiçbir eksenin etiketi eksik değil. Yalnız A–D kalınca ızgara yok, 4 aks kayıpta.
+- **Bağımsız okuyucu** (`scripts/fixtures/arch_ifc_check.py`, IfcOpenShell 0.9.0.post1, KentOS kodu olmadan): yeniden
+  yazılan `fixtures/arch/v1/ifc/kesit-binasi.ifc` ve künyeli eşi IFC4X3_ADD2, doğrulayıcı (öznitelikler, EXPRESS
+  kuralları) 0 bulgu, 68 gövde. Betiğe eklenen denetimler: ızgara binanın, eksenleri tanımın aksları adları ve iki
+  noktasıyla, RECTANGULAR; U merdiven HALF_TURN_STAIR ve Betonarme. Bu dosyalar ADR 8047'den beri yeniden yazılmamıştı:
+  B7 ve B8'in alanları (yangın sınıfları, emsal zonları, bölüm grupları) da artık içlerinde ve doğrulayıcıdan geçiyor.
 - **Dijital denetim:** rampa artık "modele girmeyen nesne" değil; sınama örneği yüksekliği olmayan bir duvara geçti.
 - **Denetim olguları** (`fixtures/audit-facts/v1/mimari.json`): merdivenin ön tanımlı tip ve malzeme eksikleri düştü
   (yalnız bu iki satır elle çıkarıldı; kaçış yolunun önceden bilinen 11,55 / 4,45 farkı görünür bırakıldı).
 
 ## §4. Sıradaki adımlar
 
-- Aks ızgarası (`IfcGrid`, `IfcGridAxis`).
 - Kitaplık bloklarının yapı sınıfı ve gövdesi (asansör, vitrifiye, mobilya).
 - Kaplama ve asma tavan (`IfcCovering`), giydirme cephe (`IfcCurtainWall`), dikme ve kayıt (`IfcMember`).
 - Rampanın korkulukları (merdivenin de) kesit modelinde yok.
