@@ -121,7 +121,11 @@
       çizilmiş delik ve boşluğun parçası döşemenin açıklığı.
     - Eğimli döşeme eğim okuyla (`slope`; kalınlıklar üst yüze dik, en çok %100, delikli olmaz; `.kcad` mimari verisi 7).
     - IFC mahali bitmiş tabanından tavanına (ADR 8040 §3'ün modeli); tavanı bilinmiyorsa yükseklik ve hacim yazılmaz.
-      Kalan: çatı katmanları, içe dönen saçak, döner merdiven, çatıyla kesilmiş mahal hacmi.
+    - Çatının katmanları (`RoofFields::layers`; `.kcad` mimari verisi 8): üstten aşağı sabit sıra, her tür bir kez,
+      kalınlık çatı yüzüne dik; katmanlı çatının kalınlığı katmanlarının toplamıdır (katmansız çatınınki düşey, ADR
+      8044). Kesitte ayrı plaklar (EK-2 öğeleri, ısı yalıtımı SN55, mertek SN23), IFC'de `IfcMaterialLayerSet`
+      (malzemesi verilmeyen katman boş, Category IFC 4.3'ün sözcükleri). Hazır katman takımı yok: değerler yazılır.
+      Kalan: içe dönen saçak, döner merdiven, çatıyla kesilmiş mahal hacmi, çatının yüz başına `IfcSlab`'e ayrılması.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

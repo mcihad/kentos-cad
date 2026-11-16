@@ -4,7 +4,7 @@
   [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-06'nın gövde kısmı (§8 "Gövdeler"); uygulama sırasında B10. Bu ADR maddenin
   bütün adımlarını tutar; koddaki "docs/adr/8071 §N" atıfları bölümleri gösterir: §1 gerçek yay, §2 kaynaktan miktar,
   §3 kapalı gövde ve ilk kabul, §4 açıklığı kesilmiş gövde ve iki çıktı (IFC-06), §5 döşemede boşluk ve şaft, §6 eğimli
-  döşeme, §7 kapalı mahal hacmi. Kararların numarası bölümler boyunca sürer. Ortak sınamalar ve sıradaki adımlar
+  döşeme, §7 kapalı mahal hacmi, §8 çatının katmanları. Kararların numarası bölümler boyunca sürer. Ortak sınamalar ve sıradaki adımlar
   numarasız son bölümlerdedir (yeni adım numaralı bölüm olarak araya girer).
 - **Bağlam:** ADR [8047](8047-ifc-building-export.md) (binanın IFC'si, kayıp listesi), [8042](8042-section-derived-from-a-section-mark.md)
   (kesit modeli), [0340](0340-wall-joins-and-edits.md) (duvar birleşimleri), [8040](8040-vertical-model.md) (duvarın
@@ -274,9 +274,68 @@ kapalı, hacim 10⁻⁹, kotlar), `.kcad`'ın `a_sloped_slab_round_trips_under_a
 asma tavanla 2,60; bütün mahal gövdeleri kapalı), eğri binanın odaları kapalı formlarıyla (alan, iç yayın boyuyla çevre,
 3,20 ve 2,90 yükseklik, hacimler; IfcOpenShell da okur).
 
+## §8. Çatının katmanları
+
+**Araştırma.**
+
+- **EK-2 Tablo 2.3** (`mevzuat/bim/ek-2-dosya-isimlendirme.md`): Çatı CATI, Çatı Kaplama CKAP, Çatı Kaplama Tahtası
+  CKTA, Çatı Taşıyıcı CTAS, Isı Yalıtımı ISYA, Su Yalıtımı SUYA. Katmansız çatı tek öğedir (CATI, ADR 8044); katmanlı
+  çatının her katmanı kendi öğesindedir.
+- **Mimarlık Hizmetleri Şartnamesi 14.5.4 q** (uygulama projesi kesitleri): "Çatı konstrüksiyonu … çizilir"; ADR 8044
+  çatı katmanlarının (kiremit, çıta, tahta, mertek) ayrı çizilmesini buraya bırakmıştı.
+- **IFC 4.3 `IfcMaterialLayer`** (buildingSMART IFC4.3.x-development, `IfcMaterialLayer.md`): katman sabit kalınlıklıdır;
+  Material verilmemişse "hava boşluğu demek değil, malzeme o noktada belirtilmemiş" demektir; LayerThickness'in anlamı
+  kullanımına bağlıdır; Category için genel sözcükler 'LoadBearing', 'Insulation', 'Inner finish', 'Outer finish'.
+  **`IfcRoof`** (`IfcRoof.md`): "çatı her yüz için döşemelere ayrılabilir"; parçaları varsa çatının kendi gövdesi
+  olmaz, gövdesi parçalarının toplamıdır.
+- **TS 5319** (ADR 8014): SN55 yalıtım malzemesi, SN23 ağaç malzeme; SN53 seramik kitaplıkta yok.
+- **Üreticiler (karşılaştırma için):** Archicad'in bileşik yapısında çatının "üst" yüzü ilk katmandır ve çatının
+  kalınlığı katmanların toplamıdır (help.graphisoft.com, AC25 "Composite Structures"); Revit'in bileşik yapısında her
+  katmanın işlevi (Structure, Substrate, Finish…), malzemesi ve kalınlığı vardır, zar katmanı 0 kalınlık alabilir
+  (help.autodesk.com, "Compound Structure", "Edit Layers in a Compound Structure").
+- **Değerler:** kaynaklı hazır katman takımı bulunamadı (birim fiyat pozları yalnız latanın kesitini veriyor; tahtanın ve
+  merteğin kalınlığı projeye göre); kalınlıklar yazılır, KentOS önermez.
+
+**Karar.**
+
+24. **Katmanlar** (`RoofFields::layers`, `RoofLayer { kind, thickness, material }`): üstten aşağı kaplama, lata (ADR
+    8044'te çıta), su yalıtımı, kaplama tahtası, ısı yalıtımı, mertek sırasıyla, her tür en çok bir kez; her biri EK-2
+    öğesinde (CKAP, CKAP, SUYA, CKTA, ISYA, CTAS). Kalınlık çatı yüzüne dik ölçülür (tahtanın, merteğin kendi
+    kalınlığı), düşeyde √(1 + eğim²) katı. Katmanlı çatının kalınlığı katmanlarının toplamıdır, ayrıca verilmez;
+    katmansız çatı ADR 8044'teki gibi tek kalınlıktır (düşey ölçülür, yoksa 0,25 m). Katman sıfırdan büyük, en çok 1 m
+    (zar katmanı yok: kesitin plağı hacim ister; 0 katmanı kaldırır); toplam en çok 2 m; malzeme boş ya da kenarı
+    boşluklu olamaz. `.kcad` mimari verisi 8.
+25. **Kesitte:** her yüzde her katman bir eğik plak, üstündekinin altında, kendi EK-4 katmanında (MM-CKAP-KIREMIT,
+    MM-CKAP-GENEL, MM-CKTA-CAM…: malzemesi, kaplamanınki verilmemişse çatının kaplaması, öbürlerininki GENEL); döşeme
+    katmanları gibi ısı yalıtımı SN55 ile taranır, mertek çatının taşıyıcısı olarak tek kalınlıktaki çatı gibi SN23 ile
+    ve kalın çizgiyle; öbürleri ince çizgiyle (kiremidin SN53'ü kitaplıkta yok, kaplama ağaç diye taranmaz). Pencere ve
+    kar siperliği çizgileri ve yüzey adı en üst katmandadır.
+26. **IFC'de:** katmanlı çatı tek malzeme yerine bir `IfcMaterialLayerSet` ("Çatı katmanları") taşır, katmanlar üstten
+    aşağı: Name türün sözcüğü; Material verilen malzeme (kaplamanınki verilmemişse çatının kaplaması), verilmemişse boş;
+    LayerThickness yüze dik kalınlık; Category IFC 4.3'ün sözcükleriyle: kaplama 'Outer finish', ısı yalıtımı
+    'Insulation', mertek 'LoadBearing', öbürleri boş. Takım `IfcRoof`'a bağlanır; gövdesi çatının kendisindedir (ADR
+    8044), her yüzün katmanları kapalı plaklardır.
+27. **Arayüz:** Öznitelikler'de "Çatı katmanları" bölümü: altı tür üstten aşağı, kalınlığı yazılan katman yerine girer
+    ya da değişir, boş ya da 0 kaldırır; katmanın hemen altında "Malzeme"; "Toplam kalınlık". Geometri'de "Kalınlık"
+    katmansız çatıda yazılır, katmanlıda katmanlarının toplamıdır ("çatı yüzüne dik" notuyla). Her değişiklik
+    `cad.arch.edit`'in `layers`'ı ile tek geri alma adımıdır; `cad.roofs.create` de `layers` alır. Yeni komut, araç ya da
+    şerit düğmesi yok.
+
+**Sınama.** `kentos-ifc`'nin `a_layered_roof_is_one_material_layer_set`'i (adlar, boş malzeme, roller, bir malzeme bir
+kez); `roof_sections::a_layered_roof_is_its_layers_plates_cut_in_the_section_and_one_ifc_layer_set` (kesit binasının
+%33'lük kırma çatısı beş katmanla: dört yüzde beşer plak, düşeyde t · √1,1089, her biri üstündekinin altında, EK-4
+katmanları; B-B'de SN55 ve SN23, her katmanın çizgisi; IFC'de takım; gövdeler kapalı); `curved_ifc_check.py`'nin çatı
+bölümü `katmanli-cati.ifc`'yi IfcOpenShell'le okur: 0 bulgu, takım beş katmanıyla geri okunur, yüzey kapalı, hacim
+13,25 · 10,25 · 0,26 · √1,1089 (10⁻⁹), en alt 6,00 − 0,26 · √1,1089, en üst 6,00 + 0,33 · 10,25 / 2; `.kcad`'ın
+`a_layered_roof_round_trips_under_arch_data_8`'i (sırası bozuk ve kalınlığı ayrıca verilen reddedilir); masaüstünde
+`a_roofs_layers_are_edited_in_their_section` (altı geri alma adımı); ortak durumlar (`cad.roofs.create` 67,
+`cad.arch.edit` 96: katmanlı çatı, retleri, katman verme ve kaldırma). Resimler: `roof_layers_screens`
+(`.run/gui-evidence/cati-katmanlari-8071/`: B-B, saçağın yakını, 3B; açık ve koyu) ve `roof_properties_screens`
+(`cati-katmanlari.png`).
+
 ## Ortak sınamalar
 
-- `cargo test -p kentos-ifc --lib` (42), `-p kentos-geometry-core` (1 117), `-p kentos-interaction wall` (81),
+- `cargo test -p kentos-ifc --lib` (45), `-p kentos-geometry-core` (1 117), `-p kentos-interaction wall` (81),
   `-p kentos-native-application --test all -- sections elevation roof arch_ifc scene mesh slab wall ramp`.
 - Ortak durumlar: `KENTOS_CASES_ONLY=cad.walls,cad.sections,cad.modules,cad.spaces,cad.slabs,cad.openings,cad.arch,cad.elevations,cad.roofs,cad.stairs,cad.columns,cad.beams,cad.ramps`
   `every_command_case` 2 995 durum. B9'dan eskimiş iki dosya yenilendi: `cad.sections.edit` (rampa ve niş artık
@@ -290,10 +349,13 @@ asma tavanla 2,60; bütün mahal gövdeleri kapalı), eğri binanın odaları ka
 - **IFC-06'nın kalanı:** gelişim seviyesi kanıtının müellif incelemesi kaydı (EK-9 formuyla, IFC-08 ve BIM-14);
   "sentetik örnek açık kural takımından uyarısız geçer" kabulü buildingSMART'ın doğrulama servisini ya da açık kural
   takımını ister: dosyayı servise yüklemek ya da kural takımını indirmek sahibin onayıyla.
-- **Çatının katmanları ve içe dönen saçak** (ADR 8044'ün kalanı).
+- **İçe dönen saçak** (L, T biçimli; ADR 8044 §10'un kalanı): ağırlıklı düz iskelet ve bağımsız başvurusuyla.
+- **Çatı yüz başına `IfcSlab`:** IFC 4.3'ün "her yüz için döşemelere ayrılabilir" yolu; katman takımı her yüze
+  `IfcMaterialLayerSetUsage` ile; çatının kendi gövdesi o zaman kalkar.
+- Kiremit kaplamanın TS 5319 SN53 "seramik" taraması (kitaplığa girince); çatının tek kalınlığının da yüze dik ölçülmesi
+  (ADR 8044 düşey ölçüyor; örnek çizimler değişir: sahibin kararı).
 - Eğimli döşemenin planda eğim oku simgesi; delikli eğimli döşeme (kesitin eğik yüz çizimi deliği tutarsa).
 - Çatıyla kesilmiş mahal hacmi; mahalin Net Çevre'si (kapı ve sanal sınırlar düşülmüş) ve duvar ve tavan alanları.
 - **Döner merdiven gerçek yayla:** eğri merdivenin basamakları ve kolu.
-- **Mahalin kapalı hacmi** (EK-9 satır 14, Z6): altındaki ve üstündeki döşemeyle sınırlanan hacim ve miktarları.
 - Kapının açıklığı bitmiş döşemeden (±0,00) başlar, duvar yapısal döşemeden; kapının altında kaplama kalınlığında duvar
   kalır (zemin katta 5 cm). Açıklığın alt kotu duvarın ayağına mı inmeli, ayrı karar.

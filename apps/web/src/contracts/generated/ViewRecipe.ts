@@ -7,7 +7,7 @@ import type { ViewCategory } from "./ViewCategory";
 import type { WallDetail } from "./WallDetail";
 
 /**
- * A named view's architectural recipe (docs/adr/0774 §1; Revit's view properties, Archicad's view settings): what a
+ * A named view's architectural recipe (docs/adr/0774 §1): what a
  * sheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the
  * screen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.
  */
@@ -37,16 +37,16 @@ hidden?: Array<ViewCategory>,
  */
 scale?: number, 
 /**
- * The walls' detail the map draws (docs/adr/0781 §1; Revit's Detail Level, Archicad's Partial Structure Display);
+ * The walls' detail the map draws (docs/adr/0781 §1);
  * none: its scale's, or the project's when it fixes one.
  */
 detail?: WallDetail, 
 /**
- * The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2; Revit's Crop Region).
+ * The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2).
  */
 crop?: boolean, 
 /**
- * The pens the map draws its categories with (docs/adr/0783 §1; Archicad's pen sets, Revit's object styles in a
+ * The pens the map draws its categories with (docs/adr/0783 §1; pen sets, the categories' styles in a
  * view), each category once, in their order.
  */
 pens?: Array<RecipePen>, 
@@ -55,7 +55,7 @@ pens?: Array<RecipePen>,
  */
 mono?: boolean, 
 /**
- * The view template it follows by its id (docs/adr/0783 §2; Revit's assigned View Template): the template gives
+ * The view template it follows by its id (docs/adr/0783 §2): the template gives
  * everything but the level and the crop, which stay the view's. An input may name it.
  */
 template?: string, 

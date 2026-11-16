@@ -189,7 +189,7 @@ impl ColumnShape {
     }
 }
 
-/// Which of a column's nine points its `at` is (docs/adr/0725 §2), Archicad's reference axis of the column core: on its
+/// Which of a column's nine points its `at` is (docs/adr/0725 §2), the reference axis of the column's core: on its
 /// box before its turn, left and right across its width, bottom and top along its depth.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

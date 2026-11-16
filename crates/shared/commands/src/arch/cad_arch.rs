@@ -244,7 +244,7 @@ pub struct SystemColumns {
     pub tag_start: Option<String>,
 }
 
-/// A curved grid system (docs/adr/0725 §1; Archicad's curved Grid System): radial grids from `center`, the first at
+/// A curved grid system (docs/adr/0725 §1): radial grids from `center`, the first at
 /// `angle`, the next `turns` round, and arcs round `center`, the first `radius` from it, the next `rings` further out.
 /// Each grid reaches `extension` past the outermost grids it crosses: a radial grid from the first arc less it (never
 /// past `center`) to the last arc and it; an arc along itself past the first and the last radial grid, never more than
@@ -988,6 +988,10 @@ pub struct NewRoof {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub parts: Option<Vec<crate::RoofPart>>,
+    /// Its layers top down (docs/adr/8071 §8); its thickness then theirs, not given.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layers: Option<Vec<crate::RoofLayer>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
@@ -1441,6 +1445,11 @@ pub struct ArchChange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub parts: Option<Vec<crate::RoofPart>>,
+    /// A roof's layers top down, all of them (docs/adr/8071 §8); its thickness then theirs; empty: one build-up again,
+    /// 0.25 m.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layers: Option<Vec<crate::RoofLayer>>,
     /// A railing's infill (docs/adr/8045 §3): upright balusters, glass or a solid panel.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

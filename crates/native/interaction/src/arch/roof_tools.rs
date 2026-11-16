@@ -200,6 +200,8 @@ impl RoofTool {
             parts: None,
             arch: self.level.arch(),
             attrs: None,
+            // Its layers are typed in Öznitelikler (docs/adr/8071 §8).
+            layers: None,
         })
     }
 

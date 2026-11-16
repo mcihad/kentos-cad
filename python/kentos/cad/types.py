@@ -1146,7 +1146,7 @@ BuildingSectionLeftName = Literal["roof", "naturalGround", "curved", "ramp", "no
 
 
 class BuildingSectionState(_StrEnum):
-    """Whether a section is what the model would draw now (BricsCAD marks a drawing out of sync red, one never made orange).
+    """Whether a section is what the model would draw now: out of date, or never made.
 
     - ``current``: Güncel: drawn again it would be the same.
     - ``stale``: Eski: the model changed what it draws (a door moved, a wall's height); Yeniden çiz brings it up to date.
@@ -1529,7 +1529,7 @@ CloudReturnsName = Literal["all", "first", "last", "single"]
 
 
 class ColumnAnchor(_StrEnum):
-    """Which of a column's nine points its `at` is (docs/adr/0725 §2), Archicad's reference axis of the column core: on its
+    """Which of a column's nine points its `at` is (docs/adr/0725 §2), the reference axis of the column's core: on its
     box before its turn, left and right across its width, bottom and top along its depth.
     """
     CENTER = "center"
@@ -3381,7 +3381,7 @@ class InteriorFaces(_StrEnum):
     """The lines of a crossed wall the chain measures (docs/adr/0711 §3).
 
     - ``outer``: Its two faces.
-    - ``skins``: Every line: the faces and the boundaries between its components (Archicad's “All Skins”).
+    - ``skins``: Every line: the faces and the boundaries between its components (all its layers).
     """
     OUTER = "outer"
     SKINS = "skins"
@@ -6966,6 +6966,23 @@ class RobustMethod(_StrEnum):
 
 RobustMethodName = Literal["huber", "danish"]
 """The names of :class:`RobustMethod`, for a plain string."""
+
+
+class RoofLayerKind(_StrEnum):
+    """What a roof's layer is (docs/adr/8071 §8; Mimarlık Hizmetleri Şartnamesi 14.5.4 q), top down in this order, each its
+    EK-2 Tablo 2.3 element: its covering (Çatı Kaplama), its battens (lata: the covering's), its waterproofing (Su
+    Yalıtımı), its boarding (Çatı Kaplama Tahtası), its insulation (Isı Yalıtımı), its rafters (Çatı Taşıyıcı).
+    """
+    COVERING = "covering"
+    BATTENS = "battens"
+    WATERPROOFING = "waterproofing"
+    BOARDING = "boarding"
+    INSULATION = "insulation"
+    RAFTERS = "rafters"
+
+
+RoofLayerKindName = Literal["covering", "battens", "waterproofing", "boarding", "insulation", "rafters"]
+"""The names of :class:`RoofLayerKind`, for a plain string."""
 
 
 class RoofPartKind(_StrEnum):
@@ -16760,7 +16777,7 @@ class ArchAuditWithin(_Model):
     Attributes:
         levels: Levels by their ids; null, the objects on no level. An object's level is the level view's (docs/adr/0715): an
             opening's its wall's, a tag's its object's, a dimension's its bonds'.
-        uids: Objects by their persistent ids (Revit's Show Related Warnings).
+        uids: Objects by their persistent ids: the findings about them.
     """
     levels: list[str | None] | None | Unset = UNSET
     uids: list[str] | None | Unset = UNSET
@@ -60172,7 +60189,7 @@ class ModuleInstance(_Model):
         exceptions: The keys it keeps as its own: its objects' and its runs'.
         rotation: Unit: rad.
         runs: Its kitchen runs (docs/adr/8050 §5): the definition's run key and the id of the instance's run.
-        storey: One storey of a module of several (docs/adr/0811, Archicad's Single Story): the instance holds only the
+        storey: One storey of a module of several (docs/adr/0811): the instance holds only the
             definition's members on that storey, standing on the instance's `level`. None: every storey, the base on `level`. Unit: count.
         unit: The building program's group (docs/adr/0773) this instance's spaces are in (docs/adr/0779 §4): a flat module
             placed again is another flat. None: its spaces keep the definition's group.
@@ -62932,6 +62949,7 @@ class NewRoof(_Model):
         pts: Its eaves line (saçak çizgisi), closed: at least three points, either way round, turning out at every corner. Unit: length.
         slopes: Each edge's slope from its eaves, per cent (the edge from `pts[i]` to the next point); null: a gable end. Unit: percent.
         gutter: Its gutter (oluk, docs/adr/8044 §8): its width outside every sloping eaves edge; absent: none. Unit: length.
+        layers: Its layers top down (docs/adr/8071 §8); its thickness then theirs, not given.
         material: Its covering; absent: Kiremit.
         offset: Its eaves' height over its storey's top (the next storey's floor); absent: 0. Unit: elevation.
         overhang: How far its eaves stand past the walls' outer faces (saçak). Unit: length.
@@ -62946,6 +62964,7 @@ class NewRoof(_Model):
     arch: ArchInfo | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
     gutter: float | None | Unset = UNSET
+    layers: list[RoofLayer] | None | Unset = UNSET
     material: str | None | Unset = UNSET
     offset: float | None | Unset = UNSET
     overhang: float | None | Unset = UNSET
@@ -62963,6 +62982,8 @@ class NewRoof(_Model):
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
         if self.gutter is not UNSET:
             out["gutter"] = None if self.gutter is None else float(self.gutter)
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else [e0.to_json() for e0 in self.layers]
         if self.material is not UNSET:
             out["material"] = self.material
         if self.offset is not UNSET:
@@ -62985,6 +63006,7 @@ class NewRoof(_Model):
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             gutter=UNSET if "gutter" not in data else None if data["gutter"] is None else float(data["gutter"]),
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else [RoofLayer.from_json(e0) for e0 in data["layers"]],
             material=data.get("material", UNSET),
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
             overhang=UNSET if "overhang" not in data else None if data["overhang"] is None else float(data["overhang"]),
@@ -65744,7 +65766,7 @@ class OptionChoice(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class OptionCombo(_Model):
-    """A named combination of options (docs/adr/0808; Archicad's Design Option Combination): one option for some of the
+    """A named combination of options (docs/adr/0808): one option for some of the
     project's sets; a set it does not name shows its primary. A proposal (“Teklif 1: mutfak B, banyo A”) is one
     combination; a view's recipe may show it, Bileşimi uygula makes its choices the primaries.
     """
@@ -68847,7 +68869,7 @@ class PaperItemFrame(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class PaperLayerOverride(_Model):
-    """One layer drawn otherwise in one map (docs/adr/0314 §1; AutoCAD's viewport overrides, VPFREEZE): the model's
+    """One layer drawn otherwise in one map (docs/adr/0314 §1; the map's own layer overrides and freezes): the model's
     layer stays as it is. Absent fields keep the layer's own.
     Attributes:
         layer: The layer's id.
@@ -69049,7 +69071,7 @@ class PaperMapGrid(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class PaperMapLevel(_Model):
-    """A map's level (docs/adr/0716; Revit's plan view of a level, its underlay): the objects on the level and those on
+    """A map's level (docs/adr/0716; a level's plan view and its underlay): the objects on the level and those on
     no level; `below`, the level under it faint as well. Objects on the other levels are left out of the map. With
     `roof` the map is the roof plan (çatı planı, docs/adr/8044 §7): every roof whole, as seen from above, with its
     chimneys and windows, and the objects on no level; nothing else of any level.
@@ -82698,7 +82720,7 @@ class QueryTime(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class RadialGridSystem(_Model):
-    """A curved grid system (docs/adr/0725 §1; Archicad's curved Grid System): radial grids from `center`, the first at
+    """A curved grid system (docs/adr/0725 §1): radial grids from `center`, the first at
     `angle`, the next `turns` round, and arcs round `center`, the first `radius` from it, the next `rings` further out.
     Each grid reaches `extension` past the outermost grids it crosses: a radial grid from the first arc less it (never
     past `center`) to the last arc and it; an arc along itself past the first and the last radial grid, never more than
@@ -87964,7 +87986,7 @@ class ReviewAnchorCheck(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ReviewDecision(_Model):
-    """A decision a note records (docs/adr/4140), as ArcGIS's Reviewer table keeps a result apart from the feature: the
+    """A decision a note records (docs/adr/4140), kept apart from the feature it is about: the
     command whose decision it is, the candidate (its persistent id) and its source's name, what was decided as the
     command was given it (a single source's candidate accepted, its class corrected to a class's id, its missing fields
     given, or it rejected with a reason), and the asset the candidate's group was written as or tied to (none for a
@@ -90538,6 +90560,8 @@ class RoofEntity(Entity):
         gutter: Its gutter (oluk, docs/adr/8044 §8): its width outside every sloping eaves edge, metres; absent: none. Unit: length.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        layers: Its layers top down (docs/adr/8071 §8), each kind once in [`RoofLayerKind`]'s order, each thick across the
+            roof's face; its thickness is theirs together. Absent: one build-up of its thickness, upright.
         line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
             `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
@@ -90573,6 +90597,7 @@ class RoofEntity(Entity):
     gutter: float | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    layers: list[RoofLayer] | Unset = UNSET
     line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
@@ -90609,6 +90634,8 @@ class RoofEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.layers is not UNSET:
+            out["layers"] = [e0.to_json() for e0 in self.layers]
         if self.line_pattern is not UNSET:
             out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
@@ -90654,6 +90681,7 @@ class RoofEntity(Entity):
             gutter=UNSET if "gutter" not in data else None if data["gutter"] is None else float(data["gutter"]),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            layers=[RoofLayer.from_json(e0) for e0 in data["layers"]] if "layers" in data else UNSET,
             line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
@@ -90668,6 +90696,34 @@ class RoofEntity(Entity):
             thickness=UNSET if "thickness" not in data else None if data["thickness"] is None else float(data["thickness"]),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoofLayer(_Model):
+    """A roof's layer (docs/adr/8071 §8): what it is, how thick across the roof's face (metres: a board's, a rafter's own
+    depth; upright on a face sloping g it is × √(1 + g²)), what of.
+    Attributes:
+        thickness: Unit: length.
+    """
+    kind: RoofLayerKind | RoofLayerKindName
+    thickness: float
+    material: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["thickness"] = float(self.thickness)
+        if self.material is not UNSET:
+            out["material"] = self.material
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoofLayer:
+        return cls(
+            kind=_enum_in(RoofLayerKind, data["kind"]),
+            thickness=float(data["thickness"]),
+            material=data.get("material", UNSET),
         )
 
 
@@ -114706,24 +114762,24 @@ class ViewMarksReferences(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ViewRecipe(_Model):
-    """A named view's architectural recipe (docs/adr/0774 §1; Revit's view properties, Archicad's view settings): what a
+    """A named view's architectural recipe (docs/adr/0774 §1): what a
     sheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the
     screen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.
     Attributes:
         combo: The combination of design options it shows by its id (docs/adr/0808): its choices, under the recipe's own.
-        crop: The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2; Revit's Crop Region).
-        detail: The walls' detail the map draws (docs/adr/0781 §1; Revit's Detail Level, Archicad's Partial Structure Display);
+        crop: The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2).
+        detail: The walls' detail the map draws (docs/adr/0781 §1);
             none: its scale's, or the project's when it fixes one.
         hidden: The categories left out, in their order.
         layer_state: A layer state of the project by its name, in this view only (docs/adr/0314 §1); none: the map's layers.
         level: The level the map draws; none: the map's own.
         mono: Every line black, hatches grey (docs/adr/0783 §1); a pen's colour still wins.
         options: The design options it shows (docs/adr/0788 §3), a set's choice each; a set not named shows its primary.
-        pens: The pens the map draws its categories with (docs/adr/0783 §1; Archicad's pen sets, Revit's object styles in a
+        pens: The pens the map draws its categories with (docs/adr/0783 §1; pen sets, the categories' styles in a
             view), each category once, in their order.
         phase: The phases it shows (docs/adr/0346 §2); none: the project's phase view.
         scale: The scale's denominator a linked map draws at (1:N), the view's middle kept; none: the view's box fitted. Unit: scale.
-        template: The view template it follows by its id (docs/adr/0783 §2; Revit's assigned View Template): the template gives
+        template: The view template it follows by its id (docs/adr/0783 §2): the template gives
             everything but the level and the crop, which stay the view's. An input may name it.
         version: 1 for a new recipe, one more at each change; given in an input, it is ignored. Unit: version.
     """
@@ -120407,6 +120463,8 @@ class SetArchOperation(ArchOperation):
         justify: A beam's justification on its axis.
         label: A grid's.
         landing: A stair's or a ramp's; null: the width. Unit: length.
+        layers: A roof's layers top down, all of them (docs/adr/8071 §8); its thickness then theirs; empty: one build-up again,
+            0.25 m.
         legs: An L column's legs (docs/adr/0725 §3). Unit: length.
         level: Any kind's.
         material: A column's or a beam's material (docs/adr/8041 §2), null: Betonarme; a roof's covering, null: Kiremit.
@@ -120456,6 +120514,7 @@ class SetArchOperation(ArchOperation):
     justify: WallJustify | WallJustifyName | None | Unset = UNSET
     label: str | None | Unset = UNSET
     landing: float | None | Unset = UNSET
+    layers: list[RoofLayer] | None | Unset = UNSET
     legs: list[float] | None | Unset = UNSET
     level: str | None | Unset = UNSET
     material: str | None | Unset = UNSET
@@ -120519,6 +120578,8 @@ class SetArchOperation(ArchOperation):
             out["label"] = self.label
         if self.landing is not UNSET:
             out["landing"] = None if self.landing is None else float(self.landing)
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else [e0.to_json() for e0 in self.layers]
         if self.legs is not UNSET:
             out["legs"] = None if self.legs is None else [float(e0) for e0 in self.legs]
         if self.level is not UNSET:
@@ -120593,6 +120654,7 @@ class SetArchOperation(ArchOperation):
             justify=UNSET if "justify" not in data else None if data["justify"] is None else _enum_in(WallJustify, data["justify"]),
             label=data.get("label", UNSET),
             landing=UNSET if "landing" not in data else None if data["landing"] is None else float(data["landing"]),
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else [RoofLayer.from_json(e0) for e0 in data["layers"]],
             legs=UNSET if "legs" not in data else None if data["legs"] is None else [float(e0) for e0 in data["legs"]],
             level=data.get("level", UNSET),
             material=data.get("material", UNSET),
@@ -124276,7 +124338,7 @@ class PolygonizeDeriveWork(DeriveWork):
 
 @dataclass(kw_only=True, slots=True)
 class SpaceDimensionEdit(DimensionEdit):
-    """Ölçü aralığı (AutoCAD's DIMSPACE): the dimensions' lines put `spacing` apart from the base's, each side of it
+    """Ölçü aralığı: the dimensions' lines put `spacing` apart from the base's, each side of it
     in its order of distance; 0 lines them up with the base's. Aligned and linear dimensions parallel to the base.
     Attributes:
         base: The base dimension's persistent id; it does not move.
@@ -124306,7 +124368,7 @@ class SpaceDimensionEdit(DimensionEdit):
 
 @dataclass(kw_only=True, slots=True)
 class BreakDimensionEdit(DimensionEdit):
-    """Ölçüyü kır (AutoCAD's DIMBREAK): a gap in each of the dimensions' lines where `objects` (absent: every shown
+    """Ölçüyü kır: a gap in each of the dimensions' lines where `objects` (absent: every shown
     object that is not a dimension) cross it; its breaks so far replaced. Aligned and linear dimensions.
     """
     TAG_VALUE: ClassVar[str] = "break"
@@ -124376,7 +124438,7 @@ class MoveTextDimensionEdit(DimensionEdit):
 
 @dataclass(kw_only=True, slots=True)
 class TextDimensionEdit(DimensionEdit):
-    """Ölçü değerini yaz: the text written over the value, `<>` its measured value (AutoCAD's text override); null:
+    """Ölçü değerini yaz: the text written over the value, `<>` its measured value; null:
     the measured value again.
     """
     TAG_VALUE: ClassVar[str] = "text"
@@ -124468,7 +124530,7 @@ class AlignedDimensionMeasure(DimensionMeasure):
 @dataclass(kw_only=True, slots=True)
 class LinearDimensionMeasure(DimensionMeasure):
     """Doğrusal: the distance from `a` to `b` along a direction, degrees
-    (0 ΔY, 90 ΔX, any other); absent: ΔY or ΔX as `at` lies (AutoCAD's rule).
+    (0 ΔY, 90 ΔX, any other); absent: ΔY or ΔX as `at` lies.
     Attributes:
         angle: Unit: deg.
     """
@@ -130641,7 +130703,7 @@ class PlaceModulesOperation(ModulesOperation):
     Attributes:
         at: Unit: length.
         rotation: Unit: rad.
-        storey: Tek kat (docs/adr/0811, Archicad's Single Story): only the members of this storey of a module of several,
+        storey: Tek kat (docs/adr/0811): only the members of this storey of a module of several,
             standing on `level`. None: every storey, the base on `level`. Unit: count.
         unit: The building program's group the instance's spaces are in (a flat placed again, docs/adr/0779 §4).
     """
@@ -130973,7 +131035,7 @@ class FieldNetworkDirection(NetworkDirection):
 
 @dataclass(kw_only=True, slots=True)
 class PlanNorthDirection(NorthDirection):
-    """The plan's north: the drawing's up (+Y), grid north in a projected system (Revit's Project North)."""
+    """The plan's north: the drawing's up (+Y), grid north in a projected system (the project's north)."""
     TAG_VALUE: ClassVar[str] = "plan"
 
     def to_json(self) -> dict[str, Any]:
@@ -140361,7 +140423,7 @@ class DeleteViewsOp(ViewsOp):
 
 @dataclass(kw_only=True, slots=True)
 class AreaViewsOp(ViewsOp):
-    """Alanı değiştir (docs/adr/0789 §1; Revit's crop region grips and Size Crop): the view's area moved, resized or
+    """Alanı değiştir (docs/adr/0789 §1; its area's grips and size): the view's area moved, resized or
     turned, its id, name, place in the list and recipe kept. The maps linked to it follow; one undo step.
     Attributes:
         center: Unit: length.
@@ -144807,6 +144869,9 @@ __all__ = [
     "RobustMethodName",
     "RobustRounds",
     "RoofEntity",
+    "RoofLayer",
+    "RoofLayerKind",
+    "RoofLayerKindName",
     "RoofPart",
     "RoofPartKind",
     "RoofPartKindName",

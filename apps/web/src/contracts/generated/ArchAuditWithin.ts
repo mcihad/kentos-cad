@@ -11,6 +11,6 @@ export type ArchAuditWithin = {
  */
 levels?: Array<string | null>, 
 /**
- * Objects by their persistent ids (Revit's Show Related Warnings).
+ * Objects by their persistent ids: the findings about them.
  */
 uids?: Array<string>, };

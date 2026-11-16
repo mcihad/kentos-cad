@@ -1,5 +1,5 @@
 //! `cad.levels.assign` v1 (“Kat ver”, docs/adr/0717): architectural objects given one of the project's levels as one
-//! undo step, their places unchanged (Archicad's Relink Home Story: the element stays where it is). Without objects
+//! undo step, their places unchanged (the element stays where it is). Without objects
 //! named it gives the level to every object Denetim says lacks one (`arch_level_missing`): a wall, a space, a column, a
 //! stair, a ramp or a room separator on no level or on a level the project does not have. A room's boundary is found
 //! again among its new level's walls in the same step.

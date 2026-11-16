@@ -428,7 +428,8 @@ eklendi), Sivas İmar Yönetmeliği 40/5 ve 42/5 (RG 10.11.2022/32009), BYKHY 58
 
 - §10: içe dönen köşeli saçak (L, T) ve dereler.
 - Bacanın duvar içi bacayla (Baca aracı) bağı; çatının ve parçalarının Öznitelikler'den düzenlenmesi (komut hazır: `cad.arch.edit`);
-  çatı katmanlarının (kiremit, çıta, tahta, mertek) ayrı ayrı çizilmesi (14.5.4 q, uygulama projesi).
+  ~~çatı katmanlarının (kiremit, çıta, tahta, mertek) ayrı ayrı çizilmesi (14.5.4 q, uygulama projesi)~~: ADR 8071 §8
+  (16 Kasım 2026).
 - `scripts/ui/ribbon.py` depodaki `catalog/v1/ribbon.json`'u artık aynen üretmiyor: sonradan eklenen arazi ve nokta
   bulutu girdilerini ve İmar panelini siliyor. Bu adımda çatının iki girdisi dosyaya elle eklendi; betik ayrıca
   güncellenmeli.

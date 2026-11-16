@@ -25,7 +25,15 @@ And fixtures/arch/v1/ifc/egimli-doseme.ifc (docs/adr/8071 §6; KENTOS_WRITE_IFC_
 section building with a 4 × 3 m slab 20 cm thick rising 30 cm over 3 m northward from 3.00 m: validator 0 findings; its
 Pset_SlabCommon.PitchAngle atan 0.1; its Qto 0.2 m wide, 12 · √1.01 m² as it lies, 12 · 0.2 · √1.01 m³; IfcOpenShell's
 own surface of it closed, its volume the same (its faces plane: 1e-9), its lowest point 3.00 − 0.2 · √1.01 (its
-underside at its tail), its highest 3.30."""
+underside at its tail), its highest 3.30.
+
+And fixtures/arch/v1/ifc/katmanli-cati.ifc (docs/adr/8071 §8; KENTOS_WRITE_IFC_ROOF_LAYERS=1 cargo test … a_layered_roof):
+the section building's hip roof over its 1. kat — its eaves 50 cm out of the walls' outer faces (the 12 × 9 m grid's
+25 cm walls: 13.25 × 10.25 m), 33 % on every edge, at +6.00 — with five layers top down: validator 0 findings; the
+roof's material one IfcMaterialLayerSet, each layer its name, thickness across its face, material (none where not
+given) and role (IfcMaterialLayer.Category's own words); IfcOpenShell's own surface of its body closed, enclosing
+13.25 · 10.25 · 0.26 · √(1 + 0.33²) m³ (each face's plates its plan area times their upright thickness), its lowest
+point 6.00 − 0.26 · √(1 + 0.33²) (the eaves' underside), its highest 6.00 + 0.33 · 10.25 / 2 (the ridge)."""
 import json
 import sys
 import uuid
@@ -34,14 +42,107 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 FILES = [ROOT / "fixtures/arch/v1/ifc/egri-bina.ifc", ROOT / "fixtures/arch/v1/ifc/egri-bina-referans.ifc"]
 SLOPED = ROOT / "fixtures/arch/v1/ifc/egimli-doseme.ifc"
+ROOF_LAYERS = ROOT / "fixtures/arch/v1/ifc/katmanli-cati.ifc"
 EXPECTED = ROOT / "fixtures/arch/v1/curved-building.json"
 
 
 def main() -> int:
     if len(sys.argv) > 1:
         path = Path(sys.argv[1]).resolve()
-        return check_sloped(path) if path.name == SLOPED.name else check(path)
-    return max([check(p) for p in FILES] + [check_sloped(SLOPED)])
+        if path.name == SLOPED.name:
+            return check_sloped(path)
+        return check_roof_layers(path) if path.name == ROOF_LAYERS.name else check(path)
+    return max([check(p) for p in FILES] + [check_sloped(SLOPED), check_roof_layers(ROOF_LAYERS)])
+
+
+def surface(f, product):
+    """IfcOpenShell's own triangles of a product in world coordinates: its points welded at 1e-9 and its triangles."""
+    import ifcopenshell.geom
+
+    settings = ifcopenshell.geom.settings()
+    for key, value in (("use-world-coords", True), ("weld-vertices", True)):
+        try:
+            settings.set(key, value)
+        except Exception:  # noqa: BLE001
+            pass
+    g = ifcopenshell.geom.create_shape(settings, product).geometry
+    v = g.verts
+    pts = [(v[i], v[i + 1], v[i + 2]) for i in range(0, len(v), 3)]
+    key = {}
+    index = [key.setdefault(tuple(round(c, 9) for c in p), len(key)) for p in pts]
+    tris = [(index[g.faces[i]], index[g.faces[i + 1]], index[g.faces[i + 2]]) for i in range(0, len(g.faces), 3)]
+    place = {}
+    for p, i in zip(pts, index):
+        place.setdefault(i, p)
+    return pts, place, tris
+
+
+def closed_volume(place, tris):
+    """Whether the triangles close (each directed edge met as often the other way) and the volume they enclose."""
+    edges = {}
+    for t in tris:
+        for a, b in ((t[0], t[1]), (t[1], t[2]), (t[2], t[0])):
+            edges[(a, b)] = edges.get((a, b), 0) + 1
+    closed = all(edges.get((b, a), 0) == n for (a, b), n in edges.items())
+    vol = abs(sum((a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0])
+                   + a[2] * (b[0] * c[1] - b[1] * c[0])) / 6.0
+                  for a, b, c in ((place[x], place[y], place[z]) for x, y, z in tris)))
+    return closed, vol
+
+
+def check_roof_layers(path: Path) -> int:
+    import math
+
+    import ifcopenshell
+    import ifcopenshell.util.element as ue
+    import ifcopenshell.validate
+
+    f = ifcopenshell.open(str(path))
+    bad: list[str] = []
+    log = ifcopenshell.validate.json_logger()
+    ifcopenshell.validate.validate(f, log, express_rules=True)
+    if log.statements:
+        bad.append(f"validator: {[s.get('message', s) for s in log.statements[:5]]}")
+    near = lambda a, b, rel=1e-9: a is not None and abs(a - b) <= rel * max(abs(b), 1.0)
+    # The section building (section_building.py): a 12 × 9 m grid, its outer walls 25 cm on it; the eaves 50 cm out.
+    face = 0.25 / 2
+    width, depth = 12 + 2 * (face + 0.5), 9 + 2 * (face + 0.5)
+    layers = [("Kaplama", 0.03, "Kiremit", "Outer finish"), ("Lata", 0.03, None, None),
+              ("Kaplama tahtası", 0.025, "Çam", None), ("Isı yalıtımı", 0.05, None, "Insulation"),
+              ("Mertek", 0.125, "Çam", "LoadBearing")]
+    total = sum(t for _, t, _, _ in layers)
+    k = math.sqrt(1 + 0.33 ** 2)
+    roofs = f.by_type("IfcRoof")
+    if len(roofs) != 1:
+        bad.append(f"{len(roofs)} roofs")
+    for roof in roofs:
+        m = ue.get_material(roof)
+        if m is None or not m.is_a("IfcMaterialLayerSet"):
+            bad.append(f"its material {m}")
+        else:
+            got = [(l.Name, l.LayerThickness, l.Material.Name if l.Material else None, l.Category)
+                   for l in m.MaterialLayers]
+            if len(got) != len(layers) or any(g[0] != w[0] or not near(g[1], w[1]) or g[2:] != w[2:]
+                                              for g, w in zip(got, layers)):
+                bad.append(f"its layers {got}, not {layers}")
+        pts, place, tris = surface(f, roof)
+        closed, vol = closed_volume(place, tris)
+        if not closed:
+            bad.append("IfcOpenShell's surface of it is not closed")
+        want = width * depth * total * k
+        if not near(vol, want):
+            bad.append(f"IfcOpenShell's volume {vol}, the closed form {want}")
+        zs = [p[2] for p in pts]
+        if not (near(min(zs), 6.0 - total * k) and near(max(zs), 6.0 + 0.33 * depth / 2)):
+            bad.append(f"{min(zs)} → {max(zs)}")
+    if bad:
+        for b in bad:
+            print("✗", b)
+        return 1
+    shown = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path.name
+    print(f"✓ {shown}: IFC4X3_ADD2, 0 validator findings; the roof one material layer set of its five layers, "
+          "IfcOpenShell's surface closed and its volume the closed form's.")
+    return 0
 
 
 def check_sloped(path: Path) -> int:

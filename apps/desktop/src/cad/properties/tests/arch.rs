@@ -308,8 +308,8 @@ fn single_cad_text_height_uses_the_same_physical_units_and_atomic_validation_as_
     }
 }
 
-/// docs/adr/1027: past the limit (AutoCAD's PROPOBJLIMIT) Öznitelikler shows the selection's size and kinds and one
-/// note, no values and no editors; at the limit it shows the values as before.
+/// docs/adr/1027: past the limit Öznitelikler shows the selection's size and kinds and one note, no values and no
+/// editors; at the limit it shows the values as before.
 #[test]
 fn a_selection_past_the_limit_shows_its_size_and_no_editors() {
     let mut app = crate::files_testing::app_with_drawing();
@@ -712,6 +712,78 @@ fn a_roofs_slope_eaves_and_parts_are_edited_in_its_properties() {
     assert_eq!(snapshot(&app), before, "each edit one undo step");
 }
 
+/// A roof's layers in Çatı katmanları (docs/adr/8071 §8): a kind's thickness typed adds it in its place, its material
+/// typed, the roof's Kalınlık then theirs together and read only; 0 takes one away, the last one gone the roof is one
+/// build-up again and its thickness typed. Each one undo step.
+#[test]
+fn a_roofs_layers_are_edited_in_their_section() {
+    use super::super::ArchField as A;
+    use serde_json::json;
+    let mut app = objects();
+    let doc = &mut app.document.as_mut().unwrap().model;
+    let mut settings = doc.settings().clone();
+    settings.workspace = Some(kentos_commands::Workspace::Cad);
+    settings.srid = 0;
+    doc.set_settings(settings);
+    let roof = add(&mut app, serde_json::from_value(json!({
+        "kind":"roof","id":0,"layerId":"parsel","attrs":{},
+        "pts":[{"x":0.,"y":0.},{"x":12.,"y":0.},{"x":12.,"y":9.},{"x":0.,"y":9.}],
+        "slopes":[33.,null,33.,null],"thickness":0.3
+    })).unwrap());
+    select(&mut app, &[roof]);
+    let editable = |app: &App, label: &str| {
+        rows(app).into_iter().flat_map(|(_, r)| r).find(|r| r.label == label).map(|r| r.editor.is_some())
+    };
+    let section = |app: &App| {
+        rows(app).into_iter().find(|(title, _)| title == "Çatı katmanları").map(|(_, r)| r).expect("its section")
+    };
+    // A layer's Malzeme: the row right under its own, when it has the layer.
+    let material = |app: &App, kind: &str| {
+        let rows = section(app);
+        let k = rows.iter().position(|r| r.label == kind).expect("its kind's row");
+        rows.get(k + 1).filter(|r| r.label == "Malzeme").map(|r| (r.value.to_string(), r.editor.is_some()))
+    };
+    assert_eq!(editable(&app, "Kalınlık"), Some(true), "one build-up: its thickness typed");
+    assert_eq!(noted(&app, "Kaplama tahtası").0, "Yok");
+    assert_eq!(section(&app).iter().filter(|r| !r.note).count(), 6, "every kind, none of them a layer yet");
+    let json = |app: &App| serde_json::to_value(entity(app, roof)).unwrap();
+    let snapshot = |app: &App| app.document.as_ref().unwrap().model.to_snapshot_v2();
+    let before = snapshot(&app);
+    // The rafters first, then the covering above them: each in its place.
+    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofLayer(5)), "0,12".into()));
+    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofLayer(0)), "0,03".into()));
+    assert_eq!(
+        json(&app)["layers"],
+        json!([{"kind":"covering","thickness":0.03},{"kind":"rafters","thickness":0.12}])
+    );
+    assert!(json(&app).get("thickness").is_none(), "its own thickness given up");
+    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofLayerMaterial(0)), "Kiremit".into()));
+    assert_eq!(json(&app)["layers"][0]["material"], json!("Kiremit"));
+    assert_eq!(editable(&app, "Kalınlık"), Some(false), "theirs together, not typed");
+    assert_eq!(noted(&app, "Kalınlık").1.as_deref(), Some("Katmanlarının toplamı, çatı yüzüne dik"));
+    assert_eq!(material(&app, "Kaplama"), Some(("Kiremit".into(), true)));
+    assert_eq!(material(&app, "Mertek"), Some((String::new(), true)));
+    assert_eq!(material(&app, "Lata"), None, "no batten layer: no Malzeme of its");
+    assert!(section(&app).iter().any(|r| r.label == "Toplam kalınlık"));
+    // Words that are no length change nothing and say why.
+    let kept = snapshot(&app);
+    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofLayer(2)), "kalın".into()));
+    assert_eq!(snapshot(&app), kept);
+    assert!(warned(&app).is_some());
+    // 0 takes the covering away; empty, the rafters: one build-up again.
+    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofLayer(0)), "0".into()));
+    assert_eq!(json(&app)["layers"], json!([{"kind":"rafters","thickness":0.12}]));
+    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofLayer(5)), "".into()));
+    assert!(json(&app).get("layers").is_none());
+    assert_eq!(editable(&app, "Kalınlık"), Some(true));
+    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofThickness), "0,2".into()));
+    assert_eq!(json(&app)["thickness"], json!(0.2));
+    for _ in 0..6 {
+        assert!(undo_label(&mut app).is_some());
+    }
+    assert_eq!(snapshot(&app), before, "each edit one undo step");
+}
+
 #[test]
 #[ignore = "GPU: a roof's editable rows in Özellikler"]
 fn roof_properties_screens() {
@@ -737,6 +809,23 @@ fn roof_properties_screens() {
     };
     snap.settle(&mut app, App::view, &mut update);
     snap.render(app.view(), &app.theme()).save(out.join("cati-ozellikleri.png")).unwrap();
+    // A layered roof (docs/adr/8071 §8): its Çatı katmanları section, its Kalınlık theirs together.
+    let layered = add(&mut app, serde_json::from_value(json!({
+        "kind":"roof","id":0,"layerId":"parsel","attrs":{},
+        "pts":[{"x":20.,"y":0.},{"x":32.,"y":0.},{"x":32.,"y":9.},{"x":20.,"y":9.}],
+        "slopes":[33.,null,33.,null],
+        "layers":[
+            {"kind":"covering","thickness":0.03,"material":"Kiremit"},{"kind":"battens","thickness":0.03},
+            {"kind":"waterproofing","thickness":0.005,"material":"Su yalıtım örtüsü"},
+            {"kind":"boarding","thickness":0.025,"material":"Çam"},{"kind":"rafters","thickness":0.125,"material":"Çam"}
+        ]
+    })).unwrap());
+    select(&mut app, &[layered]);
+    // Genel and Geometri folded: the section in sight.
+    let _ = app.update(Message::Properties(Event::Toggle("general")));
+    let _ = app.update(Message::Properties(Event::Toggle("geometry")));
+    snap.settle(&mut app, App::view, &mut update);
+    snap.render(app.view(), &app.theme()).save(out.join("cati-katmanlari.png")).unwrap();
 }
 
 /// Dikme ve kayıt in Öznitelikler (docs/adr/8070 §8): a column's Tür Dikme makes it a post (POST), its Eleman tipi and

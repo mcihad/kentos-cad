@@ -121872,7 +121872,7 @@
           ]
         },
         "uids": {
-          "description": "Objects by their persistent ids (Revit's Show Related Warnings).",
+          "description": "Objects by their persistent ids: the findings about them.",
           "items": {
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             "type": "string"
@@ -122281,6 +122281,16 @@
                 "null"
               ],
               "x-unit": "length"
+            },
+            "layers": {
+              "description": "A roof's layers top down, all of them (docs/adr/8071 §8); its thickness then theirs; empty: one build-up again,\n0.25 m.",
+              "items": {
+                "$ref": "#/$defs/RoofLayer"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
             },
             "legs": {
               "description": "An L column's legs (docs/adr/0725 §3).",
@@ -127928,7 +127938,7 @@
       "type": "object"
     },
     "BuildingSectionState": {
-      "description": "Whether a section is what the model would draw now (BricsCAD marks a drawing out of sync red, one never made orange).",
+      "description": "Whether a section is what the model would draw now: out of date, or never made.",
       "oneOf": [
         {
           "const": "current",
@@ -131643,7 +131653,7 @@
       "type": "object"
     },
     "ColumnAnchor": {
-      "description": "Which of a column's nine points its `at` is (docs/adr/0725 §2), Archicad's reference axis of the column core: on its\nbox before its turn, left and right across its width, bottom and top along its depth.",
+      "description": "Which of a column's nine points its `at` is (docs/adr/0725 §2), the reference axis of the column's core: on its\nbox before its turn, left and right across its width, bottom and top along its depth.",
       "enum": [
         "center",
         "left",
@@ -139141,7 +139151,7 @@
       "description": "One edit of `cad.dimensions.edit` (docs/adr/0321 §4).",
       "oneOf": [
         {
-          "description": "Ölçü aralığı (AutoCAD's DIMSPACE): the dimensions' lines put `spacing` apart from the base's, each side of it\nin its order of distance; 0 lines them up with the base's. Aligned and linear dimensions parallel to the base.",
+          "description": "Ölçü aralığı: the dimensions' lines put `spacing` apart from the base's, each side of it\nin its order of distance; 0 lines them up with the base's. Aligned and linear dimensions parallel to the base.",
           "properties": {
             "base": {
               "description": "The base dimension's persistent id; it does not move.",
@@ -139177,7 +139187,7 @@
           "type": "object"
         },
         {
-          "description": "Ölçüyü kır (AutoCAD's DIMBREAK): a gap in each of the dimensions' lines where `objects` (absent: every shown\nobject that is not a dimension) cross it; its breaks so far replaced. Aligned and linear dimensions.",
+          "description": "Ölçüyü kır: a gap in each of the dimensions' lines where `objects` (absent: every shown\nobject that is not a dimension) cross it; its breaks so far replaced. Aligned and linear dimensions.",
           "properties": {
             "kind": {
               "const": "break",
@@ -139259,7 +139269,7 @@
           "type": "object"
         },
         {
-          "description": "Ölçü değerini yaz: the text written over the value, `<>` its measured value (AutoCAD's text override); null:\nthe measured value again.",
+          "description": "Ölçü değerini yaz: the text written over the value, `<>` its measured value; null:\nthe measured value again.",
           "properties": {
             "kind": {
               "const": "text",
@@ -140068,7 +140078,7 @@
           "type": "object"
         },
         {
-          "description": "Doğrusal: the distance from `a` to `b` along a direction, degrees\n(0 ΔY, 90 ΔX, any other); absent: ΔY or ΔX as `at` lies (AutoCAD's rule).",
+          "description": "Doğrusal: the distance from `a` to `b` along a direction, degrees\n(0 ΔY, 90 ΔX, any other); absent: ΔY or ΔX as `at` lies.",
           "properties": {
             "a": {
               "$ref": "#/$defs/MeasuredPoint"
@@ -156484,7 +156494,7 @@
         },
         {
           "const": "skins",
-          "description": "Every line: the faces and the boundaries between its components (Archicad's “All Skins”).",
+          "description": "Every line: the faces and the boundaries between its components (all its layers).",
           "type": "string"
         }
       ]
@@ -165831,7 +165841,7 @@
           "type": "array"
         },
         "storey": {
-          "description": "One storey of a module of several (docs/adr/0811, Archicad's Single Story): the instance holds only the\ndefinition's members on that storey, standing on the instance's `level`. None: every storey, the base on `level`.",
+          "description": "One storey of a module of several (docs/adr/0811): the instance holds only the\ndefinition's members on that storey, standing on the instance's `level`. None: every storey, the base on `level`.",
           "format": "uint32",
           "minimum": 0,
           "type": [
@@ -166431,7 +166441,7 @@
               "x-unit": "rad"
             },
             "storey": {
-              "description": "Tek kat (docs/adr/0811, Archicad's Single Story): only the members of this storey of a module of several,\nstanding on `level`. None: every storey, the base on `level`.",
+              "description": "Tek kat (docs/adr/0811): only the members of this storey of a module of several,\nstanding on `level`. None: every storey, the base on `level`.",
               "format": "uint32",
               "minimum": 0,
               "type": [
@@ -169488,6 +169498,16 @@
           ],
           "x-unit": "length"
         },
+        "layers": {
+          "description": "Its layers top down (docs/adr/8071 §8); its thickness then theirs, not given.",
+          "items": {
+            "$ref": "#/$defs/RoofLayer"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
         "material": {
           "description": "Its covering; absent: Kiremit.",
           "type": [
@@ -170398,7 +170418,7 @@
       "oneOf": [
         {
           "additionalProperties": false,
-          "description": "The plan's north: the drawing's up (+Y), grid north in a projected system (Revit's Project North).",
+          "description": "The plan's north: the drawing's up (+Y), grid north in a projected system (the project's north).",
           "properties": {
             "kind": {
               "const": "plan",
@@ -173690,7 +173710,7 @@
     },
     "OptionCombo": {
       "additionalProperties": false,
-      "description": "A named combination of options (docs/adr/0808; Archicad's Design Option Combination): one option for some of the\nproject's sets; a set it does not name shows its primary. A proposal (“Teklif 1: mutfak B, banyo A”) is one\ncombination; a view's recipe may show it, Bileşimi uygula makes its choices the primaries.",
+      "description": "A named combination of options (docs/adr/0808): one option for some of the\nproject's sets; a set it does not name shows its primary. A proposal (“Teklif 1: mutfak B, banyo A”) is one\ncombination; a view's recipe may show it, Bileşimi uygula makes its choices the primaries.",
       "properties": {
         "choices": {
           "items": {
@@ -178570,7 +178590,7 @@
     },
     "PaperLayerOverride": {
       "additionalProperties": false,
-      "description": "One layer drawn otherwise in one map (docs/adr/0314 §1; AutoCAD's viewport overrides, VPFREEZE): the model's\nlayer stays as it is. Absent fields keep the layer's own.",
+      "description": "One layer drawn otherwise in one map (docs/adr/0314 §1; the map's own layer overrides and freezes): the model's\nlayer stays as it is. Absent fields keep the layer's own.",
       "properties": {
         "color": {
           "description": "A colour (`#RRGGBB` or a theme's name) for the layer's own.",
@@ -178960,7 +178980,7 @@
     },
     "PaperMapLevel": {
       "additionalProperties": false,
-      "description": "A map's level (docs/adr/0716; Revit's plan view of a level, its underlay): the objects on the level and those on\nno level; `below`, the level under it faint as well. Objects on the other levels are left out of the map. With\n`roof` the map is the roof plan (çatı planı, docs/adr/8044 §7): every roof whole, as seen from above, with its\nchimneys and windows, and the objects on no level; nothing else of any level.",
+      "description": "A map's level (docs/adr/0716; a level's plan view and its underlay): the objects on the level and those on\nno level; `below`, the level under it faint as well. Objects on the other levels are left out of the map. With\n`roof` the map is the roof plan (çatı planı, docs/adr/8044 §7): every roof whole, as seen from above, with its\nchimneys and windows, and the objects on no level; nothing else of any level.",
       "properties": {
         "below": {
           "description": "The level under it drawn faint too. Null is false: an inverse writes null for a field the old level left out.",
@@ -192329,7 +192349,7 @@
     },
     "RadialGridSystem": {
       "additionalProperties": false,
-      "description": "A curved grid system (docs/adr/0725 §1; Archicad's curved Grid System): radial grids from `center`, the first at\n`angle`, the next `turns` round, and arcs round `center`, the first `radius` from it, the next `rings` further out.\nEach grid reaches `extension` past the outermost grids it crosses: a radial grid from the first arc less it (never\npast `center`) to the last arc and it; an arc along itself past the first and the last radial grid, never more than\na quarter of the turn left round the circle so that its ends stay apart. An arc runs the way the turns go.",
+      "description": "A curved grid system (docs/adr/0725 §1): radial grids from `center`, the first at\n`angle`, the next `turns` round, and arcs round `center`, the first `radius` from it, the next `rings` further out.\nEach grid reaches `extension` past the outermost grids it crosses: a radial grid from the first arc less it (never\npast `center`) to the last arc and it; an arc along itself past the first and the last radial grid, never more than\na quarter of the turn left round the circle so that its ends stay apart. An arc runs the way the turns go.",
       "properties": {
         "angle": {
           "description": "The first radial grid's direction, radians counter-clockwise from east; absent: 0.",
@@ -197089,7 +197109,7 @@
     },
     "ReviewDecision": {
       "additionalProperties": false,
-      "description": "A decision a note records (docs/adr/4140), as ArcGIS's Reviewer table keeps a result apart from the feature: the\ncommand whose decision it is, the candidate (its persistent id) and its source's name, what was decided as the\ncommand was given it (a single source's candidate accepted, its class corrected to a class's id, its missing fields\ngiven, or it rejected with a reason), and the asset the candidate's group was written as or tied to (none for a\nrejection). The note's anchors stamp the candidate and the asset as the decision left them; its author is the\nreviewer.",
+      "description": "A decision a note records (docs/adr/4140), kept apart from the feature it is about: the\ncommand whose decision it is, the candidate (its persistent id) and its source's name, what was decided as the\ncommand was given it (a single source's candidate accepted, its class corrected to a class's id, its missing fields\ngiven, or it rejected with a reason), and the asset the candidate's group was written as or tied to (none for a\nrejection). The note's anchors stamp the candidate and the asset as the decision left them; its author is the\nreviewer.",
       "properties": {
         "accept": {
           "type": "boolean"
@@ -199311,6 +199331,13 @@
         "layerId": {
           "type": "string"
         },
+        "layers": {
+          "description": "Its layers top down (docs/adr/8071 §8), each kind once in [`RoofLayerKind`]'s order, each thick across the\nroof's face; its thickness is theirs together. Absent: one build-up of its thickness, upright.",
+          "items": {
+            "$ref": "#/$defs/RoofLayer"
+          },
+          "type": "array"
+        },
         "linePattern": {
           "description": "Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:\n`line_type`.",
           "type": [
@@ -199463,6 +199490,43 @@
         "slopes"
       ],
       "type": "object"
+    },
+    "RoofLayer": {
+      "additionalProperties": false,
+      "description": "A roof's layer (docs/adr/8071 §8): what it is, how thick across the roof's face (metres: a board's, a rafter's own\ndepth; upright on a face sloping g it is × √(1 + g²)), what of.",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/RoofLayerKind"
+        },
+        "material": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "thickness": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "kind",
+        "thickness"
+      ],
+      "type": "object"
+    },
+    "RoofLayerKind": {
+      "description": "What a roof's layer is (docs/adr/8071 §8; Mimarlık Hizmetleri Şartnamesi 14.5.4 q), top down in this order, each its\nEK-2 Tablo 2.3 element: its covering (Çatı Kaplama), its battens (lata: the covering's), its waterproofing (Su\nYalıtımı), its boarding (Çatı Kaplama Tahtası), its insulation (Isı Yalıtımı), its rafters (Çatı Taşıyıcı).",
+      "enum": [
+        "covering",
+        "battens",
+        "waterproofing",
+        "boarding",
+        "insulation",
+        "rafters"
+      ],
+      "type": "string"
     },
     "RoofPart": {
       "description": "A part of a roof (docs/adr/8044 §6): a chimney, a vent or a roof window.",
@@ -222722,7 +222786,7 @@
     },
     "ViewRecipe": {
       "additionalProperties": false,
-      "description": "A named view's architectural recipe (docs/adr/0774 §1; Revit's view properties, Archicad's view settings): what a\nsheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the\nscreen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.",
+      "description": "A named view's architectural recipe (docs/adr/0774 §1): what a\nsheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the\nscreen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.",
       "properties": {
         "combo": {
           "description": "The combination of design options it shows by its id (docs/adr/0808): its choices, under the recipe's own.",
@@ -222732,7 +222796,7 @@
           ]
         },
         "crop": {
-          "description": "The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2; Revit's Crop Region).",
+          "description": "The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2).",
           "type": "boolean"
         },
         "detail": {
@@ -222744,7 +222808,7 @@
               "type": "null"
             }
           ],
-          "description": "The walls' detail the map draws (docs/adr/0781 §1; Revit's Detail Level, Archicad's Partial Structure Display);\nnone: its scale's, or the project's when it fixes one."
+          "description": "The walls' detail the map draws (docs/adr/0781 §1);\nnone: its scale's, or the project's when it fixes one."
         },
         "hidden": {
           "description": "The categories left out, in their order.",
@@ -222783,7 +222847,7 @@
           "type": "array"
         },
         "pens": {
-          "description": "The pens the map draws its categories with (docs/adr/0783 §1; Archicad's pen sets, Revit's object styles in a\nview), each category once, in their order.",
+          "description": "The pens the map draws its categories with (docs/adr/0783 §1; pen sets, the categories' styles in a\nview), each category once, in their order.",
           "items": {
             "$ref": "#/$defs/RecipePen"
           },
@@ -222811,7 +222875,7 @@
           "x-unit": "scale"
         },
         "template": {
-          "description": "The view template it follows by its id (docs/adr/0783 §2; Revit's assigned View Template): the template gives\neverything but the level and the crop, which stay the view's. An input may name it.",
+          "description": "The view template it follows by its id (docs/adr/0783 §2): the template gives\neverything but the level and the crop, which stay the view's. An input may name it.",
           "type": [
             "string",
             "null"
@@ -222961,7 +223025,7 @@
           "type": "object"
         },
         {
-          "description": "Alanı değiştir (docs/adr/0789 §1; Revit's crop region grips and Size Crop): the view's area moved, resized or\nturned, its id, name, place in the list and recipe kept. The maps linked to it follow; one undo step.",
+          "description": "Alanı değiştir (docs/adr/0789 §1; its area's grips and size): the view's area moved, resized or\nturned, its id, name, place in the list and recipe kept. The maps linked to it follow; one undo step.",
           "properties": {
             "center": {
               "$ref": "#/$defs/Vec2",

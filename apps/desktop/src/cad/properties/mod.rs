@@ -249,6 +249,12 @@ pub enum ArchField {
     SnowGuard,
     /// A roof's chimney, vent, window or downpipe at this place among its parts: its size typed as “width × depth”.
     RoofPart(u16),
+    /// A roof's thickness when it has no layers (docs/adr/8071 §8); empty: 0.25 m.
+    RoofThickness,
+    /// A roof's layer of this kind (its place in `RoofLayerKind::ALL`, docs/adr/8071 §8): its thickness typed adds or
+    /// sets it, empty or 0 takes it away; its material typed, empty none.
+    RoofLayer(u8),
+    RoofLayerMaterial(u8),
     /// A column's own height over its floor (docs/adr/8070 §8); empty: its storey's.
     OwnHeight,
     /// A post's or a rail's name (docs/adr/8070 §8): its IFC name's words, a user-defined one's object type; empty: its

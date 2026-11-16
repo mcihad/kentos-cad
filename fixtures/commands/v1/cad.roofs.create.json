@@ -2458,6 +2458,264 @@
       ]
     },
     {
+      "name": "katmanlı çatı: kaplama, lata, kaplama tahtası, mertek",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "layers": [
+                  {
+                    "kind": "covering",
+                    "thickness": 0.03,
+                    "material": "Kiremit"
+                  },
+                  {
+                    "kind": "battens",
+                    "thickness": 0.03
+                  },
+                  {
+                    "kind": "boarding",
+                    "thickness": 0.025,
+                    "material": "Çam"
+                  },
+                  {
+                    "kind": "rafters",
+                    "thickness": 0.125,
+                    "material": "Çam"
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "roof",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "layers": [
+                  {
+                    "kind": "covering",
+                    "thickness": 0.03,
+                    "material": "Kiremit"
+                  },
+                  {
+                    "kind": "battens",
+                    "thickness": 0.03
+                  },
+                  {
+                    "kind": "boarding",
+                    "thickness": 0.025,
+                    "material": "Çam"
+                  },
+                  {
+                    "kind": "rafters",
+                    "thickness": 0.125,
+                    "material": "Çam"
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "tek katmanlı çatı: yalnız kaplama",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "layers": [
+                  {
+                    "kind": "covering",
+                    "thickness": 0.05
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "roof",
+                "id": 10,
+                "layerId": "cizim",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "layers": [
+                  {
+                    "kind": "covering",
+                    "thickness": 0.05
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
       "name": "çatı verilmezse reddedilir",
       "steps": [
         {
@@ -4608,6 +4866,508 @@
               "code": "invalid_roof",
               "message": "İniş borusu oluktan zemine iner; yüksekliği verilmez.",
               "path": "roofs[0].parts[0].rise"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katmanlı çatıya ayrıca kalınlık verilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "thickness": 0.25,
+                "layers": [
+                  {
+                    "kind": "covering",
+                    "thickness": 0.03,
+                    "material": "Kiremit"
+                  },
+                  {
+                    "kind": "battens",
+                    "thickness": 0.03
+                  },
+                  {
+                    "kind": "boarding",
+                    "thickness": 0.025,
+                    "material": "Çam"
+                  },
+                  {
+                    "kind": "rafters",
+                    "thickness": 0.125,
+                    "material": "Çam"
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "Katmanlı çatının kalınlığı katmanlarının toplamıdır; kalınlığı ayrıca vermeyin.",
+              "path": "roofs[0].thickness"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sırası bozuk katmanlar reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "layers": [
+                  {
+                    "kind": "rafters",
+                    "thickness": 0.12
+                  },
+                  {
+                    "kind": "covering",
+                    "thickness": 0.03
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "Çatının katmanları yukarıdan aşağı kaplama, lata, su yalıtımı, kaplama tahtası, ısı yalıtımı, mertek sırasıyla ve her biri bir kez verilir.",
+              "path": "roofs[0].layers[1].kind"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "aynı katman iki kez verilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "layers": [
+                  {
+                    "kind": "covering",
+                    "thickness": 0.03
+                  },
+                  {
+                    "kind": "covering",
+                    "thickness": 0.02
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "Çatının katmanları yukarıdan aşağı kaplama, lata, su yalıtımı, kaplama tahtası, ısı yalıtımı, mertek sırasıyla ve her biri bir kez verilir.",
+              "path": "roofs[0].layers[1].kind"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır kalınlıklı katman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "layers": [
+                  {
+                    "kind": "covering",
+                    "thickness": 0.0
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "Kaplama katmanının kalınlığı sıfırdan büyük, en çok 1 m olmalı; 0 verildi.",
+              "path": "roofs[0].layers[0].thickness"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1 m'den kalın katman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "layers": [
+                  {
+                    "kind": "rafters",
+                    "thickness": 1.5
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "Mertek katmanının kalınlığı sıfırdan büyük, en çok 1 m olmalı; 1.5 verildi.",
+              "path": "roofs[0].layers[0].thickness"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "toplamı 2 m'yi aşan katmanlar reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "layers": [
+                  {
+                    "kind": "covering",
+                    "thickness": 1.0
+                  },
+                  {
+                    "kind": "battens",
+                    "thickness": 0.75
+                  },
+                  {
+                    "kind": "rafters",
+                    "thickness": 0.5
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "Çatının katmanları toplam en çok 2 m olur; 2.25 verildi.",
+              "path": "roofs[0].layers"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boşluklu katman malzemesi reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "cizim",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 50.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 59.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 59.0
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ],
+                "layers": [
+                  {
+                    "kind": "covering",
+                    "thickness": 0.03,
+                    "material": " Kiremit"
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_roof",
+              "message": "Katmanın malzemesi boş ya da kenarı boşluklu olamaz; en çok 120 karakter.",
+              "path": "roofs[0].layers[0].material"
             }
           },
           "expect": {

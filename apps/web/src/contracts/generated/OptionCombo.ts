@@ -2,7 +2,7 @@
 import type { OptionChoice } from "./OptionChoice";
 
 /**
- * A named combination of options (docs/adr/0808; Archicad's Design Option Combination): one option for some of the
+ * A named combination of options (docs/adr/0808): one option for some of the
  * project's sets; a set it does not name shows its primary. A proposal (“Teklif 1: mutfak B, banyo A”) is one
  * combination; a view's recipe may show it, Bileşimi uygula makes its choices the primaries.
  */

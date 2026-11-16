@@ -33,6 +33,7 @@ pub(crate) mod raster;
 
 // A kind's own rows, out of `entity_sections` (docs/adr/8054 §7).
 mod opening;
+mod roof_layers;
 mod slab;
 mod space;
 mod wall;

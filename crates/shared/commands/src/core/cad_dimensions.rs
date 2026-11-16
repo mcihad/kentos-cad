@@ -78,7 +78,7 @@ pub enum DimensionMeasure {
     /// Hizalı: the distance from `a` to `b`.
     Aligned { a: MeasuredPoint, b: MeasuredPoint },
     /// Doğrusal: the distance from `a` to `b` along a direction, degrees
-    /// (0 ΔY, 90 ΔX, any other); absent: ΔY or ΔX as `at` lies (AutoCAD's rule).
+    /// (0 ΔY, 90 ΔX, any other); absent: ΔY or ΔX as `at` lies.
     Linear {
         a: MeasuredPoint,
         b: MeasuredPoint,
@@ -277,7 +277,7 @@ pub enum InteriorFaces {
     /// Its two faces.
     #[default]
     Outer,
-    /// Every line: the faces and the boundaries between its components (Archicad's “All Skins”).
+    /// Every line: the faces and the boundaries between its components (all its layers).
     Skins,
 }
 
@@ -507,7 +507,7 @@ pub const CAD_DIMENSIONS_EDIT_VERSION: u32 = 1;
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionEdit {
-    /// Ölçü aralığı (AutoCAD's DIMSPACE): the dimensions' lines put `spacing` apart from the base's, each side of it
+    /// Ölçü aralığı: the dimensions' lines put `spacing` apart from the base's, each side of it
     /// in its order of distance; 0 lines them up with the base's. Aligned and linear dimensions parallel to the base.
     Space {
         /// The base dimension's persistent id; it does not move.
@@ -521,7 +521,7 @@ pub enum DimensionEdit {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         spacing: Option<f64>,
     },
-    /// Ölçüyü kır (AutoCAD's DIMBREAK): a gap in each of the dimensions' lines where `objects` (absent: every shown
+    /// Ölçüyü kır: a gap in each of the dimensions' lines where `objects` (absent: every shown
     /// object that is not a dimension) cross it; its breaks so far replaced. Aligned and linear dimensions.
     Break {
         #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
@@ -545,7 +545,7 @@ pub enum DimensionEdit {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         across: f64,
     },
-    /// Ölçü değerini yaz: the text written over the value, `<>` its measured value (AutoCAD's text override); null:
+    /// Ölçü değerini yaz: the text written over the value, `<>` its measured value; null:
     /// the measured value again.
     Text {
         #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]

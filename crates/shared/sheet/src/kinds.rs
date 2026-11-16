@@ -262,7 +262,7 @@ pub enum MapLayers {
     List(LayerList),
 }
 
-/// One layer drawn otherwise in one map (docs/adr/0314 §1; AutoCAD's viewport overrides, VPFREEZE): the model's
+/// One layer drawn otherwise in one map (docs/adr/0314 §1; the map's own layer overrides and freezes): the model's
 /// layer stays as it is. Absent fields keep the layer's own.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -387,7 +387,7 @@ pub struct MapItem {
     pub level: Option<MapLevel>,
 }
 
-/// A map's level (docs/adr/0716; Revit's plan view of a level, its underlay): the objects on the level and those on
+/// A map's level (docs/adr/0716; a level's plan view and its underlay): the objects on the level and those on
 /// no level; `below`, the level under it faint as well. Objects on the other levels are left out of the map. With
 /// `roof` the map is the roof plan (çatı planı, docs/adr/8044 §7): every roof whole, as seen from above, with its
 /// chimneys and windows, and the objects on no level; nothing else of any level.

@@ -54,7 +54,7 @@ pub const MAX_NORTH_SIZE: f64 = 200.0;
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum NorthDirection {
-    /// The plan's north: the drawing's up (+Y), grid north in a projected system (Revit's Project North).
+    /// The plan's north: the drawing's up (+Y), grid north in a projected system (the project's north).
     #[default]
     Plan,
     /// True north at the arrow: the meridian through it, from the project's coordinate system (a transverse

@@ -940,6 +940,99 @@ fn covering_screens() {
     }
 }
 
+/// The section building with a hip roof over its 1. kat at 33 % (its eaves 50 cm out of the walls) in five layers top
+/// down — kiremit 3 cm, lata 3 cm, çam kaplama tahtası 2.5 cm, ısı yalıtımı 5 cm, çam mertek 12.5 cm (docs/adr/8071 §8)
+/// — and section B derived 20 m east.
+fn with_a_layered_roof() -> kentos_commands::DocumentSnapshotV2 {
+    use kentos_native_application::{ExecutionContext, registry, roofs, sections_edit};
+    let mut doc = kentos_domain::Document::from_snapshot_v2(building()).expect("opens");
+    let eaves = roofs::eaves_from_walls(&doc, kentos_commands::Vec2 { x: 6.0, y: 4.5 }, Some("k1"), 0.5)
+        .expect("the walls enclose the point");
+    let slopes = vec![33.0; eaves.len()];
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.roofs.create",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"layerId": "0", "roofs": [{"pts": eaves, "slopes": slopes, "overhang": 0.5,
+            "arch": {"level": "k1"}, "layers": [
+                {"kind": "covering", "thickness": 0.03, "material": "Kiremit"},
+                {"kind": "battens", "thickness": 0.03},
+                {"kind": "boarding", "thickness": 0.025, "material": "Çam"},
+                {"kind": "insulation", "thickness": 0.05},
+                {"kind": "rafters", "thickness": 0.125, "material": "Çam"}
+            ]}]}),
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let section = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| match e {
+            Entity::ViewMark(v) if v.mark.form == kentos_commands::ViewMarkForm::Section && v.mark.mark == "B" => Some(u),
+            _ => None,
+        })
+        .expect("section B");
+    let derived = sections_edit::execute(
+        &mut ExecutionContext::new(&mut doc),
+        kentos_commands::BuildingSectionsEdit {
+            operation: kentos_commands::BuildingSectionsOperation::Derive {
+                mark: section.to_string(),
+                at: Some(kentos_commands::Vec2 { x: 20.0, y: 0.0 }),
+            },
+            expected_revision: None,
+        },
+    );
+    assert!(matches!(derived, kentos_commands::CommandResult::Completed { .. }), "{derived:?}");
+    doc.to_snapshot_v2()
+}
+
+/// Çatı katmanları in section and in 3D (docs/adr/8071 §8): section B with the roof's five layers cut down its fall
+/// lines, its eaves near, and the building in 3D. `.run/gui-evidence/cati-katmanlari-8071/`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib scene3d_building_tests::roof_layers_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn roof_layers_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/cati-katmanlari-8071");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 700.0), "koyu")] {
+        let mut app = open(with_a_layered_roof());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let fit = |app: &mut App, min: [f64; 2], max: [f64; 2]| {
+            app.viewport.camera.fit(
+                &kentos_render_wgpu::Bounds { min_x: min[0], min_y: min[1], max_x: max[0], max_y: max[1] },
+                24.0,
+            );
+        };
+        fit(&mut app, [18.0, -2.0], [36.0, 9.5]);
+        shot(&mut app, "1-kesit-b");
+        // Its south eaves near: the five layers each under the one over it, the covering and the insulation hatched.
+        fit(&mut app, [20.4, 5.3], [22.6, 6.6]);
+        shot(&mut app, "2-kesit-b-sacak");
+        let _ = app.update(Message::Run("scene3d.view"));
+        send(&mut app, W::View(1));
+        shot(&mut app, "3-3b-guneybati");
+        send(&mut app, W::Close);
+    }
+}
+
 /// Kiriş çizelgesi and Kaplama çizelgesi (docs/adr/8070 §11): the pergola's building with an asma tavan in its first
 /// ground storey room, the two schedules placed south of it. `.run/gui-evidence/eleman-cizelgeleri-8070/`:
 ///

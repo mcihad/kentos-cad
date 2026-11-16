@@ -1584,6 +1584,7 @@ fn roofs_check(doc: &Document, input: &RoofsCreate) -> Result<Checked, Stop> {
             material: n.material.clone(),
             gutter: n.gutter,
             snow_guard: n.snow_guard,
+            layers: n.layers.clone().unwrap_or_default(),
             parts: n.parts.clone().unwrap_or_default(),
             arch: n.arch.clone().unwrap_or_default(),
         };

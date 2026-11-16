@@ -1226,6 +1226,38 @@ fn roof_look(r: &kentos_commands::RoofFields) -> Look {
     }
 }
 
+/// A roof layer's look in a section (docs/adr/8071 §8): on its EK-2 element (Çatı Kaplama, Su Yalıtımı, Çatı Kaplama
+/// Tahtası, Isı Yalıtımı, Çatı Taşıyıcı) by its material (the covering's the roof's, else Genel); hatched as a slab's
+/// layers are, the insulation by TS 5319 SN55, and the rafters, the roof's structure, as the one build-up was (SN23
+/// "ağaç malzeme"), outlined heavy; the others outlined (a tile covering's SN53 "seramik" is not in the library).
+fn roof_layer_look(l: &kentos_commands::RoofLayer, r: &kentos_commands::RoofFields) -> Look {
+    use kentos_commands::RoofLayerKind as K;
+    let detail = match (&l.material, l.kind) {
+        (Some(m), _) if !m.trim().is_empty() => m.trim().to_owned(),
+        (_, K::Covering) => r.material_name().to_owned(),
+        _ => "Genel".to_owned(),
+    };
+    let fill = |pattern: &str| {
+        Some(Fill {
+            pattern: pattern.into(),
+            scale: 1.0,
+            angle: 0.0,
+            color: None,
+        })
+    };
+    let element = l.kind.element();
+    Look {
+        key: format!("{element}:{}", fold(&detail)),
+        layer: kentos_commands::ek4_layer(element, &detail),
+        heavy: l.kind == K::Rafters,
+        fill: match l.kind {
+            K::Insulation => fill("SN55"),
+            K::Rafters => fill("SN23"),
+            _ => None,
+        },
+    }
+}
+
 /// A chimney's or a vent's look in a section (docs/adr/8044 §6): masonry, hatched as the plan's brick (ANSI31), on EK-2's
 /// own element (Baca: MM-BACA-GENEL), outlined heavy.
 fn chimney_look() -> Look {
@@ -1292,17 +1324,40 @@ fn roof(doc: &Document, r: &kentos_commands::RoofEntity, owner: Option<String>, 
             top: *top,
         })
         .collect();
+    // Its layers top down (docs/adr/8071 §8), each a plate under the one over it: how far down from its top and how
+    // thick, across its face (upright on a face sloping g: × √(1 + g²)), its look and its finish; none: one build-up of
+    // its thickness, upright (docs/adr/8044 §1).
+    let (layered, plates): (bool, Vec<(f64, f64, Look, Option<String>)>) = if r.roof.layers.is_empty() {
+        (false, vec![(0.0, thickness, look.clone(), finish.clone())])
+    } else {
+        let mut down = 0.0;
+        let plates = r
+            .roof
+            .layers
+            .iter()
+            .enumerate()
+            .map(|(n, l)| {
+                let plate = (down, l.thickness, roof_layer_look(l, &r.roof), if n == 0 { finish.clone() } else { None });
+                down += l.thickness;
+                plate
+            })
+            .collect();
+        (true, plates)
+    };
     if faces.is_empty() {
-        at.solids.push(m.solids.len());
-        let mut slab = solid(
-            vec![pts.clone()],
-            Height::Prism {
-                bottom: spec.base - thickness,
-                top: spec.base,
-            },
-        );
-        slab.voids = holes.clone();
-        push(m, slab, look, owner.clone());
+        for (down, t, look, finish) in &plates {
+            at.solids.push(m.solids.len());
+            let mut slab = solid(
+                vec![pts.clone()],
+                Height::Prism {
+                    bottom: spec.base - down - t,
+                    top: spec.base - down,
+                },
+            );
+            slab.voids = holes.clone();
+            slab.finish = finish.clone();
+            push(m, slab, look.clone(), owner.clone());
+        }
     } else {
         // Its snow guard's line on each sloping face (docs/adr/8044 §8; Sivas İmar Yönetmeliği 42/5).
         let guards = spec
@@ -1310,7 +1365,6 @@ fn roof(doc: &Document, r: &kentos_commands::RoofEntity, owner: Option<String>, 
             .filter(|d| *d > 1e-9)
             .map_or_else(Vec::new, |d| core::along_eaves(&pts, &spec, -d));
         for (f, (c, dx, dy)) in faces {
-            at.solids.push(m.solids.len());
             // Its windows' outlines on its top (docs/adr/8044 §6): seen where it is, never cut.
             let plane = |q: P| c + dx * q.x + dy * q.y;
             let mut marks: Vec<[(P, f64); 2]> = spec
@@ -1334,18 +1388,27 @@ fn roof(doc: &Document, r: &kentos_commands::RoofEntity, owner: Option<String>, 
                     .filter(|(i, _)| *i == f.edge)
                     .map(|(_, [a, b])| [(*a, plane(*a)), (*b, plane(*b))]),
             );
-            let sloped = sec::Sloped {
-                top: c,
-                dx,
-                dy,
-                thickness,
-                eaves: pts.clone(),
-                roof: k,
-            };
-            let mut face = solid(vec![f.ring], Height::Sloped(sloped));
-            face.marks = marks;
-            face.voids = holes.clone();
-            push(m, face, look.clone(), owner.clone());
+            // A layer's thickness across the face, upright on it.
+            let upright = if layered { (1.0 + dx * dx + dy * dy).sqrt() } else { 1.0 };
+            for (n, (down, t, look, finish)) in plates.iter().enumerate() {
+                at.solids.push(m.solids.len());
+                let sloped = sec::Sloped {
+                    top: c - down * upright,
+                    dx,
+                    dy,
+                    thickness: t * upright,
+                    eaves: pts.clone(),
+                    roof: k,
+                };
+                let mut face = solid(vec![f.ring.clone()], Height::Sloped(sloped));
+                // Its windows and snow guard on its top layer.
+                if n == 0 {
+                    face.marks = marks.clone();
+                }
+                face.voids = holes.clone();
+                face.finish = finish.clone();
+                push(m, face, look.clone(), owner.clone());
+            }
         }
     }
     for (k, part, ring, top) in stacks {

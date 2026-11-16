@@ -13,7 +13,7 @@ export type ModulesOperation = { "kind": "define", name: string, id?: string, ui
  */
 unit?: string, 
 /**
- * Tek kat (docs/adr/0811, Archicad's Single Story): only the members of this storey of a module of several,
+ * Tek kat (docs/adr/0811): only the members of this storey of a module of several,
  * standing on `level`. None: every storey, the base on `level`.
  */
 storey?: number, } | { "kind": "addMembers", module: string, instance: string, uids: Array<string>, } | { "kind": "removeMembers", module: string, uids: Array<string>, } | { "kind": "repeat", from: string, modules?: Array<string>, to: Array<ModuleLevelTarget>, loose?: boolean, 

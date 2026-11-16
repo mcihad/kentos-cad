@@ -75,7 +75,7 @@ pub struct ReviewAnchor {
     pub block_stamp: Option<String>,
 }
 
-/// A decision a note records (docs/adr/4140), as ArcGIS's Reviewer table keeps a result apart from the feature: the
+/// A decision a note records (docs/adr/4140), kept apart from the feature it is about: the
 /// command whose decision it is, the candidate (its persistent id) and its source's name, what was decided as the
 /// command was given it (a single source's candidate accepted, its class corrected to a class's id, its missing fields
 /// given, or it rejected with a reason), and the asset the candidate's group was written as or tied to (none for a

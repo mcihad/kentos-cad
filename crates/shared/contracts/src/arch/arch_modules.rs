@@ -147,7 +147,7 @@ pub struct ModuleInstance {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<String>,
-    /// One storey of a module of several (docs/adr/0811, Archicad's Single Story): the instance holds only the
+    /// One storey of a module of several (docs/adr/0811): the instance holds only the
     /// definition's members on that storey, standing on the instance's `level`. None: every storey, the base on `level`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

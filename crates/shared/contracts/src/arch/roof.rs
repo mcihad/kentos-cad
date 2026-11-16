@@ -1,7 +1,7 @@
 //! A roof (çatı, docs/adr/8044 §1): its eaves line (saçak çizgisi) and, for each edge, the slope the roof rises at from
-//! it (eğim, per cent) or none, a gable end (kalkan), as Revit's roof by footprint marks each edge "defines slope". Its
-//! faces, ridges, hips and valleys follow (docs/adr/8044 §2): every edge sloping is a hip roof (kırma), two opposite
-//! ones a gable roof (beşik), one a shed (tek eğimli), none a flat roof (düz).
+//! it (eğim, per cent) or none, a gable end (kalkan): a roof by its footprint, each edge sloping or not. Its faces,
+//! ridges, hips and valleys follow (docs/adr/8044 §2): every edge sloping is a hip roof (kırma), two opposite ones a
+//! gable roof (beşik), one a shed (tek eğimli), none a flat roof (düz).
 //!
 //! - Its eaves stand at its storey's top (the next storey's floor) and its offset; without a storey at its offset over
 //!   ±0.00.
@@ -36,6 +36,75 @@ pub const MAX_ROOF_OVERHANG: f64 = 5.0;
 pub const MAX_ROOF_TEXT: usize = 120;
 /// A roof's build-up when none is given, metres: tiles on battens, boarding and rafters.
 pub const DEFAULT_ROOF_THICKNESS: f64 = 0.25;
+/// A roof layer's thickest, metres (docs/adr/8071 §8).
+pub const MAX_ROOF_LAYER: f64 = 1.0;
+
+/// What a roof's layer is (docs/adr/8071 §8; Mimarlık Hizmetleri Şartnamesi 14.5.4 q), top down in this order, each its
+/// EK-2 Tablo 2.3 element: its covering (Çatı Kaplama), its battens (lata: the covering's), its waterproofing (Su
+/// Yalıtımı), its boarding (Çatı Kaplama Tahtası), its insulation (Isı Yalıtımı), its rafters (Çatı Taşıyıcı).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum RoofLayerKind {
+    Covering,
+    Battens,
+    Waterproofing,
+    Boarding,
+    Insulation,
+    Rafters,
+}
+
+impl RoofLayerKind {
+    pub const ALL: [RoofLayerKind; 6] = [
+        RoofLayerKind::Covering,
+        RoofLayerKind::Battens,
+        RoofLayerKind::Waterproofing,
+        RoofLayerKind::Boarding,
+        RoofLayerKind::Insulation,
+        RoofLayerKind::Rafters,
+    ];
+
+    /// Its name in the interface.
+    pub fn label(self) -> &'static str {
+        match self {
+            RoofLayerKind::Covering => "Kaplama",
+            RoofLayerKind::Battens => "Lata",
+            RoofLayerKind::Waterproofing => "Su yalıtımı",
+            RoofLayerKind::Boarding => "Kaplama tahtası",
+            RoofLayerKind::Insulation => "Isı yalıtımı",
+            RoofLayerKind::Rafters => "Mertek",
+        }
+    }
+
+    /// Its EK-2 Tablo 2.3 element's code.
+    pub fn element(self) -> &'static str {
+        match self {
+            RoofLayerKind::Covering | RoofLayerKind::Battens => "CKAP",
+            RoofLayerKind::Waterproofing => "SUYA",
+            RoofLayerKind::Boarding => "CKTA",
+            RoofLayerKind::Insulation => "ISYA",
+            RoofLayerKind::Rafters => "CTAS",
+        }
+    }
+}
+
+/// A roof's layer (docs/adr/8071 §8): what it is, how thick across the roof's face (metres: a board's, a rafter's own
+/// depth; upright on a face sloping g it is × √(1 + g²)), what of.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoofLayer {
+    pub kind: RoofLayerKind,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub thickness: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material: Option<String>,
+}
 /// The most parts a roof holds.
 pub const MAX_ROOF_PARTS: usize = 100;
 /// The largest a roof's part is across, metres.
@@ -194,6 +263,11 @@ pub struct RoofFields {
     #[serde(default, skip_serializing_if = "ArchInfo::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<ArchInfo>", optional))]
     pub arch: ArchInfo,
+    /// Its layers top down (docs/adr/8071 §8), each kind once in [`RoofLayerKind`]'s order, each thick across the
+    /// roof's face; its thickness is theirs together. Absent: one build-up of its thickness, upright.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<RoofLayer>>"))]
+    pub layers: Vec<RoofLayer>,
 }
 
 impl RoofFields {
@@ -202,13 +276,17 @@ impl RoofFields {
         self.material.as_deref().unwrap_or("Kiremit")
     }
 
-    /// Its build-up's thickness, metres.
+    /// Its build-up's thickness, metres: its layers' together (across its face), else its own (upright), else 0.25.
     pub fn thickness_m(&self) -> f64 {
-        self.thickness.unwrap_or(DEFAULT_ROOF_THICKNESS)
+        if self.layers.is_empty() {
+            self.thickness.unwrap_or(DEFAULT_ROOF_THICKNESS)
+        } else {
+            self.layers.iter().map(|l| l.thickness).sum()
+        }
     }
 
-    /// What it is by its slopes (Revit's roof by footprint): every edge sloping a hip roof, two a gable roof, one a
-    /// shed, none a flat roof.
+    /// What it is by its slopes (a roof by its footprint): every edge sloping a hip roof, two a gable roof, one a shed,
+    /// none a flat roof.
     pub fn kind_name(&self) -> &'static str {
         let n = self.slopes.iter().filter(|s| s.is_some()).count();
         match n {
@@ -387,6 +465,50 @@ impl RoofFields {
                     "Boş, kenarı boşluklu ya da denetim karakterli metin yazılmaz; en çok {MAX_ROOF_TEXT} karakter."
                 ),
             ));
+        }
+        // Its layers (docs/adr/8071 §8): each kind once, top down in their order, each a thickness; its thickness theirs.
+        if !self.layers.is_empty() {
+            if self.thickness.is_some() {
+                return Some((
+                    "thickness".into(),
+                    "Katmanlı çatının kalınlığı katmanlarının toplamıdır; kalınlığı ayrıca vermeyin.".into(),
+                ));
+            }
+            for (i, l) in self.layers.iter().enumerate() {
+                if !(l.thickness.is_finite() && l.thickness > 0.0 && l.thickness <= MAX_ROOF_LAYER) {
+                    return Some((
+                        format!("layers[{i}].thickness"),
+                        format!(
+                            "{} katmanının kalınlığı sıfırdan büyük, en çok {MAX_ROOF_LAYER} m olmalı; {} verildi.",
+                            l.kind.label(),
+                            l.thickness
+                        ),
+                    ));
+                }
+                if i > 0 && self.layers[i - 1].kind >= l.kind {
+                    return Some((
+                        format!("layers[{i}].kind"),
+                        "Çatının katmanları yukarıdan aşağı kaplama, lata, su yalıtımı, kaplama tahtası, ısı yalıtımı, \
+                         mertek sırasıyla ve her biri bir kez verilir."
+                            .into(),
+                    ));
+                }
+                if let Some(m) = &l.material
+                    && (m.trim().is_empty() || m.trim() != m || m.chars().count() > MAX_ROOF_TEXT)
+                {
+                    return Some((
+                        format!("layers[{i}].material"),
+                        format!("Katmanın malzemesi boş ya da kenarı boşluklu olamaz; en çok {MAX_ROOF_TEXT} karakter."),
+                    ));
+                }
+            }
+            let sum: f64 = self.layers.iter().map(|l| l.thickness).sum();
+            if sum > MAX_ROOF_THICKNESS {
+                return Some((
+                    "layers".into(),
+                    format!("Çatının katmanları toplam en çok {MAX_ROOF_THICKNESS} m olur; {sum} verildi."),
+                ));
+            }
         }
         None
     }

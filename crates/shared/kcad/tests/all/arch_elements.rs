@@ -240,3 +240,45 @@ fn a_sloped_slab_round_trips_under_arch_data_7() {
     let refused = kentos_kcad::encode(&steep).expect_err("steeper than 100 %");
     assert!(refused.message.contains("en çok %100"), "{}", refused.message);
 }
+
+/// Architecture data 8 (docs/adr/8071 §8): a roof's layers are written with `modules.arch = 8` and read back as they
+/// were; layers out of their order, or a thickness given beside them, are refused when written, with their words.
+#[test]
+fn a_layered_roof_round_trips_under_arch_data_8() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_roof_layers(&doc));
+    let id = doc.entities.iter().map(|e| e.base().id).max().unwrap_or(0) + 1;
+    let roof: kentos_contracts::Entity = serde_json::from_value(serde_json::json!({
+        "kind": "roof", "id": id, "layerId": "0", "attrs": {},
+        "pts": [{"x": -0.625, "y": -0.625}, {"x": 12.625, "y": -0.625}, {"x": 12.625, "y": 9.625},
+                {"x": -0.625, "y": 9.625}],
+        "slopes": [33.0, 33.0, 33.0, 33.0], "arch": {"level": "k1"},
+        "layers": [
+            {"kind": "covering", "thickness": 0.03, "material": "Kiremit"},
+            {"kind": "battens", "thickness": 0.03},
+            {"kind": "rafters", "thickness": 0.125, "material": "Çam"}
+        ]
+    }))
+    .expect("a roof");
+    doc.entities.push(roof);
+    let mut uid = [0x22u8; 16];
+    uid[15] = 0x81;
+    doc.uids.push(kentos_contracts::EntityId(uid));
+    assert!(kentos_kcad::uses_roof_layers(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_ROOF_LAYERS);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the layers read back");
+    let edit = |doc: &kentos_contracts::DocumentSnapshotV2, change: &dyn Fn(&mut kentos_contracts::RoofFields)| {
+        let mut doc = doc.clone();
+        if let Some(kentos_contracts::Entity::Roof(r)) = doc.entities.last_mut() {
+            change(&mut r.roof);
+        }
+        doc
+    };
+    let swapped = edit(&doc, &|r| r.layers.swap(0, 2));
+    let refused = kentos_kcad::encode(&swapped).expect_err("out of their order");
+    assert!(refused.message.contains("sırasıyla"), "{}", refused.message);
+    let both = edit(&doc, &|r| r.thickness = Some(0.25));
+    let refused = kentos_kcad::encode(&both).expect_err("a thickness beside its layers");
+    assert!(refused.message.contains("katmanlarının toplamıdır"), "{}", refused.message);
+}

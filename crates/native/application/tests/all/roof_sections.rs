@@ -750,3 +750,113 @@ fn a_flue_in_its_walls_and_the_chimney_over_it_are_one_ifc_chimney_and_a_niche_a
     assert!(text.contains("IFCCHIMNEY("), "the chimney");
     assert_eq!(text.matches("IFCRELFILLSELEMENT(").count(), b.openings.iter().filter(|o| o.filler.is_some()).count());
 }
+
+/// Çatı katmanları (docs/adr/8071 §8): the hip roof over the 1. kat at 33 % with its layers top down — kiremit 3 cm, lata
+/// 3 cm, çam kaplama tahtası 2.5 cm, ısı yalıtımı 5 cm, çam mertek 12.5 cm — each thick across its face. Worked out here:
+/// on each of its four faces five plates, each under the one over it and upright its thickness × √(1 + 0.33²), on its
+/// EK-2 element's layer (MM-CKAP-KIREMIT, MM-CKAP-GENEL, MM-CKTA-CAM, MM-ISYA-GENEL, MM-CTAS-CAM); B-B cuts each one: the
+/// insulation hatched as insulation, the rafters as wood, the others outlined. In the IFC model the roof is one material
+/// layer set of them in place of its material: each layer its kind's word, its material (unsaid where not given), its
+/// thickness and its role; its body closed (`KENTOS_WRITE_IFC_ROOF_LAYERS=1` writes fixtures/arch/v1/ifc/katmanli-cati.ifc
+/// for scripts/fixtures/curved_ifc_check.py's roof part).
+#[test]
+fn a_layered_roof_is_its_layers_plates_cut_in_the_section_and_one_ifc_layer_set() {
+    use kentos_geometry_core::geom::section::Height;
+    use kentos_ifc::building::{Class, Layer};
+    let mut doc = building();
+    let eaves = roofs::eaves_from_walls(&doc, kentos_commands::Vec2 { x: 6.0, y: 4.5 }, Some("k1"), 0.5)
+        .expect("the walls enclose the point");
+    let slopes = vec![33.0; eaves.len()];
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.roofs.create",
+        CallOp::Execute,
+        json!({"layerId": "0", "roofs": [{"pts": eaves, "slopes": slopes, "overhang": 0.5, "arch": {"level": "k1"},
+            "layers": [
+                {"kind": "covering", "thickness": 0.03, "material": "Kiremit"},
+                {"kind": "battens", "thickness": 0.03},
+                {"kind": "boarding", "thickness": 0.025, "material": "Çam"},
+                {"kind": "insulation", "thickness": 0.05},
+                {"kind": "rafters", "thickness": 0.125, "material": "Çam"}
+            ]}]}),
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let roof = answer["output"]["uids"][0].as_str().unwrap().to_owned();
+    let thick = [0.03, 0.03, 0.025, 0.05, 0.125];
+    let layers = ["MM-CKAP-KIREMIT", "MM-CKAP-GENEL", "MM-CKTA-CAM", "MM-ISYA-GENEL", "MM-CTAS-CAM"];
+    let k = (1.0_f64 + 0.33 * 0.33).sqrt();
+    let near = |a: f64, b: f64| (a - b).abs() < 1e-12;
+    // The section model: four faces of five plates each, top down.
+    let m = sections::model(&doc);
+    let plates: Vec<usize> = (0..m.solids.len())
+        .filter(|&i| m.owners[i].as_deref() == Some(roof.as_str()) && m.parts[i].is_none())
+        .collect();
+    assert_eq!(plates.len(), 4 * 5, "four faces, five layers");
+    for face in plates.chunks(5) {
+        let mut over: Option<(f64, f64)> = None;
+        for (n, &i) in face.iter().enumerate() {
+            let Height::Sloped(s) = &m.solids[i].height else { panic!("a sloped plate") };
+            assert!((s.dx * s.dx + s.dy * s.dy - 0.33 * 0.33).abs() < 1e-12, "33 %");
+            assert!(near(s.thickness, thick[n] * k), "{n}: {} upright, {} across", s.thickness, thick[n]);
+            if let Some((top, t)) = over {
+                assert!(near(s.top, top - t), "{n} right under the one over it");
+            }
+            over = Some((s.top, s.thickness));
+            assert_eq!(m.looks[i].layer, layers[n]);
+            assert_eq!(m.looks[i].heavy, n == 4, "the rafters, its structure, heavy");
+            assert_eq!(m.solids[i].finish.is_some(), n == 0, "its covering its top's finish");
+        }
+    }
+    // B-B cuts every layer: the insulation hatched as insulation, the rafters as wood, each outlined on its layer.
+    let b = mark(&doc, ViewMarkForm::Section, "B");
+    let out = derive(&mut doc, b);
+    assert!(!out.left_out.iter().any(|l| l.why == BuildingSectionLeft::Roof), "{:?}", out.left_out);
+    let block = doc.block(sections::block_id(b)).unwrap();
+    let hatch = |layer: &str| {
+        block.entities.iter().find_map(|e| match e {
+            Entity::Hatch(h) if h.base.layer_id == layer => Some(format!("{:?}", h.pattern)),
+            _ => None,
+        })
+    };
+    assert!(hatch("mm-isya-genel-t").is_some_and(|p| p.contains("SN55")), "the insulation's hatch");
+    assert!(hatch("mm-ctas-cam-t").is_some_and(|p| p.contains("SN23")), "the rafters' hatch");
+    assert!(hatch("mm-ckap-kiremit-t").is_none(), "tiles are no wood");
+    for layer in ["mm-ckap-kiremit", "mm-ckap-genel", "mm-ckta-cam", "mm-isya-genel", "mm-ctas-cam"] {
+        assert!(
+            block.entities.iter().any(|e| matches!(e, Entity::Polyline(p) if p.base.layer_id == layer)),
+            "{layer}'s outline"
+        );
+    }
+    assert!(!block.entities.iter().any(|e| e.base().layer_id == "mm-cati-kiremit"), "no one-build-up band");
+    // The IFC model: one layer set, top down, in place of the roof's material.
+    let (bld, written) = kentos_native_application::arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
+    assert_eq!(written.left, Vec::new());
+    let at = bld.elements.iter().position(|e| e.class == Class::Roof).expect("the roof");
+    let (_, name, set) = bld.layer_sets.iter().find(|(i, ..)| *i == at).expect("its layer set");
+    assert_eq!(name, "Çatı katmanları");
+    let layer = |name: &str, material: Option<&str>, thickness: f64, category: Option<&'static str>| Layer {
+        name: name.into(),
+        material: material.map(Into::into),
+        thickness,
+        category,
+    };
+    assert_eq!(
+        set,
+        &vec![
+            layer("Kaplama", Some("Kiremit"), 0.03, Some("Outer finish")),
+            layer("Lata", None, 0.03, None),
+            layer("Kaplama tahtası", Some("Çam"), 0.025, None),
+            layer("Isı yalıtımı", None, 0.05, Some("Insulation")),
+            layer("Mertek", Some("Çam"), 0.125, Some("LoadBearing")),
+        ]
+    );
+    assert_eq!(kentos_ifc::closed::open_bodies(&bld), Vec::<(String, String)>::new());
+    let f = kentos_ifc::building::write(&bld);
+    assert_eq!(f.matches("IFCMATERIALLAYER(").count(), 5);
+    assert_eq!(f.matches("IFCMATERIALLAYERSET(").count(), 1);
+    if std::env::var_os("KENTOS_WRITE_IFC_ROOF_LAYERS").is_some() {
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc/katmanli-cati.ifc");
+        std::fs::write(out, f).expect("the file kept");
+    }
+}

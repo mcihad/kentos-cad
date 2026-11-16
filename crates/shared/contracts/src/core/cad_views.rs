@@ -147,7 +147,7 @@ pub struct RecipeLevel {
     pub below: bool,
 }
 
-/// A named view's architectural recipe (docs/adr/0774 §1; Revit's view properties, Archicad's view settings): what a
+/// A named view's architectural recipe (docs/adr/0774 §1): what a
 /// sheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the
 /// screen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -182,16 +182,16 @@ pub struct ViewRecipe {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: Option<u32>,
-    /// The walls' detail the map draws (docs/adr/0781 §1; Revit's Detail Level, Archicad's Partial Structure Display);
+    /// The walls' detail the map draws (docs/adr/0781 §1);
     /// none: its scale's, or the project's when it fixes one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub detail: Option<crate::arch::WallDetail>,
-    /// The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2; Revit's Crop Region).
+    /// The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub crop: bool,
-    /// The pens the map draws its categories with (docs/adr/0783 §1; Archicad's pen sets, Revit's object styles in a
+    /// The pens the map draws its categories with (docs/adr/0783 §1; pen sets, the categories' styles in a
     /// view), each category once, in their order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RecipePen>>", optional))]
@@ -200,7 +200,7 @@ pub struct ViewRecipe {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mono: bool,
-    /// The view template it follows by its id (docs/adr/0783 §2; Revit's assigned View Template): the template gives
+    /// The view template it follows by its id (docs/adr/0783 §2): the template gives
     /// everything but the level and the crop, which stay the view's. An input may name it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -682,7 +682,7 @@ pub enum ViewsOp {
     Rename { name: String, to: String },
     /// Sil: a named view removed.
     Delete { name: String },
-    /// Alanı değiştir (docs/adr/0789 §1; Revit's crop region grips and Size Crop): the view's area moved, resized or
+    /// Alanı değiştir (docs/adr/0789 §1; its area's grips and size): the view's area moved, resized or
     /// turned, its id, name, place in the list and recipe kept. The maps linked to it follow; one undo step.
     Area {
         name: String,

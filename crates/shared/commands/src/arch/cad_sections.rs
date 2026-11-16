@@ -159,7 +159,7 @@ pub struct BuildingSectionsQuery {
     pub uid: Option<String>,
 }
 
-/// Whether a section is what the model would draw now (BricsCAD marks a drawing out of sync red, one never made orange).
+/// Whether a section is what the model would draw now: out of date, or never made.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

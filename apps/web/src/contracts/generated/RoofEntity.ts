@@ -4,6 +4,7 @@ import type { Attachment } from "./Attachment";
 import type { LabelPin } from "./LabelPin";
 import type { LineType } from "./LineType";
 import type { LookPart } from "./LookPart";
+import type { RoofLayer } from "./RoofLayer";
 import type { RoofPart } from "./RoofPart";
 import type { Vec2 } from "./Vec2";
 import type { Wipeout } from "./Wipeout";
@@ -111,4 +112,9 @@ snowGuard?: number,
 /**
  * Its chimneys, vents and roof windows (docs/adr/8044 §6).
  */
-parts?: Array<RoofPart>, arch?: ArchInfo, };
+parts?: Array<RoofPart>, arch?: ArchInfo, 
+/**
+ * Its layers top down (docs/adr/8071 §8), each kind once in [`RoofLayerKind`]'s order, each thick across the
+ * roof's face; its thickness is theirs together. Absent: one build-up of its thickness, upright.
+ */
+layers?: Array<RoofLayer>, };

@@ -5,7 +5,7 @@ import type { SystemColumns } from "./SystemColumns";
 import type { Vec2 } from "./Vec2";
 
 /**
- * A curved grid system (docs/adr/0725 §1; Archicad's curved Grid System): radial grids from `center`, the first at
+ * A curved grid system (docs/adr/0725 §1): radial grids from `center`, the first at
  * `angle`, the next `turns` round, and arcs round `center`, the first `radius` from it, the next `rings` further out.
  * Each grid reaches `extension` past the outermost grids it crosses: a radial grid from the first arc less it (never
  * past `center`) to the last arc and it; an arc along itself past the first and the last radial grid, never more than

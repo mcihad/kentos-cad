@@ -111,6 +111,7 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.gutter.is_some(), "gutter", ROOF);
     add(c.snow_guard.is_some(), "snowGuard", ROOF);
     add(c.parts.is_some(), "parts", ROOF);
+    add(c.layers.is_some(), "layers", ROOF);
     add(c.infill.is_some(), "infill", RAILING);
     add(c.gap.is_some(), "gap", RAILING);
     add(c.level.is_some(), "level", ALL);
@@ -376,6 +377,11 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
             }
             if let Some(v) = &c.parts {
                 f.parts.clone_from(v);
+            }
+            // Its layers (docs/adr/8071 §8): its thickness theirs, its own given up; none, one build-up again.
+            if let Some(v) = &c.layers {
+                f.layers.clone_from(v);
+                f.thickness = None;
             }
         }
         // A railing's (docs/adr/8045 §3); null gap: PAİY 38/4's 0.10 m.

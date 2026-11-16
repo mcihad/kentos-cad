@@ -17,7 +17,7 @@ export type ModuleInstance = { id: string, at: Vec2, rotation?: number, mirror?:
  */
 unit?: string, 
 /**
- * One storey of a module of several (docs/adr/0811, Archicad's Single Story): the instance holds only the
+ * One storey of a module of several (docs/adr/0811): the instance holds only the
  * definition's members on that storey, standing on the instance's `level`. None: every storey, the base on `level`.
  */
 storey?: number, version: number, members: Array<ModuleObject>, 

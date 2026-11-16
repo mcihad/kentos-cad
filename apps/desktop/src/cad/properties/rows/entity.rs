@@ -569,6 +569,13 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
                 Row::text("Kaplama", x.material_name())
                     .editor(edit(Editor::Text(Field::Arch(slot, ArchField::Material)))),
             );
+            // Its thickness (docs/adr/8071 §8): typed while it has no layers, else theirs together.
+            if x.layers.is_empty() {
+                geo.push(metres("Kalınlık", x.thickness_m()).editor(roof_edit(ArchField::RoofThickness)));
+            } else {
+                geo.push(metres("Kalınlık", x.thickness_m()));
+                geo.push(Row::note("Katmanlarının toplamı, çatı yüzüne dik"));
+            }
             // Its gutter and snow guard (docs/adr/8044 §8; Sivas İmar Yönetmeliği 42/5): along its sloping eaves.
             geo.push(roof_length("Oluk", x.gutter, ArchField::Gutter));
             geo.push(roof_length("Kar siperliği", x.snow_guard, ArchField::SnowGuard));
@@ -1128,6 +1135,10 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
             title: "Geometri".into(),
             rows: geo,
         });
+    }
+    // A roof's layers (docs/adr/8071 §8).
+    if let Entity::Roof(r) = e {
+        sections.push(roof_layers::section(&kit, &r.roof));
     }
     if drawn && doc.settings().workspace == Some(kentos_commands::Workspace::Cad) {
         if let Some(layer) = layers.get(&base.layer_id) {

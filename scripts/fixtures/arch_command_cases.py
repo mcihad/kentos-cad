@@ -1581,7 +1581,45 @@ def roof_fields(n):
         f["parts"] = n["parts"]
     if n.get("arch"):
         f["arch"] = n["arch"]
+    # Its layers top down (ADR 8071 §8), only when it has some.
+    if n.get("layers"):
+        f["layers"] = n["layers"]
     return f
+
+
+# A roof's layer kinds top down (ADR 8071 §8), with their names in the interface.
+ROOF_LAYERS = {"covering": "Kaplama", "battens": "Lata", "waterproofing": "Su yalıtımı", "boarding": "Kaplama tahtası",
+               "insulation": "Isı yalıtımı", "rafters": "Mertek"}
+
+
+def roof_layers_problem(f, path):
+    """A roof's layers' rule and words (ADR 8071 §8): its thickness theirs, not given; each a thickness above 0 and at
+    most 1 m, the kinds once each top down in their order, a material neither blank nor edged with spaces; together at
+    most 2 m."""
+    layers = f.get("layers") or []
+    if not layers:
+        return None
+    if f.get("thickness") is not None:
+        return refusal("invalid_roof", "Katmanlı çatının kalınlığı katmanlarının toplamıdır; kalınlığı ayrıca vermeyin.",
+                       f"{path}.thickness")
+    order = list(ROOF_LAYERS)
+    for i, lay in enumerate(layers):
+        t = lay["thickness"]
+        if not (math.isfinite(t) and 0 < t <= 1.0):
+            return refusal("invalid_roof", f"{ROOF_LAYERS[lay['kind']]} katmanının kalınlığı sıfırdan büyük, en çok 1 m "
+                                           f"olmalı; {num(t)} verildi.", f"{path}.layers[{i}].thickness")
+        if i and order.index(layers[i - 1]["kind"]) >= order.index(lay["kind"]):
+            return refusal("invalid_roof", "Çatının katmanları yukarıdan aşağı kaplama, lata, su yalıtımı, kaplama tahtası, "
+                                           "ısı yalıtımı, mertek sırasıyla ve her biri bir kez verilir.",
+                           f"{path}.layers[{i}].kind")
+        m = lay.get("material")
+        if m is not None and (not m.strip() or m.strip() != m or len(m) > 120):
+            return refusal("invalid_roof", "Katmanın malzemesi boş ya da kenarı boşluklu olamaz; en çok 120 karakter.",
+                           f"{path}.layers[{i}].material")
+    total = sum(lay["thickness"] for lay in layers)
+    if total > 2.0:
+        return refusal("invalid_roof", f"Çatının katmanları toplam en çok 2 m olur; {num(total)} verildi.", f"{path}.layers")
+    return None
 
 
 PART_WHOSE = {"chimney": "Duman bacasının", "vent": "Hava bacasının", "window": "Çatı penceresinin",
@@ -1734,6 +1772,9 @@ def roof_problem(f, path):
     if v is not None and (not v.strip() or v.strip() != v or any(ord(ch) < 32 or 127 <= ord(ch) < 160 for ch in v) or len(v) > 120):
         return refusal("invalid_roof", "Boş, kenarı boşluklu ya da denetim karakterli metin yazılmaz; en çok 120 karakter.",
                        f"{path}.material")
+    r = roof_layers_problem(f, path)
+    if r:
+        return r
     # The command's own (docs/adr/8044 §2): an area; no corner turning in (not drawn yet).
     xs = [(F(p["x"]), F(p["y"])) for p in pts]
     a2 = sum(xs[i][0] * xs[(i + 1) % n][1] - xs[(i + 1) % n][0] * xs[i][1] for i in range(n))
@@ -2668,6 +2709,9 @@ def roof_cases():
         ("oluklu ve kar siperlikli çatı", roof(gutter=0.15, snowGuard=0.3)),
         ("saçak ucundaki kar siperliği", roof(slopes=[40.0, None, 40.0, None], snowGuard=0.0)),
         ("oluğun altında iki iniş borusu", roof(gutter=0.15, parts=[DOWNPIPE, {**DOWNPIPE, "at": P(-0.075, 49.925)}])),
+        # Its layers (ADR 8071 §8), top down, their thicknesses its own.
+        ("katmanlı çatı: kaplama, lata, kaplama tahtası, mertek", roof(layers=ROOF_BUILD_UP)),
+        ("tek katmanlı çatı: yalnız kaplama", roof(layers=[{"kind": "covering", "thickness": 0.05}])),
     ]:
         c.add(name, [create_step(Drawing(), ROOFS, "execute", inp)])
     refusals(c, ROOFS, [
@@ -2706,9 +2750,28 @@ def roof_cases():
         ("kalkanın yanındaki iniş borusu reddedilir",
          roof(slopes=[33.0, None, 33.0, None], gutter=0.15, parts=[{**DOWNPIPE, "at": P(12.1, 54.5)}]), {}),
         ("iniş borusuna yükseklik verilmez", roof(gutter=0.15, parts=[{**DOWNPIPE, "rise": 1.0}]), {}),
+        # A roof's layers' refusals (ADR 8071 §8).
+        ("katmanlı çatıya ayrıca kalınlık verilmez", roof(thickness=0.25, layers=ROOF_BUILD_UP), {}),
+        ("sırası bozuk katmanlar reddedilir", roof(layers=[{"kind": "rafters", "thickness": 0.12},
+                                                         {"kind": "covering", "thickness": 0.03}]), {}),
+        ("aynı katman iki kez verilmez", roof(layers=[{"kind": "covering", "thickness": 0.03},
+                                                     {"kind": "covering", "thickness": 0.02}]), {}),
+        ("sıfır kalınlıklı katman reddedilir", roof(layers=[{"kind": "covering", "thickness": 0.0}]), {}),
+        ("1 m'den kalın katman reddedilir", roof(layers=[{"kind": "rafters", "thickness": 1.5}]), {}),
+        ("toplamı 2 m'yi aşan katmanlar reddedilir", roof(layers=[{"kind": "covering", "thickness": 1.0},
+                                                                 {"kind": "battens", "thickness": 0.75},
+                                                                 {"kind": "rafters", "thickness": 0.5}]), {}),
+        ("boşluklu katman malzemesi reddedilir", roof(layers=[{"kind": "covering", "thickness": 0.03, "material": " Kiremit"}]),
+         {}),
     ])
     common_refusals(c, ROOFS, roof())
     return c.cases
+
+
+# A pitched roof's build-up for the cases (ADR 8071 §8): not KentOS's values, the cases' own.
+ROOF_BUILD_UP = [{"kind": "covering", "thickness": 0.03, "material": "Kiremit"}, {"kind": "battens", "thickness": 0.03},
+                 {"kind": "boarding", "thickness": 0.025, "material": "Çam"}, {"kind": "rafters", "thickness": 0.125,
+                                                                               "material": "Çam"}]
 
 
 def ramp_level_cases():
@@ -2925,6 +2988,8 @@ FIELDS = [  # wire name, kinds, nullable
     # A roof's (docs/adr/8044 §1, §6).
     ("slopes", ("roof",), False), ("thickness", ("roof",), True), ("overhang", ("roof",), True),
     ("gutter", ("roof",), True), ("snowGuard", ("roof",), True), ("parts", ("roof",), False),
+    # A roof's layers, all of them (ADR 8071 §8): its thickness theirs; empty: one build-up again.
+    ("layers", ("roof",), False),
     # A railing's (docs/adr/8045 §3); null gap: PAİY 38/4's 0.10 m.
     ("infill", ("railing",), False), ("gap", ("railing",), True),
     ("level", ("grid", "column", "stair", "ramp", "beam", "roof", "railing"), True),
@@ -3036,6 +3101,14 @@ def edit(d, inp, conflict=False):
                 if kind == "column" and n == "heightFromLevel":
                     if op[n] is True:
                         f.pop("height", None)
+                    continue
+                # A roof's layers (ADR 8071 §8): its own thickness given up; none, one build-up again.
+                if kind == "roof" and n == "layers":
+                    f.pop("thickness", None)
+                    if op[n]:
+                        f["layers"] = op[n]
+                    else:
+                        f.pop("layers", None)
                     continue
                 set_field(f, n, op[n])
             path = f"uids[{i}]"
@@ -3280,6 +3353,18 @@ def edit_cases():
            one(d, [uid_of(k)], {"kind": "set", "gutter": None, "snowGuard": None})])
     d, made, k = with_roof()
     c.add("Değiştir: 3 m içerideki kar siperliği reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "snowGuard": 3.0})])
+    # A roof's layers (ADR 8071 §8): given, its own thickness given up; taken away, one build-up again.
+    d, made, k = with_roof(thickness=0.3)
+    c.add("Değiştir: çatıya katmanlar verilir, kalınlığı onların toplamı olur",
+          [made, one(d, [uid_of(k)], {"kind": "set", "layers": ROOF_BUILD_UP})])
+    d, made, k = with_roof(layers=ROOF_BUILD_UP)
+    c.add("Değiştir: boş liste çatının katmanlarını kaldırır", [made, one(d, [uid_of(k)], {"kind": "set", "layers": []})])
+    d, made, k = with_roof(layers=ROOF_BUILD_UP)
+    c.add("Değiştir: katmanlı çatıya kalınlık verilmez", [made, one(d, [uid_of(k)], {"kind": "set", "thickness": 0.3})])
+    d, made, k = with_roof()
+    c.add("Değiştir: sırası bozuk katmanlar reddedilir",
+          [made, one(d, [uid_of(k)], {"kind": "set", "layers": [{"kind": "rafters", "thickness": 0.12},
+                                                                  {"kind": "covering", "thickness": 0.03}]})])
     d, made, k = with_roof()
     c.add("Değiştir: sonsuz oluk reddedilir",
           [made, one(d, [uid_of(k)], {"kind": "set", "gutter": 0.15}, non_finite={"operation.gutter": "NaN"})])

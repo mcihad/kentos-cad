@@ -7,6 +7,7 @@ import type { GridBubbles } from "./GridBubbles";
 import type { Member } from "./Member";
 import type { RailingInfill } from "./RailingInfill";
 import type { Railings } from "./Railings";
+import type { RoofLayer } from "./RoofLayer";
 import type { RoofPart } from "./RoofPart";
 import type { WallJustify } from "./WallJustify";
 
@@ -180,6 +181,11 @@ snowGuard?: number | null,
  * the ones it has with theirs; empty: none.
  */
 parts?: Array<RoofPart>, 
+/**
+ * A roof's layers top down, all of them (docs/adr/8071 §8); its thickness then theirs; empty: one build-up again,
+ * 0.25 m.
+ */
+layers?: Array<RoofLayer>, 
 /**
  * A railing's infill (docs/adr/8045 §3): upright balusters, glass or a solid panel.
  */

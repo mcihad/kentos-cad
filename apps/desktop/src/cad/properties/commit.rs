@@ -787,6 +787,75 @@ pub(super) fn commit(
             };
             return properties::edit_tag(model, *slot, c);
         }
+        // A roof's thickness and its layers (docs/adr/8071 §8): a layer's thickness typed adds it in its place or sets
+        // it, empty or 0 takes it away; its material typed, empty none; the thickness typed while it has no layers.
+        Field::Arch(
+            slot,
+            which @ (ArchField::RoofThickness | ArchField::RoofLayer(_) | ArchField::RoofLayerMaterial(_)),
+        ) => {
+            use kentos_commands::{ArchChange, ArchOperation, RoofLayer, RoofLayerKind};
+            let Some(kentos_commands::Entity::Roof(r)) = model.get(*slot) else {
+                return Vec::new();
+            };
+            let t = kentos_interaction::js_trim(text);
+            let typed = || -> Result<Option<f64>, Vec<String>> {
+                if t.is_empty() {
+                    return Ok(None);
+                }
+                match length(text) {
+                    Some(n) if n.is_finite() => Ok(Some(n)),
+                    _ => Err(vec!["Kalınlık için bir uzunluk girin; örneğin 3 cm ya da 0.03 m.".into()]),
+                }
+            };
+            let kind = |k: u8| RoofLayerKind::ALL.get(usize::from(k)).copied();
+            let mut layers = r.roof.layers.clone();
+            let c = match which {
+                ArchField::RoofThickness => match typed() {
+                    Ok(n) => ArchChange {
+                        thickness: Some(n),
+                        ..Default::default()
+                    },
+                    Err(e) => return e,
+                },
+                ArchField::RoofLayer(k) => {
+                    let Some(kind) = kind(*k) else {
+                        return Vec::new();
+                    };
+                    let n = match typed() {
+                        Ok(n) => n.filter(|n| n.abs() >= 1e-9),
+                        Err(e) => return e,
+                    };
+                    match (layers.iter().position(|l| l.kind == kind), n) {
+                        (Some(i), Some(n)) => layers[i].thickness = n,
+                        (Some(i), None) => {
+                            layers.remove(i);
+                        }
+                        // In its place top down, whatever the others are.
+                        (None, Some(n)) => {
+                            let at = layers.iter().position(|l| l.kind > kind).unwrap_or(layers.len());
+                            layers.insert(at, RoofLayer { kind, thickness: n, material: None });
+                        }
+                        (None, None) => return Vec::new(),
+                    }
+                    ArchChange {
+                        layers: Some(layers),
+                        ..Default::default()
+                    }
+                }
+                ArchField::RoofLayerMaterial(k) => {
+                    let Some(l) = kind(*k).and_then(|kind| layers.iter_mut().find(|l| l.kind == kind)) else {
+                        return Vec::new();
+                    };
+                    l.material = (!t.is_empty()).then(|| t.to_owned());
+                    ArchChange {
+                        layers: Some(layers),
+                        ..Default::default()
+                    }
+                }
+                _ => return Vec::new(),
+            };
+            return properties::edit_arch(model, *slot, ArchOperation::Set(Box::new(c)));
+        }
         Field::Arch(slot, which) => {
             use kentos_commands::{ArchChange, ArchOperation};
             let t = kentos_interaction::js_trim(text);
@@ -1065,7 +1134,10 @@ pub(super) fn commit(
                 | ArchField::MarkSize
                 | ArchField::RoofSlope
                 | ArchField::FireRating
-                | ArchField::RoofPart(_) => {
+                | ArchField::RoofPart(_)
+                | ArchField::RoofThickness
+                | ArchField::RoofLayer(_)
+                | ArchField::RoofLayerMaterial(_) => {
                     return Vec::new();
                 }
             };

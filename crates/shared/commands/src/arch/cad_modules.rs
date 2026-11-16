@@ -79,7 +79,7 @@ pub enum ModulesOperation {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         unit: Option<String>,
-        /// Tek kat (docs/adr/0811, Archicad's Single Story): only the members of this storey of a module of several,
+        /// Tek kat (docs/adr/0811): only the members of this storey of a module of several,
         /// standing on `level`. None: every storey, the base on `level`.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]

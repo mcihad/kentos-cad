@@ -1,4 +1,4 @@
-//! Proje gezgini (docs/adr/0778; Revit's Project Browser, Archicad's Navigator): the project's levels, named views and
+//! Proje gezgini (docs/adr/0778): the project's levels, named views and
 //! their recipes, sheets and their maps, schedules, and how they link — and, given one object, where it shows: its level,
 //! the views that draw it, the sheets' maps that draw it, the schedules that list it and the tags that name it.
 //! `cad.navigator.read` reads; it writes nothing.

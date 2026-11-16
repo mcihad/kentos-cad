@@ -1892,6 +1892,40 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         .filter(|g| !g.spaces.is_empty())
         .collect();
     let grids = grids_of(&entities, &storey_of, &mut written);
+    // A layered roof's material layer set (docs/adr/8071 §8): top down, each layer its kind's word, its material (the
+    // covering's, not given, the roof's covering; another's not given unsaid), its thickness across the roof's face and
+    // its role in IFC 4.3's words (`IfcMaterialLayer.Category`): the covering the outer finish, the insulation
+    // insulating, the rafters load bearing.
+    let layer_sets: Vec<(usize, String, Vec<crate::building::Layer>)> = index
+        .iter()
+        .filter_map(|(owner, &k)| match by_uid.get(owner) {
+            Some(&(_, Entity::Roof(r)))
+                if !r.roof.layers.is_empty() && elements.get(k).is_some_and(|e| e.class == Class::Roof) =>
+            {
+                use kentos_contracts::RoofLayerKind as K;
+                let layers = r
+                    .roof
+                    .layers
+                    .iter()
+                    .map(|l| crate::building::Layer {
+                        name: l.kind.label().to_owned(),
+                        material: l.material.clone().or_else(|| {
+                            (l.kind == K::Covering).then(|| r.roof.material_name().to_owned())
+                        }),
+                        thickness: l.thickness,
+                        category: match l.kind {
+                            K::Covering => Some("Outer finish"),
+                            K::Insulation => Some("Insulation"),
+                            K::Rafters => Some("LoadBearing"),
+                            K::Battens | K::Waterproofing | K::Boarding => None,
+                        },
+                    })
+                    .collect();
+                Some((k, "Çatı katmanları".to_owned(), layers))
+            }
+            _ => None,
+        })
+        .collect();
     let building = Building {
         view: Default::default(),
         file: k.file_stem(&title),
@@ -1936,6 +1970,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         groups: group_list,
         grids,
         crs,
+        layer_sets,
     };
     (building, written)
 }

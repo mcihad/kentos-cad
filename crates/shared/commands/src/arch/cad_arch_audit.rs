@@ -209,7 +209,7 @@ pub struct ArchAuditWithin {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub levels: Option<Vec<Option<String>>>,
-    /// Objects by their persistent ids (Revit's Show Related Warnings).
+    /// Objects by their persistent ids: the findings about them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]

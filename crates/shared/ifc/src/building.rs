@@ -347,7 +347,24 @@ pub struct Building {
     pub groups: Vec<Group>,
     /// The grids (EK-6 Tablo 6.36's axes, docs/adr/8070 §4).
     pub grids: Vec<Grid>,
+    /// The layered elements' material layer sets (docs/adr/8071 §8): an element (by its index), its set's name and its
+    /// layers top down, in place of a single material.
+    pub layer_sets: Vec<(usize, String, Vec<Layer>)>,
     pub crs: Option<Crs>,
+}
+
+/// A layer of an element's material layer set (docs/adr/8071 §8; IFC 4.3 `IfcMaterialLayer`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Layer {
+    /// What it is (its `Name`).
+    pub name: String,
+    /// Its material's name; none: not given, which is no air gap, only not said (its `Material`).
+    pub material: Option<String>,
+    /// How thick it is, metres (its `LayerThickness`).
+    pub thickness: f64,
+    /// Its role in the set (its `Category`): IFC 4.3's own words, 'LoadBearing', 'Insulation', 'Inner finish' or
+    /// 'Outer finish'; none, none of them.
+    pub category: Option<&'static str>,
 }
 
 /// What the file's bodies are, its header's view definition (docs/adr/8071 §4; IFC 4.3, `IfcRelVoidsElement`): Design
@@ -894,6 +911,8 @@ pub fn write(b: &Building) -> String {
     let mut contained: Vec<Vec<usize>> = vec![Vec::new(); b.storeys.len()];
     let mut products = Vec::new();
     let mut materials: Vec<(String, Vec<usize>)> = Vec::new();
+    // An element's material layer set (docs/adr/8071 §8), by its index.
+    let mut sets: Vec<(usize, usize)> = Vec::new();
     for (i, e) in b.elements.iter().enumerate() {
         let Some(&parent) = storey_places.get(e.storey) else {
             products.push(0);
@@ -935,7 +954,9 @@ pub fn write(b: &Building) -> String {
             }
         };
         w.psets(n, &e.psets, &e.qtos);
-        if let Some(m) = &e.material {
+        if b.layer_sets.iter().any(|(k, ..)| *k == i) {
+            sets.push((i, n));
+        } else if let Some(m) = &e.material {
             match materials.iter_mut().find(|(name, _)| name == m) {
                 Some((_, list)) => list.push(n),
                 None => materials.push((m.clone(), vec![n])),
@@ -1173,13 +1194,47 @@ pub fn write(b: &Building) -> String {
             Step::refs(&in_building)
         ));
     }
+    let mut material_ids: Vec<(String, usize)> = Vec::new();
     for (name, list) in &materials {
         let m = w.st.add(format!("IFCMATERIAL({},$,$)", text(name)));
+        material_ids.push((name.clone(), m));
         let g = w.st.gid();
         w.st.add(format!(
             "IFCRELASSOCIATESMATERIAL({g},$,$,$,({}),#{m})",
             Step::refs(list)
         ));
+    }
+    // The layered elements' sets (docs/adr/8071 §8): a material for each name once, a layer for each with its thickness,
+    // its name and its role; a layer's material not given stays unsaid.
+    for (i, n) in sets {
+        let Some((_, name, layers)) = b.layer_sets.iter().find(|(k, ..)| *k == i) else {
+            continue;
+        };
+        let refs: Vec<usize> = layers
+            .iter()
+            .map(|l| {
+                let material = match &l.material {
+                    Some(m) => match material_ids.iter().find(|(x, _)| x == m) {
+                        Some((_, id)) => format!("#{id}"),
+                        None => {
+                            let id = w.st.add(format!("IFCMATERIAL({},$,$)", text(m)));
+                            material_ids.push((m.clone(), id));
+                            format!("#{id}")
+                        }
+                    },
+                    None => "$".to_owned(),
+                };
+                let category = l.category.map_or_else(|| "$".to_owned(), text);
+                w.st.add(format!(
+                    "IFCMATERIALLAYER({material},{},$,{},$,{category},$)",
+                    real(l.thickness),
+                    text(&l.name)
+                ))
+            })
+            .collect();
+        let set = w.st.add(format!("IFCMATERIALLAYERSET(({}),{},$)", Step::refs(&refs), text(name)));
+        let g = w.st.gid();
+        w.st.add(format!("IFCRELASSOCIATESMATERIAL({g},$,$,$,(#{n}),#{set})"));
     }
     // The header says what the bodies are (docs/adr/8047, 8071 §4): Design Transfer, an opening's body subtracted from
     // its wall's by the reader (IFC 4.3, IfcRelVoidsElement: a 'Body' opening is a Boolean difference); a Reference View
@@ -1376,6 +1431,45 @@ mod tests {
         let f = write(&door_building());
         assert!(f.contains("ViewDefinition [DesignTransferView]") && !f.contains("'Reference'"));
         assert_eq!(f.matches("IFCEXTRUDEDAREASOLID(").count(), 2);
+    }
+
+    /// A roof's layers (docs/adr/8071 §8): one IfcMaterialLayerSet top down in place of its material, each layer its
+    /// name, thickness and role; a material written once for two layers of it, a layer without one unsaid.
+    #[test]
+    fn a_layered_roof_is_one_material_layer_set() {
+        let mut b = door_building();
+        b.elements[0].class = Class::Roof;
+        b.elements[0].predefined = "NOTDEFINED";
+        let layer = |name: &str, material: Option<&str>, thickness: f64, category: Option<&'static str>| Layer {
+            name: name.into(),
+            material: material.map(Into::into),
+            thickness,
+            category,
+        };
+        b.layer_sets = vec![(
+            0,
+            "Çatı katmanları".into(),
+            vec![
+                layer("Kaplama", Some("Kiremit"), 0.03, Some("Outer finish")),
+                layer("Lata", None, 0.03, None),
+                layer("Kaplama tahtası", Some("Çam"), 0.025, None),
+                layer("Mertek", Some("Çam"), 0.125, Some("LoadBearing")),
+            ],
+        )];
+        let f = write(&b);
+        let layers: Vec<&str> = f.lines().filter(|l| l.contains("IFCMATERIALLAYER(")).collect();
+        assert_eq!(layers.len(), 4, "{layers:?}");
+        assert!(layers[0].contains(",0.03,$,'Kaplama',$,'Outer finish',$)"), "{}", layers[0]);
+        assert!(layers[1].contains("IFCMATERIALLAYER($,0.03,$,'Lata',$,$,$)"), "{}", layers[1]);
+        assert!(layers[3].contains(",0.125,$,'Mertek',$,'LoadBearing',$)"), "{}", layers[3]);
+        assert_eq!(f.matches(&format!("IFCMATERIAL({},$,$)", text("Çam"))).count(), 1, "Çam once");
+        let set = f.lines().find(|l| l.contains("IFCMATERIALLAYERSET(")).expect("the set");
+        assert!(set.contains(&format!("),{},$)", text("Çatı katmanları"))), "{set}");
+        // The roof's own material gives way to the set; the set is the roof's.
+        assert!(!f.contains("IFCMATERIAL('Tugla'"));
+        let roof = f.lines().find(|l| l.contains("IFCROOF(")).expect("the roof").split('=').next().unwrap().to_owned();
+        let set_id = set.split('=').next().unwrap().to_owned();
+        assert!(f.lines().any(|l| l.contains("IFCRELASSOCIATESMATERIAL(") && l.contains(&format!("({roof}),{set_id})"))));
     }
 
     /// A 5 m wall with a 0.9 m door through it, on one storey.
