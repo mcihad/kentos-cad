@@ -199,7 +199,8 @@ mod tests {
     /// item, bold and code inline (bold around code stays bold), a paragraph's lines one paragraph.
     #[test]
     fn a_changelog_is_read_as_headings_items_and_paragraphs() {
-        let text = "# Değişiklikler\n\n## 0.4.0\n\n- **`kacis-uzakligi`** (yeni): konut olmayan\n  bölümlerde `occupancy`.\n- İkinci madde.\n\nBir paragraf\nsürer.\n";
+        let text = "# Değişiklikler\n\n## 0.4.0\n\n- **`kacis-uzakligi`** (yeni): konut olmayan\n  bölümlerde \
+                    `occupancy`.\n- İkinci madde.\n\nBir paragraf\nsürer.\n";
         let read = read(text);
         assert_eq!(
             read,
