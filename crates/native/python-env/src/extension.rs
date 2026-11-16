@@ -7,6 +7,9 @@
 //! - **From the package's lock alone:** `uv sync --locked --no-dev --no-install-project`: what the author locked, not a
 //!   new resolution; development dependencies are not installed (PY-UV-17, 19). The project's two files are copied into
 //!   the environment's folder: the installed package stays read-only.
+//! - **Three kinds (PY-UV-10, docs/adr/8057 §97):** the personal environment ([`crate::personal`]), a published
+//!   version's (this), and an extension being developed (installed from its working folder): [`Key::development`],
+//!   another folder, its project's development group in (no `--no-dev`), never a published version's.
 //! - **Previewed first:** `uv sync --dry-run` says what it would install, on this computer, before anything is
 //!   downloaded (PY-UV-14).
 //! - **Made, checked, then marked ready:** after the sync, KentOS's library from the installation's wheel (offline, the
@@ -75,6 +78,11 @@ pub struct Key {
     /// Empty on the desktop, whose keys and folders stay as they were.
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub digest: String,
+    /// An extension being developed (installed from its working folder): its project's development group is in, and
+    /// it is never a published version's environment (PY-UV-10, docs/adr/8057 §97). False for the others, whose keys
+    /// and folders stay as they were.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub development: bool,
 }
 
 impl Key {
@@ -92,6 +100,9 @@ impl Key {
         if !self.digest.is_empty() {
             text.push('\n');
             text.push_str(&self.digest);
+        }
+        if self.development {
+            text.push_str("\ngelistirme");
         }
         Sha256::digest(text.as_bytes())
             .iter()
@@ -167,7 +178,17 @@ pub fn key_for(
         platform: platform(),
         extras: extras.into_iter().filter(|e| !e.is_empty()).collect(),
         digest: String::new(),
+        development: false,
     })
+}
+
+impl Key {
+    /// The same key for an extension being developed (installed from its working folder): another environment, with
+    /// its project's development group (PY-UV-10, docs/adr/8057 §97).
+    pub fn for_development(mut self, development: bool) -> Key {
+        self.development = development;
+        self
+    }
 }
 
 /// The environment for `key` when it is ready: its record there and of this key, its Python there. Files only, no uv:
@@ -194,8 +215,16 @@ fn records(root: &Path) -> Vec<Ready> {
 }
 
 /// A ready environment of an extension version on this Python and system, whatever features it was made with: the
-/// newest, so its features are the ones the user chose last. Files only: it answers offline.
-pub fn find(root: &Path, id: &str, version: &str, lock: &str, python: &str) -> Option<Ready> {
+/// newest, so its features are the ones the user chose last; a development one for an extension being developed
+/// (`development`), a published version's else. Files only: it answers offline.
+pub fn find(
+    root: &Path,
+    id: &str,
+    version: &str,
+    lock: &str,
+    python: &str,
+    development: bool,
+) -> Option<Ready> {
     let here = platform();
     records(root)
         .into_iter()
@@ -205,6 +234,7 @@ pub fn find(root: &Path, id: &str, version: &str, lock: &str, python: &str) -> O
                 && r.key.lock == lock
                 && r.key.python == python
                 && r.key.platform == here
+                && r.key.development == development
                 && r.python.is_file()
         })
         .max_by_key(|r| r.made_at)
@@ -311,7 +341,6 @@ fn sync_args(interpreter: &Interpreter, key: &Key, dry: bool, lock: &str) -> Vec
     let mut args: Vec<OsString> = [
         "sync",
         "--locked",
-        "--no-dev",
         "--no-install-project",
         "--no-config",
         "--no-python-downloads",
@@ -320,6 +349,10 @@ fn sync_args(interpreter: &Interpreter, key: &Key, dry: bool, lock: &str) -> Vec
     .iter()
     .map(OsString::from)
     .collect();
+    // A published version's environment takes no development group (PY-UV-19); one being developed takes it.
+    if !key.development {
+        args.insert(2, OsString::from("--no-dev"));
+    }
     if dry {
         args.push(OsString::from("--dry-run"));
     }

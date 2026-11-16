@@ -227,6 +227,8 @@ struct Plan {
     root: PathBuf,
     interpreter: kentos_python_env::python::Interpreter,
     lock_file: String,
+    /// Installed from a working folder: its environment is a development one (docs/adr/8057 §97).
+    development: bool,
 }
 
 fn refused(code: &'static str, message: &str) -> HeadlessError {
@@ -372,6 +374,7 @@ impl App {
             root: root.clone(),
             interpreter: interpreter.clone(),
             lock_file: project.lock_file.clone(),
+            development: registry.developed(ext),
         })
     }
 
@@ -430,6 +433,7 @@ impl App {
                     &plan.launch.version,
                     &lock,
                     &plan.interpreter.version,
+                    plan.development,
                 )
                 .ok_or_else(|| {
                     "Bu eklentinin Python ortamı hazırlanmadı: Eklentiler › Python ortamı."

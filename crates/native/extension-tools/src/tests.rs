@@ -169,12 +169,15 @@ fn install_files(
         .install_folder(&folder, &choice)
         .unwrap_or_else(|p| panic!("{p:#?}"));
     let package = registry.package_dir(EXT).expect("installed");
-    // Its environment, as the desktop leaves a ready one: the stand-in is its Python.
+    // Its environment, as the desktop leaves a ready one: the stand-in is its Python. Installed from a working folder,
+    // it is a development environment (docs/adr/8057 §97).
     let interpreter = Interpreter {
         version: "3.12.13".into(),
         path: python_root.join("yorumlayici/cpython-3.12/bin/python3.12"),
     };
-    let key = extension::key_for(&package, "uv.lock", EXT, "0.1.0", &interpreter, &[]).unwrap();
+    let key = extension::key_for(&package, "uv.lock", EXT, "0.1.0", &interpreter, &[])
+        .unwrap()
+        .for_development(true);
     let dir = extension::place(python_root, &key);
     std::fs::create_dir_all(&dir).unwrap();
     let script = dir.join("host.py");

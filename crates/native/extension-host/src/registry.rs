@@ -663,6 +663,15 @@ impl Registry {
     }
 
     /// The version in use's manifest.
+    /// Whether `id` is being developed: installed from a working folder (Asistan's workshop, an agent's on the link),
+    /// so its Python runs in a development environment, not a published version's (PY-UV-10, docs/adr/8057 §97).
+    pub fn developed(&self, id: &str) -> bool {
+        self.file
+            .extensions
+            .get(id)
+            .is_some_and(|e| e.source.kind == SourceKind::DeveloperFolder)
+    }
+
     /// The organisation's policy the registry judges by, when there is one.
     pub fn policy(&self) -> Option<&Policy> {
         self.options.policy.as_ref()

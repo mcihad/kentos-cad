@@ -1376,6 +1376,56 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
         calls,
         "uv not asked"
     );
+    // Being developed (installed from its working folder, docs/adr/8057 §97): another environment, its project's
+    // development group in; a published version's key and record stay as they were.
+    let developing = key.clone().for_development(true);
+    assert_ne!(developing.hash(), key.hash());
+    let written = serde_json::to_string(&key).unwrap();
+    assert!(!written.contains("development"), "{written}");
+    assert!(
+        serde_json::to_string(&developing)
+            .unwrap()
+            .contains("\"development\":true")
+    );
+    let developed = extension::prepare(
+        &fake,
+        &root,
+        &python,
+        &wheel,
+        &package,
+        ("pyproject.toml", "uv.lock"),
+        &developing,
+        &stop,
+        &mut |_| {},
+    )
+    .unwrap();
+    assert_ne!(extension::place(&root, &developing), dir);
+    let last_sync = std::fs::read_to_string(&log)
+        .unwrap()
+        .lines()
+        .filter(|l| l.contains("|sync --locked"))
+        .last()
+        .unwrap()
+        .to_owned();
+    assert!(
+        last_sync.contains("|sync --locked --no-install-project")
+            && !last_sync.contains("--no-dev"),
+        "{last_sync}"
+    );
+    // Each found for its own: the development one for an extension being developed, the published one else.
+    let find = |development| {
+        extension::find(
+            &root,
+            &key.id,
+            &key.version,
+            &key.lock,
+            &key.python,
+            development,
+        )
+    };
+    assert_eq!(find(false), Some(made.clone()));
+    assert_eq!(find(true), Some(developed));
+    extension::remove(&root, &developing).unwrap();
     // A sync that fails leaves nothing half-made.
     std::fs::write(temp.0.join("uv").join("bozuk"), b"").unwrap();
     let failed = extension::prepare(

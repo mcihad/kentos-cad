@@ -747,12 +747,14 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   kararıyla uv kurulumun içinde (0.11.26, 6 platformun SHA-256'sı).*
 
 **Ortam modeli ve bağımlılık çözümü:**
-- [ ] Üç ortam: kişisel analiz, eklenti geliştirme, değişmez yayın ortamı [PY-UV-10]. Yayın ortamının anahtarı
+- [x] Üç ortam: kişisel analiz, eklenti geliştirme, değişmez yayın ortamı [PY-UV-10]. Yayın ortamının anahtarı
   kullanıcı + eklenti kimliği/sürümü + kilit özeti + Python ABI + OS/mimari + seçilen ek özellikler [PY-UV-11]. Paket
   önbelleği paylaşılabilir, değişen venv paylaşılmaz; iki eklentinin çelişen NumPy'ı aynı yorumlayıcı ad alanına girmez
   [PY-UV-12].
-  — *kısmen (ADR 8057 §5): kişisel ortam ve sürüm başına eklenti ortamı (kimlik, sürüm, kilit özeti, Python, sistem,
-  özellikler), paket önbelleği ayrı; kalan: ayrı eklenti geliştirme ortamı.*
+  — *tamamlandı (ADR 8057 §5, §97): kişisel ortam ve sürüm başına eklenti ortamı (kimlik, sürüm, kilit özeti, Python,
+  sistem, özellikler), paket önbelleği ayrı; 16 Kasım: geliştirme ortamı: çalışma klasöründen kurulan eklentinin
+  ortamı ayrı bir anahtarla (`development`), projenin geliştirme grubuyla; yayın ortamları `--no-dev` ve klasörleri
+  aynı.*
 - [x] `pyproject.toml` gereksinimin, `uv.lock` çözülmüş sürümün kaynağıdır; manifestte üçüncü bir liste yok [PY-UV-13].
   Bağımlılık önizlemesi doğrudan/geçişli, sürüm, ek özellik, Python/platform işareti, dizin, lisans ve mümkünse
   indirme boyutunu gösterir [PY-UV-14].

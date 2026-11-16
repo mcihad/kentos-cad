@@ -222,6 +222,7 @@ pub fn environment_python(
         &manifest.version,
         &lock,
         &python.interpreter.version,
+        false,
     )
     .map(|ready| ready.python)
     .ok_or_else(|| {

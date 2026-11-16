@@ -92,6 +92,9 @@ struct Context {
     project_file: String,
     lock_file: String,
     version: String,
+    /// Installed from a working folder: a development environment, with its project's development group (docs/adr/8057
+    /// §97).
+    development: bool,
 }
 
 /// What preparing it would install, in a line: what the lock gives on this computer.
@@ -156,6 +159,7 @@ impl App {
             project_file: project.project_file.clone(),
             lock_file: project.lock_file.clone(),
             version: manifest.version.to_string(),
+            development: registry.developed(id),
         })
     }
 
@@ -166,7 +170,16 @@ impl App {
         };
         extension::lock_digest(&c.package, &c.lock_file)
             .ok()
-            .and_then(|lock| extension::find(&c.root, id, &c.version, &lock, &c.python.version))
+            .and_then(|lock| {
+                extension::find(
+                    &c.root,
+                    id,
+                    &c.version,
+                    &lock,
+                    &c.python.version,
+                    c.development,
+                )
+            })
             .is_some()
     }
 
@@ -205,10 +218,15 @@ impl App {
         in_background(
             move || {
                 let lock = extension::lock_digest(&c.package, &c.lock_file)?;
-                Ok(
-                    extension::find(&c.root, &asked, &c.version, &lock, &c.python.version)
-                        .map(Box::new),
+                Ok(extension::find(
+                    &c.root,
+                    &asked,
+                    &c.version,
+                    &lock,
+                    &c.python.version,
+                    c.development,
                 )
+                .map(Box::new))
             },
             Err("arama yarıda kaldı".to_owned()),
             move |found| env_msg(EnvEvent::Found(id.clone(), found)),
@@ -246,7 +264,8 @@ impl App {
                         &c.python,
                         &extras,
                     )
-                    .map_err(InstallError::NotRun)?;
+                    .map_err(InstallError::NotRun)?
+                    .for_development(c.development);
                     let wheel = sdk::find(&sdk::dirs(), VERSION).map_err(InstallError::NotRun)?;
                     let made = extension::prepare(
                         &c.uv,
@@ -326,7 +345,8 @@ impl App {
                             &c.version,
                             &c.python,
                             &extras,
-                        )?;
+                        )?
+                        .for_development(c.development);
                         extension::preview(
                             &c.uv,
                             &c.root,
@@ -469,6 +489,13 @@ impl App {
         if !registry.grant(id).is_some_and(|g| g.python) {
             return form.wide(label::caption(
                 "Python işlevleri kurulumda seçilmedi; bu eklenti için ortam hazırlanmaz.",
+            ));
+        }
+        // Being developed (docs/adr/8057 §97): its own kind of environment, said once.
+        if registry.developed(id) {
+            form = form.wide(label::caption(
+                "Geliştirme ortamı: eklenti çalışma klasöründen kurulu; projenin geliştirme bağımlılıkları da kurulur \
+                 ([dependency-groups] dev). Yayımlanan sürümün ortamı onları almaz.",
             ));
         }
         if let Err(why) = self.env_context(id) {

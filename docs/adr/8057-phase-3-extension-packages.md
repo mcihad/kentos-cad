@@ -4885,3 +4885,31 @@ masaüstü `python_personal/add_to.rs` (yeni: `AddTo`, `Developed`, `developed_e
   ilkede eklentinin aracı kapalı ve sözüyle, KentOS'un aracı açık; yazılmamış ve ilkesiz açık; okunamayan; yerel
   çizimde yok; Vitrin'in TAKS penceresinde satır kapalı ve notuyla), bileşen kitaplığının sınamaları (366),
   masaüstünün İşlemler ve eklenti sınamaları (217).
+
+## §97. Geliştirme ortamı: çalışma klasöründen kurulan eklentinin kendi türü (`ADIM 18A`, PY-UV-10)
+
+**16 Kasım.** Kod: python-env `extension.rs` (`Key::development`, `Key::for_development`, `find`'ın `development`'ı,
+`sync_args`); kayıt defteri `registry.rs` (`Registry::developed`); eklenti araçları `plan.rs` (`Plan::development`);
+masaüstü `extensions/environment.rs`, `runner.rs`.
+
+- **Sorun.** PY-UV-10 üç ortam türünü ayırır: kişisel çalışma alanı, eklenti geliştirme ortamı, değişmez yayın ortamı.
+  Kişisel ortam (§5) ve sürüm başına yayın ortamı vardı; çalışma klasöründen kurulan eklenti (Asistan'ın atölyesi,
+  bağlantıdaki bir ajanınki, §22, §30) de yayın ortamını kullanıyordu: projenin geliştirme grubu
+  (`[dependency-groups] dev`) hiç kurulmuyor, geliştirilen ile yayımlanan aynı türden bir ortamı paylaşıyordu.
+- **Karar.** Ortam anahtarında `development`: kayıt defteri eklentinin kaynağı geliştirici klasörüyse (`developed`)
+  masaüstü ve başsız ana makine onun ortamını bu işaretle hazırlar ve arar. Geliştirme ortamı `uv sync`'i `--no-dev`
+  olmadan çalıştırır (projenin geliştirme grubu girer), başka bir klasördedir ve bir yayın sürümünün ortamı olarak hiç
+  bulunmaz (`find` işareti ayırır). Yayın ortamlarının anahtarı, özeti ve kaydı bayt bayt aynı kalır: işaret yalnız
+  doğruyken özete ve kayda yazılır; var olan klasörler yeniden hazırlanmaz. Kurulum ve ortam kuralları (önizleme,
+  hazırlanmadan çalışmama, internetsiz çalışma) aynıdır.
+- **`kentos kek test` yayın ortamında kalır:** sınama, paketin yayımlandığı hâliyle çalışıp çalışmadığını söyler;
+  geliştirme grubunda olup yayında olmayan bir içe aktarma orada düşmelidir.
+- **Ayrıntıda söylenir:** "Python ortamı" bölümünde "Geliştirme ortamı: eklenti çalışma klasöründen kurulu; projenin
+  geliştirme bağımlılıkları da kurulur ([dependency-groups] dev). Yayımlanan sürümün ortamı onları almaz."
+- **Gerçek pencere:** Vitrin'in kopyası bağlantıdaki bir ajanın atölyesinden kuruldu, Ortamı hazırla → önizleme (numpy
+  2.5.4, shapely 2.0.7) → Hazırla: "Ortam hazır · Python 3.12.13 · 2 paket · internetsiz çalışır"; diskteki kaydında
+  `"development": true`.
+- **Sınamalar:** python-env 1 (aynı sınamanın içinde: geliştirme anahtarı başka klasör, yayın anahtarının kaydında
+  işaret yok; geliştirme eşitlemesi `--no-dev`'siz; `find` iki türü ayırır), kayıt defteri 1 (klasörden kurulan
+  geliştirilir, dosyadan kurulan değil), eklenti araçlarının sınamaları (12; atölye kurulumu artık geliştirme
+  ortamıyla), masaüstünün eklenti, Asistan, Python ve İşlemler sınamaları (271).

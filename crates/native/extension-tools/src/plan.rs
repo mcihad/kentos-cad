@@ -26,6 +26,8 @@ pub struct Plan {
     pub digest: String,
     /// Its lock in the package (`uv.lock`): its environment is found by it.
     pub lock_file: String,
+    /// Installed from a working folder: its environment is a development one (docs/adr/8057 §97).
+    pub development: bool,
 }
 
 impl Plan {
@@ -44,6 +46,7 @@ impl Plan {
                 .as_ref()
                 .map(|p| p.lock_file.clone())
                 .unwrap_or_default(),
+            development: registry.developed(ext),
         })
     }
 
@@ -92,6 +95,7 @@ pub fn start_of(plan: &Plan, python: &Python, library: Library) -> Result<Start,
         &plan.version,
         &lock,
         &python.interpreter.version,
+        plan.development,
     )
     .ok_or_else(|| {
         "Bu eklentinin Python ortamı hazırlanmadı: Eklentiler › Python ortamı.".to_owned()

@@ -157,6 +157,7 @@ fn the_whole_lifecycle_leaves_nothing_of_a_lease_behind() {
     let temp = Temp::new("yasam");
     let mut r = open(&temp.0);
     let first = install(&mut r, &package(ID, "1.0.0", &[]));
+    assert!(!r.developed(ID), "from a file: a published version's environment");
     let l1 = first.activation.unwrap().unwrap().lease;
     assert_eq!(r.state(ID), Some(State::Active));
     assert_eq!(r.contributions().len(), 1);
@@ -795,6 +796,9 @@ fn python_contributions_wait_for_the_choice_and_a_working_folder_reloads_cleanly
             .any(|s| s.id == "ext.tr.ornek.mebis.init-schema" && s.reason.contains("Python"))
     );
     assert_eq!(r.extensions()[0].trust, Trust::Local);
+    // Being developed: its Python takes a development environment (docs/adr/8057 §97); an unknown one is not.
+    assert!(r.developed("tr.ornek.mebis"));
+    assert!(!r.developed("tr.ornek.yok"));
     // The author changes a title in the working folder and reloads: same version, a new lease, nothing old left.
     let path = folder.join("manifest.json");
     let text = fs::read_to_string(&path)
