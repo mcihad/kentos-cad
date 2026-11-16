@@ -47,9 +47,9 @@ const USAGE: &str = "Kullanım:
                                                     satırlı rapor (yapay zekâ ajanlarının tek adımda düzelteceği)
   kentos kek test <klasör> [--install-python] [--json]
                                                     doğrular, geçici bir kayıt defterine kurar, Python ortamını
-                                                    kilidinden hazırlar ve araçların örneklerini pencere açmadan
-                                                    çalıştırır (sürekli tümleştirmenin komutu; çıkış 0 geçti,
-                                                    1 kaldı, 2 sınanamadı)
+                                                    kilidinden hazırlar; örneklerini ve tests/ sınamalarını
+                                                    (unittest) pencere açmadan çalıştırır (sürekli tümleştirmenin
+                                                    komutu; çıkış 0 geçti, 1 kaldı, 2 sınanamadı)
   kentos kek new <klasör> --id <kimlik> --name <ad> [--summary <cümle>] [--module cbs|harita|mimari|yol]
                  [--utility] [--with command,processing,audit,expression,mapTool,schema,panel]
                                                     doğrulamadan geçen bir eklenti iskeleti yazar

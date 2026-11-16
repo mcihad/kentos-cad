@@ -4550,3 +4550,26 @@ alanı reddetmeden okunur), masaüstü `view.rs` (`report_card`).
 - **Sınamalar:** paylaşılan katalog sınamaları 4 (paketler, örneksiz ve Python'suz pakette alanların yazılmaması,
   tanınmayan alanla okuma).
 - **Kalan:** sunucu kataloğunun karnesi: geçen kapılar ve inceleme derinliği (ADR 8059; masaüstüne bağlandığında).
+
+## §87. Paketin kendi sınamaları: `kek test` `tests/`'i `unittest` ile eklentinin ortamında (`ADIM 21`, §74'ün kalanı)
+
+**16 Kasım.** Kod: komut satırı `kek_test/own.rs` (yeni: `run`, `read_result`), `kek_test.rs` (rapor ve çıkış kodu),
+`main.rs` (yardım); Vitrin 1.0.54 (`tests/test_mantik.py`).
+
+- **Sorun.** `kek test` örnekleri (§48, §75, §78) koşturuyordu; yazarın kendi sınamaları (yardımcı işlevler, hesap
+  ayrıntıları) için bir yer yoktu. Sürekli tümleştirmede ikinci bir komut, ikinci bir ortam gerekirdi.
+- **Karar: `tests/test_*.py`, Python'un `unittest`'i, eklentinin ortamı.** Örneklerden sonra, klasörde `tests/test_*.py`
+  varsa `python -B -m unittest discover -s tests -v` eklentinin hazırlanmış ortamında, yazarın klasöründe çalışır; kod
+  `src`'den (`PYTHONPATH`), KentOS'un kitaplığı ortamdan gelir. pytest değil: kilidin getirmesi gereken bir paket
+  olurdu, atölyedeki ajan uv çalıştıramaz; KentOS'un kendi Python sınamaları da `unittest`'le. Başlangıç klasörü kök
+  sayılır: `tests/__init__.py` gerekmez (ilk denemede `-t .` onu istedi: "Start directory is not importable").
+- **Rapor:** "Sınamalar (tests/, unittest): 5 sınamanın hepsi geçti."; kalanda unittest'in çıktısı (yazarın dosyasının
+  satırıyla) ve "3 sınamadan 1 tanesi kaldı (1 başarısız, 0 hata)"; pytest biçimli düz işlevler ("NO TESTS RAN") ne
+  yapılacağıyla söylenir; 300 saniyede bitmeyen durdurulur. `--json`'da `tests` alanı (`ran`, `failures`, `errors`,
+  çıktının sonu). Kalan sınama çıkışı 1 yapar; sonuç cümlesi örneklerinkiyle birlikte.
+- **Gerçek koşu:** mevzuatın kopyasında bilerek kalan bir sınama: çıkış 1, iz kaydı yazarın `tests/test_kacis.py`'sinin
+  18. satırı; düzeltince çıkış 0. Vitrin'de ilk koşu göreli klasörle (`kek test samples/…`) "No module named 'vitrin'"
+  verdi: alt süreç klasörde başladığı için göreli `PYTHONPATH` başka yeri gösteriyordu; klasör mutlak yapıldı. Vitrin
+  1.0.54: 9 örnek ve 5 sınama geçti; deneme profilinde 1.0.53 → 1.0.54 gerçek pencerede güncellendi.
+- **Sınamalar:** komut satırı (unittest'in sözleri: geçen, kalan, hata, hiç sınama yok, süre aşımı).
+- **Kalan:** sürekli tümleştirme şablonu (komut satırının indirilebilir dağıtımı yok).

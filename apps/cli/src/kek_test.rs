@@ -11,6 +11,8 @@
 //!    installed there; `--install-python` installs it with uv when it is not (a download its caller asked for).
 //! 4. **Its tools' examples run** (§48) on synthetic drawings in its version's process, every tool's (a desktop-only
 //!    tool's code runs the same way), each checked against what it expects; a failure's traceback is said with it.
+//! 5. **Its own tests run** (§87): `tests/test_*.py` with Python's `unittest` in its environment, its code from the
+//!    folder's `src` ([`own`]).
 //!
 //! Exit codes: 0 every example passed (or there were none), 1 the extension failed (refused, its lock, an example), 2
 //! the test could not run (a wrong command, an unreadable folder, no uv, no Python, no network).
@@ -29,6 +31,7 @@ use serde_json::{Value, json};
 
 use setup::{environment, install_into, python_of};
 
+mod own;
 mod setup;
 
 /// Why the test ended before its examples: the extension's (exit 1) or the computer's (exit 2).
@@ -157,11 +160,50 @@ pub(crate) fn run(folder: &Path, json: bool, install: bool) -> ExitCode {
         })
         .unwrap_or_default();
     report["notes"] = json!(notes);
+    // The package's own tests (§87), its code from the author's folder.
+    let tests = own::run(folder, &ready.python);
+    if let Some(t) = &tests {
+        if !json {
+            say!(
+                "Sınamalar (tests/, unittest): {} ({})",
+                t["summary"].as_str().unwrap_or_default(),
+                seconds(t["ms"].as_u64().unwrap_or_default())
+            );
+            if t["status"] != "passed" {
+                say!(
+                    "  {}",
+                    t["output"]
+                        .as_str()
+                        .unwrap_or_default()
+                        .trim_end()
+                        .replace('\n', "\n  ")
+                );
+            }
+        }
+        report["tests"] = t.clone();
+    }
+    let tests_failed = tests.as_ref().is_some_and(|t| t["status"] != "passed");
+    let tests_said = tests
+        .as_ref()
+        .and_then(|t| t["summary"].as_str())
+        .map(|s| format!(" Sınamalar: {s}"))
+        .unwrap_or_default();
     let Some(mut examples) = examples else {
-        let said = "Araçlarda, denetim kurallarında ve ifade işlevlerinde örnek yok: eklenti doğrulandı ve ortamı \
-                    hazırlandı, çalıştırılacak örnek yok. Aracın örneği tanımında (examples), kuralınki kendi \
-                    dosyasında (entrypoints.audits[].examples), ifadeninki manifestte \
-                    (entrypoints.expressions[].examples).";
+        if let Some(t) = &tests {
+            let said = format!("Örnek yok.{tests_said}",);
+            let code = if t["status"] == "passed" { 0 } else { 1 };
+            return end(
+                report,
+                json,
+                if code == 0 { "passed" } else { "failed" },
+                &said,
+                code,
+            );
+        }
+        let said = "Araçlarda, denetim kurallarında ve ifade işlevlerinde örnek, tests/ klasöründe sınama yok: eklenti \
+                    doğrulandı ve ortamı hazırlandı, çalıştırılacak bir şey yok. Aracın örneği tanımında (examples), \
+                    kuralınki kendi dosyasında (entrypoints.audits[].examples), ifadeninki manifestte \
+                    (entrypoints.expressions[].examples); sınamalar tests/test_*.py'de, unittest ile.";
         return end(report, json, "passed", said, 0);
     };
     for row in examples["examples"].as_array_mut().into_iter().flatten() {
@@ -204,9 +246,12 @@ pub(crate) fn run(folder: &Path, json: bool, install: bool) -> ExitCode {
         }
     }
     let failed = examples["failed"].as_u64().unwrap_or_default();
-    let said = examples["summary"].as_str().unwrap_or_default().to_owned();
+    let said = format!(
+        "{}{tests_said}",
+        examples["summary"].as_str().unwrap_or_default()
+    );
     report["examples"] = examples;
-    if failed == 0 {
+    if failed == 0 && !tests_failed {
         end(report, json, "passed", &said, 0)
     } else {
         end(report, json, "failed", &said, 1)

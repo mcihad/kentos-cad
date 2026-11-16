@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.54 — 16 Kasım 2026
+
+- Paketin kendi sınamaları (`tests/test_mantik.py`, Python'un `unittest`'i): "Ada/parsel yazımı" işlevi ve Yapı
+  özeti'nin çubuk grafiği. `kentos kek test` örneklerden sonra onları eklentinin ortamında çalıştırır.
+
 ## 1.0.53 — 16 Kasım 2026
 
 - "Ada/parsel yazımı" ifade işlevinin örnekleri (manifestte `examples`): `("101", "1")` → `"101/1"`, sayı olarak gelen
