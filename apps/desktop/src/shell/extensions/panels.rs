@@ -118,6 +118,8 @@ pub(crate) struct OpenPanel {
     pub(crate) images: BTreeMap<String, iced::widget::image::Handle>,
     /// A dialog shown as a wizard (`ctx.dialog(…, steps=True)`, dialogs.rs): its tabs are the steps, no tab bar.
     pub(crate) steps: bool,
+    /// Each shape picker's drawn shape, as GeoJSON (panel_points.rs, docs/adr/8057 §62).
+    pub(crate) geoms: BTreeMap<String, Value>,
 }
 
 /// A component's rules, compiled against the panel's inputs (Kapı 1 passed them; one that does not compile is none).
@@ -178,6 +180,10 @@ pub(crate) enum PanelEvent {
     PickFile(String),
     /// A point picker's Haritadan seç: a point picked on the map, the field's words then (panel_points.rs).
     PickPoint(String),
+    /// A shape picker's Haritada çiz: a shape drawn on the map (panel_points.rs).
+    DrawShape(String),
+    /// A shape picker's ✕: its shape let go.
+    ClearShape(String),
     /// A number field's − (−1) or + (1): its value by its step.
     Step(String, i8),
     /// The open panel at this place in the tabs shown.
@@ -226,6 +232,7 @@ impl OpenPanel {
             tab: None,
             images: BTreeMap::new(),
             steps: false,
+            geoms: BTreeMap::new(),
         };
         // The sections folded when it opens.
         for (at, c) in panel.definition.body.iter().enumerate() {
@@ -412,7 +419,8 @@ impl OpenPanel {
             | PanelEvent::Picked(id, _)
             | PanelEvent::Toggle(id, _)
             | PanelEvent::Pick(id)
-            | PanelEvent::Unpick(id) => Some(id),
+            | PanelEvent::Unpick(id)
+            | PanelEvent::ClearShape(id) => Some(id),
             _ => None,
         };
         if changed.is_some_and(|id| self.invalid.as_ref().is_some_and(|(at, _)| at == id)) {
@@ -456,6 +464,15 @@ impl OpenPanel {
         c.required() || self.holds(at, |r| r.required.as_ref()) == Some(true)
     }
 
+    /// Whether a shown input it asks for has no value yet: a change's command waits for it (docs/adr/8057 §62).
+    pub(crate) fn waits_for_value(&self) -> bool {
+        self.definition
+            .body
+            .iter()
+            .enumerate()
+            .any(|(at, c)| self.shown(at, c) && self.asked(at, c) && self.missing(c).is_some())
+    }
+
     /// A rule of component `at` worked out from the panel's values; none when it has no such rule.
     fn holds(
         &self,
@@ -486,6 +503,9 @@ impl OpenPanel {
             Component::PointPicker { .. } => typed()
                 .and_then(kentos_extensions::ui_panel::typed_point)
                 .map(kentos_extensions::ui_panel::point_words),
+            Component::ShapePicker { .. } => {
+                self.geoms.get(id).map(super::panel_points::shape_words)
+            }
             Component::NumberField { .. } => typed().and_then(number_of).map(|n| n.to_string()),
             Component::DateField { .. } => {
                 typed().and_then(kentos_extensions::ui_panel::typed_date)
@@ -542,7 +562,8 @@ impl OpenPanel {
             | Component::DateTimeField { label, .. }
             | Component::FilePicker { label, .. }
             | Component::CrsPicker { label, .. }
-            | Component::PointPicker { label, .. } => label,
+            | Component::PointPicker { label, .. }
+            | Component::ShapePicker { label, .. } => label,
             _ => return None,
         };
         match c {
@@ -575,6 +596,8 @@ impl OpenPanel {
                 .then(|| {
                     format!("“{label}”: nokta verilmedi (x, y yazın ya da Haritadan seç'e basın).")
                 }),
+            Component::ShapePicker { .. } => (!self.geoms.contains_key(id))
+                .then(|| format!("“{label}”: çizilmedi (Haritada çiz'e basın).")),
             _ => self
                 .texts
                 .get(id)
@@ -589,6 +612,13 @@ impl OpenPanel {
             Component::TextField { id, .. } => {
                 let text = self.texts.get(id).map_or("", |t| t.trim());
                 out.insert(id.clone(), json!(text));
+            }
+            // A drawn shape: GeoJSON, none when empty (docs/adr/8057 §62).
+            Component::ShapePicker { id, .. } => {
+                out.insert(
+                    id.clone(),
+                    self.geoms.get(id).cloned().unwrap_or(Value::Null),
+                );
             }
             // A point: `[x, y]`, none when empty (docs/adr/8057 §57).
             Component::PointPicker { id, label, .. } => {
@@ -1241,6 +1271,12 @@ impl App {
             }
             PanelEvent::Pick(id) => return self.ext_panel_pick(at, &id),
             PanelEvent::PickPoint(id) => return self.ext_panel_pick_point(at, &id),
+            PanelEvent::DrawShape(id) => return self.ext_panel_draw_shape(at, &id),
+            PanelEvent::ClearShape(id) => {
+                panel.geoms.remove(&id);
+                panel.recalculate();
+                return self.ext_panel_changed(at, &id);
+            }
             PanelEvent::Step(id, sign) => {
                 panel.step(&id, sign);
                 panel.recalculate();
@@ -1378,7 +1414,8 @@ impl App {
     }
 
     /// An input changed: its `onChange` command runs with the panel's values, its rows to the panel's first table. A
-    /// change while a command runs waits for it: one rerun, with the values then.
+    /// change while a command runs waits for it: one rerun, with the values then. While an input it asks for has no
+    /// value yet, the command waits saying nothing, and the rows given before go.
     pub(super) fn ext_panel_changed(&mut self, at: usize, input: &str) -> Task<Message> {
         let Some(panel) = self.extensions.panels.get_mut(at) else {
             return Task::none();
@@ -1395,6 +1432,16 @@ impl App {
         };
         if panel.running.is_some() {
             panel.rerun = Some(input.to_owned());
+            return Task::none();
+        }
+        // A change runs its command only with the values it asks for. One still to be given (an area let go with ✕,
+        // a box ticked before the area is drawn) is not a mistake to say, as a button's press says it: said in red
+        // twice, real window. The answer to the values before goes: it is not the answer to these.
+        if panel.waits_for_value() {
+            panel.said = None;
+            if let Some(table) = panel.table_of(None) {
+                panel.tables.remove(&table);
+            }
             return Task::none();
         }
         self.ext_panel_start(at, input, command, None)

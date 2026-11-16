@@ -209,6 +209,20 @@ pub enum Component {
         #[serde(default, rename = "onChange")]
         on_change: Option<String>,
     },
+    /// A line or an area drawn on the map (docs/adr/8057 §62): "Haritada çiz" draws it with KentOS's capture (snaps
+    /// apply, Esc leaves the field as it was), its ✕ empties it; its value the shape as GeoJSON in the drawing's plane
+    /// (a rectangle a Polygon of its corners, a circle a Polygon of 64 chords with `circle`), none when empty.
+    ShapePicker {
+        id: String,
+        label: String,
+        /// What the user draws.
+        shape: PickShape,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
+    },
     /// The objects selected in the drawing, taken when the user asks: of the layer the panel's layer picker `layer`
     /// holds and of `geometry`'s type, when given. Its value is their persistent ids (`multiple`, the default), else
     /// one id or none.
@@ -438,6 +452,7 @@ impl Component {
             | Component::FilePicker { id, .. }
             | Component::CrsPicker { id, .. }
             | Component::PointPicker { id, .. }
+            | Component::ShapePicker { id, .. }
             | Component::DateField { id, .. }
             | Component::TimeField { id, .. }
             | Component::DateTimeField { id, .. }
@@ -463,6 +478,7 @@ impl Component {
             | Component::FilePicker { on_change, .. }
             | Component::CrsPicker { on_change, .. }
             | Component::PointPicker { on_change, .. }
+            | Component::ShapePicker { on_change, .. }
             | Component::DateField { on_change, .. }
             | Component::TimeField { on_change, .. }
             | Component::DateTimeField { on_change, .. }
@@ -483,6 +499,7 @@ impl Component {
             | Component::FilePicker { required, .. }
             | Component::CrsPicker { required, .. }
             | Component::PointPicker { required, .. }
+            | Component::ShapePicker { required, .. }
             | Component::MultiSelect { required, .. }
             | Component::DateField { required, .. }
             | Component::TimeField { required, .. }
@@ -504,6 +521,7 @@ impl Component {
                 | Component::FilePicker { .. }
                 | Component::CrsPicker { .. }
                 | Component::PointPicker { .. }
+                | Component::ShapePicker { .. }
                 | Component::DateField { .. }
                 | Component::TimeField { .. }
                 | Component::DateTimeField { .. }
@@ -664,6 +682,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
             "defaultName",
         ],
         "crsPicker" | "pointPicker" => &["id", "label", "value", "onChange", "required"],
+        "shapePicker" => &["id", "label", "shape", "onChange", "required"],
         "checkbox" => &["id", "label", "value", "onChange"],
         "dateField" | "timeField" | "dateTimeField" => {
             &["id", "label", "value", "min", "max", "onChange", "required"]
@@ -689,8 +708,29 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
 }
 
 const TYPES: &str = "text, section, divider, textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, layerPicker, \
-                     fieldPicker, featurePicker, filePicker, crsPicker, pointPicker, checkbox, button, table, tree, card, \
-                     stats, chart, image";
+                     fieldPicker, featurePicker, filePicker, crsPicker, pointPicker, shapePicker, checkbox, button, table, \
+                     tree, card, stats, chart, image";
+
+/// What a shape picker asks the user to draw (docs/adr/8057 §62).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub enum PickShape {
+    Line,
+    Polygon,
+    Rectangle,
+    Circle,
+}
+
+impl PickShape {
+    /// The GeoJSON type its shape has.
+    pub fn geojson_type(self) -> &'static str {
+        match self {
+            PickShape::Line => "LineString",
+            _ => "Polygon",
+        }
+    }
+}
 
 /// A point given as JSON (`[x, y]`, two finite numbers); none otherwise.
 pub fn point_value(value: &Value) -> Option<[f64; 2]> {
@@ -1383,6 +1423,20 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             "filePicker" => files::check(c, &at, &mut add),
             // Its value a system of KentOS's list (crs.rs, docs/adr/8057 §45).
             "crsPicker" => crs::check(c, &at, &mut add),
+            // What the user draws: a line or an area (docs/adr/8057 §62).
+            "shapePicker" => {
+                if !c
+                    .get("shape")
+                    .and_then(Value::as_str)
+                    .is_some_and(|k| ["line", "polygon", "rectangle", "circle"].contains(&k))
+                {
+                    add(
+                        format!("{at}/shape"),
+                        "shape çizilecek şekil olmalı: line, polygon, rectangle ya da circle."
+                            .to_owned(),
+                    );
+                }
+            }
             // Its value a point: two finite numbers (docs/adr/8057 §57).
             "pointPicker" => {
                 if let Some(value) = c.get("value").filter(|v| !v.is_null())
@@ -1578,6 +1632,24 @@ mod tests {
                   "category": "ada" }
             ]
         })
+    }
+
+    /// A shape picker draws a line, an area, a rectangle or a circle; another shape is said where it is written.
+    #[test]
+    fn a_shape_picker_says_what_is_drawn() {
+        let value = json!({ "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Alan",
+            "body": [
+                { "type": "shapePicker", "id": "alan", "label": "Alan", "shape": "polygon", "required": true },
+                { "type": "shapePicker", "id": "yol", "label": "Yol", "shape": "spiral" }
+            ] });
+        let said: Vec<String> = check("p.json", &value, &[])
+            .into_iter()
+            .filter_map(|p| p.at)
+            .collect();
+        assert!(said.contains(&"/body/1/shape".to_owned()), "{said:?}");
+        assert!(!said.iter().any(|at| at.starts_with("/body/0")), "{said:?}");
+        assert_eq!(PickShape::Line.geojson_type(), "LineString");
+        assert_eq!(PickShape::Circle.geojson_type(), "Polygon");
     }
 
     /// A divider needs no id; a number field's step is a positive number, said where it is written otherwise.

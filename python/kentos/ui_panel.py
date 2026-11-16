@@ -393,6 +393,34 @@ def point_picker(
     return out
 
 
+def shape_picker(
+    id: str,
+    label: str,
+    shape: str,
+    *,
+    on_change: str | None = None,
+    required: bool = False,
+    visible_when: str | None = None,
+    required_when: str | None = None,
+    tab: str | None = None,
+) -> dict[str, Any]:
+    """A line or an area drawn on the map (docs/adr/8057 §62): "Haritada çiz" draws it with KentOS's capture (snaps
+    apply, Esc leaves the field as it was), its ✕ empties it; its value the shape as GeoJSON in the drawing's plane
+    (a rectangle a Polygon of its corners, a circle a Polygon of 64 chords with `circle`), none when empty."""
+    out: dict[str, Any] = {"type": "shapePicker", "id": id, "label": label, "shape": shape}
+    if on_change is not None:
+        out["onChange"] = on_change
+    if required:
+        out["required"] = True
+    if visible_when is not None:
+        out["visibleWhen"] = visible_when
+    if required_when is not None:
+        out["requiredWhen"] = required_when
+    if tab is not None:
+        out["tab"] = tab
+    return out
+
+
 def feature_picker(
     id: str,
     label: str,
@@ -818,7 +846,7 @@ def card(
 
 __all__ = [
     "Choice", "choice", "file_filter", "panel", "text", "section", "divider", "text_field", "number_field", "select",
-    "layer_picker", "field_picker", "file_picker", "crs_picker", "point_picker", "feature_picker", "multi_select",
-    "date_field", "time_field", "date_time_field", "checkbox", "button", "table", "tree", "stats", "chart", "image",
-    "card",
+    "layer_picker", "field_picker", "file_picker", "crs_picker", "point_picker", "shape_picker", "feature_picker",
+    "multi_select", "date_field", "time_field", "date_time_field", "checkbox", "button", "table", "tree", "stats",
+    "chart", "image", "card",
 ]

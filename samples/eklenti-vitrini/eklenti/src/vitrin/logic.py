@@ -154,6 +154,40 @@ def yakin_yapilar(ctx: ext.CommandContext) -> ext.CommandResult:
     return ctx.report(satirlar, title="Yakın yapılar", message=f"{uzaklik:g} m içinde {len(satirlar)} yapı.")
 
 
+@ext.command("alandaki-yapilar")
+def alandaki_yapilar(ctx: ext.CommandContext) -> ext.CommandResult:
+    """"Alandaki yapılar" panelinin alanı çizilince ya da kutusu değişince: panelin şekil seçicisindeki alana
+    (ctx.params["alan"]: haritada çizilen GeoJSON Polygon, shapely'nin shape() ile okunur) giren yapılar, alanın içinde
+    kalan taban alanı ve payıyla, büyükten küçüğe; "Yalnızca tamamı içinde kalanlar" işaretliyse yalnız alanın içinde
+    kalanlar. Satırlar Ara'nınki gibi: tıklanan satır yapıyı gösterir."""
+    if ctx.doc is None:
+        return ctx.message("Açık çizim yok.")
+    alan = ctx.params.get("alan")
+    if not alan:
+        return ctx.message("Önce haritada bir alan çizin.")
+    yapi = _katman(ctx.doc, "yapi")
+    if yapi is None:
+        return ctx.message("Çizimde 'yapi' kimlikli ya da adlı katman yok.")
+    sinir = shape(alan)
+    tamami = bool(ctx.params.get("tamami"))
+    satirlar = []
+    for kayit in ctx.doc.entities(layer=yapi, kinds=["polygon"]):
+        taban = Polygon(kayit.entity.pts)
+        icinde = taban.intersection(sinir).area
+        if icinde <= 0 or (tamami and not sinir.covers(taban)):
+            continue
+        satirlar.append(
+            {
+                "uid": kayit.uid,
+                "no": (kayit.entity.attrs or {}).get("no") or "—",
+                "içinde (m²)": round(icinde, 1),
+                "pay (%)": round(100 * icinde / taban.area),
+            }
+        )
+    satirlar.sort(key=lambda s: -s["içinde (m²)"])
+    return ctx.report(satirlar, title="Alandaki yapılar", message=f"{sinir.area:.0f} m²'lik alanda {len(satirlar)} yapı.")
+
+
 @ext.command("yapi-ara")
 def yapi_ara(ctx: ext.CommandContext) -> ext.CommandResult:
     """"Yapı ara" panelinin düğmesi: numarasında aranan geçen yapıları alanlarıyla listeler. Panelin değerleri

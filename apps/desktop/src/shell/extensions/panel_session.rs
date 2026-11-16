@@ -72,6 +72,7 @@ fn kind_of(c: &Component) -> &'static str {
         Component::Select { .. } => "select",
         Component::CrsPicker { .. } => "crsPicker",
         Component::PointPicker { .. } => "pointPicker",
+        Component::ShapePicker { .. } => "shapePicker",
         Component::LayerPicker { .. } => "layerPicker",
         Component::FieldPicker { .. } => "fieldPicker",
         Component::FeaturePicker { .. } => "featurePicker",
@@ -313,6 +314,8 @@ pub(super) fn set(
         Choice(String),
         Chosen(Vec<String>),
         Picks(Vec<String>),
+        /// A drawn shape as GeoJSON; none takes it away.
+        Shape(Option<Value>),
     }
     let value = match props.get("value") {
         None => None,
@@ -415,6 +418,21 @@ pub(super) fn set(
                 }
                 Given::Picks(uids)
             }
+            // A drawn shape: GeoJSON of the shape's type, none to take it away (docs/adr/8057 §62).
+            Component::ShapePicker { shape, .. } => match given {
+                Value::Null => Given::Shape(None),
+                Value::Object(g)
+                    if g.get("type").and_then(Value::as_str) == Some(shape.geojson_type()) =>
+                {
+                    Given::Shape(Some(given.clone()))
+                }
+                _ => {
+                    return Err(wrong(format!(
+                        "value bir GeoJSON {} olmalı (ya da None)",
+                        shape.geojson_type()
+                    )));
+                }
+            },
             _ => {
                 return Err(not_taken(
                     "value",
@@ -492,6 +510,12 @@ pub(super) fn set(
         }
         Given::Picks(uids) => {
             panel.picks.insert(id.clone(), uids);
+        }
+        Given::Shape(Some(shape)) => {
+            panel.geoms.insert(id.clone(), shape);
+        }
+        Given::Shape(None) => {
+            panel.geoms.remove(&id);
         }
     }
     // A value the code put right is not wrong any more.

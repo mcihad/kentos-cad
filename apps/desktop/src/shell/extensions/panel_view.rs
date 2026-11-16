@@ -523,6 +523,15 @@ impl App {
                         super::panel_points::point_field(p, id, on(id), event, enter.clone()),
                     );
                 }
+                // A line or an area drawn on the map (panel_points.rs, docs/adr/8057 §62).
+                Component::ShapePicker {
+                    id, label: words, ..
+                } => {
+                    form = form.field(
+                        words.clone(),
+                        super::panel_points::shape_field(p, id, on(id), event),
+                    );
+                }
                 // KentOS's coordinate systems, each with its datum (panel_crs.rs, docs/adr/8057 §45).
                 Component::CrsPicker {
                     id, label: words, ..

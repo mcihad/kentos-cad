@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 1.0.46 — 16 Kasım 2026
+
+- "Alandaki yapılar" paneli (Vitrin › Panel): Alan alanı bir şekil seçicisi (`shapePicker`, `"shape": "polygon"`):
+  Haritada çiz'e basıp alan çizilir (kenetlenir; Enter ya da çift tık bitirir, Esc vazgeçer), alan alanın yanında köşe
+  sayısı ve büyüklüğüyle yazılır, ✕ bırakır. Alan çizilince ve "Yalnızca tamamı içinde kalanlar" değişince
+  `alandaki-yapilar` komutu alana giren yapıları, içinde kalan taban alanı ve payıyla listeler (komut alanı GeoJSON
+  olarak alır, shapely ile okur).
+
 ## 1.0.45 — 16 Kasım 2026
 
 - "Katmanı CSV'ye yaz" iki adımlı bir sihirbaz (`ctx.dialog(…, steps=True)`): Sütunlar adımında hangi özniteliklerin

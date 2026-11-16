@@ -1301,6 +1301,12 @@ impl App {
         let Some(captured) = self.extensions.captured.take() else {
             return Task::none();
         };
+        // A panel's shape picker asked for it (panel_points.rs, docs/adr/8057 §62), not a map tool.
+        if self.extensions.shape_pick.is_some() {
+            return self
+                .ext_panel_shape_drawn(captured)
+                .unwrap_or_else(Task::none);
+        }
         let Some(c) = self.extensions.capturing.clone() else {
             return Task::none();
         };

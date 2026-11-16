@@ -20,6 +20,8 @@ mod panel_crs;
 mod panel_files;
 // A panel's pictures: the PNG an extension's code gives (docs/adr/8057 §40).
 mod panel_image;
+// The shown panel's drawn area or line and its point, on the map (docs/adr/8057 §62).
+pub(crate) mod panel_marks;
 // A panel's point picker: a point typed or picked on the map (docs/adr/8057 §57).
 mod panel_points;
 // A panel's rows: components side by side, the cells of one line (docs/adr/8057 §55).
@@ -171,6 +173,8 @@ pub(crate) struct Extensions {
     pub(crate) point_pick: Option<panel_points::PointPick>,
     /// The panel (by place) and the field a point was just picked for: its onChange command after the update.
     pub(crate) point_changed: Option<(usize, String)>,
+    /// A shape being drawn on the map for a panel's shape picker (panel_points.rs).
+    pub(crate) shape_pick: Option<panel_points::PointPick>,
     /// The shape just drawn, waiting for its run after the update; none: Esc.
     pub(crate) captured: Option<Option<kentos_interaction::capture::Shape>>,
     /// The drawn shape the next map tool run gives its code (GeoJSON).
@@ -240,6 +244,7 @@ impl Default for Extensions {
             capturing: None,
             point_pick: None,
             point_changed: None,
+            shape_pick: None,
             captured: None,
             capture_shape: None,
             target_params: None,

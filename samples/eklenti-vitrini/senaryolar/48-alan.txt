@@ -1,0 +1,38 @@
+# Panelden alan çizimi: Vitrin › Alandaki yapılar'ın Alan alanı bir şekil seçicisi (shapePicker, polygon). Hedef
+# düğmesine (Haritada çiz) basılıp haritada dört köşe tıklanır, Enter bitirir: alan, köşe sayısı ve büyüklüğüyle alana
+# yazılır; alan değiştiği için komut çalışır ve alana giren üç yapı içinde kalan taban alanı ve payıyla tabloda
+# listelenir; alan, panel açıkken haritada kesikli çerçeveyle durur. "Yalnızca tamamı içinde kalanlar" işaretlenince
+# kesişen ikisi çıkar. ✕ alanı bırakır: haritadan ve tablodan gider, komut çalışmaz, uyarı çıkmaz. (Önce 01.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 743 57    # Alandaki yapılar (şeritte, Panel grubunda)
+wait 2500
+shot 48-panel
+click 1378 324  # Haritada çiz (hedef düğmesi)
+wait 800
+click 330 515   # alanın köşeleri: büyük yapının sağ kenarı, ortadaki yapı ve sağdaki yapının sol yarısı
+wait 400
+click 605 515
+wait 400
+click 605 700
+wait 400
+move 330 700
+wait 600
+shot 48-ciziliyor
+click 330 700
+wait 400
+key Return
+wait 9000
+shot 48-sonuc
+click 1288 363  # Yalnızca tamamı içinde kalanlar
+wait 4000
+shot 48-tamami
+click 1413 324  # ✕: alanı bırak
+wait 1500
+shot 48-birakildi

@@ -1815,7 +1815,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | CBS girdisi | katman seçici | var | `layerPicker` (tür süzgeci) | |
 | | nesne seçici | var | `featurePicker` (çizimdeki seçimden) | haritada tıklatan kip bilinçli olarak yok (§24) |
 | | alan seçici | var | `fieldPicker` (bağlı katmanın alanları) | |
-| | koordinat/harita seçimi | var | `pointPicker` (`x, y` yazılır ya da Haritadan seç ile haritada gösterilir, kenetlenir; değeri `[x, y]`, §57); harita aracı `entrypoints.mapTools` (yakalama türleri) | panelden çizgi/alan seçimi yok; pencerede (`ctx.dialog`) yok |
+| | koordinat/harita seçimi | var | `pointPicker` (`x, y` yazılır ya da Haritadan seç ile haritada gösterilir, kenetlenir; değeri `[x, y]`, §57); çizgi ve alan `shapePicker` (haritada çizilir, değeri GeoJSON, §62); harita aracı `entrypoints.mapTools` (yakalama türleri) | pencerede (`ctx.dialog`) yok |
 | | CRS/birim | var | `crsPicker` (KentOS'un sistemleri, değeri `EPSG:<kod>`, verilmezse çizimin sistemi; §45) | birim seçici yok |
 | | ilişki başvurusu | yok | — | ilişkiler şemada (§23), seçicisi yok |
 | Kaynak ve çıktı | dosya/eser seçici, ek | var | `filePicker` (okunacak dosya: yolu yazılır ya da bilgisayarın dosya penceresinden seçilir, §41; `save` ile yazılacak dosyanın yeri, §44) | `files.userSelected` ister, kaydetme yeri `files.userSelectedWrite`; ek sonraki dilim |
@@ -3413,3 +3413,48 @@ rehberi; Vitrin 1.0.45.
 - **Kalan:** (1) UDP ve ABI 9'un altında yol adlı UNIX soketleri (seccomp ile `socket()` reddi, yukarıda). (2)
   `kentosd`'nin açılışta kutunun düzeyini günlüğüne yazması. (3) Windows'ta ve macOS'ta kutu: bugün `require` orada
   kuralı çalıştırmaz. (4) Yayın derlemesinde ölçüm (iş çalıştırıcısının açılışı, buradaki 6.1 ms'nin çoğu, küçülür).
+
+## §62. Panelden çizgi ve alan: `shapePicker` (`ADIM 22`, envanterin "panelden çizgi/alan seçimi")
+
+**16 Kasım.** Kod: paylaşılan `crates/shared/extensions/src/ui_panel.rs` (`Component::ShapePicker`, `PickShape`,
+Kapı 1), `ui_panel/rules.rs`, şema ve Python kurucusu (`ui.shape_picker`), SDK rehberi; masaüstü
+`apps/desktop/src/shell/extensions/panel_points.rs` (`shape_field`, `shape_words`, `ext_panel_draw_shape`,
+`ext_panel_shape_drawn`), yeni `panel_marks.rs` (haritadaki işaret), `panels.rs` (değer, zorunluluk,
+`waits_for_value`), `panel_session.rs` (`ctx.panel.set`), `panel_view.rs`, `runner.rs` (yakalamanın zinciri),
+`cad/marks.rs` (`picked`); Vitrin 1.0.46.
+
+- **Karar: harita aracının yakalaması, panelin alanında.** `shape`: `line`, `polygon`, `rectangle`, `circle`. Haritada
+  çiz (hedef düğmesi) KentOS'un yakalamasını (`Capture`, harita araçlarınınki: kenetlenme; Enter ya da çift tık bitirir,
+  Esc vazgeçer) o türle başlatır, komut satırı panelin ve alanın adını söyler; ✕ alanı bırakır. Yazılarak verilmez:
+  bir alanın köşelerini panelde yazmak işe yaramaz, noktada (§57) yazım vardı.
+- **Karar: değer GeoJSON, çizimin düzleminde.** Kod `ctx.params["alan"]`'ı `{"type": "Polygon", "coordinates":
+  [[[x, y], …]]}` (halka kapalı) ya da `LineString` alır, boşsa None; shapely'nin `shape()`'i doğrudan okur. Dikdörtgen
+  dört köşeli çokgendir; daire 64 köşeli çokgendir ve ayrıca `circle: {center, radius}` taşır. Kod `ctx.panel.set(id,
+  value=…)` ile alanın türünden bir şekil yazar ya da None ile bırakır; başka tür (alan isteyen alana çizgi) "value bir
+  GeoJSON Polygon olmalı" diye reddedilir.
+- **Alanın sözü:** "4 köşe, 673,3 m²", "2 nokta, 5,0 m", "yarıçap 5,0 m, 78,5 m²". İlk sürüm "Alan: 4 köşe, …" diyordu:
+  etiket neyin çizildiğini zaten söylüyor. Sayı birimine bölünmez boşlukla bağlı: dar dock'ta satır virgülden sonra
+  kırılır, "m²" alt satıra tek başına düşmez (gerçek pencere: üç satırdı, iki oldu).
+- **Karar: çizilen alan, panel gösterildikçe haritada.** Gösterilen panelin şekil seçicilerindeki şekil kesikli ve vurgu
+  renginde, alan hafif dolgulu; nokta seçicinin noktası halkayla (§57'ninki de). İlk sürümde alan çizim bitince
+  kayboluyordu: tablo bir alanı anlatıyor, alan görünmüyordu (gerçek pencere). Yalnız gösterilen panelinki (iki panelin
+  alanı karışmaz); gizlenen bileşen (kuralı ya da kodu) bir şey göstermez; çizime bir şey yazılmaz.
+- **Karar: değişiklik eksik değerle çalışmaz ve bir şey demez** (bütün paneller için). `onChange`'li bir değişiklik,
+  panelin sorduğu bir alan boşken (✕ ile bırakılan alan, alan çizilmeden işaretlenen kutu) komutu başlatmaz, alanı
+  kırmızıya döndürmez; eski değerlere verilen cevap (komutun tablosu ve sözü) gider. İlk sürümde ✕'e basınca "“Alan”:
+  çizilmedi" iki yerde kırmızıyla söyleniyor, eski alanın satırları duruyordu (gerçek pencere). Eksiği düğme söyler,
+  eskisi gibi. Vitrin'in öbür panellerinde zorunlu ve `onChange`'li tek alan nokta seçicisidir: davranışları değişmedi.
+- **Pencerede yok** (§57'nin gerekçesi: pencere cevaplanana dek pencereyi tutar). **Satıra girmez:** çizilenin sözü dar
+  dock'ta iki satıra yayılır, yanında başka hücreye yer kalmaz.
+- **Kapı 1:** `shapePicker` `id`, `label`, `shape` (zorunlu), `onChange`, `required` alır; tanınmayan `shape` yerinde
+  söylenir (`/body/<n>/shape`). Kural dili alanı metin olarak okur, boşsa boş.
+- **Vitrin 1.0.46:** "Alandaki yapılar" paneli (Vitrin › Panel): Alan (`shapePicker`, `polygon`, `onChange`), "Yalnızca
+  tamamı içinde kalanlar" (`checkbox`, `onChange`), tablo; `alandaki-yapilar` komutu alanı `shape()` ile okur, alana
+  giren yapıları içinde kalan taban alanı ve payıyla büyükten küçüğe listeler. Gerçek pencerede (48-alan): dört köşe
+  tıklanıp Enter: "4 köşe, 673,3 m²", "673 m²'lik alanda 3 yapı" (150 m² %100, 92,6 m² %64, 71,9 m² %18), alan haritada;
+  kutu işaretlenince 1 yapı; ✕: alan haritadan ve tablodan gitti, söz yok.
+- **Sınamalar:** paylaşılan 1 (türün yerinde söylenmesi, GeoJSON türleri), rehberin ve §25'in türü anması (var olan
+  sınamalar); masaüstü 3 (çizilenin değeri ve sözü, zorunluluk, kodun `set`'i ve yanlışı, ✕; gösterilen panelin alanı ve
+  noktası işaretli, çizgi açık, gizlenen ve yanlış yazılan işaretsiz; değişikliğin eksik alanla sessiz beklemesi, eski
+  satırların gitmesi, düğmenin eksiği söylemesi); Vitrin'in sayıları (15 komut, 5 panel) ve şerit etiketleri; gerçek
+  pencere 48-alan.
