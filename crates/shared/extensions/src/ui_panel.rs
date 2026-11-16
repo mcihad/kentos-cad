@@ -23,6 +23,7 @@ pub const VERSION: u64 = 1;
 /// Components a panel may have.
 pub const MOST_COMPONENTS: usize = 100;
 
+pub mod behaviour;
 pub mod crs;
 mod files;
 /// The components' Python builders, `kentos.ui_panel` (docs/adr/8057 §34), made from [`json_schema`].

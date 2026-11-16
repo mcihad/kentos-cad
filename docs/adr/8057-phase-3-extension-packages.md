@@ -3885,3 +3885,35 @@ Vitrin 1.0.50.
 - **Sınamalar:** paylaşılan 1 (`split` okunur, yanlış türü yerinde söylenir, verilmezse kapalı); masaüstü 1 (bölünmüş
   görünüm kurulur, sürükleme yüksekliği ve çıktıların kaydırması tutulur, çift tık bırakır); Python kurucusunun çıktısı;
   gerçek pencere 52-bolucu.
+
+## §71. Bileşen davranış tablosu: değer, olay, eylem, klavye (`ADIM 22`, "özellik/olay/eylem/erişilebilirlik şeması")
+
+**16 Kasım.** Bileşen envanterinin (§25) kalanı, bileşen başına davranış, tek tabloda:
+`kentos_extensions::ui_panel::behaviour::TABLE`, Kapı 1'in 28 türünün her biri bir satır, Kapı 1'in sırasıyla (test).
+Davranış önceden masaüstünün panel oturumunda tek tek `match`'lerdeydi (`panel_session.rs`); hangi bileşenin neyi
+aldığı yalnız ret iletilerinden öğreniliyordu.
+
+| Sütun | Ne söyler | Tabloda |
+|---|---|---|
+| `value`, `example` | komutun `ctx.params`'ta aldığı değer ve biçimi (boşsa None); `ctx.panel.set(id, value=…)` için bir örnek | 16 tür |
+| `events` | eklentinin kodunu başlatan: `onChange` (kullanıcı değiştirdi), `command` (basıldı) | 14 tür `onChange`, düğme `command` |
+| `sets` | `ctx.panel.set`'in değiştirdikleri (`visible` her bileşende) | `value` 16, `options` 2, `text` 1, `image` 1, `enabled` 8 |
+| `rows`, `focus` | `ctx.panel.rows` doldurur; `ctx.panel.focus` imleci koyar | 5 ve 7 tür |
+| `keys` | klavye: `type` (Tab ulaşır, yazılır, Enter birincil düğme), `choose` (Tab; Boşluk/Enter/F4 açar, ↑↓ adımlar), `toggle` (Tab; Boşluk/Enter), `pointer` (yalnız fare), `shown` (yalnız gösterilir) | 7 · 5 · 1 · 11 · 4 |
+| `namedBy`, `note` | adını veren özellik (`label`, metinde `text`); KentOS'un ayrıca yaptığı (uid'li satıra tıklamak nesneyi gösterir…) | |
+
+- **Tek kaynak:** panel oturumu `set`, `rows` ve `focus`'u tablodan reddeder; ret iletisi alanları tablodan sayar
+  ("“liste” (table) enabled almaz: yalnız textField, numberField, …, button alır."). Bir özellik ve bir değer None
+  verilince (`image`, `value`) kaldırılır; öbürlerinin None'ı dokunmaz (eski davranış).
+- **Klavye sütunu ölçülür, yazılmaz:** masaüstü testi her türü bağlam bileşenleriyle (katman ve nesne seçici, tablo;
+  nesne seçili, ilişki ve ek dolu, satırlar dolu) KentOS'un çizdiği panelde çizer ve iced işlemiyle odaklanabilir
+  öğeleri ve metin girişlerini sayar (Tab'ın saydığı gibi, görünenler): `type` +1/+1, `choose`/`toggle` +1/+0,
+  `pointer`/`shown` 0 (`panel_session::behaviour_tests::the_keyboard_column_is_the_drawn_panels`). Olay sütunu
+  tanımdan (`onChange` okunur ya da reddedilir), `sets`/`rows` sütunları oturumdan (her tür × her özellik, örnek
+  değerle) sınanır.
+- **Ölçümün söylediği (16 Kasım):** Tab 13 türe ulaşıyor (7 yazılan, 5 açılır liste, onay kutusu). Düğme, çoklu seçimin
+  çipleri, nesne seçicinin Seçimi al'ı, şekil seçicinin Haritada çiz'i, bölüm başlığı, ek listesinin düğmeleri ve
+  satırlar yalnız fareyle kullanılıyor: birincil olmayan düğme klavyeyle hiç basılamıyor. Planın kabulü ("gerçek fare
+  ve klavyeyle") bunu kapatmayı istiyor; tablo şimdilik olanı söylüyor.
+- **Erişilebilirlik sınırı:** iced'de ekran okuyucu ağacı yok; tablonun "erişilebilirlik" payı klavye ve ad. Ad, KentOS'un
+  bileşeni andığı yerdeki adıdır (hata iletisi, alanın yanındaki yazı).

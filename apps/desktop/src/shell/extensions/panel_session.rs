@@ -14,6 +14,7 @@
 //!   error (said to its code and its log, not put to the user); nothing of that call is applied.
 //! - **A closed panel** answers `applied: false, closed: true`: the user closed it, not the code's mistake.
 
+use kentos_extensions::ui_panel::behaviour::{self, Prop};
 use kentos_extensions::ui_panel::{Choice, Component};
 use kentos_headless::HeadlessError;
 use serde_json::{Map, Value, json};
@@ -223,12 +224,35 @@ pub(super) fn set(
     let props: &Map<String, Value> = params
         .as_object()
         .ok_or_else(|| refused("invalid_input", "Yama bir sözlük olmalı."))?;
-    let not_taken = |prop: &str, only: &str| {
+    // What the code may change of it is the behaviour table's (docs/adr/8057 §71): asked of another, refused whole.
+    let not_taken = |prop: Prop| {
         refused(
             "invalid_input",
-            format!("“{id}” ({}) {prop} almaz: {only}.", kind_of(&c)),
+            format!(
+                "“{id}” ({}) {} almaz: yalnız {} alır.",
+                kind_of(&c),
+                prop.name(),
+                behaviour::takers(prop).join(", ")
+            ),
         )
     };
+    let takes = behaviour::of(kind_of(&c));
+    for prop in [
+        Prop::Options,
+        Prop::Text,
+        Prop::Image,
+        Prop::Enabled,
+        Prop::Value,
+    ] {
+        // A picture and a value given as None take them away; the others' None leaves them.
+        let given = match prop {
+            Prop::Image | Prop::Value => props.contains_key(prop.name()),
+            _ => props.get(prop.name()).is_some_and(|v| !v.is_null()),
+        };
+        if given && !takes.is_some_and(|b| b.takes(prop)) {
+            return Err(not_taken(prop));
+        }
+    }
     let wrong = |why: String| refused("invalid_input", format!("“{id}” ({}): {why}.", kind_of(&c)));
     // A calculated component's value is its calculation's (docs/adr/8057 §35): the code does not write it.
     if panel.calculated_id(&id)
@@ -249,12 +273,7 @@ pub(super) fn set(
             Component::Select { .. } | Component::MultiSelect { .. } => {
                 Some(options_of(&id, given)?)
             }
-            _ => {
-                return Err(not_taken(
-                    "options",
-                    "yalnız select ve multiSelect seçenek alır",
-                ));
-            }
+            _ => return Err(not_taken(Prop::Options)),
         },
     };
     let words = match props.get("text").filter(|v| !v.is_null()) {
@@ -268,7 +287,7 @@ pub(super) fn set(
                     .take(2000)
                     .collect::<String>(),
             ),
-            _ => return Err(not_taken("text", "yalnız text bileşeninin yazısı değişir")),
+            _ => return Err(not_taken(Prop::Text)),
         },
     };
     // A picture (docs/adr/8057 §40): a PNG as base64, checked and decoded before anything changes; null takes it away.
@@ -284,7 +303,7 @@ pub(super) fn set(
                     ));
                 }
             }),
-            _ => return Err(not_taken("image", "yalnız image bileşeni görsel alır")),
+            _ => return Err(not_taken(Prop::Image)),
         },
     };
     let enabled = match props.get("enabled").filter(|v| !v.is_null()) {
@@ -293,12 +312,6 @@ pub(super) fn set(
             let on = given
                 .as_bool()
                 .ok_or_else(|| wrong("enabled true ya da false olmalı".to_owned()))?;
-            if !(typed(&c) || matches!(c, Component::Button { .. })) {
-                return Err(not_taken(
-                    "enabled",
-                    "düğmeler ile metin, sayı, tarih ve saat alanları kapatılır",
-                ));
-            }
             Some(on)
         }
     };
@@ -448,12 +461,7 @@ pub(super) fn set(
                     )));
                 }
             },
-            _ => {
-                return Err(not_taken(
-                    "value",
-                    "değer tutan bileşenlerin değeri değişir",
-                ));
-            }
+            _ => return Err(not_taken(Prop::Value)),
         }),
     };
     // Applied: the options before the value they hold.
@@ -550,19 +558,18 @@ pub(super) fn rows(panel: &mut OpenPanel, params: &Value) -> Result<String, Head
         .ok_or_else(|| refused("invalid_input", "id gerekli: tablonun kimliği."))?
         .to_owned();
     let c = component(panel, &id)?;
-    if !matches!(
-        c,
-        Component::Table { .. }
-            | Component::Tree { .. }
-            | Component::Stats { .. }
-            | Component::Chart { .. }
-            | Component::Card { .. }
-    ) {
+    if !behaviour::of(kind_of(c)).is_some_and(|b| b.rows) {
+        let takers: Vec<&str> = behaviour::TABLE
+            .iter()
+            .filter(|b| b.rows)
+            .map(|b| b.kind)
+            .collect();
         return Err(refused(
             "invalid_input",
             format!(
-                "“{id}” ({}) satır almaz: satırlar table, tree, card, stats ya da chart'a gider.",
-                kind_of(c)
+                "“{id}” ({}) satır almaz: satırlar {} bileşenlerine gider.",
+                kind_of(c),
+                takers.join(", ")
             ),
         ));
     }
@@ -742,12 +749,18 @@ impl App {
                     .ok_or_else(|| refused("invalid_input", "id gerekli: alanın kimliği."))?;
                 let panel = &self.extensions.panels[at];
                 let c = component(panel, id)?;
-                if !typed(c) {
+                if !behaviour::of(kind_of(c)).is_some_and(|b| b.focus) {
+                    let takers: Vec<&str> = behaviour::TABLE
+                        .iter()
+                        .filter(|b| b.focus)
+                        .map(|b| b.kind)
+                        .collect();
                     return Err(refused(
                         "invalid_input",
                         format!(
-                            "“{id}” ({}) odak almaz: imleç metin, sayı, tarih ve saat alanlarına konur.",
-                            kind_of(c)
+                            "“{id}” ({}) odak almaz: imleç yalnız {} bileşenlerine konur.",
+                            kind_of(c),
+                            takers.join(", ")
                         ),
                     ));
                 }
@@ -805,6 +818,9 @@ impl App {
         }
     }
 }
+
+#[cfg(test)]
+mod behaviour_tests;
 
 #[cfg(test)]
 mod tests {
@@ -1016,11 +1032,12 @@ mod tests {
                 &json!({ "id": "liste", "enabled": false }),
                 None
             )),
-            "invalid_input: “liste” (table) enabled almaz: düğmeler ile metin, sayı, tarih ve saat alanları kapatılır."
+            "invalid_input: “liste” (table) enabled almaz: yalnız textField, numberField, dateField, timeField, \
+             dateTimeField, filePicker, pointPicker, button alır."
         );
         assert_eq!(
             code(set(&mut p, &json!({ "id": "tamam", "text": "x" }), None)),
-            "invalid_input: “tamam” (checkbox) text almaz: yalnız text bileşeninin yazısı değişir."
+            "invalid_input: “tamam” (checkbox) text almaz: yalnız text alır."
         );
         // A hidden required field is not asked of the user.
         assert_eq!(
