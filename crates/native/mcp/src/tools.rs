@@ -1603,6 +1603,15 @@ pub fn resources(server: &Server) -> Vec<Value> {
          tanımının türleri, doğrulama kodlarının anlamı, istekten pakete adımlar ve her katkının doğrulamadan geçen \
          örneği. Ajan aracı extension.sdk aynısını verir.",
     ));
+    let mut text = resource(
+        crate::extensions::SDK_TEXT,
+        "sdk-llms-txt",
+        "Eklenti yazma paketi (düz metin)",
+        "Aynı paket tek bir Markdown dosyası olarak (llms.txt biçimi): rehber, adımlar, yetenekler, katkılar, İşlemler \
+         aracı tanımı, bölümlerin nasıl alınacağı ve kentos.ext imzaları. JSON okumayan bir okuyucu için.",
+    );
+    text["mimeType"] = json!("text/markdown");
+    out.push(text);
     let mut whole = resource(
         "kentos://catalog",
         "catalog",
@@ -1673,6 +1682,15 @@ pub fn read(server: &mut Server, params: &Value) -> Result<Value, Fault> {
         crate::extensions::installed(server.extensions_root.as_deref())
     } else if uri == crate::extensions::SDK_PACK {
         kentos_extensions::sdk_pack()
+    } else if uri == crate::extensions::SDK_TEXT {
+        // Text, not JSON: the file as it is.
+        return Ok(json!({
+            "contents": [{
+                "uri": uri,
+                "mimeType": "text/markdown",
+                "text": kentos_extensions::sdk_text::llms_txt(),
+            }]
+        }));
     } else if let Some(handle) = uri.strip_prefix("kentos://drawing/")
         && let Some(s) = server.drawings.get(handle)
     {

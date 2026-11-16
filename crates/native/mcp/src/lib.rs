@@ -22,7 +22,8 @@
 //!   2026-07-28, `resources/subscribe` before).
 //! - `kentos://sdk/ai-kek-pack` is what an agent writing an extension reads
 //!   first: the SDK's guide, signatures, capabilities, contributions and a
-//!   working example (docs/adr/8057 §20).
+//!   working example (docs/adr/8057 §20); `kentos://sdk/llms.txt` is the
+//!   same as one Markdown file (§77).
 #![forbid(unsafe_code)]
 #![cfg_attr(
     not(test),

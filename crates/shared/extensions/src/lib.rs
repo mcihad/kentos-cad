@@ -45,6 +45,7 @@ pub mod revocations;
 mod schema_check;
 pub mod sdk_pack;
 pub mod sdk_surface;
+pub mod sdk_text;
 mod text;
 pub mod ui_panel;
 pub mod verify;

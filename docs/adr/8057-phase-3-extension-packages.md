@@ -4271,3 +4271,22 @@ MCP `server.rs` (`clientInfo`, `client_of`), `tools.rs` (`WithWorkshop::author`)
   (protokol söylemiyor).
 - **Uygularken verilen kararlar (planda yazılı değildi):** köken manifestte, atölye paketlerken klasöre yazar; zaman
   yok; MCP istemcisinin kendi verdiği ad; kurulum incelemesinde bilgi şeridi.
+
+## §77. SDK'nın düz metni: `llms.txt` (`ADIM 21`, "düz metin SDK belgesi")
+
+**16 Kasım.** Kod: paylaşılan `kentos_extensions::sdk_text` (yeni: `llms_txt`), depoda `sdk/llms.txt`; komut satırı
+`kentos kek sdk --text`; MCP `kentos://sdk/llms.txt` (`text/markdown`).
+
+- **Karar: paketten üretilir, elle yazılmaz.** `kentos://sdk/ai-kek-pack` JSON'dur; editördeki bir kodlama ajanı, bir
+  modelin bağlamı ya da belgelerde arama düz metin okur. Metin paketin kendisinden kurulur: başlık, bir paragraflık
+  alıntı (önerilen `llms.txt` biçimi), rehber (başlıkları bir düzey aşağıda; kod bloğunun `#` satırları olduğu gibi),
+  adımlar, yetenekler ve kapsamları, katkılar (manifest anahtarı, işareti, dosyası, istediği yetenek), İşlemler aracı
+  tanımının sözlüğü, her bölümün nasıl alınacağı ve `kentos.ext` imzaları. KentOS'un bağlantı verecek bir sitesi yok:
+  bölümler metnin kendisini taşır; şemalar ve ikon listesi kendi bölümünde kalır (alıntı ve "Bölümler" söyler).
+- **Depoda durur, sapınca kırmızı:** `sdk/llms.txt` öbür SDK dosyaları gibi `KENTOS_WRITE_SDK=1` ile yazılır; sınaması
+  her yeteneğin, katkının ve bölümün metinde olduğunu ve biçimi (başlık, boş satır, alıntı) denetler.
+- **Ölçü:** 46.434 bayt (rehber 16,5 KB, imzalar 21 KB). Asistan'ın araç sonucu sınırı (48 KB) bu metnin işi değil:
+  Asistan JSON paketi okur.
+- **Gerçek okuma:** MCP'nin `resources/list`'i iki SDK kaynağını verdi (`application/json`, `text/markdown`),
+  `resources/read` metni 45.047 karakter olarak.
+- **Kalan:** sürekli tümleştirme şablonu, `kek serve`.

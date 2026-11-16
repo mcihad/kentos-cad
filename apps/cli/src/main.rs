@@ -8,7 +8,7 @@
 //! kentos kek index <klasör> [--name <ad>]
 //! kentos kek dump [--root <klasör>]
 //! kentos kek log [<kimlik>] [--son <n>] [--root <klasör>] [--json]
-//! kentos kek sdk [--part <bölüm>] [--json]
+//! kentos kek sdk [--part <bölüm>] [--json] [--text]
 //! kentos kek upgrade <klasör> [--check] [--json]
 //! ```
 //!
@@ -40,8 +40,9 @@ const USAGE: &str = "Kullanım:
   kentos kek new <klasör> --id <kimlik> --name <ad> [--summary <cümle>] [--module cbs|harita|mimari|yol]
                  [--utility] [--with command,processing,audit,expression,mapTool,schema,panel]
                                                     doğrulamadan geçen bir eklenti iskeleti yazar
-  kentos kek sdk [--part <bölüm>] [--json]          eklenti yazma rehberi ve kentos.ext imzaları (--json: paketin
-                                                    tamamı, ajanların kentos://sdk/ai-kek-pack'i)
+  kentos kek sdk [--part <bölüm>] [--json] [--text] eklenti yazma rehberi ve kentos.ext imzaları (--json: paketin
+                                                    tamamı, ajanların kentos://sdk/ai-kek-pack'i; --text: tamamı tek
+                                                    Markdown dosyası, llms.txt)
   kentos kek upgrade <klasör> [--check] [--json]    eskiyen SDK adlarını yenileriyle yazar (--check: yazmaz, değişecek
                                                     bir şey varsa çıkış 1)
   kentos kek index <klasör> [--name <ad>]           klasördeki paketlerin katalog dizinini (index.json) yazar
@@ -84,6 +85,10 @@ fn main() -> ExitCode {
         }
         ["kek", "new", folder, rest @ ..] => new_folder(Path::new(folder), rest),
         ["kek", "sdk"] => sdk(None, json),
+        ["kek", "sdk", "--text"] => {
+            print!("{}", kentos_extensions::sdk_text::llms_txt());
+            ExitCode::SUCCESS
+        }
         ["kek", "sdk", "--part", part] => sdk(Some(part), json),
         ["kek", "pack", folder, "-o", out] => {
             pack_folder(Path::new(folder), Some(PathBuf::from(out)), json)

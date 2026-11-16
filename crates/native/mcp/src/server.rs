@@ -465,7 +465,10 @@ fn cache_hint(method: &str, params: &Value) -> Option<(u64, &'static str)> {
         "resources/list" => Some((0, "private")),
         "resources/read" => match params.get("uri").and_then(Value::as_str) {
             Some(
-                "kentos://catalog" | "kentos://catalog/categories" | crate::extensions::SDK_PACK,
+                "kentos://catalog"
+                | "kentos://catalog/categories"
+                | crate::extensions::SDK_PACK
+                | crate::extensions::SDK_TEXT,
             ) => Some((HOUR, "public")),
             _ => Some((0, "private")),
         },

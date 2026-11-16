@@ -1220,8 +1220,9 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
     — *kısmen (ADR 8057 §74, 16 Kasım): `kek test` başsız test koşucusu (doğrulama, geçici kayıt defteri, kilitten
     ortam, araçların örnekleri; çıkış 0 geçti, 1 kaldı, 2 sınanamadı; `--install-python`); `kek verify` araç tanımlarını
     tam okur. Denetim kurallarının örnekleri (ADR 8057 §75): `audits/<kimlik>.examples.json`, nesneler ya da mimari
-    olgular ve beklenen bulgular; Vitrin'in iki kuralında, mevzuatın yedi kuralının hepsinde (20 örnek). Kalan:
-    `serve`, CI şablonu (komut satırının indirilebilir dağıtımını bekler), `llms.txt`, ifade işlevlerinin örnekleri.*
+    olgular ve beklenen bulgular; Vitrin'in iki kuralında, mevzuatın yedi kuralının hepsinde (20 örnek). `llms.txt`
+    (ADR 8057 §77): paketten üretilen tek Markdown dosyası, `kek sdk --text`, MCP `kentos://sdk/llms.txt`. Kalan:
+    `serve`, CI şablonu (komut satırının indirilebilir dağıtımını bekler), ifade işlevlerinin örnekleri.*
   - **Bağımlılık:** `blueprint` izinli ve yaygın paketleri önerir; `verify` dizinde olmayan, çok yeni ya da adı popüler
     pakete benzeyen bağımlılığı işaretler (uydurulmuş paket adı saldırısı) [D18].
   - **Üretim kökeni:** AI ile üretilen paket hangi ajan/model ve hangi `blueprint` sürümüyle üretildiğini katalog

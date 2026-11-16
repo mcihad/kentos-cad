@@ -15,6 +15,9 @@ pub(crate) const INSTALLED: &str = "kentos://extensions/installed";
 /// The SDK in one read (plan/eklenti.md ADIM 21, docs/adr/8057 §20): what `extension.sdk` gives.
 pub(crate) const SDK_PACK: &str = "kentos://sdk/ai-kek-pack";
 
+/// The same pack as one plain text file (docs/adr/8057 §77): Markdown in the `llms.txt` form.
+pub(crate) const SDK_TEXT: &str = "kentos://sdk/llms.txt";
+
 /// What `kentos://extensions/installed` reads: every installed extension with its state, what the running or ready
 /// ones add and what was left out, from the registry in `root` (the user's, `KENTOS_EXTENSIONS_DIR` or a test's).
 pub(crate) fn installed(root: Option<&Path>) -> Value {
