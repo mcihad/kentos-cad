@@ -423,6 +423,7 @@ impl App {
                     caps: WallCaps::Closed,
                     fill: None,
                     width: Some(kentos_commands::DEFAULT_WALL_WIDTH),
+                    fire_rating: None,
                 });
                 // Projeye al keeps KentOS's id, as a wall made with it would (docs/adr/0339 §2).
                 if !take {

@@ -44,6 +44,7 @@ Olgular KentOS'un `cad` bölümündendir (`kentos.auditFacts` 1); kural yalnız 
 | `turetim` | Eski kesit ve görünüş, kaynağı silinmiş çizim, model katmanında serbest çizim, kopmuş etiket ve ölçü | Md. 9/1; EK-9 satır 21 | 8065 |
 | `paket` | PDF/A, bir dosyada bir pafta, A4 ve katları, EK-2 dosya adı | Md. 4/2, 6, 8 | 8066 |
 | `kalite` | Aynı kattaki mahaller örtüşmez (ortak alan 0,01 m²'den küçükse yuvarlama sayılır) | EK-9 Tablo 9.1 satır 13 | 8067 |
+| `zorunlu` | Modelin zorunlu alanları: yazılacak modelde sınıfının her nesnesinde değeri olmayan satır, nesneleriyle | Md. 12/1, 13; EK-6, EK-7; EK-9 satır 9 | 8068 |
 
-`mimari.denetle` masaüstünün Denetim sekmesi için `ek34`, `turetim` ve `kalite`'yi; `ruhsat.denetle` ruhsat yayınının
+`mimari.denetle` masaüstünün Denetim sekmesi için `ek34`, `turetim`, `kalite` ve `zorunlu`'yu; `ruhsat.denetle` ruhsat yayınının
 kapısı için `turetim` ve `paket`'i birlikte verir.

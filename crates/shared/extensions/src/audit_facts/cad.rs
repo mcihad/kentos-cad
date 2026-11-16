@@ -43,6 +43,28 @@ pub struct CadFacts {
     /// ids; written only when there is one.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub room_overlaps: Vec<CadRoomOverlap>,
+    /// EK-6's and EK-7's mandatory rows the model `cad.arch.ifc` writes does not carry for some objects (docs/adr/8068;
+    /// `kentos_ifc::required`), in the catalog's order; written only when there is one.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub model_gaps: Vec<CadModelGap>,
+}
+
+/// A mandatory row of the model some objects of its class do not carry: the class (`IfcWall`) and its Turkish name, the
+/// row's path (`Pset_WallCommon.FireRating`) and Turkish name, its table and page, the objects without it (persistent
+/// ids; an empty one is the file's own object: the project, the site, the building) and how many objects of the class
+/// the model has.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct CadModelGap {
+    pub class: String,
+    pub class_tr: String,
+    pub path: String,
+    pub tr: String,
+    pub table: String,
+    pub page: u32,
+    pub missing: Vec<String>,
+    pub of: u32,
 }
 
 /// Two rooms of one storey (or both on none) that cover the same ground: their persistent ids, the smaller first, the
@@ -204,6 +226,11 @@ impl CadFacts {
         }
         self.room_overlaps.retain(|o| o.area > 0.0);
         self.room_overlaps.sort_by(|x, y| x.a.cmp(&y.a).then_with(|| x.b.cmp(&y.b)));
+        for g in &mut self.model_gaps {
+            g.missing.sort();
+            g.missing.dedup();
+            g.missing.truncate(MOST_SHOWN);
+        }
         let cut = [
             self.layers.len(),
             self.blocks.len(),
@@ -212,6 +239,7 @@ impl CadFacts {
             self.derived.len(),
             self.broken.len(),
             self.room_overlaps.len(),
+            self.model_gaps.len(),
         ]
         .iter()
         .any(|n| *n > MOST_ITEMS);
@@ -222,6 +250,7 @@ impl CadFacts {
         self.derived.truncate(MOST_ITEMS);
         self.broken.truncate(MOST_ITEMS);
         self.room_overlaps.truncate(MOST_ITEMS);
+        self.model_gaps.truncate(MOST_ITEMS);
         (self, cut)
     }
 }
@@ -254,6 +283,7 @@ mod tests {
                 CadRoomOverlap { a: "r2".into(), b: "r1".into(), area: 0.360_04, at: [2.000_4, 1.0] },
                 CadRoomOverlap { a: "r3".into(), b: "r4".into(), area: 0.000_04, at: [0.0, 0.0] },
             ],
+            model_gaps: vec![],
         };
         let (n, cut) = facts.normalized();
         assert!(!cut);

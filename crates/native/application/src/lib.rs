@@ -1240,6 +1240,9 @@ pub mod legends;
 #[cfg(feature = "mod-arch")]
 #[path = "arch/levels_assign.rs"]
 pub mod levels_assign;
+#[cfg(feature = "mod-arch")]
+#[path = "arch/arch_performance.rs"]
+pub mod arch_performance;
 #[path = "core/library_symbols.rs"]
 mod library_symbols;
 #[cfg(feature = "mod-arch")]
@@ -2143,6 +2146,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_LEVELS_ASSIGN,
         kentos_commands::CAD_LEVELS_ASSIGN_VERSION,
+    ),
+    // Yangın ve performans ([`arch_performance`], docs/adr/8068).
+    (
+        kentos_commands::CAD_ARCH_PERFORMANCE,
+        kentos_commands::CAD_ARCH_PERFORMANCE_VERSION,
     ),
     // Kuzey oku, Revizyon işaretle and Malzeme lejandı ([`north`], [`revisions`], [`legends`], docs/adr/0721).
     (

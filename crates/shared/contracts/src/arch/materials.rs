@@ -4,10 +4,9 @@
 //! material changes, everything bound to it follows in the same undo step (`cad.materials.edit`). A component that
 //! binds to none keeps its own text material as before.
 //!
-//! Revit keeps a material's identity and its cut pattern in one table (Material Browser: Identity, Graphics); Archicad
-//! a Building Material's cut fill, its pens and its intersection priority. KentOS keeps the identity and the cut's look in
-//! the material, the joining priority on the component (docs/adr/0340), so one material can be a core in one wall and a
-//! lining in another.
+//! KentOS keeps the identity and the cut's look in the material, the joining priority on the component (docs/adr/0340),
+//! so one material can be a core in one wall and a lining in another. Its strength class (docs/adr/8068) is the
+//! material's too: the model writes its name `Ad_Dayanım`.
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -20,7 +19,7 @@ pub const MAX_MATERIALS: usize = 256;
 /// The longest material name and description, in characters.
 pub const MAX_MATERIAL_NAME: usize = 128;
 
-/// What a material is for (Revit's material class, the role ADR 0771 §7 named).
+/// What a material is for (the role ADR 0771 §7 named).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -116,6 +115,11 @@ pub struct ArchMaterial {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub cut: Option<ComponentEdge>,
+    /// Its strength class (docs/adr/8068; EK-6: the model's material is named `Ad_Dayanım`, “Beton_C25”, “Çelik_S355”):
+    /// C25, S355 (`crate::strength_problem`). Absent: not given (a load-bearing material without one is missing).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub strength: Option<String>,
 }
 
 /// An office material library's format (docs/adr/0791): a file outside the drawing, as KentOS's block library (ADR 0318)

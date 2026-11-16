@@ -22,7 +22,7 @@ use kentos_commands::{DrawingFont, Entity};
 use kentos_domain::Document;
 use kentos_domain::arch_values::core_areas;
 use kentos_extensions::audit_facts::cad::{
-    CadBlock, CadBroken, CadDerived, CadFacts, CadGrid, CadLayer, CadRoom, CadRoomOverlap, FontUse,
+    CadBlock, CadBroken, CadDerived, CadFacts, CadGrid, CadLayer, CadModelGap, CadRoom, CadRoomOverlap, FontUse,
 };
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geom::arrangement::Area;
@@ -144,7 +144,40 @@ pub fn measure(doc: &Document) -> CadFacts {
         derived: derived(doc),
         broken,
         room_overlaps: overlaps(&grounds),
+        model_gaps: model_gaps(doc),
     }
+}
+
+/// EK-6's and EK-7's mandatory rows the model `cad.arch.ifc` writes does not carry (docs/adr/8068): none for a drawing
+/// whose model has no element (no building to ask).
+#[cfg(feature = "mod-arch")]
+fn model_gaps(doc: &Document) -> Vec<CadModelGap> {
+    let (building, _, _) = kentos_native_application::arch_ifc::model(doc);
+    if building.elements.is_empty() {
+        return Vec::new();
+    }
+    let classes = &kentos_ifc::catalog::base().classes;
+    kentos_ifc::required::gaps(&building)
+        .into_iter()
+        .map(|g| CadModelGap {
+            class_tr: classes
+                .iter()
+                .find(|c| c.class.eq_ignore_ascii_case(&g.class))
+                .map_or_else(|| g.class.clone(), |c| c.tr.clone()),
+            missing: g.missing.iter().map(|id| id.map(|i| kentos_domain::Uuid::from_u128(i).to_string()).unwrap_or_default()).collect(),
+            of: g.of as u32,
+            class: g.class,
+            path: g.path,
+            tr: g.tr,
+            table: g.table,
+            page: g.page,
+        })
+        .collect()
+}
+
+#[cfg(not(feature = "mod-arch"))]
+fn model_gaps(_doc: &Document) -> Vec<CadModelGap> {
+    Vec::new()
 }
 
 /// Each pair of rooms of one storey (or both on none) whose areas share ground: what they share and its centre. Only

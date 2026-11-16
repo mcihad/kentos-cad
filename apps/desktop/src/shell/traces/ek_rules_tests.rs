@@ -47,7 +47,9 @@ fn rules(app: &mut App) -> Vec<String> {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
     assert_eq!(app.arch.arch_audit.standards_failed, None);
-    let mut out: Vec<String> = app.arch.arch_audit.standards.iter().map(|f| f.code.clone()).collect();
+    // EK-3's and EK-4's findings: the model's mandatory fields (docs/adr/8068) are another rule's.
+    let mut out: Vec<String> =
+        app.arch.arch_audit.standards.iter().map(|f| f.code.clone()).filter(|c| c.starts_with("digital_ek")).collect();
     out.sort();
     out.dedup();
     out

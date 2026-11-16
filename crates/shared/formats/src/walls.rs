@@ -407,6 +407,8 @@ mod tests {
                 phase: Some(kentos_contracts::ArchPhase::New),
                 status: None,
                 discipline: Some(kentos_contracts::ArchDiscipline::Architecture),
+                exit: None,
+                fire_rating: None,
             },
             joins: WallJoins {
                 start: WallJoin::Butt,
@@ -480,6 +482,8 @@ mod tests {
                 place: Vec::new(),
                 broken: None,
                 phase: None,
+                exit: None,
+                fire_rating: None,
             };
             let (s0, s1) = (at - width / 2.0, at + width / 2.0);
             f.place = [(s0, 0.15), (s0, -0.15), (s1, 0.15), (s1, -0.15)]
@@ -587,6 +591,8 @@ mod tests {
                         .collect(),
                     broken: None,
                     phase: None,
+                    exit: None,
+                    fire_rating: None,
                 },
             })
         };

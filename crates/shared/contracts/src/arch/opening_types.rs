@@ -508,6 +508,11 @@ pub struct OpeningType {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "W/m2K")))]
     pub u_value: Option<f64>,
+    /// Its fire resistance class (docs/adr/8068, EK-6 Tablo 6.25 `FireRating`): every opening of the type carries it
+    /// unless it has its own. Absent: none (missing on a door).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fire_rating: Option<crate::Declared>,
 }
 
 /// The highest thermal transmittance a type may say, W/m²K (a single glazed metal window is about 6).
@@ -608,6 +613,8 @@ impl OpeningType {
             place: vec![crate::entity::Vec2 { x: 0.0, y: 0.0 }; 4],
             broken: None,
             phase: None,
+            exit: None,
+            fire_rating: None,
         };
         if f.build.as_ref().is_some_and(OpeningBuild::is_empty) {
             f.build = None;
@@ -1388,6 +1395,7 @@ mod tests {
             build: Some(build),
             material: None,
             u_value: None,
+            fire_rating: None,
         }
         .fields()
     }
@@ -1436,6 +1444,7 @@ mod tests {
             build: None,
             material: None,
             u_value: None,
+            fire_rating: None,
         };
         f.take_type(&t);
         assert_eq!(

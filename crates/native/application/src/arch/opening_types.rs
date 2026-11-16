@@ -99,6 +99,7 @@ pub(crate) fn of_builtin(t: &OpeningTypeDef, id: String, name: String) -> Openin
         build: None,
         material: None,
         u_value: None,
+        fire_rating: None,
     }
 }
 

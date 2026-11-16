@@ -55,6 +55,11 @@ pub(crate) enum ArchOp {
         before: Arc<Vec<kentos_contracts::ArchAuditException>>,
         after: Arc<Vec<kentos_contracts::ArchAuditException>>,
     },
+    /// The building's declared fire protection class (docs/adr/8068), before and after: a step of its own.
+    Performance {
+        before: Option<kentos_contracts::BuildingPerformance>,
+        after: Option<kentos_contracts::BuildingPerformance>,
+    },
 }
 
 impl ArchOp {
@@ -90,6 +95,10 @@ impl ArchOp {
                 after: before.clone(),
             },
             ArchOp::AuditExceptions { before, after } => ArchOp::AuditExceptions {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            ArchOp::Performance { before, after } => ArchOp::Performance {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -157,6 +166,14 @@ impl ArchOp {
                     .unwrap_or_default();
                 arch.audit_exceptions = (**after).clone();
                 // No empty settings are kept (a file refuses them).
+                Arc::make_mut(&mut doc.settings).arch = (!arch.is_empty()).then_some(arch);
+            }
+            ArchOp::Performance { after, .. } => {
+                let mut arch = Arc::make_mut(&mut doc.settings)
+                    .arch
+                    .take()
+                    .unwrap_or_default();
+                arch.performance = after.clone().filter(|p| !p.is_empty());
                 Arc::make_mut(&mut doc.settings).arch = (!arch.is_empty()).then_some(arch);
             }
         }

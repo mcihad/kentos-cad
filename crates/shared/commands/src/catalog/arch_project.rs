@@ -655,6 +655,62 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // Yangın ve performans (docs/adr/8068), held together by fixtures/commands/v1/cad.arch.performance.json.
+        CommandDescriptor {
+            id: crate::CAD_ARCH_PERFORMANCE.into(),
+            version: crate::CAD_ARCH_PERFORMANCE_VERSION,
+            title: "Yangın ve performans".into(),
+            summary: "Yangın yönetmeliği ve dijital proje modeli için müellifin beyanını yazar (Dijital Proje Yön. EK-6): operation.kind objects nesnelerin kendi yangın dayanım sınıfını (fireRating: duvar, döşeme, kolon, kiriş, çatı, korkuluk, merdiven, rampa, kapı, pencere; mahal, aks, blok ve çizgide field_not_for_kind) ve acil çıkış rolünü (exit: yalnız kapı ve merdiven) verir; verilmeyen alan kalır, null nesnenin kendi değerini kaldırır (duvar stilinin, kapı tipinin değerini taşır), ikisi de yoksa nothing_to_set. wallStyle duvar stilinin (style: kimlik ya da ad, yoksa style_not_found), openingType kapı ve pencere tipinin (type, yoksa opening_type_not_found) yangın dayanım sınıfını verir; kendi değeri olmayan duvarlar ve açıklıklar onu taşır. material malzemenin dayanım sınıfını (strength: C25, S355; harf, rakam ve / . , - ile en çok 16, değilse invalid_strength; modelde Ad_Dayanım yazılır) verir, building binanın yangın koruma sınıfını (fireProtectionClass). Beyan value ve basis'tir: basis kind author (müellif beyanı) ya da document (name, isteğe bağlı date YYYY-AA-GG); boş, 64 karakterden uzun, satır sonlu değer ya da adsız belge, gün olmayan tarih invalid_declared. Varsayılan yoktur: null değeri kaldırır, eksik sayılır; boş metin yazılmaz. Kilitli katmandaki nesne layer_locked ile bütün çağrıyı reddeder. Tek geri alma adımı “Yangın ve performans”; çizimin geometrisi değişmez. Çıktı değeri şimdi taşıyan nesneler (kendi değeri, ya da tipin değeri kendi değeri olmayan duvar ve açıklıklarda; malzemede ve binada boş) çizimin sırasıyla ve sürüm. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ArchPerformance>(),
+            output: schema::<crate::ArchPerformanceDone>(),
+            plan: Some(schema::<crate::ArchPerformanceDone>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Duvar stiline REI 120, müellif beyanıyla".into(),
+                    input: json!({
+                        "operation": {
+                            "kind": "wallStyle",
+                            "style": "kentos-dis-duvar-25",
+                            "fireRating": { "value": "REI 120", "basis": { "kind": "author" } }
+                        }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Giriş kapısı acil çıkış, test raporuna dayanarak EI 60".into(),
+                    input: json!({
+                        "operation": {
+                            "kind": "objects",
+                            "uids": ["0192f5a1-7040-7000-8000-000000000005"],
+                            "fireRating": {
+                                "value": "EI 60",
+                                "basis": { "kind": "document", "name": "Test raporu 2026/41", "date": "2026-11-16" }
+                            },
+                            "exit": { "exit": true, "basis": { "kind": "author" } }
+                        }
+                    }),
+                    output: Some(json!({
+                        "uids": ["0192f5a1-7040-7000-8000-000000000005"],
+                        "revision": "12"
+                    })),
+                },
+                CommandExample {
+                    title: "Betonarmenin dayanımı C30".into(),
+                    input: json!({ "operation": { "kind": "material", "material": "betonarme", "strength": "C30" } }),
+                    output: None,
+                },
+            ],
+        },
         // Kat ver (docs/adr/0717), held together by fixtures/commands/v1/cad.levels.assign.json.
         CommandDescriptor {
             id: crate::CAD_LEVELS_ASSIGN.into(),

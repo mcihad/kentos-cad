@@ -211,7 +211,7 @@ use crate::{sensors_ingest, sensors_latest};
 // The edge commands (docs/adr/0047): every module trims, extends, fillets and chamfers.
 #[cfg(feature = "mod-arch")]
 use crate::{
-    arch_audit, arch_edit, arch_exceptions, arch_ifc, arch_recognize, beams_create, casework_edit,
+    arch_audit, arch_edit, arch_exceptions, arch_ifc, arch_performance, arch_recognize, beams_create, casework_edit,
     casework_query, casework_run, columns_create, columns_distances, elevations_edit,
     elevations_query, grids_create, legends, levels_assign, materials_edit, modules_edit,
     modules_query, north, opening_types_edit, openings_create, openings_distances, openings_edit,

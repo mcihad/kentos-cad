@@ -13,6 +13,7 @@ fn style(id: &str, name: &str, width: f64) -> WallStyleDef {
         caps: Default::default(),
         fill: None,
         width: Some(width),
+        fire_rating: None,
     }
 }
 

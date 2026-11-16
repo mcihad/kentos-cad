@@ -24,5 +24,6 @@ mod math;
 pub mod mesh;
 pub mod naming;
 pub mod quality;
+pub mod required;
 pub mod rules;
 pub mod step;

@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 0.6.0 — 16 Kasım 2026
+
+- Yeni kural: modelin zorunlu alanları (`zorunlu`, docs/adr/8068; Md. 12/1, 13; EK-6, EK-7; EK-9 satır 9). KentOS'un
+  ölçtüğü `cad.modelGaps` (yazılacak modelde sınıfının her nesnesinde değeri olmayan zorunlu satır) her satır için bir
+  hata, nesneleriyle; onarım alanına göre (yangın dayanım sınıfı ve acil çıkış Öznitelikler'de, malzemenin dayanımı
+  Malzemeler'de, binanın yangın koruma sınıfı Mimari ayarları'nda). `mimari.denetle` dört kuralı birlikte verir.
+
 ## 0.5.0 — 16 Kasım 2026
 
 - Yeni kural: EK-9'un modelde ölçülen soruları (`kalite`, docs/adr/8067). Satır 13: aynı kattaki iki mahal aynı zemini

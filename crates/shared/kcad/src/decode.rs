@@ -292,7 +292,8 @@ fn root(r: &mut Reader<'_>) -> Result<DocumentSnapshotV2, KcadError> {
                 };
                 // The GIS data's version (docs/adr/8057 §15): what its layers' derivations may name.
                 let gis = modules.as_ref().map_or(0, |m| m.versions.module("gis"));
-                document = Some(body(r, schema, gis)?);
+                let arch = modules.as_ref().map_or(0, |m| m.versions.module("arch"));
+                document = Some(body(r, schema, gis, arch)?);
             }
             _ => return Err(unknown(r)),
         }
@@ -309,9 +310,10 @@ fn root(r: &mut Reader<'_>) -> Result<DocumentSnapshotV2, KcadError> {
 
 /// The document; `schema` is its payload's (2, 3 with objects' line weights,
 /// 4 with vertex elevations too, 5 with areas' parts, 6 with blocks).
-fn body(r: &mut Reader<'_>, schema: u32, gis: u16) -> Result<DocumentSnapshotV2, KcadError> {
+fn body(r: &mut Reader<'_>, schema: u32, gis: u16, arch: u16) -> Result<DocumentSnapshotV2, KcadError> {
     let mut has = Features::of(schema);
     has.gis = gis;
+    let body_at = r.position();
     let mut name = None;
     let mut blocks: Option<blocks::Definitions> = None;
     let mut layers = None;
@@ -432,7 +434,7 @@ fn body(r: &mut Reader<'_>, schema: u32, gis: u16) -> Result<DocumentSnapshotV2,
         }
         None => Default::default(),
     };
-    Ok(DocumentSnapshotV2 {
+    let doc = DocumentSnapshotV2 {
         dimension_sets: dimension_sets_.unwrap_or_default(),
         casework: casework_.unwrap_or_default(),
         constraints,
@@ -453,7 +455,16 @@ fn body(r: &mut Reader<'_>, schema: u32, gis: u16) -> Result<DocumentSnapshotV2,
         sheets: sheets_,
         requests: requests_.unwrap_or_default(),
         arrays,
-    })
+    };
+    // Architecture data 1 (docs/adr/8068): a file that does not name it holds none of it.
+    if arch < crate::ARCH_WITH_PERFORMANCE && crate::uses_performance(&doc) {
+        return Err(r.fail_at(
+            Code::UnknownField,
+            body_at,
+            "yangın dayanım sınıfı, acil çıkış, malzeme dayanımı ve binanın yangın koruma sınıfı mimari verisi sürüm 1'den önce yok",
+        ));
+    }
+    Ok(doc)
 }
 
 /// The kitchen runs (schema 127, docs/adr/0727 §5): the contract's JSON in the writer's canonical form, held to its

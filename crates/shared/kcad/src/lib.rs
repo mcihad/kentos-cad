@@ -988,11 +988,33 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", 0),
+    ("arch", "mimari", ARCH_WITH_PERFORMANCE),
     ("gis", "CBS", GIS_WITH_EXTENSION_DERIVATIONS),
     ("map", "harita", 0),
     ("road", "yol", 0),
 ];
+
+/// Architecture data version 1 (docs/adr/8068): the fire resistance classes (an object's `arch.fireRating`, an
+/// opening's `fireRating`, a wall style's and a door or window type's), the exit roles (`exit`), a material's
+/// `strength` and the building's `performance`. The document schema stays as it is.
+pub const ARCH_WITH_PERFORMANCE: u16 = 1;
+
+/// Whether `doc` holds architecture data 1 ([`ARCH_WITH_PERFORMANCE`]): what its writer names and an older reader
+/// refuses.
+pub fn uses_performance(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    use kentos_contracts::Entity;
+    let objects = doc.entities.iter().any(|e| match e {
+        Entity::Opening(o) => o.opening.fire_rating.is_some() || o.opening.exit.is_some(),
+        _ => e.arch_info().is_some_and(|a| a.fire_rating.is_some() || a.exit.is_some()),
+    });
+    let styles = doc.settings.wall_styles.iter().any(|s| s.fire_rating.is_some());
+    let arch = doc.settings.arch.as_ref().is_some_and(|a| {
+        a.performance.as_ref().is_some_and(|p| !p.is_empty())
+            || a.opening_types.iter().any(|t| t.fire_rating.is_some())
+            || a.materials.iter().any(|m| m.strength.is_some())
+    });
+    objects || styles || arch
+}
 
 /// GIS data version 1 (docs/adr/8057 §15): a layer's derivation names the extension whose tool made it and where its
 /// code ran (`extension`, `environment`). The first module version raised: the document schema stays as it is.

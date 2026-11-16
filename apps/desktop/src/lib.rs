@@ -684,6 +684,9 @@ mod scene3d_window_tests;
 #[path = "tests/scene3d_building_tests.rs"]
 mod scene3d_building_tests;
 #[cfg(test)]
+#[path = "tests/performance_tests.rs"]
+mod performance_tests;
+#[cfg(test)]
 #[path = "tests/road_project_panel_tests.rs"]
 mod road_project_panel_tests;
 #[cfg(test)]

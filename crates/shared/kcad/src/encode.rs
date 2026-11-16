@@ -85,8 +85,8 @@ pub(crate) fn payload(
     Ok(e.w.out)
 }
 
-/// The module versions a document needs (`modules`, schema 254): none has raised its version yet. A module's new data
-/// raises its own version here and in its reader's `MODULE_VERSIONS`; the document schema stays (docs/adr/8054 §10).
+/// The module versions a document needs (`modules`, schema 254). A module's new data raises its own version here and in
+/// its reader's `MODULE_VERSIONS`; the document schema stays (docs/adr/8054 §10).
 fn modules_of(doc: &DocumentSnapshotV2) -> ModuleVersions {
     // GIS 1 (docs/adr/8057 §15): a derivation that names an extension or its environment.
     fn extended(nodes: &[kentos_contracts::LayerNode]) -> bool {
@@ -98,6 +98,10 @@ fn modules_of(doc: &DocumentSnapshotV2) -> ModuleVersions {
         })
     }
     let mut out = ModuleVersions::default();
+    // Architecture 1 (docs/adr/8068): fire resistance, exit roles, strengths, the building's performance.
+    if crate::uses_performance(doc) {
+        out.modules.push(("arch".to_owned(), crate::ARCH_WITH_PERFORMANCE));
+    }
     if extended(&doc.layers) {
         out.modules
             .push(("gis".to_owned(), crate::GIS_WITH_EXTENSION_DERIVATIONS));

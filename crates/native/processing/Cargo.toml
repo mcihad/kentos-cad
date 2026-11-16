@@ -24,6 +24,8 @@ kentos-expression = { path = "../../shared/expression" }
 # contract's (`kentos_extensions::audit_facts`), this crate measures them. Pure, without its JSON Schema's derive.
 kentos-extensions = { path = "../../shared/extensions", default-features = false }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
+# The model's mandatory rows (docs/adr/8068): `kentos_ifc::required`, read for the CAD facts.
+kentos-ifc = { path = "../../shared/ifc" }
 # A run's result written to a GeoPackage carries its lineage in the metadata extension (docs/adr/0511).
 kentos-geopackage = { path = "../geopackage" }
 # İşlemler is CBS's toolbox (docs/adr/0508): its tools read CBS's sources, topology, scenarios and addresses

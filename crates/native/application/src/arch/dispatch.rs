@@ -165,6 +165,12 @@ macro_rules! arch_commands {
                 levels_assign,
                 kentos_commands::LevelsAssign
             ),
+            kentos_commands::CAD_ARCH_PERFORMANCE => crate::arch_dispatch::arch_arm!(
+                $command,
+                $then,
+                arch_performance,
+                kentos_commands::ArchPerformance
+            ),
             kentos_commands::CAD_NORTH_CREATE => crate::arch_dispatch::arch_arm!(
                 $command,
                 $then,

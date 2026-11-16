@@ -178,6 +178,13 @@
           },
           "type": "array"
         },
+        "modelGaps": {
+          "description": "EK-6's and EK-7's mandatory rows the model `cad.arch.ifc` writes does not carry for some objects (docs/adr/8068;\n`kentos_ifc::required`), in the catalog's order; written only when there is one.",
+          "items": {
+            "$ref": "#/$defs/CadModelGap"
+          },
+          "type": "array"
+        },
         "roomOverlaps": {
           "description": "The rooms of one storey that cover the same ground, a pair each (docs/adr/8067; EK-9 Tablo 9.1/13), by their\nids; written only when there is one.",
           "items": {
@@ -306,6 +313,53 @@
         "first",
         "firstHatches",
         "lineType"
+      ],
+      "type": "object"
+    },
+    "CadModelGap": {
+      "description": "A mandatory row of the model some objects of its class do not carry: the class (`IfcWall`) and its Turkish name, the\nrow's path (`Pset_WallCommon.FireRating`) and Turkish name, its table and page, the objects without it (persistent\nids; an empty one is the file's own object: the project, the site, the building) and how many objects of the class\nthe model has.",
+      "properties": {
+        "class": {
+          "type": "string"
+        },
+        "classTr": {
+          "type": "string"
+        },
+        "missing": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "of": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "page": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "path": {
+          "type": "string"
+        },
+        "table": {
+          "type": "string"
+        },
+        "tr": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "class",
+        "classTr",
+        "path",
+        "tr",
+        "table",
+        "page",
+        "missing",
+        "of"
       ],
       "type": "object"
     },

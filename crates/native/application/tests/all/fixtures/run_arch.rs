@@ -86,6 +86,9 @@ macro_rules! arch_cases {
             kentos_commands::CAD_LEVELS_ASSIGN => {
                 $then!(levels_assign, kentos_commands::LevelsAssign)
             }
+            kentos_commands::CAD_ARCH_PERFORMANCE => {
+                $then!(arch_performance, kentos_commands::ArchPerformance)
+            }
             kentos_commands::CAD_SPACES_CREATE => {
                 $then!(spaces_create, kentos_commands::SpacesCreate)
             }

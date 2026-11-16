@@ -23,8 +23,9 @@ const MODULE: &str = "dijital_proje.mimari";
 const FUNCTION: &str = "denetle";
 
 /// The findings this module adds, by their codes' starts: EK-3 and EK-4's, the sheets-from-the-model rule's
-/// (docs/adr/8065) and EK-9's measured on the model (docs/adr/8067: rooms that overlap).
-const CODES: [&str; 4] = ["digital_ek", "digital_derived", "digital_free", "digital_quality"];
+/// (docs/adr/8065), EK-9's measured on the model (docs/adr/8067: rooms that overlap) and the model's mandatory fields
+/// (docs/adr/8068).
+const CODES: [&str; 5] = ["digital_ek", "digital_derived", "digital_free", "digital_quality", "digital_required"];
 
 /// Whether a finding is this module's.
 fn ours(code: &str) -> bool {

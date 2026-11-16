@@ -3,6 +3,7 @@ import type { ArchAuditException } from "./ArchAuditException";
 import type { ArchLevel } from "./ArchLevel";
 import type { ArchMaterial } from "./ArchMaterial";
 import type { ArchModule } from "./ArchModule";
+import type { BuildingPerformance } from "./BuildingPerformance";
 import type { BuildingProgram } from "./BuildingProgram";
 import type { LevelView } from "./LevelView";
 import type { LineGroups } from "./LineGroups";
@@ -24,7 +25,7 @@ export type ArchSettings = { levels?: Array<ArchLevel>, detail?: WallDetail,
 /**
  * The plan's cut height above each level's floor, metres (docs/adr/8012, KCAD 217): what crosses it is cut, a
  * window over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project
- * writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50; Revit's metric templates: 1200 mm).
+ * writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50).
  */
 cutHeight?: number, 
 /**
@@ -56,7 +57,7 @@ spaceUsages?: Array<string>,
 spaceNumberPrefixes?: { [key in string]: string }, 
 /**
  * Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no
- * level). Absent: its ground level (the one at elevation 0, else its first). Revit's last viewed view.
+ * level). Absent: its ground level (the one at elevation 0, else its first).
  */
 activeLevel?: string | null, 
 /**
@@ -106,6 +107,11 @@ site?: SitePlan,
  * Mevzuat group reads over Planlı Alanlar İmar Yönetmeliği. Absent: the national regulation alone.
  */
 localRules?: LocalRules, 
+/**
+ * Yangın ve performans (docs/adr/8068; arch data 1): the building's declared fire protection class (EK-6 Tablo
+ * 6.7 `FireProtectionClass`). Absent: none declared.
+ */
+performance?: BuildingPerformance, 
 /**
  * Yağmurlama sistemi (docs/adr/8035; `.kcad` schema 226): the building has an automatic sprinkler system, so the
  * fire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.

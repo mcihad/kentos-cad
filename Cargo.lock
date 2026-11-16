@@ -3149,6 +3149,7 @@ dependencies = [
  "kentos-formats",
  "kentos-geometry-core",
  "kentos-geopackage",
+ "kentos-ifc",
  "kentos-kcad",
  "kentos-native-application",
  "kentos-pointcloud",

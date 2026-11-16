@@ -2102,6 +2102,46 @@ impl Entity {
         }
     }
 
+    /// Its architectural information (level, phase, status, discipline, fire resistance, exit role): a wall's, a
+    /// space's, a slab's, a grid's, a column's, a beam's, a roof's, a railing's, a stair's, a ramp's, a room
+    /// separator's or a block insert's. An opening keeps its own fields (`OpeningFields`).
+    pub fn arch_info(&self) -> Option<&crate::ArchInfo> {
+        match self {
+            Entity::Insert(x) => Some(&x.arch),
+            Entity::Wall(x) => Some(&x.wall.arch),
+            Entity::Space(x) => Some(&x.space.arch),
+            Entity::Slab(x) => Some(&x.slab.arch),
+            Entity::Grid(x) => Some(&x.grid.arch),
+            Entity::Column(x) => Some(&x.column.arch),
+            Entity::Beam(x) => Some(&x.beam.arch),
+            Entity::Roof(x) => Some(&x.roof.arch),
+            Entity::Railing(x) => Some(&x.railing.arch),
+            Entity::Stair(x) => Some(&x.stair.arch),
+            Entity::Ramp(x) => Some(&x.ramp.arch),
+            Entity::Polyline(p) => p.space_separator.as_ref(),
+            _ => None,
+        }
+    }
+
+    /// [`Self::arch_info`], to be written.
+    pub fn arch_info_mut(&mut self) -> Option<&mut crate::ArchInfo> {
+        match self {
+            Entity::Insert(x) => Some(&mut x.arch),
+            Entity::Wall(x) => Some(&mut x.wall.arch),
+            Entity::Space(x) => Some(&mut x.space.arch),
+            Entity::Slab(x) => Some(&mut x.slab.arch),
+            Entity::Grid(x) => Some(&mut x.grid.arch),
+            Entity::Column(x) => Some(&mut x.column.arch),
+            Entity::Beam(x) => Some(&mut x.beam.arch),
+            Entity::Roof(x) => Some(&mut x.roof.arch),
+            Entity::Railing(x) => Some(&mut x.railing.arch),
+            Entity::Stair(x) => Some(&mut x.stair.arch),
+            Entity::Ramp(x) => Some(&mut x.ramp.arch),
+            Entity::Polyline(p) => p.space_separator.as_mut(),
+            _ => None,
+        }
+    }
+
     /// Its level as a level view reads it (docs/adr/0715 §1): its own; an opening's its wall's; a tag's its object's;
     /// a hatch following a room (a room's finish, docs/adr/0345) the room's; a dimension bound to objects all of one
     /// level that level (`by_uid` finds an object by its persistent id). None: on no level, shown on every one.

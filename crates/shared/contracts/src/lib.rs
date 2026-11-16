@@ -54,6 +54,8 @@ pub mod opening;
 pub mod opening_types;
 #[path = "arch/materials.rs"]
 pub mod materials;
+#[path = "arch/performance.rs"]
+pub mod performance;
 #[path = "arch/arch_modules.rs"]
 pub mod arch_modules;
 #[path = "arch/arch_options.rs"]
@@ -335,6 +337,7 @@ pub use ek4::*;
 pub use opening::*;
 pub use opening_types::*;
 pub use materials::*;
+pub use performance::*;
 pub use arch_modules::*;
 pub use arch_options::*;
 pub use slab::*;

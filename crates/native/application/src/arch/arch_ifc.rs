@@ -55,6 +55,7 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
         gaps,
         entities,
         wall_style_name: &wall_style_name,
+        wall_styles: &doc.settings().wall_styles,
         net_area: &mut net_area,
         arch: doc.settings().arch.as_ref(),
         particulars: particulars(doc),
@@ -125,6 +126,13 @@ pub fn particulars(doc: &Document) -> Particulars {
             .map(|r| r.levels.iter().map(|l| l.all()).sum::<f64>()),
         footprint: zoning.as_ref().map(|r| r.footprint),
         setbacks,
+        // The künye's building kind (Ruhsat takımı › Dijital teslim kapsamı) as the construction action.
+        construction: get("yapi_turu").map(|k| match k.as_str() {
+            "yeni" => "Yeni yapı".to_owned(),
+            "ilave" => "İlave".to_owned(),
+            "tadilat" => "Tadilat".to_owned(),
+            _ => k,
+        }),
     }
 }
 

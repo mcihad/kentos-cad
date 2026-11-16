@@ -347,9 +347,26 @@ pub fn ek9(b: &Building, written: &Written, k: &Particulars) -> Vec<Row> {
                 },
                 7 => Answer::Ask("EK-8'in gelişim seviyesi; KentOS değerlendirmiyor.".into()),
                 8 | 17 => Answer::Yes("sınıflar EK-5 Tablo 5.1'e göre.".into()),
-                9 => Answer::No(
-                    "yangın dayanım sınıfı (FireRating), acil çıkış (FireExit) ve beton sınıfı çizimde yok".into(),
-                ),
+                // EK-6's and EK-7's mandatory rows against the model (`crate::required`, docs/adr/8068).
+                9 => {
+                    let gaps = crate::required::gaps(b);
+                    if gaps.is_empty() {
+                        Answer::Yes("EK-6 ve EK-7'nin zorunlu alanları modelin her nesnesinde dolu.".into())
+                    } else {
+                        let first: Vec<String> = gaps
+                            .iter()
+                            .take(4)
+                            .map(|g| format!("{} {} ({}/{})", g.class, g.tr, g.missing.len(), g.of))
+                            .collect();
+                        let more = gaps.len().saturating_sub(first.len());
+                        Answer::No(format!(
+                            "{} zorunlu alan eksik: {}{}; Mimari denetim › Mevzuat nesneleriyle listeler",
+                            gaps.len(),
+                            first.join(", "),
+                            if more > 0 { format!(" ve {more} başka") } else { String::new() }
+                        ))
+                    }
+                }
                 10 => Answer::Ask("Mahallerin net alanı yazıldı; emsal tablosuyla karşılaştırma mimarın.".into()),
                 11 => Answer::Yes(format!("proje, saha, bina ve {} kat.", b.storeys.len())),
                 12 if b.spaces.is_empty() => Answer::No("modelde mahal yok".into()),

@@ -528,6 +528,7 @@ mod tests {
             quantity: Default::default(),
             hatch: None,
             cut: None,
+            strength: None,
         }
     }
 

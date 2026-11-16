@@ -4218,7 +4218,7 @@ MatchPropertyName = Literal["layer", "color", "lineType", "lineTypeScale", "line
 
 
 class MaterialCategory(_StrEnum):
-    """What a material is for (Revit's material class, the role ADR 0771 §7 named).
+    """What a material is for (the role ADR 0771 §7 named).
 
     - ``structure``: Taşıyıcı: concrete, masonry, timber that carries.
     - ``insulation``: Yalıtım: thermal or acoustic insulation.
@@ -8971,7 +8971,7 @@ WallJointKindName = Literal["corner", "inline", "tee", "cross"]
 
 
 class WallJustify(_StrEnum):
-    """Where the wall's body lies across its path (AutoCAD Architecture's justification): `Left`, the path is the wall's
+    """Where the wall's body lies across its path (its justification): `Left`, the path is the wall's
     left face and the body to its right; `Center`, the path is its middle; `Right`, the path is its right face.
     """
     LEFT = "left"
@@ -10088,6 +10088,27 @@ class CurveEdit(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> CurveEdit:
         return _variant(_CURVE_EDIT, "CurveEdit", "kind", data).from_json(data)
+
+
+class DeclaredBasis(_Union):
+    """Where a declared value comes from.
+
+    One of:
+
+    - :class:`AuthorDeclaredBasis` (``kind: author``)
+    - :class:`DocumentDeclaredBasis` (``kind: document``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeclaredBasis:
+        return _variant(_DECLARED_BASIS, "DeclaredBasis", "kind", data).from_json(data)
 
 
 class DeriveWork(_Union):
@@ -12011,6 +12032,30 @@ class PavementEdge(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> PavementEdge:
         return _variant(_PAVEMENT_EDGE, "PavementEdge", "kind", data).from_json(data)
+
+
+class PerformanceOperation(_Union):
+    """What `cad.arch.performance` declares.
+
+    One of:
+
+    - :class:`ObjectsPerformanceOperation` (``kind: objects``)
+    - :class:`WallStylePerformanceOperation` (``kind: wallStyle``)
+    - :class:`OpeningTypePerformanceOperation` (``kind: openingType``)
+    - :class:`MaterialPerformanceOperation` (``kind: material``)
+    - :class:`BuildingPerformanceOperation` (``kind: building``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PerformanceOperation:
+        return _variant(_PERFORMANCE_OPERATION, "PerformanceOperation", "kind", data).from_json(data)
 
 
 class PerpendicularReference(_Union):
@@ -16868,8 +16913,14 @@ class ArchExceptionsEdited(_Model):
 class ArchInfo(_Model):
     """What every architectural object carries beside its geometry (`CAD-ARCH-03`): its level (by the project level's
     id), phase, construction status and discipline; absent fields are not said.
+    Attributes:
+        exit: A stair's emergency exit role (docs/adr/8068, EK-6 `FireExit`); absent: unknown (missing).
+        fire_rating: Its own fire resistance class (docs/adr/8068, EK-6 `FireRating`), over its type's (a wall style's); absent: its
+            type's, else none (missing).
     """
     discipline: ArchDiscipline | ArchDisciplineName | None | Unset = UNSET
+    exit: DeclaredExit | None | Unset = UNSET
+    fire_rating: Declared | None | Unset = UNSET
     level: str | None | Unset = UNSET
     phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
     status: ArchStatus | ArchStatusName | None | Unset = UNSET
@@ -16878,6 +16929,10 @@ class ArchInfo(_Model):
         out: dict[str, Any] = {}
         if self.discipline is not UNSET:
             out["discipline"] = None if self.discipline is None else _enum_out(self.discipline)
+        if self.exit is not UNSET:
+            out["exit"] = None if self.exit is None else self.exit.to_json()
+        if self.fire_rating is not UNSET:
+            out["fireRating"] = None if self.fire_rating is None else self.fire_rating.to_json()
         if self.level is not UNSET:
             out["level"] = self.level
         if self.phase is not UNSET:
@@ -16890,6 +16945,8 @@ class ArchInfo(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ArchInfo:
         return cls(
             discipline=UNSET if "discipline" not in data else None if data["discipline"] is None else _enum_in(ArchDiscipline, data["discipline"]),
+            exit=UNSET if "exit" not in data else None if data["exit"] is None else DeclaredExit.from_json(data["exit"]),
+            fire_rating=UNSET if "fireRating" not in data else None if data["fireRating"] is None else Declared.from_json(data["fireRating"]),
             level=data.get("level", UNSET),
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
             status=UNSET if "status" not in data else None if data["status"] is None else _enum_in(ArchStatus, data["status"]),
@@ -16935,6 +16992,8 @@ class ArchMaterial(_Model):
         id: Lower-case letters, digits and “-”, at most 64; it never changes.
         cut: Its cut pen; absent: the wall's.
         hatch: Its cut's hatch; absent: drawn without one.
+        strength: Its strength class (docs/adr/8068; EK-6: the model's material is named `Ad_Dayanım`, “Beton_C25”, “Çelik_S355”):
+            C25, S355 (`crate::strength_problem`). Absent: not given (a load-bearing material without one is missing).
     """
     id: str
     name: str
@@ -16942,6 +17001,7 @@ class ArchMaterial(_Model):
     cut: ComponentEdge | None | Unset = UNSET
     hatch: ComponentHatch | None | Unset = UNSET
     quantity: MaterialQuantity | MaterialQuantityName | Unset = UNSET
+    strength: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -16955,6 +17015,8 @@ class ArchMaterial(_Model):
             out["hatch"] = None if self.hatch is None else self.hatch.to_json()
         if self.quantity is not UNSET:
             out["quantity"] = _enum_out(self.quantity)
+        if self.strength is not UNSET:
+            out["strength"] = self.strength
         return out
 
     @classmethod
@@ -16966,6 +17028,7 @@ class ArchMaterial(_Model):
             cut=UNSET if "cut" not in data else None if data["cut"] is None else ComponentEdge.from_json(data["cut"]),
             hatch=UNSET if "hatch" not in data else None if data["hatch"] is None else ComponentHatch.from_json(data["hatch"]),
             quantity=_enum_in(MaterialQuantity, data["quantity"]) if "quantity" in data else UNSET,
+            strength=data.get("strength", UNSET),
         )
 
 
@@ -17010,6 +17073,56 @@ class ArchModule(_Model):
             members=[ModuleMember.from_json(e0) for e0 in data["members"]] if "members" in data else UNSET,
             removed=data.get("removed", UNSET),
             runs=[ModuleRun.from_json(e0) for e0 in data["runs"]] if "runs" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchPerformance(_Model):
+    """Input of `cad.arch.performance` v1.
+
+    Refusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `field_not_for_kind` (a class on a room,
+    a grid, a line …; an exit role on anything but a door or a stair), `nothing_to_set`, `style_not_found`,
+    `opening_type_not_found`, `material_not_found`, `invalid_declared`, `invalid_strength`, `invalid_revision`,
+    `revision_conflict`, `layer_locked` (an object named on a locked layer: nothing is written).
+    """
+    operation: PerformanceOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchPerformance:
+        return cls(
+            operation=PerformanceOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchPerformanceDone(_Model):
+    """Output of `cad.arch.performance` v1, and its plan: the objects that carry the value declared now (an object's own,
+    or a type's on its walls or openings without their own; none for a material's or the building's), by persistent id
+    in the drawing's order; the revision.
+    """
+    uids: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchPerformanceDone:
+        return cls(
+            uids=list(data["uids"]),
+            revision=data["revision"],
         )
 
 
@@ -17195,11 +17308,11 @@ class ArchSettings(_Model):
     by the drawing's scale, `WallDetail::at_scale`).
     Attributes:
         active_level: Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no
-            level). Absent: its ground level (the one at elevation 0, else its first). Revit's last viewed view.
+            level). Absent: its ground level (the one at elevation 0, else its first).
         audit_exceptions: Mimari denetim's findings left on purpose (docs/adr/0732 §3, KCAD 130), in the order they were marked.
         cut_height: The plan's cut height above each level's floor, metres (docs/adr/8012, KCAD 217): what crosses it is cut, a
             window over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project
-            writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50; Revit's metric templates: 1200 mm). Unit: length.
+            writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50). Unit: length.
         level_view: Kat görünümü when the drawing was saved (docs/adr/0720 §1), the one it opens with; absent: Bütün katlar.
         line_groups: How the plan's lines are weighted (docs/adr/8013, KCAD 218): `byScale` takes the line group of the scale the
             plan is drawn at (TS 88-23 / ISO 128-23 Tablo 2: 1:200 0.25, 1:100 0.35, 1:50 0.5, 1:20 0.7 mm for the wide
@@ -17212,6 +17325,8 @@ class ArchSettings(_Model):
         opening_types: The project's door and window types (docs/adr/0772, KCAD 137), in the order they were made.
         option_combos: The project's combinations of its sets' options (docs/adr/0808, KCAD 154): named proposals a view may show.
         options: The project's design option sets (docs/adr/0788, KCAD 153): alternatives for a part of the plan, one primary.
+        performance: Yangın ve performans (docs/adr/8068; arch data 1): the building's declared fire protection class (EK-6 Tablo
+            6.7 `FireProtectionClass`). Absent: none declared.
         phase_view: The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are.
         program: The building's program (docs/adr/0773, KCAD 140): buildings, wings, units and the design brief.
         site: Vaziyet planı (docs/adr/8032; `.kcad` schema 224): the parcel's boundary, its edges' kinds and setbacks, the
@@ -17238,6 +17353,7 @@ class ArchSettings(_Model):
     opening_types: list[OpeningType] | Unset = UNSET
     option_combos: list[OptionCombo] | Unset = UNSET
     options: list[OptionSet] | Unset = UNSET
+    performance: BuildingPerformance | None | Unset = UNSET
     phase_view: PhaseView | PhaseViewName | None | Unset = UNSET
     program: BuildingProgram | Unset = UNSET
     site: SitePlan | None | Unset = UNSET
@@ -17276,6 +17392,8 @@ class ArchSettings(_Model):
             out["optionCombos"] = [e0.to_json() for e0 in self.option_combos]
         if self.options is not UNSET:
             out["options"] = [e0.to_json() for e0 in self.options]
+        if self.performance is not UNSET:
+            out["performance"] = None if self.performance is None else self.performance.to_json()
         if self.phase_view is not UNSET:
             out["phaseView"] = None if self.phase_view is None else _enum_out(self.phase_view)
         if self.program is not UNSET:
@@ -17312,6 +17430,7 @@ class ArchSettings(_Model):
             opening_types=[OpeningType.from_json(e0) for e0 in data["openingTypes"]] if "openingTypes" in data else UNSET,
             option_combos=[OptionCombo.from_json(e0) for e0 in data["optionCombos"]] if "optionCombos" in data else UNSET,
             options=[OptionSet.from_json(e0) for e0 in data["options"]] if "options" in data else UNSET,
+            performance=UNSET if "performance" not in data else None if data["performance"] is None else BuildingPerformance.from_json(data["performance"]),
             phase_view=UNSET if "phaseView" not in data else None if data["phaseView"] is None else _enum_in(PhaseView, data["phaseView"]),
             program=BuildingProgram.from_json(data["program"]) if "program" in data else UNSET,
             site=UNSET if "site" not in data else None if data["site"] is None else SitePlan.from_json(data["site"]),
@@ -21996,6 +22115,27 @@ class Bounds(_Model):
             min_y=float(data["minY"]),
             max_x=float(data["maxX"]),
             max_y=float(data["maxY"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BuildingPerformance(_Model):
+    """The building's declared particulars for the fire regulation (EK-6 Tablo 6.7): its fire protection class. The
+    construction action (`ConstructionMethod`: new construction, addition, renovation) is the künye's building kind,
+    worked out where it is written.
+    """
+    fire_protection_class: Declared | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.fire_protection_class is not UNSET:
+            out["fireProtectionClass"] = None if self.fire_protection_class is None else self.fire_protection_class.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BuildingPerformance:
+        return cls(
+            fire_protection_class=UNSET if "fireProtectionClass" not in data else None if data["fireProtectionClass"] is None else Declared.from_json(data["fireProtectionClass"]),
         )
 
 
@@ -30061,6 +30201,26 @@ class DaylightWorst(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class Declared(_Model):
+    """A declared word and its basis."""
+    value: str
+    basis: DeclaredBasis
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["value"] = self.value
+        out["basis"] = self.basis.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Declared:
+        return cls(
+            value=data["value"],
+            basis=DeclaredBasis.from_json(data["basis"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DeclaredCrs(_Model):
     """The coordinate system a file declares: what the file says, never a
     guess (CLAUDE.md §5). The import window shows it as the answer to its
@@ -30092,6 +30252,29 @@ class DeclaredCrs(_Model):
             source=_enum_in(CrsSource, data["source"]),
             srid=data.get("srid", UNSET),
             vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else DeclaredVertical.from_json(data["vertical"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeclaredExit(_Model):
+    """A declared emergency exit role and its basis.
+    Attributes:
+        exit: Evet: it serves as an exit in a fire; hayır: it does not.
+    """
+    exit: bool
+    basis: DeclaredBasis
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["exit"] = self.exit
+        out["basis"] = self.basis.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeclaredExit:
+        return cls(
+            exit=data["exit"],
+            basis=DeclaredBasis.from_json(data["basis"]),
         )
 
 
@@ -64091,6 +64274,8 @@ class OpeningEntity(Entity):
         color: Colour override; absent = the layer's colour ("katmana göre").
         depth: A niche's depth from its face, a flue's size across its wall, metres (docs/adr/0719); none for one that goes
             through. Its face is `side`. Unit: length.
+        exit: A door's emergency exit role (docs/adr/8068, EK-6 `FireExit`); absent: unknown (missing).
+        fire_rating: Its own fire resistance class (docs/adr/8068, EK-6 `FireRating`), over its type's; absent: its type's, else none.
         frame: Its frame's width at each jamb, along the wall, metres. Absent: none. Unit: length.
         hand: Its hinge's end. Absent: its start.
         head: Its head's height above the floor, metres. Unit: elevation.
@@ -64139,6 +64324,8 @@ class OpeningEntity(Entity):
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     depth: float | None | Unset = UNSET
+    exit: DeclaredExit | None | Unset = UNSET
+    fire_rating: Declared | None | Unset = UNSET
     form: OpeningForm | OpeningFormName = OpeningForm.DOOR
     frame: float | None | Unset = UNSET
     hand: OpeningHand | OpeningHandName | Unset = UNSET
@@ -64189,6 +64376,10 @@ class OpeningEntity(Entity):
             out["color"] = self.color
         if self.depth is not UNSET:
             out["depth"] = None if self.depth is None else float(self.depth)
+        if self.exit is not UNSET:
+            out["exit"] = None if self.exit is None else self.exit.to_json()
+        if self.fire_rating is not UNSET:
+            out["fireRating"] = None if self.fire_rating is None else self.fire_rating.to_json()
         out["form"] = _enum_out(self.form)
         if self.frame is not UNSET:
             out["frame"] = None if self.frame is None else float(self.frame)
@@ -64259,6 +64450,8 @@ class OpeningEntity(Entity):
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
+            exit=UNSET if "exit" not in data else None if data["exit"] is None else DeclaredExit.from_json(data["exit"]),
+            fire_rating=UNSET if "fireRating" not in data else None if data["fireRating"] is None else Declared.from_json(data["fireRating"]),
             form=_enum_in(OpeningForm, data["form"]) if "form" in data else OpeningForm.DOOR,
             frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
             hand=_enum_in(OpeningHand, data["hand"]) if "hand" in data else UNSET,
@@ -64583,6 +64776,8 @@ class OpeningType(_Model):
             door in the building's outer wall, P01 a window, B01 a bare opening): the same on every opening of the type;
             unique in the project, case aside; at most 16 letters, digits, `-` or `.`. Absent: none (KCAD schema 220).
         depth: Unit: length.
+        fire_rating: Its fire resistance class (docs/adr/8068, EK-6 Tablo 6.25 `FireRating`): every opening of the type carries it
+            unless it has its own. Absent: none (missing on a door).
         frame: Unit: length.
         head: Unit: elevation.
         leaves: Unit: count.
@@ -64603,6 +64798,7 @@ class OpeningType(_Model):
     build: OpeningBuild | None | Unset = UNSET
     code: str | None | Unset = UNSET
     depth: float | None | Unset = UNSET
+    fire_rating: Declared | None | Unset = UNSET
     frame: float | None | Unset = UNSET
     head: float | None | Unset = UNSET
     leaves: int | Unset = UNSET
@@ -64627,6 +64823,8 @@ class OpeningType(_Model):
             out["code"] = self.code
         if self.depth is not UNSET:
             out["depth"] = None if self.depth is None else float(self.depth)
+        if self.fire_rating is not UNSET:
+            out["fireRating"] = None if self.fire_rating is None else self.fire_rating.to_json()
         if self.frame is not UNSET:
             out["frame"] = None if self.frame is None else float(self.frame)
         if self.head is not UNSET:
@@ -64660,6 +64858,7 @@ class OpeningType(_Model):
             build=UNSET if "build" not in data else None if data["build"] is None else OpeningBuild.from_json(data["build"]),
             code=data.get("code", UNSET),
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
+            fire_rating=UNSET if "fireRating" not in data else None if data["fireRating"] is None else Declared.from_json(data["fireRating"]),
             frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
             head=UNSET if "head" not in data else None if data["head"] is None else float(data["head"]),
             leaves=data.get("leaves", UNSET),
@@ -117005,6 +117204,8 @@ class WallStyleDef(_Model):
     new wall takes when one component takes the rest.
     Attributes:
         id: One of its kind among the project's wall styles; KentOS's own are named (`kentos-…`), the user's UUIDv7.
+        fire_rating: Its fire resistance class (docs/adr/8068, EK-6 Tablo 6.66 `FireRating`): every wall of the style carries it
+            unless the wall has its own. Absent: none (missing).
         width: A new wall's width, metres, when one component takes the rest; the components' sum when none does. Unit: length.
     """
     id: str
@@ -117012,6 +117213,7 @@ class WallStyleDef(_Model):
     components: list[WallComponent]
     caps: WallCaps | WallCapsName | Unset = UNSET
     fill: str | None | Unset = UNSET
+    fire_rating: Declared | None | Unset = UNSET
     width: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -117023,6 +117225,8 @@ class WallStyleDef(_Model):
             out["caps"] = _enum_out(self.caps)
         if self.fill is not UNSET:
             out["fill"] = self.fill
+        if self.fire_rating is not UNSET:
+            out["fireRating"] = None if self.fire_rating is None else self.fire_rating.to_json()
         if self.width is not UNSET:
             out["width"] = None if self.width is None else float(self.width)
         return out
@@ -117035,6 +117239,7 @@ class WallStyleDef(_Model):
             components=[WallComponent.from_json(e0) for e0 in data["components"]],
             caps=_enum_in(WallCaps, data["caps"]) if "caps" in data else UNSET,
             fill=data.get("fill", UNSET),
+            fire_rating=UNSET if "fireRating" not in data else None if data["fireRating"] is None else Declared.from_json(data["fireRating"]),
             width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
         )
 
@@ -123612,6 +123817,45 @@ class ToPolylineCurveEdit(CurveEdit):
     def from_json(cls, data: Mapping[str, Any]) -> ToPolylineCurveEdit:
         return cls(
             tolerance=float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AuthorDeclaredBasis(DeclaredBasis):
+    """Müellif beyanı: the author's own statement."""
+    TAG_VALUE: ClassVar[str] = "author"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "author"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AuthorDeclaredBasis:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class DocumentDeclaredBasis(DeclaredBasis):
+    """A document: its name (a test report, a product's declaration of performance) and, when given, its date.
+    Attributes:
+        date: `YYYY-MM-DD`.
+    """
+    TAG_VALUE: ClassVar[str] = "document"
+    name: str
+    date: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "document"}
+        out["name"] = self.name
+        if self.date is not UNSET:
+            out["date"] = self.date
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DocumentDeclaredBasis:
+        return cls(
+            name=data["name"],
+            date=data.get("date", UNSET),
         )
 
 
@@ -134841,6 +135085,116 @@ class SlopePavementEdge(PavementEdge):
 
 
 @dataclass(kw_only=True, slots=True)
+class ObjectsPerformanceOperation(PerformanceOperation):
+    """Nesneler: the objects' own fire resistance class (walls, slabs, columns, beams, roofs, railings, stairs, ramps,
+    doors, windows) and exit role (doors, stairs). A field absent stays; null takes the object's own away (a wall
+    then carries its style's, a door its type's).
+    """
+    TAG_VALUE: ClassVar[str] = "objects"
+    uids: list[str]
+    exit: DeclaredExit | None | Unset = UNSET
+    fire_rating: Declared | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "objects"}
+        out["uids"] = list(self.uids)
+        if self.exit is not UNSET:
+            out["exit"] = None if self.exit is None else self.exit.to_json()
+        if self.fire_rating is not UNSET:
+            out["fireRating"] = None if self.fire_rating is None else self.fire_rating.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ObjectsPerformanceOperation:
+        return cls(
+            uids=list(data["uids"]),
+            exit=UNSET if "exit" not in data else None if data["exit"] is None else DeclaredExit.from_json(data["exit"]),
+            fire_rating=UNSET if "fireRating" not in data else None if data["fireRating"] is None else Declared.from_json(data["fireRating"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallStylePerformanceOperation(PerformanceOperation):
+    """Duvar stili: a wall style's class (by its id or name); null: none."""
+    TAG_VALUE: ClassVar[str] = "wallStyle"
+    style: str
+    fire_rating: Declared | None = None
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "wallStyle"}
+        out["style"] = self.style
+        out["fireRating"] = None if self.fire_rating is None else self.fire_rating.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallStylePerformanceOperation:
+        return cls(
+            style=data["style"],
+            fire_rating=None if data["fireRating"] is None else Declared.from_json(data["fireRating"]) if "fireRating" in data else None,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningTypePerformanceOperation(PerformanceOperation):
+    """Kapı ve pencere tipi: a type's class (by its id or name); null: none."""
+    TAG_VALUE: ClassVar[str] = "openingType"
+    type: str
+    fire_rating: Declared | None = None
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "openingType"}
+        out["type"] = self.type
+        out["fireRating"] = None if self.fire_rating is None else self.fire_rating.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningTypePerformanceOperation:
+        return cls(
+            type=data["type"],
+            fire_rating=None if data["fireRating"] is None else Declared.from_json(data["fireRating"]) if "fireRating" in data else None,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MaterialPerformanceOperation(PerformanceOperation):
+    """Malzeme: a material's strength class (by its id or name); null: none."""
+    TAG_VALUE: ClassVar[str] = "material"
+    material: str
+    strength: str | None = None
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "material"}
+        out["material"] = self.material
+        out["strength"] = self.strength
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MaterialPerformanceOperation:
+        return cls(
+            material=data["material"],
+            strength=data["strength"] if "strength" in data else None,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BuildingPerformanceOperation(PerformanceOperation):
+    """Bina: the building's fire protection class; null: none."""
+    TAG_VALUE: ClassVar[str] = "building"
+    fire_protection_class: Declared | None = None
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "building"}
+        out["fireProtectionClass"] = None if self.fire_protection_class is None else self.fire_protection_class.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BuildingPerformanceOperation:
+        return cls(
+            fire_protection_class=None if data["fireProtectionClass"] is None else Declared.from_json(data["fireProtectionClass"]) if "fireProtectionClass" in data else None,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LinePerpendicularReference(PerpendicularReference):
     """
     Attributes:
@@ -140448,6 +140802,9 @@ _CURVE_CONSTRUCTION: dict[str, type[CurveConstruction]] = {"circleTwoPoints": Ci
 _CURVE_EDIT: dict[str, type[CurveEdit]] = {"close": CloseCurveEdit, "open": OpenCurveEdit, "decurve": DecurveCurveEdit, "toSpline": ToSplineCurveEdit, "addFit": AddFitCurveEdit, "moveFit": MoveFitCurveEdit, "removeFit": RemoveFitCurveEdit, "tangents": TangentsCurveEdit, "moveControl": MoveControlCurveEdit, "weight": WeightCurveEdit, "removeControl": RemoveControlCurveEdit, "insertKnot": InsertKnotCurveEdit, "toPolyline": ToPolylineCurveEdit}
 
 
+_DECLARED_BASIS: dict[str, type[DeclaredBasis]] = {"author": AuthorDeclaredBasis, "document": DocumentDeclaredBasis}
+
+
 _DERIVE_WORK: dict[str, type[DeriveWork]] = {"vertexPoints": VertexPointsDeriveWork, "centerline": CenterlineDeriveWork, "polygonize": PolygonizeDeriveWork}
 
 
@@ -140674,6 +141031,9 @@ _PARTITION_EXTENT: dict[str, type[PartitionExtent]] = {"source": SourcePartition
 
 
 _PAVEMENT_EDGE: dict[str, type[PavementEdge]] = {"vertical": VerticalPavementEdge, "slope": SlopePavementEdge}
+
+
+_PERFORMANCE_OPERATION: dict[str, type[PerformanceOperation]] = {"objects": ObjectsPerformanceOperation, "wallStyle": WallStylePerformanceOperation, "openingType": OpeningTypePerformanceOperation, "material": MaterialPerformanceOperation, "building": BuildingPerformanceOperation}
 
 
 _PERPENDICULAR_REFERENCE: dict[str, type[PerpendicularReference]] = {"line": LinePerpendicularReference, "circle": CirclePerpendicularReference}
@@ -141002,6 +141362,8 @@ __all__ = [
     "ArchMaterial",
     "ArchModule",
     "ArchOperation",
+    "ArchPerformance",
+    "ArchPerformanceDone",
     "ArchPhase",
     "ArchPhaseName",
     "ArchRecognize",
@@ -141128,6 +141490,7 @@ __all__ = [
     "AuditedRecord",
     "AuthKind",
     "AuthKindName",
+    "AuthorDeclaredBasis",
     "AutoCsvGeometryIn",
     "AutoPaperAnnotationScale",
     "AutoPaperLegendEntries",
@@ -141240,6 +141603,8 @@ __all__ = [
     "BreakLineName",
     "BreaksSectionStations",
     "BreaksTableEdit",
+    "BuildingPerformance",
+    "BuildingPerformanceOperation",
     "BuildingProgram",
     "BuildingSectionLeft",
     "BuildingSectionLeftName",
@@ -141609,7 +141974,10 @@ __all__ = [
     "DaylightSide",
     "DaylightStation",
     "DaylightWorst",
+    "Declared",
+    "DeclaredBasis",
     "DeclaredCrs",
+    "DeclaredExit",
     "DeclaredVertical",
     "DecurveCurveEdit",
     "DefineMaterialsOperation",
@@ -141745,6 +142113,7 @@ __all__ = [
     "DividerFormItem",
     "Division",
     "DmsPaperGridLabelFormat",
+    "DocumentDeclaredBasis",
     "DomainField",
     "DomainsEdit",
     "DomainsEdited",
@@ -142765,6 +143134,7 @@ __all__ = [
     "MaterialChange",
     "MaterialConflict",
     "MaterialConflictName",
+    "MaterialPerformanceOperation",
     "MaterialQuantity",
     "MaterialQuantityName",
     "MaterialReport",
@@ -142985,6 +143355,7 @@ __all__ = [
     "ObjectsDerived",
     "ObjectsHatchRegion",
     "ObjectsPaperCoordSource",
+    "ObjectsPerformanceOperation",
     "ObjectsSelectRegion",
     "ObjectsTrimBoundaries",
     "Observation",
@@ -143041,6 +143412,7 @@ __all__ = [
     "OpeningTypeConflictName",
     "OpeningTypeField",
     "OpeningTypeFieldName",
+    "OpeningTypePerformanceOperation",
     "OpeningTypeRefused",
     "OpeningTypeRefusedName",
     "OpeningTypeReport",
@@ -143405,6 +143777,7 @@ __all__ = [
     "PenCategory",
     "PenCategoryName",
     "PercentLengthenChange",
+    "PerformanceOperation",
     "PerpendicularConstraintRule",
     "PerpendicularInConstruction",
     "PerpendicularOutConstruction",
@@ -145121,6 +145494,7 @@ __all__ = [
     "WallSideName",
     "WallStyleDef",
     "WallStyleMaterialTarget",
+    "WallStylePerformanceOperation",
     "WallsCreate",
     "WallsCreated",
     "WallsDistances",

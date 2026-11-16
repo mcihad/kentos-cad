@@ -2,9 +2,20 @@
 import type { ArchDiscipline } from "./ArchDiscipline";
 import type { ArchPhase } from "./ArchPhase";
 import type { ArchStatus } from "./ArchStatus";
+import type { Declared } from "./Declared";
+import type { DeclaredExit } from "./DeclaredExit";
 
 /**
  * What every architectural object carries beside its geometry (`CAD-ARCH-03`): its level (by the project level's
  * id), phase, construction status and discipline; absent fields are not said.
  */
-export type ArchInfo = { level?: string, phase?: ArchPhase, status?: ArchStatus, discipline?: ArchDiscipline, };
+export type ArchInfo = { level?: string, phase?: ArchPhase, status?: ArchStatus, discipline?: ArchDiscipline, 
+/**
+ * Its own fire resistance class (docs/adr/8068, EK-6 `FireRating`), over its type's (a wall style's); absent: its
+ * type's, else none (missing).
+ */
+fireRating?: Declared, 
+/**
+ * A stair's emergency exit role (docs/adr/8068, EK-6 `FireExit`); absent: unknown (missing).
+ */
+exit?: DeclaredExit, };

@@ -46,6 +46,8 @@ pub struct Input<'a> {
     pub gaps: Vec<Gap>,
     pub entities: Vec<(u128, String, &'a Entity)>,
     pub wall_style_name: &'a dyn Fn(Option<&str>) -> String,
+    /// The project's wall styles: a wall's fire resistance class is its own, else its style's (docs/adr/8068).
+    pub wall_styles: &'a [kentos_contracts::WallStyleDef],
     pub net_area: &'a mut dyn FnMut(&SpaceFields) -> Option<f64>,
     pub arch: Option<&'a ArchSettings>,
     pub particulars: Particulars,
@@ -107,6 +109,9 @@ pub struct Particulars {
     pub footprint: Option<f64>,
     /// The gardens' distances, m: ön, yan, arka (each the least of its edges'; Vaziyet planı).
     pub setbacks: [Option<f64>; 3],
+    /// The construction action (EK-6 Tablo 6.7 `ConstructionMethod`: yeni yapı, ilave, tadilat), the künye's
+    /// building kind (docs/adr/8068).
+    pub construction: Option<String>,
 }
 
 impl Particulars {
@@ -393,6 +398,61 @@ fn material(m: Option<String>) -> Option<String> {
     m.map(|m| m.trim().to_owned()).filter(|m| !m.is_empty())
 }
 
+/// `props` given `key` in the set `set`: added to the set if the element has it, else a set of its own.
+fn give(psets: &mut Vec<Pset>, set: &str, key: &str, value: Value) {
+    match psets.iter_mut().find(|p| p.name == set) {
+        Some(p) => p.props.push((key.to_owned(), value)),
+        None => psets.push(Pset { name: set.to_owned(), props: vec![(key.to_owned(), value)] }),
+    }
+}
+
+/// The common property set EK-6 asks a class's fire resistance class in.
+fn common_set(class: Class) -> Option<&'static str> {
+    Some(match class {
+        Class::Wall => "Pset_WallCommon",
+        Class::Slab => "Pset_SlabCommon",
+        Class::Column => "Pset_ColumnCommon",
+        Class::Beam => "Pset_BeamCommon",
+        Class::Roof => "Pset_RoofCommon",
+        Class::Railing => "Pset_RailingCommon",
+        Class::Stair => "Pset_StairCommon",
+        Class::Door => "Pset_DoorCommon",
+        Class::Window => "Pset_WindowCommon",
+        Class::Covering => "Pset_CoveringCommon",
+        Class::Ramp => "Pset_RampCommon",
+        _ => return None,
+    })
+}
+
+/// The declarations an object carries (docs/adr/8068): its fire resistance class (its own, else its wall style's or its
+/// door or window type's) and a door's or a stair's exit role. Nothing declared is nothing written.
+fn declared(e: &Entity, wall_styles: &[kentos_contracts::WallStyleDef], arch: Option<&ArchSettings>) -> (Option<String>, Option<bool>) {
+    let fire = match e {
+        Entity::Wall(w) => w.wall.arch.fire_rating.as_ref().or_else(|| {
+            let id = w.wall.style.as_deref()?;
+            wall_styles.iter().find(|s| s.id == id)?.fire_rating.as_ref()
+        }),
+        Entity::Opening(o) => o.opening.fire_rating.as_ref().or_else(|| {
+            let id = o.opening.style.as_deref()?;
+            arch?.opening_types.iter().find(|t| t.id == id)?.fire_rating.as_ref()
+        }),
+        other => other.arch_info().and_then(|a| a.fire_rating.as_ref()),
+    };
+    let exit = match e {
+        Entity::Opening(o) => o.opening.exit.as_ref(),
+        Entity::Stair(s) => s.stair.arch.exit.as_ref(),
+        _ => None,
+    };
+    (fire.map(|d| d.value.clone()), exit.map(|x| x.exit))
+}
+
+/// A material's name as the model writes it: `Ad_Dayanım` when the project's material of that name has a strength
+/// (EK-6: “Beton_C25”), else its name.
+fn material_named(name: String, arch: Option<&ArchSettings>) -> String {
+    let strength = arch.and_then(|a| a.material(&name)).and_then(|m| m.strength.as_deref());
+    kentos_contracts::material_label(&name, strength)
+}
+
 /// The building to write.
 pub fn building(input: Input<'_>) -> (Building, Written) {
     let Input {
@@ -405,6 +465,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         gaps,
         entities,
         wall_style_name,
+        wall_styles,
         net_area,
         arch,
         particulars,
@@ -913,6 +974,20 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     if let Some(a) = k.gross_area {
         common.push(("GrossPlannedArea".to_owned(), Value::Area(a)));
     }
+    // The rooms' net areas together (EK-6 Tablo 6.7 `NetPlannedArea`; docs/adr/8068), as the model's spaces carry them.
+    let net: f64 = spaces.iter().filter_map(|s| s.qtos.iter().find_map(|q| q.quantities.iter().find_map(|(k, v)| match (k.as_str(), v) {
+        ("NetFloorArea", Value::Area(a)) => Some(*a),
+        _ => None,
+    }))).sum();
+    if net > 0.0 {
+        common.push(("NetPlannedArea".to_owned(), Value::Area(net)));
+    }
+    if let Some(c) = &k.construction {
+        common.push(("ConstructionMethod".to_owned(), label(c)));
+    }
+    if let Some(d) = arch.and_then(|a| a.performance.as_ref()).and_then(|p| p.fire_protection_class.as_ref()) {
+        common.push(("FireProtectionClass".to_owned(), label(&d.value)));
+    }
     common.push((
         "NumberOfStoreys".to_owned(),
         Value::Count(storeys.len() as i64),
@@ -932,6 +1007,30 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     // EK-7 Tablo 7.1: the project's name is its code (EK-1), its long name the work's.
     let project_name = k.project_code.clone().unwrap_or_else(|| title.clone());
     let actors = k.architect().into_iter().collect();
+    // The author's declarations (docs/adr/8068): each element's fire resistance class and exit role, its material
+    // named with its strength.
+    {
+        let at: std::collections::HashMap<u128, usize> =
+            elements.iter().enumerate().filter_map(|(i, e)| Some((e.id?, i))).collect();
+        for (id, _, e) in &entities {
+            let Some(&i) = at.get(id) else { continue };
+            let class = elements[i].class;
+            let (fire, exit) = declared(e, wall_styles, arch);
+            if let (Some(set), Some(f)) = (common_set(class), fire) {
+                give(&mut elements[i].psets, set, "FireRating", Value::Label(f));
+            }
+            if let (Some(set), Some(x)) = (common_set(class), exit)
+                && matches!(class, Class::Door | Class::Stair)
+            {
+                give(&mut elements[i].psets, set, "FireExit", Value::Bool(x));
+            }
+        }
+        for e in &mut elements {
+            if let Some(m) = e.material.take() {
+                e.material = Some(material_named(m, arch));
+            }
+        }
+    }
     let building = Building {
         file: k.file_stem(&title),
         stamp: stamp.to_owned(),

@@ -2512,6 +2512,12 @@ codes! {
     OPENING_TYPE_SKIPPED = "opening_type_skipped", Warning, false, "Tipi izleyen bazı açıklıklar güncellenmedi (kilitli katman ya da sığmayan); eski sürümde kaldı.";
     /// Openings of a type that kept their own value of a field the type changed.
     OPENING_TYPE_KEPT = "opening_type_kept", Warning, false, "Tipi izleyen bazı açıklıklar değişen alanda kendi değerini (örnek istisnası) korudu.";
+    // ── Yangın ve performans (docs/adr/8068) ────────────────────────────
+    /// A declared word that is empty, too long or broken over lines, or a basis whose document has no name or whose date
+    /// is no day.
+    INVALID_DECLARED = "invalid_declared", Failed, false, "Beyan edilen değer boş, çok uzun ya da satır sonu içeriyor ya da dayanağı geçersiz (belgenin adı yok, tarihi bir gün değil).";
+    /// A strength class that does not read as one.
+    INVALID_STRENGTH = "invalid_strength", Failed, false, "Malzemenin dayanım sınıfı harf, rakam ve / . , - ile en çok 16 karakter değil (C25, S355).";
     // ── Malzemeler (docs/adr/0785) ───────────────────────────────────────
     /// No project material of the id or name given.
     MATERIAL_NOT_FOUND = "material_not_found", Failed, false, "Projede bu kimlikte ya da adda malzeme yok.";

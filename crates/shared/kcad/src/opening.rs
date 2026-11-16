@@ -1,7 +1,7 @@
 //! An opening's fields beside its wall, place along it, width and jambs (docs/adr/0341 §1), as schema 77 writes
 //! them: one map, each field only when it is not its default, so a file has one way to say an opening. Schema 119
 //! (docs/adr/0719) adds a niche's and flue's form, `depth` and `inset` and the break `tooDeep`. Schema 230
-//! (docs/adr/8039) adds its own `phase`.
+//! (docs/adr/8039) adds its own `phase`; arch data 1 (docs/adr/8068) its own `fireRating` and a door's `exit`.
 
 use kentos_contracts::{
     OpeningAnchor, OpeningBreak, OpeningFields, OpeningForm, OpeningHand, OpeningOperation,
@@ -53,6 +53,11 @@ pub(crate) struct OpeningRest {
     /// Schema 230 (docs/adr/8039): its own phase; absent: its wall's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub phase: Option<kentos_contracts::ArchPhase>,
+    /// Arch data 1 (docs/adr/8068): its own fire resistance class and a door's exit role.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fire_rating: Option<kentos_contracts::Declared>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub exit: Option<kentos_contracts::DeclaredExit>,
 }
 
 fn one() -> u8 {
@@ -103,6 +108,8 @@ impl OpeningRest {
             overrides: f.overrides.clone(),
             build: f.build.clone(),
             phase: f.phase,
+            fire_rating: f.fire_rating.clone(),
+            exit: f.exit.clone(),
         }
     }
 
@@ -132,6 +139,8 @@ impl OpeningRest {
             place,
             broken: self.broken,
             phase: self.phase,
+            exit: self.exit,
+            fire_rating: self.fire_rating,
         }
     }
 }

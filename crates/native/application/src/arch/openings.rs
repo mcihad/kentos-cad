@@ -317,6 +317,8 @@ pub(crate) fn fields_of(n: &NewOpening, kind: &OpeningTypeDef) -> OpeningFields 
         place: Vec::new(),
         broken: None,
         phase: None,
+        exit: None,
+        fire_rating: None,
     };
     kind.apply(&mut f);
     if let Some(v) = n.form {

@@ -20,4 +20,9 @@ hatch?: ComponentHatch,
 /**
  * Its cut pen; absent: the wall's.
  */
-cut?: ComponentEdge, };
+cut?: ComponentEdge, 
+/**
+ * Its strength class (docs/adr/8068; EK-6: the model's material is named `Ad_Dayanım`, “Beton_C25”, “Çelik_S355”):
+ * C25, S355 (`crate::strength_problem`). Absent: not given (a load-bearing material without one is missing).
+ */
+strength?: string, };

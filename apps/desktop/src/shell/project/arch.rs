@@ -437,6 +437,7 @@ pub fn read(
         site,
         local_rules,
         sprinklers,
+        performance: None,
     };
     match arch.problem() {
         Some((_, why)) => Err(why),

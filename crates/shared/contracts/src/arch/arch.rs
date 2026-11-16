@@ -25,7 +25,7 @@ pub const DEFAULT_WALL_WIDTH: f64 = 0.2;
 pub const DETAILED_UP_TO: f64 = 30.0;
 pub const STANDARD_UP_TO: f64 = 75.0;
 
-/// Where the wall's body lies across its path (AutoCAD Architecture's justification): `Left`, the path is the wall's
+/// Where the wall's body lies across its path (its justification): `Left`, the path is the wall's
 /// left face and the body to its right; `Center`, the path is its middle; `Right`, the path is its right face.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -604,6 +604,15 @@ pub struct ArchInfo {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub discipline: Option<ArchDiscipline>,
+    /// Its own fire resistance class (docs/adr/8068, EK-6 `FireRating`), over its type's (a wall style's); absent: its
+    /// type's, else none (missing).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fire_rating: Option<crate::Declared>,
+    /// A stair's emergency exit role (docs/adr/8068, EK-6 `FireExit`); absent: unknown (missing).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub exit: Option<crate::DeclaredExit>,
 }
 
 impl ArchInfo {
@@ -1085,6 +1094,11 @@ pub struct WallStyleDef {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub width: Option<f64>,
+    /// Its fire resistance class (docs/adr/8068, EK-6 Tablo 6.66 `FireRating`): every wall of the style carries it
+    /// unless the wall has its own. Absent: none (missing).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fire_rating: Option<crate::Declared>,
 }
 
 impl WallStyleDef {
@@ -1300,7 +1314,7 @@ pub struct ArchSettings {
     pub detail: Option<WallDetail>,
     /// The plan's cut height above each level's floor, metres (docs/adr/8012, KCAD 217): what crosses it is cut, a
     /// window over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project
-    /// writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50; Revit's metric templates: 1200 mm).
+    /// writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -1336,7 +1350,7 @@ pub struct ArchSettings {
     )]
     pub space_number_prefixes: std::collections::BTreeMap<String, String>,
     /// Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no
-    /// level). Absent: its ground level (the one at elevation 0, else its first). Revit's last viewed view.
+    /// level). Absent: its ground level (the one at elevation 0, else its first).
     #[serde(
         default,
         with = "crate::cad_properties::nullable",
@@ -1392,6 +1406,11 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub local_rules: Option<LocalRules>,
+    /// Yangın ve performans (docs/adr/8068; arch data 1): the building's declared fire protection class (EK-6 Tablo
+    /// 6.7 `FireProtectionClass`). Absent: none declared.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub performance: Option<crate::BuildingPerformance>,
     /// Yağmurlama sistemi (docs/adr/8035; `.kcad` schema 226): the building has an automatic sprinkler system, so the
     /// fire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -1775,8 +1794,8 @@ pub enum LineGroups {
 
 /// TS 88-23 / ISO 128-23's line groups (Tablo 2) by the scale a plan is drawn at, as the owner chose them
 /// (docs/adr/8013): up to 1:`scale`, the group's wide line, mm; its narrow line is half. A scale between two takes
-/// the group of the next smaller one up to it, as Revit's model line weights do ("applied to the associated scale and
-/// larger scales until the next range"): 1:75 draws as 1:100, 1:150 and 1:500 as 1:200.
+/// the group of the next smaller one up to it (a range holds from its scale until the next): 1:75 draws as 1:100,
+/// 1:150 and 1:500 as 1:200.
 pub const LINE_GROUPS: [(f64, f64); 4] = [
     (20.0, 0.7),
     (50.0, 0.5),
@@ -2179,6 +2198,7 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             caps: WallCaps::Closed,
             fill: Some("#5A5A5A".into()),
             width: Some(0.25),
+            fire_rating: None,
         },
         WallStyleDef {
             id: "kentos-ic-duvar-15".into(),
@@ -2191,6 +2211,7 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             caps: WallCaps::Closed,
             fill: Some("#5A5A5A".into()),
             width: Some(0.15),
+            fire_rating: None,
         },
         WallStyleDef {
             id: "kentos-gazbeton-20".into(),
@@ -2204,6 +2225,7 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             caps: WallCaps::Closed,
             fill: Some("#5A5A5A".into()),
             width: Some(0.20),
+            fire_rating: None,
         },
         WallStyleDef {
             id: "kentos-betonarme-25".into(),
@@ -2218,6 +2240,7 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             caps: WallCaps::Closed,
             fill: Some("#3C3C3C".into()),
             width: Some(0.25),
+            fire_rating: None,
         },
         WallStyleDef {
             id: "kentos-bolme-10".into(),
@@ -2230,6 +2253,7 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             caps: WallCaps::Closed,
             fill: None,
             width: Some(0.10),
+            fire_rating: None,
         },
     ]
 }

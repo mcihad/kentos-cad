@@ -759,6 +759,35 @@ pub(super) const ENTRIES: &[Entry] = &[
             )]
         },
     },
+    // Yangın ve performans (docs/adr/8068): a class on a building element, an exit role on a door or a stair.
+    Entry {
+        id: "cad.arch.performance",
+        refusals: &[
+            OBJECTS,
+            &[
+                "field_not_for_kind",
+                "nothing_to_set",
+                "style_not_found",
+                "opening_type_not_found",
+                "material_not_found",
+                "invalid_declared",
+                "invalid_strength",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: || {
+            vec![target(
+                Some("objects"),
+                &[
+                    "wall", "slab", "column", "beam", "roof", "railing", "stair", "ramp", "opening",
+                ],
+                &[],
+                Some("field_not_for_kind"),
+                Some("Acil çıkış yalnız kapıda ve merdivende; yangın dayanım sınıfı yapı elemanında (mahal, aks, blok ve çizgide değil)."),
+            )]
+        },
+    },
     // Kuzey oku, Revizyon işaretle and Malzeme lejandı (docs/adr/0721).
     Entry {
         id: "cad.north.create",
