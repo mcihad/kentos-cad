@@ -328,7 +328,7 @@ class RoomEscape:
 
 @dataclass(frozen=True)
 class RoomFacts:
-    """A room: its persistent id, number, name, usage, storey and group; void, outdoor, broken (boundary not found) or an escape stair's room; net area and outline to the walls' axes (m²); walks (None for a void, outdoor, broken or stair room); ``kind`` by name or use (``living``, ``bedroom``, ``kitchen``, ``bath``, ``toilet``, ``corridor``; None for another); ``narrow``, its net width (m, dar kenar)."""
+    """A room: its persistent id, number, name, usage, storey and group; void, outdoor, broken (boundary not found) or an escape stair's room; net area and outline to the walls' axes (m²); walks (None for a void, outdoor, broken or stair room); ``kind`` by name or use (``living``, ``bedroom``, ``kitchen``, ``bath``, ``toilet``, ``corridor``; None for another); ``narrow``, its net width (m, dar kenar); ``…"""
     uid: str
     number: str | None
     name: str | None
@@ -344,6 +344,7 @@ class RoomFacts:
     escape: RoomEscape | None
     kind: str | None = None
     narrow: float | None = None
+    occupancy: str | None = None
 
 
 @dataclass(frozen=True)

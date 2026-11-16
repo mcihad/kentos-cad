@@ -577,6 +577,129 @@
       "expect": {
         "count": 0
       }
+    },
+    {
+      "title": "Konut binasının bodrum otoparkı (bölümsüz): adından otopark sınıfı, tek yönde 27 m (15 m)",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "bodrum",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          },
+          {
+            "level": "bodrum",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000005",
+            "number": "Z05",
+            "name": "Salon",
+            "kind": null,
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 30.0,
+            "axis": 33.0,
+            "narrow": 4.0,
+            "escape": {
+              "exit": {
+                "length": 40.0,
+                "oneWay": 40.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000006",
+            "number": "B01",
+            "name": "Otopark",
+            "kind": null,
+            "level": "bodrum",
+            "unit": null,
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 400.0,
+            "axis": 420.0,
+            "narrow": 15.0,
+            "escape": {
+              "exit": {
+                "length": 27.0,
+                "oneWay": 27.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            },
+            "occupancy": "parking"
+          }
+        ],
+        "units": [
+          {
+            "id": "d1",
+            "number": "5",
+            "name": null,
+            "kind": "unit",
+            "nature": "Daire",
+            "annexOf": null,
+            "dwelling": true,
+            "gross": 120.0,
+            "net": 100.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 120.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 120.0,
+                "net": 100.0
+              }
+            ],
+            "occupancy": "dwelling"
+          }
+        ],
+        "doors": [],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 1,
+        "has": [
+          {
+            "severity": "error",
+            "message": "otoparklar ve depolar için tek yönde en çok 15.00 m"
+          }
+        ]
+      }
     }
   ]
 }

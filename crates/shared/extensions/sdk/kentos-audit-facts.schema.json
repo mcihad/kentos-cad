@@ -545,6 +545,17 @@
             "null"
           ]
         },
+        "occupancy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Occupancy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The use its name or usage names as BYKHY Ek-5/B's rows do (Otopark, Depo, Lokanta …), as Mimari denetim's\nfire rules read a room outside a unit (docs/adr/8057 §82); none when they name none, or a dwelling's."
+        },
         "outdoor": {
           "description": "Its usage's brief is an outdoor one (a balcony, a terrace).",
           "type": "boolean"

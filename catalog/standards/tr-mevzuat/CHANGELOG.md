@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 0.4.1
+
+- **`kacis-uzakligi`**: bir bölüme ait olmayan mahal (ortak alan, bodrumdaki otopark ya da depo) yerel denetim gibi
+  önce kendi adının sınıfıyla ölçülür (olguların yeni `RoomFacts.occupancy`'si: Otopark, Depo, Lokanta …), o da yoksa
+  binanınkiyle; bulgu sınıfın mahalin adından okunduğunu söyler. Yalnız konut olan binanın bodrum otoparkı artık
+  ölçülür. Sekizinci örnek: 27 m'lik tek yönlü otopark yürüyüşü, sınır 15 m.
+
 ## 0.4.0
 
 - **`kacis-uzakligi`** (yeni): konut olmayan bölümlerde kaçış uzaklığı (BYKHY 32/3-4, Ek-5/B). Mahalin en uzak

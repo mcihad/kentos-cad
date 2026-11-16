@@ -1223,7 +1223,7 @@ def _room(raw: dict[str, Any]) -> RoomFacts:
     return RoomFacts(str(raw.get("uid", "")), *text.values(), bool(raw.get("void")), bool(raw.get("outdoor")),
                      bool(raw.get("broken")), bool(raw.get("stair")), float(raw.get("net") or 0.0),
                      float(raw.get("axis") or 0.0), escape, _maybe_str(raw.get("kind")),
-                     _maybe_float(raw.get("narrow")))
+                     _maybe_float(raw.get("narrow")), _maybe_str(raw.get("occupancy")))
 
 
 def _unit(raw: dict[str, Any]) -> UnitFacts:
@@ -1274,7 +1274,7 @@ class RoomFacts:
     """A room: its persistent id, number, name, usage, storey and group; void, outdoor, broken (boundary not found) or
     an escape stair's room; net area and outline to the walls' axes (m²); walks (None for a void, outdoor, broken or
     stair room); ``kind`` by name or use (``living``, ``bedroom``, ``kitchen``, ``bath``, ``toilet``, ``corridor``;
-    None for another); ``narrow``, its net width (m, dar kenar)."""
+    None for another); ``narrow``, its net width (m, dar kenar); ``occupancy``, the Ek-5/B row its name says."""
 
     uid: str
     number: str | None
@@ -1291,6 +1291,7 @@ class RoomFacts:
     escape: RoomEscape | None
     kind: str | None = None
     narrow: float | None = None
+    occupancy: str | None = None
 
 
 @dataclass(frozen=True)

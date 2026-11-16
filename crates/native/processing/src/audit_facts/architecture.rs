@@ -69,6 +69,9 @@ pub(super) fn measure(
                 name: x.name.clone(),
                 usage: x.usage.clone(),
                 kind: kind_of(x.name.as_deref(), x.usage.as_deref()).map(facts_kind),
+                occupancy: kentos_domain::fire_use::use_of(x.name.as_deref(), x.usage.as_deref())
+                    .filter(|u| *u != kentos_domain::fire_use::Use::Dwelling)
+                    .map(row_of),
                 level: e.own_level().map(str::to_owned),
                 unit: x.unit.clone(),
                 void: x.void,
@@ -222,7 +225,13 @@ fn occupancy_of(
     } else {
         use_of(owner.nature.as_deref(), None)?
     };
-    Some(match read {
+    Some(row_of(read))
+}
+
+/// A use as the facts name Ek-5/B's row.
+fn row_of(read: kentos_domain::fire_use::Use) -> Occupancy {
+    use kentos_domain::fire_use::Use;
+    match read {
         Use::HighHazard => Occupancy::HighHazard,
         Use::Industry => Occupancy::Industry,
         Use::Dormitory => Occupancy::Dormitory,
@@ -234,7 +243,7 @@ fn occupancy_of(
         Use::Hospital => Occupancy::Hospital,
         Use::Hotel => Occupancy::Hotel,
         Use::Dwelling => Occupancy::Dwelling,
-    })
+    }
 }
 
 /// The program's groups with rooms and their article 4 areas, in the program's order.

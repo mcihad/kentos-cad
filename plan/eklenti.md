@@ -1061,8 +1061,10 @@ kullanım sınıfı ve tek/iki yönlü Ek-5/B uzaklıkları, yüksek tehlikeli y
 **Ulusal kuralların dördüncü dilimi** (ADR 8057 §79, 16 Kasım): bölümün Ek-5/B kullanım sınıfı olgularda
 (`UnitFacts.occupancy`, niteliğinden; Mimari denetimin okuması `kentos_domain::fire_use`'a taşındı); `tr.kentos.mevzuat`
 0.4.0'a `kacis-uzakligi`: konut olmayan bölümlerde tek ve iki yönlü kaçış uzaklığı sınıfın satırıyla, yağmurlama
-ayarının sütunuyla; okunamayan sınıf büro sayılır ve söylenir; endüstri yapısında dipnot (1) "karar verilemedi". Kalan:
-yüksek tehlikeli yer, mahal adından sınıf, kurp/görüş hesapları, belediye plan notları.
+ayarının sütunuyla; okunamayan sınıf büro sayılır ve söylenir; endüstri yapısında dipnot (1) "karar verilemedi".
+0.4.1 (ADR 8057 §82): mahalin adından sınıf olgularda (`RoomFacts.occupancy`); bölümsüz mahal (konut binasının bodrum
+otoparkı da) yerel denetim gibi kendi adının sınıfıyla ölçülür. Kalan: yüksek tehlikeli yer, kurp/görüş hesapları,
+belediye plan notları.
 **Bütçe kuralın Python'unu da ölçer** (ADR 8057 §58, 16 Kasım): sunucunun gözcüsü iş çalıştırıcısını ve altındaki her
 süreci (kuralın Python'u) birlikte ölçer (Linux'ta `/proc`, öbür Unix'lerde tek `ps`; işlemci bitip beklenen çocuklarla,
 bellek toplam RSS) ve bütçe aşılınca ya da Durdur'da iş çalıştırıcısının süreç grubunu bitirir; sonuç yerleşik

@@ -71,6 +71,10 @@ pub struct RoomFacts {
     /// Mutfak, Banyo, WC, Hol …); none for another room (a store, a study, a balcony).
     #[serde(default)]
     pub kind: Option<RoomKind>,
+    /// The use its name or usage names as BYKHY Ek-5/B's rows do (Otopark, Depo, Lokanta …), as Mimari denetim's
+    /// fire rules read a room outside a unit (docs/adr/8057 §82); none when they name none, or a dwelling's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub occupancy: Option<Occupancy>,
     /// Its storey's id.
     pub level: Option<String>,
     /// Its program group's id.

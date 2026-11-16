@@ -9,7 +9,10 @@ kaçış uzaklığı sütunları, m: tek yön ve iki yön, yağmurlama sistemi y
 çıkışta bütün yol tek yöndür, iki çıkışta önce yolun tek yönlü kısmı tek yön sınırına, o aşılmıyorsa bütün yol iki yön
 sınırına. Bölümün sınıfı olguların ``occupancy``'sidir (niteliğinden okunur: Büro, Dükkân, Otel …); niteliği bir sınıf
 söylemeyen bölüm binanın bilinen en ağır sınıfıyla, o da yoksa yerel denetim gibi büro sayılır ve bulgu bunu söyler.
-Konutun mahalleri 48'in kurallarınındır; yalnız konut olan binanın ortak mahalleri ölçülmez (48/4 kapıdan ölçer).
+Bir bölüme ait olmayan mahal (ortak alanlar, bodrumdaki otopark ya da depo) yerel denetim gibi önce kendi adının
+söylediği sınıfla (mahalin ``occupancy``'si: Otopark, Depo, Lokanta …), o da yoksa binanınkiyle ölçülür. Konutun
+mahalleri 48'in kurallarınındır; yalnız konut olan binanın, adı bir sınıf söylemeyen ortak mahalleri ölçülmez (48/4
+kapıdan ölçer).
 """
 
 from __future__ import annotations
@@ -84,9 +87,10 @@ def _karar(walk: ext.EscapeWalk, sinif: str, wet: Yagmurlama) -> tuple[str, str,
 def kacis_uzakligi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Konut olmayan bölümlerin (ve onların bulunduğu binanın ortak mahallerinin) her mahalinden en yakın kat çıkışına
     yürüyüş, bölümün Ek-5/B satırının sınırına, projenin yağmurlama ayarının sütunuyla: aşarsa hata. Sınıfı okunamayan
-    bölüm binanın bilinen en ağır sınıfıyla ya da büro sayılır, bulgu söyler. Konutun ve yalnız konut olan binanın
-    mahalleri okunmaz; yürüyüşü olmayan mahal (boşluk, dış mahal, sınırı bulunamayan, kaçış merdiveni) ve hiçbir çıkışa
-    ulaşmayan mahal (çıkış erişimi kuralının) denetlenmez."""
+    bölüm binanın bilinen en ağır sınıfıyla ya da büro sayılır, bulgu söyler. Bölümü olmayan mahal önce kendi adının
+    sınıfıyla ölçülür (konut binasının bodrum otoparkı da). Konutun mahalleri ve yalnız konut olan binanın adı bir sınıf
+    söylemeyen ortak mahalleri okunmaz; yürüyüşü olmayan mahal (boşluk, dış mahal, sınırı bulunamayan, kaçış merdiveni)
+    ve hiçbir çıkışa ulaşmayan mahal (çıkış erişimi kuralının) denetlenmez."""
     a = facts.project.architecture
     units = {u.id: u for u in a.units}
     bilinen = [
@@ -107,11 +111,15 @@ def kacis_uzakligi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
             if unit.dwelling:
                 continue
             sinif, okunan = (unit.occupancy, True) if unit.occupancy in UZAKLIK else (bina_sinifi, False)
+            adindan = False
+        elif room.occupancy in UZAKLIK:
+            # Bölümü olmayan mahal kendi adının sınıfıyla, yerel denetim gibi: Otopark, Depo, Lokanta …
+            sinif, okunan, adindan = room.occupancy, True, True
         elif konut_disi:
-            sinif, okunan = bina_sinifi, bina_sinifi is not None
+            sinif, okunan, adindan = bina_sinifi, bina_sinifi is not None, False
         else:
             continue
-        not_ = ""
+        not_ = "; sınıf mahalin adından okundu" if adindan else ""
         if sinif is None:
             sinif, not_ = "office", "; bölümün niteliği bir kullanım sınıfı söylemiyor, büro sayıldı"
         elif not okunan:

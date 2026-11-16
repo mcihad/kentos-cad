@@ -17,6 +17,7 @@ fn room(uid: &str, net: f64, escape: Option<RoomEscape>) -> RoomFacts {
         name: Some("Ofis".into()),
         usage: None,
         kind: None,
+        occupancy: Some(Occupancy::Office),
         level: Some("zemin".into()),
         unit: Some("of".into()),
         void: false,

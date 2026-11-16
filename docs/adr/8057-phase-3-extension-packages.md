@@ -4428,3 +4428,27 @@ SDK'nın doğrulama kodları; kayıt defteri `packages.rs` (yeni: `PackageLine`,
   başka sürüm, aynı sürüm başka dosyalar, yeni ve benzer adlı, değişmeyen, kalkan), masaüstünün eklenti sınamaları 99.
 - **Kalan:** platform farkı (yeni bir işletim sistemi ya da işlemci tekerleği); listenin dönemsel güncellenmesi;
   paket deposunda olmayan adın tarayıcıda denetimi.
+
+## §82. Mahalin adından kullanım sınıfı; bölümsüz mahal kendi sınıfıyla (`ADIM 20`, §79'un kalanı)
+
+**16 Kasım.** Kod: paylaşılan olgular (`RoomFacts::occupancy`), İşlemler'in olgu üreticisi (`row_of`, mahalin adı ve
+kullanımı `kentos_domain::fire_use::use_of` ile), `python/kentos/ext.py` (`RoomFacts.occupancy`), olgu fikstürü, JSON
+Schema'lar, `kentos_ext.pyi`; `tr.kentos.mevzuat` 0.4.1 (`kacis.py`, sekizinci örnek).
+
+- **Sorun.** Mimari denetimin yangın kuralı bir mahalin sınıfını önce bölümünden, bölümü yoksa kendi adından (Otopark,
+  Depo, Lokanta …), o da yoksa binadan okuyor; olgular yalnız bölümün sınıfını taşıyordu. Kural bölümsüz mahali
+  binanın sınıfıyla ölçüyor, yalnız konut olan binada hiç ölçmüyordu: konut binasının bodrumundaki otoparkın 27 m'lik
+  tek yönlü yürüyüşü (Ek-5/B'de otoparklar ve depolar için 15 m) bulgusuz geçiyordu.
+- **Karar: aynı okuma, mahal için de.** Olgu mahalin adının ve kullanımının söylediği Ek-5/B satırıdır (konutunki
+  yazılmaz: konutun mahalleri 48'in kurallarınındır); yerel denetimin okumasıyla aynı işlevden. Kural sırası yerel
+  denetiminki: bölümün sınıfı, bölüm yoksa mahalin adının sınıfı, o da yoksa binanın bilinen en ağır sınıfı; bulgu
+  sınıfın mahalin adından okunduğunu söyler. Bölümdeki mahalin adı bölümün sınıfını değiştirmez (büro bölümündeki
+  Depo büro sayılır), yerel denetim gibi. Olguların sürümü değişmedi (isteğe bağlı alan).
+- **Bütün çizimde:** fikstürde üç mahal sınıf aldı (dükkân, otopark, büro), üçü de bir bölümde; kuralın bulguları
+  değişmedi (iş çalıştırıcısının sınamaları 25/25).
+- **SDK paketi:** yeni alan ve belge cümlesi pakete 40 bayt ekledi: 47.977 / 48.000 (sınır yükseltilmedi; bir sonraki
+  alan için önce bir yerden kısaltmak gerekecek).
+- **Sınamalar:** `kek test` mevzuatın 28 örneğinin hepsi (yeni örnek: konut binasının bölümsüz bodrum otoparkı, tek
+  yönde 27 m, hata), Python 43, paylaşılan crate 156, İşlemler'in olgu sınamaları 13.
+- **Kalan:** yüksek tehlikeli yer (adlardan okunmuyor; BYKHY'nin tanımı tehlikeli maddenin türü ve miktarına bakar,
+  çizimde yok); bölüm sınıfının programda açıkça seçilmesi.
