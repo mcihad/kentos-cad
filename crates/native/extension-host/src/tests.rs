@@ -703,6 +703,11 @@ fn the_policy_judges_the_python_packages_a_package_brings() {
             "Kurum ilkesi “numpy” Python paketini engelliyor.",
         ),
         (
+            json!({"blockedPythonPackages": ["numpy==2.5.3", "shapely == 2.2.0"]}),
+            "Kurum ilkesi “shapely” Python paketinin 2.2.0 sürümünü engelliyor; eklentinin yazarı başka bir sürüme \
+             kilitlemeli.",
+        ),
+        (
             json!({"allowedPythonPackages": ["numpy", "shapely", "pygal", "zipp", "importlib-metadata"]}),
             "Kurum ilkesi yalnız izin verdiği Python paketlerini kurduruyor; “lazy-importer” listede yok.",
         ),

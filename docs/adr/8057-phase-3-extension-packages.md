@@ -4505,7 +4505,11 @@ inceleme, kurulum ve çalıştırma aynı kurala bakar); paylaşılan `python_na
   ("unknown field … expected one of …"). Artık Türkçe: "bu KentOS'un tanımadığı “…” alanı var; ilke daha yeni bir
   KentOS sürümü için yazılmış olabilir"; bozuk JSON satır ve sütunuyla. Kurumda ilke dosyası KentOS'tan önce
   güncellenebileceği için bu gerçek bir durum.
-- **Kalan:** paket sürümü düzeyinde kural (bugün ad düzeyinde). İlkede soğuma süresi aynı gün §85'te.
+- **Sürüm düzeyinde engel (aynı gün):** `blockedPythonPackages` bir sürümü de adlandırabilir (`"ultralytics==8.3.41"`;
+  2024'te bu paketin iki sürümü ele geçirilip kripto madencisi dağıtmıştı): yalnız o sürüm reddedilir ("… paketinin
+  8.3.41 sürümünü engelliyor; eklentinin yazarı başka bir sürüme kilitlemeli."), öbürleri geçer; `==` çevresindeki
+  boşluk önemsiz. Sınama: `numpy==2.5.3` kilitteki 2.5.4'ü geçirir, `shapely == 2.2.0` kilitteki 2.2.0'ı engeller.
+  İlkede soğuma süresi aynı gün §85'te.
 
 ## §85. Kurum ilkesinde en düşük paket yaşı (`minimumPackageAgeDays`; `ADIM 17`, D14 ve D18)
 

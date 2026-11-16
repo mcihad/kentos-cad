@@ -44,7 +44,8 @@ pub struct Policy {
     /// Whether an extension may send data to an outside AI service (`network.sendsDataToAi`); not written: yes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub allow_data_to_ai: Option<bool>,
-    /// Python packages no extension may install, by name (compared as PEP 503 normalises them).
+    /// Python packages no extension may install, by name (compared as PEP 503 normalises them), or one version of
+    /// one (`ultralytics==8.3.41`: a release taken over and withdrawn, the others allowed).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub blocked_python_packages: Vec<String>,
     /// When written, the only Python packages an extension may install.
@@ -181,8 +182,26 @@ impl Policy {
         }
         let listed = |list: &[String], name: &str| list.iter().any(|n| normalized(n) == name);
         for (name, p) in packages {
-            if listed(&self.blocked_python_packages, name) {
-                return Some(format!("Kurum ilkesi “{name}” Python paketini engelliyor."));
+            for blocked in &self.blocked_python_packages {
+                let (who, version) = match blocked.split_once("==") {
+                    Some((who, version)) => (who, Some(version.trim())),
+                    None => (blocked.as_str(), None),
+                };
+                if normalized(who) != *name {
+                    continue;
+                }
+                match version {
+                    None => {
+                        return Some(format!("Kurum ilkesi “{name}” Python paketini engelliyor."));
+                    }
+                    Some(v) if v == p.version => {
+                        return Some(format!(
+                            "Kurum ilkesi “{name}” Python paketinin {v} sürümünü engelliyor; eklentinin yazarı başka \
+                             bir sürüme kilitlemeli."
+                        ));
+                    }
+                    Some(_) => {}
+                }
             }
             if let Some(allowed) = &self.allowed_python_packages
                 && !listed(allowed, name)
