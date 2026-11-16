@@ -89,6 +89,9 @@ sonraki çalıştırmada onu alır.
 
 - Eklentinin işlevlerinin kimlikleri manifestin yerel kimlikleridir: `ext.tr.ornek.vitrin.taks` (İşlemler aracı,
   `cad.processing.run` ile de çalışır), `ext.tr.ornek.vitrin.ada-parsel` (ifade işlevi).
+- İki İşlemler aracı da `headless-python` bildirir (`tools/*.tool.json`, `capabilities.runtimes`): MCP'de
+  (`kentos-mcp`) ve KentOS'un Python kitaplığında masaüstündekiyle aynı kimlik, şema ve sonuçla, eklentinin
+  ortamında çalışır. Bildirmeyen bir araç başsız listede görünmez; adıyla istenirse süreç başlamadan reddedilir.
 - `cad.processing.tools` eklenti aracını tanımındaki `modelDescription` ile listeler (ne zaman ve nasıl
   kullanılacağı, yapay zekâ için) ve aracın eklentisini (`extension`: kimlik, sürüm, paket özeti) verir; kod
   yüklenmez. Vitrin'in TAKS tanımında örneği var (`eklenti/tools/taks.tool.json`).

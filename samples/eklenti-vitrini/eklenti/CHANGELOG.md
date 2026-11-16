@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 1.0.51 — 16 Kasım 2026
+
+- İki İşlemler aracı da (TAKS denetimi, Çekme mesafesi denetimi) `headless-python` bildirir: MCP'de ve KentOS'un
+  Python kitaplığında, masaüstündeki gibi eklentinin ortamında çalışır (aynı kimlik, şema ve sonuç).
+
 ## 1.0.50 — 16 Kasım 2026
 
 - Bakım kayıtları bölünmüş panel (`"split": true`): form üstte, bakım kayıtları ve tesisin ekleri altta kendi

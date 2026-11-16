@@ -97,7 +97,8 @@
   },
   "capabilities": {
     "runtimes": [
-      "desktop-python"
+      "desktop-python",
+      "headless-python"
     ]
   },
   "examples": [
