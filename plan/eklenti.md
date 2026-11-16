@@ -1275,6 +1275,9 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
     §78): manifestte satır içi çağrı ve değer; araç, kural ve ifade örnekleri tek koşucuda.*
   - **Bağımlılık:** `blueprint` izinli ve yaygın paketleri önerir; `verify` dizinde olmayan, çok yeni ya da adı popüler
     pakete benzeyen bağımlılığı işaretler (uydurulmuş paket adı saldırısı) [D18].
+    — *tamamlandı (ADR 8057 §81, §83, §85, §105, 16 Kasım): kilitlenemeyen ad `python_lock_stale`, tanınmış bir pakete
+    bir harf uzak ad `python_name_resembles`, ajanın kilidinde soğuma süresi ve ilkenin en düşük yaşı; iskelet sık
+    kullanılan paketleri amaçlarıyla, kurumun listesi varsa yalnız onları önerir; `kek new` adlarını söyler.*
   - **Üretim kökeni:** AI ile üretilen paket hangi ajan/model ve hangi `blueprint` sürümüyle üretildiğini katalog
     kaydına yazar; kullanıcıya dürüst gösterilir [D17].
     — *tamamlandı (ADR 8057 §76, 16 Kasım): atölye paketlerken manifestin `generated`'ını KentOS yazar (ajan, model,

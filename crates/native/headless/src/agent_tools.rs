@@ -101,6 +101,12 @@ pub trait Host {
         self.review_package(package)
     }
 
+    /// The only Python packages an extension may install here, when the organisation's policy lists them
+    /// (`allowedPythonPackages`): the blueprint offers those alone (docs/adr/8057 §105). None: no such list.
+    fn allowed_packages(&self) -> Option<Vec<String>> {
+        None
+    }
+
     /// Why this host's agent may run no Python it wrote (docs/adr/8057 §104, PY-AI-11: its own trusted Python a class
     /// apart from its tool calls): the user's choice for the agent, the organisation's policy. None: it may; whether
     /// each run waits for the user is the host's matter. The tools that run it ([`PYTHON_RUNS`]) are then not offered,
@@ -1989,5 +1995,18 @@ fn extension_blueprint(host: &dyn Host, args: &Value) -> Result<Value, HeadlessE
          Kurulum kullanıcının incelemesiyle olur."
             .to_owned()
     };
-    Ok(json!({ "files": files, "next": next }))
+    // The packages it may name (docs/adr/8057 §105, D18): a name an agent makes up installs someone else's code.
+    let allowed = host.allowed_packages();
+    let list: Vec<Value> = kentos_extensions::python_names::suggested(allowed.as_deref())
+        .into_iter()
+        .map(|(name, purpose)| json!({ "name": name, "purpose": purpose }))
+        .collect();
+    let note = if allowed.is_some() {
+        "Kurum ilkesi yalnız bu paketlere izin veriyor: başkasını eklemeyin; gerekiyorsa kullanıcıya söyleyin."
+    } else {
+        "Sık kullanılanlar. Listede olmayan bir paket gerekiyorsa adını uydurmayın: kullanıcıya sorun ya da `uv add` \
+         ile ekleyin; kilit çözülmezse ad yanlıştır. Tanınmış bir pakete bir harf uzak ad extension.verify'da uyarı \
+         verir."
+    };
+    Ok(json!({ "files": files, "next": next, "packages": { "list": list, "note": note } }))
 }

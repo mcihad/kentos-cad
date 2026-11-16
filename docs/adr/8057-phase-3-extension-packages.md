@@ -5138,3 +5138,26 @@ headless `agent_tools.rs` (`PYTHON_RUNS`, `Host::python_refusal`); masaüstü `a
 - **Gerçek pencere:** yerel sahte sağlayıcı (127.0.0.1, gerçek bir yapay zekâya bir şey gitmez) ajanın Vitrin'i
   denemesini istedi: kart "Onay gerekiyor" ve kodun kimin yetkisiyle çalışacağını yazdı; Reddet'le "Reddedildi", kod
   çalışmadı. Ajan formunda "Kod çalıştırma" bölümü.
+
+## §105. İskelet önerilen paketleri verir: ajan paket adı uydurmaz (`ADIM 21`, D18)
+
+**16 Kasım.** Kod: `python_names.rs` (`SUGGESTED`, `suggested`); headless `agent_tools.rs` (`Host::allowed_packages`,
+`extension.blueprint`'in yanıtı); masaüstü `assistant/host.rs`; komut satırı `main.rs` (`kek new`).
+
+- **Sorun.** Plan (ADIM 21 › Derslerden › Bağımlılık, D18): "`blueprint` izinli ve yaygın paketleri önerir; `verify`
+  dizinde olmayan, çok yeni ya da adı popüler pakete benzeyen bağımlılığı işaretler". Denetim yarısı vardı: kilitte
+  olmayan bağımlılık `python_lock_stale` (uydurulmuş ad kilitlenemez: uv "dizinde bulunamadı" der), tanınmış bir pakete
+  bir harf uzak ad `python_name_resembles` (§81), yeni paket ajanın kilidindeki soğuma süresi `python_lock_no_cooling`
+  (§83) ve ilkenin en düşük yaşı (§85). Öneri yarısı yoktu: iskelet ajana hangi paketin adını yazabileceğini
+  söylemiyordu; modeller paket adını yanıtlarının en az %5,2'sinde uyduruyor (D18).
+- **Karar.** `extension.blueprint` yanıtı `packages` taşır: sık kullanılan 13 paket ve her birinin ne işe yaradığı
+  (shapely, pyproj, numpy, pandas, scipy, networkx, pyogrio, rasterio, openpyxl, python-docx, reportlab, matplotlib,
+  httpx; hepsi tanınmış adlar listesinde, sınamayla) ve bir not: listede olmayan paketin adını uydurmamak, kullanıcıya
+  sormak ya da `uv add` ile eklemek, kilit çözülmezse adın yanlış olduğu.
+- **Kurum ilkesi önce gelir:** ilke `allowedPythonPackages` yazmışsa (yalnız bu paketler kurulabilir) iskelet yalnız
+  onları önerir: listedeki öneriler önce, ilkenin adlandırdığı öbürleri sonra; not "başkasını eklemeyin" der. İlkenin
+  girdisi bir gereksinim olabilir (`numpy>=2`): adı alınır. Masaüstünde ilke kayıt defterinden okunur
+  (`Host::allowed_packages`); başka bir host (MCP) yazmadıkça ilke yoktur.
+- **İnsan için de:** `kentos kek new` iskeleti yazınca sık kullanılan paketlerin adlarını söyler.
+- **Sınamalar:** `python_names` 1 (öneriler tanınmış adlar, her biri bir kez ve amacıyla; ilke listesi süzer ve ekler,
+  gereksinimden ad); headless 2 (iskelet yanıtında paketler ve not; ilkeli host yalnız izinlileri önerir).

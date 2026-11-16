@@ -349,6 +349,16 @@ fn new_folder(folder: &Path, args: &[&str]) -> ExitCode {
         folder.display(),
         folder.display()
     );
+    // The packages commonly needed, by their names (docs/adr/8057 §105): a library is added by a known name, not a
+    // guessed one.
+    let names: Vec<String> = kentos_extensions::python_names::suggested(None)
+        .into_iter()
+        .map(|(name, _)| name)
+        .collect();
+    say!(
+        "Kütüphane gerekirse klasörde `uv add <paket>`; sık kullanılanlar: {}.",
+        names.join(", ")
+    );
     ExitCode::SUCCESS
 }
 

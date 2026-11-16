@@ -22,6 +22,17 @@ impl Host for AppHost<'_> {
         self.0.product_not_offered(command)
     }
 
+    /// The organisation's list of the only Python packages an extension may install (docs/adr/8057 §105).
+    fn allowed_packages(&self) -> Option<Vec<String>> {
+        self.0
+            .extensions
+            .registry
+            .as_ref()?
+            .policy()?
+            .allowed_python_packages
+            .clone()
+    }
+
     /// The agent's own Python (docs/adr/8057 §104): the user's choice for it, the organisation's policy.
     fn python_refusal(&self) -> Option<String> {
         self.0.assistant.python_refusal()

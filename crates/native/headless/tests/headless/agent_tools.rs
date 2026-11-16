@@ -658,6 +658,20 @@ fn an_agent_gets_a_blueprint_that_verifies() {
     .unwrap();
     let files = answer["files"].as_object().expect("files");
     assert!(files.contains_key("manifest.json") && files.contains_key("src/mezarlik/logic.py"));
+    // docs/adr/8057 §105: the packages it may name, each with what it is for; a name not among them is not made up.
+    let packages = answer["packages"]["list"].as_array().expect("the packages");
+    assert!(
+        packages.iter().any(|p| p["name"] == "shapely"
+            && p["purpose"]
+                .as_str()
+                .is_some_and(|w| w.contains("geometri"))),
+        "{packages:?}"
+    );
+    assert!(
+        answer["packages"]["note"]
+            .as_str()
+            .is_some_and(|n| n.contains("uydurmayın"))
+    );
     let folder = std::env::temp_dir().join(format!("kentos-blueprint-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&folder);
     for (path, text) in files {
@@ -684,6 +698,44 @@ fn an_agent_gets_a_blueprint_that_verifies() {
     .unwrap_err();
     assert!(refused.to_string().contains("bir katkı değil"), "{refused}");
     let _ = std::fs::remove_dir_all(&folder);
+}
+
+/// A drawing whose organisation lists the only Python packages an extension may install.
+struct WithAllowedPackages<'a>(&'a mut Session);
+
+impl Host for WithAllowedPackages<'_> {
+    fn request(&mut self, method: &str, params: &Value) -> Result<Value, HeadlessError> {
+        self.0.request(method, params)
+    }
+
+    fn allowed_packages(&self) -> Option<Vec<String>> {
+        Some(vec!["numpy>=2".to_owned(), "kurum-paketi".to_owned()])
+    }
+}
+
+/// docs/adr/8057 §105: under the organisation's list the blueprint offers the packages it allows alone, and says so.
+#[test]
+fn the_blueprint_offers_the_packages_the_policy_allows() {
+    let mut s = drawing();
+    let answer = agent_tools::call(
+        &mut WithAllowedPackages(&mut s),
+        &mut Guard::new(),
+        "extension.blueprint",
+        &json!({ "id": "tr.ornek.mezarlik", "name": "Mezarlık bilgi", "contributions": ["command"] }),
+    )
+    .unwrap();
+    let names: Vec<&str> = answer["packages"]["list"]
+        .as_array()
+        .expect("the packages")
+        .iter()
+        .filter_map(|p| p["name"].as_str())
+        .collect();
+    assert_eq!(names, ["numpy", "kurum-paketi"]);
+    assert!(
+        answer["packages"]["note"]
+            .as_str()
+            .is_some_and(|n| n.contains("Kurum ilkesi"))
+    );
 }
 
 #[test]
