@@ -1818,7 +1818,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | koordinat/harita seçimi | var | `pointPicker` (`x, y` yazılır ya da Haritadan seç ile haritada gösterilir, kenetlenir; değeri `[x, y]`, §57); çizgi ve alan `shapePicker` (haritada çizilir, değeri GeoJSON, §62); harita aracı `entrypoints.mapTools` (yakalama türleri) | pencerede (`ctx.dialog`) yok |
 | | CRS/birim | var | `crsPicker` (KentOS'un sistemleri, değeri `EPSG:<kod>`, verilmezse çizimin sistemi; §45); birim `numberField`'ın `units`'i (KentOS'un sayı alanları gibi birimiyle yazılır: 0,03 km; kod alanın biriminde alır, §64) | |
 | | ilişki başvurusu | var | `relationPicker` (projenin bir ilişkisinin üst katmanının kayıtlarından adıyla seçilir; değeri kaydın kalıcı kimliği, ilişkinin alt alanının tuttuğu; §67) | |
-| Kaynak ve çıktı | dosya/eser seçici, ek | var | `filePicker` (okunacak dosya: yolu yazılır ya da bilgisayarın dosya penceresinden seçilir, §41; `save` ile yazılacak dosyanın yeri, §44) | `files.userSelected` ister, kaydetme yeri `files.userSelectedWrite`; ek sonraki dilim |
+| Kaynak ve çıktı | dosya/eser seçici, ek | var | ek `attachments` (seçicinin tuttuğu kaydın fotoğrafları, belgeleri ve adresleri; Aç, KentOS'un Dosya ekle… ve Adres ekle…'si; §68); `filePicker` (okunacak dosya: yolu yazılır ya da bilgisayarın dosya penceresinden seçilir, §41; `save` ile yazılacak dosyanın yeri, §44) | `files.userSelected` ister, kaydetme yeri `files.userSelectedWrite` |
 | | görsel önizleme | var | `image` (kodun verdiği PNG, `ctx.panel.set(id, image=…)`; oranı korunur, §40) | yalnız PNG, en çok 4096 piksel kenar; JPEG sonraki dilim |
 | | çıktı hedefi | host | İşlemler aracının çıktısı (`sinkParameter`) | panel komutu çizime yazar |
 | Veri görünüşü | tablo | var | `table` (500 satır) | `uid`'li satır nesneyi gösterir |
@@ -3832,3 +3832,29 @@ Python kurucuları (`ui.relation_picker`, `ui.relation_list`), SDK rehberi; masa
   listenin satırları ve kimlikleri, varsayılan sütunlar, tarihin günün sözüyle yazılması, başka kaydın boş listesi,
   projede olmayan ilişki, zorunluluk, değer ve kural değeri, kodun `set`'i ve reddi); rehberin ve §25'in türleri anması;
   Vitrin'in sayıları (16 komut, 6 panel) ve şerit etiketleri; gerçek pencere 50-iliski.
+
+## §68. Panelde ek listesi: `attachments` (`ADIM 22`, envanterin "ek"i)
+
+**16 Kasım.** Kod: paylaşılan `crates/shared/extensions/src/ui_panel.rs` (`Component::Attachments`, Kapı 1), şema ve
+Python kurucusu (`ui.attachments`), SDK rehberi; masaüstü yeni `apps/desktop/src/shell/extensions/panel_attachments.rs`
+(`attachments_view`, `panel_attachment_slots`), `shell/attachments.rs` (`wanted_photos`: gösterilen panelin ekleri),
+`panel_view.rs`, `panel_session.rs`; Vitrin 1.0.49.
+
+- **Karar: KentOS'un ekleri, Öznitelikler'in gösterdiği gibi.** `of` bileşeninin (nesne seçicinin ilk nesnesi ya da
+  ilişki seçicisinin kaydı) tuttuğu kaydın fotoğrafları, belgeleri ve adresleri (ADR 0225), her biri bir satır:
+  fotoğrafın küçük resmi çözülünce, yoksa türünün simgesi; adı (boşsa türü), nerede olduğu ("Bağlı dosya: …", adres);
+  Aç (fotoğraf görüntüleyicisi, belge ve adres için sistemin açıcısı). Fotoğraflar kabuğun öbür fotoğraflarıyla aynı
+  kuyrukta, iş parçacığı dışında çözülür (`wanted_photos`'a gösterilen panelin kayıtları eklendi). Kayıt seçilmeden
+  "Önce bir kayıt seçin.", eki yoksa "Bu kaydın eki yok.".
+- **Karar: eklemek KentOS'un, kullanıcının düzenlemesi.** Katmanı kilitli değilse altta KentOS'un kendi Dosya ekle… ve
+  Adres ekle…'si (Öznitelikler'inkiyle aynı pencere ve yazım, tek geri alma adımı "Ekler"). Eklentinin kodu bir şey
+  yazmaz, yeni bir yetenek istenmez: ekleyen kullanıcıdır. Kodun eki okuması ya da yazması `ctx.doc` ve
+  `cad.entities.set` ile, eskisi gibi.
+- **Değeri yok** (bir çıktı): öbür çıktılar gibi formun altında durur. Kapı 1: `of` bu paneldeki bir nesne ya da ilişki
+  seçicisi.
+- **SDK paketi:** rehber türü anar; yer için görselin örnek cümlesi çıktı. Paket 47 981 bayt.
+- **Vitrin 1.0.49:** Bakım kayıtları'nın altında "Tesisin ekleri" (`of: "tesis"`). Gerçek pencerede (51-ek): Merkez
+  Okulu seçildi, "Bu kaydın eki yok."; Adres ekle… KentOS'un penceresini açtı, `https://okul.ornek.bel.tr` ve
+  "Okulun sayfası" yazılıp Kaydet: liste eki bağlantı simgesi, adı ve adresiyle, Aç'la gösterdi.
+- **Sınamalar:** masaüstü 1 (seçilmeden kayıt yok; nesne seçicinin binası seçilince eki listede, katmanı eklemeye açık,
+  görünüm kuruluyor); rehberin ve §25'in türü anması; gerçek pencere 51-ek.

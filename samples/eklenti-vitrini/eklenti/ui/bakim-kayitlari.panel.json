@@ -5,7 +5,7 @@
   "body": [
     {
       "type": "text",
-      "text": "Bir tesis seçin: bakım kayıtları altta listelenir. Ekle seçili tesise yeni bir kayıt yazar, liste kendiliğinden yenilenir. Önce Katmanları kur'a basıp Örnek tesis'e nokta koyun."
+      "text": "Bir tesis seçin: bakım kayıtları ve tesisin ekleri altta listelenir. Ekle seçili tesise yeni bir kayıt yazar, liste kendiliğinden yenilenir. Önce Katmanları kur'a basıp Örnek tesis'e nokta koyun."
     },
     {
       "type": "relationPicker",
@@ -49,6 +49,12 @@
         "tarih",
         "aciklama"
       ]
+    },
+    {
+      "type": "attachments",
+      "id": "ekler",
+      "label": "Tesisin ekleri",
+      "of": "tesis"
     }
   ]
 }

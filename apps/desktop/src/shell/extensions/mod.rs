@@ -26,6 +26,8 @@ pub(crate) mod panel_marks;
 mod panel_points;
 // A panel's relation picker and relation list, read from the drawing (docs/adr/8057 §67).
 mod panel_relations;
+// A panel's attachments: a record's photos, documents and addresses, KentOS's own adding (docs/adr/8057 §68).
+pub(crate) mod panel_attachments;
 // A panel's rows: components side by side, the cells of one line (docs/adr/8057 §55).
 mod panel_rows;
 // A number field's units: chosen beside it, the code's in its own (docs/adr/8057 §64).

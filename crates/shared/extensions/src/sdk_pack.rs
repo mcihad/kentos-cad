@@ -106,7 +106,8 @@ yazılacak yeri sorar: `defaultName`, `files.userSelectedWrite`),
 (`id`, `label`, `value`; "x, y" yazılır ya da Haritadan seç, değeri [x, y]), `shapePicker` (`id`, `label`, `shape`:
 line, polygon, rectangle, circle; haritada çizilir, değeri GeoJSON), `relationPicker` (`id`, `label`, `relation`,
 `display`; ilişkinin üst kaydı, değeri kalıcı kimliği), `relationList` (`id`, `label`, `relation`, `of`: bir seçici,
-`columns`; o kaydın ilişkili kayıtları, canlı), `button` (`id`,
+`columns`; o kaydın ilişkili kayıtları, canlı), `attachments` (`id`, `label`, `of`: bir seçici; o kaydın ekleri,
+Aç ve KentOS'un ekle düğmeleri), `button` (`id`,
 `label`, `command`: bir `entrypoints.commands` kimliği, `table`,
 `primary`), `table` (`id`, `label`), `tree` (`id`, `label`, `group`: 1–3 sütun adı; düğmenin satırlarını bu sütunlara
 göre açılıp kapanan gruplara dizer, her grubun sayısını yazar; yaprağın adı satırın ilk diğer sütunu, `uid`'li yaprak
@@ -120,7 +121,7 @@ pie, histogram, line; `category`: gruplanacak ya da yatay eksendeki sütun, `val
 (varsayılan; `value` verilirse sum), sum, mean, min, max, median; çubuk ve pasta `category` ister, histogram `value`,
 çizgi ikisini; satırları düğmenin `table`'ından ya da `of` ile bu paneldeki bir tablonun, ağacın, kartın ya da
 göstergenin satırlarından; KentOS'un grafik motoru çizer), `image` (`id`, `label`, `alt`, `height`: 80–600 px; kodun
-verdiği PNG'yi oranını koruyarak gösterir, verilene dek `alt` yazar; ör. matplotlib ya da NumPy ile çizilen grafik). Metin, sayı, tarih, saat ve an alanları, çoklu seçim ve seçiciler `required: true` alır: boş
+verdiği PNG'yi oranını koruyarak gösterir, verilene dek `alt` yazar). Metin, sayı, tarih, saat ve an alanları, çoklu seçim ve seçiciler `required: true` alır: boş
 bırakılan komut çalışmadan adıyla söylenir, sözler alanın altında, adının yanında yıldız.
 Seçim, çoklu seçim, seçiciler, onay ve tarih/saat alanları (seçilince ya da Enter'la) isteğe
 bağlı `onChange` alır: değer değişince o komut panelin değerleriyle çalışır, satırları panelin ilk tablosuna gelir. Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya

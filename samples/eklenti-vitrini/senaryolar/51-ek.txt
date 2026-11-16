@@ -1,0 +1,63 @@
+# Ek listesi: Vitrin › Bakım kayıtları'nın altında "Tesisin ekleri" (attachments, of: tesis). 50'deki gibi iki tesis
+# konur, Merkez Okulu seçilir: "Bu kaydın eki yok." ve KentOS'un Dosya ekle… ile Adres ekle…'si. Adres ekle…: KentOS'un
+# kendi penceresinde okulun sayfası yazılıp Kaydet; liste eki adıyla ve adresiyle gösterir (Python'suz; kullanıcının
+# düzenlemesi, tek geri alma adımı). (Önce 01.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 157 110   # Katmanları kur
+wait 6000
+click 1270 220  # Katman ara
+wait 400
+type tesis
+wait 800
+dclick 1218 311 # Örnek tesis: etkin katman
+wait 1000
+key Escape
+wait 500
+click 410 20    # Düzenle
+wait 1200
+click 32 75     # Nokta
+wait 800
+key a
+wait 600
+type Merkez Okulu
+key Return
+wait 600
+click 600 300   # birinci tesis
+wait 1200
+key a
+wait 600
+type Park Kreşi
+key Return
+wait 600
+click 1000 350  # ikinci tesis
+wait 1200
+key Escape
+wait 800
+click 843 20    # Vitrin
+wait 1200
+click 750 83    # Bakım kayıtları
+wait 2500
+click 1355 315  # Tesis
+wait 1000
+click 1340 350  # Merkez Okulu
+wait 1500
+wheel 1280 450 -10
+wait 800
+shot 51-yok
+click 1294 553  # Adres ekle…
+wait 1200
+type https://okul.ornek.bel.tr
+click 720 418   # Ad
+type Okulun sayfası
+wait 400
+shot 51-pencere
+click 949 627   # Kaydet
+wait 1500
+shot 51-ek

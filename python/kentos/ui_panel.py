@@ -747,6 +747,28 @@ def relation_list(
     return out
 
 
+def attachments(
+    id: str,
+    of: str,
+    *,
+    label: str | None = None,
+    visible_when: str | None = None,
+    tab: str | None = None,
+) -> dict[str, Any]:
+    """The attachments of the record component `of` holds (docs/adr/8057 §68): its photos, documents and addresses as
+    Öznitelikler shows them, a photo's picture once decoded; Aç opens one, and KentOS's own Dosya ekle… and Adres
+    ekle… add one (the user's edit) where the record's layer is not locked. `of` is a feature picker (its first
+    object) or a relation picker."""
+    out: dict[str, Any] = {"type": "attachments", "id": id, "of": of}
+    if label is not None:
+        out["label"] = label
+    if visible_when is not None:
+        out["visibleWhen"] = visible_when
+    if tab is not None:
+        out["tab"] = tab
+    return out
+
+
 def table(
     id: str,
     *,
@@ -909,5 +931,5 @@ __all__ = [
     "Choice", "choice", "file_filter", "panel", "text", "section", "divider", "text_field", "number_field", "select",
     "layer_picker", "field_picker", "file_picker", "crs_picker", "point_picker", "shape_picker", "relation_picker",
     "feature_picker", "multi_select", "date_field", "time_field", "date_time_field", "checkbox", "button",
-    "relation_list", "table", "tree", "stats", "chart", "image", "card",
+    "relation_list", "attachments", "table", "tree", "stats", "chart", "image", "card",
 ]

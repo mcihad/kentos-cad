@@ -1350,6 +1350,44 @@
           "type": "object"
         },
         {
+          "description": "The attachments of the record component `of` holds (docs/adr/8057 §68): its photos, documents and addresses as\nÖznitelikler shows them, a photo's picture once decoded; Aç opens one, and KentOS's own Dosya ekle… and Adres\nekle… add one (the user's edit) where the record's layer is not locked. `of` is a feature picker (its first\nobject) or a relation picker.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "of": {
+              "description": "The component holding the record.",
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "type": {
+              "const": "attachments",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "of"
+          ],
+          "type": "object"
+        },
+        {
           "description": "The rows a button's command answered.",
           "properties": {
             "id": {

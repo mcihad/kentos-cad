@@ -364,6 +364,17 @@ pub enum Component {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         columns: Vec<String>,
     },
+    /// The attachments of the record component `of` holds (docs/adr/8057 §68): its photos, documents and addresses as
+    /// Öznitelikler shows them, a photo's picture once decoded; Aç opens one, and KentOS's own Dosya ekle… and Adres
+    /// ekle… add one (the user's edit) where the record's layer is not locked. `of` is a feature picker (its first
+    /// object) or a relation picker.
+    Attachments {
+        id: String,
+        #[serde(default)]
+        label: Option<String>,
+        /// The component holding the record.
+        of: String,
+    },
     /// The rows a button's command answered.
     Table {
         id: String,
@@ -493,6 +504,7 @@ impl Component {
             | Component::ShapePicker { id, .. }
             | Component::RelationPicker { id, .. }
             | Component::RelationList { id, .. }
+            | Component::Attachments { id, .. }
             | Component::DateField { id, .. }
             | Component::TimeField { id, .. }
             | Component::DateTimeField { id, .. }
@@ -728,6 +740,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
         "shapePicker" => &["id", "label", "shape", "onChange", "required"],
         "relationPicker" => &["id", "label", "relation", "display", "onChange", "required"],
         "relationList" => &["id", "label", "relation", "of", "columns"],
+        "attachments" => &["id", "label", "of"],
         "checkbox" => &["id", "label", "value", "onChange"],
         "dateField" | "timeField" | "dateTimeField" => {
             &["id", "label", "value", "min", "max", "onChange", "required"]
@@ -754,7 +767,8 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
 
 const TYPES: &str = "text, section, divider, textField, numberField, dateField, timeField, dateTimeField, select, \
                      multiSelect, layerPicker, fieldPicker, featurePicker, filePicker, crsPicker, pointPicker, \
-                     shapePicker, relationPicker, checkbox, button, table, tree, card, stats, chart, image, relationList";
+                     shapePicker, relationPicker, checkbox, button, table, tree, card, stats, chart, image, relationList, \
+                     attachments";
 
 /// What a shape picker asks the user to draw (docs/adr/8057 §62).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1479,6 +1493,21 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             "crsPicker" => crs::check(c, &at, &mut add),
             // Its relation, and a list's parent (relations.rs, docs/adr/8057 §67).
             "relationPicker" | "relationList" => relations::check(kind, c, &at, &parents, &mut add),
+            // The record whose attachments it shows (docs/adr/8057 §68).
+            "attachments" => {
+                if !c
+                    .get("of")
+                    .and_then(Value::as_str)
+                    .is_some_and(|of| parents.contains(of))
+                {
+                    add(
+                        format!("{at}/of"),
+                        "of bu paneldeki bir nesne seçicinin (featurePicker) ya da ilişki seçicinin (relationPicker) \
+                         kimliği olmalı: ekler onun tuttuğu kaydındır."
+                            .to_owned(),
+                    );
+                }
+            }
             // What the user draws: a line or an area (docs/adr/8057 §62).
             "shapePicker" => {
                 if !c

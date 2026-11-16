@@ -673,6 +673,17 @@ impl App {
                 } => {
                     tables.push(self.panel_table(p, id, words.as_deref()));
                 }
+                // The attachments of the record a picker holds, KentOS's adding (panel_attachments.rs, §68).
+                Component::Attachments {
+                    label: words, of, ..
+                } => {
+                    tables.push(super::panel_attachments::attachments_view(
+                        self,
+                        p,
+                        words.as_deref(),
+                        of,
+                    ));
+                }
                 // The records a relation ties to the record a picker holds, read from the drawing (§67).
                 Component::RelationList {
                     id,

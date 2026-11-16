@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 1.0.49 — 16 Kasım 2026
+
+- Bakım kayıtları panelinin altında "Tesisin ekleri" (`attachments`, `of: "tesis"`): seçilen tesisin fotoğrafları,
+  belgeleri ve adresleri Öznitelikler'deki gibi (fotoğrafın küçük resmi, yoksa türünün simgesi); Aç açar, KentOS'un
+  kendi Dosya ekle… ve Adres ekle…'si tesise ek ekler (kullanıcının düzenlemesi, tek geri alma adımı). Python'suz.
+
 ## 1.0.48 — 16 Kasım 2026
 
 - "Bakım kayıtları" paneli (Vitrin › Panel): Tesis bir ilişki seçicisi (`relationPicker`, ilişki `bakim-tesis`,

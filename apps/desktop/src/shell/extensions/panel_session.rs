@@ -75,6 +75,7 @@ fn kind_of(c: &Component) -> &'static str {
         Component::ShapePicker { .. } => "shapePicker",
         Component::RelationPicker { .. } => "relationPicker",
         Component::RelationList { .. } => "relationList",
+        Component::Attachments { .. } => "attachments",
         Component::LayerPicker { .. } => "layerPicker",
         Component::FieldPicker { .. } => "fieldPicker",
         Component::FeaturePicker { .. } => "featurePicker",
