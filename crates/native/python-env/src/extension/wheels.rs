@@ -119,6 +119,9 @@ fn make(
         export.push(OsString::from("--extra"));
         export.push(OsString::from(extra));
     }
+    // Its cooling period, which `--no-config` would leave out (docs/adr/8057 §83).
+    let lock = std::fs::read_to_string(project.join("uv.lock")).unwrap_or_default();
+    export.extend(super::cooling_args(&lock));
     export.push(OsString::from("--output-file"));
     export.push(list.clone().into_os_string());
     check_ran(uv::run(

@@ -257,7 +257,55 @@ pub fn shadows_library(lock: &str) -> bool {
 
 const SHADOWS: &str = "Eklentinin kilidi “kentos” adlı bir paket istiyor; bu ad KentOS'un kendi kitaplığının, başka yerden kurulamaz.";
 
-fn sync_args(interpreter: &Interpreter, key: &Key, dry: bool) -> Vec<OsString> {
+/// The cooling period the lock was made with (`[options]`: `exclude-newer-span`, or a fixed `exclude-newer`, and
+/// `exclude-newer-package`) as uv's flags (docs/adr/8057 §83). KentOS runs uv with `--no-config`, which leaves the
+/// project's `[tool.uv]` out, so uv would take the lock for stale and refuse it under `--locked`; the lock's own words
+/// given back keep it current. Found when a new blueprint's environment could not be prepared ("uv: “”").
+pub fn cooling_args(lock: &str) -> Vec<OsString> {
+    let mut out = Vec::new();
+    let mut section = "";
+    let value = |line: &str| -> Option<(String, String)> {
+        let (key, rest) = line.split_once('=')?;
+        let rest = rest.trim();
+        let quoted = rest.strip_prefix('"')?;
+        let end = quoted.find('"')?;
+        Some((
+            key.trim().trim_matches('"').to_owned(),
+            quoted[..end].to_owned(),
+        ))
+    };
+    let mut span = None;
+    let mut date = None;
+    for line in lock.lines() {
+        let line = line.trim();
+        if line.starts_with('[') {
+            section = line;
+            continue;
+        }
+        match section {
+            "[options]" => match value(line) {
+                Some((key, v)) if key == "exclude-newer-span" => span = Some(v),
+                Some((key, v)) if key == "exclude-newer" && !v.starts_with("0001-") => {
+                    date = Some(v)
+                }
+                _ => {}
+            },
+            "[options.exclude-newer-package]" => {
+                if let Some((name, v)) = value(line) {
+                    out.push(OsString::from("--exclude-newer-package"));
+                    out.push(OsString::from(format!("{name}={v}")));
+                }
+            }
+            _ => {}
+        }
+    }
+    if let Some(v) = span.or(date) {
+        out.splice(0..0, [OsString::from("--exclude-newer"), OsString::from(v)]);
+    }
+    out
+}
+
+fn sync_args(interpreter: &Interpreter, key: &Key, dry: bool, lock: &str) -> Vec<OsString> {
     let mut args: Vec<OsString> = [
         "sync",
         "--locked",
@@ -277,6 +325,7 @@ fn sync_args(interpreter: &Interpreter, key: &Key, dry: bool) -> Vec<OsString> {
         args.push(OsString::from("--extra"));
         args.push(OsString::from(extra));
     }
+    args.extend(cooling_args(lock));
     args.push(OsString::from("--python"));
     args.push(interpreter.path.clone().into_os_string());
     args
@@ -327,7 +376,7 @@ pub fn preview(
         return Err(SHADOWS.to_owned());
     }
     let env = env_for(root, &aside.join(".venv"));
-    let args = sync_args(interpreter, key, true);
+    let args = sync_args(interpreter, key, true, &lock);
     let ran = uv::run(
         uv_path,
         &uv::os_args(&args),
@@ -506,7 +555,8 @@ fn sync(
     cancel: &AtomicBool,
     told: &mut dyn FnMut(Progress),
 ) -> Result<(), InstallError> {
-    let args = sync_args(interpreter, key, false);
+    let lock = std::fs::read_to_string(project.join("uv.lock")).unwrap_or_default();
+    let args = sync_args(interpreter, key, false, &lock);
     let heard = Arc::new(Mutex::new(String::new()));
     let cache = places::cache(root);
     let mut last = Progress::Starting;

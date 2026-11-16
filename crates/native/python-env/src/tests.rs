@@ -1424,3 +1424,31 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
     extension::remove(&root, &key).unwrap();
     assert!(extension::ready(&root, &key).is_none());
 }
+
+/// The lock's cooling period given back to uv as flags (docs/adr/8057 §83): `--no-config` leaves `[tool.uv]` out and
+/// uv would take a cooled lock for stale under `--locked`. A span wins over the placeholder date; a fixed date is given
+/// as it is; a package's own date too; a lock without one gives none.
+#[test]
+fn a_locks_cooling_period_is_given_back_to_uv() {
+    let words = |lock: &str| -> Vec<String> {
+        extension::cooling_args(lock)
+            .into_iter()
+            .map(|a| a.to_string_lossy().into_owned())
+            .collect()
+    };
+    let span = "version = 1\n\n[options]\nexclude-newer = \"0001-01-01T00:00:00Z\" # This has no effect\n\
+                exclude-newer-span = \"P7D\"\n\n[options.exclude-newer-package]\nnumpy = \"2026-11-01T00:00:00Z\"\n\n\
+                [[package]]\nname = \"x\"\n";
+    assert_eq!(
+        words(span),
+        [
+            "--exclude-newer",
+            "P7D",
+            "--exclude-newer-package",
+            "numpy=2026-11-01T00:00:00Z"
+        ]
+    );
+    let fixed = "version = 1\n\n[options]\nexclude-newer = \"2026-11-01T00:00:00Z\"\n";
+    assert_eq!(words(fixed), ["--exclude-newer", "2026-11-01T00:00:00Z"]);
+    assert!(words("version = 1\n\n[[package]]\nname = \"x\"\n").is_empty());
+}
