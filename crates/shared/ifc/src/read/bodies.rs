@@ -18,12 +18,14 @@ use super::{Model, ReadError, guarded, header};
 /// Ask the host whether to stop once in this many bodies.
 const CANCEL_EVERY: usize = 32;
 
-/// One object's body: its object (an index into [`Model::objects`]), its corners in world metres and its triangles.
+/// One object's body: its object (an index into [`Model::objects`]), its corners in world metres, its triangles, and
+/// how far a corner may be from where the file puts it through the engine's float32 numbers, in metres (`rounding`).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Body {
     pub object: usize,
     pub positions: Vec<[f64; 3]>,
     pub triangles: Vec<[u32; 3]>,
+    pub rounding: f64,
 }
 
 /// An object with a shape whose body could not be made, and why.
@@ -84,7 +86,8 @@ impl Model {
                             .map(|p| [ox + f64::from(p[0]), oy + f64::from(p[1]), oz + f64::from(p[2])])
                             .collect();
                         let triangles = mesh.indices.chunks_exact(3).map(|t| [t[0], t[1], t[2]]).collect();
-                        out.bodies.push(Body { object: i, positions, triangles });
+                        let rounding = rounding(&mesh, scale);
+                        out.bodies.push(Body { object: i, positions, triangles, rounding });
                     }
                     Ok(_) => out.not_shown.push(NotShown { object: i, reason: "gövdesi boş çıktı".to_owned() }),
                     Err(reason) => out.not_shown.push(NotShown { object: i, reason }),
@@ -106,6 +109,19 @@ impl Model {
         }
         out
     }
+}
+
+/// How far the engine's float32 numbers may put a body's corner from where the file puts it, in metres. The engine
+/// stores a corner as float32 twice with float64 arithmetic between (`transform_mesh_world_framed`): first in the
+/// object's own frame as its kernel builds it, scaled from the file's unit to metres in float32 when the file is not in
+/// metres (the scale factor's own rounding and the product's: two more), then in the world about its anchor. Each
+/// float32 rounding is at most half a step, 2⁻²⁴ of the number's size: one at the object frame's reach in metres
+/// (three with the scaling), one at the world positions' reach.
+fn rounding(mesh: &ifc_lite_geometry::Mesh, scale: f64) -> f64 {
+    let world = mesh.positions.iter().fold(0.0f32, |m, v| m.max(v.abs()));
+    let local = mesh.local_bounds.map_or(world, |b| b.iter().fold(0.0f32, |m, v| m.max(v.abs())));
+    let times = if scale == 1.0 { 1.0 } else { 3.0 };
+    (times * f64::from(local) + f64::from(world)) * f64::from(f32::EPSILON) / 2.0
 }
 
 /// A body's volume (the divergence theorem over its triangles) and area; the volume's sign follows the triangles'

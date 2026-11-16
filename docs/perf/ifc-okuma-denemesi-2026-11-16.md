@@ -37,4 +37,10 @@ arkasında.
 | Gövdeler yapılırken, 2 000 ms'de | 2,057 s (57 ms) |
 | Gövdeler yapılırken, 5 000 ms'de | 5,226 s (226 ms) |
 
+## Gerçek dünyadan örnekler
+
+buildingSMART'ın sertifika veri setlerinin 35 IFC dosyası (CC BY 4.0, commit `80d976a9b`, 16,4 MB; ADR 8061 §11.7):
+en büyüğü 2,3 MB (`Infra-Landscaping`, 27 419 kayıt). Her dosyada yüz 6 ms'nin, gövdeler 16 ms'nin altında okundu; 0 bulgu,
+şekilli nesnelerin hepsi gövdeli.
+
 Taban budur; hedef bu ölçümden sonra konur (ADR 8061 §7).

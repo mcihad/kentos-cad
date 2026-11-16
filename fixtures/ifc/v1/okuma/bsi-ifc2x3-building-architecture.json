@@ -1,0 +1,770 @@
+{
+ "bodies": {
+  "0OfZwWc8j9QP5uX8xPTxDH": {
+   "area": 46.61618267484772,
+   "box": [
+    [
+     3.0000001991791585,
+     3.000000178398034,
+     -0.25
+    ],
+    [
+     3.2000001991791667,
+     9.000000178398034,
+     3.375736
+    ]
+   ],
+   "volume": 4.2308832000000045
+  },
+  "0Q5LjisRjDwhFSOc_WQjlF": {
+   "area": 14.117299345040562,
+   "box": [
+    [
+     8.150000199179154,
+     5.000000178398033,
+     0.0
+    ],
+    [
+     8.174000199179158,
+     8.800000178398033,
+     2.225736
+    ]
+   ],
+   "volume": 0.16470195839995627
+  },
+  "0ZTBBPo6f6bxqV2K7Oelrq": {
+   "area": 52.439045106997476,
+   "box": [
+    [
+     2.699999880765686,
+     2.700000178397997,
+     2.8757356815866344
+    ],
+    [
+     5.10000019917922,
+     9.300000178398037,
+     5.700000068711968
+    ]
+   ],
+   "volume": 6.7203437400000015
+  },
+  "0xY$LvXaDEswJDk_VU74C_": {
+   "area": 77.47,
+   "box": [
+    [
+     3.2000001991791183,
+     5.000000178397962,
+     0.0
+    ],
+    [
+     8.150000199179159,
+     8.800000178398035,
+     2.2
+    ]
+   ],
+   "volume": 40.68900000000001
+  },
+  "12UVOn4wvAJPMUExKdZLb8": {
+   "area": 72.43602460319418,
+   "box": [
+    [
+     5.100000199179139,
+     2.700000178397999,
+     1.4757356726220503
+    ],
+    [
+     8.900000526557074,
+     9.300000178398044,
+     5.700000068711934
+    ]
+   ],
+   "volume": 9.36350879999997
+  },
+  "18QhMtUIXBvQktPHXXxs7H": {
+   "area": 35.92,
+   "box": [
+    [
+     3.2000001991791454,
+     3.200000178397994,
+     0.0
+    ],
+    [
+     7.0000001991791585,
+     4.800000178398035,
+     2.2
+    ]
+   ],
+   "volume": 13.376000000000012
+  },
+  "1AQAupaRP1txwK1AGiN61V": {
+   "area": 14.972060882454315,
+   "box": [
+    [
+     7.0000001991791585,
+     3.0000001783980306,
+     -0.25
+    ],
+    [
+     7.200000199179204,
+     4.800000178398047,
+     3.3757360000000056
+    ]
+   ],
+   "volume": 1.2692649600000117
+  },
+  "1yP7NInQz5uQzbiOpVFFJr": {
+   "area": 166.4937575185558,
+   "box": [
+    [
+     3.0000001991791585,
+     3.000000178398034,
+     -0.3
+    ],
+    [
+     8.60000019917916,
+     9.000000178398034,
+     5.7
+    ]
+   ],
+   "volume": 143.556
+  },
+  "2F44QMqSH3TOkM$SZoqCBe": {
+   "area": 6.0,
+   "box": [
+    [
+     2.7653983991626774e-07,
+     4.671120326094069e-07,
+     0.0
+    ],
+    [
+     1.00000027653984,
+     1.0000004671120326,
+     1.0
+    ]
+   ],
+   "volume": 0.9999999999999997
+  },
+  "2e9pghUJbBqR4jTInsONQT": {
+   "area": 6.1860000000000035,
+   "box": [
+    [
+     7.5500001991791565,
+     5.500000178398034,
+     0.0
+    ],
+    [
+     8.150000199179159,
+     7.1000001783980355,
+     0.9000000000000009
+    ]
+   ],
+   "volume": 0.8008000000000045
+  },
+  "3Fit2Fad92zf2f6aWdJtF5": {
+   "area": 0.8884836072149038,
+   "box": [
+    [
+     -29.642534144846856,
+     -14.985716150583348,
+     -1.3
+    ],
+    [
+     -28.01611301508667,
+     -13.30217270796493,
+     -1.2
+    ]
+   ],
+   "volume": 0.005702362812513669
+  },
+  "3_4VN63S96DfWiJjgG8j1C": {
+   "area": 50.21071163911184,
+   "box": [
+    [
+     3.3500001991791586,
+     3.350000178398034,
+     -0.598692
+    ],
+    [
+     8.250000199179158,
+     8.650000178398034,
+     -0.25
+    ]
+   ],
+   "volume": 6.345856972599405
+  },
+  "3wdauVJT5Fx9drrREiDqA$": {
+   "area": 20.73441619239339,
+   "box": [
+    [
+     8.400000199179154,
+     4.800000178398034,
+     -0.25
+    ],
+    [
+     8.600000199179158,
+     9.000000178398034,
+     1.9757360000000002
+    ]
+   ],
+   "volume": 1.7856182400000016
+  },
+  "3zR0BOEcLADRKln4HYporH": {
+   "area": 58.74999999999999,
+   "box": [
+    [
+     3.2000001991791587,
+     3.000000178398034,
+     -0.25
+    ],
+    [
+     8.400000199179159,
+     8.800000178398033,
+     0.0
+    ]
+   ],
+   "volume": 6.437499999999998
+  }
+ },
+ "header": {
+  "name": "Building-Architecture.ifc",
+  "originatingSystem": "BIM_Tools - Sketchup_IFC_manager - 5.6.0",
+  "preprocessor": "Sketchup-IFC-manager 5.6.0 / SketchUp 2026 (26.2.242)",
+  "timeStamp": "2026-06-23T11:53:12"
+ },
+ "lengthToSi": 0.001,
+ "location": null,
+ "objects": {
+  "02tV5cCF9FyA9D1O5nS04E": {
+   "class": "IfcBuildingElementProxyType",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": null,
+   "name": "house - gross volume",
+   "objectType": "gross volume",
+   "parent": null,
+   "predefined": "NOTDEFINED",
+   "step": 682,
+   "tag": "884737",
+   "type": null
+  },
+  "0OfZwWc8j9QP5uX8xPTxDH": {
+   "class": "IfcWall",
+   "container": "1Ano2ZUxnEIvVQ_beukl8b",
+   "description": "A solid outer wall, forming the left side of the house.",
+   "hasShape": true,
+   "longName": null,
+   "name": "house - outer wall - house left",
+   "objectType": "solidwall",
+   "parent": null,
+   "predefined": null,
+   "step": 415,
+   "tag": "454425.1027891.979946.932083.920032",
+   "type": "3zoiwePjTDQAyswDZcvJRA"
+  },
+  "0Q5LjisRjDwhFSOc_WQjlF": {
+   "class": "IfcWall",
+   "container": "1Ano2ZUxnEIvVQ_beukl8b",
+   "description": "A wall designed to house and protect plumbing systems, keeping the pipes snug and secure.",
+   "hasShape": true,
+   "longName": null,
+   "name": "plumbing wall",
+   "objectType": "plumbingwall",
+   "parent": null,
+   "predefined": null,
+   "step": 468,
+   "tag": "454425.1027891.979946.932083.2037918.920027",
+   "type": "2S9_r4C7nDjgFt_4z9uegR"
+  },
+  "0ZTBBPo6f6bxqV2K7Oelrq": {
+   "class": "IfcSlab",
+   "container": null,
+   "description": "A roof slab that's got it all covered",
+   "hasShape": true,
+   "longName": null,
+   "name": "house - roof - slab left",
+   "objectType": "roof",
+   "parent": "2iPwJwpPDCSgMheXwk9cBT",
+   "predefined": null,
+   "step": 555,
+   "tag": "454425.1027891.979946.932084.902510",
+   "type": "3eOsEo1q1CHfDNvWsh3ksD"
+  },
+  "0c$N1CTon2BB2Sp89385G8": {
+   "class": "IfcBuilding",
+   "container": null,
+   "description": "The main building structure, providing shelter and space.",
+   "hasShape": false,
+   "longName": "house - building",
+   "name": "Single-family house",
+   "objectType": "house",
+   "parent": "23sFQGRy90RxVbRHD9iSE2",
+   "predefined": null,
+   "step": 25,
+   "tag": null,
+   "type": null
+  },
+  "0hnSKr4LD8eRixcnqcc6X1": {
+   "class": "IfcSlabType",
+   "container": null,
+   "description": "A solid, site-cast concrete floor, providing a strong foundation.",
+   "hasShape": false,
+   "longName": null,
+   "name": "house - groundfloor",
+   "objectType": "slab on grade",
+   "parent": null,
+   "predefined": "FLOOR",
+   "step": 39,
+   "tag": "884513",
+   "type": null
+  },
+  "0xY$LvXaDEswJDk_VU74C_": {
+   "class": "IfcSpace",
+   "container": null,
+   "description": "A cozy space, perfect for relaxation and family gatherings.",
+   "hasShape": true,
+   "longName": null,
+   "name": "living room",
+   "objectType": "living area",
+   "parent": "1Ano2ZUxnEIvVQ_beukl8b",
+   "predefined": null,
+   "step": 183,
+   "tag": null,
+   "type": "1hq0sM3Q5Cq9DOc93a74pc"
+  },
+  "12UVOn4wvAJPMUExKdZLb8": {
+   "class": "IfcSlab",
+   "container": null,
+   "description": "A roof slab that's got it all covered",
+   "hasShape": true,
+   "longName": null,
+   "name": "house - roof - slab right",
+   "objectType": "roof",
+   "parent": "2iPwJwpPDCSgMheXwk9cBT",
+   "predefined": null,
+   "step": 606,
+   "tag": "454425.1027891.979946.932084.902511",
+   "type": "3n9C2OuJjE89DiYlOaoccO"
+  },
+  "18QhMtUIXBvQktPHXXxs7H": {
+   "class": "IfcSpace",
+   "container": null,
+   "description": "A welcoming entry hall, the first impression of the home.",
+   "hasShape": true,
+   "longName": null,
+   "name": "entry hall",
+   "objectType": "hallway",
+   "parent": "1Ano2ZUxnEIvVQ_beukl8b",
+   "predefined": null,
+   "step": 296,
+   "tag": null,
+   "type": "30wkH7SyH7gvhogulgnDi9"
+  },
+  "1AQAupaRP1txwK1AGiN61V": {
+   "class": "IfcWall",
+   "container": "1Ano2ZUxnEIvVQ_beukl8b",
+   "description": "A solid outer wall, forming the right front side of the house.",
+   "hasShape": true,
+   "longName": null,
+   "name": "house - outer wall - house right front",
+   "objectType": "solidwall",
+   "parent": null,
+   "predefined": null,
+   "step": 319,
+   "tag": "454425.1027891.979946.932083.920023",
+   "type": "2YJwrhcCv9v8UXU8cWK40m"
+  },
+  "1Ano2ZUxnEIvVQ_beukl8b": {
+   "class": "IfcBuildingStorey",
+   "container": null,
+   "description": "The ground floor, forming the base level of the building.",
+   "hasShape": false,
+   "longName": null,
+   "name": "00 groundfloor",
+   "objectType": "buildingstorey",
+   "parent": "0c$N1CTon2BB2Sp89385G8",
+   "predefined": null,
+   "step": 36,
+   "tag": null,
+   "type": null
+  },
+  "1hq0sM3Q5Cq9DOc93a74pc": {
+   "class": "IfcSpaceType",
+   "container": null,
+   "description": "A cozy space, perfect for relaxation and family gatherings.",
+   "hasShape": false,
+   "longName": null,
+   "name": "house - living room",
+   "objectType": "living area",
+   "parent": null,
+   "predefined": "NOTDEFINED",
+   "step": 181,
+   "tag": "883849",
+   "type": null
+  },
+  "1t790TYSH528FFF32MjoC5": {
+   "class": "IfcWallType",
+   "container": null,
+   "description": "A solid outer wall, forming the right back side of the house.",
+   "hasShape": false,
+   "longName": null,
+   "name": "house - outer wall - house right back",
+   "objectType": "solidwall",
+   "parent": null,
+   "predefined": "NOTDEFINED",
+   "step": 368,
+   "tag": "919483",
+   "type": null
+  },
+  "1yP7NInQz5uQzbiOpVFFJr": {
+   "class": "IfcBuildingElementProxy",
+   "container": "23sFQGRy90RxVbRHD9iSE2",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "house - gross volume",
+   "objectType": "gross volume",
+   "parent": null,
+   "predefined": null,
+   "step": 684,
+   "tag": "454425.1027891.979946.932085",
+   "type": "02tV5cCF9FyA9D1O5nS04E"
+  },
+  "23sFQGRy90RxVbRHD9iSE2": {
+   "class": "IfcSite",
+   "container": null,
+   "description": "A sample scene environment, showcasing the surrounding landscape.",
+   "hasShape": false,
+   "longName": null,
+   "name": "environment - site",
+   "objectType": null,
+   "parent": "2Ndyd$OSX7s9A04nc4lyye",
+   "predefined": null,
+   "step": 18,
+   "tag": null,
+   "type": null
+  },
+  "2Cv3e8z_D5hxYOcR$bfTHG": {
+   "class": "IfcZone",
+   "container": null,
+   "description": "A cozy living space, perfect for relaxation and gatherings.",
+   "hasShape": false,
+   "longName": null,
+   "name": "house - living space",
+   "objectType": "living space",
+   "parent": null,
+   "predefined": null,
+   "step": 179,
+   "tag": null,
+   "type": null
+  },
+  "2F44QMqSH3TOkM$SZoqCBe": {
+   "class": "IfcBuildingElementProxy",
+   "container": "23sFQGRy90RxVbRHD9iSE2",
+   "description": "The local position for coordination of aspect models.",
+   "hasShape": true,
+   "longName": null,
+   "name": "origin",
+   "objectType": "origin",
+   "parent": null,
+   "predefined": null,
+   "step": 855,
+   "tag": "454425.1027891.1032757",
+   "type": "3mjKLn_DjE4Beriey9bTvr"
+  },
+  "2IpkHFcdnD3xuZl6H52fWn": {
+   "class": "IfcBuildingElementProxyType",
+   "container": null,
+   "description": "The reference point for transforming the local engineering coordinate system into the coordinate reference system of the underlying map.",
+   "hasShape": false,
+   "longName": null,
+   "name": "geo-reference",
+   "objectType": "origin",
+   "parent": null,
+   "predefined": "NOTDEFINED",
+   "step": 898,
+   "tag": "1028019",
+   "type": null
+  },
+  "2Ndyd$OSX7s9A04nc4lyye": {
+   "class": "IfcProject",
+   "container": null,
+   "description": "Demystifying IFC with a playful scene using diverse building elements and compositions.",
+   "hasShape": false,
+   "longName": null,
+   "name": "ifc silly sample scene - project",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 13,
+   "tag": null,
+   "type": null
+  },
+  "2S9_r4C7nDjgFt_4z9uegR": {
+   "class": "IfcWallType",
+   "container": null,
+   "description": "A wall designed to house and protect plumbing systems, keeping the pipes snug and secure.",
+   "hasShape": false,
+   "longName": null,
+   "name": "plumbing wall",
+   "objectType": "plumbingwall",
+   "parent": null,
+   "predefined": "NOTDEFINED",
+   "step": 466,
+   "tag": "880192",
+   "type": null
+  },
+  "2YJwrhcCv9v8UXU8cWK40m": {
+   "class": "IfcWallType",
+   "container": null,
+   "description": "A solid outer wall, forming the right front side of the house.",
+   "hasShape": false,
+   "longName": null,
+   "name": "house - outer wall - house right front",
+   "objectType": "solidwall",
+   "parent": null,
+   "predefined": "NOTDEFINED",
+   "step": 317,
+   "tag": "919456",
+   "type": null
+  },
+  "2e9pghUJbBqR4jTInsONQT": {
+   "class": "IfcFurnishingElement",
+   "container": "0xY$LvXaDEswJDk_VU74C_",
+   "description": "The heart of the home, where meals are prepared and shared.",
+   "hasShape": true,
+   "longName": null,
+   "name": "kitchen",
+   "objectType": "kitchen",
+   "parent": null,
+   "predefined": null,
+   "step": 215,
+   "tag": "454425.1027891.979946.932083.920029.919427.2003222",
+   "type": "38qaFzdvb6KwnqDJqzAlhG"
+  },
+  "2iPwJwpPDCSgMheXwk9cBT": {
+   "class": "IfcRoof",
+   "container": "23sFQGRy90RxVbRHD9iSE2",
+   "description": "A sturdy roof, sheltering the house from the elements.",
+   "hasShape": false,
+   "longName": null,
+   "name": "house - roof",
+   "objectType": "gable_roof",
+   "parent": null,
+   "predefined": null,
+   "step": 546,
+   "tag": "454425.1027891.979946.932084",
+   "type": null
+  },
+  "2vWR$XNSf2qhsAEJMXcZLU": {
+   "class": "IfcBuildingElementProxyType",
+   "container": null,
+   "description": "A chimney, standing tall and proud, guiding smoke away from the home.",
+   "hasShape": false,
+   "longName": null,
+   "name": "house - chimney",
+   "objectType": "flue",
+   "parent": null,
+   "predefined": "NOTDEFINED",
+   "step": 458,
+   "tag": "884350",
+   "type": null
+  },
+  "30wkH7SyH7gvhogulgnDi9": {
+   "class": "IfcSpaceType",
+   "container": null,
+   "description": "A welcoming entry hall, the first impression of the home.",
+   "hasShape": false,
+   "longName": null,
+   "name": "house - entry hall",
+   "objectType": "hallway",
+   "parent": null,
+   "predefined": "NOTDEFINED",
+   "step": 294,
+   "tag": "884735",
+   "type": null
+  },
+  "38qaFzdvb6KwnqDJqzAlhG": {
+   "class": "IfcFurnishingElementType",
+   "container": null,
+   "description": "The heart of the home, where meals are prepared and shared.",
+   "hasShape": false,
+   "longName": null,
+   "name": "house - kitchen",
+   "objectType": "kitchen",
+   "parent": null,
+   "predefined": null,
+   "step": 213,
+   "tag": "883722",
+   "type": null
+  },
+  "3Fbgsvr8nAYfGs9y5keub0": {
+   "class": "IfcBuildingElementProxy",
+   "container": "1Ano2ZUxnEIvVQ_beukl8b",
+   "description": "A chimney, standing tall and proud, guiding smoke away from the home.",
+   "hasShape": false,
+   "longName": null,
+   "name": "house - chimney",
+   "objectType": "flue",
+   "parent": null,
+   "predefined": null,
+   "step": 460,
+   "tag": "454425.1027891.979946.932083.2023772",
+   "type": "2vWR$XNSf2qhsAEJMXcZLU"
+  },
+  "3Fit2Fad92zf2f6aWdJtF5": {
+   "class": "IfcBuildingElementProxy",
+   "container": "23sFQGRy90RxVbRHD9iSE2",
+   "description": "The reference point for transforming the local engineering coordinate system into the coordinate reference system of the underlying map.",
+   "hasShape": true,
+   "longName": null,
+   "name": "geo-reference",
+   "objectType": "origin",
+   "parent": null,
+   "predefined": null,
+   "step": 900,
+   "tag": "454425.1032696",
+   "type": "2IpkHFcdnD3xuZl6H52fWn"
+  },
+  "3_4VN63S96DfWiJjgG8j1C": {
+   "class": "IfcBuildingElementProxy",
+   "container": "23sFQGRy90RxVbRHD9iSE2",
+   "description": "A layer of ground floor sand bedding, providing a stable base.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sand bedding",
+   "objectType": "subgrade",
+   "parent": null,
+   "predefined": null,
+   "step": 744,
+   "tag": "454425.1027891.979946.932086",
+   "type": "3w6ICDipzDzBpAKGLlR62f"
+  },
+  "3eOsEo1q1CHfDNvWsh3ksD": {
+   "class": "IfcSlabType",
+   "container": null,
+   "description": "A roof slab that's got it all covered",
+   "hasShape": false,
+   "longName": null,
+   "name": "house - roof - slab left",
+   "objectType": "roof",
+   "parent": null,
+   "predefined": "ROOF",
+   "step": 553,
+   "tag": "880245",
+   "type": null
+  },
+  "3mjKLn_DjE4Beriey9bTvr": {
+   "class": "IfcBuildingElementProxyType",
+   "container": null,
+   "description": "The local position for coordination of aspect models.",
+   "hasShape": false,
+   "longName": null,
+   "name": "origin",
+   "objectType": "origin",
+   "parent": null,
+   "predefined": "NOTDEFINED",
+   "step": 853,
+   "tag": "1028017",
+   "type": null
+  },
+  "3n9C2OuJjE89DiYlOaoccO": {
+   "class": "IfcSlabType",
+   "container": null,
+   "description": "A roof slab that's got it all covered",
+   "hasShape": false,
+   "longName": null,
+   "name": "house - roof - slab right",
+   "objectType": "roof",
+   "parent": null,
+   "predefined": "ROOF",
+   "step": 604,
+   "tag": "883786",
+   "type": null
+  },
+  "3w6ICDipzDzBpAKGLlR62f": {
+   "class": "IfcBuildingElementProxyType",
+   "container": null,
+   "description": "A layer of ground floor sand bedding, providing a stable base.",
+   "hasShape": false,
+   "longName": null,
+   "name": "sand bedding",
+   "objectType": "subgrade",
+   "parent": null,
+   "predefined": "NOTDEFINED",
+   "step": 742,
+   "tag": "884803",
+   "type": null
+  },
+  "3wdauVJT5Fx9drrREiDqA$": {
+   "class": "IfcWall",
+   "container": "1Ano2ZUxnEIvVQ_beukl8b",
+   "description": "A solid outer wall, forming the right back side of the house.",
+   "hasShape": true,
+   "longName": null,
+   "name": "house - outer wall - house right back",
+   "objectType": "solidwall",
+   "parent": null,
+   "predefined": null,
+   "step": 370,
+   "tag": "454425.1027891.979946.932083.920031",
+   "type": "1t790TYSH528FFF32MjoC5"
+  },
+  "3zR0BOEcLADRKln4HYporH": {
+   "class": "IfcSlab",
+   "container": "1Ano2ZUxnEIvVQ_beukl8b",
+   "description": "A solid, site-cast concrete floor, providing a strong foundation.",
+   "hasShape": true,
+   "longName": null,
+   "name": "floor",
+   "objectType": "slab on grade",
+   "parent": null,
+   "predefined": null,
+   "step": 44,
+   "tag": "454425.1027891.979946.932083.920025",
+   "type": "0hnSKr4LD8eRixcnqcc6X1"
+  },
+  "3zoiwePjTDQAyswDZcvJRA": {
+   "class": "IfcWallType",
+   "container": null,
+   "description": "A solid outer wall, forming the left side of the house.",
+   "hasShape": false,
+   "longName": null,
+   "name": "house - outer wall - house left",
+   "objectType": "solidwall",
+   "parent": null,
+   "predefined": "NOTDEFINED",
+   "step": 413,
+   "tag": "919429",
+   "type": null
+  }
+ },
+ "precision": 1e-06,
+ "reader": "IfcOpenShell 0.9.0.post1",
+ "records": 2046,
+ "schema": "IFC2X3",
+ "sets": {
+  "0OfZwWc8j9QP5uX8xPTxDH": {
+   "Qto_WallBaseQuantities": {
+    "Length": 6000.0,
+    "NetSideArea": 21.154415587728412,
+    "NetVolume": 4.230883117545889,
+    "Width": 200.0
+   }
+  },
+  "0ZTBBPo6f6bxqV2K7Oelrq": {
+   "Qto_SlabBaseQuantities": {
+    "Depth": 300.0,
+    "NetArea": 22.40114282797721,
+    "NetVolume": 6.7203428483966
+   }
+  },
+  "0hnSKr4LD8eRixcnqcc6X1": {
+   "Pset_SlabCommon": {
+    "FireRating": "REI60",
+    "SurfaceSpreadOfFlame": "A2 s1 d0"
+   }
+  }
+ },
+ "source": "fixtures/ifc/v1/disaridan/bsi-ifc2x3-building-architecture.ifc"
+}

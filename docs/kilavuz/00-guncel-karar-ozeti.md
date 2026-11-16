@@ -177,8 +177,9 @@
       her dilimde sınanır.
     - Motor IFClite'ın Rust çekirdeğidir (MPL-2.0): yalnız `kentos-ifc`'in içinde, sabit sürümle (`=28.3.0`), `read` ve
       `geometry` özelliklerinin arkasında; ikisi de varsayılan olarak kapalı. Denemenin sonuçları ADR 8061 §11'dedir.
-      Ayrıştırıcı geçti; düz gövdeler iki okuyucuda aynı. Profil yayları motorda kaba üçgenleniyor. Gövdeler her modelde
-      modelin ortasına göre yapılır; yoksa TUREF koordinatında 0,16 m kayıyor. Sahibin üç kararı bekleniyor (§11.6).
+      Ayrıştırıcı ve geometri geçti; motor kesinleşti. Gerçek dünyadan 35 dosya iki okuyucuda aynı okunuyor (§11.7).
+      Profil yayları motorda kaba üçgenleniyor ve gösterim sınırı olarak kabul edildi (§11.6). Gövdeler her modelde
+      modelin ortasına göre yapılır; yoksa TUREF koordinatında 0,16 m kayıyor.
     - Çizim mevcut 3B sahnedir; üçgen ağ ölçü kaynağı değildir; katı modelleme çekirdeği kararı (yukarıda) değişmez.
     - Araştırma: [not](../research/2026-11-15-ifc-goruntuleyici.md). Ölçümler:
       [docs/perf/ifc-okuma-denemesi-2026-11-16.md](../perf/ifc-okuma-denemesi-2026-11-16.md).

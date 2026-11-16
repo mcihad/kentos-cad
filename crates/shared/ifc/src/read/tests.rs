@@ -28,9 +28,27 @@ pub(super) const OTHERS: [(&str, &[u8]); 2] = [
     ("ifcopenshell-ifc4x3", include_bytes!("../../../../../fixtures/ifc/v1/acik/ifcopenshell-ifc4x3.ifc")),
 ];
 
-/// Every sample: KentOS's, then another program's.
+/// Real-world files (fixtures/ifc/v1/disaridan/README.md: CC BY 4.0, buildingSMART International): IFC 4.3, IFC4 and
+/// IFC2x3, written by five programs.
+pub(super) const OUTSIDE: [(&str, &[u8]); 7] = [
+    ("bsi-ifc4x3-building-architecture", include_bytes!("../../../../../fixtures/ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc")),
+    ("bsi-ifc4x3-infra-road", include_bytes!("../../../../../fixtures/ifc/v1/disaridan/bsi-ifc4x3-infra-road.ifc")),
+    ("bsi-ifc4x3-infra-rail", include_bytes!("../../../../../fixtures/ifc/v1/disaridan/bsi-ifc4x3-infra-rail.ifc")),
+    (
+        "bsi-ifc4-wall-with-opening-and-window",
+        include_bytes!("../../../../../fixtures/ifc/v1/disaridan/bsi-ifc4-wall-with-opening-and-window.ifc"),
+    ),
+    ("bsi-ifc4-basin-tessellation", include_bytes!("../../../../../fixtures/ifc/v1/disaridan/bsi-ifc4-basin-tessellation.ifc")),
+    (
+        "bsi-ifc4-column-straight-rectangle-tessellation",
+        include_bytes!("../../../../../fixtures/ifc/v1/disaridan/bsi-ifc4-column-straight-rectangle-tessellation.ifc"),
+    ),
+    ("bsi-ifc2x3-building-architecture", include_bytes!("../../../../../fixtures/ifc/v1/disaridan/bsi-ifc2x3-building-architecture.ifc")),
+];
+
+/// Every sample: KentOS's, another program's, then the real-world ones.
 pub(super) fn samples() -> impl Iterator<Item = (&'static str, &'static [u8])> {
-    WRITTEN.iter().chain(OTHERS.iter()).copied()
+    WRITTEN.iter().chain(OTHERS.iter()).chain(OUTSIDE.iter()).copied()
 }
 
 pub(super) fn never() -> bool {

@@ -8,10 +8,10 @@ use std::sync::Arc;
 
 use ifc_lite_core::{AttributeValue, DecodedEntity, EntityDecoder, EntityScanner, SchemaVersion};
 
+use super::checks::{cycles, global_ids, placement_cycles};
 use super::scan::{CANCEL_EVERY, Lines, Scanned, references};
-use super::{
-    Family, Finding, Header, Limits, Location, Model, Object, ReadError, Relation, Severity, Summary, Unit, Units, header,
-};
+use super::units::{location, units};
+use super::{Family, Finding, Header, Limits, Model, Object, ReadError, Relation, Severity, Summary, header};
 
 /// The most findings of one kind kept with their lines; the rest are counted.
 const KEEP: usize = 100;
@@ -295,13 +295,13 @@ pub(super) fn build(
 
 /// Findings of one kind: the first [`KEEP`] with their lines, then how many more.
 #[derive(Default)]
-struct Counted {
+pub(super) struct Counted {
     kept: usize,
     more: usize,
 }
 
 impl Counted {
-    fn add(&mut self, findings: &mut Vec<Finding>, f: impl FnOnce() -> Finding) {
+    pub(super) fn add(&mut self, findings: &mut Vec<Finding>, f: impl FnOnce() -> Finding) {
         if self.kept < KEEP {
             self.kept += 1;
             findings.push(f());
@@ -310,7 +310,7 @@ impl Counted {
         }
     }
 
-    fn close(self, findings: &mut Vec<Finding>, code: &'static str, what: &str) {
+    pub(super) fn close(self, findings: &mut Vec<Finding>, code: &'static str, what: &str) {
         if self.more > 0 {
             findings.push(Finding {
                 code,
@@ -396,145 +396,6 @@ fn inverse(relations: &[Relation]) -> HashMap<u32, Vec<usize>> {
     out
 }
 
-/// Cycles in the tree (an object above itself through its parents and containers): one finding a cycle.
-fn cycles(objects: &[Object], line_of: &HashMap<u32, usize>, findings: &mut Vec<Finding>) {
-    let up = |i: usize| objects[i].parent.or(objects[i].container);
-    for members in functional_cycles(objects.len(), up) {
-        let first = objects[members[0]].step;
-        let steps: Vec<String> = members.iter().map(|&i| format!("#{}", objects[i].step)).collect();
-        findings.push(Finding {
-            code: "tree_cycle",
-            severity: Severity::Error,
-            step: Some(first),
-            line: line_of.get(&first).copied(),
-            message: format!(
-                "Yapı ağacında döngü var: {} birbirinin içinde. Döngüdeki nesneler ağacın kökünde gösterilmez; dosyayı yazan programla düzeltin.",
-                steps.join(", ")
-            ),
-        });
-    }
-}
-
-/// Cycles and too deep chains in the placements (`PlacementRelTo`).
-fn placement_cycles(
-    placements: &HashMap<u32, u32>,
-    limits: &Limits,
-    line_of: &HashMap<u32, usize>,
-    findings: &mut Vec<Finding>,
-) {
-    let ids: Vec<u32> = {
-        let mut v: Vec<u32> = placements.keys().copied().collect();
-        v.sort_unstable();
-        v
-    };
-    let at: HashMap<u32, usize> = ids.iter().enumerate().map(|(i, s)| (*s, i)).collect();
-    let up = |i: usize| placements.get(&ids[i]).and_then(|to| at.get(to)).copied();
-    for members in functional_cycles(ids.len(), up) {
-        let first = ids[members[0]];
-        findings.push(Finding {
-            code: "placement_cycle",
-            severity: Severity::Error,
-            step: Some(first),
-            line: line_of.get(&first).copied(),
-            message: format!(
-                "#{first} yerleşimi kendine göre konmuş (PlacementRelTo zinciri döngü yapıyor, {} kayıt); bu yerleşimdeki nesnelerin yeri bilinemez.",
-                members.len()
-            ),
-        });
-    }
-    // Depths, each chain walked once (memoised); a chain in a cycle has been said already.
-    let mut depth: Vec<Option<usize>> = vec![None; ids.len()];
-    for start in 0..ids.len() {
-        let mut path = Vec::new();
-        let mut i = Some(start);
-        while let Some(k) = i {
-            if depth[k].is_some() || path.len() > limits.depth || path.contains(&k) {
-                break;
-            }
-            path.push(k);
-            i = up(k);
-        }
-        let mut d = i.and_then(|k| depth[k]).unwrap_or(0);
-        for &k in path.iter().rev() {
-            d += 1;
-            depth[k] = Some(d);
-        }
-        if d > limits.depth {
-            let s = ids[start];
-            findings.push(Finding {
-                code: "placement_too_deep",
-                severity: Severity::Warning,
-                step: Some(s),
-                line: line_of.get(&s).copied(),
-                message: format!("#{s} yerleşiminin zinciri {} kattan derin; olağan dışı bir model.", limits.depth),
-            });
-            break;
-        }
-    }
-}
-
-/// The cycles of a graph where each node has at most one successor, in O(n): each cycle's members, in order.
-fn functional_cycles(n: usize, up: impl Fn(usize) -> Option<usize>) -> Vec<Vec<usize>> {
-    // 0: not seen, 1: on the walk now, 2: done.
-    let mut state = vec![0u8; n];
-    let mut out = Vec::new();
-    for start in 0..n {
-        if state[start] != 0 {
-            continue;
-        }
-        let mut path = Vec::new();
-        let mut i = Some(start);
-        while let Some(k) = i {
-            match state[k] {
-                0 => {
-                    state[k] = 1;
-                    path.push(k);
-                    i = up(k);
-                }
-                1 => {
-                    if let Some(from) = path.iter().position(|&p| p == k) {
-                        out.push(path[from..].to_vec());
-                    }
-                    break;
-                }
-                _ => break,
-            }
-        }
-        for k in path {
-            state[k] = 2;
-        }
-    }
-    out
-}
-
-/// GlobalIds missing, malformed (22 characters of IFC's base 64, the first 0–3) or said twice.
-fn global_ids(objects: &[Object], line_of: &HashMap<u32, usize>, findings: &mut Vec<Finding>) {
-    let mut seen: HashMap<&str, u32> = HashMap::new();
-    let mut said = Counted::default();
-    for o in objects {
-        let line = line_of.get(&o.step).copied();
-        let g = o.global_id.as_str();
-        let (code, message) = if g.is_empty() {
-            ("global_id_missing", format!("{} #{} kaydının GlobalId'si yok.", o.class, o.step))
-        } else if !valid_global_id(g) {
-            ("global_id_invalid", format!("{} #{} kaydının GlobalId'si “{g}” biçimsiz (22 karakter, IFC'nin 64'lük alfabesi).", o.class, o.step))
-        } else if let Some(first) = seen.insert(g, o.step) {
-            ("global_id_duplicate", format!("“{g}” GlobalId'si iki nesnede: #{first} ve #{}. Kimlik her nesnede tek olmalı.", o.step))
-        } else {
-            continue;
-        };
-        said.add(findings, || Finding { code, severity: Severity::Error, step: Some(o.step), line, message });
-    }
-    said.close(findings, "global_id_more", "nesnenin GlobalId'sinde sorun var");
-}
-
-/// Whether `g` is a GlobalId as IFC writes it: 22 characters of `0-9A-Za-z_$`, the first 0–3 (128 bits).
-pub(crate) fn valid_global_id(g: &str) -> bool {
-    g.len() == 22
-        && g.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'_' || c == b'$')
-        && matches!(g.as_bytes()[0], b'0'..=b'3')
-}
-
 /// An attribute of a decoded record by its name in the file's schema; none when it is unset.
 pub(super) fn named<'e>(schema: SchemaVersion, e: &'e DecodedEntity, name: &str) -> Option<&'e AttributeValue> {
     let names = schema.attribute_names(e.ifc_type.name())?;
@@ -542,79 +403,3 @@ pub(super) fn named<'e>(schema: SchemaVersion, e: &'e DecodedEntity, name: &str)
     e.get(i).filter(|v| !v.is_null())
 }
 
-/// The project's units (`UnitsInContext`): length, area, volume and plane angle.
-fn units(decoder: &mut EntityDecoder, schema: SchemaVersion, project: u32) -> Units {
-    let mut out = Units::default();
-    let Ok(p) = decoder.decode_by_id(project) else { return out };
-    let Some(assignment) = named(schema, &p, "UnitsInContext").and_then(AttributeValue::as_entity_ref) else { return out };
-    let Ok(a) = decoder.decode_by_id(assignment) else { return out };
-    let refs: Vec<u32> = a.get(0).and_then(AttributeValue::as_list).unwrap_or(&[]).iter().filter_map(AttributeValue::as_entity_ref).collect();
-    for r in refs {
-        let Some((kind, unit)) = unit(decoder, schema, r, 0) else { continue };
-        let slot = match kind.as_str() {
-            "LENGTHUNIT" => &mut out.length,
-            "AREAUNIT" => &mut out.area,
-            "VOLUMEUNIT" => &mut out.volume,
-            "PLANEANGLEUNIT" => &mut out.plane_angle,
-            _ => continue,
-        };
-        slot.get_or_insert(unit);
-    }
-    out
-}
-
-/// A unit record: its unit type and the unit (an SI unit with its prefix, or a conversion through its factor).
-fn unit(decoder: &mut EntityDecoder, schema: SchemaVersion, step: u32, depth: usize) -> Option<(String, Unit)> {
-    if depth > 4 {
-        return None;
-    }
-    let u = decoder.decode_by_id(step).ok()?;
-    let kind = named(schema, &u, "UnitType").and_then(AttributeValue::as_enum)?.to_owned();
-    let name = named(schema, &u, "Name").and_then(|v| v.as_enum().or_else(|| v.as_string()))?.to_owned();
-    if let Some(factor) = named(schema, &u, "ConversionFactor").and_then(AttributeValue::as_entity_ref) {
-        let m = decoder.decode_by_id(factor).ok()?;
-        let value = named(schema, &m, "ValueComponent").and_then(AttributeValue::as_float)?;
-        let of = named(schema, &m, "UnitComponent").and_then(AttributeValue::as_entity_ref)?;
-        let (_, base) = unit(decoder, schema, of, depth + 1)?;
-        return Some((kind, Unit { name, prefix: None, to_si: value * base.to_si }));
-    }
-    let prefix = named(schema, &u, "Prefix").and_then(AttributeValue::as_enum).map(str::to_owned);
-    let power = match name.as_str() {
-        "SQUARE_METRE" => 2,
-        "CUBIC_METRE" => 3,
-        _ => 1,
-    };
-    let to_si = prefix.as_deref().map_or(1.0, ifc_lite_core::get_si_prefix_multiplier).powi(power);
-    Some((kind, Unit { name, prefix, to_si }))
-}
-
-/// The first map conversion and its target system.
-fn location(decoder: &mut EntityDecoder, schema: SchemaVersion, step: u32) -> Option<Location> {
-    let c = decoder.decode_by_id(step).ok()?;
-    let f = |name: &str| named(schema, &c, name).and_then(AttributeValue::as_float);
-    let mut out = Location {
-        eastings: f("Eastings").unwrap_or(0.0),
-        northings: f("Northings").unwrap_or(0.0),
-        orthogonal_height: f("OrthogonalHeight").unwrap_or(0.0),
-        x_axis_abscissa: f("XAxisAbscissa"),
-        x_axis_ordinate: f("XAxisOrdinate"),
-        scale: f("Scale"),
-        factors: match (f("FactorX"), f("FactorY"), f("FactorZ")) {
-            (Some(x), Some(y), Some(z)) => Some([x, y, z]),
-            _ => None,
-        },
-        ..Location::default()
-    };
-    if let Some(target) = named(schema, &c, "TargetCRS").and_then(AttributeValue::as_entity_ref)
-        && let Ok(t) = decoder.decode_by_id(target)
-    {
-        let s = |name: &str| named(schema, &t, name).and_then(AttributeValue::as_string).map(str::to_owned);
-        out.crs = s("Name");
-        out.crs_description = s("Description");
-        out.geodetic_datum = s("GeodeticDatum");
-        out.vertical_datum = s("VerticalDatum");
-        out.map_projection = s("MapProjection");
-        out.map_zone = s("MapZone");
-    }
-    Some(out)
-}

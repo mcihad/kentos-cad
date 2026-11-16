@@ -1,6 +1,6 @@
 //! Property and quantity sets, read when asked (docs/adr/8061 §5 "Özellikler"; plan IFC-07 "istenince özellik ve
-//! miktar setleri"): an object's own sets (`IfcRelDefinesByProperties`, a set or a set of sets), then its type's
-//! (`HasPropertySets`). Values are as the file writes them, with the measure they are typed with; nothing is
+//! miktar setleri"): an object's own sets (`IfcRelDefinesByProperties`, a set or a set of sets; a type's own
+//! `HasPropertySets`), then its type's. Values are as the file writes them, with the measure they are typed with; nothing is
 //! converted (the units are the project's, `Summary::units`).
 
 use ifc_lite_core::{AttributeValue, DecodedEntity, EntityDecoder, SchemaVersion};
@@ -74,6 +74,12 @@ impl Model {
                 }
                 let Ok(e) = decoder.decode_by_id(rel.step) else { continue };
                 for set in refs(named(schema, &e, "RelatingPropertyDefinition")) {
+                    out.extend(set_of(&mut decoder, schema, set, false));
+                }
+            }
+            // A type holds its own sets in HasPropertySets; an object of a type is given its type's after its own.
+            if let Ok(e) = decoder.decode_by_id(o.step) {
+                for set in refs(named(schema, &e, "HasPropertySets")) {
                     out.extend(set_of(&mut decoder, schema, set, false));
                 }
             }

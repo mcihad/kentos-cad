@@ -41,8 +41,10 @@ fn run() {
     let face = start.elapsed();
     match &read {
         Ok(m) => println!(
-            "{} MB, {} kayıt, {} nesne, {} ilişki, {} bulgu; yüz {:.3} s",
+            "{} MB, {} ({}), {} kayıt, {} nesne, {} ilişki, {} bulgu; yüz {:.3} s",
             bytes.len() / 1_000_000,
+            m.summary.schema,
+            m.summary.header.originating_system.as_deref().unwrap_or("?"),
             m.summary.records,
             m.objects.len(),
             m.relations.len(),
@@ -66,12 +68,21 @@ fn run() {
         match m.bodies(&bytes, &cancel) {
             Ok(b) => {
                 let triangles: usize = b.bodies.iter().map(|x| x.triangles.len()).sum();
+                let shaped = m.objects.iter().filter(|o| o.has_shape).count();
                 println!(
-                    "{} gövde, {} gösterilemeyen, {triangles} üçgen; gövdeler {:.3} s",
+                    "{} gövde ({shaped} şekilli nesne), {} gösterilemeyen, {triangles} üçgen; gövdeler {:.3} s",
                     b.bodies.len(),
                     b.not_shown.len(),
                     from.elapsed().as_secs_f64()
                 );
+                let mut why = std::collections::BTreeMap::new();
+                for n in &b.not_shown {
+                    let reason: String = n.reason.chars().take(90).collect();
+                    *why.entry((m.objects[n.object].class.clone(), reason)).or_insert(0) += 1;
+                }
+                for ((class, reason), count) in why {
+                    println!("  gösterilemeyen {count} × {class}: {reason}");
+                }
             }
             Err(e) => println!("gövdeler: {e}; {:.3} s", from.elapsed().as_secs_f64()),
         }

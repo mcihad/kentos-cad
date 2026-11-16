@@ -1,0 +1,2482 @@
+{
+ "bodies": {
+  "0GfyK6YKbBBOLGVolBxAx4": {
+   "area": 18.57319012894414,
+   "box": [
+    [
+     7.76025396215571,
+     23.44115427318779,
+     -0.03999999999998074
+    ],
+    [
+     11.82524727693414,
+     27.866540226811786,
+     3.2782804562761436e-14
+    ]
+   ],
+   "volume": 0.3594280159999985
+  },
+  "0JHBQuEiP0nvPYpJMf4bmS": {
+   "area": 149.66400000000002,
+   "box": [
+    [
+     -26.880762037844384,
+     3.4411542731880083,
+     -0.49
+    ],
+    [
+     -7.760253962155614,
+     16.55884572681199,
+     -0.37
+    ]
+   ],
+   "volume": 8.640000000000008
+  },
+  "0WFaAjgxT8whuM_s0GDVop": {
+   "area": 147.7759999999999,
+   "box": [
+    [
+     25.080761962155616,
+     33.441154273188005,
+     -0.12
+    ],
+    [
+     44.20127003784438,
+     46.558845726811995,
+     -0.04
+    ]
+   ],
+   "volume": 5.760000000000007
+  },
+  "0YqCWlEOfFLOP9cWpIfWnw": {
+   "area": 55.70961179749815,
+   "box": [
+    [
+     -27.43076203784453,
+     6.558845726812258,
+     -0.4900000000000043
+    ],
+    [
+     -9.560253962155608,
+     17.511473670974883,
+     -0.03999999999948661
+    ]
+   ],
+   "volume": 5.850000000000006
+  },
+  "0bOiufAU17JvMAqTkdbCGK": {
+   "area": 145.88800000000003,
+   "box": [
+    [
+     -9.560254037844386,
+     13.441154273188008,
+     -0.04
+    ],
+    [
+     9.560254037844386,
+     26.55884572681199,
+     0.0
+    ]
+   ],
+   "volume": 2.8800000000000026
+  },
+  "0foyckKPj2OwIIYCa8mzqS": {
+   "area": 0.19999999999999993,
+   "box": [
+    [
+     -14.747431788646681,
+     11.456698729810771,
+     0.0
+    ],
+    [
+     -12.965380981077807,
+     12.543301270189222,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "0v1ddg6Y12hvvQhtW6MY3h": {
+   "area": 34.358415247250505,
+   "box": [
+    [
+     -5.663139720814413,
+     18.808845726811988,
+     -0.37
+    ],
+    [
+     3.863139720814412,
+     24.613268708511864,
+     -0.12
+    ]
+   ],
+   "volume": 3.5656404553737495
+  },
+  "122iIwdi92Nu19w41eQ8OO": {
+   "area": 29.458450299671682,
+   "box": [
+    [
+     -5.663139720814413,
+     18.808845726811988,
+     -0.04
+    ],
+    [
+     3.863139720814412,
+     24.613268708511864,
+     0.0
+    ]
+   ],
+   "volume": 0.5705024728598003
+  },
+  "15Sq9FrzT9FBv27nCk5mh_": {
+   "area": 59.32692891691437,
+   "box": [
+    [
+     -10.110254037844525,
+     16.55884572681225,
+     -0.4900000000000043
+    ],
+    [
+     7.760254037844394,
+     27.511473670974883,
+     -0.03999999999948661
+    ]
+   ],
+   "volume": 6.1690897115038075
+  },
+  "17coQp2iL5FhBqt0CY_3TM": {
+   "area": 55.70961179749803,
+   "box": [
+    [
+     24.53076196215563,
+     36.558845726811974,
+     -0.49
+    ],
+    [
+     42.40127003784454,
+     47.51147367097461,
+     -0.039999999999485836
+    ]
+   ],
+   "volume": 5.850000000000038
+  },
+  "1EBv$nhkP16QpDbPgakj0R": {
+   "area": 147.77600000000007,
+   "box": [
+    [
+     -9.560254037844386,
+     13.441154273188008,
+     -0.12
+    ],
+    [
+     9.560254037844386,
+     26.55884572681199,
+     -0.04
+    ]
+   ],
+   "volume": 5.759999999999996
+  },
+  "1Fxh8JXAj0VPU5VkvOYvkk": {
+   "area": 0.19999999999999993,
+   "box": [
+    [
+     -11.283330173508928,
+     13.456698729810773,
+     0.0
+    ],
+    [
+     -9.501279365940054,
+     14.543301270189223,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "1HY$KHGVb0Y9iLwHsRZfqX": {
+   "area": 0.1999999999999989,
+   "box": [
+    [
+     -21.67563501892219,
+     7.45669872981077,
+     0.0
+    ],
+    [
+     -19.893584211353318,
+     8.543301270189222,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "1IhMwsHkj23Pk9puusHUBF": {
+   "area": 155.8,
+   "box": [
+    [
+     -26.880762037844384,
+     3.4411542731880083,
+     -0.37
+    ],
+    [
+     -7.760253962155614,
+     16.55884572681199,
+     -0.12
+    ]
+   ],
+   "volume": 18.000000000000004
+  },
+  "1LsZ9dUZn5397IxXcrlrIe": {
+   "area": 14.51636751652272,
+   "box": [
+    [
+     7.210253962155697,
+     26.558845726811715,
+     -0.4899999999999672
+    ],
+    [
+     12.137579365584124,
+     30.03872367097465,
+     -0.03999999999985143
+    ]
+   ],
+   "volume": 1.478441249999997
+  },
+  "1PLaDnWNP2WPtJ6K0kxgur": {
+   "area": 0.1999999999999998,
+   "box": [
+    [
+     6.0371778264910745,
+     23.45669872981077,
+     0.0
+    ],
+    [
+     7.8192286340599475,
+     24.54330127018922,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "1URig8FeLBeR9AdMrx_PFb": {
+   "area": 155.79999999999987,
+   "box": [
+    [
+     25.080761962155616,
+     33.441154273188005,
+     -0.37
+    ],
+    [
+     44.20127003784438,
+     46.558845726811995,
+     -0.12
+    ]
+   ],
+   "volume": 17.99999999999997
+  },
+  "1UiPSFcDjErxwCT65xLh1S": {
+   "area": 147.77600000000007,
+   "box": [
+    [
+     -9.560254037844386,
+     13.441154273188008,
+     -0.12
+    ],
+    [
+     9.560254037844386,
+     26.55884572681199,
+     -0.04
+    ]
+   ],
+   "volume": 5.759999999999996
+  },
+  "1hIucSGDb5YfQIf0E4zTy_": {
+   "area": 147.77600000000004,
+   "box": [
+    [
+     -26.880762037844384,
+     3.4411542731880083,
+     -0.12
+    ],
+    [
+     -7.760253962155614,
+     16.55884572681199,
+     -0.04
+    ]
+   ],
+   "volume": 5.76
+  },
+  "1iXLtViPXCCwrYVlnB19Ks": {
+   "area": 0.20000000000000606,
+   "box": [
+    [
+     30.28588898107781,
+     37.456698729810775,
+     0.0
+    ],
+    [
+     32.06793978864668,
+     38.54330127018923,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "1rSMOsFHPCxBpVA$FlasQt": {
+   "area": 59.32692891691437,
+   "box": [
+    [
+     -10.110254037844525,
+     16.55884572681225,
+     -0.4900000000000043
+    ],
+    [
+     7.760254037844394,
+     27.511473670974883,
+     -0.03999999999948661
+    ]
+   ],
+   "volume": 6.1690897115038075
+  },
+  "1zA0UQopr71wWPFRVqk8vb": {
+   "area": 149.66400000000004,
+   "box": [
+    [
+     -9.560254037844386,
+     13.441154273188008,
+     -0.49
+    ],
+    [
+     9.560254037844386,
+     26.55884572681199,
+     -0.37
+    ]
+   ],
+   "volume": 8.639999999999997
+  },
+  "2$CI2UZ2nC6udOwWqZWr6C": {
+   "area": 14.51636751652273,
+   "box": [
+    [
+     20.15343663441581,
+     34.03159572681212,
+     -0.48999999999997895
+    ],
+    [
+     25.080762037844256,
+     37.51147367097503,
+     -0.03999999999985826
+    ]
+   ],
+   "volume": 1.4784412499999662
+  },
+  "21looXrNb6n9dVVqZ0afH3": {
+   "area": 31.325103613035044,
+   "box": [
+    [
+     -5.663139720814413,
+     18.808845726811988,
+     -0.49
+    ],
+    [
+     3.863139720814412,
+     24.613268708511864,
+     -0.37
+    ]
+   ],
+   "volume": 1.7115074185794188
+  },
+  "2271FKNO1DdwPAfaVP8xJd": {
+   "area": 55.709611797498134,
+   "box": [
+    [
+     -7.760254037844545,
+     12.488526329025389,
+     -0.49
+    ],
+    [
+     10.11025403784437,
+     23.44115427318802,
+     -0.039999999999485836
+    ]
+   ],
+   "volume": 5.850000000000017
+  },
+  "22Oy65k6H6RQzyRYDT5O81": {
+   "area": 0.19999999999999957,
+   "box": [
+    [
+     -0.8910254037844341,
+     19.45669872981077,
+     0.0
+    ],
+    [
+     0.8910254037844388,
+     20.54330127018922,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "23fuLywRn2yQjhdXt_DTEx": {
+   "area": 149.66400000000004,
+   "box": [
+    [
+     -9.560254037844386,
+     13.441154273188008,
+     -0.49
+    ],
+    [
+     9.560254037844386,
+     26.55884572681199,
+     -0.37
+    ]
+   ],
+   "volume": 8.639999999999997
+  },
+  "24yB027vXAnwvB5wEFTdUW": {
+   "area": 40.149419740237946,
+   "box": [
+    [
+     7.7602539621557085,
+     23.44115427318779,
+     -0.3699999999999875
+    ],
+    [
+     13.786024919921898,
+     28.99859572681184,
+     0.025814000000018177
+    ]
+   ],
+   "volume": 4.555154476093408
+  },
+  "25_RTYQg9CWPpSeXsVQXRz": {
+   "area": 155.80000000000004,
+   "box": [
+    [
+     -9.560254037844386,
+     13.441154273188008,
+     -0.37
+    ],
+    [
+     9.560254037844386,
+     26.55884572681199,
+     -0.12
+    ]
+   ],
+   "volume": 18.00000000000001
+  },
+  "29INDGxC98WgiF2$uaWE$G": {
+   "area": 145.88800000000003,
+   "box": [
+    [
+     -9.560254037844386,
+     13.441154273188008,
+     -0.04
+    ],
+    [
+     9.560254037844386,
+     26.55884572681199,
+     0.0
+    ]
+   ],
+   "volume": 2.8800000000000026
+  },
+  "2B7GjowjDAyvkWvj3mcysp": {
+   "area": 19.219139457888282,
+   "box": [
+    [
+     7.76025396215571,
+     23.44115427318779,
+     -0.11999999999998076
+    ],
+    [
+     11.832175480164416,
+     27.870540226811784,
+     -0.039999999999967215
+    ]
+   ],
+   "volume": 0.7205840319999968
+  },
+  "2CFlp691nEVAN$xmwmq4NQ": {
+   "area": 19.219139457888268,
+   "box": [
+    [
+     22.80884051983562,
+     32.12945977318817,
+     -0.11999999999998076
+    ],
+    [
+     26.880762037844313,
+     36.55884572681215,
+     -0.039999999999967215
+    ]
+   ],
+   "volume": 0.7205840320000104
+  },
+  "2E09k8p5j8Ie2cdShEa6y3": {
+   "area": 0.19999999999999993,
+   "box": [
+    [
+     -7.819228634059943,
+     15.45669872981077,
+     0.0
+    ],
+    [
+     -6.03717782649107,
+     16.54330127018922,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "2Hv0cNhjPCV8n4VnOiLlhy": {
+   "area": 145.888,
+   "box": [
+    [
+     -26.880762037844384,
+     3.4411542731880083,
+     -0.04
+    ],
+    [
+     -7.760253962155614,
+     16.55884572681199,
+     0.0
+    ]
+   ],
+   "volume": 2.8800000000000003
+  },
+  "2Jmv7aVW59tgvJy3nmB5rm": {
+   "area": 55.709611797498155,
+   "box": [
+    [
+     -25.080762037844543,
+     2.4885263290253867,
+     -0.49
+    ],
+    [
+     -7.210253962155629,
+     13.441154273188019,
+     -0.039999999999485836
+    ]
+   ],
+   "volume": 5.84999999999998
+  },
+  "2Lcv7v7Y9CDgeVSxtOixa_": {
+   "area": 40.14941974023793,
+   "box": [
+    [
+     20.85499108007813,
+     31.001404273188122,
+     -0.3699999999999875
+    ],
+    [
+     26.880762037844313,
+     36.55884572681215,
+     0.025814000000018177
+    ]
+   ],
+   "volume": 4.555154476093408
+  },
+  "2PKdE1kbL8ke7QxRRzxN_q": {
+   "area": 14.516367516522703,
+   "box": [
+    [
+     22.50343663441588,
+     29.96127632902531,
+     -0.4899999999999672
+    ],
+    [
+     27.430762037844318,
+     33.44115427318822,
+     -0.03999999999985143
+    ]
+   ],
+   "volume": 1.478441249999932
+  },
+  "2VDStrHxP5_9fajgO5lJMP": {
+   "area": 0.2000000000000044,
+   "box": [
+    [
+     26.821787365940057,
+     35.45669872981077,
+     0.0
+    ],
+    [
+     28.60383817350893,
+     36.543301270189225,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "2XfFRWwzD9qfMHjBFXzIXm": {
+   "area": 0.20000000000000606,
+   "box": [
+    [
+     40.67819382649107,
+     43.45669872981078,
+     0.0
+    ],
+    [
+     42.46024463405994,
+     44.54330127018924,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "2Z1Tk3YUj4bfBY5kB$H6XD": {
+   "area": 29.458450299671682,
+   "box": [
+    [
+     -5.663139720814413,
+     18.808845726811988,
+     -0.04
+    ],
+    [
+     3.863139720814412,
+     24.613268708511864,
+     0.0
+    ]
+   ],
+   "volume": 0.5705024728598003
+  },
+  "2ayNnO1Fn0kRTcnBmZ4Sgd": {
+   "area": 0.19999999999999957,
+   "box": [
+    [
+     2.57307621135332,
+     21.45669872981077,
+     0.0
+    ],
+    [
+     4.355127018922193,
+     22.54330127018922,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "2bgbuMDuj3hg9k0pkgUphW": {
+   "area": 55.709611797498134,
+   "box": [
+    [
+     26.880761962155606,
+     32.48852632902511,
+     -0.4900000000000043
+    ],
+    [
+     44.75127003784453,
+     43.44115427318775,
+     -0.03999999999948661
+    ]
+   ],
+   "volume": 5.849999999999967
+  },
+  "2gurTQSkD1_htHRFmtcbL_": {
+   "area": 36.63447999999998,
+   "box": [
+    [
+     20.854991080078133,
+     31.001404273188125,
+     -0.4899999999999875
+    ],
+    [
+     26.880762037844313,
+     36.55884572681216,
+     -0.3699999999999672
+    ]
+   ],
+   "volume": 2.057244000000053
+  },
+  "2k035JfqPANO_5sd1VjpMr": {
+   "area": 0.19999999999999993,
+   "box": [
+    [
+     -7.819228634059943,
+     15.45669872981077,
+     0.0
+    ],
+    [
+     -6.03717782649107,
+     16.54330127018922,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "2osHTl91z1WeqT0dDvg3WD": {
+   "area": 14.516367516522703,
+   "box": [
+    [
+     9.56025396215579,
+     22.488526329024918,
+     -0.48999999999997895
+    ],
+    [
+     14.48757936558422,
+     25.96840427318785,
+     -0.03999999999985826
+    ]
+   ],
+   "volume": 1.4784412500000044
+  },
+  "2perTo5I50_QVZloPyhq8F": {
+   "area": 145.8879999999999,
+   "box": [
+    [
+     25.080761962155616,
+     33.441154273188005,
+     -0.04
+    ],
+    [
+     44.20127003784438,
+     46.558845726811995,
+     0.0
+    ]
+   ],
+   "volume": 2.8800000000000043
+  },
+  "2xFNEEiVXAoQ17T8KWBbr6": {
+   "area": 0.19999999999999946,
+   "box": [
+    [
+     -4.355127018922189,
+     17.45669872981077,
+     0.0
+    ],
+    [
+     -2.5730762113533157,
+     18.54330127018922,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "34susoRVr6zwuxR_H7WjJP": {
+   "area": 149.6639999999999,
+   "box": [
+    [
+     25.080761962155616,
+     33.441154273188005,
+     -0.49
+    ],
+    [
+     44.20127003784438,
+     46.558845726811995,
+     -0.37
+    ]
+   ],
+   "volume": 8.640000000000065
+  },
+  "3736_hvIzFCRBgB1NzaIAG": {
+   "area": 0.1999999999999989,
+   "box": [
+    [
+     -25.139736634059943,
+     5.4566987298107685,
+     0.0
+    ],
+    [
+     -23.35768582649107,
+     6.54330127018922,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "37h0T9Qob7Mw1PFsR1kVP7": {
+   "area": 30.391776956353368,
+   "box": [
+    [
+     -5.663139720814413,
+     18.808845726811988,
+     -0.12
+    ],
+    [
+     3.863139720814412,
+     24.613268708511864,
+     -0.04
+    ]
+   ],
+   "volume": 1.1410049457195992
+  },
+  "3Fit2Fad92zf2f6aWdJtF5": {
+   "area": 0.8884836072149055,
+   "box": [
+    [
+     -0.965763,
+     -0.904192,
+     0.0
+    ],
+    [
+     0.885377,
+     0.895808,
+     0.1
+    ]
+   ],
+   "volume": 0.005702362812277502
+  },
+  "3IUYm3Tt58BvzwcxEk6ARA": {
+   "area": 34.358415247250505,
+   "box": [
+    [
+     -5.663139720814413,
+     18.808845726811988,
+     -0.37
+    ],
+    [
+     3.863139720814412,
+     24.613268708511864,
+     -0.12
+    ]
+   ],
+   "volume": 3.5656404553737495
+  },
+  "3PBVDB_Gv65fD5rAR8Y2j0": {
+   "area": 0.19999999999999957,
+   "box": [
+    [
+     -0.8910254037844341,
+     19.45669872981077,
+     0.0
+    ],
+    [
+     0.8910254037844388,
+     20.54330127018922,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "3PGg5TW8D94u9cNHoKU9ai": {
+   "area": 18.573190128944127,
+   "box": [
+    [
+     22.815768723065897,
+     32.133459773188164,
+     -0.03999999999998074
+    ],
+    [
+     26.880762037844313,
+     36.55884572681215,
+     3.278280456276144e-14
+    ]
+   ],
+   "volume": 0.3594280159999964
+  },
+  "3SstlkwwP25gbEsTjECubM": {
+   "area": 0.19999999999999812,
+   "box": [
+    [
+     -18.211533403784436,
+     9.456698729810771,
+     0.0
+    ],
+    [
+     -16.429482596215564,
+     10.543301270189222,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "3XzlKA5bz0efC2no0GJY02": {
+   "area": 31.325103613035044,
+   "box": [
+    [
+     -5.663139720814413,
+     18.808845726811988,
+     -0.49
+    ],
+    [
+     3.863139720814412,
+     24.613268708511864,
+     -0.37
+    ]
+   ],
+   "volume": 1.7115074185794188
+  },
+  "3YeZLOBOrEnv261fug3ZyX": {
+   "area": 0.20000000000000606,
+   "box": [
+    [
+     33.74999059621556,
+     39.456698729810775,
+     0.0
+    ],
+    [
+     35.53204140378443,
+     40.54330127018923,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "3hvQKS_3f35hrc93TD89Cw": {
+   "area": 55.709611797498134,
+   "box": [
+    [
+     -7.760254037844545,
+     12.488526329025389,
+     -0.49
+    ],
+    [
+     10.11025403784437,
+     23.44115427318802,
+     -0.039999999999485836
+    ]
+   ],
+   "volume": 5.850000000000017
+  },
+  "3iK_B7RQX1A90d2SZn3haF": {
+   "area": 0.1999999999999998,
+   "box": [
+    [
+     6.0371778264910745,
+     23.45669872981077,
+     0.0
+    ],
+    [
+     7.8192286340599475,
+     24.54330127018922,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "3kgqjUM35B4wJgRMa9qRTs": {
+   "area": 0.20000000000000606,
+   "box": [
+    [
+     37.21409221135332,
+     41.456698729810775,
+     0.0
+    ],
+    [
+     38.99614301892219,
+     42.54330127018923,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "3l2i$KGMz4I87INjjdXvqG": {
+   "area": 155.80000000000004,
+   "box": [
+    [
+     -9.560254037844386,
+     13.441154273188008,
+     -0.37
+    ],
+    [
+     9.560254037844386,
+     26.55884572681199,
+     -0.12
+    ]
+   ],
+   "volume": 18.00000000000001
+  },
+  "3n9r1K2N1DBRveA6CMqp_q": {
+   "area": 30.391776956353368,
+   "box": [
+    [
+     -5.663139720814413,
+     18.808845726811988,
+     -0.12
+    ],
+    [
+     3.863139720814412,
+     24.613268708511864,
+     -0.04
+    ]
+   ],
+   "volume": 1.1410049457195992
+  },
+  "3nP$zLBVH1Yxs64yX$MtCU": {
+   "area": 0.19999999999999957,
+   "box": [
+    [
+     2.57307621135332,
+     21.45669872981077,
+     0.0
+    ],
+    [
+     4.355127018922193,
+     22.54330127018922,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  },
+  "3nUgJwuKjBSgKNVqnDReQ_": {
+   "area": 36.634480000000025,
+   "box": [
+    [
+     7.7602539621557085,
+     23.44115427318779,
+     -0.4899999999999875
+    ],
+    [
+     13.786024919921896,
+     28.998595726811843,
+     -0.3699999999999672
+    ]
+   ],
+   "volume": 2.057244000000001
+  },
+  "3oFdaVamzCehZnvL2DVyTv": {
+   "area": 0.19999999999999946,
+   "box": [
+    [
+     -4.355127018922189,
+     17.45669872981077,
+     0.0
+    ],
+    [
+     -2.5730762113533157,
+     18.54330127018922,
+     0.0
+    ]
+   ],
+   "volume": 0.0
+  }
+ },
+ "header": {
+  "name": "Infra-Road.ifc",
+  "originatingSystem": "BIM_Tools - Sketchup_IFC_manager - 5.6.0",
+  "preprocessor": "Sketchup-IFC-manager 5.6.0 / SketchUp 2026 (26.2.242)",
+  "timeStamp": "2026-06-23T11:54:08"
+ },
+ "lengthToSi": 0.001,
+ "location": {
+  "crs": "EPSG:32760",
+  "eastings": 729011.2258823584,
+  "northings": 9063960.607644705,
+  "orthogonalHeight": 0.0,
+  "scale": 0.001,
+  "xAxisAbscissa": 1.0,
+  "xAxisOrdinate": 0.0
+ },
+ "objects": {
+  "00ZvlN19v73wE8JOyDmPjG": {
+   "class": "IfcElementAssembly",
+   "container": "1$CApj9YLCeu0YyH5TXRVh",
+   "description": "A marker indicating specific locations along the highway.",
+   "hasShape": false,
+   "longName": null,
+   "name": "highway location marker",
+   "objectType": "signalassembly",
+   "parent": null,
+   "predefined": null,
+   "step": 583,
+   "tag": "454425.1027895.1031643",
+   "type": "0iAJVoiDX1LxdIktn5l5jI"
+  },
+  "046y63wsz4DQSmQSAZEkx4": {
+   "class": "IfcCourseType",
+   "container": null,
+   "description": "A smooth asphalt surface, providing a durable driving layer in the parking area.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road - parking - asphalt surface course",
+   "objectType": "pavement",
+   "parent": null,
+   "predefined": "PAVEMENT",
+   "step": 74,
+   "tag": "1922431",
+   "type": null
+  },
+  "0GfyK6YKbBBOLGVolBxAx4": {
+   "class": "IfcCourse",
+   "container": "3JCNkEnxX2HAIohFE8d0li",
+   "description": "A smooth asphalt surface, providing a durable driving layer on the bridge road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road asphalt surface course - bridge road",
+   "objectType": "pavement",
+   "parent": null,
+   "predefined": null,
+   "step": 486,
+   "tag": "454425.1027893.1882581.1882584.953129.940412",
+   "type": "37sfwh1Dz0oBz8ltSruelK"
+  },
+  "0JHBQuEiP0nvPYpJMf4bmS": {
+   "class": "IfcEarthworksFill",
+   "container": "2v_vgJ52rCdOoY4xv9BEGs",
+   "description": "A solid base course, providing support for the road surface.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - base course",
+   "objectType": "subgradebed",
+   "parent": null,
+   "predefined": "SUBGRADEBED",
+   "step": 862,
+   "tag": "454425.1918123.1918126.1918136.1918138.1918147",
+   "type": null
+  },
+  "0UKHUh06v69wKcoKjB04ik": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The carriageway, providing a smooth driving surface on the bridge road.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road carriageway - bridge road",
+   "objectType": "carriageway",
+   "parent": "1gawLKQN1FlOdzrZDos6Gg",
+   "predefined": "CARRIAGEWAY",
+   "step": 530,
+   "tag": null,
+   "type": null
+  },
+  "0WFaAjgxT8whuM_s0GDVop": {
+   "class": "IfcCourse",
+   "container": "3oc$qAY_95VA0MUuoAYGxh",
+   "description": "A durable asphalt binder course, forming a key layer of the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - asphalt binder course",
+   "objectType": "core",
+   "parent": null,
+   "predefined": null,
+   "step": 617,
+   "tag": "454425.1027895.1925011.1918136.1918138.1918143",
+   "type": "2RY49kCtvEu91WhX$tQv6E"
+  },
+  "0YqCWlEOfFLOP9cWpIfWnw": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The shoulder, providing additional space and support alongside the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - shoulder",
+   "objectType": "shoulder",
+   "parent": "2pS6pdNUf5JhK0$Ap6Vb7C",
+   "predefined": "SHOULDER",
+   "step": 873,
+   "tag": null,
+   "type": null
+  },
+  "0_Qwe45Iz4axmHTXYPvOsp": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The carriageway, providing a smooth driving surface for vehicles.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road  - carriageway",
+   "objectType": "carriageway",
+   "parent": "13nXdzaiLCcBMI_327t3$B",
+   "predefined": "CARRIAGEWAY",
+   "step": 146,
+   "tag": null,
+   "type": null
+  },
+  "0bOiufAU17JvMAqTkdbCGK": {
+   "class": "IfcCourse",
+   "container": "0_Qwe45Iz4axmHTXYPvOsp",
+   "description": "A smooth asphalt surface, providing a durable driving layer.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - asphalt surface course",
+   "objectType": "pavement",
+   "parent": null,
+   "predefined": null,
+   "step": 168,
+   "tag": "454425.1027892.955978.953073.1922257.937649",
+   "type": "378XWUiZH0i9KZruDMskvH"
+  },
+  "0foyckKPj2OwIIYCa8mzqS": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 835,
+   "tag": "454425.1918123.1918126.1918136.1918138.1918144.2051909",
+   "type": null
+  },
+  "0iAJVoiDX1LxdIktn5l5jI": {
+   "class": "IfcElementAssemblyType",
+   "container": null,
+   "description": "A marker indicating specific locations along the highway.",
+   "hasShape": false,
+   "longName": null,
+   "name": "highway location marker",
+   "objectType": "signalassembly",
+   "parent": null,
+   "predefined": "SIGNALASSEMBLY",
+   "step": 581,
+   "tag": "1031224",
+   "type": null
+  },
+  "0v1ddg6Y12hvvQhtW6MY3h": {
+   "class": "IfcEarthworksFill",
+   "container": "2X7Dlo9gX5dgM3FX0gYZXP",
+   "description": "A stable subgrade, forming the foundation of the parking area.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - parking - subgrade",
+   "objectType": "subgrade",
+   "parent": null,
+   "predefined": "SUBGRADE",
+   "step": 92,
+   "tag": "454425.1027892.955978.953073.940313.1922262",
+   "type": null
+  },
+  "1$CApj9YLCeu0YyH5TXRVh": {
+   "class": "IfcSite",
+   "container": null,
+   "description": "The site of the road rail bridge, supporting both road and rail traffic.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road rail bridge - site",
+   "objectType": null,
+   "parent": "23sFQGRy90RxVbRHD9iSE2",
+   "predefined": null,
+   "step": 575,
+   "tag": null,
+   "type": null
+  },
+  "122iIwdi92Nu19w41eQ8OO": {
+   "class": "IfcCourse",
+   "container": "3Rtyfer6f14gfdIYhSAJfS",
+   "description": "A smooth asphalt surface, providing a durable driving layer in the parking area.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - parking - asphalt surface course",
+   "objectType": "pavement",
+   "parent": null,
+   "predefined": null,
+   "step": 279,
+   "tag": "454425.1027892.955978.1922250.940313.1922260",
+   "type": "046y63wsz4DQSmQSAZEkx4"
+  },
+  "13nXdzaiLCcBMI_327t3$B": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "A segment of the road, connecting various parts of the infrastructure.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road parking - road segment",
+   "objectType": "roadsegment",
+   "parent": "2MBfH6RyP3luv6spdwrCIJ",
+   "predefined": "ROADSEGMENT",
+   "step": 41,
+   "tag": null,
+   "type": null
+  },
+  "15Sq9FrzT9FBv27nCk5mh_": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The shoulder, providing additional space and support alongside the parking area.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road parking - shoulder",
+   "objectType": "shoulder",
+   "parent": "3UW01eWGf3R9Qahji8i4XE",
+   "predefined": "SHOULDER",
+   "step": 303,
+   "tag": null,
+   "type": null
+  },
+  "17coQp2iL5FhBqt0CY_3TM": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The shoulder, providing additional space and support alongside the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - shoulder",
+   "objectType": "shoulder",
+   "parent": "1qeMYKRz11NfwG9VheT8FH",
+   "predefined": "SHOULDER",
+   "step": 724,
+   "tag": null,
+   "type": null
+  },
+  "1AfgOmh7nDOedEyHKWgbIw": {
+   "class": "IfcRoad",
+   "container": null,
+   "description": "A well-constructed road, connecting various parts of the infrastructure.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road",
+   "objectType": "road",
+   "parent": "2syxA9_lr7Ew2uZai3VhhS",
+   "predefined": "NOTDEFINED",
+   "step": 756,
+   "tag": null,
+   "type": null
+  },
+  "1EBv$nhkP16QpDbPgakj0R": {
+   "class": "IfcCourse",
+   "container": "2FFDMtF_bFt9Cn7VXimDUu",
+   "description": "A durable asphalt binder course, forming a key layer of the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - asphalt binder course",
+   "objectType": "core",
+   "parent": null,
+   "predefined": null,
+   "step": 325,
+   "tag": "454425.1027892.955978.1922250.1922257.937648",
+   "type": "2RY49kCtvEu91WhX$tQv6E"
+  },
+  "1Engm$GMHEoAv0uoo9qvMb": {
+   "class": "IfcRoad",
+   "container": null,
+   "description": "A connection point, linking the bridge road to other infrastructure.",
+   "hasShape": false,
+   "longName": null,
+   "name": "bridge road connection",
+   "objectType": "road",
+   "parent": "3pnaj3EgL1cOScZHtoQhHO",
+   "predefined": "NOTDEFINED",
+   "step": 497,
+   "tag": null,
+   "type": null
+  },
+  "1Fxh8JXAj0VPU5VkvOYvkk": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 843,
+   "tag": "454425.1918123.1918126.1918136.1918138.1918144.2051910",
+   "type": null
+  },
+  "1Gy5o1F_T6VxmwxJ5$xsRE": {
+   "class": "IfcRoad",
+   "container": null,
+   "description": "A well-constructed road, connecting various parts of the infrastructure.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road",
+   "objectType": "road",
+   "parent": "1$CApj9YLCeu0YyH5TXRVh",
+   "predefined": "NOTDEFINED",
+   "step": 596,
+   "tag": null,
+   "type": null
+  },
+  "1HY$KHGVb0Y9iLwHsRZfqX": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 819,
+   "tag": "454425.1918123.1918126.1918136.1918138.1918144.2051907",
+   "type": null
+  },
+  "1IhMwsHkj23Pk9puusHUBF": {
+   "class": "IfcEarthworksFill",
+   "container": "2v_vgJ52rCdOoY4xv9BEGs",
+   "description": "A stable subgrade, forming the foundation of the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - subgrade",
+   "objectType": "subgrade",
+   "parent": null,
+   "predefined": "SUBGRADE",
+   "step": 851,
+   "tag": "454425.1918123.1918126.1918136.1918138.1918146",
+   "type": null
+  },
+  "1LsZ9dUZn5397IxXcrlrIe": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The shoulder, providing additional space and support alongside the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - shoulder",
+   "objectType": "shoulder",
+   "parent": "3gVUlQBybBTR_jtpA_c89f",
+   "predefined": "SHOULDER",
+   "step": 431,
+   "tag": null,
+   "type": null
+  },
+  "1PLaDnWNP2WPtJ6K0kxgur": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 375,
+   "tag": "454425.1027892.955978.1922250.1922257.937649.2051910",
+   "type": null
+  },
+  "1URig8FeLBeR9AdMrx_PFb": {
+   "class": "IfcEarthworksFill",
+   "container": "3oc$qAY_95VA0MUuoAYGxh",
+   "description": "A stable subgrade, forming the foundation of the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - subgrade",
+   "objectType": "subgrade",
+   "parent": null,
+   "predefined": "SUBGRADE",
+   "step": 691,
+   "tag": "454425.1027895.1925011.1918136.1918138.1918146",
+   "type": null
+  },
+  "1UiPSFcDjErxwCT65xLh1S": {
+   "class": "IfcCourse",
+   "container": "0_Qwe45Iz4axmHTXYPvOsp",
+   "description": "A durable asphalt binder course, forming a key layer of the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - asphalt binder course",
+   "objectType": "core",
+   "parent": null,
+   "predefined": null,
+   "step": 154,
+   "tag": "454425.1027892.955978.953073.1922257.937648",
+   "type": "2RY49kCtvEu91WhX$tQv6E"
+  },
+  "1adp27B_9CUfup2ojuKOng": {
+   "class": "IfcSite",
+   "container": null,
+   "description": "A designated parking area, providing space for vehicles.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road parking - site",
+   "objectType": null,
+   "parent": "23sFQGRy90RxVbRHD9iSE2",
+   "predefined": null,
+   "step": 24,
+   "tag": null,
+   "type": null
+  },
+  "1gawLKQN1FlOdzrZDos6Gg": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "A segment of the bridge road, connecting various parts of the infrastructure.",
+   "hasShape": false,
+   "longName": null,
+   "name": "bridge - road segment",
+   "objectType": "roadsegment",
+   "parent": "1Engm$GMHEoAv0uoo9qvMb",
+   "predefined": "ROADSEGMENT",
+   "step": 503,
+   "tag": null,
+   "type": null
+  },
+  "1hIucSGDb5YfQIf0E4zTy_": {
+   "class": "IfcCourse",
+   "container": "2v_vgJ52rCdOoY4xv9BEGs",
+   "description": "A durable asphalt binder course, forming a key layer of the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - asphalt binder course",
+   "objectType": "core",
+   "parent": null,
+   "predefined": null,
+   "step": 777,
+   "tag": "454425.1918123.1918126.1918136.1918138.1918143",
+   "type": "2RY49kCtvEu91WhX$tQv6E"
+  },
+  "1iXLtViPXCCwrYVlnB19Ks": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 675,
+   "tag": "454425.1027895.1925011.1918136.1918138.1918144.2051909",
+   "type": null
+  },
+  "1qeMYKRz11NfwG9VheT8FH": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "A segment of the road, connecting various parts of the infrastructure.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road segment",
+   "objectType": "roadsegment",
+   "parent": "1Gy5o1F_T6VxmwxJ5$xsRE",
+   "predefined": "ROADSEGMENT",
+   "step": 603,
+   "tag": null,
+   "type": null
+  },
+  "1rSMOsFHPCxBpVA$FlasQt": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The shoulder, providing additional space and support alongside the parking area.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road parking - shoulder",
+   "objectType": "shoulder",
+   "parent": "13nXdzaiLCcBMI_327t3$B",
+   "predefined": "SHOULDER",
+   "step": 124,
+   "tag": null,
+   "type": null
+  },
+  "1ycqplGh55EAGDAsiDHPxX": {
+   "class": "IfcRoad",
+   "container": null,
+   "description": "A connection point, linking the bridge road to other infrastructure.",
+   "hasShape": false,
+   "longName": null,
+   "name": "bridge road connection",
+   "objectType": "road",
+   "parent": "3pnaj3EgL1cOScZHtoQhHO",
+   "predefined": "NOTDEFINED",
+   "step": 405,
+   "tag": null,
+   "type": null
+  },
+  "1zA0UQopr71wWPFRVqk8vb": {
+   "class": "IfcEarthworksFill",
+   "container": "0_Qwe45Iz4axmHTXYPvOsp",
+   "description": "A solid base course, providing support for the road surface.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - base course",
+   "objectType": "subgradebed",
+   "parent": null,
+   "predefined": "SUBGRADEBED",
+   "step": 246,
+   "tag": "454425.1027892.955978.953073.1922257.937652",
+   "type": null
+  },
+  "2$CI2UZ2nC6udOwWqZWr6C": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The shoulder, providing additional space and support alongside the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - shoulder",
+   "objectType": "shoulder",
+   "parent": "1gawLKQN1FlOdzrZDos6Gg",
+   "predefined": "SHOULDER",
+   "step": 510,
+   "tag": null,
+   "type": null
+  },
+  "21looXrNb6n9dVVqZ0afH3": {
+   "class": "IfcEarthworksFill",
+   "container": "2X7Dlo9gX5dgM3FX0gYZXP",
+   "description": "A solid base course, providing support for the parking area surface.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road parking - base course",
+   "objectType": "subgradebed",
+   "parent": null,
+   "predefined": "SUBGRADEBED",
+   "step": 108,
+   "tag": "454425.1027892.955978.953073.940313.1922263",
+   "type": null
+  },
+  "2271FKNO1DdwPAfaVP8xJd": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The shoulder, providing additional space and support alongside the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - shoulder",
+   "objectType": "shoulder",
+   "parent": "3UW01eWGf3R9Qahji8i4XE",
+   "predefined": "SHOULDER",
+   "step": 311,
+   "tag": null,
+   "type": null
+  },
+  "22Oy65k6H6RQzyRYDT5O81": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 211,
+   "tag": "454425.1027892.955978.953073.1922257.937649.2051908",
+   "type": null
+  },
+  "23fuLywRn2yQjhdXt_DTEx": {
+   "class": "IfcEarthworksFill",
+   "container": "2FFDMtF_bFt9Cn7VXimDUu",
+   "description": "A solid base course, providing support for the road surface.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - base course",
+   "objectType": "subgradebed",
+   "parent": null,
+   "predefined": "SUBGRADEBED",
+   "step": 391,
+   "tag": "454425.1027892.955978.1922250.1922257.937652",
+   "type": null
+  },
+  "23sFQGRy90RxVbRHD9iSE2": {
+   "class": "IfcSite",
+   "container": null,
+   "description": "A sample scene environment, showcasing the surrounding landscape.",
+   "hasShape": false,
+   "longName": null,
+   "name": "environment - site",
+   "objectType": null,
+   "parent": "2Ndyd$OSX7s9A04nc4lyye",
+   "predefined": null,
+   "step": 21,
+   "tag": null,
+   "type": null
+  },
+  "24yB027vXAnwvB5wEFTdUW": {
+   "class": "IfcEarthworksFill",
+   "container": "3JCNkEnxX2HAIohFE8d0li",
+   "description": "A stable subgrade, forming the foundation of the bridge road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road subgrade - bridge road",
+   "objectType": "subgrade",
+   "parent": null,
+   "predefined": "SUBGRADE",
+   "step": 473,
+   "tag": "454425.1027893.1882581.1882584.953129.940414",
+   "type": null
+  },
+  "25_RTYQg9CWPpSeXsVQXRz": {
+   "class": "IfcEarthworksFill",
+   "container": "0_Qwe45Iz4axmHTXYPvOsp",
+   "description": "A stable subgrade, forming the foundation of the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - subgrade",
+   "objectType": "subgrade",
+   "parent": null,
+   "predefined": "SUBGRADE",
+   "step": 235,
+   "tag": "454425.1027892.955978.953073.1922257.937651",
+   "type": null
+  },
+  "29INDGxC98WgiF2$uaWE$G": {
+   "class": "IfcCourse",
+   "container": "2FFDMtF_bFt9Cn7VXimDUu",
+   "description": "A smooth asphalt surface, providing a durable driving layer.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - asphalt surface course",
+   "objectType": "pavement",
+   "parent": null,
+   "predefined": null,
+   "step": 334,
+   "tag": "454425.1027892.955978.1922250.1922257.937649",
+   "type": "378XWUiZH0i9KZruDMskvH"
+  },
+  "2B7GjowjDAyvkWvj3mcysp": {
+   "class": "IfcCourse",
+   "container": "3JCNkEnxX2HAIohFE8d0li",
+   "description": "A durable asphalt binder course, forming a key layer of the bridge road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "bridge road - road asphalt binder course",
+   "objectType": "core",
+   "parent": null,
+   "predefined": null,
+   "step": 462,
+   "tag": "454425.1027893.1882581.1882584.953129.940413",
+   "type": "2rOCTfPmDCz95amGDvgELY"
+  },
+  "2CFlp691nEVAN$xmwmq4NQ": {
+   "class": "IfcCourse",
+   "container": "0UKHUh06v69wKcoKjB04ik",
+   "description": "A durable asphalt binder course, forming a key layer of the bridge road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "bridge road - road asphalt binder course",
+   "objectType": "core",
+   "parent": null,
+   "predefined": null,
+   "step": 545,
+   "tag": "454425.1027893.1886558.1882584.953129.940413",
+   "type": "2rOCTfPmDCz95amGDvgELY"
+  },
+  "2E09k8p5j8Ie2cdShEa6y3": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 179,
+   "tag": "454425.1027892.955978.953073.1922257.937649.2051805",
+   "type": null
+  },
+  "2EzPaFZtb3Te7t3gdE7DhG": {
+   "class": "IfcCourseType",
+   "container": null,
+   "description": "A durable asphalt binder course, forming a key layer of the parking area.",
+   "hasShape": false,
+   "longName": null,
+   "name": "asphalt binder course - road - parking",
+   "objectType": "core",
+   "parent": null,
+   "predefined": "CORE",
+   "step": 55,
+   "tag": "1922392",
+   "type": null
+  },
+  "2FFDMtF_bFt9Cn7VXimDUu": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The carriageway, providing a smooth driving surface for vehicles.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road  - carriageway",
+   "objectType": "carriageway",
+   "parent": "3UW01eWGf3R9Qahji8i4XE",
+   "predefined": "CARRIAGEWAY",
+   "step": 319,
+   "tag": null,
+   "type": null
+  },
+  "2Hv0cNhjPCV8n4VnOiLlhy": {
+   "class": "IfcCourse",
+   "container": "2v_vgJ52rCdOoY4xv9BEGs",
+   "description": "A smooth asphalt surface, providing a durable driving layer.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - asphalt surface course",
+   "objectType": "pavement",
+   "parent": null,
+   "predefined": null,
+   "step": 789,
+   "tag": "454425.1918123.1918126.1918136.1918138.1918144",
+   "type": "378XWUiZH0i9KZruDMskvH"
+  },
+  "2IpkHFcdnD3xuZl6H52fWn": {
+   "class": "IfcBuildingElementProxyType",
+   "container": null,
+   "description": "The reference point for transforming the local engineering coordinate system into the coordinate reference system of the underlying map.",
+   "hasShape": false,
+   "longName": null,
+   "name": "geo-reference",
+   "objectType": "origin",
+   "parent": null,
+   "predefined": "USERDEFINED",
+   "step": 735,
+   "tag": "1028019",
+   "type": null
+  },
+  "2Jmv7aVW59tgvJy3nmB5rm": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The shoulder, providing additional space and support alongside the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - shoulder",
+   "objectType": "shoulder",
+   "parent": "2pS6pdNUf5JhK0$Ap6Vb7C",
+   "predefined": "SHOULDER",
+   "step": 884,
+   "tag": null,
+   "type": null
+  },
+  "2Lcv7v7Y9CDgeVSxtOixa_": {
+   "class": "IfcEarthworksFill",
+   "container": "0UKHUh06v69wKcoKjB04ik",
+   "description": "A stable subgrade, forming the foundation of the bridge road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road subgrade - bridge road",
+   "objectType": "subgrade",
+   "parent": null,
+   "predefined": "SUBGRADE",
+   "step": 553,
+   "tag": "454425.1027893.1886558.1882584.953129.940414",
+   "type": null
+  },
+  "2MBfH6RyP3luv6spdwrCIJ": {
+   "class": "IfcRoad",
+   "container": null,
+   "description": "A well-constructed road, connecting various parts of the infrastructure.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road parking - road",
+   "objectType": "road",
+   "parent": "1adp27B_9CUfup2ojuKOng",
+   "predefined": "NOTDEFINED",
+   "step": 31,
+   "tag": null,
+   "type": null
+  },
+  "2Ndyd$OSX7s9A04nc4lyye": {
+   "class": "IfcProject",
+   "container": null,
+   "description": "Demystifying IFC with a playful scene using diverse building elements and compositions.",
+   "hasShape": false,
+   "longName": null,
+   "name": "ifc silly sample scene - project",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 13,
+   "tag": null,
+   "type": null
+  },
+  "2PKdE1kbL8ke7QxRRzxN_q": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The shoulder, providing additional space and support alongside the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - shoulder",
+   "objectType": "shoulder",
+   "parent": "1gawLKQN1FlOdzrZDos6Gg",
+   "predefined": "SHOULDER",
+   "step": 522,
+   "tag": null,
+   "type": null
+  },
+  "2RY49kCtvEu91WhX$tQv6E": {
+   "class": "IfcCourseType",
+   "container": null,
+   "description": "A durable asphalt binder course, forming a key layer of the road.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road - asphalt binder course",
+   "objectType": "core",
+   "parent": null,
+   "predefined": "CORE",
+   "step": 152,
+   "tag": "932698",
+   "type": null
+  },
+  "2VDStrHxP5_9fajgO5lJMP": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 683,
+   "tag": "454425.1027895.1925011.1918136.1918138.1918144.2051910",
+   "type": null
+  },
+  "2Wad9UE39Fl81buLr2dp_x": {
+   "class": "IfcSite",
+   "container": null,
+   "description": "The site of the rail river bridge, facilitating train crossings.",
+   "hasShape": false,
+   "longName": null,
+   "name": "rail river bridge - site",
+   "objectType": null,
+   "parent": "23sFQGRy90RxVbRHD9iSE2",
+   "predefined": null,
+   "step": 569,
+   "tag": null,
+   "type": null
+  },
+  "2X7Dlo9gX5dgM3FX0gYZXP": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "A designated parking area, providing space for vehicles.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road - parking",
+   "objectType": "parkingbay",
+   "parent": "13nXdzaiLCcBMI_327t3$B",
+   "predefined": "PARKINGBAY",
+   "step": 48,
+   "tag": null,
+   "type": null
+  },
+  "2XfFRWwzD9qfMHjBFXzIXm": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 640,
+   "tag": "454425.1027895.1925011.1918136.1918138.1918144.2051805",
+   "type": null
+  },
+  "2Z1Tk3YUj4bfBY5kB$H6XD": {
+   "class": "IfcCourse",
+   "container": "2X7Dlo9gX5dgM3FX0gYZXP",
+   "description": "A smooth asphalt surface, providing a durable driving layer in the parking area.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - parking - asphalt surface course",
+   "objectType": "pavement",
+   "parent": null,
+   "predefined": null,
+   "step": 76,
+   "tag": "454425.1027892.955978.953073.940313.1922260",
+   "type": "046y63wsz4DQSmQSAZEkx4"
+  },
+  "2ayNnO1Fn0kRTcnBmZ4Sgd": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 367,
+   "tag": "454425.1027892.955978.1922250.1922257.937649.2051909",
+   "type": null
+  },
+  "2bgbuMDuj3hg9k0pkgUphW": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The shoulder, providing additional space and support alongside the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - shoulder",
+   "objectType": "shoulder",
+   "parent": "1qeMYKRz11NfwG9VheT8FH",
+   "predefined": "SHOULDER",
+   "step": 713,
+   "tag": null,
+   "type": null
+  },
+  "2gurTQSkD1_htHRFmtcbL_": {
+   "class": "IfcEarthworksFill",
+   "container": "0UKHUh06v69wKcoKjB04ik",
+   "description": "A solid base course, providing support for the bridge road surface.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road base course - bridge road",
+   "objectType": "subgradebed",
+   "parent": null,
+   "predefined": "SUBGRADEBED",
+   "step": 536,
+   "tag": "454425.1027893.1886558.1882584.953129.940411",
+   "type": null
+  },
+  "2k035JfqPANO_5sd1VjpMr": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 342,
+   "tag": "454425.1027892.955978.1922250.1922257.937649.2051805",
+   "type": null
+  },
+  "2osHTl91z1WeqT0dDvg3WD": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The shoulder, providing additional space and support alongside the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - shoulder",
+   "objectType": "shoulder",
+   "parent": "3gVUlQBybBTR_jtpA_c89f",
+   "predefined": "SHOULDER",
+   "step": 419,
+   "tag": null,
+   "type": null
+  },
+  "2pS6pdNUf5JhK0$Ap6Vb7C": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "A segment of the road, connecting various parts of the infrastructure.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road segment",
+   "objectType": "roadsegment",
+   "parent": "1AfgOmh7nDOedEyHKWgbIw",
+   "predefined": "ROADSEGMENT",
+   "step": 763,
+   "tag": null,
+   "type": null
+  },
+  "2perTo5I50_QVZloPyhq8F": {
+   "class": "IfcCourse",
+   "container": "3oc$qAY_95VA0MUuoAYGxh",
+   "description": "A smooth asphalt surface, providing a durable driving layer.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - asphalt surface course",
+   "objectType": "pavement",
+   "parent": null,
+   "predefined": null,
+   "step": 629,
+   "tag": "454425.1027895.1925011.1918136.1918138.1918144",
+   "type": "378XWUiZH0i9KZruDMskvH"
+  },
+  "2rOCTfPmDCz95amGDvgELY": {
+   "class": "IfcCourseType",
+   "container": null,
+   "description": "A durable asphalt binder course, forming a key layer of the bridge road.",
+   "hasShape": false,
+   "longName": null,
+   "name": "bridge road - road asphalt binder course",
+   "objectType": "core",
+   "parent": null,
+   "predefined": "CORE",
+   "step": 460,
+   "tag": "937696",
+   "type": null
+  },
+  "2syxA9_lr7Ew2uZai3VhhS": {
+   "class": "IfcSite",
+   "container": null,
+   "description": "A designated parking area, providing space for vehicles.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road - site",
+   "objectType": null,
+   "parent": "23sFQGRy90RxVbRHD9iSE2",
+   "predefined": null,
+   "step": 750,
+   "tag": null,
+   "type": null
+  },
+  "2v_vgJ52rCdOoY4xv9BEGs": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The carriageway, providing a smooth driving surface for vehicles in the parking area.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road carriageway",
+   "objectType": "carriageway",
+   "parent": "2pS6pdNUf5JhK0$Ap6Vb7C",
+   "predefined": "CARRIAGEWAY",
+   "step": 770,
+   "tag": null,
+   "type": null
+  },
+  "2xFNEEiVXAoQ17T8KWBbr6": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 351,
+   "tag": "454425.1027892.955978.1922250.1922257.937649.2051907",
+   "type": null
+  },
+  "34susoRVr6zwuxR_H7WjJP": {
+   "class": "IfcEarthworksFill",
+   "container": "3oc$qAY_95VA0MUuoAYGxh",
+   "description": "A solid base course, providing support for the road surface.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - base course",
+   "objectType": "subgradebed",
+   "parent": null,
+   "predefined": "SUBGRADEBED",
+   "step": 702,
+   "tag": "454425.1027895.1925011.1918136.1918138.1918147",
+   "type": null
+  },
+  "3736_hvIzFCRBgB1NzaIAG": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 800,
+   "tag": "454425.1918123.1918126.1918136.1918138.1918144.2051805",
+   "type": null
+  },
+  "378XWUiZH0i9KZruDMskvH": {
+   "class": "IfcCourseType",
+   "container": null,
+   "description": "A smooth asphalt surface, providing a durable driving layer.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road - asphalt surface course",
+   "objectType": "pavement",
+   "parent": null,
+   "predefined": "PAVEMENT",
+   "step": 166,
+   "tag": "932737",
+   "type": null
+  },
+  "37h0T9Qob7Mw1PFsR1kVP7": {
+   "class": "IfcCourse",
+   "container": "2X7Dlo9gX5dgM3FX0gYZXP",
+   "description": "A durable asphalt binder course, forming a key layer of the parking area.",
+   "hasShape": true,
+   "longName": null,
+   "name": "asphalt binder course - road - parking",
+   "objectType": "core",
+   "parent": null,
+   "predefined": null,
+   "step": 57,
+   "tag": "454425.1027892.955978.953073.940313.1922259",
+   "type": "2EzPaFZtb3Te7t3gdE7DhG"
+  },
+  "37sfwh1Dz0oBz8ltSruelK": {
+   "class": "IfcCourseType",
+   "container": null,
+   "description": "A smooth asphalt surface, providing a durable driving layer on the bridge road.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road asphalt surface course - bridge road",
+   "objectType": "pavement",
+   "parent": null,
+   "predefined": "PAVEMENT",
+   "step": 484,
+   "tag": "938489",
+   "type": null
+  },
+  "3E8poO$Er6gPhLg44LF$bc": {
+   "class": "IfcElementAssembly",
+   "container": "1$CApj9YLCeu0YyH5TXRVh",
+   "description": "A marker indicating specific locations along the highway.",
+   "hasShape": false,
+   "longName": null,
+   "name": "highway location marker",
+   "objectType": "signalassembly",
+   "parent": null,
+   "predefined": null,
+   "step": 590,
+   "tag": "454425.1027895.1031644",
+   "type": "0iAJVoiDX1LxdIktn5l5jI"
+  },
+  "3Fit2Fad92zf2f6aWdJtF5": {
+   "class": "IfcBuildingElementProxy",
+   "container": "23sFQGRy90RxVbRHD9iSE2",
+   "description": "The reference point for transforming the local engineering coordinate system into the coordinate reference system of the underlying map.",
+   "hasShape": true,
+   "longName": null,
+   "name": "geo-reference",
+   "objectType": "origin",
+   "parent": null,
+   "predefined": null,
+   "step": 737,
+   "tag": "454425.1032696",
+   "type": "2IpkHFcdnD3xuZl6H52fWn"
+  },
+  "3IUYm3Tt58BvzwcxEk6ARA": {
+   "class": "IfcEarthworksFill",
+   "container": "3Rtyfer6f14gfdIYhSAJfS",
+   "description": "A stable subgrade, forming the foundation of the parking area.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - parking - subgrade",
+   "objectType": "subgrade",
+   "parent": null,
+   "predefined": "SUBGRADE",
+   "step": 287,
+   "tag": "454425.1027892.955978.1922250.940313.1922262",
+   "type": null
+  },
+  "3JCNkEnxX2HAIohFE8d0li": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The carriageway, providing a smooth driving surface on the bridge road.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road carriageway - bridge road",
+   "objectType": "carriageway",
+   "parent": "3gVUlQBybBTR_jtpA_c89f",
+   "predefined": "CARRIAGEWAY",
+   "step": 442,
+   "tag": null,
+   "type": null
+  },
+  "3PBVDB_Gv65fD5rAR8Y2j0": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 359,
+   "tag": "454425.1027892.955978.1922250.1922257.937649.2051908",
+   "type": null
+  },
+  "3PGg5TW8D94u9cNHoKU9ai": {
+   "class": "IfcCourse",
+   "container": "0UKHUh06v69wKcoKjB04ik",
+   "description": "A smooth asphalt surface, providing a durable driving layer on the bridge road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road asphalt surface course - bridge road",
+   "objectType": "pavement",
+   "parent": null,
+   "predefined": null,
+   "step": 561,
+   "tag": "454425.1027893.1886558.1882584.953129.940412",
+   "type": "37sfwh1Dz0oBz8ltSruelK"
+  },
+  "3Rtyfer6f14gfdIYhSAJfS": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "A designated parking area, providing space for vehicles.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road - parking",
+   "objectType": "parkingbay",
+   "parent": "3UW01eWGf3R9Qahji8i4XE",
+   "predefined": "PARKINGBAY",
+   "step": 263,
+   "tag": null,
+   "type": null
+  },
+  "3SstlkwwP25gbEsTjECubM": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 827,
+   "tag": "454425.1918123.1918126.1918136.1918138.1918144.2051908",
+   "type": null
+  },
+  "3UW01eWGf3R9Qahji8i4XE": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "A segment of the road, connecting various parts of the infrastructure.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road parking - road segment",
+   "objectType": "roadsegment",
+   "parent": "2MBfH6RyP3luv6spdwrCIJ",
+   "predefined": "ROADSEGMENT",
+   "step": 257,
+   "tag": null,
+   "type": null
+  },
+  "3XzlKA5bz0efC2no0GJY02": {
+   "class": "IfcEarthworksFill",
+   "container": "3Rtyfer6f14gfdIYhSAJfS",
+   "description": "A solid base course, providing support for the parking area surface.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road parking - base course",
+   "objectType": "subgradebed",
+   "parent": null,
+   "predefined": "SUBGRADEBED",
+   "step": 295,
+   "tag": "454425.1027892.955978.1922250.940313.1922263",
+   "type": null
+  },
+  "3YeZLOBOrEnv261fug3ZyX": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 667,
+   "tag": "454425.1027895.1925011.1918136.1918138.1918144.2051908",
+   "type": null
+  },
+  "3gVUlQBybBTR_jtpA_c89f": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "A segment of the bridge road, connecting various parts of the infrastructure.",
+   "hasShape": false,
+   "longName": null,
+   "name": "bridge - road segment",
+   "objectType": "roadsegment",
+   "parent": "1ycqplGh55EAGDAsiDHPxX",
+   "predefined": "ROADSEGMENT",
+   "step": 412,
+   "tag": null,
+   "type": null
+  },
+  "3hvQKS_3f35hrc93TD89Cw": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The shoulder, providing additional space and support alongside the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - shoulder",
+   "objectType": "shoulder",
+   "parent": "13nXdzaiLCcBMI_327t3$B",
+   "predefined": "SHOULDER",
+   "step": 135,
+   "tag": null,
+   "type": null
+  },
+  "3iK_B7RQX1A90d2SZn3haF": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 227,
+   "tag": "454425.1027892.955978.953073.1922257.937649.2051910",
+   "type": null
+  },
+  "3kgqjUM35B4wJgRMa9qRTs": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 659,
+   "tag": "454425.1027895.1925011.1918136.1918138.1918144.2051907",
+   "type": null
+  },
+  "3l2i$KGMz4I87INjjdXvqG": {
+   "class": "IfcEarthworksFill",
+   "container": "2FFDMtF_bFt9Cn7VXimDUu",
+   "description": "A stable subgrade, forming the foundation of the road.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - subgrade",
+   "objectType": "subgrade",
+   "parent": null,
+   "predefined": "SUBGRADE",
+   "step": 383,
+   "tag": "454425.1027892.955978.1922250.1922257.937651",
+   "type": null
+  },
+  "3n9r1K2N1DBRveA6CMqp_q": {
+   "class": "IfcCourse",
+   "container": "3Rtyfer6f14gfdIYhSAJfS",
+   "description": "A durable asphalt binder course, forming a key layer of the parking area.",
+   "hasShape": true,
+   "longName": null,
+   "name": "asphalt binder course - road - parking",
+   "objectType": "core",
+   "parent": null,
+   "predefined": null,
+   "step": 270,
+   "tag": "454425.1027892.955978.1922250.940313.1922259",
+   "type": "2EzPaFZtb3Te7t3gdE7DhG"
+  },
+  "3nP$zLBVH1Yxs64yX$MtCU": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 219,
+   "tag": "454425.1027892.955978.953073.1922257.937649.2051909",
+   "type": null
+  },
+  "3nUgJwuKjBSgKNVqnDReQ_": {
+   "class": "IfcEarthworksFill",
+   "container": "3JCNkEnxX2HAIohFE8d0li",
+   "description": "A solid base course, providing support for the bridge road surface.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road base course - bridge road",
+   "objectType": "subgradebed",
+   "parent": null,
+   "predefined": "SUBGRADEBED",
+   "step": 448,
+   "tag": "454425.1027893.1882581.1882584.953129.940411",
+   "type": null
+  },
+  "3oFdaVamzCehZnvL2DVyTv": {
+   "class": "IfcSurfaceFeature",
+   "container": null,
+   "description": "Clear and precise line markings, guiding traffic safely.",
+   "hasShape": true,
+   "longName": null,
+   "name": "road - line marking",
+   "objectType": "linemarking",
+   "parent": null,
+   "predefined": "LINEMARKING",
+   "step": 203,
+   "tag": "454425.1027892.955978.953073.1922257.937649.2051907",
+   "type": null
+  },
+  "3oc$qAY_95VA0MUuoAYGxh": {
+   "class": "IfcRoadPart",
+   "container": null,
+   "description": "The carriageway, providing a smooth driving surface for vehicles in the parking area.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road carriageway",
+   "objectType": "carriageway",
+   "parent": "1qeMYKRz11NfwG9VheT8FH",
+   "predefined": "CARRIAGEWAY",
+   "step": 610,
+   "tag": null,
+   "type": null
+  },
+  "3pnaj3EgL1cOScZHtoQhHO": {
+   "class": "IfcSite",
+   "container": null,
+   "description": "The site of the road river bridge, connecting different areas.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road river bridge - site",
+   "objectType": null,
+   "parent": "23sFQGRy90RxVbRHD9iSE2",
+   "predefined": null,
+   "step": 399,
+   "tag": null,
+   "type": null
+  }
+ },
+ "precision": 1e-06,
+ "reader": "IfcOpenShell 0.9.0.post1",
+ "records": 894,
+ "schema": "IFC4X3_ADD2",
+ "sets": {},
+ "source": "fixtures/ifc/v1/disaridan/bsi-ifc4x3-infra-road.ifc"
+}

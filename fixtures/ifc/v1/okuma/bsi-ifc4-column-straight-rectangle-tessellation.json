@@ -1,0 +1,78 @@
+{
+ "bodies": {
+  "2WUGYBphrFv8aLIFJCmiIk": {
+   "area": 2.5599948799999974,
+   "box": [
+    [
+     10.8712,
+     7.2136,
+     1.2191999999999998
+    ],
+    [
+     11.074399999999999,
+     7.4168,
+     4.2672
+    ]
+   ],
+   "volume": 0.12585265152000114
+  }
+ },
+ "header": {
+  "name": "column_rectangle_straight_tessellated_reference-view.ifc",
+  "originatingSystem": "Constructivity - Constructivity - 0.9.8.1",
+  "preprocessor": "Constructivity 0.9.8.1",
+  "timeStamp": "2014-07-08T19:20:14"
+ },
+ "lengthToSi": 0.0254,
+ "location": null,
+ "objects": {
+  "0CxDbxzA1B4eLeOw9eIjQx": {
+   "class": "IfcProject",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": null,
+   "name": "Project",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 37,
+   "tag": null,
+   "type": null
+  },
+  "0M0akNk9f3hOH9u2awmtre": {
+   "class": "IfcSite",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": null,
+   "name": "Site #1",
+   "objectType": null,
+   "parent": "0CxDbxzA1B4eLeOw9eIjQx",
+   "predefined": null,
+   "step": 44,
+   "tag": null,
+   "type": null
+  },
+  "2WUGYBphrFv8aLIFJCmiIk": {
+   "class": "IfcColumn",
+   "container": "0M0akNk9f3hOH9u2awmtre",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "Column #1",
+   "objectType": null,
+   "parent": null,
+   "predefined": "COLUMN",
+   "step": 71,
+   "tag": null,
+   "type": null
+  }
+ },
+ "precision": 2.54e-07,
+ "reader": "IfcOpenShell 0.9.0.post1",
+ "records": 26,
+ "schema": "IFC4",
+ "sets": {},
+ "source": "fixtures/ifc/v1/disaridan/bsi-ifc4-column-straight-rectangle-tessellation.ifc"
+}

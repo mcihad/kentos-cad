@@ -405,7 +405,7 @@ dosyanın içeriğiyle uyuşur. Gövdeleri BIM-10'dan gelir.
 **İlk kabul:** iki profilde eleman sayıları eşit; açıklıklı duvarın hacmi iki profilde yazılı tolerans içinde aynı; bütün
 gövdeler kapalı; sentetik örnek açık kural takımından uyarısız geçer.
 
-#### IFC-07 — Okuma yüzü ve motor denemesi [~]
+#### IFC-07 — Okuma yüzü ve motor denemesi [x]
 
 **Kullanıcı sonucu:** KentOS yazdığı dosyayı geri okur; bozuk ya da çok büyük bir dosya uygulamayı düşürmez, sebebini satırıyla
 söyler. Doğrulamanın (IFC-08), görüntüleyicinin (IFC-12), altlık modelin (IFC-09) ve idare incelemesinin (BIM-18) ortak
@@ -441,10 +441,11 @@ açık IFC 4.3 örnekleri okunur; ölçeklenmiş modelde süre ve bellek tabanı
   - TUREF koordinatında köşe hatası 1,05e-7 m.
   - Taban: 135 MB'lık dosyada yüz 0,72 s, gövdeler 8,39 s
     ([ölçüm](../docs/perf/ifc-okuma-denemesi-2026-11-16.md)).
-- Kalanlar (sahibin kararları, ADR 8061 §11.6):
-  - Derleme ve boyut artışının kabulü.
-  - Gerçek dünyadan açık örnekler için indirme izni.
-  - Profil yaylarının kaba üçgenlenmesi için seçilecek yol.
+  - Gerçek dünyadan 35 dosya (buildingSMART'ın sertifika veri setleri, CC BY 4.0) iki okuyucuda aynı okundu; 7'si
+    `fixtures/ifc/v1/disaridan/` altında her sınamada okunur (ADR 8061 §11.7).
+- Kararlar (ADR 8061 §11.6): boyut artışı kabul edildi; örnekler yalnız lisansı okunmuş kaynaktan alındı; profil
+  yayları gösterim sınırı olarak kabul edildi.
+- Kalan yok. Okuma yüzünü ürüne görüntüleyici (IFC-12) ve dosyadan doğrulama (IFC-08) bağlar.
 
 #### IFC-08 — Yazılmış dosyadan doğrulama, IDS ve kontrol formu [ ]
 

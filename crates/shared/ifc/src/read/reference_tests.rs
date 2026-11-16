@@ -1,7 +1,11 @@
 //! The reading face against another reader (plan/ifc-uyum.md IFC-07 "yazılan her örnek geri okununca aynı nesne
-//! çizgesini verir"): every file KentOS writes, read by IfcOpenShell into fixtures/ifc/v1/okuma/
-//! (scripts/fixtures/ifc_read_cases.py), gives the same header, records, unit, map conversion, objects (class, names,
-//! predefined type, shape, parent, container, type) and the same own property and quantity sets, value for value.
+//! çizgesini verir"): every sample (the files KentOS writes, two another program writes, real-world ones from
+//! fixtures/ifc/v1/disaridan/), read by IfcOpenShell into fixtures/ifc/v1/okuma/ (scripts/fixtures/ifc_read_cases.py),
+//! gives the same header, records, unit, map conversion, objects (class, names, predefined type, shape, parent,
+//! container, type) and the same own property and quantity sets, value for value. The checks are functions so the
+//! samples downloaded for a measurement go through the same (outside_tests.rs).
+
+use std::fmt::Debug;
 
 use serde_json::Value as Json;
 
@@ -9,7 +13,7 @@ use super::tests::{read_ok, samples};
 use super::*;
 
 /// IfcOpenShell's reading of each sample, in [`samples`]'s order.
-const REFERENCES: [&str; 13] = [
+const REFERENCES: [&str; 20] = [
     include_str!("../../../../../fixtures/ifc/v1/okuma/kesit-binasi.json"),
     include_str!("../../../../../fixtures/ifc/v1/okuma/kesit-binasi-kunye.json"),
     include_str!("../../../../../fixtures/ifc/v1/okuma/blok-a.json"),
@@ -23,6 +27,13 @@ const REFERENCES: [&str; 13] = [
     include_str!("../../../../../fixtures/ifc/v1/okuma/yol.json"),
     include_str!("../../../../../fixtures/ifc/v1/okuma/ifcopenshell-ifc4.json"),
     include_str!("../../../../../fixtures/ifc/v1/okuma/ifcopenshell-ifc4x3.json"),
+    include_str!("../../../../../fixtures/ifc/v1/okuma/bsi-ifc4x3-building-architecture.json"),
+    include_str!("../../../../../fixtures/ifc/v1/okuma/bsi-ifc4x3-infra-road.json"),
+    include_str!("../../../../../fixtures/ifc/v1/okuma/bsi-ifc4x3-infra-rail.json"),
+    include_str!("../../../../../fixtures/ifc/v1/okuma/bsi-ifc4-wall-with-opening-and-window.json"),
+    include_str!("../../../../../fixtures/ifc/v1/okuma/bsi-ifc4-basin-tessellation.json"),
+    include_str!("../../../../../fixtures/ifc/v1/okuma/bsi-ifc4-column-straight-rectangle-tessellation.json"),
+    include_str!("../../../../../fixtures/ifc/v1/okuma/bsi-ifc2x3-building-architecture.json"),
 ];
 
 pub(super) fn reference(i: usize) -> Json {
@@ -33,65 +44,67 @@ fn text(v: &Json) -> Option<String> {
     v.as_str().map(str::to_owned)
 }
 
-#[test]
-fn the_header_records_unit_and_map_conversion_are_the_other_reader_s() {
-    for (i, (name, bytes)) in samples().enumerate() {
-        let r = reference(i);
-        let m = read_ok(bytes);
-        let s = &m.summary;
-        assert_eq!(Some(s.schema.as_str()), r["schema"].as_str(), "{name}");
-        assert_eq!(s.header.name, text(&r["header"]["name"]), "{name}");
-        assert_eq!(s.header.time_stamp, text(&r["header"]["timeStamp"]), "{name}");
-        assert_eq!(s.header.preprocessor, text(&r["header"]["preprocessor"]), "{name}");
-        assert_eq!(s.header.originating_system, text(&r["header"]["originatingSystem"]), "{name}");
-        assert_eq!(Some(s.records as u64), r["records"].as_u64(), "{name}");
-        assert_eq!(s.units.length.as_ref().map(|u| u.to_si), r["lengthToSi"].as_f64(), "{name}");
-        match (&s.location, r["location"].as_object()) {
-            (None, None) => {}
-            (Some(l), Some(o)) => {
-                assert_eq!(Some(l.eastings), o["eastings"].as_f64(), "{name}");
-                assert_eq!(Some(l.northings), o["northings"].as_f64(), "{name}");
-                assert_eq!(Some(l.orthogonal_height), o["orthogonalHeight"].as_f64(), "{name}");
-                assert_eq!(l.x_axis_abscissa, o["xAxisAbscissa"].as_f64(), "{name}");
-                assert_eq!(l.x_axis_ordinate, o["xAxisOrdinate"].as_f64(), "{name}");
-                assert_eq!(l.scale, o["scale"].as_f64(), "{name}");
-                assert_eq!(l.crs, text(&o["crs"]), "{name}");
-                let factors = o.get("factors").and_then(Json::as_array).map(|f| {
-                    let v: Vec<f64> = f.iter().filter_map(Json::as_f64).collect();
-                    [v[0], v[1], v[2]]
-                });
-                assert_eq!(l.factors, factors, "{name}");
-            }
-            (ours, theirs) => panic!("{name}: map conversion {ours:?} against {theirs:?}"),
-        }
+fn same<T: PartialEq + Debug>(out: &mut Vec<String>, what: &str, ours: T, theirs: T) {
+    if ours != theirs {
+        out.push(format!("{what}: ours {ours:?}, the other reader's {theirs:?}"));
     }
 }
 
-#[test]
-fn every_object_and_its_place_in_the_tree_are_the_other_reader_s() {
-    for (i, (name, bytes)) in samples().enumerate() {
-        let r = reference(i);
-        let theirs = r["objects"].as_object().expect("objects");
-        let m = read_ok(bytes);
-        assert_eq!(m.objects.len(), theirs.len(), "{name}: as many objects");
-        let gid = |at: Option<usize>| at.map(|k| m.objects[k].global_id.clone());
-        for o in &m.objects {
-            let t = theirs.get(&o.global_id).unwrap_or_else(|| panic!("{name}: {} not in the other reading", o.global_id));
-            let what = format!("{name}: {} #{}", o.class, o.step);
-            assert_eq!(Some(u64::from(o.step)), t["step"].as_u64(), "{what}");
-            assert_eq!(Some(o.class.as_str()), t["class"].as_str(), "{what}");
-            assert_eq!(o.name, text(&t["name"]), "{what}");
-            assert_eq!(o.description, text(&t["description"]), "{what}");
-            assert_eq!(o.object_type, text(&t["objectType"]), "{what}");
-            assert_eq!(o.long_name, text(&t["longName"]), "{what}");
-            assert_eq!(o.tag, text(&t["tag"]), "{what}");
-            assert_eq!(o.predefined, text(&t["predefined"]), "{what}");
-            assert_eq!(Some(o.has_shape), t["hasShape"].as_bool(), "{what}");
-            assert_eq!(gid(o.parent), text(&t["parent"]), "{what}: parent");
-            assert_eq!(gid(o.container), text(&t["container"]), "{what}: container");
-            assert_eq!(gid(o.type_object), text(&t["type"]), "{what}: type");
+/// Where our reading `m` differs from the other reader's `r`: the summary, then every object and its place.
+pub(super) fn graph_differences(m: &Model, r: &Json) -> Vec<String> {
+    let mut out = Vec::new();
+    let s = &m.summary;
+    same(&mut out, "schema", Some(s.schema.clone()), text(&r["schema"]));
+    same(&mut out, "name", s.header.name.clone(), text(&r["header"]["name"]));
+    same(&mut out, "time stamp", s.header.time_stamp.clone(), text(&r["header"]["timeStamp"]));
+    same(&mut out, "preprocessor", s.header.preprocessor.clone(), text(&r["header"]["preprocessor"]));
+    same(&mut out, "originating system", s.header.originating_system.clone(), text(&r["header"]["originatingSystem"]));
+    same(&mut out, "records", Some(s.records as u64), r["records"].as_u64());
+    same(&mut out, "length unit", s.units.length.as_ref().map(|u| u.to_si), r["lengthToSi"].as_f64());
+    match (&s.location, r["location"].as_object()) {
+        (None, None) => {}
+        (Some(l), Some(o)) => {
+            same(&mut out, "eastings", Some(l.eastings), o["eastings"].as_f64());
+            same(&mut out, "northings", Some(l.northings), o["northings"].as_f64());
+            same(&mut out, "orthogonal height", Some(l.orthogonal_height), o["orthogonalHeight"].as_f64());
+            same(&mut out, "x axis abscissa", l.x_axis_abscissa, o["xAxisAbscissa"].as_f64());
+            same(&mut out, "x axis ordinate", l.x_axis_ordinate, o["xAxisOrdinate"].as_f64());
+            same(&mut out, "scale", l.scale, o["scale"].as_f64());
+            same(&mut out, "system", l.crs.clone(), text(&o["crs"]));
+            let factors = o.get("factors").and_then(Json::as_array).map(|f| {
+                let v: Vec<f64> = f.iter().filter_map(Json::as_f64).collect();
+                [v[0], v[1], v[2]]
+            });
+            same(&mut out, "factors", l.factors, factors);
         }
+        (ours, theirs) => out.push(format!("map conversion: ours {ours:?}, the other reader's {theirs:?}")),
     }
+    let Some(theirs) = r["objects"].as_object() else {
+        out.push("the other reader lists no objects".to_owned());
+        return out;
+    };
+    same(&mut out, "objects", m.objects.len(), theirs.len());
+    let gid = |at: Option<usize>| at.map(|k| m.objects[k].global_id.clone());
+    for o in &m.objects {
+        let Some(t) = theirs.get(&o.global_id) else {
+            out.push(format!("{} #{} {}: not in the other reading", o.class, o.step, o.global_id));
+            continue;
+        };
+        let what = format!("{} #{}", o.class, o.step);
+        same(&mut out, &format!("{what} step"), Some(u64::from(o.step)), t["step"].as_u64());
+        same(&mut out, &format!("{what} class"), Some(o.class.clone()), text(&t["class"]));
+        same(&mut out, &format!("{what} name"), o.name.clone(), text(&t["name"]));
+        same(&mut out, &format!("{what} description"), o.description.clone(), text(&t["description"]));
+        same(&mut out, &format!("{what} object type"), o.object_type.clone(), text(&t["objectType"]));
+        same(&mut out, &format!("{what} long name"), o.long_name.clone(), text(&t["longName"]));
+        same(&mut out, &format!("{what} tag"), o.tag.clone(), text(&t["tag"]));
+        same(&mut out, &format!("{what} predefined"), o.predefined.clone(), text(&t["predefined"]));
+        same(&mut out, &format!("{what} shape"), Some(o.has_shape), t["hasShape"].as_bool());
+        same(&mut out, &format!("{what} parent"), gid(o.parent), text(&t["parent"]));
+        same(&mut out, &format!("{what} container"), gid(o.container), text(&t["container"]));
+        same(&mut out, &format!("{what} type"), gid(o.type_object), text(&t["type"]));
+    }
+    out
 }
 
 /// A value of ours as the other reader gives it in Python: a logical as a boolean, a number as a number.
@@ -109,17 +122,16 @@ fn as_json(v: &ValueKind) -> Json {
     }
 }
 
-#[test]
-fn an_object_s_own_sets_are_the_other_reader_s_value_for_value() {
-    let mut compared = 0;
-    for (i, (name, bytes)) in samples().enumerate() {
-        let r = reference(i);
-        let m = read_ok(bytes);
-        for (global_id, sets) in r["sets"].as_object().expect("sets") {
-            let at = m.objects.iter().position(|o| &o.global_id == global_id).expect("the object");
-            let ours: serde_json::Map<String, Json> = m
-                .property_sets(bytes, at)
-                .expect("its sets")
+/// Where the own sets of the objects the other reader lists sets of differ, value for value; and how many objects.
+pub(super) fn set_differences(m: &Model, bytes: &[u8], r: &Json) -> (usize, Vec<String>) {
+    let (mut compared, mut out) = (0, Vec::new());
+    for (global_id, sets) in r["sets"].as_object().into_iter().flatten() {
+        let Some(at) = m.objects.iter().position(|o| &o.global_id == global_id) else {
+            out.push(format!("{global_id}: no such object"));
+            continue;
+        };
+        let ours: serde_json::Map<String, Json> = match m.property_sets(bytes, at) {
+            Ok(list) => list
                 .into_iter()
                 .filter(|s| !s.from_type && s.kind != SetKind::Other)
                 .map(|s| {
@@ -127,11 +139,40 @@ fn an_object_s_own_sets_are_the_other_reader_s_value_for_value() {
                         s.values.iter().map(|v| (v.name.clone(), as_json(&v.value))).collect();
                     (s.name, Json::Object(values))
                 })
-                .collect();
-            assert_eq!(&Json::Object(ours), sets, "{name}: {} {global_id}", m.objects[at].class);
-            compared += 1;
+                .collect(),
+            Err(e) => {
+                out.push(format!("{global_id}: {e}"));
+                continue;
+            }
+        };
+        compared += 1;
+        if &Json::Object(ours.clone()) != sets {
+            out.push(format!("{} {global_id}: sets {ours:?}, the other reader's {sets:?}", m.objects[at].class));
         }
     }
+    (compared, out)
+}
+
+#[test]
+fn every_sample_reads_as_the_other_reader_reads_it() {
+    let mut differences = Vec::new();
+    for (i, (name, bytes)) in samples().enumerate() {
+        let m = read_ok(bytes);
+        differences.extend(graph_differences(&m, &reference(i)).into_iter().map(|d| format!("{name}: {d}")));
+    }
+    assert!(differences.is_empty(), "{} differences:\n{}", differences.len(), differences.join("\n"));
+}
+
+#[test]
+fn an_object_s_own_sets_are_the_other_reader_s_value_for_value() {
+    let (mut compared, mut differences) = (0, Vec::new());
+    for (i, (name, bytes)) in samples().enumerate() {
+        let m = read_ok(bytes);
+        let (n, d) = set_differences(&m, bytes, &reference(i));
+        compared += n;
+        differences.extend(d.into_iter().map(|d| format!("{name}: {d}")));
+    }
+    assert!(differences.is_empty(), "{}", differences.join("\n"));
     assert!(compared > 50, "{compared} objects' sets compared");
 }
 

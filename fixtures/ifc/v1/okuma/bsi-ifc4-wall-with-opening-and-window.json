@@ -1,0 +1,206 @@
+{
+ "bodies": {
+  "0tA4DSHd50le6Ov9Yu0I9X": {
+   "area": 2.8,
+   "box": [
+    [
+     1.0,
+     0.05,
+     0.5
+    ],
+    [
+     2.0,
+     0.25,
+     1.5
+    ]
+   ],
+   "volume": 0.2
+  },
+  "3ZYW59sxj8lei475l7EhLU": {
+   "area": 14.2,
+   "box": [
+    [
+     0.0,
+     0.0,
+     0.0
+    ],
+    [
+     3.0,
+     0.3,
+     2.0
+    ]
+   ],
+   "volume": 1.5
+  }
+ },
+ "header": {
+  "name": "building_element_configuration_wall.ifc",
+  "originatingSystem": "RDF - Test Application - 0.10",
+  "preprocessor": "IFC Engine DLL version 1.03 beta",
+  "timeStamp": "2011-12-12T22:18:35"
+ },
+ "lengthToSi": 0.001,
+ "location": null,
+ "objects": {
+  "0AqAhXVxvCy9m0OX1nxY1A": {
+   "class": "IfcBuilding",
+   "container": null,
+   "description": "Description of Default Building",
+   "hasShape": false,
+   "longName": null,
+   "name": "Default Building",
+   "objectType": null,
+   "parent": "1cwlDi_hLEvPsClAelBNnz",
+   "predefined": null,
+   "step": 34,
+   "tag": null,
+   "type": null
+  },
+  "0Ps4H3X0nAxfqkHNemLE6f": {
+   "class": "IfcWindowType",
+   "container": null,
+   "description": "Description of Window Type",
+   "hasShape": false,
+   "longName": null,
+   "name": "Window for Test Example",
+   "objectType": null,
+   "parent": null,
+   "predefined": "WINDOW",
+   "step": 107,
+   "tag": null,
+   "type": null
+  },
+  "0tA4DSHd50le6Ov9Yu0I9X": {
+   "class": "IfcWindow",
+   "container": "2GNgSHJ5j9BRUjqT$7tE8w",
+   "description": "Description of Window",
+   "hasShape": true,
+   "longName": null,
+   "name": "Window for Test Example",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 102,
+   "tag": null,
+   "type": "0Ps4H3X0nAxfqkHNemLE6f"
+  },
+  "1SutvPaeH8EBtxrmG2k_Kh": {
+   "class": "IfcProjectLibrary",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": null,
+   "name": null,
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 110,
+   "tag": null,
+   "type": null
+  },
+  "1cwlDi_hLEvPsClAelBNnz": {
+   "class": "IfcSite",
+   "container": null,
+   "description": "Description of Default Site",
+   "hasShape": false,
+   "longName": null,
+   "name": "Default Site",
+   "objectType": null,
+   "parent": "28hypXUBvBefc20SI8kfA$",
+   "predefined": null,
+   "step": 31,
+   "tag": null,
+   "type": null
+  },
+  "28hypXUBvBefc20SI8kfA$": {
+   "class": "IfcProject",
+   "container": null,
+   "description": "Description of Default Project",
+   "hasShape": false,
+   "longName": null,
+   "name": "Default Project",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 1,
+   "tag": null,
+   "type": null
+  },
+  "2GNgSHJ5j9BRUjqT$7tE8w": {
+   "class": "IfcBuildingStorey",
+   "container": null,
+   "description": "Description of Default Building Storey",
+   "hasShape": false,
+   "longName": null,
+   "name": "Default Building Storey",
+   "objectType": null,
+   "parent": "0AqAhXVxvCy9m0OX1nxY1A",
+   "predefined": null,
+   "step": 38,
+   "tag": null,
+   "type": null
+  },
+  "2bJiss68D6hvLKV8O1xmqJ": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": "Description of Opening",
+   "hasShape": true,
+   "longName": null,
+   "name": "Opening Element for Test Example",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 80,
+   "tag": null,
+   "type": null
+  },
+  "3ZYW59sxj8lei475l7EhLU": {
+   "class": "IfcWall",
+   "container": "2GNgSHJ5j9BRUjqT$7tE8w",
+   "description": "Description of Wall",
+   "hasShape": true,
+   "longName": null,
+   "name": "Wall for Test Example",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 45,
+   "tag": null,
+   "type": null
+  }
+ },
+ "precision": 1e-08,
+ "reader": "IfcOpenShell 0.9.0.post1",
+ "records": 127,
+ "schema": "IFC4",
+ "sets": {
+  "0tA4DSHd50le6Ov9Yu0I9X": {
+   "Pset_WindowCommon": {
+    "AcousticRating": "",
+    "FireRating": "",
+    "GlazingAreaFraction": 0.7,
+    "Infiltration": 0.3,
+    "IsExternal": true,
+    "Reference": "",
+    "SecurityRating": "",
+    "SmokeStop": false,
+    "ThermalTransmittance": 0.24
+   }
+  },
+  "3ZYW59sxj8lei475l7EhLU": {
+   "Pset_WallCommon": {
+    "AcousticRating": "",
+    "Combustible": false,
+    "Compartmentation": false,
+    "ExtendToStructure": false,
+    "FireRating": "",
+    "IsExternal": true,
+    "LoadBearing": false,
+    "Reference": "",
+    "SurfaceSpreadOfFlame": "",
+    "ThermalTransmittance": 0.24
+   }
+  }
+ },
+ "source": "fixtures/ifc/v1/disaridan/bsi-ifc4-wall-with-opening-and-window.ifc"
+}

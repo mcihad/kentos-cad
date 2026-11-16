@@ -1,0 +1,92 @@
+{
+ "bodies": {
+  "0Zk2_ch2P32wrl1QuECi58": {
+   "area": 0.4902607342346469,
+   "box": [
+    [
+     -0.30124650000000003,
+     -0.153498641,
+     -0.094
+    ],
+    [
+     0.30112175,
+     0.268839531,
+     0.0
+    ]
+   ],
+   "volume": 0.0020268494501826263
+  }
+ },
+ "header": {
+  "name": "",
+  "originatingSystem": "Geometry Gym Pty Ltd - ggIFC - 1.0.0.0",
+  "preprocessor": "ggIFC - Exporter by Geometry Gym Pty Ltd",
+  "timeStamp": "2014-12-09T00:27:55"
+ },
+ "lengthToSi": 0.001,
+ "location": null,
+ "objects": {
+  "0MRYiPpfn0RRBz4hjR$d0R": {
+   "class": "IfcBuilding",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": null,
+   "name": "IfcBuilding",
+   "objectType": null,
+   "parent": "3SXUMunn9EXfAFTjVxyt84",
+   "predefined": null,
+   "step": 50,
+   "tag": null,
+   "type": null
+  },
+  "0Zk2_ch2P32wrl1QuECi58": {
+   "class": "IfcSanitaryTerminal",
+   "container": "0MRYiPpfn0RRBz4hjR$d0R",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": null,
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 217,
+   "tag": null,
+   "type": "14smeVOBv8HRjwdm9$muyM"
+  },
+  "14smeVOBv8HRjwdm9$muyM": {
+   "class": "IfcSanitaryTerminalType",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": null,
+   "name": "IFCSANITARYTERMINALTYPE",
+   "objectType": null,
+   "parent": null,
+   "predefined": "WASHHANDBASIN",
+   "step": 209,
+   "tag": null,
+   "type": null
+  },
+  "3SXUMunn9EXfAFTjVxyt84": {
+   "class": "IfcProject",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": "IfcProject",
+   "name": "IfcProject",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 100,
+   "tag": null,
+   "type": null
+  }
+ },
+ "precision": 1.0000000000000001e-07,
+ "reader": "IfcOpenShell 0.9.0.post1",
+ "records": 44,
+ "schema": "IFC4",
+ "sets": {},
+ "source": "fixtures/ifc/v1/disaridan/bsi-ifc4-basin-tessellation.ifc"
+}

@@ -1,9 +1,9 @@
 # ADR 8061: IFC görüntüleyici — uygulamanın içinde, gevşek bağlı; okuma ve geometri motoru `kentos-ifc`'nin arkasında
 
-- **Durum:** karar (15 Kasım 2026); deneme yapıldı (16 Kasım 2026, §11). Okuma yüzü `kentos-ifc`'te, motor `read` ve
-  `geometry` özelliklerinin arkasında, sabit 28.3.0. Ayrıştırıcı denemeden geçti. Geometri gösterim için geçti: düz
-  gövdeler iki okuyucuda aynı, profil yayları motorda kaba (§11.3). Kesinleşmesi için sahibin üç kararı bekleniyor
-  (§11.6). Görüntüleyici (IFC-12) yapılmadı.
+- **Durum:** karar (15 Kasım 2026). Deneme yapıldı ve motor kesinleşti (16 Kasım 2026, §11). Okuma yüzü `kentos-ifc`'te,
+  motor `read` ve `geometry` özelliklerinin arkasında, sabit 28.3.0. Ayrıştırıcı ve geometri denemeden geçti; profil
+  yayları motorda kaba kalır ve gösterim sınırı olarak kabul edildi (§11.3, §11.6). Gerçek dünyadan 35 dosyanın hepsi
+  iki okuyucuda aynı okundu (§11.7). Görüntüleyici (IFC-12) yapılmadı.
 - **Sahibin isteği (15 Kasım, özet):** sistemde IFC dosyaları için bir görüntüleyici olsun; Rust ile yazılmış IFClite'ın
   lisansı uygunsa doğrudan kullanılabilir. Sonraki sözü karardır: görüntüleyici uygulamanın içinde olacak ama gevşek
   bağlı olacak; gerektiğinde hızlıca ayrı bir uygulama olabilecek ya da WASM ile web üzerinde çalıştırılabilecek.
@@ -324,7 +324,7 @@ geçer).
 | Derleme | Yerel ve wasm32 uyarısız derlendi. `read` 12 paket ekliyor, `geometry` 35 paket daha. Lisanslar iki MPL-2.0, gerisi MIT, Apache-2.0, ISC, Zlib ve 0BSD. Release örneği 0,43 → 1,34 MB (`read`) → 6,03 MB (`geometry`) büyüdü. Motor önbellekte yokken release derlemesi 67 s sürdü | Geçti. Boyut ve süre artışı sahibin kabulünü bekliyor (§11.6). `deps.mjs` `kentos-ifc` için temiz; betiğin bugünkü tek hatası `crates/vendor/block` (bu işten önce, 04b979287) |
 | Kendi dosyalarımız | 11 dosyanın her nesnesi IfcOpenShell'in okumasıyla aynı (`fixtures/ifc/v1/okuma/`): sınıf, ad, ObjectType, LongName, Tag, PredefinedType, şekil, parça, içerilme ve tip. Başlık, kayıt sayısı, birim ve harita dönüşümü de aynı. 50'den fazla nesnenin kendi setleri değer değer aynı. 382 gövdenin hacmi kesit modelinin yazdığı NetVolume'a eşit. Düz gövdelerde en kötü kutu farkı 5,05e-7 m, en kötü hacim farkı 5,3e-6 göreli. Tolerans dosyanın hassasiyetinden (1e-5) ve float32 yuvarlamasından (gövde erimi × 2⁻²⁴) türetildi; sonradan büyütülmedi | Geçti. Eğri yaylı 8 gövde ayrı sonuçtur (§11.3) |
 | Türkçe | Başlıkta ve adlarda `\X2\…\X0\` ile yazılan harfler UTF-8 okunuyor ve IfcOpenShell'inkiyle bayt bayt aynı | Geçti |
-| Açık örnekler | Başka bir yazıcının dosyaları: IfcOpenShell'in kendi API'siyle yazılmış birer IFC4 ve IFC 4.3 binası (`scripts/fixtures/ifc_other_writer_cases.py`; açıklık, kapı, döşeme, mahal, set, tip, malzeme ve Türkçe adlarla). Nesnelerin, setlerin ve gövdelerin tamamı gösterildi | Kısmen. Gerçek dünyadan örnekler (başka programların dışa aktarımları) indirilmedi; sahibin izni bekleniyor (§11.6) |
+| Açık örnekler | Başka bir yazıcının dosyaları: IfcOpenShell'in kendi API'siyle yazılmış birer IFC4 ve IFC 4.3 binası (`scripts/fixtures/ifc_other_writer_cases.py`; açıklık, kapı, döşeme, mahal, set, tip, malzeme ve Türkçe adlarla). Gerçek dünyadan 35 dosya: beş programın IFC2x3, IFC4 ve IFC 4.3 dışa aktarımları (§11.7). Gösterilen nesne oranı %100; atlanan nesne yok | Geçti |
 | Bozuk girdi | Boş, STEP değil, ikili çöp, yanlış şema, DATA'sız, kesik dosya ve kayıt, olmayan başvuru, ağaç ve yerleşim döngüsü, iki kez verilen numara ve GlobalId, biçimsiz GlobalId, 64 bitlik numara, bilinmeyen sınıf, 100 000 kat iç içe liste, uzun liste, uzun kayıt, kayıt sayısı sınırı denendi | Geçti: her biri hata ya da satırıyla bulgu verdi. Panik, asılma ve yığın taşması olmadı |
 | İptal ve bütçe | 135 MB dosyada yüz okunurken durdurma ≤ 1 ms'de, gövdeler yapılırken 57–226 ms'de oldu. İptalden sonra sonuç verilmedi. Sınır aşımı açık iletiyle döndü | Geçti |
 | Büyük koordinat | Kesit binası TUREF koordinatına (587 312,345 D; 4 400 612,789 K; 1 285,40 m) taşındı. Gövdeler mutlak float32 tutulunca köşeler 0,164 m kaydı. Modelin ortası motora göreli merkez (`with_scale_and_rtc`) olarak verilince ve float64'te geri eklenince en kötü köşe 1,05e-7 m oldu | Geçti, merkezle. Motor bu yolda kendiliğinden merkez almıyor; `bodies` her modelde alıyor |
@@ -360,12 +360,50 @@ bölümün 3B eğrisini veriyor (hacimsiz). İkisi gövde olarak karşılaştır
 6. Bulgu iletileri Türkçedir; nedeni ve çözümü söyler.
 7. Bir nesnenin iki üst yapısı ya da iki kabı olursa ilki gösterilir; ikincisi uyarıdır.
 
-### 11.6 Sahibin kararını bekleyenler
+### 11.6 Kararlar (16 Kasım 2026)
 
-1. **Derleme ve boyut artışı:** `read` +0,91 MB, `geometry` +4,69 MB (release örneği); motorun release derlemesi
-   yaklaşık 1 dakika. Kabul edilirse görüntüleyici (IFC-12) `mod-arch` ve `mod-road` bayraklarıyla bağlar.
-2. **Gerçek dünyadan açık örnekler:** başka programların IFC4 ve IFC 4.3 dışa aktarımları (ör. buildingSMART'ın örnek
-   dosyaları) için indirme izni. Kullanım koşulu okunmadan hiçbiri depoya kopyalanmaz (§7).
-3. **Yaylar (§11.3):** üç yol var. (a) Kabul: görüntüleyicide gösterim olarak kalır. (b) Yukarı akışa bildirilir
-   (değişiklik yapılmaz, §9). (c) KentOS kendi yazdığı profil yaylarını kendi üçgenleyicisiyle ağa çevirir (§8'in dar
-   üçgenleyicisi). KentOS'un önerisi (a) ve (b)'dir.
+Sahip üç kararı KentOS'a bıraktı (“Kararı sen ver”). Verilen kararlar:
+
+1. **Derleme ve boyut artışı kabul edildi:** `read` +0,91 MB, `geometry` +4,69 MB (release örneği); motorun release
+   derlemesi yaklaşık 1 dakika. Gerekçe: masaüstü programının release ikilisi sembolleriyle 255 MB, sembolsüz
+   yaklaşık 216 MB'tır (`Cargo.toml`'daki release profilinin notu, ADR 0802 §1); artış yaklaşık %2,2'dir. Karşılığında dosyadan doğrulama (IFC-08),
+   görüntüleyici (IFC-12) ve altlık model (IFC-09) aynı motoru kullanır. Görüntüleyici motoru `mod-arch` ve `mod-road`
+   bayraklarıyla bağlar.
+2. **Gerçek dünyadan örnekler indirildi.** Yalnız lisansı okunmuş, resmî bir kaynak kullanıldı: buildingSMART'ın
+   sertifika veri setleri (CC BY 4.0). Lisansı olmayan IFC 4.x belirtim modelleri deposu (`IFC4.x-specification-models`)
+   kullanılmadı. 35 dosya ölçüm için `.run/` altına indirildi ve Git'e girmedi. Küçük bir alt küme, atfıyla birlikte
+   depoya konuldu (§11.7).
+3. **Yaylar gösterim sınırı olarak kabul edildi (a).** Motorun kodu bu sınırın bilerek konduğunu söylüyor: “Medium'un
+   üstünde incelmez; daha sık kapaklar yalnız earcut köprü kıymıkları ekler”. Bu bir hata değil, tasarım tercihi;
+   bu yüzden yukarı akışa bildirmek (b) seçilmedi. Ölçü ağdan değil, dosyanın miktar setlerinden ve kaynak modelden
+   gelir (§1.6). KentOS'un kendi binasını gösteren 3B görünüm motoru değil, kendi ağlarını (`kentos_ifc::mesh`)
+   kullanır. Görüntüleyicide bir kullanıcı yayların köşeli görünmesinden yakınırsa (c) yeniden açılır.
+
+### 11.7 Gerçek dünyadan örnekler
+
+- **Kaynak:** <https://github.com/buildingSMART/Certification-datasets>, commit `80d976a9b193a26a8e928c3e79bff67af1de68a8`.
+  (C) buildingSMART International Ltd., CC BY 4.0. Deponun 35 IFC dosyası alındı (16,4 MB). Ayrıntı:
+  - IFC2x3 TC1: 10 dosya.
+  - IFC4 ADD2 TC1: 15 dosya; 5'i ISO ReferenceView belirtim örneği.
+  - IFC 4.3 ADD2: 10 dosya.
+  - Yazan programlar: beş ayrı geliştiricinin dışa aktarıcısı (adları dosyaların başlığında, araştırma notunda değil
+    burada sayılmaz).
+- **Depoya giren alt küme:** 7 dosya, 0,69 MB. Dosyalar `fixtures/ifc/v1/disaridan/` altında, içerikleri değiştirilmeden
+  durur. Kaynağı, lisansı, özgün yolları ve SHA-256'ları aynı klasörün `README.md` dosyasındadır. Bu dosyalar her
+  sınamada okunur.
+- **Ölçme yolu (35 dosyanın hepsi):** dosyalar indirilir, sonra IfcOpenShell her dosyanın yanına okumasını yazar
+  (`scripts/fixtures/ifc_read_cases.py --files KLASÖR`). Ardından şu sınama koşulur:
+  `KENTOS_IFC_ORNEKLER=KLASÖR cargo test -p kentos-ifc --features geometry read::outside_tests -- --ignored`.
+- **Sonuç:** 35 dosyanın hepsinde okuma 0 bulgu verdi. Nesne ağacı 0 farkla, kendi setler değer değer IfcOpenShell'inkiyle
+  aynı çıktı. IfcOpenShell'in yaptığı her gövdeyi motor da yaptı (gösterilen oran %100); en kötü kutu farkı 2,33e-6 m.
+- **Ortaya çıkan üç şey:**
+  - **Tip setleri:** bir tip nesnesinin kendi setleri (`HasPropertySets`) okunmuyordu; düzeltildi.
+  - **Diğer okuyucunun birim sorunu:** IfcOpenShell 0.9.0.post1, ikinci bir `IfcContext` (`IfcProjectLibrary`) taşıyan
+    bir dosyanın geometrisini metreye çevirmiyor. Ayarlar (`convert-back-units`, `length-unit`) sonucu değiştirmiyor.
+    Denendiği dosya `wall-with-opening-and-window.ifc`: 3000 mm'lik duvar 3000 çıkıyor, kütüphanenin kayıtları
+    silinince 3,0 çıkıyor. Dosya projesinin birimini milimetre diye açıkça bildiriyor; KentOS'un okuması (3 m)
+    doğrudur. Başvuru böyle dosyaların sayılarını projenin birimiyle kendisi çevirir; bu, betikte nedeniyle yazılıdır.
+  - **Float32 sınırı:** gövdenin float32 sınırı motorun aritmetiğinden türetildi (`Body::rounding`). Köşe float32'de iki
+    kez saklanır: nesnenin kendi çerçevesinde ve dünyada. Dosya metre değilse ölçekleme de float32'de yapılır. Önceki
+    tahmin (gövdenin yarı boyunun 2⁻²⁴'ü), milimetrelik dosyada hassasiyet 1e-8 m'ye inince yetmedi. Sınır sonuca göre
+    değil, `transform_mesh_world_framed` ve `scale_positions` okunarak kuruldu.

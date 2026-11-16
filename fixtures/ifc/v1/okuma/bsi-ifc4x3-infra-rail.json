@@ -1,0 +1,2470 @@
+{
+ "bodies": {
+  "0BRh6j4b90nA0leMHsST_R": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     32.834325642840184,
+     39.41698244230603,
+     7.449582
+    ],
+    [
+     34.350831993786294,
+     41.79364849214557,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000076375
+  },
+  "0JskQH3CjFQwvVhALUzox1": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     27.060822662268787,
+     42.750315942306024,
+     7.449582
+    ],
+    [
+     28.577329013214893,
+     45.126981992145566,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000076398
+  },
+  "0KPcs1y3j3YezA6xslC0pO": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     37.03323595668258,
+     36.99274044230604,
+     7.449582
+    ],
+    [
+     38.54974230762869,
+     39.36940649214558,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000076398
+  },
+  "0LmYrpL31BLxBAY291UUPV": {
+   "area": 2.155000000000005,
+   "box": [
+    [
+     9.740314643346597,
+     52.750315975080234,
+     7.449582
+    ],
+    [
+     11.256820994292704,
+     55.126982024919776,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999977899
+  },
+  "0NjD4eL$13aPRyMEU8_Pur": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     20.237592160003388,
+     46.68970997508024,
+     7.449582
+    ],
+    [
+     21.754098510949493,
+     49.066376024919784,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000030945
+  },
+  "0SNcQbysLA08i6DTmPfdl$": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     16.038680980135588,
+     49.11395247508024,
+     7.449582
+    ],
+    [
+     17.555187331081694,
+     51.49061852491978,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999985448
+  },
+  "0W$6qwCif1ePgGk6Sh$apd": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     32.30946142059718,
+     39.72001294230603,
+     7.449582
+    ],
+    [
+     33.82596777154329,
+     42.09667899214557,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999894499
+  },
+  "0X2A_iiNzCc9sTeIrZyf9i": {
+   "area": 2.1550000000000002,
+   "box": [
+    [
+     14.98895340167499,
+     49.72001297508024,
+     7.449582
+    ],
+    [
+     16.505459752621096,
+     52.09667902491978,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000030923
+  },
+  "0bjxY5edf3ORsHsGFLUXnG": {
+   "area": 2.155000000000005,
+   "box": [
+    [
+     13.939225823214393,
+     50.326073475080236,
+     7.449582
+    ],
+    [
+     15.4557321741605,
+     52.70273952491978,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000030967
+  },
+  "0dRF_swOj9Z89ywNzIYxlz": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     39.65755533584677,
+     35.47758894230604,
+     7.449582
+    ],
+    [
+     41.17406168679288,
+     37.854254992145584,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999985404
+  },
+  "0gOEB3nvP8w8b2x7dkCurB": {
+   "area": 15.11440749999996,
+   "box": [
+    [
+     8.997753962155612,
+     45.584567147554516,
+     7.602582000000001
+    ],
+    [
+     26.393262037844394,
+     55.71447095812216,
+     7.7745820000000005
+    ]
+   ],
+   "volume": 0.14407499999992446
+  },
+  "0l0npIYpb0jwRcuQumw8GS": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     33.88405322130078,
+     38.81092194230603,
+     7.449582
+    ],
+    [
+     35.40055957224689,
+     41.18758799214557,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999894499
+  },
+  "0mApyqgbP3kwWGcMHpBgdC": {
+   "area": 2.155000000000005,
+   "box": [
+    [
+     8.165722842642998,
+     53.65940697508023,
+     7.449582
+    ],
+    [
+     9.682229193589105,
+     56.03607302491977,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999962711
+  },
+  "0rTKpqwfH8ZvpESUY9mK0D": {
+   "area": 2.155000000000005,
+   "box": [
+    [
+     13.414361600971391,
+     50.629103975080234,
+     7.449582
+    ],
+    [
+     14.930867951917499,
+     53.00577002491978,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999939996
+  },
+  "0v0w97H9D0vhXlZ8fsd1v_": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     30.210006263675986,
+     40.932133942306024,
+     7.449582
+    ],
+    [
+     31.72651261462209,
+     43.308799992145566,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999894499
+  },
+  "0xoA7NQgD7lRlwTspYVfko": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     33.359188999057785,
+     39.11395244230603,
+     7.449582
+    ],
+    [
+     34.875695350003895,
+     41.49061849214557,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999894476
+  },
+  "0y55PkXXrAfxfuCFlVHxdf": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     20.762456382246384,
+     46.38667947508024,
+     7.449582
+    ],
+    [
+     22.27896273319249,
+     48.763345524919785,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000030923
+  },
+  "14O93KCH5CcwgIvHrgZEXj": {
+   "area": 15.114407500000178,
+   "box": [
+    [
+     25.568261981077807,
+     34.285529009103655,
+     7.602582000000001
+    ],
+    [
+     42.96377005676659,
+     44.415432819671295,
+     7.7745820000000005
+    ]
+   ],
+   "volume": 0.14407500000060858
+  },
+  "15Q88nz595tP5ei3_pAQgO": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     26.535958440025787,
+     43.05334644230602,
+     7.449582
+    ],
+    [
+     28.052464790971893,
+     45.430012492145565,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000076403
+  },
+  "1A14NvUhv2_wMj4mxmA7o0": {
+   "area": 2.155000000000005,
+   "box": [
+    [
+     12.889498244753794,
+     50.932133975080234,
+     7.449582
+    ],
+    [
+     14.406004595699901,
+     53.308800024919776,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999894454
+  },
+  "1DlyW6vE1AFxD298O5l6sU": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     21.287319738463985,
+     46.08364947508024,
+     7.449582
+    ],
+    [
+     22.80382608941009,
+     48.460315524919785,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000167347
+  },
+  "1Hb6PCblD2ZuvhFdwzUotD": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     26.01109508380819,
+     43.35637644230602,
+     7.449582
+    ],
+    [
+     27.527601434754295,
+     45.733042492145564,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999894493
+  },
+  "1J8_j1nRDDfQQXFNU6jh1C": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     18.13813700308219,
+     47.90183097508024,
+     7.449582
+    ],
+    [
+     19.654643354028295,
+     50.27849702491978,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999985492
+  },
+  "1KgKJls3H9_u5Xd8c_HS7x": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     16.56354520237859,
+     48.810921975080234,
+     7.449582
+    ],
+    [
+     18.080051553324697,
+     51.187588024919776,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.0975000000007642
+  },
+  "1TPGJrtGD5GuYtVCcv8tWE": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     38.60782775738618,
+     36.08364944230604,
+     7.449582
+    ],
+    [
+     40.12433410833229,
+     38.46031549214558,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999985359
+  },
+  "1VhaT3K8H2lPdXb8NqCPZs": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     31.784597198354184,
+     40.023043442306026,
+     7.449582
+    ],
+    [
+     33.301103549300294,
+     42.39970949214557,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999803544
+  },
+  "1XcDIiNyv9uuTZP4jDMfO$": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     40.18241955808978,
+     35.17455844230604,
+     7.449582
+    ],
+    [
+     41.698925909035886,
+     37.55122449214558,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.097499999997126
+  },
+  "1_XScBOSD3h8oErFHWZl76": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     41.75701135879338,
+     34.26546744230604,
+     7.449582
+    ],
+    [
+     43.27351770973949,
+     36.64213349214558,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000167347
+  },
+  "1dc6DrbT90UA9pg9Z3rs4Z": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     27.585686018486385,
+     42.447285942306024,
+     7.449582
+    ],
+    [
+     29.10219236943249,
+     44.82395199214557,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999894518
+  },
+  "1gG3H$M4nC18HrcjbZfxcQ": {
+   "area": 2.155000000000005,
+   "box": [
+    [
+     8.690587064885998,
+     53.35637647508023,
+     7.449582
+    ],
+    [
+     10.207093415832105,
+     55.733042524919775,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999962666
+  },
+  "1jPuNq3399wwsfi63CaYtQ": {
+   "area": 2.155000000000005,
+   "box": [
+    [
+     10.790042221807195,
+     52.14425547508023,
+     7.449582
+    ],
+    [
+     12.306548572753302,
+     54.52092152491977,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000076442
+  },
+  "1j_ofp0_jDkQibnMsl$T_a": {
+   "area": 2.155000000000006,
+   "box": [
+    [
+     30.734869619893587,
+     40.629103942306024,
+     7.449582
+    ],
+    [
+     32.251375970839696,
+     43.00576999214557,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.0975000000007637
+  },
+  "1o4sQbZYD7EfuX2weAoHYD": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     41.232147136550374,
+     34.56849794230604,
+     7.449582
+    ],
+    [
+     42.74865348749648,
+     36.94516399214558,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000167347
+  },
+  "1p7IOkE9j9cwFyx4_vQUH$": {
+   "area": 2.155000000000005,
+   "box": [
+    [
+     14.46408917943199,
+     50.023043475080236,
+     7.449582
+    ],
+    [
+     15.980595530378098,
+     52.39970952491978,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999939973
+  },
+  "1qU3xMaZz2Av3pVOxzfZKW": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     34.93378079976139,
+     38.20486144230603,
+     7.449582
+    ],
+    [
+     36.450287150707496,
+     40.581527492145575,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999894499
+  },
+  "2$czTi6GrAHxd14aD6Qmmc": {
+   "area": 15.114407499999986,
+   "box": [
+    [
+     26.318261981077804,
+     35.58456711478031,
+     7.602582000000001
+    ],
+    [
+     43.71377005676659,
+     45.71447092534795,
+     7.7745820000000005
+    ]
+   ],
+   "volume": 0.14407500000031037
+  },
+  "20FBV5Tcj4yeFIkA119U20": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     17.61327278083919,
+     48.204861475080236,
+     7.449582
+    ],
+    [
+     19.129779131785295,
+     50.58152752491978,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999894476
+  },
+  "225m02QHv3mhkTXinDpbnC": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     23.91163911762818,
+     44.56849797508025,
+     7.449582
+    ],
+    [
+     25.428145468574286,
+     46.94516402491979,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.0974999999980356
+  },
+  "240DDX4Zv7ZRBebISw7amg": {
+   "area": 2.1550000000000002,
+   "box": [
+    [
+     15.513817623917994,
+     49.41698247508024,
+     7.449582
+    ],
+    [
+     17.0303239748641,
+     51.79364852491978,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.0974999999998547
+  },
+  "28xYqtZ4vF0RoQVLMjR04U": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     34.40891657751838,
+     38.50789194230603,
+     7.449582
+    ],
+    [
+     35.92542292846449,
+     40.884557992145574,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000167347
+  },
+  "29NeQDl9r0RPTH7F43W1He": {
+   "area": 147.0657649784384,
+   "box": [
+    [
+     25.10576198107781,
+     33.48445551060304,
+     7.374582
+    ],
+    [
+     44.17627005676659,
+     46.51554442384856,
+     7.6209690000000005
+    ]
+   ],
+   "volume": 12.627270064536459
+  },
+  "2G0mFQhK929u_6An0lBNTZ": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     25.48623086156519,
+     43.65940694230602,
+     7.449582
+    ],
+    [
+     27.002737212511295,
+     46.03607299214556,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999985462
+  },
+  "2HKuqlX7D0UQ6Ws7xU2Tpj": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     24.43650333987118,
+     44.26546747508024,
+     7.449582
+    ],
+    [
+     25.953009690817286,
+     46.642133524919785,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.0975000000003094
+  },
+  "2SCufMLTX7xQpijUrlgbDl": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     19.187864581542787,
+     47.29577047508024,
+     7.449582
+    ],
+    [
+     20.704370932488892,
+     49.67243652491978,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000076431
+  },
+  "2UXPKrUxb1NPLYxy3$uCcp": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     40.70728378033278,
+     34.87152794230604,
+     7.449582
+    ],
+    [
+     42.22379013127889,
+     37.24819399214558,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999985537
+  },
+  "2VSzSEJibEmQCf1lSBr3vL": {
+   "area": 147.06576497843827,
+   "box": [
+    [
+     7.785253962155615,
+     43.48445554337725,
+     7.374582
+    ],
+    [
+     26.855762037844393,
+     56.51554445662277,
+     7.6209690000000005
+    ]
+   ],
+   "volume": 12.627270064540248
+  },
+  "2aNIR9HKD6lPzpHEoqth$b": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     22.861911539167583,
+     45.17455847508025,
+     7.449582
+    ],
+    [
+     24.37841789011369,
+     47.55122452491979,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.0974999999986419
+  },
+  "2dSJ10Gxv9AR$_DmiMCtSq": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     23.386775761410583,
+     44.87152797508024,
+     7.449582
+    ],
+    [
+     24.90328211235669,
+     47.24819402491978,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000106729
+  },
+  "2ea9NtvwjBGfaygNYjxAxe": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     38.08296440116858,
+     36.38667944230603,
+     7.449582
+    ],
+    [
+     39.59947075211469,
+     38.763345492145575,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999894499
+  },
+  "2fLDxlSJ5658K2aKlEUuO$": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     35.98350837822198,
+     37.598800942306035,
+     7.449582
+    ],
+    [
+     37.500014729168086,
+     39.97546699214558,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000076353
+  },
+  "2hC6KuMWz8T8p3DKcB74Nr": {
+   "area": 2.155000000000005,
+   "box": [
+    [
+     11.314906444050195,
+     51.84122497508023,
+     7.449582
+    ],
+    [
+     12.831412794996302,
+     54.21789102491977,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000030923
+  },
+  "2mQystxXrBl9nXWHqw58UW": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     22.337047316924583,
+     45.477588975080245,
+     7.449582
+    ],
+    [
+     23.85355366787069,
+     47.85425502491979,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999879344
+  },
+  "2pFyoP4czDyPD7YSYV0g1I": {
+   "area": 2.155000000000005,
+   "box": [
+    [
+     9.215450421103595,
+     53.05334647508023,
+     7.449582
+    ],
+    [
+     10.731956772049703,
+     55.430012524919775,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999962733
+  },
+  "2vvVUDLqjBxRXxfI3C2q$r": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     29.685142041432986,
+     41.23516444230602,
+     7.449582
+    ],
+    [
+     31.20164839237909,
+     43.611830492145565,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999894499
+  },
+  "2xpMIc_0H2iuAG4BcTIFAT": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     28.63541446297239,
+     41.84122494230602,
+     7.449582
+    ],
+    [
+     30.151920813918494,
+     44.21789099214556,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999894476
+  },
+  "30nYk7ZUj7BeZTiiCyQzG3": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     35.45864502200438,
+     37.901830942306034,
+     7.449582
+    ],
+    [
+     36.97515137295049,
+     40.27849699214558,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000076375
+  },
+  "3615LYIInAVAKMJ7MpZ30R": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     24.96136669608878,
+     43.96243747508025,
+     7.449582
+    ],
+    [
+     26.477873047034887,
+     46.33910352491979,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.0975000000022799
+  },
+  "3A9NNgob1BBODyEmbQaSNY": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     36.50837260046498,
+     37.295770442306036,
+     7.449582
+    ],
+    [
+     38.02487895141109,
+     39.67243649214558,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000076398
+  },
+  "3BWkltsLT1kg_mUdP5q1Mv": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     19.712727937760384,
+     46.99274047508024,
+     7.449582
+    ],
+    [
+     21.22923428870649,
+     49.36940652491978,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000076409
+  },
+  "3CF5zUVrXC$xgrsKXU$XAx": {
+   "area": 2.155000000000005,
+   "box": [
+    [
+     10.265177999564193,
+     52.447285975080234,
+     7.449582
+    ],
+    [
+     11.7816843505103,
+     54.82395202491978,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999993042
+  },
+  "3Fit2Fad92zf2f6aWdJtF5": {
+   "area": 0.8884836072149055,
+   "box": [
+    [
+     -0.965763,
+     -0.904192,
+     0.0
+    ],
+    [
+     0.885377,
+     0.895808,
+     0.1
+    ]
+   ],
+   "volume": 0.005702362812277502
+  },
+  "3Ixq0AlaX2PR0EdMfWL49i": {
+   "area": 15.114407500000048,
+   "box": [
+    [
+     8.247753962155613,
+     44.28552904187786,
+     7.602582000000001
+    ],
+    [
+     25.643262037844394,
+     54.415432852445505,
+     7.7745820000000005
+    ]
+   ],
+   "volume": 0.1440750000017491
+  },
+  "3PcU1ZuFj2Aev0J8hzhHvy": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     39.13269197962918,
+     35.780618942306035,
+     7.449582
+    ],
+    [
+     40.64919833057529,
+     38.15728499214558,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999985359
+  },
+  "3QRjVXoH17pvJxTHfLfGTz": {
+   "area": 2.155000000000005,
+   "box": [
+    [
+     12.364634022510794,
+     51.23516447508023,
+     7.449582
+    ],
+    [
+     13.881140373456901,
+     53.611830524919775,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000030923
+  },
+  "3_fqSk$jXDlgUncZWfXZMS": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     42.28187471501098,
+     33.96243744230604,
+     7.449582
+    ],
+    [
+     43.79838106595709,
+     36.33910349214558,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000167258
+  },
+  "3a7SkZ5Ar1xxhiVrdbOBRI": {
+   "area": 2.1550000000000047,
+   "box": [
+    [
+     31.259733842136587,
+     40.326073442306026,
+     7.449582
+    ],
+    [
+     32.77624019308269,
+     42.70273949214557,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999985426
+  },
+  "3b4O_fC9b728g3ldIvq6l2": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     17.088408558596186,
+     48.50789197508024,
+     7.449582
+    ],
+    [
+     18.60491490954229,
+     50.884558024919784,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000076398
+  },
+  "3eijguL1P9Nfvjs$Xpqdpu": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     28.11055024072939,
+     42.144255442306026,
+     7.449582
+    ],
+    [
+     29.627056591675494,
+     44.52092149214557,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000076398
+  },
+  "3jf03qOPH8oftXrH9IVkSa": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     18.663000359299787,
+     47.59880097508024,
+     7.449582
+    ],
+    [
+     20.179506710245892,
+     49.97546702491978,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000030923
+  },
+  "3ooxVTKoDDyAfZgN27B0Xt": {
+   "area": 2.155000000000005,
+   "box": [
+    [
+     11.839769800267792,
+     51.53819497508023,
+     7.449582
+    ],
+    [
+     13.3562761512139,
+     53.91486102491977,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999985492
+  },
+  "3qB7jvnzzCdhkb6SWzwgkc": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     29.160277819189986,
+     41.53819494230602,
+     7.449582
+    ],
+    [
+     30.67678417013609,
+     43.91486099214556,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000167314
+  },
+  "3qFv979eH6S8MEUxE$yKtu": {
+   "area": 2.155000000000014,
+   "box": [
+    [
+     37.55810017892558,
+     36.68970994230604,
+     7.449582
+    ],
+    [
+     39.07460652987169,
+     39.06637599214558,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09749999999985448
+  },
+  "3yQtEGRLLAuwH0EvMJUSpX": {
+   "area": 2.154999999999997,
+   "box": [
+    [
+     21.812183960706985,
+     45.780618975080245,
+     7.449582
+    ],
+    [
+     23.32869031165309,
+     48.15728502491979,
+     7.599582000000001
+    ]
+   ],
+   "volume": 0.09750000000000603
+  }
+ },
+ "header": {
+  "name": "Infra-Rail.ifc",
+  "originatingSystem": "BIM_Tools - Sketchup_IFC_manager - 5.6.0",
+  "preprocessor": "Sketchup-IFC-manager 5.6.0 / SketchUp 2026 (26.2.242)",
+  "timeStamp": "2026-06-23T11:54:09"
+ },
+ "lengthToSi": 0.001,
+ "location": {
+  "crs": "EPSG:32760",
+  "eastings": 729011.2258823584,
+  "northings": 9063960.607644705,
+  "orthogonalHeight": 0.0,
+  "scale": 0.001,
+  "xAxisAbscissa": 1.0,
+  "xAxisOrdinate": 0.0
+ },
+ "objects": {
+  "00ZvlN19v73wE8JOyDmPjG": {
+   "class": "IfcElementAssembly",
+   "container": "1$CApj9YLCeu0YyH5TXRVh",
+   "description": "A marker indicating specific locations along the highway.",
+   "hasShape": false,
+   "longName": null,
+   "name": "highway location marker",
+   "objectType": "signalassembly",
+   "parent": null,
+   "predefined": null,
+   "step": 693,
+   "tag": "454425.1027895.1031643",
+   "type": "0iAJVoiDX1LxdIktn5l5jI"
+  },
+  "01Ne9sLvX2JB7MmvFUh4ey": {
+   "class": "IfcRailType",
+   "container": null,
+   "description": "Strong rails, guiding trains safely along their path.",
+   "hasShape": false,
+   "longName": null,
+   "name": "rail",
+   "objectType": "rail",
+   "parent": null,
+   "predefined": "RAIL",
+   "step": 60,
+   "tag": "940736",
+   "type": null
+  },
+  "0BRh6j4b90nA0leMHsST_R": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 539,
+   "tag": "454425.1027895.956002.2042690.955716",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "0JskQH3CjFQwvVhALUzox1": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 451,
+   "tag": "454425.1027895.956002.2042690.955705",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "0KPcs1y3j3YezA6xslC0pO": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 603,
+   "tag": "454425.1027895.956002.2042690.955724",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "0LmYrpL31BLxBAY291UUPV": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 142,
+   "tag": "454425.1027894.2183506.2042690.955705",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "0NjD4eL$13aPRyMEU8_Pur": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 302,
+   "tag": "454425.1027894.2183506.2042690.955725",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "0SJ2RiUZ18WvDG2vKWfTmD": {
+   "class": "IfcCourseType",
+   "container": null,
+   "description": "A sturdy ballast bed, providing a stable base for railway tracks.",
+   "hasShape": false,
+   "longName": null,
+   "name": "ballastbed",
+   "objectType": "ballastbed",
+   "parent": null,
+   "predefined": "BALLASTBED",
+   "step": 90,
+   "tag": "940418",
+   "type": null
+  },
+  "0SNcQbysLA08i6DTmPfdl$": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 238,
+   "tag": "454425.1027894.2183506.2042690.955717",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "0W$6qwCif1ePgGk6Sh$apd": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 531,
+   "tag": "454425.1027895.956002.2042690.955715",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "0X2A_iiNzCc9sTeIrZyf9i": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 222,
+   "tag": "454425.1027894.2183506.2042690.955715",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "0bjxY5edf3ORsHsGFLUXnG": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 206,
+   "tag": "454425.1027894.2183506.2042690.955713",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "0dRF_swOj9Z89ywNzIYxlz": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 643,
+   "tag": "454425.1027895.956002.2042690.955729",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "0gOEB3nvP8w8b2x7dkCurB": {
+   "class": "IfcRail",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Strong rails, guiding trains safely along their path.",
+   "hasShape": true,
+   "longName": null,
+   "name": "rail",
+   "objectType": "rail",
+   "parent": null,
+   "predefined": null,
+   "step": 79,
+   "tag": "454425.1027894.2183506.2042690.955697",
+   "type": "01Ne9sLvX2JB7MmvFUh4ey"
+  },
+  "0iAJVoiDX1LxdIktn5l5jI": {
+   "class": "IfcElementAssemblyType",
+   "container": null,
+   "description": "A marker indicating specific locations along the highway.",
+   "hasShape": false,
+   "longName": null,
+   "name": "highway location marker",
+   "objectType": "signalassembly",
+   "parent": null,
+   "predefined": "SIGNALASSEMBLY",
+   "step": 691,
+   "tag": "1031224",
+   "type": null
+  },
+  "0l0npIYpb0jwRcuQumw8GS": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 555,
+   "tag": "454425.1027895.956002.2042690.955718",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "0mApyqgbP3kwWGcMHpBgdC": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 110,
+   "tag": "454425.1027894.2183506.2042690.955696",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "0rTKpqwfH8ZvpESUY9mK0D": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 198,
+   "tag": "454425.1027894.2183506.2042690.955712",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "0v0w97H9D0vhXlZ8fsd1v_": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 499,
+   "tag": "454425.1027895.956002.2042690.955711",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "0vMmNglnHCxwAXN15KG$Y3": {
+   "class": "IfcRailwayPart",
+   "container": null,
+   "description": "Durable rail tracks, guiding trains safely along their path.",
+   "hasShape": false,
+   "longName": null,
+   "name": "Rail track",
+   "objectType": "track",
+   "parent": "144_CJ8b1C7xe6fkDXe2iD",
+   "predefined": "TRACK",
+   "step": 53,
+   "tag": null,
+   "type": null
+  },
+  "0xoA7NQgD7lRlwTspYVfko": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 547,
+   "tag": "454425.1027895.956002.2042690.955717",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "0y55PkXXrAfxfuCFlVHxdf": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 310,
+   "tag": "454425.1027894.2183506.2042690.955726",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1$CApj9YLCeu0YyH5TXRVh": {
+   "class": "IfcSite",
+   "container": null,
+   "description": "The site of the road rail bridge, supporting both road and rail traffic.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road rail bridge - site",
+   "objectType": null,
+   "parent": "23sFQGRy90RxVbRHD9iSE2",
+   "predefined": null,
+   "step": 382,
+   "tag": null,
+   "type": null
+  },
+  "144_CJ8b1C7xe6fkDXe2iD": {
+   "class": "IfcRailway",
+   "container": null,
+   "description": "Durable rail tracks, guiding trains safely along their path.",
+   "hasShape": false,
+   "longName": null,
+   "name": "Rail track",
+   "objectType": "railway",
+   "parent": "2Wad9UE39Fl81buLr2dp_x",
+   "predefined": "NOTDEFINED",
+   "step": 43,
+   "tag": null,
+   "type": null
+  },
+  "14O93KCH5CcwgIvHrgZEXj": {
+   "class": "IfcRail",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Strong rails, guiding trains safely along their path.",
+   "hasShape": true,
+   "longName": null,
+   "name": "rail",
+   "objectType": "rail",
+   "parent": null,
+   "predefined": null,
+   "step": 402,
+   "tag": "454425.1027895.956002.2042690.955698",
+   "type": "01Ne9sLvX2JB7MmvFUh4ey"
+  },
+  "15Q88nz595tP5ei3_pAQgO": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 443,
+   "tag": "454425.1027895.956002.2042690.955704",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1A14NvUhv2_wMj4mxmA7o0": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 190,
+   "tag": "454425.1027894.2183506.2042690.955711",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1DlyW6vE1AFxD298O5l6sU": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 318,
+   "tag": "454425.1027894.2183506.2042690.955727",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1Hb6PCblD2ZuvhFdwzUotD": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 435,
+   "tag": "454425.1027895.956002.2042690.955703",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1J8_j1nRDDfQQXFNU6jh1C": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 270,
+   "tag": "454425.1027894.2183506.2042690.955721",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1KgKJls3H9_u5Xd8c_HS7x": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 246,
+   "tag": "454425.1027894.2183506.2042690.955718",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1OAsMV9659sQQS2f3ETl_F": {
+   "class": "IfcRailway",
+   "container": null,
+   "description": "Durable rail tracks, guiding trains safely along their path.",
+   "hasShape": false,
+   "longName": null,
+   "name": "Rail track",
+   "objectType": "railway",
+   "parent": "1$CApj9YLCeu0YyH5TXRVh",
+   "predefined": "NOTDEFINED",
+   "step": 388,
+   "tag": null,
+   "type": null
+  },
+  "1TPGJrtGD5GuYtVCcv8tWE": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 627,
+   "tag": "454425.1027895.956002.2042690.955727",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1VhaT3K8H2lPdXb8NqCPZs": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 523,
+   "tag": "454425.1027895.956002.2042690.955714",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1XcDIiNyv9uuTZP4jDMfO$": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 651,
+   "tag": "454425.1027895.956002.2042690.955730",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1Y4VQW3SD4UO4o4Dn6KDad": {
+   "class": "IfcRailwayPart",
+   "container": null,
+   "description": "Durable rail tracks, guiding trains safely along their path.",
+   "hasShape": false,
+   "longName": null,
+   "name": "Rail track",
+   "objectType": "track",
+   "parent": "1OAsMV9659sQQS2f3ETl_F",
+   "predefined": "TRACK",
+   "step": 395,
+   "tag": null,
+   "type": null
+  },
+  "1_XScBOSD3h8oErFHWZl76": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 675,
+   "tag": "454425.1027895.956002.2042690.955733",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1adp27B_9CUfup2ojuKOng": {
+   "class": "IfcSite",
+   "container": null,
+   "description": "A designated parking area, providing space for vehicles.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road parking - site",
+   "objectType": null,
+   "parent": "23sFQGRy90RxVbRHD9iSE2",
+   "predefined": null,
+   "step": 24,
+   "tag": null,
+   "type": null
+  },
+  "1dc6DrbT90UA9pg9Z3rs4Z": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 459,
+   "tag": "454425.1027895.956002.2042690.955706",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1gG3H$M4nC18HrcjbZfxcQ": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 126,
+   "tag": "454425.1027894.2183506.2042690.955703",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1jPuNq3399wwsfi63CaYtQ": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 158,
+   "tag": "454425.1027894.2183506.2042690.955707",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1j_ofp0_jDkQibnMsl$T_a": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 507,
+   "tag": "454425.1027895.956002.2042690.955712",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1o4sQbZYD7EfuX2weAoHYD": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 667,
+   "tag": "454425.1027895.956002.2042690.955732",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1p7IOkE9j9cwFyx4_vQUH$": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 214,
+   "tag": "454425.1027894.2183506.2042690.955714",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1qU3xMaZz2Av3pVOxzfZKW": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 571,
+   "tag": "454425.1027895.956002.2042690.955720",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "1t6PIeEkvA3Ou$ofmC9D_1": {
+   "class": "IfcTrackElementType",
+   "container": null,
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": false,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": "SLEEPER",
+   "step": 108,
+   "tag": "940709",
+   "type": null
+  },
+  "2$czTi6GrAHxd14aD6Qmmc": {
+   "class": "IfcRail",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Strong rails, guiding trains safely along their path.",
+   "hasShape": true,
+   "longName": null,
+   "name": "rail",
+   "objectType": "rail",
+   "parent": null,
+   "predefined": null,
+   "step": 411,
+   "tag": "454425.1027895.956002.2042690.955697",
+   "type": "01Ne9sLvX2JB7MmvFUh4ey"
+  },
+  "20FBV5Tcj4yeFIkA119U20": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 262,
+   "tag": "454425.1027894.2183506.2042690.955720",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "225m02QHv3mhkTXinDpbnC": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 358,
+   "tag": "454425.1027894.2183506.2042690.955732",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "23sFQGRy90RxVbRHD9iSE2": {
+   "class": "IfcSite",
+   "container": null,
+   "description": "A sample scene environment, showcasing the surrounding landscape.",
+   "hasShape": false,
+   "longName": null,
+   "name": "environment - site",
+   "objectType": null,
+   "parent": "2Ndyd$OSX7s9A04nc4lyye",
+   "predefined": null,
+   "step": 21,
+   "tag": null,
+   "type": null
+  },
+  "240DDX4Zv7ZRBebISw7amg": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 230,
+   "tag": "454425.1027894.2183506.2042690.955716",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "28xYqtZ4vF0RoQVLMjR04U": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 563,
+   "tag": "454425.1027895.956002.2042690.955719",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "29NeQDl9r0RPTH7F43W1He": {
+   "class": "IfcCourse",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "A sturdy ballast bed, providing a stable base for railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "ballastbed",
+   "objectType": "ballastbed",
+   "parent": null,
+   "predefined": null,
+   "step": 419,
+   "tag": "454425.1027895.956002.2042690.955699",
+   "type": "0SJ2RiUZ18WvDG2vKWfTmD"
+  },
+  "2G0mFQhK929u_6An0lBNTZ": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 427,
+   "tag": "454425.1027895.956002.2042690.955696",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "2HKuqlX7D0UQ6Ws7xU2Tpj": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 366,
+   "tag": "454425.1027894.2183506.2042690.955733",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "2IpkHFcdnD3xuZl6H52fWn": {
+   "class": "IfcBuildingElementProxyType",
+   "container": null,
+   "description": "The reference point for transforming the local engineering coordinate system into the coordinate reference system of the underlying map.",
+   "hasShape": false,
+   "longName": null,
+   "name": "geo-reference",
+   "objectType": "origin",
+   "parent": null,
+   "predefined": "USERDEFINED",
+   "step": 706,
+   "tag": "1028019",
+   "type": null
+  },
+  "2Ndyd$OSX7s9A04nc4lyye": {
+   "class": "IfcProject",
+   "container": null,
+   "description": "Demystifying IFC with a playful scene using diverse building elements and compositions.",
+   "hasShape": false,
+   "longName": null,
+   "name": "ifc silly sample scene - project",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 13,
+   "tag": null,
+   "type": null
+  },
+  "2SCufMLTX7xQpijUrlgbDl": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 286,
+   "tag": "454425.1027894.2183506.2042690.955723",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "2UXPKrUxb1NPLYxy3$uCcp": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 659,
+   "tag": "454425.1027895.956002.2042690.955731",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "2VSzSEJibEmQCf1lSBr3vL": {
+   "class": "IfcCourse",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "A sturdy ballast bed, providing a stable base for railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "ballastbed",
+   "objectType": "ballastbed",
+   "parent": null,
+   "predefined": null,
+   "step": 92,
+   "tag": "454425.1027894.2183506.2042690.955699",
+   "type": "0SJ2RiUZ18WvDG2vKWfTmD"
+  },
+  "2Wad9UE39Fl81buLr2dp_x": {
+   "class": "IfcSite",
+   "container": null,
+   "description": "The site of the rail river bridge, facilitating train crossings.",
+   "hasShape": false,
+   "longName": null,
+   "name": "rail river bridge - site",
+   "objectType": null,
+   "parent": "23sFQGRy90RxVbRHD9iSE2",
+   "predefined": null,
+   "step": 37,
+   "tag": null,
+   "type": null
+  },
+  "2aNIR9HKD6lPzpHEoqth$b": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 342,
+   "tag": "454425.1027894.2183506.2042690.955730",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "2dSJ10Gxv9AR$_DmiMCtSq": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 350,
+   "tag": "454425.1027894.2183506.2042690.955731",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "2ea9NtvwjBGfaygNYjxAxe": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 619,
+   "tag": "454425.1027895.956002.2042690.955726",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "2fLDxlSJ5658K2aKlEUuO$": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 587,
+   "tag": "454425.1027895.956002.2042690.955722",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "2hC6KuMWz8T8p3DKcB74Nr": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 166,
+   "tag": "454425.1027894.2183506.2042690.955708",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "2mQystxXrBl9nXWHqw58UW": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 334,
+   "tag": "454425.1027894.2183506.2042690.955729",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "2pFyoP4czDyPD7YSYV0g1I": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 134,
+   "tag": "454425.1027894.2183506.2042690.955704",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "2syxA9_lr7Ew2uZai3VhhS": {
+   "class": "IfcSite",
+   "container": null,
+   "description": "A designated parking area, providing space for vehicles.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road - site",
+   "objectType": null,
+   "parent": "23sFQGRy90RxVbRHD9iSE2",
+   "predefined": null,
+   "step": 721,
+   "tag": null,
+   "type": null
+  },
+  "2vvVUDLqjBxRXxfI3C2q$r": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 491,
+   "tag": "454425.1027895.956002.2042690.955710",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "2xpMIc_0H2iuAG4BcTIFAT": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 475,
+   "tag": "454425.1027895.956002.2042690.955708",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "30nYk7ZUj7BeZTiiCyQzG3": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 579,
+   "tag": "454425.1027895.956002.2042690.955721",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "3615LYIInAVAKMJ7MpZ30R": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 374,
+   "tag": "454425.1027894.2183506.2042690.955734",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "3A9NNgob1BBODyEmbQaSNY": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 595,
+   "tag": "454425.1027895.956002.2042690.955723",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "3BWkltsLT1kg_mUdP5q1Mv": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 294,
+   "tag": "454425.1027894.2183506.2042690.955724",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "3CF5zUVrXC$xgrsKXU$XAx": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 150,
+   "tag": "454425.1027894.2183506.2042690.955706",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "3E8poO$Er6gPhLg44LF$bc": {
+   "class": "IfcElementAssembly",
+   "container": "1$CApj9YLCeu0YyH5TXRVh",
+   "description": "A marker indicating specific locations along the highway.",
+   "hasShape": false,
+   "longName": null,
+   "name": "highway location marker",
+   "objectType": "signalassembly",
+   "parent": null,
+   "predefined": null,
+   "step": 700,
+   "tag": "454425.1027895.1031644",
+   "type": "0iAJVoiDX1LxdIktn5l5jI"
+  },
+  "3Fit2Fad92zf2f6aWdJtF5": {
+   "class": "IfcBuildingElementProxy",
+   "container": "23sFQGRy90RxVbRHD9iSE2",
+   "description": "The reference point for transforming the local engineering coordinate system into the coordinate reference system of the underlying map.",
+   "hasShape": true,
+   "longName": null,
+   "name": "geo-reference",
+   "objectType": "origin",
+   "parent": null,
+   "predefined": null,
+   "step": 708,
+   "tag": "454425.1032696",
+   "type": "2IpkHFcdnD3xuZl6H52fWn"
+  },
+  "3Ixq0AlaX2PR0EdMfWL49i": {
+   "class": "IfcRail",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Strong rails, guiding trains safely along their path.",
+   "hasShape": true,
+   "longName": null,
+   "name": "rail",
+   "objectType": "rail",
+   "parent": null,
+   "predefined": null,
+   "step": 62,
+   "tag": "454425.1027894.2183506.2042690.955698",
+   "type": "01Ne9sLvX2JB7MmvFUh4ey"
+  },
+  "3PcU1ZuFj2Aev0J8hzhHvy": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 635,
+   "tag": "454425.1027895.956002.2042690.955728",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "3QRjVXoH17pvJxTHfLfGTz": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 182,
+   "tag": "454425.1027894.2183506.2042690.955710",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "3_fqSk$jXDlgUncZWfXZMS": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 683,
+   "tag": "454425.1027895.956002.2042690.955734",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "3a7SkZ5Ar1xxhiVrdbOBRI": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 515,
+   "tag": "454425.1027895.956002.2042690.955713",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "3b4O_fC9b728g3ldIvq6l2": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 254,
+   "tag": "454425.1027894.2183506.2042690.955719",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "3eijguL1P9Nfvjs$Xpqdpu": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 467,
+   "tag": "454425.1027895.956002.2042690.955707",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "3jf03qOPH8oftXrH9IVkSa": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 278,
+   "tag": "454425.1027894.2183506.2042690.955722",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "3ooxVTKoDDyAfZgN27B0Xt": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 174,
+   "tag": "454425.1027894.2183506.2042690.955709",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "3pnaj3EgL1cOScZHtoQhHO": {
+   "class": "IfcSite",
+   "container": null,
+   "description": "The site of the road river bridge, connecting different areas.",
+   "hasShape": false,
+   "longName": null,
+   "name": "road river bridge - site",
+   "objectType": null,
+   "parent": "23sFQGRy90RxVbRHD9iSE2",
+   "predefined": null,
+   "step": 31,
+   "tag": null,
+   "type": null
+  },
+  "3qB7jvnzzCdhkb6SWzwgkc": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 483,
+   "tag": "454425.1027895.956002.2042690.955709",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "3qFv979eH6S8MEUxE$yKtu": {
+   "class": "IfcTrackElement",
+   "container": "1Y4VQW3SD4UO4o4Dn6KDad",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 611,
+   "tag": "454425.1027895.956002.2042690.955725",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  },
+  "3yQtEGRLLAuwH0EvMJUSpX": {
+   "class": "IfcTrackElement",
+   "container": "0vMmNglnHCxwAXN15KG$Y3",
+   "description": "Durable wooden sleepers, supporting the railway tracks.",
+   "hasShape": true,
+   "longName": null,
+   "name": "sleeper wood",
+   "objectType": "sleeper",
+   "parent": null,
+   "predefined": null,
+   "step": 326,
+   "tag": "454425.1027894.2183506.2042690.955728",
+   "type": "1t6PIeEkvA3Ou$ofmC9D_1"
+  }
+ },
+ "precision": 1e-06,
+ "reader": "IfcOpenShell 0.9.0.post1",
+ "records": 726,
+ "schema": "IFC4X3_ADD2",
+ "sets": {},
+ "source": "fixtures/ifc/v1/disaridan/bsi-ifc4x3-infra-rail.ifc"
+}

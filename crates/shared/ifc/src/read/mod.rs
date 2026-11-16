@@ -18,10 +18,14 @@
 pub mod bodies;
 #[cfg(all(test, feature = "geometry"))]
 mod bodies_tests;
+#[cfg(all(test, feature = "geometry"))]
+mod outside_tests;
+mod checks;
 mod graph;
 mod header;
 mod scan;
 mod sets;
+mod units;
 #[cfg(test)]
 mod reference_tests;
 #[cfg(test)]

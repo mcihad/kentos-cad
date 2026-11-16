@@ -10,7 +10,8 @@ object of each class (sorted by GlobalId), and every body's world bounding box, 
 (ifcopenshell.geom, world coordinates), with the file's precision. kentos-ifc's `read` tests compare its reading face
 with the graph and the sets; its `geometry` tests compare the engine's bodies with the boxes and volumes.
 
-Writes fixtures/ifc/v1/okuma/<name>.json; --check compares instead. Runs under IfcOpenShell, offline:
+Writes fixtures/ifc/v1/okuma/<name>.json; --check compares instead; --files DIR writes FILE.okuma.json beside every
+FILE.ifc under DIR (samples downloaded for a measurement, kept out of Git). Runs under IfcOpenShell, offline:
 
     uv run --offline --no-project --python 3.11 --with ifcopenshell==0.9.0.post1 python -I scripts/fixtures/ifc_read_cases.py
 """
@@ -43,6 +44,14 @@ FILES = {
     # Another writer's files (scripts/fixtures/ifc_other_writer_cases.py): IFC4 and IFC 4.3.
     "ifcopenshell-ifc4": "fixtures/ifc/v1/acik/ifcopenshell-ifc4.ifc",
     "ifcopenshell-ifc4x3": "fixtures/ifc/v1/acik/ifcopenshell-ifc4x3.ifc",
+    # Real-world samples (fixtures/ifc/v1/disaridan/README.md: CC BY 4.0, buildingSMART International).
+    "bsi-ifc4x3-building-architecture": "fixtures/ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+    "bsi-ifc4x3-infra-road": "fixtures/ifc/v1/disaridan/bsi-ifc4x3-infra-road.ifc",
+    "bsi-ifc4x3-infra-rail": "fixtures/ifc/v1/disaridan/bsi-ifc4x3-infra-rail.ifc",
+    "bsi-ifc4-wall-with-opening-and-window": "fixtures/ifc/v1/disaridan/bsi-ifc4-wall-with-opening-and-window.ifc",
+    "bsi-ifc4-basin-tessellation": "fixtures/ifc/v1/disaridan/bsi-ifc4-basin-tessellation.ifc",
+    "bsi-ifc4-column-straight-rectangle-tessellation": "fixtures/ifc/v1/disaridan/bsi-ifc4-column-straight-rectangle-tessellation.ifc",
+    "bsi-ifc2x3-building-architecture": "fixtures/ifc/v1/disaridan/bsi-ifc2x3-building-architecture.ifc",
 }
 
 
@@ -117,9 +126,15 @@ def sets(f):
 
 
 def bodies(f):
-    """Every product's body in world coordinates, openings cut: its box, volume and area."""
+    """Every product's body in world coordinates and metres, openings cut: its box, volume and area. IfcOpenShell
+    0.9.0.post1 carries a body to metres itself, except in a file that also has an IfcProjectLibrary: there it gives
+    the file's own unit, whatever convert-back-units and length-unit say (checked on
+    bsi-ifc4-wall-with-opening-and-window.ifc: its 3000 mm wall comes out 3000, and 3.0 once the library's records are
+    taken out). Such a file's numbers are carried to metres here, with the project's unit."""
     settings = ifcopenshell.geom.settings()
     settings.set("use-world-coords", True)
+    library = f.schema != "IFC2X3" and f.by_type("IfcProjectLibrary")
+    k = unit.calculate_unit_scale(f) if library else 1.0
     out = {}
     for p in f.by_type("IfcProduct"):
         if not p.Representation or p.is_a("IfcOpeningElement"):
@@ -133,14 +148,16 @@ def bodies(f):
             continue
         xs, ys, zs = v[0::3], v[1::3], v[2::3]
         out[p.GlobalId] = {
-            "box": [[min(xs), min(ys), min(zs)], [max(xs), max(ys), max(zs)]],
-            "volume": shape.get_volume(s.geometry),
-            "area": shape.get_area(s.geometry),
+            "box": [[min(xs) * k, min(ys) * k, min(zs) * k], [max(xs) * k, max(ys) * k, max(zs) * k]],
+            "volume": shape.get_volume(s.geometry) * k**3,
+            "area": shape.get_area(s.geometry) * k**2,
         }
     return out
 
 
 def location(f):
+    if f.schema == "IFC2X3":
+        return None  # IFC2x3 has no map conversion.
     conversions = f.by_type("IfcMapConversion")
     if not conversions:
         return None
@@ -161,11 +178,11 @@ def location(f):
 
 
 def case(path):
-    f = ifcopenshell.open(str(ROOT / path))
+    f = ifcopenshell.open(str(path if Path(path).is_absolute() else ROOT / path))
     name = f.header.file_name
     contexts = [c for c in f.by_type("IfcGeometricRepresentationContext") if not c.is_a("IfcGeometricRepresentationSubContext")]
     return {
-        "source": path,
+        "source": str(path) if not Path(path).is_absolute() else Path(path).name,
         "reader": f"IfcOpenShell {ifcopenshell.version}",
         "schema": f.schema_identifier,
         "header": {
@@ -176,7 +193,7 @@ def case(path):
         },
         "records": len(list(f)),
         "lengthToSi": unit.calculate_unit_scale(f),
-        "precision": contexts[0].Precision if contexts else None,
+        "precision": contexts[0].Precision * unit.calculate_unit_scale(f) if contexts and contexts[0].Precision else None,
         "location": location(f),
         "objects": objects(f),
         "sets": sets(f),
@@ -187,7 +204,18 @@ def case(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--check", action="store_true", help="compare with the files instead of writing them")
+    parser.add_argument(
+        "--files",
+        type=Path,
+        help="a folder of other files (downloaded samples, kept out of Git): each FILE.ifc under it gets FILE.okuma.json beside it",
+    )
     args = parser.parse_args()
+    if args.files:
+        for path in sorted(args.files.rglob("*.ifc")):
+            out = path.with_suffix(".okuma.json")
+            out.write_text(json.dumps(case(path.resolve()), ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+            print(out)
+        return
     OUT.mkdir(parents=True, exist_ok=True)
     stale = []
     for name, path in FILES.items():
