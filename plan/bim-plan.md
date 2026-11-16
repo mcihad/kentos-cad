@@ -143,7 +143,7 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
 | Z3 | **Emsal alanları modelde nesne değil;** bağımsız bölüm modelde grup olarak durmuyor | EK-9/10 ve EK-6 6.60 mekânsal zon istiyor; yazılmıyor | K | BIM-08 |
 | Z4 | **Paftanın modelden üretildiği kanıtlanamıyor:** plan paftasındaki serbest çizim ayırt edilmiyor; IFC ile PDF/A'nın aynı revizyondan çıktığı kayıtlı değil | EK-9/21 "modele girmeyen nesne yoksa evet" (`quality.rs`); Ruhsat takımı ile `cad.arch.ifc` ayrı komutlar | K | BIM-04, BIM-14 |
 | Z5 | **Eleman sınıfları dar:** giydirme cephe, kaplama ve asma tavan nesnesi, baca, dikme yok; asansör, vitrifiye ve mobilya sınıfsız blok; rampanın gövdesi yok | `Entity` listesi (`contracts/src/core/entity.rs`); `arch.rs` `Why::NotYet`; ADR 8045 | Y | BIM-09 |
-| Z6 | **Geometri her yerde gerçek değil:** ~~eğri duvar düz parçalarla~~ (yay yay olarak, miktarlar kaynaktan: ADR 8071); ~~eğri merdiven düz parçalarla~~ (ADR 8071 §9); ~~mahalin hacmi düz prizma~~ (tabanından tavanına: ADR 8071 §7; çatı altı kalan); ~~açıklık gövdeden kesilmiyor~~ (Reference View: ADR 8071 §4); içe dönen saçak yok; ~~çatı katmanları yok~~ (ADR 8071 §8) | ADR 8047 §6; `arch.rs` (mahal `bottom + height`); ADR 8044 "sonraya" | Y | BIM-10 |
+| Z6 | **Geometri her yerde gerçek değil:** ~~eğri duvar düz parçalarla~~ (yay yay olarak, miktarlar kaynaktan: ADR 8071); ~~eğri merdiven düz parçalarla~~ (ADR 8071 §9); ~~mahalin hacmi düz prizma~~ (tabanından tavanına: ADR 8071 §7; çatı altı kalan); ~~açıklık gövdeden kesilmiyor~~ (Reference View: ADR 8071 §4); ~~içe dönen saçak yok~~ (ADR 8071 §10); ~~çatı katmanları yok~~ (ADR 8071 §8) | ADR 8047 §6; `arch.rs` (mahal `bottom + height`); ADR 8044 "sonraya" | Y | BIM-10 |
 | Z7 | **Tek bina:** program bina ve kanat tanıyor; model, künye ve dışa aktarma tek binalı; ortak bodrum yok | `building.rs` tek saha, tek bina; `program.rs` | Y | BIM-11 |
 | Z8 | **2B kuralların denetimi yarım:** EK-4 katmanı ve çizgi tipi, EK-3 numara biçimi ve mahal adı sözlüğü denetlenmiyor | ADR 8047 §9 "yalnız varlığı"; M9 "profil ve blok katmanı kaldı" | Y | BIM-03 |
 | Z9 | **Mevzuat denetimi yarım:** başvuru tarihine göre kural seti, plan notu katmanı, yangın dayanımları, erişilebilirlik, emsalin 22. madde sınırları | ADV-22 ve ADV-23 "Kalanlar" | Y | BIM-13 |
@@ -503,8 +503,9 @@ tabanından tavanına, yükseklik ve hacimleriyle. Çatının katmanları (§8):
 ısı yalıtımı, mertek üstten aşağı, yüze dik kalınlıkla, her biri EK-2 öğesinde; kesitte ayrı plaklar, IFC'de
 `IfcMaterialLayerSet`, Öznitelikler'de "Çatı katmanları" (`.kcad` mimari verisi 8); kesitte yalıtım katmana oturan
 zikzakla. Döner merdiven (§9): her basamak gerçek yaylı bir halka parçası, merkez direği silindir; IFC'de SPIRAL_STAIR,
-IfcOpenShell'de hacmi kapalı formla 1,04·10⁻⁶ içinde. **Kalan:** içe dönen saçak, çatıyla kesilmiş mahal hacmi;
-çatının yüz başına `IfcSlab`'e ayrılması.
+IfcOpenShell'de hacmi kapalı formla 1,04·10⁻⁶ içinde. İçe dönen saçak (§10): L, T biçimli çatının yüzleri ağırlıklı
+düz iskeletten, iç köşeden dere; kesit, plan, 3B ve IFC onu okur. **Kalan:** çatıyla kesilmiş mahal hacmi; çatının yüz
+başına `IfcSlab`'e ayrılması.
 
 **Kullanıcı sonucu:** Kesit, görünüş, 3B ve dışa aktarılan model aynı gövdeyi gösterir ve o gövde çizilen yapıyla aynıdır:
 eğri duvar eğridir, açıklık duvardan kesilmiştir, döşemenin boşluğu boştur. Dayanak Md. 14; EK-8; EK-9/14; Z6.

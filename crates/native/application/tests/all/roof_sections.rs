@@ -895,3 +895,57 @@ fn a_layered_roof_is_its_layers_plates_cut_in_the_section_and_one_ifc_layer_set(
         std::fs::write(out, f).expect("the file kept");
     }
 }
+
+/// İçe dönen saçak (docs/adr/8071 §10): an L roof over the section building's 1. kat, 33 % on every edge, its eaves
+/// 50 cm out of the walls on the south and west and turning in at (6.0, 4.0). Its six faces are each a sloped plate in
+/// the section model, one valley runs down to the inner corner, B-B draws it; in the IFC model its body is closed and
+/// holds the L's plan area (13.25 × 4.625 + 6.625 × 5.625 m²) by its 25 cm upright build-up, whatever its faces.
+#[test]
+fn an_l_roof_turns_in_with_a_valley_through_the_section_and_the_ifc() {
+    use kentos_geometry_core::geom::roof as core;
+    use kentos_geometry_core::geom::section::Height;
+    use kentos_ifc::building::Class;
+    let mut doc = building();
+    let l = [(-0.625, -0.625), (12.625, -0.625), (12.625, 4.0), (6.0, 4.0), (6.0, 9.625), (-0.625, 9.625)];
+    let pts: Vec<serde_json::Value> = l.iter().map(|(x, y)| json!({"x": x, "y": y})).collect();
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.roofs.create",
+        CallOp::Execute,
+        json!({"layerId": "0", "roofs": [{"pts": pts, "slopes": vec![33.0; 6], "arch": {"level": "k1"}}]}),
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let roof = answer["output"]["uids"][0].as_str().unwrap().to_owned();
+    // Its plan: six faces, one valley down to (6, 4).
+    let ring: Vec<kentos_geometry_core::Vec2> = l.iter().map(|(x, y)| kentos_geometry_core::Vec2::new(*x, *y)).collect();
+    let spec = core::RoofSpec { slopes: vec![Some(33.0); 6], ..Default::default() };
+    assert_eq!(core::faces(&ring, &spec).unwrap().len(), 6);
+    let valleys: Vec<core::RoofLine> =
+        core::lines(&ring, &spec).unwrap().into_iter().filter(|x| x.kind == core::Line::Valley).collect();
+    assert_eq!(valleys.len(), 1);
+    assert!((valleys[0].b.x - 6.0).abs() < 1e-9 && (valleys[0].b.y - 4.0).abs() < 1e-9, "{valleys:?}");
+    // The section model: a sloped plate for each face, 33 % down to its eaves.
+    let m = sections::model(&doc);
+    let plates: Vec<usize> = (0..m.solids.len())
+        .filter(|&i| m.owners[i].as_deref() == Some(roof.as_str()) && m.parts[i].is_none())
+        .collect();
+    assert_eq!(plates.len(), 6);
+    for &i in &plates {
+        let Height::Sloped(s) = &m.solids[i].height else { panic!("a sloped plate") };
+        assert!(((s.dx * s.dx + s.dy * s.dy).sqrt() - 0.33).abs() < 1e-12);
+    }
+    let b = mark(&doc, ViewMarkForm::Section, "B");
+    let out = derive(&mut doc, b);
+    assert!(!out.left_out.iter().any(|x| x.why == BuildingSectionLeft::Roof), "{:?}", out.left_out);
+    // The IFC model: its body closed, its volume the plan's area by its build-up.
+    let (bld, written) = kentos_native_application::arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
+    assert_eq!(written.left, Vec::new());
+    let e = bld.elements.iter().find(|e| e.class == Class::Roof).expect("the roof");
+    for s in &e.shapes {
+        assert_eq!(kentos_ifc::closed::faults(s), Vec::<String>::new(), "{}", e.name);
+    }
+    let v: f64 = e.shapes.iter().map(kentos_ifc::quantities::volume).sum();
+    let want = (13.25 * 4.625 + 6.625 * 5.625) * 0.25;
+    assert!((v - want).abs() < 1e-9, "{v}, the closed form {want}");
+}

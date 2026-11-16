@@ -426,7 +426,7 @@ eklendi), Sivas İmar Yönetmeliği 40/5 ve 42/5 (RG 10.11.2022/32009), BYKHY 58
 
 ## Sonraya kalan
 
-- §10: içe dönen köşeli saçak (L, T) ve dereler.
+- ~~§10: içe dönen köşeli saçak (L, T) ve dereler~~: ADR 8071 §10 (16 Kasım 2026), ağırlıklı düz iskeletle.
 - Bacanın duvar içi bacayla (Baca aracı) bağı; çatının ve parçalarının Öznitelikler'den düzenlenmesi (komut hazır: `cad.arch.edit`);
   ~~çatı katmanlarının (kiremit, çıta, tahta, mertek) ayrı ayrı çizilmesi (14.5.4 q, uygulama projesi)~~: ADR 8071 §8
   (16 Kasım 2026).

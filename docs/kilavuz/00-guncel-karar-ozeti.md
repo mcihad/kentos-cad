@@ -128,7 +128,9 @@
     - Kesitte kesilen yalıtım katmana oturan tek zikzaktır (`geom::zigzag::fitted`, ADR 8014'ün duvar kuralı).
     - Döner merdivenin basamağı gerçek yaylı halka parçası (balansman basamağı gibi kademeli alt yüz), merkez direği
       silindir; IFC'de SPIRAL_STAIR / CURVED_RUN_STAIR. 3B'de yarı saydam yüz opak yüzün kılı kadar önünde çizilir.
-      Kalan: içe dönen saçak, çatıyla kesilmiş mahal hacmi, çatının yüz başına `IfcSlab`'e ayrılması.
+    - İçe dönen (L, T) saçakta yüzler ağırlıklı düz iskeletten (`geom::roof_skeleton`, kaba kuvvetli kinetik benzetim);
+      dışbükey saçak alt zarf yöntemiyle kalır. Kendini kesen saçak ve aynı doğruda farklı eğimli kenar reddedilir.
+      Kalan: çatıyla kesilmiş mahal hacmi, çatının yüz başına `IfcSlab`'e ayrılması.
   - **Dayanak:** RG 5.8.2026/33331'in iki yönetmeliği. Ana metinler tam okundu; ekler depodaki sayfa okumaları (ADR 8008,
     8027, 8037, 8047) ve bağımsız bir dökümle karşılaştırıldı ([araştırma notu](../research/2026-11-15-bim-ifc-yonetmelik.md)).
     Resmî Gazete'nin sitesi bu bilgisayarda sertifika hatası veriyor: denetim kapatılmaz, yayımlanmış kopyalar kullanılır.

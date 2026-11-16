@@ -1735,7 +1735,8 @@ def roof_parts_placed(f, path):
 
 
 def roof_problem(f, path):
-    """RoofFields::problem's rule and words, in its order; then the command's: an area, every corner turning out."""
+    """RoofFields::problem's rule and words, in its order; then the command's: an area, no crossing, two edges in one
+    line sloping alike."""
     pts, slopes = f["pts"], f["slopes"]
     n = len(pts)
     if not 3 <= n <= 1000:
@@ -1775,20 +1776,53 @@ def roof_problem(f, path):
     r = roof_layers_problem(f, path)
     if r:
         return r
-    # The command's own (docs/adr/8044 §2): an area; no corner turning in (not drawn yet).
+    # The command's own (docs/adr/8044 §2, 8071 §10): an area; no crossing (an eaves line turning in, an L or a T, is
+    # drawn by its straight skeleton); two edges running on in one line slope alike, else the roof would step.
     xs = [(F(p["x"]), F(p["y"])) for p in pts]
     a2 = sum(xs[i][0] * xs[(i + 1) % n][1] - xs[(i + 1) % n][0] * xs[i][1] for i in range(n))
     if a2 == 0:
         return refusal("invalid_roof", "Saçak çizgisinin alanı yok: noktalar bir doğru üzerinde.", f"{path}.pts")
-    if a2 < 0:
-        xs = xs[::-1]
+    if eaves_cross(xs):
+        return refusal("invalid_roof", "Saçak çizgisi kendini kesiyor; kesişmeyen bir çizgi çizin.", f"{path}.pts")
+    slopes = f["slopes"]
     for i in range(n):
         a, b, c = xs[i - 1], xs[i], xs[(i + 1) % n]
-        if (b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]) < 0:
-            return refusal("invalid_roof", "Saçak çizgisinin bir köşesi içe dönük (L ya da T biçimli); böyle bir çatı henüz "
-                                           "çizilmiyor. Dışbükey bir saçak çizin ya da çatıyı dışbükey parçalara bölün.",
-                           f"{path}.pts")
+        straight = ((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]) == 0
+                    and (b[0] - a[0]) * (c[0] - b[0]) + (b[1] - a[1]) * (c[1] - b[1]) > 0)
+        if straight and slopes[i - 1] != slopes[i]:
+            return refusal("invalid_roof", "Saçak çizgisinde aynı doğru üzerindeki iki kenarın eğimi farklı (ya da biri "
+                                           "kalkan); çatı orada basamak yapardı. İki kenarın eğimini eşitleyin ya da "
+                                           "aradaki noktayı kaldırın.", f"{path}.pts")
     return roof_parts_placed(f, path)
+
+
+def eaves_cross(xs):
+    """Whether two edges of the closed line cross or touch beyond the corner they share, exactly (fractions);
+    neighbours only by folding back over each other."""
+    n = len(xs)
+
+    def side(a, b, c):
+        o = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+        return (o > 0) - (o < 0)
+
+    def on(a, b, c):
+        return min(a[0], b[0]) <= c[0] <= max(a[0], b[0]) and min(a[1], b[1]) <= c[1] <= max(a[1], b[1])
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            a, b = xs[i], xs[(i + 1) % n]
+            c, d = xs[j], xs[(j + 1) % n]
+            if j == i + 1 or (i == 0 and j == n - 1):
+                shared, fa, fb = (b, a, d) if j == i + 1 else (a, b, c)
+                back = (fa[0] - shared[0]) * (fb[0] - shared[0]) + (fa[1] - shared[1]) * (fb[1] - shared[1])
+                if side(fa, shared, fb) == 0 and back > 0:
+                    return True
+                continue
+            d1, d2, d3, d4 = side(c, d, a), side(c, d, b), side(a, b, c), side(a, b, d)
+            if ((d1 * d2 < 0 and d3 * d4 < 0) or (d1 == 0 and on(c, d, a)) or (d2 == 0 and on(c, d, b))
+                    or (d3 == 0 and on(a, b, c)) or (d4 == 0 and on(a, b, d))):
+                return True
+    return False
 
 
 def roofs_create(d, inp, conflict=False):
@@ -2709,6 +2743,14 @@ def roof_cases():
         ("oluklu ve kar siperlikli çatı", roof(gutter=0.15, snowGuard=0.3)),
         ("saçak ucundaki kar siperliği", roof(slopes=[40.0, None, 40.0, None], snowGuard=0.0)),
         ("oluğun altında iki iniş borusu", roof(gutter=0.15, parts=[DOWNPIPE, {**DOWNPIPE, "at": P(-0.075, 49.925)}])),
+        # An eaves line turning in (ADR 8071 §10): drawn by its straight skeleton, a valley at each inner corner.
+        ("L biçimli saçak: içe dönen köşede dere", roof(pts=[P(0, 50), P(10, 50), P(10, 54), P(4, 54), P(4, 60), P(0, 60)],
+                                                       slopes=[33.0] * 6)),
+        ("T biçimli saçak, kanatları kalkanlı",
+         roof(pts=[P(0, 50), P(12, 50), P(12, 54), P(8, 54), P(8, 60), P(4, 60), P(4, 54), P(0, 54)],
+              slopes=[33.0, None, 33.0, 33.0, 33.0, 33.0, 33.0, None])),
+        ("L biçimli çatının bacası", roof(pts=[P(0, 50), P(10, 50), P(10, 54), P(4, 54), P(4, 60), P(0, 60)],
+                                          slopes=[33.0] * 6, parts=[{**CHIMNEY, "at": P(2, 57)}])),
         # Its layers (ADR 8071 §8), top down, their thicknesses its own.
         ("katmanlı çatı: kaplama, lata, kaplama tahtası, mertek", roof(layers=ROOF_BUILD_UP)),
         ("tek katmanlı çatı: yalnız kaplama", roof(layers=[{"kind": "covering", "thickness": 0.05}])),
@@ -2729,8 +2771,11 @@ def roof_cases():
         ("eksi saçak reddedilir", roof(overhang=-0.1), {}),
         ("boşluklu kaplama reddedilir", roof(material=" Kiremit"), {}),
         ("doğru üzerindeki saçak reddedilir", roof(pts=[P(0, 50), P(6, 50), P(12, 50)], slopes=[33.0] * 3), {}),
-        ("L biçimli saçak henüz reddedilir", roof(pts=[P(0, 50), P(10, 50), P(10, 54), P(4, 54), P(4, 60), P(0, 60)],
-                                                  slopes=[33.0] * 6), {}),
+        ("kendini kesen saçak reddedilir", roof(pts=[P(0, 50), P(6, 54), P(6, 50), P(0, 56)], slopes=[33.0] * 4), {}),
+        ("bir doğrudaki iki kenarın eğimi farklıysa reddedilir",
+         roof(pts=[P(0, 50), P(5, 50), P(10, 50), P(10, 56), P(0, 56)], slopes=[33.0, 45.0, 33.0, 33.0, 33.0]), {}),
+        ("bir doğrudaki kenarın biri kalkansa reddedilir",
+         roof(pts=[P(0, 50), P(5, 50), P(10, 50), P(10, 56), P(0, 56)], slopes=[33.0, None, 33.0, 33.0, 33.0]), {}),
         ("olmayan kat reddedilir", roof(arch={"level": "yok"}), {}),
         ("sonsuz baca yeri reddedilir", roof(parts=[CHIMNEY]), {"non_finite": {"roofs[0].parts[0].at.y": "NaN"}}),
         ("sonsuz pencere derinliği reddedilir", roof(parts=[WINDOW]), {"non_finite": {"roofs[0].parts[0].depth": "Infinity"}}),

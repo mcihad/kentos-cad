@@ -4,8 +4,8 @@
   [ifc-uyum.md](../../plan/ifc-uyum.md) IFC-06'nın gövde kısmı (§8 "Gövdeler"); uygulama sırasında B10. Bu ADR maddenin
   bütün adımlarını tutar; koddaki "docs/adr/8071 §N" atıfları bölümleri gösterir: §1 gerçek yay, §2 kaynaktan miktar,
   §3 kapalı gövde ve ilk kabul, §4 açıklığı kesilmiş gövde ve iki çıktı (IFC-06), §5 döşemede boşluk ve şaft, §6 eğimli
-  döşeme, §7 kapalı mahal hacmi, §8 çatının katmanları, §9 döner merdiven gerçek yayla. Kararların numarası bölümler
-  boyunca sürer. Ortak sınamalar ve sıradaki adımlar
+  döşeme, §7 kapalı mahal hacmi, §8 çatının katmanları, §9 döner merdiven gerçek yayla, §10 içe dönen saçak. Kararların
+  numarası bölümler boyunca sürer. Ortak sınamalar ve sıradaki adımlar
   numarasız son bölümlerdedir (yeni adım numaralı bölüm olarak araya girer).
 - **Bağlam:** ADR [8047](8047-ifc-building-export.md) (binanın IFC'si, kayıp listesi), [8042](8042-section-derived-from-a-section-mark.md)
   (kesit modeli), [0340](0340-wall-joins-and-edits.md) (duvar birleşimleri), [8040](8040-vertical-model.md) (duvarın
@@ -374,6 +374,49 @@ alanını (0,22 · 0,80 ve π · 0,1²) 10⁻⁹ içinde, hacim toplamını, yay
 `curved_ifc_check.py` iki dosyada `IfcStair` SPIRAL_STAIR, 38 yay parçası, IfcOpenShell'in yüzeyi kapalı, hacmi kapalı
 formla 1,04·10⁻⁶ içinde. Resim: `curved_screens`'in `5-3b-doner-merdiven-*`'i (zemin kat, 60°'den).
 
+## §10. İçe dönen saçak
+
+**Araştırma.**
+
+- **ADR 8044 §2, §10:** çatının her eğimli kenarı kendi düzlemini kaldırır; dışbükey saçakta yüzler düzlemlerin alt
+  zarfıdır (düz iskeletin çatısı); içe dönen (L, T biçimli) saçak bölünme olayları gerektirdiği için reddediliyordu.
+- **Aichholzer, Aurenhammer, Alberts, Gärtner (1995), "A novel type of skeleton for polygons":** düz iskelet ve çatı
+  modeli: kenarlar içe doğru eşit hızda yürür, bir noktanın yüksekliği yürüyen çizginin ona vardığı andır.
+- **Felkel ve Obdržálek (1998), "Straight skeleton implementation":** kenar olayı (kenar sıfırlanır, komşuları
+  birleşir) ve bölünme olayı (içe dönen köşe karşı kenara varır, çizgi ikiye ayrılır); algoritmanın bölünme sınaması
+  sonraki uygulama çalışmalarında kusurlu bulundu (Huber ve Held, "Theoretical and Practical Results on Straight
+  Skeletons of Planar Straight-Line Graphs", 2011; "On Implementing Straight Skeletons: Challenges and Experiences").
+- **Biedl, Held, Huber, Kaaser, Palfrader (2015), "Weighted straight skeletons in the plane", CGTA 48(2):** her kenarın
+  kendi hızıyla yürüdüğü ağırlıklı düz iskelet; eğimleri farklı yüzlü gerçek çatılar böyledir (Laycock ve Day, Kelly ve
+  Wonka); çizgide kendini kesme ve aynı doğruda farklı hızlar tanımı bozar.
+- **Bağımsız başvuru:** iki L'nin (kolları eşit ve farklı) yüzleri, alanları ve kotları elle çözüldü; dışbükey saçakta
+  iskelet, alt zarf yöntemiyle (başka bir yol) karşılaştırıldı.
+
+**Karar.**
+
+31. **İçe dönen saçakta yüzler ağırlıklı düz iskeletten** (`geom::roof_skeleton`): eğimli kenarın doğrusu çatı her metre
+    yükseldiğinde `1 / eğim` metre içeri yürür, kalkan yerinde durur; olaylar en erkenden: kenar sıfırlanır, içe dönen köşe
+    karşı kenara varır (çizgi bölünür), alanı kalmayan döngü mahyayla kapanır (iki köşe ya da sırt sırta kenarlar). Her
+    olaydan sonra bütün adaylar yeniden hesaplanır (köşe sayısının küpü; bir çatının birkaç düzinesi): bölünme kenarın o
+    anki parçasına göre sınanır. Her yüz kendi kenarının düzlemindedir; derenin türü iç köşeden inmesidir; mahya kotu en
+    yüksek düğümün. Dışbükey saçak bugünkü alt zarf yöntemiyle kalır (sonuçlar aynı, örnek çizimler değişmez).
+32. **Ret:** kendini kesen saçak (tam yön sınamasıyla, `orient2d`); aynı doğrudaki iki kenarın eğimi farklıysa (ya da
+    biri kalkansa): çatı orada basamak yapardı. "İçe dönük köşe" reddi kalktı; Öznitelikler'in "henüz hesaplanmıyor"
+    satırı da.
+33. **Planda ok** yüzün köşelerinin ortalamasında; içe dönen bir yüzde bu nokta dışarıda kalırsa kenarının ortasından
+    içeri, yüzün karşı kenarına giden yolun yarısında. Çatı penceresinin yüzü genel içerde-mi sınamasıyla bulunur.
+
+**Sınama.** `geom::roof_skeleton`'ın yedi sınaması (dikdörtgen kırma çatı, kalkanlı beşik, tek eğimli; eşit kollu L'nin
+ve kolları farklı L'nin elle çözülmüş yüz alanları 16, 4, 12, 8, 4, 12 ve 17, 4, 8, 11, 9, 15, kotları 2 ve 3; T; L'de
+iki eğim ve kalkanlar; her yüzün her noktası kendi düzleminde, yüzler birlikte saçağın alanı); `geom::roof`'ta
+`an_eaves_line_turning_in_has_a_valley` (altı yüz, bir dere, iki mahya, beş kırma, 0,66 m mahya, beş noktanın kotu,
+her yüzde ok; kendini kesen çizgi reddi) ve `on_a_convex_line_the_skeleton_is_the_lower_envelope` (altı dışbükey çizgi,
+karışık eğim ve kalkanlarla: yüz alanları ve köşe kotları alt zarfınkiyle 10⁻⁹ içinde aynı); uygulamada
+`roof_sections::an_l_roof_turns_in_with_a_valley_through_the_section_and_the_ifc` (kesit binasında L çatı: altı eğik
+plak, dere iç köşeye, B-B çatıyı çizer, IFC gövdesi kapalı ve hacmi L'nin alanı × 0,25); ortak durumlar
+(`cad.roofs.create`: L, kanatları kalkanlı T, L'de baca kabul; kendini kesen ve aynı doğruda farklı eğimli saçak
+reddi). Resimler: `l_roof_screens` (`.run/gui-evidence/ic-donen-sacak-8071/`: plan, güneybatı, kuzeydoğu).
+
 ## Ortak sınamalar
 
 - `cargo test -p kentos-ifc --lib` (45), `-p kentos-geometry-core` (1 117), `-p kentos-interaction wall` (81),
@@ -390,7 +433,7 @@ formla 1,04·10⁻⁶ içinde. Resim: `curved_screens`'in `5-3b-doner-merdiven-*
 - **IFC-06'nın kalanı:** gelişim seviyesi kanıtının müellif incelemesi kaydı (EK-9 formuyla, IFC-08 ve BIM-14);
   "sentetik örnek açık kural takımından uyarısız geçer" kabulü buildingSMART'ın doğrulama servisini ya da açık kural
   takımını ister: dosyayı servise yüklemek ya da kural takımını indirmek sahibin onayıyla.
-- **İçe dönen saçak** (L, T biçimli; ADR 8044 §10'un kalanı): ağırlıklı düz iskelet ve bağımsız başvurusuyla.
+- İçe dönen yüzde çatı penceresi: köşeleri yüzdeyse kabul ediliyor, kenarının dereyi aşıp aşmadığı sınanmıyor.
 - **Çatı yüz başına `IfcSlab`:** IFC 4.3'ün "her yüz için döşemelere ayrılabilir" yolu; katman takımı her yüze
   `IfcMaterialLayerSetUsage` ile; çatının kendi gövdesi o zaman kalkar.
 - Kiremit kaplamanın TS 5319 SN53 "seramik" taraması (kitaplığa girince); çatının tek kalınlığının da yüze dik ölçülmesi

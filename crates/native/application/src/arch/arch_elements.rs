@@ -1651,11 +1651,18 @@ pub(crate) fn roof_valid(r: &kentos_commands::RoofFields, at: &str) -> Result<()
     };
     match kentos_geometry_core::geom::roof::faces(&core, &spec) {
         Ok(_) => {}
-        Err(kentos_geometry_core::geom::roof::Problem::Concave) => {
+        Err(kentos_geometry_core::geom::roof::Problem::Crossing) => {
             return Err(fail(
                 codes::INVALID_ROOF,
-                "Saçak çizgisinin bir köşesi içe dönük (L ya da T biçimli); böyle bir çatı henüz çizilmiyor. \
-                 Dışbükey bir saçak çizin ya da çatıyı dışbükey parçalara bölün."
+                "Saçak çizgisi kendini kesiyor; kesişmeyen bir çizgi çizin.".into(),
+                &format!("{at}.pts"),
+            ));
+        }
+        Err(kentos_geometry_core::geom::roof::Problem::Collinear) => {
+            return Err(fail(
+                codes::INVALID_ROOF,
+                "Saçak çizgisinde aynı doğru üzerindeki iki kenarın eğimi farklı (ya da biri kalkan); çatı orada basamak \
+                 yapardı. İki kenarın eğimini eşitleyin ya da aradaki noktayı kaldırın."
                     .into(),
                 &format!("{at}.pts"),
             ));

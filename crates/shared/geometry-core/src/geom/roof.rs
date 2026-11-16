@@ -2,7 +2,8 @@
 //! planes: an edge with a slope (eğim: rise over run, per cent) lifts a plane from its line into the roof at that slope;
 //! an edge without one is a gable end (kalkan), where the roof stops at a wall standing up to it. Over a point inside
 //! the eaves the roof stands at the lowest of the planes there: their lower envelope, which for a convex eaves line is
-//! its straight skeleton's roof (each edge sloped or not, docs/adr/8044).
+//! its straight skeleton's roof (each edge sloped or not, docs/adr/8044); an eaves line that turns in (an L, a T) has
+//! its straight skeleton worked out event by event (`roof_skeleton`, docs/adr/8071 §10).
 //!
 //! - **Faces.** One for each sloping edge, where its plane is the lowest. Every edge sloping is a hip roof (kırma
 //!   çatı), two opposite ones a gable roof (beşik), one a shed (tek eğimli), none a flat roof (düz çatı).
@@ -12,8 +13,8 @@
 //! - **Plan** (Mimarlar Odası, Mimarlık Hizmetleri Şartnamesi 14.3.3 u, 14.5.3 w: "Meyiller, su toplama yerleri,
 //!   dereler ... gösterilir ve gerekli kotlar verilir"): the eaves and gable ends at the object's pen, ridges, hips and
 //!   valleys narrow, an arrow down each face with its slope ("%33"), the ridge's height ("+8.45").
-//! - **Not yet** (docs/adr/8044 §10): an eaves line that turns in (an L or a T): its straight skeleton needs split events.
-//!   [`faces`] refuses it ([`Problem::Concave`]).
+//! - **Refused:** an eaves line crossing itself ([`Problem::Crossing`]); two edges in one line whose slopes differ, where
+//!   the roof would step ([`Problem::Collinear`]).
 
 use crate::Vec2;
 use crate::block::{Piece, PieceStroke};
@@ -179,14 +180,9 @@ pub fn part_ring(pts: &[Vec2], spec: &RoofSpec, part: &Part) -> Option<Vec<Vec2>
     ])
 }
 
-/// Whether `p` lies inside the convex counter-clockwise `ring` or on its outline.
+/// Whether `p` lies inside the counter-clockwise `ring` (a face turning in too) or on its outline.
 fn inside(ring: &[Vec2], p: Vec2) -> bool {
-    let n = ring.len();
-    n >= 3
-        && (0..n).all(|i| {
-            let (a, b) = (ring[i], ring[(i + 1) % n]);
-            (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x) >= -EPS
-        })
+    ring.len() >= 3 && (on_ring(ring, p) || crate::geometry::point_in_polygon(p, ring))
 }
 
 /// A chimney's or a vent's top over ±0.00 (docs/adr/8044 §6): a chimney's its rise over the ridge's top (the roof's
@@ -269,8 +265,10 @@ pub enum Problem {
     Shape,
     /// No area.
     Degenerate,
-    /// The eaves turn in somewhere (docs/adr/8044 §10).
-    Concave,
+    /// The eaves line crosses itself.
+    Crossing,
+    /// Two edges in one line slope differently (or one is a gable end): the roof would step there.
+    Collinear,
 }
 
 fn area2(pts: &[Vec2]) -> f64 {
@@ -352,7 +350,7 @@ fn clip(ring: &[Vec2], f: impl Fn(Vec2) -> f64) -> Vec<Vec2> {
 }
 
 /// The eaves counter-clockwise with their edges, checked: at least three points, a slope for each edge, an area, no
-/// corner turning in.
+/// crossing.
 fn checked(pts: &[Vec2], spec: &RoofSpec) -> Result<(Vec<Vec2>, Edges), Problem> {
     if pts.len() < 3 || spec.slopes.len() != pts.len() {
         return Err(Problem::Shape);
@@ -361,28 +359,81 @@ fn checked(pts: &[Vec2], spec: &RoofSpec) -> Result<(Vec<Vec2>, Edges), Problem>
         return Err(Problem::Degenerate);
     }
     let (ring, edges) = ccw(pts, &spec.slopes);
+    if crosses(&ring) {
+        return Err(Problem::Crossing);
+    }
+    // Two edges running on in one line slope alike (or are both gable ends): else the roof would step between them.
     let n = ring.len();
     for i in 0..n {
         let (a, b, c) = (ring[(i + n - 1) % n], ring[i], ring[(i + 1) % n]);
-        let cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
-        if cross
-            < -EPS
-                * js_max(
-                    1.0,
-                    js_hypot(b.x - a.x, b.y - a.y) * js_hypot(c.x - b.x, c.y - b.y),
-                )
-        {
-            return Err(Problem::Concave);
+        let straight = crate::predicates::orient2d(a, b, c) == 0.0 && (b.x - a.x) * (c.x - b.x) + (b.y - a.y) * (c.y - b.y) > 0.0;
+        if straight && edges[(i + n - 1) % n].1 != edges[i].1 {
+            return Err(Problem::Collinear);
         }
     }
     Ok((ring, edges))
 }
 
-/// Its faces, one for each sloping edge whose plane is the lowest somewhere, in the edges' order as given; none for a
-/// flat roof (no edge sloping).
+/// Whether the counter-clockwise eaves turn out at every corner: their faces are then their planes' lower envelope.
+fn convex(ring: &[Vec2]) -> bool {
+    let n = ring.len();
+    (0..n).all(|i| {
+        let (a, b, c) = (ring[(i + n - 1) % n], ring[i], ring[(i + 1) % n]);
+        let cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
+        cross >= -EPS * js_max(1.0, js_hypot(b.x - a.x, b.y - a.y) * js_hypot(c.x - b.x, c.y - b.y))
+    })
+}
+
+/// Whether two edges of the ring cross or touch beyond the corner they share (exactly: `orient2d`).
+fn crosses(ring: &[Vec2]) -> bool {
+    use crate::predicates::orient2d;
+    let n = ring.len();
+    let side = |a: Vec2, b: Vec2, c: Vec2| {
+        let o = orient2d(a, b, c);
+        if o > 0.0 { 1 } else if o < 0.0 { -1 } else { 0 }
+    };
+    let on = |a: Vec2, b: Vec2, c: Vec2| {
+        c.x >= a.x.min(b.x) && c.x <= a.x.max(b.x) && c.y >= a.y.min(b.y) && c.y <= a.y.max(b.y)
+    };
+    let meet = |a: Vec2, b: Vec2, c: Vec2, d: Vec2| {
+        let (d1, d2, d3, d4) = (side(c, d, a), side(c, d, b), side(a, b, c), side(a, b, d));
+        (d1 * d2 < 0 && d3 * d4 < 0)
+            || (d1 == 0 && on(c, d, a))
+            || (d2 == 0 && on(c, d, b))
+            || (d3 == 0 && on(a, b, c))
+            || (d4 == 0 && on(a, b, d))
+    };
+    for i in 0..n {
+        for j in i + 1..n {
+            let (a, b) = (ring[i], ring[(i + 1) % n]);
+            let (c, d) = (ring[j], ring[(j + 1) % n]);
+            if j == i + 1 || (i == 0 && j == n - 1) {
+                // Neighbours share a corner: they cross only by folding back over each other.
+                let (shared, far_a, far_b) = if j == i + 1 { (b, a, d) } else { (a, b, c) };
+                if side(far_a, shared, far_b) == 0 {
+                    let (u, v) = (Vec2::new(far_a.x - shared.x, far_a.y - shared.y), Vec2::new(far_b.x - shared.x, far_b.y - shared.y));
+                    if u.x * v.x + u.y * v.y > 0.0 {
+                        return true;
+                    }
+                }
+                continue;
+            }
+            if meet(a, b, c, d) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Its faces, one for each sloping edge whose plane is the lowest somewhere (an eaves line turning in: where its edge's
+/// line reaches first as the roof rises), in the edges' order as given; none for a flat roof (no edge sloping).
 pub fn faces(pts: &[Vec2], spec: &RoofSpec) -> Result<Vec<Face>, Problem> {
     let (ring, edges) = checked(pts, spec)?;
     let n = ring.len();
+    if !convex(&ring) {
+        return skeleton_faces(&ring, &edges);
+    }
     let planes: Vec<(usize, f64, (f64, f64, f64))> = (0..n)
         .filter_map(|k| {
             let (i, s) = edges[k];
@@ -414,6 +465,31 @@ pub fn faces(pts: &[Vec2], spec: &RoofSpec) -> Result<Vec<Face>, Problem> {
     Ok(out)
 }
 
+/// An eaves line turning in: each sloping edge's face from the straight skeleton (docs/adr/8071 §10), its line moving
+/// `1 / slope` a metre of rise, a gable end's standing.
+fn skeleton_faces(ring: &[Vec2], edges: &Edges) -> Result<Vec<Face>, Problem> {
+    use crate::geom::roof_skeleton::{Fail, faces};
+    let speeds: Vec<f64> = edges.iter().map(|(_, s)| s.filter(|s| *s > 0.0).map_or(0.0, |s| 100.0 / s)).collect();
+    if speeds.iter().all(|v| *v == 0.0) {
+        return Ok(Vec::new());
+    }
+    let found = faces(ring, &speeds).map_err(|f| match f {
+        Fail::Collinear => Problem::Collinear,
+        Fail::Stuck => Problem::Degenerate,
+    })?;
+    let mut out: Vec<Face> = found
+        .into_iter()
+        .enumerate()
+        .filter_map(|(k, f)| {
+            let face: Vec<Vec2> = f?.into_iter().map(|(q, _)| q).collect();
+            let slope = edges[k].1?;
+            (face.len() >= 3 && area2(&face) / 2.0 > EPS).then_some(Face { edge: edges[k].0, ring: face, slope })
+        })
+        .collect();
+    out.sort_by_key(|f| f.edge);
+    Ok(out)
+}
+
 /// A face's plane: `(c, dx, dy)`, its top `c + dx·x + dy·y` metres over ±0.00.
 pub type Plane = (f64, f64, f64);
 
@@ -431,10 +507,22 @@ pub fn face_planes(pts: &[Vec2], spec: &RoofSpec) -> Result<Vec<(Face, Plane)>, 
         .collect())
 }
 
-/// The roof's height over its eaves at `p`: the lowest sloping plane's there; 0 for a flat roof.
+/// The roof's height over its eaves at `p`: the lowest sloping plane's there (an eaves line turning in: the plane of the
+/// face it is on, none outside them); 0 for a flat roof.
 pub fn height_at(pts: &[Vec2], spec: &RoofSpec, p: Vec2) -> Result<f64, Problem> {
     let (ring, edges) = checked(pts, spec)?;
     let n = ring.len();
+    if !convex(&ring) {
+        let faces = skeleton_faces(&ring, &edges)?;
+        return Ok(faces
+            .iter()
+            .find(|f| inside(&f.ring, p))
+            .and_then(|f| {
+                let k = edges.iter().position(|e| e.0 == f.edge)?;
+                Some(js_max(0.0, at(plane(ring[k], ring[(k + 1) % n], f.slope), p)))
+            })
+            .unwrap_or(0.0));
+    }
     Ok((0..n)
         .filter_map(|k| {
             edges[k]
@@ -606,6 +694,38 @@ fn text(p: Vec2, words: String, height: f64, rotation: f64, align: TextAlign) ->
     }
 }
 
+/// Where a face's arrow stands: its corners' mean, inside a face that turns out; in one that turns in (an eaves line's
+/// L or T) where that mean falls outside, halfway in from its edge's middle to its far side.
+fn face_middle(f: &Face, a: Vec2, b: Vec2, inward: Vec2) -> Vec2 {
+    let m = f.ring.len() as f64;
+    let c = Vec2::new(f.ring.iter().map(|q| q.x).sum::<f64>() / m, f.ring.iter().map(|q| q.y).sum::<f64>() / m);
+    if crate::geometry::point_in_polygon(c, &f.ring) {
+        return c;
+    }
+    let mid = Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
+    // The nearest of the face's other edges straight in from the middle.
+    let k = f.ring.len();
+    let reach = (0..k)
+        .filter_map(|i| {
+            let (p, q) = (f.ring[i], f.ring[(i + 1) % k]);
+            let e = Vec2::new(q.x - p.x, q.y - p.y);
+            let den = inward.x * e.y - inward.y * e.x;
+            if den.abs() <= EPS {
+                return None;
+            }
+            let (px, py) = (p.x - mid.x, p.y - mid.y);
+            let t = (px * e.y - py * e.x) / den;
+            let s = (px * inward.y - py * inward.x) / den;
+            (t > EPS && (0.0..=1.0).contains(&s)).then_some(t)
+        })
+        .fold(f64::INFINITY, js_min);
+    if reach.is_finite() {
+        Vec2::new(mid.x + inward.x * reach / 2.0, mid.y + inward.y * reach / 2.0)
+    } else {
+        c
+    }
+}
+
 /// Its pieces at 1:`scale`: its eaves and gable ends, its ridges, hips and valleys narrow; an arrow down each face
 /// from its middle with its slope beside it; its ridge's height at the highest point of its highest line. A roof that
 /// cannot be had draws its eaves alone.
@@ -642,11 +762,6 @@ pub(crate) fn pieces_at(pts: &[Vec2], spec: &RoofSpec, scale: f64, _level: Level
     let len = ARROW_MM * scale / 1000.0;
     let head = HEAD_MM * scale / 1000.0;
     for f in faces(pts, spec).unwrap_or_default() {
-        let m = f.ring.len() as f64;
-        let c = Vec2::new(
-            f.ring.iter().map(|q| q.x).sum::<f64>() / m,
-            f.ring.iter().map(|q| q.y).sum::<f64>() / m,
-        );
         // Down the face: from its edge's inward normal, backwards.
         let n = pts.len();
         let (a, b) = (pts[f.edge], pts[(f.edge + 1) % n]);
@@ -656,6 +771,7 @@ pub(crate) fn pieces_at(pts: &[Vec2], spec: &RoofSpec, scale: f64, _level: Level
         } else {
             Vec2::new((b.y - a.y) / l, -(b.x - a.x) / l)
         };
+        let c = face_middle(&f, a, b, inward);
         let down = Vec2::new(-inward.x, -inward.y);
         let tail = Vec2::new(c.x - down.x * len / 2.0, c.y - down.y * len / 2.0);
         let tip = Vec2::new(c.x + down.x * len / 2.0, c.y + down.y * len / 2.0);
@@ -1430,8 +1546,12 @@ mod tests {
         );
     }
 
+    /// An eaves line turning in (docs/adr/8071 §10): an L, both arms 4 m wide, at 33 %. Worked out by hand: six faces,
+    /// a valley from its inner corner (4, 4) up to (2, 2), its two ridges 2 m in, 0.66 over the eaves; a point 0.5 m
+    /// in from the inner edge 0.165 up; its plan draws every line and an arrow with its slope on each face, each arrow
+    /// on its own face. A line crossing itself is refused.
     #[test]
-    fn an_eaves_line_turning_in_is_not_drawn_yet() {
+    fn an_eaves_line_turning_in_has_a_valley() {
         let l = vec![
             Vec2::new(0.0, 0.0),
             Vec2::new(10.0, 0.0),
@@ -1445,9 +1565,34 @@ mod tests {
             base: 0.0,
             ..Default::default()
         };
-        assert_eq!(faces(&l, &s), Err(Problem::Concave));
-        // Its plan draws its eaves alone.
-        assert_eq!(pieces_at(&l, &s, 100.0, Level::Whole).len(), 1);
+        let f = faces(&l, &s).unwrap();
+        assert_eq!(f.len(), 6);
+        let total: f64 = f.iter().map(|x| area2(&x.ring) / 2.0).sum();
+        assert!((total - 64.0).abs() < 1e-9, "{total}");
+        assert!((ridge_rise(&l, &s).unwrap() - 0.66).abs() < 1e-9);
+        for (q, z) in [((2.0, 2.0), 0.66), ((7.0, 2.0), 0.66), ((7.0, 1.0), 0.33), ((6.0, 3.5), 0.165), ((2.0, 9.0), 0.33)] {
+            let got = height_at(&l, &s, Vec2::new(q.0, q.1)).unwrap();
+            assert!((got - z).abs() < 1e-9, "{q:?}: {got}");
+        }
+        let lines = lines(&l, &s).unwrap();
+        let valleys: Vec<&RoofLine> = lines.iter().filter(|x| x.kind == Line::Valley).collect();
+        assert_eq!(valleys.len(), 1, "{lines:?}");
+        assert!(same(valleys[0].a, Vec2::new(2.0, 2.0)) && same(valleys[0].b, Vec2::new(4.0, 4.0)), "{valleys:?}");
+        assert_eq!(lines.iter().filter(|x| x.kind == Line::Ridge).count(), 2, "{lines:?}");
+        assert_eq!(lines.iter().filter(|x| x.kind == Line::Hip).count(), 5, "{lines:?}");
+        let pieces = pieces_at(&l, &s, 100.0, Level::Whole);
+        let arrows: Vec<Vec2> = pieces
+            .iter()
+            .filter_map(|p| match &p.shape {
+                Shape::Text { text, p, .. } if text == "%33" => Some(*p),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(arrows.len(), 6);
+        // A line crossing itself (its two loops of unequal area).
+        let tie = vec![Vec2::new(0.0, 0.0), Vec2::new(6.0, 4.0), Vec2::new(6.0, 0.0), Vec2::new(0.0, 6.0)];
+        let s4 = RoofSpec { slopes: vec![Some(33.0); 4], ..Default::default() };
+        assert_eq!(faces(&tie, &s4), Err(Problem::Crossing));
     }
 
     #[test]
@@ -1479,5 +1624,41 @@ mod tests {
         assert_eq!(slope_words(32.5), "%32,5");
         assert_eq!(level_words(0.0), "±0.00");
         assert_eq!(level_words(-2.754), "-2.75");
+    }
+
+    /// On a convex eaves line the straight skeleton (docs/adr/8071 §10) is the planes' lower envelope, worked out the
+    /// other way: for several lines, slopes and gable ends, each face's area the same and each of its corners as high.
+    #[test]
+    fn on_a_convex_line_the_skeleton_is_the_lower_envelope() {
+        let v = |x: f64, y: f64| Vec2::new(x, y);
+        let cases: Vec<(Vec<Vec2>, Vec<Option<f64>>)> = vec![
+            (rect(12.0, 9.0), vec![Some(33.0); 4]),
+            (rect(12.0, 9.0), vec![Some(33.0), None, Some(45.0), None]),
+            (rect(12.0, 9.0), vec![Some(20.0), Some(35.0), Some(50.0), Some(25.0)]),
+            (vec![v(0.0, 0.0), v(8.0, -1.0), v(11.0, 4.0), v(6.0, 9.0), v(-1.0, 6.0)], vec![Some(30.0); 5]),
+            (vec![v(0.0, 0.0), v(8.0, -1.0), v(11.0, 4.0), v(6.0, 9.0), v(-1.0, 6.0)],
+             vec![Some(30.0), Some(45.0), None, Some(60.0), Some(25.0)]),
+            (vec![v(0.0, 0.0), v(10.0, 0.0), v(13.0, 3.0), v(10.0, 7.0), v(2.0, 8.0), v(-2.0, 4.0)],
+             vec![Some(40.0), Some(30.0), Some(30.0), Some(50.0), None, Some(35.0)]),
+        ];
+        for (pts, slopes) in cases {
+            let s = RoofSpec { slopes: slopes.clone(), ..Default::default() };
+            let envelope = faces(&pts, &s).unwrap();
+            let (ring, edges) = checked(&pts, &s).unwrap();
+            let skeleton = skeleton_faces(&ring, &edges).unwrap();
+            assert_eq!(envelope.len(), skeleton.len(), "{slopes:?}");
+            for (e, k) in envelope.iter().zip(&skeleton) {
+                assert_eq!(e.edge, k.edge);
+                let (ae, ak) = (area2(&e.ring) / 2.0, area2(&k.ring) / 2.0);
+                assert!((ae - ak).abs() < 1e-9, "{slopes:?} edge {}: {ae} by the envelope, {ak} by the skeleton", e.edge);
+                for q in &k.ring {
+                    let low = height_at(&pts, &s, *q).unwrap();
+                    let n = ring.len();
+                    let j = edges.iter().position(|x| x.0 == k.edge).unwrap();
+                    let mine = at(plane(ring[j], ring[(j + 1) % n], k.slope), *q);
+                    assert!((low - mine).abs() < 1e-9, "{slopes:?} edge {} at {q:?}: {mine}, the envelope {low}", k.edge);
+                }
+            }
+        }
     }
 }

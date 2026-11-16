@@ -43,6 +43,7 @@ pub mod arch;
 pub mod beam;
 pub mod railing;
 pub mod roof;
+pub(crate) mod roof_skeleton;
 pub mod column_join;
 pub mod casework;
 pub mod tag;

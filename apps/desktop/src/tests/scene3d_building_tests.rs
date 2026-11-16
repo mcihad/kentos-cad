@@ -1037,6 +1037,65 @@ fn roof_layers_screens() {
     }
 }
 
+/// The section building with an L roof over its 1. kat (docs/adr/8071 §10): 33 % on every edge, its eaves 50 cm out of
+/// the walls on the south and west and turning in at (6.0, 4.0).
+fn with_an_l_roof() -> kentos_commands::DocumentSnapshotV2 {
+    use kentos_native_application::{ExecutionContext, registry};
+    let mut doc = kentos_domain::Document::from_snapshot_v2(building()).expect("opens");
+    let l = [(-0.625, -0.625), (12.625, -0.625), (12.625, 4.0), (6.0, 4.0), (6.0, 9.625), (-0.625, 9.625)];
+    let pts: Vec<serde_json::Value> = l.iter().map(|(x, y)| serde_json::json!({"x": x, "y": y})).collect();
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.roofs.create",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"layerId": "0", "roofs": [{"pts": pts, "slopes": vec![33.0; 6], "arch": {"level": "k1"}}]}),
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    doc.to_snapshot_v2()
+}
+
+/// İçe dönen saçak in plan and in 3D (docs/adr/8071 §10): the L roof's eaves, ridges, hips, its valley and an arrow on
+/// each face, then the building from the south-west and the north-east. `.run/gui-evidence/ic-donen-sacak-8071/`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib scene3d_building_tests::l_roof_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn l_roof_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/ic-donen-sacak-8071");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 700.0), "koyu")] {
+        let mut app = open(with_an_l_roof());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        app.viewport.camera.fit(&kentos_render_wgpu::Bounds { min_x: -2.0, min_y: -2.0, max_x: 14.0, max_y: 11.0 }, 24.0);
+        shot(&mut app, "1-plan");
+        let _ = app.update(Message::Run("scene3d.view"));
+        send(&mut app, W::View(1));
+        shot(&mut app, "2-3b-guneybati");
+        send(&mut app, W::View(0));
+        shot(&mut app, "3-3b-kuzeydogu");
+        send(&mut app, W::Close);
+    }
+}
+
 /// Kiriş çizelgesi and Kaplama çizelgesi (docs/adr/8070 §11): the pergola's building with an asma tavan in its first
 /// ground storey room, the two schedules placed south of it. `.run/gui-evidence/eleman-cizelgeleri-8070/`:
 ///

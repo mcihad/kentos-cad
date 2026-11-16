@@ -23,18 +23,19 @@ if TYPE_CHECKING:
 
 class _RoofsCreate(LocalCommand[RoofsCreate, RoofsCreated, RoofsPlan]):
     """``cad.roofs.create`` v1. Çatı: Çatılar ekler; tek geri alma adımı “Çatı”. Her biri
-    saçak çizgisi (pts: en az 3, en çok 1000 nokta, kapalı, iki yönde de; her köşesi
-    dışa dönük — içe dönen köşeli saçak henüz çizilmez, invalid_roof), her kenarın eğimi
-    (slopes: pts[i]'den sonrakine kenarın yüzde eğimi, sıfırdan büyük, en çok %500; null
-    kalkan: hepsi eğimli kırma, karşılıklı ikisi beşik, biri tek eğimli, hiçbiri düz
-    çatı), kot farkı (offset: saçağın katının tepesinden — üstündeki katın döşemesinden
-    — farkı; en çok ±10 m), kalınlık (thickness: düşey ölçülen çatı katmanları; yoksa
-    0,25 m), saçak (overhang: saçağın duvarların dış yüzünden uzaklığı, 0–5 m; PAİY 42
-    1,00 m), kaplama (material; yoksa Kiremit), kat ve tadilat durumu (arch). Planda
-    saçak ve kalkanlar nesnenin kalemiyle, mahya, kırma ve dereler ince, her yüzde aşağı
-    bakan eğim oku ve yüzdesi (%33), mahyanın kotu (+7.49) çizilir (Mimarlar Odası
-    Mimarlık Hizmetleri Şartnamesi 14.3.3 u, 14.5.3 w). Katman açıkça verilir; kilitli
-    katmana yazılmaz, gizli katmana uyarıyla yazılır.
+    saçak çizgisi (pts: en az 3, en çok 1000 nokta, kapalı, iki yönde de, kendini
+    kesmeyen; içe dönen köşeli — L, T biçimli — saçakta yüzler düz iskeletle bulunur, iç
+    köşeden dere iner; aynı doğrudaki iki kenarın eğimi aynı olur, invalid_roof), her
+    kenarın eğimi (slopes: pts[i]'den sonrakine kenarın yüzde eğimi, sıfırdan büyük, en
+    çok %500; null kalkan: hepsi eğimli kırma, karşılıklı ikisi beşik, biri tek eğimli,
+    hiçbiri düz çatı), kot farkı (offset: saçağın katının tepesinden — üstündeki katın
+    döşemesinden — farkı; en çok ±10 m), kalınlık (thickness: düşey ölçülen çatı
+    katmanları; yoksa 0,25 m), saçak (overhang: saçağın duvarların dış yüzünden
+    uzaklığı, 0–5 m; PAİY 42 1,00 m), kaplama (material; yoksa Kiremit), kat ve tadilat
+    durumu (arch). Planda saçak ve kalkanlar nesnenin kalemiyle, mahya, kırma ve dereler
+    ince, her yüzde aşağı bakan eğim oku ve yüzdesi (%33), mahyanın kotu (+7.49) çizilir
+    (Mimarlar Odası Mimarlık Hizmetleri Şartnamesi 14.3.3 u, 14.5.3 w). Katman açıkça
+    verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
     """
     __slots__ = ()
     id = "cad.roofs.create"
@@ -59,18 +60,19 @@ class _RoofsCreate(LocalCommand[RoofsCreate, RoofsCreated, RoofsPlan]):
         expected: Expected | None = None,
     ) -> RoofsCreated:
         """Çatı: Çatılar ekler; tek geri alma adımı “Çatı”. Her biri saçak çizgisi (pts: en az
-        3, en çok 1000 nokta, kapalı, iki yönde de; her köşesi dışa dönük — içe dönen köşeli
-        saçak henüz çizilmez, invalid_roof), her kenarın eğimi (slopes: pts[i]'den sonrakine
-        kenarın yüzde eğimi, sıfırdan büyük, en çok %500; null kalkan: hepsi eğimli kırma,
-        karşılıklı ikisi beşik, biri tek eğimli, hiçbiri düz çatı), kot farkı (offset:
-        saçağın katının tepesinden — üstündeki katın döşemesinden — farkı; en çok ±10 m),
-        kalınlık (thickness: düşey ölçülen çatı katmanları; yoksa 0,25 m), saçak (overhang:
-        saçağın duvarların dış yüzünden uzaklığı, 0–5 m; PAİY 42 1,00 m), kaplama (material;
-        yoksa Kiremit), kat ve tadilat durumu (arch). Planda saçak ve kalkanlar nesnenin
-        kalemiyle, mahya, kırma ve dereler ince, her yüzde aşağı bakan eğim oku ve yüzdesi
-        (%33), mahyanın kotu (+7.49) çizilir (Mimarlar Odası Mimarlık Hizmetleri Şartnamesi
-        14.3.3 u, 14.5.3 w). Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana
-        uyarıyla yazılır.
+        3, en çok 1000 nokta, kapalı, iki yönde de, kendini kesmeyen; içe dönen köşeli — L,
+        T biçimli — saçakta yüzler düz iskeletle bulunur, iç köşeden dere iner; aynı
+        doğrudaki iki kenarın eğimi aynı olur, invalid_roof), her kenarın eğimi (slopes:
+        pts[i]'den sonrakine kenarın yüzde eğimi, sıfırdan büyük, en çok %500; null kalkan:
+        hepsi eğimli kırma, karşılıklı ikisi beşik, biri tek eğimli, hiçbiri düz çatı), kot
+        farkı (offset: saçağın katının tepesinden — üstündeki katın döşemesinden — farkı; en
+        çok ±10 m), kalınlık (thickness: düşey ölçülen çatı katmanları; yoksa 0,25 m), saçak
+        (overhang: saçağın duvarların dış yüzünden uzaklığı, 0–5 m; PAİY 42 1,00 m), kaplama
+        (material; yoksa Kiremit), kat ve tadilat durumu (arch). Planda saçak ve kalkanlar
+        nesnenin kalemiyle, mahya, kırma ve dereler ince, her yüzde aşağı bakan eğim oku ve
+        yüzdesi (%33), mahyanın kotu (+7.49) çizilir (Mimarlar Odası Mimarlık Hizmetleri
+        Şartnamesi 14.3.3 u, 14.5.3 w). Katman açıkça verilir; kilitli katmana yazılmaz,
+        gizli katmana uyarıyla yazılır.
 
         Args:
             doc: The drawing it works on.

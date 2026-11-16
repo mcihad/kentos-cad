@@ -556,12 +556,6 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
                     ));
                     geo.push(metres("Mahya yüksekliği", rise));
                 }
-                Err(kentos_geometry_core::geom::roof::Problem::Concave) => {
-                    geo.push(Row::text(
-                        "Mahya kotu",
-                        "İçe dönen köşeli saçak henüz hesaplanmıyor",
-                    ));
-                }
                 Err(_) => {}
             }
             geo.push(roof_length("Saçak", x.overhang, ArchField::Overhang));
