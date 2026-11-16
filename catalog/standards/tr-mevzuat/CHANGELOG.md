@@ -1,5 +1,16 @@
 # Değişiklikler
 
+## 0.3.1
+
+- **Her kuralın örnekleri** (`audits/<kural>.examples.json`, 20 örnek): kural, mimari olgular veri olarak verilip
+  sınanır. PAİY 29/1: 8 m² yatak odası hata, tablonun en azındaki piyesler bulgusuz. 29/3: 1.00 m'lik hol hata, 1.20
+  m'lik hol (sınırda) bulgusuz. BYKHY 4/i: 18 m çıkmaz koridor yağmurlamasız hata, yağmurlamayla (20 m) ve 12 m'de
+  bulgusuz. 48/2: salondan kapıya 24 m hata, 18 m bulgusuz, kapıya yolu olmayan mahal hata, 4 katlı konut binasında
+  (48/1) bulgusuz; iki katlı dairenin tek kapısı üst katta hata, üst kat net 72 m² hata, 65 m² bulgusuz. 48/3-4:
+  kapıdan tek yönde 22 m yağmurlamasız hata, yağmurlamayla (30 m) bulgusuz, çıkışa ulaşmayan kapı hata. 31/3 ve
+  33/6-b: kat çıkışı olmayan kat hata, çıkışa ulaşmayan mahal hata, hepsi ulaşınca bulgusuz. Eklentiler › Örnekleri
+  çalıştır ve `kentos kek test` çalıştırır; kuralların kodu değişmedi.
+
 ## 0.3.0
 
 - **`cikmaz-koridor`** (yeni): çıkmaz koridor (BYKHY 4/i, Ek-5/B). Türü koridor olan mahalin yürüyüşünün tek yön payı

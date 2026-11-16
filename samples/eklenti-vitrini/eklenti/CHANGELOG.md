@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 1.0.52 — 16 Kasım 2026
+
+- İki denetim kuralının örnekleri (`audits/yapi-no.examples.json`, `audits/parsel-cakisma.examples.json`): numarasız
+  yapı sıradaki numarayı ve düzeltmesini alır, numaralı yapıda bulgu yok; üst üste binen iki parsel 20 m² çakışma
+  hatası verir, komşu iki parselde bulgu yok. Eklentiler › Örnekleri çalıştır ve `kentos kek test` çalıştırır.
+
 ## 1.0.51 — 16 Kasım 2026
 
 - İki İşlemler aracı da (TAKS denetimi, Çekme mesafesi denetimi) `headless-python` bildirir: MCP'de ve KentOS'un

@@ -19,18 +19,17 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
-use kentos_extension_host::{Choice, Grant, Options, Registry, Source, SourceKind};
+use kentos_extension_tools::examples::Rule;
 use kentos_extension_tools::headless::{Headless, offer_with};
-use kentos_extension_tools::{Note, Python};
-use kentos_extensions::{Limits, Manifest, pack};
-use kentos_python_env::compat::compat;
-use kentos_python_env::extension::{self, Ready};
-use kentos_python_env::python::{self, Cause, InstallError};
-use kentos_python_env::settings::PythonSettings;
-use kentos_python_env::uv::{self, UvStatus};
+use kentos_extension_tools::{Library, Note, Plan, Python, run_in_pool, start_of};
+use kentos_python_env::process::Pool;
 use serde_json::{Value, json};
+
+use setup::{environment, install_into, python_of};
+
+mod setup;
 
 /// Why the test ended before its examples: the extension's (exit 1) or the computer's (exit 2).
 enum Stop {
@@ -158,11 +157,17 @@ pub(crate) fn run(folder: &Path, json: bool, install: bool) -> ExitCode {
         })
         .unwrap_or_default();
     report["notes"] = json!(notes);
-    let Some(examples) = examples else {
-        let said = "Araçların hiçbirinde örnek (examples) yok: eklenti doğrulandı ve ortamı hazırlandı, çalıştırılacak \
-                    örnek yok. Örnek aracın tanımına yazılır (kentos kek sdk --part tool).";
+    let Some(mut examples) = examples else {
+        let said = "Araçlarda ve denetim kurallarında örnek yok: eklenti doğrulandı ve ortamı hazırlandı, \
+                    çalıştırılacak örnek yok. Aracın örneği tanımında (examples), kuralınki kendi dosyasında \
+                    (entrypoints.audits[].examples; kentos kek sdk --part auditExamplesSchema).";
         return end(report, json, "passed", said, 0);
     };
+    for row in examples["examples"].as_array_mut().into_iter().flatten() {
+        if let Some(detail) = row["detail"].as_str() {
+            row["detail"] = json!(detail.replace(&installed, &own));
+        }
+    }
     if !json {
         println!("Örnekler:");
         for e in examples["examples"]
@@ -184,6 +189,10 @@ pub(crate) fn run(folder: &Path, json: bool, install: bool) -> ExitCode {
                 .unwrap_or_default()
             {
                 println!("      • {}", p.as_str().unwrap_or_default());
+            }
+            // A rule's code failed: its traceback, the files named where the author edits them.
+            if let Some(detail) = e["detail"].as_str() {
+                println!("        {}", detail.trim_end().replace('\n', "\n        "));
             }
         }
         if !notes.is_empty() {
@@ -218,159 +227,6 @@ fn end(mut report: Value, json: bool, status: &str, said: &str, code: u8) -> Exi
     ExitCode::from(code)
 }
 
-/// The folder packed and installed into a registry of the test's own under `root`, enabled, everything it asks for
-/// granted, the organisation's policy as the computer's; its package folder.
-fn install_into(
-    root: &Path,
-    folder: &Path,
-    files: &std::collections::BTreeMap<String, Vec<u8>>,
-    manifest: &Manifest,
-) -> Result<PathBuf, Stop> {
-    let packed = pack(files, &Limits::default()).map_err(|p| {
-        Stop::Failed(format!(
-            "Paketlenemedi: {}",
-            p.first().map(|p| p.to_string()).unwrap_or_default()
-        ))
-    })?;
-    let host = kentos_extensions::Host::this(
-        kentos_extensions::version::Version::parse(env!("CARGO_PKG_VERSION"))
-            .unwrap_or_else(|| kentos_extensions::version::Version::new(0, 1, 0)),
-    );
-    let options = Options {
-        policy: kentos_extension_host::places::load_policy(
-            &kentos_extension_host::places::policy_path(),
-        ),
-        ..Options::default()
-    };
-    let mut registry = Registry::open(root, host, options)
-        .map_err(|p| Stop::CouldNot(format!("Sınamanın kayıt defteri açılamadı: {p}")))?;
-    let choice = Choice {
-        grant: Grant {
-            capabilities: manifest.capabilities().into_iter().collect(),
-            python: true,
-        },
-        enable: true,
-        replace_source: false,
-    };
-    let source = Source {
-        kind: SourceKind::DeveloperFolder,
-        location: folder.display().to_string(),
-    };
-    registry
-        .install(&packed.bytes, &source, &choice)
-        .map_err(|problems| {
-            let said: Vec<String> = problems.iter().map(ToString::to_string).collect();
-            Stop::Failed(format!("Kurulamadı: {}", said.join("; ")))
-        })?;
-    registry
-        .package_dir(&manifest.id)
-        .ok_or_else(|| Stop::Failed("Kuruldu ama paket klasörü bulunamadı.".to_owned()))
-}
-
-/// KentOS's Python as the desktop finds it (the Python folder, uv as chosen or found), installed with uv when
-/// `install` and it is not there. Not the desktop's on/off choice: the command is its caller's own.
-fn python_of(install: bool, tell: &dyn Fn(String)) -> Result<Python, Stop> {
-    let root = kentos_python_env::places::root().ok_or_else(|| {
-        Stop::CouldNot(
-            "Bu bilgisayarda kullanıcı veri klasörü yok (XDG_DATA_HOME ya da HOME); KENTOS_PYTHON_DIR ile bir \
-             klasör verin."
-                .to_owned(),
-        )
-    })?;
-    let chosen = PythonSettings::load(&root);
-    let uv = match uv::detect(chosen.uv_path.as_deref().map(Path::new)) {
-        UvStatus::Found { path, .. } => path,
-        other => return Err(Stop::CouldNot(other.words())),
-    };
-    let need = &compat().python;
-    let installed = || python::installed(&uv, &root, &need.range).map_err(Stop::CouldNot);
-    let interpreter = match installed()? {
-        Some(found) => found,
-        None if install => {
-            tell(format!(
-                "KentOS'un Python'u kuruluyor: Python {} ({}) …",
-                need.install, need.size
-            ));
-            python::install(
-                &uv,
-                &root,
-                &need.install,
-                &AtomicBool::new(false),
-                &mut |_| {},
-            )
-            .map_err(|e| Stop::CouldNot(e.words(&need.install)))?;
-            installed()?.ok_or_else(|| {
-                Stop::CouldNot("Python kuruldu ama uv onu bulamadı; yeniden deneyin.".to_owned())
-            })?
-        }
-        None => {
-            return Err(Stop::CouldNot(format!(
-                "KentOS'un Python'u kurulu değil ({}): KentOS masaüstünde Uygulama ayarları › Python ve \
-                 eklentiler'den kurun ya da komutu --install-python ile çalıştırın (uv Python {} sürümünü indirir; {}).",
-                root.display(),
-                need.install,
-                need.size
-            )));
-        }
-    };
-    Ok(Python {
-        interpreter,
-        root,
-        uv,
-    })
-}
-
-/// The installed package's environment from its lock, prepared as the desktop prepares it (a ready one used as it
-/// is), and whether it was made now. The lock's fault is the extension's; the network's, the disk's and uv's are the
-/// computer's.
-fn environment(
-    python: &Python,
-    package: &Path,
-    manifest: &Manifest,
-    project_file: &str,
-    lock_file: &str,
-) -> Result<(Ready, bool), Stop> {
-    let version = manifest.version.to_string();
-    let key = extension::key_for(
-        package,
-        lock_file,
-        &manifest.id,
-        &version,
-        &python.interpreter,
-        &[],
-    )
-    .map_err(Stop::Failed)?;
-    let wheel =
-        kentos_python_env::sdk::find(&kentos_python_env::sdk::dirs(), env!("CARGO_PKG_VERSION"))
-            .map_err(Stop::CouldNot)?;
-    let made = extension::ready(&python.root, &key).is_none();
-    extension::prepare(
-        &python.uv,
-        &python.root,
-        &python.interpreter,
-        &wheel,
-        package,
-        (project_file, lock_file),
-        &key,
-        &AtomicBool::new(false),
-        &mut |_| {},
-    )
-    .map_err(|e| {
-        let words = format!(
-            "Eklentinin Python ortamı hazırlanamadı: {}",
-            extension::prepare_words(&e)
-        );
-        match e {
-            InstallError::Failed {
-                cause: Cause::Other | Cause::Unavailable,
-                ..
-            } => Stop::Failed(words),
-            _ => Stop::CouldNot(words),
-        }
-    })
-    .map(|ready| (ready, made))
-}
-
 /// The examples of extension `ext`'s tools run as the desktop runs them, in its version's process, every tool listed
 /// (`Headless::every_runtime`); the report, none when no tool gives an example. What a run notes goes to `heard`.
 fn examples_of(
@@ -381,10 +237,10 @@ fn examples_of(
 ) -> Option<Value> {
     kentos_processing::command::register();
     let into = Arc::clone(heard);
-    let (root, given) = (root.to_path_buf(), python.clone());
+    let (registry, given) = (root.to_path_buf(), python.clone());
     offer_with(move || {
         Headless::new(
-            Some(root),
+            Some(registry),
             Some(given.root.clone()),
             Arc::new(move |n| {
                 if let Ok(mut heard) = into.lock() {
@@ -396,7 +252,16 @@ fn examples_of(
         .every_runtime()
     });
     let tools = kentos_extension_tools::examples::of(ext);
-    if tools.is_empty() {
+    let pool = Arc::new(Pool::default());
+    let rules = match rules_of(root, python, ext, &pool) {
+        Ok(rules) => rules,
+        Err(why) => {
+            return Some(
+                json!({ "status": "failed", "failed": 1, "summary": why, "examples": [] }),
+            );
+        }
+    };
+    if tools.is_empty() && rules.is_empty() {
         return None;
     }
     let head = json!({ "kind": "examples", "extension": { "id": ext } });
@@ -404,11 +269,58 @@ fn examples_of(
     let report = std::thread::Builder::new()
         .name("kentos-kek-test".into())
         .stack_size(kentos_extension_tools::calls::STACK)
-        .spawn(move || kentos_extension_tools::examples::run(&tools, head, &AtomicBool::new(false)))
+        .spawn(move || {
+            kentos_extension_tools::examples::run(&tools, &rules, head, &AtomicBool::new(false))
+        })
         .ok()
         .and_then(|t| t.join().ok());
     kentos_extension_tools::headless::close();
+    pool.close_all();
     Some(report.unwrap_or_else(|| {
         json!({ "status": "failed", "failed": 1, "summary": "Örnek koşusu beklenmedik biçimde durdu.", "examples": [] })
     }))
+}
+
+/// How long a rule's example may take, as a rule on the desktop.
+const RULE_TIMEOUT: Duration = Duration::from_secs(120);
+
+/// The audit rules of `ext` installed in the test's registry `root` that give examples (docs/adr/8057 §75), each run
+/// in its version's process in `pool` as the desktop runs it; why not, when a rule's examples cannot be read.
+fn rules_of(
+    root: &Path,
+    python: &Python,
+    ext: &str,
+    pool: &Arc<Pool>,
+) -> Result<Vec<Rule>, String> {
+    let registry = kentos_extension_host::places::open_to_read(root, env!("CARGO_PKG_VERSION"))
+        .map_err(|p| format!("Sınamanın kayıt defteri okunamadı: {p}"))?;
+    let mut rules = Vec::new();
+    for (audit, read) in kentos_extension_tools::examples::rule_examples(&registry, ext) {
+        let examples =
+            read.map_err(|why| format!("“{}” kuralının örnekleri okunamadı: {why}", audit.id))?;
+        let plan = Plan::of(&registry, ext, &audit.id, &audit.handler)
+            .ok_or_else(|| format!("“{}” kuralı kurulu değil.", audit.id))?;
+        let (pool, python) = (Arc::clone(pool), python.clone());
+        rules.push(Rule {
+            id: format!("ext.{ext}.{}", audit.id),
+            title: audit.title.clone(),
+            examples,
+            run: Box::new(move |invoke| {
+                let start = || {
+                    kentos_extension_host::verify_installed(&plan.source, &plan.digest)?;
+                    start_of(&plan, &python, Library::IfFound)
+                };
+                run_in_pool(
+                    &pool,
+                    &plan.key(),
+                    &plan,
+                    &start,
+                    invoke,
+                    RULE_TIMEOUT,
+                    &|| false,
+                )
+            }),
+        });
+    }
+    Ok(rules)
 }

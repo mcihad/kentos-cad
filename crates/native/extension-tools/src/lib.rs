@@ -27,7 +27,7 @@ pub mod synthetic;
 
 pub use note::Note;
 pub use plan::{Library, Listed, Plan, Python, environment_of, read_tools, start_of};
-pub use run::run_tool;
+pub use run::{answered, run_in_pool, run_tool};
 
 #[cfg(all(test, unix))]
 mod tests;

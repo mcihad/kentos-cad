@@ -14,6 +14,8 @@ publish.workspace = true
 kentos-commands = { path = "../../shared/commands", default-features = false }
 kentos-domain = { path = "../domain" }
 kentos-extension-host = { path = "../extension-host" }
+# An audit rule's examples, read from its package (docs/adr/8057 §75).
+kentos-extensions = { path = "../../shared/extensions" }
 # A built-in tool an extension's code asks for runs on a drawing of its own (docs/adr/8057 §47): CBS's processing
 # commands, the only discipline extensions' tools belong to.
 kentos-headless = { path = "../headless", default-features = false, features = ["mod-gis"] }
@@ -22,6 +24,3 @@ kentos-project = { path = "../project" }
 kentos-python-env = { path = "../python-env" }
 serde_json = { workspace = true }
 
-[dev-dependencies]
-# The tests' extension is the SDK's own blueprint, installed into a registry of their own.
-kentos-extensions = { path = "../../shared/extensions" }

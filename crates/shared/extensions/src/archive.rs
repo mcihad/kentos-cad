@@ -745,6 +745,19 @@ fn check_references(manifest: &Manifest, files: &BTreeMap<String, Vec<u8>>, out:
                     ));
                 }
             }
+            FileRole::AuditExamples => {
+                // Read without running anything (audit_examples.rs): what the rule is given, the findings it must give.
+                let rule = manifest
+                    .entrypoints
+                    .audits
+                    .iter()
+                    .find(|a| a.examples.as_deref() == Some(path))
+                    .map(|a| a.id.as_str())
+                    .unwrap_or_default();
+                if let Err(found) = crate::audit_examples::read(path, rule, data) {
+                    out.problems.extend(found);
+                }
+            }
             FileRole::PythonProject => python.0 = Some(path.to_owned()),
             FileRole::PythonLock => python.1 = Some(path.to_owned()),
         }

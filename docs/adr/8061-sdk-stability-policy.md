@@ -20,7 +20,7 @@ Kararlı olan, bir eklentinin dokunduğu her şeydir:
 |---|---|
 | `kentos.ext` (Python) | `__all__`'daki adlar; sınıfların genel yöntem ve alanları; **argüman adları, sırası, varsayılanları**, dönüş türü ve anlamı (`sdk/kentos_ext.pyi` bunun yazılı hâli, `python/kentos/ext.py`'den üretilir, sapma test kırmızısı) |
 | `kentos.ui_panel` (Python) | bileşen işlevleri ve argümanları (panelin şemasından üretilir) |
-| JSON biçimleri | `kentos.extension` (manifest), `kentos.processingTool`, `kentos.ui.panel`, `kentos.layerSchema`, denetim olguları: her biri `schemaVersion` 1; JSON Schema'ları SDK'nın yanında |
+| JSON biçimleri | `kentos.extension` (manifest), `kentos.processingTool`, `kentos.ui.panel`, `kentos.layerSchema`, denetim olguları, kuralın örnekleri (`kentos.auditExamples`, ADR 8057 §75): her biri `schemaVersion` 1; JSON Schema'ları SDK'nın yanında |
 | Davranış | panel bileşenlerinin davranış tablosu (ADR 8057 §71), komutun `ctx.params` değerlerinin biçimi, doğrulama ve ret **kodları** (`python_runtime_install`, `manifest_utility_tab` …) |
 | Ajan yüzeyi | `extension.*` araçlarının adları, argümanları ve sonuç şemaları; `kentos://sdk/ai-kek-pack` ve bölümlerinin adları |
 | Komut satırı | `kentos kek` alt komutları, bayrakları ve çıkış kodları (0 tamam, 1 ret, 2 yanlış komut ya da okunamayan dosya) |

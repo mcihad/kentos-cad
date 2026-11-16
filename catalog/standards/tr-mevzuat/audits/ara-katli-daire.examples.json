@@ -1,0 +1,492 @@
+{
+  "format": "kentos.auditExamples",
+  "schemaVersion": 1,
+  "examples": [
+    {
+      "title": "İki katlı dairenin tek kapısı üst katta",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "k1",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "height": 3.0
+          },
+          {
+            "id": "k2",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "height": 3.0
+          },
+          {
+            "id": "k3",
+            "name": "3. kat",
+            "elevation": 9.0,
+            "height": 3.0
+          },
+          {
+            "id": "k4",
+            "name": "4. kat",
+            "elevation": 12.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          },
+          {
+            "level": "k1",
+            "count": 1
+          },
+          {
+            "level": "k2",
+            "count": 1
+          },
+          {
+            "level": "k3",
+            "count": 1
+          },
+          {
+            "level": "k4",
+            "count": 1
+          }
+        ],
+        "rooms": [],
+        "units": [
+          {
+            "id": "d1",
+            "number": "1",
+            "name": null,
+            "kind": "unit",
+            "nature": "Daire",
+            "annexOf": null,
+            "dwelling": true,
+            "gross": 120.0,
+            "net": 100.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 120.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 60.0,
+                "net": 50.0
+              },
+              {
+                "level": "k1",
+                "gross": 60.0,
+                "net": 50.0
+              }
+            ]
+          },
+          {
+            "id": "d2",
+            "number": "2",
+            "name": null,
+            "kind": "unit",
+            "nature": "Daire",
+            "annexOf": null,
+            "dwelling": true,
+            "gross": 90.0,
+            "net": 75.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 90.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "k2",
+                "gross": 90.0,
+                "net": 75.0
+              }
+            ]
+          },
+          {
+            "id": "ortak",
+            "number": "O",
+            "name": null,
+            "kind": "common",
+            "nature": null,
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 30.0,
+            "net": 25.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 30.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 30.0,
+                "net": 25.0
+              }
+            ]
+          }
+        ],
+        "doors": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000010",
+            "unit": "d1",
+            "level": "k1",
+            "at": [
+              0.0,
+              0.0
+            ],
+            "exit": {
+              "length": 8.0,
+              "oneWay": 8.0,
+              "exits": 1,
+              "path": []
+            },
+            "intoStair": false
+          }
+        ],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 1,
+        "has": [
+          {
+            "severity": "error",
+            "message": "dairenin tek kapısı üst katta"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Kapı altta, üst kat net 72 m² (ayrı çıkışsız en çok 70 m²)",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "k1",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "height": 3.0
+          },
+          {
+            "id": "k2",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "height": 3.0
+          },
+          {
+            "id": "k3",
+            "name": "3. kat",
+            "elevation": 9.0,
+            "height": 3.0
+          },
+          {
+            "id": "k4",
+            "name": "4. kat",
+            "elevation": 12.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          },
+          {
+            "level": "k1",
+            "count": 1
+          },
+          {
+            "level": "k2",
+            "count": 1
+          },
+          {
+            "level": "k3",
+            "count": 1
+          },
+          {
+            "level": "k4",
+            "count": 1
+          }
+        ],
+        "rooms": [],
+        "units": [
+          {
+            "id": "d1",
+            "number": "1",
+            "name": null,
+            "kind": "unit",
+            "nature": "Daire",
+            "annexOf": null,
+            "dwelling": true,
+            "gross": 140.0,
+            "net": 122.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 140.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 60.0,
+                "net": 50.0
+              },
+              {
+                "level": "k1",
+                "gross": 80.0,
+                "net": 72.0
+              }
+            ]
+          },
+          {
+            "id": "d2",
+            "number": "2",
+            "name": null,
+            "kind": "unit",
+            "nature": "Daire",
+            "annexOf": null,
+            "dwelling": true,
+            "gross": 90.0,
+            "net": 75.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 90.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "k2",
+                "gross": 90.0,
+                "net": 75.0
+              }
+            ]
+          },
+          {
+            "id": "ortak",
+            "number": "O",
+            "name": null,
+            "kind": "common",
+            "nature": null,
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 30.0,
+            "net": 25.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 30.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 30.0,
+                "net": 25.0
+              }
+            ]
+          }
+        ],
+        "doors": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000010",
+            "unit": "d1",
+            "level": "zemin",
+            "at": [
+              0.0,
+              0.0
+            ],
+            "exit": {
+              "length": 8.0,
+              "oneWay": 8.0,
+              "exits": 1,
+              "path": []
+            },
+            "intoStair": false
+          }
+        ],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 1,
+        "has": [
+          {
+            "severity": "error",
+            "message": "üst katta kapı yok ve net alanı 72.00 m²"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Kapı altta, üst kat 65 m²: bulgu yok",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "k1",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "height": 3.0
+          },
+          {
+            "id": "k2",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "height": 3.0
+          },
+          {
+            "id": "k3",
+            "name": "3. kat",
+            "elevation": 9.0,
+            "height": 3.0
+          },
+          {
+            "id": "k4",
+            "name": "4. kat",
+            "elevation": 12.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          },
+          {
+            "level": "k1",
+            "count": 1
+          },
+          {
+            "level": "k2",
+            "count": 1
+          },
+          {
+            "level": "k3",
+            "count": 1
+          },
+          {
+            "level": "k4",
+            "count": 1
+          }
+        ],
+        "rooms": [],
+        "units": [
+          {
+            "id": "d1",
+            "number": "1",
+            "name": null,
+            "kind": "unit",
+            "nature": "Daire",
+            "annexOf": null,
+            "dwelling": true,
+            "gross": 125.0,
+            "net": 108.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 125.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 60.0,
+                "net": 50.0
+              },
+              {
+                "level": "k1",
+                "gross": 65.0,
+                "net": 58.0
+              }
+            ]
+          },
+          {
+            "id": "d2",
+            "number": "2",
+            "name": null,
+            "kind": "unit",
+            "nature": "Daire",
+            "annexOf": null,
+            "dwelling": true,
+            "gross": 90.0,
+            "net": 75.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 90.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "k2",
+                "gross": 90.0,
+                "net": 75.0
+              }
+            ]
+          },
+          {
+            "id": "ortak",
+            "number": "O",
+            "name": null,
+            "kind": "common",
+            "nature": null,
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 30.0,
+            "net": 25.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 30.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 30.0,
+                "net": 25.0
+              }
+            ]
+          }
+        ],
+        "doors": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000010",
+            "unit": "d1",
+            "level": "zemin",
+            "at": [
+              0.0,
+              0.0
+            ],
+            "exit": {
+              "length": 8.0,
+              "oneWay": 8.0,
+              "exits": 1,
+              "path": []
+            },
+            "intoStair": false
+          }
+        ],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 0
+      }
+    }
+  ]
+}

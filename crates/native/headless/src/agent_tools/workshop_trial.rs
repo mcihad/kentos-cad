@@ -53,9 +53,10 @@ pub(super) fn tool() -> Tool {
                       paneller raporda. Pencerelerin (ctx.dialog, ctx.confirm) cevapları dialogs ile sırayla verilir, \
                       cevabı verilmeyen İptal sayılır; dosya seçen pencere denemede hep İptal'dir. auditAfter: true \
                       ile kurallar bütün adımlardan sonra son çizimde yeniden çalışır (auditsAfter): bir düzeltme \
-                      komutunun bulguyu kapattığı böyle görülür. examples: true ile araçların tanımındaki \
-                      örnekler kendi çizimlerinde çalışır ve beklenenle karşılaştırılır (features gerekmez). Eklenti \
-                      kurulu, etkin ve Python ortamı hazır olmalı."
+                      komutunun bulguyu kapattığı böyle görülür. examples: true ile araçların tanımındaki ve \
+                      kuralların örnek dosyasındaki (entrypoints.audits[].examples) örnekler kendi çizimlerinde \
+                      çalışır ve beklenenle karşılaştırılır (features gerekmez). Eklenti kurulu, etkin ve Python \
+                      ortamı hazır olmalı."
             .into(),
         input: object(
             json!({
@@ -112,8 +113,8 @@ pub(super) fn tool() -> Tool {
                                 "description": "true: kurallar adımlardan sonra son çizimde yeniden çalışır \
                                                 (auditsAfter)" },
                 "examples": { "type": "boolean",
-                              "description": "true: araçların tanımındaki örnekleri (examples) çalıştırıp beklenenle \
-                                              karşılaştırır; features gerekmez" }
+                              "description": "true: araçların ve kuralların örneklerini (examples) çalıştırıp \
+                                              beklenenle karşılaştırır; features gerekmez" }
             }),
             &["id"],
         ),

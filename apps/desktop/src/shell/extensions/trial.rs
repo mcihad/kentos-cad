@@ -37,7 +37,7 @@ pub(crate) use drawing::{Synthetic, synthetic};
 use steps::{Rights, Step};
 
 /// How long a rule may take in a trial: as on the drawing.
-const RULE_TIMEOUT: Duration = Duration::from_secs(120);
+pub(super) const RULE_TIMEOUT: Duration = Duration::from_secs(120);
 
 /// The last trial: while it runs, what stops it; once it ran, its report.
 #[derive(Clone, Debug)]

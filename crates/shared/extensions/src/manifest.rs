@@ -360,6 +360,10 @@ pub struct AuditEntry {
     /// The program whose audit it joins.
     pub domain: Module,
     pub handler: String,
+    /// Its examples (`audits/<id>.examples.json`, `kentos.auditExamples` 1): what it is given and the findings it must
+    /// give, run by Örnekleri çalıştır and `kentos kek test` (docs/adr/8057 §75).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub examples: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -801,6 +805,8 @@ pub enum FileRole {
     PanelDefinition,
     Form,
     GeoPackage,
+    /// An audit rule's examples (`kentos.auditExamples` 1).
+    AuditExamples,
 }
 
 /// A file the manifest names: where, which and what.
@@ -2455,6 +2461,15 @@ impl Manifest {
                 &x.definition,
                 FileRole::PanelDefinition,
             );
+        }
+        for (i, x) in e.audits.iter().enumerate() {
+            if let Some(path) = &x.examples {
+                add(
+                    format!("/entrypoints/audits/{i}/examples"),
+                    path,
+                    FileRole::AuditExamples,
+                );
+            }
         }
         for (i, x) in e.forms.iter().enumerate() {
             add(

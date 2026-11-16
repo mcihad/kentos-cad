@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.vitrin",
-  "version": "1.0.51",
+  "version": "1.0.52",
   "name": "Eklenti Vitrini",
   "icon": "assets/vitrin.svg",
   "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",
@@ -191,13 +191,15 @@
         "id": "yapi-no",
         "title": "Yapı numarası",
         "domain": "cbs",
-        "handler": "vitrin.logic:yapi_no"
+        "handler": "vitrin.logic:yapi_no",
+        "examples": "audits/yapi-no.examples.json"
       },
       {
         "id": "parsel-cakisma",
         "title": "Parsel çakışması",
         "domain": "cbs",
-        "handler": "vitrin.logic:parsel_cakisma"
+        "handler": "vitrin.logic:parsel_cakisma",
+        "examples": "audits/parsel-cakisma.examples.json"
       }
     ],
     "expressions": [

@@ -7,6 +7,13 @@
           "$ref": "#/$defs/Module",
           "description": "The program whose audit it joins."
         },
+        "examples": {
+          "description": "Its examples (`audits/<id>.examples.json`, `kentos.auditExamples` 1): what it is given and the findings it must\ngive, run by Örnekleri çalıştır and `kentos kek test` (docs/adr/8057 §75).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "handler": {
           "type": "string"
         },

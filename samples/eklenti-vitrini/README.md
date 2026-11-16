@@ -99,10 +99,11 @@ sonraki çalıştırmada onu alır.
 - Bir eklentinin hatası eklentinin günlüğüne (`<eklenti klasörü>/logs/tr.ornek.vitrin.jsonl`) iz kaydıyla yazılır.
 - Paketlemeden önce `kentos kek verify samples/eklenti-vitrini/eklenti` (ajanlarda `extension.verify`): paket, Python
   işlevlerinin `@ext` işaretleri ve tehlikeli çağrılar; her bulgu dosyası, satırı ve ne yazılacağıyla.
-- Araçların örnekleri pencere açmadan: `kentos kek test samples/eklenti-vitrini/eklenti` doğrular, geçici bir kayıt
-  defterine kurar, Python ortamını kilidinden hazırlar ve iki aracın örneğini çalıştırır ("2 örneğin hepsi geçti.", çıkış
-  0; kalan örnek nedeni ve kodun iz kaydıyla, çıkış 1). Sürekli tümleştirmede `--install-python` KentOS'un Python'unu uv
-  ile kurar.
+- Araçların ve kuralların örnekleri pencere açmadan: `kentos kek test samples/eklenti-vitrini/eklenti` doğrular, geçici
+  bir kayıt defterine kurar, Python ortamını kilidinden hazırlar ve iki aracın ve iki kuralın örneklerini çalıştırır
+  ("6 örneğin hepsi geçti.", çıkış 0; kalan örnek nedeni ve kodun iz kaydıyla, çıkış 1). Kuralın örnekleri kendi
+  dosyasındadır (`eklenti/audits/yapi-no.examples.json`): nesneler ya da mimari olgular ve beklenen bulgular. Sürekli
+  tümleştirmede `--install-python` KentOS'un Python'unu uv ile kurar.
 - Yeni bir eklentiye Vitrin'i kopyalayarak değil iskeletle başlayın: `kentos kek new KLASÖR --id … --name … --with
   command,processing,audit,expression,mapTool` (ajanlarda `extension.blueprint`): doğrulamadan sorunsuz geçer.
 - SDK'nın rehberi ve `kentos.ext` imzaları: `kentos kek sdk` (`--json` paketin tamamı; ajanlarda `extension.sdk`, MCP'de

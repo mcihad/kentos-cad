@@ -139,7 +139,7 @@ impl PoolJob {
         invoke["local"] = json!(self.plan.local);
         invoke["handler"] = json!(self.plan.handler);
         invoke["document"] = json!(document);
-        match self.pool.run_answering(
+        kentos_extension_tools::answered(self.pool.run_answering(
             key,
             &|| start_of(&self.plan, &self.python),
             invoke,
@@ -147,20 +147,7 @@ impl PoolJob {
             flow.stopped,
             flow.heard,
             flow.answer,
-        ) {
-            Ended::Answered(done) => Ok(done),
-            Ended::StoppedBefore => Err("Başlamadan durduruldu.".to_owned()),
-            Ended::Killed { timed_out: true } => {
-                Err("Süresini aştı; eklentinin süreci sonlandırıldı.".to_owned())
-            }
-            Ended::Killed { timed_out: false } => {
-                Err("Durdur'a cevap vermedi; eklentinin süreci sonlandırıldı.".to_owned())
-            }
-            Ended::NotStarted(why) => Err(why),
-            Ended::Crashed(words) => {
-                Err(format!("Eklentinin süreci kendiliğinden kapandı: {words}"))
-            }
-        }
+        ))
     }
 }
 

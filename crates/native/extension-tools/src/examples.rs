@@ -1,8 +1,15 @@
-//! An extension tool's examples run (docs/adr/8057 §48, PY-TOOL-23): each on a synthetic drawing of its own objects
-//! (the trial's, §37), never the user's, the tool run as İşlemler runs it, and its answer checked against what the
-//! example expects: a number or text output's value, a features output's count and the attributes some written
-//! object has, words of the run's summary. The desktop's Eklentiler (Örnekleri çalıştır), an agent's trial
-//! (`extension.workshop.trial` with `examples`) and the command line's `kentos kek test` (§74) run the same code.
+//! An extension's examples run (docs/adr/8057 §48, §75; PY-TOOL-23), each on a synthetic drawing of its own objects
+//! (the trial's, §37), never the user's:
+//!
+//! - **A tool's** (its descriptor's `examples`): run as İşlemler runs it, its answer checked against what the example
+//!   expects: a number or text output's value, a features output's count and the attributes some written object has,
+//!   words of the run's summary.
+//! - **An audit rule's** (`audits/<id>.examples.json`, `kentos_extensions::audit_examples`): the drawing's facts
+//!   measured as for any drawing, the architecture the example gives put in them, the rule run in its version's
+//!   process as the host runs it, and its findings checked: how many, and the ones it must have.
+//!
+//! The desktop's Eklentiler (Örnekleri çalıştır), an agent's trial (`extension.workshop.trial` with `examples`) and the
+//! command line's `kentos kek test` (§74) run the same code.
 
 use std::collections::BTreeSet;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -25,9 +32,10 @@ pub fn of(ext: &str) -> Vec<ExternalTool> {
         .collect()
 }
 
-/// Each tool's examples in turn, the report (`head` and `status`, `summary`, `passed`, `failed`, `examples`: one row
-/// each); Durdur between examples. Deep: a tool's code may ask for a built-in tool (§47), a command inside the command.
-pub fn run(tools: &[ExternalTool], head: Value, stop: &AtomicBool) -> Value {
+/// Each tool's examples in turn, then each rule's, the report (`head` and `status`, `summary`, `passed`, `failed`,
+/// `examples`: one row each); Durdur between examples. Deep: a tool's code may ask for a built-in tool (§47), a command
+/// inside the command.
+pub fn run(tools: &[ExternalTool], rules: &[Rule], head: Value, stop: &AtomicBool) -> Value {
     let mut out = Vec::new();
     for tool in tools {
         for example in &tool.examples {
@@ -36,6 +44,17 @@ pub fn run(tools: &[ExternalTool], head: Value, stop: &AtomicBool) -> Value {
             }
             let began = Instant::now();
             let mut row = one(tool, example);
+            row["ms"] = json!(began.elapsed().as_millis() as u64);
+            out.push(row);
+        }
+    }
+    for rule in rules {
+        for example in &rule.examples {
+            if stop.load(Ordering::Relaxed) {
+                return json!({ "status": "stopped" });
+            }
+            let began = Instant::now();
+            let mut row = rules::one_rule(rule, example);
             row["ms"] = json!(began.elapsed().as_millis() as u64);
             out.push(row);
         }
@@ -223,31 +242,9 @@ fn same(got: &Value, want: &Value) -> bool {
     }
 }
 
+mod rules;
+
+pub use rules::{Rule, RunRule, rule_examples};
+
 #[cfg(test)]
-mod tests {
-    use serde_json::json;
-
-    use super::*;
-
-    /// Numbers compare as numbers (text too, a comma for the point), text as written; an object holds an attribute
-    /// set when every key matches.
-    #[test]
-    fn an_expected_value_is_met_as_a_number_or_as_text() {
-        assert!(same(&json!(1), &json!(1.0)));
-        assert!(same(&json!("0,4"), &json!(0.4)));
-        assert!(!same(&json!(2), &json!(1)));
-        assert!(
-            same(&json!("aşıyor"), &json!("aşıyor")) && !same(&json!("uygun"), &json!("aşıyor"))
-        );
-        let attrs: Map<String, Value> =
-            serde_json::from_value(json!({ "durum": "aşıyor", "taks": "0.5" })).unwrap();
-        assert!(has(&attrs, &json!({ "durum": "aşıyor", "taks": 0.5 })));
-        assert!(!has(&attrs, &json!({ "durum": "uygun" })));
-        assert!(!has(&attrs, &json!({ "yok": 1 })));
-        // How many passed, without a suffix after the number.
-        assert_eq!(said(2, 2), "2 örneğin hepsi geçti.");
-        assert_eq!(said(3, 2), "3 örnekten 2 tanesi geçti, 1 tanesi kaldı.");
-        assert_eq!(said(1, 1), "Örnek geçti.");
-        assert_eq!(said(2, 0), "2 örneğin hiçbiri geçmedi.");
-    }
-}
+mod tests;

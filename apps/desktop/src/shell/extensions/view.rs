@@ -463,8 +463,15 @@ impl App {
                 Some(msg(Event::Switch(id.clone(), other.clone()))),
             ));
         }
-        // Its tools' examples, on drawings of their own (docs/adr/8057 §48): while one runs, the button waits.
-        if e.enabled && !kentos_extension_tools::examples::of(&id).is_empty() {
+        // Its tools' and rules' examples, on drawings of their own (docs/adr/8057 §48, §75): while one runs, the button
+        // waits.
+        let rules_give = self
+            .extensions
+            .registry
+            .as_ref()
+            .and_then(|r| r.manifest(&id))
+            .is_some_and(|m| m.entrypoints.audits.iter().any(|a| a.examples.is_some()));
+        if e.enabled && (rules_give || !kentos_extension_tools::examples::of(&id).is_empty()) {
             let running = self
                 .extensions
                 .trial

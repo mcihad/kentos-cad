@@ -4169,3 +4169,61 @@ bağı kaldı); `scripts/arch/deps.mjs` (`cli` grubu).
   masaüstününkiyle ortak; masaüstü ayarı aranmaz, Python yalnız bayrakla indirilir; yalnız masaüstü araçlarının
   örnekleri de çalışır; 1 ve 2 ayrı çıkış; iz kaydının yolu yazarın klasörüne çevrilir; `kek verify` araç tanımını tam
   okur.
+
+## §75. Denetim kuralının örnekleri: olgular ve beklenen bulgular (`ADIM 20`–`21`, §48'in kurallara uzanması)
+
+**16 Kasım.** Kod: paylaşılan `kentos_extensions::audit_examples` (yeni: `AuditExamples`, `read`, `json_schema`),
+`manifest.rs` (`AuditEntry::examples`, `FileRole::AuditExamples`), `archive.rs` (Kapı 1), `sdk_pack.rs`
+(`auditExamplesSchema` bölümü, katkı listesinde `examples`), `sdk/kentos-audit-examples.schema.json`;
+`kentos-extension-tools` `examples.rs` (`Rule`, `rule_examples`, `one_rule`), `run.rs` (`run_in_pool`, `answered`);
+komut satırı `kek_test.rs` (`rules_of`); masaüstü `examples.rs` (`ext_example_rules`), `view.rs`, `tools.rs`
+(`answered`); ajan aracı `extension.workshop.trial`'ın sözü; Vitrin 1.0.52; `tr.kentos.mevzuat` 0.3.1.
+
+- **Karar: örnek kuralın yanında, kendi dosyasında.** Kuralın tanım dosyası yok (araç örneği tanımındadır, §48);
+  manifestin denetim girişi örnek dosyasını adlandırır: `"examples": "audits/<kimlik>.examples.json"`
+  (`kentos.auditExamples` 1, en çok 10 örnek). Manifeste satır içi yazılmadı: mevzuat örneklerinin mimari olguları
+  kilobaytlarca.
+- **Karar: kural olgu okur, örnek olgu verir.** İki kaynak, birlikte ya da ayrı: `features` (katmanı adıyla, GeoJSON
+  şekli, öznitelikler; en çok 500) sentetik çizim olur ve her çizim gibi ölçülür (`facts.layers`, `facts.project`:
+  çakışmalar, boşluklar); `architecture` mimari çizimde ölçülenin kendisidir (`facts.project.architecture`: katlar,
+  mahaller, bağımsız bölümler, kapılar), duvar ve mahal GeoJSON'la yazılamadığı için veri olarak verilir ve olguların
+  türleriyle okunur (eksik zorunlu alan Kapı 1'de ret). Böylece mevzuat kuralı mimari çizim kurmadan sınanır.
+- **Beklenen:** `count` (tam bulgu sayısı; 0: kural bir şey bulmaz) ve `has` (bulunması gereken bulgular: önemi,
+  sözünden bir parça, adlandırdığı nesne `features`'taki sırasıyla, düzeltmesinin komutu; verilen her anahtar
+  uymalı). Kalan örnekte rapor eksik bulguyu tarif eder ve gelenlerin ilk üçünü söyler; kuralın kodu hata verirse iz
+  kaydı (`detail`) yazarın dosyasını gösterir.
+- **Kapı 1 dosyayı kod çalıştırmadan okur:** biçim, örnek sayısı, ad, nesnenin katmanı ve şekli, boş beklenti, sayısı
+  bulunacaklardan az olan beklenti, olmayan nesneye başvuru, bilinmeyen anahtar (yazım hatası satırıyla); her biri
+  dosyası ve JSON yeriyle (`audit_examples`). Örnek: "audits/yapi-no.examples.json /examples/0/expect/has/0/feature:
+  sırası 5 olan nesne yok: features'ın sırası 0'dan başlar (2 nesne var)."
+- **Çalıştıranlar aynı kod:** Eklentiler › Örnekleri çalıştır (düğme kuralın örneği varsa da görünür), ajanın
+  `extension.workshop.trial`'ı (`examples: true`) ve `kentos kek test`. Kural, konağın onu çalıştırdığı yoldan
+  koşar: masaüstünde Eklenti denetiminin havuz işi, başsızda sürümün havuzdaki süreci; ikisinin sonucu aynı okunur
+  (`answered`, masaüstündeki eş kod paylaşılana indi).
+- **Vitrin 1.0.52:** "Yapı numarası" (numarasız yapı sıradaki numarayı ve düzeltmesini alır; numaralı yapıda bulgu
+  yok), "Parsel çakışması" (üst üste binen iki parsel 20.00 m² çakışma hatası; komşu iki parselde bulgu yok).
+- **İskelet örnekleriyle gelir:** `kek new` / `extension.blueprint`'in denetim kuralı örnek dosyasıyla (adsız nesne
+  bulunur, düzeltmesi ad yazar), İşlemler aracı tanımında bir örnekle (iki kare alan, toplam 500 m²): yeni bir
+  eklenti `kek test`'ten kutudan çıktığı gibi geçer ve yazan ajan örnek yazmayı iskeletten görür.
+- **`tr.kentos.mevzuat` 0.3.1, yedi kuralın 20 örneği:** her kural en az bir hata ve bir bulgusuz örnekle; sınırlar
+  yönetmeliğin sayılarıyla: PAİY 29/1 (8 m² yatak odası: "net alanı 8.00 m² (en az 9.00 m²)"), 29/3 (1.00 m hol; 1.20
+  m sınırda bulgusuz), BYKHY 4/i ve Ek-5/B (18 m çıkmaz koridor yağmurlamasız hata, yağmurlamayla 20 m'ye kadar ve 12
+  m'de bulgusuz), 48/2 (kapıya 24 m hata, 18 m bulgusuz, kapıya yolu olmayan mahal, 4 katlı konut binasında 48/1
+  muafiyeti; iki katlı dairenin üst kattaki tek kapısı, ayrı çıkışsız üst katın net 72 m²'si), 48/3-4 (kapıdan tek
+  yönde 22 m yağmurlamasız hata, yağmurlamayla 30 m'ye kadar bulgusuz, çıkışa ulaşmayan kapı), 31/3 ve 33/6-b (kat
+  çıkışı olmayan kat, çıkışa ulaşmayan mahal). Örnekler kaçış yürüyüşlerini (`escape`, kapıların `exit`'i), katları ve
+  yağmurlama ayarını olgu olarak verir; konut örnekleri 48/1 muafiyetinin dışında kalmak için beş katlı. Kuralların
+  kodu değişmedi; 20 örneğin hepsi ilk koşuda geçti.
+- **Gerçek koşu (16 Kasım):** `kek test` Vitrin: 6 örneğin hepsi geçti (ortam 1.0.52 için kilitten 3,54 sn, toplam
+  6,9 sn; ilk kural örneği süreci başlatırken 1,49 sn, sonrakiler 0,00 sn). Mevzuat: 20 örneğin hepsi geçti (hazır
+  ortamla toplam 2,5 sn). Bozulan beklenti: "(warning, “sıradaki numara Y-03”, features[1], düzeltme cad.entities.set) bulgusu
+  gelmedi" ve "gelenler: warning “Yapının numarası yok; sıradaki numara Y-02.”"; hata atan kural: "kural hata verdi:
+  KeyError: 'alan'" ve yazarın `src/vitrin/logic.py`'sinin satırıyla iz kaydı, çıkış 1.
+- **Sınamalar:** paylaşılan crate 3 (dosyanın tamamı okunur; her yanlış yeriyle; şemanın türlerden üretilmesi),
+  extension-tools 1 (stand-in kuralla: sayı, önem, söz, nesne, düzeltme; eksik bulguda gelenler; kodun hatası iz
+  kaydıyla; verilen mimari olguların kurala ulaşması), komut satırı ve masaüstü sınamaları.
+- **Kalan:** ifade işlevlerinin örnekleri; bir bulgunun mimari olgudaki mahali kimliğiyle beklenmesi (bugün yalnız
+  sözüyle).
+- **Uygularken verilen kararlar (planda yazılı değildi):** örnek ayrı dosyada ve manifestte adıyla; mimari olgu veri
+  olarak; `has`'ın nesnesi `features`'taki sırayla; eksik bulguda gelenlerin ilk üçü; dosyanın biçimi `format` ve
+  `schemaVersion` taşır (öbür biçimler gibi); mevzuat 0.3.1 yalnız örnek ekler.

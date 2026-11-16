@@ -1,16 +1,17 @@
-//! An extension tool's examples run on the desktop (docs/adr/8057 §48, PY-TOOL-23): the user's Eklentiler (Örnekleri
-//! çalıştır) and an agent's trial (`extension.workshop.trial` with `examples`) start it alike, one at a time, in the
-//! trial's place. The run itself is `kentos_extension_tools::examples`, the command line's `kentos kek test` too.
+//! An extension's examples run on the desktop (docs/adr/8057 §48, §75; PY-TOOL-23): its tools' and its audit rules'.
+//! The user's Eklentiler (Örnekleri çalıştır) and an agent's trial (`extension.workshop.trial` with `examples`) start
+//! it alike, one at a time, in the trial's place. The run itself is `kentos_extension_tools::examples`, the command
+//! line's `kentos kek test` too.
 
 use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use kentos_extension_tools::examples;
 use kentos_ui::widget::Toast;
 use serde_json::{Value, json};
 
 use super::audits::Refusal;
-use super::trial::TrialState;
+use super::trial::{RULE_TIMEOUT, TrialState};
 use super::{Event, msg};
 use crate::app::{App, Message};
 
@@ -36,16 +37,27 @@ impl App {
         if let Some(Some(why)) = self.extensions.python_reasons.get(ext) {
             return Err(("not_ready", format!("Eklentinin kodu çalışmıyor: {why}")));
         }
+        let stop = Arc::new(AtomicBool::new(false));
         let tools = examples::of(ext);
-        if tools.is_empty() {
+        let rules = self.ext_example_rules(ext, &stop)?;
+        if tools.is_empty() && rules.is_empty() {
             return Err((
                 "no_examples",
-                format!("“{ext}” araçlarının tanımında örnek (examples) yok."),
+                format!(
+                    "“{ext}” araçlarının ve denetim kurallarının örneği yok (araç tanımında examples, kuralın \
+                     examples dosyası)."
+                ),
             ));
         }
-        let count: usize = tools.iter().map(|t| t.examples.len()).sum();
-        let version = tools[0].version.clone();
-        let stop = Arc::new(AtomicBool::new(false));
+        let count: usize = tools.iter().map(|t| t.examples.len()).sum::<usize>()
+            + rules.iter().map(|r| r.examples.len()).sum::<usize>();
+        let version = self
+            .extensions
+            .registry
+            .as_ref()
+            .and_then(|r| r.manifest(ext))
+            .map(|m| m.version.to_string())
+            .unwrap_or_default();
         self.extensions.trial = Some(TrialState {
             ext: ext.to_owned(),
             running: Some(Arc::clone(&stop)),
@@ -54,7 +66,7 @@ impl App {
         });
         let head = json!({ "kind": "examples", "extension": { "id": ext, "version": version } });
         let task = crate::python_setup::in_background_deep(
-            move || examples::run(&tools, head, &stop),
+            move || examples::run(&tools, &rules, head, &stop),
             json!({ "status": "failed", "error": "Örnek koşusu cevapsız kaldı." }),
             |report| msg(Event::TrialDone(Box::new(report))),
         );
@@ -62,6 +74,36 @@ impl App {
             json!({ "status": "running", "extension": ext, "examples": count }),
             task,
         ))
+    }
+
+    /// The audit rules of `ext` that give examples (docs/adr/8057 §75), each run in its version's process as Eklenti
+    /// denetimi runs it, Durdur (`stop`) asked while it runs; why not, when a rule's examples cannot be read or its
+    /// Python cannot run now.
+    fn ext_example_rules(
+        &self,
+        ext: &str,
+        stop: &Arc<AtomicBool>,
+    ) -> Result<Vec<examples::Rule>, Refusal> {
+        let Some(registry) = self.extensions.registry.as_ref() else {
+            return Ok(Vec::new());
+        };
+        let mut rules = Vec::new();
+        for (audit, read) in examples::rule_examples(registry, ext) {
+            let list = read.map_err(|why| ("invalid_input", why))?;
+            let job = self
+                .pool_job(ext, &audit.id, &audit.handler)
+                .map_err(|why| ("not_ready", why))?;
+            let stop = Arc::clone(stop);
+            rules.push(examples::Rule {
+                id: format!("ext.{ext}.{}", audit.id),
+                title: audit.title.clone(),
+                examples: list,
+                run: Box::new(move |invoke| {
+                    job.run(invoke, RULE_TIMEOUT, &|| stop.load(Ordering::Relaxed))
+                }),
+            });
+        }
+        Ok(rules)
     }
 
     /// The user's run of the examples ended: how it went in a toast, each failed example in the extension's log.
@@ -95,9 +137,9 @@ impl App {
         if failed.is_empty() {
             // A problem an earlier run left goes: the tools do what their examples say.
             self.extension_worked(&ext, "examples", "examples_passed", &said);
-            self.toast(Toast::success(format!("{name}: araç örnekleri")).body(said));
+            self.toast(Toast::success(format!("{name}: örnekler")).body(said));
         } else {
-            self.toast(Toast::warning(format!("{name}: araç örnekleri")).body(said));
+            self.toast(Toast::warning(format!("{name}: örnekler")).body(said));
         }
     }
 }

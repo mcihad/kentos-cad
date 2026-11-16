@@ -1,7 +1,8 @@
 //! `extension.blueprint` (plan/eklenti.md ADIM 21; docs/adr/8057 §19): a new extension's working folder, valid by
 //! construction (`verify` passes it without a problem or a warning), with one small example of each contribution
-//! asked for: a command that reads the layers, an İşlemler tool with its descriptor, an audit rule with a fix, an
-//! expression function and a map tool. An agent or a person grows it from there.
+//! asked for: a command that reads the layers, an İşlemler tool with its descriptor and an example, an audit rule with
+//! a fix and its examples (`kentos kek test` runs both, §48, §75), an expression function and a map tool. An agent or
+//! a person grows it from there.
 //!
 //! KentOS gives the files; the caller writes them (an agent's read-only tool writes nothing). The Python project has
 //! no dependency and its lock is uv's own for that (uv 0.11): adding a library is `uv add` in the folder, which writes
@@ -153,7 +154,19 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
             ],
             "feedback": { "progress": true, "cancel": true },
             // On the desktop and in the headless hosts (MCP, Python) alike (docs/adr/8057 §70).
-            "capabilities": { "runtimes": ["desktop-python", "headless-python"] }
+            "capabilities": { "runtimes": ["desktop-python", "headless-python"] },
+            // What it gives on objects of its own (docs/adr/8057 §48): Örnekleri çalıştır and kentos kek test check it.
+            "examples": [{
+                "title": "İki kare alan",
+                "features": [
+                    { "layer": "alan", "geometry": { "type": "Polygon",
+                      "coordinates": [[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0], [0.0, 0.0]]] } },
+                    { "layer": "alan", "geometry": { "type": "Polygon",
+                      "coordinates": [[[20.0, 0.0], [40.0, 0.0], [40.0, 20.0], [20.0, 20.0], [20.0, 0.0]]] } }
+                ],
+                "params": { "alanlar": { "scope": "layer", "layerId": "alan" } },
+                "expect": { "outputs": { "toplam": 500.0 }, "summary": "2 alan" }
+            }]
         });
         let mut descriptor = descriptor;
         // With a schema, the tool opens on the extension's own layer (not the active one).
@@ -166,7 +179,24 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
     if has(Contribution::Audit) {
         entrypoints.insert(
             "audits".into(),
-            json!([{ "id": "adsiz", "title": "Adsız nesneler", "domain": module, "handler": format!("{package}.logic:adsiz") }]),
+            json!([{ "id": "adsiz", "title": "Adsız nesneler", "domain": module, "handler": format!("{package}.logic:adsiz"),
+                     "examples": "audits/adsiz.examples.json" }]),
+        );
+        // Its examples (docs/adr/8057 §75): what it is given and the findings it must give; kentos kek test runs them.
+        files.insert(
+            "audits/adsiz.examples.json".to_owned(),
+            pretty(&json!({
+                "format": "kentos.auditExamples", "schemaVersion": 1,
+                "examples": [{
+                    "title": "Adsız nesne bulunur, düzeltmesi ad yazar",
+                    "features": [
+                        { "layer": "nesne", "geometry": { "type": "Point", "coordinates": [0.0, 0.0] },
+                          "attrs": { "ad": "Çeşme" } },
+                        { "layer": "nesne", "geometry": { "type": "Point", "coordinates": [10.0, 0.0] } }
+                    ],
+                    "expect": { "count": 1, "has": [{ "severity": "info", "feature": 1, "fix": "cad.entities.set" }] }
+                }]
+            })),
         );
         capabilities.push(json!({ "id": "audit.provider", "scope": "plugin-owned",
                                   "reason": "Adı olmayan nesneleri bulur ve ad yazan bir düzeltme önerir." }));

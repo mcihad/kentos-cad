@@ -16,6 +16,44 @@ use serde_json::{Value, json};
 use crate::note::Note;
 use crate::plan::Plan;
 
+/// A run in the pool that is not a tool's (an audit rule's: the desktop's Eklenti denetimi, a rule's examples,
+/// docs/adr/8057 §75): `invoke` (its `kind` and data) sent to the process `key` of `plan`'s version with the local id
+/// and handler, `stopped` asked while it runs: the code's answer (`done`), or why there is none, in a sentence.
+#[allow(clippy::too_many_arguments)]
+pub fn run_in_pool(
+    pool: &Arc<Pool>,
+    key: &str,
+    plan: &Plan,
+    start: &dyn Fn() -> Result<Start, String>,
+    mut invoke: Value,
+    timeout: Duration,
+    stopped: &dyn Fn() -> bool,
+) -> Result<Value, String> {
+    invoke["type"] = json!("invoke");
+    invoke["local"] = json!(plan.local);
+    invoke["handler"] = json!(plan.handler);
+    if invoke.get("document").is_none() {
+        invoke["document"] = json!(false);
+    }
+    answered(pool.run(key, start, invoke, timeout, stopped, &mut |_| {}))
+}
+
+/// How a run that is not a tool's ended, as its host says it: the code's answer, or why there is none.
+pub fn answered(ended: Ended) -> Result<Value, String> {
+    match ended {
+        Ended::Answered(done) => Ok(done),
+        Ended::StoppedBefore => Err("Başlamadan durduruldu.".to_owned()),
+        Ended::Killed { timed_out: true } => {
+            Err("Süresini aştı; eklentinin süreci sonlandırıldı.".to_owned())
+        }
+        Ended::Killed { timed_out: false } => {
+            Err("Durdur'a cevap vermedi; eklentinin süreci sonlandırıldı.".to_owned())
+        }
+        Ended::NotStarted(why) => Err(why),
+        Ended::Crashed(words) => Err(format!("Eklentinin süreci kendiliğinden kapandı: {words}")),
+    }
+}
+
 /// What a run prints that goes to İşlemler' log, lines at most: the rest is in the extension's own output.
 const PRINTED_LINES: usize = 200;
 

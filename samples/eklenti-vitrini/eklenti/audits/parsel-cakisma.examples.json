@@ -1,0 +1,164 @@
+{
+  "format": "kentos.auditExamples",
+  "schemaVersion": 1,
+  "examples": [
+    {
+      "title": "Üst üste binen iki parsel",
+      "features": [
+        {
+          "layer": "parsel",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  10,
+                  0
+                ],
+                [
+                  10,
+                  10
+                ],
+                [
+                  0,
+                  10
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          },
+          "attrs": {
+            "ada": "101",
+            "parsel": "1"
+          }
+        },
+        {
+          "layer": "parsel",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  8,
+                  0
+                ],
+                [
+                  18,
+                  0
+                ],
+                [
+                  18,
+                  10
+                ],
+                [
+                  8,
+                  10
+                ],
+                [
+                  8,
+                  0
+                ]
+              ]
+            ]
+          },
+          "attrs": {
+            "ada": "101",
+            "parsel": "2"
+          }
+        }
+      ],
+      "expect": {
+        "count": 1,
+        "has": [
+          {
+            "severity": "error",
+            "message": "20.00 m² çakışıyor"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Komşu iki parsel: bulgu yok",
+      "features": [
+        {
+          "layer": "parsel",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  10,
+                  0
+                ],
+                [
+                  10,
+                  10
+                ],
+                [
+                  0,
+                  10
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          },
+          "attrs": {
+            "ada": "101",
+            "parsel": "1"
+          }
+        },
+        {
+          "layer": "parsel",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  10,
+                  0
+                ],
+                [
+                  20,
+                  0
+                ],
+                [
+                  20,
+                  10
+                ],
+                [
+                  10,
+                  10
+                ],
+                [
+                  10,
+                  0
+                ]
+              ]
+            ]
+          },
+          "attrs": {
+            "ada": "101",
+            "parsel": "2"
+          }
+        }
+      ],
+      "expect": {
+        "count": 0
+      }
+    }
+  ]
+}

@@ -215,8 +215,12 @@ pub const TOOL_SCHEMA: &str = include_str!("../sdk/kentos-processing-tool.schema
 /// (`audit_facts::json_schema`) and committed beside the stub: a part of its own (docs/adr/8057 §36).
 pub const FACTS_SCHEMA: &str = include_str!("../sdk/kentos-audit-facts.schema.json");
 
+/// An audit rule's examples file (`audits/<id>.examples.json`, `kentos.auditExamples` 1): its JSON Schema, made from
+/// its types (`audit_examples::json_schema`) and committed beside the stub: a part of its own (docs/adr/8057 §75).
+pub const AUDIT_EXAMPLES_SCHEMA: &str = include_str!("../sdk/kentos-audit-examples.schema.json");
+
 /// The pack's parts an agent may ask for alone (`extension.sdk`'s `part`, `kentos kek sdk --part`).
-pub const PARTS: [&str; 17] = [
+pub const PARTS: [&str; 18] = [
     "guide",
     "api",
     "capabilities",
@@ -234,6 +238,7 @@ pub const PARTS: [&str; 17] = [
     "layerSchema",
     "toolSchema",
     "factsSchema",
+    "auditExamplesSchema",
 ];
 
 /// One part of the pack; none for a name the pack has not. `icons` is the whole list, which the pack only counts: its
@@ -261,6 +266,9 @@ pub fn sdk_part(part: &str) -> Option<Value> {
     }
     if part == "factsSchema" {
         return serde_json::from_str(FACTS_SCHEMA).ok();
+    }
+    if part == "auditExamplesSchema" {
+        return serde_json::from_str(AUDIT_EXAMPLES_SCHEMA).ok();
     }
     if part == "example" {
         return serde_json::to_value(example()).ok();
@@ -296,6 +304,7 @@ fn verify_codes() -> Value {
         "sdk_deprecated": "Uyarı: eskiyen SDK adı; yerini söyler, düz yeniden adlandırmayı kentos kek upgrade yazar.",
         "sdk_experimental": "Uyarı: deneysel SDK adı; atölyede ve yerel kurulumda çalışır, katalogda yayımlanamaz.",
         "handler_missing": "İşleyicinin modülü pakette yok (paketin kendi denetimi).",
+        "audit_examples": "Kuralın örnek dosyası (kentos.auditExamples): biçim, nesneler, beklenen; yeriyle.",
         "manifest_icon": "İkon yerleşik bir ad (küçük harf, tire) ya da paketteki bir .svg yolu değil.",
         "manifest_icon_unknown": "Uyarı: bu KentOS'ta böyle bir yerleşik ikon yok; en yakınları önerilir.",
         "layer_schema": "schema.json'da bir kural bozuk; işaretçi yeri, ileti kuralı söyler.",
@@ -347,7 +356,7 @@ pub fn sdk_pack() -> Value {
             { "kind": "processing", "decorator": "@ext.processing", "manifest": "entrypoints.processing",
               "capabilities": ["processing.provider"], "descriptor": "tools/<kimlik>.tool.json" },
             { "kind": "audit", "decorator": "@ext.audit", "manifest": "entrypoints.audits",
-              "capabilities": ["audit.provider"] },
+              "capabilities": ["audit.provider"], "examples": "audits/<kimlik>.examples.json" },
             { "kind": "expression", "decorator": "@ext.expr", "manifest": "entrypoints.expressions",
               "capabilities": ["expression.provider"] },
             { "kind": "mapTool", "decorator": "@ext.map_tool", "manifest": "entrypoints.mapTools",
@@ -441,6 +450,10 @@ pub fn sdk_pack() -> Value {
                     katman başına geometriye göre nesne sayıları, geçersiz geometriler, alanların çakışmaları ve \
                     boşluklar; mimari çizimde katlar, mahaller, PAİY alanları ve kaçış yolları: extension.sdk \
                     part=factsSchema ya da kentos kek sdk --part factsSchema.",
+        },
+        "auditExamplesSchema": {
+            "how": "Kuralın örnekleri (kentos.auditExamples 1): nesneler (features) ya da mimari olgular (architecture) \
+                    ve beklenen bulgular (count; has: severity, message, feature, fix). kentos kek test çalıştırır.",
         },
     })
 }

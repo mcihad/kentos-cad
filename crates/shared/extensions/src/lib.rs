@@ -23,6 +23,7 @@
 //! Pure: no file system and no network. A host reads the file and hands the bytes over.
 
 pub mod archive;
+pub mod audit_examples;
 pub mod audit_facts;
 pub mod blueprint;
 pub mod catalog;

@@ -478,6 +478,7 @@ fn offered_tools_run_through_the_commands_and_follow_the_registry() {
     tool.examples = vec![example("İki alan", 500.0), example("Yanlış toplam", 499.0)];
     let report = crate::examples::run(
         &[tool],
+        &[],
         json!({ "kind": "examples" }),
         &AtomicBool::new(false),
     );

@@ -1,0 +1,345 @@
+{
+  "format": "kentos.auditExamples",
+  "schemaVersion": 1,
+  "examples": [
+    {
+      "title": "Mahali olup kat çıkışı olmayan kat",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "k1",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "number": "Z02",
+            "name": "Yatak odası",
+            "kind": "bedroom",
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 12.0,
+            "axis": 13.2,
+            "narrow": 3.0,
+            "escape": {
+              "exit": {
+                "length": 25.0,
+                "oneWay": 25.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": {
+                "length": 9.0,
+                "oneWay": null,
+                "exits": null,
+                "path": []
+              },
+              "hasEntrance": true,
+              "passages": 1
+            }
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000003",
+            "number": "K01",
+            "name": "Salon",
+            "kind": "living",
+            "level": "k1",
+            "unit": "d2",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 24.0,
+            "axis": 26.4,
+            "narrow": 4.0,
+            "escape": {
+              "exit": {
+                "length": 12.0,
+                "oneWay": 12.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": "d1",
+            "number": "1",
+            "name": null,
+            "kind": "unit",
+            "nature": "Daire",
+            "annexOf": null,
+            "dwelling": true,
+            "gross": 90.0,
+            "net": 75.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 90.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 90.0,
+                "net": 75.0
+              }
+            ]
+          },
+          {
+            "id": "d2",
+            "number": "2",
+            "name": null,
+            "kind": "unit",
+            "nature": "Daire",
+            "annexOf": null,
+            "dwelling": true,
+            "gross": 90.0,
+            "net": 75.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 90.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "k1",
+                "gross": 90.0,
+                "net": 75.0
+              }
+            ]
+          }
+        ],
+        "doors": [],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 1,
+        "has": [
+          {
+            "severity": "error",
+            "message": "1. kat: katta kat çıkışı yok"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Kat çıkışına ulaşmayan mahal",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "number": "Z02",
+            "name": "Yatak odası",
+            "kind": "bedroom",
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 12.0,
+            "axis": 13.2,
+            "narrow": 3.0,
+            "escape": {
+              "exit": {
+                "length": 25.0,
+                "oneWay": 25.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": {
+                "length": 9.0,
+                "oneWay": null,
+                "exits": null,
+                "path": []
+              },
+              "hasEntrance": true,
+              "passages": 1
+            }
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000003",
+            "number": "Z03",
+            "name": "Depo",
+            "kind": null,
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 6.0,
+            "axis": 6.6,
+            "narrow": 2.0,
+            "escape": {
+              "exit": null,
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": "d1",
+            "number": "1",
+            "name": null,
+            "kind": "unit",
+            "nature": "Daire",
+            "annexOf": null,
+            "dwelling": true,
+            "gross": 90.0,
+            "net": 75.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 90.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 90.0,
+                "net": 75.0
+              }
+            ]
+          }
+        ],
+        "doors": [],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 1,
+        "has": [
+          {
+            "severity": "error",
+            "message": "Z03 Depo (Zemin kat): kendi bölümünün mahallerinden"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Her mahal bir kat çıkışına ulaşıyor: bulgu yok",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "number": "Z02",
+            "name": "Yatak odası",
+            "kind": "bedroom",
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 12.0,
+            "axis": 13.2,
+            "narrow": 3.0,
+            "escape": {
+              "exit": {
+                "length": 25.0,
+                "oneWay": 25.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": {
+                "length": 9.0,
+                "oneWay": null,
+                "exits": null,
+                "path": []
+              },
+              "hasEntrance": true,
+              "passages": 1
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": "d1",
+            "number": "1",
+            "name": null,
+            "kind": "unit",
+            "nature": "Daire",
+            "annexOf": null,
+            "dwelling": true,
+            "gross": 90.0,
+            "net": 75.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 90.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 90.0,
+                "net": 75.0
+              }
+            ]
+          }
+        ],
+        "doors": [],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 0
+      }
+    }
+  ]
+}
