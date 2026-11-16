@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 1.0.47 — 16 Kasım 2026
+
+- Yakın yapılar'da Uzaklık km ile de yazılır (`numberField`'ın `units`'i: m, km; KentOS'un sayı alanları gibi):
+  "0,03 km" yazılınca komut 30 m alır ve alan 30 m yazar, "1 km + 20 m" de olur; sınır metreyle söylenir ("1 m ile
+  1000 m arasında"), − + metre adımlarıyla. Açıklama bunu söyler. Komut değişmedi: uzaklığı yine metre alır.
+
 ## 1.0.46 — 16 Kasım 2026
 
 - "Alandaki yapılar" paneli (Vitrin › Panel): Alan alanı bir şekil seçicisi (`shapePicker`, `"shape": "polygon"`):

@@ -26,6 +26,8 @@ pub(crate) mod panel_marks;
 mod panel_points;
 // A panel's rows: components side by side, the cells of one line (docs/adr/8057 §55).
 mod panel_rows;
+// A number field's units: chosen beside it, the code's in its own (docs/adr/8057 §64).
+mod panel_units;
 // A panel's sections: headings that fold what they gather (docs/adr/8057 §38).
 mod panel_sections;
 mod panel_tabs;

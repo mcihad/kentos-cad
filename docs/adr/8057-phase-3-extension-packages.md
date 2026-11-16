@@ -1816,7 +1816,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | nesne seçici | var | `featurePicker` (çizimdeki seçimden) | haritada tıklatan kip bilinçli olarak yok (§24) |
 | | alan seçici | var | `fieldPicker` (bağlı katmanın alanları) | |
 | | koordinat/harita seçimi | var | `pointPicker` (`x, y` yazılır ya da Haritadan seç ile haritada gösterilir, kenetlenir; değeri `[x, y]`, §57); çizgi ve alan `shapePicker` (haritada çizilir, değeri GeoJSON, §62); harita aracı `entrypoints.mapTools` (yakalama türleri) | pencerede (`ctx.dialog`) yok |
-| | CRS/birim | var | `crsPicker` (KentOS'un sistemleri, değeri `EPSG:<kod>`, verilmezse çizimin sistemi; §45) | birim seçici yok |
+| | CRS/birim | var | `crsPicker` (KentOS'un sistemleri, değeri `EPSG:<kod>`, verilmezse çizimin sistemi; §45); birim `numberField`'ın `units`'i (KentOS'un sayı alanları gibi birimiyle yazılır: 0,03 km; kod alanın biriminde alır, §64) | |
 | | ilişki başvurusu | yok | — | ilişkiler şemada (§23), seçicisi yok |
 | Kaynak ve çıktı | dosya/eser seçici, ek | var | `filePicker` (okunacak dosya: yolu yazılır ya da bilgisayarın dosya penceresinden seçilir, §41; `save` ile yazılacak dosyanın yeri, §44) | `files.userSelected` ister, kaydetme yeri `files.userSelectedWrite`; ek sonraki dilim |
 | | görsel önizleme | var | `image` (kodun verdiği PNG, `ctx.panel.set(id, image=…)`; oranı korunur, §40) | yalnız PNG, en çok 4096 piksel kenar; JPEG sonraki dilim |
@@ -3546,3 +3546,41 @@ kutunun planını alır); bağımlılık `seccompiler = "=0.5.0"` ve çağrı nu
   reddederse ABI 1 yeter ve kutu 5.15 ile 6.1 LTS çekirdeklerinde de bütün kapanır. Bugün asgari ABI 4 (değişmedi; ayrı
   karar). (2) ABI 6'nın altında sinyaller (süzgeçle `kill` ailesini kendi süreciyle sınırlamak). (3) `kentosd`'nin
   açılışta kutunun düzeyini günlüğüne yazması (§61).
+
+## §64. Sayı alanında birim: `numberField`'ın `units`'i (`ADIM 22`, envanterin "birim seçici"si)
+
+**16 Kasım.** Kod: paylaşılan yeni `crates/shared/extensions/src/ui_panel/units.rs` (`UNITS`, `unit`, `quantity_of`,
+`tidy`, Kapı 1'in `check`'i), `ui_panel.rs` (`NumberField::units`), şema ve Python kurucusu (`ui.number_field(…,
+units=)`), SDK rehberi; masaüstü yeni `apps/desktop/src/shell/extensions/panel_units.rs` (`typed_number`,
+`units_hint`, `units_words`, `show_in_own_units`), `panels.rs` (değer, kural değeri, adım, sınırın sözü),
+`panel_view.rs` (boş alanın ipucu); ortak bileşen `crates/ui/src/widget/number.rs` (birimin üssü); Vitrin 1.0.47.
+
+- **Karar: birim seçilmez, yazılır: KentOS'un sayı alanlarının dili.** `units` alanın kendi birimi (`unit`) dahil 2-4
+  birimdir; kullanıcı sayıyı bunlardan biriyle yazar ("0,03 km", "2 dönüm", "1 km + 20 m"), birimsiz sayı alanın
+  kendi birimindedir. Okuyan KentOS UI'nin sayı girişinin çözümleyicisidir (`kentos_ui::widget::number::evaluate`):
+  KentOS'un her sayı alanı ("1 m + 20 cm", Türkçe sayılar, ifadeler) böyle yazılır, eklentinin paneli ayrı bir dil
+  konuşmaz. İlk sürüm sayının yanına bir birim seçimi koymuştu: 300 piksellik dock'ta seçim ve − + düğmeleri sayının
+  yerini aldı, sayı kutusu sıfır genişliğe indi, + kenardan kesildi (gerçek pencere).
+- **Karar: kod alanın kendi biriminde alır.** `value`, `min`, `max`, `step` ve kodun `ctx.panel.set`'i de onunla
+  yazılır; kod hiç çevirmez. Çeviri on iki anlamlı haneye yuvarlanır (1,1 km 1100 m, 1100,0000000000002 değil). Komut
+  başlarken alan değeri kendi biriminde yazar ("0,03 km" "30" olur, yanında "m"): KentOS'un sayı alanı da girilen
+  değeri kendi biriminde gösterir; yazılan birim alanın biriminin yanında iki kez okunuyordu ("0,03 km m").
+- **Sözler:** sınırı aşan değer alanın birimiyle söylenir ("“Uzaklık” 1 m ile 1000 m arasında olmalı."; km ile yazılan
+  sayı metreyle denetlenir), okunamayan değer alanın birimlerini sayar ("bir sayı ya da birimiyle yazılmış bir sayı
+  olmalı (m, km)"). Boş alan aldığı birimleri söyler ("m ya da km"). `units`'siz alan eskisi gibi düz sayı okur;
+  sözleri değişmedi.
+- **Birimler KentOS'unkiler:** uzunluk mm, cm, m, km; alan m², dönüm (1 000 m²), ha (10 000 m²); açı ° ve grad (400
+  bir tur): projenin ayarları ve raporlarındakiler. Kapı 1: hepsi bilinen, aynı şeyi ölçen, her biri bir kez, `unit`
+  aralarında; yanlış olan yerinde söylenir (`/body/<n>/units/<i>`, `/body/<n>/unit`).
+- **Ortak bileşen düzeltildi:** çözümleyici `m²`'yi okuyamıyordu ("²" harf sayılmadığı için birim "m" ile "²" diye
+  bölünüyordu); "m2" de yazılmıyordu. Artık birimin üssü yazımın parçasıdır ve düz rakamla da yazılır (m2, m3; yalnız
+  takımda öyle bir birim varsa, hemen ardından tek rakam). KentOS'un kendi sayı alanlarının takımlarında alan birimi
+  yoktu: davranışları değişmedi ("5 m2" uzunluk takımında eskisi gibi yazım hatası).
+- **SDK paketi:** rehber `units`'i anar; yer açmak için saat alanının sözü kısaldı. Paket 47 986 bayt (sınır 48 000).
+- **Vitrin 1.0.47:** Yakın yapılar'ın Uzaklık'ı `unit: "m"`, `units: ["m", "km"]`; açıklama "Uzaklık km ile de
+  yazılır: 0,03 km" der. Gerçek pencerede (49-birim): nokta seçildi (25 m: 3 yapı), "0,03 km" yazılıp Bul: "30 m içinde
+  3 yapı" (6,4, 6,6, 20,6 m), alan "30 m"; "2 km": "“Uzaklık” 1 m ile 1000 m arasında olmalı.", komut çalışmadı.
+- **Sınamalar:** paylaşılan 2 (birimlerin büyüklüğü ve yuvarlama; Kapı 1'in dokuz durumu), ortak bileşen 1 (m², m2,
+  dönüm, ha, büyük harf, takımda olmayan birim, uzunluk takımında m2), masaüstü 1 (km ile yazılanın metre gitmesi,
+  toplama, takımda olmayan cm, alan birimleri, ipucu, kural değeri, sınırın ve okunamayanın sözü, metre adımı,
+  komutun aldığı değerin metreyle yazılması, birimsiz alanın değişmemesi); gerçek pencere 49-birim.

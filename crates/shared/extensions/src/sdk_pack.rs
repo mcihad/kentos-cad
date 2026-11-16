@@ -85,9 +85,9 @@ Katmanlar'ın yanında, left haritanın solunda, bottom altında; kullanıcını
 bileşenleri: `text` (`text`), `section` (`label`, `collapsed`: katlanır başlık; sonraki bileşenleri bir sonraki bölüme
 dek toplar, katlıyken değerleri yine gider, yanlış bırakılan alanı bölümü açar), `divider`, `textField` (`id`,
 `label`, `placeholder`, `value`), `numberField` (`id`, `label`,
-`min`, `max`, `unit`, `value`, `step`), `dateField` (`id`, `label`, `value`, `min`, `max`: YYYY-AA-GG; kullanıcı GG.AA.YYYY ya
+`min`, `max`, `unit`, `value`, `step`, `units`: ör. m, km; 0,03 km yazılır, kod `unit`'te alır), `dateField` (`id`, `label`, `value`, `min`, `max`: YYYY-AA-GG; kullanıcı GG.AA.YYYY ya
 da YYYY-AA-GG yazar ya da takvimden seçer, değeri ISO tarih metni ya da boşsa None), `timeField` (`id`, `label`,
-`value`, `min`, `max`: SS:DD; kullanıcı 14:30, 14.30 ya da 9:05 yazar ya da saat seçicisinden seçer, değeri SS:DD ya da
+`value`, `min`, `max`: SS:DD; kullanıcı 14:30 ya da 14.30 yazar ya da saat seçiciden seçer, değeri SS:DD ya da
 None), `dateTimeField` (`id`, `label`, `value`, `min`, `max`: YYYY-AA-GGTSS:DD, yerel saat; kullanıcı 15.11.2026 14:30
 yazar ya da takvim ve saatten seçer, değeri 2026-11-15T14:30 ya da None), `select` (`id`, `label`,
 `options: [{value, label}]`, `value`), `multiSelect` (`id`, `label`, `options: [{value, label}]`, `value`: başta

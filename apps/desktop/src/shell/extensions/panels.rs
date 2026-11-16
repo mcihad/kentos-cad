@@ -506,7 +506,9 @@ impl OpenPanel {
             Component::ShapePicker { .. } => {
                 self.geoms.get(id).map(super::panel_points::shape_words)
             }
-            Component::NumberField { .. } => typed().and_then(number_of).map(|n| n.to_string()),
+            Component::NumberField { .. } => typed()
+                .and_then(|t| self.typed_number(id, t))
+                .map(|n| n.to_string()),
             Component::DateField { .. } => {
                 typed().and_then(kentos_extensions::ui_panel::typed_date)
             }
@@ -653,6 +655,7 @@ impl OpenPanel {
                 label,
                 min,
                 max,
+                unit,
                 ..
             } => {
                 let text = self.texts.get(id).map_or("", |t| t.trim());
@@ -660,14 +663,27 @@ impl OpenPanel {
                     out.insert(id.clone(), Value::Null);
                     return Ok(());
                 }
-                let Some(n) = number_of(text) else {
-                    return Err(format!("“{label}”: “{text}” bir sayı değil."));
+                // In its own unit, whichever of its units it was typed in (panel_units.rs, docs/adr/8057 §64).
+                let units = self.units_words(id);
+                let Some(n) = self.typed_number(id, text) else {
+                    return Err(match units {
+                        Some(units) => format!(
+                            "“{label}”: “{text}” okunamadı: bir sayı ya da birimiyle yazılmış bir sayı olmalı \
+                             ({units})."
+                        ),
+                        None => format!("“{label}”: “{text}” bir sayı değil."),
+                    });
                 };
                 if min.is_some_and(|m| n < m) || max.is_some_and(|m| n > m) {
+                    // With its unit when it takes others: a number typed in km is checked in m.
+                    let words = |b: f64| match unit.as_deref().filter(|_| units.is_some()) {
+                        Some(unit) => format!("{}\u{a0}{unit}", number_words(b)),
+                        None => number_words(b),
+                    };
                     return Err(format!(
                         "“{label}” {} ile {} arasında olmalı.",
-                        min.map_or_else(|| "−∞".to_owned(), number_words),
-                        max.map_or_else(|| "∞".to_owned(), number_words)
+                        min.map_or_else(|| "−∞".to_owned(), words),
+                        max.map_or_else(|| "∞".to_owned(), words)
                     ));
                 }
                 out.insert(id.clone(), json!(n));
@@ -914,7 +930,7 @@ impl OpenPanel {
         let now = self
             .texts
             .get(id)
-            .and_then(|t| number_of(t))
+            .and_then(|t| self.typed_number(id, t))
             .or(*value)
             .or(min)
             .unwrap_or(0.0);
@@ -993,7 +1009,7 @@ pub(super) fn number_words(n: f64) -> String {
 }
 
 /// A typed number, its decimal sign a comma or a point.
-fn number_of(text: &str) -> Option<f64> {
+pub(super) fn number_of(text: &str) -> Option<f64> {
     text.replace(' ', "")
         .replace(',', ".")
         .parse::<f64>()
@@ -1512,6 +1528,7 @@ impl App {
             }
         };
         panel.invalid = None;
+        panel.show_in_own_units(&params);
         let origin = PanelOrigin {
             ext: ext.clone(),
             panel: panel.local.clone(),

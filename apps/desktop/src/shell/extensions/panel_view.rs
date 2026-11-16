@@ -311,8 +311,10 @@ impl App {
                     ..
                 } => {
                     let value = p.texts.get(id).map_or("", String::as_str);
-                    let mut field =
-                        kentos_ui::widget::input_field::InputField::new("", value).id(field_id(id));
+                    // Empty, it says the units it takes (panel_units.rs, docs/adr/8057 §64).
+                    let hint = p.units_hint(id);
+                    let mut field = kentos_ui::widget::input_field::InputField::new(&hint, value)
+                        .id(field_id(id));
                     if on(id) {
                         let id = id.clone();
                         field = field.on_input(move |t| event(PanelEvent::Text(id.clone(), t)));

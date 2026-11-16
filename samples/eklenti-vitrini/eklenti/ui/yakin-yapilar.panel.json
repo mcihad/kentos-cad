@@ -5,7 +5,7 @@
   "body": [
     {
       "type": "text",
-      "text": "Haritadan seç'e basıp haritada bir nokta gösterin ya da x, y yazın: o noktaya verilen uzaklıktaki yapılar yakından uzağa listelenir; satıra tıklamak yapıyı gösterir."
+      "text": "Haritadan seç'e basıp haritada bir nokta gösterin ya da x, y yazın: o noktaya verilen uzaklıktaki yapılar yakından uzağa listelenir; satıra tıklamak yapıyı gösterir. Uzaklık km ile de yazılır: 0,03 km."
     },
     {
       "type": "divider"
@@ -23,6 +23,10 @@
       "id": "uzaklik",
       "label": "Uzaklık",
       "unit": "m",
+      "units": [
+        "m",
+        "km"
+      ],
       "value": 25,
       "min": 1,
       "max": 1000,

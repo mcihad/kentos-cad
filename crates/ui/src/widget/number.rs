@@ -213,13 +213,13 @@ fn tokenize(text: &str, units: &[Unit]) -> Result<Vec<Token>, Error> {
                 tokens.push(Token::Number(value));
             }
             _ => {
-                // Birim: harfler ya da tek bir simge (°, ', ", %).
+                // Birim: harfler (kare ve küp üssüyle: m², m³) ya da tek bir simge (°, ', ", %).
                 let start = index;
 
                 if character.is_alphabetic() || character == 'µ' {
                     while characters
                         .get(index)
-                        .is_some_and(|c| c.is_alphabetic() || *c == 'µ')
+                        .is_some_and(|c| c.is_alphabetic() || matches!(*c, 'µ' | '²' | '³'))
                     {
                         index += 1;
                     }
@@ -227,7 +227,22 @@ fn tokenize(text: &str, units: &[Unit]) -> Result<Vec<Token>, Error> {
                     index += 1;
                 }
 
-                let symbol: String = characters[start..index].iter().collect();
+                let mut symbol: String = characters[start..index].iter().collect();
+
+                // Üs düz rakamla da yazılır (m2, m3): hemen ardından tek rakam ve alanın öyle bir birimi varsa.
+                if let Some(power @ ('2' | '3')) = characters.get(index).copied()
+                    && character.is_alphabetic()
+                    && !characters
+                        .get(index + 1)
+                        .is_some_and(|c| c.is_ascii_digit() || matches!(c, '.' | ','))
+                {
+                    let raised = format!("{symbol}{}", if power == '2' { '²' } else { '³' });
+
+                    if units.iter().any(|unit| unit.symbol == raised) {
+                        symbol = raised;
+                        index += 1;
+                    }
+                }
                 let unit = units
                     .iter()
                     .find(|unit| unit.symbol == symbol)
@@ -1453,6 +1468,28 @@ mod tests {
         assert!(close(evaluate("10°30'36\"", units::ANGLE), 10.51));
         assert!(close(evaluate("1 rad", units::ANGLE), 180.0 / PI));
         assert!(close(evaluate("90 - 12,5", units::ANGLE), 77.5));
+    }
+
+    /// Bir alan birimi üssüyle yazılır (m²) ya da üssü düz rakamla (m2); dönüm ve hektar harflerle. Üssü olmayan
+    /// takımda m2 eskisi gibi birim ile sayıdır.
+    #[test]
+    fn a_squares_power_is_written_raised_or_plain() {
+        const AREA: &[Unit] = &[
+            Unit::new("m²", 1.0),
+            Unit::new("dönüm", 1000.0),
+            Unit::new("ha", 10_000.0),
+        ];
+        assert!(close(evaluate("5000 m²", AREA), 5000.0));
+        assert!(close(evaluate("5000 m2", AREA), 5000.0));
+        assert!(close(evaluate("5000m2 + 1 dönüm", AREA), 6000.0));
+        assert!(close(evaluate("1,5 ha", AREA), 15_000.0));
+        assert!(close(evaluate("2 DÖNÜM", AREA), 2000.0));
+        assert_eq!(evaluate("5 m", AREA), Err(Error::Unit("m".to_owned())));
+        assert_eq!(
+            eval("5 m2"),
+            Err(Error::Syntax),
+            "a length set has no m²: m and 2"
+        );
     }
 
     #[test]

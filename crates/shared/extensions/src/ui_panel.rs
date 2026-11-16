@@ -31,6 +31,7 @@ pub mod python;
 pub mod rows;
 pub mod rules;
 pub mod tabs;
+pub mod units;
 pub mod values;
 
 pub use rules::Rules;
@@ -120,6 +121,11 @@ pub enum Component {
         /// − and + beside it change the value by this much, within `min` and `max` (docs/adr/8057 §59).
         #[serde(default)]
         step: Option<f64>,
+        /// The units the user may type it in besides `unit` (docs/adr/8057 §64), as KentOS's number fields take
+        /// them (0,03 km, 1 m + 20 cm): KentOS's (mm, cm, m, km; m², dönüm, ha; °, grad), of one kind, `unit`
+        /// among them. The code gets the number in `unit`.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        units: Vec<String>,
     },
     /// One of its choices.
     Select {
@@ -663,7 +669,7 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
         "divider" => &["id"],
         "textField" => &["id", "label", "placeholder", "value", "required"],
         "numberField" => &[
-            "id", "label", "value", "min", "max", "unit", "step", "required",
+            "id", "label", "value", "min", "max", "unit", "step", "units", "required",
         ],
         "select" => &["id", "label", "options", "value", "onChange"],
         "layerPicker" => &["id", "label", "geometry", "onChange", "required"],
@@ -1162,6 +1168,10 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                         "“step” sıfırdan büyük bir sayı olmalı: − ve + değeri bu kadar değiştirir."
                             .to_owned(),
                     );
+                }
+                // Its units (docs/adr/8057 §64): KentOS's, of one kind, its `unit` among them.
+                for (place, why) in units::check(c, &at) {
+                    add(place, why);
                 }
             }
             "select" | "multiSelect" => {

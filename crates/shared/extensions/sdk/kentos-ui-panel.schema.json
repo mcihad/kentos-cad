@@ -295,6 +295,13 @@
                 "null"
               ]
             },
+            "units": {
+              "description": "The units the user may type it in besides `unit` (docs/adr/8057 §64), as KentOS's number fields take\nthem (0,03 km, 1 m + 20 cm): KentOS's (mm, cm, m, km; m², dönüm, ha; °, grad), of one kind, `unit`\namong them. The code gets the number in `unit`.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
             "value": {
               "default": null,
               "format": "double",

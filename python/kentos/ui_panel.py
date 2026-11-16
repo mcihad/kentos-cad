@@ -151,6 +151,7 @@ def number_field(
     max: float | None = None,
     unit: str | None = None,
     step: float | None = None,
+    units: Sequence[str] | None = None,
     required: bool = False,
     visible_when: str | None = None,
     required_when: str | None = None,
@@ -172,6 +173,8 @@ def number_field(
         out["unit"] = unit
     if step is not None:
         out["step"] = step
+    if units is not None:
+        out["units"] = list(units)
     if required:
         out["required"] = True
     if visible_when is not None:

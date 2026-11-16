@@ -1,0 +1,35 @@
+# Sayı alanında birim: Vitrin › Yakın yapılar'ın Uzaklık'ı metre (`unit: "m"`) ama km de yazılır (`units`), KentOS'un
+# sayı alanları gibi. Nokta haritadan seçilir (25 m: 3 yapı); Uzaklık'a "0,03 km" yazılıp Bul: komut 30 m alır,
+# "30 m içinde 3 yapı" der, alan 30 m yazar; "2 km" yazılınca sınır metreyle söylenir (1 m ile 1000 m arasında),
+# komut çalışmaz.
+# (Önce 01.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 638 111   # Yakın yapılar (şeritte, Panel grubunda)
+wait 2500
+click 1413 327  # Haritadan seç (hedef düğmesi)
+wait 800
+click 700 600   # haritada bir nokta: yapıların arasında
+wait 9000
+shot 49-metre
+click 1310 364  # Uzaklık
+key ctrl+a
+type 0,03 km
+wait 400
+shot 49-yazildi
+click 1303 402  # Bul
+wait 4000
+shot 49-km
+click 1310 364  # Uzaklık
+key ctrl+a
+type 2 km
+wait 400
+click 1303 402  # Bul
+wait 1500
+shot 49-sinir
