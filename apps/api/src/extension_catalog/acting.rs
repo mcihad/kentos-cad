@@ -58,6 +58,7 @@ impl Catalog {
             release = self.imitation_gate(key, release).await?;
             release = self.secrets_gate(key, release).await?;
             release = self.experimental_gate(key, release).await?;
+            release = self.build_gate(key, release).await?;
         }
         if release.state() == ReleaseState::Published && before != Some(ReleaseState::Published) {
             self.published(&key.catalog, &release).await;
@@ -170,6 +171,57 @@ impl Catalog {
             r.record_scan(
                 &scanner,
                 GateKind::Package,
+                &content,
+                ScanOutcome::Blocked(found.clone()),
+                now,
+            )
+        })
+        .await
+    }
+
+    /// The dependency gate's rule for builds, run by the catalog itself when a version is sent to the public catalog
+    /// (docs/adr/8057 §94; plan/eklenti.md D3, PY-UV-21): a package its lock builds from its source, or does not
+    /// install, on a computer the release says it runs on sends it back with each package and computer. The gate
+    /// allows judgement: a reviewer may lift it with a reason (a build the publisher stands behind, a computer nobody
+    /// uses). A tenant's or a person's catalog publishes it, each desktop's install review saying the build. Finding
+    /// none proves nothing of the gate, so nothing is reported then; a release another gate sent back is left.
+    async fn build_gate(
+        &self,
+        key: &ReleaseKey,
+        release: Release,
+    ) -> Result<Release, CatalogError> {
+        if release.state() != ReleaseState::Submitted || !matches!(key.catalog, CatalogId::Public) {
+            return Ok(release);
+        }
+        let content = release.content().package.clone();
+        let bytes = self.stored(&content).await?;
+        let opened = kentos_extensions::open(&bytes, &self.limits);
+        let Some(manifest) = opened.inspection.manifest.as_ref() else {
+            return Ok(release);
+        };
+        let lock = manifest.python.as_ref().map(|p| p.lock_file.clone());
+        let found: Vec<Reason> =
+            kentos_extensions::python_builds::of_package(manifest, &opened.files)
+                .iter()
+                .flat_map(|u| {
+                    kentos_extensions::python_builds::said(u)
+                        .into_iter()
+                        .map(|(code, message)| Reason {
+                            file: lock.clone(),
+                            dependency: Some(u.name.clone()),
+                            ..Reason::new(code, message)
+                        })
+                })
+                .collect();
+        if found.is_empty() {
+            return Ok(release);
+        }
+        let scanner = Actor::new(CATALOG_SCANNER, &[Role::Scanner], Channel::Program);
+        let now = now();
+        self.moved(key, &scanner, |r| {
+            r.record_scan(
+                &scanner,
+                GateKind::Dependencies,
                 &content,
                 ScanOutcome::Blocked(found.clone()),
                 now,

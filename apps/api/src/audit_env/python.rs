@@ -110,7 +110,7 @@ pub(super) fn words(error: &InstallError) -> String {
             }
             Cause::Disk => format!("Ortam hazırlanamadı: diskte yer yok. uv: “{said}”"),
             Cause::Folder => format!("Ortam klasörüne yazılamadı. ({said})"),
-            Cause::Unavailable | Cause::Other => said.clone(),
+            Cause::Unavailable | Cause::Build | Cause::Other => said.clone(),
         },
     }
 }

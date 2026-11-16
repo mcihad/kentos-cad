@@ -758,6 +758,7 @@ pub(crate) fn check(
             );
         }
     }
+    let lock_text = lock;
     let lock = match parse_toml(lock) {
         Ok(l) => l,
         Err((line, message)) => {
@@ -964,7 +965,20 @@ pub(crate) fn check(
             }
         }
     }
+    // A computer it says it runs on with no wheel of a package (docs/adr/8057 §94): built there from its source, or
+    // not installed. Warnings: a build works where a compiler is; the public catalog asks a reviewer's reason.
+    let targets = builds::Target::declared(
+        &manifest.compatibility.operating_systems,
+        Some(requires_python),
+    );
+    for found in builds::unwheeled(lock_text, &own, &targets) {
+        for (code, message) in builds::said(&found) {
+            warnings.push(Problem::new(code, message).file(lock_path));
+        }
+    }
 }
+
+pub mod builds;
 
 #[cfg(test)]
 mod tests;

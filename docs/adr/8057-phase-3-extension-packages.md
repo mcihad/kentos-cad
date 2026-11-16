@@ -4770,3 +4770,53 @@ Kaynaklar `docs/research/2026-11-16-tr-mevzuat-denetim-kurallari.md` › *İmar 
   paket 50e5a757e12e · çizim revizyonu 0".
 - **Sınamalar:** masaüstü 1 (`audit_picker`: Mimari'de mevzuatın kuralları; seçim tutulur; başka yerden başlayan
   çalıştırma seçiciyi gösterilen kurala getirir; CBS'de hiçbiri), masaüstünün eklenti sınamaları (103), Asistan (17).
+
+## §94. Kaynaktan derlenecek paket: `kek verify`, kurulum incelemesi ve genel katalog (`ADIM 18A`, PY-UV-20, 21; D3)
+
+**16 Kasım.** Kod: paylaşılan `python/builds.rs` (yeni, `kentos_extensions::python_builds`: `Target`, `Machine`,
+`unwheeled`, `fits`, `said`, `of_package`, `on_computer`; PEP 508 marker okuyucusu), `python.rs` (lint'in uyarısı);
+python-env `python.rs` (`Cause::Build`, `build_words`), `extension.rs`, `personal.rs`; katalog `acting.rs`
+(`build_gate`); masaüstü kurulum incelemesi (`view.rs` `on_this_computer`, `Pending.here`), `python_personal.rs`.
+
+- **Sorun.** Bir paketin bu bilgisayara uyan hazır kurulum dosyası (wheel) yoksa uv onu kaynak dağıtımından
+  kullanıcının bilgisayarında derler: paketin derleme betiği kullanıcının yetkileriyle çalışır, kilitte olmayan derleme
+  araçlarını indirir, C eklentisi için derleyici ister. Bunu kimse söylemiyordu: `required-environments` yalnız kaynak
+  dağıtımı olmayan paketlerden wheel ister (uv'nin kuralı), D3 denetimi de yalnız sistemin adına bakıyordu. Sunucu hiç
+  derlemez (§66), masaüstü sessizce derler. Derleme düşünce derleme betiğinin kendi `error:` satırı uv'nin sözü sanılıp
+  "Eklentinin ortamı hazırlanamadı" diye gösteriliyordu (uv 0.11.26 ile ölçüldü: ağsız, kendi derleme betiği bilerek
+  düşen bir kaynak paketi).
+- **Karar: kilitten okunur, hiçbir şey çalıştırılmaz.** Her bilgisayar için kurulan paketler projenin bağımlılıklarından
+  marker'ları o bilgisayar için okunarak izlenir (her isteğe bağlı özellik dahil, geliştirme grupları değil; bir
+  bağımlılığın istediği extra'lar ve çatallanan sürümler de). Paketin wheel etiketlerinden (PEP 425; platform etiketi
+  `packaging`'in okuduğu gibi) biri bilgisayara ve Python'a uymuyorsa kaynağı varsa (depodan gelenin her zaman)
+  **kaynağından derlenir**, yoksa **kurulamaz**. Kilidin desteklemediği bilgisayar (`supported-markers`,
+  `requires-python`) yargılanmaz. Bilgisayarlar KentOS'un çalıştığı altısı (`compat.json` ile aynı olduğu sınanır),
+  Python KentOS'un kurduğu 3.12; kilit almıyorsa KentOS'un çalıştırdıklarının en eskisi. Bilerek yalın: glibc'nin ve
+  macOS'un en düşük sürümü karşılaştırılmaz, KentOS'un Linux'u glibc'dir (musl wheel'i sayılmaz), okunamayan marker
+  tutar sayılır (paket atlanmaktansa yargılansın).
+- **Üç yerde.** `kentos kek verify` ve ajanın `extension.verify`'ı: paket başına uyarı, bilgisayarlarıyla
+  (`python_source_build`, `python_no_wheel`). Kurulum incelemesi: Python bölümünde yalnız bu bilgisayar için, KentOS'un
+  buradaki Python'uyla (hazırsa onun sürümü): derlenecek paketler, kurulamayacaklar, kilidin bu bilgisayarı
+  desteklemediği; yazara dönük cümleler Uyarılar'da yinelenmez. Genel katalog: gönderilen sürümün bulguları Bağımlılık
+  denetimini engeller ve sürüm yazarına döner; yazar notla yeniden gönderir, inceleyici gerekçeyle kaldırır (planın
+  "gerekçeli istisna"sı; kapının var olan gerekçeli kaldırma yolu). Kurum ve kişisel katalog engellemez: o
+  masaüstlerinin incelemesi derlemeyi söyler.
+- **Düşen derleme paketin hatasıdır (PY-UV-20).** `Cause::Build`: uv'nin "Failed to build `paket==sürüm`" satırı (uzun
+  ad `│` altında sarılır) ve `[stderr]` altındaki derlemenin son sözü okunur: "“tasli” 0.3 kaynağından derlenemedi: bu
+  bilgisayar için hazır kurulum dosyası (wheel) yok ve derlemesi başarısız oldu. Bu, eklentinin kendi hatası değil;
+  çoğu zaman derleyici ya da paketin istediği bir sistem kütüphanesi eksiktir. …" Eklentinin ortamında ve kişisel
+  ortamda aynı cümle; `kek test` bunu "çalıştırılamadı" sayar, eklentinin başarısızlığı değil.
+- **Söz:** arayüzde "tekerlek" farenin tekerleğidir ("tekerlek: yaklaş"); Python'un wheel'i için aynı sözcük çakışırdı.
+  Kullanıcıya görünen metin "hazır kurulum dosyası (wheel)" der.
+- **Ölçüm:** Vitrin'in kilidinden Linux wheel'leri çıkarılınca `kek verify` iki uyarı verir (numpy 2.5.4, shapely
+  2.0.7: Linux (x86_64), Python 3.12). Gerçek pencerede kurulum incelemesi: "Bu bilgisayar (Linux x86_64, Python 3.12)
+  için hazır kurulum dosyası (wheel) olmayan paketler kaynağından derlenecek: numpy 2.5.4, shapely 2.0.7. …". Vitrin'in,
+  mevzuatın ve fikstürlerin kendi kilitlerinde uyarı yok.
+- **Sınamalar:** paylaşılan 7 (`python::builds`: etiketler, marker'lar, gezinme: marker, extra, çatal, isteğe bağlı
+  özellik, depo; desteklenmeyen bilgisayar; bilgisayarlar ve sözleri; `compat.json` ile aynılık; Vitrin'in kilidi) ve 1
+  (lint'in uyarıları), python-env 1 (uv 0.11'in sözü, sarılmış ad, derlemenin son sözü), katalog API 1 (iki depoda:
+  engel, notla yeniden gönderim, gerekçeli kaldırma, wheel'li kilit geçer, kişisel katalog engellemez), masaüstü 1 (bu
+  bilgisayarda derlenecekler, Uyarılar'da yinelenmez, pencere çizilir).
+- **Kalan:** derlemeyi yalnız incelemede listelenen paketlere açmak (uv'de izin listesi yok; `--no-build-package`
+  tersidir); kilidin desteklemediği bilgisayarı (ajan iskeletinin üç bilgisayarlık kilidi Linux aarch64'te) kurulumdan
+  önce uyumsuzluk saymak; glibc ve macOS'un en düşük sürümü.

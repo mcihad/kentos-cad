@@ -810,6 +810,55 @@ fn python_packages<'a>(
     }))
 }
 
+/// What the package's Python lock means on this computer (docs/adr/8057 §94): a computer it does not support, the
+/// packages built here from their sources, the ones that do not install here. Said before Kur: a build runs the
+/// package's own code here.
+fn on_this_computer<'a>(
+    mut form: Form<'a, Message>,
+    here: &kentos_extensions::python_builds::OnComputer,
+) -> Form<'a, Message> {
+    use kentos_extensions::python_builds::Need;
+    let t = &here.target;
+    let computer = format!(
+        "{} {}, Python {}.{}",
+        t.os,
+        t.machine.id(),
+        t.python.0,
+        t.python.1
+    );
+    if !here.supported {
+        return form.wide(Banner::warning(format!(
+            "Eklentinin Python kilidi bu bilgisayarı ({computer}) desteklemiyor: Python ortamı burada hazırlanamaz, \
+             Python katkıları çalışmaz. Formlar, veri kaynakları ve şerit düğmeleri Python'suz çalışır."
+        )));
+    }
+    let named = |need: Need| -> Vec<String> {
+        here.unwheeled
+            .iter()
+            .filter(|u| u.needs.iter().any(|(_, n)| *n == need))
+            .map(|u| format!("{} {}", u.name, u.version))
+            .collect()
+    };
+    let built = named(Need::Source);
+    if !built.is_empty() {
+        form = form.wide(Banner::warning(format!(
+            "Bu bilgisayar ({computer}) için hazır kurulum dosyası (wheel) olmayan paketler kaynağından derlenecek: \
+             {}. Derleme, paketin kendi derleme betiğini bu bilgisayarda sizin yetkilerinizle çalıştırır, kilitte \
+             olmayan derleme araçlarını indirir ve derleyici isteyebilir; derlenemezse Python ortamı hazırlanamaz.",
+            built.join(", ")
+        )));
+    }
+    let nothing = named(Need::Nothing);
+    if !nothing.is_empty() {
+        form = form.wide(Banner::warning(format!(
+            "Bu bilgisayarda ({computer}) kurulamayacak paketler: {} (ne hazır kurulum dosyası ne kaynağı var). \
+             Python ortamı burada hazırlanamaz.",
+            nothing.join(", ")
+        )));
+    }
+    form
+}
+
 fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a, Message> {
     use kentos_extensions::resemblance::sentences;
     let r = &p.review;
@@ -988,14 +1037,21 @@ fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a
              Python'suz çalışır.",
         ));
         form = python_packages(form, &r.python_packages);
+        if let Some(here) = &p.here {
+            form = on_this_computer(form, here);
+        }
     }
-    // A package named like a well-known one is said at the top.
+    // A package named like a well-known one is said at the top; the computers without a wheel, for this one in the
+    // Python section (the lint's sentences name every computer the package says it runs on: the author's).
     let named = r.python_packages.iter().any(|l| l.resembles.is_some());
     let warnings: Vec<_> = r
         .inspection
         .warnings
         .iter()
         .filter(|w| !(named && w.code == "python_name_resembles"))
+        .filter(|w| {
+            p.here.is_none() || !matches!(w.code, "python_source_build" | "python_no_wheel")
+        })
         .collect();
     if !warnings.is_empty() {
         form = form.section("Uyarılar");

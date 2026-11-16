@@ -442,7 +442,7 @@ pub fn prepare_words(error: &InstallError) -> String {
                 Cause::Folder => {
                     "Ortam hazırlanamadı: KentOS'un Python klasörüne yazılamadı.".to_owned()
                 }
-                Cause::Unavailable | Cause::Other => String::new(),
+                Cause::Unavailable | Cause::Build | Cause::Other => String::new(),
             },
             said,
         ),
@@ -595,6 +595,11 @@ fn sync(
     if ran.status != Some(0) {
         let said = python::said(&ran.stderr).unwrap_or_default();
         return Err(match python::cause_of(&ran.stderr) {
+            // A package's build, not the extension's environment (PY-UV-20).
+            Cause::Build => InstallError::Failed {
+                cause: Cause::Build,
+                said: python::build_words(&ran.stderr).unwrap_or(said),
+            },
             Cause::Other => other(lock_words(&said)),
             cause => InstallError::Failed { cause, said },
         });

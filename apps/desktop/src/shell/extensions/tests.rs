@@ -13,6 +13,7 @@ use super::*;
 
 mod audit_picker;
 mod bom;
+mod builds;
 mod demo;
 mod python;
 

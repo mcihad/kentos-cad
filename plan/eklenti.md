@@ -729,7 +729,8 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   çıktıların kapsamını gösterir; kişisel betikler varsayılan temizliğe girmez [PY-OPT-13]. Her kurulum akışında ilk
   kullanıcı hazır araçlarla devam edebilir [PY-OPT-14].
   — *kısmen (ADR 8057 §5): eklenti başına ortam, isteğe bağlı özellikler, reddedilen bağımlılık nedenli pasif,
-  eklentiyle kaldırma; kalan: kurum politikası [PY-OPT-12].*
+  eklentiyle kaldırma; kalan: kurum politikası [PY-OPT-12]. 16 Kasım (ADR 8057 §84): ilke izinli paket depolarını
+  ve paketleri sınırlar, kullanıcının onayı genişletemez; kalan: bulut yürütme sınırı.*
 
 **Algılama ve kurulum:**
 - [x] PATH'ten ve kullanıcının seçtiği yoldan uv; sürüm/platform/mimari destek matrisiyle karşılaştırılır [PY-UV-01];
@@ -763,8 +764,10 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   atomik etkinleşir [PY-UV-18]. Geliştirme bağımlılıkları yayına kurulmaz [PY-UV-19]. Yerel tekerlek, kaynaktan derleme
   ve işletim sistemi kütüphanesi ayrılır; başarısız derleme eklenti hatası gibi gösterilmez [PY-UV-20]; derleme kancaları
   kod yürütür, açık kapsamla yönetilir, genel yayında tekerlek önceliklidir [PY-UV-21].
-  — *kısmen (ADR 8057 §5): kur, denetle, "hazır" en son yazılır; kalan: kaynaktan derlemenin ayrı gösterilmesi ve
-  derleme kancalarının kapsamı [PY-UV-20, 21].*
+  — *kısmen (ADR 8057 §5): kur, denetle, "hazır" en son yazılır. 16 Kasım (ADR 8057 §94): kaynaktan derlenecek
+  paket kilitten okunur ve `kek verify`'da, kurulum incelemesinde (bu bilgisayar ve Python'u için) ve genel katalogda
+  (Bağımlılık denetiminin engeli, gerekçeli istisna) söylenir; düşen derleme paketin hatası olarak, derlemenin son
+  sözüyle söylenir. Kalan: derlemeyi yalnız incelemede listelenen paketlere açmak (uv'de izin listesi yok).*
 - [x] uv argv ile çağrılır, kabuk dizgisi birleştirilmez; zaman aşımı, çıktı sınırı, istek/iş kimliği [PY-UV-22].
   Sistem Python'una yazma, genel `pip`, `--system` normal akışta yok [PY-UV-23]. Ortam yolu, yorumlayıcı ve çalışma
   klasörü açıkça seçilir; çevredeki `.python-version`, uv yapılandırması ya da etkin venv hedefi belirlemez [PY-UV-24].
@@ -793,7 +796,8 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   Alt yorumlayıcı yalıtım için kullanılmaz [Ö·23]. — *16 Kasım (ADR 8057 §83): soğuma süresi iskelette varsayılan
   (`exclude-newer = "7 days"`); ajanın yazdığı paketin soğumasız kilidi `kek verify`'da ve incelemede uyarıdır. Kurum
   izinli paket listesi (ADR 8057 §84): ilkede engelli ve izinli Python paketleri ile izinli paket depoları; inceleme,
-  kurulum ve kurulu eklentinin çalışması aynı kurala bakar.*
+  kurulum ve kurulu eklentinin çalışması aynı kurala bakar. Genel katalogda kaynaktan derleme (ADR 8057 §94):
+  Bağımlılık denetiminin engeli, inceleyicinin gerekçesiyle kalkar.*
 - **Sürüyor (13 Kasım, ADR 8057 §5):** `crates/native/python-env`; Uygulama ayarları › Python ve eklentiler (varsayılan
   kapalı, kapalıyken hiçbir şey aranmaz); uv'nin arka planda algılanması ve sürüm denetimi; tek uyumluluk manifesti;
   resmî kurulum komutları (KentOS kurmaz); kabuksuz, süreli, sınırlı uv çağrısı; **Windows:** konsol penceresi yok,
@@ -1418,7 +1422,8 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
 - [ ] Bulut Python işleri ayrı işçi/kapta, kaynak sınırı, ağ politikası, kapsamlı kimlik bilgisi ve kiracı yalıtımıyla;
   masaüstü eklenti süreci sunucu yalıtımı sayılmaz [PY-RUN-22].
   — *kısmen (ADR 8057 §42): iş çalıştırıcısı denetim kuralını hazırlanan ortamda, ağ isteyeni reddederek çalıştırır;
-  kalan: işletim sistemi yalıtımı, Python'u da ölçen bütçe, kiracı yalıtımı.*
+  16 Kasım: Python'u da ölçen bütçe (§58), Linux'ta Landlock kutusu ve soket süzgeci (§61, §63). Kalan: Windows ve
+  macOS'ta yalıtım, kiracı yalıtımı.*
 - [ ] **Derslerden (13 Kasım):**
   - **Kapı durumları "açık kalmaz":** doğrulanıyor / engellendi / doğrulandı; "taranmadı" ya da "tarama hata verdi"
     hiçbir zaman "geçti" değildir (Open VSX yük altında taranmamış paketi geçirdi) [D11].

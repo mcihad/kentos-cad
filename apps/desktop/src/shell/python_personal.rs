@@ -151,6 +151,11 @@ pub(crate) fn apply_words(error: &InstallError) -> String {
             return format!("Paket kurulumu 30 dakikada bitmedi ve durduruldu; {back}.");
         }
         InstallError::NotRun(why) => return format!("uv çalıştırılamadı: {why}."),
+        // A package's build, said by the package (PY-UV-20).
+        InstallError::Failed {
+            cause: Cause::Build,
+            said,
+        } if !said.is_empty() => return format!("{said} Ortam önceki hâline döndü."),
         InstallError::Failed { cause, said } => (
             match cause {
                 Cause::Network => format!(
@@ -165,7 +170,9 @@ pub(crate) fn apply_words(error: &InstallError) -> String {
                 Cause::Folder => {
                     format!("Paketler kurulamadı: kişisel ortamın klasörüne yazılamadı; {back}.")
                 }
-                Cause::Unavailable | Cause::Other => format!("Paketler kurulamadı; {back}."),
+                Cause::Unavailable | Cause::Build | Cause::Other => {
+                    format!("Paketler kurulamadı; {back}.")
+                }
             },
             said,
         ),

@@ -107,6 +107,9 @@ pub(crate) struct Pending {
     pub(crate) accept_imitation: bool,
     /// The agent whose workshop it comes from (Asistan, an agent on the link): its later changes are its own.
     pub(crate) agent: Option<String>,
+    /// What its Python lock means on this computer, with the Python KentOS uses here (docs/adr/8057 §94): supported,
+    /// and the packages built here from their sources or not installed.
+    pub(crate) here: Option<kentos_extensions::python_builds::OnComputer>,
 }
 
 /// The extensions' state in the window.
@@ -1292,6 +1295,10 @@ impl App {
             .map(|m| m.capabilities().into_iter().collect())
             .unwrap_or_default();
         let has_python = manifest.is_some_and(|m| m.python.is_some());
+        let here = manifest.and_then(|m| {
+            let target = kentos_extensions::python_builds::Target::here(self.python_here())?;
+            kentos_extensions::python_builds::on_computer(m, &opened.files, target)
+        });
         self.extensions.review = Some(Pending {
             bytes,
             source,
@@ -1304,7 +1311,18 @@ impl App {
             replace_source: false,
             accept_imitation: false,
             agent: None,
+            here,
         });
+    }
+
+    /// The Python KentOS makes the extensions' environments with here (`3.12`), when it is ready; none before.
+    fn python_here(&self) -> Option<(u64, u64)> {
+        let Some(crate::python_setup::OwnPython::Ready(python, _)) = &self.python_setup.python
+        else {
+            return None;
+        };
+        let mut parts = python.version.split('.').map(|p| p.parse::<u64>().ok());
+        Some((parts.next()??, parts.next()??))
     }
 
     /// Kur: the reviewed package with the user's choices.

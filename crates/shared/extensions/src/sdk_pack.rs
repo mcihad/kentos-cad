@@ -305,6 +305,9 @@ fn verify_codes() -> Value {
                                   taklidi ya da uydurulmuş ad).",
         "python_lock_no_cooling": "Uyarı: ajanın yazdığı eklentinin kilidinde soğuma süresi yok ([tool.uv] \
                                    exclude-newer = \"7 days\").",
+        "python_source_build": "Uyarı: bir bilgisayar için hazır kurulum dosyası (wheel) yok, paket orada kaynağından \
+                                derlenir; genel katalog inceleyicinin gerekçesini ister.",
+        "python_no_wheel": "Uyarı: bir bilgisayar için ne wheel ne kaynak var; paket orada kurulamaz.",
         "sdk_deprecated": "Uyarı: eskiyen SDK adı; yerini söyler, düz yeniden adlandırmayı kentos kek upgrade yazar.",
         "sdk_experimental": "Uyarı: deneysel SDK adı; atölyede ve yerel kurulumda çalışır, katalogda yayımlanamaz.",
         "handler_missing": "İşleyicinin modülü pakette yok (paketin kendi denetimi).",

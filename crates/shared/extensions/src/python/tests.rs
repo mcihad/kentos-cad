@@ -401,3 +401,62 @@ fn an_unknown_lock_version_is_a_warning_and_broken_files_are_problems() {
         "the project itself is not in the lock"
     );
 }
+
+/// A computer the manifest names with no wheel of a package is a warning naming the package and the computers: built
+/// there from its source, or not installed at all (docs/adr/8057 §94).
+#[test]
+fn a_package_without_a_wheel_for_a_named_computer_is_a_warning() {
+    let words = |lock: &str| {
+        let manifest = Manifest::read(MANIFEST).unwrap();
+        let (mut problems, mut warnings) = (Vec::new(), Vec::new());
+        check(
+            &manifest,
+            "pyproject.toml",
+            PROJECT,
+            "uv.lock",
+            lock,
+            &mut problems,
+            &mut warnings,
+        );
+        assert!(problems.is_empty(), "{problems:?}");
+        warnings
+            .into_iter()
+            .map(|w| (w.code, w.message))
+            .collect::<Vec<_>>()
+    };
+    // The macOS wheels gone: numpy and shapely are built there from their sources.
+    let no_mac: String = LOCK
+        .lines()
+        .filter(|l| !l.contains("macosx"))
+        .map(|l| format!("{l}\n"))
+        .collect();
+    let said = words(&no_mac);
+    let built: Vec<&str> = said
+        .iter()
+        .filter(|(code, _)| *code == "python_source_build")
+        .map(|(_, m)| m.as_str())
+        .collect();
+    assert_eq!(built.len(), 2, "{said:?}");
+    assert!(
+        built[0].starts_with(
+            "“numpy” 2.5.4: macOS (aarch64), Python 3.12 için hazır kurulum dosyası (wheel) yok"
+        ),
+        "{}",
+        built[0]
+    );
+    assert!(built[1].starts_with("“shapely”"), "{}", built[1]);
+    // Without its source too, numpy does not install there.
+    let no_source: String = no_mac
+        .lines()
+        .filter(|l| !l.contains("numpy-2.5.4.tar.gz"))
+        .map(|l| format!("{l}\n"))
+        .collect();
+    let said = words(&no_source);
+    assert!(
+        said.iter().any(|(code, m)| *code == "python_no_wheel"
+            && m.starts_with(
+                "“numpy” 2.5.4: macOS (aarch64), Python 3.12 için ne hazır kurulum dosyası"
+            )),
+        "{said:?}"
+    );
+}
