@@ -403,6 +403,7 @@ mod tests {
                 name: "A".into(),
                 wings: vec![ProgramWing { id: "d".into(), name: "Doğu".into(), levels: vec![] }],
                 levels: vec![],
+                ..Default::default()
             }],
             units: vec![
                 unit("1", "1", UnitKind::Unit, Some("a"), None),

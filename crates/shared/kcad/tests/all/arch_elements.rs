@@ -282,3 +282,42 @@ fn a_layered_roof_round_trips_under_arch_data_8() {
     let refused = kentos_kcad::encode(&both).expect_err("a thickness beside its layers");
     assert!(refused.message.contains("katmanlarının toplamıdır"), "{}", refused.message);
 }
+
+/// Architecture data 9 (docs/adr/8072 §1): two buildings' codes, uses and ±0.00 and their shared basement's building
+/// are written with `modules.arch = 9` and read back as they were; a code in a wrong form is refused when written.
+#[test]
+fn building_places_round_trip_under_arch_data_9() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_building_places(&doc));
+    let arch = doc.settings.arch.as_mut().expect("its levels");
+    let levels: Vec<String> = arch.levels.iter().map(|l| l.id.clone()).collect();
+    arch.program.buildings = vec![
+        kentos_contracts::ProgramBuilding {
+            id: "a".into(),
+            name: "A Blok".into(),
+            levels: levels.clone(),
+            code: Some("A1".into()),
+            usage: Some("Konut".into()),
+            zero: Some(0.0),
+            ..Default::default()
+        },
+        kentos_contracts::ProgramBuilding {
+            id: "b".into(),
+            name: "B Blok".into(),
+            levels: vec![levels[0].clone()],
+            code: Some("B1".into()),
+            zero: Some(1.2),
+            ..Default::default()
+        },
+    ];
+    arch.program.shared = vec![kentos_contracts::SharedLevel { level: levels[0].clone(), building: "a".into() }];
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_BUILDING_PLACES);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the buildings read back");
+    let mut wrong = doc.clone();
+    if let Some(a) = wrong.settings.arch.as_mut() {
+        a.program.buildings[1].code = Some("b-1".into());
+    }
+    let refused = kentos_kcad::encode(&wrong).expect_err("a code in a wrong form");
+    assert!(refused.message.contains("bina kodu"), "{}", refused.message);
+}

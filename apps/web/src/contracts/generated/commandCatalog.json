@@ -27489,7 +27489,7 @@
       "id": "cad.program.edit",
       "version": 1,
       "title": "Bina programı",
-      "summary": "Bina programını ve bölümlerine verilen mahalleri yazar; tek geri alma adımı “Bina programı”, hepsi ya da hiçbiri. program (verilmezse olduğu gibi): buildings (bina ve kanatları: kimlik, ad, levels: kapladıkları katların kimlikleri, kanadınki binasınınkilerden), units (bağımsız bölüm, ortak alan ya da dış alan: kimlik, numara, ad, kind unit/common/outdoor, bina, kanat, recordedArea kayıtlı alan m²: ölçümle hiç yazılmaz, shareWeight: ağırlığa göre paylaştırmada bölümün pay ağırlığı, ondalık metin), shareRule (ortak alanların bağımsız bölümlere paylaştırılması: equal eşit, net net alana göre, weight ağırlığa göre; kural kentos.share/1), briefs (kullanıma göre tasarım hedefi: areaMin, areaMax m², minWidth net en, minPassage kapılar arası net geçiş, adjacent komşu kullanımlar, reach kapı ya da açık geçişle ulaşılacak kullanımlar, outdoor balkon gibi dış mahal; yasal sınır değildir), clearances (blok adına donatının önündeki kullanım alanı: width, depth m), version (hedeflerin adı ve sürümü, bulgularda yazılır). Kat ile bölüm arasında zorunlu bire bir bağ yoktur: bölümün katları mahallerinden okunur (dubleks iki kat). assign: uids mahalleri unit bölümüne verir (null bölümden çıkarır). Kaldırılan bölümde hâlâ mahal kalırsa unit_in_use (uids); kaldırılan bina ya da kanat hâlâ bölümlerde yazılıysa building_in_use (bölümlerin numaraları iletide). Retler: nothing_to_set, building_in_use, invalid_program (programın yolu), level_not_found (binanın ya da kanadın katı projede yok), no_entities, invalid_uid, entity_not_found, not_a_space, unit_not_found, unit_in_use, layer_locked. Çıktı yazılan program, bölümü değişen mahaller (assigned) ve revizyon. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Bina programını ve bölümlerine verilen mahalleri yazar; tek geri alma adımı “Bina programı”, hepsi ya da hiçbiri. program (verilmezse olduğu gibi): buildings (bina ve kanatları: kimlik, ad, levels: kapladıkları katların kimlikleri, kanadınki binasınınkilerden; binanın code: EK-2 §2.3 bina kodu, iki büyük harf ya da rakam, her binada ayrı, “00” yalnız tek binalı projede; usage: kullanım türü; zero: ±0.00'ı, projenin ±0.00'ına göre metre), shared (birden çok binanın kapladığı kat — ortak bodrum — ve alanının bir kez sayıldığı bina: level, building), units (bağımsız bölüm, ortak alan ya da dış alan: kimlik, numara, ad, kind unit/common/outdoor, bina, kanat, recordedArea kayıtlı alan m²: ölçümle hiç yazılmaz, shareWeight: ağırlığa göre paylaştırmada bölümün pay ağırlığı, ondalık metin), shareRule (ortak alanların bağımsız bölümlere paylaştırılması: equal eşit, net net alana göre, weight ağırlığa göre; kural kentos.share/1), briefs (kullanıma göre tasarım hedefi: areaMin, areaMax m², minWidth net en, minPassage kapılar arası net geçiş, adjacent komşu kullanımlar, reach kapı ya da açık geçişle ulaşılacak kullanımlar, outdoor balkon gibi dış mahal; yasal sınır değildir), clearances (blok adına donatının önündeki kullanım alanı: width, depth m), version (hedeflerin adı ve sürümü, bulgularda yazılır). Kat ile bölüm arasında zorunlu bire bir bağ yoktur: bölümün katları mahallerinden okunur (dubleks iki kat). assign: uids mahalleri unit bölümüne verir (null bölümden çıkarır). Kaldırılan bölümde hâlâ mahal kalırsa unit_in_use (uids); kaldırılan bina ya da kanat hâlâ bölümlerde yazılıysa building_in_use (bölümlerin numaraları iletide). Retler: nothing_to_set, building_in_use, invalid_program (programın yolu), level_not_found (binanın ya da kanadın katı projede yok), no_entities, invalid_uid, entity_not_found, not_a_space, unit_not_found, unit_in_use, layer_locked. Çıktı yazılan program, bölümü değişen mahaller (assigned) ve revizyon. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -127820,6 +127820,13 @@
           ],
           "description": "How the common areas are shared out to the independent units (docs/adr/0784 §2); none: they are not."
         },
+        "shared": {
+          "description": "The levels two or more buildings span, each with the building it counts as a storey of (docs/adr/8072 §1).",
+          "items": {
+            "$ref": "#/$defs/SharedLevel"
+          },
+          "type": "array"
+        },
         "units": {
           "items": {
             "$ref": "#/$defs/ProgramUnit"
@@ -189753,6 +189760,13 @@
       "additionalProperties": false,
       "description": "A building and its wings.",
       "properties": {
+        "code": {
+          "description": "Its building code (docs/adr/8072 §1; EK-2 §2.3, Tablo 2.1): two capital letters or digits, its model files'\nnames carry it; \"00\" only for a project of one building. None: not said.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "id": {
           "type": "string"
         },
@@ -189766,11 +189780,27 @@
         "name": {
           "type": "string"
         },
+        "usage": {
+          "description": "What it is used for (Kullanım türü; EK-6 Tablo 6.7 `OccupancyType`), as the project writes it.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "wings": {
           "items": {
             "$ref": "#/$defs/ProgramWing"
           },
           "type": "array"
+        },
+        "zero": {
+          "description": "Its ±0.00 over the project's ±0.00, metres (docs/adr/8072 §1): a block entered higher or lower than another;\nits storeys' levels are read from it. None: not said (the project's when it is the only building).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
         }
       },
       "required": [
@@ -202983,6 +203013,23 @@
           "type": "string"
         }
       ]
+    },
+    "SharedLevel": {
+      "additionalProperties": false,
+      "description": "A level two or more buildings span (a common basement, docs/adr/8072 §1): the building it counts as a storey of, its\narea once.",
+      "properties": {
+        "building": {
+          "type": "string"
+        },
+        "level": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "level",
+        "building"
+      ],
+      "type": "object"
     },
     "SheetBuiltUp": {
       "additionalProperties": false,

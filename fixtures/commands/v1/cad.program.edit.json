@@ -4379,6 +4379,1710 @@
    ]
   },
   {
+   "name": "İki blok kodları, kullanımları, ±0.00'ları ve ortak katın sayıldığı binayla yazılır",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.program.edit",
+     "input": {
+      "program": {
+       "buildings": [
+        {
+         "id": "a",
+         "name": "A Blok",
+         "wings": [
+          {
+           "id": "a-dogu",
+           "name": "Doğu kanadı"
+          }
+         ],
+         "levels": [
+          "zemin",
+          "kat-1"
+         ],
+         "code": "A1",
+         "usage": "Konut",
+         "zero": 0.0
+        },
+        {
+         "id": "b",
+         "name": "B Blok",
+         "levels": [
+          "zemin"
+         ],
+         "code": "B1",
+         "usage": "Ticaret",
+         "zero": 1.2
+        }
+       ],
+       "units": [
+        {
+         "id": "d1",
+         "number": "1",
+         "name": "Daire 1",
+         "building": "a",
+         "recordedArea": 60.0
+        },
+        {
+         "id": "d2",
+         "number": "2",
+         "name": "Daire 2",
+         "building": "a",
+         "wing": "a-dogu"
+        },
+        {
+         "id": "ortak",
+         "number": "O",
+         "name": "Ortak alan",
+         "kind": "common",
+         "building": "a"
+        },
+        {
+         "id": "bahce",
+         "number": "B",
+         "name": "Bahçe",
+         "kind": "outdoor"
+        }
+       ],
+       "briefs": [
+        {
+         "usage": "Yatak odası",
+         "areaMin": 12.0,
+         "areaMax": 16.0,
+         "minWidth": 2.8,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Salon",
+         "areaMin": 18.0,
+         "areaMax": 30.0,
+         "adjacent": [
+          "Mutfak"
+         ]
+        },
+        {
+         "usage": "Mutfak",
+         "areaMin": 6.0,
+         "areaMax": 12.0,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Koridor",
+         "minWidth": 1.1,
+         "minPassage": 1.2
+        },
+        {
+         "usage": "Banyo",
+         "areaMin": 4.0,
+         "areaMax": 8.0
+        },
+        {
+         "usage": "Balkon",
+         "outdoor": true
+        }
+       ],
+       "version": "Ofis konut hedefleri 2026-1",
+       "shared": [
+        {
+         "level": "zemin",
+         "building": "b"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "program": {
+        "buildings": [
+         {
+          "id": "a",
+          "name": "A Blok",
+          "wings": [
+           {
+            "id": "a-dogu",
+            "name": "Doğu kanadı"
+           }
+          ],
+          "levels": [
+           "zemin",
+           "kat-1"
+          ],
+          "code": "A1",
+          "usage": "Konut",
+          "zero": 0.0
+         },
+         {
+          "id": "b",
+          "name": "B Blok",
+          "levels": [
+           "zemin"
+          ],
+          "code": "B1",
+          "usage": "Ticaret",
+          "zero": 1.2
+         }
+        ],
+        "units": [
+         {
+          "id": "d1",
+          "number": "1",
+          "name": "Daire 1",
+          "building": "a",
+          "recordedArea": 60.0
+         },
+         {
+          "id": "d2",
+          "number": "2",
+          "name": "Daire 2",
+          "building": "a",
+          "wing": "a-dogu"
+         },
+         {
+          "id": "ortak",
+          "number": "O",
+          "name": "Ortak alan",
+          "kind": "common",
+          "building": "a"
+         },
+         {
+          "id": "bahce",
+          "number": "B",
+          "name": "Bahçe",
+          "kind": "outdoor"
+         }
+        ],
+        "briefs": [
+         {
+          "usage": "Yatak odası",
+          "areaMin": 12.0,
+          "areaMax": 16.0,
+          "minWidth": 2.8,
+          "reach": [
+           "Salon"
+          ]
+         },
+         {
+          "usage": "Salon",
+          "areaMin": 18.0,
+          "areaMax": 30.0,
+          "adjacent": [
+           "Mutfak"
+          ]
+         },
+         {
+          "usage": "Mutfak",
+          "areaMin": 6.0,
+          "areaMax": 12.0,
+          "reach": [
+           "Salon"
+          ]
+         },
+         {
+          "usage": "Koridor",
+          "minWidth": 1.1,
+          "minPassage": 1.2
+         },
+         {
+          "usage": "Banyo",
+          "areaMin": 4.0,
+          "areaMax": 8.0
+         },
+         {
+          "usage": "Balkon",
+          "outdoor": true
+         }
+        ],
+        "version": "Ofis konut hedefleri 2026-1",
+        "shared": [
+         {
+          "level": "zemin",
+          "building": "b"
+         }
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.0
+         },
+         {
+          "id": "kat-1",
+          "name": "1. kat",
+          "elevation": 3.0,
+          "height": 3.0
+         }
+        ],
+        "program": {
+         "buildings": [
+          {
+           "id": "a",
+           "name": "A Blok",
+           "wings": [
+            {
+             "id": "a-dogu",
+             "name": "Doğu kanadı"
+            }
+           ],
+           "levels": [
+            "zemin",
+            "kat-1"
+           ],
+           "code": "A1",
+           "usage": "Konut",
+           "zero": 0.0
+          },
+          {
+           "id": "b",
+           "name": "B Blok",
+           "levels": [
+            "zemin"
+           ],
+           "code": "B1",
+           "usage": "Ticaret",
+           "zero": 1.2
+          }
+         ],
+         "units": [
+          {
+           "id": "d1",
+           "number": "1",
+           "name": "Daire 1",
+           "building": "a",
+           "recordedArea": 60.0
+          },
+          {
+           "id": "d2",
+           "number": "2",
+           "name": "Daire 2",
+           "building": "a",
+           "wing": "a-dogu"
+          },
+          {
+           "id": "ortak",
+           "number": "O",
+           "name": "Ortak alan",
+           "kind": "common",
+           "building": "a"
+          },
+          {
+           "id": "bahce",
+           "number": "B",
+           "name": "Bahçe",
+           "kind": "outdoor"
+          }
+         ],
+         "briefs": [
+          {
+           "usage": "Yatak odası",
+           "areaMin": 12.0,
+           "areaMax": 16.0,
+           "minWidth": 2.8,
+           "reach": [
+            "Salon"
+           ]
+          },
+          {
+           "usage": "Salon",
+           "areaMin": 18.0,
+           "areaMax": 30.0,
+           "adjacent": [
+            "Mutfak"
+           ]
+          },
+          {
+           "usage": "Mutfak",
+           "areaMin": 6.0,
+           "areaMax": 12.0,
+           "reach": [
+            "Salon"
+           ]
+          },
+          {
+           "usage": "Koridor",
+           "minWidth": 1.1,
+           "minPassage": 1.2
+          },
+          {
+           "usage": "Banyo",
+           "areaMin": 4.0,
+           "areaMax": 8.0
+          },
+          {
+           "usage": "Balkon",
+           "outdoor": true
+          }
+         ],
+         "version": "Ofis konut hedefleri 2026-1",
+         "shared": [
+          {
+           "level": "zemin",
+           "building": "b"
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tek binanın kodu 00 olur",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.program.edit",
+     "input": {
+      "program": {
+       "buildings": [
+        {
+         "id": "a",
+         "name": "A Blok",
+         "wings": [
+          {
+           "id": "a-dogu",
+           "name": "Doğu kanadı"
+          }
+         ],
+         "code": "00"
+        }
+       ],
+       "units": [
+        {
+         "id": "d1",
+         "number": "1",
+         "name": "Daire 1",
+         "building": "a",
+         "recordedArea": 60.0
+        },
+        {
+         "id": "d2",
+         "number": "2",
+         "name": "Daire 2",
+         "building": "a",
+         "wing": "a-dogu"
+        },
+        {
+         "id": "ortak",
+         "number": "O",
+         "name": "Ortak alan",
+         "kind": "common",
+         "building": "a"
+        },
+        {
+         "id": "bahce",
+         "number": "B",
+         "name": "Bahçe",
+         "kind": "outdoor"
+        }
+       ],
+       "briefs": [
+        {
+         "usage": "Yatak odası",
+         "areaMin": 12.0,
+         "areaMax": 16.0,
+         "minWidth": 2.8,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Salon",
+         "areaMin": 18.0,
+         "areaMax": 30.0,
+         "adjacent": [
+          "Mutfak"
+         ]
+        },
+        {
+         "usage": "Mutfak",
+         "areaMin": 6.0,
+         "areaMax": 12.0,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Koridor",
+         "minWidth": 1.1,
+         "minPassage": 1.2
+        },
+        {
+         "usage": "Banyo",
+         "areaMin": 4.0,
+         "areaMax": 8.0
+        },
+        {
+         "usage": "Balkon",
+         "outdoor": true
+        }
+       ],
+       "version": "Ofis konut hedefleri 2026-1"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "program": {
+        "buildings": [
+         {
+          "id": "a",
+          "name": "A Blok",
+          "wings": [
+           {
+            "id": "a-dogu",
+            "name": "Doğu kanadı"
+           }
+          ],
+          "code": "00"
+         }
+        ],
+        "units": [
+         {
+          "id": "d1",
+          "number": "1",
+          "name": "Daire 1",
+          "building": "a",
+          "recordedArea": 60.0
+         },
+         {
+          "id": "d2",
+          "number": "2",
+          "name": "Daire 2",
+          "building": "a",
+          "wing": "a-dogu"
+         },
+         {
+          "id": "ortak",
+          "number": "O",
+          "name": "Ortak alan",
+          "kind": "common",
+          "building": "a"
+         },
+         {
+          "id": "bahce",
+          "number": "B",
+          "name": "Bahçe",
+          "kind": "outdoor"
+         }
+        ],
+        "briefs": [
+         {
+          "usage": "Yatak odası",
+          "areaMin": 12.0,
+          "areaMax": 16.0,
+          "minWidth": 2.8,
+          "reach": [
+           "Salon"
+          ]
+         },
+         {
+          "usage": "Salon",
+          "areaMin": 18.0,
+          "areaMax": 30.0,
+          "adjacent": [
+           "Mutfak"
+          ]
+         },
+         {
+          "usage": "Mutfak",
+          "areaMin": 6.0,
+          "areaMax": 12.0,
+          "reach": [
+           "Salon"
+          ]
+         },
+         {
+          "usage": "Koridor",
+          "minWidth": 1.1,
+          "minPassage": 1.2
+         },
+         {
+          "usage": "Banyo",
+          "areaMin": 4.0,
+          "areaMax": 8.0
+         },
+         {
+          "usage": "Balkon",
+          "outdoor": true
+         }
+        ],
+        "version": "Ofis konut hedefleri 2026-1"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.0
+         },
+         {
+          "id": "kat-1",
+          "name": "1. kat",
+          "elevation": 3.0,
+          "height": 3.0
+         }
+        ],
+        "program": {
+         "buildings": [
+          {
+           "id": "a",
+           "name": "A Blok",
+           "wings": [
+            {
+             "id": "a-dogu",
+             "name": "Doğu kanadı"
+            }
+           ],
+           "code": "00"
+          }
+         ],
+         "units": [
+          {
+           "id": "d1",
+           "number": "1",
+           "name": "Daire 1",
+           "building": "a",
+           "recordedArea": 60.0
+          },
+          {
+           "id": "d2",
+           "number": "2",
+           "name": "Daire 2",
+           "building": "a",
+           "wing": "a-dogu"
+          },
+          {
+           "id": "ortak",
+           "number": "O",
+           "name": "Ortak alan",
+           "kind": "common",
+           "building": "a"
+          },
+          {
+           "id": "bahce",
+           "number": "B",
+           "name": "Bahçe",
+           "kind": "outdoor"
+          }
+         ],
+         "briefs": [
+          {
+           "usage": "Yatak odası",
+           "areaMin": 12.0,
+           "areaMax": 16.0,
+           "minWidth": 2.8,
+           "reach": [
+            "Salon"
+           ]
+          },
+          {
+           "usage": "Salon",
+           "areaMin": 18.0,
+           "areaMax": 30.0,
+           "adjacent": [
+            "Mutfak"
+           ]
+          },
+          {
+           "usage": "Mutfak",
+           "areaMin": 6.0,
+           "areaMax": 12.0,
+           "reach": [
+            "Salon"
+           ]
+          },
+          {
+           "usage": "Koridor",
+           "minWidth": 1.1,
+           "minPassage": 1.2
+          },
+          {
+           "usage": "Banyo",
+           "areaMin": 4.0,
+           "areaMax": 8.0
+          },
+          {
+           "usage": "Balkon",
+           "outdoor": true
+          }
+         ],
+         "version": "Ofis konut hedefleri 2026-1"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bina kodu iki büyük harf ya da rakamdır",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.program.edit",
+     "input": {
+      "program": {
+       "buildings": [
+        {
+         "id": "a",
+         "name": "A Blok",
+         "wings": [
+          {
+           "id": "a-dogu",
+           "name": "Doğu kanadı"
+          }
+         ],
+         "levels": [
+          "zemin",
+          "kat-1"
+         ],
+         "code": "A1",
+         "usage": "Konut",
+         "zero": 0.0
+        },
+        {
+         "id": "b",
+         "name": "B Blok",
+         "levels": [
+          "zemin"
+         ],
+         "code": "b-1",
+         "usage": "Ticaret",
+         "zero": 1.2
+        }
+       ],
+       "units": [
+        {
+         "id": "d1",
+         "number": "1",
+         "name": "Daire 1",
+         "building": "a",
+         "recordedArea": 60.0
+        },
+        {
+         "id": "d2",
+         "number": "2",
+         "name": "Daire 2",
+         "building": "a",
+         "wing": "a-dogu"
+        },
+        {
+         "id": "ortak",
+         "number": "O",
+         "name": "Ortak alan",
+         "kind": "common",
+         "building": "a"
+        },
+        {
+         "id": "bahce",
+         "number": "B",
+         "name": "Bahçe",
+         "kind": "outdoor"
+        }
+       ],
+       "briefs": [
+        {
+         "usage": "Yatak odası",
+         "areaMin": 12.0,
+         "areaMax": 16.0,
+         "minWidth": 2.8,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Salon",
+         "areaMin": 18.0,
+         "areaMax": 30.0,
+         "adjacent": [
+          "Mutfak"
+         ]
+        },
+        {
+         "usage": "Mutfak",
+         "areaMin": 6.0,
+         "areaMax": 12.0,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Koridor",
+         "minWidth": 1.1,
+         "minPassage": 1.2
+        },
+        {
+         "usage": "Banyo",
+         "areaMin": 4.0,
+         "areaMax": 8.0
+        },
+        {
+         "usage": "Balkon",
+         "outdoor": true
+        }
+       ],
+       "version": "Ofis konut hedefleri 2026-1",
+       "shared": [
+        {
+         "level": "zemin",
+         "building": "b"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_program",
+       "message": "“b-1” bina kodu olamaz; bina kodu iki büyük harf ya da rakamdır (A1, B2, 01).",
+       "path": "program.buildings[1].code"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki binanın kodu aynı olamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.program.edit",
+     "input": {
+      "program": {
+       "buildings": [
+        {
+         "id": "a",
+         "name": "A Blok",
+         "wings": [
+          {
+           "id": "a-dogu",
+           "name": "Doğu kanadı"
+          }
+         ],
+         "levels": [
+          "zemin",
+          "kat-1"
+         ],
+         "code": "A1",
+         "usage": "Konut",
+         "zero": 0.0
+        },
+        {
+         "id": "b",
+         "name": "B Blok",
+         "levels": [
+          "zemin"
+         ],
+         "code": "A1",
+         "usage": "Ticaret",
+         "zero": 1.2
+        }
+       ],
+       "units": [
+        {
+         "id": "d1",
+         "number": "1",
+         "name": "Daire 1",
+         "building": "a",
+         "recordedArea": 60.0
+        },
+        {
+         "id": "d2",
+         "number": "2",
+         "name": "Daire 2",
+         "building": "a",
+         "wing": "a-dogu"
+        },
+        {
+         "id": "ortak",
+         "number": "O",
+         "name": "Ortak alan",
+         "kind": "common",
+         "building": "a"
+        },
+        {
+         "id": "bahce",
+         "number": "B",
+         "name": "Bahçe",
+         "kind": "outdoor"
+        }
+       ],
+       "briefs": [
+        {
+         "usage": "Yatak odası",
+         "areaMin": 12.0,
+         "areaMax": 16.0,
+         "minWidth": 2.8,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Salon",
+         "areaMin": 18.0,
+         "areaMax": 30.0,
+         "adjacent": [
+          "Mutfak"
+         ]
+        },
+        {
+         "usage": "Mutfak",
+         "areaMin": 6.0,
+         "areaMax": 12.0,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Koridor",
+         "minWidth": 1.1,
+         "minPassage": 1.2
+        },
+        {
+         "usage": "Banyo",
+         "areaMin": 4.0,
+         "areaMax": 8.0
+        },
+        {
+         "usage": "Balkon",
+         "outdoor": true
+        }
+       ],
+       "version": "Ofis konut hedefleri 2026-1",
+       "shared": [
+        {
+         "level": "zemin",
+         "building": "b"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_program",
+       "message": "“A1” bina kodu iki binada var; her binanın kodu ayrı olmalı.",
+       "path": "program.buildings[1].code"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "00 birden çok binada verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.program.edit",
+     "input": {
+      "program": {
+       "buildings": [
+        {
+         "id": "a",
+         "name": "A Blok",
+         "wings": [
+          {
+           "id": "a-dogu",
+           "name": "Doğu kanadı"
+          }
+         ],
+         "levels": [
+          "zemin",
+          "kat-1"
+         ],
+         "code": "A1",
+         "usage": "Konut",
+         "zero": 0.0
+        },
+        {
+         "id": "b",
+         "name": "B Blok",
+         "levels": [
+          "zemin"
+         ],
+         "code": "00",
+         "usage": "Ticaret",
+         "zero": 1.2
+        }
+       ],
+       "units": [
+        {
+         "id": "d1",
+         "number": "1",
+         "name": "Daire 1",
+         "building": "a",
+         "recordedArea": 60.0
+        },
+        {
+         "id": "d2",
+         "number": "2",
+         "name": "Daire 2",
+         "building": "a",
+         "wing": "a-dogu"
+        },
+        {
+         "id": "ortak",
+         "number": "O",
+         "name": "Ortak alan",
+         "kind": "common",
+         "building": "a"
+        },
+        {
+         "id": "bahce",
+         "number": "B",
+         "name": "Bahçe",
+         "kind": "outdoor"
+        }
+       ],
+       "briefs": [
+        {
+         "usage": "Yatak odası",
+         "areaMin": 12.0,
+         "areaMax": 16.0,
+         "minWidth": 2.8,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Salon",
+         "areaMin": 18.0,
+         "areaMax": 30.0,
+         "adjacent": [
+          "Mutfak"
+         ]
+        },
+        {
+         "usage": "Mutfak",
+         "areaMin": 6.0,
+         "areaMax": 12.0,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Koridor",
+         "minWidth": 1.1,
+         "minPassage": 1.2
+        },
+        {
+         "usage": "Banyo",
+         "areaMin": 4.0,
+         "areaMax": 8.0
+        },
+        {
+         "usage": "Balkon",
+         "outdoor": true
+        }
+       ],
+       "version": "Ofis konut hedefleri 2026-1",
+       "shared": [
+        {
+         "level": "zemin",
+         "building": "b"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_program",
+       "message": "“00” tek binalı projenin kodudur; birden çok binada her binaya kendi kodunu verin.",
+       "path": "program.buildings[1].code"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Binanın ±0.00'ı 100 m'den uzak olamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.program.edit",
+     "input": {
+      "program": {
+       "buildings": [
+        {
+         "id": "a",
+         "name": "A Blok",
+         "wings": [
+          {
+           "id": "a-dogu",
+           "name": "Doğu kanadı"
+          }
+         ],
+         "levels": [
+          "zemin",
+          "kat-1"
+         ],
+         "code": "A1",
+         "usage": "Konut",
+         "zero": 0.0
+        },
+        {
+         "id": "b",
+         "name": "B Blok",
+         "levels": [
+          "zemin"
+         ],
+         "code": "B1",
+         "usage": "Ticaret",
+         "zero": 150.0
+        }
+       ],
+       "units": [
+        {
+         "id": "d1",
+         "number": "1",
+         "name": "Daire 1",
+         "building": "a",
+         "recordedArea": 60.0
+        },
+        {
+         "id": "d2",
+         "number": "2",
+         "name": "Daire 2",
+         "building": "a",
+         "wing": "a-dogu"
+        },
+        {
+         "id": "ortak",
+         "number": "O",
+         "name": "Ortak alan",
+         "kind": "common",
+         "building": "a"
+        },
+        {
+         "id": "bahce",
+         "number": "B",
+         "name": "Bahçe",
+         "kind": "outdoor"
+        }
+       ],
+       "briefs": [
+        {
+         "usage": "Yatak odası",
+         "areaMin": 12.0,
+         "areaMax": 16.0,
+         "minWidth": 2.8,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Salon",
+         "areaMin": 18.0,
+         "areaMax": 30.0,
+         "adjacent": [
+          "Mutfak"
+         ]
+        },
+        {
+         "usage": "Mutfak",
+         "areaMin": 6.0,
+         "areaMax": 12.0,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Koridor",
+         "minWidth": 1.1,
+         "minPassage": 1.2
+        },
+        {
+         "usage": "Banyo",
+         "areaMin": 4.0,
+         "areaMax": 8.0
+        },
+        {
+         "usage": "Balkon",
+         "outdoor": true
+        }
+       ],
+       "version": "Ofis konut hedefleri 2026-1",
+       "shared": [
+        {
+         "level": "zemin",
+         "building": "b"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_program",
+       "message": "Binanın ±0.00'ı projenin ±0.00'ından en çok 100 m uzakta olur; 150 verildi.",
+       "path": "program.buildings[1].zero"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Boş kullanım türü yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.program.edit",
+     "input": {
+      "program": {
+       "buildings": [
+        {
+         "id": "a",
+         "name": "A Blok",
+         "wings": [
+          {
+           "id": "a-dogu",
+           "name": "Doğu kanadı"
+          }
+         ],
+         "levels": [
+          "zemin",
+          "kat-1"
+         ],
+         "code": "A1",
+         "usage": "Konut",
+         "zero": 0.0
+        },
+        {
+         "id": "b",
+         "name": "B Blok",
+         "levels": [
+          "zemin"
+         ],
+         "code": "B1",
+         "usage": " ",
+         "zero": 1.2
+        }
+       ],
+       "units": [
+        {
+         "id": "d1",
+         "number": "1",
+         "name": "Daire 1",
+         "building": "a",
+         "recordedArea": 60.0
+        },
+        {
+         "id": "d2",
+         "number": "2",
+         "name": "Daire 2",
+         "building": "a",
+         "wing": "a-dogu"
+        },
+        {
+         "id": "ortak",
+         "number": "O",
+         "name": "Ortak alan",
+         "kind": "common",
+         "building": "a"
+        },
+        {
+         "id": "bahce",
+         "number": "B",
+         "name": "Bahçe",
+         "kind": "outdoor"
+        }
+       ],
+       "briefs": [
+        {
+         "usage": "Yatak odası",
+         "areaMin": 12.0,
+         "areaMax": 16.0,
+         "minWidth": 2.8,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Salon",
+         "areaMin": 18.0,
+         "areaMax": 30.0,
+         "adjacent": [
+          "Mutfak"
+         ]
+        },
+        {
+         "usage": "Mutfak",
+         "areaMin": 6.0,
+         "areaMax": 12.0,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Koridor",
+         "minWidth": 1.1,
+         "minPassage": 1.2
+        },
+        {
+         "usage": "Banyo",
+         "areaMin": 4.0,
+         "areaMax": 8.0
+        },
+        {
+         "usage": "Balkon",
+         "outdoor": true
+        }
+       ],
+       "version": "Ofis konut hedefleri 2026-1",
+       "shared": [
+        {
+         "level": "zemin",
+         "building": "b"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_program",
+       "message": "Binanın kullanım türü boş olamaz; bir değer yazın.",
+       "path": "program.buildings[1].usage"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tek binanın katı ortak kat değildir",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.program.edit",
+     "input": {
+      "program": {
+       "buildings": [
+        {
+         "id": "a",
+         "name": "A Blok",
+         "wings": [
+          {
+           "id": "a-dogu",
+           "name": "Doğu kanadı"
+          }
+         ],
+         "levels": [
+          "zemin",
+          "kat-1"
+         ],
+         "code": "A1",
+         "usage": "Konut",
+         "zero": 0.0
+        },
+        {
+         "id": "b",
+         "name": "B Blok",
+         "levels": [
+          "zemin"
+         ],
+         "code": "B1",
+         "usage": "Ticaret",
+         "zero": 1.2
+        }
+       ],
+       "units": [
+        {
+         "id": "d1",
+         "number": "1",
+         "name": "Daire 1",
+         "building": "a",
+         "recordedArea": 60.0
+        },
+        {
+         "id": "d2",
+         "number": "2",
+         "name": "Daire 2",
+         "building": "a",
+         "wing": "a-dogu"
+        },
+        {
+         "id": "ortak",
+         "number": "O",
+         "name": "Ortak alan",
+         "kind": "common",
+         "building": "a"
+        },
+        {
+         "id": "bahce",
+         "number": "B",
+         "name": "Bahçe",
+         "kind": "outdoor"
+        }
+       ],
+       "briefs": [
+        {
+         "usage": "Yatak odası",
+         "areaMin": 12.0,
+         "areaMax": 16.0,
+         "minWidth": 2.8,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Salon",
+         "areaMin": 18.0,
+         "areaMax": 30.0,
+         "adjacent": [
+          "Mutfak"
+         ]
+        },
+        {
+         "usage": "Mutfak",
+         "areaMin": 6.0,
+         "areaMax": 12.0,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Koridor",
+         "minWidth": 1.1,
+         "minPassage": 1.2
+        },
+        {
+         "usage": "Banyo",
+         "areaMin": 4.0,
+         "areaMax": 8.0
+        },
+        {
+         "usage": "Balkon",
+         "outdoor": true
+        }
+       ],
+       "version": "Ofis konut hedefleri 2026-1",
+       "shared": [
+        {
+         "level": "kat-1",
+         "building": "a"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_program",
+       "message": "“kat-1” katını birden çok bina kaplamıyor; ortak kat değil, sayıldığı bina seçilmez.",
+       "path": "program.shared[0].level"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ortak kat onu kaplayan binada sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.program.edit",
+     "input": {
+      "program": {
+       "buildings": [
+        {
+         "id": "a",
+         "name": "A Blok",
+         "wings": [
+          {
+           "id": "a-dogu",
+           "name": "Doğu kanadı"
+          }
+         ],
+         "levels": [
+          "zemin",
+          "kat-1"
+         ],
+         "code": "A1",
+         "usage": "Konut",
+         "zero": 0.0
+        },
+        {
+         "id": "b",
+         "name": "B Blok",
+         "levels": [
+          "zemin"
+         ],
+         "code": "B1",
+         "usage": "Ticaret",
+         "zero": 1.2
+        }
+       ],
+       "units": [
+        {
+         "id": "d1",
+         "number": "1",
+         "name": "Daire 1",
+         "building": "a",
+         "recordedArea": 60.0
+        },
+        {
+         "id": "d2",
+         "number": "2",
+         "name": "Daire 2",
+         "building": "a",
+         "wing": "a-dogu"
+        },
+        {
+         "id": "ortak",
+         "number": "O",
+         "name": "Ortak alan",
+         "kind": "common",
+         "building": "a"
+        },
+        {
+         "id": "bahce",
+         "number": "B",
+         "name": "Bahçe",
+         "kind": "outdoor"
+        }
+       ],
+       "briefs": [
+        {
+         "usage": "Yatak odası",
+         "areaMin": 12.0,
+         "areaMax": 16.0,
+         "minWidth": 2.8,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Salon",
+         "areaMin": 18.0,
+         "areaMax": 30.0,
+         "adjacent": [
+          "Mutfak"
+         ]
+        },
+        {
+         "usage": "Mutfak",
+         "areaMin": 6.0,
+         "areaMax": 12.0,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Koridor",
+         "minWidth": 1.1,
+         "minPassage": 1.2
+        },
+        {
+         "usage": "Banyo",
+         "areaMin": 4.0,
+         "areaMax": 8.0
+        },
+        {
+         "usage": "Balkon",
+         "outdoor": true
+        }
+       ],
+       "version": "Ofis konut hedefleri 2026-1",
+       "shared": [
+        {
+         "level": "zemin",
+         "building": "c"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_program",
+       "message": "“zemin” katı “c” binasının katı değil; onu kaplayan binalardan birini seçin.",
+       "path": "program.shared[0].building"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ortak katın binası bir kez verilir",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.program.edit",
+     "input": {
+      "program": {
+       "buildings": [
+        {
+         "id": "a",
+         "name": "A Blok",
+         "wings": [
+          {
+           "id": "a-dogu",
+           "name": "Doğu kanadı"
+          }
+         ],
+         "levels": [
+          "zemin",
+          "kat-1"
+         ],
+         "code": "A1",
+         "usage": "Konut",
+         "zero": 0.0
+        },
+        {
+         "id": "b",
+         "name": "B Blok",
+         "levels": [
+          "zemin"
+         ],
+         "code": "B1",
+         "usage": "Ticaret",
+         "zero": 1.2
+        }
+       ],
+       "units": [
+        {
+         "id": "d1",
+         "number": "1",
+         "name": "Daire 1",
+         "building": "a",
+         "recordedArea": 60.0
+        },
+        {
+         "id": "d2",
+         "number": "2",
+         "name": "Daire 2",
+         "building": "a",
+         "wing": "a-dogu"
+        },
+        {
+         "id": "ortak",
+         "number": "O",
+         "name": "Ortak alan",
+         "kind": "common",
+         "building": "a"
+        },
+        {
+         "id": "bahce",
+         "number": "B",
+         "name": "Bahçe",
+         "kind": "outdoor"
+        }
+       ],
+       "briefs": [
+        {
+         "usage": "Yatak odası",
+         "areaMin": 12.0,
+         "areaMax": 16.0,
+         "minWidth": 2.8,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Salon",
+         "areaMin": 18.0,
+         "areaMax": 30.0,
+         "adjacent": [
+          "Mutfak"
+         ]
+        },
+        {
+         "usage": "Mutfak",
+         "areaMin": 6.0,
+         "areaMax": 12.0,
+         "reach": [
+          "Salon"
+         ]
+        },
+        {
+         "usage": "Koridor",
+         "minWidth": 1.1,
+         "minPassage": 1.2
+        },
+        {
+         "usage": "Banyo",
+         "areaMin": 4.0,
+         "areaMax": 8.0
+        },
+        {
+         "usage": "Balkon",
+         "outdoor": true
+        }
+       ],
+       "version": "Ofis konut hedefleri 2026-1",
+       "shared": [
+        {
+         "level": "zemin",
+         "building": "a"
+        },
+        {
+         "level": "zemin",
+         "building": "b"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_program",
+       "message": "“zemin” katının sayıldığı bina iki kez verildi.",
+       "path": "program.shared[1].level"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
    "name": "Programda olmayan bölüme verilmez",
    "steps": [
     {

@@ -92,7 +92,7 @@ pub struct ProgramWing {
 }
 
 /// A building and its wings.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -107,7 +107,37 @@ pub struct ProgramBuilding {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub levels: Vec<String>,
+    /// Its building code (docs/adr/8072 §1; EK-2 §2.3, Tablo 2.1): two capital letters or digits, its model files'
+    /// names carry it; "00" only for a project of one building. None: not said.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub code: Option<String>,
+    /// What it is used for (Kullanım türü; EK-6 Tablo 6.7 `OccupancyType`), as the project writes it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub usage: Option<String>,
+    /// Its ±0.00 over the project's ±0.00, metres (docs/adr/8072 §1): a block entered higher or lower than another;
+    /// its storeys' levels are read from it. None: not said (the project's when it is the only building).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub zero: Option<f64>,
 }
+
+/// A level two or more buildings span (a common basement, docs/adr/8072 §1): the building it counts as a storey of, its
+/// area once.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SharedLevel {
+    pub level: String,
+    pub building: String,
+}
+
+/// The farthest a building's ±0.00 may stand from the project's, metres.
+pub const MAX_BUILDING_ZERO: f64 = 100.0;
 
 /// A group of spaces: an independent unit, a common area or an outdoor area.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -277,6 +307,10 @@ pub struct BuildingProgram {
     #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 100000000)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub land_total: Option<u64>,
+    /// The levels two or more buildings span, each with the building it counts as a storey of (docs/adr/8072 §1).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SharedLevel>>", optional))]
+    pub shared: Vec<SharedLevel>,
 }
 
 /// The largest land share whole (payda) a program may give (docs/adr/8031).
@@ -325,6 +359,39 @@ impl BuildingProgram {
 
     pub fn is_empty(&self) -> bool {
         self == &BuildingProgram::default()
+    }
+
+    /// Whether it says what architecture data 9 brings (docs/adr/8072 §1): a building's code, use or ±0.00, a shared
+    /// level's building.
+    pub fn has_building_places(&self) -> bool {
+        !self.shared.is_empty()
+            || self.buildings.iter().any(|b| b.code.is_some() || b.usage.is_some() || b.zero.is_some())
+    }
+
+    /// The building a level is a storey of (docs/adr/8072 §1): the one building that spans it, else the one its shared
+    /// entry names; none when no building or several without a choice span it.
+    pub fn building_of_level(&self, level: &str) -> Option<&ProgramBuilding> {
+        let mut spanning = self.buildings.iter().filter(|b| b.levels.iter().any(|l| l == level));
+        let first = spanning.next()?;
+        if spanning.next().is_none() {
+            return Some(first);
+        }
+        let chosen = self.shared.iter().find(|s| s.level == level)?;
+        self.buildings.iter().find(|b| b.id == chosen.building)
+    }
+
+    /// The levels two or more buildings span with no building chosen for them, in the buildings' order.
+    pub fn unshared_levels(&self) -> Vec<&str> {
+        let mut out: Vec<&str> = Vec::new();
+        for b in &self.buildings {
+            for l in &b.levels {
+                let many = self.buildings.iter().filter(|x| x.levels.contains(l)).count() > 1;
+                if many && !out.contains(&l.as_str()) && !self.shared.iter().any(|s| &s.level == l) {
+                    out.push(l);
+                }
+            }
+        }
+        out
     }
 
     /// Whether it says what schema 223 brings (docs/adr/8031): an annex, a unit's nature or value factor, the land
@@ -436,6 +503,38 @@ impl BuildingProgram {
             if let Some(p) = levels_problem(&b.levels, &format!("buildings[{i}].levels")) {
                 return Some(p);
             }
+            // Its code, use and ±0.00 (docs/adr/8072 §1; EK-2 §2.3).
+            if let Some(c) = &b.code {
+                let well = c.chars().count() == 2 && c.chars().all(|ch| ch.is_ascii_uppercase() || ch.is_ascii_digit());
+                if !well {
+                    return Some((
+                        format!("buildings[{i}].code"),
+                        format!("“{c}” bina kodu olamaz; bina kodu iki büyük harf ya da rakamdır (A1, B2, 01)."),
+                    ));
+                }
+                if c == "00" && self.buildings.len() > 1 {
+                    return Some((
+                        format!("buildings[{i}].code"),
+                        "“00” tek binalı projenin kodudur; birden çok binada her binaya kendi kodunu verin.".into(),
+                    ));
+                }
+                if self.buildings[..i].iter().any(|x| x.code.as_deref() == Some(c.as_str())) {
+                    return Some((format!("buildings[{i}].code"), format!("“{c}” bina kodu iki binada var; her binanın kodu ayrı olmalı.")));
+                }
+            }
+            if let Some(u) = &b.usage
+                && let Some(p) = text_problem(u, &format!("buildings[{i}].usage"), "Binanın kullanım türü")
+            {
+                return Some(p);
+            }
+            if let Some(z) = b.zero
+                && !(z.is_finite() && z.abs() <= MAX_BUILDING_ZERO)
+            {
+                return Some((
+                    format!("buildings[{i}].zero"),
+                    format!("Binanın ±0.00'ı projenin ±0.00'ından en çok {MAX_BUILDING_ZERO} m uzakta olur; {z} verildi."),
+                ));
+            }
             for (k, w) in b.wings.iter().enumerate() {
                 let at = format!("buildings[{i}].wings[{k}]");
                 if let Some(p) = text_problem(&w.id, &format!("{at}.id"), "Kanadın kimliği") {
@@ -459,6 +558,27 @@ impl BuildingProgram {
                         format!("“{l}” katı “{}” binasının katlarında yok; kanadın katları binasının katlarından seçilir.", b.name),
                     ));
                 }
+            }
+        }
+        // The shared levels (docs/adr/8072 §1): each once, spanned by two or more buildings, counted in one of them.
+        for (i, sh) in self.shared.iter().enumerate() {
+            let at = format!("shared[{i}]");
+            if self.shared[..i].iter().any(|x| x.level == sh.level) {
+                return Some((format!("{at}.level"), format!("“{}” katının sayıldığı bina iki kez verildi.", sh.level)));
+            }
+            let spanning: Vec<&ProgramBuilding> =
+                self.buildings.iter().filter(|b| b.levels.contains(&sh.level)).collect();
+            if spanning.len() < 2 {
+                return Some((
+                    format!("{at}.level"),
+                    format!("“{}” katını birden çok bina kaplamıyor; ortak kat değil, sayıldığı bina seçilmez.", sh.level),
+                ));
+            }
+            if !spanning.iter().any(|b| b.id == sh.building) {
+                return Some((
+                    format!("{at}.building"),
+                    format!("“{}” katı “{}” binasının katı değil; onu kaplayan binalardan birini seçin.", sh.level, sh.building),
+                ));
             }
         }
         let mut unit_ids: Vec<&str> = Vec::new();
@@ -672,5 +792,51 @@ mod tests {
         assert_eq!(p.problem(), None);
         p.units[1].wing = Some("a".into());
         assert_eq!(p.problem().map(|p| p.0), Some("units[1].wing".into()));
+    }
+
+    /// Two blocks over a common basement (docs/adr/8072 §1): the basement is the building's its shared entry names, the
+    /// others' storeys their own; without the entry the basement is no one's and is said; a code in a wrong form, a
+    /// repeated one, "00" beside another building, a shared entry for a level only one building spans or naming a
+    /// building that does not span it are refused.
+    #[test]
+    fn a_shared_basement_counts_in_the_building_chosen() {
+        let b = |id: &str, levels: &[&str], code: &str| ProgramBuilding {
+            id: id.into(),
+            name: format!("{id} Blok"),
+            levels: levels.iter().map(|l| (*l).into()).collect(),
+            code: Some(code.into()),
+            ..Default::default()
+        };
+        let mut p = BuildingProgram {
+            buildings: vec![b("A", &["bodrum", "zemin-a"], "A1"), b("B", &["bodrum", "zemin-b"], "B1")],
+            ..Default::default()
+        };
+        assert_eq!(p.problem(), None);
+        assert_eq!(p.unshared_levels(), vec!["bodrum"]);
+        assert!(p.building_of_level("bodrum").is_none());
+        assert_eq!(p.building_of_level("zemin-b").map(|x| x.id.as_str()), Some("B"));
+        p.shared = vec![SharedLevel { level: "bodrum".into(), building: "B".into() }];
+        assert_eq!(p.problem(), None);
+        assert!(p.unshared_levels().is_empty());
+        assert_eq!(p.building_of_level("bodrum").map(|x| x.id.as_str()), Some("B"));
+        assert!(p.has_building_places());
+        let refused = |q: &BuildingProgram| q.problem().map(|x| x.0);
+        let mut q = p.clone();
+        q.buildings[1].code = Some("b1".into());
+        assert_eq!(refused(&q), Some("buildings[1].code".into()));
+        q.buildings[1].code = Some("A1".into());
+        assert_eq!(refused(&q), Some("buildings[1].code".into()));
+        q.buildings[1].code = Some("00".into());
+        assert_eq!(refused(&q), Some("buildings[1].code".into()));
+        let mut q = p.clone();
+        q.shared = vec![SharedLevel { level: "zemin-a".into(), building: "A".into() }];
+        assert_eq!(refused(&q), Some("shared[0].level".into()));
+        q.shared = vec![SharedLevel { level: "bodrum".into(), building: "C".into() }];
+        assert_eq!(refused(&q), Some("shared[0].building".into()));
+        let mut q = p.clone();
+        q.buildings[0].zero = Some(f64::NAN);
+        assert_eq!(refused(&q), Some("buildings[0].zero".into()));
+        let one = BuildingProgram { buildings: vec![b("A", &[], "00")], ..Default::default() };
+        assert_eq!(one.problem(), None, "a single building's 00");
     }
 }

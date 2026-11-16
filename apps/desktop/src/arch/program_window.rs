@@ -133,6 +133,10 @@ pub struct Running {
 pub struct Window {
     tab: Tab,
     buildings: Vec<ProgramBuilding>,
+    /// Each building's ±0.00 as typed (docs/adr/8072 §1), in the buildings' order; empty: not said.
+    zeros: Vec<String>,
+    /// The levels two or more buildings span and the building each counts in (docs/adr/8072 §1).
+    shared: Vec<kentos_commands::SharedLevel>,
     share_rule: Option<ShareRule>,
     units: Vec<UnitRow>,
     briefs: Vec<BriefRow>,
@@ -161,6 +165,11 @@ pub enum Event {
     RemoveBuilding(usize),
     BuildingName(usize, String),
     BuildingLevel(usize, String),
+    /// A building's code, use and ±0.00 as typed; a shared level's building (docs/adr/8072 §1).
+    BuildingCode(usize, String),
+    BuildingUsage(usize, String),
+    BuildingZero(usize, String),
+    SharedBuilding(String, String),
     AddWing(usize),
     RemoveWing(usize, usize),
     WingName(usize, usize, String),
@@ -232,6 +241,8 @@ impl Window {
                 .map(|t| t.to_string())
                 .unwrap_or_default(),
             buildings: program.buildings.clone(),
+            zeros: program.buildings.iter().map(|b| b.zero.map(|z| z.to_string()).unwrap_or_default()).collect(),
+            shared: program.shared.clone(),
             share_rule: program.share_rule,
             briefs: program.briefs.iter().cloned().map(BriefRow::of).collect(),
             version: program.version.clone().unwrap_or_default(),
@@ -270,6 +281,19 @@ impl Window {
     fn program(&self) -> Result<BuildingProgram, String> {
         let mut p = self.kept.clone();
         p.buildings = self.buildings.clone();
+        for (b, z) in p.buildings.iter_mut().zip(&self.zeros) {
+            b.zero = number(z, "Binanın ±0.00'ı")?;
+        }
+        // A level's choice kept while two or more buildings span it, the chosen one among them.
+        p.shared = self
+            .shared
+            .iter()
+            .filter(|sh| {
+                let spanning: Vec<&ProgramBuilding> = p.buildings.iter().filter(|b| b.levels.contains(&sh.level)).collect();
+                spanning.len() > 1 && spanning.iter().any(|b| b.id == sh.building)
+            })
+            .cloned()
+            .collect();
         p.share_rule = self.share_rule;
         p.units = Vec::with_capacity(self.units.len());
         for r in &self.units {
@@ -362,6 +386,7 @@ impl App {
                 let id = fresh_id("bina-", &taken);
                 let n = w.buildings.len() + 1;
                 w.buildings.push(ProgramBuilding { id, name: format!("{n}. bina"), ..Default::default() });
+                w.zeros.push(String::new());
             }
             Event::RemoveBuilding(i) => {
                 let Some(b) = w.buildings.get(i) else { return Task::none() };
@@ -376,6 +401,9 @@ impl App {
                 }
                 if users.is_empty() {
                     w.buildings.remove(i);
+                    if i < w.zeros.len() {
+                        w.zeros.remove(i);
+                    }
                 } else {
                     let why = format!(
                         "“{}” binası kaldırılamaz: {} bölümü ona bağlı; önce Bölümler'de başka binaya verin.",
@@ -389,6 +417,28 @@ impl App {
                 if let Some(b) = w.buildings.get_mut(i) {
                     b.name = t;
                 }
+            }
+            // Its code in capitals as typed (EK-2 §2.3: two letters or digits), its use; empty: not said.
+            Event::BuildingCode(i, t) => {
+                if let Some(b) = w.buildings.get_mut(i) {
+                    let t: String = t.trim().to_uppercase().chars().take(2).collect();
+                    b.code = (!t.is_empty()).then_some(t);
+                }
+            }
+            Event::BuildingUsage(i, t) => {
+                if let Some(b) = w.buildings.get_mut(i) {
+                    let t = t.trim();
+                    b.usage = (!t.is_empty()).then(|| t.to_owned());
+                }
+            }
+            Event::BuildingZero(i, t) => {
+                if let Some(z) = w.zeros.get_mut(i) {
+                    *z = t;
+                }
+            }
+            Event::SharedBuilding(level, building) => {
+                w.shared.retain(|sh| sh.level != level);
+                w.shared.push(kentos_commands::SharedLevel { level, building });
             }
             Event::BuildingLevel(i, l) => {
                 if let Some(b) = w.buildings.get_mut(i) {
@@ -942,7 +992,33 @@ impl App {
             ]
             .spacing(12)
             .align_y(iced::Bottom);
-            let mut block = column![top].spacing(6);
+            // Its code (EK-2 §2.3), its use and its ±0.00 over the project's (docs/adr/8072 §1).
+            let place = row![
+                words::field(
+                    "Kodu",
+                    kentos_ui::widget::text_field("A1", b.code.as_deref().unwrap_or(""))
+                        .on_input(move |t| msg(Event::BuildingCode(i, t)))
+                        .width(64),
+                    None
+                ),
+                words::field(
+                    "Kullanım türü",
+                    kentos_ui::widget::text_field("Konut", b.usage.as_deref().unwrap_or(""))
+                        .on_input(move |t| msg(Event::BuildingUsage(i, t)))
+                        .width(176),
+                    None
+                ),
+                words::field(
+                    "±0.00, projeninkine göre (m)",
+                    kentos_ui::widget::text_field("0", w.zeros.get(i).map_or("", String::as_str))
+                        .on_input(move |t| msg(Event::BuildingZero(i, t)))
+                        .width(96),
+                    None
+                ),
+            ]
+            .spacing(12)
+            .align_y(iced::Bottom);
+            let mut block = column![top, place].spacing(6);
             block = block.push(label::caption(if users.is_empty() {
                 "Bölümü yok.".to_owned()
             } else {
@@ -969,6 +1045,37 @@ impl App {
                 block = block.push(line);
             }
             list = list.push(block);
+        }
+        // Ortak katlar (docs/adr/8072 §1): each level two or more buildings span, the building it counts in.
+        let mut spanned: Vec<(String, String)> = Vec::new();
+        for (id, name) in &levels {
+            if w.buildings.iter().filter(|b| b.levels.contains(id)).count() > 1 {
+                spanned.push((id.clone(), name.clone()));
+            }
+        }
+        if !spanned.is_empty() {
+            let mut shared = Column::new().spacing(6).push(label::caption("Ortak katlar: alanı bir kez, seçilen binada sayılır."));
+            for (id, name) in spanned {
+                let owners: Vec<&ProgramBuilding> = w.buildings.iter().filter(|b| b.levels.contains(&id)).collect();
+                let chosen = w.shared.iter().find(|sh| sh.level == id).map(|sh| sh.building.clone());
+                let at = owners.iter().position(|b| Some(&b.id) == chosen.as_ref());
+                let ids: Vec<String> = owners.iter().map(|b| b.id.clone()).collect();
+                let level = id.clone();
+                let pick = Select::new(owners.iter().map(|b| Choice::new(b.name.clone())), at, move |k| {
+                    msg(Event::SharedBuilding(level.clone(), ids.get(k).cloned().unwrap_or_default()))
+                });
+                let note = if at.is_none() { "Seçilmedi: alanı hangi binada sayılacağı belli değil." } else { "" };
+                shared = shared.push(
+                    row![
+                        words::field("Kat", label::body(name), None),
+                        words::field("Sayıldığı bina", container(pick).width(Length::Fixed(220.0)), None),
+                        label::caption(note)
+                    ]
+                        .spacing(12)
+                        .align_y(iced::Bottom),
+                );
+            }
+            list = list.push(shared);
         }
         list = list.push(row![words::secondary(ADD_BUILDING, Some(msg(Event::AddBuilding)))]);
         list = list.push(label::caption(

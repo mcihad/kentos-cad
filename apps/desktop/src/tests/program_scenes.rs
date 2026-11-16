@@ -341,6 +341,27 @@ fn share_buildings(app: &mut App) {
     window(app, Tab::Buildings);
 }
 
+/// Two blocks over a shared ground floor (docs/adr/8072 §1): B Blok spans the ground floor too; each block its code, use
+/// and ±0.00 typed, the ground floor counted in A Blok; Binalar after Kaydet.
+fn blocks(app: &mut App) {
+    share_house(app, "net");
+    window(app, Tab::Buildings);
+    let ev = |app: &mut App, e: Event| {
+        let _ = app.update(Message::Arch(arch::Event::Program(e)));
+    };
+    ev(app, Event::BuildingLevel(1, "zemin".into()));
+    ev(app, Event::BuildingCode(0, "A1".into()));
+    ev(app, Event::BuildingUsage(0, "Konut".into()));
+    ev(app, Event::BuildingZero(0, "0".into()));
+    ev(app, Event::BuildingCode(1, "B1".into()));
+    ev(app, Event::BuildingUsage(1, "Ticaret".into()));
+    ev(app, Event::BuildingZero(1, "1,20".into()));
+    ev(app, Event::SharedBuilding("zemin".into(), "a".into()));
+    ev(app, Event::Save);
+    fit(app, -0.5, -0.5, UP + 5.5, 10.0);
+    window(app, Tab::Buildings);
+}
+
 fn share_units(app: &mut App) {
     share_house(app, "weight");
     fit(app, -0.5, -0.5, UP + 5.5, 10.0);
@@ -439,6 +460,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("bina-programi-bol", split),
         ("bina-programi-birlestir", merge),
         ("bina-pay-binalar", share_buildings),
+        ("bina-ortak-kat", blocks),
         ("bina-pay-bolumler", share_units),
         ("bina-pay-durum", share_status),
         ("bina-pay-plan", share_plan),
@@ -522,6 +544,29 @@ mod tests {
         assert_eq!(program.buildings[1].levels, vec!["zemin".to_owned()]);
         assert_eq!(program.buildings[1].wings[0].levels, vec!["zemin".to_owned()]);
         assert!(program.building("b").is_none(), "B Blok, which nothing named, is gone");
+    }
+
+    /// docs/adr/8072 §1: Binalar gives two blocks their codes (in capitals), uses and ±0.00 and the ground floor both span
+    /// to A Blok; Kaydet writes them through the command, the ground floor then A Blok's storey; “00” beside another
+    /// building is refused with its words and nothing is written.
+    #[test]
+    fn two_blocks_get_codes_zeros_and_a_shared_level_through_the_window() {
+        let mut app = app_with_drawing();
+        blocks(&mut app);
+        let program = app.document.as_ref().expect("a drawing").model.program();
+        assert_eq!(program.buildings[0].code.as_deref(), Some("A1"));
+        assert_eq!(program.buildings[0].usage.as_deref(), Some("Konut"));
+        assert_eq!(program.buildings[1].code.as_deref(), Some("B1"));
+        assert_eq!(program.buildings[1].zero, Some(1.2));
+        assert_eq!(program.shared, vec![kentos_commands::SharedLevel { level: "zemin".into(), building: "a".into() }]);
+        assert_eq!(program.building_of_level("zemin").map(|b| b.id.as_str()), Some("a"));
+        assert_eq!(program.building_of_level("kat-1").map(|b| b.id.as_str()), Some("a"));
+        let _ = app.update(Message::Arch(arch::Event::Program(Event::BuildingCode(1, "00".into()))));
+        let _ = app.update(Message::Arch(arch::Event::Program(Event::Save)));
+        let kept = app.document.as_ref().expect("a drawing").model.program();
+        assert_eq!(kept.buildings[1].code.as_deref(), Some("B1"), "nothing written");
+        let said = crate::files_testing::last_said(&app);
+        assert!(said.contains("“00” tek binalı projenin kodudur"), "{said}");
     }
 
     /// docs/adr/0795: the units schedule's rows are the program's groups with the check's numbers; its name cell goes to

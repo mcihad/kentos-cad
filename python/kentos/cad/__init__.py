@@ -3565,6 +3565,7 @@ __all__ = [
     "ShapesEdited",
     "ShareRule",
     "ShareRuleName",
+    "SharedLevel",
     "SharpRectangleCorners",
     "SheetBuiltUp",
     "SheetContourLabel",

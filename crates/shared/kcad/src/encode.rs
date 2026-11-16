@@ -101,7 +101,7 @@ fn modules_of(doc: &DocumentSnapshotV2) -> ModuleVersions {
     // Architecture 1 (docs/adr/8068): fire resistance, exit roles, strengths, the building's performance; 2
     // (docs/adr/8070 §5): a block card's building element; 3 (§7) a curtain wall; 4 (§8) a post, a rail, a column's
     // own height; 5 (§10) a covering; 6 (§11) a beams' or coverings' schedule; 7 (docs/adr/8071 §6) a sloped slab; 8
-    // (§8) a roof's layers.
+    // (§8) a roof's layers; 9 (docs/adr/8072 §1) a building's code, use or ±0.00, a shared level.
     let arch = crate::arch_version(doc);
     if arch > 0 {
         out.modules.push(("arch".to_owned(), arch));

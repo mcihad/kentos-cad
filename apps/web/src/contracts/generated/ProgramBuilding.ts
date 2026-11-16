@@ -8,4 +8,18 @@ export type ProgramBuilding = { id: string, name: string, wings?: Array<ProgramW
 /**
  * The levels it spans (docs/adr/0784 §1), by their ids, each once; a level may be another building's too.
  */
-levels?: Array<string>, };
+levels?: Array<string>, 
+/**
+ * Its building code (docs/adr/8072 §1; EK-2 §2.3, Tablo 2.1): two capital letters or digits, its model files'
+ * names carry it; "00" only for a project of one building. None: not said.
+ */
+code?: string, 
+/**
+ * What it is used for (Kullanım türü; EK-6 Tablo 6.7 `OccupancyType`), as the project writes it.
+ */
+usage?: string, 
+/**
+ * Its ±0.00 over the project's ±0.00, metres (docs/adr/8072 §1): a block entered higher or lower than another;
+ * its storeys' levels are read from it. None: not said (the project's when it is the only building).
+ */
+zero?: number, };

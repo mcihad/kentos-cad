@@ -22250,6 +22250,7 @@ class BuildingProgram(_Model):
         land_total: Arsa payı paydası (docs/adr/8031; `.kcad` schema 223): the whole the land shares are written over; none: the
             parcel's area in whole m² when the project has a zoning, else the units' weighted areas in whole m² summed. Unit: count.
         share_rule: How the common areas are shared out to the independent units (docs/adr/0784 §2); none: they are not.
+        shared: The levels two or more buildings span, each with the building it counts as a storey of (docs/adr/8072 §1).
         version: The brief's own name and version (“Ofis konut brief'i 2026-1”), said with its findings.
     """
     briefs: list[SpaceBrief] | Unset = UNSET
@@ -22257,6 +22258,7 @@ class BuildingProgram(_Model):
     clearances: list[FixtureClearance] | Unset = UNSET
     land_total: int | None | Unset = UNSET
     share_rule: ShareRule | ShareRuleName | None | Unset = UNSET
+    shared: list[SharedLevel] | Unset = UNSET
     units: list[ProgramUnit] | Unset = UNSET
     version: str | None | Unset = UNSET
 
@@ -22272,6 +22274,8 @@ class BuildingProgram(_Model):
             out["landTotal"] = self.land_total
         if self.share_rule is not UNSET:
             out["shareRule"] = None if self.share_rule is None else _enum_out(self.share_rule)
+        if self.shared is not UNSET:
+            out["shared"] = [e0.to_json() for e0 in self.shared]
         if self.units is not UNSET:
             out["units"] = [e0.to_json() for e0 in self.units]
         if self.version is not UNSET:
@@ -22286,6 +22290,7 @@ class BuildingProgram(_Model):
             clearances=[FixtureClearance.from_json(e0) for e0 in data["clearances"]] if "clearances" in data else UNSET,
             land_total=data.get("landTotal", UNSET),
             share_rule=UNSET if "shareRule" not in data else None if data["shareRule"] is None else _enum_in(ShareRule, data["shareRule"]),
+            shared=[SharedLevel.from_json(e0) for e0 in data["shared"]] if "shared" in data else UNSET,
             units=[ProgramUnit.from_json(e0) for e0 in data["units"]] if "units" in data else UNSET,
             version=data.get("version", UNSET),
         )
@@ -79693,21 +79698,35 @@ class ProgramAssign(_Model):
 class ProgramBuilding(_Model):
     """A building and its wings.
     Attributes:
+        code: Its building code (docs/adr/8072 §1; EK-2 §2.3, Tablo 2.1): two capital letters or digits, its model files'
+            names carry it; "00" only for a project of one building. None: not said.
         levels: The levels it spans (docs/adr/0784 §1), by their ids, each once; a level may be another building's too.
+        usage: What it is used for (Kullanım türü; EK-6 Tablo 6.7 `OccupancyType`), as the project writes it.
+        zero: Its ±0.00 over the project's ±0.00, metres (docs/adr/8072 §1): a block entered higher or lower than another;
+            its storeys' levels are read from it. None: not said (the project's when it is the only building). Unit: length.
     """
     id: str
     name: str
+    code: str | None | Unset = UNSET
     levels: list[str] | Unset = UNSET
+    usage: str | None | Unset = UNSET
     wings: list[ProgramWing] | Unset = UNSET
+    zero: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["id"] = self.id
         out["name"] = self.name
+        if self.code is not UNSET:
+            out["code"] = self.code
         if self.levels is not UNSET:
             out["levels"] = list(self.levels)
+        if self.usage is not UNSET:
+            out["usage"] = self.usage
         if self.wings is not UNSET:
             out["wings"] = [e0.to_json() for e0 in self.wings]
+        if self.zero is not UNSET:
+            out["zero"] = None if self.zero is None else float(self.zero)
         return out
 
     @classmethod
@@ -79715,8 +79734,11 @@ class ProgramBuilding(_Model):
         return cls(
             id=data["id"],
             name=data["name"],
+            code=data.get("code", UNSET),
             levels=list(data["levels"]) if "levels" in data else UNSET,
+            usage=data.get("usage", UNSET),
             wings=[ProgramWing.from_json(e0) for e0 in data["wings"]] if "wings" in data else UNSET,
+            zero=UNSET if "zero" not in data else None if data["zero"] is None else float(data["zero"]),
         )
 
 
@@ -94364,6 +94386,28 @@ class ShapesEdited(_Model):
             carried=data.get("carried", UNSET),
             created=list(data["created"]) if "created" in data else UNSET,
             neighbours=[ShapeNeighbour.from_json(e0) for e0 in data["neighbours"]] if "neighbours" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SharedLevel(_Model):
+    """A level two or more buildings span (a common basement, docs/adr/8072 §1): the building it counts as a storey of, its
+    area once.
+    """
+    level: str
+    building: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["level"] = self.level
+        out["building"] = self.building
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SharedLevel:
+        return cls(
+            level=data["level"],
+            building=data["building"],
         )
 
 
@@ -145037,6 +145081,7 @@ __all__ = [
     "ShapesEdited",
     "ShareRule",
     "ShareRuleName",
+    "SharedLevel",
     "SharpRectangleCorners",
     "SheetBuiltUp",
     "SheetContourLabel",

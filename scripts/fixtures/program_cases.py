@@ -946,6 +946,36 @@ def program_edit_cases():
         "“Salon” iki kez yazıldı.")
     bad("Kullanım alanının eni sıfır olamaz", lambda p: p.update(clearances=[{"block": "Klozet", "width": 0.0, "depth": 0.6}]),
         "clearances[0].width", "Kullanım alanının eni 0 m; sıfırdan büyük, sonlu olmalı.")
+    # Two blocks over a common basement (ADR 8072 §1): each its code, use and ±0.00; the zemin level, spanned by both,
+    # counted in B Blok.
+    def blocks(p):
+        p["buildings"][0].update(levels=["zemin", "kat-1"], code="A1", usage="Konut", zero=0.0)
+        p["buildings"].append({"id": "b", "name": "B Blok", "levels": ["zemin"], "code": "B1", "usage": "Ticaret",
+                               "zero": 1.2})
+        p["shared"] = [{"level": "zemin", "building": "b"}]
+        return p
+    pg5 = blocks(copy.deepcopy(base))
+    edit("İki blok kodları, kullanımları, ±0.00'ları ve ortak katın sayıldığı binayla yazılır", {"program": pg5}, pg5)
+    one = copy.deepcopy(base)
+    one["buildings"][0].update(code="00")
+    edit("Tek binanın kodu 00 olur", {"program": one}, one)
+    bad("Bina kodu iki büyük harf ya da rakamdır", lambda p: blocks(p)["buildings"][1].update(code="b-1"),
+        "buildings[1].code", "“b-1” bina kodu olamaz; bina kodu iki büyük harf ya da rakamdır (A1, B2, 01).")
+    bad("İki binanın kodu aynı olamaz", lambda p: blocks(p)["buildings"][1].update(code="A1"), "buildings[1].code",
+        "“A1” bina kodu iki binada var; her binanın kodu ayrı olmalı.")
+    bad("00 birden çok binada verilmez", lambda p: blocks(p)["buildings"][1].update(code="00"), "buildings[1].code",
+        "“00” tek binalı projenin kodudur; birden çok binada her binaya kendi kodunu verin.")
+    bad("Binanın ±0.00'ı 100 m'den uzak olamaz", lambda p: blocks(p)["buildings"][1].update(zero=150.0),
+        "buildings[1].zero", "Binanın ±0.00'ı projenin ±0.00'ından en çok 100 m uzakta olur; 150 verildi.")
+    bad("Boş kullanım türü yazılmaz", lambda p: blocks(p)["buildings"][1].update(usage=" "), "buildings[1].usage",
+        "Binanın kullanım türü boş olamaz; bir değer yazın.")
+    bad("Tek binanın katı ortak kat değildir", lambda p: blocks(p).update(shared=[{"level": "kat-1", "building": "a"}]),
+        "shared[0].level", "“kat-1” katını birden çok bina kaplamıyor; ortak kat değil, sayıldığı bina seçilmez.")
+    bad("Ortak kat onu kaplayan binada sayılır", lambda p: blocks(p).update(shared=[{"level": "zemin", "building": "c"}]),
+        "shared[0].building", "“zemin” katı “c” binasının katı değil; onu kaplayan binalardan birini seçin.")
+    bad("Ortak katın binası bir kez verilir",
+        lambda p: blocks(p).update(shared=[{"level": "zemin", "building": "a"}, {"level": "zemin", "building": "b"}]),
+        "shared[1].level", "“zemin” katının sayıldığı bina iki kez verildi.")
     edit("Programda olmayan bölüme verilmez", {"assign": [{"uids": ["$uidOf:28"], "unit": "d9"}]},
          result=refusal("unit_not_found", "“d9” bölümü bina programında yok; önce programa ekleyin.", "assign[0].unit"))
     edit("Mahal olmayan nesne bölüme verilmez", {"assign": [{"uids": ["$uidOf:1"], "unit": "d1"}]},

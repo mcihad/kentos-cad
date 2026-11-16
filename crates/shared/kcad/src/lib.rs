@@ -988,7 +988,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_ROOF_LAYERS),
+    ("arch", "mimari", ARCH_WITH_BUILDING_PLACES),
     ("gis", "CBS", GIS_WITH_EXTENSION_DERIVATIONS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -1098,11 +1098,23 @@ pub fn uses_roof_layers(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     doc.entities.iter().any(layered) || doc.blocks.iter().any(|b| b.entities.iter().any(layered))
 }
 
-/// The architecture data version `doc` needs: 8 for a roof's layers, 7 for a sloped slab, 6 for a beams' or coverings'
+/// Architecture data version 9 (docs/adr/8072 §1): a program building's code, use or ±0.00, a shared level's building.
+/// Version 9 holds versions 1–8's data too. The document schema stays as it is.
+pub const ARCH_WITH_BUILDING_PLACES: u16 = 9;
+
+/// Whether `doc` holds architecture data 9 ([`ARCH_WITH_BUILDING_PLACES`]).
+pub fn uses_building_places(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    doc.settings.arch.as_ref().is_some_and(|a| a.program.has_building_places())
+}
+
+/// The architecture data version `doc` needs: 9 for a building's code, use or ±0.00 or a shared level, 8 for a roof's
+/// layers, 7 for a sloped slab, 6 for a beams' or coverings'
 /// schedule, 5 for a covering, 4 for a post, a rail or a column's own height, 3 for a curtain wall, 2 for a block's
 /// building element, 1 for the performance declarations, else 0 (not raised).
 pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
-    if uses_roof_layers(doc) {
+    if uses_building_places(doc) {
+        ARCH_WITH_BUILDING_PLACES
+    } else if uses_roof_layers(doc) {
         ARCH_WITH_ROOF_LAYERS
     } else if uses_slab_slopes(doc) {
         ARCH_WITH_SLAB_SLOPES

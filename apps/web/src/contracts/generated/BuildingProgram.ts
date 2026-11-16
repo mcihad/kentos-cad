@@ -3,6 +3,7 @@ import type { FixtureClearance } from "./FixtureClearance";
 import type { ProgramBuilding } from "./ProgramBuilding";
 import type { ProgramUnit } from "./ProgramUnit";
 import type { ShareRule } from "./ShareRule";
+import type { SharedLevel } from "./SharedLevel";
 import type { SpaceBrief } from "./SpaceBrief";
 
 /**
@@ -21,4 +22,8 @@ shareRule?: ShareRule,
  * Arsa payı paydası (docs/adr/8031; `.kcad` schema 223): the whole the land shares are written over; none: the
  * parcel's area in whole m² when the project has a zoning, else the units' weighted areas in whole m² summed.
  */
-landTotal?: bigint, };
+landTotal?: bigint, 
+/**
+ * The levels two or more buildings span, each with the building it counts as a storey of (docs/adr/8072 §1).
+ */
+shared?: Array<SharedLevel>, };

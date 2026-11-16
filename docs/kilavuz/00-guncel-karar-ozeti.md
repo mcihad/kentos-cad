@@ -106,6 +106,10 @@
       değildir (duvar, kolon, mahal yüksekliği ve metraj onu görmez); `IfcCovering`; `.kcad` mimari verisi 5.
     - Kiriş çizelgesi (kiriş, lento, hatıl, kayıt) ve Kaplama çizelgesi (yalnız kaplamalar); `.kcad` mimari verisi 6.
       Kalan: eğimli eleman, duvar kaplamasının kalınlığı, giydirme cephenin kapısı.
+  - **B11 sürüyor (16 Kasım 2026; [ADR 8072](../adr/8072-buildings-shared-basement-location.md); BIM-11 `[~]`):**
+    - Programın binası kod (EK-2 §2.3), kullanım türü ve projenin ±0.00'ına göre ±0.00 taşır; birden çok binanın
+      kapladığı kat seçilen binada sayılır (`BuildingProgram::shared`), nesnenin binası katından okunur
+      (`building_of_level`); `.kcad` mimari verisi 9. Kalan: bina başına model, konum ve kot, alanlar, plan kararları.
   - **B10 yapıldı (16 Kasım 2026; [ADR 8071](../adr/8071-geometry-accuracy.md); BIM-10 `[x]`):**
     - Yayın kaynağı kesit modelidir (`Model::exact`): döşeme ve mahal parçalarından, duvar düz parçalı gövdesinden geri
       alınarak (`arc_recover`); IFC profili `IfcIndexedPolyCurve` + `IfcArcIndex`; parça sayısı görüntünün işidir.
