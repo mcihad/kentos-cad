@@ -313,7 +313,9 @@ fn verify_codes() -> Value {
         "manifest_icon_unknown": "Uyarı: bu KentOS'ta böyle bir yerleşik ikon yok; en yakınları önerilir.",
         "layer_schema": "schema.json'da bir kural bozuk; işaretçi yeri, ileti kuralı söyler.",
         "ui_panel": "Panel tanımında bir kural bozuk; işaretçi yeri söyler.",
-        "layer_schema_outside": "Uyarı: ilişki şemanın kurmadığı bir katmana bağlı; projede olmalı."
+        "layer_schema_outside": "Uyarı: ilişki şemanın kurmadığı bir katmana bağlı; projede olmalı.",
+        "secret_in_text": "Uyarı: metinde API anahtarı, jeton ya da özel anahtar biçiminde bir değer; katalog yayımlamaz. \
+                           Değeri çıkarın, kullanıcının ayarından okuyun."
     })
 }
 

@@ -1387,7 +1387,9 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
   izinler [PY-CLOUD-09]. Yayımcı onaylı özetin yerine başka içerik koyamaz; indirme ve kurulum bütünlüğü/onay kaydını
   doğrular [PY-CLOUD-10]. Ret gerekçe kodu, ilgili dosya/bağımlılık ve yeniden gönderme yoluyla [PY-CLOUD-11].
   — *kısmen (ADR 8059): açık onay, yazar kendi genel sürümünü onaylayamaz, içerik değişince onay düşer, onay ve yayın
-  ayrı izin, ret gerekçe koduyla; kalan: sır taraması ve yalıtılmış duman testi işçisi [PY-CLOUD-05, 06].*
+  ayrı izin, ret gerekçe koduyla; 16 Kasım (ADR 8059 §15): sır taraması: dosyanın içine yazılmış anahtar (sağlayıcı
+  biçimleri, özel anahtar) paketlemede ve kurulumda uyarı, katalogda sır kapısını engeller, değer hiçbir yerde
+  söylenmez; kalan: tarayıcının daha geniş sır kuralları ve yalıtılmış duman testi işçisi [PY-CLOUD-05, 06].*
 - [ ] Liste sürüm durumu, uyumluluk, Python/yerel bağımlılık ve gerekli izinlerle süzülür [PY-CLOUD-12]; kurma ve
   çalıştırma tüketicinin seçimidir, onaylı olmak kişinin bağımlılık/izin kararını atlatmaz [PY-CLOUD-13]; güncelleme yeni
   bağımlılık/yetenek/platform farkını gösterir, eski sürüm denetimli korunur [PY-CLOUD-14]; askıya alma/geri çekme yeni
@@ -1398,8 +1400,9 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
   incelemeyi atlayamaz [PY-CLOUD-18].
   — *kısmen (ADR 8059 §10, §12): görmeyene aynı 404, programlı çağrı incelemeyi atlayamaz, geri çekme listesi; 16 Kasım
   (ADR 8057 §81): kurulum incelemesi kuracağı Python paketlerini, güncellemede farkını (yeni, değişen, aynı sürüm başka
-  dosyalar, kalkan) gösterir; tanınmış bir paketin adına bir harf uzak ad uyarıdır. Kalan: listenin süzgeçleri,
-  platform farkı, listenin imzası ve masaüstünde uygulanması.*
+  dosyalar, kalkan) gösterir; tanınmış bir paketin adına bir harf uzak ad uyarıdır. Listenin süzgeçleri (ADR 8057 §88:
+  çalışanlar, internetsiz, paket kurmayan, yapay zekânın ya da insanın yazdığı). Kalan: platform farkı, listenin imzası
+  ve masaüstünde uygulanması.*
 - [ ] Bulut Python işleri ayrı işçi/kapta, kaynak sınırı, ağ politikası, kapsamlı kimlik bilgisi ve kiracı yalıtımıyla;
   masaüstü eklenti süreci sunucu yalıtımı sayılmaz [PY-RUN-22].
   — *kısmen (ADR 8057 §42): iş çalıştırıcısı denetim kuralını hazırlanan ortamda, ağ isteyeni reddederek çalıştırır;

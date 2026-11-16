@@ -3,8 +3,8 @@
 //! fresh sign-in; a release that becomes published handed to the server's hook.
 
 use kentos_extensions::release::{
-    Actor, Channel, GateKind, Refusal, Release, ReleaseFacts, ReleaseState, Role, ScanOutcome,
-    Timestamp,
+    Actor, Channel, GateKind, Reason, Refusal, Release, ReleaseFacts, ReleaseState, Role,
+    ScanOutcome, Timestamp,
 };
 
 use super::model::{changed, fresh_sign_in_required};
@@ -56,6 +56,7 @@ impl Catalog {
             .await?;
         if matches!(request, Move::Submit { .. }) {
             release = self.imitation_gate(key, release).await?;
+            release = self.secrets_gate(key, release).await?;
         }
         if release.state() == ReleaseState::Published && before != Some(ReleaseState::Published) {
             self.published(&key.catalog, &release).await;
@@ -84,6 +85,46 @@ impl Catalog {
             r.record_scan(
                 &scanner,
                 GateKind::Publisher,
+                &content,
+                ScanOutcome::Blocked(found.clone()),
+                now,
+            )
+        })
+        .await
+    }
+
+    /// The secret gate's rule the catalog runs itself when a version is sent (PY-CLOUD-05, D11;
+    /// `kentos_extensions::secrets`): a key written in the package's text, a provider's key by its shape or a private
+    /// key, sends the release back to its author with each file and line, never the value. Finding none proves nothing
+    /// of the gate (its scanner keeps it), so nothing is reported then; a release another gate sent back is left.
+    async fn secrets_gate(
+        &self,
+        key: &ReleaseKey,
+        release: Release,
+    ) -> Result<Release, CatalogError> {
+        if release.state() != ReleaseState::Submitted {
+            return Ok(release);
+        }
+        let content = release.content().package.clone();
+        let bytes = self.stored(&content).await?;
+        let opened = kentos_extensions::open(&bytes, &self.limits);
+        let found: Vec<Reason> = kentos_extensions::secrets::gate_findings(&opened.files)
+            .into_iter()
+            .map(|(file, line, message)| Reason {
+                file: Some(file),
+                at: Some(format!("satır {line}")),
+                ..Reason::new("secret_found", message)
+            })
+            .collect();
+        if found.is_empty() {
+            return Ok(release);
+        }
+        let scanner = Actor::new(CATALOG_SCANNER, &[Role::Scanner], Channel::Program);
+        let now = now();
+        self.moved(key, &scanner, |r| {
+            r.record_scan(
+                &scanner,
+                GateKind::Secrets,
                 &content,
                 ScanOutcome::Blocked(found.clone()),
                 now,

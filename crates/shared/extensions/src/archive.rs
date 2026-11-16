@@ -10,7 +10,8 @@
 //!    code (by name and by its first bytes), nested archives, a computer's junk;
 //! 4. the content: `integrity.json` against every file, `manifest.json` and its rules, every file it names, each
 //!    as what it is (an icon, a form, a tool descriptor, a GeoPackage …), the handlers' modules, the Python project
-//!    against its lock, and every text file for invisible characters and a user's home path.
+//!    against its lock, and every text file for invisible characters, a user's home path and a key written in it
+//!    (a warning, `secrets.rs`).
 //!
 //! Nothing is written anywhere: the installer takes [`Opened::files`] only when [`Inspection::problems`] is empty.
 
@@ -527,6 +528,8 @@ fn check_tree(files: &BTreeMap<String, Vec<u8>>, stage: Stage, out: &mut Inspect
     check_references(&manifest, files, out);
     for (path, data) in files {
         text::scan(path, data, &mut out.problems, &mut out.warnings);
+        // A key written in its text (secrets.rs): warned here, the catalog's secret gate blocks it.
+        crate::secrets::scan(path, data, &mut out.warnings);
         // What its Python must not do, at packing and at installing alike (python_rules.rs).
         if path.ends_with(".py")
             && let Ok(code) = std::str::from_utf8(data)

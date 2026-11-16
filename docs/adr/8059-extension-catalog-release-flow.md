@@ -488,6 +488,42 @@ defteri `imitation.rs` (yeni), `Review::resemblances`, `Registry::review_beside`
   kuralı çalıştırması; inceleyicinin benzerlikleri görmesi (inceleme penceresi henüz yok); kurulu taklidin
   ayrıntısında kalıcı bir işaret.
 
+## §15 Sır taraması: dosyanın içine yazılmış anahtar (PY-CLOUD-05, D11)
+
+**16 Kasım.** Kod: paylaşılan `secrets.rs` (yeni: `found`, `scan`, `gate_findings`); paket denetimi `archive.rs`
+(her metin dosyası); sunucu `acting.rs` (`secrets_gate`); `verifyCodes`'a `secret_in_text`.
+
+- **Sorun.** Paket denetimi gizli bilgi taşıyan dosyaları adından dışlıyordu (`content_secret`: `.env`, `.pem`, `id_rsa`,
+  `credentials.json`; yapay zekâ araçlarının ayarları), ama izinli bir dosyanın içine yazılmış anahtarı görmüyordu:
+  `src/arac.py`'de `ANAHTAR = "sk-…"`. Eklentileri yapay zekâ ajanları yazıyor (planın 1.1'i) ve ajana kullanıcının
+  anahtarı verilmiş olabilir; kataloğa giden paket anahtarı herkese verir. Sır kapısı vardı (§3), onu besleyen kural yoktu.
+- **Karar: yalnız biçiminden anahtar olan.** Sağlayıcının öneki, ardından gelen harflerin türü ve sayısı: Anthropic
+  (`sk-ant-`), OpenAI (`sk-proj-`, `sk-svcacct-`), Stripe (`sk_live_`, `rk_live_`), harf ve rakam karışık 32+ karakterli
+  `sk-` (DeepSeek ve benzerleri), GitHub (`ghp_`… 36, `github_pat_`), GitLab (`glpat-`), Slack (`xoxb-`…), Google
+  (`AIza` + 35), AWS (`AKIA`/`ASIA` + 16), Hugging Face (`hf_`), PyPI (`pypi-AgE`), npm (`npm_` + 36); ve özel anahtar
+  zırhı (`-----BEGIN … PRIVATE KEY-----`). Önek daha uzun bir sözcüğün içindeyse (`task-…`) sayılmaz. Örnek değer sayılmaz
+  (tek harfin tekrarı, "xxxx", "example", "your", "dummy", "örnek" …: `AKIA…EXAMPLE`). **Ad yargılanmaz**
+  (`api_key = …`): engelleyen kural az ve kesin olmalı (D11); tahminle uyaran kural kimseye yaramaz.
+- **Değer hiçbir yerde söylenmez:** bulgu türü ve satırı yazar ("Anthropic API anahtarı gibi görünen bir değer var",
+  "satır 5"); ileti, rapor ve kapı kaydı anahtarı taşımaz (sınamalar denetler). Depo da anahtar biçiminde bir dizgi
+  taşımaz: sınamalar örnek anahtarı çalışırken üretir.
+- **Paketlemede ve kurulumda uyarı** (`secret_in_text`): kurumun kendi iç hizmeti için yazdığı paket anahtarını bilerek
+  taşıyabilir; kişinin bilgisayarında karar onundur. `kek verify`, ajanın `extension.verify`'ı ve kurulum incelemesi
+  aynı uyarıyı satırıyla görür (ajan tek adımda düzeltir).
+- **Katalogda engel:** gönderilen sürümün paketi taranır; bulgu varsa katalog kendisi (`kentos-katalog`, tarayıcı rolüyle)
+  sır kapısını bulgularıyla engeller (`secret_found`, dosya ve satır) ve sürüm yazarına döner. Taklit kapısı (§14) gibi:
+  hiçbir şey bulunmaması kapıyı geçirmez (daha geniş kurallar tarayıcınındır), temiz sonuç bildirilmez; başka bir kapının
+  geri gönderdiği sürüme dokunulmaz. Sır kapısı gerekçeyle kaldırılabilen kapılardandır (karar 5): yanlış bir bulgu
+  inceleyicinin gerekçesiyle aşılır.
+- **Sınamalar:** paylaşılan 3 (sekiz sağlayıcının biçimi ve zırh satırıyla; örnek değer, kısa/uzun dizi, `sk-`'den sonra
+  sözcük, sözcük içi önek, ad, sertifika bulgu değil; paketleme uyarısı ve kapı bulgusu değeri söylemeden), paylaşılan
+  crate'in hepsi (161) geçti; katalog API 1 (52; README'sinde anahtar olan sürüm `changesRequested`, kapı `blocked`,
+  bulgu `secret_found` · `README.md` · `satır 5`, yanıtın hiçbir yerinde anahtar yok; anahtarsız sürüm `submitted`).
+  Mevcut paketler: mevzuat ve Vitrin 0 uyarı.
+- **Kalan:** tarayıcının daha geniş sır kuralları (ad + yüksek düzensizlik, geçmişte sızmış anahtar listeleri),
+  ajanın atölyesinin kullanıcının kendi anahtarını (ajan profilinin ve hizmet bağlantılarının) birebir tanıması,
+  yalıtılmış duman testi işçisi.
+
 ## Uygularken verilen kararlar (planda yazılı değildi)
 
 1. Kişisel katalogda sahibi kendi sürümünü inceleyip onaylar; kurum kataloğunda yazar onaylayamaz, yayımcının başka bir

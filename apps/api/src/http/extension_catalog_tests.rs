@@ -55,6 +55,7 @@ mod imitation;
 mod persistent;
 mod refusals;
 mod revocations;
+mod secrets;
 
 use bench::Bench;
 
