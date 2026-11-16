@@ -1,5 +1,14 @@
 # Değişiklikler
 
+## 0.4.0
+
+- **`kacis-uzakligi`** (yeni): konut olmayan bölümlerde kaçış uzaklığı (BYKHY 32/3-4, Ek-5/B). Mahalin en uzak
+  noktasından en yakın kat çıkışına yürüyüş bölümün kullanım sınıfının satırına, projenin yağmurlama ayarının
+  sütunuyla: tek çıkışta bütün yol tek yön, iki çıkışta önce tek yönlü kısım, sonra bütün yol iki yön sınırına; aşarsa
+  hata. Sınıf olguların `occupancy`'sidir (bölümün niteliğinden: Büro, Dükkân, Otel …); söylemeyen bölüm binanın
+  bilinen en ağır sınıfıyla, o da yoksa büro sayılır ve bulgu bunu söyler. Endüstri yapısında dipnot (1)'in ½ artışıyla
+  uygun olan "karar verilemedi". Konutun ve yalnız konut olan binanın mahalleri okunmaz. Yedi örnekle.
+
 ## 0.3.1
 
 - **Her kuralın örnekleri** (`audits/<kural>.examples.json`, 20 örnek): kural, mimari olgular veri olarak verilip

@@ -1233,7 +1233,7 @@ def _unit(raw: dict[str, Any]) -> UnitFacts:
         _maybe_str(raw.get("nature")), _maybe_str(raw.get("annexOf")), bool(raw.get("dwelling")), *area.values(),
         _maybe_float(raw.get("share")), _maybe_float(raw.get("general")),
         tuple(UnitLevel(_maybe_str(x.get("level")), float(x.get("gross") or 0.0), float(x.get("net") or 0.0))
-              for x in raw.get("levels") or []))
+              for x in raw.get("levels") or []), _maybe_str(raw.get("occupancy")))
 
 
 @dataclass(frozen=True)
@@ -1306,7 +1306,7 @@ class UnitLevel:
 class UnitFacts:
     """A program group with PAİY 4/ğ's areas (m²): ``kind`` (``unit``, ``common``, ``outdoor``, ``annex``), ``gross``
     (BB brüt), ``net``, ``total`` (with its annexes'), ``share`` of the common areas and ``general`` (genel brüt; None
-    without a share)."""
+    without a share); ``occupancy`` its Ek-5/B row."""
 
     id: str
     number: str
@@ -1323,6 +1323,7 @@ class UnitFacts:
     share: float | None
     general: float | None
     levels: tuple[UnitLevel, ...]
+    occupancy: str | None = None
 
 
 @dataclass(frozen=True)

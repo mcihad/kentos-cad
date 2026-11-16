@@ -356,7 +356,7 @@ class UnitLevel:
 
 @dataclass(frozen=True)
 class UnitFacts:
-    """A program group with PAİY 4/ğ's areas (m²): ``kind`` (``unit``, ``common``, ``outdoor``, ``annex``), ``gross`` (BB brüt), ``net``, ``total`` (with its annexes'), ``share`` of the common areas and ``general`` (genel brüt; None without a share)."""
+    """A program group with PAİY 4/ğ's areas (m²): ``kind`` (``unit``, ``common``, ``outdoor``, ``annex``), ``gross`` (BB brüt), ``net``, ``total`` (with its annexes'), ``share`` of the common areas and ``general`` (genel brüt; None without a share); ``occupancy`` its Ek-5/B row."""
     id: str
     number: str
     name: str | None
@@ -372,6 +372,7 @@ class UnitFacts:
     share: float | None
     general: float | None
     levels: tuple[UnitLevel, ...]
+    occupancy: str | None = None
 
 
 @dataclass(frozen=True)

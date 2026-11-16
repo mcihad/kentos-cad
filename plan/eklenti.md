@@ -1056,6 +1056,11 @@ dışında her sınıfta aynı olduğu için konut olmayan binalarda da karar ve
 ve 48/1) ve ara katlı daire (48/2: iki katlı dairenin tek kapısı üst katta olamaz, kapısız üst kat 70 m²'yi aşamaz;
 net aşarsa hata, yalnız brüt aşarsa karar verilemedi; üç katlı dairede karar yok). Kalan: konut olmayan bölümlerin
 kullanım sınıfı ve tek/iki yönlü Ek-5/B uzaklıkları, yüksek tehlikeli yer, kurp/görüş hesapları, belediye plan notları.
+**Ulusal kuralların dördüncü dilimi** (ADR 8057 §79, 16 Kasım): bölümün Ek-5/B kullanım sınıfı olgularda
+(`UnitFacts.occupancy`, niteliğinden; Mimari denetimin okuması `kentos_domain::fire_use`'a taşındı); `tr.kentos.mevzuat`
+0.4.0'a `kacis-uzakligi`: konut olmayan bölümlerde tek ve iki yönlü kaçış uzaklığı sınıfın satırıyla, yağmurlama
+ayarının sütunuyla; okunamayan sınıf büro sayılır ve söylenir; endüstri yapısında dipnot (1) "karar verilemedi". Kalan:
+yüksek tehlikeli yer, mahal adından sınıf, kurp/görüş hesapları, belediye plan notları.
 **Bütçe kuralın Python'unu da ölçer** (ADR 8057 §58, 16 Kasım): sunucunun gözcüsü iş çalıştırıcısını ve altındaki her
 süreci (kuralın Python'u) birlikte ölçer (Linux'ta `/proc`, öbür Unix'lerde tek `ps`; işlemci bitip beklenen çocuklarla,
 bellek toplam RSS) ve bütçe aşılınca ya da Durdur'da iş çalıştırıcısının süreç grubunu bitirir; sonuç yerleşik

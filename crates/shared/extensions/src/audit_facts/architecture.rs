@@ -162,6 +162,36 @@ pub enum GroupKind {
     Annex,
 }
 
+/// A unit's use as BYKHY Ek-5/B's rows name it, as KentOS Mimari reads it from the unit's nature (Daire, Büro,
+/// Dükkân, Otel …): the row of its escape distances.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub enum Occupancy {
+    /// Yüksek tehlikeli yerler.
+    HighHazard,
+    /// Endüstri amaçlı yapılar.
+    Industry,
+    /// Yurtlar, yatakhaneler.
+    Dormitory,
+    /// Mağazalar, dükkânlar, marketler.
+    Shop,
+    /// Büro binaları.
+    Office,
+    /// Otoparklar ve depolar.
+    Parking,
+    /// Okul ve eğitim yapıları.
+    School,
+    /// Toplanma amaçlı binalar.
+    Assembly,
+    /// Hastaneler, huzurevleri.
+    Hospital,
+    /// Oteller, pansiyonlar.
+    Hotel,
+    /// Apartmanlar.
+    Dwelling,
+}
+
 /// A program group's article 4 areas (Planlı Alanlar İmar Yönetmeliği 4/ğ), m².
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -178,6 +208,10 @@ pub struct UnitFacts {
     pub annex_of: Option<String>,
     /// An independent unit that is a dwelling (BYKHY 48 reads its rooms).
     pub dwelling: bool,
+    /// Its use as BYKHY Ek-5/B's rows name it, read from its nature (an annex's from its unit's; docs/adr/8057 §79);
+    /// none for a common or outdoor group and for a nature that names no use.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub occupancy: Option<Occupancy>,
     /// BB brüt alanı (4/ğ-1): its rooms' outer contour, a wall it shares cut at its axis.
     pub gross: f64,
     /// BB net alanı (4/ğ-3): its rooms' net areas, voids and outdoor rooms out.

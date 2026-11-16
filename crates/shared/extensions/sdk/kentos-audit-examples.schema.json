@@ -274,6 +274,66 @@
         }
       ]
     },
+    "Occupancy": {
+      "description": "A unit's use as BYKHY Ek-5/B's rows name it, as KentOS Mimari reads it from the unit's nature (Daire, Büro,\nDükkân, Otel …): the row of its escape distances.",
+      "oneOf": [
+        {
+          "const": "highHazard",
+          "description": "Yüksek tehlikeli yerler.",
+          "type": "string"
+        },
+        {
+          "const": "industry",
+          "description": "Endüstri amaçlı yapılar.",
+          "type": "string"
+        },
+        {
+          "const": "dormitory",
+          "description": "Yurtlar, yatakhaneler.",
+          "type": "string"
+        },
+        {
+          "const": "shop",
+          "description": "Mağazalar, dükkânlar, marketler.",
+          "type": "string"
+        },
+        {
+          "const": "office",
+          "description": "Büro binaları.",
+          "type": "string"
+        },
+        {
+          "const": "parking",
+          "description": "Otoparklar ve depolar.",
+          "type": "string"
+        },
+        {
+          "const": "school",
+          "description": "Okul ve eğitim yapıları.",
+          "type": "string"
+        },
+        {
+          "const": "assembly",
+          "description": "Toplanma amaçlı binalar.",
+          "type": "string"
+        },
+        {
+          "const": "hospital",
+          "description": "Hastaneler, huzurevleri.",
+          "type": "string"
+        },
+        {
+          "const": "hotel",
+          "description": "Oteller, pansiyonlar.",
+          "type": "string"
+        },
+        {
+          "const": "dwelling",
+          "description": "Apartmanlar.",
+          "type": "string"
+        }
+      ]
+    },
     "RoomEscape": {
       "description": "A room's walks, from its farthest point: 40 cm in front of its walls (BYKHY 32/6).",
       "properties": {
@@ -596,6 +656,17 @@
         "number": {
           "description": "Its number, as the project writes it.",
           "type": "string"
+        },
+        "occupancy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Occupancy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its use as BYKHY Ek-5/B's rows name it, read from its nature (an annex's from its unit's; docs/adr/8057 §79);\nnone for a common or outdoor group and for a nature that names no use."
         },
         "share": {
           "description": "Its part of the common areas' gross, by the program's rule; none when the program shares nothing.",

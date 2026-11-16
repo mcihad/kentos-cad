@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.kentos.mevzuat",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "name": "Türkiye mevzuatı",
   "summary": "İmar ve yangın yönetmeliklerinin mimari çizimin ölçülmüş olgularıyla karar verilen kuralları.",
   "description": "KentOS'un mimari çizimde ölçtüğü olgular (katlar, kat çıkışları, mahallerin türü, net alanı ve dar kenarı, bağımsız bölümler, kaçış yürüyüşleri, projenin yağmurlama ayarı) üzerinde Planlı Alanlar İmar Yönetmeliği (RG 3.7.2017/30113) ile Binaların Yangından Korunması Hakkında Yönetmelik'in (RG 19.12.2007/26735) olgularla karar verilebilen kuralları. Her bulgu yönetmeliğin maddesini ve fıkrasını söyler. Yönetmeliğin istisnası olguların göremediği bir şeye bağlıysa (mutfak ya da yatak nişi, mahalin donanımı) bulgu karar verilemediğini söyler. Konut olmayan bölümün yangın yönetmeliğindeki kullanım sınıfı olgularda yok; o bölümlerin tek ve iki yönlü kaçış uzaklığına karar verilmez (çıkmaz koridorun sınırı sınıftan bağımsızdır, ona karar verilir). Bulgu çizimin ölçüsüdür, onay değildir.",
@@ -104,6 +104,13 @@
         "domain": "mimari",
         "handler": "tr_mevzuat.bykhy:cikis_erisimi",
         "examples": "audits/cikis-erisimi.examples.json"
+      },
+      {
+        "id": "kacis-uzakligi",
+        "title": "Kaçış uzaklığı, konut dışı (BYKHY 32/3-4)",
+        "domain": "mimari",
+        "handler": "tr_mevzuat.kacis:kacis_uzakligi",
+        "examples": "audits/kacis-uzakligi.examples.json"
       }
     ]
   }

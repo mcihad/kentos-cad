@@ -21,8 +21,8 @@ use kentos_domain::room_width::{net_parts, width_of};
 use kentos_domain::space_follow::SpaceSearch;
 use kentos_domain::{Document, Slot};
 use kentos_extensions::audit_facts::architecture::{
-    ArchitectureFacts, DoorEscape, EscapeWalk, GroupKind, RoomEscape, RoomFacts, RoomKind, Storey,
-    StoreyExits, UnitFacts, UnitLevel,
+    ArchitectureFacts, DoorEscape, EscapeWalk, GroupKind, Occupancy, RoomEscape, RoomFacts,
+    RoomKind, Storey, StoreyExits, UnitFacts, UnitLevel,
 };
 use kentos_geometry_core::geom::space::area;
 
@@ -204,6 +204,39 @@ fn outline(search: &mut SpaceSearch<'_>, s: &SpaceFields, method: SpaceMethod) -
     area(&core_areas(&s.parts))
 }
 
+/// A unit's use as Ek-5/B's rows name it, read as Mimari denetim's fire rules read it (`kentos_domain::fire_use`): a
+/// dwelling's nature the apartments' row, another nature by its words; an annex by its unit's; none for a common or
+/// outdoor group and for words that name no use (docs/adr/8057 §79).
+fn occupancy_of(
+    program: &kentos_commands::BuildingProgram,
+    u: &kentos_commands::ProgramUnit,
+) -> Option<Occupancy> {
+    use kentos_domain::fire_use::{Use, use_of};
+    let owner = match u.kind {
+        UnitKind::Unit => u,
+        UnitKind::Annex => u.annex_of.as_deref().and_then(|o| program.unit(o))?,
+        UnitKind::Common | UnitKind::Outdoor => return None,
+    };
+    let read = if dwelling_nature(owner.nature.as_deref()) {
+        Use::Dwelling
+    } else {
+        use_of(owner.nature.as_deref(), None)?
+    };
+    Some(match read {
+        Use::HighHazard => Occupancy::HighHazard,
+        Use::Industry => Occupancy::Industry,
+        Use::Dormitory => Occupancy::Dormitory,
+        Use::Shop => Occupancy::Shop,
+        Use::Office => Occupancy::Office,
+        Use::Parking => Occupancy::Parking,
+        Use::School => Occupancy::School,
+        Use::Assembly => Occupancy::Assembly,
+        Use::Hospital => Occupancy::Hospital,
+        Use::Hotel => Occupancy::Hotel,
+        Use::Dwelling => Occupancy::Dwelling,
+    })
+}
+
 /// The program's groups with rooms and their article 4 areas, in the program's order.
 fn units(doc: &Document, program: &kentos_commands::BuildingProgram) -> Vec<UnitFacts> {
     doc.paiy_areas()
@@ -222,6 +255,7 @@ fn units(doc: &Document, program: &kentos_commands::BuildingProgram) -> Vec<Unit
                 nature: u.nature.clone(),
                 annex_of: u.annex_of.clone(),
                 dwelling: u.kind == UnitKind::Unit && dwelling_nature(u.nature.as_deref()),
+                occupancy: occupancy_of(program, u),
                 total: g.total(),
                 general: g.general(),
                 gross: g.gross,

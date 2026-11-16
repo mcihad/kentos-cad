@@ -240,6 +240,8 @@ fn the_rules_run_on_the_drawing_as_a_cloud_job_runs_them() {
         let expected: &[Severity] = match entry.id.as_str() {
             "piyesler" => &[Info, Error, Error, Info, Error, Error],
             "cikmaz-koridor" => &[Error],
+            // 1. kat: the common corridor (the building's shop row, one exit) and the office's Arşiv, both over 15 m.
+            "kacis-uzakligi" => &[Error, Error],
             _ => &[],
         };
         assert_eq!(severities, expected, "{}: {:?}", entry.id, report.findings);
@@ -254,7 +256,8 @@ fn the_rules_run_on_the_drawing_as_a_cloud_job_runs_them() {
             "daire-ici",
             "ara-katli-daire",
             "daire-kapisi",
-            "cikis-erisimi"
+            "cikis-erisimi",
+            "kacis-uzakligi"
         ]
     );
     let _ = std::fs::remove_dir_all(&dir);

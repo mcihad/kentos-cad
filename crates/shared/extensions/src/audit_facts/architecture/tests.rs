@@ -39,6 +39,7 @@ fn unit(id: &str) -> UnitFacts {
         nature: Some("Daire".into()),
         annex_of: None,
         dwelling: true,
+        occupancy: Some(super::Occupancy::Dwelling),
         gross: 80.000_04,
         net: 65.123_449,
         annex_gross: 0.0,

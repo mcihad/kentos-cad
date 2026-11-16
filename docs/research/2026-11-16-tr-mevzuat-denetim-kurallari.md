@@ -251,9 +251,9 @@ KentOS'un olgularında iki durum ayırt edilmez, karar verilmez.
 
 ## Dışarıda kalanlar ve nedenleri
 
-- **BYKHY 32/3-4 ve Ek-5/B'nin konut olmayan bölümleri:** kullanım sınıfı olgularda yok; sınıftan bağımsız bir eşik de
-  dürüst değil (yağmurlamasız tek yön 15 m bütün sınıflarda ortak değil: yüksek tehlikeli yerlerde 10 m, Ek-5/B'nin (1)
-  dipnotuyla kolay alevlenici malzeme üretmeyen endüstri yapılarında 22.5 m).
+- ~~**BYKHY 32/3-4 ve Ek-5/B'nin konut olmayan bölümleri**~~: 0.4.0'da `kacis-uzakligi` (ADR 8057 §79): bölümün
+  sınıfı olgularda (`occupancy`, niteliğinden; Mimari denetimin okuması), okunamayan büro sayılır ve söylenir;
+  endüstri yapısında dipnot (1) "karar verilemedi". Yüksek tehlikeli yer hâlâ okunmuyor.
 - **5/25'in %20 sınırı:** parseldeki bağımsız bölüm sayısı olgu değil; yatak nişi olan bölümlerin payı sayılamaz.
 - **Çıkmaz koridorda yüksek tehlikeli yerin yağmurlamasız 10 m'si:** yüksek tehlikeli yer olgularda tanınmaz (0.3.0).
 - **48/2'nin ara katlı daire cümleleri, üç ve daha çok katlı dairede** ve brütü aşıp neti aşmayan üst kat (0.3.0:

@@ -169,7 +169,7 @@ bütün panel `ui.panel(başlık, bileşenler)`); panelin şemasından üretilir
 - Her bildirilen kimliğin tek, doğru türde işaretli işlevi olur; `kentos kek verify` (ajanlarda `extension.verify`)
   her adımda bunu, paketin kurallarını ve İşlemler aracının tanımını (parametreler, çıktılar; yeni nesne veren
   çıktının `sinkParameter`'ı bir `layer` parametresini adlandırır) kurulumdaki gibi denetler. `kentos kek test`
-  araçların örneklerini pencere açmadan, eklentinin ortamında çalıştırır (çıkış 0 geçti, 1 kaldı).
+  örnekleri pencere açmadan çalıştırır.
 - Bir katkı yeteneğini ister ve nedenini yazar (`requestedCapabilities`): kullanıcı kurarken her birini görüp onaylar.
   Ağa çıkan kod `network` ister; işletim sistemi komutu ve `eval`/`exec` uyarıdır.
 - Kütüphane `uv add <paket>` ile eklenir (`pyproject.toml` ve `uv.lock` birlikte yazılır); KentOS ortamı kilitten kurar.

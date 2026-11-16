@@ -4316,3 +4316,37 @@ JSON Schema'sı, `blueprint.rs`; `kentos-extension-tools` `examples.rs` (`Exampl
   3/3.
 - **Sınamalar:** extension-tools 1 (stand-in işlevle: değer, null, başka değer, kodun hatası, çağrının adı), paylaşılan
   crate'in manifest sınamaları, masaüstü örnek ve deneme sınamaları.
+
+## §79. Bölümün kullanım sınıfı olgularda; konut olmayan bölümlerin kaçış uzaklığı (`ADIM 20`, ulusal kuralların dördüncü dilimi)
+
+**16 Kasım.** Kod: `kentos_domain::fire_use` (yeni: `Use`, `use_of`, Ek-5/B'nin tablosu; yerel yangın denetiminden
+taşındı, `fire_audit` onu kullanır), paylaşılan olgular (`Occupancy`, `UnitFacts::occupancy`), İşlemler'in olgu üreticisi
+(`occupancy_of`), `python/kentos/ext.py` (`UnitFacts.occupancy`), olgu fikstürü, JSON Schema'lar, `kentos_ext.pyi`;
+`tr.kentos.mevzuat` 0.4.0 (`kacis.py`, `kacis-uzakligi`, yedi örnek); jobrun'ın mevzuat sınaması.
+Araştırma: `docs/research/2026-11-16-tr-mevzuat-denetim-kurallari.md` (Ek-5/B'nin bütün satırları, resmî sayfanın
+görüntüsüyle karşılaştırılmış).
+
+- **Karar: tek okuma.** Mimari denetimin yangın kuralları bölümün Ek-5/B satırını niteliğinden (Büro, Dükkân, Otel …)
+  ve mahalin adından okuyordu; olgular okumuyordu, araştırma notu bunu "modelde yok" diye dışarıda bırakmıştı. Okuma
+  `kentos_domain`'e taşındı; olgu üreticisi ve yerel denetim aynı kodu çağırır. Olgu okumanın kendisidir: niteliği
+  bir sınıf söylemeyen bölümde `occupancy` yoktur (politika kuralın: yerel denetim gibi büro sayar ve söyler).
+  Ek bölüm sahibinin niteliğiyle okunur; ortak ve dış alanın sınıfı yoktur. Olguların sürümü değişmedi (isteğe bağlı
+  yeni alan; eski olgular alansız okunur).
+- **Kural `kacis-uzakligi`** (BYKHY 32/3-4, Ek-5/B): konut olmayan bölümün her mahalinden en yakın kat çıkışına
+  yürüyüş; tek çıkışta bütün yol tek yön sınırına, iki çıkışta önce tek yönlü kısım tek yön, sonra bütün yol iki yön
+  sınırına; projenin yağmurlama ayarının sütunu (bilinmiyorsa yağmurlamalıyı da aşan hata, yalnız yağmurlamasızı aşan
+  uyarı). Sınıfı okunamayan bölüm binanın bilinen en ağır sınıfıyla (kısa iki yön, sonra kısa tek yön), o da yoksa büro
+  sayılır ve bulgu bunu söyler. Konut olmayan bölümü olan binanın ortak mahalleri binanın sınıfıyla ölçülür; konutun ve
+  yalnız konut olan binanın mahalleri okunmaz (48'in kuralları). Endüstri yapısında dipnot (1)'in ½ artışıyla uygun olan
+  uyarıdır ("karar verilemedi": malzemenin kolay alevlenici olup olmadığı olgularda yok).
+- **Bütün çizimde** (fikstür, bulut işinin yolu): 1. katta ortak koridor tek çıkışlı katta 21.82 m (binanın sınıfı
+  mağaza: eşit ağırlıkta ilk bölüm, yerel denetimin `stricter`'ı gibi) ve büronun Arşiv'i 22.52 m: iki hata.
+- **Örnekler (7):** büro tek çıkış 18 m hata, yağmurlamayla bulgusuz; dükkân iki çıkış 50 m hata, 40 m bulgusuz;
+  niteliği sınıf söylemeyen bölüm (Kuaför) büro sayılır; endüstri yapısı 20 m "karar verilemedi"; yalnız konut bina
+  bulgusuz. `kek test`: mevzuatın 27 örneğinin hepsi geçti.
+- **SDK paketi:** `UnitFacts`'in yeni alanı ve belge cümlesi pakete 102 bayt ekledi (47.992 / 48.000); sınır
+  yükseltilmeden belge cümlesi ve rehberin `kek test` cümlesi kısaltıldı: 47.890.
+- **Sınamalar:** olgu fikstürü (beş bölümün sınıfı), jobrun 12 (sekiz kural, yeni kuralın iki bulgusu), Python 7
+  (`occupancy`'nin okunması), paylaşılan crate 149.
+- **Kalan:** mahalin adından sınıf (yerel denetim okuyor, olgular bölümünkini taşıyor); yüksek tehlikeli yer
+  (okunmuyor); bölüm sınıfının programda açıkça seçilmesi (bugün nitelikten okunur).

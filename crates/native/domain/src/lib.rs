@@ -80,6 +80,7 @@ pub mod paiy_areas;
 pub mod zoning;
 pub mod site;
 pub mod escape;
+pub mod fire_use;
 pub mod room_names;
 pub mod room_openings;
 pub mod room_width;

@@ -54,6 +54,10 @@ class ArchitectureFactsTest(unittest.TestCase):
 
     def test_groups_carry_article_4_s_areas(self) -> None:
         self.assertEqual([u.id for u in self.a.units], ["d1", "d2", "dk", "of", "dp", "ortak"])
+        # Their BYKHY Ek-5/B rows as KentOS reads the natures (ADR 8057 §79): the annex its unit's, the common none.
+        self.assertEqual(
+            [u.occupancy for u in self.a.units], ["dwelling", "dwelling", "shop", "office", "dwelling", None]
+        )
         flat, storage = self.a.unit("d1"), self.a.unit("1-E")
         self.assertEqual((storage.kind, storage.annex_of), ("annex", "d1"))
         self.assertEqual(flat.annex_gross, storage.gross)
