@@ -303,6 +303,8 @@ fn verify_codes() -> Value {
         "python_eval": "Uyarı: eval/exec.",
         "python_name_resembles": "Uyarı: kilitteki paketin adı tanınmış bir paketinkine çok benziyor (yazım hatası \
                                   taklidi ya da uydurulmuş ad).",
+        "python_lock_no_cooling": "Uyarı: ajanın yazdığı eklentinin kilidinde soğuma süresi yok ([tool.uv] \
+                                   exclude-newer = \"7 days\").",
         "sdk_deprecated": "Uyarı: eskiyen SDK adı; yerini söyler, düz yeniden adlandırmayı kentos kek upgrade yazar.",
         "sdk_experimental": "Uyarı: deneysel SDK adı; atölyede ve yerel kurulumda çalışır, katalogda yayımlanamaz.",
         "handler_missing": "İşleyicinin modülü pakette yok (paketin kendi denetimi).",

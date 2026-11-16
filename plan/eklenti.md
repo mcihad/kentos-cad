@@ -787,7 +787,8 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   soğuma süresi (`exclude-newer`) [D18]; katalogun onaylı kilitten ürettiği platform tekerlek deposundan dizine düşmeden
   hazırlama (ADIM 22A); kurum izinli paket listesi [D14]; genel çevrimiçi erişim anahtarı kapalıyken `network` yeteneği
   aracıda reddedilir [Ö·43]. Ölçülecek: venv başına disk ve hazırlama süresi, vekil sunucu ve platform tekerleği matrisi.
-  Alt yorumlayıcı yalıtım için kullanılmaz [Ö·23].
+  Alt yorumlayıcı yalıtım için kullanılmaz [Ö·23]. — *16 Kasım (ADR 8057 §83): soğuma süresi iskelette varsayılan
+  (`exclude-newer = "7 days"`); ajanın yazdığı paketin soğumasız kilidi `kek verify`'da ve incelemede uyarıdır.*
 - **Sürüyor (13 Kasım, ADR 8057 §5):** `crates/native/python-env`; Uygulama ayarları › Python ve eklentiler (varsayılan
   kapalı, kapalıyken hiçbir şey aranmaz); uv'nin arka planda algılanması ve sürüm denetimi; tek uyumluluk manifesti;
   resmî kurulum komutları (KentOS kurmaz); kabuksuz, süreli, sınırlı uv çağrısı; **Windows:** konsol penceresi yok,
@@ -1441,7 +1442,12 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
 ### 5.2 Doğrulama [ECO-QA-01…16]
 
 - [ ] JSON Schema/kod üretimi/kayıt sapması, yinelenen kimlik, kaynak başvurusu ve uyumsuz yetenek testleri [ECO-QA-01].
-- [ ] Arşiv ayrıştırıcısı yol/boyut/oran/özet/kodlama/harf/platform uç durum korpusu ve olumsuz test [ECO-QA-02] (ADIM 16).
+- [x] Arşiv ayrıştırıcısı yol/boyut/oran/özet/kodlama/harf/platform uç durum korpusu ve olumsuz test [ECO-QA-02] (ADIM 16).
+  — *16 Kasım'da gözden geçirildi, karşılanmış (`crates/shared/extensions/src/archive/tests.rs`, `paths.rs`): yol aşımı,
+  mutlak yol, ters bölü, sürücü harfi, ASCII dışı ad, sonda nokta, aygıt adları (CON, aux.txt …), yinelenen ve harfi
+  çakışan ad, derinlik, sembolik bağ, özel dosya, klasör girdisi, sıkıştırma oranı bombası, şifreli girdi, kesik ve
+  bozuk arşiv, önüne program eklenmiş arşiv, boyut ve girdi sınırı, bütünlük listesi, ortam/önbellek/sürüm denetimi/sır/
+  yapay zekâ yapılandırması/ikili; 150 noktada kesme, bit çevirme ve sıfırlamayla paniksiz.*
 - [ ] İsteğe bağlılık/uv/Python/paket kurulumu sahte taşıma ve temiz profille [ECO-QA-03]; Windows/macOS/Linux, ABI,
   mimari/yerel tekerlek ve çevrimdışı önbellek matrisiyle kurma/çalıştırma duman testi [ECO-QA-04].
 - [ ] Süreç çökme/durdurma/yeniden başlatma, geç geri çağırma, kaldırma ve çoklu örnek fikstürleri [ECO-QA-05].

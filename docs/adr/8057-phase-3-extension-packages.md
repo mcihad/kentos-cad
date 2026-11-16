@@ -4452,3 +4452,26 @@ Schema'lar, `kentos_ext.pyi`; `tr.kentos.mevzuat` 0.4.1 (`kacis.py`, sekizinci �
   yönde 27 m, hata), Python 43, paylaşılan crate 156, İşlemler'in olgu sınamaları 13.
 - **Kalan:** yüksek tehlikeli yer (adlardan okunmuyor; BYKHY'nin tanımı tehlikeli maddenin türü ve miktarına bakar,
   çizimde yok); bölüm sınıfının programda açıkça seçilmesi.
+
+## §83. Ajanın kilidine soğuma süresi (`exclude-newer`), iskelette varsayılan (`ADIM 18A`, D18)
+
+**16 Kasım.** Kod: paylaşılan `blueprint.rs` (`pyproject.toml`'da `[tool.uv] exclude-newer = "7 days"`, kilitte
+`[options]`), `python.rs` (`python_lock_no_cooling` uyarısı), SDK'nın doğrulama kodları.
+
+- **Sorun.** Paket deposu yeni bir sürümü ya da yeni bir adı anında yayımlar; kötü niyetli sürümler çoğu zaman
+  günler içinde yakalanıp kaldırılır. Bir yapay zekâ ajanının uydurduğu paket adı (ya da tanınmış bir adın bir harf
+  yanındaki taklidi, §81) birinin onu hemen kaydetmesiyle bir sonraki `uv add`'de kilide girerdi.
+- **Karar: bir hafta.** İskeletin `pyproject.toml`'u `[tool.uv] exclude-newer = "7 days"` der: uv bir haftadan yeni
+  sürümü çözüme almaz, kilit bunu `exclude-newer-span = "P7D"` ile kaydeder (uv 0.11.26 göreli süreyi kabul ediyor;
+  ölçüldü). Yeni bir eklentinin `uv add`'i böylece kendiliğinden soğutulur; bir güvenlik düzeltmesi beklemezse yazar
+  tek paketi `exclude-newer-package` ile açar.
+- **Uyarı yalnız ajanın kilidine.** KentOS'un yapay zekâ damgasını (`generated`, §76) taşıyan pakette üçüncü taraf
+  paketi olup soğuma süresi (ya da sabit bir tarih) olmayan kilit uyarıdır (`python_lock_no_cooling`); insanın
+  paketinde karar yazarınındır, engel değil (D11). Depodaki fikstürler ve Vitrin değişmedi: sabit özetleri ve kilitleri
+  korunur.
+- **Ölçüm:** iskeletin yeni kilidi uv'nin `uv lock` ile yazdığıyla bayt bayt aynı, `uv lock --check --offline` temiz,
+  `kek verify` 0 uyarı. Vitrin'in kilidi `exclude-newer` eklenince çevrimdışı yeniden kilitlenebildi (yalnız `[options]`
+  bloğu eklendi); KentOS'un TOML okuyucusu satır sonu yorumunu okudu.
+- **Sınamalar:** paylaşılan 157 (ajanın soğumasız kilidi uyarı; soğumalı ve sabit tarihli kilit ile insanın kilidi
+  uyarısız), headless ajan araçları 20 (iskelet doğrulanır), extension-tools 11, masaüstünün eklenti sınamaları 99.
+- **Kalan:** kurum ilkesinde süre (D14); katalogun bağımlılık kapısının bunu kendisi denetlemesi.

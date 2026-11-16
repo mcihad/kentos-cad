@@ -341,6 +341,40 @@ fn a_package_named_like_a_well_known_one_is_a_warning() {
     );
 }
 
+/// An agent's lock without a cooling period is a warning; with one, or a person's lock, none (docs/adr/8057 §83).
+#[test]
+fn an_agents_lock_without_a_cooling_period_is_a_warning() {
+    let by_agent = |m: &mut Manifest| {
+        m.generated = Some(crate::provenance::Generated {
+            agent: "KentOS Asistan".into(),
+            model: None,
+            kentos: "0.1.0".into(),
+        });
+    };
+    assert_eq!(
+        checked(PROJECT, LOCK, by_agent),
+        (vec![], vec!["python_lock_no_cooling"])
+    );
+    assert_eq!(plain(PROJECT, LOCK), (vec![], vec![]), "a person's lock");
+    let cooled = LOCK.replacen(
+        "\n[[package]]",
+        "\n[options]\nexclude-newer = \"0001-01-01T00:00:00Z\" # This has no effect and is included for backwards \
+         compatibility when using relative exclude-newer values.\nexclude-newer-span = \"P7D\"\n\n[[package]]",
+        1,
+    );
+    assert_eq!(checked(PROJECT, &cooled, by_agent), (vec![], vec![]));
+    let frozen = LOCK.replacen(
+        "\n[[package]]",
+        "\n[options]\nexclude-newer = \"2026-11-01T00:00:00Z\"\n\n[[package]]",
+        1,
+    );
+    assert_eq!(
+        checked(PROJECT, &frozen, by_agent),
+        (vec![], vec![]),
+        "a fixed date cools too"
+    );
+}
+
 #[test]
 fn an_unknown_lock_version_is_a_warning_and_broken_files_are_problems() {
     assert_eq!(

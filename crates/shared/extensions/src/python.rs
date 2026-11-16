@@ -890,6 +890,28 @@ pub(crate) fn check(
             stale(problems, format!("“{n}” kilitte çözülmemiş"));
         }
     }
+    // An agent's lock takes no release younger than its cooling period (docs/adr/8057 §83, D18): a name a model made
+    // up and someone registered the next day does not get in. Said of the packages KentOS stamped as an agent's.
+    let third_party = packages
+        .iter()
+        .any(|p| p.get(&["source", "registry"]).is_some());
+    let cooled = lock.get(&["options", "exclude-newer-span"]).is_some()
+        || lock
+            .get(&["options", "exclude-newer"])
+            .and_then(Toml::str)
+            .is_some_and(|date| !date.starts_with("0001-"));
+    if manifest.generated.is_some() && third_party && !cooled {
+        warnings.push(
+            Problem::new(
+                "python_lock_no_cooling",
+                "Bu eklentiyi bir yapay zekâ ajanı yazdı ve kilidi yeni yayımlanmış paket sürümlerini de alabiliyor: \
+                 pyproject.toml'un [tool.uv] bölümüne exclude-newer = \"7 days\" yazıp uv lock çalıştırın. Bir haftadan \
+                 yeni sürüm (uydurulmuş bir adı yeni kaydeden bir paket de) kilide giremez."
+                    .to_owned(),
+            )
+            .file(lock_path),
+        );
+    }
     for package in packages {
         let n = package.get(&["name"]).and_then(Toml::str).unwrap_or("?");
         // A name one letter from a well-known package's (docs/adr/8057 §81): a mistyped `uv add` or a made-up name.

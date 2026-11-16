@@ -395,18 +395,21 @@ fn pyproject(project: &str, name: &str) -> String {
     format!(
         "# {name} eklentisinin Python tarafı. Kütüphaneleri eklentinin kilidi seçer, KentOS değil: `uv add <paket>` \
          bu dosyayı ve uv.lock'u yazar.\n[project]\nname = \"{project}\"\nversion = \"0.1.0\"\ndescription = \"{name} \
-         eklentisinin işlevleri\"\nrequires-python = \">=3.12,<3.14\"\ndependencies = []\n\n[tool.uv]\nenvironments = \
-         [\n{ENVIRONMENTS}]\nrequired-environments = [\n{ENVIRONMENTS}]\n"
+         eklentisinin işlevleri\"\nrequires-python = \">=3.12,<3.14\"\ndependencies = []\n\n[tool.uv]\n# Yeni yayımlanan \
+         sürüm kilide bir hafta sonra girer: yeni kaydedilmiş bir taklit paket o arada fark edilir.\nexclude-newer = \
+         \"7 days\"\nenvironments = [\n{ENVIRONMENTS}]\nrequired-environments = [\n{ENVIRONMENTS}]\n"
     )
 }
 
-/// uv's lock for a project without dependencies (uv 0.11, the three systems).
+/// uv's lock for a project without dependencies (uv 0.11, the three systems, a week's cooling: docs/adr/8057 §83).
 fn lock(project: &str) -> String {
     let markers = "    \"platform_machine == 'AMD64' and sys_platform == 'win32'\",\n    \"platform_machine == 'arm64' and \
                    sys_platform == 'darwin'\",\n    \"platform_machine == 'x86_64' and sys_platform == 'linux'\",\n";
     format!(
         "version = 1\nrevision = 3\nrequires-python = \">=3.12, <3.14\"\nresolution-markers = [\n{markers}]\n\
-         supported-markers = [\n{markers}]\nrequired-markers = [\n{markers}]\n\n[[package]]\nname = \"{project}\"\n\
+         supported-markers = [\n{markers}]\nrequired-markers = [\n{markers}]\n\n[options]\nexclude-newer = \
+         \"0001-01-01T00:00:00Z\" # This has no effect and is included for backwards compatibility when using \
+         relative exclude-newer values.\nexclude-newer-span = \"P7D\"\n\n[[package]]\nname = \"{project}\"\n\
          version = \"0.1.0\"\nsource = {{ virtual = \".\" }}\n"
     )
 }
