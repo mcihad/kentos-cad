@@ -168,17 +168,20 @@
     elemanlar, geometri, çok bina (B6–B11) → dosyadan doğrulama ve tek paket (B12–B17) → dış disiplin ve belediyenin inceleme
     tarafı (B18–B20).
   - **IFC görüntüleyici ve okuma motoru (15 Kasım 2026; [ADR 8061](../adr/8061-ifc-viewer-and-reading-engine.md), IFC-07,
-    IFC-12, sıra B12 ve B12b; karar, uygulanmadı):**
+    IFC-12, sıra B12 ve B12b; okuma yüzü ve deneme 16 Kasım'da yapıldı, görüntüleyici yapılmadı):**
     - Sahibin kararı: görüntüleyici uygulamanın içinde gelir ama gevşek bağlıdır; gerektiğinde hızlıca ayrı program olur
       ya da WASM ile web'de çalışır. Ayrı program ve web şimdi yapılmaz.
     - Üç katman: `kentos-ifc`'in okuma yüzü ve gövde ağları; saf görüntüleyici çekirdeği (yerel ve wasm32; kaynağını
       bilmez, binanın 3B görünümü de onu kullanır); kendi paketinde Iced bileşeni. Uygulamada tek bağdaştırıcı, dar bir
       bağlantı yüzü. Bağımlılık yönü `scripts/arch/deps.mjs` ile, ayrılabilirlik wasm32 derlemesi ve tek pencere örneğiyle
       her dilimde sınanır.
-    - Motor IFClite'ın Rust çekirdeğidir (MPL-2.0): yalnız `kentos-ifc`'in içinde, sabit sürümle. **Henüz bağlanmadı:**
-      deneme (ADR 8061 §7) sahibin onayıyla başlar; geçemezse kendi okuyucumuz yazılır.
+    - Motor IFClite'ın Rust çekirdeğidir (MPL-2.0): yalnız `kentos-ifc`'in içinde, sabit sürümle (`=28.3.0`), `read` ve
+      `geometry` özelliklerinin arkasında; ikisi de varsayılan olarak kapalı. Denemenin sonuçları ADR 8061 §11'dedir.
+      Ayrıştırıcı geçti; düz gövdeler iki okuyucuda aynı. Profil yayları motorda kaba üçgenleniyor. Gövdeler her modelde
+      modelin ortasına göre yapılır; yoksa TUREF koordinatında 0,16 m kayıyor. Sahibin üç kararı bekleniyor (§11.6).
     - Çizim mevcut 3B sahnedir; üçgen ağ ölçü kaynağı değildir; katı modelleme çekirdeği kararı (yukarıda) değişmez.
-    - Araştırma: [not](../research/2026-11-15-ifc-goruntuleyici.md). Paketler derlenmedi, hiçbir ölçüm yok.
+    - Araştırma: [not](../research/2026-11-15-ifc-goruntuleyici.md). Ölçümler:
+      [docs/perf/ifc-okuma-denemesi-2026-11-16.md](../perf/ifc-okuma-denemesi-2026-11-16.md).
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

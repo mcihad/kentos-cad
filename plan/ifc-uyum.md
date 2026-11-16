@@ -405,7 +405,7 @@ dosyanın içeriğiyle uyuşur. Gövdeleri BIM-10'dan gelir.
 **İlk kabul:** iki profilde eleman sayıları eşit; açıklıklı duvarın hacmi iki profilde yazılı tolerans içinde aynı; bütün
 gövdeler kapalı; sentetik örnek açık kural takımından uyarısız geçer.
 
-#### IFC-07 — Okuma yüzü ve motor denemesi [ ]
+#### IFC-07 — Okuma yüzü ve motor denemesi [~]
 
 **Kullanıcı sonucu:** KentOS yazdığı dosyayı geri okur; bozuk ya da çok büyük bir dosya uygulamayı düşürmez, sebebini satırıyla
 söyler. Doğrulamanın (IFC-08), görüntüleyicinin (IFC-12), altlık modelin (IFC-09) ve idare incelemesinin (BIM-18) ortak
@@ -421,12 +421,30 @@ temelidir. IFC-01'i beklemez; kataloğa bağlı olan IFC-08'dir.
   karşı sınanır. Tür ve sayı denetimine yetmediği yerde tablo resmî şemadan üretilir.
 - **Sınırlar:** boyut, derinlik, süre, bellek; iptal; döngüsel başvuru ve yerleşim bulgudur. Kullanıcı girdisinde panik
   üretilmez (kılavuz §14); motorun çağrıları sınırda sarılır.
-- **Gövde ağları** (`mesh` özelliği) bu pakette yalnız denenir; ürüne görüntüleyiciyle girer (IFC-12).
+- **Gövde ağları** (`geometry` özelliği; `mesh` adı `kentos_ifc::mesh`'in, ADR 8061 §11.5) bu pakette yalnız denenir;
+  ürüne görüntüleyiciyle girer (IFC-12).
 - **Deneme geçemezse** kendi ISO 10303-21 ayrıştırıcımız ve şemadan üretilen sözlük yazılır (ADR 8061 §8); yüz değişmez.
 
 **İlk kabul:** ADR 8061 §7'nin tablosu ölçülmüş ve karar ADR'ye yazılmış; yazılan her örnek geri okununca aynı nesne
 çizgesini verir; bilerek bozulan dosyalar (kesik satır, olmayan başvuru, döngü, yanlış şema adı) hata verir, panik vermez;
 açık IFC 4.3 örnekleri okunur; ölçeklenmiş modelde süre ve bellek tabanı yazılır.
+
+**Durum (16 Kasım 2026, [ADR 8061](../docs/adr/8061-ifc-viewer-and-reading-engine.md) §11):**
+
+- Yapılanlar:
+  - Okuma yüzü `kentos_ifc::read` (`read` özelliği): özet, nesneler, ağaç, ters ilişki dizini, istenince setler, satırıyla
+    bulgular, sınırlar, iptal ve panik sınırı. Gövde denemesi `geometry` özelliğinde.
+  - KentOS'un yazdığı 11 dosya IfcOpenShell'in okumasıyla nesne nesne ve set set aynı. Başka bir yazıcının IFC4 ve IFC 4.3
+    dosyaları da aynı (`fixtures/ifc/v1/`).
+  - Motorun IFC 4.3 tablosu yayımlanmış şemayla, KentOS'un kullandığı 152 sınıfta aynı.
+  - Bozuk dosyaların hepsi hata ya da bulgu verdi, panik vermedi.
+  - TUREF koordinatında köşe hatası 1,05e-7 m.
+  - Taban: 135 MB'lık dosyada yüz 0,72 s, gövdeler 8,39 s
+    ([ölçüm](../docs/perf/ifc-okuma-denemesi-2026-11-16.md)).
+- Kalanlar (sahibin kararları, ADR 8061 §11.6):
+  - Derleme ve boyut artışının kabulü.
+  - Gerçek dünyadan açık örnekler için indirme izni.
+  - Profil yaylarının kaba üçgenlenmesi için seçilecek yol.
 
 #### IFC-08 — Yazılmış dosyadan doğrulama, IDS ve kontrol formu [ ]
 
@@ -510,7 +528,7 @@ tıkla görür. Karar ve kurallar [ADR 8061](../docs/adr/8061-ifc-viewer-and-rea
   `scripts/arch/deps.mjs`'e yazılır.
 - **Sürekli iki sınama:** çekirdeğin ve `kentos-ifc`'in wasm32 derlemesi; bileşeni uygulama olmadan açan tek pencere
   örneği ve resmi. Ayrı program ve web bu paketin dışındadır (ADR 8061 §6); bu iki sınama o yolları açık tutar.
-- **Gövde ağları** (`kentos-ifc`, `mesh` özelliği): nesne başına float64 köşeler, üçgenler ve renk; gösterilemeyen
+- **Gövde ağları** (`kentos-ifc`, `geometry` özelliği): nesne başına float64 köşeler, üçgenler ve renk; gösterilemeyen
   gösterim türü sebebiyle listede, nesne sınır kutusuyla.
 - **Pencere** (ADR 8061 §5): yapı ve sınıf ağacı, sahne, özellikler; gizle, yalnız bırak, hepsini göster; mahal ve açıklık
   ayrı açılıp kapanır; kesit düzlemi ve kesit kutusu (çizicide kırpma yeni iştir); hazır bakışlar; ilerleme ve iptal.

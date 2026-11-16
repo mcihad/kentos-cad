@@ -1,0 +1,917 @@
+{
+ "bodies": {
+  "01alMXW75m080000000001": {
+   "area": 71.77771644662752,
+   "box": [
+    [
+     -0.14999999999999972,
+     -0.15,
+     -0.05
+    ],
+    [
+     10.149999999999999,
+     0.15,
+     3.2
+    ]
+   ],
+   "volume": 9.209999999999997
+  },
+  "01alMXW75m080000000002": {
+   "area": 42.69684397929028,
+   "box": [
+    [
+     9.85,
+     -0.150000000000002,
+     -0.05
+    ],
+    [
+     10.15,
+     6.063896875175505,
+     3.2
+    ]
+   ],
+   "volume": 5.219616181699203
+  },
+  "01alMXW75m080000000003": {
+   "area": 79.02993460304883,
+   "box": [
+    [
+     -0.15000000000000036,
+     5.935315805233081,
+     -0.05
+    ],
+    [
+     10.15,
+     8.15,
+     3.2
+    ]
+   ],
+   "volume": 10.326789097120546
+  },
+  "01alMXW75m080000000004": {
+   "area": 45.03684397929025,
+   "box": [
+    [
+     -0.15,
+     -0.14999999999999974,
+     -0.05
+    ],
+    [
+     0.15,
+     6.063896875175507,
+     3.2
+    ]
+   ],
+   "volume": 5.849616181699187
+  },
+  "01alMXW75m080000000005": {
+   "area": 5.219999999999999,
+   "box": [
+    [
+     4.0,
+     -0.15,
+     0.9
+    ],
+    [
+     5.5,
+     0.15,
+     2.1
+    ]
+   ],
+   "volume": 0.54
+  },
+  "01alMXW75m080000000006": {
+   "area": 6.060000000000005,
+   "box": [
+    [
+     9.85,
+     2.0,
+     0.0
+    ],
+    [
+     10.15,
+     3.0,
+     2.1
+    ]
+   ],
+   "volume": 0.6300000000000026
+  },
+  "01alMXW75m080000000007": {
+   "area": 4.3134305961921715,
+   "box": [
+    [
+     4.388285036792228,
+     7.825699961966325,
+     0.9
+    ],
+    [
+     5.611714963207773,
+     8.124673199795888,
+     2.1
+    ]
+   ],
+   "volume": 0.4300301912587916
+  },
+  "01alMXW75m080000000008": {
+   "area": 239.98290320448245,
+   "box": [
+    [
+     0.15,
+     0.15,
+     0.0
+    ],
+    [
+     9.85,
+     7.85,
+     3.2
+    ]
+   ],
+   "volume": 220.3950785302295
+  },
+  "01alMXW75m080000000009": {
+   "area": 64.48073159852918,
+   "box": [
+    [
+     -0.14999999999999972,
+     -0.15,
+     3.35
+    ],
+    [
+     10.149999999999999,
+     0.15,
+     6.25
+    ]
+   ],
+   "volume": 8.159999999999997
+  },
+  "01alMXW75m08000000000A": {
+   "area": 37.63438919119529,
+   "box": [
+    [
+     9.85,
+     -0.150000000000002,
+     3.35
+    ],
+    [
+     10.15,
+     6.063896875175505,
+     6.25
+    ]
+   ],
+   "volume": 4.5896575159777155
+  },
+  "01alMXW75m08000000000B": {
+   "area": 71.07697149128512,
+   "box": [
+    [
+     -0.15000000000000036,
+     5.935315805233081,
+     3.35
+    ],
+    [
+     10.15,
+     8.15,
+     6.25
+    ]
+   ],
+   "volume": 9.16814915413954
+  },
+  "01alMXW75m08000000000C": {
+   "area": 40.574389191195266,
+   "box": [
+    [
+     -0.15,
+     -0.14999999999999974,
+     3.35
+    ],
+    [
+     0.15,
+     6.063896875175507,
+     6.25
+    ]
+   ],
+   "volume": 5.219657515977735
+  },
+  "01alMXW75m08000000000D": {
+   "area": 5.219999999999999,
+   "box": [
+    [
+     4.0,
+     -0.15,
+     4.25
+    ],
+    [
+     5.5,
+     0.15,
+     5.45
+    ]
+   ],
+   "volume": 0.5399999999999999
+  },
+  "01alMXW75m08000000000E": {
+   "area": 6.060000000000005,
+   "box": [
+    [
+     9.85,
+     2.0,
+     3.35
+    ],
+    [
+     10.15,
+     3.0,
+     5.45
+    ]
+   ],
+   "volume": 0.6300000000000093
+  },
+  "01alMXW75m08000000000F": {
+   "area": 4.3134305961921715,
+   "box": [
+    [
+     4.388285036792228,
+     7.825699961966325,
+     4.25
+    ],
+    [
+     5.611714963207773,
+     8.124673199795888,
+     5.45
+    ]
+   ],
+   "volume": 0.4300301912588221
+  },
+  "01alMXW75m08000000000G": {
+   "area": 230.39828016169284,
+   "box": [
+    [
+     0.15,
+     0.15,
+     3.35
+    ],
+    [
+     9.85,
+     7.85,
+     6.25
+    ]
+   ],
+   "volume": 199.73303991802035
+  },
+  "01alMXW75m08000000000H": {
+   "area": 321.95842130874655,
+   "box": [
+    [
+     -0.15,
+     -0.15,
+     -0.2
+    ],
+    [
+     10.15,
+     8.149511649824912,
+     0.0
+    ]
+   ],
+   "volume": 15.756724652366113
+  },
+  "01alMXW75m08000000000I": {
+   "area": 152.60519271972933,
+   "box": [
+    [
+     -0.15,
+     -0.15,
+     3.2
+    ],
+    [
+     10.15,
+     8.149511649824912,
+     3.35
+    ]
+   ],
+   "volume": 10.953543489274532
+  },
+  "01alMXW75m08000000000J": {
+   "area": 162.68519271972937,
+   "box": [
+    [
+     -0.15,
+     -0.15,
+     6.25
+    ],
+    [
+     10.15,
+     8.149511649824912,
+     6.4
+    ]
+   ],
+   "volume": 11.817543489274856
+  },
+  "01alMXW75m08000000000K": {
+   "area": 20.173560207507368,
+   "box": [
+    [
+     1.9000019786791271,
+     1.5,
+     0.0
+    ],
+    [
+     4.099999780146705,
+     3.6999991205869085,
+     3.3499999999999996
+    ]
+   ],
+   "volume": 1.1115872099516777
+  },
+  "0CESgV88kjh95W253AK3e4": {
+   "area": 202.04995829187362,
+   "box": [
+    [
+     0.15,
+     0.15,
+     3.35
+    ],
+    [
+     9.85,
+     5.935315805233081,
+     6.25
+    ]
+   ],
+   "volume": 162.7409336012065
+  },
+  "0Q7eHHW8kjmPPbLbFOO0c8": {
+   "area": 211.3411477750135,
+   "box": [
+    [
+     0.15,
+     0.15,
+     0.0
+    ],
+    [
+     9.85,
+     5.935315805233081,
+     3.2
+    ]
+   ],
+   "volume": 179.57620259443485
+  }
+ },
+ "header": {
+  "name": "Eğri cepheli bina.ifc",
+  "originatingSystem": "KentOS Mimari",
+  "preprocessor": "KentOS Mimari",
+  "timeStamp": "2026-11-16T12:00:00"
+ },
+ "lengthToSi": 1.0,
+ "location": null,
+ "objects": {
+  "0$u382g8kltjUjxoA2ToaF": {
+   "class": "IfcBuilding",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": "Eğri cepheli bina",
+   "name": "MM-BNA-Eğri_cepheli_bina",
+   "objectType": null,
+   "parent": "3yPmEM48klsPPicw6_ypKk",
+   "predefined": null,
+   "step": 18,
+   "tag": null,
+   "type": null
+  },
+  "01alMXW75m080000000001": {
+   "class": "IfcWall",
+   "container": "1PgpDO88klfGdVM9eRowva",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 57,
+   "tag": "0192f5a1-8071-7000-8000-000000000001",
+   "type": null
+  },
+  "01alMXW75m080000000002": {
+   "class": "IfcWall",
+   "container": "1PgpDO88klfGdVM9eRowva",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 82,
+   "tag": "0192f5a1-8071-7000-8000-000000000002",
+   "type": null
+  },
+  "01alMXW75m080000000003": {
+   "class": "IfcWall",
+   "container": "1PgpDO88klfGdVM9eRowva",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 104,
+   "tag": "0192f5a1-8071-7000-8000-000000000003",
+   "type": null
+  },
+  "01alMXW75m080000000004": {
+   "class": "IfcWall",
+   "container": "1PgpDO88klfGdVM9eRowva",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 129,
+   "tag": "0192f5a1-8071-7000-8000-000000000004",
+   "type": null
+  },
+  "01alMXW75m080000000005": {
+   "class": "IfcWindow",
+   "container": "1PgpDO88klfGdVM9eRowva",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-PNC-P01",
+   "objectType": null,
+   "parent": null,
+   "predefined": "WINDOW",
+   "step": 439,
+   "tag": "P01",
+   "type": null
+  },
+  "01alMXW75m080000000006": {
+   "class": "IfcDoor",
+   "container": "1PgpDO88klfGdVM9eRowva",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KAP-K01",
+   "objectType": null,
+   "parent": null,
+   "predefined": "DOOR",
+   "step": 456,
+   "tag": "K01",
+   "type": null
+  },
+  "01alMXW75m080000000007": {
+   "class": "IfcWindow",
+   "container": "1PgpDO88klfGdVM9eRowva",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-PNC-P02",
+   "objectType": null,
+   "parent": null,
+   "predefined": "WINDOW",
+   "step": 473,
+   "tag": "P02",
+   "type": null
+  },
+  "01alMXW75m080000000008": {
+   "class": "IfcSpace",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": "Salon",
+   "name": "MM-MHL-001_Salon",
+   "objectType": null,
+   "parent": "1PgpDO88klfGdVM9eRowva",
+   "predefined": "INTERNAL",
+   "step": 643,
+   "tag": null,
+   "type": null
+  },
+  "01alMXW75m080000000009": {
+   "class": "IfcWall",
+   "container": "0a5hwTw8kljCsZKnncLue7",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 154,
+   "tag": "0192f5a1-8071-7000-8000-000000000009",
+   "type": null
+  },
+  "01alMXW75m08000000000A": {
+   "class": "IfcWall",
+   "container": "0a5hwTw8kljCsZKnncLue7",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 179,
+   "tag": "0192f5a1-8071-7000-8000-00000000000a",
+   "type": null
+  },
+  "01alMXW75m08000000000B": {
+   "class": "IfcWall",
+   "container": "0a5hwTw8kljCsZKnncLue7",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 201,
+   "tag": "0192f5a1-8071-7000-8000-00000000000b",
+   "type": null
+  },
+  "01alMXW75m08000000000C": {
+   "class": "IfcWall",
+   "container": "0a5hwTw8kljCsZKnncLue7",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 226,
+   "tag": "0192f5a1-8071-7000-8000-00000000000c",
+   "type": null
+  },
+  "01alMXW75m08000000000D": {
+   "class": "IfcWindow",
+   "container": "0a5hwTw8kljCsZKnncLue7",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-PNC-P11",
+   "objectType": null,
+   "parent": null,
+   "predefined": "WINDOW",
+   "step": 490,
+   "tag": "P11",
+   "type": null
+  },
+  "01alMXW75m08000000000E": {
+   "class": "IfcDoor",
+   "container": "0a5hwTw8kljCsZKnncLue7",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KAP-K11",
+   "objectType": null,
+   "parent": null,
+   "predefined": "DOOR",
+   "step": 507,
+   "tag": "K11",
+   "type": null
+  },
+  "01alMXW75m08000000000F": {
+   "class": "IfcWindow",
+   "container": "0a5hwTw8kljCsZKnncLue7",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-PNC-P12",
+   "objectType": null,
+   "parent": null,
+   "predefined": "WINDOW",
+   "step": 524,
+   "tag": "P12",
+   "type": null
+  },
+  "01alMXW75m08000000000G": {
+   "class": "IfcSpace",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": "Salon",
+   "name": "MM-MHL-101_Salon",
+   "objectType": null,
+   "parent": "0a5hwTw8kljCsZKnncLue7",
+   "predefined": "INTERNAL",
+   "step": 666,
+   "tag": null,
+   "type": null
+  },
+  "01alMXW75m08000000000H": {
+   "class": "IfcSlab",
+   "container": "1PgpDO88klfGdVM9eRowva",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DSM-Döşeme",
+   "objectType": null,
+   "parent": null,
+   "predefined": "FLOOR",
+   "step": 254,
+   "tag": "0192f5a1-8071-7000-8000-000000000011",
+   "type": null
+  },
+  "01alMXW75m08000000000I": {
+   "class": "IfcSlab",
+   "container": "0a5hwTw8kljCsZKnncLue7",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DSM-Döşeme",
+   "objectType": null,
+   "parent": null,
+   "predefined": "FLOOR",
+   "step": 275,
+   "tag": "0192f5a1-8071-7000-8000-000000000012",
+   "type": null
+  },
+  "01alMXW75m08000000000J": {
+   "class": "IfcSlab",
+   "container": "0a5hwTw8kljCsZKnncLue7",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DSM-Döşeme",
+   "objectType": null,
+   "parent": null,
+   "predefined": "FLOOR",
+   "step": 296,
+   "tag": "0192f5a1-8071-7000-8000-000000000013",
+   "type": null
+  },
+  "01alMXW75m08000000000K": {
+   "class": "IfcStair",
+   "container": "1PgpDO88klfGdVM9eRowva",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-MRD-Merdiven",
+   "objectType": null,
+   "parent": null,
+   "predefined": "SPIRAL_STAIR",
+   "step": 425,
+   "tag": "0192f5a1-8071-7000-8000-000000000014",
+   "type": null
+  },
+  "04K6SQc8kkmnFcKVb4eRUP": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-K11",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 602,
+   "tag": null,
+   "type": null
+  },
+  "0CESgV88kjh95W253AK3e4": {
+   "class": "IfcSpatialZone",
+   "container": null,
+   "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
+   "hasShape": true,
+   "longName": "1. kat emsale dahil alan",
+   "name": "MM-MZN-Emsal_DAHIL_1._kat",
+   "objectType": "EMSAL",
+   "parent": null,
+   "predefined": "USERDEFINED",
+   "step": 707,
+   "tag": null,
+   "type": null
+  },
+  "0Q7eHHW8kjmPPbLbFOO0c8": {
+   "class": "IfcSpatialZone",
+   "container": null,
+   "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
+   "hasShape": true,
+   "longName": "Zemin kat emsale dahil alan",
+   "name": "MM-MZN-Emsal_DAHIL_Zemin_kat",
+   "objectType": "EMSAL",
+   "parent": null,
+   "predefined": "USERDEFINED",
+   "step": 689,
+   "tag": null,
+   "type": null
+  },
+  "0a5hwTw8kljCsZKnncLue7": {
+   "class": "IfcBuildingStorey",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": "1. kat",
+   "name": "MM-BNK-1._kat",
+   "objectType": null,
+   "parent": "0$u382g8kltjUjxoA2ToaF",
+   "predefined": null,
+   "step": 36,
+   "tag": null,
+   "type": null
+  },
+  "0tvcd5Y8kkJtX99EXtIi93": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P02",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 570,
+   "tag": null,
+   "type": null
+  },
+  "1Lhayva8kktLeiytqMDNh_": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P11",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 586,
+   "tag": null,
+   "type": null
+  },
+  "1PgpDO88klfGdVM9eRowva": {
+   "class": "IfcBuildingStorey",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": "Zemin kat",
+   "name": "MM-BNK-Zemin_kat",
+   "objectType": null,
+   "parent": "0$u382g8kltjUjxoA2ToaF",
+   "predefined": null,
+   "step": 28,
+   "tag": null,
+   "type": null
+  },
+  "1jUjv$m8kkFxI5AcOilkQW": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-K01",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 557,
+   "tag": null,
+   "type": null
+  },
+  "2_sCQUk8kkMVhBo_d_Kge5": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P01",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 541,
+   "tag": null,
+   "type": null
+  },
+  "2oydxxe8kkgCsVi7Lp3VGq": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P12",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 615,
+   "tag": null,
+   "type": null
+  },
+  "2uxTKfU8klr5KhI23xRq5D": {
+   "class": "IfcProject",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": "Eğri cepheli bina",
+   "name": "Eğri cepheli bina",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 12,
+   "tag": null,
+   "type": null
+  },
+  "3eQcBfWAUgirVTHpg4EmHE": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-Döşeme_boşluğu",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 631,
+   "tag": null,
+   "type": null
+  },
+  "3yPmEM48klsPPicw6_ypKk": {
+   "class": "IfcSite",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": null,
+   "name": "MM-SAH-Parsel",
+   "objectType": null,
+   "parent": "2uxTKfU8klr5KhI23xRq5D",
+   "predefined": null,
+   "step": 15,
+   "tag": null,
+   "type": null
+  }
+ },
+ "precision": 1e-05,
+ "reader": "IfcOpenShell 0.9.0.post1",
+ "records": 715,
+ "schema": "IFC4X3_ADD2",
+ "sets": {
+  "0$u382g8kltjUjxoA2ToaF": {
+   "Pset_BuildingCommon": {
+    "NetPlannedArea": 137.75390209544568,
+    "NumberOfStoreys": 2
+   },
+   "Qto_BuildingBaseQuantities": {
+    "NetFloorArea": 137.75390209544568
+   }
+  },
+  "01alMXW75m080000000001": {
+   "Pset_WallCommon": {
+    "IsExternal": true
+   },
+   "Qto_WallBaseQuantities": {
+    "GrossVolume": 9.75,
+    "Height": 3.25,
+    "Length": 10.0,
+    "NetSideArea": 30.7,
+    "NetVolume": 9.21,
+    "Width": 0.3
+   }
+  },
+  "01alMXW75m080000000005": {
+   "Pset_WindowCommon": {
+    "IsExternal": true
+   }
+  },
+  "01alMXW75m080000000006": {
+   "Pset_DoorCommon": {
+    "IsExternal": true
+   }
+  },
+  "01alMXW75m080000000008": {
+   "Pset_SpaceCoveringRequirements": {
+    "FloorCoveringThickness": 0.05
+   },
+   "Qto_SpaceBaseQuantities": {
+    "GrossFloorArea": 68.87695104772284,
+    "GrossPerimeter": 31.948989185773883,
+    "GrossVolume": 220.4062433527131,
+    "Height": 3.2,
+    "NetFloorArea": 68.87695104772284,
+    "NetVolume": 220.4062433527131
+   }
+  },
+  "01alMXW75m08000000000H": {
+   "Pset_SlabCommon": {
+    "IsExternal": false
+   },
+   "Qto_SlabBaseQuantities": {
+    "GrossArea": 78.78733209347283,
+    "GrossVolume": 15.757466418694566,
+    "NetArea": 78.78733209347283,
+    "NetVolume": 15.757466418694566,
+    "Width": 0.2
+   }
+  },
+  "0CESgV88kjh95W253AK3e4": {
+   "TREpys_EmsalOzellikSeti": {
+    "EmsalDurumu": "DAHIL"
+   }
+  },
+  "0a5hwTw8kljCsZKnncLue7": {
+   "Qto_BuildingStoreyBaseQuantities": {
+    "GrossHeight": 2.9,
+    "NetFloorArea": 68.87695104772284
+   }
+  }
+ },
+ "source": "fixtures/arch/v1/ifc/egri-bina.ifc"
+}

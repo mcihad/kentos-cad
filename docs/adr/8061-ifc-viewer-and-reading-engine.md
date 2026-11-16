@@ -1,7 +1,9 @@
 # ADR 8061: IFC görüntüleyici — uygulamanın içinde, gevşek bağlı; okuma ve geometri motoru `kentos-ifc`'nin arkasında
 
-- **Durum:** karar (15 Kasım 2026); uygulanmadı. Kod değişmedi, bağımlılık eklenmedi. Motor seçimi §7'deki denemeden
-  geçince kesinleşir; geçemezse §8 uygulanır.
+- **Durum:** karar (15 Kasım 2026); deneme yapıldı (16 Kasım 2026, §11). Okuma yüzü `kentos-ifc`'te, motor `read` ve
+  `geometry` özelliklerinin arkasında, sabit 28.3.0. Ayrıştırıcı denemeden geçti. Geometri gösterim için geçti: düz
+  gövdeler iki okuyucuda aynı, profil yayları motorda kaba (§11.3). Kesinleşmesi için sahibin üç kararı bekleniyor
+  (§11.6). Görüntüleyici (IFC-12) yapılmadı.
 - **Sahibin isteği (15 Kasım, özet):** sistemde IFC dosyaları için bir görüntüleyici olsun; Rust ile yazılmış IFClite'ın
   lisansı uygunsa doğrudan kullanılabilir. Sonraki sözü karardır: görüntüleyici uygulamanın içinde olacak ama gevşek
   bağlı olacak; gerektiğinde hızlıca ayrı bir uygulama olabilecek ya da WASM ile web üzerinde çalıştırılabilecek.
@@ -15,8 +17,10 @@
 - **Araştırma:** [IFC görüntüleyici ve okuma motoru notu](../research/2026-11-15-ifc-goruntuleyici.md).
 - **Web:** şimdi yapılmaz (ADR 0228). Tarifi §6.2'de; dönüşte gerekenler TODOS.md §0.2'de.
 - **`.kcad`:** değişmez. Görüntüleyici projeye yazmaz; altlık modelin projede saklanması IFC-09'un işidir.
-- **Bağımlılık:** bu ADR ile eklenmedi. Deneme başlarken sahibin onayıyla eklenir (§7): `ifc-lite-core`,
-  `ifc-lite-geometry`, gerekirse `ifc-lite-processing`; üçü de MPL-2.0; sabit sürüm.
+- **Bağımlılık:** 16 Kasım'da eklendi. Sahip “daha sonra B12 maddesine geç” dedi; bu söz §7'nin istediği onay sayıldı.
+  Eklenenler `ifc-lite-core` ve `ifc-lite-geometry` (MPL-2.0, `=28.3.0`) ile `rustc-hash`. Yalnız
+  `crates/shared/ifc/Cargo.toml`'da, varsayılan olarak kapalı iki özelliğin arkasındalar. `ifc-lite-processing`
+  gerekmedi.
 
 ## §1. Karar
 
@@ -90,7 +94,7 @@ Adlar öneridir; uygulama diliminde kesinleşir. Düzen paftanınkiyle aynıdır
 
 | Paket | Yer | İşi | Bağlandıkları | Derlendiği hedef |
 |---|---|---|---|---|
-| `kentos-ifc` (var) | `crates/shared/ifc` | Okuma yüzü (`read` özelliği) ve gövde ağları (`mesh` özelliği, `read`'i içerir). Özellikler varsayılan olarak kapalıdır: yazıcı ve katalog bugünkü gibi saf ve küçük kalır | ortak çekirdekler; motor | yerel, wasm32 |
+| `kentos-ifc` (var) | `crates/shared/ifc` | Okuma yüzü (`read` özelliği) ve gövde ağları (`geometry` özelliği, `read`'i içerir; §11.5). Özellikler varsayılan olarak kapalıdır: yazıcı ve katalog bugünkü gibi saf ve küçük kalır | ortak çekirdekler; motor | yerel, wasm32 |
 | `kentos-model-view` (yeni) | `crates/shared/model-view` | Görüntüleyicinin çekirdeği. Kaynağını bilmez: IFC dosyası ve kesit modeli (BIM-06) aynı girdiyi doldurur | `kentos-scene3d` | yerel, wasm32 |
 | `kentos-model-view-ui` (yeni) | `crates/model-view-ui` | Iced bileşeni: sahne yüzeyi, yapı ağacı, özellikler, araç satırı. Kendi durumu ve kendi iletileri vardır | `kentos-ui`, çekirdek, 3B çizici | yerel |
 | bağdaştırıcı | `apps/desktop` içinde tek modül | Pencere, dosya seçimi, komut kaydı, Mimari ile bağ (§4) | bileşen ve uygulama | yerel |
@@ -125,7 +129,7 @@ Adlar öneridir; uygulama diliminde kesinleşir. Düzen paftanınkiyle aynıdır
 
 İki sürekli sınama ayrılabilirliği kanıtlar; ikisi de görüntüleyicinin ilk diliminde eklenir:
 
-- **wasm32 derlemesi:** `kentos-ifc` (`mesh` özelliğiyle) ve çekirdek `wasm32-unknown-unknown` için derlenir. Web
+- **wasm32 derlemesi:** `kentos-ifc` (`geometry` özelliğiyle) ve çekirdek `wasm32-unknown-unknown` için derlenir. Web
   durduğu için yalnız derleme denetlenir; bağlama paketi yazılmaz.
 - **Tek pencere örneği:** bileşeni uygulama olmadan açan küçük bir örnek program ve onun resim sınaması. Ayrı programın
   çekirdeği budur; uygulamaya sızan her bağ bu örneğin derlemesini bozar.
@@ -215,7 +219,7 @@ Gerekince yapılacaklar; görüntüleyicinin kodu değişmez.
 
 Web'e dönüldüğünde (ADR 0228) yapılacaklar:
 
-- Yeni bağlama paketi `crates/wasm/` altında: `kentos-ifc` (`mesh`) ve çekirdek. Bağlantı yüzü (§4) ve karo tamponları
+- Yeni bağlama paketi `crates/wasm/` altında: `kentos-ifc` (`geometry`) ve çekirdek. Bağlantı yüzü (§4) ve karo tamponları
   tipli dizilerle geçer.
 - Çizim web'in WebGPU arka ucundadır; gölgelendirici ve düzen sözleşmesi masaüstüyle ortaktır
   (`shaders/wgsl/scene3d/`, `scene3d.layout.json`). WebGL2 yolu ayrı iştir (plan/3d.md S-E05).
@@ -275,6 +279,93 @@ Açık örneklerin kullanım koşulu okunmadan hiçbiri depoya kopyalanmaz.
   sürümleri okuma (IFC-11) motorla birlikte gelir.
 - **Yük:** en az on yeni doğrudan paket (nalgebra, rayon, i_overlay ve öbürleri); derleme süresi ve ikili boyutu artar.
   Hızlı sürüm çıkaran genç bir projeye bağlanılır; kural 7 ve §9 bu yükü tek pakette tutar.
-- **Açık:** motorun yerel çağrı yüzü docs.rs'ten okunmadı; paketler derlenmedi; hiçbir ölçüm yok. Kesit düzlemi çizicide
-  yeni iştir. Web'de çizimin hangi arka uçla yapılacağı dönüşte karara bağlanır.
-- **Sahibin onayı gereken sonraki adım:** denemenin başlaması, yani bağımlılığın eklenmesi (kılavuz §3).
+- **Açık:** motorun yerel çağrı yüzü 16 Kasım'da paketlerin kaynağından okundu ve paketler derlendi. Ölçümler §11'dedir.
+  Kesit düzlemi çizicide yeni iştir. Web'de çizimin hangi arka uçla yapılacağı dönüşte karara bağlanır.
+- **Sahibin onayı gereken sonraki adım:** deneme başladı ve ölçüldü (§11). Kalan kararlar §11.6'dadır.
+
+## §11. Deneme sonuçları (16 Kasım 2026)
+
+Makine, derleyici ve ölçüm yolu [docs/perf/ifc-okuma-denemesi-2026-11-16.md](../perf/ifc-okuma-denemesi-2026-11-16.md)'dedir.
+Sınamalar `cargo test -p kentos-ifc --features geometry read::` ile koşar (19 sınama; özelliksiz 49 sınama değişmeden
+geçer).
+
+### 11.1 Okuma yüzü
+
+`kentos_ifc::read` (`crates/shared/ifc/src/read/`) bayt alır, düz veri verir. Motorun türü açık yüzde görünmez.
+
+- **Özet:** şema, başlık ve kayıt sayısı. Nesnelerin sınıf sayıları da özettedir. Birimler: uzunluk, alan, hacim ve açı;
+  SI birimi önekiyle, dönüşümlü birim çarpanıyla. Harita dönüşümü `IfcMapConversion`'dan ya da `…Scaled`'dan, hedef
+  sistemiyle birlikte okunur.
+- **Nesneler:** her `IfcObjectDefinition`. Her biri için GlobalId, sınıf (`IfcWall` yazımıyla), ad, açıklama, ObjectType
+  (tipte ElementType), LongName, Tag, PredefinedType ve şekli olup olmadığı okunur.
+- **Ağaç ve dizin:** parça (`IfcRelAggregates`, `IfcRelNests`), içerilme ve tip ağaca girer. İlişkilerin iki yanı ters
+  ilişki dizinindedir. Kökler ürünlerden ve projeden seçilir. Tip, grup, aktör, açıklık ve başvurulan bölge kök
+  sayılmaz.
+- **Setler** istenince okunur: nesnenin kendi setleri, sonra tipinin setleri. Değerler yazıldığı türle gelir.
+- **Bulgu ve hata ayrımı:** okunacak bir şey bırakmayan durum hatadır (`ReadError`): boş dosya, STEP olmayan dosya,
+  bilinmeyen şema, sınır aşımı, DATA'sız dosya, iptal ve motor paniği. Gerisi satırıyla bulgudur ve model yine verilir.
+  Bulgu kodları: `record_malformed`, `record_unreadable`, `reference_missing`, `step_duplicate`, `step_number_too_large`,
+  `class_unknown`, `tree_cycle`, `placement_cycle`, `placement_too_deep`, `parent_twice`, `contained_twice`,
+  `global_id_missing`, `global_id_invalid`, `global_id_duplicate`, `map_conversion_many`. Aynı türden ilk 100 bulgu
+  satırıyla tutulur, kalanı sayılır.
+- **Sınırlar** (KentOS'un seçimi, `Limits::default`): 2 GB dosya, 60 milyon kayıt, kayıt başına 256 MB uzunluk, 32 kat
+  iç içe liste ve 8 milyon liste öğesi. Ağaç ve yerleşim zinciri 1000 kat derinliğe dek yürünür. IFC'nin en derin
+  listesi üç kattır. Bir kaydı bu sınırların dışında tutan ilk geçiş KentOS'un kendi kodudur: kayıtların yeri motorun
+  yinelemeli (özyinelemesiz) tarayıcısından gelir, uzunluğu, iç içeliği, öğe sayısı ve başvuruları bizim yürüyüşümüzle
+  ölçülür. Motor listeleri özyinelemeyle ayrıştırır; sınırı aşan kayıt motora hiç gitmez. 100 000 kat iç içe bir kayıt
+  yığın taşmadan, satırıyla reddedildi.
+- **Panik sınırı:** okuma, setler ve gövdeler `catch_unwind` içinde koşar. Motor paniği `ReadError::Engine` olur. wasm32'de
+  panik yine durdurur; web dönüşünde ayrı işçi gerekir.
+
+### 11.2 §7'nin tablosu, ölçülen
+
+| Konu | Ölçülen | Sonuç |
+|---|---|---|
+| Derleme | Yerel ve wasm32 uyarısız derlendi. `read` 12 paket ekliyor, `geometry` 35 paket daha. Lisanslar iki MPL-2.0, gerisi MIT, Apache-2.0, ISC, Zlib ve 0BSD. Release örneği 0,43 → 1,34 MB (`read`) → 6,03 MB (`geometry`) büyüdü. Motor önbellekte yokken release derlemesi 67 s sürdü | Geçti. Boyut ve süre artışı sahibin kabulünü bekliyor (§11.6). `deps.mjs` `kentos-ifc` için temiz; betiğin bugünkü tek hatası `crates/vendor/block` (bu işten önce, 04b979287) |
+| Kendi dosyalarımız | 11 dosyanın her nesnesi IfcOpenShell'in okumasıyla aynı (`fixtures/ifc/v1/okuma/`): sınıf, ad, ObjectType, LongName, Tag, PredefinedType, şekil, parça, içerilme ve tip. Başlık, kayıt sayısı, birim ve harita dönüşümü de aynı. 50'den fazla nesnenin kendi setleri değer değer aynı. 382 gövdenin hacmi kesit modelinin yazdığı NetVolume'a eşit. Düz gövdelerde en kötü kutu farkı 5,05e-7 m, en kötü hacim farkı 5,3e-6 göreli. Tolerans dosyanın hassasiyetinden (1e-5) ve float32 yuvarlamasından (gövde erimi × 2⁻²⁴) türetildi; sonradan büyütülmedi | Geçti. Eğri yaylı 8 gövde ayrı sonuçtur (§11.3) |
+| Türkçe | Başlıkta ve adlarda `\X2\…\X0\` ile yazılan harfler UTF-8 okunuyor ve IfcOpenShell'inkiyle bayt bayt aynı | Geçti |
+| Açık örnekler | Başka bir yazıcının dosyaları: IfcOpenShell'in kendi API'siyle yazılmış birer IFC4 ve IFC 4.3 binası (`scripts/fixtures/ifc_other_writer_cases.py`; açıklık, kapı, döşeme, mahal, set, tip, malzeme ve Türkçe adlarla). Nesnelerin, setlerin ve gövdelerin tamamı gösterildi | Kısmen. Gerçek dünyadan örnekler (başka programların dışa aktarımları) indirilmedi; sahibin izni bekleniyor (§11.6) |
+| Bozuk girdi | Boş, STEP değil, ikili çöp, yanlış şema, DATA'sız, kesik dosya ve kayıt, olmayan başvuru, ağaç ve yerleşim döngüsü, iki kez verilen numara ve GlobalId, biçimsiz GlobalId, 64 bitlik numara, bilinmeyen sınıf, 100 000 kat iç içe liste, uzun liste, uzun kayıt, kayıt sayısı sınırı denendi | Geçti: her biri hata ya da satırıyla bulgu verdi. Panik, asılma ve yığın taşması olmadı |
+| İptal ve bütçe | 135 MB dosyada yüz okunurken durdurma ≤ 1 ms'de, gövdeler yapılırken 57–226 ms'de oldu. İptalden sonra sonuç verilmedi. Sınır aşımı açık iletiyle döndü | Geçti |
+| Büyük koordinat | Kesit binası TUREF koordinatına (587 312,345 D; 4 400 612,789 K; 1 285,40 m) taşındı. Gövdeler mutlak float32 tutulunca köşeler 0,164 m kaydı. Modelin ortası motora göreli merkez (`with_scale_and_rtc`) olarak verilince ve float64'te geri eklenince en kötü köşe 1,05e-7 m oldu | Geçti, merkezle. Motor bu yolda kendiliğinden merkez almıyor; `bodies` her modelde alıyor |
+| Süre ve bellek | 156 KB'lık dosyada yüz 1–3 ms, gövdeler 13 ms ve 9 MB sürdü. 135 MB'lık dosyada (2,05 M kayıt) yüz 0,72 s ve 322 MB, gövdeler 8,39 s ve 913 MB sürdü | Taban yazıldı. Hedef bu ölçümden sonra konur |
+| Dayanıklılık | Sınamaların, bozuk girdilerin ve büyük dosyanın hiçbirinde süreç düşmedi | Okuma süreç içinde, iş parçacığında kalır (§4) |
+
+### 11.3 Eğri profil yayları (motorun sınırı)
+
+Eğri binanın (`egri-bina*.ifc`) yaylı duvarları, mahalleri, döşemeleri ve döner merdiveni motorun ağında kesit modelinin
+yazdığı hacimden %0,3–0,9 eksik çıkıyor. IfcOpenShell'in ağı %0,01 içinde kalıyor (öntanımlı doğrusal sapması 1 mm,
+kendi ayarından okundu). Motor bir profilin yaylarını kendi öntanımlı sıklığından (Medium) daha ince bölmüyor. Kaynağı
+`TessellationQuality::profile_arc_segments`'tir: “Medium'un üstünde incelmez”. Highest istense de sonuç aynı çıktı. 7 m
+yarıçaplı yayda kirişin sehimi yaklaşık 3 cm'dir. Gövdenin dışa göre kutusu yine 3,8e-7 m içinde kalıyor, çünkü köşeler
+yayın üstünde. Ağ gösterimdir (§1.6): ölçü gösterilmez. Gene de görüntüleyicide yay köşeli görünür. Bu sekiz gövde
+sınamada adıyla listelidir (`COARSE_ARCS`). Listeden çıkan ya da listeye eklenen gövde sınamayı bozar; tolerans
+genişletilmedi.
+
+### 11.4 Hizalama gövdesi
+
+Yolun dört `IfcAlignment`'ını motor eksen boyunca birer şerit olarak üçgenliyor. IfcOpenShell yalnız düşey profili olan
+bölümün 3B eğrisini veriyor (hacimsiz). İkisi gövde olarak karşılaştırılmadı: hizalama bir çizgidir.
+
+### 11.5 Uygularken verilen kararlar (sahibin söylemediği)
+
+1. Özelliklerin adı `read` ve `geometry`. §3.2'nin önerdiği `mesh` adı kullanılmadı, çünkü `kentos_ifc::mesh` (BIM-06'nın
+   kendi ağları, ADR 8067 §7) zaten var.
+2. Gövdeler her modelde, yalnız büyük koordinatta değil, modelin ortasına göre yapılır. Ortayı motorun `scan_model_bounds`'u
+   verir.
+3. Motorun öntanımlı sıklığı (Medium) kullanılır. Daha incesi profil yaylarını değiştirmiyor, öbür eğrileri ise
+   sıklaştırıyor.
+4. Başlık (FILE_DESCRIPTION, FILE_NAME, FILE_SCHEMA) motorun tokenizer'ıyla okunur: her deyim bir kayıt gibi verilir.
+5. Birim ve harita dönüşümü, şemanın öznitelik adlarıyla okunur (`named`). Motorun `georef` modülü kullanılmadı.
+6. Bulgu iletileri Türkçedir; nedeni ve çözümü söyler.
+7. Bir nesnenin iki üst yapısı ya da iki kabı olursa ilki gösterilir; ikincisi uyarıdır.
+
+### 11.6 Sahibin kararını bekleyenler
+
+1. **Derleme ve boyut artışı:** `read` +0,91 MB, `geometry` +4,69 MB (release örneği); motorun release derlemesi
+   yaklaşık 1 dakika. Kabul edilirse görüntüleyici (IFC-12) `mod-arch` ve `mod-road` bayraklarıyla bağlar.
+2. **Gerçek dünyadan açık örnekler:** başka programların IFC4 ve IFC 4.3 dışa aktarımları (ör. buildingSMART'ın örnek
+   dosyaları) için indirme izni. Kullanım koşulu okunmadan hiçbiri depoya kopyalanmaz (§7).
+3. **Yaylar (§11.3):** üç yol var. (a) Kabul: görüntüleyicide gösterim olarak kalır. (b) Yukarı akışa bildirilir
+   (değişiklik yapılmaz, §9). (c) KentOS kendi yazdığı profil yaylarını kendi üçgenleyicisiyle ağa çevirir (§8'in dar
+   üçgenleyicisi). KentOS'un önerisi (a) ve (b)'dir.

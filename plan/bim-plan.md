@@ -737,7 +737,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
-| B12 | Okuma yüzü ve motor denemesi | IFC-07 | Yazılan dosya geri okunur; motor kararı ADR 8061'de |
+| B12 ◐ | Okuma yüzü ve motor denemesi | IFC-07 | Yazılan dosya geri okunur; motor kararı ADR 8061'de (§11; sahibin üç kararı bekleniyor) |
 | B12b | IFC görüntüleyici | IFC-12 | Dosya kendi penceresinde: ağaç, özellikler, kesit; dışa aktarılan tek tıkla görülür |
 | B13 | Yazılmış dosyadan doğrulama, IDS ve kontrol formu | IFC-08 | 21 sorunun kanıtı dosyadan |
 | B14 | BIM ruhsat paketi | BIM-14 | Tek komut, tek revizyon, tek paket |

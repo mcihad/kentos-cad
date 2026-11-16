@@ -14,6 +14,8 @@
 //! - [`catalog_schema`]: the catalog compared with the IFC 4.3 schema and its official templates.
 //! - [`rules`]: every rule of the base profile, the 2D annexes' and the IFC annexes', as one list a window reads.
 //! - [`turns`]: a stair's and a ramp's predefined type from its walking line's flights and turns (docs/adr/8070 §2).
+//! - [`read`] (feature `read`): reading an IFC file through the engine's STEP parser: summary, objects, tree, relations,
+//!   sets on demand and findings (docs/adr/8061, plan/ifc-uyum.md IFC-07).
 
 pub mod alignment;
 pub mod arch;
@@ -27,6 +29,8 @@ pub mod mesh;
 pub mod naming;
 pub mod quality;
 pub mod quantities;
+#[cfg(feature = "read")]
+pub mod read;
 pub mod required;
 pub mod rules;
 pub mod step;

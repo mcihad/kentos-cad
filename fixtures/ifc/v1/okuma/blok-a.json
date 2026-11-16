@@ -1,0 +1,2548 @@
+{
+ "bodies": {
+  "01alMXGa9m08000000000$": {
+   "area": 3.6600000000000095,
+   "box": [
+    [
+     11.85,
+     8.85,
+     2.93
+    ],
+    [
+     12.15,
+     9.15,
+     5.83
+    ]
+   ],
+   "volume": 0.26100000000002394
+  },
+  "01alMXGa9m080000000001": {
+   "area": 222.77799999999996,
+   "box": [
+    [
+     0.15,
+     -0.125,
+     -0.13
+    ],
+    [
+     11.85,
+     0.125,
+     2.43
+    ]
+   ],
+   "volume": 6.608999999999998
+  },
+  "01alMXGa9m080000000002": {
+   "area": 183.34079999999994,
+   "box": [
+    [
+     11.875,
+     0.14999999999999888,
+     -0.13
+    ],
+    [
+     12.125,
+     8.850000000000001,
+     2.43
+    ]
+   ],
+   "volume": 5.562368000000008
+  },
+  "01alMXGa9m080000000003": {
+   "area": 196.03799999999998,
+   "box": [
+    [
+     0.15000000000000036,
+     8.875,
+     -0.13
+    ],
+    [
+     11.850000000000001,
+     9.125,
+     2.43
+    ]
+   ],
+   "volume": 5.70149999999997
+  },
+  "01alMXGa9m080000000004": {
+   "area": 183.3408,
+   "box": [
+    [
+     -0.125,
+     0.15000000000000036,
+     -0.13
+    ],
+    [
+     0.125,
+     8.85,
+     2.43
+    ]
+   ],
+   "volume": 5.562367999999999
+  },
+  "01alMXGa9m080000000005": {
+   "area": 144.41680000000002,
+   "box": [
+    [
+     4.425,
+     0.15,
+     -0.13
+    ],
+    [
+     4.575,
+     8.850000000000001,
+     2.7800000000000002
+    ]
+   ],
+   "volume": 3.50764800000005
+  },
+  "01alMXGa9m080000000006": {
+   "area": 144.4168,
+   "box": [
+    [
+     7.425,
+     0.15,
+     -0.13
+    ],
+    [
+     7.575,
+     8.85,
+     2.7800000000000002
+    ]
+   ],
+   "volume": 3.507647999999986
+  },
+  "01alMXGa9m080000000007": {
+   "area": 77.8134289173205,
+   "box": [
+    [
+     0.10499999999999954,
+     4.425,
+     -0.13
+    ],
+    [
+     4.445,
+     4.575,
+     2.7800000000000002
+    ]
+   ],
+   "volume": 1.8920820000000125
+  },
+  "01alMXGa9m080000000008": {
+   "area": 77.81342891732046,
+   "box": [
+    [
+     7.555,
+     4.425,
+     -0.13
+    ],
+    [
+     11.895,
+     4.575,
+     2.7800000000000002
+    ]
+   ],
+   "volume": 1.8920820000000125
+  },
+  "01alMXGa9m080000000009": {
+   "area": 4.370000000000002,
+   "box": [
+    [
+     1.5,
+     -0.125,
+     0.9
+    ],
+    [
+     2.7,
+     0.125,
+     2.2
+    ]
+   ],
+   "volume": 0.39000000000000024
+  },
+  "01alMXGa9m08000000000A": {
+   "area": 1.4899999999999998,
+   "box": [
+    [
+     9.6,
+     -0.125,
+     1.5
+    ],
+    [
+     10.2,
+     0.125,
+     2.2
+    ]
+   ],
+   "volume": 0.10499999999999982
+  },
+  "01alMXGa9m08000000000B": {
+   "area": 5.300000000000001,
+   "box": [
+    [
+     1.5,
+     8.875,
+     0.9
+    ],
+    [
+     3.0,
+     9.125,
+     2.2
+    ]
+   ],
+   "volume": 0.4875000000000022
+  },
+  "01alMXGa9m08000000000C": {
+   "area": 4.369999999999999,
+   "box": [
+    [
+     9.3,
+     8.875,
+     0.9
+    ],
+    [
+     10.5,
+     9.125,
+     2.2
+    ]
+   ],
+   "volume": 0.39000000000000556
+  },
+  "01alMXGa9m08000000000D": {
+   "area": 4.680000000000002,
+   "box": [
+    [
+     4.425,
+     6.0,
+     0.0
+    ],
+    [
+     4.575,
+     6.9,
+     2.1
+    ]
+   ],
+   "volume": 0.2834999999999898
+  },
+  "01alMXGa9m08000000000E": {
+   "area": 4.680000000000002,
+   "box": [
+    [
+     7.425,
+     6.0,
+     0.0
+    ],
+    [
+     7.575,
+     6.9,
+     2.1
+    ]
+   ],
+   "volume": 0.2835000000000034
+  },
+  "01alMXGa9m08000000000F": {
+   "area": 5.75,
+   "box": [
+    [
+     4.8,
+     8.875,
+     0.0
+    ],
+    [
+     5.8,
+     9.125,
+     2.1
+    ]
+   ],
+   "volume": 0.5249999999999919
+  },
+  "01alMXGa9m08000000000G": {
+   "area": 82.34525000000001,
+   "box": [
+    [
+     0.2,
+     0.2,
+     0.0
+    ],
+    [
+     4.425,
+     4.425,
+     2.7600000000000002
+    ]
+   ],
+   "volume": 49.26772499999999
+  },
+  "01alMXGa9m08000000000H": {
+   "area": 82.34525000000002,
+   "box": [
+    [
+     0.2,
+     4.575,
+     0.0
+    ],
+    [
+     4.425,
+     8.8,
+     2.7600000000000002
+    ]
+   ],
+   "volume": 49.267725
+  },
+  "01alMXGa9m08000000000I": {
+   "area": 117.71999999999998,
+   "box": [
+    [
+     4.575,
+     0.2,
+     0.0
+    ],
+    [
+     7.425,
+     8.8,
+     3.0
+    ]
+   ],
+   "volume": 73.52999999999997
+  },
+  "01alMXGa9m08000000000J": {
+   "area": 82.34525000000002,
+   "box": [
+    [
+     7.575,
+     0.2,
+     0.0
+    ],
+    [
+     11.8,
+     4.425,
+     2.7600000000000002
+    ]
+   ],
+   "volume": 49.26772500000001
+  },
+  "01alMXGa9m08000000000K": {
+   "area": 82.34525000000002,
+   "box": [
+    [
+     7.575,
+     4.575,
+     0.0
+    ],
+    [
+     11.8,
+     8.8,
+     2.7600000000000002
+    ]
+   ],
+   "volume": 49.267725
+  },
+  "01alMXGa9m08000000000L": {
+   "area": 208.32999999999996,
+   "box": [
+    [
+     0.15,
+     -0.125,
+     2.93
+    ],
+    [
+     11.85,
+     0.125,
+     5.33
+    ]
+   ],
+   "volume": 6.164999999999999
+  },
+  "01alMXGa9m08000000000M": {
+   "area": 172.15359999999995,
+   "box": [
+    [
+     11.875,
+     0.14999999999999888,
+     2.93
+    ],
+    [
+     12.125,
+     8.850000000000001,
+     5.33
+    ]
+   ],
+   "volume": 5.2147200000000264
+  },
+  "01alMXGa9m08000000000N": {
+   "area": 187.58999999999995,
+   "box": [
+    [
+     0.15000000000000036,
+     8.875,
+     2.93
+    ],
+    [
+     11.850000000000001,
+     9.125,
+     5.33
+    ]
+   ],
+   "volume": 5.457499999999884
+  },
+  "01alMXGa9m08000000000O": {
+   "area": 172.15360000000004,
+   "box": [
+    [
+     -0.125,
+     0.15000000000000036,
+     2.93
+    ],
+    [
+     0.125,
+     8.85,
+     5.33
+    ]
+   ],
+   "volume": 5.214719999999995
+  },
+  "01alMXGa9m08000000000P": {
+   "area": 136.04559999999995,
+   "box": [
+    [
+     4.425,
+     0.15,
+     2.93
+    ],
+    [
+     4.575,
+     8.850000000000001,
+     5.68
+    ]
+   ],
+   "volume": 3.2992000000000345
+  },
+  "01alMXGa9m08000000000Q": {
+   "area": 136.04559999999998,
+   "box": [
+    [
+     7.425,
+     0.15,
+     2.93
+    ],
+    [
+     7.575,
+     8.85,
+     5.68
+    ]
+   ],
+   "volume": 3.2992000000000536
+  },
+  "01alMXGa9m08000000000R": {
+   "area": 73.60652698372212,
+   "box": [
+    [
+     0.10499999999999954,
+     4.425,
+     2.93
+    ],
+    [
+     4.445,
+     4.575,
+     5.68
+    ]
+   ],
+   "volume": 1.788049999999999
+  },
+  "01alMXGa9m08000000000S": {
+   "area": 73.60652698372209,
+   "box": [
+    [
+     7.555,
+     4.425,
+     2.93
+    ],
+    [
+     11.895,
+     4.575,
+     5.68
+    ]
+   ],
+   "volume": 1.7880500000000186
+  },
+  "01alMXGa9m08000000000T": {
+   "area": 4.370000000000002,
+   "box": [
+    [
+     1.5,
+     -0.125,
+     3.9
+    ],
+    [
+     2.7,
+     0.125,
+     5.2
+    ]
+   ],
+   "volume": 0.3899999999999997
+  },
+  "01alMXGa9m08000000000U": {
+   "area": 1.4899999999999998,
+   "box": [
+    [
+     9.6,
+     -0.125,
+     4.5
+    ],
+    [
+     10.2,
+     0.125,
+     5.2
+    ]
+   ],
+   "volume": 0.10499999999999854
+  },
+  "01alMXGa9m08000000000V": {
+   "area": 5.300000000000001,
+   "box": [
+    [
+     1.5,
+     8.875,
+     3.9
+    ],
+    [
+     3.0,
+     9.125,
+     5.2
+    ]
+   ],
+   "volume": 0.48749999999998245
+  },
+  "01alMXGa9m08000000000W": {
+   "area": 4.369999999999999,
+   "box": [
+    [
+     9.3,
+     8.875,
+     3.9
+    ],
+    [
+     10.5,
+     9.125,
+     5.2
+    ]
+   ],
+   "volume": 0.39000000000004365
+  },
+  "01alMXGa9m08000000000X": {
+   "area": 4.6800000000000015,
+   "box": [
+    [
+     4.425,
+     6.0,
+     3.0
+    ],
+    [
+     4.575,
+     6.9,
+     5.1
+    ]
+   ],
+   "volume": 0.2834999999999749
+  },
+  "01alMXGa9m08000000000Y": {
+   "area": 4.6800000000000015,
+   "box": [
+    [
+     7.425,
+     6.0,
+     3.0
+    ],
+    [
+     7.575,
+     6.9,
+     5.1
+    ]
+   ],
+   "volume": 0.28350000000000436
+  },
+  "01alMXGa9m08000000000Z": {
+   "area": 3.750000000000001,
+   "box": [
+    [
+     4.8,
+     8.875,
+     3.9
+    ],
+    [
+     5.8,
+     9.125,
+     5.2
+    ]
+   ],
+   "volume": 0.32499999999999307
+  },
+  "01alMXGa9m08000000000_": {
+   "area": 3.6600000000000037,
+   "box": [
+    [
+     11.85,
+     -0.15,
+     2.93
+    ],
+    [
+     12.15,
+     0.15,
+     5.83
+    ]
+   ],
+   "volume": 0.26100000000000423
+  },
+  "01alMXGa9m08000000000a": {
+   "area": 80.65525,
+   "box": [
+    [
+     0.2,
+     0.2,
+     3.0
+    ],
+    [
+     4.425,
+     4.425,
+     5.66
+    ]
+   ],
+   "volume": 47.48266249999999
+  },
+  "01alMXGa9m08000000000b": {
+   "area": 80.65525000000002,
+   "box": [
+    [
+     0.2,
+     4.575,
+     3.0
+    ],
+    [
+     4.425,
+     8.8,
+     5.66
+    ]
+   ],
+   "volume": 47.482662499999975
+  },
+  "01alMXGa9m08000000000c": {
+   "area": 109.934,
+   "box": [
+    [
+     4.575,
+     0.2,
+     3.0
+    ],
+    [
+     7.425,
+     8.8,
+     5.66
+    ]
+   ],
+   "volume": 65.1966
+  },
+  "01alMXGa9m08000000000d": {
+   "area": 80.65525000000002,
+   "box": [
+    [
+     7.575,
+     0.2,
+     3.0
+    ],
+    [
+     11.8,
+     4.425,
+     5.66
+    ]
+   ],
+   "volume": 47.48266250000002
+  },
+  "01alMXGa9m08000000000e": {
+   "area": 80.65525000000002,
+   "box": [
+    [
+     7.575,
+     4.575,
+     3.0
+    ],
+    [
+     11.8,
+     8.8,
+     5.66
+    ]
+   ],
+   "volume": 47.482662500000025
+  },
+  "01alMXGa9m08000000000f": {
+   "area": 1145.165,
+   "box": [
+    [
+     -0.125,
+     -0.125,
+     -0.28
+    ],
+    [
+     12.125,
+     9.125,
+     0.0
+    ]
+   ],
+   "volume": 31.727500000000013
+  },
+  "01alMXGa9m08000000000g": {
+   "area": 830.2472000000001,
+   "box": [
+    [
+     -0.125,
+     -0.125,
+     2.7600000000000002
+    ],
+    [
+     12.125,
+     9.125,
+     3.0
+    ]
+   ],
+   "volume": 24.50004000000002
+  },
+  "01alMXGa9m08000000000h": {
+   "area": 1374.37,
+   "box": [
+    [
+     -0.125,
+     -0.125,
+     5.66
+    ],
+    [
+     12.125,
+     9.125,
+     6.0
+    ]
+   ],
+   "volume": 38.52625000000012
+  },
+  "01alMXGa9m08000000000i": {
+   "area": 3.8519999999999994,
+   "box": [
+    [
+     -0.15,
+     -0.15,
+     -0.13
+    ],
+    [
+     0.15,
+     0.15,
+     2.93
+    ]
+   ],
+   "volume": 0.27540000000000003
+  },
+  "01alMXGa9m08000000000j": {
+   "area": 3.852000000000004,
+   "box": [
+    [
+     -0.15,
+     8.85,
+     -0.13
+    ],
+    [
+     0.15,
+     9.15,
+     2.93
+    ]
+   ],
+   "volume": 0.27540000000000237
+  },
+  "01alMXGa9m08000000000k": {
+   "area": 3.852000000000004,
+   "box": [
+    [
+     4.35,
+     -0.15,
+     -0.13
+    ],
+    [
+     4.65,
+     0.15,
+     2.93
+    ]
+   ],
+   "volume": 0.27540000000000064
+  },
+  "01alMXGa9m08000000000l": {
+   "area": 3.85200000000001,
+   "box": [
+    [
+     4.35,
+     8.85,
+     -0.13
+    ],
+    [
+     4.65,
+     9.15,
+     2.93
+    ]
+   ],
+   "volume": 0.27540000000002884
+  },
+  "01alMXGa9m08000000000m": {
+   "area": 3.852000000000004,
+   "box": [
+    [
+     7.35,
+     -0.15,
+     -0.13
+    ],
+    [
+     7.65,
+     0.15,
+     2.93
+    ]
+   ],
+   "volume": 0.27540000000000103
+  },
+  "01alMXGa9m08000000000n": {
+   "area": 3.85200000000001,
+   "box": [
+    [
+     7.35,
+     8.85,
+     -0.13
+    ],
+    [
+     7.65,
+     9.15,
+     2.93
+    ]
+   ],
+   "volume": 0.2754000000000296
+  },
+  "01alMXGa9m08000000000o": {
+   "area": 3.852000000000004,
+   "box": [
+    [
+     11.85,
+     -0.15,
+     -0.13
+    ],
+    [
+     12.15,
+     0.15,
+     2.93
+    ]
+   ],
+   "volume": 0.27539999999999865
+  },
+  "01alMXGa9m08000000000p": {
+   "area": 3.85200000000001,
+   "box": [
+    [
+     11.85,
+     8.85,
+     -0.13
+    ],
+    [
+     12.15,
+     9.15,
+     2.93
+    ]
+   ],
+   "volume": 0.2754000000000281
+  },
+  "01alMXGa9m08000000000q": {
+   "area": 18.25,
+   "box": [
+    [
+     0.0,
+     -0.125,
+     2.43
+    ],
+    [
+     12.0,
+     0.125,
+     2.93
+    ]
+   ],
+   "volume": 1.4999999999999998
+  },
+  "01alMXGa9m08000000000r": {
+   "area": 13.75,
+   "box": [
+    [
+     11.875,
+     0.0,
+     2.43
+    ],
+    [
+     12.125,
+     9.0,
+     2.93
+    ]
+   ],
+   "volume": 1.1249999999999998
+  },
+  "01alMXGa9m08000000000s": {
+   "area": 18.25,
+   "box": [
+    [
+     0.0,
+     8.875,
+     2.43
+    ],
+    [
+     12.0,
+     9.125,
+     2.93
+    ]
+   ],
+   "volume": 1.5
+  },
+  "01alMXGa9m08000000000t": {
+   "area": 13.75,
+   "box": [
+    [
+     -0.125,
+     0.0,
+     2.43
+    ],
+    [
+     0.125,
+     9.0,
+     2.93
+    ]
+   ],
+   "volume": 1.1249999999999998
+  },
+  "01alMXGa9m08000000000u": {
+   "area": 3.6599999999999997,
+   "box": [
+    [
+     -0.15,
+     -0.15,
+     2.93
+    ],
+    [
+     0.15,
+     0.15,
+     5.83
+    ]
+   ],
+   "volume": 0.2609999999999999
+  },
+  "01alMXGa9m08000000000v": {
+   "area": 3.6600000000000037,
+   "box": [
+    [
+     -0.15,
+     8.85,
+     2.93
+    ],
+    [
+     0.15,
+     9.15,
+     5.83
+    ]
+   ],
+   "volume": 0.261000000000001
+  },
+  "01alMXGa9m08000000000w": {
+   "area": 3.6600000000000037,
+   "box": [
+    [
+     4.35,
+     -0.15,
+     2.93
+    ],
+    [
+     4.65,
+     0.15,
+     5.83
+    ]
+   ],
+   "volume": 0.2609999999999999
+  },
+  "01alMXGa9m08000000000x": {
+   "area": 3.6600000000000095,
+   "box": [
+    [
+     4.35,
+     8.85,
+     2.93
+    ],
+    [
+     4.65,
+     9.15,
+     5.83
+    ]
+   ],
+   "volume": 0.26099999999999607
+  },
+  "01alMXGa9m08000000000y": {
+   "area": 3.6600000000000037,
+   "box": [
+    [
+     7.35,
+     -0.15,
+     2.93
+    ],
+    [
+     7.65,
+     0.15,
+     5.83
+    ]
+   ],
+   "volume": 0.26099999999999957
+  },
+  "01alMXGa9m08000000000z": {
+   "area": 3.6600000000000095,
+   "box": [
+    [
+     7.35,
+     8.85,
+     2.93
+    ],
+    [
+     7.65,
+     9.15,
+     5.83
+    ]
+   ],
+   "volume": 0.2610000000000244
+  },
+  "01alMXGa9m080000000010": {
+   "area": 18.25,
+   "box": [
+    [
+     0.0,
+     -0.125,
+     5.33
+    ],
+    [
+     12.0,
+     0.125,
+     5.83
+    ]
+   ],
+   "volume": 1.5000000000000018
+  },
+  "01alMXGa9m080000000011": {
+   "area": 13.75,
+   "box": [
+    [
+     11.875,
+     0.0,
+     5.33
+    ],
+    [
+     12.125,
+     9.0,
+     5.83
+    ]
+   ],
+   "volume": 1.125
+  },
+  "01alMXGa9m080000000012": {
+   "area": 18.25,
+   "box": [
+    [
+     0.0,
+     8.875,
+     5.33
+    ],
+    [
+     12.0,
+     9.125,
+     5.83
+    ]
+   ],
+   "volume": 1.5
+  },
+  "01alMXGa9m080000000013": {
+   "area": 13.75,
+   "box": [
+    [
+     -0.125,
+     0.0,
+     5.33
+    ],
+    [
+     0.125,
+     9.0,
+     5.83
+    ]
+   ],
+   "volume": 1.125
+  },
+  "01alMXGa9m080000000014": {
+   "area": 30.804596019768933,
+   "box": [
+    [
+     4.6000000000000005,
+     1.0,
+     0.0
+    ],
+    [
+     7.4,
+     5.22,
+     3.0
+    ]
+   ],
+   "volume": 1.678446034676484
+  },
+  "01eUHWMzPrSeb_tGOqq7Q3": {
+   "area": 506.92499999999995,
+   "box": [
+    [
+     -0.125,
+     -0.125,
+     -3.3
+    ],
+    [
+     26.125,
+     9.125,
+     -3.0
+    ]
+   ],
+   "volume": 72.84374999999994
+  },
+  "1Xs$WkkrCR2Xo6GO5TqO0T": {
+   "area": 463.325,
+   "box": [
+    [
+     0.2,
+     0.2,
+     0.0
+    ],
+    [
+     11.8,
+     8.8,
+     3.0
+    ]
+   ],
+   "volume": 287.73750000000007
+  },
+  "1lmB7X6rCR7o6BZuHhuK_X": {
+   "area": 463.325,
+   "box": [
+    [
+     0.2,
+     0.2,
+     3.0
+    ],
+    [
+     11.8,
+     8.8,
+     6.0
+    ]
+   ],
+   "volume": 287.73750000000007
+  }
+ },
+ "header": {
+  "name": "Kesit binası_A1.ifc",
+  "originatingSystem": "KentOS Mimari",
+  "preprocessor": "KentOS Mimari",
+  "timeStamp": "2026-11-16T12:00:00"
+ },
+ "lengthToSi": 1.0,
+ "location": null,
+ "objects": {
+  "01alMXGa9m08000000000$": {
+   "class": "IfcColumn",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KLN-Kolon",
+   "objectType": null,
+   "parent": null,
+   "predefined": "COLUMN",
+   "step": 1791,
+   "tag": "0192f5a1-4242-7000-8000-00000000003f",
+   "type": null
+  },
+  "01alMXGa9m080000000001": {
+   "class": "IfcWall",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR-Dış_duvar_25",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 165,
+   "tag": "0192f5a1-4242-7000-8000-000000000001",
+   "type": null
+  },
+  "01alMXGa9m080000000002": {
+   "class": "IfcWall",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR-Dış_duvar_25",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 226,
+   "tag": "0192f5a1-4242-7000-8000-000000000002",
+   "type": null
+  },
+  "01alMXGa9m080000000003": {
+   "class": "IfcWall",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR-Dış_duvar_25",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 350,
+   "tag": "0192f5a1-4242-7000-8000-000000000003",
+   "type": null
+  },
+  "01alMXGa9m080000000004": {
+   "class": "IfcWall",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR-Dış_duvar_25",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 411,
+   "tag": "0192f5a1-4242-7000-8000-000000000004",
+   "type": null
+  },
+  "01alMXGa9m080000000005": {
+   "class": "IfcWall",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR-İç_duvar_15",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 463,
+   "tag": "0192f5a1-4242-7000-8000-000000000005",
+   "type": null
+  },
+  "01alMXGa9m080000000006": {
+   "class": "IfcWall",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR-İç_duvar_15",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 515,
+   "tag": "0192f5a1-4242-7000-8000-000000000006",
+   "type": null
+  },
+  "01alMXGa9m080000000007": {
+   "class": "IfcWall",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR-İç_duvar_15",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 558,
+   "tag": "0192f5a1-4242-7000-8000-000000000007",
+   "type": null
+  },
+  "01alMXGa9m080000000008": {
+   "class": "IfcWall",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR-İç_duvar_15",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 601,
+   "tag": "0192f5a1-4242-7000-8000-000000000008",
+   "type": null
+  },
+  "01alMXGa9m080000000009": {
+   "class": "IfcWindow",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-PNC-P01",
+   "objectType": null,
+   "parent": null,
+   "predefined": "WINDOW",
+   "step": 2089,
+   "tag": "P01",
+   "type": null
+  },
+  "01alMXGa9m08000000000A": {
+   "class": "IfcWindow",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-PNC-P02",
+   "objectType": null,
+   "parent": null,
+   "predefined": "WINDOW",
+   "step": 2106,
+   "tag": "P02",
+   "type": null
+  },
+  "01alMXGa9m08000000000B": {
+   "class": "IfcWindow",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-PNC-P03",
+   "objectType": null,
+   "parent": null,
+   "predefined": "WINDOW",
+   "step": 2123,
+   "tag": "P03",
+   "type": null
+  },
+  "01alMXGa9m08000000000C": {
+   "class": "IfcWindow",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-PNC-P04",
+   "objectType": null,
+   "parent": null,
+   "predefined": "WINDOW",
+   "step": 2140,
+   "tag": "P04",
+   "type": null
+  },
+  "01alMXGa9m08000000000D": {
+   "class": "IfcDoor",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KAP-K01",
+   "objectType": null,
+   "parent": null,
+   "predefined": "DOOR",
+   "step": 2174,
+   "tag": "K01",
+   "type": null
+  },
+  "01alMXGa9m08000000000E": {
+   "class": "IfcDoor",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KAP-K02",
+   "objectType": null,
+   "parent": null,
+   "predefined": "DOOR",
+   "step": 2191,
+   "tag": "K02",
+   "type": null
+  },
+  "01alMXGa9m08000000000F": {
+   "class": "IfcDoor",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KAP-GK01",
+   "objectType": null,
+   "parent": null,
+   "predefined": "DOOR",
+   "step": 2157,
+   "tag": "GK01",
+   "type": null
+  },
+  "01alMXGa9m08000000000G": {
+   "class": "IfcSpace",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": "Yatak odası",
+   "name": "MM-MHL-001_Yatak_odası",
+   "objectType": null,
+   "parent": "3fQ87615CRb$eangsDbcj5",
+   "predefined": "INTERNAL",
+   "step": 2566,
+   "tag": null,
+   "type": null
+  },
+  "01alMXGa9m08000000000H": {
+   "class": "IfcSpace",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": "Salon",
+   "name": "MM-MHL-002_Salon",
+   "objectType": null,
+   "parent": "3fQ87615CRb$eangsDbcj5",
+   "predefined": "INTERNAL",
+   "step": 2593,
+   "tag": null,
+   "type": null
+  },
+  "01alMXGa9m08000000000I": {
+   "class": "IfcSpace",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": "Merdiven holü",
+   "name": "MM-MHL-003_Merdiven_holü",
+   "objectType": null,
+   "parent": "3fQ87615CRb$eangsDbcj5",
+   "predefined": "INTERNAL",
+   "step": 2620,
+   "tag": null,
+   "type": null
+  },
+  "01alMXGa9m08000000000J": {
+   "class": "IfcSpace",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": "Banyo",
+   "name": "MM-MHL-004_Banyo",
+   "objectType": null,
+   "parent": "3fQ87615CRb$eangsDbcj5",
+   "predefined": "INTERNAL",
+   "step": 2644,
+   "tag": null,
+   "type": null
+  },
+  "01alMXGa9m08000000000K": {
+   "class": "IfcSpace",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": "Mutfak",
+   "name": "MM-MHL-005_Mutfak",
+   "objectType": null,
+   "parent": "3fQ87615CRb$eangsDbcj5",
+   "predefined": "INTERNAL",
+   "step": 2671,
+   "tag": null,
+   "type": null
+  },
+  "01alMXGa9m08000000000L": {
+   "class": "IfcWall",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR-Dış_duvar_25",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 725,
+   "tag": "0192f5a1-4242-7000-8000-000000000015",
+   "type": null
+  },
+  "01alMXGa9m08000000000M": {
+   "class": "IfcWall",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR-Dış_duvar_25",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 786,
+   "tag": "0192f5a1-4242-7000-8000-000000000016",
+   "type": null
+  },
+  "01alMXGa9m08000000000N": {
+   "class": "IfcWall",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR-Dış_duvar_25",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 910,
+   "tag": "0192f5a1-4242-7000-8000-000000000017",
+   "type": null
+  },
+  "01alMXGa9m08000000000O": {
+   "class": "IfcWall",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR-Dış_duvar_25",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 971,
+   "tag": "0192f5a1-4242-7000-8000-000000000018",
+   "type": null
+  },
+  "01alMXGa9m08000000000P": {
+   "class": "IfcWall",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR-İç_duvar_15",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 1023,
+   "tag": "0192f5a1-4242-7000-8000-000000000019",
+   "type": null
+  },
+  "01alMXGa9m08000000000Q": {
+   "class": "IfcWall",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR-İç_duvar_15",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 1075,
+   "tag": "0192f5a1-4242-7000-8000-00000000001a",
+   "type": null
+  },
+  "01alMXGa9m08000000000R": {
+   "class": "IfcWall",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR-İç_duvar_15",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 1118,
+   "tag": "0192f5a1-4242-7000-8000-00000000001b",
+   "type": null
+  },
+  "01alMXGa9m08000000000S": {
+   "class": "IfcWall",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR-İç_duvar_15",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 1161,
+   "tag": "0192f5a1-4242-7000-8000-00000000001c",
+   "type": null
+  },
+  "01alMXGa9m08000000000T": {
+   "class": "IfcWindow",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-PNC-P11",
+   "objectType": null,
+   "parent": null,
+   "predefined": "WINDOW",
+   "step": 2208,
+   "tag": "P11",
+   "type": null
+  },
+  "01alMXGa9m08000000000U": {
+   "class": "IfcWindow",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-PNC-P12",
+   "objectType": null,
+   "parent": null,
+   "predefined": "WINDOW",
+   "step": 2225,
+   "tag": "P12",
+   "type": null
+  },
+  "01alMXGa9m08000000000V": {
+   "class": "IfcWindow",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-PNC-P13",
+   "objectType": null,
+   "parent": null,
+   "predefined": "WINDOW",
+   "step": 2242,
+   "tag": "P13",
+   "type": null
+  },
+  "01alMXGa9m08000000000W": {
+   "class": "IfcWindow",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-PNC-P14",
+   "objectType": null,
+   "parent": null,
+   "predefined": "WINDOW",
+   "step": 2259,
+   "tag": "P14",
+   "type": null
+  },
+  "01alMXGa9m08000000000X": {
+   "class": "IfcDoor",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KAP-K11",
+   "objectType": null,
+   "parent": null,
+   "predefined": "DOOR",
+   "step": 2293,
+   "tag": "K11",
+   "type": null
+  },
+  "01alMXGa9m08000000000Y": {
+   "class": "IfcDoor",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KAP-K12",
+   "objectType": null,
+   "parent": null,
+   "predefined": "DOOR",
+   "step": 2310,
+   "tag": "K12",
+   "type": null
+  },
+  "01alMXGa9m08000000000Z": {
+   "class": "IfcWindow",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-PNC-P15",
+   "objectType": null,
+   "parent": null,
+   "predefined": "WINDOW",
+   "step": 2276,
+   "tag": "P15",
+   "type": null
+  },
+  "01alMXGa9m08000000000_": {
+   "class": "IfcColumn",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KLN-Kolon",
+   "objectType": null,
+   "parent": null,
+   "predefined": "COLUMN",
+   "step": 1768,
+   "tag": "0192f5a1-4242-7000-8000-00000000003e",
+   "type": null
+  },
+  "01alMXGa9m08000000000a": {
+   "class": "IfcSpace",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": "Yatak odası",
+   "name": "MM-MHL-101_Yatak_odası",
+   "objectType": null,
+   "parent": "2pr0qBp5CRfxtemI$O8aRe",
+   "predefined": "INTERNAL",
+   "step": 2698,
+   "tag": null,
+   "type": null
+  },
+  "01alMXGa9m08000000000b": {
+   "class": "IfcSpace",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": "Salon",
+   "name": "MM-MHL-102_Salon",
+   "objectType": null,
+   "parent": "2pr0qBp5CRfxtemI$O8aRe",
+   "predefined": "INTERNAL",
+   "step": 2725,
+   "tag": null,
+   "type": null
+  },
+  "01alMXGa9m08000000000c": {
+   "class": "IfcSpace",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": "Merdiven holü",
+   "name": "MM-MHL-103_Merdiven_holü",
+   "objectType": null,
+   "parent": "2pr0qBp5CRfxtemI$O8aRe",
+   "predefined": "INTERNAL",
+   "step": 2752,
+   "tag": null,
+   "type": null
+  },
+  "01alMXGa9m08000000000d": {
+   "class": "IfcSpace",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": "Banyo",
+   "name": "MM-MHL-104_Banyo",
+   "objectType": null,
+   "parent": "2pr0qBp5CRfxtemI$O8aRe",
+   "predefined": "INTERNAL",
+   "step": 2778,
+   "tag": null,
+   "type": null
+  },
+  "01alMXGa9m08000000000e": {
+   "class": "IfcSpace",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": "Mutfak",
+   "name": "MM-MHL-105_Mutfak",
+   "objectType": null,
+   "parent": "2pr0qBp5CRfxtemI$O8aRe",
+   "predefined": "INTERNAL",
+   "step": 2805,
+   "tag": null,
+   "type": null
+  },
+  "01alMXGa9m08000000000f": {
+   "class": "IfcSlab",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DSM-Döşeme",
+   "objectType": null,
+   "parent": null,
+   "predefined": "FLOOR",
+   "step": 1222,
+   "tag": "0192f5a1-4242-7000-8000-000000000029",
+   "type": null
+  },
+  "01alMXGa9m08000000000g": {
+   "class": "IfcSlab",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DSM-Döşeme",
+   "objectType": null,
+   "parent": null,
+   "predefined": "FLOOR",
+   "step": 1273,
+   "tag": "0192f5a1-4242-7000-8000-00000000002a",
+   "type": null
+  },
+  "01alMXGa9m08000000000h": {
+   "class": "IfcSlab",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DSM-Döşeme",
+   "objectType": null,
+   "parent": null,
+   "predefined": "FLOOR",
+   "step": 1342,
+   "tag": "0192f5a1-4242-7000-8000-00000000002b",
+   "type": null
+  },
+  "01alMXGa9m08000000000i": {
+   "class": "IfcColumn",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KLN-Kolon",
+   "objectType": null,
+   "parent": null,
+   "predefined": "COLUMN",
+   "step": 1366,
+   "tag": "0192f5a1-4242-7000-8000-00000000002c",
+   "type": null
+  },
+  "01alMXGa9m08000000000j": {
+   "class": "IfcColumn",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KLN-Kolon",
+   "objectType": null,
+   "parent": null,
+   "predefined": "COLUMN",
+   "step": 1389,
+   "tag": "0192f5a1-4242-7000-8000-00000000002d",
+   "type": null
+  },
+  "01alMXGa9m08000000000k": {
+   "class": "IfcColumn",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KLN-Kolon",
+   "objectType": null,
+   "parent": null,
+   "predefined": "COLUMN",
+   "step": 1412,
+   "tag": "0192f5a1-4242-7000-8000-00000000002e",
+   "type": null
+  },
+  "01alMXGa9m08000000000l": {
+   "class": "IfcColumn",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KLN-Kolon",
+   "objectType": null,
+   "parent": null,
+   "predefined": "COLUMN",
+   "step": 1435,
+   "tag": "0192f5a1-4242-7000-8000-00000000002f",
+   "type": null
+  },
+  "01alMXGa9m08000000000m": {
+   "class": "IfcColumn",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KLN-Kolon",
+   "objectType": null,
+   "parent": null,
+   "predefined": "COLUMN",
+   "step": 1458,
+   "tag": "0192f5a1-4242-7000-8000-000000000030",
+   "type": null
+  },
+  "01alMXGa9m08000000000n": {
+   "class": "IfcColumn",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KLN-Kolon",
+   "objectType": null,
+   "parent": null,
+   "predefined": "COLUMN",
+   "step": 1481,
+   "tag": "0192f5a1-4242-7000-8000-000000000031",
+   "type": null
+  },
+  "01alMXGa9m08000000000o": {
+   "class": "IfcColumn",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KLN-Kolon",
+   "objectType": null,
+   "parent": null,
+   "predefined": "COLUMN",
+   "step": 1504,
+   "tag": "0192f5a1-4242-7000-8000-000000000032",
+   "type": null
+  },
+  "01alMXGa9m08000000000p": {
+   "class": "IfcColumn",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KLN-Kolon",
+   "objectType": null,
+   "parent": null,
+   "predefined": "COLUMN",
+   "step": 1527,
+   "tag": "0192f5a1-4242-7000-8000-000000000033",
+   "type": null
+  },
+  "01alMXGa9m08000000000q": {
+   "class": "IfcBeam",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KRS-Kiriş",
+   "objectType": null,
+   "parent": null,
+   "predefined": "BEAM",
+   "step": 1550,
+   "tag": "0192f5a1-4242-7000-8000-000000000034",
+   "type": null
+  },
+  "01alMXGa9m08000000000r": {
+   "class": "IfcBeam",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KRS-Kiriş",
+   "objectType": null,
+   "parent": null,
+   "predefined": "BEAM",
+   "step": 1570,
+   "tag": "0192f5a1-4242-7000-8000-000000000035",
+   "type": null
+  },
+  "01alMXGa9m08000000000s": {
+   "class": "IfcBeam",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KRS-Kiriş",
+   "objectType": null,
+   "parent": null,
+   "predefined": "BEAM",
+   "step": 1590,
+   "tag": "0192f5a1-4242-7000-8000-000000000036",
+   "type": null
+  },
+  "01alMXGa9m08000000000t": {
+   "class": "IfcBeam",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KRS-Kiriş",
+   "objectType": null,
+   "parent": null,
+   "predefined": "BEAM",
+   "step": 1610,
+   "tag": "0192f5a1-4242-7000-8000-000000000037",
+   "type": null
+  },
+  "01alMXGa9m08000000000u": {
+   "class": "IfcColumn",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KLN-Kolon",
+   "objectType": null,
+   "parent": null,
+   "predefined": "COLUMN",
+   "step": 1630,
+   "tag": "0192f5a1-4242-7000-8000-000000000038",
+   "type": null
+  },
+  "01alMXGa9m08000000000v": {
+   "class": "IfcColumn",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KLN-Kolon",
+   "objectType": null,
+   "parent": null,
+   "predefined": "COLUMN",
+   "step": 1653,
+   "tag": "0192f5a1-4242-7000-8000-000000000039",
+   "type": null
+  },
+  "01alMXGa9m08000000000w": {
+   "class": "IfcColumn",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KLN-Kolon",
+   "objectType": null,
+   "parent": null,
+   "predefined": "COLUMN",
+   "step": 1676,
+   "tag": "0192f5a1-4242-7000-8000-00000000003a",
+   "type": null
+  },
+  "01alMXGa9m08000000000x": {
+   "class": "IfcColumn",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KLN-Kolon",
+   "objectType": null,
+   "parent": null,
+   "predefined": "COLUMN",
+   "step": 1699,
+   "tag": "0192f5a1-4242-7000-8000-00000000003b",
+   "type": null
+  },
+  "01alMXGa9m08000000000y": {
+   "class": "IfcColumn",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KLN-Kolon",
+   "objectType": null,
+   "parent": null,
+   "predefined": "COLUMN",
+   "step": 1722,
+   "tag": "0192f5a1-4242-7000-8000-00000000003c",
+   "type": null
+  },
+  "01alMXGa9m08000000000z": {
+   "class": "IfcColumn",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KLN-Kolon",
+   "objectType": null,
+   "parent": null,
+   "predefined": "COLUMN",
+   "step": 1745,
+   "tag": "0192f5a1-4242-7000-8000-00000000003d",
+   "type": null
+  },
+  "01alMXGa9m080000000010": {
+   "class": "IfcBeam",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KRS-Kiriş",
+   "objectType": null,
+   "parent": null,
+   "predefined": "BEAM",
+   "step": 1814,
+   "tag": "0192f5a1-4242-7000-8000-000000000040",
+   "type": null
+  },
+  "01alMXGa9m080000000011": {
+   "class": "IfcBeam",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KRS-Kiriş",
+   "objectType": null,
+   "parent": null,
+   "predefined": "BEAM",
+   "step": 1834,
+   "tag": "0192f5a1-4242-7000-8000-000000000041",
+   "type": null
+  },
+  "01alMXGa9m080000000012": {
+   "class": "IfcBeam",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KRS-Kiriş",
+   "objectType": null,
+   "parent": null,
+   "predefined": "BEAM",
+   "step": 1854,
+   "tag": "0192f5a1-4242-7000-8000-000000000042",
+   "type": null
+  },
+  "01alMXGa9m080000000013": {
+   "class": "IfcBeam",
+   "container": "2pr0qBp5CRfxtemI$O8aRe",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-KRS-Kiriş",
+   "objectType": null,
+   "parent": null,
+   "predefined": "BEAM",
+   "step": 1874,
+   "tag": "0192f5a1-4242-7000-8000-000000000043",
+   "type": null
+  },
+  "01alMXGa9m080000000014": {
+   "class": "IfcStair",
+   "container": "3fQ87615CRb$eangsDbcj5",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-MRD-Merdiven",
+   "objectType": null,
+   "parent": null,
+   "predefined": "HALF_TURN_STAIR",
+   "step": 2051,
+   "tag": "0192f5a1-4242-7000-8000-000000000044",
+   "type": null
+  },
+  "01eUHWMzPrSeb_tGOqq7Q3": {
+   "class": "IfcSlab",
+   "container": "1_FvXHb5CRju6ikx8YhYAB",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DSM-Döşeme",
+   "objectType": null,
+   "parent": null,
+   "predefined": "FLOOR",
+   "step": 2065,
+   "tag": "01a1e460-5bd6-7572-897e-dd0634d07683",
+   "type": null
+  },
+  "09$UySuLLFzMCtT0aDEeah": {
+   "class": "IfcSite",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": null,
+   "name": "MM-SAH-Parsel",
+   "objectType": null,
+   "parent": "23IghJHOCOls7W8Env6cDE",
+   "predefined": null,
+   "step": 15,
+   "tag": null,
+   "type": null
+  },
+  "093W$O95CNFV0Be0kaK7Jn": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-K11",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2519,
+   "tag": null,
+   "type": null
+  },
+  "0IvfYm$dj758w34vRbzllC": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-Döşeme_boşluğu",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2551,
+   "tag": null,
+   "type": null
+  },
+  "0Kz5TxF5CMxnqtku0lbIh2": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P11",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2439,
+   "tag": null,
+   "type": null
+  },
+  "0_eeIIN5CNBYn7fObPn9bE": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P15",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2503,
+   "tag": null,
+   "type": null
+  },
+  "0er6TRT5COBwd8eIx61aTV": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-K02",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2423,
+   "tag": null,
+   "type": null
+  },
+  "0lfUlWWhJ79jfCWDLB1Adf": {
+   "class": "IfcBuilding",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": "A Blok",
+   "name": "MM-BNA-A_Blok",
+   "objectType": null,
+   "parent": "09$UySuLLFzMCtT0aDEeah",
+   "predefined": null,
+   "step": 18,
+   "tag": null,
+   "type": null
+  },
+  "0qkgx_Z5CNuDRqlADHIlqm": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P02",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2343,
+   "tag": null,
+   "type": null
+  },
+  "1UQDmLh5CO7_O4fgnxUcky": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-K01",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2407,
+   "tag": null,
+   "type": null
+  },
+  "1Xs$WkkrCR2Xo6GO5TqO0T": {
+   "class": "IfcSpatialZone",
+   "container": null,
+   "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
+   "hasShape": true,
+   "longName": "Zemin kat emsale dahil alan",
+   "name": "MM-MZN-Emsal_DAHIL_Zemin_kat",
+   "objectType": "EMSAL",
+   "parent": null,
+   "predefined": "USERDEFINED",
+   "step": 2868,
+   "tag": null,
+   "type": null
+  },
+  "1_FvXHb5CRju6ikx8YhYAB": {
+   "class": "IfcBuildingStorey",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": "Bodrum kat",
+   "name": "MM-BNK-Bodrum_kat",
+   "objectType": null,
+   "parent": "0lfUlWWhJ79jfCWDLB1Adf",
+   "predefined": null,
+   "step": 46,
+   "tag": null,
+   "type": null
+  },
+  "1gJoEun5CNqHCmmY46lo6D": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P01",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2327,
+   "tag": null,
+   "type": null
+  },
+  "1lmB7X6rCR7o6BZuHhuK_X": {
+   "class": "IfcSpatialZone",
+   "container": null,
+   "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
+   "hasShape": true,
+   "longName": "1. kat emsale dahil alan",
+   "name": "MM-MZN-Emsal_DAHIL_1._kat",
+   "objectType": "EMSAL",
+   "parent": null,
+   "predefined": "USERDEFINED",
+   "step": 2922,
+   "tag": null,
+   "type": null
+  },
+  "1qDlbCb5CN7cY3gmSFEBsh": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P14",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2487,
+   "tag": null,
+   "type": null
+  },
+  "23IghJHOCOls7W8Env6cDE": {
+   "class": "IfcProject",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": "Kesit binası",
+   "name": "Kesit binası",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 12,
+   "tag": null,
+   "type": null
+  },
+  "2F3OwRUOuMv6Xjq6pbP_U6": {
+   "class": "IfcGrid",
+   "container": "0lfUlWWhJ79jfCWDLB1Adf",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-AKS-Aks",
+   "objectType": null,
+   "parent": null,
+   "predefined": "RECTANGULAR",
+   "step": 2954,
+   "tag": null,
+   "type": null
+  },
+  "2J$L3Fv5CO4290h2emxf0P": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-GK01",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2391,
+   "tag": null,
+   "type": null
+  },
+  "2fosu6p5CN3gI$i8J4hE88": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P13",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2471,
+   "tag": null,
+   "type": null
+  },
+  "2pr0qBp5CRfxtemI$O8aRe": {
+   "class": "IfcBuildingStorey",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": "1. kat",
+   "name": "MM-BNK-1._kat",
+   "objectType": null,
+   "parent": "0lfUlWWhJ79jfCWDLB1Adf",
+   "predefined": null,
+   "step": 38,
+   "tag": null,
+   "type": null
+  },
+  "3$9Zf4L5CNy9gujoMRrjZJ": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P03",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2359,
+   "tag": null,
+   "type": null
+  },
+  "39aSMA75CO05vyiQVcOhHs": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P04",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2375,
+   "tag": null,
+   "type": null
+  },
+  "3JUPiTx5CNJRFFcetkt52K": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-K12",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2535,
+   "tag": null,
+   "type": null
+  },
+  "3VN_B115CM$k3xjW9w8GPb": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P12",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2455,
+   "tag": null,
+   "type": null
+  },
+  "3fQ87615CRb$eangsDbcj5": {
+   "class": "IfcBuildingStorey",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": "Zemin kat",
+   "name": "MM-BNK-Zemin_kat",
+   "objectType": null,
+   "parent": "0lfUlWWhJ79jfCWDLB1Adf",
+   "predefined": null,
+   "step": 30,
+   "tag": null,
+   "type": null
+  }
+ },
+ "precision": 1e-05,
+ "reader": "IfcOpenShell 0.9.0.post1",
+ "records": 2962,
+ "schema": "IFC4X3_ADD2",
+ "sets": {
+  "01alMXGa9m08000000000$": {
+   "Pset_ColumnCommon": {
+    "LoadBearing": true
+   },
+   "Qto_ColumnBaseQuantities": {
+    "CrossSectionArea": 0.09000000000000043,
+    "GrossVolume": 0.26100000000000123,
+    "Length": 2.9,
+    "NetVolume": 0.26100000000000123
+   }
+  },
+  "01alMXGa9m080000000001": {
+   "Pset_WallCommon": {
+    "IsExternal": true
+   },
+   "Qto_WallBaseQuantities": {
+    "GrossVolume": 7.68,
+    "Height": 2.56,
+    "Length": 12.0,
+    "NetSideArea": 28.74,
+    "NetVolume": 6.609,
+    "Width": 0.25
+   }
+  },
+  "01alMXGa9m080000000009": {
+   "Pset_WindowCommon": {
+    "IsExternal": true
+   }
+  },
+  "01alMXGa9m08000000000D": {
+   "Pset_DoorCommon": {
+    "IsExternal": false
+   }
+  },
+  "01alMXGa9m08000000000G": {
+   "Pset_SpaceCoveringRequirements": {
+    "CeilingCoveringThickness": 0.02,
+    "FloorCoveringThickness": 0.02
+   },
+   "Qto_SpaceBaseQuantities": {
+    "GrossFloorArea": 17.850624999999997,
+    "GrossPerimeter": 16.9,
+    "GrossVolume": 49.267725,
+    "Height": 2.7600000000000002,
+    "NetFloorArea": 17.850624999999997,
+    "NetVolume": 49.267725
+   }
+  },
+  "01alMXGa9m08000000000f": {
+   "Pset_SlabCommon": {
+    "IsExternal": false
+   },
+   "Qto_SlabBaseQuantities": {
+    "GrossArea": 113.3125,
+    "GrossVolume": 31.727500000000003,
+    "NetArea": 113.3125,
+    "NetVolume": 31.727500000000003,
+    "Width": 0.28
+   }
+  },
+  "01alMXGa9m08000000000q": {
+   "Qto_BeamBaseQuantities": {
+    "CrossSectionArea": 0.125,
+    "GrossVolume": 1.5,
+    "Length": 12.0,
+    "NetVolume": 1.5
+   }
+  },
+  "0lfUlWWhJ79jfCWDLB1Adf": {
+   "Pset_BuildingCommon": {
+    "NetPlannedArea": 191.82500000000002,
+    "NumberOfStoreys": 3,
+    "OccupancyType": "Konut"
+   },
+   "Qto_BuildingBaseQuantities": {
+    "Height": 3.0,
+    "NetFloorArea": 191.82500000000005
+   }
+  },
+  "1Xs$WkkrCR2Xo6GO5TqO0T": {
+   "TREpys_EmsalOzellikSeti": {
+    "EmsalDurumu": "DAHIL"
+   }
+  },
+  "1_FvXHb5CRju6ikx8YhYAB": {
+   "Qto_BuildingStoreyBaseQuantities": {
+    "GrossHeight": 3.0
+   }
+  }
+ },
+ "source": "fixtures/arch/v1/ifc/blok-a.ifc"
+}

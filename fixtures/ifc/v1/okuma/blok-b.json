@@ -1,0 +1,313 @@
+{
+ "bodies": {
+  "01eUHWMzrpX8Wvhco2QPtz": {
+   "area": 41.121320343559645,
+   "box": [
+    [
+     19.875,
+     -0.125,
+     1.2
+    ],
+    [
+     26.125,
+     0.125,
+     4.2
+    ]
+   ],
+   "volume": 4.5
+  },
+  "01eUHWMzrpX8Wvhct44rKL": {
+   "area": 34.62132034355964,
+   "box": [
+    [
+     25.875,
+     -0.1249999999999997,
+     1.2
+    ],
+    [
+     26.125,
+     5.125,
+     4.2
+    ]
+   ],
+   "volume": 3.7500000000000853
+  },
+  "01eUHWMzrpX8WvhcwSdI2O": {
+   "area": 41.121320343559645,
+   "box": [
+    [
+     19.875,
+     4.875,
+     1.2
+    ],
+    [
+     26.125,
+     5.125,
+     4.2
+    ]
+   ],
+   "volume": 4.49999999999999
+  },
+  "01eUHWMzrpX8WvhczulZzB": {
+   "area": 34.621320343559645,
+   "box": [
+    [
+     19.875,
+     -0.1250000000000003,
+     1.2
+    ],
+    [
+     20.125,
+     5.125,
+     4.2
+    ]
+   ],
+   "volume": 3.7499999999999805
+  },
+  "01eUHWMzvs0vZccFqjMr4x": {
+   "area": 117.625,
+   "box": [
+    [
+     20.125,
+     0.125,
+     1.2
+    ],
+    [
+     25.875,
+     4.875,
+     4.2
+    ]
+   ],
+   "volume": 81.93749999999991
+  },
+  "2D$xXaVlsq$Y7AsgtRhv15": {
+   "area": 117.625,
+   "box": [
+    [
+     20.125,
+     0.125,
+     1.2
+    ],
+    [
+     25.875,
+     4.875,
+     4.2
+    ]
+   ],
+   "volume": 81.93749999999991
+  }
+ },
+ "header": {
+  "name": "Kesit binası_B1.ifc",
+  "originatingSystem": "KentOS Mimari",
+  "preprocessor": "KentOS Mimari",
+  "timeStamp": "2026-11-16T12:00:00"
+ },
+ "lengthToSi": 1.0,
+ "location": null,
+ "objects": {
+  "01eUHWMzrpX8Wvhco2QPtz": {
+   "class": "IfcWall",
+   "container": "0arK3$LlsrWO4i0a3pac4_",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 52,
+   "tag": "01a1e460-5bdd-7384-8839-ae6c82699dfd",
+   "type": null
+  },
+  "01eUHWMzrpX8Wvhct44rKL": {
+   "class": "IfcWall",
+   "container": "0arK3$LlsrWO4i0a3pac4_",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 77,
+   "tag": "01a1e460-5bdd-7384-8839-ae6dc4135515",
+   "type": null
+  },
+  "01eUHWMzrpX8WvhcwSdI2O": {
+   "class": "IfcWall",
+   "container": "0arK3$LlsrWO4i0a3pac4_",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 102,
+   "tag": "01a1e460-5bdd-7384-8839-ae6e9c9d2098",
+   "type": null
+  },
+  "01eUHWMzrpX8WvhczulZzB": {
+   "class": "IfcWall",
+   "container": "0arK3$LlsrWO4i0a3pac4_",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 127,
+   "tag": "01a1e460-5bdd-7384-8839-ae6f78be3f4b",
+   "type": null
+  },
+  "01eUHWMzvs0vZccFqjMr4x": {
+   "class": "IfcSpace",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": "Dükkân",
+   "name": "MM-MHL-B01_Dükkân",
+   "objectType": null,
+   "parent": "0arK3$LlsrWO4i0a3pac4_",
+   "predefined": "INTERNAL",
+   "step": 152,
+   "tag": null,
+   "type": null
+  },
+  "09$UySuLLFzMCtT0aDEeah": {
+   "class": "IfcSite",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": null,
+   "name": "MM-SAH-Parsel",
+   "objectType": null,
+   "parent": "23IghJHOCOls7W8Env6cDE",
+   "predefined": null,
+   "step": 15,
+   "tag": null,
+   "type": null
+  },
+  "0arK3$LlsrWO4i0a3pac4_": {
+   "class": "IfcBuildingStorey",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": "B zemin kat",
+   "name": "MM-BNK-B_zemin_kat",
+   "objectType": null,
+   "parent": "2R1m4dnxIpmFWdGeEGxMXO",
+   "predefined": null,
+   "step": 31,
+   "tag": null,
+   "type": null
+  },
+  "23IghJHOCOls7W8Env6cDE": {
+   "class": "IfcProject",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": "Kesit binası",
+   "name": "Kesit binası",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 12,
+   "tag": null,
+   "type": null
+  },
+  "2D$xXaVlsq$Y7AsgtRhv15": {
+   "class": "IfcSpatialZone",
+   "container": null,
+   "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
+   "hasShape": true,
+   "longName": "B zemin kat emsale dahil alan",
+   "name": "MM-MZN-Emsal_DAHIL_B_zemin_kat",
+   "objectType": "EMSAL",
+   "parent": null,
+   "predefined": "USERDEFINED",
+   "step": 172,
+   "tag": null,
+   "type": null
+  },
+  "2R1m4dnxIpmFWdGeEGxMXO": {
+   "class": "IfcBuilding",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": "B Blok",
+   "name": "MM-BNA-B_Blok",
+   "objectType": null,
+   "parent": "09$UySuLLFzMCtT0aDEeah",
+   "predefined": null,
+   "step": 19,
+   "tag": null,
+   "type": null
+  },
+  "3reT65tesD1pmXj_jNQZTl": {
+   "class": "IfcGrid",
+   "container": "2R1m4dnxIpmFWdGeEGxMXO",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-AKS-Aks",
+   "objectType": null,
+   "parent": null,
+   "predefined": "RECTANGULAR",
+   "step": 204,
+   "tag": null,
+   "type": null
+  }
+ },
+ "precision": 1e-05,
+ "reader": "IfcOpenShell 0.9.0.post1",
+ "records": 206,
+ "schema": "IFC4X3_ADD2",
+ "sets": {
+  "01eUHWMzrpX8Wvhco2QPtz": {
+   "Pset_WallCommon": {
+    "IsExternal": true
+   },
+   "Qto_WallBaseQuantities": {
+    "GrossVolume": 4.5,
+    "Height": 3.0,
+    "Length": 6.0,
+    "NetSideArea": 18.0,
+    "NetVolume": 4.5,
+    "Width": 0.25
+   }
+  },
+  "01eUHWMzvs0vZccFqjMr4x": {
+   "Qto_SpaceBaseQuantities": {
+    "GrossFloorArea": 27.3125,
+    "GrossPerimeter": 21.0,
+    "NetFloorArea": 27.3125
+   }
+  },
+  "0arK3$LlsrWO4i0a3pac4_": {
+   "Qto_BuildingStoreyBaseQuantities": {
+    "GrossHeight": 3.0,
+    "NetFloorArea": 27.3125
+   }
+  },
+  "2D$xXaVlsq$Y7AsgtRhv15": {
+   "TREpys_EmsalOzellikSeti": {
+    "EmsalDurumu": "DAHIL"
+   }
+  },
+  "2R1m4dnxIpmFWdGeEGxMXO": {
+   "Pset_BuildingCommon": {
+    "NetPlannedArea": 27.3125,
+    "NumberOfStoreys": 1,
+    "OccupancyType": "Ticaret"
+   },
+   "Qto_BuildingBaseQuantities": {
+    "Height": 3.0,
+    "NetFloorArea": 27.3125
+   }
+  }
+ },
+ "source": "fixtures/arch/v1/ifc/blok-b.ifc"
+}

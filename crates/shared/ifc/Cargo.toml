@@ -17,3 +17,14 @@ kentos-road = { path = "../road" }
 libm = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+# The reading engine (docs/adr/8061 §1, §7, §9, §11): MPL-2.0, unmodified, pinned. Its name appears in this file alone
+# (a test keeps it so) and its types never on this crate's surface: `read` is the reading face over its STEP parser,
+# `geometry` adds its triangulation for the bodies of a file read. Both are off by default, so the writer and the
+# catalogue stay as small and pure as they were.
+ifc-lite-core = { version = "=28.3.0", optional = true }
+ifc-lite-geometry = { version = "=28.3.0", optional = true }
+rustc-hash = { version = "2", optional = true }
+
+[features]
+read = ["dep:ifc-lite-core"]
+geometry = ["read", "dep:ifc-lite-geometry", "dep:rustc-hash"]

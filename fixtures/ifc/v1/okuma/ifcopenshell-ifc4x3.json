@@ -1,0 +1,314 @@
+{
+ "bodies": {
+  "0XnDwHAVDMCBDXGNOBbSjV": {
+   "area": 26.799999999999997,
+   "box": [
+    [
+     5.8,
+     0.0,
+     0.0
+    ],
+    [
+     6.0,
+     4.0,
+     3.0
+    ]
+   ],
+   "volume": 2.40000000000001
+  },
+  "10OowZKtHSmuA_PZGhfsJW": {
+   "area": 101.67999999999999,
+   "box": [
+    [
+     0.1,
+     0.1,
+     0.0
+    ],
+    [
+     5.9,
+     3.9,
+     3.0
+    ]
+   ],
+   "volume": 66.12
+  },
+  "1iDYuGXMrGdPS_GK3WfLLD": {
+   "area": 4.510000000000002,
+   "box": [
+    [
+     2.0,
+     0.07499999999999998,
+     0.0
+    ],
+    [
+     3.0,
+     0.12499999999999999,
+     2.1
+    ]
+   ],
+   "volume": 0.10499999999999998
+  },
+  "1xIdJfzE5Nc8tG2JuHis7a": {
+   "area": 52.0,
+   "box": [
+    [
+     0.0,
+     0.0,
+     -0.2
+    ],
+    [
+     6.0,
+     4.0,
+     0.0
+    ]
+   ],
+   "volume": 4.8
+  },
+  "1y3Ikkpt5K_PB8DOPEndJ0": {
+   "area": 36.24,
+   "box": [
+    [
+     0.0,
+     0.0,
+     0.0
+    ],
+    [
+     6.0,
+     0.2,
+     3.0
+    ]
+   ],
+   "volume": 3.18
+  },
+  "3TxX5ZbhPPTf53MeDtDqes": {
+   "area": 39.60000000000001,
+   "box": [
+    [
+     0.0,
+     3.8,
+     0.0
+    ],
+    [
+     6.0,
+     4.000000000000001,
+     3.0
+    ]
+   ],
+   "volume": 3.6000000000000143
+  },
+  "3pfQgDCzHRER8fwN4SD6JY": {
+   "area": 26.799999999999994,
+   "box": [
+    [
+     0.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.20000000000000026,
+     4.0,
+     3.0
+    ]
+   ],
+   "volume": 2.4
+  }
+ },
+ "header": {
+  "name": "Örnek yapı.ifc",
+  "originatingSystem": "IfcOpenShell 0.9.0.post1",
+  "preprocessor": "IfcOpenShell 0.9.0.post1",
+  "timeStamp": "2026-11-16T12:00:00"
+ },
+ "lengthToSi": 1.0,
+ "location": null,
+ "objects": {
+  "02vqCoh9THqxNfv8qrit69": {
+   "class": "IfcProject",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": null,
+   "name": "Örnek yapı",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 1,
+   "tag": null,
+   "type": null
+  },
+  "0QBtcxjFXRovy8ZVCNrGrX": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "Kapı boşluğu",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 136,
+   "tag": null,
+   "type": null
+  },
+  "0XJX9sstrJY9UaH$ZMvKcc": {
+   "class": "IfcWallType",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": null,
+   "name": "Tuğla duvar 20",
+   "objectType": null,
+   "parent": null,
+   "predefined": "NOTDEFINED",
+   "step": 33,
+   "tag": null,
+   "type": null
+  },
+  "0XnDwHAVDMCBDXGNOBbSjV": {
+   "class": "IfcWall",
+   "container": "3x3asqaS5K6O8qf4s86mfg",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "Duvar 2 — dış",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 58,
+   "tag": null,
+   "type": "0XJX9sstrJY9UaH$ZMvKcc"
+  },
+  "10OowZKtHSmuA_PZGhfsJW": {
+   "class": "IfcSpace",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": "Oturma odası",
+   "name": "101",
+   "objectType": null,
+   "parent": "3x3asqaS5K6O8qf4s86mfg",
+   "predefined": null,
+   "step": 200,
+   "tag": null,
+   "type": null
+  },
+  "18d$qc45vLQxeHyCmQVacY": {
+   "class": "IfcSite",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": null,
+   "name": "Arsa",
+   "objectType": null,
+   "parent": "02vqCoh9THqxNfv8qrit69",
+   "predefined": null,
+   "step": 12,
+   "tag": null,
+   "type": null
+  },
+  "1iDYuGXMrGdPS_GK3WfLLD": {
+   "class": "IfcDoor",
+   "container": "3x3asqaS5K6O8qf4s86mfg",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "Giriş kapısı",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 159,
+   "tag": null,
+   "type": null
+  },
+  "1nrXNN5WDUrO0x9Zr6rH1P": {
+   "class": "IfcBuilding",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": null,
+   "name": "Bina",
+   "objectType": null,
+   "parent": "18d$qc45vLQxeHyCmQVacY",
+   "predefined": null,
+   "step": 13,
+   "tag": null,
+   "type": null
+  },
+  "1xIdJfzE5Nc8tG2JuHis7a": {
+   "class": "IfcSlab",
+   "container": "3x3asqaS5K6O8qf4s86mfg",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "Döşeme",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 182,
+   "tag": null,
+   "type": null
+  },
+  "1y3Ikkpt5K_PB8DOPEndJ0": {
+   "class": "IfcWall",
+   "container": "3x3asqaS5K6O8qf4s86mfg",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "Duvar 1 — dış",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 35,
+   "tag": null,
+   "type": "0XJX9sstrJY9UaH$ZMvKcc"
+  },
+  "3TxX5ZbhPPTf53MeDtDqes": {
+   "class": "IfcWall",
+   "container": "3x3asqaS5K6O8qf4s86mfg",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "Duvar 3 — dış",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 80,
+   "tag": null,
+   "type": "0XJX9sstrJY9UaH$ZMvKcc"
+  },
+  "3pfQgDCzHRER8fwN4SD6JY": {
+   "class": "IfcWall",
+   "container": "3x3asqaS5K6O8qf4s86mfg",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "Duvar 4 — dış",
+   "objectType": null,
+   "parent": null,
+   "predefined": null,
+   "step": 102,
+   "tag": null,
+   "type": "0XJX9sstrJY9UaH$ZMvKcc"
+  },
+  "3x3asqaS5K6O8qf4s86mfg": {
+   "class": "IfcBuildingStorey",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": null,
+   "name": "Zemin kat",
+   "objectType": null,
+   "parent": "1nrXNN5WDUrO0x9Zr6rH1P",
+   "predefined": null,
+   "step": 14,
+   "tag": null,
+   "type": null
+  }
+ },
+ "precision": 1e-05,
+ "reader": "IfcOpenShell 0.9.0.post1",
+ "records": 178,
+ "schema": "IFC4X3_ADD2",
+ "sets": {},
+ "source": "fixtures/ifc/v1/acik/ifcopenshell-ifc4x3.ifc"
+}
