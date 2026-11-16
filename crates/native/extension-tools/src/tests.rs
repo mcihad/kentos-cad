@@ -18,8 +18,8 @@ use kentos_python_env::python::Interpreter;
 use serde_json::{Value, json};
 
 use crate::headless::{Headless, Hook, find_python};
+use crate::note::Note;
 use crate::plan::Python;
-use crate::run::Note;
 
 const EXT: &str = "tr.ornek.basiz";
 const TOOL: &str = "ext.tr.ornek.basiz.alan-ozeti";
@@ -242,7 +242,7 @@ fn a_headless_host_runs_the_tools_that_declare_it() {
     let (root, python_root) = (temp.0.join("eklentiler"), temp.0.join("python"));
     install(&root, &python_root, &python);
     let heard = Arc::new(Mutex::new(Heard::default()));
-    let headless = Headless::new(Some(root), Some(python_root.clone()), hook(&heard))
+    let headless = Headless::new(Some(root.clone()), Some(python_root.clone()), hook(&heard))
         .with_python(given(&python_root));
     assert!(headless.read(), "the registry is read");
     assert!(!headless.read(), "not again while nothing changed");
@@ -300,6 +300,38 @@ fn a_headless_host_runs_the_tools_that_declare_it() {
         "{:?}",
         heard.notes
     );
+    drop(heard);
+    // The extension's log keeps the run as the desktop writes it (docs/adr/8057 §73): Ayrıntı reads it there.
+    let log = |n: usize| kentos_extension_host::Journal::new(&root).tail(Some(EXT), n);
+    let kept: Vec<(String, Option<String>)> =
+        log(2).into_iter().map(|r| (r.code, r.version)).collect();
+    let version = Some("0.1.0".to_owned());
+    assert_eq!(
+        kept,
+        [
+            ("run_started".to_owned(), version.clone()),
+            ("run_finished".to_owned(), version)
+        ]
+    );
+    // Its code fails: the caller gets the sentence, the log the traceback and what it printed.
+    let mut failing = input();
+    failing["params"] = json!({ "hata": true });
+    let mut listener = Listener(Arc::new(Mutex::new(Heard::default())));
+    let Err(Failure::Failed(why)) = headless.run(&tools[0], failing, &mut listener) else {
+        panic!("it failed");
+    };
+    assert_eq!(why, "“Alan özeti” hata verdi: ValueError: istenen hata");
+    let failed = log(1).remove(0);
+    assert_eq!(
+        (failed.level, failed.code.as_str()),
+        (kentos_extension_host::Level::Error, "run_failed")
+    );
+    let detail = failed.detail.unwrap_or_default();
+    assert!(
+        detail.starts_with("ara çıktı") && detail.contains("ValueError: istenen hata"),
+        "{detail}"
+    );
+    assert!(!failed.program.is_empty(), "which program wrote it");
     headless.close();
 }
 

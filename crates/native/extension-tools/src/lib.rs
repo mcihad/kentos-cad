@@ -5,7 +5,8 @@
 //!   each needs ([`Plan`]); how the extension version's process starts in its prepared environment ([`start_of`]).
 //! - [`run_tool`]: one run in the version's process (`kentos_python_env::process::Pool`): its inputs as data, its
 //!   progress, log and printed lines to İşlemler' feedback, Durdur asked of its code, how it ended read into İşlemler'
-//!   answer and a [`Note`] for its host (the desktop writes the extension's log, the notice and the watchdog from it).
+//!   answer and a [`Note`] for its host (the desktop writes the extension's log, the notice and the watchdog from it; a
+//!   headless host the same log record, and says it to its caller).
 //! - [`calls`]: what the code asks of KentOS while it runs: one of KentOS's built-in tools on a drawing of the call's
 //!   own (docs/adr/8057 §47), never the user's.
 //! - [`headless`]: the headless hosts' provider (MCP, the Python library): the user's installed and enabled
@@ -16,12 +17,14 @@
 
 pub mod calls;
 pub mod headless;
+mod note;
 pub mod plan;
 mod run;
 pub mod synthetic;
 
+pub use note::Note;
 pub use plan::{Library, Listed, Plan, Python, environment_of, read_tools, start_of};
-pub use run::{Note, run_tool};
+pub use run::run_tool;
 
 #[cfg(all(test, unix))]
 mod tests;

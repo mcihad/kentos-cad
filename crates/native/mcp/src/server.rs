@@ -154,11 +154,12 @@ impl Server {
     /// `headless-python` (docs/adr/8057 §70): `cad.processing.tools` lists them and `.run` runs them in their own
     /// processes, from the environments the desktop prepared; a desktop-only one is refused saying what its descriptor
     /// must declare. The program's start asks; a server a test makes offers nothing unless it asks. What a run notes
-    /// goes to standard error. Whether this process runs them.
+    /// goes to the extension's log and to standard error. Whether this process runs them.
     #[cfg(feature = "mod-gis")]
     pub fn offer_extension_tools(&self) -> bool {
+        // Standard error: the protocol has standard output. The extension's log keeps it too (docs/adr/8057 §73).
         let note: kentos_extension_tools::headless::Hook =
-            std::sync::Arc::new(|note| eprintln!("{}", crate::extensions::said(&note)));
+            std::sync::Arc::new(|note| eprintln!("{}", note.said()));
         kentos_extension_tools::headless::offer(self.extensions_root.clone(), note)
     }
 

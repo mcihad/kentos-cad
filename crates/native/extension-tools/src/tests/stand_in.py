@@ -39,6 +39,12 @@ while True:
     i = m["id"]
     with open(os.path.join(here, "cagrilar.txt"), "a") as f:
         f.write(m["local"] + "\n")
+    if m["params"].get("hata"):
+        # The code fails: what it printed, then its traceback.
+        send({"type": "out", "id": i, "stream": "out", "text": "ara çıktı\n"})
+        send({"type": "done", "id": i, "ok": False, "exception": "ValueError", "message": "istenen hata",
+              "error": "Traceback (most recent call last):\n  File \"logic.py\", line 3\nValueError: istenen hata"})
+        continue
     features = m["inputs"]["alanlar"]["features"]
     send({"type": "progress", "id": i, "done": 1, "total": 2, "text": "ölçülüyor"})
     send({"type": "log", "id": i, "level": "info", "text": "eklenti: %s" % hello["extension"]})

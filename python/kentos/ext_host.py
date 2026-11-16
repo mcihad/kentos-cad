@@ -474,7 +474,7 @@ def run(channel: Channel, streams: tuple[Stream, Stream], message: dict[str, Any
             done.update(
                 ok=False,
                 exception=type(e).__name__,
-                message=str(e)[:2000],
+                message=failure_words(e)[:2000],
                 error=traceback.format_exc()[-MAX_TRACEBACK:],
             )
     finally:
@@ -483,6 +483,14 @@ def run(channel: Channel, streams: tuple[Stream, Stream], message: dict[str, Any
             stream.run = None
         channel.stops.pop(run_id, None)
     channel.send(done)
+
+
+def failure_words(e: BaseException) -> str:
+    """What a failure says: KentOS's refusal (``HostError(code, message)``) as its words and then its code, not as the
+    pair's tuple ("('capability', 'Bir İşlemler aracı …')", docs/adr/8057 §73); anything else as Python says it."""
+    if isinstance(e, _native.HostError) and len(e.args) == 2 and all(isinstance(a, str) for a in e.args):
+        return f"{e.args[1]} ({e.args[0]})"
+    return str(e)
 
 
 def main() -> int:

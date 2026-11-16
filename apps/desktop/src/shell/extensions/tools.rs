@@ -820,13 +820,10 @@ impl App {
         };
         for note in notes {
             match note {
-                Note::Started { ext, part } => {
+                // The record a headless host writes too (`Note::record`, docs/adr/8057 §73).
+                Note::Started { .. } => {
                     if let Some(registry) = self.extensions.registry.as_mut() {
-                        registry.write_log(
-                            Record::info("run_started", "Çalıştırıldı (İşlemler).")
-                                .of(&ext, None)
-                                .part(part),
-                        );
+                        registry.write_log(note.record(None));
                     }
                 }
                 Note::Worked {

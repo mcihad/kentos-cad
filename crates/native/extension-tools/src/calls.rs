@@ -7,6 +7,8 @@
 //!   drawing (in the user's drawing's coordinate system), and the call reaches no layer the tool was not given.
 //! - **Built-in tools only:** another extension's tool is not run from a tool (no chain of processes, no way round its
 //!   dependency); a tool's own code calls its own functions.
+//! - **No questions:** a tool's code does not ask the user or open a panel ([`NO_QUESTIONS`]): what it would ask is its
+//!   parameter. The same on the desktop and headless; a window is not what is missing.
 //! - **Bounded:** at most [`MOST`] objects in and out; the made objects are read back in the order they were made.
 //! - **A stack of its own:** the call is a whole command run inside another one's (the tool's), on whatever thread that
 //!   one has; it runs on a thread of [`STACK`]. An agent's run goes as a job, whose thread has the default 2 MiB: the
@@ -52,8 +54,19 @@ pub fn tool_call(method: &str, params: &Value, srid: u32) -> Result<Value, (Stri
     })
 }
 
+/// Why a tool does not ask the user while it runs, on any host (docs/adr/8057 §73): what it would ask is its
+/// parameter, which every way of running it (its window, a batch, a model, an agent, a server's job) gives before the
+/// run and the run's record keeps (PY-TOOL-21, 22). A window is not what is missing: the desktop refuses it alike.
+pub const NO_QUESTIONS: &str = "Bir İşlemler aracı çalışırken kullanıcıya sormaz ve panel açmaz (ctx.dialog, \
+                                ctx.confirm, ctx.open_panel): sorulacak olan aracın parametresidir; araç penceresi, \
+                                toplu çalıştırma, model, ajan ve sunucu işi onu çalıştırmadan önce verir, çalıştırma \
+                                kaydı da onu tutar. Kullanıcıyla konuşan iş bir komuttur (@ext.command).";
+
 /// [`tool_call`]'s work, on its thread.
 fn answer(method: &str, params: &Value, srid: u32) -> Result<Value, (String, String)> {
+    if method == "dialog" || method.starts_with("panel.") {
+        return Err(refused("capability", NO_QUESTIONS));
+    }
     if method != "processing.run" {
         return Err(refused(
             "unknown_method",
@@ -229,6 +242,14 @@ mod tests {
             tool_call("entities", &json!({}), 5256).unwrap_err().0,
             "unknown_method"
         );
+        // A question or a panel: refused on every host with why (the tool's parameters), not for want of a window.
+        for asked in ["dialog", "panel.open"] {
+            let (code, words) = tool_call(asked, &json!({ "title": "?" }), 5256).unwrap_err();
+            assert_eq!(
+                (code.as_str(), words.as_str()),
+                ("capability", NO_QUESTIONS)
+            );
+        }
         let none = call(json!({ "input": { "features": [] }, "distance": 2 })).expect("an answer");
         assert_eq!(none["layers"], json!([]));
         assert!(none["summary"].as_str().unwrap().contains("Girdi boş"));

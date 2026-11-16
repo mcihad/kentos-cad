@@ -2,7 +2,7 @@
 //! `kentos://extensions/installed` (the view `kentos kek dump` prints), the overview's short list, and the watch that
 //! tells a subscriber the list changed. The user's registry is read; the İşlemler tools that declare
 //! `headless-python` run in their own processes (`Server::offer_extension_tools`, docs/adr/8057 §70), what their runs
-//! note said on standard error ([`said`]).
+//! note written to the extension's log and said on standard error (§73).
 
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::path::{Path, PathBuf};
@@ -37,29 +37,6 @@ pub(crate) fn installed(root: Option<&Path>) -> Value {
             view
         }
         Err(problem) => unread(json!(root.display().to_string()), json!(problem)),
-    }
-}
-
-/// A run's note as standard error says it (the protocol has standard output): whose, which part, what happened and,
-/// for a failure, its detail (the traceback, what it printed).
-#[cfg(feature = "mod-gis")]
-pub(crate) fn said(note: &kentos_extension_tools::Note) -> String {
-    use kentos_extension_tools::Note;
-    match note {
-        Note::Started { ext, part } => format!("eklenti {ext} {part}: çalıştırıldı"),
-        Note::Worked {
-            ext, part, message, ..
-        } => format!("eklenti {ext} {part}: {message}"),
-        Note::Failed {
-            ext,
-            part,
-            message,
-            detail,
-            ..
-        } => match detail {
-            Some(detail) => format!("eklenti {ext} {part}: {message}\n{detail}"),
-            None => format!("eklenti {ext} {part}: {message}"),
-        },
     }
 }
 

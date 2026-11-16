@@ -265,6 +265,19 @@ def not_a_dict(ctx, parcels):
 @ext.processing("bad-value")
 def bad_value(ctx, parcels):
     return {"parcels": object()}
+
+
+@ext.processing("asks-host")
+def asks_host(ctx, parcels):
+    """Asks KentOS for something it refuses: the failure says KentOS's words."""
+    ctx.run_tool("geometry.buffer", input=[], distance=1)
+    return {}
+
+
+@ext.command("marker")
+def marker(ctx):
+    """Whether its process says it is an extension's (docs/adr/8057 §70)."""
+    return ctx.report([{"isaret": os.environ.get("KENTOS_EXTENSION_PROCESS")}])
 '''
 
 
@@ -606,6 +619,22 @@ class ExtHostTest(unittest.TestCase):
         self.assertFalse(done["ok"])
         self.assertEqual(done["exception"], "ZeroDivisionError")
         self.assertIn("1 / 0", done["error"])
+
+    def test_a_hosts_refusal_reads_as_its_words(self) -> None:
+        # docs/adr/8057 §73: KentOS's refusal as its words and its code, not as the pair's tuple.
+        self.kentos.hello()
+        empty = {"parcels": {"description": "boş", "features": []}}
+        done, _ = self.kentos.invoke("asks-host", "deneme.logic:asks_host", kind="processing", inputs=empty)
+        self.assertFalse(done["ok"])
+        self.assertEqual(done["exception"], "HostError")
+        self.assertEqual(done["message"], "processing.run (capability)")
+
+    def test_an_extensions_process_says_it_is_one(self) -> None:
+        # A drawing its code opens offers no extension's tools (docs/adr/8057 §70): the process says what it is.
+        self.kentos.hello()
+        done, _ = self.kentos.invoke("marker", "deneme.logic:marker")
+        self.assertTrue(done["ok"], done)
+        self.assertEqual(done["result"]["rows"], [{"isaret": "1"}])
 
     def test_durdur_is_heard_while_the_code_computes(self) -> None:
         self.kentos.hello()

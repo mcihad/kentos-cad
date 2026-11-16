@@ -13,36 +13,11 @@ use kentos_processing::external::{ExternalTool, Failure};
 use kentos_python_env::process::{Ended, Heard, KILL_AFTER, Pool, Start};
 use serde_json::{Value, json};
 
+use crate::note::Note;
 use crate::plan::Plan;
 
 /// What a run prints that goes to İşlemler' log, lines at most: the rest is in the extension's own output.
 const PRINTED_LINES: usize = 200;
-
-/// What a run tells its host: the desktop's window writes the extension's log, its failure notice with Ayrıntı and a
-/// crash for the watchdog from it (runner.rs's way); a headless host says it where it can.
-#[derive(Clone, Debug, PartialEq)]
-pub enum Note {
-    Started {
-        ext: String,
-        part: String,
-    },
-    Worked {
-        ext: String,
-        part: String,
-        code: &'static str,
-        message: String,
-    },
-    Failed {
-        ext: String,
-        part: String,
-        title: String,
-        code: &'static str,
-        message: String,
-        detail: Option<String>,
-        /// Its process ended by itself: a crash the watchdog counts.
-        crash: bool,
-    },
-}
 
 /// Runs `tool` with `input` (`{ params, inputs, layers, srid }`, what `kentos_processing::external` gives) in the
 /// process of `plan`'s version, which `start` starts when the pool has none: `feedback` hears its progress, log and

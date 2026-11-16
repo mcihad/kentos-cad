@@ -3945,7 +3945,8 @@ crate'e taşındı, `trial/drawing.rs`; MCP `server.rs`, `main.rs`, `extensions.
   `~/.local/bin`'deydi).
 - **Söylenen:** MCP koşunun notlarını standart hataya yazar (protokol standart çıktıda): "eklenti tr.ornek.vitrin
   processing:cekme: Bitti (1,5 sn; süreç belleği 126 MB)."; Python kitaplığı sessizdir, yanıt nasıl bittiğini söyler.
-  Başsız konak eklentinin günlüğüne yazmaz ve çökmeyi bekçiye saymaz (kayıt defterine yazmaz).
+  Başsız konak eklentinin günlüğüne yazmaz ve çökmeyi bekçiye saymaz (kayıt defterine yazmaz). *(§73'te değişti:
+  başsız koşu günlüğe yazar, Python kitaplığı Python'un logging'iyle söyler; bekçi masaüstünün kaldı.)*
 - **Gerçek koşu (16 Kasım, MCP stdio'dan elle JSON-RPC, yalıtılmış klasörler):** Vitrin 1.0.50'nin kopyası, "Çekme
   mesafesi denetimi" tanımı iki ortamı bildirir, TAKS yalnız masaüstü; Python ortamı masaüstünün hazırladığının kopyası
   (anahtar aynı: sürüm, kilit, yorumlayıcı). `cad.processing.tools` (`category: extensions`) yalnız
@@ -4075,3 +4076,44 @@ yasak; beyan edilmemiş yetenek kullanımı (ağ, dosya, alt süreç, pano) ret;
 - **Sınamalar:** `python_rules` 2 (belge dizgisi/yorum ayrımı; her kural satırıyla, `pipeline`, `retrieval(`,
   `pip_tools_like` kural sayılmaz), `verify` 2 (beyansız ağ ret, komut uyarı ve paketlenir; çalışırken kurma ve
   `sys.path` satırlarıyla ret, belge dizgisindeki not değil). Vitrin ve MEBİS kurallara takılmıyor.
+
+## §73. Başsız koşuda işletim sistemi penceresi gerekmedi; susturulan söylenir (`ADIM 19`, §70'in gözden geçirilmesi)
+
+**16 Kasım.** Sahip: "gerekli görülen yerlerde işletim sistemi penceresi açılabilir … öyle bir kısıtımız yoktur" (alt
+süreçlerin Windows'ta konsol penceresi açmaması ayrı kural, sürüyor). §70'in başsız yolunda "pencere yok" diye bir şeyi
+reddeden, düşüren ya da susturan her yer tek tek gözden geçirildi; her biri için pencerenin doğru cevap olup olmadığına
+karar verildi. Kod: `crates/native/extension-tools` (yeni `note.rs`: `Note::record`, `said`, `failed`; `headless.rs`,
+`calls.rs` `NO_QUESTIONS`), MCP `server.rs` ve `extensions.rs`, Python bağı `lib.rs` (`say_notes`),
+`python/kentos/ext_host.py` (`failure_words`), masaüstü `tools.rs`.
+
+| Yer | §70'te | Karar |
+|---|---|---|
+| Aracın kodunda `ctx.dialog`, `ctx.confirm`, `ctx.open_panel` | başsızda ve **masaüstünde de** ret (`unknown_method`: "yalnız processing.run") | Pencere değil. Araç çalışırken sormaz, her konakta: sorulacak olan aracın parametresidir; araç penceresi, toplu çalıştırma, model, ajan ve sunucu işi onu çalıştırmadan önce verir, çalıştırma kaydı (türetim, PY-TOOL-22) onu tutar. Yarıda verilen cevap kayda girmezdi, toplu iş ve sunucu işi kimseyi bekleyemez. Ret artık nedeni ve çaresiyle (`capability`, `calls::NO_QUESTIONS`); kullanıcıyla konuşan iş komuttur (`@ext.command`). |
+| Hata bildirimi ve Ayrıntı | MCP standart hataya, Python hiçbir yere | Pencere değil: cevabı çağıran (ajan, betik) alır, araya giren pencere otomasyonu durdururdu. Başsız koşu eklentinin günlüğüne masaüstünün yazdığı kaydı yazar (başladı, bitti, hata iz kaydı ve yazdırdıklarıyla; `program` hangi konak): masaüstünün Ayrıntı'sı ve `kentos://extensions/installed` başsız koşuyu da gösterir. |
+| "Python kitaplığı sessiz" | notlar düşüyordu | Python'un logging'i (`kentos.ext`): hata uyarı olarak, iz kaydıyla (betik bir şey ayarlamadıysa standart hatada görünür); başladı ve bitti bilgi olarak. Not, çalıştırma yorumlayıcının kilidi bırakılmışken gelir; çağrı dönünce söylenir (en çok 200 bekler). |
+| Bekçinin çökme sayacı | yazılmıyordu | Masaüstünün kalır: sayaç etkinleştirmenin kirasına bağlı, başsız konak etkinleştirmez; iki sürecin ardışık çökme sayımını birlikte tutması ayrı bir iş. Çökme günlükte hata olarak durur (`runner_crashed`, iz kaydıyla). |
+| Python kapalı, kurulu değil, ortam hazırlanmadı | ret, yeri söylenir | Pencere değil: Python kurmak ve ortam hazırlamak onaylı, ilerlemeli masaüstü akışı (indirilecekler, paket önizlemesi); başsız konak indirmez. Ret yeri söylemeye devam eder. |
+| Yalnız masaüstü aracı | ret | Pencere değil: tanımın bildirimi (§70). |
+
+- **Sonuç: bu yolda işletim sistemi penceresi açılan bir yer çıkmadı**, ekran yokken (CI, sunucu, `DISPLAY` yok, Windows
+  hizmeti) ret de değişmedi. Araçların çalışırken sorması istenirse bu bütün konaklarda bir sözleşme değişikliği olur:
+  masaüstünde çizimin üstünde, başsızda masaüstü programının tek pencerelik bir soru kipiyle (ADR 8060'ın
+  `Dialog::window`'u, eklenti penceresinin bileşenleri), gözetimsiz koşularda ret ve cevabın çalıştırma kaydına
+  yazılmasıyla; ayrı karar.
+- **Uzak konağın reddi okunur:** kodun yakalamadığı `HostError(code, message)` başarısızlıkta demet olarak yazılıyordu
+  ("HostError: ('capability', 'Bir …')"); artık sözü ve kodu ("HostError: Bir İşlemler aracı … (capability)").
+- **Tek kayıt biçimi:** başladı kaydını masaüstü de `Note::record`'dan yazar; MCP'nin kendi satır biçimi kalktı
+  (`Note::said`).
+- **Gerçek koşu (yalıtılmış klasörler; Vitrin kopyasının Çekme mesafesi aracına yalnız bu denemede 19 m'de soran, 20
+  m'de hata veren iki satır):** MCP: 3 m soğuk 2,98 sn (kurulumun tekerleği değişmişti, ilk koşu kitaplığı ortama koydu:
+  6,32 sn), ılık 0,04 sn (§70'te 0,03); 19 m 0,01 sn'de "HostError: Bir İşlemler aracı çalışırken kullanıcıya sormaz …
+  (capability)"; 20 m "ValueError: deneme hatası: 20 m". `kentos://extensions/installed` Vitrin'in son kayıtlarını
+  `kentos-mcp`'nin yazdığı iz kayıtlarıyla verdi, `problem: run_failed`. Python bağı: yapılandırmasız betikte iki uyarı
+  iz kaydıyla standart hatada, başarılı koşu sessiz; `logging.basicConfig(level=INFO)` ile "INFO kentos.ext: … Bitti
+  (0,9 sn; süreç belleği 128 MB)." satırları. Dört oturumda (ikisi MCP, ikisi Python) günlüğe 28 kayıt eklendi
+  (`kentos-mcp` 16, `python3` 12), kayıt başına ortalama 703 bayt (hata kayıtları iz kaydıyla büyük).
+- **Sınamalar:** extension-tools 6 (yeni: notun kaydı ve satırı; başsız koşunun günlüğe yazdığı başladı ve bitti, iz
+  kayıtlı hata ve yazdırdığı; soru ve panel isteğinin nedeniyle reddi), `python/tests/test_ext_host.py` 28 (2 yeni:
+  reddin sözü, eklenti sürecinin işareti), masaüstü eklenti araçları, deneme ve Python sınamaları geçti.
+- **Kalan:** bekçi sayacının başsız koşuyu da sayması; ifade işlevleri başsızda; sunucu ve bulut koşusu kentosd'nin
+  yolu.

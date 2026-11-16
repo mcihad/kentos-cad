@@ -9,9 +9,13 @@
 //! - **An honest list:** only the tools whose descriptor declares `headless-python` are listed; a run of another
 //!   installed tool is refused before any process starts, saying what its descriptor must declare
 //!   ([`external::unavailable`]).
-//! - **Read, never written:** the registry is read as `kentos kek dump` reads it (its ready extensions' contributions,
+//! - **Read, never changed:** the registry is read as `kentos kek dump` reads it (its ready extensions' contributions,
 //!   nothing activated) and read again when its files change ([`refresh`]); an environment is prepared on the desktop
 //!   only. Before a version's process starts its files are checked against their digest, as activation checks them.
+//!   A run is written to the extension's log as the desktop writes it (§73): its start and how it ended, a failure
+//!   with its traceback, so that the desktop's Ayrıntı and `kentos://extensions/installed` show a headless run too. The
+//!   watchdog's count of crashes stays the desktop's: it belongs to an activation's lease, and this host activates
+//!   nothing.
 //! - **Python found at the first run:** the user's choice to use it, uv and KentOS's interpreter, as the desktop finds
 //!   them; a listing starts nothing.
 //! - **No chain of processes:** an extension's own process (`kentos.ext_host` sets [`EXTENSION_PROCESS`]) offers none:
@@ -22,7 +26,7 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock, RwLock};
 
-use kentos_extension_host::places;
+use kentos_extension_host::{Journal, places};
 use kentos_processing::Feedback;
 use kentos_processing::external::{
     self, DESKTOP_RUNTIME, ExternalTool, Failure, HEADLESS_RUNTIME, Provider,
@@ -32,14 +36,15 @@ use kentos_python_env::settings::{self, PythonSettings};
 use kentos_python_env::uv::UvStatus;
 use serde_json::Value;
 
+use crate::note::Note;
 use crate::plan::{Library, Plan, Python, environment_of, read_tools, start_of};
-use crate::run::{Note, run_tool};
+use crate::run::run_tool;
 
 /// Set in an extension's own process (`kentos.ext_host`): a headless host there offers no extension's tools.
 pub const EXTENSION_PROCESS: &str = "KENTOS_EXTENSION_PROCESS";
 
-/// What a host does with what a run notes: MCP writes it to its standard error; the Python library keeps quiet, the
-/// run's answer says how it ended.
+/// What a host does with what a run notes, besides the extension's log: MCP writes it to its standard error, the
+/// Python library says it through Python's logging (`kentos.ext`), a failure as a warning with its traceback.
 pub type Hook = Arc<dyn Fn(Note) + Send + Sync>;
 
 /// A headless host's extension tools: what it lists and runs, read from the user's registry.
@@ -307,7 +312,13 @@ impl Provider for Headless {
             kentos_extension_host::verify_installed(&plan.source, &plan.digest)?;
             start_of(&plan, &python, Library::IfFound)
         };
-        let note = |n: Note| (self.note)(n);
+        let note = |n: Note| {
+            // The extension's log, as the desktop writes it: Ayrıntı reads a headless run there too (§73).
+            if let Some(root) = &self.root {
+                Journal::new(root).write(n.record(Some(&plan.version)));
+            }
+            (self.note)(n)
+        };
         run_tool(&self.pool, &plan, &start, tool, input, feedback, &note)
     }
 }

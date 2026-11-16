@@ -29,7 +29,8 @@ sürecinde ve kendi Python ortamında çalışır. Ayrı süreç bir korumalı a
   yazmaları tek geri alma adımıdır; hata veren ya da durdurulan çalıştırma geri alınır.
 - `@ext.processing("kimlik")` → `entrypoints.processing` + tanım dosyası: `def f(ctx: ext.ProcessingContext,
   <parametreler adlarıyla>) -> dict`. Nesne girdileri `ext.FeatureInput`'tur (`ctx.read_features(girdi)` →
-  `ext.Feature`: `uid`/`id`, `kind`, `layer`, `attrs`, `geometry` GeoJSON, `__geo_interface__`). Çizim yoktur; çıktılar
+  `ext.Feature`: `uid`/`id`, `kind`, `layer`, `attrs`, `geometry` GeoJSON, `__geo_interface__`). Çizim yoktur;
+  kullanıcıya da sormaz (`ctx.dialog`/`ctx.confirm` reddedilir: sorulacak olan bir parametredir); çıktılar
   tanımdaki adlarıyla bir sözlükte döner (`features`: `ext.NewFeature(attrs=…, geometry=…)` ya da girdinin şekliyle
   `ext.NewFeature(source=f, attrs=…)` listesi; `table`: satır sözlükleri ya da DataFrame; `number`; `string`). Şekil
   `ext.point/polyline/polygon`, GeoJSON ya da `__geo_interface__` taşıyan her şeydir (shapely, GeoPandas).
