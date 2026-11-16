@@ -46,8 +46,10 @@ pub enum Keys {
     Type,
     /// Tab reaches it; Space, Enter or F4 opens its list, ↑ and ↓ step its value.
     Choose,
-    /// Tab reaches it; Space or Enter turns it on or off.
+    /// Tab reaches it; Space or Enter turns it on or off (a chip of a multiple choice each, a section's heading folds).
     Toggle,
+    /// Tab reaches its buttons; Space or Enter presses the one focused.
+    Press,
     /// Only the mouse uses it: Tab passes it by.
     Pointer,
     /// Nothing to use: it is shown.
@@ -173,7 +175,7 @@ pub const TABLE: [Behaviour; 28] = [
         ..shown("text", Some("text"))
     },
     Behaviour {
-        keys: Keys::Pointer,
+        keys: Keys::Toggle,
         note: Some(
             "Başlığına tıklamak sonraki bileşenleri katlar; katlıyken değerleri yine komuta gider.",
         ),
@@ -217,7 +219,7 @@ pub const TABLE: [Behaviour; 28] = [
         "seçilenlerin değerleri, seçeneklerin sırasıyla (liste)",
         "[\"a\"]",
         CHOICE,
-        Keys::Pointer,
+        Keys::Toggle,
     ),
     holds(
         "layerPicker",
@@ -240,7 +242,7 @@ pub const TABLE: [Behaviour; 28] = [
             "nesnenin kalıcı kimliği (multiple ise kimliklerin listesi); alınmamışsa None",
             "\"0192f5a1-25a0-7000-8000-000000000301\"",
             VALUE,
-            Keys::Pointer,
+            Keys::Press,
         )
     },
     Behaviour {
@@ -282,7 +284,7 @@ pub const TABLE: [Behaviour; 28] = [
             "GeoJSON geometri (LineString ya da Polygon); çizilmemişse None",
             "{\"type\": \"Polygon\", \"coordinates\": [[[0, 0], [10, 0], [10, 10], [0, 0]]]}",
             VALUE,
-            Keys::Pointer,
+            Keys::Press,
         )
     },
     holds(
@@ -296,7 +298,7 @@ pub const TABLE: [Behaviour; 28] = [
     Behaviour {
         events: &["command"],
         sets: &[Prop::Enabled],
-        keys: Keys::Pointer,
+        keys: Keys::Press,
         note: Some("Birincil düğmeye, metin, sayı, tarih ve saat alanında Enter da basar."),
         ..shown("button", Some("label"))
     },
@@ -319,7 +321,7 @@ pub const TABLE: [Behaviour; 28] = [
         ..shown("relationList", Some("label"))
     },
     Behaviour {
-        keys: Keys::Pointer,
+        keys: Keys::Press,
         note: Some("Aç eki açar; Dosya ekle… ve Adres ekle… KentOS'un, katmanı kilitli değilse."),
         ..shown("attachments", Some("label"))
     },

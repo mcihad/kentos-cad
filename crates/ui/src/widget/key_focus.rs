@@ -166,6 +166,7 @@ pub struct KeyFocus<'a, Message> {
     on_activate: Option<Message>,
     on_step: Option<Box<dyn Fn(i32) -> Option<Message> + 'a>>,
     radius: f32,
+    hold: bool,
 }
 
 /// `content`'i odaklanabilir yapar; tuşlarının mesajları [`KeyFocus::on_activate`] ve
@@ -178,6 +179,7 @@ pub fn key_focus<'a, Message: 'a>(
         on_activate: None,
         on_step: None,
         radius: shape::sm(),
+        hold: false,
     }
 }
 
@@ -206,6 +208,13 @@ impl<'a, Message: Clone + 'a> KeyFocus<'a, Message> {
         self
     }
 
+    /// Devre dışı kalınca odağı bırakmaz: işi sürerken kapanan düğme klavyeyi tutar, Tab ondan devam eder, iş bitip
+    /// açılınca Boşluk yine ona basar. Bırakan öğede (varsayılan) odak pencerenin başına dönüyordu.
+    pub fn hold(mut self) -> Self {
+        self.hold = true;
+        self
+    }
+
     fn enabled(&self) -> bool {
         self.on_activate.is_some() || self.on_step.is_some()
     }
@@ -226,8 +235,8 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for KeyFocus<'a, 
 
     fn diff(&self, tree: &mut Tree) {
         tree.diff_children(std::slice::from_ref(&self.content));
-        // A field that went disabled lets the keyboard go.
-        if !self.enabled() {
+        // A field that went disabled lets the keyboard go, unless it holds it while its work runs.
+        if !self.enabled() && !self.hold {
             tree.state.downcast_mut::<Flag>().0 = false;
         }
     }
@@ -340,8 +349,9 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for KeyFocus<'a, 
         renderer: &Renderer,
         operation: &mut dyn Operation,
     ) {
-        if self.enabled() {
-            operation.focusable(None, layout.bounds(), tree.state.downcast_mut::<Flag>());
+        let flag = tree.state.downcast_mut::<Flag>();
+        if self.enabled() || (self.hold && flag.0) {
+            operation.focusable(None, layout.bounds(), flag);
         }
         if let Some(child) = layout.children().next() {
             operation.traverse(&mut |operation| {
@@ -404,5 +414,96 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for KeyFocus<'a, 
 impl<'a, Message: Clone + 'a> From<KeyFocus<'a, Message>> for Element<'a, Message> {
     fn from(focus: KeyFocus<'a, Message>) -> Self {
         Element::new(focus)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::{Arc, Mutex};
+
+    use iced::advanced::widget::Id;
+    use iced::widget::{button, row, text};
+
+    use super::*;
+
+    #[derive(Clone, Debug)]
+    struct Press;
+
+    /// Three buttons, the middle one (pressed, its work running) enabled or not, holding the keyboard or not.
+    fn three(middle_on: bool, hold: bool) -> Element<'static, Press> {
+        let item = |on: bool, hold: bool| -> Element<'static, Press> {
+            let press = on.then_some(Press);
+            let focus = key_focus(button(text("düğme")).on_press_maybe(press.clone()))
+                .on_activate_maybe(press);
+            if hold { focus.hold() } else { focus }.into()
+        };
+        row![item(true, false), item(middle_on, hold), item(true, false)]
+            .spacing(10)
+            .into()
+    }
+
+    /// Which focusables are focused, in visiting order.
+    struct Focused(Arc<Mutex<Vec<bool>>>);
+
+    impl Operation for Focused {
+        fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
+            operate(self);
+        }
+
+        fn focusable(&mut self, _id: Option<&Id>, _bounds: Rectangle, state: &mut dyn Focusable) {
+            if let Ok(mut list) = self.0.lock() {
+                list.push(state.is_focused());
+            }
+        }
+    }
+
+    fn focused(
+        snapshot: &mut crate::snapshot::Snapshot,
+        view: Element<'static, Press>,
+    ) -> Vec<bool> {
+        let list = Arc::new(Mutex::new(Vec::new()));
+        snapshot.operate(view, Box::new(Focused(Arc::clone(&list))));
+        list.lock().expect("listed").clone()
+    }
+
+    /// A held item that goes disabled while its work runs keeps the keyboard and Tab goes on from it to the next (the
+    /// held one, left, is no longer listed); one not held lets it go and Tab starts again at the window's first.
+    #[test]
+    fn a_held_item_keeps_the_keyboard_while_disabled() {
+        for (hold, after) in [(true, vec![false, true]), (false, vec![true, false])] {
+            let mut snapshot =
+                crate::snapshot::Snapshot::new(Size::new(400.0, 60.0)).expect("a renderer");
+            // Tab twice: the middle one.
+            for _ in 0..2 {
+                snapshot.operate(
+                    three(true, hold),
+                    Box::new(crate::focus::step_operation(false, false)),
+                );
+            }
+            assert_eq!(
+                focused(&mut snapshot, three(true, hold)),
+                [false, true, false]
+            );
+            // Its work runs: disabled.
+            let now = focused(&mut snapshot, three(false, hold));
+            assert_eq!(
+                now,
+                if hold {
+                    vec![false, true, false]
+                } else {
+                    vec![false, false]
+                },
+                "hold {hold}"
+            );
+            snapshot.operate(
+                three(false, hold),
+                Box::new(crate::focus::step_operation(false, false)),
+            );
+            assert_eq!(
+                focused(&mut snapshot, three(false, hold)),
+                after,
+                "hold {hold}"
+            );
+        }
     }
 }

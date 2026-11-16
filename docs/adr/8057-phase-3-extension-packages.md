@@ -3899,7 +3899,7 @@ aldığı yalnız ret iletilerinden öğreniliyordu.
 | `events` | eklentinin kodunu başlatan: `onChange` (kullanıcı değiştirdi), `command` (basıldı) | 14 tür `onChange`, düğme `command` |
 | `sets` | `ctx.panel.set`'in değiştirdikleri (`visible` her bileşende) | `value` 16, `options` 2, `text` 1, `image` 1, `enabled` 8 |
 | `rows`, `focus` | `ctx.panel.rows` doldurur; `ctx.panel.focus` imleci koyar | 5 ve 7 tür |
-| `keys` | klavye: `type` (Tab ulaşır, yazılır, Enter birincil düğme), `choose` (Tab; Boşluk/Enter/F4 açar, ↑↓ adımlar), `toggle` (Tab; Boşluk/Enter), `pointer` (yalnız fare), `shown` (yalnız gösterilir) | 7 · 5 · 1 · 11 · 4 |
+| `keys` | klavye: `type` (Tab ulaşır, yazılır, Enter birincil düğme), `choose` (Tab; Boşluk/Enter/F4 açar, ↑↓ adımlar), `toggle` (Tab; Boşluk/Enter çevirir), `press` (Tab düğmelerine; Boşluk/Enter basar), `pointer` (yalnız fare), `shown` (yalnız gösterilir) | 7 · 5 · 3 · 4 · 5 · 4 |
 | `namedBy`, `note` | adını veren özellik (`label`, metinde `text`); KentOS'un ayrıca yaptığı (uid'li satıra tıklamak nesneyi gösterir…) | |
 
 - **Tek kaynak:** panel oturumu `set`, `rows` ve `focus`'u tablodan reddeder; ret iletisi alanları tablodan sayar
@@ -3911,9 +3911,23 @@ aldığı yalnız ret iletilerinden öğreniliyordu.
   `pointer`/`shown` 0 (`panel_session::behaviour_tests::the_keyboard_column_is_the_drawn_panels`). Olay sütunu
   tanımdan (`onChange` okunur ya da reddedilir), `sets`/`rows` sütunları oturumdan (her tür × her özellik, örnek
   değerle) sınanır.
-- **Ölçümün söylediği (16 Kasım):** Tab 13 türe ulaşıyor (7 yazılan, 5 açılır liste, onay kutusu). Düğme, çoklu seçimin
-  çipleri, nesne seçicinin Seçimi al'ı, şekil seçicinin Haritada çiz'i, bölüm başlığı, ek listesinin düğmeleri ve
-  satırlar yalnız fareyle kullanılıyor: birincil olmayan düğme klavyeyle hiç basılamıyor. Planın kabulü ("gerçek fare
-  ve klavyeyle") bunu kapatmayı istiyor; tablo şimdilik olanı söylüyor.
+- **Ölçüm ve düzeltme (16 Kasım):** ilk ölçümde Tab 13 türe ulaşıyordu (7 yazılan, 5 açılır liste, onay kutusu);
+  düğme, çoklu seçimin çipleri, Seçimi al, Haritada çiz, bölüm başlığı, ek listesinin düğmeleri ve satırlar yalnız
+  fareyleydi: birincil olmayan düğme klavyeyle hiç basılamıyordu. Aynı gün kapatıldı, Tab artık **19 türe** ulaşıyor:
+  - kitte, onay kutusunun sınıfı olarak: çoklu seçimin her çipi (`chips::toggles`) ve katlanır bölüm başlığı
+    (`Form::foldable_section`) `key_focus` ile Tab alır, Boşluk/Enter çevirir (ikisini de yalnız eklenti paneli
+    kullanıyor);
+  - panelde (`panel_view::keyed`, kitin `key_focus`'u): düğme, Seçimi al ve Temizle, Haritada çiz ve ✕, Haritadan seç,
+    Seç…, ek listesinin Aç, Dosya ekle… ve Adres ekle…'si. KentOS'un öbür pencerelerindeki düğmeler Tab turunda değil
+    (`words::primary/secondary/ghost`, 947 kullanım): uygulama geneline yaymak ayrı karar.
+  - **İşi süren düğme odağı tutar** (`KeyFocus::hold`): gerçek pencerede Boşluk'la basılan Özetle, komutu sürerken
+    devre dışı kalınca odağı bırakıyordu ve sonraki Tab pencerenin başından başlıyordu (bölüm başlığına ulaşılamadı).
+    Kit testi: tutulan öğeden Tab sonrakine, tutmayandan pencerenin ilkine (`a_held_item_keeps_the_keyboard_while_disabled`).
+  - Yalnız satırlar (`table`, `tree`, `card`, `stats`, `relationList`) fareyle: uid'li satır nesneyi gösterir; 500
+    satırı Tab turuna katmak turu kullanılmaz kılar, ok tuşlarıyla tablo içi gezinme ayrı iş.
+  - Gerçek pencere (Vitrin, Yapı ara ve Parsel kartı): Yapı no'dan Tab → Katman → onay → Ara → Yapıları numarala →
+    Özetle; Boşluk Özetle'yi çalıştırdı ("5 yapının özeti"), odak düğmede kaldı; Tab İpuçları başlığına, Boşluk açtı;
+    Shift+Tab geri. Shift+Tab Kart tarihi'nden Seçimi al'a; Tab çiplerde, Boşluk çipi kaldırdı, komut sürerken basılan
+    Tab sonraki çipe geçti.
 - **Erişilebilirlik sınırı:** iced'de ekran okuyucu ağacı yok; tablonun "erişilebilirlik" payı klavye ve ad. Ad, KentOS'un
   bileşeni andığı yerdeki adıdır (hata iletisi, alanın yanındaki yazı).

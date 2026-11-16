@@ -632,7 +632,12 @@ pub fn toggles<'a, Message: Clone + 'a>(
 ) -> Element<'a, Message> {
     let mut chips = iced::widget::Row::new().spacing(4);
     for (name, active, message) in items {
-        chips = chips.push(toggle(name, active, message));
+        // Each chip a form item as a check box is (key_focus.rs): Tab reaches it, Space or Enter turns it.
+        chips = chips.push(
+            super::key_focus(toggle(name, active, message.clone()))
+                .on_activate(message)
+                .radius(999.0),
+        );
     }
     chips.wrap().vertical_spacing(4).into()
 }

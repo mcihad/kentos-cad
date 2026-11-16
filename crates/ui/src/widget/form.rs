@@ -210,7 +210,8 @@ impl<'a, Message: 'a> Form<'a, Message> {
 
 impl<'a, Message: Clone + 'a> Form<'a, Message> {
     /// Katlanır bölüm başlığı: adı, açıkken aşağı, katlıyken sağa bakan ok ve satırın sonuna kadar çizgi; satırın
-    /// tamamı basılır, basınca `toggle` gider. Katlıyken bölümün satırlarını koymamak çağıranın işidir.
+    /// tamamı basılır, basınca `toggle` gider; Tab başlığa da ulaşır, Boşluk ya da Enter basar. Katlıyken bölümün
+    /// satırlarını koymamak çağıranın işidir.
     pub fn foldable_section(
         mut self,
         title: impl IntoFragment<'a>,
@@ -235,7 +236,9 @@ impl<'a, Message: Clone + 'a> Form<'a, Message> {
         .padding(Padding::ZERO)
         .width(Fill)
         .style(style::button::ghost)
-        .on_press(toggle);
+        .on_press(toggle.clone());
+        // A form item as a check box is (key_focus.rs): Tab reaches the heading, Space or Enter folds or opens it.
+        let heading = super::key_focus(heading).on_activate(toggle);
         self.rows.push(Line::Fold(heading.into()));
         self
     }

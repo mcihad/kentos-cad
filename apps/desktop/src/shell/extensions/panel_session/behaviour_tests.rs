@@ -243,12 +243,16 @@ fn the_keyboard_column_is_the_drawn_panels() {
         let with = reach(&mut app, body);
         let added = (with.focusables - base.focusables, with.inputs - base.inputs);
         let keys = behaviour::of(kind).expect("in the table").keys;
-        let expected = match keys {
-            Keys::Type => (1, 1),
-            Keys::Choose | Keys::Toggle => (1, 0),
-            Keys::Pointer | Keys::Shown => (0, 0),
+        let (reached, typed) = (added.0 > 0, added.1 > 0);
+        let measured = match keys {
+            Keys::Type => reached && typed,
+            Keys::Choose | Keys::Toggle | Keys::Press => reached && !typed,
+            Keys::Pointer | Keys::Shown => added == (0, 0),
         };
-        assert_eq!(added, expected, "{kind}: {keys:?}");
+        assert!(
+            measured,
+            "{kind}: {keys:?}, focusables and inputs added {added:?}"
+        );
     }
 }
 

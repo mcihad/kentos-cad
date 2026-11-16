@@ -1,6 +1,6 @@
 //! The dock's Eklenti tab drawn (docs/adr/8057 §24): the panel shown, its components as KentOS draws them, the open
-//! panels' tabs above it; a command's rows as a table, a tree or cards. What the panels hold and what the user does with
-//! them are panels.rs's.
+//! panels' tabs above it; a command's rows as a table, a tree or cards. What the panels hold and what the user does
+//! with them are panels.rs's.
 
 use iced::widget::{column, container, row, scrollable};
 use iced::{Element, Fill};
@@ -341,13 +341,14 @@ impl App {
                         value,
                     )
                     .id(field_id(id));
-                    let mut choose = iced::widget::button(label::body("Seç…"))
+                    let choose = iced::widget::button(label::body("Seç…"))
                         .style(kentos_ui::style::button::secondary);
-                    if on(id) {
+                    let pick = on(id).then(|| event(PanelEvent::PickFile(id.clone())));
+                    if pick.is_some() {
                         let typing = id.clone();
                         field = field.on_input(move |t| event(PanelEvent::Text(typing.clone(), t)));
-                        choose = choose.on_press(event(PanelEvent::PickFile(id.clone())));
                     }
+                    let choose = keyed(choose.on_press_maybe(pick.clone()).into(), pick);
                     form = form.field(
                         words.clone(),
                         iced::widget::row![field, choose]
@@ -682,14 +683,19 @@ impl App {
                     };
                     let mut line = row![count].spacing(8).align_y(iced::Center);
                     if picked > 0 {
-                        line = line.push(words::ghost(
-                            "Temizle",
-                            Some(event(PanelEvent::Unpick(id.clone()))),
+                        let unpick = event(PanelEvent::Unpick(id.clone()));
+                        line = line.push(keyed(
+                            words::ghost("Temizle", Some(unpick.clone())),
+                            Some(unpick),
                         ));
                     }
+                    let take = event(PanelEvent::Pick(id.clone()));
                     let cell = column![
                         line,
-                        words::secondary("Seçimi al", Some(event(PanelEvent::Pick(id.clone())))),
+                        keyed(
+                            words::secondary("Seçimi al", Some(take.clone())),
+                            Some(take)
+                        ),
                     ]
                     .spacing(4);
                     form = form.field(words.clone(), cell);
@@ -714,11 +720,12 @@ impl App {
                     // jumped (real window, 15 November 2026); the run's line under the form names it.
                     let on = (p.running.is_none() && why.is_none() && on(id))
                         .then(|| event(PanelEvent::Press(id.clone())));
-                    form = form.row(if *primary {
-                        words::primary(words.clone(), on)
+                    let face = if *primary {
+                        words::primary(words.clone(), on.clone())
                     } else {
-                        words::secondary(words.clone(), on)
-                    });
+                        words::secondary(words.clone(), on.clone())
+                    };
+                    form = form.row(keyed(face, on));
                 }
                 Component::Table {
                     id, label: words, ..
@@ -920,6 +927,20 @@ impl App {
         };
         rows_table(p, id, words, columns, rows, "Satır yok.")
     }
+}
+
+/// A panel's button the keyboard presses too (docs/adr/8057 §71): Tab reaches it, Space or Enter presses it, as
+/// KentOS's form items take the keyboard (`key_focus`); one that cannot be pressed takes no focus, but one pressed
+/// keeps it while its command runs (Tab goes on from it; the real window lost it to the window's start). KentOS's
+/// other windows' buttons are not in Tab's round; the panel's are, as nothing else presses a panel's second button.
+pub(super) fn keyed<'a>(
+    button: Element<'a, Message>,
+    press: Option<Message>,
+) -> Element<'a, Message> {
+    kentos_ui::widget::key_focus(button)
+        .on_activate_maybe(press)
+        .hold()
+        .into()
 }
 
 /// Rows as a table, a page of [`PAGE_ROWS`] with its pager: a command's (a table component's) or a relation list's

@@ -50,10 +50,15 @@ pub(super) fn point_field<'a>(
         }
         pick = pick.on_press(event(PanelEvent::PickPoint(id.to_owned())));
     }
-    let pick = tip(
-        pick,
-        Tip::new("Haritadan seç").body("Noktayı haritada gösterin (kenetlenir); Esc vazgeçer."),
-        iced::widget::tooltip::Position::Top,
+    let press = usable.then(|| event(PanelEvent::PickPoint(id.to_owned())));
+    let pick = super::panel_view::keyed(
+        tip(
+            pick,
+            Tip::new("Haritadan seç").body("Noktayı haritada gösterin (kenetlenir); Esc vazgeçer."),
+            iced::widget::tooltip::Position::Top,
+        )
+        .into(),
+        press,
     );
     row![field, pick]
         .spacing(6)
@@ -81,18 +86,23 @@ pub(super) fn shape_field<'a>(
     let mut clear = button(icon(Icon::Close).size(12.0).tone(Tone::Inherit))
         .padding([5, 8])
         .style(kentos_ui::style::button::secondary);
-    if usable {
-        draw = draw.on_press(event(PanelEvent::DrawShape(id.to_owned())));
-        if drawn.is_some() {
-            clear = clear.on_press(event(PanelEvent::ClearShape(id.to_owned())));
-        }
-    }
-    let draw = tip(
-        draw,
-        Tip::new("Haritada çiz")
-            .body("Şekli haritada çizin (kenetlenir); Enter ya da çift tık bitirir, Esc vazgeçer."),
-        iced::widget::tooltip::Position::Top,
+    let drawing = usable.then(|| event(PanelEvent::DrawShape(id.to_owned())));
+    let clearing =
+        (usable && drawn.is_some()).then(|| event(PanelEvent::ClearShape(id.to_owned())));
+    draw = draw.on_press_maybe(drawing.clone());
+    clear = clear.on_press_maybe(clearing.clone());
+    let draw = super::panel_view::keyed(
+        tip(
+            draw,
+            Tip::new("Haritada çiz").body(
+                "Şekli haritada çizin (kenetlenir); Enter ya da çift tık bitirir, Esc vazgeçer.",
+            ),
+            iced::widget::tooltip::Position::Top,
+        )
+        .into(),
+        drawing,
     );
+    let clear = super::panel_view::keyed(clear.into(), clearing);
     row![iced::widget::container(text).width(iced::Fill), draw, clear]
         .spacing(6)
         .align_y(iced::Alignment::Center)

@@ -93,10 +93,14 @@ pub(super) fn attachments_view<'a>(
                 column![label::body(name), label::muted(view.source.clone())]
                     .spacing(2)
                     .width(Fill),
-                button(label::body("Aç"))
-                    .on_press(open)
-                    .padding([4, 10])
-                    .style(kentos_ui::style::button::secondary),
+                super::panel_view::keyed(
+                    button(label::body("Aç"))
+                        .on_press(open.clone())
+                        .padding([4, 10])
+                        .style(kentos_ui::style::button::secondary)
+                        .into(),
+                    Some(open),
+                ),
             ]
             .spacing(8)
             .align_y(iced::Alignment::Center),
@@ -104,10 +108,15 @@ pub(super) fn attachments_view<'a>(
     }
     if app.attachable(slot) {
         let add = |words: &'static str, e: Event| {
-            button(label::body(words))
-                .on_press(Message::Attachment(e))
-                .padding([4, 10])
-                .style(kentos_ui::style::button::secondary)
+            let press = Message::Attachment(e);
+            super::panel_view::keyed(
+                button(label::body(words))
+                    .on_press(press.clone())
+                    .padding([4, 10])
+                    .style(kentos_ui::style::button::secondary)
+                    .into(),
+                Some(press),
+            )
         };
         list = list.push(
             row![
