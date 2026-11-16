@@ -162,6 +162,12 @@ impl App {
                 .fold(StatusBar::new(), |bar, cell| {
                     bar.push(cell.map(Message::Sheet))
                 });
+            // Çalışan işler (works/, docs/adr/8057 §102) goes on with a sheet in front: Asistan or an agent may be at
+            // work meanwhile.
+            let bar = match self.works_cell(true) {
+                Some(cell) => bar.separator().push(cell),
+                None => bar,
+            };
             return container(bar)
                 .height(kentos_ui::widget::status_bar::height())
                 .into();
@@ -375,6 +381,10 @@ impl App {
                     .push(ContextMenu::new(cell, move |_| self.crs_cell_menu()));
             }
         }
+        // Çalışan işler (works/, docs/adr/8057 §102): while something runs in the background, whoever started it.
+        if let Some(cell) = self.works_cell(fit >= 4) {
+            bar = bar.separator().push(cell);
+        }
         // Eklenti hatası (docs/adr/8057 §4): while an extension is in trouble, drawing or none.
         if let Some(cell) = self.extension_trouble_cell() {
             bar = bar.separator().push(cell);
@@ -581,6 +591,10 @@ impl App {
             if fit < 2 {
                 width += SEPARATOR + cell(&crate::crs::project_name(doc.settings()), true);
             }
+        }
+        // Çalışan işler: its icon and its words, the count alone from the step the cloud cells lose theirs.
+        if let Some(words) = self.works_words(fit >= 4) {
+            width += SEPARATOR + cell(&words, true);
         }
         width += self.cloud_cells_width(fit < 4, size);
         width + SEPARATOR + if fit < 1 { cell("wgpu", true) } else { 35.0 }

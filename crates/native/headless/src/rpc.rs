@@ -121,6 +121,17 @@ impl Jobs {
         job.cancel();
         Ok(job.status(doc))
     }
+
+    /// The job as it is now, without writing it: a view of the jobs going on (the desktop's Çalışan işler).
+    pub fn peek(&self, id: &str) -> Option<JobStatus> {
+        self.list.get(id).map(Job::peek)
+    }
+
+    /// Asks the job to stop without writing it first, as [`Jobs::cancel`] would a computed one: its result is dropped
+    /// when it is next asked (`status`, `wait`); one already written stays. False when there is no such job.
+    pub fn stop(&mut self, id: &str) -> bool {
+        self.list.get_mut(id).map(Job::cancel).is_some()
+    }
 }
 
 /// Answers `method` with `params` on `doc`; the job requests are refused

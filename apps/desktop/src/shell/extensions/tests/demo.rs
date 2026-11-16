@@ -481,6 +481,8 @@ fn an_audit_rules_findings_are_listed_shown_and_fixed_as_one_step() {
         revision: gis.document.as_ref().unwrap().model.revision(),
         drawing: None,
         facts: None,
+        by: crate::works::By::You,
+        started: std::time::Instant::now(),
     });
     let model = &gis.document.as_ref().unwrap().model;
     let facts = kentos_processing::audit_job::facts_of(model, &|| false).expect("the facts");
@@ -1270,6 +1272,8 @@ fn a_disabled_extensions_panel_and_audit_fixes_go_with_it() {
         revision: 0,
         drawing: None,
         facts: None,
+        by: crate::works::By::You,
+        started: std::time::Instant::now(),
     });
     assert_eq!(
         gis.ext_audit_fix_refused(0),

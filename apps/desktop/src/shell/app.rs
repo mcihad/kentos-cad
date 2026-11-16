@@ -581,6 +581,8 @@ pub enum Message {
     Python(crate::python::Event),
     /// Asistan's events (assistant/, docs/adr/8056 §4).
     Assistant(crate::assistant::Event),
+    /// Çalışan işler's buttons (works/, docs/adr/8057 §102).
+    Works(crate::works::Event),
     /// Eklentiler's window and what the extensions add (docs/adr/8057 §3).
     Extensions(crate::extensions::Event),
     /// Esc in the empty command line: the running command ends.

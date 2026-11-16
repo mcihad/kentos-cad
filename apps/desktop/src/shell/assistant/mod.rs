@@ -136,6 +136,15 @@ struct Running {
     later: Option<Later>,
 }
 
+/// A turn under way as Çalışan işler sees it: since when, how many tool calls wait for the user's Onayla, and whether
+/// it waits for a work it started (an audit, a trial, a job).
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct Turning {
+    pub(crate) started: Instant,
+    pub(crate) waiting: usize,
+    pub(crate) later: bool,
+}
+
 /// A tool call of the model.
 struct Call {
     id: String,
@@ -486,6 +495,8 @@ impl App {
         let mut turn =
             kentos_agent::start_turn_counting(&profile, key, conversation, tools, text, spent);
         let events = turn.take_events();
+        // The commands' titles read on their own thread now, for Çalışan işler to name the jobs the turn starts.
+        let _ = kentos_headless::command_title("");
         self.assistant.running = Some(Running {
             message,
             turn,
@@ -505,9 +516,9 @@ impl App {
         Task::run(heard, move |event| msg(Event::Agent(message, event)))
     }
 
-    /// Durdur, Yeni sohbet: the turn stops; what it ran on the drawing stays in the history. An extension audit or a
-    /// job its call waits for is asked to stop too: the user stopped the agent's work.
-    fn assistant_stop(&mut self) {
+    /// Durdur, Yeni sohbet, Çalışan işler's Durdur (works/): the turn stops; what it ran on the drawing stays in the
+    /// history. An extension audit or a job its call waits for is asked to stop too: the user stopped the agent's work.
+    pub(crate) fn assistant_stop(&mut self) {
         if let Some(running) = self.assistant.running.take() {
             running.turn.cancel();
             self.assistant.history = Some(running.turn.conversation());
@@ -515,6 +526,16 @@ impl App {
                 self.assistant_stop_pending(later.pending);
             }
         }
+    }
+
+    /// The turn under way, as Çalışan işler lists it (works/, docs/adr/8057 §102).
+    pub(crate) fn assistant_turn(&self) -> Option<Turning> {
+        let running = self.assistant.running.as_ref()?;
+        Some(Turning {
+            started: running.started,
+            waiting: running.waiting.len(),
+            later: running.later.is_some(),
+        })
     }
 
     fn assistant_heard(&mut self, message: u64, event: kentos_agent::Event) -> Task<Message> {

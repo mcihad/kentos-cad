@@ -80,6 +80,9 @@ impl App {
                     ),
                 );
                 self.python.link = Some(open);
+                // The commands' titles read on their own thread now, for Çalışan işler to name an agent's jobs
+                // (works/): until they are read a job says its command's id.
+                let _ = kentos_headless::command_title("");
                 Task::batch([task, super::view::follow()])
             }
             Err(e) => {
@@ -314,9 +317,14 @@ impl App {
         // A trial (extensions/trial.rs, §37) reads none: it runs on a synthetic drawing of its own.
         match method {
             "trial" => {
-                return self
+                let started = self
                     .ext_trial_start(&params)
-                    .map_err(|(code, why)| (code.to_owned(), why));
+                    .map_err(|(code, why)| (code.to_owned(), why))?;
+                // Asked by an agent on the link or by Asistan: Çalışan işler says which (works/).
+                if let Some(trial) = &mut self.extensions.trial {
+                    trial.by = crate::works::By::of(who);
+                }
+                return Ok(started);
             }
             "trial_report" => return Ok(self.ext_trial_report()),
             "audits" => return Ok(self.ext_audit_rules()),
@@ -338,7 +346,13 @@ impl App {
                     )
                 })?;
                 let answer = if method == "audit" {
-                    self.ext_audit_start_rule(rule)
+                    let started = self.ext_audit_start_rule(rule);
+                    if started.is_ok()
+                        && let Some(audit) = &mut self.extensions.audit
+                    {
+                        audit.by = crate::works::By::of(who);
+                    }
+                    started
                 } else {
                     let finding = params.get("finding").and_then(Value::as_u64).unwrap_or(0);
                     self.ext_audit_fixed(rule, usize::try_from(finding).unwrap_or(0))
@@ -402,6 +416,7 @@ impl App {
                 // Whether it ran a call's execution to its end: a call's answer says it; a job's, by the op it was
                 // started with (kept until it ends).
                 let job = answer.get("id").and_then(Value::as_str).map(str::to_owned);
+                let session = doc.session;
                 let executed = match method {
                     "call" => {
                         execute
@@ -415,11 +430,21 @@ impl App {
                         if method == "start" && execute && going {
                             self.python.executing.insert(id.to_owned());
                         }
+                        // Who started it, on which drawing and when, for Çalışan işler (works/, docs/adr/8057 §102).
+                        if method == "start" && going {
+                            self.python.job_starts.insert(
+                                id.to_owned(),
+                                crate::works::JobStart::of(
+                                    who, session, !execute, &params, &answer,
+                                ),
+                            );
+                        }
                         let executed = phase == "done"
                             && (self.python.executing.contains(id)
                                 || (method == "start" && execute));
                         if !going {
                             self.python.executing.remove(id);
+                            self.python.job_starts.remove(id);
                         }
                         executed
                     }),

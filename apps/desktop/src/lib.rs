@@ -234,6 +234,9 @@ mod assistant;
 // Eklentiler: the user's extension registry, its manager and what the extensions add (docs/adr/8057 §3).
 #[path = "shell/extensions/mod.rs"]
 mod extensions;
+// Çalışan işler: the background work in one list, whoever started it (docs/adr/8057 §102).
+#[path = "shell/works/mod.rs"]
+mod works;
 
 // Each discipline's part of the shell: its windows' state, messages and windows (docs/adr/8054 §6).
 #[path = "arch/state.rs"]

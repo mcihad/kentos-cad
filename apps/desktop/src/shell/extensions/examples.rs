@@ -63,6 +63,12 @@ impl App {
             running: Some(Arc::clone(&stop)),
             report: None,
             by_user,
+            by: if by_user {
+                crate::works::By::You
+            } else {
+                crate::works::By::Agent
+            },
+            started: std::time::Instant::now(),
         });
         let head = json!({ "kind": "examples", "extension": { "id": ext, "version": version } });
         let task = crate::python_setup::in_background_deep(

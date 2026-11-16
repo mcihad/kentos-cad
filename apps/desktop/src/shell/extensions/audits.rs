@@ -89,6 +89,10 @@ pub(crate) struct AuditState {
     /// stamp (`drawing_stamp`) and the facts' digest (`digest_of`).
     pub(crate) drawing: Option<String>,
     pub(crate) facts: Option<String>,
+    /// Who asked for the run and when it began, for Çalışan işler (works/): the user, or an agent's request
+    /// (agents.rs says which).
+    pub(crate) by: crate::works::By,
+    pub(crate) started: Instant,
 }
 
 /// What a rule read, worked out with its facts on the run's thread.
@@ -248,6 +252,8 @@ impl App {
             revision,
             drawing: None,
             facts: None,
+            by: crate::works::By::You,
+            started: Instant::now(),
         });
         self.bottom_tab = crate::bottom::BottomTab::ExtAudit;
         self.command_expanded = true;

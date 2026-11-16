@@ -120,6 +120,7 @@ fn each_program_has_its_own_bottom_tabs() {
             Audit,
             ExtAudit,
             CadInspection,
+            Works,
             Messages,
             Python
         ]
@@ -138,6 +139,7 @@ fn each_program_has_its_own_bottom_tabs() {
             ExtAudit,
             CadInspection,
             ServiceInfo,
+            Works,
             Messages,
             Python
         ]
@@ -146,10 +148,10 @@ fn each_program_has_its_own_bottom_tabs() {
     let gis = started(GIS).bottom_tabs();
     assert_eq!(gis.len(), BottomTab::ALL.len() - 2);
     assert!(!gis.contains(&Audit) && !gis.contains(&CadInspection) && gis.contains(&Chart));
-    // Komut geçmişi, Koordinat listesi, Uyarılar and Python are every program's.
+    // Komut geçmişi, Koordinat listesi, Çalışan işler, Uyarılar and Python are every program's.
     for program in PROGRAMS {
         let app = started(program);
-        for tab in [History, Coords, Messages, Python] {
+        for tab in [History, Coords, Works, Messages, Python] {
             assert!(app.shows_bottom_tab(tab), "{program:?} {tab:?}");
         }
     }

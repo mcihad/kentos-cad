@@ -176,6 +176,7 @@ impl App {
             | BottomTab::Audit
             | BottomTab::ExtAudit
             | BottomTab::ServiceInfo
+            | BottomTab::Works
             | BottomTab::Python => None,
         }
     }

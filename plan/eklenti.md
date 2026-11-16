@@ -1220,15 +1220,17 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   ayarlardan ayrı; kurum ilkesinin "dış yapay zekâya veri" izni Asistan'ı da bağlar, izinli yapay zekâ adresleriyle
   (16 Kasım); kalan: yetki sınıflarının ayrımı [PY-AI-11], izinli sağlayıcıya öznitelik değerlerini göndermeme
   seçeneği [PY-AI-13].*
-- [ ] **Yüzeyler:** uygulama içi ajan (Asistan) ve dış MCP aynı komut, belge kapsamı, gizli alan ayıklaması, önizleme ve
+- [x] **Yüzeyler:** uygulama içi ajan (Asistan) ve dış MCP aynı komut, belge kapsamı, gizli alan ayıklaması, önizleme ve
   izinleri kullanır [EKL-06]; çalışan işler, maliyet/istek bütçesi ve gönderilecek çizim verisinin kapsamı kullanıcıya
   anlaşılır gösterilir. Sürümlü Python API referansı, kavramsal başlangıç, KentOS UI ve İşlemler rehberi, paketleme, hata
   ayıklama, sürüm geçişi ve SDK sürümüyle test edilen çalışan örnekler; çevrimdışı belge paketi [EKL-06].
-  — *kısmen (ADR 8057 §22, §30; ADR 8056 §6): Asistan ve masaüstüne bağlı MCP aynı atölye araçlarını kullanır, SDK
-  paketi tek okumada; ajanın token sınırı sohbet başına ve günlük, sohbetin toplamı her yanıtın altında, günün
-  harcaması ayarlarda (16 Kasım); sürümlü API başvurusu ve çevrimdışı belge paketi (ADR 8057 §101): `kentos kek docs
+  — *tamam (ADR 8057 §22, §30, §101, §102; ADR 8056 §6): Asistan ve masaüstüne bağlı MCP aynı atölye araçlarını
+  kullanır, SDK paketi tek okumada; ajanın token sınırı sohbet başına ve günlük, sohbetin toplamı her yanıtın altında,
+  günün harcaması ayarlarda (16 Kasım); sürümlü API başvurusu ve çevrimdışı belge paketi (§101): `kentos kek docs
   <klasör>` bu KentOS'un SDK'sını dosya dosya yazar (rehber ve `llms.txt`, Python imzaları, bütün şemalar, kodlar, iş
-  akışı, ikonlar, doğrulamadan geçen örnek eklenti, sürüm kaydı, Türkçe dizin); kalan: çalışan işlerin tek görünümü.*
+  akışı, ikonlar, doğrulamadan geçen örnek eklenti, sürüm kaydı, Türkçe dizin); çalışan işler tek listede (§102):
+  durum çubuğunda yalnız iş varken bir hücre ve her programda "Çalışan işler" sekmesi; her işin başlatanı (Siz,
+  Asistan, bağlı ajan), ilerlemesi ve kendi Durdur'u; ajanın hesaplanmış işi yazılmadan durdurulur.*
 - [ ] **API ailesi** (adlar SDK uyumluluk ADR'sinde kesinleşir): `python.environments.*`, `extensions.*`
   (inspect/package/check/install/prepare/enable/disable/run/update/uninstall), `extensions.catalog.*`, `ui.sessions.*`,
   `processing.tools.*`, `processing.models.*`/`jobs.*`. Okuma/doğrulama/plan çağrıları yazmaz; indirme/kurma ayrı açık

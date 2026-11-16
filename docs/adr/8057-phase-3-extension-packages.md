@@ -5008,3 +5008,51 @@ masaüstü `extensions/environment.rs` (`Context::not_to_build`); komut satırı
 - **Ölçüm:** 33 dosya, 444 KB; içindeki örnek eklenti `kentos kek verify`'dan geçer (kuru koşu 9 katkı, kalıntı yok).
 - **Sınamalar:** komut satırı 1 (her parça kendi dosyasında, JSON'lar okunur, sürüm ve dizin, örnek eklenti doğrulamadan
   geçer, paket yeniden yazılır, yabancı klasör reddedilir, güvenli yol).
+
+## §102. Çalışan işler: arka plandaki işler tek listede, kimin başlattığıyla (`ADIM 21`, EKL-06)
+
+**16 Kasım.** Kod: masaüstü `works/` (yeni: `mod.rs`, `sources.rs`, `view.rs`, `tests.rs`), durum çubuğu
+(`view/status.rs`), alt panel (`bottom.rs`, `module_surfaces.rs`, `layout.rs`), ajan bağlantısı (`python/agents.rs`,
+`python/mod.rs`), İşlemler (`processing/background.rs`, `mod.rs`), Asistan (`assistant/mod.rs`), eklenti denetimi ve
+deneme koşusu (`audits.rs`, `trial.rs`, `examples.rs`); headless `rpc.rs` (`Jobs::peek`, `Jobs::stop`), `lib.rs`
+(`command_title`).
+
+- **Sorun.** EKL-06 "çalışan işler … kullanıcıya anlaşılır gösterilir" ister. Arka plandaki işler dağınıktı: İşlemler
+  koşusu penceresinde, eklenti komutu bir bildirimde, denetim kendi sekmesinde, Python kurulumları ayarlarda, Asistan'ın
+  turu panelinde. Bağlı bir ajanın (MCP) başlattığı iş ise hiçbir yerde görünmüyordu; hesaplanıp ajanın sormasını
+  bekleyen bir yazma işi de. Kullanıcı çiziminde kimin ne yaptığını göremiyor, durduramıyordu.
+- **Karar: tek liste ve durum çubuğunda bir hücre.** Hücre yalnız iş varken görünür (tek işte adı ve yüzdesi, birden
+  çokta sayısı, dar çubukta yalnız sayı); tıklanınca her programın alt panelindeki "Çalışan işler" sekmesi açılır. Her
+  iş bir satır: adı, türü, **başlatan** (Siz, Asistan, Bağlı ajan), başlangıç saati, ilerleme çubuğu ve adımı, Göster
+  (işin kendi sekmesi ya da penceresi) ve Durdur. Sıra: önce kullanıcının uzun işleri, sonra Asistan'ınkiler ve
+  ajanlarınkiler.
+- **Kaynak: işin kendi durumu, ayrı kayıt yok.** Liste her gösterilişinde işlerin kendi durumlarından okunur (İşlemler
+  koşuları, eklenti komutları, denetim, deneme koşusu, ajan işleri, Asistan'ın turu, konsoldaki kod, KentOS'un Python
+  kurulumu, kişisel ortam, eklenti ortamları). Kayıt defteri tutulmadığı için biten iş listede kalamaz; yeni bir arka
+  plan işi `App::works`'e bir okuyucu ekleyerek girer.
+- **Başlatan:** ajan işi, denetim ve deneme koşusu kimin isteğiyle başladığını taşır (bağlantının ve Asistan'ın
+  isteklerini ayıran `who`); geri kalanları yalnız kullanıcı başlatır. Asistan'ın turunu kullanıcı başlatır; turun
+  başlattığı iş "Asistan" yazar.
+- **Durdur işin kendi durdurmasıdır:** kendi penceresindeki, bildirimindeki, sekmesindeki düğmeyle aynı işleyici ve
+  aynı sonuç (yazdığı geri alınır, günlüğü ve bildirimi). Ajan işinde yeni yol: iş önce durdurulur, sonra kendi
+  çiziminde sorulur; hesaplanmış ama yazılmamış sonuç **yazılmadan** düşer (`Jobs::cancel` önce sorduğu için
+  hesaplanmışı yazardı). Ajan bir sonraki sorusunda `cancelled` duyar, Asistan'ın bekleyen çağrısı da.
+- **Bekleyen iş dürüst söylenir:** hesaplanıp ajanı bekleyen yazma "Hesaplandı; yazmak için ajanı bekliyor", plan "Plan
+  hazır; ajanı bekliyor"; çubuğu dolu, hareketli değil. Ajan hiç sormazsa iş listede kalır: sonucu gerçekten bekliyor ve
+  kullanıcı durdurabilir.
+- **Adlar Türkçe, arayüz beklemeden:** ajan işi komutun katalogdaki adıyla görünür ("Kapalı alan oluştur"). Katalog bir
+  kez, kendi iş parçacığında okunur (bağlantı açılırken ve Asistan'ın turu başlarken); okunana dek komutun kimliği
+  yazılır. **Ölçüm:** ilk sürüm kataloğu arayüz iş parçacığında okuyordu; debug derlemesinde ilk ajan işi 2 saniye geç
+  yanıtlandı (art arda gönderilen iki işin başlangıcı 21:47:05 ve 21:47:07). Şimdi ikisi aynı saniyede.
+- **Kapsam dışı (bilerek):** kendi penceresi açıkken çalışan işler (Topoloji, Dizi, CAD denetimi …: penceresi gösterir,
+  Durdur'u oradadır) ve kataloğun sunucu işleri (sunucuda çalışır, Katalog bölmesinde listelenir). Sekmenin altındaki
+  not bunu söyler.
+- **Gerçek pencere (Xvfb, KentOS GIS, Vitrin'in çizimi):** bağlı ajan iki iş (yazma ve plan) ve Vitrin'in deneme
+  koşusunu başlattı: hücre "▷ 3", sekmede üç satır, ipucu üçünü sayar; deneme koşusu yaklaşık 5 saniyede bitip listeden
+  düştü. Yazma işinde Durdur: bildirim, çizime bir şey yazılmadı, ajan sorunca `"phase": "cancelled"`. Plan işi ajan
+  sorunca bitti, liste boşaldı. İlk koşuda üç satırla kaydırma çubuğu Durdur düğmelerini örtüyordu ve düğmesi az satırın
+  çubuğu kayıyordu: çubuk satırların yanına alındı, düğme alanı sabit genişlikte.
+- **Sınamalar:** masaüstü 4 (ajan işi: başlatan, bekleme sözü, Durdur'da yazılmaması ve `cancelled`; Asistan'ın ve
+  ajanın ayrımı, hücrenin sayımı, sorulan işin listeden çıkması, Göster; Python kurulumunun, kişisel ortamın ve eklenti
+  ortamının kendi Durdur'u, Durdur'u olmayan işte düğme olmaması; hücre ve sekme); her programın sekmelerinde "Çalışan
+  işler" (`module_surface_tests`).

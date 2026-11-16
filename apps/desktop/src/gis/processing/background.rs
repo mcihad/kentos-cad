@@ -100,6 +100,10 @@ pub(crate) struct Running {
     /// The drawing it was started on (the open drawing's `session`): the
     /// answer applies to no other.
     pub session: u64,
+    /// When it began, and how far it last said it is (its share and the tool's step): Çalışan işler reads them
+    /// (works/), whether its window is open or not.
+    pub started: Instant,
+    pub progress: Option<(f64, String)>,
     /// Asks the tool to stop.
     stop: Arc<AtomicBool>,
     answer: Arc<Mutex<Option<Answer>>>,
@@ -229,6 +233,8 @@ fn start<M: Send + 'static>(
         id,
         work,
         session,
+        started: Instant::now(),
+        progress: None,
         stop,
         answer,
     };

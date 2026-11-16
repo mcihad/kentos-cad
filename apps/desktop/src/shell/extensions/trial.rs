@@ -47,6 +47,10 @@ pub(crate) struct TrialState {
     pub(crate) report: Option<Value>,
     /// The user started it (the tool examples from Eklentiler, examples.rs): a toast and the log say how it went.
     pub(crate) by_user: bool,
+    /// Who asked for it and when it began, for Çalışan işler (works/): an agent's request says which agent
+    /// (agents.rs).
+    pub(crate) by: crate::works::By,
+    pub(crate) started: Instant,
 }
 
 /// A rule's findings as a trial reports them: each by the object's place in the agent's list (`feature`), its fix's
@@ -218,6 +222,8 @@ impl App {
             running: Some(Arc::clone(&stop)),
             report: None,
             by_user: false,
+            by: crate::works::By::Agent,
+            started: Instant::now(),
         });
         let head = json!({
             "extension": { "id": ext, "version": manifest.version.to_string() },
