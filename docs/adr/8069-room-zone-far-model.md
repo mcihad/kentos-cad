@@ -4,7 +4,7 @@
   IFC-03; uygulama sırasında B8. Bu ilk adım ilk kabulün balkon ölçütünü sağlar; emsal zonları, gruplar, mahal hacmi ve
   IFC zonları sonraki adımlardır (§4).
 - **Bağlam:** ADR [8030](8030-emsal-taks-zoning-badge-and-table.md) (emsal ve TAKS: mahal mahal sınıflama, %30 sınırı,
-  tablo), [8029](8029-paiy-area-definitions.md) (yönetmeliğin alanları), [8031](8031-condominium-units-annexes-and-land-shares.md)
+  tablo), [8029](8029-regulation-areas-of-independent-units.md) (yönetmeliğin alanları), [8031](8031-condominium-units-annexes-and-land-shares.md)
   (bağımsız bölüm, eklenti), [0773](0773-building-program-units-and-design-brief.md) (bina programı).
 - **Dayanak:** Planlı Alanlar İmar Yönetmeliği 22/1-l (değişik RG 25/7/2019-30842; değişik ibare RG 11/7/2021-31538), 4/1-ğ-3
   (bağımsız bölüm net alanı), 5/8 (emsal harici %30).
