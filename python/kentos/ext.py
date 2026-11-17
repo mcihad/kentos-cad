@@ -301,8 +301,9 @@ class PanelSession:
         picker's persistent ids; None empties it), ``options`` (a choice's or a multiple choice's: values, or dicts
         with ``value`` and ``label``; a chosen value no longer among them is let go), ``enabled`` (buttons and typed
         fields), ``visible`` (any component with an id; a hidden required field is not asked of the user),
-        ``text`` (a ``text`` component's words) and ``image`` (an ``image`` component's picture: a PNG's bytes, e.g.
-        ``fig.savefig(buf, format="png")``, or the path of a PNG file; None takes it away; at most 4096 pixels a side)."""
+        ``text`` (a ``text`` component's words) and ``image`` (an ``image`` component's picture: a PNG's or a JPEG's
+        bytes, e.g. ``fig.savefig(buf, format="png")`` or a photo, or the path of such a file; None takes it away; at
+        most 4096 pixels a side)."""
         params: dict[str, Any] = {"id": str(id)}
         if value is not _KEEP:
             params["value"] = _json_value(value)

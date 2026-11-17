@@ -1309,7 +1309,8 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
 
 [argon ADIM 22; EKL-03; PY-UI-01…18]
 
-- [ ] **Bileşen envanteri ve şeması** — *ilk dilim (ADR 8057 §25): kapsam raporu: aşağıdaki listenin her maddesi
+- [x] **Bileşen envanteri ve şeması** — *tamam (17 Kasım, ADR 8057 §115: görsel önizleme JPEG de alır; envanterin
+  her satırı panelde var ya da host yüzeyi, sınırlar tabloda yazılı). İlk dilim (ADR 8057 §25): kapsam raporu: aşağıdaki listenin her maddesi
   panelde var / KentOS'ta bileşeni var ama bağlanmadı / yok / host yüzeyi; Kapı 1'in her türü raporda adıyla geçmeli
   (test); özel çizim bileşeni olmadığı sınır olarak yazılı. Bağlananlar (15 Kasım): tarih, saat, an, çoklu seçim,
   özet/ölçü, grafik (`dateField`, `timeField`, `dateTimeField`, `multiSelect`, `stats`, `chart`), katlanır bölüm

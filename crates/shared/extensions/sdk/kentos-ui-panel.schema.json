@@ -1600,7 +1600,7 @@
           "type": "object"
         },
         {
-          "description": "A picture its code gives (`ctx.panel.set(id, image=…)`, a PNG): a chart drawn in Python, a preview. `alt` says\nwhat it shows and stands in its place until the code gives one; `height` in pixels (80–600, none: 200), the\npicture fitted inside it.",
+          "description": "A picture its code gives (`ctx.panel.set(id, image=…)`, a PNG or a JPEG): a chart drawn in Python, a preview, a\nphoto. `alt` says what it shows and stands in its place until the code gives one; `height` in pixels (80–600,\nnone: 200), the picture fitted inside it.",
           "properties": {
             "alt": {
               "default": null,

@@ -888,9 +888,9 @@ def image(
     visible_when: str | None = None,
     tab: str | None = None,
 ) -> dict[str, Any]:
-    """A picture its code gives (`ctx.panel.set(id, image=…)`, a PNG): a chart drawn in Python, a preview. `alt` says
-    what it shows and stands in its place until the code gives one; `height` in pixels (80–600, none: 200), the
-    picture fitted inside it."""
+    """A picture its code gives (`ctx.panel.set(id, image=…)`, a PNG or a JPEG): a chart drawn in Python, a preview,
+    a photo. `alt` says what it shows and stands in its place until the code gives one; `height` in pixels (80–600,
+    none: 200), the picture fitted inside it."""
     out: dict[str, Any] = {"type": "image", "id": id}
     if label is not None:
         out["label"] = label

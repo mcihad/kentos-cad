@@ -1820,7 +1820,7 @@ bağlanmadı · *yok*: ikisi de yok · *host*: panel bileşeni değil, manifesti
 | | CRS/birim | var | `crsPicker` (KentOS'un sistemleri, değeri `EPSG:<kod>`, verilmezse çizimin sistemi; §45); birim `numberField`'ın `units`'i (KentOS'un sayı alanları gibi birimiyle yazılır: 0,03 km; kod alanın biriminde alır, §64) | |
 | | ilişki başvurusu | var | `relationPicker` (projenin bir ilişkisinin üst katmanının kayıtlarından adıyla seçilir; değeri kaydın kalıcı kimliği, ilişkinin alt alanının tuttuğu; §67) | |
 | Kaynak ve çıktı | dosya/eser seçici, ek | var | ek `attachments` (seçicinin tuttuğu kaydın fotoğrafları, belgeleri ve adresleri; Aç, KentOS'un Dosya ekle… ve Adres ekle…'si; §68); `filePicker` (okunacak dosya: yolu yazılır ya da bilgisayarın dosya penceresinden seçilir, §41; `save` ile yazılacak dosyanın yeri, §44) | `files.userSelected` ister, kaydetme yeri `files.userSelectedWrite` |
-| | görsel önizleme | var | `image` (kodun verdiği PNG, `ctx.panel.set(id, image=…)`; oranı korunur, §40) | yalnız PNG, en çok 4096 piksel kenar; JPEG sonraki dilim |
+| | görsel önizleme | var | `image` (kodun verdiği PNG ya da JPEG, `ctx.panel.set(id, image=…)`; oranı korunur, §40, §115) | en çok 4096 piksel kenar, boyutu başlığından okunur |
 | | çıktı hedefi | host | İşlemler aracının çıktısı (`sinkParameter`) | panel komutu çizime yazar |
 | Veri görünüşü | tablo | var | `table` (500 satır) | `uid`'li satır nesneyi gösterir |
 | | ağaç | var | `tree` (1–3 sütunla gruplar) | |
@@ -5457,3 +5457,20 @@ sınaması (her katkı, tek başına ve hepsi birden), masaüstü `extensions/te
   `total` ve `next.offset`. Bir sayfa 16 000 baytın altında; sayfalar sonuna dek okunduğunda her araç bir kez gelir.
 - **Sınamalar:** headless (dizin 50 araçlık sayfa, 16 000 baytın altında; `next.offset` ile sonuna dek her araç bir
   kez, sayısı `total`; aramanın iki sayfası farklı komutlarla, aynı toplamla).
+
+## §115. Panelin görseli fotoğrafı da gösterir: JPEG (`ADIM 22`, bileşen envanteri)
+
+**17 Kasım.** Kod: masaüstü `extensions/panel_image.rs` (`jpeg`, `within`); SDK rehberi (`sdk_pack.rs`), panelin şeması
+(`ui_panel.rs`, `sdk/kentos-ui-panel.schema.json`), Python `kentos/ext.py` ve `kentos/ui_panel.py` (belgeleri); SDK
+paketi yeniden üretildi.
+
+- **Sorun.** Bileşen envanterinin (§25) tek açık satırı görsel önizlemeydi: `image` yalnız PNG alıyordu ("JPEG sonraki
+  dilim"). Kaydın fotoğrafını panelde göstermek isteyen eklenti onu PNG'ye çevirmek zorundaydı; çoğu fotoğrafta bu
+  dosyayı katlarca büyütür.
+- **Karar:** `image` PNG'nin yanında JPEG de alır; KentOS'un kendi çözücüsüyle (zune-jpeg, sahibin onayıyla ADR 0092),
+  yeni bağımlılık yok. PNG gibi JPEG'in de boyutu çözülmeden önce çerçeve başlığından okunur: kenarı 4096'yı ya da
+  toplamı 8 milyon pikseli aşan görsel okunmadan reddedilir. Başka biçim "PNG ya da JPEG olmalı" diye, bozuk JPEG
+  "JPEG okunamadı" diye kodun sözlerine düşer.
+- **Sınamalar:** masaüstü 1 (8 × 4 fotoğraf çizilir; başlığı 5000 × 2 diyen JPEG çözülmeden reddedilir; kırpılmış JPEG
+  okunamadı der); var olan PNG sınaması başka biçimi GIF ile sınar.
+

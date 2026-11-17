@@ -432,9 +432,9 @@ pub enum Component {
         #[serde(default)]
         aggregate: Option<ChartAggregate>,
     },
-    /// A picture its code gives (`ctx.panel.set(id, image=…)`, a PNG): a chart drawn in Python, a preview. `alt` says
-    /// what it shows and stands in its place until the code gives one; `height` in pixels (80–600, none: 200), the
-    /// picture fitted inside it.
+    /// A picture its code gives (`ctx.panel.set(id, image=…)`, a PNG or a JPEG): a chart drawn in Python, a preview, a
+    /// photo. `alt` says what it shows and stands in its place until the code gives one; `height` in pixels (80–600,
+    /// none: 200), the picture fitted inside it.
     Image {
         id: String,
         #[serde(default)]

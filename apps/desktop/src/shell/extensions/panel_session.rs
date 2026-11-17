@@ -859,8 +859,8 @@ mod tests {
         }
     }
 
-    /// docs/adr/8057 §40: the code gives an `image` component a PNG (base64), checked before it is kept; null takes
-    /// it away; another component does not take one.
+    /// docs/adr/8057 §40, §115: the code gives an `image` component a PNG or a JPEG (base64), checked before it is
+    /// kept; null takes it away; another component does not take one.
     #[test]
     fn the_code_gives_an_image_component_its_picture() {
         let value = json!({ "format": ui_panel::FORMAT, "schemaVersion": ui_panel::VERSION, "title": "Görsel",
@@ -885,8 +885,8 @@ mod tests {
                 &json!({ "id": "grafik", "image": "eA==" }),
                 None
             ))
-            .contains("PNG olmalı"),
-            "not a PNG"
+            .contains("PNG ya da JPEG olmalı"),
+            "not a PNG nor a JPEG"
         );
         assert!(
             p.images.contains_key("grafik"),
