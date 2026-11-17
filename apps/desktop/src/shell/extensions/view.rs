@@ -938,7 +938,12 @@ fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a
         )));
     }
     if let Some(m) = manifest {
-        form = form.section("Paket").wide(label::body(m.summary.clone()));
+        form = form.section("Paket");
+        // Retired by its publisher: said before the user decides to install it (§119).
+        if let Some(d) = &m.deprecation {
+            form = form.wide(Banner::warning(retired_words(d, None).0));
+        }
+        form = form.wide(label::body(m.summary.clone()));
         if let Some(d) = &m.description {
             form = form.wide(label::caption(d.clone()));
         }

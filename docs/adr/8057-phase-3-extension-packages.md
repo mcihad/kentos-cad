@@ -5549,6 +5549,8 @@ sınamalar `catalog.rs`, `extensions/tests/retired.rs` (yeni).
   ve "Yerine geçeni bul" düğmesiyle: Bulunabilir listesi o kimlikle açılır. Katalog dizini (`kentos kek index`)
   emekliliği girdiye yazar; emekli olmayanın girdisinde alan yazılmaz, eski KentOS yeni alanı yok sayar (§86'nın
   kuralı). Ajanların ortak kataloğu da söyler (§113'ün `compatibility.deprecated`'ı).
+- **Kurmadan önce de:** kurulum incelemesi emekliliği paketin bilgisinden önce uyarır; eskimiş bir eklentiyi kuran
+  kişi bunu kurduktan sonra öğrenmez (gerçek pencere: inceleme ve kurulu ayrıntı, Yerine geçeni bul düğmesiyle).
 - **Kalan (katalog sunucusu):** bakıcı devri ve terk edilmiş paketin işaretlenmesi.
 - **Sınamalar:** eklenti paketi 1 (emekli paketin girdisi yerine geçeni adlandırır, gidiş-dönüşte aynı; emekli
   olmayanda alan yok); masaüstü 1 (sözler: yerine geçen yokken, kuruluyken, adıyla; emekli paket kurulur, manifesti
