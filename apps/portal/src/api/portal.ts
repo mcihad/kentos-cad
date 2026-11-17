@@ -47,6 +47,9 @@ import type {
   ProfessionalView,
   ProjectDetails,
   ProjectPage,
+  RetentionPage,
+  RetentionRunView,
+  RetentionSettings,
   SessionView,
   SigningRequestCreated,
   SigningTrust,
@@ -66,6 +69,8 @@ export type ListAsk = {
   q?: string;
   mine?: boolean;
   awaiting?: boolean;
+  /** The archive (closed dossiers past their period, docs/adr/9000 §21) instead of the working list. */
+  archived?: boolean;
   limit?: number;
   offset?: number;
 };
@@ -147,6 +152,9 @@ export const platform = {
   events: (limit = 100) => get<PlatformEventView[]>(`/v1/platform/events${query({ limit })}`),
   settings: () => get<PlatformSettings>('/v1/platform/settings'),
   setSettings: (edit: PlatformSettingsEdit) => put<PlatformSettings>('/v1/platform/settings', edit),
+  retention: () => get<RetentionPage>('/v1/platform/retention'),
+  setRetention: (input: RetentionSettings) => put<RetentionPage>('/v1/platform/retention', input),
+  runRetention: () => post<RetentionRunView>('/v1/platform/retention/run'),
 };
 
 /** The account itself (docs/adr/9000 §12): its sessions and its personal access tokens. */

@@ -137,6 +137,7 @@ const DOSSIER_LIST: &[P] = &[
     P("q", "string", false, "Numara, başlık, ada/parsel ya da kişi adında arama."),
     P("mine", "boolean", false, "Yalnız çağıranın sorumlu olduğu dosyalar."),
     P("awaiting", "boolean", false, "Yalnız çağıran tarafın sırası olan dosyalar."),
+    P("archived", "boolean", false, "Arşiv: süresi dolunca arşive geçen kapanmış dosyalar (çalışma listesi yerine)."),
     P("limit", "integer", false, "En çok kaç dosya (1–200, varsayılan 50)."),
     P("offset", "integer", false, "Kaç dosya atlanacak."),
 ];
@@ -494,6 +495,15 @@ pub(super) fn ops() -> Vec<Op> {
              hafta sonuna ya da tam günlük bir tatile denk gelirse süre ilk iş gününe uzar (ayrıntıdaki `clock`: \
              `extendedFrom`); arife (`halfDay`) iş günüdür.",
             No, Json(200, of::<Vec<c::HolidayView>>)).query(&[P("year", "integer", false, "Yıl; yoksa bu yıl.")]),
+        op("GET", "/v1/platform/retention", PLATFORM, "Kişisel verilerin saklanması",
+            "Sistem yöneticisi: saklama süreleri (gün) ve periyodik imhanın son çalışmaları. Kapanan dosya süresi \
+             dolunca arşive geçer (silinmez); gönderilmemiş eski taslak dosyalarıyla, eski bildirimler ve teknik \
+             kayıtlar imha edilir. Sunucu her gün çalıştırır (KVKK Yönetmeliği: iki periyodik imha arası en çok 6 ay).",
+            No, Json(200, of::<c::RetentionPage>)),
+        op("PUT", "/v1/platform/retention", PLATFORM, "Saklama sürelerini değiştir",
+            "Sistem yöneticisi; platformun kaydına geçer.", Body(of::<c::RetentionSettings>), Json(200, of::<c::RetentionPage>)),
+        op("POST", "/v1/platform/retention/run", PLATFORM, "Periyodik imhayı şimdi çalıştır",
+            "Sistem yöneticisi; çalışmanın kaydı döner.", No, Json(200, of::<c::RetentionRunView>)),
         op("POST", "/v1/platform/holidays", PLATFORM, "Dinî bayram günü ekle",
             "Sistem yöneticisi: bir yılın bayram günleri açıklandığında. Aynı gün yeniden yazılırsa adı ve yarım gün \
              bilgisi değişir. Sabit tatiller eklenmez.",

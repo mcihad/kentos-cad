@@ -16,7 +16,7 @@ pub(crate) const SUMMARY_SELECT: &str = "select d.id, d.direction, d.year, d.num
         d.tenant_id, t.slug as tenant_slug, t.name as tenant_name, d.professional_id,
         u.display_name as professional_name, p.profession, d.assignee_id, d.assignee_name, d.round, d.site,
         d.created_at, d.updated_at, d.sent_at, d.round_sent_at, d.due_on, d.office_id,
-        kentos.dossier_office_name(d.id) as office_name
+        kentos.dossier_office_name(d.id) as office_name, d.archived_at
    from kentos.dossier d
    left join kentos.tenant t on t.id = d.tenant_id
    left join kentos.app_user u on u.id = d.professional_id
@@ -48,6 +48,7 @@ pub(crate) struct SummaryRow {
     pub due_on: Option<Date>,
     pub office_id: Option<Uuid>,
     pub office_name: Option<String>,
+    pub archived_at: Option<OffsetDateTime>,
 }
 
 impl SummaryRow {
@@ -106,6 +107,7 @@ impl SummaryRow {
             awaiting_me: side.is_some() && flow::waiting_for(direction, status) == side,
             office_id: self.office_id.map(|o| o.to_string()),
             office_name: self.office_name.clone(),
+            archived: self.archived_at.is_some(),
         }
     }
 }

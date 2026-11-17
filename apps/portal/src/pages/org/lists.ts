@@ -32,7 +32,7 @@ export function orgDossiers(direction: DossierDirection): PageFn {
     const mine = query.get('bana') === '1';
     const status = filter === 'acik' ? OPEN.join(',') : filter === 'kapanan' ? CLOSED.join(',') : undefined;
     const [list, all, awaiting] = await Promise.all([
-      organization.dossiers(org.tenantId, { direction, status, q: q || undefined, mine: mine || undefined, awaiting: filter === 'sira' || undefined, limit: 100 }),
+      organization.dossiers(org.tenantId, { direction, status, q: q || undefined, mine: mine || undefined, awaiting: filter === 'sira' || undefined, archived: filter === 'arsiv' || undefined, limit: 100 }),
       organization.dossiers(org.tenantId, { direction, limit: 1 }),
       organization.dossiers(org.tenantId, { direction, awaiting: true, limit: 1 }),
     ]);
@@ -53,6 +53,7 @@ export function orgDossiers(direction: DossierDirection): PageFn {
         { key: 'acik', label: 'Açık', href: withQuery({ liste: 'acik' }) },
         { key: 'kapanan', label: 'Kapanan', href: withQuery({ liste: 'kapanan' }) },
         { key: 'tumu', label: 'Tümü', count: all.total, href: withQuery({ liste: 'tumu' }) },
+        { key: 'arsiv', label: 'Arşiv', href: withQuery({ liste: 'arsiv' }) },
       ],
       filter,
     );

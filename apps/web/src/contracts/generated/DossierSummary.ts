@@ -25,4 +25,8 @@ awaitingMe: boolean,
 /**
  * The office the professional shares it with (docs/adr/9000 §18), by id and name.
  */
-officeId: string | null, officeName: string | null, };
+officeId: string | null, officeName: string | null, 
+/**
+ * Closed and moved to the archive after its period (docs/adr/9000 §21): kept, out of the working lists.
+ */
+archived: boolean, };

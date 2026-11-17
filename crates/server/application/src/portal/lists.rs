@@ -27,6 +27,8 @@ pub struct ListFilter {
     pub mine: bool,
     /// Waiting for the caller's side.
     pub awaiting: bool,
+    /// The archive (closed dossiers past their period, docs/adr/9000 §21) instead of the working list.
+    pub archived: bool,
     pub limit: u32,
     pub offset: u32,
 }
@@ -107,7 +109,8 @@ async fn list(
                  or coalesce(u.display_name, '') ilike '%' || $4 || '%'
                  or coalesce(d.site ->> 'parcel', '') = $4)
             and (not $5 or d.assignee_id = $6)
-            and (not $7 or {awaiting})) s
+            and (not $7 or {awaiting})
+            and (d.archived_at is not null) = $10) s
          order by s.updated_at desc
          limit $8 offset $9"
     );
@@ -126,6 +129,7 @@ async fn list(
         .bind(filter.awaiting)
         .bind(i64::from(filter.limit.clamp(1, 200)))
         .bind(i64::from(filter.offset))
+        .bind(filter.archived)
         .fetch_all(&mut **tx)
         .await?;
     let today = today();

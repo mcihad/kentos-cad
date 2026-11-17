@@ -32,7 +32,7 @@ export function proDossiers(direction: DossierDirection): PageFn {
     const q = query.get('ara') ?? '';
     const status = filter === 'acik' ? OPEN.join(',') : filter === 'kapanan' ? CLOSED.join(',') : undefined;
     const [list, awaiting] = await Promise.all([
-      professional.dossiers({ direction, status, q: q || undefined, awaiting: filter === 'sira' || undefined, limit: 100 }),
+      professional.dossiers({ direction, status, q: q || undefined, awaiting: filter === 'sira' || undefined, archived: filter === 'arsiv' || undefined, limit: 100 }),
       professional.dossiers({ direction, awaiting: true, limit: 1 }),
     ]);
     const application = direction === 'application';
@@ -52,6 +52,7 @@ export function proDossiers(direction: DossierDirection): PageFn {
           { key: 'acik', label: 'Açık', href: withQuery({ liste: 'acik' }) },
           { key: 'kapanan', label: 'Kapanan', href: withQuery({ liste: 'kapanan' }) },
           { key: 'tumu', label: 'Tümü', href: withQuery({ liste: 'tumu' }) },
+          { key: 'arsiv', label: 'Arşiv', href: withQuery({ liste: 'arsiv' }) },
         ],
         filter,
       ),

@@ -8,6 +8,7 @@ mod holidays;
 mod me;
 mod organization;
 mod platform;
+mod retention;
 mod signing;
 
 use axum::Router;
@@ -132,6 +133,8 @@ pub fn routes() -> Router<AppState> {
         .route("/v1/holidays", get(holidays::list))
         .route("/v1/platform/holidays", post(holidays::add))
         .route("/v1/platform/holidays/{day}", axum::routing::delete(holidays::remove))
+        .route("/v1/platform/retention", get(retention::page).put(retention::set))
+        .route("/v1/platform/retention/run", post(retention::run_now))
 }
 
 /// A file's bytes coming to a dossier: under the upload limits (`super::router`).
@@ -152,6 +155,8 @@ pub struct ListQuery {
     q: Option<String>,
     mine: Option<bool>,
     awaiting: Option<bool>,
+    /// The archive instead of the working list (docs/adr/9000 §21).
+    archived: Option<bool>,
     limit: Option<u32>,
     offset: Option<u32>,
 }
@@ -183,6 +188,7 @@ impl ListQuery {
             query: self.q.clone(),
             mine: self.mine.unwrap_or(false),
             awaiting: self.awaiting.unwrap_or(false),
+            archived: self.archived.unwrap_or(false),
             limit: self.limit.unwrap_or(50),
             offset: self.offset.unwrap_or(0),
         })

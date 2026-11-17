@@ -85,12 +85,16 @@ sıradakileri tutar. Bir madde ancak sınaması ve gerçek pencerede görüntüs
   - Görünmez bal küpü alanı.
   - Sunucunun imzaladığı, tek kullanımlık, en erken 3 saniye sonra geçen form bileti (ADR 9000 §20).
 
+- [x] `BUL-18` **Kişisel verilerin saklanması:**
+  - Kapanan dosya süresi dolunca arşive geçer, silinmez.
+  - Gönderilmemiş eski taslak belgeleriyle, eski bildirimler ve teknik kayıtlar her gün imha edilir.
+  - Her çalışma kayıtta; süreleri yönetici değiştirir (ADR 9000 §21).
+
 ## Sıradakiler
 
 - [ ] `BUL-10` Portala kurum kimliğiyle giriş (OpenID Connect; sunucu tarafı ADR 0007'de hazır).
 - [ ] `BUL-15` Aktarımda kopya yerine canlı projede misafir düzenleyici (ADR 0035) seçeneği.
 - [ ] `BUL-17` Gerçek zamanlı bildirim (WebSocket); şimdi dakikada bir sorulur.
-- [ ] `BUL-18` Kişisel verinin saklama süresi ve kapanan dosyaların arşivi (KVKK).
 - [ ] `BUL-20` Belediyenin istatistikleri ve dönem raporları (PDF ve Excel).
 - [ ] `BUL-27` Resmî yazı (kararın antetli PDF'i), e-tebligat / KEP bağlantısı (kurumun anlaşması gerekir) ve
   e-imzanın yasal denetimi (Kamu SM zinciri, OCSP / SİL, zaman damgası, CAdES / PAdES çıktısı).

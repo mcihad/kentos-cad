@@ -57,6 +57,9 @@ export type { SigningTrust } from '../../../web/src/contracts/generated/SigningT
 export type { SigningVerdict } from '../../../web/src/contracts/generated/SigningVerdict';
 export type { HolidayCreate } from '../../../web/src/contracts/generated/HolidayCreate';
 export type { HolidayView } from '../../../web/src/contracts/generated/HolidayView';
+export type { RetentionPage } from '../../../web/src/contracts/generated/RetentionPage';
+export type { RetentionRunView } from '../../../web/src/contracts/generated/RetentionRunView';
+export type { RetentionSettings } from '../../../web/src/contracts/generated/RetentionSettings';
 export type { FileRevision } from '../../../web/src/contracts/generated/FileRevision';
 export type { FileRevisions } from '../../../web/src/contracts/generated/FileRevisions';
 export type { KindOption } from '../../../web/src/contracts/generated/KindOption';

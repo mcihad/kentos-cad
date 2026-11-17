@@ -9008,6 +9008,11 @@
       },
       "DossierSummary": {
         "properties": {
+          "archived": {
+            "default": false,
+            "description": "Closed and moved to the archive after its period (docs/adr/9000 §21): kept, out of the working lists.",
+            "type": "boolean"
+          },
           "assigneeName": {
             "type": [
               "string",
@@ -27635,6 +27640,131 @@
         ],
         "type": "object"
       },
+      "RetentionPage": {
+        "description": "`GET /v1/platform/retention`.",
+        "properties": {
+          "runs": {
+            "description": "The latest runs, newest first.",
+            "items": {
+              "$ref": "#/components/schemas/RetentionRunView"
+            },
+            "type": "array"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/RetentionSettings"
+          }
+        },
+        "required": [
+          "settings",
+          "runs"
+        ],
+        "type": "object"
+      },
+      "RetentionRunView": {
+        "description": "One run of the periodic destruction.",
+        "properties": {
+          "actorName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "archived": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "at": {
+            "description": "RFC 3339.",
+            "type": "string"
+          },
+          "deliveriesDeleted": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "draftsDeleted": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "filesDeleted": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "notificationsDeleted": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/RetentionSettings",
+            "description": "The periods it ran under."
+          },
+          "signingRequestsDeleted": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "trigger": {
+            "description": "`schedule` (the server's daily run) or `manual`.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "trigger",
+          "archived",
+          "draftsDeleted",
+          "filesDeleted",
+          "notificationsDeleted",
+          "deliveriesDeleted",
+          "signingRequestsDeleted",
+          "settings"
+        ],
+        "type": "object"
+      },
+      "RetentionSettings": {
+        "description": "The periods, in days.",
+        "properties": {
+          "archiveAfterDays": {
+            "description": "A closed dossier moves to the archive after this (30–3650; it is kept, not deleted).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "draftKeepDays": {
+            "description": "A draft never sent and untouched this long is destroyed with its files (30–3650).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "notificationKeepDays": {
+            "description": "Notifications older than this are destroyed (30–3650).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "technicalKeepDays": {
+            "description": "E-mail / SMS deliveries done and signing requests that left no signature, older than this (7–3650).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "archiveAfterDays",
+          "draftKeepDays",
+          "notificationKeepDays",
+          "technicalKeepDays"
+        ],
+        "type": "object"
+      },
       "ReviewAnchor": {
         "additionalProperties": false,
         "description": "An object a note is bound to, with the stamps of the state it was written for.",
@@ -41470,6 +41600,15 @@
             }
           },
           {
+            "description": "Arşiv: süresi dolunca arşive geçen kapanmış dosyalar (çalışma listesi yerine).",
+            "in": "query",
+            "name": "archived",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
             "description": "En çok kaç dosya (1–200, varsayılan 50).",
             "in": "query",
             "name": "limit",
@@ -42402,6 +42541,110 @@
           }
         },
         "summary": "Meslek mensubunu doğrula",
+        "tags": [
+          "Portal: platform yönetimi"
+        ]
+      }
+    },
+    "/v1/platform/retention": {
+      "get": {
+        "description": "Sistem yöneticisi: saklama süreleri (gün) ve periyodik imhanın son çalışmaları. Kapanan dosya süresi dolunca arşive geçer (silinmez); gönderilmemiş eski taslak dosyalarıyla, eski bildirimler ve teknik kayıtlar imha edilir. Sunucu her gün çalıştırır (KVKK Yönetmeliği: iki periyodik imha arası en çok 6 ay).",
+        "operationId": "getPlatformRetention",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionPage"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "summary": "Kişisel verilerin saklanması",
+        "tags": [
+          "Portal: platform yönetimi"
+        ]
+      },
+      "put": {
+        "description": "Sistem yöneticisi; platformun kaydına geçer.",
+        "operationId": "putPlatformRetention",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetentionSettings"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionPage"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Saklama sürelerini değiştir",
+        "tags": [
+          "Portal: platform yönetimi"
+        ]
+      }
+    },
+    "/v1/platform/retention/run": {
+      "post": {
+        "description": "Sistem yöneticisi; çalışmanın kaydı döner.",
+        "operationId": "postPlatformRetentionRun",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionRunView"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "summary": "Periyodik imhayı şimdi çalıştır",
         "tags": [
           "Portal: platform yönetimi"
         ]
@@ -43586,6 +43829,15 @@
             "description": "Yalnız çağıran tarafın sırası olan dosyalar.",
             "in": "query",
             "name": "awaiting",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Arşiv: süresi dolunca arşive geçen kapanmış dosyalar (çalışma listesi yerine).",
+            "in": "query",
+            "name": "archived",
             "required": false,
             "schema": {
               "type": "boolean"

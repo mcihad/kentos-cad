@@ -183,6 +183,9 @@ pub struct DossierSummary {
     pub office_id: Option<String>,
     #[serde(default)]
     pub office_name: Option<String>,
+    /// Closed and moved to the archive after its period (docs/adr/9000 §21): kept, out of the working lists.
+    #[serde(default)]
+    pub archived: bool,
 }
 
 /// `GET …/dossiers`: a page of them, and how many there are.

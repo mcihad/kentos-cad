@@ -74,6 +74,23 @@ async fn prune_events(db: Db, keep: Duration) {
 const CLEAN_FIRST: Duration = Duration::from_secs(120);
 const CLEAN_EVERY: Duration = Duration::from_secs(3600);
 
+/// The portal's periodic destruction of personal data (docs/adr/9000 §21): every day, the first an hour after start
+/// (KVKK's regulation asks for at most six months between two). Each run is in `kentos.retention_run`.
+async fn retention_sweep(db: Db, blobs: Blobs) {
+    let mut every = tokio::time::interval_at(
+        tokio::time::Instant::now() + Duration::from_secs(3600),
+        Duration::from_secs(24 * 3600),
+    );
+    every.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+    loop {
+        every.tick().await;
+        match kentos_application::portal::retention::sweep(&db, &blobs).await {
+            Ok(files) => tracing::info!(silinen_dosya = files, "kişisel verilerin periyodik imhası çalıştı"),
+            Err(e) => tracing::warn!(error = ?e, "periyodik imha çalışamadı; ertesi gün yeniden denenecek"),
+        }
+    }
+}
+
 async fn clean_store(db: Db, blobs: Blobs, job_retention: Duration) {
     let mut every =
         tokio::time::interval_at(tokio::time::Instant::now() + CLEAN_FIRST, CLEAN_EVERY);
@@ -205,6 +222,8 @@ async fn serve(config: Config) -> Result<(), String> {
         tokio::spawn(prune_events(db.clone(), config.event_retention));
         tokio::spawn(purge_trash(db.clone()));
         tokio::spawn(clean_store(db.clone(), blobs.clone(), config.job_retention));
+        // The periodic destruction of personal data past its period (docs/adr/9000 §21): daily.
+        tokio::spawn(retention_sweep(db.clone(), blobs.clone()));
         // Notifications by e-mail and SMS (docs/adr/9000 §17), when the server is set up to send them.
         if let Some(delivery) = config.delivery.clone() {
             tokio::spawn(delivery.run(db.clone()));

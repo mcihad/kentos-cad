@@ -1304,3 +1304,95 @@ async fn the_platform_keeps_the_religious_holidays_the_deadlines_count_over() {
     let events = platform::events(&db.app, &root, 20).await.unwrap();
     assert!(events.iter().any(|e| e.action == "holiday_set") && events.iter().any(|e| e.action == "holiday_removed"));
 }
+
+#[tokio::test]
+async fn personal_data_past_its_period_is_archived_or_destroyed_and_each_run_is_recorded() {
+    use kentos_application::portal::retention;
+    use kentos_contracts::RetentionSettings;
+
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let store = blobs();
+    let root = sistem(&db).await;
+    let tenant = municipality(&db, &root, "saklayan", "mehmet").await;
+    let mehmet = signed_in(&db, "mehmet").await;
+    let mehmet_in = tenancy::access(&db.app, &mehmet, tenant).await.unwrap();
+    let ayse = professional(&db, &root, "ayse", Profession::Architect).await;
+    let open = |title: &'static str| ApplicationCreate {
+        tenant_id: tenant.to_string(),
+        kind: "architectural_project".into(),
+        title: title.into(),
+        description: String::new(),
+        site: site(),
+        owner_name: Some("Hasan Er".into()),
+        office_id: None,
+    };
+    // A decided application, a draft left for months with a file, a draft of this week.
+    let decided = dossiers::create_application(&db.app, &ayse, &open("Karara bağlanmış başvuru")).await.unwrap();
+    add_file(&db, &store, &ayse, decided, ("proje.pdf", b"%PDF-1.4 proje", "architectural"), Purpose::Package).await.unwrap();
+    act(&db, &ayse, decided, DossierAction::Send, None).await.unwrap();
+    act(&db, &mehmet, decided, DossierAction::Approve, None).await.unwrap();
+    let left = dossiers::create_application(&db.app, &ayse, &open("Unutulmuş taslak")).await.unwrap();
+    let file = add_file(&db, &store, &ayse, left, ("eski.pdf", b"%PDF-1.4 eski", "architectural"), Purpose::Package)
+        .await
+        .unwrap();
+    let key: String = sqlx::query_scalar("select blob_key from kentos.dossier_file where id = $1::uuid")
+        .bind(&file.id)
+        .fetch_one(&db.owner)
+        .await
+        .unwrap();
+    let fresh = dossiers::create_application(&db.app, &ayse, &open("Bu haftanın taslağı")).await.unwrap();
+    let back = |table: &'static str, column: &'static str, days: i32| {
+        let owner = db.owner.clone();
+        async move {
+            sqlx::query(sqlx::AssertSqlSafe(format!(
+                "update kentos.{table} set {column} = now() - make_interval(days => $1)"
+            )))
+            .bind(days)
+            .execute(&owner)
+            .await
+            .unwrap();
+        }
+    };
+    back("notification", "at", 200).await;
+    for (id, days) in [(decided, 400), (left, 200)] {
+        sqlx::query("update kentos.dossier set updated_at = now() - make_interval(days => $2) where id = $1")
+            .bind(id)
+            .bind(days)
+            .execute(&db.owner)
+            .await
+            .unwrap();
+    }
+
+    // Only the platform's administrators run it by hand and set its periods.
+    let refused = retention::run_now(&db.app, &store, &ayse).await.unwrap_err();
+    assert!(matches!(refused, AppError::Forbidden(_)), "{refused:?}");
+    let short = RetentionSettings { archive_after_days: 365, draft_keep_days: 5, notification_keep_days: 180, technical_keep_days: 90 };
+    let bad = retention::set(&db.app, &root, &short).await.unwrap_err();
+    assert_eq!(bad.path(), Some("draftKeepDays"));
+    let run = retention::run_now(&db.app, &store, &root).await.unwrap();
+    assert_eq!((run.trigger.as_str(), run.archived, run.drafts_deleted, run.files_deleted), ("manual", 1, 1, 1));
+    assert!(run.notifications_deleted >= 1, "{run:?}");
+    assert_eq!(run.actor_name.as_deref(), Some("sistem"), "who ran it by hand");
+    assert_eq!(run.settings.draft_keep_days, 180);
+
+    // The draft and its bytes are gone; the decided one is in the archive, out of the working list; this week's stays.
+    assert!(matches!(detail::detail(&db.app, &ayse, left).await.unwrap_err(), AppError::NotFound(_)));
+    assert!(store.open(&key).await.is_err(), "the file left the store");
+    detail::detail(&db.app, &ayse, fresh).await.unwrap();
+    let working = dossiers::list_for_tenant(&db.app, &mehmet_in, &ListFilter { limit: 50, ..ListFilter::default() }).await.unwrap();
+    assert!(working.items.iter().all(|d| d.id != decided.to_string()));
+    let archive = dossiers::list_for_tenant(&db.app, &mehmet_in, &ListFilter { limit: 50, archived: true, ..ListFilter::default() })
+        .await
+        .unwrap();
+    assert_eq!(archive.items.len(), 1);
+    assert!(archive.items[0].archived && archive.items[0].id == decided.to_string());
+
+    // The server's daily run finds nothing more; both runs are on record, newest first.
+    assert_eq!(retention::sweep(&db.app, &store).await.unwrap(), 0);
+    let page = retention::page(&db.app, &root).await.unwrap();
+    assert_eq!(page.runs.iter().map(|r| r.trigger.as_str()).collect::<Vec<_>>(), ["schedule", "manual"]);
+    let longer = RetentionSettings { archive_after_days: 730, ..page.settings };
+    assert_eq!(retention::set(&db.app, &root, &longer).await.unwrap().settings.archive_after_days, 730);
+}

@@ -437,6 +437,41 @@ vekilden (loopback) geliyorsa okunur, başkasının başlığına inanılmaz. Sa
 - **Demo:** örnek veri (seed) biletleri önce alıp 3 saniye bekler, sonra kaydeder. Demo ortamında saatlik hesap
   sınırı 50'dir.
 
+## §21 Kişisel verilerin saklanması ve periyodik imha
+
+Portal kişisel veri tutar: meslek mensubunun kaydı, yapı sahibinin adı, yazışmalar, belgeler, bildirimler, e-posta ve
+SMS kayıtları, imza sertifikaları. KVKK (6698 sayılı Kanun m.7) amacı biten veriyi siler. Kişisel Verilerin
+Silinmesi, Yok Edilmesi veya Anonim Hâle Getirilmesi Hakkında Yönetmelik iki şey ister:
+
+- periyodik imha, iki imha arası en çok 6 ay (m.11);
+- imha işlemlerinin kayıtları en az 3 yıl saklanır (m.7).
+
+Bu yüzden ayrım şöyledir:
+
+- **Dosya bir idari kayıttır, silinmez.** Kapanmış dosya (onay, ret, geri çekme, tamamlanma, iptal) süresi dolunca
+  (varsayılan 365 gün) **arşive** geçer (`archived_at`). Çalışma listelerinden çıkar, “Arşiv” sekmesinde durur, her
+  zaman açılır. Saklama süresi kurumun arşiv mevzuatının işidir.
+- **Amacı biten imha edilir:**
+  - hiç gönderilmemiş ve dokunulmamış taslak (180 gün), belgeleriyle; belgelerin baytları da depodan silinir;
+  - eski bildirim (180 gün);
+  - teknik kayıtlar (90 gün): tamamlanmış e-posta / SMS gönderimleri ve imza bırakmamış imza istekleri. İmzası olan
+    istek imzayla birlikte durur.
+- **Süreleri sistem yöneticisi değiştirir** (Platform ayarları › Kişisel verilerin saklanması). Değişiklik platformun
+  kaydına geçer.
+- **Sunucu imhayı her gün çalıştırır.** İlk çalışma açılıştan bir saat sonradır. Yönetici elle de çalıştırabilir.
+- **Her çalışma `kentos.retention_run`'a yazılır:** zaman, günlük mü elle mi (ve kimin elinden), her türden kaç kayıt
+  ve hangi sürelerle. Kayıt silinmez.
+- **İş tek bir yetkili işlevdedir** (`kentos.retention_sweep`). Kurumlar arası çalışır; silinen belgelerin depo
+  anahtarlarını sunucuya döndürür.
+
+Ölçülenler (`tests/portal.rs` `personal_data_past_its_period_is_archived_or_destroyed_and_each_run_is_recorded`):
+
+- 400 günlük kapanmış dosya arşive geçti; çalışma listesinden çıktı, `archived=true` listesinde göründü.
+- 200 günlük taslak belgesiyle imha edildi, baytı depodan silindi. Bu haftanın taslağı kaldı.
+- 200 günlük bildirimler silindi.
+- Elle çalıştırmak yalnız yöneticinin işi (403), 5 günlük süre reddedildi.
+- Günlük çalışma ardından bir şey bulmadı. İki çalışma da kayıtta, yenisi önce.
+
 ## Kaynaklar
 
 - OpenAPI 3.1.0 (<https://spec.openapis.org/oas/v3.1.0>), JSON Schema 2020-12, llms.txt önerisi
@@ -454,6 +489,8 @@ vekilden (loopback) geliyorsa okunur, başkasının başlığına inanılmaz. Sa
   - m.30: yapı kullanma izni (30 gün).
 - Sürenin son günü: 2577 sayılı İdari Yargılama Usulü Kanunu m.8; tatiller: 2429 sayılı Ulusal Bayram ve Genel
   Tatiller Hakkında Kanun; dinî bayramların günleri: Diyanet İşleri Başkanlığı'nın yıllık takvimi.
+- Kişisel veriler: 6698 sayılı Kişisel Verilerin Korunması Kanunu m.7; Kişisel Verilerin Silinmesi, Yok Edilmesi
+  veya Anonim Hâle Getirilmesi Hakkında Yönetmelik m.7 ve m.11.
 - Aplikasyonun tanımı ve lisanslı büroların işleri: TKGM 2010/4 ve 2023/5 sayılı genelgeler
   (<https://www.tkgm.gov.tr/sites/default/files/2020-11/2010-4_genelge.pdf>,
   <https://www.tkgm.gov.tr/sites/default/files/2025-07/2023_5.pdf>). Röperli krokinin yalnız lisanslı bürolara ait

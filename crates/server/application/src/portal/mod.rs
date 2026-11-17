@@ -26,6 +26,7 @@ pub mod lists;
 pub mod notifications;
 pub mod organization;
 pub mod platform;
+pub mod retention;
 mod rows;
 pub mod signing;
 pub mod steps;
