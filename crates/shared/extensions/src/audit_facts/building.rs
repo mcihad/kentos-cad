@@ -54,6 +54,33 @@ pub struct BuildingFacts {
     /// The project says the building has sprinklers (`settings.arch.sprinklers`): BYKHY Ek-4's notes read it.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub sprinklers: bool,
+    /// The elements BYKHY Ek-3/B gives fire resistance times for, with their declared classes (docs/adr/8082).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub elements: Vec<ElementFacts>,
+    /// Bina yüksekliği (BYKHY 4/h): the storeys on ±0.00 and above, as the fire rules measure them, m.
+    #[serde(default)]
+    pub height: f64,
+    /// Bodrum katların derinliği (Ek-3/C's footnote): the lowest basement's floor under ±0.00, m; 0 without one.
+    #[serde(default)]
+    pub basement_depth: f64,
+}
+
+/// An element BYKHY Ek-3/B reads: its persistent id, its kind (`column`, `beam`, `wall`, `slab`), its storey, its
+/// declared fire class (its own, else its type's), whether it is a column or a beam of the frame, whether a wall is on its
+/// storey's outline (docs/adr/8082).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct ElementFacts {
+    pub uid: String,
+    pub kind: String,
+    pub level: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fire_rating: Option<String>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub frame: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub exterior: bool,
 }
 
 /// A room as a fire compartment counts it: its persistent id, its storey, its name (and number), its area as the
@@ -270,6 +297,9 @@ impl BuildingFacts {
             x.openings.sort_by(|a, b| a.uid.cmp(&b.uid));
         }
         self.separations.sort_by(|a, b| a.rooms.cmp(&b.rooms));
+        self.elements.sort_by(|a, b| a.uid.cmp(&b.uid));
+        self.height = round(self.height, LENGTH);
+        self.basement_depth = round(self.basement_depth, LENGTH);
         self
     }
 

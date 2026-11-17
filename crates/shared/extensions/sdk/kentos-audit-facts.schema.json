@@ -67,6 +67,12 @@
     "BuildingFacts": {
       "description": "The building as the regulation's rules count it.",
       "properties": {
+        "basementDepth": {
+          "default": 0.0,
+          "description": "Bodrum katların derinliği (Ek-3/C's footnote): the lowest basement's floor under ±0.00, m; 0 without one.",
+          "format": "double",
+          "type": "number"
+        },
         "doors": {
           "description": "The doors, by persistent id (docs/adr/8078 §8).",
           "items": {
@@ -79,6 +85,19 @@
           "format": "uint32",
           "minimum": 0,
           "type": "integer"
+        },
+        "elements": {
+          "description": "The elements BYKHY Ek-3/B gives fire resistance times for, with their declared classes (docs/adr/8082).",
+          "items": {
+            "$ref": "#/$defs/ElementFacts"
+          },
+          "type": "array"
+        },
+        "height": {
+          "default": 0.0,
+          "description": "Bina yüksekliği (BYKHY 4/h): the storeys on ±0.00 and above, as the fire rules measure them, m.",
+          "format": "double",
+          "type": "number"
         },
         "limits": {
           "description": "The uses Planlı Alanlar İmar Yönetmeliği 22/1 lets out of katlar alanı only up to a limit, as Emsal ve TAKS\ntablosu counts them (docs/adr/8079): a unit's balconies, its storage annexes, the caretaker flats, the library.",
@@ -656,6 +675,40 @@
         "uid",
         "between",
         "operation"
+      ],
+      "type": "object"
+    },
+    "ElementFacts": {
+      "description": "An element BYKHY Ek-3/B reads: its persistent id, its kind (`column`, `beam`, `wall`, `slab`), its storey, its\ndeclared fire class (its own, else its type's), whether it is a column or a beam of the frame, whether a wall is on its\nstorey's outline (docs/adr/8082).",
+      "properties": {
+        "exterior": {
+          "type": "boolean"
+        },
+        "fireRating": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "frame": {
+          "type": "boolean"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "kind"
       ],
       "type": "object"
     },

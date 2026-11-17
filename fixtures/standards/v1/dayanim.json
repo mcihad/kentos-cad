@@ -1,0 +1,1681 @@
+{
+  "format": "kentos.regulationCases",
+  "version": 1,
+  "about": "Yapı elemanlarının yangına dayanım sürelerinin bağımsız durumları (docs/adr/8082): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik Ek-3/B ve Ek-3/C'nin tablolarından (PDF'in 91. ve 93. sayfaları; Ek-3/C RG 9.9.2009/27344) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.elements, height, basementDepth, separations).",
+  "cases": [
+    {
+      "id": "apartman-tamam",
+      "neden": "8 daireli apartman, bina yüksekliği 12 m (21,50'den az: 60), bodrum 3 m (10'dan az: 60): kolon R 60, kat döşemesi REI 60, dış duvar REI 60; zemin kat döşemesi bodrumla zemin arası en az REI 90 (Ek-3/B 3-d) REI 90; en alt katın döşemesi zemine oturur → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "kind": "column",
+            "level": "k01",
+            "fireRating": "R 60",
+            "frame": true
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "kind": "slab",
+            "level": "k01",
+            "fireRating": "REI 60"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000003",
+            "kind": "wall",
+            "level": "k00",
+            "fireRating": "REI 60",
+            "exterior": true
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000004",
+            "kind": "slab",
+            "level": "k00",
+            "fireRating": "REI 90"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000005",
+            "kind": "slab",
+            "level": "b01"
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY Ek-3": [
+            "passed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kolon-yetmiyor",
+      "neden": "Aynı apartmanda 1. kat kolonu R 30: Ek-3/C 60 ister → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "kind": "column",
+            "level": "k01",
+            "fireRating": "R 30",
+            "frame": true
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "1. kat",
+              "kolon",
+              "R 30",
+              "R 60"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kolon-beyansiz",
+      "neden": "Kolonun sınıfı beyan edilmemiş → eksik veri.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "kind": "column",
+            "level": "k01",
+            "frame": true
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000006",
+            "kind": "column",
+            "level": "k01",
+            "frame": true
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "state": "missingData",
+            "has": [
+              "2 kolonun",
+              "beyan edilmemiş",
+              "R 60"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "missingData",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "apartman-24m",
+      "neden": "Bina yüksekliği 24 m (30,50'den az: 90): kolon R 60 yetmez → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "kind": "column",
+            "level": "k01",
+            "fireRating": "R 60",
+            "frame": true
+          }
+        ],
+        "height": 24.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "R 90",
+              "24.00 m"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "zemin-dosemesi",
+      "neden": "Bodrumla zemin kat arası döşeme REI 60: Ek-3/B 3-d en az REI 90 → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000004",
+            "kind": "slab",
+            "level": "k00",
+            "fireRating": "REI 60"
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "Zemin kat",
+              "döşeme",
+              "REI 90",
+              "3-d"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ev-iki-kat",
+      "neden": "Tek konutlu iki katlı ev (bodrumsuz, 6 m): Ek-3/C 1-a 60, ikinci katın döşemesi Ek-3/B 3-a REI 30; kolon R 60, döşeme REI 30 → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "kind": "column",
+            "level": "k00",
+            "fireRating": "R 60",
+            "frame": true
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "kind": "slab",
+            "level": "k01",
+            "fireRating": "REI 30"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000003",
+            "kind": "slab",
+            "level": "k00"
+          }
+        ],
+        "height": 6.0,
+        "basementDepth": 0.0
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY Ek-3": [
+            "passed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ev-konut-kullanimi",
+      "neden": "Kullanımı 'Konut' yazılı iki daireli ev: Ek-3/C 1-a (bir ve iki ailelik), ikinci kat döşemesi REI 30 → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "kind": "slab",
+            "level": "k01",
+            "fireRating": "REI 30"
+          }
+        ],
+        "height": 6.0,
+        "basementDepth": 0.0,
+        "uses": [
+          "Konut"
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY Ek-3": [
+            "passed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "buro-izinsiz",
+      "neden": "Yağmurlamasız büro binası 32 m: Ek-3/C 30,50 m'den fazla 'İzin verilmez' → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 10,
+        "dwellings": 0,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "kind": "column",
+            "level": "k01",
+            "fireRating": "R 120",
+            "frame": true
+          }
+        ],
+        "height": 32.0,
+        "basementDepth": 3.0,
+        "uses": [
+          "Büro"
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_height_not_permitted",
+            "has": [
+              "yağmurlama",
+              "32.00 m"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "buro-yagmurlamali-120",
+      "neden": "Yağmurlamalı büro 32 m: kolon 120(3) R 120 geçer; dış duvar EI 90, not (3) taşıyıcı değilse 90'a indirir, duvarın taşıyıcılığı bilinmiyor → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 10,
+        "dwellings": 0,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "kind": "column",
+            "level": "k01",
+            "fireRating": "R 120",
+            "frame": true
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000003",
+            "kind": "wall",
+            "level": "k01",
+            "fireRating": "EI 90",
+            "exterior": true
+          }
+        ],
+        "height": 32.0,
+        "basementDepth": 3.0,
+        "uses": [
+          "Büro"
+        ],
+        "sprinklers": true
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "state": "expertReview",
+            "has": [
+              "EI 90",
+              "not (3)"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "expertReview",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "buro-dis-duvar-yetmiyor",
+      "neden": "Yağmurlamalı büro 32 m: dış duvar EI 60, 90'ın da altında → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 10,
+        "dwellings": 0,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000003",
+            "kind": "wall",
+            "level": "k01",
+            "fireRating": "EI 60",
+            "exterior": true
+          }
+        ],
+        "height": 32.0,
+        "basementDepth": 3.0,
+        "uses": [
+          "Büro"
+        ],
+        "sprinklers": true
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "EI 60",
+              "EI 120"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "buro-yagmurlamali-alcak",
+      "neden": "Yağmurlamalı büro 12 m: Ek-3/C 30(2): kolon R 30 geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 10,
+        "dwellings": 0,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "kind": "column",
+            "level": "k01",
+            "fireRating": "R 30",
+            "frame": true
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0,
+        "uses": [
+          "Büro"
+        ],
+        "sprinklers": true
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY Ek-3": [
+            "passed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kompartiman-duvari-24m",
+      "neden": "Büro 24 m (30,50'den az: 90): iki ofis arası EI 60 kompartıman duvarı (en az 60 ve Ek-3/C 90) → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 10,
+        "dwellings": 0,
+        "elements": [],
+        "height": 24.0,
+        "basementDepth": 3.0,
+        "uses": [
+          "Büro"
+        ],
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000010",
+            "level": "k01",
+            "name": "Ofis 1",
+            "area": 50.0
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000011",
+            "level": "k01",
+            "name": "Ofis 2",
+            "area": 50.0
+          }
+        ],
+        "separations": [
+          {
+            "level": "k01",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000010",
+              "00000000-0000-4000-8000-000000000011"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000060",
+                "kind": "wall",
+                "fireRating": "EI 60",
+                "length": 5.0
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "kompartıman",
+              "EI 90"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "yangin-merdiveni",
+      "neden": "Yangın merdivenini koridordan ayıran duvar REI 90: Ek-3/B 9-a REI 120 → kalır; güvenlik holüyle arası REI 60 (9-b) geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [],
+        "height": 12.0,
+        "basementDepth": 3.0,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000020",
+            "level": "k01",
+            "name": "Yangın merdiveni",
+            "area": 50.0
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000021",
+            "level": "k01",
+            "name": "Koridor",
+            "area": 50.0
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000022",
+            "level": "k01",
+            "name": "Yangın güvenlik holü",
+            "area": 50.0
+          }
+        ],
+        "separations": [
+          {
+            "level": "k01",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000020",
+              "00000000-0000-4000-8000-000000000021"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000061",
+                "kind": "wall",
+                "fireRating": "REI 90",
+                "length": 5.0
+              }
+            ]
+          },
+          {
+            "level": "k01",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000020",
+              "00000000-0000-4000-8000-000000000022"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000062",
+                "kind": "wall",
+                "fireRating": "REI 60",
+                "length": 5.0
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "REI 90",
+              "REI 120",
+              "9-a"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kullanim-yok",
+      "neden": "Kullanım yazılmamış, bölümlerin hepsi konut değil → eksik veri.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 3,
+        "dwellings": 1,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "kind": "column",
+            "level": "k01",
+            "fireRating": "R 60",
+            "frame": true
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY Ek-3": [
+            "missingData",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bodrum-tam-10",
+      "neden": "Bodrum derinliği tam 10 m: Ek-3/C'nin '10 m'den fazla' ve 'az' sütunlarının ikisi de tutmaz → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000007",
+            "kind": "column",
+            "level": "b01",
+            "fireRating": "R 90",
+            "frame": true
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 10.0
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "state": "expertReview",
+            "has": [
+              "sınırında"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "expertReview",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "eleman-yok",
+      "neden": "Kolon, kiriş, duvar, döşeme yok → kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY Ek-3": [
+            "outOfScope",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "tarihsiz",
+      "neden": "Başvuru tarihi yok: Ek-3'ün tek hâli her aday günde aynı → kolon R 30 kalır.",
+      "permit": {
+        "particulars": {}
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "kind": "column",
+            "level": "k01",
+            "fireRating": "R 30",
+            "frame": true
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance"
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "2008-basvuru",
+      "neden": "Başvuru 1.6.2008: Ek-3/C'nin 9.9.2009'dan önceki tablosu kural setinde yok → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "01.06.2008"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "kind": "column",
+            "level": "k01",
+            "fireRating": "R 30",
+            "frame": true
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "regulation_text_unknown",
+            "state": "expertReview",
+            "has": [
+              "1.6.2008",
+              "Ek-3",
+              "9.9.2009"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "expertReview",
+            null
+          ]
+        }
+      }
+    }
+  ]
+}

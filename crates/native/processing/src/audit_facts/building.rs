@@ -25,13 +25,16 @@
 //! - **Compartments' parts** (docs/adr/8081): every room the storeys count with its regulation gross area, and what
 //!   separates each two rooms of a storey (`Document::separations`): walls and openings with their declared fire classes
 //!   (`arch_performance::fire_rating_of`: its own, else its type's), and the open stretches; the project's sprinklers.
+//! - **Ek-3's elements** (docs/adr/8082): the frame's columns and beams, the walls (exterior or not), the floors
+//!   (`Document::fire_elements`) with their declared classes; the building's height as the fire rules measure it and
+//!   its basements' depth.
 
 use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
 use kentos_extensions::audit_facts::building::{
-    BuildingFacts, DoorFacts, EmsalLimit, RoomPeople, SeparatingElement, SeparationFacts, SpaceFacts, StoreyHolds,
-    UnderStairFacts, UnderStairRoom,
+    BuildingFacts, DoorFacts, ElementFacts, EmsalLimit, RoomPeople, SeparatingElement, SeparationFacts, SpaceFacts,
+    StoreyHolds, UnderStairFacts, UnderStairRoom,
 };
 
 /// The drawing's building facts; empty (no storey) for a project without Mimari's storeys.
@@ -134,6 +137,8 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         })
         .collect();
     let separations = separations(doc);
+    let (elements, height) = elements(doc);
+    let basement_depth = arch.levels.iter().map(|l| -l.elevation).fold(0.0_f64, f64::max);
     BuildingFacts {
         storeys,
         units: units.len() as u32,
@@ -149,7 +154,40 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         spaces,
         separations,
         sprinklers: arch.has_sprinklers(),
+        elements,
+        height,
+        basement_depth,
     }
+}
+
+/// Ek-3's elements with their declared classes, and the building's height as the fire rules measure it (docs/adr/8082).
+#[cfg(feature = "mod-arch")]
+fn elements(doc: &Document) -> (Vec<ElementFacts>, f64) {
+    use kentos_native_application::arch_performance::fire_rating_of;
+    let by_uid: std::collections::HashMap<String, &Entity> =
+        doc.entities_with_uids().map(|(u, e)| (u.to_string(), e)).collect();
+    let elements = doc
+        .fire_elements()
+        .into_iter()
+        .map(|x| ElementFacts {
+            fire_rating: by_uid
+                .get(&x.uid)
+                .and_then(|e| fire_rating_of(doc.settings(), e))
+                .map(|(d, _)| d.value.clone()),
+            uid: x.uid,
+            kind: x.kind.to_owned(),
+            level: x.level,
+            frame: x.frame,
+            exterior: x.exterior,
+        })
+        .collect();
+    (elements, kentos_native_application::fire_audit::heights(doc).0)
+}
+
+/// Without Mimari's performance declarations there are no classes to read.
+#[cfg(not(feature = "mod-arch"))]
+fn elements(_: &Document) -> (Vec<ElementFacts>, f64) {
+    (Vec::new(), 0.0)
 }
 
 /// What separates each two rooms of a storey, its walls' and openings' declared classes read as the performance command

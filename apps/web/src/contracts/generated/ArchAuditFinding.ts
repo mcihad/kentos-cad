@@ -39,7 +39,8 @@ key: string, check: ArchAuditCheck,
  * and `bykhy_stair_door_rating` (docs/adr/8078 §8), the emsal limits' conditions `paiy_caretaker_not_required` and
  * `paiy_library_not_exempt` (docs/adr/8079), a low space under a stair open into a room `paiy_under_stair_open`
  * (docs/adr/8080), the fire compartments' `bykhy_hazard_room_separation`, `bykhy_compartment_area_over` and
- * `bykhy_compartment_opening` (docs/adr/8081), `regulation_date_needed` (eksik veri) and
+ * `bykhy_compartment_opening` (docs/adr/8081), the elements' declared classes against Ek-3
+ * `bykhy_element_resistance` and `bykhy_height_not_permitted` (docs/adr/8082), `regulation_date_needed` (eksik veri) and
  * `regulation_text_unknown` (uzman incelemesi); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
  * `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/8035); `parking_short`,
  * `shelter_short`, `shelter_exit_count`, `shelter_height_low` (docs/adr/8036); `paiy_sections_missing`,

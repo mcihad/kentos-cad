@@ -1,5 +1,14 @@
 # Değişiklikler
 
+## 0.6.0 — 17 Kasım 2026
+
+- Yangına dayanım süreleri (`dayanim`, docs/adr/8082): BYKHY Ek-3/B ve Ek-3/C. Taşıyıcı sistemin kolonu ve kirişi R,
+  döşemeler REI (bodrumla zemin kat arası en az 90, iki katlı evin ikinci katı 30), dış duvarlar ve kompartıman duvarları
+  EI, korunumlu yangın merdiveni yuvası REI 120 (holüne 60); kullanım sınıfına, yağmurlamaya, bina yüksekliğine ve
+  bodrum derinliğine göre Ek-3/C'nin dakikası. Tablolar PDF sayfalarından veri olarak. Yağmurlamasız konut dışı bina
+  30,50 m'yi aşamaz. Sınıf okuyucu `yangin_sinifi.okuma` her harfi okur. Olgular `building.elements`, `height`,
+  `basementDepth`. 18 bağımsız durum.
+
 ## 0.5.0 — 17 Kasım 2026
 
 - Yangın kompartımanları (`kompartiman`, docs/adr/8081): BYKHY 4/tt, 24/2, 24/6 ve Ek-4, 24/7. İki mahal, aralarındaki

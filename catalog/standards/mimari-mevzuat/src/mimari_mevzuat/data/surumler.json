@@ -1,7 +1,7 @@
 {
   "format": "kentos.ruleVersions",
   "version": 1,
-  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de, merdiven altınınki 8080 §1'de, kompartımanlarınki 8081 §1'de).",
+  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de, merdiven altınınki 8080 §1'de, kompartımanlarınki 8081 §1'de, dayanımlarınki 8082 §1'de).",
   "regulations": {
     "PAİY": {
       "name": "Planlı Alanlar İmar Yönetmeliği",
@@ -445,6 +445,273 @@
           "minutes": 60,
           "text": "Yangın kompartımanlarının etkili olabilmesi için, kompartımanı çevreleyen elemanların yangına dayanıklılığı birleşme noktalarında da sürekli olur ve kompartımanlar arasında yangına dayanıksız açıklıklar bulunamaz.",
           "source": "RG 19.12.2007/26735, 24 üncü maddenin yedinci fıkrası; değişiklik işareti yok; docs/adr/8081 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "Ek-3",
+      "title": "Yapı elemanlarının yangına dayanım süreleri (Ek-3/B, Ek-3/C)",
+      "transition": "Ek-3/C 10.8.2009 tarihli ve 2009/15316 sayılı Bakanlar Kurulu Kararıyla değişti (RG 9.9.2009/27344); önceki tablosu kural setinde yok. Ek-3/B'nin 12 nci satırı (asansör kat kapıları) RG 9.7.2015/29411 ile eklendi, bu kural okumaz.",
+      "versions": [
+        {
+          "id": "2009",
+          "from": "2009-09-09",
+          "until": null,
+          "label": "9.9.2009",
+          "gazette": "19.12.2007/26735; Ek-3/C 9.9.2009/27344",
+          "rows": [
+            {
+              "id": "ev",
+              "name": "bir ve iki ailelik ev",
+              "all": [
+                "---",
+                "30(2)",
+                "30",
+                "60",
+                "---",
+                "---"
+              ]
+            },
+            {
+              "id": "apartman",
+              "name": "apartman",
+              "words": [
+                "KONUT",
+                "DAIRE",
+                "MESKEN",
+                "APARTMAN",
+                "SITE"
+              ],
+              "all": [
+                "90",
+                "60",
+                "30(2)",
+                "60",
+                "90",
+                "120"
+              ]
+            },
+            {
+              "id": "konaklama",
+              "name": "konaklama",
+              "words": [
+                "OTEL",
+                "MOTEL",
+                "PANSIYON",
+                "KONAKLAMA",
+                "YURT",
+                "HOSTEL"
+              ],
+              "dry": [
+                "90",
+                "60",
+                "60",
+                "60",
+                "90",
+                "İzin verilmez"
+              ],
+              "wet": [
+                "60",
+                "60",
+                "30(2)",
+                "60",
+                "60",
+                "120(3)"
+              ]
+            },
+            {
+              "id": "kurumsal",
+              "name": "kurumsal",
+              "words": [
+                "HASTANE",
+                "SAGLIK",
+                "KLINIK",
+                "POLIKLINIK",
+                "OKUL",
+                "EGITIM",
+                "ANAOKUL",
+                "KRES",
+                "LISE",
+                "UNIVERSITE",
+                "DERSHANE"
+              ],
+              "dry": [
+                "90",
+                "60",
+                "60",
+                "60",
+                "90",
+                "İzin verilmez"
+              ],
+              "wet": [
+                "90",
+                "60",
+                "30(2)",
+                "60",
+                "90",
+                "120(3)"
+              ]
+            },
+            {
+              "id": "buro",
+              "name": "büro",
+              "words": [
+                "BURO",
+                "OFIS",
+                "IDARI"
+              ],
+              "dry": [
+                "90",
+                "60",
+                "30(2)",
+                "60",
+                "90",
+                "İzin verilmez"
+              ],
+              "wet": [
+                "60",
+                "60",
+                "30(2)",
+                "30(2)",
+                "60",
+                "120(3)"
+              ]
+            },
+            {
+              "id": "ticaret",
+              "name": "ticaret",
+              "words": [
+                "TICARET",
+                "MAGAZA",
+                "DUKKAN",
+                "AVM",
+                "ALISVERIS",
+                "MARKET",
+                "CARSI"
+              ],
+              "dry": [
+                "90",
+                "60",
+                "60",
+                "60",
+                "90",
+                "İzin verilmez"
+              ],
+              "wet": [
+                "60",
+                "60",
+                "30(2)",
+                "30(2)",
+                "60",
+                "120(3)"
+              ]
+            },
+            {
+              "id": "endustri",
+              "name": "endüstriyel",
+              "words": [
+                "SANAYI",
+                "ENDUSTRI",
+                "FABRIKA",
+                "IMALAT",
+                "ATOLYE"
+              ],
+              "dry": [
+                "120",
+                "90",
+                "60",
+                "90",
+                "120",
+                "İzin verilmez"
+              ],
+              "wet": [
+                "90",
+                "60",
+                "30(2)",
+                "60",
+                "90",
+                "120(3)"
+              ]
+            },
+            {
+              "id": "toplanma",
+              "name": "toplanma",
+              "words": [
+                "TOPLANMA",
+                "KONFERANS",
+                "KONGRE",
+                "CAMI",
+                "IBADET",
+                "DUGUN",
+                "LOKANTA",
+                "RESTORAN",
+                "KAFE",
+                "SINEMA",
+                "TIYATRO",
+                "MUZE",
+                "SERGI"
+              ],
+              "dry": [
+                "90",
+                "60",
+                "60",
+                "60",
+                "90",
+                "İzin verilmez"
+              ],
+              "wet": [
+                "60",
+                "60",
+                "30(2)",
+                "60",
+                "60",
+                "120(3)"
+              ]
+            },
+            {
+              "id": "depo",
+              "name": "depo",
+              "words": [
+                "DEPO",
+                "ANTREPO"
+              ],
+              "dry": [
+                "120",
+                "90",
+                "60",
+                "90",
+                "120",
+                "İzin verilmez"
+              ],
+              "wet": [
+                "90",
+                "60",
+                "30(2)",
+                "60",
+                "90",
+                "120(3)"
+              ]
+            },
+            {
+              "id": "otopark",
+              "name": "kapalı otopark",
+              "words": [
+                "OTOPARK",
+                "GARAJ"
+              ],
+              "all": [
+                "90",
+                "60",
+                "30(2)",
+                "60",
+                "90",
+                "120(3)"
+              ]
+            }
+          ],
+          "text": "Ek-3/B: taşıyıcı sistem R Ek-3/C; döşemeler: iki katlı konutun ikinci katı REI 30, dükkânla üstü arası REI 60 ya da Ek-3/C, kompartıman döşemeleri dâhil öbürleri REI Ek-3/C, bodrumla zemin kat arası REI 90 ya da Ek-3/C (büyüğü); dış duvarlar REI Ek-3/C; yangın kompartıman duvarları REI 60 ya da Ek-3/C (büyüğü), öbürleri REI Ek-3/C; korunumlu şaftlar REI 120; korunumlu yangın merdiveni yuvasını binanın geri kalanından ayıran duvar REI 120, yuva, acil durum asansör kuyusu ve yangın güvenlik holünü birbirinden ayıran duvar REI 60. Ek-3/C: kullanım sınıfına, yağmurlamaya, bodrum derinliğine (10 m'den fazla, az) ve bina yüksekliğine (5, 21,50, 30,50 m'den az; 30,50 m'den fazla) göre dakikalar; notlar: (1) bir bodrumun üstündeki döşeme, giriş ve üst katlarınki daha fazlaysa onu sağlar; (2) binaları ayıran kompartıman duvarlarında en az 60; (3) taşıyıcı sistemin parçası olmayan elemanlarda 90'a düşürülebilir; (4) acil kaçışı oluşturan elemanlarda 30'a yükseltilir.",
+          "source": "RG 19.12.2007/26735, 29/7 ve Ek-3; Ek-3/B ve Ek-3/C'nin tabloları yönetmeliğin PDF'inin 91. ve 93. sayfalarından okundu; docs/adr/8082 §1."
         }
       ]
     }

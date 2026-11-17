@@ -18,8 +18,10 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
 - **Yangın kompartımanları** (`kompartiman`, docs/adr/8081): mahaller arasındaki ayrımlardan kompartımanlar (en az EI 60,
   açık yer yok); tehlikeli alanların ayrımı (BYKHY 24/2), Ek-4'ün en çok alanı (24/6), kompartıman duvarındaki
   açıklıklar (24/7).
+- **Yangına dayanım süreleri** (`dayanim`, docs/adr/8082): beyan edilen sınıf Ek-3/B ve Ek-3/C'nin istediğiyle: kolon ve
+  kiriş R, döşeme REI, dış ve kompartıman duvarı EI, korunumlu yangın merdiveni REI 120.
 - **Olgular** KentOS'un ölçtüğüdür (`facts.building`, `facts.permit`); kural çizimi okumaz.
-- **Bağımsız durumlar** `fixtures/standards/v1/asansor.json`, `kapilar.json`, `emsal.json`, `merdiven-alti.json` ve `kompartiman.json`: beklenen sonuçlar mevzuat
+- **Bağımsız durumlar** `fixtures/standards/v1/asansor.json`, `kapilar.json`, `emsal.json`, `merdiven-alti.json`, `kompartiman.json` ve `dayanim.json`: beklenen sonuçlar mevzuat
   metninden elle çıkarıldı.
 
-Sınama: `python3 -I catalog/standards/tests/mimari-mevzuat/test_asansor.py`, `test_kapilar.py`, `test_emsal.py`, `test_merdiven_alti.py` ve `test_kompartiman.py`.
+Sınama: `python3 -I catalog/standards/tests/mimari-mevzuat/test_asansor.py`, `test_kapilar.py`, `test_emsal.py`, `test_merdiven_alti.py`, `test_kompartiman.py` ve `test_dayanim.py`.

@@ -80,6 +80,7 @@ pub mod paiy_areas;
 pub mod zoning;
 pub mod under_stair;
 pub mod separations;
+pub mod fire_elements;
 pub mod site;
 pub mod escape;
 pub mod fire_use;

@@ -185,6 +185,22 @@ fn area_by(search: &mut SpaceSearch<'_>, s: &SpaceFields, method: SpaceMethod) -
     })
 }
 
+/// The building's height (its storeys on ±0.00 and above: BYKHY 4/h) and the structure's (all of them: 4/bbb), metres,
+/// as the fire rules measure them (docs/adr/8035, 8082): a storey's own height, else to the next one's floor, else 3.00.
+pub fn heights(doc: &Document) -> (f64, f64) {
+    let Some(arch) = doc.settings().arch.as_ref() else {
+        return (0.0, 0.0);
+    };
+    let mut levels: Vec<&kentos_commands::ArchLevel> = arch.levels.iter().collect();
+    levels.sort_by(|a, b| a.elevation.total_cmp(&b.elevation));
+    let structure: f64 = (0..levels.len()).map(|i| level_height(&levels, i)).sum();
+    let building: f64 = (0..levels.len())
+        .filter(|&i| levels[i].elevation >= -1e-6)
+        .map(|i| level_height(&levels, i))
+        .sum();
+    (building, structure)
+}
+
 fn level_height(levels: &[&kentos_commands::ArchLevel], i: usize) -> f64 {
     let next = levels
         .get(i + 1)
@@ -365,11 +381,7 @@ fn assess(
                         == Some(crate::regulation_audit::RoomKind::Bedroom))
             }));
     // The storeys: the structure's height (all of them, 48/5, 4/bbb) and the building's (those on ±0.00 and above).
-    let structure: f64 = (0..levels.len()).map(|i| level_height(&levels, i)).sum();
-    let building: f64 = (0..levels.len())
-        .filter(|&i| levels[i].elevation >= -1e-6)
-        .map(|i| level_height(&levels, i))
-        .sum();
+    let (building, structure) = heights(doc);
     let high = building > 21.50 + 1e-9 || structure > 30.50 + 1e-9;
     let storeys = levels
         .iter()

@@ -257,6 +257,11 @@
       açık boy. Kompartımanı paketin kuralı kurar: en az EI 60 ve açık yer yoksa ayrı; döşemeler hep ayırır (26/1).
     - BYKHY 24/2 tehlikeli alanların ayrımı, 24/6 Ek-4'ün en çok alanı (tablo PDF'ten okundu, yeme içme 4000 m²),
       24/7 kompartıman duvarındaki açıklıklar. Katlar arası açıklıklar ve 24/4 kaldı.
+  - **Yapı elemanlarının dayanımı (17 Kasım 2026; [ADR 8082](../adr/8082-fire-resistance-of-elements.md), K79–K80):**
+    - Taşıyıcı sistemin kolon ve kirişleri, duvarlar (dış olup olmadıkları), döşemeler ölçülür (`Document::fire_elements`);
+      bina yüksekliği `fire_audit::heights`'tan.
+    - Paketin `dayanim` kuralı beyan edilen sınıfı Ek-3/B ve Ek-3/C ile karşılaştırır (tablolar PDF sayfalarından
+      veri). Çatı, şaft, asma tavan, asansör kapısı ve taşıyıcı duvar kaldı.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

@@ -2593,7 +2593,119 @@
         ],
         "open": 0.0
       }
-    ]
+    ],
+    "elements": [
+      {
+        "uid": "01a1dfda-069a-74c1-969d-0168a1cc86c9",
+        "kind": "wall",
+        "level": "zemin",
+        "exterior": true
+      },
+      {
+        "uid": "01a1dfda-069b-7333-8eb1-c34c62c094f1",
+        "kind": "wall",
+        "level": "zemin",
+        "exterior": true
+      },
+      {
+        "uid": "01a1dfda-069b-7333-8eb1-c34d6c2f3cb1",
+        "kind": "wall",
+        "level": "zemin",
+        "exterior": true
+      },
+      {
+        "uid": "01a1dfda-069b-7333-8eb1-c34e8d7f6c00",
+        "kind": "wall",
+        "level": "zemin",
+        "exterior": true
+      },
+      {
+        "uid": "01a1dfda-069b-7333-8eb1-c34fb2c551eb",
+        "kind": "wall",
+        "level": "zemin"
+      },
+      {
+        "uid": "01a1dfda-069b-7333-8eb1-c3504b9064c9",
+        "kind": "wall",
+        "level": "zemin"
+      },
+      {
+        "uid": "01a1dfda-06a7-7435-a23f-d8eabcad9c04",
+        "kind": "wall",
+        "level": "zemin"
+      },
+      {
+        "uid": "01a1dfda-06a7-7435-a23f-d8ebd7ba45f1",
+        "kind": "wall",
+        "level": "zemin"
+      },
+      {
+        "uid": "01a1dfda-06a7-7435-a23f-d8ec0fb0adb9",
+        "kind": "wall",
+        "level": "zemin"
+      },
+      {
+        "uid": "01a1dfda-06a7-7435-a23f-d8ed2c7b1e3d",
+        "kind": "wall",
+        "level": "zemin"
+      },
+      {
+        "uid": "01a1dfda-06a7-7435-a23f-d8ee6b4072a1",
+        "kind": "wall",
+        "level": "zemin"
+      },
+      {
+        "uid": "01a1dfda-06f8-76a1-8694-154e564a0117",
+        "kind": "wall",
+        "level": "k1",
+        "exterior": true
+      },
+      {
+        "uid": "01a1dfda-06f8-76a1-8694-154f1bfb8d4f",
+        "kind": "wall",
+        "level": "k1",
+        "exterior": true
+      },
+      {
+        "uid": "01a1dfda-06f8-76a1-8694-15505f2d5b85",
+        "kind": "wall",
+        "level": "k1",
+        "exterior": true
+      },
+      {
+        "uid": "01a1dfda-06f8-76a1-8694-15513f57a37f",
+        "kind": "wall",
+        "level": "k1",
+        "exterior": true
+      },
+      {
+        "uid": "01a1dfda-06f8-76a1-8694-1552b94befba",
+        "kind": "wall",
+        "level": "k1"
+      },
+      {
+        "uid": "01a1dfda-06f8-76a1-8694-15536ba1f48d",
+        "kind": "wall",
+        "level": "k1"
+      },
+      {
+        "uid": "01a1dfda-06fd-70e4-a3f4-c759aeeb6785",
+        "kind": "wall",
+        "level": "k1"
+      },
+      {
+        "uid": "01a1dfda-06fd-70e4-a3f4-c75adbd765e3",
+        "kind": "wall",
+        "level": "k1"
+      },
+      {
+        "uid": "01a1dfda-06fd-70e4-a3f4-c75baedb94aa",
+        "kind": "wall",
+        "level": "k1"
+      }
+    ],
+    "height": 6.0,
+    "basementDepth": 0.0
   },
   "cut": false
 }

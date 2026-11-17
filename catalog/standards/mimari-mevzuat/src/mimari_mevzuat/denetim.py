@@ -58,3 +58,9 @@ def merdiven_alti_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
 def kompartiman_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Yangın kompartımanları (BYKHY 24/2 tehlikeli alanlar, 24/6 ve Ek-4 en çok alan, 24/7 açıklıklar)."""
     return _bulgular(facts, ("bykhy_compartment_", "bykhy_hazard_room"))
+
+
+@ext.audit("dayanim")
+def dayanim_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Yapı elemanlarının yangına dayanım süreleri (BYKHY Ek-3/B, Ek-3/C): beyan edilen sınıf istenenle."""
+    return _bulgular(facts, ("bykhy_element_resistance", "bykhy_height_not_permitted"))

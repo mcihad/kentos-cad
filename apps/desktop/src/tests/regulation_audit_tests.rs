@@ -453,6 +453,18 @@ fn a_four_storey_building_s_stairs_ramp_shafts_and_elevator_are_said() {
             "paiy_elevator_missing",
             "Binada asansör yok (4 kat) — PAİY 34/1 (1.7.2026)",
         ),
+        // The standards package's Ek-3 (docs/adr/8082): the exterior walls declare no fire class; one dwelling makes
+        // the building Ek-3/C's "bir ve iki ailelik ev", 12.00 m high: 60 minutes.
+        (
+            "bykhy_element_resistance",
+            "1. kat: 1 duvarın yangın sınıfı beyan edilmemiş; Ek-3/B 5 dış duvar; Ek-3/C bir ve iki ailelik ev, bina \
+             yüksekliği 12.00 m (21,50 m'den az) en az EI 60 ister — BYKHY Ek-3",
+        ),
+        (
+            "bykhy_element_resistance",
+            "Zemin kat: 4 duvarın yangın sınıfı beyan edilmemiş; Ek-3/B 5 dış duvar; Ek-3/C bir ve iki ailelik ev, bina \
+             yüksekliği 12.00 m (21,50 m'den az) en az EI 60 ister — BYKHY Ek-3",
+        ),
     ];
     assert_eq!(
         found,

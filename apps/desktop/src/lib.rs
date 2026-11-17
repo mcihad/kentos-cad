@@ -1545,6 +1545,9 @@ mod under_stair_tests;
 #[path = "tests/compartment_tests.rs"]
 mod compartment_tests;
 #[cfg(test)]
+#[path = "tests/resistance_tests.rs"]
+mod resistance_tests;
+#[cfg(test)]
 #[path = "tests/fire_escape_tests.rs"]
 mod fire_escape_tests;
 #[cfg(test)]
