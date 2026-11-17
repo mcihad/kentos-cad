@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 0.8.0 — 17 Kasım 2026
+
+- Müellifin cevapları çizimde (docs/adr/8077): `form.cevapli(satirlar, cevaplar)` incelemeye kalan soruların resmî
+  cevabını ve notunu müellifin cevabından verir (`muellif`); `form.tablo(ifc, cevaplar)` basılan formda onları yazar;
+  `bim.denetle` aynı birleştirmeyi kullanır. KentOS'un dosyadan cevapladığı soruya verilen cevap okunmaz.
+
 ## 0.7.1 — 17 Kasım 2026
 
 - 9. soru: modelin gerçek kuzeyi (EK-7 Tablo 7.8 `TrueNorth`) yoksa onarım, dışa aktarımın nedenini söyler

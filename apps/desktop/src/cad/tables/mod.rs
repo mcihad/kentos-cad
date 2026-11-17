@@ -198,12 +198,13 @@ impl crate::app::App {
             return iced::Task::none();
         };
         let planned = crate::ifc_facts::plan(&doc.model);
+        let answers = doc.model.form_answers().to_vec();
         self.say(kentos_interaction::Level::Info, "Model kalite kontrol formu: IFC modeli yazılıp okunuyor…");
         iced::Task::perform(
             async move {
                 let (sent, got) = iced::futures::channel::oneshot::channel();
                 std::thread::spawn(move || {
-                    let _ = sent.send(crate::ifc_facts::form_rows_of(planned));
+                    let _ = sent.send(crate::ifc_facts::form_rows_of(planned, answers));
                 });
                 got.await.unwrap_or_else(|_| Err("Kuralın süreci cevap vermeden kapandı.".to_owned()))
             },

@@ -128,6 +128,23 @@ class GercekDosyalar(unittest.TestCase):
         self.assertIn("digital_quality_room_overlap", [b["code"] for b in mimari.denetle(cad)])
 
 
+class MuellifCevaplari(unittest.TestCase):
+    """Çizimde tutulan müellif cevapları (docs/adr/8077): basılan formda incelemeye kalan sorunun resmî cevabı ve notu;
+    dosyadan cevaplanan soruya verilen cevap okunmaz."""
+
+    def test_inceleme_sorusu_muellifin_cevabini_alir(self):
+        satirlar = form.tablo(KUNYE, [{"no": 1, "yes": True, "note": "Sınır yayımlanmadı"}, {"no": 7, "yes": False}])
+        bir = next(r for r in satirlar if r[0] == "1")
+        yedi = next(r for r in satirlar if r[0] == "7")
+        self.assertEqual((bir[4], bir[5]), ("Evet", "Sınır yayımlanmadı (müellif)"))
+        self.assertEqual(yedi[4], "Hayır")
+        on = next(r for r in satirlar if r[0] == "10")
+        self.assertEqual(on[4], "", "cevaplanmayan inceleme sorusu boş kalır")
+
+    def test_dosyadan_cevaplanan_soruya_cevap_okunmaz(self):
+        self.assertEqual(form.tablo(KUNYE), form.tablo(KUNYE, [{"no": 4, "yes": False, "note": "Okunmaz"}]))
+
+
 class IkinciOkuyucu(unittest.TestCase):
     """KentOS'un okuduğu olgulardan form, başka bir okuyucunun (scripts/fixtures/ifc_form_reference.py) aynı dosyalardan
     kurduğu olgulardaki formla satır satır aynı: kanıt, bulguların kodu ve nesneleri."""

@@ -59,7 +59,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2929,
+       "records": 2947,
        "objects": 91,
        "classes": {
         "IfcBeam": 8,
@@ -91,7 +91,7 @@
          "contains": 29
         },
         {
-         "globalId": "2v8zbZ9wnjAEbjpi6u0vu1",
+         "globalId": "1D_k$kjwnjI73rmyPD6rL7",
          "name": "MM-BNK-1._kat",
          "contains": 29
         }
@@ -122,7 +122,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi-kunye.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2960,
+       "records": 2979,
        "objects": 92,
        "classes": {
         "IfcActor": 1,
@@ -155,7 +155,7 @@
          "contains": 29
         },
         {
-         "globalId": "0Wel6gHNOjY6IbRO7bDZVt",
+         "globalId": "2Pi9JH5NOjVU8Yne1UBb0r",
          "name": "MM-BNK-1._kat",
          "contains": 29
         }
@@ -186,7 +186,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/blok-a.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2962,
+       "records": 2977,
        "objects": 93,
        "classes": {
         "IfcBeam": 8,
@@ -218,12 +218,12 @@
          "contains": 29
         },
         {
-         "globalId": "2pr0qBp5CRfxtemI$O8aRe",
+         "globalId": "0wncda$5CRia1hQ35VAYwg",
          "name": "MM-BNK-1._kat",
          "contains": 29
         },
         {
-         "globalId": "1_FvXHb5CRju6ikx8YhYAB",
+         "globalId": "2C9583z5CRp8Qo2RKmlV8F",
          "name": "MM-BNK-Bodrum_kat",
          "contains": 1
         }
@@ -254,7 +254,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/blok-b.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 206,
+       "records": 204,
        "objects": 11,
        "classes": {
         "IfcBuilding": 1,
@@ -369,7 +369,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/egimli-doseme.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2978,
+       "records": 2996,
        "objects": 93,
        "classes": {
         "IfcBeam": 8,
@@ -401,7 +401,7 @@
          "contains": 31
         },
         {
-         "globalId": "2j7l5Hr_0qEfdv$rkXS2mU",
+         "globalId": "0OHzh6H_0q6n9o2bSCM7JO",
          "name": "MM-BNK-1._kat",
          "contains": 29
         }
@@ -432,7 +432,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/egri-bina.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 715,
+       "records": 723,
        "objects": 34,
        "classes": {
         "IfcBuilding": 1,
@@ -461,7 +461,7 @@
          "contains": 9
         },
         {
-         "globalId": "0a5hwTw8kljCsZKnncLue7",
+         "globalId": "2FFwWIM8klbKORNXVHFzB1",
          "name": "MM-BNK-1._kat",
          "contains": 9
         }
@@ -492,7 +492,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/egri-bina-referans.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 855,
+       "records": 863,
        "objects": 34,
        "classes": {
         "IfcBuilding": 1,
@@ -521,7 +521,7 @@
          "contains": 9
         },
         {
-         "globalId": "0a5hwTw8kljCsZKnncLue7",
+         "globalId": "2FFwWIM8klbKORNXVHFzB1",
          "name": "MM-BNK-1._kat",
          "contains": 9
         }
@@ -1186,7 +1186,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2929,
+       "records": 2947,
        "objects": 91,
        "classes": {
         "IfcBeam": 8,
@@ -1218,7 +1218,7 @@
          "contains": 29
         },
         {
-         "globalId": "2v8zbZ9wnjAEbjpi6u0vu1",
+         "globalId": "1D_k$kjwnjI73rmyPD6rL7",
          "name": "MM-BNK-1._kat",
          "contains": 29
         }
@@ -1226,7 +1226,7 @@
        "findings": [],
        "object": {
         "globalId": "01alMXGa9m080000000001",
-        "step": 157,
+        "step": 164,
         "class": "IfcWall",
         "name": "MM-DVR-Dış_duvar_25",
         "description": null,
@@ -1348,7 +1348,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2929,
+       "records": 2947,
        "objects": 91,
        "classes": {
         "IfcBeam": 8,
@@ -1380,7 +1380,7 @@
          "contains": 29
         },
         {
-         "globalId": "2v8zbZ9wnjAEbjpi6u0vu1",
+         "globalId": "1D_k$kjwnjI73rmyPD6rL7",
          "name": "MM-BNK-1._kat",
          "contains": 29
         }
@@ -1388,7 +1388,7 @@
        "findings": [],
        "object": {
         "globalId": "01alMXGa9m08000000000G",
-        "step": 2534,
+        "step": 2541,
         "class": "IfcSpace",
         "name": "MM-MHL-001_Yatak_odası",
         "description": null,
@@ -1406,6 +1406,16 @@
           "values": [
            {
             "name": "FloorCoveringThickness",
+            "class": "IfcPropertySingleValue",
+            "value": {
+             "kind": "number",
+             "number": 0.02,
+             "measure": "IFCPOSITIVELENGTHMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "WallCoveringThickness",
             "class": "IfcPropertySingleValue",
             "value": {
              "kind": "number",
@@ -1521,7 +1531,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2929,
+       "records": 2947,
        "objects": 91,
        "classes": {
         "IfcBeam": 8,
@@ -1553,7 +1563,7 @@
          "contains": 29
         },
         {
-         "globalId": "2v8zbZ9wnjAEbjpi6u0vu1",
+         "globalId": "1D_k$kjwnjI73rmyPD6rL7",
          "name": "MM-BNK-1._kat",
          "contains": 29
         }
@@ -1561,7 +1571,7 @@
        "findings": [],
        "object": {
         "globalId": "3ydGVFlwnjBYgl8a9xXv7Y",
-        "step": 29,
+        "step": 28,
         "class": "IfcBuildingStorey",
         "name": "MM-BNK-Zemin_kat",
         "description": null,
@@ -1573,6 +1583,23 @@
         "storey": null,
         "sets": [
          {
+          "name": "Pset_BuildingStoreyCommon",
+          "kind": "properties",
+          "fromType": false,
+          "values": [
+           {
+            "name": "ElevationOfSSLRelative",
+            "class": "IfcPropertySingleValue",
+            "value": {
+             "kind": "number",
+             "number": -0.13,
+             "measure": "IFCLENGTHMEASURE"
+            },
+            "unit": null
+           }
+          ]
+         },
+         {
           "name": "Qto_BuildingStoreyBaseQuantities",
           "kind": "quantities",
           "fromType": false,
@@ -1582,7 +1609,17 @@
             "class": "IfcQuantityLength",
             "value": {
              "kind": "number",
-             "number": 3.0,
+             "number": 3.06,
+             "measure": "IFCLENGTHMEASURE"
+            },
+            "unit": null
+           },
+           {
+            "name": "NetHeight",
+            "class": "IfcQuantityLength",
+            "value": {
+             "kind": "number",
+             "number": 2.91,
              "measure": "IFCLENGTHMEASURE"
             },
             "unit": null
@@ -2008,7 +2045,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2929,
+       "records": 2947,
        "objects": 91,
        "classes": {
         "IfcBeam": 8,
@@ -2040,7 +2077,7 @@
          "contains": 29
         },
         {
-         "globalId": "2v8zbZ9wnjAEbjpi6u0vu1",
+         "globalId": "1D_k$kjwnjI73rmyPD6rL7",
          "name": "MM-BNK-1._kat",
          "contains": 29
         }

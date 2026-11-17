@@ -525,6 +525,12 @@ impl Input for kentos_commands::ArchPerformance {
     }
 }
 
+impl Input for kentos_commands::ArchFormAnswers {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_commands::ZoningParcel {
     /// `tolerance` (docs/adr/8072 §5).
     fn number(&mut self, path: &str) -> Option<&mut f64> {

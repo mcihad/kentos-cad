@@ -246,6 +246,11 @@ impl App {
             Event::Plan if permit => self.permit_gate_wait(),
             _ => {}
         }
+        // The author's answers are the drawing's (docs/adr/8077): what the window holds is written with
+        // `cad.form.answer` before a check or a publication, one undo step when it changed.
+        if matches!(e, Event::Plan | Event::Publish) && !self.permit_bim_keep() {
+            return Task::none();
+        }
         let task = self.sheet_publish_step(e);
         // The check's report came: the gate asked with the files it would write (docs/adr/8066).
         if self.permit_gate_due() {
@@ -314,6 +319,10 @@ impl App {
             }
             Event::Bim(on) => {
                 super::permit_bim::switch(s, on);
+                // The drawing's answers come with the switch (docs/adr/8077).
+                if let (Some(bim), Some(doc)) = (s.input.bim.as_mut(), self.document.as_ref()) {
+                    bim.answers = doc.model.form_answers().to_vec();
+                }
                 s.changed();
             }
             // An answer keeps the check's report in view (its questions are there) but no longer ready: Denetle again.

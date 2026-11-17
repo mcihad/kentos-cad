@@ -795,6 +795,13 @@ pub(super) const ENTRIES: &[Entry] = &[
             )]
         },
     },
+    // Kontrol formunun cevapları (docs/adr/8077): the drawing's settings, no object.
+    Entry {
+        id: "cad.form.answer",
+        refusals: &[&["nothing_to_set", "invalid_input"], REVISION],
+        warnings: &[],
+        targets: Vec::new,
+    },
     // Kuzey oku, Revizyon işaretle and Malzeme lejandı (docs/adr/0721).
     Entry {
         id: "cad.north.create",

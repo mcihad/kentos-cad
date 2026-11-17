@@ -178,6 +178,37 @@ fn a_declared_building_s_package_holds_and_is_published() {
     let _ = std::fs::remove_dir_all(&path);
 }
 
+/// The author's answers are the drawing's (docs/adr/8077): the window holds them until Denetle, which writes them with
+/// `cad.form.answer` as one undo step; the printed form shows them; a new window's switch loads them; undo takes them
+/// away.
+#[test]
+fn the_author_s_answers_are_the_drawing_s_and_the_printed_form_shows_them() {
+    let model = |app: &App| -> kentos_domain::Document { app.document.as_ref().expect("a drawing").model.clone() };
+    let mut app = declared_building();
+    let path = folder("cevap");
+    permit_publication(&mut app, &path);
+    let _ = app.sheet_publish_event(Publish::Bim(true));
+    let _ = app.sheet_publish_event(Publish::BimAnswer(1, Some(true)));
+    let _ = app.sheet_publish_event(Publish::BimNote(1, "Bakanlığın sınırı yayımlanmadı".into()));
+    assert!(model(&app).form_answers().is_empty(), "the window holds them until Denetle");
+    check(&mut app);
+    let held = kentos_commands::FormAnswer { no: 1, yes: true, note: "Bakanlığın sınırı yayımlanmadı".into() };
+    assert_eq!(model(&app).form_answers(), [held.clone()]);
+    // The printed form: the question's official answer and the author's note.
+    let rows = crate::ifc_facts::form_rows(&model(&app)).expect("the form");
+    let one = rows.iter().find(|r| r[0] == "1").expect("row 1");
+    assert_eq!((one[4].as_str(), one[5].as_str()), ("Evet", "Bakanlığın sınırı yayımlanmadı (müellif)"));
+    // Another window: the switch loads the drawing's answers.
+    let _ = app.sheet_publish_event(Publish::Bim(false));
+    let _ = app.sheet_publish_event(Publish::Bim(true));
+    assert_eq!(publication(&app).input.bim.as_ref().expect("the package").answers, [held]);
+    // Undo takes them away, one step.
+    let undone = app.document.as_mut().expect("a drawing").model.undo();
+    assert_eq!(undone.as_deref(), Some("Kontrol formunun cevapları"));
+    assert!(model(&app).form_answers().is_empty());
+    let _ = std::fs::remove_dir_all(&path);
+}
+
 /// The window's BIM part, light and dark: the switch, the five results and the author's questions after Denetle;
 /// then the declared building's package, every result holding; `.run/gui-evidence/bim-ruhsat-paketi-8075/`:
 ///
@@ -275,5 +306,94 @@ fn kunye_screens() {
         let file = out.join(format!("1-kunye-posta-kutusu-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
+    }
+}
+
+/// The printed form with the author's answers (docs/adr/8077): the declared building's answers written with
+/// `cad.form.answer`, the EK-9 table placed beside the building, its 1st, 7th and 10th questions the author's;
+/// `.run/gui-evidence/ek9-cevaplar-8077/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib bim_permit_tests::form_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn form_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/ek9-cevaplar-8077");
+    std::fs::create_dir_all(&out).expect("a folder");
+    fn update(app: &mut App, m: Message) {
+        let _ = app.update(m);
+    }
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        let mut app = declared_building();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        // The künye typed and the set made, as Ruhsat takımı does; then the window closed.
+        let path = folder(&format!("form-{name}"));
+        permit_publication(&mut app, &path);
+        app.close_exchange();
+        let _ = std::fs::remove_dir_all(&path);
+        // The questions left to the author; in the drawing the form reads the file written in memory, so the 18th
+        // (the delivered file) is the author's too.
+        run(
+            &mut app,
+            "cad.form.answer",
+            json!({"answers": [
+                {"no": 1, "yes": true, "note": "Bakanlığın sınırı yayımlanmadı"},
+                {"no": 7, "yes": true, "note": "LOD 300, 3B'de incelendi"},
+                {"no": 10, "yes": true},
+                {"no": 18, "yes": true, "note": "Yayımlanan paketin dosyası"}
+            ]}),
+        );
+        let rows = crate::ifc_facts::form_rows(&app.document.as_ref().expect("a drawing").model).expect("the form");
+        let doc = &mut app.document.as_mut().expect("a drawing").model;
+        let all = kentos_native_application::sheets_fit::extent_of(doc, doc.entities()).expect("the building's extent");
+        let look = kentos_interaction::table::Look { header: true, height: 0.25, ..Default::default() };
+        let cells = kentos_geometry_core::ops::table::from_rows(rows, true);
+        let geometry =
+            kentos_interaction::table::new_table(doc, &cells, &look, kentos_interaction::Vec2::new(all[2] + 4.0, all[3]), None);
+        let layer_id = doc.layers().active().to_owned();
+        let made = kentos_native_application::create::execute(
+            &mut kentos_native_application::ExecutionContext::new(doc),
+            kentos_commands::EntitiesCreate {
+                layer_id,
+                objects: vec![kentos_commands::NewObject {
+                    geometry,
+                    color: None,
+                    line_weight: None,
+                    line_type: None,
+                    line_pattern: None,
+                    attrs: None,
+                    label: None,
+                    label_of: None,
+                    label_scale: None,
+                    symbol: None,
+                    order: None,
+                    transparency: None,
+                }],
+                operation: None,
+                expected_revision: None,
+            },
+        );
+        assert!(matches!(made, kentos_commands::CommandResult::Completed { .. }), "{made:?}");
+        let table = doc.entities().filter(|e| matches!(e, Entity::Table(_))).last().expect("the table");
+        let [x0, y0, x1, y1] = kentos_native_application::sheets_fit::extent_of(doc, std::iter::once(table)).expect("its box");
+        let large = Size::new(2400.0, 1500.0);
+        let _ = app.update(Message::WindowResized(large));
+        let _ = app.update(Message::CommandHistoryToggled);
+        let mut wide = Snapshot::new(large).expect("a renderer");
+        wide.settle(&mut app, App::view, &mut update);
+        // The questions, then the answers with the notes: the table's two halves.
+        for (from, to, file) in [(0.0, 0.5, "1-ek9-sorular"), (0.45, 1.0, "2-ek9-muellif-cevaplari")] {
+            let bounds = kentos_render_wgpu::Bounds { min_x: x0 + from * (x1 - x0), min_y: y0, max_x: x0 + to * (x1 - x0), max_y: y1 };
+            app.viewport.camera.fit(&bounds, 24.0);
+            wide.settle(&mut app, App::view, &mut update);
+            wide.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            wide.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        }
     }
 }

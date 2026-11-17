@@ -219,6 +219,11 @@
     - Posta kutusu künyeden, KentOS doldurmaz (K56); duvar kaplamasının kalınlığı mahalin durduğu duvar yüzünün
       kaplamasından (K57); gerçek kuzey sistemin meridyeninden, yoksa kuzey okundan, bilinmezse yazılmaz (K58).
     - IDS koşul yazamaz: koşullu iki satır IfcTester karşılaştırmasında ayrı tutulur.
+  - **EK-9'un müellif cevapları çizimde (17 Kasım 2026; [ADR 8077](../adr/8077-ek9-author-answers-in-the-drawing.md)):**
+    - `settings.arch.formAnswers`, `cad.form.answer` v1 (tek geri alma adımı, mimari verisi 10); basılan form
+      (`form.tablo(ifc, cevaplar)`) ve yayın aynı cevabı okur; yalnız incelemeye kalan soru müellifin cevabını alır.
+    - Yayın penceresinin taslağı Denetle ve Yayınla'da çizime yazılır; çağrıda verilen cevap çizimdekinin önüne geçer.
+    - Bağımsız Python `.kcad` okuyucusu mimari verisi ≥1'i bilmiyor (ADR 8068'den beri): TODOS.md'de ayrı iş.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

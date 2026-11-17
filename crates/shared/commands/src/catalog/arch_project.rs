@@ -679,6 +679,43 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // Kontrol formunun cevapları (docs/adr/8077), held together by fixtures/commands/v1/cad.form.answer.json.
+        CommandDescriptor {
+            id: crate::CAD_FORM_ANSWER.into(),
+            version: crate::CAD_FORM_ANSWER_VERSION,
+            title: "Kontrol formunun cevapları".into(),
+            summary: "Model kalite kontrol formunun (Dijital Proje Yön. EK-9 Tablo 9.1) KentOS'un dosyadan cevaplamadığı sorularına müellifin cevabını çizimde tutar (settings.arch.formAnswers): basılan form ve BIM ruhsat paketinin yayını onu okur. answers her biri bir soru: no (1–21), yes (true Evet, false Hayır; null cevabı ve notu kaldırır) ve note (verilmezse var olan kalır, boş metin kaldırır; en çok 300 karakter, satır sonu yok). Değişiklik yoksa nothing_to_set; 1–21 dışında numara, iki kez verilen soru, null ile not, uzun ya da denetim karakterli not invalid_input. Komut cevabı tutar; hangi sorunun onu aldığı formun kuralıdır (standart paketin): KentOS'un dosyadan cevapladığı soruya verilen cevap tutulur, okunmaz. Tek geri alma adımı “Kontrol formunun cevapları”; çizimin geometrisi değişmez. Çıktı çizimin bütün cevapları soru sırasıyla ve sürüm. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ArchFormAnswers>(),
+            output: schema::<crate::ArchFormAnswersDone>(),
+            plan: Some(schema::<crate::ArchFormAnswersDone>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Dosya boyutu Evet, notuyla; gelişim seviyesi Evet".into(),
+                    input: json!({
+                        "answers": [
+                            { "no": 1, "yes": true, "note": "Bakanlığın sınırı yayımlanmadı" },
+                            { "no": 7, "yes": true }
+                        ]
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Emsal hesabının cevabını kaldır".into(),
+                    input: json!({ "answers": [{ "no": 10, "yes": null }] }),
+                    output: None,
+                },
+            ],
+        },
         // Yangın ve performans (docs/adr/8068), held together by fixtures/commands/v1/cad.arch.performance.json.
         CommandDescriptor {
             id: crate::CAD_ARCH_PERFORMANCE.into(),

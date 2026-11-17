@@ -174,6 +174,12 @@ macro_rules! arch_commands {
                 arch_performance,
                 kentos_commands::ArchPerformance
             ),
+            kentos_commands::CAD_FORM_ANSWER => crate::arch_dispatch::arch_arm!(
+                $command,
+                $then,
+                arch_form_answers,
+                kentos_commands::ArchFormAnswers
+            ),
             kentos_commands::CAD_ZONING_PARCEL => crate::arch_dispatch::arch_arm!(
                 $command,
                 $then,

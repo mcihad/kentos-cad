@@ -5,6 +5,7 @@
 mod addresses;
 mod arch_elements;
 mod arch_performance;
+mod arch_form_answers;
 mod annotation;
 mod arrays;
 mod salvage;

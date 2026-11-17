@@ -450,7 +450,10 @@ pub fn read(
         site,
         local_rules,
         sprinklers,
-        performance: None,
+        // The building's fire protection class (docs/adr/8068) and the form's answers (docs/adr/8077) are their own
+        // windows': kept as the project has them.
+        performance: choices.and_then(|a| a.performance.clone()),
+        form_answers: choices.map_or_else(Vec::new, |a| a.form_answers.clone()),
     };
     match arch.problem() {
         Some((_, why)) => Err(why),
@@ -800,7 +803,10 @@ mod tests {
         serde_json::from_value(serde_json::json!({
             "levels":[{"id":"zemin","name":"Zemin kat","elevation":0.}],
             "spaceNames":["Mutfak","mutfak"],"spaceUsages":["Konut"],
-            "spaceNumberPrefixes":{"zemin":"Z-"}
+            "spaceNumberPrefixes":{"zemin":"Z-"},
+            // Declared elsewhere, kept by the form (docs/adr/8068, 8077).
+            "performance":{"fireProtectionClass":{"value":"Konut, düşük tehlike","basis":{"kind":"author"}}},
+            "formAnswers":[{"no":1,"yes":true,"note":"Sınır yayımlanmadı"}]
         }))
         .unwrap()
     }

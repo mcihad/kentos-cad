@@ -5,6 +5,7 @@ import type { ArchMaterial } from "./ArchMaterial";
 import type { ArchModule } from "./ArchModule";
 import type { BuildingPerformance } from "./BuildingPerformance";
 import type { BuildingProgram } from "./BuildingProgram";
+import type { FormAnswer } from "./FormAnswer";
 import type { LevelView } from "./LevelView";
 import type { LineGroups } from "./LineGroups";
 import type { LocalRules } from "./LocalRules";
@@ -112,6 +113,12 @@ localRules?: LocalRules,
  * 6.7 `FireProtectionClass`). Absent: none declared.
  */
 performance?: BuildingPerformance, 
+/**
+ * Kontrol formunun cevapları (docs/adr/8077; arch data 1): the author's answers to the model quality control form's
+ * questions KentOS leaves to them (EK-9 Tablo 9.1: the file size, the development level, the area tables), each
+ * with its note, by question; the printed form and the BIM package read them. Empty: none given.
+ */
+formAnswers?: Array<FormAnswer>, 
 /**
  * Yağmurlama sistemi (docs/adr/8035; `.kcad` schema 226): the building has an automatic sprinkler system, so the
  * fire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.

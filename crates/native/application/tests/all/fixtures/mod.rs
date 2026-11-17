@@ -137,7 +137,8 @@ use kentos_native_application::{
 };
 #[cfg(feature = "mod-arch")]
 use kentos_native_application::{
-    arch_audit, arch_ifc, arch_performance, casework_edit, casework_query, casework_run, columns_distances,
+    arch_audit, arch_form_answers, arch_ifc, arch_performance, casework_edit, casework_query, casework_run,
+    columns_distances,
     zoning_parcel,
     elevations_edit, elevations_query, legends, levels_assign, materials_edit, modules_edit,
     modules_query, north, opening_types_edit, openings_create, openings_distances, openings_edit,

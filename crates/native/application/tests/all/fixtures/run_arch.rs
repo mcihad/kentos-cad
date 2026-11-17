@@ -89,6 +89,9 @@ macro_rules! arch_cases {
             kentos_commands::CAD_ARCH_PERFORMANCE => {
                 $then!(arch_performance, kentos_commands::ArchPerformance)
             }
+            kentos_commands::CAD_FORM_ANSWER => {
+                $then!(arch_form_answers, kentos_commands::ArchFormAnswers)
+            }
             kentos_commands::CAD_ZONING_PARCEL => {
                 $then!(zoning_parcel, kentos_commands::ZoningParcel)
             }

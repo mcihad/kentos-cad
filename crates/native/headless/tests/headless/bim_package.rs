@@ -230,10 +230,13 @@ fn the_real_rule_stops_what_the_model_lacks_and_publishes_a_declared_building_wh
 
 fn a_declared_building_is_published_whole() {
     let mut doc = permit_drawing(true);
+    // The author's answers kept in the drawing (`cad.form.answer`, docs/adr/8077): the publication reads them, none given
+    // to it.
+    run(&mut doc, "cad.form.answer", json!({"answers": answers()}));
     // `KENTOS_BIM_PAKET=<folder>` keeps the published package there, for the independent readers (docs/adr/8075 §6).
     let keep = std::env::var_os("KENTOS_BIM_PAKET").map(PathBuf::from);
     let path = keep.clone().unwrap_or_else(|| folder("tam"));
-    let answer = publish(&mut doc, &path, CallOp::Execute, answers());
+    let answer = publish(&mut doc, &path, CallOp::Execute, json!([]));
     let published = report(&answer);
     assert!(published.ready, "{:#?}", published.issues.iter().filter(|i| i.error).map(|i| (&i.code, &i.message)).collect::<Vec<_>>());
     let bim = published.bim.as_ref().expect("the package's part");

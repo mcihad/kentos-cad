@@ -1510,6 +1510,12 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub performance: Option<crate::BuildingPerformance>,
+    /// Kontrol formunun cevapları (docs/adr/8077; arch data 1): the author's answers to the model quality control form's
+    /// questions KentOS leaves to them (EK-9 Tablo 9.1: the file size, the development level, the area tables), each
+    /// with its note, by question; the printed form and the BIM package read them. Empty: none given.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::FormAnswer>>"))]
+    pub form_answers: Vec<crate::FormAnswer>,
     /// Yağmurlama sistemi (docs/adr/8035; `.kcad` schema 226): the building has an automatic sprinkler system, so the
     /// fire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -2095,6 +2101,9 @@ impl ArchSettings {
 
     /// What is wrong with it; none when it holds.
     pub fn problem(&self) -> Option<(String, String)> {
+        if let Some(p) = crate::FormAnswer::list_problem(&self.form_answers) {
+            return Some((format!("formAnswers.{}", p.0), p.1));
+        }
         if let Some(z) = &self.zoning
             && let Some(p) = z.problem()
         {

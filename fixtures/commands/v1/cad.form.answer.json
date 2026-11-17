@@ -1,0 +1,2770 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.form.answer",
+  "commandVersion": 1,
+  "title": "Kontrol formunun cevapları: Evet/Hayır ve not, kaldırma, değişmeyen çağrı; retler",
+  "note": "ADR 8077. Beklenenler scripts/fixtures/form_answers_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kontrol formu",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50.0,
+      "workspace": "cad"
+    },
+    "origin": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "layers": [
+      {
+        "id": "0",
+        "name": "0",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "0",
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 6.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.25,
+        "justify": "center"
+      },
+      {
+        "kind": "space",
+        "id": 2,
+        "layerId": "0",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 0.0,
+                  "y": 0.125
+                },
+                {
+                  "x": 6.0,
+                  "y": 0.125
+                },
+                {
+                  "x": 6.0,
+                  "y": 4.0
+                },
+                {
+                  "x": 0.0,
+                  "y": 4.0
+                }
+              ]
+            }
+          }
+        ],
+        "name": "Salon"
+      }
+    ],
+    "uids": [
+      "0192f5a1-8077-7000-8000-000000000001",
+      "0192f5a1-8077-7000-8000-000000000002"
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Dosya boyutu Evet, notuyla; mimari ayarı olmayan çizimde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 1,
+                "yes": true,
+                "note": "Bakanlığın sınırı yayımlanmadı"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [
+                {
+                  "no": 1,
+                  "yes": true,
+                  "note": "Bakanlığın sınırı yayımlanmadı"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "Bakanlığın sınırı yayımlanmadı"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "Bakanlığın sınırı yayımlanmadı"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gelişim seviyesi Hayır, notsuz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 7,
+                "yes": false
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [
+                {
+                  "no": 7,
+                  "yes": false
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 7,
+                    "yes": false
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 7,
+                    "yes": false
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Üç soru birlikte, soru sırasıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 10,
+                "yes": true
+              },
+              {
+                "no": 1,
+                "yes": true
+              },
+              {
+                "no": 7,
+                "yes": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [
+                {
+                  "no": 1,
+                  "yes": true
+                },
+                {
+                  "no": 7,
+                  "yes": true
+                },
+                {
+                  "no": 10,
+                  "yes": true
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  },
+                  {
+                    "no": 10,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  },
+                  {
+                    "no": 10,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Var olan cevap Hayır'a döner, notu kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 1,
+                "yes": false
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [
+                {
+                  "no": 1,
+                  "yes": false,
+                  "note": "Bakanlığın sınırı yayımlanmadı"
+                },
+                {
+                  "no": 7,
+                  "yes": true
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": false,
+                    "note": "Bakanlığın sınırı yayımlanmadı"
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "Bakanlığın sınırı yayımlanmadı"
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": false,
+                    "note": "Bakanlığın sınırı yayımlanmadı"
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kontrol formu",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "formAnswers": [
+              {
+                "no": 1,
+                "yes": true,
+                "note": "Bakanlığın sınırı yayımlanmadı"
+              },
+              {
+                "no": 7,
+                "yes": true
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "space",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 4.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 4.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "Salon"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8077-7000-8000-000000000001",
+          "0192f5a1-8077-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Yeni not eskisinin yerini alır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 1,
+                "yes": true,
+                "note": "Sınır 2027'de"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [
+                {
+                  "no": 1,
+                  "yes": true,
+                  "note": "Sınır 2027'de"
+                },
+                {
+                  "no": 7,
+                  "yes": true
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "Sınır 2027'de"
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "Bakanlığın sınırı yayımlanmadı"
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "Sınır 2027'de"
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kontrol formu",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "formAnswers": [
+              {
+                "no": 1,
+                "yes": true,
+                "note": "Bakanlığın sınırı yayımlanmadı"
+              },
+              {
+                "no": 7,
+                "yes": true
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "space",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 4.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 4.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "Salon"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8077-7000-8000-000000000001",
+          "0192f5a1-8077-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Boş not notu kaldırır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 1,
+                "yes": true,
+                "note": ""
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [
+                {
+                  "no": 1,
+                  "yes": true
+                },
+                {
+                  "no": 7,
+                  "yes": true
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "Bakanlığın sınırı yayımlanmadı"
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kontrol formu",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "formAnswers": [
+              {
+                "no": 1,
+                "yes": true,
+                "note": "Bakanlığın sınırı yayımlanmadı"
+              },
+              {
+                "no": 7,
+                "yes": true
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "space",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 4.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 4.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "Salon"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8077-7000-8000-000000000001",
+          "0192f5a1-8077-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "null cevabı ve notu kaldırır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 1,
+                "yes": null
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [
+                {
+                  "no": 7,
+                  "yes": true
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "Bakanlığın sınırı yayımlanmadı"
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kontrol formu",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "formAnswers": [
+              {
+                "no": 1,
+                "yes": true,
+                "note": "Bakanlığın sınırı yayımlanmadı"
+              },
+              {
+                "no": 7,
+                "yes": true
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "space",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 4.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 4.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "Salon"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8077-7000-8000-000000000001",
+          "0192f5a1-8077-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Son cevap da kalkınca liste boşalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 1,
+                "yes": null
+              },
+              {
+                "no": 7,
+                "yes": null
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "Bakanlığın sınırı yayımlanmadı"
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kontrol formu",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "formAnswers": [
+              {
+                "no": 1,
+                "yes": true,
+                "note": "Bakanlığın sınırı yayımlanmadı"
+              },
+              {
+                "no": 7,
+                "yes": true
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "space",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 4.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 4.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "Salon"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8077-7000-8000-000000000001",
+          "0192f5a1-8077-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Notun iki ucundaki boşluk alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 10,
+                "yes": true,
+                "note": "  Emsal tablosu kontrol edildi \t"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [
+                {
+                  "no": 10,
+                  "yes": true,
+                  "note": "Emsal tablosu kontrol edildi"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 10,
+                    "yes": true,
+                    "note": "Emsal tablosu kontrol edildi"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 10,
+                    "yes": true,
+                    "note": "Emsal tablosu kontrol edildi"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "300 karakterlik not",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 1,
+                "yes": true,
+                "note": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [
+                {
+                  "no": 1,
+                  "yes": true,
+                  "note": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notta Türkçe harfler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 7,
+                "yes": true,
+                "note": "Gelişim seviyesi LOD 300; müellif İ.Ş.Ç."
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [
+                {
+                  "no": 7,
+                  "yes": true,
+                  "note": "Gelişim seviyesi LOD 300; müellif İ.Ş.Ç."
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 7,
+                    "yes": true,
+                    "note": "Gelişim seviyesi LOD 300; müellif İ.Ş.Ç."
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 7,
+                    "yes": true,
+                    "note": "Gelişim seviyesi LOD 300; müellif İ.Ş.Ç."
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dosyadan cevaplanan soruya verilen cevap da tutulur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 9,
+                "yes": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [
+                {
+                  "no": 9,
+                  "yes": true
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 9,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 9,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeni soru eklenir, öbürleri kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 10,
+                "yes": false,
+                "note": "Bir zon eksik"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [
+                {
+                  "no": 1,
+                  "yes": true,
+                  "note": "Bakanlığın sınırı yayımlanmadı"
+                },
+                {
+                  "no": 7,
+                  "yes": true
+                },
+                {
+                  "no": 10,
+                  "yes": false,
+                  "note": "Bir zon eksik"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "Bakanlığın sınırı yayımlanmadı"
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  },
+                  {
+                    "no": 10,
+                    "yes": false,
+                    "note": "Bir zon eksik"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "Bakanlığın sınırı yayımlanmadı"
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "Bakanlığın sınırı yayımlanmadı"
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  },
+                  {
+                    "no": 10,
+                    "yes": false,
+                    "note": "Bir zon eksik"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kontrol formu",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "formAnswers": [
+              {
+                "no": 1,
+                "yes": true,
+                "note": "Bakanlığın sınırı yayımlanmadı"
+              },
+              {
+                "no": 7,
+                "yes": true
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "space",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 4.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 4.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "Salon"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8077-7000-8000-000000000001",
+          "0192f5a1-8077-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Aynı cevap: değişiklik yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 7,
+                "yes": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [
+                {
+                  "no": 1,
+                  "yes": true,
+                  "note": "Bakanlığın sınırı yayımlanmadı"
+                },
+                {
+                  "no": 7,
+                  "yes": true
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "Bakanlığın sınırı yayımlanmadı"
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kontrol formu",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "formAnswers": [
+              {
+                "no": 1,
+                "yes": true,
+                "note": "Bakanlığın sınırı yayımlanmadı"
+              },
+              {
+                "no": 7,
+                "yes": true
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "space",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 4.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 4.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "Salon"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8077-7000-8000-000000000001",
+          "0192f5a1-8077-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Cevabı olmayan sorunun null'ı: değişiklik yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 10,
+                "yes": null
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [
+                {
+                  "no": 1,
+                  "yes": true,
+                  "note": "Bakanlığın sınırı yayımlanmadı"
+                },
+                {
+                  "no": 7,
+                  "yes": true
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "Bakanlığın sınırı yayımlanmadı"
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kontrol formu",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "formAnswers": [
+              {
+                "no": 1,
+                "yes": true,
+                "note": "Bakanlığın sınırı yayımlanmadı"
+              },
+              {
+                "no": 7,
+                "yes": true
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "space",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 4.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 4.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "Salon"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8077-7000-8000-000000000001",
+          "0192f5a1-8077-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Boş liste",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": []
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_set",
+              "message": "$any",
+              "path": "answers"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "0. soru",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 0,
+                "yes": true
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "$any",
+              "path": "answers[0].no"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "22. soru",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 22,
+                "yes": true
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "$any",
+              "path": "answers[0].no"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "22. sorunun null'ı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 22,
+                "yes": null
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "$any",
+              "path": "answers[0].no"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı soru iki kez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 1,
+                "yes": true
+              },
+              {
+                "no": 1,
+                "yes": false
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "$any",
+              "path": "answers[1].no"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "null ile not",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 1,
+                "yes": null,
+                "note": "Not"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "$any",
+              "path": "answers[0].note"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "Bakanlığın sınırı yayımlanmadı"
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kontrol formu",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "formAnswers": [
+              {
+                "no": 1,
+                "yes": true,
+                "note": "Bakanlığın sınırı yayımlanmadı"
+              },
+              {
+                "no": 7,
+                "yes": true
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "space",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 4.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 4.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "Salon"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8077-7000-8000-000000000001",
+          "0192f5a1-8077-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "301 karakterlik not",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 1,
+                "yes": true,
+                "note": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "$any",
+              "path": "answers[0].note"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Satır sonlu not",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 1,
+                "yes": true,
+                "note": "İlk satır\nİkinci satır"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "$any",
+              "path": "answers[0].note"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Biri geçersizse hiçbiri yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 1,
+                "yes": true
+              },
+              {
+                "no": 30,
+                "yes": true
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "$any",
+              "path": "answers[1].no"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 1,
+                    "yes": true,
+                    "note": "Bakanlığın sınırı yayımlanmadı"
+                  },
+                  {
+                    "no": 7,
+                    "yes": true
+                  }
+                ]
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kontrol formu",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "formAnswers": [
+              {
+                "no": 1,
+                "yes": true,
+                "note": "Bakanlığın sınırı yayımlanmadı"
+              },
+              {
+                "no": 7,
+                "yes": true
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "space",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 4.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 4.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "Salon"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8077-7000-8000-000000000001",
+          "0192f5a1-8077-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Sürüm sayı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 1,
+                "yes": true
+              }
+            ],
+            "expectedRevision": "abc"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "$any",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizim başka sürümde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 1,
+                "yes": true
+              }
+            ],
+            "expectedRevision": "999"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "$any",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

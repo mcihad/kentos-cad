@@ -22,13 +22,18 @@ pub(crate) fn plan(doc: &Document) -> Option<Planned> {
 /// EK-9's form as the drawing's table rows under its header (`dijital_proje.form.tablo`), for the drawing now, the rule
 /// asked on this thread: what Ruhsat takımı writes again. A drawing without walls has its questions unanswered.
 pub(crate) fn form_rows(doc: &Document) -> Result<Vec<Vec<String>>, String> {
-    form_rows_of(plan(doc))
+    form_rows_of(plan(doc), doc.form_answers().to_vec())
 }
 
-/// The rows for a model taken from the drawing ([`plan`]), on any thread.
-pub(crate) fn form_rows_of(planned: Option<Planned>) -> Result<Vec<Vec<String>>, String> {
+/// The rows for a model taken from the drawing ([`plan`]), on any thread, with the author's answers the drawing keeps
+/// (docs/adr/8077: the questions KentOS leaves to them take their Evet or Hayır and note).
+pub(crate) fn form_rows_of(
+    planned: Option<Planned>,
+    answers: Vec<kentos_commands::FormAnswer>,
+) -> Result<Vec<Vec<String>>, String> {
     let facts = planned.map(Planned::facts).transpose()?.unwrap_or(Value::Null);
-    let answer = crate::standards::call(PACKAGE, FORM, "tablo", vec![facts])?;
+    let answers = serde_json::to_value(answers).unwrap_or(Value::Null);
+    let answer = crate::standards::call(PACKAGE, FORM, "tablo", vec![facts, answers])?;
     let rows: Vec<Vec<String>> =
         serde_json::from_value(answer).map_err(|e| format!("Formun satırları okunamadı ({FORM}.tablo): {e}."))?;
     // The package writes the header the drawing knows the form by (`kentos_ifc::quality::FORM_HEADER`).

@@ -30,6 +30,8 @@ pub mod cad_casework;
 pub mod cad_levels;
 #[path = "arch/cad_arch_performance.rs"]
 pub mod cad_arch_performance;
+#[path = "arch/cad_arch_form_answers.rs"]
+pub mod cad_arch_form_answers;
 #[path = "arch/cad_zoning_parcel.rs"]
 pub mod cad_zoning_parcel;
 #[path = "arch/cad_symbols.rs"]
@@ -435,6 +437,7 @@ pub use cad_arch_recognize::*;
 pub use cad_casework::*;
 pub use cad_levels::*;
 pub use cad_arch_performance::*;
+pub use cad_arch_form_answers::*;
 pub use cad_zoning_parcel::*;
 pub use cad_symbols::*;
 pub use cad_arrays::*;

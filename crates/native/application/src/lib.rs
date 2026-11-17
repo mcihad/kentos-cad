@@ -1250,6 +1250,9 @@ pub mod levels_assign;
 #[cfg(feature = "mod-arch")]
 #[path = "arch/arch_performance.rs"]
 pub mod arch_performance;
+#[cfg(feature = "mod-arch")]
+#[path = "arch/arch_form_answers.rs"]
+pub mod arch_form_answers;
 // Parselin plan kararları (docs/adr/8072 §5): the zoning plan read for the building's parcel, Mimari's.
 #[cfg(feature = "mod-arch")]
 #[path = "arch/zoning_parcel.rs"]
@@ -2162,6 +2165,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_ARCH_PERFORMANCE,
         kentos_commands::CAD_ARCH_PERFORMANCE_VERSION,
+    ),
+    // Kontrol formunun cevapları ([`arch_form_answers`], docs/adr/8077).
+    (
+        kentos_commands::CAD_FORM_ANSWER,
+        kentos_commands::CAD_FORM_ANSWER_VERSION,
     ),
     // Parselin plan kararları ([`zoning_parcel`], docs/adr/8072 §5).
     (

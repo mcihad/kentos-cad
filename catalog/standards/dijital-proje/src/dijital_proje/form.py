@@ -153,12 +153,31 @@ def cevapla(ifc: dict[str, Any]) -> dict[str, Any]:
 BASLIK = ["No", "Kategori / Disiplin", "Kontrol Başlığı", "Açıklama", "Evet / Hayır", "Not"]
 
 
-def tablo(ifc: dict[str, Any] | None) -> list[list[str]]:
+def cevapli(satirlar: list[dict[str, Any]], cevaplar: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+    """Formun satırları müellifin cevaplarıyla (docs/adr/8077): incelemeye kalan sorunun resmî cevabı müellifin Evet'i ya
+    da Hayır'ı, notu "<not> (müellif)"; `muellif` cevabın müellifin olduğunu söyler. KentOS'un dosyadan cevapladığı
+    soruya verilen cevap okunmaz: kanıt dosyanındır."""
+    cevap = {int(c["no"]): c for c in cevaplar or []}
+    out = []
+    for s in satirlar:
+        s = dict(s, muellif=False)
+        c = cevap.get(s["no"])
+        if s["kanit"] == INCELEME and c is not None:
+            s["cevap"] = "Evet" if c.get("yes") else "Hayır"
+            s["muellif"] = True
+            if str(c.get("note") or "").strip():
+                s["gerekce"] = f"{c['note'].strip()} (müellif)"
+        out.append(s)
+    return out
+
+
+def tablo(ifc: dict[str, Any] | None, cevaplar: list[dict[str, Any]] | None = None) -> list[list[str]]:
     """Formun çizimdeki tablosu: başlık; her grubun adı kendi satırında, sonra soruları: numara, disiplin, başlık, soru,
-    resmî cevap (Evet, Hayır ya da müellifin cevaplayacağı boş) ve KentOS'un notu (kanıtın gerekçesi). Olgu yoksa
+    resmî cevap (Evet, Hayır ya da müellifin cevaplayacağı boş) ve KentOS'un notu (kanıtın gerekçesi). İncelemeye kalan
+    sorularda `cevaplar` (çizimde tutulan müellif cevapları, docs/adr/8077) resmî cevabı ve notu verir. Olgu yoksa
     (çizimde duvar yok) sorular cevapsızdır."""
     if ifc:
-        satirlar = cevapla(ifc)["satirlar"]
+        satirlar = cevapli(cevapla(ifc)["satirlar"], cevaplar)
     else:
         satirlar = [{"no": no, "grup": grup, "disiplin": disiplin, "baslik": baslik, "soru": soru, "cevap": "",
                      "gerekce": "Çizimde bina yok: model yazılmadı.", "bulgular": []}
@@ -169,7 +188,7 @@ def tablo(ifc: dict[str, Any] | None) -> list[list[str]]:
         if s["grup"] != grup:
             grup = s["grup"]
             out.append(["", grup, "", "", "", ""])
-        not_ = _cumle(s["gerekce"])
+        not_ = s["gerekce"] if s.get("muellif") else _cumle(s["gerekce"])
         if s["bulgular"]:
             not_ += " Mimari denetim › Mevzuat nesneleriyle listeler."
         out.append([str(s["no"]), s["disiplin"], s["baslik"], s["soru"], s["cevap"], not_])

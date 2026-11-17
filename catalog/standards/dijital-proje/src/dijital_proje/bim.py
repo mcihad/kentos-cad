@@ -26,9 +26,8 @@ RG = "RG 5.8.2026/33331"
 
 
 def denetle(cizim: dict[str, Any], ifc: dict[str, Any], cevaplar: list[dict[str, Any]] | None = None) -> dict[str, Any]:
-    cevap = {int(c["no"]): c for c in cevaplar or []}
     paket = ruhsat.denetle(cizim)
-    tablo = form.cevapla(ifc)["satirlar"]
+    tablo = form.cevapli(form.cevapla(ifc)["satirlar"], cevaplar)
     bulgular = list(paket)
     satirlar = []
     profil_kalan, model_kalan = [], []
@@ -39,21 +38,16 @@ def denetle(cizim: dict[str, Any], ifc: dict[str, Any], cevaplar: list[dict[str,
             bulgular.extend(b for b in s["bulgular"] if b.get("severity", "error") == "error")
             (model_kalan if s["no"] == 21 else profil_kalan).append(s["no"])
         elif s["kanit"] == form.INCELEME:
-            c = cevap.get(s["no"])
-            if c is None:
+            if not s["muellif"]:
                 profil_kalan.append(s["no"])
                 bulgular.append(_bulgu(s, "digital_form_unanswered",
                                        f"Formun {s['no']}. sorusu müellifin cevabını bekliyor: {s['baslik']}. {s['gerekce']}",
                                        "Soruyu inceleyip yayında Evet ya da Hayır olarak cevaplayın (gerekirse notuyla)."))
-            else:
-                resmi = "Evet" if c.get("yes") else "Hayır"
-                if str(c.get("note") or "").strip():
-                    not_ = f"{c['note'].strip()} (müellif)"
-                if not c.get("yes"):
-                    profil_kalan.append(s["no"])
-                    bulgular.append(_bulgu(s, "digital_form_author_no",
-                                           f"Formun {s['no']}. sorusunu müellif Hayır cevapladı: {s['baslik']}",
-                                           "Eksikliği giderin ya da cevabı gözden geçirin; Hayır cevaplı form teslim edilmez."))
+            elif resmi != "Evet":
+                profil_kalan.append(s["no"])
+                bulgular.append(_bulgu(s, "digital_form_author_no",
+                                       f"Formun {s['no']}. sorusunu müellif Hayır cevapladı: {s['baslik']}",
+                                       "Eksikliği giderin ya da cevabı gözden geçirin; Hayır cevaplı form teslim edilmez."))
         satirlar.append({"no": s["no"], "baslik": s["baslik"], "cevap": resmi, "kanit": s["kanit"], "not": not_})
     hatalar = [f for f in ifc.get("findings") or [] if f.get("severity") == "error"]
     turetim = [b for b in paket if str(b.get("code", "")).startswith(("digital_derived", "digital_free"))]

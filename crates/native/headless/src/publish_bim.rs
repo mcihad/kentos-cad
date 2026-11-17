@@ -121,7 +121,12 @@ pub(crate) fn package(
             })).collect::<Vec<_>>(),
         },
     });
-    let answers = serde_json::to_value(&bim.answers).unwrap_or(Value::Null);
+    // The drawing's answers (docs/adr/8077), a question's answer given to the publication over its own.
+    let mut given: Vec<kentos_commands::FormAnswer> =
+        doc.form_answers().iter().filter(|a| !bim.answers.iter().any(|b| b.no == a.no)).cloned().collect();
+    given.extend(bim.answers.iter().cloned());
+    given.sort_by_key(|a| a.no);
+    let answers = serde_json::to_value(&given).unwrap_or(Value::Null);
     let decided =
         match kentos_standards::call(PACKAGE, RULE, "denetle", vec![cizim, ifc.clone(), answers]) {
             Ok(v) => v,
@@ -188,7 +193,7 @@ pub(crate) fn package(
         "model": {"name": model.name, "bytes": model.bytes, "sha256": model.sha256},
         "rows": rows,
         "results": results,
-        "answers": bim.answers,
+        "answers": given,
         "versions": versions,
     });
     let record_bytes = serde_json::to_vec_pretty(&record).unwrap_or_default();

@@ -14,5 +14,5 @@ supported-markers = [
 
 [[package]]
 name = "dijital-proje"
-version = "0.7.1"
+version = "0.8.0"
 source = { virtual = "." }

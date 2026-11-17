@@ -16991,6 +16991,51 @@ class ArchExceptionsEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ArchFormAnswers(_Model):
+    """Input of `cad.form.answer` v1.
+
+    Refusals, in this order: `nothing_to_set` (no change), `invalid_input` (a number outside 1–21, a question twice, a
+    note given with null, a note too long or with a control character), `invalid_revision`, `revision_conflict`.
+    """
+    answers: list[FormAnswerChange]
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["answers"] = [e0.to_json() for e0 in self.answers]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchFormAnswers:
+        return cls(
+            answers=[FormAnswerChange.from_json(e0) for e0 in data["answers"]],
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchFormAnswersDone(_Model):
+    """Output of `cad.form.answer` v1, and its plan: the drawing's answers then, by question; the revision."""
+    answers: list[FormAnswer]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["answers"] = [e0.to_json() for e0 in self.answers]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchFormAnswersDone:
+        return cls(
+            answers=[FormAnswer.from_json(e0) for e0 in data["answers"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ArchInfo(_Model):
     """What every architectural object carries beside its geometry (`CAD-ARCH-03`): its level (by the project level's
     id), phase, construction status and discipline; absent fields are not said.
@@ -17394,6 +17439,9 @@ class ArchSettings(_Model):
         cut_height: The plan's cut height above each level's floor, metres (docs/adr/8012, KCAD 217): what crosses it is cut, a
             window over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project
             writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50). Unit: length.
+        form_answers: Kontrol formunun cevapları (docs/adr/8077; arch data 1): the author's answers to the model quality control form's
+            questions KentOS leaves to them (EK-9 Tablo 9.1: the file size, the development level, the area tables), each
+            with its note, by question; the printed form and the BIM package read them. Empty: none given.
         level_view: Kat görünümü when the drawing was saved (docs/adr/0720 §1), the one it opens with; absent: Bütün katlar.
         line_groups: How the plan's lines are weighted (docs/adr/8013, KCAD 218): `byScale` takes the line group of the scale the
             plan is drawn at (TS 88-23 / ISO 128-23 Tablo 2: 1:200 0.25, 1:100 0.35, 1:50 0.5, 1:20 0.7 mm for the wide
@@ -17425,6 +17473,7 @@ class ArchSettings(_Model):
     audit_exceptions: list[ArchAuditException] | Unset = UNSET
     cut_height: float | None | Unset = UNSET
     detail: WallDetail | WallDetailName | None | Unset = UNSET
+    form_answers: list[FormAnswer] | Unset = UNSET
     level_view: LevelView | LevelViewName | None | Unset = UNSET
     levels: list[ArchLevel] | Unset = UNSET
     line_groups: LineGroups | LineGroupsName | None | Unset = UNSET
@@ -17455,6 +17504,8 @@ class ArchSettings(_Model):
             out["cutHeight"] = None if self.cut_height is None else float(self.cut_height)
         if self.detail is not UNSET:
             out["detail"] = None if self.detail is None else _enum_out(self.detail)
+        if self.form_answers is not UNSET:
+            out["formAnswers"] = [e0.to_json() for e0 in self.form_answers]
         if self.level_view is not UNSET:
             out["levelView"] = None if self.level_view is None else _enum_out(self.level_view)
         if self.levels is not UNSET:
@@ -17502,6 +17553,7 @@ class ArchSettings(_Model):
             audit_exceptions=[ArchAuditException.from_json(e0) for e0 in data["auditExceptions"]] if "auditExceptions" in data else UNSET,
             cut_height=UNSET if "cutHeight" not in data else None if data["cutHeight"] is None else float(data["cutHeight"]),
             detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
+            form_answers=[FormAnswer.from_json(e0) for e0 in data["formAnswers"]] if "formAnswers" in data else UNSET,
             level_view=UNSET if "levelView" not in data else None if data["levelView"] is None else _enum_in(LevelView, data["levelView"]),
             levels=[ArchLevel.from_json(e0) for e0 in data["levels"]] if "levels" in data else UNSET,
             line_groups=UNSET if "lineGroups" not in data else None if data["lineGroups"] is None else _enum_in(LineGroups, data["lineGroups"]),
@@ -41697,6 +41749,35 @@ class FormAnswer(_Model):
             no=data["no"],
             yes=data["yes"],
             note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormAnswerChange(_Model):
+    """One question's change: Evet (true) or Hayır (false), or null to take its answer and note away; its note, absent to
+    keep the one it has (an empty one takes it away).
+    Attributes:
+        no: The question's number in EK-9 Tablo 9.1 (1–21). Unit: index.
+    """
+    no: int
+    note: str | None | Unset = UNSET
+    yes: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["no"] = self.no
+        if self.note is not UNSET:
+            out["note"] = self.note
+        if self.yes is not UNSET:
+            out["yes"] = self.yes
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormAnswerChange:
+        return cls(
+            no=data["no"],
+            note=data.get("note", UNSET),
+            yes=data.get("yes", UNSET),
         )
 
 
@@ -142761,6 +142842,8 @@ __all__ = [
     "ArchExceptionOperationName",
     "ArchExceptions",
     "ArchExceptionsEdited",
+    "ArchFormAnswers",
+    "ArchFormAnswersDone",
     "ArchInfo",
     "ArchLevel",
     "ArchMaterial",
@@ -143860,6 +143943,7 @@ __all__ = [
     "FontsReported",
     "ForgetMapWorkOperation",
     "FormAnswer",
+    "FormAnswerChange",
     "FormBody",
     "FormBreaking",
     "FormChange",

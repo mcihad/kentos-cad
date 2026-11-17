@@ -147,6 +147,39 @@ pub struct FormAnswer {
     pub note: String,
 }
 
+/// The longest note an answer keeps, characters: a form's cell, not a report.
+pub const MAX_FORM_NOTE: usize = 300;
+
+impl FormAnswer {
+    /// What is wrong with it: its number outside EK-9 Tablo 9.1's 1–21, or a note too long or with a control character
+    /// (a form's cell is one line). The field and the words.
+    pub fn problem(&self) -> Option<(String, String)> {
+        if !(1..=21).contains(&self.no) {
+            return Some(("no".into(), format!("Sorunun numarası 1 ile 21 arasında olmalı (EK-9 Tablo 9.1); {} verildi.", self.no)));
+        }
+        if self.note.chars().count() > MAX_FORM_NOTE {
+            return Some(("note".into(), format!("Not en çok {MAX_FORM_NOTE} karakter olabilir; formun bir hücresidir.")));
+        }
+        if self.note.chars().any(char::is_control) {
+            return Some(("note".into(), "Not satır sonu ya da denetim karakteri içeremez; formun bir hücresidir.".into()));
+        }
+        None
+    }
+
+    /// What is wrong with a list of them: an answer's problem, or a question answered twice. Its place and the words.
+    pub fn list_problem(list: &[FormAnswer]) -> Option<(String, String)> {
+        for (i, a) in list.iter().enumerate() {
+            if let Some((field, why)) = a.problem() {
+                return Some((format!("{i}.{field}"), why));
+            }
+            if list[..i].iter().any(|b| b.no == a.no) {
+                return Some((format!("{i}.no"), format!("{}. soru iki kez cevaplanmış; her sorunun bir cevabı olur.", a.no)));
+            }
+        }
+        None
+    }
+}
+
 /// A BIM permit package's result (docs/adr/8075 §2).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

@@ -28028,6 +28028,128 @@
       ]
     },
     {
+      "id": "cad.form.answer",
+      "version": 1,
+      "title": "Kontrol formunun cevapları",
+      "summary": "Model kalite kontrol formunun (Dijital Proje Yön. EK-9 Tablo 9.1) KentOS'un dosyadan cevaplamadığı sorularına müellifin cevabını çizimde tutar (settings.arch.formAnswers): basılan form ve BIM ruhsat paketinin yayını onu okur. answers her biri bir soru: no (1–21), yes (true Evet, false Hayır; null cevabı ve notu kaldırır) ve note (verilmezse var olan kalır, boş metin kaldırır; en çok 300 karakter, satır sonu yok). Değişiklik yoksa nothing_to_set; 1–21 dışında numara, iki kez verilen soru, null ile not, uzun ya da denetim karakterli not invalid_input. Komut cevabı tutar; hangi sorunun onu aldığı formun kuralıdır (standart paketin): KentOS'un dosyadan cevapladığı soruya verilen cevap tutulur, okunmaz. Tek geri alma adımı “Kontrol formunun cevapları”; çizimin geometrisi değişmez. Çıktı çizimin bütün cevapları soru sırasıyla ve sürüm. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.form.answer` v1.\n\nRefusals, in this order: `nothing_to_set` (no change), `invalid_input` (a number outside 1–21, a question twice, a\nnote given with null, a note too long or with a control character), `invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "answers": {
+            "items": {
+              "$ref": "#/$defs/FormAnswerChange"
+            },
+            "type": "array"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "answers"
+        ],
+        "title": "ArchFormAnswers",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.form.answer` v1, and its plan: the drawing's answers then, by question; the revision.",
+        "properties": {
+          "answers": {
+            "items": {
+              "$ref": "#/$defs/FormAnswer"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "answers",
+          "revision"
+        ],
+        "title": "ArchFormAnswersDone",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.form.answer` v1, and its plan: the drawing's answers then, by question; the revision.",
+        "properties": {
+          "answers": {
+            "items": {
+              "$ref": "#/$defs/FormAnswer"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "answers",
+          "revision"
+        ],
+        "title": "ArchFormAnswersDone",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "nothing_to_set",
+          "invalid_input",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Dosya boyutu Evet, notuyla; gelişim seviyesi Evet",
+          "input": {
+            "answers": [
+              {
+                "no": 1,
+                "note": "Bakanlığın sınırı yayımlanmadı",
+                "yes": true
+              },
+              {
+                "no": 7,
+                "yes": true
+              }
+            ]
+          }
+        },
+        {
+          "title": "Emsal hesabının cevabını kaldır",
+          "input": {
+            "answers": [
+              {
+                "no": 10,
+                "yes": null
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.arch.performance",
       "version": 1,
       "title": "Yangın ve performans",
@@ -123140,6 +123262,13 @@
             }
           ]
         },
+        "formAnswers": {
+          "description": "Kontrol formunun cevapları (docs/adr/8077; arch data 1): the author's answers to the model quality control form's\nquestions KentOS leaves to them (EK-9 Tablo 9.1: the file size, the development level, the area tables), each\nwith its note, by question; the printed form and the BIM package read them. Empty: none given.",
+          "items": {
+            "$ref": "#/$defs/FormAnswer"
+          },
+          "type": "array"
+        },
         "levelView": {
           "anyOf": [
             {
@@ -148755,6 +148884,36 @@
       "required": [
         "no",
         "yes"
+      ],
+      "type": "object"
+    },
+    "FormAnswerChange": {
+      "additionalProperties": false,
+      "description": "One question's change: Evet (true) or Hayır (false), or null to take its answer and note away; its note, absent to\nkeep the one it has (an empty one takes it away).",
+      "properties": {
+        "no": {
+          "description": "The question's number in EK-9 Tablo 9.1 (1–21).",
+          "format": "uint8",
+          "maximum": 21,
+          "minimum": 1,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "yes": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "no"
       ],
       "type": "object"
     },

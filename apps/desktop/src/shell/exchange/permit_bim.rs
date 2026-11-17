@@ -48,6 +48,50 @@ pub(crate) fn note(s: &mut State, no: u8, text: String) {
 }
 
 impl App {
+    /// Writes the window's answers to the drawing (`cad.form.answer`, docs/adr/8077) where they differ from it: the
+    /// questions given and the ones taken back. Whether the check or the publication may go on (a refusal is said).
+    pub(crate) fn permit_bim_keep(&mut self) -> bool {
+        let (Some(crate::exchange::Window::SheetPublish(s)), Some(doc)) = (&self.exchange, self.document.as_mut()) else {
+            return true;
+        };
+        let Some(bim) = s.input.bim.as_ref() else {
+            return true;
+        };
+        let held = doc.model.form_answers().to_vec();
+        let mut changes: Vec<serde_json::Value> = bim
+            .answers
+            .iter()
+            .filter(|a| !held.contains(a))
+            .map(|a| serde_json::json!({"no": a.no, "yes": a.yes, "note": a.note}))
+            .collect();
+        changes.extend(
+            held.iter()
+                .filter(|h| !bim.answers.iter().any(|a| a.no == h.no))
+                .map(|h| serde_json::json!({"no": h.no, "yes": null})),
+        );
+        if changes.is_empty() {
+            return true;
+        }
+        let answer = kentos_native_application::registry::run(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            kentos_commands::CAD_FORM_ANSWER,
+            kentos_commands::CallOp::Execute,
+            serde_json::json!({"answers": changes}),
+        );
+        match answer {
+            Ok(v) if v["status"] == "completed" => true,
+            Ok(v) => {
+                let words = v["error"]["message"].as_str().unwrap_or("komut reddetti").to_owned();
+                self.say(kentos_interaction::Level::Error, format!("Kontrol formunun cevapları yazılamadı: {words}"));
+                false
+            }
+            Err(unrun) => {
+                self.say(kentos_interaction::Level::Error, format!("Kontrol formunun cevapları yazılamadı: {}", unrun.message));
+                false
+            }
+        }
+    }
+
     /// The package's part of the window: the switch, then after Denetle the five results and the author's questions.
     pub(crate) fn permit_bim_view<'a>(&'a self, s: &'a State, busy: bool) -> Element<'a, Message> {
         let on = s.input.bim.is_some();

@@ -60,6 +60,11 @@ pub(crate) enum ArchOp {
         before: Option<kentos_contracts::BuildingPerformance>,
         after: Option<kentos_contracts::BuildingPerformance>,
     },
+    /// The author's answers to the model quality control form (docs/adr/8077), before and after: a step of its own.
+    FormAnswers {
+        before: Arc<Vec<kentos_contracts::FormAnswer>>,
+        after: Arc<Vec<kentos_contracts::FormAnswer>>,
+    },
 }
 
 impl ArchOp {
@@ -99,6 +104,10 @@ impl ArchOp {
                 after: before.clone(),
             },
             ArchOp::Performance { before, after } => ArchOp::Performance {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            ArchOp::FormAnswers { before, after } => ArchOp::FormAnswers {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -174,6 +183,14 @@ impl ArchOp {
                     .take()
                     .unwrap_or_default();
                 arch.performance = after.clone().filter(|p| !p.is_empty());
+                Arc::make_mut(&mut doc.settings).arch = (!arch.is_empty()).then_some(arch);
+            }
+            ArchOp::FormAnswers { after, .. } => {
+                let mut arch = Arc::make_mut(&mut doc.settings)
+                    .arch
+                    .take()
+                    .unwrap_or_default();
+                arch.form_answers = (**after).clone();
                 Arc::make_mut(&mut doc.settings).arch = (!arch.is_empty()).then_some(arch);
             }
         }
