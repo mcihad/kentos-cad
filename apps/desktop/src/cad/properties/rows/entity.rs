@@ -1119,6 +1119,8 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
         }
     }
 
+    // Where an element's values come from (docs/adr/8106 §5): its type's or its own.
+    element_types::mark(doc, e, &mut geo);
     let mut sections = vec![Section {
         id: "general".into(),
         title: "Genel".into(),
@@ -1203,6 +1205,8 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
     if let Entity::Opening(o) = e {
         sections.extend(opening_types::section(doc, slot, &o.opening, &f, locked));
     }
+    // A column's, beam's, slab's, roof's, railing's or stair's type (docs/adr/8106 §5).
+    sections.extend(element_types::section(doc, e, locked));
     // A wall's components' and a slab's project materials (docs/adr/0785).
     sections.extend(materials::section(doc, slot, locked));
     // The room module the object is in (docs/adr/0775 §3).
@@ -1249,6 +1253,7 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
                     note: false,
                     warn: false,
                     thumb: None,
+                    source: None,
                 })
                 .collect(),
         });
@@ -1304,6 +1309,7 @@ pub(super) fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<S
                     note: false,
                     warn: false,
                     thumb: None,
+                    source: None,
                 })
                 .collect(),
         });

@@ -152,6 +152,48 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 },
             ],
         },
+        // Eleman tipleri (docs/adr/8106), held together by fixtures/commands/v1/cad.elementtypes.edit.json
+        // (scripts/fixtures/element_types_cases.py).
+        CommandDescriptor {
+            id: crate::CAD_ELEMENT_TYPES_EDIT.into(),
+            version: crate::CAD_ELEMENT_TYPES_EDIT_VERSION,
+            title: "Eleman tipleri".into(),
+            summary: "Projenin kolon, kiriş, döşeme, çatı, korkuluk ve merdiven tiplerini (settings.arch.elementTypes) yönetir; tek geri alma adımı “Eleman tipi”, tipi izleyen elemanlar aynı adımda. Tipin değerleri türünün tip alanlarıdır, elemanın kendi alan adlarıyla: kolon member, shape, width (zorunlu), depth, legs, height, fill, material (kolonun type'ı tipin adıdır); kiriş role, member, width ve height (zorunlu), material; döşeme role, covering, thickness (zorunlu), materialId, material, edge, layers; çatı thickness, material, layers, gutter, snowGuard; korkuluk height ve width (zorunlu), infill, gap; merdiven width ve tread (zorunlu), landing, winders, post, railings, numbering. Verilmeyen alan o alanın yokluğudur (varsayılanı). Yeri, katı, dönüşü, etiketi elemanın kendisinindir. operation: define (name, id isteğe bağlı: adından; element column/beam/slab/roof/railing/stair; values; copyOf projenin tipi; from çizilmiş bir elemanın uid'si — Tipe çevir: değerleri tipin olur, eleman aynı adımda tipi izler; sürüm 1), update (type: kimlik ya da ad, values: verilen alanlar, null alanı kaldırır; sürüm bir artar, izleyenler alır), rename (type, name; kimlik kalır, izleyen kolonun türü yeni ad), remove (type; izleyen varsa element_type_in_use, detach: true izleyenleri değerleriyle tipten ayırır), assign (type, uids: elemanlar tipin bütün değerlerini alır, istisnasız), detach (uids: değerler kalır, tip izlenmez), reset (uids, fields: istisnalar bırakılır, yoksa hepsi; son sürüm alınır), push (uid, fields: elemanın kendi değerleri, yoksa bütün istisnaları, tipin olur; sürüm artar, öbürleri izler), refresh (uids, yoksa eski sürümdeki hepsi: son sürümü istisnaları korunarak alır). Tipi izleyen elemanın bir tip alanını başka bir düzenleme tipinkinden farklı yaparsa o alan istisnadır (elementType.overrides), tipinkine dönerse yine izler. Tipin değişikliğinde istisna alanı korunur (report.kept, element_type_kept); kilitli katmandaki eleman eski sürümde kalır (report.skipped, element_type_skipped); yeni değerle geçersiz olan eleman bütün değişikliği reddeder (element_type_refused) ya da onRefused: skip ile eski sürümde kalır (report.refused). Plan yazmadan tabloyu ve her elemanın sonucunu gösterir."
+                .into(),
+            aliases: vec!["ELEMANTIPI".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ElementTypesEdit>(),
+            output: schema::<crate::ElementTypesEdited>(),
+            plan: Some(schema::<crate::ElementTypesEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "30/50 kolon tipi S1".into(),
+                    input: json!({
+                        "operation": {"kind": "define", "name": "S1", "element": "column",
+                            "values": {"width": 0.3, "depth": 0.5, "fill": true}}
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "S1'i 35/50 yap; izleyen kolonlar alır, kendi eni olan korur".into(),
+                    input: json!({"operation": {"kind": "update", "type": "S1", "values": {"width": 0.35}}}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Çizilmiş kolondan tip".into(),
+                    input: json!({"operation": {"kind": "define", "name": "S2",
+                        "from": "00000000-0000-4000-8000-000000000001"}}),
+                    output: None,
+                },
+            ],
+        },
         // Malzemeler (docs/adr/0785), held together by fixtures/commands/v1/cad.materials.edit.json
         // (scripts/fixtures/materials_cases.py).
         CommandDescriptor {

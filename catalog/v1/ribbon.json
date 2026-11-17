@@ -2530,6 +2530,7 @@
        "arch.navigator",
        "tool.viewCrop",
        "arch.openingTypes",
+       "arch.elementTypes",
        "arch.materials",
        "arch.modules",
        "tool.modulePlace",
@@ -7496,6 +7497,27 @@
      "works": [
       "architecture"
      ]
+    },
+    {
+     "label": "Tip",
+     "icon": "elementTypes",
+     "items": [
+      {
+       "command": "arch.elementTypes",
+       "size": "large"
+      },
+      {
+       "command": "arch.elementTypeFrom",
+       "size": "small"
+      },
+      {
+       "command": "arch.elementSameType",
+       "size": "small"
+      }
+     ],
+     "works": [
+      "architecture"
+     ]
     }
    ]
   },
@@ -7585,6 +7607,27 @@
       },
       {
        "command": "arch.viewRefs",
+       "size": "small"
+      }
+     ],
+     "works": [
+      "architecture"
+     ]
+    },
+    {
+     "label": "Tip",
+     "icon": "elementTypes",
+     "items": [
+      {
+       "command": "arch.elementTypes",
+       "size": "large"
+      },
+      {
+       "command": "arch.elementTypeFrom",
+       "size": "small"
+      },
+      {
+       "command": "arch.elementSameType",
        "size": "small"
       }
      ],

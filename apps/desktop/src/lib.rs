@@ -122,6 +122,8 @@ mod ifc_compare_window;
 mod bcf_window;
 #[path = "arch/package_review_window.rs"]
 mod package_review_window;
+#[path = "arch/element_types_window.rs"]
+mod element_types_window;
 #[path = "cad/sheet_set.rs"]
 mod sheet_set;
 #[path = "cad/xrefs_window.rs"]
@@ -1082,6 +1084,9 @@ mod ifc_revisions_tests;
 #[cfg(test)]
 #[path = "tests/package_review_tests.rs"]
 mod package_review_tests;
+#[cfg(test)]
+#[path = "tests/element_types_tests.rs"]
+mod element_types_tests;
 #[cfg(test)]
 #[path = "tests/arch_ifc_tests.rs"]
 mod arch_ifc_tests;

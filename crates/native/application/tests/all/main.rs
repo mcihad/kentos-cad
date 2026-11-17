@@ -22,6 +22,7 @@ mod delivery_limit;
 mod ifc_revisions;
 #[cfg(feature = "mod-arch")]
 mod ifc_types;
+mod element_types;
 #[cfg(feature = "mod-arch")]
 mod railing_audit;
 // Runs shafts and rooms through the registry by name (docs/adr/8054 §11).

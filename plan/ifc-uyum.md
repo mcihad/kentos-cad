@@ -368,6 +368,12 @@ katman takımı (sol yüzden sağa, adı, malzemesi, kalınlığı), aynı takı
 8'er duvarı ve katmanları sırasıyla okur. **Kalan:** kolon, döşeme, kiriş, çatı tipleri (BIM-12), katman takımının
 kullanımı (duvarlar kendi eksen çerçevesinde yazılınca), çok kata uzanan elemanın başvuruları.
 
+**Durum (17 Kasım 2026, [ADR 8106](../docs/adr/8106-element-types-and-their-exceptions.md)):** eleman tipleri de IFC
+tipidir: `IfcColumnType` (dikmede `IfcMemberType`), `IfcBeamType`, `IfcSlabType` (kaplamada `IfcCoveringType`),
+`IfcRoofType`, `IfcRailingType`, `IfcStairType`; elemanları ona bağlı, tipler projede bildirilmiş. IfcOpenShell kesit
+binasında 16 kolonu, 8 kirişi, döşemeleri ve merdiveni tiplerinde okur. **Kalan:** kolon ve kiriş tipinin profil takımı
+(`IfcMaterialProfileSet` ve kullanımı), katman takımının kullanımı, çok kata uzanan eleman.
+
 #### IFC-05 — Konum, kot, çok bina ve projenin ortak alanları [x]
 
 **Yapılan (16 Kasım 2026, [ADR 8072](../docs/adr/8072-buildings-shared-basement-location.md) §1–§4, BIM-11 ile):** bina

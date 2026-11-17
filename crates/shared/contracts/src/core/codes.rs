@@ -2543,6 +2543,25 @@ codes! {
     OPENING_TYPE_SKIPPED = "opening_type_skipped", Warning, false, "Tipi izleyen bazı açıklıklar güncellenmedi (kilitli katman ya da sığmayan); eski sürümde kaldı.";
     /// Openings of a type that kept their own value of a field the type changed.
     OPENING_TYPE_KEPT = "opening_type_kept", Warning, false, "Tipi izleyen bazı açıklıklar değişen alanda kendi değerini (örnek istisnası) korudu.";
+    // ── Eleman tipleri (docs/adr/8106) ──────────────────────────────────
+    /// No project element type of the id or name given.
+    ELEMENT_TYPE_NOT_FOUND = "element_type_not_found", Failed, false, "Projede bu kimlikte ya da adda eleman tipi yok.";
+    /// A type whose values make no element of its kind, or a table that would break its rules.
+    INVALID_ELEMENT_TYPE = "invalid_element_type", Failed, false, "Tipin değerleri o türden bir eleman tanımlamıyor ya da tip tablosunun kuralını bozuyor.";
+    /// A type's id, or its name among its kind's, another type of the project has.
+    ELEMENT_TYPE_EXISTS = "element_type_exists", Failed, false, "Projede bu kimlikte ya da bu türde bu adda bir tip zaten var; başka bir ad verin.";
+    /// A type removed while elements follow it, without detaching them.
+    ELEMENT_TYPE_IN_USE = "element_type_in_use", Failed, false, "Tipi izleyen elemanlar var; önce onları tipten ayırın ya da silmede ayırmayı seçin.";
+    /// An element no type serves, or another kind's than the type's.
+    ELEMENT_TYPE_KIND = "element_type_kind", Failed, false, "Eleman bu tipin türünden değil: kolon tipi kolona, kiriş tipi kirişe… verilir.";
+    /// An element that follows no project type, asked to leave it, push to it or take it back.
+    ELEMENT_NOT_TYPED = "element_not_typed", Failed, false, "Eleman bir proje tipini izlemiyor.";
+    /// A type change an element following it cannot take (its kind's own rule): nothing written.
+    ELEMENT_TYPE_REFUSED = "element_type_refused", Failed, false, "Tipi izleyen bir eleman yeni değerlerle geçersiz oluyor; hiçbir şey yazılmadı.";
+    /// Elements of a type left at its older version: on a locked layer, or refused and skipped.
+    ELEMENT_TYPE_SKIPPED = "element_type_skipped", Warning, false, "Tipi izleyen bazı elemanlar güncellenmedi (kilitli katman ya da geçersiz olan); eski sürümde kaldı.";
+    /// Elements of a type that kept their own value of a field the type changed.
+    ELEMENT_TYPE_KEPT = "element_type_kept", Warning, false, "Tipi izleyen bazı elemanlar değişen alanda kendi değerini (örnek istisnası) korudu.";
     // ── Yangın ve performans (docs/adr/8068) ────────────────────────────
     /// A declared word that is empty, too long or broken over lines, or a basis whose document has no name or whose date
     /// is no day.

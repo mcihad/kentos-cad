@@ -7,6 +7,7 @@ import type { BuildingPerformance } from "./BuildingPerformance";
 import type { BuildingProgram } from "./BuildingProgram";
 import type { BuildingStructure } from "./BuildingStructure";
 import type { Delivery } from "./Delivery";
+import type { ElementType } from "./ElementType";
 import type { FormAnswer } from "./FormAnswer";
 import type { LevelView } from "./LevelView";
 import type { LineGroups } from "./LineGroups";
@@ -155,4 +156,9 @@ deliveries?: Array<Delivery>,
  * Altlık modeller (docs/adr/8101; `.kcad` Mimari data 18): other disciplines' IFC models shown read-only under the
  * drawing, by their files. Empty: none.
  */
-underlays?: Array<ModelUnderlay>, };
+underlays?: Array<ModelUnderlay>, 
+/**
+ * Eleman tipleri (docs/adr/8106; `.kcad` Mimari data 19): the project's column, beam, slab, roof, railing and
+ * stair types, in the order they were made. Empty: none.
+ */
+elementTypes?: Array<ElementType>, };

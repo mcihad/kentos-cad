@@ -73,6 +73,14 @@ macro_rules! arch_commands {
                     kentos_commands::MaterialsEdit
                 )
             }
+            kentos_commands::CAD_ELEMENT_TYPES_EDIT => {
+                crate::arch_dispatch::arch_arm!(
+                    $command,
+                    $then,
+                    element_types_edit,
+                    kentos_commands::ElementTypesEdit
+                )
+            }
             kentos_commands::CAD_OPENINGS_QUERY => crate::arch_dispatch::arch_arm!(
                 $command,
                 $then,

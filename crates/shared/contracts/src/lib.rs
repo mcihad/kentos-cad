@@ -54,6 +54,8 @@ pub mod ek4;
 pub mod opening;
 #[path = "arch/opening_types.rs"]
 pub mod opening_types;
+#[path = "arch/element_types.rs"]
+pub mod element_types;
 #[path = "arch/materials.rs"]
 pub mod materials;
 #[path = "arch/performance.rs"]
@@ -352,6 +354,7 @@ pub use arch::*;
 pub use ek4::*;
 pub use opening::*;
 pub use opening_types::*;
+pub use element_types::*;
 pub use materials::*;
 pub use performance::*;
 pub use deliveries::*;

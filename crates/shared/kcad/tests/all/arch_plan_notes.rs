@@ -152,3 +152,30 @@ fn an_underlay_model_round_trips_under_arch_data_18() {
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
     assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the underlay reads back");
 }
+
+/// Architecture data 19 (docs/adr/8106): a project's element type and a column following it, with an exception, are
+/// written with `modules.arch = 19` and read back.
+#[test]
+fn an_element_type_and_its_column_round_trip_under_arch_data_19() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_element_types(&doc));
+    let values = serde_json::json!({ "width": 0.3, "depth": 0.5, "fill": true });
+    doc.settings.arch.get_or_insert_with(Default::default).element_types.push(kentos_contracts::ElementType {
+        id: "s1".into(),
+        name: "S1".into(),
+        kind: kentos_contracts::ElementTypeKind::Column,
+        version: 2,
+        values: values.as_object().cloned().unwrap_or_default(),
+    });
+    let column = doc
+        .entities
+        .iter_mut()
+        .find(|e| matches!(e, kentos_contracts::Entity::Column(_)))
+        .expect("the building has a column");
+    column.arch_info_mut().expect("a column's").element_type =
+        Some(kentos_contracts::TypeLink { id: "s1".into(), version: 2, overrides: vec!["width".into()] });
+    assert!(kentos_kcad::uses_element_types(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_ELEMENT_TYPES);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the type and the link read back");
+}

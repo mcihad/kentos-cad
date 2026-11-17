@@ -222,7 +222,7 @@ use crate::{
     ifc_compare,
     casework_query, casework_run, columns_create, columns_distances, elevations_edit,
     elevations_query, grids_create, legends, levels_assign, materials_edit, modules_edit,
-    modules_query, north, opening_types_edit, openings_create, openings_distances, openings_edit,
+    modules_query, north, opening_types_edit, element_types_edit, openings_create, openings_distances, openings_edit,
     openings_query, options_edit, options_query, program_check, program_edit, railings_create,
     ramps_create, revisions, roofs_create, schedules_create, schedules_edit, schedules_query,
     sections_edit, sections_query, slabs_create, slabs_edit, spaces_create, spaces_discover,

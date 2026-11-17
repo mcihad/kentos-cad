@@ -2562,6 +2562,48 @@ EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "br
 """The names of :class:`EditOperation`, for a plain string."""
 
 
+class ElementLeftWhy(_StrEnum):
+    """Why an element following a type did not take its change.
+
+    - ``locked``: On a locked layer.
+    - ``invalid``: Its values would make no element of its kind.
+    """
+    LOCKED = "locked"
+    INVALID = "invalid"
+
+
+ElementLeftWhyName = Literal["locked", "invalid"]
+"""The names of :class:`ElementLeftWhy`, for a plain string."""
+
+
+class ElementTypeKind(_StrEnum):
+    """What an element type is for."""
+    COLUMN = "column"
+    BEAM = "beam"
+    SLAB = "slab"
+    ROOF = "roof"
+    RAILING = "railing"
+    STAIR = "stair"
+
+
+ElementTypeKindName = Literal["column", "beam", "slab", "roof", "railing", "stair"]
+"""The names of :class:`ElementTypeKind`, for a plain string."""
+
+
+class ElementTypeRefused(_StrEnum):
+    """When a type's change makes an element following it invalid.
+
+    - ``stop``: Nothing is written (`element_type_refused`).
+    - ``skip``: The others take it; those it does not fit stay at the older version and are reported.
+    """
+    STOP = "stop"
+    SKIP = "skip"
+
+
+ElementTypeRefusedName = Literal["stop", "skip"]
+"""The names of :class:`ElementTypeRefused`, for a plain string."""
+
+
 class ElevationLeft(_StrEnum):
     """Why something of the room is not drawn (or drawn only in part).
 
@@ -10490,6 +10532,34 @@ class DomainsOp(_Union):
         return _variant(_DOMAINS_OP, "DomainsOp", "kind", data).from_json(data)
 
 
+class ElementTypesOperation(_Union):
+    """What `cad.elementtypes.edit` does.
+
+    One of:
+
+    - :class:`DefineElementTypesOperation` (``kind: define``)
+    - :class:`UpdateElementTypesOperation` (``kind: update``)
+    - :class:`RenameElementTypesOperation` (``kind: rename``)
+    - :class:`RemoveElementTypesOperation` (``kind: remove``)
+    - :class:`AssignElementTypesOperation` (``kind: assign``)
+    - :class:`DetachElementTypesOperation` (``kind: detach``)
+    - :class:`ResetElementTypesOperation` (``kind: reset``)
+    - :class:`PushElementTypesOperation` (``kind: push``)
+    - :class:`RefreshElementTypesOperation` (``kind: refresh``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElementTypesOperation:
+        return _variant(_ELEMENT_TYPES_OPERATION, "ElementTypesOperation", "kind", data).from_json(data)
+
+
 class ElevationsOperation(_Union):
     """What `cad.elevations.edit` does.
 
@@ -17375,6 +17445,8 @@ class ArchInfo(_Model):
     """What every architectural object carries beside its geometry (`CAD-ARCH-03`): its level (by the project level's
     id), phase, construction status and discipline; absent fields are not said.
     Attributes:
+        element_type: The project's element type it follows (docs/adr/8106; `.kcad` Mimari data 19): a column's, beam's, slab's,
+            roof's, railing's or stair's, the version it took and the fields it keeps its own value of. Absent: none.
         exit: A stair's emergency exit role (docs/adr/8068, EK-6 `FireExit`), or a roof's as an escape route (docs/adr/8090,
             BYKHY Ek-3/B 4-a); absent: unknown (missing).
         fire_rating: Its own fire resistance class (docs/adr/8068, EK-6 `FireRating`), over its type's (a wall style's); absent: its
@@ -17383,6 +17455,7 @@ class ArchInfo(_Model):
             (missing).
     """
     discipline: ArchDiscipline | ArchDisciplineName | None | Unset = UNSET
+    element_type: TypeLink | None | Unset = UNSET
     exit: DeclaredExit | None | Unset = UNSET
     fire_rating: Declared | None | Unset = UNSET
     level: str | None | Unset = UNSET
@@ -17394,6 +17467,8 @@ class ArchInfo(_Model):
         out: dict[str, Any] = {}
         if self.discipline is not UNSET:
             out["discipline"] = None if self.discipline is None else _enum_out(self.discipline)
+        if self.element_type is not UNSET:
+            out["elementType"] = None if self.element_type is None else self.element_type.to_json()
         if self.exit is not UNSET:
             out["exit"] = None if self.exit is None else self.exit.to_json()
         if self.fire_rating is not UNSET:
@@ -17412,6 +17487,7 @@ class ArchInfo(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ArchInfo:
         return cls(
             discipline=UNSET if "discipline" not in data else None if data["discipline"] is None else _enum_in(ArchDiscipline, data["discipline"]),
+            element_type=UNSET if "elementType" not in data else None if data["elementType"] is None else TypeLink.from_json(data["elementType"]),
             exit=UNSET if "exit" not in data else None if data["exit"] is None else DeclaredExit.from_json(data["exit"]),
             fire_rating=UNSET if "fireRating" not in data else None if data["fireRating"] is None else Declared.from_json(data["fireRating"]),
             level=data.get("level", UNSET),
@@ -17790,6 +17866,8 @@ class ArchSettings(_Model):
             writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50). Unit: length.
         deliveries: Teslim kaydı (docs/adr/8099; `.kcad` Mimari data 17): each package that went to an authority and what came back,
             in the order they went. Empty: none recorded.
+        element_types: Eleman tipleri (docs/adr/8106; `.kcad` Mimari data 19): the project's column, beam, slab, roof, railing and
+            stair types, in the order they were made. Empty: none.
         form_answers: Kontrol formunun cevapları (docs/adr/8077; arch data 1): the author's answers to the model quality control form's
             questions KentOS leaves to them (EK-9 Tablo 9.1: the file size, the development level, the area tables), each
             with its note, by question; the printed form and the BIM package read them. Empty: none given.
@@ -17835,6 +17913,7 @@ class ArchSettings(_Model):
     cut_height: float | None | Unset = UNSET
     deliveries: list[Delivery] | Unset = UNSET
     detail: WallDetail | WallDetailName | None | Unset = UNSET
+    element_types: list[ElementType] | Unset = UNSET
     form_answers: list[FormAnswer] | Unset = UNSET
     level_view: LevelView | LevelViewName | None | Unset = UNSET
     levels: list[ArchLevel] | Unset = UNSET
@@ -17872,6 +17951,8 @@ class ArchSettings(_Model):
             out["deliveries"] = [e0.to_json() for e0 in self.deliveries]
         if self.detail is not UNSET:
             out["detail"] = None if self.detail is None else _enum_out(self.detail)
+        if self.element_types is not UNSET:
+            out["elementTypes"] = [e0.to_json() for e0 in self.element_types]
         if self.form_answers is not UNSET:
             out["formAnswers"] = [e0.to_json() for e0 in self.form_answers]
         if self.level_view is not UNSET:
@@ -17930,6 +18011,7 @@ class ArchSettings(_Model):
             cut_height=UNSET if "cutHeight" not in data else None if data["cutHeight"] is None else float(data["cutHeight"]),
             deliveries=[Delivery.from_json(e0) for e0 in data["deliveries"]] if "deliveries" in data else UNSET,
             detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
+            element_types=[ElementType.from_json(e0) for e0 in data["elementTypes"]] if "elementTypes" in data else UNSET,
             form_answers=[FormAnswer.from_json(e0) for e0 in data["formAnswers"]] if "formAnswers" in data else UNSET,
             level_view=UNSET if "levelView" not in data else None if data["levelView"] is None else _enum_in(LevelView, data["levelView"]),
             levels=[ArchLevel.from_json(e0) for e0 in data["levels"]] if "levels" in data else UNSET,
@@ -35611,6 +35693,52 @@ class EdgeStraightened(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ElementKept(_Model):
+    """An element a type's change kept its own value for.
+    Attributes:
+        fields: The changed fields it keeps its own value of.
+    """
+    uid: str
+    fields: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["fields"] = list(self.fields)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElementKept:
+        return cls(
+            uid=data["uid"],
+            fields=list(data["fields"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ElementLeft(_Model):
+    """An element that did not take a type's change: it stays at the older version."""
+    uid: str
+    why: ElementLeftWhy | ElementLeftWhyName
+    message: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["why"] = _enum_out(self.why)
+        out["message"] = self.message
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElementLeft:
+        return cls(
+            uid=data["uid"],
+            why=_enum_in(ElementLeftWhy, data["why"]),
+            message=data["message"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ElementRef(_Model):
     """A part of an object by the object's persistent id."""
     uid: str
@@ -35627,6 +35755,136 @@ class ElementRef(_Model):
         return cls(
             uid=data["uid"],
             element=CadElement.from_json(data["element"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ElementType(_Model):
+    """A project's element type (docs/adr/8106 §1).
+    Attributes:
+        id: Its lasting key: lower-case letters, digits and `-`, at most 64, not starting with `kentos-`.
+        name: What it is called (S1, Döşeme 15): unique among its kind's types, case aside.
+        kind: The elements it serves.
+        version: Each change gives it the next; an element that took an older one is behind (eski sürüm). Unit: count.
+        values: Its values: its kind's type fields by their names on the wire (`width`, `material` …), each as the element
+            writes it; a field it does not give is that field's absence (a column's rectangle, a slab's lone structure).
+    """
+    id: str
+    name: str
+    kind: ElementTypeKind | ElementTypeKindName
+    version: int
+    values: dict[str, Any] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["kind"] = _enum_out(self.kind)
+        out["version"] = self.version
+        if self.values is not UNSET:
+            out["values"] = dict(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElementType:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            kind=_enum_in(ElementTypeKind, data["kind"]),
+            version=data["version"],
+            values=dict(data["values"]) if "values" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ElementTypeReport(_Model):
+    """Every element's fate in a type's change: those that took it, those that kept a changed field of their own, those
+    left at the older version (`skipped`: a locked layer; `refused`: it would be invalid).
+    """
+    applied: list[str]
+    kept: list[ElementKept]
+    skipped: list[ElementLeft]
+    refused: list[ElementLeft]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["applied"] = list(self.applied)
+        out["kept"] = [e0.to_json() for e0 in self.kept]
+        out["skipped"] = [e0.to_json() for e0 in self.skipped]
+        out["refused"] = [e0.to_json() for e0 in self.refused]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElementTypeReport:
+        return cls(
+            applied=list(data["applied"]),
+            kept=[ElementKept.from_json(e0) for e0 in data["kept"]],
+            skipped=[ElementLeft.from_json(e0) for e0 in data["skipped"]],
+            refused=[ElementLeft.from_json(e0) for e0 in data["refused"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ElementTypesEdit(_Model):
+    """Input of `cad.elementtypes.edit` v1: the project's element types changed as one undo step “Eleman tipi”, with the
+    elements following them. Its plan is the preview: the types and every element's fate, nothing written.
+
+    Refusals: `invalid_element_type`, `element_type_not_found`, `element_type_exists`, `element_type_in_use`,
+    `element_type_kind`, `element_not_typed`, `element_type_refused`, `nothing_to_set`, `no_entities`, `invalid_uid`,
+    `entity_not_found`, `layer_locked`, `invalid_revision`, `revision_conflict`. Warnings: `element_type_kept`,
+    `element_type_skipped`.
+    Attributes:
+        on_refused: When the change makes an element following the type invalid; absent: stop.
+    """
+    operation: ElementTypesOperation
+    expected_revision: str | None | Unset = UNSET
+    on_refused: ElementTypeRefused | ElementTypeRefusedName = ElementTypeRefused.STOP
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        out["onRefused"] = _enum_out(self.on_refused)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElementTypesEdit:
+        return cls(
+            operation=ElementTypesOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            on_refused=_enum_in(ElementTypeRefused, data["onRefused"]) if "onRefused" in data else ElementTypeRefused.STOP,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ElementTypesEdited(_Model):
+    """Output (and plan) of `cad.elementtypes.edit` v1: the project's types after it, the type it acted on (a new one's
+    id), every element's fate and the drawing's revision.
+    Attributes:
+        id: The type's id; absent for Tipten ayır and Tipi yeniden uygula, which may touch several.
+    """
+    types: list[ElementType]
+    report: ElementTypeReport
+    revision: str
+    id: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["types"] = [e0.to_json() for e0 in self.types]
+        out["report"] = self.report.to_json()
+        out["revision"] = self.revision
+        if self.id is not UNSET:
+            out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElementTypesEdited:
+        return cls(
+            types=[ElementType.from_json(e0) for e0 in data["types"]],
+            report=ElementTypeReport.from_json(data["report"]),
+            revision=data["revision"],
+            id=data.get("id", UNSET),
         )
 
 
@@ -116321,6 +116579,34 @@ class TurnLayer(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TypeLink(_Model):
+    """The type an element follows (docs/adr/8106 §1): its id, the version it took and the fields it keeps its own value
+    of (its exceptions), in its kind's order.
+    Attributes:
+        version: Unit: count.
+    """
+    id: str
+    version: int
+    overrides: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["version"] = self.version
+        if self.overrides is not UNSET:
+            out["overrides"] = list(self.overrides)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TypeLink:
+        return cls(
+            id=data["id"],
+            version=data["version"],
+            overrides=list(data["overrides"]) if "overrides" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class Ucs(_Model):
     """A user coordinate system: its origin in the world and the angle of its x
     axis from the world's x (east), counter-clockwise, in radians, in
@@ -128234,6 +128520,225 @@ class LinkDomainsOp(DomainsOp):
             layer=data["layer"],
             field=data["field"],
             domain=data.get("domain", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DefineElementTypesOperation(ElementTypesOperation):
+    """Yeni tip: a new type `name` (its id `id`, else from its name) for `element` elements, version 1. Its values are
+    `values`, over those of `copyOf` (a project type, by id or name) or of `from` (a drawn element: Tipe çevir,
+    which then follows the new type in the same step) when given.
+    Attributes:
+        element: The elements it serves; absent: those of `copyOf` or `from`.
+        from_: A drawn element's persistent id: its values become the type's and it follows the type.
+        values: The kind's type fields by their names on the wire, each as the element writes it.
+    """
+    TAG_VALUE: ClassVar[str] = "define"
+    name: str
+    copy_of: str | None | Unset = UNSET
+    element: ElementTypeKind | ElementTypeKindName | None | Unset = UNSET
+    from_: str | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+    values: dict[str, Any] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "define"}
+        out["name"] = self.name
+        if self.copy_of is not UNSET:
+            out["copyOf"] = self.copy_of
+        if self.element is not UNSET:
+            out["element"] = None if self.element is None else _enum_out(self.element)
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.values is not UNSET:
+            out["values"] = dict(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DefineElementTypesOperation:
+        return cls(
+            name=data["name"],
+            copy_of=data.get("copyOf", UNSET),
+            element=UNSET if "element" not in data else None if data["element"] is None else _enum_in(ElementTypeKind, data["element"]),
+            from_=data.get("from", UNSET),
+            id=data.get("id", UNSET),
+            values=dict(data["values"]) if "values" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UpdateElementTypesOperation(ElementTypesOperation):
+    """Tipi değiştir: the type `type` (its id or name) given the values `values` (null takes a field away, the
+    field's absence); its version goes up by one and its elements follow.
+    """
+    TAG_VALUE: ClassVar[str] = "update"
+    type: str
+    values: dict[str, Any]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "update"}
+        out["type"] = self.type
+        out["values"] = dict(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UpdateElementTypesOperation:
+        return cls(
+            type=data["type"],
+            values=dict(data["values"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RenameElementTypesOperation(ElementTypesOperation):
+    """Yeniden adlandır: the type's name; its id stays, and a column following it takes the name as its type."""
+    TAG_VALUE: ClassVar[str] = "rename"
+    type: str
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rename"}
+        out["type"] = self.type
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RenameElementTypesOperation:
+        return cls(
+            type=data["type"],
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveElementTypesOperation(ElementTypesOperation):
+    """Sil: the type; its elements refuse it (`element_type_in_use`) unless `detach`, which leaves them with their
+    values, following nothing.
+    """
+    TAG_VALUE: ClassVar[str] = "remove"
+    type: str
+    detach: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        out["type"] = self.type
+        if self.detach is not UNSET:
+            out["detach"] = self.detach
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveElementTypesOperation:
+        return cls(
+            type=data["type"],
+            detach=data.get("detach", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AssignElementTypesOperation(ElementTypesOperation):
+    """Tipe bağla: the elements `uids` follow the type, taking all its values (their exceptions none)."""
+    TAG_VALUE: ClassVar[str] = "assign"
+    type: str
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "assign"}
+        out["type"] = self.type
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AssignElementTypesOperation:
+        return cls(
+            type=data["type"],
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DetachElementTypesOperation(ElementTypesOperation):
+    """Tipten ayır: the elements keep their values and follow no type."""
+    TAG_VALUE: ClassVar[str] = "detach"
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "detach"}
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DetachElementTypesOperation:
+        return cls(
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ResetElementTypesOperation(ElementTypesOperation):
+    """Tipe döndür: the elements give up their own values of `fields` (none: all) and take the type's latest."""
+    TAG_VALUE: ClassVar[str] = "reset"
+    uids: list[str]
+    fields: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "reset"}
+        out["uids"] = list(self.uids)
+        if self.fields is not UNSET:
+            out["fields"] = list(self.fields)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ResetElementTypesOperation:
+        return cls(
+            uids=list(data["uids"]),
+            fields=list(data["fields"]) if "fields" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PushElementTypesOperation(ElementTypesOperation):
+    """Tipe uygula: one element's own values of `fields` (none: all its exceptions) become its type's; the type's
+    version goes up by one and its other elements follow.
+    """
+    TAG_VALUE: ClassVar[str] = "push"
+    uid: str
+    fields: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "push"}
+        out["uid"] = self.uid
+        if self.fields is not UNSET:
+            out["fields"] = list(self.fields)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PushElementTypesOperation:
+        return cls(
+            uid=data["uid"],
+            fields=list(data["fields"]) if "fields" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RefreshElementTypesOperation(ElementTypesOperation):
+    """Tipi yeniden uygula: the elements `uids` (none: every one behind) at an older version of their type take its
+    latest, their exceptions kept.
+    """
+    TAG_VALUE: ClassVar[str] = "refresh"
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "refresh"}
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RefreshElementTypesOperation:
+        return cls(
+            uids=list(data["uids"]) if "uids" in data else UNSET,
         )
 
 
@@ -144587,6 +145092,9 @@ _DIVISION: dict[str, type[Division]] = {"parts": PartsDivision, "step": StepDivi
 _DOMAINS_OP: dict[str, type[DomainsOp]] = {"create": CreateDomainsOp, "fromField": FromFieldDomainsOp, "update": UpdateDomainsOp, "remove": RemoveDomainsOp, "import": ImportDomainsOp, "link": LinkDomainsOp}
 
 
+_ELEMENT_TYPES_OPERATION: dict[str, type[ElementTypesOperation]] = {"define": DefineElementTypesOperation, "update": UpdateElementTypesOperation, "rename": RenameElementTypesOperation, "remove": RemoveElementTypesOperation, "assign": AssignElementTypesOperation, "detach": DetachElementTypesOperation, "reset": ResetElementTypesOperation, "push": PushElementTypesOperation, "refresh": RefreshElementTypesOperation}
+
+
 _ELEVATIONS_OPERATION: dict[str, type[ElevationsOperation]] = {"derive": DeriveElevationsOperation, "refresh": RefreshElevationsOperation, "release": ReleaseElevationsOperation}
 
 
@@ -145224,6 +145732,7 @@ __all__ = [
     "AssetViaName",
     "AssetsCheck",
     "AssetsChecked",
+    "AssignElementTypesOperation",
     "AssignMaterialsOperation",
     "AssocArray",
     "AtKnownPoint",
@@ -145788,6 +146297,7 @@ __all__ = [
     "DeclaredExit",
     "DeclaredVertical",
     "DecurveCurveEdit",
+    "DefineElementTypesOperation",
     "DefineMaterialsOperation",
     "DefineModulesOperation",
     "DefineOpeningTypesOperation",
@@ -145832,6 +146342,7 @@ __all__ = [
     "DesignRuleName",
     "DetachArchOperation",
     "DetachDimensionSetEdit",
+    "DetachElementTypesOperation",
     "DetachMasterPaperOp",
     "DetachModulesOperation",
     "DetachOpeningsOperation",
@@ -145998,7 +146509,20 @@ __all__ = [
     "EditOperation",
     "EditOperationName",
     "EditTablesOperation",
+    "ElementKept",
+    "ElementLeft",
+    "ElementLeftWhy",
+    "ElementLeftWhyName",
     "ElementRef",
+    "ElementType",
+    "ElementTypeKind",
+    "ElementTypeKindName",
+    "ElementTypeRefused",
+    "ElementTypeRefusedName",
+    "ElementTypeReport",
+    "ElementTypesEdit",
+    "ElementTypesEdited",
+    "ElementTypesOperation",
     "ElevationDimensionMeasure",
     "ElevationLeft",
     "ElevationLeftName",
@@ -147952,6 +148476,7 @@ __all__ = [
     "PublishStatusReport",
     "PublishStopReason",
     "PublishStopReasonName",
+    "PushElementTypesOperation",
     "PushOpeningsOperation",
     "QmlExported",
     "QmlImported",
@@ -148084,6 +148609,7 @@ __all__ = [
     "RectangleRevcloudFrame",
     "ReferenceIfcValue",
     "RefreshBuildingSectionsOperation",
+    "RefreshElementTypesOperation",
     "RefreshElevationsOperation",
     "RefreshMapWorkOperation",
     "RefreshOpeningsOperation",
@@ -148140,6 +148666,7 @@ __all__ = [
     "RemoveControlCurveEdit",
     "RemoveDeliveryChange",
     "RemoveDomainsOp",
+    "RemoveElementTypesOperation",
     "RemoveEntityEdit",
     "RemoveFieldEdit",
     "RemoveFitCurveEdit",
@@ -148166,6 +148693,7 @@ __all__ = [
     "RemoveUnderlayChange",
     "RemoveVariantPaperOp",
     "RenameDomainMigrationStep",
+    "RenameElementTypesOperation",
     "RenameFieldMigrationStep",
     "RenameFormsOp",
     "RenameItemPaperOp",
@@ -148206,6 +148734,7 @@ __all__ = [
     "ResectionSurveyWork",
     "ReselectHatchEdit",
     "ResetArrayEdit",
+    "ResetElementTypesOperation",
     "ResetJoinsWallsOperation",
     "ResetLayersXrefsOperation",
     "ResetOpeningsOperation",
@@ -149196,6 +149725,7 @@ __all__ = [
     "TurnTextEdit",
     "TwoPointsUcsTo",
     "TypeIfcChange",
+    "TypeLink",
     "Ucs",
     "UcsChanged",
     "UcsNow",
@@ -149238,6 +149768,7 @@ __all__ = [
     "UnusedResource",
     "UpdateBlockChange",
     "UpdateDomainsOp",
+    "UpdateElementTypesOperation",
     "UpdateEntityEdit",
     "UpdateFeatureChange",
     "UpdateFieldEdit",

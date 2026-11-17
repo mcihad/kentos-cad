@@ -269,6 +269,12 @@ impl App {
             "arch.wallJoinCheck" => self.open_wall_joins(),
             // Kapı ve pencere tipleri (docs/adr/0772).
             "arch.openingTypes" => self.open_opening_types(),
+            // Eleman tipleri (docs/adr/8106).
+            "arch.elementTypes" => self.open_element_types(),
+            "arch.elementTypeFrom" => {
+                return self.element_types_event(crate::element_types_window::Event::FromSelection);
+            }
+            "arch.elementSameType" => self.select_same_element_type(),
             // Malzemeler (docs/adr/0785).
             "arch.materials" => self.open_materials(),
             // Oda modülleri (docs/adr/0775).

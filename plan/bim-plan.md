@@ -560,7 +560,7 @@ EK-7'nin "ortak öznitelikler aynı" notu; Z7.
 **İlk kabul:** ortak bodrumlu ve giriş kotları farklı iki blok için pilot profilde iki model dosyası. Aynı adlı katlar
 karışmaz, ortak proje ve saha bilgileri eşleşir, blok kotları doğru kalır ve bodrum alanı bir kez sayılır.
 
-#### BIM-12 — Tipler ve katmanlı yapı [ ]
+#### BIM-12 — Tipler ve katmanlı yapı [~]
 
 **Kullanıcı sonucu:** Her eleman türünün tipi vardır. Bir değerin tipten mi örnekten mi geldiği görünür. Tip değişince
 örnekler izler; örnekte ayrılan değer korunur. Dayanak Z11; W2 §2.1.
@@ -573,6 +573,14 @@ karışmaz, ortak proje ve saha bilgileri eşleşir, blok kotları doğru kalır
 
 **İlk kabul:** kolon tipinin ölçüsü değişince 16 kolon izler, örnekte ayrılan biri izlemez. Öznitelikler'de değerin kaynağı
 yazılıdır.
+
+**Durum (17 Kasım 2026, [ADR 8106](../docs/adr/8106-element-types-and-their-exceptions.md)):** ilk kabul sağlandı. Kolon,
+kiriş, döşeme (kaplama da), çatı, korkuluk ve merdiven tipleri `settings.arch.elementTypes`'ta; eleman tipe bağlıdır, sürümü
+ve istisnaları (`overrides`) her düzenlemede doğru tutulur. `cad.elementtypes.edit`: yeni tip, Tipe çevir (önce çiz, beğenince
+tipe çevir), değiştir, ad, sil, bağla, ayır, döndür, uygula, yeniden uygula; takip raporu (izledi, korundu, atlandı,
+reddedildi); 45 bağımsız durum. Eleman tipleri penceresi ve Öznitelikler'de "Tipten" / "Örnekten"; IFC'de her tip kendi
+sınıfının tipi (IfcOpenShell doğruladı). Mimari verisi 19. **Kalan:** giydirme cephe ve rampa tipi, kolon ve kiriş tipinin
+profil takımı, eski sürüm denetimi, ofis kitaplığı, katmanların pencerede düzenlenmesi, gerçek pencerede kabul.
 
 ### 5.4 Denetim
 
@@ -925,7 +933,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
-| B21 | Tipler ve katmanlı yapı; tip nesneleri | BIM-12, IFC-04 | Değerin kaynağı görünür |
+| B21 ~ | Tipler ve katmanlı yapı; tip nesneleri | BIM-12, IFC-04 | Değerin kaynağı görünür (ADR 8105: duvar stili `IfcWallType`, katman takımları; ADR 8106: kolon, kiriş, döşeme, çatı, korkuluk, merdiven tipi, istisna, Öznitelikler'de Tipten/Örnekten, IFC tipleri; iki ilk kabul de tamam; giydirme cephe tipi, profil takımı, eski sürüm denetimi, kitaplık kaldı) |
 | B22 | Konut dışı kullanımlar (yasal en geç 1.9.2033) | BIM-13 | Kullanım sınıfına özel kurallar |
 | B23 | Kat irtifakı için 3B yapı modeli araştırması | BIM-19 | Karar ADR'de |
 

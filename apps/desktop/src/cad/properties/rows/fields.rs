@@ -152,6 +152,7 @@ pub(super) fn field_rows(
             note: false,
             warn: false,
             thumb: None,
+            source: None,
         });
         if let Err(refused) = checked {
             rows.push(Row {

@@ -619,6 +619,11 @@ pub struct ArchInfo {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub load_bearing: Option<crate::DeclaredBearing>,
+    /// The project's element type it follows (docs/adr/8106; `.kcad` Mimari data 19): a column's, beam's, slab's,
+    /// roof's, railing's or stair's, the version it took and the fields it keeps its own value of. Absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub element_type: Option<crate::TypeLink>,
 }
 
 impl ArchInfo {
@@ -1554,6 +1559,11 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ModelUnderlay>>", optional))]
     pub underlays: Vec<crate::ModelUnderlay>,
+    /// Eleman tipleri (docs/adr/8106; `.kcad` Mimari data 19): the project's column, beam, slab, roof, railing and
+    /// stair types, in the order they were made. Empty: none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ElementType>>", optional))]
+    pub element_types: Vec<crate::ElementType>,
 }
 
 /// The building's structural system as the project declares it (docs/adr/8094): Dijital Proje Yönetmeliği EK-2 Tablo
@@ -2306,6 +2316,22 @@ impl ArchSettings {
         !self.underlays.is_empty()
     }
 
+    /// Whether it keeps element types (Mimari data 19, docs/adr/8106).
+    pub fn has_element_types(&self) -> bool {
+        !self.element_types.is_empty()
+    }
+
+    /// The element type `key` names: by id, then by name (case aside) among `kind`'s when given.
+    pub fn element_type(&self, key: &str, kind: Option<crate::ElementTypeKind>) -> Option<&crate::ElementType> {
+        let folded = key.trim().to_lowercase();
+        let of = |t: &&crate::ElementType| kind.is_none_or(|k| t.kind == k);
+        self.element_types
+            .iter()
+            .filter(of)
+            .find(|t| t.id == key)
+            .or_else(|| self.element_types.iter().filter(of).find(|t| t.name.to_lowercase() == folded))
+    }
+
     /// Whether it says the building's structural system (Mimari data 15, docs/adr/8094).
     pub fn has_structure(&self) -> bool {
         self.structure.is_some()
@@ -2492,6 +2518,9 @@ impl ArchSettings {
             return Some(problem);
         }
         if let Some(problem) = crate::opening_types_problem(&self.opening_types) {
+            return Some(problem);
+        }
+        if let Some(problem) = crate::element_types_problem(&self.element_types) {
             return Some(problem);
         }
         if let Some((at, why)) = self.program.problem() {

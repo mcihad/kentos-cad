@@ -2596,6 +2596,9 @@ mod tests {
                     crate::CAD_OPENING_TYPES_EDIT => {
                         serde_json::from_value::<crate::OpeningTypesEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ELEMENT_TYPES_EDIT => {
+                        serde_json::from_value::<crate::ElementTypesEdit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_MODULES_EDIT => {
                         serde_json::from_value::<crate::ModulesEdit>(e.input.clone()).map(|_| ())
                     }
@@ -4468,6 +4471,9 @@ mod tests {
                         }
                         crate::CAD_OPENING_TYPES_EDIT => {
                             serde_json::from_value::<crate::OpeningTypesEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_ELEMENT_TYPES_EDIT => {
+                            serde_json::from_value::<crate::ElementTypesEdited>(output.clone()).map(|_| ())
                         }
                         crate::CAD_MODULES_EDIT => {
                             serde_json::from_value::<crate::ModulesEdited>(output.clone()).map(|_| ())

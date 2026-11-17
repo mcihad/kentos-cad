@@ -25116,6 +25116,194 @@
       ]
     },
     {
+      "id": "cad.elementtypes.edit",
+      "version": 1,
+      "title": "Eleman tipleri",
+      "summary": "Projenin kolon, kiriş, döşeme, çatı, korkuluk ve merdiven tiplerini (settings.arch.elementTypes) yönetir; tek geri alma adımı “Eleman tipi”, tipi izleyen elemanlar aynı adımda. Tipin değerleri türünün tip alanlarıdır, elemanın kendi alan adlarıyla: kolon member, shape, width (zorunlu), depth, legs, height, fill, material (kolonun type'ı tipin adıdır); kiriş role, member, width ve height (zorunlu), material; döşeme role, covering, thickness (zorunlu), materialId, material, edge, layers; çatı thickness, material, layers, gutter, snowGuard; korkuluk height ve width (zorunlu), infill, gap; merdiven width ve tread (zorunlu), landing, winders, post, railings, numbering. Verilmeyen alan o alanın yokluğudur (varsayılanı). Yeri, katı, dönüşü, etiketi elemanın kendisinindir. operation: define (name, id isteğe bağlı: adından; element column/beam/slab/roof/railing/stair; values; copyOf projenin tipi; from çizilmiş bir elemanın uid'si — Tipe çevir: değerleri tipin olur, eleman aynı adımda tipi izler; sürüm 1), update (type: kimlik ya da ad, values: verilen alanlar, null alanı kaldırır; sürüm bir artar, izleyenler alır), rename (type, name; kimlik kalır, izleyen kolonun türü yeni ad), remove (type; izleyen varsa element_type_in_use, detach: true izleyenleri değerleriyle tipten ayırır), assign (type, uids: elemanlar tipin bütün değerlerini alır, istisnasız), detach (uids: değerler kalır, tip izlenmez), reset (uids, fields: istisnalar bırakılır, yoksa hepsi; son sürüm alınır), push (uid, fields: elemanın kendi değerleri, yoksa bütün istisnaları, tipin olur; sürüm artar, öbürleri izler), refresh (uids, yoksa eski sürümdeki hepsi: son sürümü istisnaları korunarak alır). Tipi izleyen elemanın bir tip alanını başka bir düzenleme tipinkinden farklı yaparsa o alan istisnadır (elementType.overrides), tipinkine dönerse yine izler. Tipin değişikliğinde istisna alanı korunur (report.kept, element_type_kept); kilitli katmandaki eleman eski sürümde kalır (report.skipped, element_type_skipped); yeni değerle geçersiz olan eleman bütün değişikliği reddeder (element_type_refused) ya da onRefused: skip ile eski sürümde kalır (report.refused). Plan yazmadan tabloyu ve her elemanın sonucunu gösterir.",
+      "aliases": [
+        "ELEMANTIPI"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.elementtypes.edit` v1: the project's element types changed as one undo step “Eleman tipi”, with the\nelements following them. Its plan is the preview: the types and every element's fate, nothing written.\n\nRefusals: `invalid_element_type`, `element_type_not_found`, `element_type_exists`, `element_type_in_use`,\n`element_type_kind`, `element_not_typed`, `element_type_refused`, `nothing_to_set`, `no_entities`, `invalid_uid`,\n`entity_not_found`, `layer_locked`, `invalid_revision`, `revision_conflict`. Warnings: `element_type_kept`,\n`element_type_skipped`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "onRefused": {
+            "$ref": "#/$defs/ElementTypeRefused",
+            "default": "stop",
+            "description": "When the change makes an element following the type invalid; absent: stop."
+          },
+          "operation": {
+            "$ref": "#/$defs/ElementTypesOperation"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "ElementTypesEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.elementtypes.edit` v1: the project's types after it, the type it acted on (a new one's\nid), every element's fate and the drawing's revision.",
+        "properties": {
+          "id": {
+            "description": "The type's id; absent for Tipten ayır and Tipi yeniden uygula, which may touch several.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "report": {
+            "$ref": "#/$defs/ElementTypeReport"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "types": {
+            "items": {
+              "$ref": "#/$defs/ElementType"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "types",
+          "report",
+          "revision"
+        ],
+        "title": "ElementTypesEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.elementtypes.edit` v1: the project's types after it, the type it acted on (a new one's\nid), every element's fate and the drawing's revision.",
+        "properties": {
+          "id": {
+            "description": "The type's id; absent for Tipten ayır and Tipi yeniden uygula, which may touch several.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "report": {
+            "$ref": "#/$defs/ElementTypeReport"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "types": {
+            "items": {
+              "$ref": "#/$defs/ElementType"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "types",
+          "report",
+          "revision"
+        ],
+        "title": "ElementTypesEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "column",
+              "beam",
+              "slab",
+              "roof",
+              "railing",
+              "stair"
+            ],
+            "refusedWith": "element_type_kind",
+            "note": "Tipe bağla, Tipten ayır, Tipe döndür, Tipe uygula, Tipi yeniden uygula ve Tipe çevir (define from) yalnız bu nesnelerde; bağlanan nesne tipin türünden olmalı."
+          }
+        ],
+        "refusals": [
+          "invalid_element_type",
+          "element_type_not_found",
+          "element_type_exists",
+          "element_type_in_use",
+          "element_type_kind",
+          "element_not_typed",
+          "element_type_refused",
+          "nothing_to_set",
+          "no_entities",
+          "invalid_uid",
+          "entity_not_found",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "element_type_kept",
+          "element_type_skipped"
+        ]
+      },
+      "examples": [
+        {
+          "title": "30/50 kolon tipi S1",
+          "input": {
+            "operation": {
+              "element": "column",
+              "kind": "define",
+              "name": "S1",
+              "values": {
+                "depth": 0.5,
+                "fill": true,
+                "width": 0.3
+              }
+            }
+          }
+        },
+        {
+          "title": "S1'i 35/50 yap; izleyen kolonlar alır, kendi eni olan korur",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "type": "S1",
+              "values": {
+                "width": 0.35
+              }
+            }
+          }
+        },
+        {
+          "title": "Çizilmiş kolondan tip",
+          "input": {
+            "operation": {
+              "from": "00000000-0000-4000-8000-000000000001",
+              "kind": "define",
+              "name": "S2"
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.materials.edit",
       "version": 1,
       "title": "Malzemeler",
@@ -117650,6 +117838,60 @@
       "meaning": "Tipi izleyen bazı açıklıklar değişen alanda kendi değerini (örnek istisnası) korudu."
     },
     {
+      "code": "element_type_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu kimlikte ya da adda eleman tipi yok."
+    },
+    {
+      "code": "invalid_element_type",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tipin değerleri o türden bir eleman tanımlamıyor ya da tip tablosunun kuralını bozuyor."
+    },
+    {
+      "code": "element_type_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu kimlikte ya da bu türde bu adda bir tip zaten var; başka bir ad verin."
+    },
+    {
+      "code": "element_type_in_use",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tipi izleyen elemanlar var; önce onları tipten ayırın ya da silmede ayırmayı seçin."
+    },
+    {
+      "code": "element_type_kind",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Eleman bu tipin türünden değil: kolon tipi kolona, kiriş tipi kirişe… verilir."
+    },
+    {
+      "code": "element_not_typed",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Eleman bir proje tipini izlemiyor."
+    },
+    {
+      "code": "element_type_refused",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tipi izleyen bir eleman yeni değerlerle geçersiz oluyor; hiçbir şey yazılmadı."
+    },
+    {
+      "code": "element_type_skipped",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tipi izleyen bazı elemanlar güncellenmedi (kilitli katman ya da geçersiz olan); eski sürümde kaldı."
+    },
+    {
+      "code": "element_type_kept",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tipi izleyen bazı elemanlar değişen alanda kendi değerini (örnek istisnası) korudu."
+    },
+    {
       "code": "invalid_declared",
       "kind": "failed",
       "retryable": false,
@@ -123888,6 +124130,17 @@
             }
           ]
         },
+        "elementType": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TypeLink"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The project's element type it follows (docs/adr/8106; `.kcad` Mimari data 19): a column's, beam's, slab's,\nroof's, railing's or stair's, the version it took and the fields it keeps its own value of. Absent: none."
+        },
         "exit": {
           "anyOf": [
             {
@@ -124663,6 +124916,13 @@
               "type": "null"
             }
           ]
+        },
+        "elementTypes": {
+          "description": "Eleman tipleri (docs/adr/8106; `.kcad` Mimari data 19): the project's column, beam, slab, roof, railing and\nstair types, in the order they were made. Empty: none.",
+          "items": {
+            "$ref": "#/$defs/ElementType"
+          },
+          "type": "array"
         },
         "formAnswers": {
           "description": "Kontrol formunun cevapları (docs/adr/8077; arch data 1): the author's answers to the model quality control form's\nquestions KentOS leaves to them (EK-9 Tablo 9.1: the file size, the development level, the area tables), each\nwith its note, by question; the printed form and the BIM package read them. Empty: none given.",
@@ -146089,6 +146349,63 @@
         }
       ]
     },
+    "ElementKept": {
+      "description": "An element a type's change kept its own value for.",
+      "properties": {
+        "fields": {
+          "description": "The changed fields it keeps its own value of.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "uid": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "fields"
+      ],
+      "type": "object"
+    },
+    "ElementLeft": {
+      "description": "An element that did not take a type's change: it stays at the older version.",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "uid": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        "why": {
+          "$ref": "#/$defs/ElementLeftWhy"
+        }
+      },
+      "required": [
+        "uid",
+        "why",
+        "message"
+      ],
+      "type": "object"
+    },
+    "ElementLeftWhy": {
+      "description": "Why an element following a type did not take its change.",
+      "oneOf": [
+        {
+          "const": "locked",
+          "description": "On a locked layer.",
+          "type": "string"
+        },
+        {
+          "const": "invalid",
+          "description": "Its values would make no element of its kind.",
+          "type": "string"
+        }
+      ]
+    },
     "ElementRef": {
       "additionalProperties": false,
       "description": "A part of an object by the object's persistent id.",
@@ -146105,6 +146422,345 @@
         "element"
       ],
       "type": "object"
+    },
+    "ElementType": {
+      "additionalProperties": false,
+      "description": "A project's element type (docs/adr/8106 §1).",
+      "properties": {
+        "id": {
+          "description": "Its lasting key: lower-case letters, digits and `-`, at most 64, not starting with `kentos-`.",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/ElementTypeKind",
+          "description": "The elements it serves."
+        },
+        "name": {
+          "description": "What it is called (S1, Döşeme 15): unique among its kind's types, case aside.",
+          "type": "string"
+        },
+        "values": {
+          "additionalProperties": true,
+          "description": "Its values: its kind's type fields by their names on the wire (`width`, `material` …), each as the element\nwrites it; a field it does not give is that field's absence (a column's rectangle, a slab's lone structure).",
+          "type": "object"
+        },
+        "version": {
+          "description": "Each change gives it the next; an element that took an older one is behind (eski sürüm).",
+          "format": "uint32",
+          "minimum": 1,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "version"
+      ],
+      "type": "object"
+    },
+    "ElementTypeKind": {
+      "description": "What an element type is for.",
+      "enum": [
+        "column",
+        "beam",
+        "slab",
+        "roof",
+        "railing",
+        "stair"
+      ],
+      "type": "string"
+    },
+    "ElementTypeRefused": {
+      "description": "When a type's change makes an element following it invalid.",
+      "oneOf": [
+        {
+          "const": "stop",
+          "description": "Nothing is written (`element_type_refused`).",
+          "type": "string"
+        },
+        {
+          "const": "skip",
+          "description": "The others take it; those it does not fit stay at the older version and are reported.",
+          "type": "string"
+        }
+      ]
+    },
+    "ElementTypeReport": {
+      "description": "Every element's fate in a type's change: those that took it, those that kept a changed field of their own, those\nleft at the older version (`skipped`: a locked layer; `refused`: it would be invalid).",
+      "properties": {
+        "applied": {
+          "items": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "kept": {
+          "items": {
+            "$ref": "#/$defs/ElementKept"
+          },
+          "type": "array"
+        },
+        "refused": {
+          "items": {
+            "$ref": "#/$defs/ElementLeft"
+          },
+          "type": "array"
+        },
+        "skipped": {
+          "items": {
+            "$ref": "#/$defs/ElementLeft"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "applied",
+        "kept",
+        "skipped",
+        "refused"
+      ],
+      "type": "object"
+    },
+    "ElementTypesOperation": {
+      "description": "What `cad.elementtypes.edit` does.",
+      "oneOf": [
+        {
+          "description": "Yeni tip: a new type `name` (its id `id`, else from its name) for `element` elements, version 1. Its values are\n`values`, over those of `copyOf` (a project type, by id or name) or of `from` (a drawn element: Tipe çevir,\nwhich then follows the new type in the same step) when given.",
+          "properties": {
+            "copyOf": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "element": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ElementTypeKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The elements it serves; absent: those of `copyOf` or `from`."
+            },
+            "from": {
+              "description": "A drawn element's persistent id: its values become the type's and it follows the type.",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "define",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "values": {
+              "additionalProperties": true,
+              "description": "The kind's type fields by their names on the wire, each as the element writes it.",
+              "type": "object"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Tipi değiştir: the type `type` (its id or name) given the values `values` (null takes a field away, the\nfield's absence); its version goes up by one and its elements follow.",
+          "properties": {
+            "kind": {
+              "const": "update",
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "values": {
+              "additionalProperties": true,
+              "type": "object"
+            }
+          },
+          "required": [
+            "kind",
+            "type",
+            "values"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Yeniden adlandır: the type's name; its id stays, and a column following it takes the name as its type.",
+          "properties": {
+            "kind": {
+              "const": "rename",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "type",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Sil: the type; its elements refuse it (`element_type_in_use`) unless `detach`, which leaves them with their\nvalues, following nothing.",
+          "properties": {
+            "detach": {
+              "type": "boolean"
+            },
+            "kind": {
+              "const": "remove",
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Tipe bağla: the elements `uids` follow the type, taking all its values (their exceptions none).",
+          "properties": {
+            "kind": {
+              "const": "assign",
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "uids": {
+              "items": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "type",
+            "uids"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Tipten ayır: the elements keep their values and follow no type.",
+          "properties": {
+            "kind": {
+              "const": "detach",
+              "type": "string"
+            },
+            "uids": {
+              "items": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "uids"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Tipe döndür: the elements give up their own values of `fields` (none: all) and take the type's latest.",
+          "properties": {
+            "fields": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "reset",
+              "type": "string"
+            },
+            "uids": {
+              "items": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "uids"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Tipe uygula: one element's own values of `fields` (none: all its exceptions) become its type's; the type's\nversion goes up by one and its other elements follow.",
+          "properties": {
+            "fields": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "push",
+              "type": "string"
+            },
+            "uid": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "uid"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Tipi yeniden uygula: the elements `uids` (none: every one behind) at an older version of their type take its\nlatest, their exceptions kept.",
+          "properties": {
+            "kind": {
+              "const": "refresh",
+              "type": "string"
+            },
+            "uids": {
+              "items": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "ElevationLeft": {
       "description": "Why something of the room is not drawn (or drawn only in part).",
@@ -225998,6 +226654,32 @@
       },
       "required": [
         "layer"
+      ],
+      "type": "object"
+    },
+    "TypeLink": {
+      "additionalProperties": false,
+      "description": "The type an element follows (docs/adr/8106 §1): its id, the version it took and the fields it keeps its own value\nof (its exceptions), in its kind's order.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "overrides": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 1,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "id",
+        "version"
       ],
       "type": "object"
     },

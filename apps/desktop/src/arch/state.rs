@@ -64,6 +64,8 @@ pub(crate) struct ArchUiState {
     pub(crate) bcf_window: Option<crate::bcf_window::Window>,
     /// Gelen paketi incele's window (package_review_window.rs, docs/adr/8104).
     pub(crate) review_window: Option<crate::package_review_window::Window>,
+    /// Eleman tipleri's window (element_types_window.rs, docs/adr/8106).
+    pub(crate) element_types: Option<crate::element_types_window::Window>,
     /// Planda seç waits for a point on an underlay's plan.
     pub(crate) underlay_picking: bool,
 }
@@ -113,6 +115,8 @@ pub(crate) enum Event {
     Bcf(crate::bcf_window::Event),
     /// Gelen paketi incele (package_review_window.rs, docs/adr/8104).
     ReviewPackage(crate::package_review_window::Event),
+    /// Eleman tipleri and the selection's type actions (element_types_window.rs, docs/adr/8106).
+    ElementTypes(crate::element_types_window::Event),
 }
 
 /// The architecture (Mimari) module's windows, `Dialog::Arch`.
@@ -164,6 +168,8 @@ pub(crate) enum ArchDialogKind {
     Bcf,
     /// Gelen paketi incele (package_review_window.rs, docs/adr/8104).
     ReviewPackage,
+    /// Eleman tipleri (element_types_window.rs, docs/adr/8106); the window is `ArchUiState::element_types`.
+    ElementTypes,
 }
 
 impl App {
@@ -194,6 +200,7 @@ impl App {
             Event::IfcCompare(event) => return self.ifc_compare_event(event),
             Event::Bcf(event) => return self.bcf_event(event),
             Event::ReviewPackage(event) => return self.review_event(event),
+            Event::ElementTypes(event) => return self.element_types_event(event),
             Event::ArchTemplate(event) => self.architecture_template_event(event),
         }
         Task::none()
@@ -224,6 +231,7 @@ impl App {
             ArchDialogKind::IfcCompare => self.ifc_compare_view(),
             ArchDialogKind::Bcf => self.bcf_view(),
             ArchDialogKind::ReviewPackage => self.review_view(),
+            ArchDialogKind::ElementTypes => self.element_types_view(),
         }
     }
 }

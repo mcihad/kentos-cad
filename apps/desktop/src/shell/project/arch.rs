@@ -546,6 +546,7 @@ pub fn read(
         // So is the delivery record (docs/adr/8099).
         deliveries: choices.map_or_else(Vec::new, |a| a.deliveries.clone()),
         underlays: choices.map_or_else(Vec::new, |a| a.underlays.clone()),
+        element_types: choices.map_or_else(Vec::new, |a| a.element_types.clone()),
     };
     match arch.problem() {
         Some((_, why)) => Err(why),

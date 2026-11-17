@@ -48,6 +48,10 @@ macro_rules! arch_cases {
             kentos_commands::CAD_OPENING_TYPES_EDIT => {
                 $then!(opening_types_edit, kentos_commands::OpeningTypesEdit)
             }
+            // Eleman tipleri (docs/adr/8106).
+            kentos_commands::CAD_ELEMENT_TYPES_EDIT => {
+                $then!(element_types_edit, kentos_commands::ElementTypesEdit)
+            }
             kentos_commands::CAD_OPENINGS_QUERY => {
                 $then!(openings_query, kentos_commands::OpeningsQuery)
             }

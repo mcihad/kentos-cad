@@ -357,6 +357,11 @@
   - **Duvar stili IFC'de tip (17 Kasım 2026; [ADR 8105](../adr/8105-wall-style-types-and-layer-sets.md), K179–K181):**
     her duvar stili bir `IfcWallType`, duvarları ona bağlı (`IfcRelDefinesByType`, `IfcRelDeclares`); her duvarın katman
     takımı sol yüzden sağa, aynı takım paylaşılır; `IfcMaterialLayerSetUsage` duvarlar eksen çerçevesinde yazılınca.
+  - **Eleman tipleri (17 Kasım 2026; [ADR 8106](../adr/8106-element-types-and-their-exceptions.md), K182–K187):** kolon,
+    kiriş, döşeme, çatı, korkuluk, merdiven tipleri `settings.arch.elementTypes`'ta, değerleri elemanın kendi alan adlarıyla
+    ve onun yazdığı biçimde; eleman `arch.elementType` ile bağlı, istisnalarını belge her düzenlemede yeniden hesaplar
+    (`update_many`). `cad.elementtypes.edit` (Tipe çevir dahil), Öznitelikler'de Tipten/Örnekten, IFC'de sınıfının tipi,
+    Mimari verisi 19.
   - **Künye role göre (17 Kasım 2026; [ADR 8100](../adr/8100-kunye-personal-particulars-by-role.md), K152–K156):** bulut
     projesinde künyenin kişisel bilgilerini (13 değişken: yapı sahibi, müellif, sicil, büro, tapu kaydı …; teslim eden)
     yalnız `feature.write` sahibi görür (`ProjectAccess::sees_particulars`); öbürleri bilgide ve anlık görüntüde "Gizli"

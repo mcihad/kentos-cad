@@ -2197,6 +2197,70 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             }
         }
     }
+    // The element types (docs/adr/8106, BIM-12): each project type of a column, beam, slab, roof, railing or stair is an
+    // IFC type of the class its values make (a post's IfcMemberType, a covering's IfcCoveringType), its elements of
+    // that class typed by it — one an exception made another class stays untyped. Its predefined type theirs when they
+    // agree (NOTDEFINED else, and for USERDEFINED, whose word the type would need); its layer set theirs when they
+    // share one.
+    let element_types = arch.map_or(&[][..], |a| a.element_types.as_slice());
+    for t in element_types {
+        use kentos_contracts::ElementTypeKind as K;
+        let class = match t.kind {
+            K::Column if t.values.contains_key("member") => Class::Member,
+            K::Column => Class::Column,
+            K::Beam if t.values.contains_key("member") => Class::Member,
+            K::Beam => Class::Beam,
+            K::Slab if t.values.contains_key("covering") => Class::Covering,
+            K::Slab => Class::Slab,
+            K::Roof => Class::Roof,
+            K::Railing => Class::Railing,
+            K::Stair => Class::Stair,
+        };
+        let entity = match class {
+            Class::Column => "IFCCOLUMNTYPE",
+            Class::Member => "IFCMEMBERTYPE",
+            Class::Beam => "IFCBEAMTYPE",
+            Class::Covering => "IFCCOVERINGTYPE",
+            Class::Slab => "IFCSLABTYPE",
+            Class::Roof => "IFCROOFTYPE",
+            Class::Railing => "IFCRAILINGTYPE",
+            _ => "IFCSTAIRTYPE",
+        };
+        let mut members: Vec<usize> = index
+            .iter()
+            .filter(|&(owner, &k)| {
+                by_uid.get(owner).is_some_and(|&(_, e)| {
+                    e.arch_info().and_then(|a| a.element_type.as_ref()).is_some_and(|l| l.id == t.id)
+                }) && elements.get(k).is_some_and(|e| e.class == class)
+            })
+            .map(|(_, &k)| k)
+            .collect();
+        if members.is_empty() {
+            continue;
+        }
+        members.sort_unstable();
+        members.dedup();
+        let first = elements[members[0]].predefined;
+        let predefined = if first != "USERDEFINED" && members.iter().all(|&k| elements[k].predefined == first) {
+            first
+        } else {
+            "NOTDEFINED"
+        };
+        let set_of = |k: usize| layer_sets.iter().find(|(i, ..)| *i == k).map(|(_, n, l)| (n.clone(), l.clone()));
+        let layer_set = set_of(members[0]).filter(|s| members.iter().all(|&k| set_of(k).as_ref() == Some(s)));
+        let seed = match &scope {
+            Some(b) => format!("kentos-eleman-tipi:{}:{}", b.id, t.id),
+            None => format!("kentos-eleman-tipi:{}", t.id),
+        };
+        types.push(crate::building::TypeObject {
+            entity,
+            id: crate::step::fnv(&seed, 0),
+            name: t.name.clone(),
+            predefined,
+            layer_set,
+            members,
+        });
+    }
     for t in &mut types {
         t.members.sort_unstable();
     }

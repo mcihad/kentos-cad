@@ -1111,6 +1111,9 @@ pub mod fixture_audit;
 #[path = "arch/opening_types_edit.rs"]
 pub mod opening_types_edit;
 #[cfg(feature = "mod-arch")]
+#[path = "arch/element_types_edit.rs"]
+pub mod element_types_edit;
+#[cfg(feature = "mod-arch")]
 #[path = "arch/materials_edit.rs"]
 pub mod materials_edit;
 #[cfg(feature = "mod-arch")]
@@ -2105,6 +2108,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_OPENING_TYPES_EDIT,
         kentos_commands::CAD_OPENING_TYPES_EDIT_VERSION,
+    ),
+    // Eleman tipleri ([`element_types_edit`], docs/adr/8106).
+    (
+        kentos_commands::CAD_ELEMENT_TYPES_EDIT,
+        kentos_commands::CAD_ELEMENT_TYPES_EDIT_VERSION,
     ),
     (
         kentos_commands::CAD_OPENINGS_QUERY,

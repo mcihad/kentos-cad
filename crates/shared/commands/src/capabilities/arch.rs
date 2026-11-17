@@ -542,6 +542,37 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &["opening_type_kept", "opening_type_skipped"],
         targets: none,
     },
+    // Eleman tipleri (docs/adr/8106).
+    Entry {
+        id: "cad.elementtypes.edit",
+        refusals: &[
+            &[
+                "invalid_element_type",
+                "element_type_not_found",
+                "element_type_exists",
+                "element_type_in_use",
+                "element_type_kind",
+                "element_not_typed",
+                "element_type_refused",
+                "nothing_to_set",
+                "no_entities",
+                "invalid_uid",
+                "entity_not_found",
+                "layer_locked",
+            ],
+            REVISION,
+        ],
+        warnings: &["element_type_kept", "element_type_skipped"],
+        targets: || {
+            vec![target(
+                None,
+                &["column", "beam", "slab", "roof", "railing", "stair"],
+                &[],
+                Some("element_type_kind"),
+                Some("Tipe bağla, Tipten ayır, Tipe döndür, Tipe uygula, Tipi yeniden uygula ve Tipe çevir (define from) yalnız bu nesnelerde; bağlanan nesne tipin türünden olmalı."),
+            )]
+        },
+    },
     // Malzemeler (docs/adr/0785).
     Entry {
         id: "cad.materials.edit",

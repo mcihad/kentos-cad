@@ -5,6 +5,7 @@ import type { ArchStatus } from "./ArchStatus";
 import type { Declared } from "./Declared";
 import type { DeclaredBearing } from "./DeclaredBearing";
 import type { DeclaredExit } from "./DeclaredExit";
+import type { TypeLink } from "./TypeLink";
 
 /**
  * What every architectural object carries beside its geometry (`CAD-ARCH-03`): its level (by the project level's
@@ -25,4 +26,9 @@ exit?: DeclaredExit,
  * A wall's load-bearing role (docs/adr/8090, EK-6 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2); absent: unknown
  * (missing).
  */
-loadBearing?: DeclaredBearing, };
+loadBearing?: DeclaredBearing, 
+/**
+ * The project's element type it follows (docs/adr/8106; `.kcad` Mimari data 19): a column's, beam's, slab's,
+ * roof's, railing's or stair's, the version it took and the fields it keeps its own value of. Absent: none.
+ */
+elementType?: TypeLink, };

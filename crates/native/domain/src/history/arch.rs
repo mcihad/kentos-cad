@@ -75,6 +75,12 @@ pub(crate) enum ArchOp {
         before: Arc<Vec<kentos_contracts::ModelUnderlay>>,
         after: Arc<Vec<kentos_contracts::ModelUnderlay>>,
     },
+    /// The project's element types (docs/adr/8106), before and after: a setting, written in the step with the
+    /// elements that follow them, so undo gives both back.
+    ElementTypes {
+        before: Arc<Vec<kentos_contracts::ElementType>>,
+        after: Arc<Vec<kentos_contracts::ElementType>>,
+    },
 }
 
 impl ArchOp {
@@ -126,6 +132,10 @@ impl ArchOp {
                 after: before.clone(),
             },
             ArchOp::Underlays { before, after } => ArchOp::Underlays {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            ArchOp::ElementTypes { before, after } => ArchOp::ElementTypes {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -225,6 +235,14 @@ impl ArchOp {
                     .take()
                     .unwrap_or_default();
                 arch.underlays = (**after).clone();
+                Arc::make_mut(&mut doc.settings).arch = (!arch.is_empty()).then_some(arch);
+            }
+            ArchOp::ElementTypes { after, .. } => {
+                let mut arch = Arc::make_mut(&mut doc.settings)
+                    .arch
+                    .take()
+                    .unwrap_or_default();
+                arch.element_types = (**after).clone();
                 Arc::make_mut(&mut doc.settings).arch = (!arch.is_empty()).then_some(arch);
             }
         }

@@ -280,6 +280,8 @@ pub mod cad_offset;
 pub mod cad_openings;
 #[path = "arch/cad_opening_types.rs"]
 pub mod cad_opening_types;
+#[path = "arch/cad_element_types.rs"]
+pub mod cad_element_types;
 #[path = "arch/cad_modules.rs"]
 pub mod cad_modules;
 #[path = "arch/cad_options.rs"]
@@ -578,6 +580,7 @@ pub use cad_nurbs::*;
 pub use cad_offset::*;
 pub use cad_openings::*;
 pub use cad_opening_types::*;
+pub use cad_element_types::*;
 pub use cad_materials::*;
 pub use cad_modules::*;
 pub use cad_options::*;

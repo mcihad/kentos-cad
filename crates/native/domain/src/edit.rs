@@ -213,9 +213,12 @@ impl Document {
             let Some(before) = latest.get(&slot).or_else(|| self.store.get(slot)).cloned() else {
                 continue;
             };
+            let mut entity = changed(entity, slot, &before.entity);
+            // An element following a project type keeps its exceptions true (docs/adr/8106 §2).
+            self.keep_exceptions(&before.entity, &mut entity);
             let after = Stored {
                 uid: before.uid,
-                entity: Arc::new(changed(entity, slot, &before.entity)),
+                entity: Arc::new(entity),
             };
             if after.entity == before.entity {
                 continue;

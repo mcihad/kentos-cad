@@ -421,6 +421,7 @@ impl App {
                 ifc_compare_window: None,
                 bcf_window: None,
                 review_window: None,
+                element_types: None,
                 underlay_picking: false,
                 quantities: None,
             },

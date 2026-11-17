@@ -391,7 +391,29 @@ impl App {
                 let label = row.label.clone();
                 // An attachment's picture before its cell (docs/adr/0225 §2).
                 let thumb = row.thumb.take();
+                // Where an element's value comes from (docs/adr/8106 §5): after its cell.
+                let source = row.source.take();
                 let cell = self.cell(row);
+                let cell = match source {
+                    Some(words) => kentos_ui::widget::Cell::flat(
+                        iced::widget::row![
+                            container(cell).width(Fill),
+                            container(kentos_ui::label::caption(words).style(if words == "Tipten" {
+                                kentos_ui::style::text::muted
+                            } else {
+                                kentos_ui::style::text::accent
+                            }))
+                            .padding(iced::Padding {
+                                left: 4.0,
+                                right: kentos_ui::theme::metrics::cell_end(),
+                                ..iced::Padding::ZERO
+                            }),
+                        ]
+                        .align_y(iced::Center),
+                    )
+                    .into(),
+                    None => cell,
+                };
                 let cell = match thumb {
                     Some(t) => kentos_ui::widget::Cell::flat(
                         iced::widget::row![

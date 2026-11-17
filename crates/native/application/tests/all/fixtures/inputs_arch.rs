@@ -695,6 +695,13 @@ impl Input for kentos_commands::OpeningTypesEdit {
     }
 }
 
+impl Input for kentos_commands::ElementTypesEdit {
+    /// The values are JSON numbers, not fields of the input (docs/adr/8106).
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_commands::CaseworkRun {
     /// `from.x` and `.y`, `through[i].x` and `.y`, `to.x` and `.y`, `module`, `depth`, `perModule[i].width`,
     /// `lineWeight` (docs/adr/0706, 0727).

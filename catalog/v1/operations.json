@@ -2507,6 +2507,24 @@
       ],
       "note": "İncele file.review.package'a gider (dosyaları okur, yazmaz); İade notu yaz hata bulgularını cad.bcf.write ile paketin modeline bağlı sorunlar olarak, yanına da yazı olarak yazar; Modelde göster IFC görüntüleyicide bulgunun nesnelerini seçer (ADR 8104)."
     },
+    "arch.elementTypes": {
+      "level": "semantic",
+      "via": [
+        "cad.elementtypes.edit"
+      ],
+      "note": "Yeni tip, Seçili elemandan, Uygula, Sil ve Öznitelikler'in Tip listesi, Tipten ayır, Tipe uygula, Tipe döndür, Tipi yeniden uygula cad.elementtypes.edit'e gider; Uygula'dan önceki satır onun planıdır (ADR 8106)."
+    },
+    "arch.elementTypeFrom": {
+      "level": "semantic",
+      "via": [
+        "cad.elementtypes.edit"
+      ],
+      "note": "Seçili elemanın değerleri define (from) ile yeni tipin olur, eleman aynı adımda onu izler (ADR 8106)."
+    },
+    "arch.elementSameType": {
+      "level": "host",
+      "note": "Seçili elemanın tipini izleyen elemanları seçer; çizimi değiştirmez (ADR 8106)."
+    },
     "arch.digitalRules": {
       "level": "host",
       "note": "Dijital proje kuralları penceresi yönetmeliğin kural kataloğunu (kentos-digital-project, kentos-ifc) okur; çizime ve projeye dokunmaz. Python ve MCP için salt okuyan sorgu komutu sonraki iştir (ADR 8062 §9)."

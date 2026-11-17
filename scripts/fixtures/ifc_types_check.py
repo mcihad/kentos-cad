@@ -61,12 +61,54 @@ def main():
     declared = [r for r in f.by_type("IfcRelDeclares") if any(x.is_a("IfcWallType") for x in r.RelatedDefinitions)]
     if len(declared) != 1:
         problems.append(f"{len(declared)} IfcRelDeclares tipleri anıyor")
+    report += element_types(problems)
     print(json.dumps(report, ensure_ascii=False, indent=2))
     if problems:
         print("uyuşmuyor: " + "; ".join(problems), file=sys.stderr)
         return 1
-    print("uyuyor: her stil bir IfcWallType, duvarları ona bağlı, katmanları sırasıyla ve kalınlığıyla")
+    print("uyuyor: her stil bir IfcWallType, duvarları ona bağlı, katmanları sırasıyla ve kalınlığıyla; her eleman tipi "
+          "sınıfının IFC tipi, elemanları ona bağlı (docs/adr/8106)")
     return 0
+
+
+# Each element type's IFC class and the class of the elements it types (docs/adr/8106).
+OCCURRENCE = {"IfcColumnType": "IfcColumn", "IfcMemberType": "IfcMember", "IfcBeamType": "IfcBeam",
+              "IfcSlabType": "IfcSlab", "IfcCoveringType": "IfcCovering", "IfcRoofType": "IfcRoof",
+              "IfcRailingType": "IfcRailing", "IfcStairType": "IfcStair"}
+
+
+def element_types(problems):
+    """The section building typed by its elements' own values (kesit-binasi-eleman-tipli.ifc): each element type of
+    the drawing one IFC type of its class by its name, its elements (their GlobalIds the compressed form of their ids)
+    of that class typed by it and by nothing else, every type declared in the project."""
+    note_path = DIR / "kesit-binasi-eleman-tipli.json"
+    note = json.loads(note_path.read_text(encoding="utf-8"))
+    f = ifcopenshell.open(str(DIR / note["file"]))
+    out = []
+    for t in note["types"]:
+        found = [x for x in f.by_type("IfcTypeObject") if x.Name == t["name"] and x.is_a().upper() == t["ifc"]]
+        if len(found) != 1:
+            problems.append(f"{t['name']}: {t['ifc']} {len(found)} kez")
+            continue
+        x = found[0]
+        occurrence = OCCURRENCE.get(x.is_a())
+        want = set()
+        for u in t["members"]:
+            g = ifcopenshell.guid.compress(uuid.UUID(u).hex)
+            try:
+                e = f.by_guid(g)
+            except RuntimeError:
+                continue
+            if occurrence and e.is_a(occurrence):
+                want.add(g)
+        typed = {e.GlobalId for e in f.by_type("IfcProduct") if (ue.get_type(e) or None) and ue.get_type(e).id() == x.id()}
+        if typed != want or not typed:
+            problems.append(f"{t['name']}: tipli {sorted(typed)}, çizimde {sorted(want)}")
+        if not any(x in r.RelatedDefinitions for r in f.by_type("IfcRelDeclares")):
+            problems.append(f"{t['name']}: projede bildirilmemiş")
+        out.append({"type": t["name"], "ifc": x.is_a(), "globalId": x.GlobalId, "predefined": x.PredefinedType,
+                    "elements": len(typed)})
+    return out
 
 
 if __name__ == "__main__":

@@ -21,6 +21,7 @@ mod arch;
 pub(crate) mod attachments;
 pub(crate) mod casework;
 mod opening_types;
+mod element_types;
 mod materials;
 mod modules;
 mod elevations;
@@ -103,6 +104,9 @@ pub(crate) struct Row {
     /// A picture before the cell: an attachment's photo or its kind's icon,
     /// which opens it (docs/adr/0225 §2).
     pub thumb: Option<Thumb>,
+    /// Where an element's value comes from (docs/adr/8106 §5): “Tipten”, its type's; “Örnekten”, its own (an
+    /// exception). Written after its cell, quiet; its own in the accent colour.
+    pub source: Option<&'static str>,
 }
 
 /// An attachment's picture in its row.
@@ -188,6 +192,7 @@ impl Row {
             note: false,
             warn: false,
             thumb: None,
+            source: None,
         }
     }
 
