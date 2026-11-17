@@ -260,6 +260,14 @@ pub struct Fix {
 
 use kentos_domain::room_names::{HeightClass, height_class};
 pub use kentos_domain::room_names::{RoomKind, has, is, kind_of, words};
+
+/// A passage's least width (docs/adr/8112, 8110) and the middle of its narrowest neck; 0 and none without a ring.
+pub(crate) fn neck_of(parts: &[kentos_commands::SpacePart]) -> (f64, Option<V>) {
+    match kentos_domain::room_width::least_of(parts) {
+        Some(w) => (w.width, Some(V::new((w.from.x + w.to.x) / 2.0, (w.from.y + w.to.y) / 2.0))),
+        None => (0.0, None),
+    }
+}
 use kentos_domain::{CeilingFrom, RoomHeight};
 
 /// 29/1's narrow side and net area, m and m²; a corridor's 29/3 width and no area.
@@ -623,7 +631,13 @@ pub fn findings(
             continue;
         }
         let parts = net_parts(&mut search, x);
-        let (width, pole) = crate::program_check::width_of(&parts);
+        let (width, pole) = if kind == RoomKind::Corridor {
+            // A hall's or a corridor's width is its narrowest neck (docs/adr/8112): its largest circle is its widest
+            // place, an L's corner or the lobby it joins. The finding points at the neck.
+            neck_of(&parts)
+        } else {
+            crate::program_check::width_of(&parts)
+        };
         let area = search.net_area(x);
         let at = pole
             .or_else(|| {
@@ -662,7 +676,7 @@ pub fn findings(
         if r.kind == RoomKind::Corridor {
             if let Some(s) = said(
                 codes::PAIY_CORRIDOR_NARROW,
-                &format!("{} net eni", named(r)),
+                &format!("{} en dar yeri", named(r)),
                 r.width,
                 Bound::AtLeast,
                 Limit {

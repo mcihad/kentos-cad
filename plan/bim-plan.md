@@ -628,8 +628,9 @@ kompartımanıysa kaldı, iki ya da daha çoksa büyüklük şartı ve 2,8 m²/k
 olan mahalin en dar yeri 2,00 m'den azsa kaldı. Koridorun en dar yeri ortak çekirdekte yeni ölçü (`geom::neck`: iki yanında
 kendi genişliğinde daire kalan en kısa kesit; L, T, artı ve holle birleşen koridorda en büyük daire koridoru geniş
 okuyordu), bina olgularında `least`; 24 durumluk bağımsız geometri referansı (Shapely), 25 bağımsız kural durumu, gerçek
-çizimde L koridorlu hastane Denetim'de. Kalan: Mimari denetimin PAİY 29/3 ve BYKHY 33/1 koridor kurallarının en dar yere
-geçmesi, çıkmaza daralan koridor ve serbest kolon, yatay tahliye alanının kapasitesi.
+çizimde L koridorlu hastane Denetim'de. Kalan: çıkmaza daralan koridor ve serbest kolon, yatay tahliye alanının kapasitesi.
+Mimari denetimin PAİY 29/3 ve BYKHY 33/1, 33/2 koridor kuralları en dar yere geçti ([ADR 8112](../docs/adr/8112-corridor-rules-by-narrowest-neck.md),
+K208–K210, 18 Kasım 2026): L hol artık kollarından ölçülür, bulgu en dar kesitte.
 **Yapıldı (18 Kasım 2026, [ADR 8111](../docs/adr/8111-hotel-room-distance-to-its-door.md), K204–K207):** otel yatak
 odasının içindeki kaçış uzaklığı (paket 0.25.0, `konaklama`): BYKHY 50/3, odanın en uzak noktasından (0,40 m önden) kendi
 kapısına yürüyüş 15 m'yi aşan tek kapılı oda kaldı, tamamı yağmurlamalı otelde sınır 20 m; kaçış modülüne mahalin kendi

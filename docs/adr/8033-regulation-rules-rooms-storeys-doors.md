@@ -58,7 +58,8 @@ metni de net (temiz) genişlik diyordu, 13.8.2025 değişikliği balkon ve tuval
 - **Eksik piyes (29/1, 29/2):** konut bölümünde oturma odası, yatak odası, mutfak, banyo ve tuvalet aranır. Üç ve daha
   az odada (oturma ve yatak odaları) banyo tuvaleti karşılar. Eklentinin mahalleri bölümüne sayılır.
 - **Hol ve koridor (29/3):** net en 1,20 m. L biçimli koridorda iç daire köşede biraz büyür (en çok %17): ilk sürümde
-  böyle kabul edildi.
+  böyle kabul edildi. 18 Kasım 2026'dan beri en dar yerden ölçülür (ADR 8112; T'de %25, artıda %41, hole bağlanan
+  koridorda holün genişliği de okunuyordu).
 - **Kat yüksekliği (28/1-c):**
   - Yalnız proje açıkça konutsa okunur: konut nitelikli bölüm ya da yatak odası olmalı.
   - Sınır 3,60 m; ±0,00 ve üstündeki kat sayısı üçü geçmiyorsa 4,00 m. Yükseklik katın kendi yüksekliği, yoksa üst

@@ -88,41 +88,42 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     m/12 m², yatak odası 2,50/9, mutfak 1,50/3,30, banyo 1,50/3, tuvalet 1,00/1,20; dar
     kenar en büyük iç dairenin çapı, alan iç yüzler) paiy_room_area_below,
     paiy_room_width_below, bölümde eksik piyes paiy_room_missing (29/2: üç ve daha az
-    odada banyo tuvaleti karşılar), hol ve koridor 1,20 m paiy_corridor_narrow (29/3),
-    adı ya da kullanımı olan mahalin iç yüksekliği bitmiş döşemesinden tavanına (asma
-    tavan, yazılan iç yükseklik, üst döşemenin sıvalı altı; yoksa kattan kata) iskân
-    edilen mahalde 2,60 (28/4), banyo, tuvalet, lavabo, kiler, depo, merdiven altı ve
-    geçitte 2,20 (28/5), garaj, otopark, kazan dairesi ve teknik mahalde 2,20 m (28/6)
-    paiy_inside_height_below (balkon, teras, sığınak, şaft, çatı arası ve asma kattaki
-    mahal okunmaz); bulgu rule alanında maddeyi ve Resmî Gazete'yi taşır. Niteliği
-    daire, mesken ya da konut olmayan bölümün piyesleri okunmaz. Merdiven 31 — ortak
-    merdiven kolu ve ara sahanlığı konut binasında 1,20, konut dışında 1,50, bağımsız
-    bölüm içinde 1,00 m paiy_stair_width_narrow, paiy_stair_landing_short (merdivenin
-    durduğu mahalin bölümünden; hiçbir mahalde değilse dış merdiven, kol ölçülmez), rıht
-    asansörsüz binada 0,16, asansörlüde 0,18 m paiy_stair_riser_high, 2a+b 0,60–0,64,
-    basamak 0,27, döner merdivende dar uçta 0,10 m paiy_stair_step; korkuluk ortak
-    merdivende iki yanda (31/1-ç), öbür merdivende birden çok basamakta ve rampada en az
-    bir (38/1) paiy_railing_missing; rampa eğimi kot farkına göre %8/7/6/5
-    paiy_ramp_steep (30/12; 2,75 m ve daha geniş rampa taşıt rampasıdır, okunmaz); zemin
-    kattan yukarıda denizliği 0,90 m'den alçak pencere paiy_window_railing (38/1);
-    Işıklık adlı boşluk 1–6 katta 1,50 m ve 4,50 m², 7 ve daha fazlada 2,00 m ve 9 m²
-    paiy_lightwell_small (32/2), Hava bacası 0,60 × 0,60 m paiy_air_shaft_small (32/3);
-    asansör zorunluluğu (34/1) ve asansörün hizmet verdiği katlar (34/8) başvuru gününde
-    (künyenin basvuru_tarihi) yürürlükteki hâlleriyle standart kural paketinin
-    (mimari-mevzuat) Python kurallarıdır, kaçış yolu kapıları (BYKHY 47/2
-    bykhy_exit_door_swing, 47/3 bykhy_stair_door_rating) ve emsalin 22. madde
-    sınırlarının koşulları da (44/1'e göre zorunlu olmayan kapıcı dairesi emsal harici
-    paiy_caretaker_not_required, 22/1-f'nin koşulu tutmayan kütüphane
-    paiy_library_not_exempt, geleneksel kesme taş yığma binada — settings.arch.structure
-    — zemin dahil 3 kattan çok katlı binanın ya da zemin katta olmayan taşlık, dış sofa
-    ve eyvan paiy_traditional_not_exempt, tutuyorsa bahçeyle bağlantısı okunmadığı için
-    uzman incelemesi, 22/1-m; böyle binada 12,50 cm'den kalın, taşıyıcılığı beyan
-    edilmemiş duvar paiy_masonry_wall_undeclared, taş duvarların kalın kısmının 5/8 ve
-    20/8-j'ye göre dışarıda sayılamadığı bina ya da başvuru günü
-    paiy_masonry_walls_not_exempt, yerel yönetmelik Sivas ise duvarlar %30'un içinde
-    sayılınca sınırı aşan emsal harici local_masonry_walls_over (Sivas 22/k); sınırları
-    ve taş duvarların 25/12,50 cm'yi aşan kısmını Emsal ve TAKS tablosu sayar) ve
-    merdiven altı da (1,80 m'den alçak boşluğu bir mahale açık merdiven
+    odada banyo tuvaleti karşılar), hol ve koridorun en dar yeri (iki yanında kendi
+    genişliğinde daire kalan en kısa kesit; L, T ya da hole bağlanan koridorda en büyük
+    daire değil) 1,20 m paiy_corridor_narrow (29/3), adı ya da kullanımı olan mahalin iç
+    yüksekliği bitmiş döşemesinden tavanına (asma tavan, yazılan iç yükseklik, üst
+    döşemenin sıvalı altı; yoksa kattan kata) iskân edilen mahalde 2,60 (28/4), banyo,
+    tuvalet, lavabo, kiler, depo, merdiven altı ve geçitte 2,20 (28/5), garaj, otopark,
+    kazan dairesi ve teknik mahalde 2,20 m (28/6) paiy_inside_height_below (balkon,
+    teras, sığınak, şaft, çatı arası ve asma kattaki mahal okunmaz); bulgu rule alanında
+    maddeyi ve Resmî Gazete'yi taşır. Niteliği daire, mesken ya da konut olmayan bölümün
+    piyesleri okunmaz. Merdiven 31 — ortak merdiven kolu ve ara sahanlığı konut
+    binasında 1,20, konut dışında 1,50, bağımsız bölüm içinde 1,00 m
+    paiy_stair_width_narrow, paiy_stair_landing_short (merdivenin durduğu mahalin
+    bölümünden; hiçbir mahalde değilse dış merdiven, kol ölçülmez), rıht asansörsüz
+    binada 0,16, asansörlüde 0,18 m paiy_stair_riser_high, 2a+b 0,60–0,64, basamak 0,27,
+    döner merdivende dar uçta 0,10 m paiy_stair_step; korkuluk ortak merdivende iki
+    yanda (31/1-ç), öbür merdivende birden çok basamakta ve rampada en az bir (38/1)
+    paiy_railing_missing; rampa eğimi kot farkına göre %8/7/6/5 paiy_ramp_steep (30/12;
+    2,75 m ve daha geniş rampa taşıt rampasıdır, okunmaz); zemin kattan yukarıda
+    denizliği 0,90 m'den alçak pencere paiy_window_railing (38/1); Işıklık adlı boşluk
+    1–6 katta 1,50 m ve 4,50 m², 7 ve daha fazlada 2,00 m ve 9 m² paiy_lightwell_small
+    (32/2), Hava bacası 0,60 × 0,60 m paiy_air_shaft_small (32/3); asansör zorunluluğu
+    (34/1) ve asansörün hizmet verdiği katlar (34/8) başvuru gününde (künyenin
+    basvuru_tarihi) yürürlükteki hâlleriyle standart kural paketinin (mimari-mevzuat)
+    Python kurallarıdır, kaçış yolu kapıları (BYKHY 47/2 bykhy_exit_door_swing, 47/3
+    bykhy_stair_door_rating) ve emsalin 22. madde sınırlarının koşulları da (44/1'e göre
+    zorunlu olmayan kapıcı dairesi emsal harici paiy_caretaker_not_required, 22/1-f'nin
+    koşulu tutmayan kütüphane paiy_library_not_exempt, geleneksel kesme taş yığma binada
+    — settings.arch.structure — zemin dahil 3 kattan çok katlı binanın ya da zemin katta
+    olmayan taşlık, dış sofa ve eyvan paiy_traditional_not_exempt, tutuyorsa bahçeyle
+    bağlantısı okunmadığı için uzman incelemesi, 22/1-m; böyle binada 12,50 cm'den
+    kalın, taşıyıcılığı beyan edilmemiş duvar paiy_masonry_wall_undeclared, taş
+    duvarların kalın kısmının 5/8 ve 20/8-j'ye göre dışarıda sayılamadığı bina ya da
+    başvuru günü paiy_masonry_walls_not_exempt, yerel yönetmelik Sivas ise duvarlar
+    %30'un içinde sayılınca sınırı aşan emsal harici local_masonry_walls_over (Sivas
+    22/k); sınırları ve taş duvarların 25/12,50 cm'yi aşan kısmını Emsal ve TAKS tablosu
+    sayar) ve merdiven altı da (1,80 m'den alçak boşluğu bir mahale açık merdiven
     paiy_under_stair_open, 31/6; o yer bağımsız bölüm net alanından düşülür, 4/1-ğ-3) ve
     yangın kompartımanları da (BYKHY 24: iki mahal arasında açık yer ya da en az EI 60
     beyan edilmemiş duvar veya açıklık varsa aynı kompartıman; kazan dairesi, otopark,
@@ -252,20 +253,21 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     birim genişlik kişisi × 0,50 m ve 50/501/2001 kişide her kaçış yolu 1,00/1,50/2,00 m
     bykhy_exit_width_below (33/1; yüksek binada merdiven 1,20 m, 33/2), 50 kişiyi aşan
     mahalde 2, katta 500'ü aşanda 3, 1000'i aşanda 4 çıkış bykhy_exit_count_below
-    (39/2), kaçış yolu olan koridor 1,10 m (yüksek binada 1,20) bykhy_corridor_narrow,
-    konutta yapı yüksekliği 21,50/30,50/51,50 m'yi aşınca en az 2 kaçış merdiveni
-    bykhy_stair_count_below (48/5). settings.arch.sprinklers yağmurlamalı sınırları
-    okutur. Korunumluluk, yangın dayanımı ve güvenlik holü çizimden okunmaz; bulguda
-    yazılır. Otopark ve Sığınak Yönetmelikleri — bölümlerin Ek-1 ihtiyacından (konutta
-    BB brüt alanına göre 3/2/1 daireye 1, 180 m² üstü daireye 2; dükkân, mağaza, banka
-    50 m²'ye 1, bölüm başına en az 1; büro 50 m²'ye 1; toplam bir üste) Otopark ya da
-    Garaj adlı mahallerin net alanı ÷ 20 m² (otopark yeri blokları çizildiyse onların
-    sayısı) az ise parking_short; konutta oda sayısından (1 oda 2, 2 oda 3, 3 ve daha
-    fazla 4 kişi), öbür bölümlerde brüt alan ÷ 20'den kişi başına 1 m² net, Sığınak adlı
-    mahallerin alanı az ise shelter_short (7/a–c muafiyetlerinde aranmaz), 100 m²'yi
-    aşan sığınakta 2 çıkış shelter_exit_count (8/c), iç yükseklik 2,40 m
-    shelter_height_low (8/a). regulation, doors ve fixtures gibi yalnız adıyla istenince
-    çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.
+    (39/2), kaçış yolu olan koridorun en dar yeri 1,10 m (yüksek binada 1,20)
+    bykhy_corridor_narrow, konutta yapı yüksekliği 21,50/30,50/51,50 m'yi aşınca en az 2
+    kaçış merdiveni bykhy_stair_count_below (48/5). settings.arch.sprinklers
+    yağmurlamalı sınırları okutur. Korunumluluk, yangın dayanımı ve güvenlik holü
+    çizimden okunmaz; bulguda yazılır. Otopark ve Sığınak Yönetmelikleri — bölümlerin
+    Ek-1 ihtiyacından (konutta BB brüt alanına göre 3/2/1 daireye 1, 180 m² üstü daireye
+    2; dükkân, mağaza, banka 50 m²'ye 1, bölüm başına en az 1; büro 50 m²'ye 1; toplam
+    bir üste) Otopark ya da Garaj adlı mahallerin net alanı ÷ 20 m² (otopark yeri
+    blokları çizildiyse onların sayısı) az ise parking_short; konutta oda sayısından (1
+    oda 2, 2 oda 3, 3 ve daha fazla 4 kişi), öbür bölümlerde brüt alan ÷ 20'den kişi
+    başına 1 m² net, Sığınak adlı mahallerin alanı az ise shelter_short (7/a–c
+    muafiyetlerinde aranmaz), 100 m²'yi aşan sığınakta 2 çıkış shelter_exit_count (8/c),
+    iç yükseklik 2,40 m shelter_height_low (8/a). regulation, doors ve fixtures gibi
+    yalnız adıyla istenince çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu
+    değildir.
     """
     __slots__ = ()
     id = "cad.arch.audit"
@@ -336,41 +338,42 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         m/12 m², yatak odası 2,50/9, mutfak 1,50/3,30, banyo 1,50/3, tuvalet 1,00/1,20; dar
         kenar en büyük iç dairenin çapı, alan iç yüzler) paiy_room_area_below,
         paiy_room_width_below, bölümde eksik piyes paiy_room_missing (29/2: üç ve daha az
-        odada banyo tuvaleti karşılar), hol ve koridor 1,20 m paiy_corridor_narrow (29/3),
-        adı ya da kullanımı olan mahalin iç yüksekliği bitmiş döşemesinden tavanına (asma
-        tavan, yazılan iç yükseklik, üst döşemenin sıvalı altı; yoksa kattan kata) iskân
-        edilen mahalde 2,60 (28/4), banyo, tuvalet, lavabo, kiler, depo, merdiven altı ve
-        geçitte 2,20 (28/5), garaj, otopark, kazan dairesi ve teknik mahalde 2,20 m (28/6)
-        paiy_inside_height_below (balkon, teras, sığınak, şaft, çatı arası ve asma kattaki
-        mahal okunmaz); bulgu rule alanında maddeyi ve Resmî Gazete'yi taşır. Niteliği
-        daire, mesken ya da konut olmayan bölümün piyesleri okunmaz. Merdiven 31 — ortak
-        merdiven kolu ve ara sahanlığı konut binasında 1,20, konut dışında 1,50, bağımsız
-        bölüm içinde 1,00 m paiy_stair_width_narrow, paiy_stair_landing_short (merdivenin
-        durduğu mahalin bölümünden; hiçbir mahalde değilse dış merdiven, kol ölçülmez), rıht
-        asansörsüz binada 0,16, asansörlüde 0,18 m paiy_stair_riser_high, 2a+b 0,60–0,64,
-        basamak 0,27, döner merdivende dar uçta 0,10 m paiy_stair_step; korkuluk ortak
-        merdivende iki yanda (31/1-ç), öbür merdivende birden çok basamakta ve rampada en az
-        bir (38/1) paiy_railing_missing; rampa eğimi kot farkına göre %8/7/6/5
-        paiy_ramp_steep (30/12; 2,75 m ve daha geniş rampa taşıt rampasıdır, okunmaz); zemin
-        kattan yukarıda denizliği 0,90 m'den alçak pencere paiy_window_railing (38/1);
-        Işıklık adlı boşluk 1–6 katta 1,50 m ve 4,50 m², 7 ve daha fazlada 2,00 m ve 9 m²
-        paiy_lightwell_small (32/2), Hava bacası 0,60 × 0,60 m paiy_air_shaft_small (32/3);
-        asansör zorunluluğu (34/1) ve asansörün hizmet verdiği katlar (34/8) başvuru gününde
-        (künyenin basvuru_tarihi) yürürlükteki hâlleriyle standart kural paketinin
-        (mimari-mevzuat) Python kurallarıdır, kaçış yolu kapıları (BYKHY 47/2
-        bykhy_exit_door_swing, 47/3 bykhy_stair_door_rating) ve emsalin 22. madde
-        sınırlarının koşulları da (44/1'e göre zorunlu olmayan kapıcı dairesi emsal harici
-        paiy_caretaker_not_required, 22/1-f'nin koşulu tutmayan kütüphane
-        paiy_library_not_exempt, geleneksel kesme taş yığma binada — settings.arch.structure
-        — zemin dahil 3 kattan çok katlı binanın ya da zemin katta olmayan taşlık, dış sofa
-        ve eyvan paiy_traditional_not_exempt, tutuyorsa bahçeyle bağlantısı okunmadığı için
-        uzman incelemesi, 22/1-m; böyle binada 12,50 cm'den kalın, taşıyıcılığı beyan
-        edilmemiş duvar paiy_masonry_wall_undeclared, taş duvarların kalın kısmının 5/8 ve
-        20/8-j'ye göre dışarıda sayılamadığı bina ya da başvuru günü
-        paiy_masonry_walls_not_exempt, yerel yönetmelik Sivas ise duvarlar %30'un içinde
-        sayılınca sınırı aşan emsal harici local_masonry_walls_over (Sivas 22/k); sınırları
-        ve taş duvarların 25/12,50 cm'yi aşan kısmını Emsal ve TAKS tablosu sayar) ve
-        merdiven altı da (1,80 m'den alçak boşluğu bir mahale açık merdiven
+        odada banyo tuvaleti karşılar), hol ve koridorun en dar yeri (iki yanında kendi
+        genişliğinde daire kalan en kısa kesit; L, T ya da hole bağlanan koridorda en büyük
+        daire değil) 1,20 m paiy_corridor_narrow (29/3), adı ya da kullanımı olan mahalin iç
+        yüksekliği bitmiş döşemesinden tavanına (asma tavan, yazılan iç yükseklik, üst
+        döşemenin sıvalı altı; yoksa kattan kata) iskân edilen mahalde 2,60 (28/4), banyo,
+        tuvalet, lavabo, kiler, depo, merdiven altı ve geçitte 2,20 (28/5), garaj, otopark,
+        kazan dairesi ve teknik mahalde 2,20 m (28/6) paiy_inside_height_below (balkon,
+        teras, sığınak, şaft, çatı arası ve asma kattaki mahal okunmaz); bulgu rule alanında
+        maddeyi ve Resmî Gazete'yi taşır. Niteliği daire, mesken ya da konut olmayan bölümün
+        piyesleri okunmaz. Merdiven 31 — ortak merdiven kolu ve ara sahanlığı konut
+        binasında 1,20, konut dışında 1,50, bağımsız bölüm içinde 1,00 m
+        paiy_stair_width_narrow, paiy_stair_landing_short (merdivenin durduğu mahalin
+        bölümünden; hiçbir mahalde değilse dış merdiven, kol ölçülmez), rıht asansörsüz
+        binada 0,16, asansörlüde 0,18 m paiy_stair_riser_high, 2a+b 0,60–0,64, basamak 0,27,
+        döner merdivende dar uçta 0,10 m paiy_stair_step; korkuluk ortak merdivende iki
+        yanda (31/1-ç), öbür merdivende birden çok basamakta ve rampada en az bir (38/1)
+        paiy_railing_missing; rampa eğimi kot farkına göre %8/7/6/5 paiy_ramp_steep (30/12;
+        2,75 m ve daha geniş rampa taşıt rampasıdır, okunmaz); zemin kattan yukarıda
+        denizliği 0,90 m'den alçak pencere paiy_window_railing (38/1); Işıklık adlı boşluk
+        1–6 katta 1,50 m ve 4,50 m², 7 ve daha fazlada 2,00 m ve 9 m² paiy_lightwell_small
+        (32/2), Hava bacası 0,60 × 0,60 m paiy_air_shaft_small (32/3); asansör zorunluluğu
+        (34/1) ve asansörün hizmet verdiği katlar (34/8) başvuru gününde (künyenin
+        basvuru_tarihi) yürürlükteki hâlleriyle standart kural paketinin (mimari-mevzuat)
+        Python kurallarıdır, kaçış yolu kapıları (BYKHY 47/2 bykhy_exit_door_swing, 47/3
+        bykhy_stair_door_rating) ve emsalin 22. madde sınırlarının koşulları da (44/1'e göre
+        zorunlu olmayan kapıcı dairesi emsal harici paiy_caretaker_not_required, 22/1-f'nin
+        koşulu tutmayan kütüphane paiy_library_not_exempt, geleneksel kesme taş yığma binada
+        — settings.arch.structure — zemin dahil 3 kattan çok katlı binanın ya da zemin katta
+        olmayan taşlık, dış sofa ve eyvan paiy_traditional_not_exempt, tutuyorsa bahçeyle
+        bağlantısı okunmadığı için uzman incelemesi, 22/1-m; böyle binada 12,50 cm'den
+        kalın, taşıyıcılığı beyan edilmemiş duvar paiy_masonry_wall_undeclared, taş
+        duvarların kalın kısmının 5/8 ve 20/8-j'ye göre dışarıda sayılamadığı bina ya da
+        başvuru günü paiy_masonry_walls_not_exempt, yerel yönetmelik Sivas ise duvarlar
+        %30'un içinde sayılınca sınırı aşan emsal harici local_masonry_walls_over (Sivas
+        22/k); sınırları ve taş duvarların 25/12,50 cm'yi aşan kısmını Emsal ve TAKS tablosu
+        sayar) ve merdiven altı da (1,80 m'den alçak boşluğu bir mahale açık merdiven
         paiy_under_stair_open, 31/6; o yer bağımsız bölüm net alanından düşülür, 4/1-ğ-3) ve
         yangın kompartımanları da (BYKHY 24: iki mahal arasında açık yer ya da en az EI 60
         beyan edilmemiş duvar veya açıklık varsa aynı kompartıman; kazan dairesi, otopark,
@@ -500,20 +503,21 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         birim genişlik kişisi × 0,50 m ve 50/501/2001 kişide her kaçış yolu 1,00/1,50/2,00 m
         bykhy_exit_width_below (33/1; yüksek binada merdiven 1,20 m, 33/2), 50 kişiyi aşan
         mahalde 2, katta 500'ü aşanda 3, 1000'i aşanda 4 çıkış bykhy_exit_count_below
-        (39/2), kaçış yolu olan koridor 1,10 m (yüksek binada 1,20) bykhy_corridor_narrow,
-        konutta yapı yüksekliği 21,50/30,50/51,50 m'yi aşınca en az 2 kaçış merdiveni
-        bykhy_stair_count_below (48/5). settings.arch.sprinklers yağmurlamalı sınırları
-        okutur. Korunumluluk, yangın dayanımı ve güvenlik holü çizimden okunmaz; bulguda
-        yazılır. Otopark ve Sığınak Yönetmelikleri — bölümlerin Ek-1 ihtiyacından (konutta
-        BB brüt alanına göre 3/2/1 daireye 1, 180 m² üstü daireye 2; dükkân, mağaza, banka
-        50 m²'ye 1, bölüm başına en az 1; büro 50 m²'ye 1; toplam bir üste) Otopark ya da
-        Garaj adlı mahallerin net alanı ÷ 20 m² (otopark yeri blokları çizildiyse onların
-        sayısı) az ise parking_short; konutta oda sayısından (1 oda 2, 2 oda 3, 3 ve daha
-        fazla 4 kişi), öbür bölümlerde brüt alan ÷ 20'den kişi başına 1 m² net, Sığınak adlı
-        mahallerin alanı az ise shelter_short (7/a–c muafiyetlerinde aranmaz), 100 m²'yi
-        aşan sığınakta 2 çıkış shelter_exit_count (8/c), iç yükseklik 2,40 m
-        shelter_height_low (8/a). regulation, doors ve fixtures gibi yalnız adıyla istenince
-        çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.
+        (39/2), kaçış yolu olan koridorun en dar yeri 1,10 m (yüksek binada 1,20)
+        bykhy_corridor_narrow, konutta yapı yüksekliği 21,50/30,50/51,50 m'yi aşınca en az 2
+        kaçış merdiveni bykhy_stair_count_below (48/5). settings.arch.sprinklers
+        yağmurlamalı sınırları okutur. Korunumluluk, yangın dayanımı ve güvenlik holü
+        çizimden okunmaz; bulguda yazılır. Otopark ve Sığınak Yönetmelikleri — bölümlerin
+        Ek-1 ihtiyacından (konutta BB brüt alanına göre 3/2/1 daireye 1, 180 m² üstü daireye
+        2; dükkân, mağaza, banka 50 m²'ye 1, bölüm başına en az 1; büro 50 m²'ye 1; toplam
+        bir üste) Otopark ya da Garaj adlı mahallerin net alanı ÷ 20 m² (otopark yeri
+        blokları çizildiyse onların sayısı) az ise parking_short; konutta oda sayısından (1
+        oda 2, 2 oda 3, 3 ve daha fazla 4 kişi), öbür bölümlerde brüt alan ÷ 20'den kişi
+        başına 1 m² net, Sığınak adlı mahallerin alanı az ise shelter_short (7/a–c
+        muafiyetlerinde aranmaz), 100 m²'yi aşan sığınakta 2 çıkış shelter_exit_count (8/c),
+        iç yükseklik 2,40 m shelter_height_low (8/a). regulation, doors ve fixtures gibi
+        yalnız adıyla istenince çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu
+        değildir.
 
         Args:
             doc: The drawing it works on.

@@ -117,8 +117,8 @@ yapılarının yatılan katları ve hastane koridorları).
 
 ## §6. Sıradaki adımlar
 
-- Mimari denetimin koridor kuralları (PAİY 29/3 1,20 m, BYKHY 33/1 1,10 m ve 33/2 1,20 m) bugün en büyük daireyle
-  ölçüyor: en dar yere geçmeleri ayrı iş (sonuçları ve sınama dosyaları değişir).
+- Mimari denetimin koridor kuralları (PAİY 29/3 1,20 m, BYKHY 33/1 1,10 m ve 33/2 1,20 m) en dar yere geçti: ADR
+  [8112](8112-corridor-rules-by-narrowest-neck.md).
 - Çıkmaza daralan koridorun dar ucu ve serbest kolonun yanındaki aralık.
 - Yatay tahliye alanının beyanı ve 2,8 m²/kişi kapasitesi (hangi kompartımanın kullanıcıları sığınır).
 - B22'nin kalanı: 50/3, 50/6, 51 ve Ek-6, eğitim, toplanma, endüstri ve depolama, 60 otopark, 18 karma kullanım.

@@ -261,7 +261,7 @@ fn an_office_storey_s_distances_people_exits_and_corridor_are_said() {
         "{messages:#?}"
     );
     assert!(
-        messages.contains(&"Koridor net eni 1.00 m < 1.10 m (kaçış yolu) — BYKHY 33/1 (9.7.2015)"),
+        messages.contains(&"Koridor en dar yeri 1.00 m < 1.10 m (kaçış yolu) — BYKHY 33/1 (9.7.2015)"),
         "{messages:#?}"
     );
     assert!(
@@ -405,7 +405,7 @@ fn a_tall_dwelling_building_s_walks_and_stairs_are_said() {
         "{messages:#?}"
     );
     assert!(
-        messages.contains(&"Koridor net eni 1.15 m < 1.20 m (yüksek bina) — BYKHY 33/2"),
+        messages.contains(&"Koridor en dar yeri 1.15 m < 1.20 m (yüksek bina) — BYKHY 33/2"),
         "{messages:#?}"
     );
     // The walks' lengths as measured: 48/2 about 22 m, 48/4 about 26 m.

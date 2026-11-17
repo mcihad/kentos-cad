@@ -163,7 +163,10 @@ struct Room {
     /// Its use and its people (Ek-5/A); none for a dwelling's room.
     use_: Option<Use>,
     people: f64,
+    /// Its width: a corridor's narrowest neck (docs/adr/8112), another room's largest circle.
     width: f64,
+    /// A corridor's narrowest neck's middle, where its width finding points.
+    neck: Option<V>,
     at: V,
     areas: Vec<kentos_geometry_core::geom::arrangement::Area>,
 }
@@ -318,7 +321,10 @@ fn assess(
                 .or(building_use)
         };
         let parts = crate::regulation_audit::net_parts(&mut search, x);
+        let corridor = kind_of(name, usage) == Some(crate::regulation_audit::RoomKind::Corridor);
         let (width, pole) = crate::program_check::width_of(&parts);
+        // A corridor's width is its narrowest neck (docs/adr/8112): its largest circle is its widest place.
+        let neck = corridor.then(|| crate::regulation_audit::neck_of(&parts));
         let areas = kentos_domain::arch_values::core_areas(&x.parts);
         let at = pole
             .or_else(|| kentos_geometry_core::geom::space::label_at(&areas))
@@ -354,10 +360,11 @@ fn assess(
             },
             unit: x.unit.clone(),
             dwelling,
-            corridor: kind_of(name, usage) == Some(crate::regulation_audit::RoomKind::Corridor),
+            corridor,
             use_,
             people,
-            width,
+            width: neck.map_or(width, |(w, _)| w),
+            neck: neck.and_then(|(_, p)| p),
             at,
             areas,
         });
@@ -846,7 +853,7 @@ fn assess(
         };
         if let Some(s) = said(
             codes::BYKHY_CORRIDOR_NARROW,
-            &format!("{} net eni", r.name),
+            &format!("{} en dar yeri", r.name),
             r.width,
             Bound::AtLeast,
             Limit {
@@ -862,7 +869,7 @@ fn assess(
             },
             "Koridoru genişletin.",
         ) {
-            push(s, vec![r.slot], r.at);
+            push(s, vec![r.slot], r.neck.unwrap_or(r.at));
         }
     }
     if high {

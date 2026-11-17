@@ -376,7 +376,8 @@
     ortak çekirdekte `geom::neck::least_width`: iki yanında kendi genişliğinde daire kalan en kısa kesit, yoksa en büyük
     daire; bina olgularında hol ve koridorun `least`'i. En büyük daire (dar kenar, ADR 8033) koridorun en geniş yerini
     ölçer (L'de %17, T'de %25, artıda %41 fazla, holle birleşende holü); odanın dar kenarı için o kalır. Görmediği: çıkmaza
-    daralan koridorun dar ucu, serbest kolonun yanı. Mimari denetimin 29/3 ve 33/1 koridor kuralları henüz geçmedi.
+    daralan koridorun dar ucu, serbest kolonun yanı. Mimari denetimin 29/3, 33/1 ve 33/2 koridor kuralları da en dar
+    yerden ölçer, bulgu en dar kesitte ([ADR 8112](../adr/8112-corridor-rules-by-narrowest-neck.md), K208–K210).
   - **TKGM'nin 3B sayısal yapı modeli (17 Kasım 2026; [ADR 8109](../adr/8109-tkgm-3d-building-model-research.md), K197–K199):**
     ertelendi; genelge 2025/2 modeli yapı aplikasyon projesinin eki sayar (harita modülünün işi), biçim standardı okunmadan
     kod yazılmaz.

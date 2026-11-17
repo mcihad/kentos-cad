@@ -236,7 +236,7 @@ fn a_small_dwelling_s_rooms_corridor_kitchen_and_storey_are_said() {
     assert!(
         messages
             .iter()
-            .any(|m| m.starts_with("Koridor net eni 0.8") && m.ends_with("< 1.20 m — PAİY 29/3")),
+            .any(|m| m.starts_with("Koridor en dar yeri 0.8") && m.ends_with("< 1.20 m — PAİY 29/3")),
         "{messages:?}"
     );
     let rules: Vec<&str> = found.iter().map(|(.., r)| r.as_str()).collect();
@@ -266,7 +266,7 @@ fn a_small_dwelling_s_rooms_corridor_kitchen_and_storey_are_said() {
     let messages: Vec<&str> = found.iter().map(|(_, m, _)| m.as_str()).collect();
     assert_eq!(messages.len(), 2, "{found:?}");
     assert!(
-        messages[0].starts_with("Koridor net eni 0.8")
+        messages[0].starts_with("Koridor en dar yeri 0.8")
             && messages[0].ends_with("< 1.10 m (kaçış yolu) — BYKHY 33/1 (9.7.2015)"),
         "{found:?}"
     );
@@ -747,4 +747,91 @@ fn rooms_lower_than_paiy_28_asks_are_said_with_where_their_ceiling_is() {
         "{said:#?}"
     );
     assert!(said[0].1.starts_with("PAİY"), "{said:#?}");
+}
+
+/// A hall and a corridor are as wide as their narrowest neck (docs/adr/8112): an L-shaped Hol of 1.10 m arms in a flat,
+/// whose largest circle (1.29 m, in its corner) would have passed 29/3's 1.20 m, fails, its finding where an arm meets
+/// the corner; widened to 1.30 m arms it passes. A straight 2.00 m corridor that opens into a lobby is its own width.
+#[test]
+fn an_l_shaped_hall_is_as_wide_as_its_arms() {
+    let hall = |app: &mut App, w: f64| {
+        let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+        run(
+            app,
+            "cad.program.edit",
+            json!({"program": {"units": [{"id": "d1", "number": "1", "nature": "Konut"}]}}),
+        );
+        let p = |x: f64, y: f64| json!({"x": x, "y": y});
+        run(
+            app,
+            "cad.spaces.create",
+            json!({"layerId": layer, "spaces": [{
+                "parts": [{"outer": {"pts": [p(0.0, 0.0), p(8.0, 0.0), p(8.0, w), p(w, w), p(w, 6.0), p(0.0, 6.0)]}}],
+                "name": "Hol", "unit": "d1"
+            }]}),
+        );
+    };
+    let narrow = |app: &mut App| -> Vec<Value> {
+        regulation_findings(app).into_iter().filter(|f| f["code"] == "paiy_corridor_narrow").collect()
+    };
+    let mut app = blank();
+    hall(&mut app, 1.10);
+    let found = narrow(&mut app);
+    assert_eq!(found.len(), 1, "{found:?}");
+    assert_eq!(found[0]["message"], "Hol en dar yeri 1.10 m < 1.20 m — PAİY 29/3");
+    // At the neck's middle: across an arm where it meets the corner, not in the corner's circle.
+    let (x, y) = (found[0]["at"]["x"].as_f64().expect("x"), found[0]["at"]["y"].as_f64().expect("y"));
+    assert!((x - 1.10).abs() < 1e-6 && (y - 0.55).abs() < 1e-6 || (y - 1.10).abs() < 1e-6 && (x - 0.55).abs() < 1e-6, "{x}, {y}");
+    let mut app = blank();
+    hall(&mut app, 1.30);
+    assert!(narrow(&mut app).is_empty());
+}
+
+/// Denetim's picture (`.run/gui-evidence/koridor-en-dar-8112/`): the L-shaped hall's finding at its neck.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn corridor_neck_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/koridor-en-dar-8112");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        let size = Size::new(1440.0, 900.0);
+        fn update(app: &mut App, message: Message) {
+            let _ = app.update(message);
+        }
+        let mut app = blank();
+        let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+        run(&mut app, "cad.program.edit", json!({"program": {"units": [{"id": "d1", "number": "1", "nature": "Konut"}]}}));
+        let p = |x: f64, y: f64| json!({"x": x, "y": y});
+        run(
+            &mut app,
+            "cad.spaces.create",
+            json!({"layerId": layer, "spaces": [{
+                "parts": [{"outer": {"pts": [p(0.0, 0.0), p(8.0, 0.0), p(8.0, 1.1), p(1.1, 1.1), p(1.1, 6.0), p(0.0, 6.0)]}}],
+                "name": "Hol", "unit": "d1"
+            }]}),
+        );
+        let _ = app.update(Message::Run("arch.audit"));
+        app.arch_audit_standards_settle();
+        let group =
+            crate::arch::Event::ArchAudit(crate::arch_audit::Event::Group(Some(kentos_commands::ArchAuditCheck::Regulation)));
+        let _ = app.update(Message::Arch(group));
+        let shown = app.arch_audit_shown();
+        let findings = &app.arch.arch_audit.audited.as_ref().expect("checked").findings;
+        let row = shown.iter().position(|&i| findings[i].code == "paiy_corridor_narrow").expect("the finding shown");
+        let _ = app.update(Message::Arch(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Press(row))));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        app.toasts.clear();
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-l-hol-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
 }
