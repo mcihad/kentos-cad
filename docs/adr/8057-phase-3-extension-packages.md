@@ -5474,3 +5474,21 @@ paketi yeniden üretildi.
 - **Sınamalar:** masaüstü 1 (8 × 4 fotoğraf çizilir; başlığı 5000 × 2 diyen JPEG çözülmeden reddedilir; kırpılmış JPEG
   okunamadı der); var olan PNG sınaması başka biçimi GIF ile sınar.
 
+
+## §116. İşlemler'in her kapısı aynı sonucu verir: uyum sınaması (§5.2, ECO-QA-06)
+
+**17 Kasım.** Kod: headless `tests/headless/processing_doors.rs` (yeni).
+
+- **İstenen.** ECO-QA-06: İşlemler'in eklenti/yerleşik/model/arayüz/Python/MCP kapıları için aynı anlık görüntüde aynı
+  tipli sonucu veren uyum sınaması.
+- **Yeni sınama:** aynı çizimde (`fixtures/processing/v1/parcels.kcad`) aynı tampon dört kapıdan yürütülür: programın
+  çağırdığı ürün komutu (`cad.processing.run`), ajanın `processing.run`'ı (planlanır, planın kimliğiyle yürütülür), tek
+  adımlı satır içi model (§108) ve tek satırlı toplu çalıştırma (`cad.processing.batch`). Her biri aynı nesneleri
+  (biçim, öznitelik, katman; kimlikler dışında) yazar, tipli sayılar (`outputs.count` 3) aynıdır. İlk koşuda yeşil.
+- **Öbür kapılar aynı yollardan geçer, bağımsız beklentilerle bağlı:** Python'un `kentos.cad` çağrısı başsız oturumun
+  `call`'ıdır (ürün komutu kapısı), MCP'nin araçları ajan araçlarıdır (ajan kapısı); masaüstünün Asistan kapısı
+  `assistant/model_tests.rs` (§108); pencere (İşlemler penceresi) ortak durum dosyalarını çalıştırır
+  (`every_shared_case_runs_from_the_window_as_it_says`; aynı dosyalar ürün komutunun durumlarıdır,
+  `every_command_case_matches_the_desktop_handlers`); eklentinin aracı masaüstünde (Örnekleri çalıştır), ajanın
+  denemesinde ve `kentos kek test`'te tek örnek koşucusundan (`examples::run`) aynı beklentilerle geçer (§48, §74).
+  Üreticinin kendi çıktısı kanıt sayılmaz (ECO-QA-15): beklentiler durum dosyalarında ve örneklerde ayrıca yazılı.

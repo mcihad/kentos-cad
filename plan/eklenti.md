@@ -1536,7 +1536,10 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
 - [ ] İsteğe bağlılık/uv/Python/paket kurulumu sahte taşıma ve temiz profille [ECO-QA-03]; Windows/macOS/Linux, ABI,
   mimari/yerel tekerlek ve çevrimdışı önbellek matrisiyle kurma/çalıştırma duman testi [ECO-QA-04].
 - [ ] Süreç çökme/durdurma/yeniden başlatma, geç geri çağırma, kaldırma ve çoklu örnek fikstürleri [ECO-QA-05].
-- [ ] İşlemler eklenti/yerleşik/model/arayüz/Python/MCP için aynı anlık görüntü ve tipli sonuç uyum testi [ECO-QA-06].
+- [x] İşlemler eklenti/yerleşik/model/arayüz/Python/MCP için aynı anlık görüntü ve tipli sonuç uyum testi [ECO-QA-06].
+  — *17 Kasım (ADR 8057 §116): aynı çizimde ürün komutu, ajanın planla-yürüt kapısı, satır içi model ve toplu
+  çalıştırma aynı nesneleri ve sayıları verir (`processing_doors`); Python ve MCP aynı yollardan geçer; pencere ortak
+  durum dosyalarıyla, eklenti aracı tek örnek koşucusuyla aynı bağımsız beklentilere bağlı.*
 - [ ] Taşınabilir UI/kural/değer kodlayıcı/doğrulama aynı profilde eşdeğer sonuç [ECO-QA-07]; eklenti UI görsel testleri
   ile durum/odak/değer korunumu, kaldırma, geç geri çağırma ve doğrulama gezinmesi gerçek girdiyle [ECO-QA-08].
 - [ ] ACL testleri ham HTTP/genel komut/Python/eklenti/AI/tablo/arama/dışa aktarma ve olay yollarını kapsar [ECO-QA-09].
