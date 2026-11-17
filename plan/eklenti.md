@@ -1537,7 +1537,16 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
   yapay zekâ yapılandırması/ikili; 150 noktada kesme, bit çevirme ve sıfırlamayla paniksiz.*
 - [ ] İsteğe bağlılık/uv/Python/paket kurulumu sahte taşıma ve temiz profille [ECO-QA-03]; Windows/macOS/Linux, ABI,
   mimari/yerel tekerlek ve çevrimdışı önbellek matrisiyle kurma/çalıştırma duman testi [ECO-QA-04].
-- [ ] Süreç çökme/durdurma/yeniden başlatma, geç geri çağırma, kaldırma ve çoklu örnek fikstürleri [ECO-QA-05].
+- [x] Süreç çökme/durdurma/yeniden başlatma, geç geri çağırma, kaldırma ve çoklu örnek fikstürleri [ECO-QA-05].
+  — *17 Kasım'da gözden geçirildi, karşılanmış: çökme `a_crash_is_said_with_its_last_errors` (süreç, son hatalarıyla)
+  ve `a_crashing_extension_fails_for_good_and_is_not_tried_at_the_next_start` (art arda çökmede kalıcı durur, geç
+  gelen çökme bildirimi yok sayılır); durdurma `durdur_is_asked_first_and_the_process_ended_when_it_does_not_answer`;
+  yeniden başlatma ve boşta kapanma `a_run_is_answered_and_its_process_kept_for_the_next`,
+  `an_idle_process_is_closed`, kiranın kuşağı (`the_whole_lifecycle_leaves_nothing_of_a_lease_behind`: durmuş kiranın
+  ölçüsü tutulmaz); geç geri çağırma kira (`is_current`), çalıştırmanın kimliği ve panelin kendi numarası (§117,
+  `extensions/tests/late.rs`); kaldırma `a_disabled_extensions_panel_and_audit_fixes_go_with_it`,
+  `a_withdrawn_version_stops_and_its_data_stays`, kalıntısız kuru koşu; çoklu örnek
+  `two_processes_share_one_registry` ve birden çok açık panel.*
 - [x] İşlemler eklenti/yerleşik/model/arayüz/Python/MCP için aynı anlık görüntü ve tipli sonuç uyum testi [ECO-QA-06].
   — *17 Kasım (ADR 8057 §116): aynı çizimde ürün komutu, ajanın planla-yürüt kapısı, satır içi model ve toplu
   çalıştırma aynı nesneleri ve sayıları verir (`processing_doors`); Python ve MCP aynı yollardan geçer; pencere ortak
