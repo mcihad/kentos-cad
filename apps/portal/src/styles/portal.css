@@ -2443,3 +2443,13 @@ select.fee-cell {
 .sign-files {
   grid-template-columns: minmax(0, 1fr);
 }
+
+/* The sign-up's field no person fills (docs/adr/9000 §20): out of sight and out of the tab order, not display: none
+   (some machines skip hidden fields by that). */
+.hp-field {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

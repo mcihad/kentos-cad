@@ -123,7 +123,7 @@ pub async fn signup_info(db: &Db) -> AppResult<SignupInfo> {
     let open: bool = sqlx::query_scalar("select signup_open from kentos.platform_setting")
         .fetch_one(&db.pool)
         .await?;
-    Ok(SignupInfo { open })
+    Ok(SignupInfo { open, ticket: None })
 }
 
 /// A chamber registration number: letters, digits, spaces, `-` and `/`.

@@ -212,12 +212,14 @@ async fn serve(config: Config) -> Result<(), String> {
         let audits = audit_source(&config, catalog.as_ref());
         spawn_workers(db, &blobs, config.workers, config.job_limits, audits);
     }
+    let signups_per_hour = config.signups_per_hour;
     let state = AppState {
         config: Arc::new(config),
         database,
         oidc,
         hub: hub::Hub::default(),
         logins: Default::default(),
+        signups: Arc::new(http::signup_guard::SignupGuard::new(signups_per_hour)),
         blobs,
         proxy: Some(Arc::new(proxy)),
         // Off unless the setting opens it (docs/adr/8059 §13): its routes answer 404 then.
@@ -227,7 +229,8 @@ async fn serve(config: Config) -> Result<(), String> {
         .await
         .map_err(|e| format!("KentOS API {addr} adresini açamadı: {e}"))?;
     println!("KentOS API: http://{addr}/v1/health");
-    axum::serve(listener, http::router(state))
+    // The connection's address reaches the handlers (the sign-up's limit per address, docs/adr/9000 §20).
+    axum::serve(listener, http::router(state).into_make_service_with_connect_info::<SocketAddr>())
         .with_graceful_shutdown(shutdown())
         .await
         .map_err(|e| format!("KentOS API durdu: {e}"))

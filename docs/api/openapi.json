@@ -30383,6 +30383,22 @@
               "string",
               "null"
             ]
+          },
+          "ticket": {
+            "default": null,
+            "description": "`GET /v1/portal/signup`'s ticket (signing up by oneself; an administrator opening the account needs none).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "website": {
+            "default": null,
+            "description": "A field the form's people do not see: filled, the request is a machine's (docs/adr/9000 §20).",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -30400,6 +30416,14 @@
         "properties": {
           "open": {
             "type": "boolean"
+          },
+          "ticket": {
+            "default": null,
+            "description": "The form's ticket while sign-ups are open: brought back with the sign-up, no sooner than a few seconds and no\nlater than two hours, once (docs/adr/9000 §20).",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -42993,7 +43017,7 @@
     },
     "/v1/portal/signup": {
       "get": {
-        "description": "Meslek mensubu kaydının açık olup olmadığı ve meslekler.",
+        "description": "Meslek mensubu kaydının açık olup olmadığı; açıksa formun bileti (`ticket`). Bilet kayıtla geri gelir: en erken 3 saniye, en geç 2 saat sonra ve bir kez.",
         "operationId": "getPortalSignup",
         "responses": {
           "200": {
@@ -43014,7 +43038,7 @@
         ]
       },
       "post": {
-        "description": "Hesap açılır ve hemen oturum açılır (çerez); profil sistem yöneticisinin doğrulamasını bekler. Kayıt kapalıysa 403.",
+        "description": "Hesap açılır ve hemen oturum açılır (çerez); profil sistem yöneticisinin doğrulamasını bekler. Kayıt kapalıysa 403. Formun bileti (`ticket`, `GET /v1/portal/signup`) zorunludur; `website` boş kalmalıdır. Bir adresten 10 dakikada 20 deneme ve saatte `KENTOS_SIGNUP_PER_HOUR` (5) hesap: aşılırsa 429 ve `Retry-After`.",
         "operationId": "postPortalSignup",
         "requestBody": {
           "content": {

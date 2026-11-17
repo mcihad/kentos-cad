@@ -377,11 +377,14 @@ pub(super) fn ops() -> Vec<Op> {
             "Oda sicil no, büro, telefon, il, rehberde görünme.",
             Body(of::<c::ProfessionalEdit>), Json(200, of::<c::PortalMe>)),
         op("GET", "/v1/portal/signup", PORTAL_ACCOUNT, "Kayıt açık mı",
-            "Meslek mensubu kaydının açık olup olmadığı ve meslekler.",
+            "Meslek mensubu kaydının açık olup olmadığı; açıksa formun bileti (`ticket`). Bilet kayıtla geri gelir: \
+             en erken 3 saniye, en geç 2 saat sonra ve bir kez.",
             No, Json(200, of::<c::SignupInfo>)).public(),
         op("POST", "/v1/portal/signup", PORTAL_ACCOUNT, "Meslek mensubu kaydı",
             "Hesap açılır ve hemen oturum açılır (çerez); profil sistem yöneticisinin doğrulamasını bekler. Kayıt \
-             kapalıysa 403.",
+             kapalıysa 403. Formun bileti (`ticket`, `GET /v1/portal/signup`) zorunludur; `website` boş kalmalıdır. \
+             Bir adresten 10 dakikada 20 deneme ve saatte `KENTOS_SIGNUP_PER_HOUR` (5) hesap: aşılırsa 429 ve \
+             `Retry-After`.",
             Body(of::<c::Signup>), Json(201, of::<c::PortalMe>)).public().limited(),
         op("GET", "/v1/portal/catalog", PORTAL_ACCOUNT, "Portal kataloğu",
             "Meslekler, dosya türleri, belge türleri ve yasal süreler.", No, Json(200, of::<c::PortalCatalog>)).public(),

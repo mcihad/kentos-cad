@@ -138,10 +138,16 @@ await hakan.req('PUT', `/v1/tenants/${yesilvadi.id}/portal`, {
 });
 
 // ── Professionals sign up; the administrator checks them ─────────────
+// Each sign-up brings back its form's ticket, a person's while after it was given (docs/adr/9000 §20): the tickets are
+// taken first and used after the wait.
+const tickets = [];
+for (let i = 0; i < 8; i++) tickets.push((await (await fetch(`${API}/v1/portal/signup`)).json()).ticket);
+await new Promise((r) => setTimeout(r, 3200));
 const signup = async (login, displayName, profession, chamberNo, officeName) => {
   const p = new Person(login);
   await p.req('POST', '/v1/portal/signup', {
     login, password: PASSWORD, displayName, email: `${login}@ornek-posta.test`, profession, chamberNo, officeName, phone: null, province: 'Örnek',
+    ticket: tickets.shift(),
   });
   return p;
 };

@@ -75,7 +75,7 @@ export const portal = {
   catalog: () => get<PortalCatalog>('/v1/portal/catalog'),
   login: (login: string, password: string) => post<unknown>('/v1/auth/login', { login, password }),
   logout: () => post<unknown>('/v1/auth/logout'),
-  signupInfo: () => get<{ open: boolean }>('/v1/portal/signup'),
+  signupInfo: () => get<{ open: boolean; ticket?: string | null }>('/v1/portal/signup'),
   signUp: (input: Signup) => post<PortalMe>('/v1/portal/signup', input),
   editProfessional: (input: { officeName: string | null; phone: string | null; province: string | null; listed: boolean }) =>
     put<PortalMe>('/v1/portal/me/professional', input),

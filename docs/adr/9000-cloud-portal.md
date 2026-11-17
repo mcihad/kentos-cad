@@ -402,6 +402,41 @@ Tatil günleri şöyle belirlenir:
 - Portal sınamalarının “15 gün kaldı” beklentisi aynı takvimle hesaplanır. Sabit 15 beklemek, on beşinci günü hafta
   sonuna denk gelen bir günde sınamayı kırardı.
 
+## §20 Makinenin açtığı hesaba karşı kayıt
+
+Kayıt açıkken giriş sayfası herkese açıktır. Bir betik saniyede onlarca hesap açabilir, bu da doğrulama kuyruğunu
+doldurur ve sahte meslek mensubu üretir. `POST /v1/portal/signup` dört kapıdan geçer (`http/signup_guard.rs`):
+
+- **Deneme sınırı:** bir adresten 10 dakikada en çok 20 kayıt denemesi; aşılırsa 429 ve `Retry-After`.
+- **Bal küpü:** formda insanın görmediği bir `website` alanı vardır. Ekranın dışındadır ve sekmeyle gelinmez.
+  `display: none` kullanılmaz, çünkü bazı betikler gizli alanı tam da bundan tanır. Doluysa istek makinenindir ve
+  ayrıntı verilmeden reddedilir.
+- **Formun bileti:** `GET /v1/portal/signup` açıkken bir bilet verir: zaman, tek kullanımlık nonce ve sunucunun ikisi
+  üzerine HMAC-SHA256'sı. Kayıt bileti şu koşullarla geri getirir:
+  - en erken 3 saniye sonra (insan okur ve yazar, betik hemen gönderir);
+  - en geç 2 saat sonra;
+  - bir kez.
+
+  Gizli anahtar süreç açılırken üretilir. Sunucu yeniden başlarsa açık form yeni bilet ister; portal bunu kendiliğinden
+  alır.
+- **Hesap sınırı:** bir adresten saatte en çok `KENTOS_SIGNUP_PER_HOUR` (varsayılan 5) hesap.
+
+Sınırlar adrese göre sayılır. Adres bağlantının kendisidir. `X-Forwarded-For` yalnız bağlantı aynı makinedeki bir ters
+vekilden (loopback) geliyorsa okunur, başkasının başlığına inanılmaz. Sayaçlar giriş sınırı gibi sürecin belleğindedir
+(ADR 0007): yeniden başlatma onları unutur, birden çok süreç ayrı sayar.
+
+Ölçülenler:
+
+- **Bilet** (`signup_guard` sınaması): 1 saniyede “çok çabuk”, 3 saniyede geçer, ikinci kez geçmez, 2 saati aşınca
+  “süresi doldu”. Başka sunucunun bileti ve değiştirilmiş bilet geçmez.
+- **Sınır** (`limit` sınaması): adres başına ayrı sayılır, pencere bitince yeniden başlar.
+- **Uç düzeyinde, veritabanına gitmeden** (`http::tests`):
+  - biletsiz kayıt 422 döner ve hata `ticket` alanına bağlanır;
+  - dolu bal küpü 422 döner;
+  - 20 denemeden sonra 429 ve `Retry-After`.
+- **Demo:** örnek veri (seed) biletleri önce alıp 3 saniye bekler, sonra kaydeder. Demo ortamında saatlik hesap
+  sınırı 50'dir.
+
 ## Kaynaklar
 
 - OpenAPI 3.1.0 (<https://spec.openapis.org/oas/v3.1.0>), JSON Schema 2020-12, llms.txt önerisi

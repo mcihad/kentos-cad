@@ -113,6 +113,8 @@ async fn professional(
             office_name: None,
             phone: None,
             province: None,
+            ticket: None,
+            website: None,
         },
         // Opened by the administrator: signing up may be closed.
         Some(admin_actor),
@@ -229,6 +231,8 @@ async fn signing_up_waits_for_the_check_and_the_check_attests_the_email() {
         office_name: None,
         phone: None,
         province: None,
+        ticket: None,
+        website: None,
     };
     // Closed until an administrator opens it (docs/adr/0007).
     let closed = accounts::sign_up(&db.app, &form, None).await.unwrap_err();

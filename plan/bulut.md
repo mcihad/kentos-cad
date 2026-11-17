@@ -80,10 +80,14 @@ sıradakileri tutar. Bir madde ancak sınaması ve gerçek pencerede görüntüs
   - Hafta sonu ve 2429'un sabit günleri kodda; dinî bayramlar tabloda, yönetici yıl yıl ekler (2026–2027 hazır).
   - Arife iş günüdür; ayrıntıda `extendedFrom` ve gerekçe yer alır (ADR 9000 §19).
 
+- [x] `BUL-12` **Makinenin açtığı hesaba karşı kayıt:**
+  - Adres başına deneme ve hesap sınırı (`KENTOS_SIGNUP_PER_HOUR`).
+  - Görünmez bal küpü alanı.
+  - Sunucunun imzaladığı, tek kullanımlık, en erken 3 saniye sonra geçen form bileti (ADR 9000 §20).
+
 ## Sıradakiler
 
 - [ ] `BUL-10` Portala kurum kimliğiyle giriş (OpenID Connect; sunucu tarafı ADR 0007'de hazır).
-- [ ] `BUL-12` Kayıtta hız sınırı ve otomatik kayıt koruması (girişin sınırıyla birlikte, ADR 0007).
 - [ ] `BUL-15` Aktarımda kopya yerine canlı projede misafir düzenleyici (ADR 0035) seçeneği.
 - [ ] `BUL-17` Gerçek zamanlı bildirim (WebSocket); şimdi dakikada bir sorulur.
 - [ ] `BUL-18` Kişisel verinin saklama süresi ve kapanan dosyaların arşivi (KVKK).

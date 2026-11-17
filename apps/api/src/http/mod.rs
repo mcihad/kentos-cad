@@ -43,6 +43,7 @@ pub mod invitations;
 #[cfg(test)]
 mod invitations_tests;
 pub mod limit;
+pub mod signup_guard;
 #[cfg(test)]
 mod native_tests;
 #[cfg(test)]
@@ -102,6 +103,8 @@ pub struct AppState {
     pub oidc: Option<Arc<Oidc>>,
     pub hub: Hub,
     pub logins: Arc<limit::LoginLimiter>,
+    /// The sign-up's ticket, hidden field and limits per address (docs/adr/9000 §20).
+    pub signups: Arc<signup_guard::SignupGuard>,
     /// The object store of file projects (docs/adr/0031).
     pub blobs: kentos_application::blobs::Blobs,
     /// The map services' proxy (docs/adr/0208 §13); `None`: off.

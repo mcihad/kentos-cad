@@ -17,6 +17,7 @@ pub(super) fn config() -> Config {
         scanner: Default::default(),
         delivery: None,
         signing: None,
+        signups_per_hour: 5,
         env_file: ".env.test".into(),
         vars: Default::default(),
         database_url: None,
@@ -57,6 +58,7 @@ pub(super) fn app_with(database: Option<Db>, blobs: kentos_application::blobs::B
         oidc: None,
         hub: crate::hub::Hub::default(),
         logins: Default::default(),
+        signups: Default::default(),
         blobs,
         proxy: None,
         extension_catalog: None,
@@ -855,4 +857,37 @@ async fn repeated_wrong_passwords_lock_the_login_for_a_while() {
     let (status, _, _) = send(&app, login_request("bora", "dogru-parola-1", true)).await;
     assert_eq!(status, StatusCode::OK);
     db.close().await;
+}
+
+/// A sign-up without its ticket, with the field no person fills, or too many from one address is refused before the
+/// database is asked (docs/adr/9000 §20).
+#[tokio::test]
+async fn a_machine_s_sign_up_is_refused_before_the_database() {
+    let app = app(None);
+    let form = |extra: serde_json::Value| {
+        let mut body = serde_json::json!({
+            "login": "bot", "password": "parola-1234", "displayName": "Bot", "email": "bot@x.test",
+            "profession": "architect", "chamberNo": "1", "officeName": null, "phone": null, "province": null
+        });
+        body.as_object_mut().unwrap().extend(extra.as_object().unwrap().clone());
+        Request::post("/v1/portal/signup")
+            .header(header::CONTENT_TYPE, "application/json")
+            .header("x-kentos-client", "web")
+            .body(Body::from(body.to_string()))
+            .unwrap()
+    };
+    let (status, _, body) = send(&app, form(serde_json::json!({}))).await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+    let e: ApiError = serde_json::from_slice(&body).unwrap();
+    assert_eq!(e.path.as_deref(), Some("ticket"), "{e:?}");
+    let (status, _, body) = send(&app, form(serde_json::json!({ "website": "http://spam.test" }))).await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+    assert!(String::from_utf8_lossy(&body).contains("Kayıt alınamadı"));
+    // Twenty tries in ten minutes from one address; then 429 with when to try again.
+    for _ in 2..crate::http::signup_guard::MAX_TRIES {
+        send(&app, form(serde_json::json!({}))).await;
+    }
+    let (status, headers, _) = send(&app, form(serde_json::json!({}))).await;
+    assert_eq!(status, StatusCode::TOO_MANY_REQUESTS);
+    assert!(headers.contains_key(header::RETRY_AFTER));
 }

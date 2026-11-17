@@ -33,6 +33,8 @@ pub struct Config {
     /// is the server's Ed25519 key, never shown; `KENTOS_IMZA_ISSUER` and `KENTOS_IMZA_AUDIENCE` the names the signing
     /// service checks. Absent: the signing routes answer 409.
     pub signing: Option<std::sync::Arc<kentos_application::portal::signing::Signer>>,
+    /// The accounts one address may open by signing up in an hour (`KENTOS_SIGNUP_PER_HOUR`, 5; docs/adr/9000 §20).
+    pub signups_per_hour: u32,
     pub vars: BTreeMap<String, String>,
     pub database_url: Option<String>,
     pub owner_url: Option<String>,
@@ -273,6 +275,15 @@ impl Config {
             PathBuf::from(std::env::var("KENTOS_ENV_FILE").unwrap_or_else(|_| ".env.local".into()));
         let vars = env::read_file(&env_file)?;
         let get = |k: &str| env::lookup(&vars, k);
+        let signups_per_hour = match get("KENTOS_SIGNUP_PER_HOUR") {
+            None => 5,
+            Some(v) => v
+                .trim()
+                .parse::<u32>()
+                .ok()
+                .filter(|n| (1..=10_000).contains(n))
+                .ok_or_else(|| format!("KENTOS_SIGNUP_PER_HOUR 1 ile 10000 arasında bir sayı olmalı: {v}"))?,
+        };
         let flag = |k: &str, default: bool| {
             get(k)
                 .map(|v| matches!(v.as_str(), "1" | "true" | "yes"))
@@ -353,6 +364,7 @@ impl Config {
             vars,
             delivery: None,
             signing: None,
+            signups_per_hour,
         };
         let delivery = crate::delivery::Delivery::configured(|k| env::lookup(&config.vars, k), &config.public_url)?;
         config.delivery = delivery;

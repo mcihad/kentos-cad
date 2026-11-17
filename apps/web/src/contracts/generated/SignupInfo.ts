@@ -3,4 +3,9 @@
 /**
  * `GET /v1/portal/signup`: whether the platform takes sign-ups now.
  */
-export type SignupInfo = { open: boolean, };
+export type SignupInfo = { open: boolean, 
+/**
+ * The form's ticket while sign-ups are open: brought back with the sign-up, no sooner than a few seconds and no
+ * later than two hours, once (docs/adr/9000 §20).
+ */
+ticket: string | null, };

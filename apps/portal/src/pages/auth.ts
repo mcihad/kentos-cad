@@ -65,8 +65,12 @@ export async function loginPage(query: URLSearchParams): Promise<HTMLElement> {
 
 export async function signupPage(): Promise<HTMLElement> {
   let open = false;
+  // The form's ticket (docs/adr/9000 §20): sent back with the sign-up; a new one when the server asks for it.
+  let ticket: string | null = null;
   try {
-    open = (await portal.signupInfo()).open;
+    const info = await portal.signupInfo();
+    open = info.open;
+    ticket = info.ticket ?? null;
   } catch {
     // Said below as closed.
   }
@@ -115,12 +119,15 @@ export async function signupPage(): Promise<HTMLElement> {
         textField({ label: 'Parola (yeniden)', name: 'password2', type: 'password', required: true, autocomplete: 'new-password' }),
       )),
       notice('info', 'Kaydınız doğrulanana kadar başvuru gönderemezsiniz.', 'Doğrulama sonucunu bildirimlerinizde görürsünüz.'),
+      // A field no person sees or fills: a machine that fills every field gives itself away.
+      h('div', { class: 'hp-field', 'aria-hidden': 'true' }, h('label', null, 'Web sitesi ', h('input', { name: 'website', tabindex: -1, autocomplete: 'off' }))),
       formError(),
       h('div', { class: 'form-actions' }, button('Vazgeç', { kind: 'ghost', href: '#/giris' }), button('Kayıt ol', { kind: 'primary', type: 'submit' })),
     ],
     async (el) => {
       const v = values(el);
       if (v.password !== v.password2) throw new ApiError(400, 'invalid', 'İki parola aynı değil.', 'password2');
+      try {
       await portal.signUp({
         login: v.login.trim(),
         password: v.password,
@@ -131,7 +138,14 @@ export async function signupPage(): Promise<HTMLElement> {
         officeName: orNull(v.officeName),
         phone: orNull(v.phone),
         province: orNull(v.province),
+        ticket,
+        website: orNull(v.website),
       });
+      } catch (e) {
+        // A used or old ticket: the next try takes a new one.
+        if (e instanceof ApiError && e.path === 'ticket') ticket = (await portal.signupInfo().catch(() => null))?.ticket ?? ticket;
+        throw e;
+      }
       await signedIn('#/mesleki');
     },
   );

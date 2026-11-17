@@ -180,6 +180,7 @@ async fn on_a_running_server_a_person_in_the_window_takes_no_decision() {
         oidc: None,
         hub: crate::hub::Hub::default(),
         logins: Default::default(),
+        signups: Default::default(),
         blobs: Blobs::new(
             std::env::temp_dir().join(format!("kentos-api-blobs-{}", Uuid::now_v7())),
         ),

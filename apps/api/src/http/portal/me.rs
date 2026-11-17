@@ -17,6 +17,7 @@ use serde::Deserialize;
 use crate::http::AppState;
 use crate::http::auth::{Caller, check_client_header, session_cookie};
 use crate::http::error::{Body, Failure};
+use crate::http::signup_guard::ClientAddr;
 
 /// `GET /v1/portal/me`.
 pub async fn me(
@@ -40,9 +41,12 @@ pub async fn signup_info(
 ) -> Result<Json<SignupInfo>, Failure> {
     let run = async {
         if !state.config.local_login {
-            return Ok(SignupInfo { open: false });
+            return Ok(SignupInfo { open: false, ticket: None });
         }
-        accounts::signup_info(state.db()?).await
+        let mut info = accounts::signup_info(state.db()?).await?;
+        // The form's ticket (docs/adr/9000 §20): it must come back with the sign-up, a person's while later.
+        info.ticket = info.open.then(|| state.signups.ticket(unix_now()));
+        Ok(info)
     };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
@@ -51,6 +55,7 @@ pub async fn signup_info(
 pub async fn sign_up(
     State(state): State<AppState>,
     headers: HeaderMap,
+    client: ClientAddr,
     Body(input): Body<Signup>,
 ) -> Result<Response, Failure> {
     let fail = |e: AppError| Failure::with(e, &headers);
@@ -60,8 +65,31 @@ pub async fn sign_up(
         )));
     }
     check_client_header(&axum::http::Method::POST, &headers).map_err(fail)?;
+    // A machine's sign-up (docs/adr/9000 §20): too many tries from one address, the field no person fills, a form
+    // sent at once or without its ticket, too many accounts from one address.
+    let address = client.key();
+    let limited = |wait: u64, what: &str| AppError::Limited {
+        message: format!("{what}; {} dakika sonra yeniden deneyin.", wait.div_ceil(60)),
+        retry_after: wait,
+    };
+    state
+        .signups
+        .tries
+        .hit(&address)
+        .map_err(|w| fail(limited(w, "Bu adresten çok fazla kayıt denemesi geldi")))?;
+    if input.website.as_deref().is_some_and(|w| !w.trim().is_empty()) {
+        return Err(fail(AppError::invalid("Kayıt alınamadı.")));
+    }
+    state
+        .signups
+        .redeem(input.ticket.as_deref(), unix_now())
+        .map_err(|why| fail(AppError::invalid_at("ticket", why)))?;
+    if let Some(w) = state.signups.accounts.blocked(&address) {
+        return Err(fail(limited(w, "Bu adresten bir saatte açılabilecek hesap sayısı doldu")));
+    }
     let db = state.db().map_err(fail)?;
     let user = accounts::sign_up(db, &input, None).await.map_err(fail)?;
+    let _ = state.signups.accounts.hit(&address);
     let token = identity::open_session(db, user, SignInMethod::Local)
         .await
         .map_err(fail)?;
@@ -190,4 +218,9 @@ pub async fn read(
         notifications::list(db, &caller.0, false, 50).await
     };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
+}
+
+/// Seconds since 1970, for the sign-up's ticket.
+fn unix_now() -> u64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs())
 }

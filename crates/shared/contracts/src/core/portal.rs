@@ -115,6 +115,10 @@ pub struct PortalMe {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SignupInfo {
     pub open: bool,
+    /// The form's ticket while sign-ups are open: brought back with the sign-up, no sooner than a few seconds and no
+    /// later than two hours, once (docs/adr/9000 §20).
+    #[serde(default)]
+    pub ticket: Option<String>,
 }
 
 /// `POST /v1/portal/signup`, and an administrator opening a professional's account.
@@ -133,6 +137,14 @@ pub struct Signup {
     pub office_name: Option<String>,
     pub phone: Option<String>,
     pub province: Option<String>,
+    /// `GET /v1/portal/signup`'s ticket (signing up by oneself; an administrator opening the account needs none).
+    #[serde(default)]
+    #[cfg_attr(feature = "ts", ts(optional = nullable))]
+    pub ticket: Option<String>,
+    /// A field the form's people do not see: filled, the request is a machine's (docs/adr/9000 §20).
+    #[serde(default)]
+    #[cfg_attr(feature = "ts", ts(optional = nullable))]
+    pub website: Option<String>,
 }
 
 /// `PUT /v1/portal/me/professional`: what a professional changes in their own profile.
