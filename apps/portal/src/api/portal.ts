@@ -1,7 +1,10 @@
 // The portal's endpoints (docs/adr/9000 §8), one function each, typed by the generated contracts.
 import { del, get, patch, post, put, query, upload } from './client';
 import type {
+  ApiTokenCreated,
+  ApiTokenView,
   ApplicationCreate,
+  AttachmentView,
   DossierActionRequest,
   DossierDashboard,
   DossierDetail,
@@ -11,6 +14,7 @@ import type {
   DossierFileView,
   DossierList,
   DossierMessageView,
+  FileRevisions,
   MemberView,
   MunicipalityCard,
   Notifications,
@@ -25,9 +29,12 @@ import type {
   ProfessionalCard,
   ProfessionalStatus,
   ProfessionalView,
+  ProjectDetails,
   ProjectPage,
+  SessionView,
   Signup,
   TenantRole,
+  TokenScope,
   TransferCreate,
 } from './types';
 
@@ -96,6 +103,8 @@ export const dossier = {
     upload<DossierFileView>(`/v1/dossiers/${id}/files${query({ name: file.name, docType, purpose })}`, file),
   fromProject: (id: string, tenantId: string, projectId: string, docType?: string) =>
     post<DossierFileView>(`/v1/dossiers/${id}/files/from-project`, { tenantId, projectId, docType: docType ?? null }),
+  fromUpload: (id: string, uploadId: string, docType: string | null, purpose: 'package' | 'attachment' = 'package') =>
+    post<DossierFileView>(`/v1/dossiers/${id}/files/from-upload`, { uploadId, purpose, docType }),
   removeFile: (id: string, file: string) => del<void>(`/v1/dossiers/${id}/files/${file}`),
   fileUrl: (id: string, file: string) => `/v1/dossiers/${id}/files/${file}`,
   importFile: (id: string, file: string, tenantId: string | null) =>
@@ -118,4 +127,28 @@ export const platform = {
   events: (limit = 100) => get<PlatformEventView[]>(`/v1/platform/events${query({ limit })}`),
   settings: () => get<{ signupOpen: boolean }>('/v1/platform/settings'),
   setSettings: (signupOpen: boolean) => put<{ signupOpen: boolean }>('/v1/platform/settings', { signupOpen }),
+};
+
+/** The account itself (docs/adr/9000 §12): its sessions and its personal access tokens. */
+export const account = {
+  sessions: () => get<SessionView[]>('/v1/me/sessions'),
+  endSession: (id: string) => del<void>(`/v1/me/sessions/${id}`),
+  tokens: () => get<ApiTokenView[]>('/v1/me/tokens'),
+  createToken: (name: string, scope: TokenScope, expiresInDays: number) =>
+    post<ApiTokenCreated>('/v1/me/tokens', { name, scope, expiresInDays }),
+  revokeToken: (id: string) => del<void>(`/v1/me/tokens/${id}`),
+};
+
+/** A cloud project's page (docs/adr/9000 §15): what it is, its drawing, its revisions and its attachments. */
+export const cloud = {
+  details: (tenant: string, project: string) => get<ProjectDetails>(`/v1/tenants/${tenant}/projects/${project}/details`),
+  revisions: (tenant: string, project: string) => get<FileRevisions>(`/v1/tenants/${tenant}/projects/${project}/files`),
+  revisionUrl: (tenant: string, project: string, revision: string) => `/v1/tenants/${tenant}/projects/${project}/files/${revision}`,
+  previewUrl: (tenant: string, project: string, width = 1200) => `/v1/tenants/${tenant}/projects/${project}/preview.svg?width=${width}`,
+  attachments: (tenant: string, project: string) => get<AttachmentView[]>(`/v1/tenants/${tenant}/projects/${project}/attachments`),
+  attach: (tenant: string, project: string, uploadId: string, note: string | null) =>
+    post<AttachmentView>(`/v1/tenants/${tenant}/projects/${project}/attachments`, { uploadId, note }),
+  attachmentUrl: (tenant: string, project: string, id: string, inline = false) =>
+    `/v1/tenants/${tenant}/projects/${project}/attachments/${id}${inline ? '?inline=1' : ''}`,
+  removeAttachment: (tenant: string, project: string, id: string) => del<void>(`/v1/tenants/${tenant}/projects/${project}/attachments/${id}`),
 };

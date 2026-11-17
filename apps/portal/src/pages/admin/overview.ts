@@ -13,7 +13,7 @@ import type { PageFn } from '../page';
 import { reviewProfessional } from './people';
 
 function eventIcon(e: PlatformEventView) {
-  return icon(e.targetKind === 'tenant' ? 'building' : e.targetKind === 'professional' ? 'badge' : e.targetKind === 'setting' ? 'settings' : 'user', 16);
+  return icon(e.targetKind === 'tenant' ? 'building' : e.targetKind === 'professional' ? 'badge' : e.targetKind === 'setting' ? 'settings' : e.targetKind === 'file' ? 'shield' : 'user', 16);
 }
 
 export function eventList(events: PlatformEventView[]): HTMLElement {
@@ -75,7 +75,7 @@ export const adminDashboard: PageFn = async ({ reload }) => {
 
 export const adminEvents: PageFn = async () => {
   const events = await platform.events(300);
-  const body = h('div', { class: 'page' }, pageHeader({ title: 'Denetim kaydı', lead: 'Kurumların, hesapların ve meslek mensubu kayıtlarının her değişikliği: kim, ne zaman, ne yaptı. Kayıt silinmez.' }), panel(null, eventList(events), { class: 'panel-flush' }));
+  const body = h('div', { class: 'page' }, pageHeader({ title: 'Denetim kaydı', lead: 'Kurumların, hesapların ve meslek mensubu kayıtlarının her değişikliği ve taramanın geri çevirdiği dosyalar: kim, ne zaman, ne yaptı. Kayıt silinmez.' }), panel(null, eventList(events), { class: 'panel-flush' }));
   return { crumbs: [{ label: 'Sistem yönetimi', href: '#/sistem' }, { label: 'Denetim kaydı' }], body };
 };
 

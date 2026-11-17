@@ -6,8 +6,10 @@
 //
 // It expects a fresh database with the platform administrator `sistem` (kentosd platform-admin add). Every demo
 // account gets PORTAL_DEMO_PASSWORD.
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { deflateSync } from 'node:zlib';
 
 const API = process.env.PORTAL_API ?? 'http://127.0.0.1:8797';
 const ADMIN_PASSWORD = process.env.PORTAL_ADMIN_PASSWORD;
@@ -270,4 +272,107 @@ await can.upload(t3, 'teknik-gorus.pdf', pdf('Teknik gorus'), PDF, 'other');
 await can.act(t3, 'deliver');
 await mehmet.act(t3, 'complete', { note: 'Görüş alındı, teşekkür ederiz.' });
 
-console.log(JSON.stringify({ ornek: ornek.id, yesilvadi: yesilvadi.id, a1, a2, a3, a4, a5, t1, t2, t3 }));
+// ── Files in the cloud (docs/adr/9000 §12-§15) ───────────────────────
+/** Sends `bytes` as `name` through /v1/uploads in small parts, as a phone on a weak connection would. */
+async function sendParts(person, name, bytes, part = 64 * 1024) {
+  const sha256 = createHash('sha256').update(bytes).digest('hex');
+  let up = await person.req('POST', '/v1/uploads', { name, size: bytes.length, sha256 });
+  while (!up.received) {
+    const from = up.receivedBytes;
+    up = await person.req('PUT', `/v1/uploads/${up.id}?offset=${from}`, undefined, { bytes: bytes.subarray(from, from + part), type: 'application/octet-stream' });
+  }
+  return up;
+}
+
+/** A small PNG drawn here: a made-up site sketch (parcels, a building, a north arrow). */
+function sketch(width = 480, height = 320) {
+  const px = Buffer.alloc((width * 3 + 1) * height, 255);
+  const set = (x, y, [r, g, b]) => {
+    if (x < 0 || y < 0 || x >= width || y >= height) return;
+    const i = y * (width * 3 + 1) + 1 + x * 3;
+    px[i] = r;
+    px[i + 1] = g;
+    px[i + 2] = b;
+  };
+  const line = (x0, y0, x1, y1, c) => {
+    const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
+    for (let k = 0; k <= n; k++) set(Math.round(x0 + ((x1 - x0) * k) / n), Math.round(y0 + ((y1 - y0) * k) / n), c);
+  };
+  for (let y = 0; y < height; y++) px[y * (width * 3 + 1)] = 0;
+  const ink = [30, 40, 51];
+  const blue = [37, 99, 235];
+  const green = [46, 125, 79];
+  for (const [x0, y0, x1, y1] of [[40, 40, 220, 40], [220, 40, 220, 280], [220, 280, 40, 280], [40, 280, 40, 40], [220, 40, 440, 60], [440, 60, 430, 280], [430, 280, 220, 280]]) line(x0, y0, x1, y1, ink);
+  for (let y = 110; y <= 200; y++) for (let x = 80; x <= 180; x++) if (x === 80 || x === 180 || y === 110 || y === 200) set(x, y, blue);
+  for (let x = 250; x <= 400; x += 2) line(x, 240, x, 250, green);
+  line(460, 300, 460, 250, ink);
+  line(460, 250, 452, 266, ink);
+  line(460, 250, 468, 266, ink);
+  const chunk = (type, data) => {
+    const len = Buffer.alloc(4);
+    len.writeUInt32BE(data.length);
+    const body = Buffer.concat([Buffer.from(type, 'latin1'), data]);
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(crc32(body) >>> 0);
+    return Buffer.concat([len, body, crc]);
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 2;
+  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', ihdr), chunk('IDAT', deflateSync(px)), chunk('IEND', Buffer.alloc(0))]);
+}
+
+function crc32(buf) {
+  let c = ~0;
+  for (const b of buf) {
+    c ^= b;
+    for (let k = 0; k < 8; k++) c = c & 1 ? (c >>> 1) ^ 0xedb88320 : c >>> 1;
+  }
+  return ~c;
+}
+
+// The municipality keeps the reports beside the project it opened from the first application.
+const orgProject = projects.projects[0];
+for (const [name, bytes, note] of [
+  ['zemin-etudu-raporu.pdf', pdf('Zemin etudu raporu', ['412 ada 7 parsel', 'Sondaj 1-3']), 'Zemin etüdü, üç sondaj'],
+  ['saha-krokisi.png', sketch(), 'Saha krokisi, 14 Kasım keşfi'],
+  ['yapi-denetim-tutanagi.pdf', pdf('Yapi denetim tutanagi', ['Temel betonu oncesi kontrol']), null],
+]) {
+  const up = await sendParts(mehmet, name, bytes);
+  await mehmet.req('POST', `/v1/tenants/${ornek.id}/projects/${orgProject.id}/attachments`, { uploadId: up.id, note });
+}
+// The surveyor's own project gets the site photo-sketch of the job.
+const canSketch = await sendParts(can, 'aplikasyon-krokisi.png', sketch(560, 360));
+await can.req('POST', `/v1/tenants/${canProject.tenantId}/projects/${canProject.projectId}/attachments`, { uploadId: canSketch.id, note: '501 ada köşe noktaları' });
+// A dossier document sent in parts from a phone.
+const phoneDoc = await sendParts(ayse, 'statik-hesap-ozeti.pdf', pdf('Statik hesap ozeti', ['412 ada 7 parsel']));
+await ayse.req('POST', `/v1/dossiers/${a3}/files/from-upload`, { uploadId: phoneDoc.id, purpose: 'package', docType: 'calculations' });
+
+// Programs signed in as the architect: her phone and her office's desktop; and a read-only token for an agent.
+const program = async (client, label) => {
+  const res = await fetch(`${API}/v1/auth/token`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ login: 'ayse.yilmaz', password: PASSWORD, client, label }) });
+  if (!res.ok) throw new Error(`token: ${res.status} ${await res.text()}`);
+  return (await res.json()).token;
+};
+const phone = await program('mobile', 'Ayşe’nin telefonu');
+await program('desktop', 'Ofis bilgisayarı');
+await fetch(`${API}/v1/me/notifications`, { headers: { authorization: `Bearer ${phone}` } });
+await ayse.req('POST', '/v1/me/tokens', { name: 'Rapor ajanı', scope: 'read', expiresInDays: 30 });
+
+// Files the scan refuses: a program passed off as a PDF, and the antivirus test file (put together here, in two
+// halves, so that this script is not itself taken for one).
+for (const [name, bytes] of [
+  ['ruhsat-eki.pdf', Buffer.concat([Buffer.from('MZ'), Buffer.alloc(64)])],
+  ['deneme.txt', Buffer.from(['X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-', 'ANTIVIRUS-TEST-FILE!$H+H*'].join(''), 'latin1')],
+]) {
+  try {
+    await sendParts(ayse, name, bytes);
+    throw new Error(`${name} alınmamalıydı`);
+  } catch (e) {
+    if (!String(e.message).includes('422')) throw e;
+  }
+}
+
+console.log(JSON.stringify({ ornek: ornek.id, yesilvadi: yesilvadi.id, a1, a2, a3, a4, a5, t1, t2, t3, orgProject: orgProject.id }));

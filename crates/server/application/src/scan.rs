@@ -266,7 +266,7 @@ impl Scanner {
             return Ok(Err(Refusal::Blocked(why.into())));
         }
         if contains(&head[..head.len().min(4096)], &test_signature()) {
-            return Ok(Err(Refusal::Infected("antivirüs deneme dosyası (EICAR)".into())));
+            return Ok(Err(Refusal::Infected("EICAR antivirüs deneme dosyası".into())));
         }
         if let Some(why) = mismatch(kind, &head) {
             return Ok(Err(Refusal::Blocked(format!("içeriği .{ext} dosyası değil ({why})."))));

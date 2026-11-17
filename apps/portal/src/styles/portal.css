@@ -2112,3 +2112,174 @@ textarea.input {
   flex-wrap: wrap;
   gap: 6px;
 }
+
+/* ── Cloud files (docs/adr/9000 §13-§15) ───────────────────────────────── */
+
+.project-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .project-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px 14px;
+}
+
+.preview-frame {
+  display: grid;
+  place-items: center;
+  min-height: 280px;
+  max-height: 560px;
+  overflow: hidden;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  /* The drawing is drawn on paper: white in both themes, like a plotted sheet. */
+  background: #fff;
+}
+
+.preview-frame.is-loading {
+  background: var(--portal-sunken);
+}
+
+.preview-frame > a {
+  display: block;
+  width: 100%;
+}
+
+.preview-image {
+  display: block;
+  width: 100%;
+  max-height: 556px;
+  object-fit: contain;
+}
+
+.preview-caption {
+  color: var(--c-text-3);
+  font-size: 12px;
+}
+
+.panel-text {
+  margin: 0;
+  padding: 12px 16px 4px;
+  color: var(--c-text-2);
+  line-height: 1.5;
+}
+
+.panel-section {
+  padding: 12px 16px 14px;
+  border-top: 1px solid var(--c-line-soft);
+}
+
+.uploads {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 640px;
+}
+
+.uploads:empty {
+  display: none;
+}
+
+.upload {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px minmax(0, 2fr);
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.upload-name {
+  overflow: hidden;
+  color: var(--c-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upload-bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--c-line);
+}
+
+.upload-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--c-accent);
+  transition: width 0.2s ease;
+}
+
+.upload-text {
+  color: var(--c-text-3);
+}
+
+.upload.is-done .upload-bar > span {
+  background: var(--c-ok);
+}
+
+.upload.is-done .upload-text {
+  color: var(--c-ok);
+}
+
+.upload.is-failed .upload-bar > span {
+  width: 100% !important;
+  background: var(--c-danger);
+}
+
+.upload.is-failed .upload-text {
+  color: var(--c-danger);
+}
+
+.file-meta .scan {
+  margin-left: 8px;
+}
+
+.token-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--c-accent-line);
+  border-radius: var(--r-md);
+  background: var(--c-accent-soft);
+}
+
+.token-value {
+  flex: 1;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  user-select: all;
+}
+
+.code-sample {
+  margin: 0;
+  padding: 10px 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  border-radius: var(--r-md);
+  background: var(--portal-sunken);
+  color: var(--c-text-2);
+  font-size: 12px;
+}
+
+.drop-row .input[type='text'] {
+  flex: 1 1 320px;
+  min-width: 260px;
+}
+
+.uploads {
+  max-width: 760px;
+}

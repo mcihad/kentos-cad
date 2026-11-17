@@ -209,4 +209,87 @@ const ORG = '#/kurum/ornek-belediyesi';
   b.close();
 }
 
+// ── Files in the cloud (docs/adr/9000 §12-§15) ───────────────────────
+/** A person's cloud projects by name, as the API lists them. */
+async function projectsOf(login, view, tenant) {
+  const res = await fetch(`${API}/v1/auth/login`, { method: 'POST', headers: { 'x-kentos-client': 'web', 'content-type': 'application/json' }, body: JSON.stringify({ login, password: PASSWORD }) });
+  const cookie = res.headers.get('set-cookie').split(';')[0];
+  const q = new URLSearchParams({ view, ...(tenant ? { tenant } : {}) });
+  const page = await (await fetch(`${API}/v1/me/catalog?${q}`, { headers: { cookie } })).json();
+  return page.projects;
+}
+
+/** Drops files made in the page onto the drop zone, as a person dragging them from their folder. */
+async function drop(b, files) {
+  await b.eval(`(() => {
+    const dt = new DataTransfer();
+    for (const [name, text, type] of ${JSON.stringify(files)}) dt.items.add(new File([Uint8Array.from(atob(text), (c) => c.charCodeAt(0))], name, { type }));
+    const zone = document.querySelector('.drop');
+    zone.scrollIntoView({ block: 'center' });
+    zone.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
+    return true;
+  })()`);
+}
+const b64 = (bytes) => Buffer.from(bytes).toString('base64');
+
+{
+  const b = await signIn('ayse.yilmaz', PASSWORD, { width: 1560, height: 1180 });
+  await open(b, '#/hesabim');
+  await shot(b, '70-hesabim-oturumlar-ve-anahtarlar');
+  await b.eval(`document.querySelector('input[name=name]').focus()`);
+  await b.type('Belge özetleyici ajan');
+  await click(b, 'button', 'Anahtar oluştur');
+  await b.waitFor(`!!document.querySelector('.token-box')`, 10000);
+  await sleep(300);
+  await shot(b, '71-anahtar-bir-kez-gosterilir');
+  await closeDialog(b);
+  await open(b, `#/mesleki/dosya/${A3}`);
+  await shot(b, '72-mimar-belgeler-tarandi');
+  b.close();
+}
+{
+  const orgProjects = await projectsOf('mehmet.kaya', 'organization', known.tenant);
+  const project = orgProjects.find((p) => p.name.startsWith('Konut')) ?? orgProjects[0];
+  const b = await signIn('mehmet.kaya', PASSWORD, { width: 1560, height: 1240 });
+  await open(b, `${ORG}/projeler`);
+  await shot(b, '73-belediye-projeler');
+  await open(b, `#/proje/${project.tenantId}/${project.id}`);
+  await b.waitFor(`!!document.querySelector('.preview-image')`, 20000);
+  await sleep(500);
+  await shot(b, '74-proje-cizim-ve-ekler');
+  // A program passed off as a PDF: refused with the server's reason, nothing kept.
+  await drop(b, [['ruhsat-eki.pdf', b64([0x4d, 0x5a, 0x90, 0, 3, 0, 0, 0]), 'application/pdf']]);
+  await b.waitFor(`!!document.querySelector('.upload.is-failed')`, 20000);
+  await sleep(200);
+  await shot(b, '75-proje-reddedilen-dosya');
+  // A report goes up in parts and joins the list.
+  const before = await b.eval(`document.querySelectorAll('.panel .table tbody tr').length`);
+  await drop(b, [['kontrol-notlari.txt', b64(Buffer.from('412 ada 7 parsel: temel betonu öncesi kontrol notları.\n', 'utf8')), 'text/plain']]);
+  await b.waitFor(`document.querySelectorAll('.panel .table tbody tr').length > ${before}`, 20000);
+  await sleep(500);
+  await shot(b, '76-proje-ek-eklendi');
+  await b.eval(`document.documentElement.dataset.theme = 'dark'; window.scrollTo(0, 0); true`);
+  await sleep(300);
+  await shot(b, '77-proje-koyu-tema');
+  b.close();
+}
+{
+  const mine = await projectsOf('can.ozturk', 'mine');
+  const project = mine.find((p) => p.storage === 'file') ?? mine[0];
+  const b = await signIn('can.ozturk', PASSWORD, { width: 1560, height: 1080 });
+  await open(b, '#/mesleki/projeler');
+  await shot(b, '78-haritaci-projelerim');
+  await open(b, `#/proje/${project.tenantId}/${project.id}`);
+  await b.waitFor(`!!document.querySelector('.preview-image')`, 20000);
+  await sleep(500);
+  await shot(b, '79-haritaci-dosya-projesi-revizyonlar');
+  b.close();
+}
+{
+  const b = await signIn('sistem', ADMIN_PASSWORD);
+  await open(b, '#/sistem/kayit');
+  await shot(b, '80-sistem-reddedilen-dosyalar');
+  b.close();
+}
+
 console.log(shots.join('\n'));

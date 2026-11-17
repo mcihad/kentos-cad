@@ -9,7 +9,9 @@ import { type Context, catalog, contexts, homeOf, me, orgBySlug, unread } from '
 import { h, replaceChildren } from './lib/dom';
 import { adminPages } from './pages/admin/routes';
 import { loginPage, signupPage } from './pages/auth';
+import { accountPage } from './pages/account';
 import { notificationsPage } from './pages/notifications';
+import { projectPage } from './pages/project';
 import { orgPages } from './pages/org/routes';
 import type { PageFn } from './pages/page';
 import { proPages } from './pages/pro/routes';
@@ -21,6 +23,8 @@ const root = document.getElementById('app') as HTMLElement;
 const routes = new Routes<PageFn>();
 for (const [pattern, page] of [...adminPages, ...orgPages, ...proPages]) routes.add(pattern, page);
 routes.add('bildirimler', notificationsPage);
+routes.add('hesabim', accountPage);
+routes.add('proje/:tenant/:project', projectPage);
 
 let shell: Shell | null = null;
 let lastContext: Context | null = null;

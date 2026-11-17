@@ -38,6 +38,7 @@ function navOf(c: Context): NavItem[] {
           { label: 'Meslek mensupları', href: `${base}/meslek-mensuplari`, icon: 'badge', match: new RegExp(`^${base}/meslek-mensuplari`) },
         );
       }
+      items.push({ label: 'Projeler', href: `${base}/projeler`, icon: 'folder', match: new RegExp(`^${base}/projeler|^#/proje/${c.org.tenantId}`) });
       if (admin) {
         items.push(
           { label: 'Üyeler', href: `${base}/uyeler`, icon: 'users', match: new RegExp(`^${base}/uyeler`) },
@@ -51,7 +52,7 @@ function navOf(c: Context): NavItem[] {
         { label: 'Genel bakış', href: '#/mesleki', icon: 'home', match: /^#\/mesleki$/ },
         { label: 'Başvurularım', href: '#/mesleki/basvurular', icon: 'inbox', match: /^#\/mesleki\/(basvurular|dosya)/ },
         { label: 'Aktarılan işler', href: '#/mesleki/isler', icon: 'send', match: /^#\/mesleki\/isler/ },
-        { label: 'Projelerim', href: '#/mesleki/projeler', icon: 'folder', match: /^#\/mesleki\/projeler/ },
+        { label: 'Projelerim', href: '#/mesleki/projeler', icon: 'folder', match: /^#\/(mesleki\/projeler|proje\/)/ },
         { label: 'Profil', href: '#/mesleki/profil', icon: 'user', match: /^#\/mesleki\/profil/ },
       ];
   }
@@ -161,6 +162,7 @@ function userBlock(onLogout: () => void): HTMLElement {
     const themeItem = h('button', { class: 'menu-item', type: 'button', role: 'menuitem' }, icon(dark ? 'sun' : 'moon', 16), dark ? 'Açık tema' : 'Koyu tema');
     const out = h('button', { class: 'menu-item', type: 'button', role: 'menuitem' }, icon('logout', 16), 'Oturumu kapat');
     const items: Child[] = [];
+    items.push(h('a', { class: 'menu-item', href: '#/hesabim', role: 'menuitem' }, icon('key', 16), 'Hesabım'));
     if (m?.professional) items.push(h('a', { class: 'menu-item', href: '#/mesleki/profil', role: 'menuitem' }, icon('user', 16), 'Profilim'));
     items.push(themeItem, h('div', { class: 'menu-sep' }), out);
     const menu = h('div', { class: 'menu user-menu', role: 'menu' }, ...items);

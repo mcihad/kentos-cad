@@ -62,6 +62,23 @@ export async function upload<T>(path: string, file: Blob): Promise<T> {
   return (await res.json()) as T;
 }
 
+/** One part of a file (`PUT`, `application/octet-stream`); a connection that breaks is an error of status 0. */
+export async function putBytes<T>(path: string, bytes: Blob): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(path, {
+      method: 'PUT',
+      credentials: 'same-origin',
+      headers: { ...HEADERS, 'content-type': 'application/octet-stream' },
+      body: bytes,
+    });
+  } catch {
+    throw new ApiError(0, 'network', 'Bağlantı kesildi; yükleme kaldığı yerden sürecek.', null);
+  }
+  if (!res.ok) throw await failure(res);
+  return (await res.json()) as T;
+}
+
 /** A query string of the defined values. */
 export function query(params: Record<string, string | number | boolean | null | undefined>): string {
   const pairs = Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '');

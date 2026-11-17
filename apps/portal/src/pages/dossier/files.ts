@@ -1,6 +1,7 @@
 // A dossier's packages on its page (docs/adr/9000 §7): the one being prepared (files dropped or chosen, a cloud
 // project's present state added), each package as it was sent, and a KentOS project file opened as a project in the
 // reader's own workspace or their organisation's.
+import { sendFile } from '../../api/files';
 import { dossier as api, portal } from '../../api/portal';
 import type { DossierDetail, DossierFileView, DossierRound, ProjectSummary } from '../../api/types';
 import { catalog } from '../../app/state';
@@ -11,6 +12,7 @@ import { form, formError, selectField, values } from '../../ui/forms';
 import { icon } from '../../ui/icons';
 import { button, empty, notice, panel } from '../../ui/kit';
 import { toast } from '../../ui/toast';
+import { scanBadge, uploadRow } from '../../ui/uploads';
 
 function fileIcon(f: DossierFileView): HTMLElement {
   const pdf = f.mediaType === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf');
@@ -76,7 +78,7 @@ function fileRow(d: DossierDetail, f: DossierFileView, reload: () => void): HTML
       'div',
       { class: 'file-text' },
       h('div', { class: 'file-name', title: `${f.name} (SHA-256 ${f.sha256})` }, f.name),
-      h('div', { class: 'file-meta' }, `${f.docTypeLabel}, ${bytes(f.size)}. ${f.addedByName} ekledi.${source}`),
+      h('div', { class: 'file-meta' }, `${f.docTypeLabel}, ${bytes(f.size)}. ${f.addedByName} ekledi.${source}`, scanBadge(f.scan, f.scanNote)),
     ),
     h('div', { class: 'file-actions' }, ...actions),
   );
@@ -144,17 +146,23 @@ function dropZone(d: DossierDetail, reload: () => void): HTMLElement {
     ...docTypes.map((t) => h('option', { value: t.code }, wanted.includes(t.code) ? `${t.label} (eksik)` : t.label)),
   );
   const input = h('input', { type: 'file', multiple: true, hidden: true });
-  const status = h('div', { class: 'field-hint' }, 'En çok 200 MB. KentOS proje dosyası (KCAD), PDF ve diğer belgeler.');
+  const status = h('div', { class: 'field-hint' }, 'En çok 200 MB. KentOS proje dosyası (KCAD), PDF, çizim, resim ve ofis belgeleri; program, betik ve makrolu belge alınmaz. Bağlantı kesilirse yükleme kaldığı yerden sürer.');
+  const progress = h('div', { class: 'uploads' });
   const send = async (files: File[]) => {
-    for (const [i, file] of files.entries()) {
-      status.textContent = `${i + 1}/${files.length} yükleniyor: ${file.name}`;
+    let added = 0;
+    for (const file of files) {
+      const r = uploadRow(file);
+      progress.append(r.row);
       try {
-        await api.upload(d.summary.id, file, typeSelect.value || null);
+        const up = await sendFile(file, r.show);
+        await api.fromUpload(d.summary.id, up.id, typeSelect.value || null);
+        r.done();
+        added += 1;
       } catch (e) {
-        toast(`${file.name}: ${e instanceof Error ? e.message : String(e)}`, 'danger');
+        r.fail(e);
       }
     }
-    reload();
+    if (added) setTimeout(reload, 900);
   };
   input.addEventListener('change', () => void send(Array.from(input.files ?? [])));
   const zone = h(
@@ -164,6 +172,7 @@ function dropZone(d: DossierDetail, reload: () => void): HTMLElement {
     h('div', null, h('strong', null, 'Dosyaları buraya bırakın'), ' ya da seçin'),
     h('div', { class: 'drop-row' }, typeSelect, button('Dosya seç', { icon: 'paperclip', onClick: () => input.click() }), button('Projeden ekle', { icon: 'project', onClick: () => fromProject(d, reload) })),
     status,
+    progress,
     input,
   );
   zone.addEventListener('dragover', (e) => {

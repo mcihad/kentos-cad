@@ -1,7 +1,10 @@
 // The portal's contract types, generated from the Rust contracts (crates/shared/contracts, ts-rs): one definition for
 // the server and every client (CLAUDE.md §14).
+export type { ApiTokenCreated } from '../../../web/src/contracts/generated/ApiTokenCreated';
+export type { ApiTokenView } from '../../../web/src/contracts/generated/ApiTokenView';
 export type { ApplicationCreate } from '../../../web/src/contracts/generated/ApplicationCreate';
 export type { AssigneeOption } from '../../../web/src/contracts/generated/AssigneeOption';
+export type { AttachmentView } from '../../../web/src/contracts/generated/AttachmentView';
 export type { DocChecklist } from '../../../web/src/contracts/generated/DocChecklist';
 export type { DossierAction } from '../../../web/src/contracts/generated/DossierAction';
 export type { DossierActionRequest } from '../../../web/src/contracts/generated/DossierActionRequest';
@@ -19,6 +22,8 @@ export type { DossierSide } from '../../../web/src/contracts/generated/DossierSi
 export type { DossierSite } from '../../../web/src/contracts/generated/DossierSite';
 export type { DossierStatus } from '../../../web/src/contracts/generated/DossierStatus';
 export type { DossierSummary } from '../../../web/src/contracts/generated/DossierSummary';
+export type { FileRevision } from '../../../web/src/contracts/generated/FileRevision';
+export type { FileRevisions } from '../../../web/src/contracts/generated/FileRevisions';
 export type { KindOption } from '../../../web/src/contracts/generated/KindOption';
 export type { LegalClock } from '../../../web/src/contracts/generated/LegalClock';
 export type { MemberView } from '../../../web/src/contracts/generated/MemberView';
@@ -39,9 +44,14 @@ export type { Profession } from '../../../web/src/contracts/generated/Profession
 export type { ProfessionalCard } from '../../../web/src/contracts/generated/ProfessionalCard';
 export type { ProfessionalStatus } from '../../../web/src/contracts/generated/ProfessionalStatus';
 export type { ProfessionalView } from '../../../web/src/contracts/generated/ProfessionalView';
+export type { ProjectDetails } from '../../../web/src/contracts/generated/ProjectDetails';
 export type { ProjectPage } from '../../../web/src/contracts/generated/ProjectPage';
 export type { ProjectSummary } from '../../../web/src/contracts/generated/ProjectSummary';
+export type { ScanState } from '../../../web/src/contracts/generated/ScanState';
+export type { SessionView } from '../../../web/src/contracts/generated/SessionView';
 export type { Signup } from '../../../web/src/contracts/generated/Signup';
 export type { StatusOption } from '../../../web/src/contracts/generated/StatusOption';
 export type { TenantRole } from '../../../web/src/contracts/generated/TenantRole';
+export type { TokenScope } from '../../../web/src/contracts/generated/TokenScope';
 export type { TransferCreate } from '../../../web/src/contracts/generated/TransferCreate';
+export type { UploadView } from '../../../web/src/contracts/generated/UploadView';

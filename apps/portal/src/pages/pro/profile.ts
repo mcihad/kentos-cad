@@ -5,11 +5,11 @@ import { chamberOf, me, professionLabel, professionalStatus } from '../../app/st
 import { h } from '../../lib/dom';
 import { initials, moment } from '../../lib/format';
 import { checked, form, formError, grid, orNull, switchField, textField, values } from '../../ui/forms';
-import { icon } from '../../ui/icons';
-import { avatar, badge, button, empty, facts, pageHeader, panel, table, twoLine } from '../../ui/kit';
+import { avatar, badge, button, empty, facts, pageHeader, panel } from '../../ui/kit';
 import { toast } from '../../ui/toast';
 import type { PageFn } from '../page';
 import { registrationNotice } from './lists';
+import { projectsTable } from '../projects';
 
 export const proProfile: PageFn = async ({ reload }) => {
   const m = await portal.me();
@@ -36,20 +36,6 @@ export const proProfile: PageFn = async ({ reload }) => {
       reload();
     },
   );
-  const password = form(
-    [
-      textField({ label: 'Şimdiki parola', name: 'current', type: 'password', autocomplete: 'current-password', required: true }),
-      textField({ label: 'Yeni parola', name: 'new', type: 'password', autocomplete: 'new-password', required: true, hint: 'En az 10 karakter. Öbür cihazlardaki oturumlarınız kapanır.' }),
-      formError(),
-      h('div', { class: 'form-actions' }, button('Parolayı değiştir', { type: 'submit' })),
-    ],
-    async (el) => {
-      const v = values(el);
-      await portal.changePassword(v.current, v.new);
-      el.reset();
-      toast('Parolanız değişti.');
-    },
-  );
   const body = h(
     'div',
     { class: 'page' },
@@ -58,7 +44,7 @@ export const proProfile: PageFn = async ({ reload }) => {
     h(
       'div',
       { class: 'cols-2' },
-      h('div', { class: 'stack' }, panel('İletişim ve görünürlük', edit), panel('Parola', password)),
+      h('div', { class: 'stack' }, panel('İletişim ve görünürlük', edit), panel('Parola ve oturumlar', h('p', { class: 'panel-text' }, 'Parolanızı, açık oturumlarınızı ve erişim anahtarlarınızı ', h('a', { href: '#/hesabim' }, 'Hesabım'), ' sayfasından yönetirsiniz.'))),
       panel(
         'Meslek mensubu kaydı',
         h(
@@ -88,16 +74,7 @@ export const proProjects: PageFn = async () => {
     'div',
     { class: 'page' },
     pageHeader({ title: 'Projelerim', lead: 'Buluttaki projeleriniz. Belediyenin aktardığı bir projeyi dosya sayfasından “Proje olarak aç” ile buraya alırsınız; teslim ederken “Projeden ekle” ile pakete koyarsınız.' }),
-    table(
-      [
-        { label: 'Proje', cell: (p) => h('div', { class: 'with-icon' }, h('span', { class: 'file-icon is-project' }, icon('project', 18)), twoLine(p.name, p.description || (p.storage === 'file' ? 'Dosya projesi' : 'Veritabanı projesi'))) },
-        { label: 'Çalışma alanı', cell: (p) => (p.tenantKind === 'personal' ? 'Kişisel' : p.tenantName) },
-        { label: 'Saklama', cell: (p) => (p.storage === 'file' ? 'Dosya' : 'Veritabanı'), class: 'narrow' },
-        { label: 'Son değişiklik', cell: (p) => h('span', { class: 'muted num' }, moment(p.updatedAt)), class: 'narrow' },
-      ],
-      projects,
-      { empty: empty('folder', 'Bulutta projeniz yok', 'KentOS masaüstünden ya da web uygulamasından buluta kaydettiğiniz projeler burada görünür.') },
-    ),
+    projectsTable(projects, empty('folder', 'Bulutta projeniz yok', 'KentOS masaüstünden ya da web uygulamasından buluta kaydettiğiniz projeler burada görünür.')),
   );
   return { crumbs: [{ label: 'Meslek mensubu', href: '#/mesleki' }, { label: 'Projelerim' }], body };
 };
