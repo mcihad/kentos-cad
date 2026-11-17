@@ -11,11 +11,18 @@
 //! - **An elevator** is a space named Asansör (not its lobby, `regulation_audit::shaft_of`), a void or not, or an
 //!   Asansör block standing in no such space of its storey (`elevator_cabins`, docs/adr/8045 §5): a cabin in a shaft is
 //!   the shaft's elevator, counted once.
+//! - **People** (docs/adr/8078 §8): each room's as the escape rules count them (`fire_audit::room_people`: BYKHY
+//!   Ek-5/A, its use's square metres a person over its area, rounded up); a dwelling's room carries none.
+//! - **A door** (a door that opens: not a fixed one): the rooms on its wall's two faces on its wall's storey, the path's
+//!   left first, and the one its leaf swings into (its `side`, the rule the room list reads a door's room by, docs/adr
+//!   8028); its operation; its fire class, its own else its type's (docs/adr/8068); whether a side is an escape stair's
+//!   room (a room named or used as Merdiven that is no dwelling unit's own, as the escape routes read it) or a fire
+//!   safety lobby (named Yangın güvenlik holü). A storey holding an escape stair's room is the stair's.
 
 use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
-use kentos_extensions::audit_facts::building::{BuildingFacts, StoreyHolds};
+use kentos_extensions::audit_facts::building::{BuildingFacts, DoorFacts, RoomPeople, StoreyHolds};
 
 /// The drawing's building facts; empty (no storey) for a project without Mimari's storeys.
 pub fn measure(doc: &Document) -> BuildingFacts {
@@ -64,6 +71,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             storey.inhabited += 1;
         }
     }
+    let (rooms, doors) = people_and_doors(doc, &mut storeys);
     BuildingFacts {
         storeys,
         units: units.len() as u32,
@@ -71,7 +79,97 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         local: arch.local_rules.map(|l| match l {
             LocalRules::Sivas => "sivas".to_owned(),
         }),
+        rooms,
+        doors,
     }
+}
+
+/// The rooms' people and the doors; each storey holding an escape stair's room marked.
+#[cfg(feature = "mod-arch")]
+fn people_and_doors(doc: &Document, storeys: &mut [StoreyHolds]) -> (Vec<RoomPeople>, Vec<DoorFacts>) {
+    use kentos_commands::{OpeningForm, OpeningOperation, OpeningSide};
+    use kentos_domain::room_names::{has, words};
+    use kentos_geometry_core::geom::region::inside_area;
+    let people = kentos_native_application::fire_audit::room_people(doc)
+        .into_iter()
+        .filter_map(|(slot, level, name, persons)| {
+            Some(RoomPeople { uid: doc.uid(slot)?.to_string(), level, name, persons })
+        })
+        .collect();
+    let program = doc.program();
+    // The rooms each storey's points are found in: id, storey, outline, an escape stair's, a fire safety lobby.
+    let mut rooms: Vec<(String, Option<String>, Vec<kentos_geometry_core::geom::arrangement::Area>, bool, bool)> =
+        Vec::new();
+    for (uid, e) in doc.entities_with_uids() {
+        let Entity::Space(s) = e else { continue };
+        let x = &s.space;
+        if x.void {
+            continue;
+        }
+        let (name, usage) = (x.name.as_deref(), x.usage.as_deref());
+        let own_dwelling = x
+            .unit
+            .as_deref()
+            .and_then(|u| program.unit(u))
+            .is_some_and(|u| u.kind == UnitKind::Unit && dwelling_nature(u.nature.as_deref()));
+        let stair = kentos_domain::escape::stair_name(name, usage) && !own_dwelling;
+        let w = words(name, usage);
+        let lobby = has(&w, "GUVENLIK") && has(&w, "HOL");
+        let level = e.own_level().map(str::to_owned);
+        if stair && let Some(storey) = storeys.iter_mut().find(|l| Some(&l.level) == level.as_ref()) {
+            storey.stair = true;
+        }
+        rooms.push((uid.to_string(), level, kentos_domain::arch_values::core_areas(&x.parts), stair, lobby));
+    }
+    let at = |level: &Option<String>, p: kentos_geometry_core::Vec2| {
+        rooms.iter().find(|(_, l, areas, _, _)| l == level && areas.iter().any(|a| inside_area(a, p)))
+    };
+    let mut doors = Vec::new();
+    for (uid, e) in doc.entities_with_uids() {
+        let Entity::Opening(o) = e else { continue };
+        let f = &o.opening;
+        if f.form != OpeningForm::Door || f.operation == OpeningOperation::Fixed {
+            continue;
+        }
+        let Some((_, left, right)) = kentos_domain::room_openings::opening_sides(f) else { continue };
+        let level = doc.wall_of(&f.host).and_then(|w| w.arch.level);
+        let (l, r) = (at(&level, left), at(&level, right));
+        let opens_into = match (f.operation, f.side) {
+            (OpeningOperation::Swing, OpeningSide::Right) => r.map(|x| x.0.clone()),
+            (OpeningOperation::Swing, OpeningSide::Left) => l.map(|x| x.0.clone()),
+            _ => None,
+        };
+        let fire_rating = f
+            .fire_rating
+            .as_ref()
+            .or_else(|| {
+                f.style
+                    .as_deref()
+                    .and_then(|t| doc.opening_types().iter().find(|x| x.id == t))
+                    .and_then(|t| t.fire_rating.as_ref())
+            })
+            .map(|d| d.value.clone());
+        doors.push(DoorFacts {
+            uid: uid.to_string(),
+            level,
+            between: [l.map(|x| x.0.clone()), r.map(|x| x.0.clone())],
+            opens_into,
+            operation: serde_json::to_value(f.operation)
+                .ok()
+                .and_then(|v| v.as_str().map(str::to_owned))
+                .unwrap_or_default(),
+            fire_rating,
+            stair: l.is_some_and(|x| x.3) || r.is_some_and(|x| x.3),
+            lobby: l.is_some_and(|x| x.4) || r.is_some_and(|x| x.4),
+        });
+    }
+    (people, doors)
+}
+
+/// Without Mimari's audits there are no people or doors to read.
+#[cfg(not(feature = "mod-arch"))]
+fn people_and_doors(_: &Document, _: &mut [StoreyHolds]) -> (Vec<RoomPeople>, Vec<DoorFacts>) {
+    (Vec::new(), Vec::new())
 }
 
 /// Each storey's elevators counted into it: its elevator shafts and the Asansör blocks standing in none of them; the

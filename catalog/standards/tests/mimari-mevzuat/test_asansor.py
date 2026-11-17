@@ -48,7 +48,8 @@ class BagimsizDurumlar(unittest.TestCase):
                         self.assertIn(parca, b["message"])
                     if "rule" in e:
                         self.assertEqual(b["rule"], e["rule"])
-            satirlar = {s["rule"]: s for s in cevap["rules"]}
+            # The lift articles' rows (the door rule's are its own cases', fixtures/standards/v1/kapilar.json).
+            satirlar = {s["rule"]: s for s in cevap["rules"] if " 34/" in s["rule"]}
             with self.subTest(durum=durum["id"], ne="satırlar"):
                 self.assertEqual(sorted(satirlar), sorted(durum["expect"]["rules"]),
                                  json.dumps(cevap["rules"], ensure_ascii=False, indent=1))

@@ -210,17 +210,30 @@ pub struct Walk {
 
 /// The fire rules' findings (docs/adr/8035), each said through `push(said, slots, at)`.
 pub(crate) fn findings(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V)) {
-    assess(doc, push, &mut Vec::new());
+    assess(doc, push, &mut Vec::new(), None);
 }
 
 /// The walks the fire rules measure, every storey's (docs/adr/8035 §2).
 pub fn walks(doc: &Document) -> Vec<Walk> {
     let mut out = Vec::new();
-    assess(doc, &mut |_, _, _| {}, &mut out);
+    assess(doc, &mut |_, _, _| {}, &mut out, None);
     out
 }
 
-fn assess(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V), walks: &mut Vec<Walk>) {
+/// Each room's people as the escape rules count them (Ek-5/A, its use's square metres a person; docs/adr/8035): those
+/// with any, by their object, storey and name, for the building facts the regulation's Python reads (docs/adr/8078 §8).
+pub fn room_people(doc: &Document) -> Vec<(Slot, Option<String>, String, f64)> {
+    let mut out = Vec::new();
+    assess(doc, &mut |_, _, _| {}, &mut Vec::new(), Some(&mut out));
+    out
+}
+
+fn assess(
+    doc: &Document,
+    push: &mut dyn FnMut(Said, Vec<Slot>, V),
+    walks: &mut Vec<Walk>,
+    people_out: Option<&mut Vec<(Slot, Option<String>, String, f64)>>,
+) {
     let program = doc.program();
     let arch = doc.settings().arch.clone().unwrap_or_default();
     let sprinklers = arch.sprinklers;
@@ -332,6 +345,16 @@ fn assess(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V), walks: &mut 
             at,
             areas,
         });
+    }
+    // Asked only the people (the building facts): the rooms that carry any.
+    if let Some(out) = people_out {
+        out.extend(
+            rooms
+                .iter()
+                .filter(|r| r.people > 0.0)
+                .map(|r| (r.slot, r.level.clone(), r.name.clone(), r.people)),
+        );
+        return;
     }
     // A dwelling building: a dwelling unit, or bedrooms without a program (docs/adr/8033).
     let dwelling_building = dwellings > 0

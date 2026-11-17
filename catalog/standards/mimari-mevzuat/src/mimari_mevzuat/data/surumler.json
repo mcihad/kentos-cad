@@ -10,6 +10,10 @@
     "Sivas": {
       "name": "Sivas Belediyesi İmar Yönetmeliği",
       "gazette": "10.11.2022/32009"
+    },
+    "BYKHY": {
+      "name": "Binaların Yangından Korunması Hakkında Yönetmelik",
+      "gazette": "19.12.2007/26735"
     }
   },
   "articles": [
@@ -116,6 +120,44 @@
           "served": "unit-or-inhabited",
           "text": "Asansörlerin, bodrum katları dahil tüm katlara hizmet vermesi zorunludur. Ancak bağımsız bölüm ya da iskân edilen alan bulunmayan bodrum katlara asansörün ulaştırılması zorunlu değildir.",
           "source": "RG 10.11.2022/32009, 34 üncü madde."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "47/2",
+      "title": "Çıkış kapısının açılış yönü",
+      "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 47 nci madde değişmedi.",
+      "versions": [
+        {
+          "id": "2007",
+          "from": "2007-12-19",
+          "until": null,
+          "label": "19.12.2007",
+          "gazette": "19.12.2007/26735",
+          "persons": 50,
+          "text": "Kaçış yolu kapıları kanatlarının, kullanıcıların hareketini engellememesi gerekir. Kullanıcı yükü 50 kişiyi aşan mekânlardaki çıkış kapılarının kaçış yönüne doğru açılması şarttır. Kaçış yolu kapılarının el ile açılması ve kilitli tutulmaması gerekir.",
+          "source": "RG 19.12.2007/26735 (BKK 2007/12937), 47 nci madde; madde değişiklik görmedi (mevzuat.gov.tr derlenmiş metni, son değişiklik RG 1.7.2025/32943; docs/adr/8078 §8)."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "47/3",
+      "title": "Kaçış merdiveni ve yangın güvenlik holü kapıları",
+      "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 47 nci madde değişmedi.",
+      "versions": [
+        {
+          "id": "2007",
+          "from": "2007-12-19",
+          "until": null,
+          "label": "19.12.2007",
+          "gazette": "19.12.2007/26735",
+          "few": 60,
+          "many": 90,
+          "storeys": 4,
+          "text": "Kaçış merdiveni ve yangın güvenlik holü kapılarının; duman sızdırmaz ve 4 kattan daha az kata hizmet veriyor ise en az 60 dakika, bodrum katlara ve 4 kattan daha fazla kata hizmet veriyor ise en az 90 dakika yangına karşı dayanıklı olması şarttır. Kapıların, kendiliğinden kapatan düzenekler ile donatılması ve itfaiyecilerin veya görevlilerin gerektiğinde dışarıdan içeriye girmelerine imkân sağlayacak şekilde olması gerekir.",
+          "source": "RG 19.12.2007/26735 (BKK 2007/12937), 47 nci madde; madde değişiklik görmedi (mevzuat.gov.tr derlenmiş metni, son değişiklik RG 1.7.2025/32943; docs/adr/8078 §8)."
         }
       ]
     }

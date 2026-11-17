@@ -1,0 +1,1807 @@
+{
+ "format": "kentos.regulationCases",
+ "version": 1,
+ "about": "Kaçış yolu kapılarının bağımsız durumları (docs/adr/8078 §8): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik 47/2 ve 47/3'ün metninden (RG 19.12.2007/26735, değişmedi) elle çıkarıldı; kuralın kodundan üretilmedi. Durumlar yalnız kapı kuralının maddelerini sınar (asansör kuralı katlarda asansör olmadığından kendi satırlarını verir, burada sayılmaz).",
+ "cases": [
+  {
+   "id": "salon-iceri",
+   "neden": "80 kişilik salonun tek çıkış kapısı salonun içine açılıyor: 47/2 'kaçış yönüne doğru açılması şarttır' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k00",
+      "name": "Toplantı salonu",
+      "persons": 80
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000010",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "opensInto": "00000000-0000-4000-8000-000000000001",
+      "operation": "swing"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_exit_door_swing",
+      "has": [
+       "Toplantı salonu",
+       "80 kişi",
+       "içine açılıyor",
+       "BYKHY 47/2"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 47/2": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "salon-disari",
+   "neden": "Aynı kapı koridora açılıyor (mekândan dışarı): geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k00",
+      "name": "Toplantı salonu",
+      "persons": 80
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000010",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "opensInto": "00000000-0000-4000-8000-000000000002",
+      "operation": "swing"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 47/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "salon-dis-kapi",
+   "neden": "Salonun dışarıya (bina dışına) açılan kapısı: kanat salona açılmıyor → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k00",
+      "name": "Toplantı salonu",
+      "persons": 80
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000010",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       null
+      ],
+      "opensInto": null,
+      "operation": "swing"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 47/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "salon-50",
+   "neden": "Tam 50 kişi: 'aşan' değil → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k00",
+      "name": "Toplantı salonu",
+      "persons": 50
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000010",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "opensInto": "00000000-0000-4000-8000-000000000001",
+      "operation": "swing"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 47/2": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "salon-51",
+   "neden": "51 kişi 50'yi aşar; kapı içe açılıyor → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k00",
+      "name": "Toplantı salonu",
+      "persons": 51
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000010",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "opensInto": "00000000-0000-4000-8000-000000000001",
+      "operation": "swing"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_exit_door_swing",
+      "has": [
+       "51 kişi"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 47/2": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "salon-surgulu",
+   "neden": "120 kişilik salonun sürgülü kapısı: 'kaçış yönüne açılma' döner kanat için okunur, sürgülüde metin söylemez → uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k00",
+      "name": "Toplantı salonu",
+      "persons": 120
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000010",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "opensInto": null,
+      "operation": "sliding"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_exit_door_swing",
+      "state": "expertReview",
+      "has": [
+       "döner kanatlı değil"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 47/2": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "merdiven-3kat-gecer",
+   "neden": "3 kata hizmet veren kaçış merdiveni (4'ten az): en az 60 dakika, duman sızdırmaz, kendiliğinden kapanan: EI2 60-S200C5 geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000020",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000003",
+       "00000000-0000-4000-8000-000000000004"
+      ],
+      "opensInto": "00000000-0000-4000-8000-000000000004",
+      "operation": "swing",
+      "fireRating": "EI2 60-S200C5",
+      "stair": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 47/2": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "passed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "merdiven-30",
+   "neden": "EI 30-Sa C: 30 dakika < 60 → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000020",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000003",
+       "00000000-0000-4000-8000-000000000004"
+      ],
+      "opensInto": "00000000-0000-4000-8000-000000000004",
+      "operation": "swing",
+      "fireRating": "EI 30-Sa C",
+      "stair": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_stair_door_rating",
+      "has": [
+       "30 dakika < 60 dakika",
+       "merdiven 3 kata hizmet veriyor"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 47/2": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "merdiven-dumansiz",
+   "neden": "EI 60 C: duman sızdırmazlık (S) yok → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000020",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000003",
+       "00000000-0000-4000-8000-000000000004"
+      ],
+      "opensInto": "00000000-0000-4000-8000-000000000004",
+      "operation": "swing",
+      "fireRating": "EI 60 C",
+      "stair": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_stair_door_rating",
+      "has": [
+       "duman sızdırmaz değil"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 47/2": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "merdiven-kapanmasiz",
+   "neden": "EI2 60-S200: kendiliğinden kapanma (C) yok → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000020",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000003",
+       "00000000-0000-4000-8000-000000000004"
+      ],
+      "opensInto": "00000000-0000-4000-8000-000000000004",
+      "operation": "swing",
+      "fireRating": "EI2 60-S200",
+      "stair": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_stair_door_rating",
+      "has": [
+       "kendiliğinden kapanmıyor"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 47/2": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "merdiven-bodrum-60",
+   "neden": "Merdiven bodruma hizmet veriyor: en az 90 dakika; EI2 60-S200C5 → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000020",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000003",
+       "00000000-0000-4000-8000-000000000004"
+      ],
+      "opensInto": "00000000-0000-4000-8000-000000000004",
+      "operation": "swing",
+      "fireRating": "EI2 60-S200C5",
+      "stair": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_stair_door_rating",
+      "has": [
+       "60 dakika < 90 dakika",
+       "bodrum dahil"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 47/2": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "merdiven-bodrum-90",
+   "neden": "Bodruma hizmet veren merdivende EI2 90-S200C5 → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000020",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000003",
+       "00000000-0000-4000-8000-000000000004"
+      ],
+      "opensInto": "00000000-0000-4000-8000-000000000004",
+      "operation": "swing",
+      "fireRating": "EI2 90-S200C5",
+      "stair": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 47/2": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "passed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "merdiven-5kat",
+   "neden": "5 kata hizmet (4'ten fazla): 90 dakika; EI2 60-S200C5 → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k04",
+      "name": "4. kat",
+      "elevation": 12.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000020",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000003",
+       "00000000-0000-4000-8000-000000000004"
+      ],
+      "opensInto": "00000000-0000-4000-8000-000000000004",
+      "operation": "swing",
+      "fireRating": "EI2 60-S200C5",
+      "stair": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_stair_door_rating",
+      "has": [
+       "60 dakika < 90 dakika",
+       "5 kata"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 47/2": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "merdiven-4kat",
+   "neden": "Bodrumsuz tam 4 kat: metin 4'ten az ve 4'ten fazlayı söyler, 4'ü söylemez → uzman incelemesi (dakika denetlenmez; S ve C var).",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000020",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000003",
+       "00000000-0000-4000-8000-000000000004"
+      ],
+      "opensInto": "00000000-0000-4000-8000-000000000004",
+      "operation": "swing",
+      "fireRating": "EI2 60-S200C5",
+      "stair": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_stair_door_rating",
+      "state": "expertReview",
+      "has": [
+       "tam 4 katı"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 47/2": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "expertReview",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "merdiven-beyansiz",
+   "neden": "Kapının yangın sınıfı beyan edilmemiş: karar verilemez → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000020",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000003",
+       "00000000-0000-4000-8000-000000000004"
+      ],
+      "opensInto": "00000000-0000-4000-8000-000000000004",
+      "operation": "swing",
+      "stair": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_stair_door_rating",
+      "state": "missingData",
+      "has": [
+       "beyan edilmemiş"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 47/2": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "missingData",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "merdiven-okunamaz",
+   "neden": "'60 dk' TS EN 13501-2 sınıfı değil (E yok) → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000020",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000003",
+       "00000000-0000-4000-8000-000000000004"
+      ],
+      "opensInto": "00000000-0000-4000-8000-000000000004",
+      "operation": "swing",
+      "fireRating": "60 dk",
+      "stair": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_stair_door_rating",
+      "state": "missingData",
+      "has": [
+       "“60 dk” okunamadı"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 47/2": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "missingData",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "hol-kapisi",
+   "neden": "Yangın güvenlik holü kapısı da 47/3'ündür: 3 katta EI2 60-S200C5 geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000021",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000005",
+       "00000000-0000-4000-8000-000000000006"
+      ],
+      "opensInto": "00000000-0000-4000-8000-000000000006",
+      "operation": "swing",
+      "fireRating": "EI2 60-S200C5",
+      "lobby": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 47/2": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "passed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "hol-30",
+   "neden": "Yangın güvenlik holü kapısı EI 30-Sa C → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000021",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000005",
+       "00000000-0000-4000-8000-000000000006"
+      ],
+      "opensInto": "00000000-0000-4000-8000-000000000006",
+      "operation": "swing",
+      "fireRating": "EI 30-Sa C",
+      "lobby": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_stair_door_rating",
+      "has": [
+       "Yangın güvenlik holü kapısı",
+       "30 dakika"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 47/2": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tarihsiz",
+   "neden": "Başvuru tarihi yok: 47'nin tek hâli var, sonuç güne bağlı değil → içe açılan kapı yine kalır, eksik veri yok.",
+   "permit": {
+    "particulars": {}
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k00",
+      "name": "Toplantı salonu",
+      "persons": 80
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000010",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "opensInto": "00000000-0000-4000-8000-000000000001",
+      "operation": "swing"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_exit_door_swing",
+      "has": [
+       "içine açılıyor"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 47/2": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "bos",
+   "neden": "Kalabalık mekân ve kaçış merdiveni kapısı yok: iki madde kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 2,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "rooms": [],
+    "doors": []
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 47/2": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 47/3": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  }
+ ]
+}

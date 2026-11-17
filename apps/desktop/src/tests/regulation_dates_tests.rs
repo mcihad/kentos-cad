@@ -104,9 +104,10 @@ fn checked(app: &mut App) {
 }
 
 /// The rule set's outcomes by article: `(rule, version, outcome)`.
+/// The lift articles' outcomes (the doors' rows are their own test's).
 fn outcomes(app: &App) -> Vec<(String, Option<String>, ArchAuditOutcome)> {
     let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
-    set.rules.iter().map(|r| (r.rule.clone(), r.version.clone(), r.state)).collect()
+    set.rules.iter().filter(|r| r.rule.contains(" 34/")).map(|r| (r.rule.clone(), r.version.clone(), r.state)).collect()
 }
 
 /// The standards package's findings in the tab: code, state, message.
@@ -139,7 +140,7 @@ fn the_application_date_chooses_the_version_of_the_elevator_articles() {
     let line = app.arch.arch_audit.rule_set.as_ref().expect("the rule set").line();
     assert_eq!(
         line,
-        "Kural seti — Başvuru tarihi künyeden: 30.6.2026 · PAİY 34/1 (11.7.2021) geçti · PAİY 34/8 (11.7.2021) kapsam dışı"
+        "Kural seti — Başvuru tarihi künyeden: 30.6.2026 · PAİY 34/1 (11.7.2021) geçti · 3 madde kapsam dışı"
     );
     // Applied for on 2.7.2026: as of 1.7.2026 the basement of annexes counts, four storeys ask for an elevator and
     // 34/8 for it to reach the basement, which it does not.
@@ -237,6 +238,102 @@ fn an_expert_s_approval_of_a_package_finding_is_kept_until_the_finding_changes()
     assert!(open[0].message.contains("katta eklenti ve teknik hacim"), "{}", open[0].message);
 }
 
+/// An office's storey (docs/adr/8078 §8): a meeting room of 10 × 12 m (its people by Ek-5/A over 50), the corridor
+/// north of it, the escape stair's room north of that; the room's door opening to `side` (left: out to the corridor),
+/// the stair's door declared `rating`.
+fn office_storey(side: &str, rating: &str) -> App {
+    kentos_postgis::connections::keep_in_memory();
+    let (mut app, _) = App::start_in(Some(Module::Architecture), None, Settings::memory(), Recovery::off());
+    app.db_store = Box::leak(Box::new(kentos_postgis::connections::ConnectionStore::open(None)));
+    app.hand_over = |m, _| Ok(m.program().to_owned());
+    let task = app.update(Message::Run("file.new"));
+    drive(&mut app, task);
+    run(
+        &mut app,
+        "cad.settings.set",
+        json!({ "arch": { "levels": [{"id": "k00", "name": "Zemin kat", "elevation": 0.0, "height": 3.0}] } }),
+    );
+    run(
+        &mut app,
+        "cad.program.edit",
+        json!({"program": {"units": [
+            {"id": "b1", "number": "1", "nature": "Büro"}, {"id": "o", "number": "O", "kind": "common"}
+        ]}}),
+    );
+    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let p = |x: f64, y: f64| json!({"x": x, "y": y});
+    let wall = |a: (f64, f64), b: (f64, f64), w: f64| json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": w, "arch": {"level": "k00"}});
+    let doc = app.document.as_mut().expect("a drawing");
+    let walls = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        "cad.walls.create",
+        kentos_commands::CallOp::Execute,
+        json!({"layerId": layer, "walls": [
+            wall((0.0, 0.0), (10.0, 0.0), 0.2), wall((10.0, 0.0), (10.0, 16.0), 0.2), wall((10.0, 16.0), (0.0, 16.0), 0.2),
+            wall((0.0, 16.0), (0.0, 0.0), 0.2), wall((0.0, 12.0), (10.0, 12.0), 0.1), wall((0.0, 14.0), (10.0, 14.0), 0.1)
+        ]}),
+    )
+    .expect("the walls");
+    let host = |i: usize| walls["output"]["uids"][i].as_str().expect("a wall").to_owned();
+    let doors = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        "cad.openings.create",
+        kentos_commands::CallOp::Execute,
+        json!({"layerId": layer, "openings": [
+            {"host": host(4), "at": 5.0, "form": "door", "width": 1.0, "head": 2.1, "side": side},
+            {"host": host(5), "at": 5.0, "form": "door", "width": 1.0, "head": 2.1}
+        ]}),
+    )
+    .expect("the doors");
+    let stair_door = doors["output"]["uids"][1].clone();
+    run(
+        &mut app,
+        "cad.arch.performance",
+        json!({"operation": {"kind": "objects", "uids": [stair_door], "fireRating": {"value": rating, "basis": {"kind": "author"}}}}),
+    );
+    let rect = |x0: f64, y0: f64, x1: f64, y1: f64| vec![p(x0, y0), p(x1, y0), p(x1, y1), p(x0, y1)];
+    run(
+        &mut app,
+        "cad.spaces.create",
+        json!({"layerId": layer, "spaces": [
+            {"parts": [{"outer": {"pts": rect(0.1, 0.1, 9.9, 11.95)}}], "name": "Toplantı salonu", "unit": "b1", "arch": {"level": "k00"}},
+            {"parts": [{"outer": {"pts": rect(0.1, 12.05, 9.9, 13.95)}}], "name": "Koridor", "unit": "b1", "arch": {"level": "k00"}},
+            {"parts": [{"outer": {"pts": rect(0.1, 14.05, 9.9, 15.9)}}], "name": "Merdiven", "unit": "o", "arch": {"level": "k00"}}
+        ]}),
+    );
+    dated(&mut app, Some("02.07.2026"));
+    app
+}
+
+/// BYKHY 47 in Denetim: the meeting room's door opening into it and the stair's door of 30 minutes are said with their
+/// article; turned out and declared EI2 60-S200C5, both articles pass.
+#[test]
+fn the_doors_of_a_crowded_room_and_of_the_stair_are_read_by_bykhy_47() {
+    let said = |app: &App| {
+        app.arch.arch_audit.audited.as_ref().expect("checked").findings.iter()
+            .filter(|f| f.code.starts_with("bykhy_exit_door") || f.code.starts_with("bykhy_stair_door"))
+            .map(|f| (f.code.clone(), f.message.clone(), f.rule.clone()))
+            .collect::<Vec<_>>()
+    };
+    let rows = |app: &App| {
+        app.arch.arch_audit.rule_set.as_ref().expect("the rule set").rules.iter()
+            .filter(|r| r.rule.starts_with("BYKHY 47"))
+            .map(|r| (r.rule.clone(), r.state))
+            .collect::<Vec<_>>()
+    };
+    let mut app = office_storey("right", "EI 30");
+    checked(&mut app);
+    let found = said(&app);
+    assert_eq!(found.len(), 2, "{found:#?}");
+    assert!(found[0].1.contains("içine açılıyor") && found[0].2.as_deref() == Some("BYKHY 47/2 · RG 19.12.2007/26735"), "{found:#?}");
+    assert!(found[1].1.starts_with("Kaçış merdiveni kapısı “EI 30”"), "{found:#?}");
+    assert_eq!(rows(&app), [("BYKHY 47/2".to_owned(), ArchAuditOutcome::Failed), ("BYKHY 47/3".to_owned(), ArchAuditOutcome::Failed)]);
+    let mut app = office_storey("left", "EI2 60-S200C5");
+    checked(&mut app);
+    assert_eq!(said(&app), Vec::new());
+    assert_eq!(rows(&app), [("BYKHY 47/2".to_owned(), ArchAuditOutcome::Passed), ("BYKHY 47/3".to_owned(), ArchAuditOutcome::Passed)]);
+}
+
 /// The Denetim tab with the rule set over its table: applied for on 30.6.2026, on 2.7.2026 and with no date, light and
 /// dark; `.run/gui-evidence/mevzuat-tarih-8078/`:
 ///
@@ -303,6 +400,22 @@ fn screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("4-uzman-onayi-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        // BYKHY 47 (docs/adr/8078 §8): the meeting room's door turned into it, the stair's door of 30 minutes.
+        let mut app = office_storey("right", "EI 30");
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        checked(&mut app);
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_exit_door_swing");
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("5-kapilar-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
     }

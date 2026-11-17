@@ -206,16 +206,22 @@ pub struct ArchAuditRuleSet {
 }
 
 impl ArchAuditRuleSet {
-    /// In one line: “Kural seti — Başvuru tarihi künyeden: 2.7.2026 · PAİY 34/1 (1.7.2026) geçti · …”.
+    /// In one line: “Kural seti — Başvuru tarihi künyeden: 2.7.2026 · PAİY 34/1 (1.7.2026) geçti · … · 2 madde kapsam
+    /// dışı”: the articles that ask this building by name, those that do not counted.
     pub fn line(&self) -> String {
-        let rules: Vec<String> = self
+        let mut rules: Vec<String> = self
             .rules
             .iter()
+            .filter(|r| r.state != ArchAuditOutcome::OutOfScope)
             .map(|r| match &r.version {
                 Some(v) => format!("{} ({v}) {}", r.rule, r.state.label()),
                 None => format!("{} {}", r.rule, r.state.label()),
             })
             .collect();
+        let out = self.rules.iter().filter(|r| r.state == ArchAuditOutcome::OutOfScope).count();
+        if out > 0 {
+            rules.push(format!("{out} madde kapsam dışı"));
+        }
         format!("Kural seti — {} · {}", self.date_note, rules.join(" · "))
     }
 }

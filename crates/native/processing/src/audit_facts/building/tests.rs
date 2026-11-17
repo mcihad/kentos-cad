@@ -107,3 +107,79 @@ fn a_project_without_storeys_gives_no_section() {
     let project = kentos_extensions::audit_facts::ProjectAuditFacts::new(0.0, Vec::new(), false).with_building(facts);
     assert!(!project.to_json().contains("building"));
 }
+
+/// An office's meeting room of 10 × 12 m and the corridor beside it, a partition between them along x with a door
+/// (docs/adr/8078 §8): the room carries its people (Ek-5/A, 1.5 m² a person on its net area), the door names the two
+/// rooms and the one its leaf swings into: the path's left (the corridor, north of the partition) by default, the
+/// room when it opens to the right.
+fn meeting_room(side: &str) -> (Document, String, String) {
+    let mut doc = empty();
+    let mut settings = doc.settings().clone();
+    settings.arch = Some(
+        serde_json::from_value(json!({
+            "levels": [{"id": "k00", "name": "Zemin kat", "elevation": 0.0, "height": 3.0}],
+            "program": {"units": [{"id": "b1", "number": "1", "nature": "Büro"}]}
+        }))
+        .expect("the settings"),
+    );
+    doc.set_settings(settings);
+    let layer = doc.layers().active().to_owned();
+    let p = |x: f64, y: f64| json!({"x": x, "y": y});
+    let run = |doc: &mut Document, name: &str, input: Value| -> Value {
+        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).expect(name);
+        assert_eq!(answer["status"], "completed", "{name}: {answer}");
+        answer
+    };
+    let walls = run(
+        &mut doc,
+        "cad.walls.create",
+        json!({"layerId": layer, "walls": [
+            {"pts": [p(0.0, 0.0), p(10.0, 0.0)], "width": 0.2, "arch": {"level": "k00"}},
+            {"pts": [p(10.0, 0.0), p(10.0, 14.0)], "width": 0.2, "arch": {"level": "k00"}},
+            {"pts": [p(10.0, 14.0), p(0.0, 14.0)], "width": 0.2, "arch": {"level": "k00"}},
+            {"pts": [p(0.0, 14.0), p(0.0, 0.0)], "width": 0.2, "arch": {"level": "k00"}},
+            {"pts": [p(0.0, 12.0), p(10.0, 12.0)], "width": 0.1, "arch": {"level": "k00"}}
+        ]}),
+    );
+    let partition = walls["output"]["uids"][4].as_str().expect("the partition").to_owned();
+    run(
+        &mut doc,
+        "cad.openings.create",
+        json!({"layerId": layer, "openings": [{"host": partition, "at": 5.0, "form": "door", "width": 1.0, "head": 2.1,
+            "side": side}]}),
+    );
+    let rect = |x0: f64, y0: f64, x1: f64, y1: f64| vec![p(x0, y0), p(x1, y0), p(x1, y1), p(x0, y1)];
+    let made = run(
+        &mut doc,
+        "cad.spaces.create",
+        json!({"layerId": layer, "spaces": [
+            {"parts": [{"outer": {"pts": rect(0.1, 0.1, 9.9, 11.95)}}], "name": "Toplantı salonu", "unit": "b1",
+             "arch": {"level": "k00"}},
+            {"parts": [{"outer": {"pts": rect(0.1, 12.05, 9.9, 13.9)}}], "name": "Koridor", "unit": "b1",
+             "arch": {"level": "k00"}}
+        ]}),
+    );
+    let uid = |i: usize| made["output"]["uids"][i].as_str().expect("a room").to_owned();
+    (doc, uid(0), uid(1))
+}
+
+#[test]
+fn a_room_carries_its_people_and_a_door_says_its_rooms_and_where_it_swings() {
+    for (side, into_room) in [("left", false), ("right", true)] {
+        let (doc, room, corridor) = meeting_room(side);
+        let facts = measure(&doc).normalized();
+        let people = facts.rooms.iter().find(|r| r.uid == room).expect("the meeting room's people");
+        assert!(people.persons > 50.0 && people.name.starts_with("Toplantı salonu"), "{people:?}");
+        assert!(facts.rooms.iter().all(|r| r.uid != corridor), "a corridor carries none (Ek-5/A)");
+        assert_eq!(facts.doors.len(), 1, "{:?}", facts.doors);
+        let door = &facts.doors[0];
+        let mut between: Vec<_> = door.between.iter().flatten().cloned().collect();
+        between.sort();
+        let mut want = vec![room.clone(), corridor.clone()];
+        want.sort();
+        assert_eq!(between, want, "{door:?}");
+        let expect = if into_room { &room } else { &corridor };
+        assert_eq!(door.opens_into.as_ref(), Some(expect), "{side}: {door:?}");
+        assert_eq!((door.operation.as_str(), door.stair, door.lobby), ("swing", false, false));
+    }
+}

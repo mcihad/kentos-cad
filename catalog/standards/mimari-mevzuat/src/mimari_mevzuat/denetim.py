@@ -11,13 +11,14 @@ _ONEK = {"missingData": "Eksik veri: ", "expertReview": "Uzman incelemesi: "}
 _AGIRLIK = {"missingData": "warning", "expertReview": "info"}
 
 
-@ext.audit("asansor")
-def asansor_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
-    """Asansör (PAİY 34/1 ve 34/8; Sivas 34/1 ve 34/8): başvuru gününün kural setiyle."""
+def _bulgular(facts: ext.GisAuditFacts, kodlar: tuple[str, ...]) -> list[ext.AuditFinding]:
+    """Kuralların bulgularından kodu ``kodlar``'la başlayanlar (ve kural setinin kendi bulguları)."""
     project = facts.project
     cevap = mimari.denetle({"building": project.building, "permit": project.permit.to_json()})
     out = []
     for b in cevap["findings"]:
+        if not b["code"].startswith(kodlar + ("regulation_",)):
+            continue
         durum = b.get("state")
         kural = f" [{b['rule']}]" if b.get("rule") else ""
         out.append(
@@ -27,3 +28,15 @@ def asansor_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
             )
         )
     return out
+
+
+@ext.audit("asansor")
+def asansor_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Asansör (PAİY 34/1 ve 34/8; Sivas 34/1 ve 34/8): başvuru gününün kural setiyle."""
+    return _bulgular(facts, ("paiy_elevator_", "regulation_conflict"))
+
+
+@ext.audit("kapilar")
+def kapi_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Kaçış yolu kapıları (BYKHY 47/2 açılış yönü, 47/3 kaçış merdiveni ve yangın güvenlik holü kapıları)."""
+    return _bulgular(facts, ("bykhy_exit_door", "bykhy_stair_door"))

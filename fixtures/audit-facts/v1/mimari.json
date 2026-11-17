@@ -1988,7 +1988,8 @@
           "01a1dfda-06c5-7278-9486-e39cf0fe5491",
           "01a1dfda-06c5-7278-9486-e39d25d6d8d6",
           "01a1dfda-06c5-7278-9486-e39f8e07d64b"
-        ]
+        ],
+        "stair": true
       },
       {
         "level": "k1",
@@ -2008,11 +2009,156 @@
           "01a1dfda-0704-70dd-a975-49a1c1b85ee4",
           "01a1dfda-0704-70dd-a975-49a2bb4d2324",
           "01a1dfda-0704-70dd-a975-49a3b97636d7"
-        ]
+        ],
+        "stair": true
       }
     ],
     "units": 4,
-    "dwellings": 2
+    "dwellings": 2,
+    "rooms": [
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39ad272edb3",
+        "level": "zemin",
+        "name": "Dükkân (Z01)",
+        "persons": 7.0
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39f8e07d64b",
+        "level": "zemin",
+        "name": "Ofis (Z05)",
+        "persons": 6.0
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-49a3b97636d7",
+        "level": "k1",
+        "name": "Arşiv (K04)",
+        "persons": 9.0
+      }
+    ],
+    "doors": [
+      {
+        "uid": "01a1dfda-06e1-741c-8eb9-6ca333490465",
+        "level": "zemin",
+        "between": [
+          "01a1dfda-06c5-7278-9486-e3999a1cb813",
+          "01a1dfda-06c5-7278-9486-e3989deaadbb"
+        ],
+        "opensInto": "01a1dfda-06c5-7278-9486-e3999a1cb813",
+        "operation": "swing",
+        "stair": true
+      },
+      {
+        "uid": "01a1dfda-06e1-741c-8eb9-6ca4a1b3fd3c",
+        "level": "zemin",
+        "between": [
+          "01a1dfda-06c5-7278-9486-e3999a1cb813",
+          "01a1dfda-06c5-7278-9486-e39ad272edb3"
+        ],
+        "opensInto": "01a1dfda-06c5-7278-9486-e3999a1cb813",
+        "operation": "swing"
+      },
+      {
+        "uid": "01a1dfda-06e1-741c-8eb9-6ca56b114c83",
+        "level": "zemin",
+        "between": [
+          "01a1dfda-06c5-7278-9486-e3999a1cb813",
+          "01a1dfda-06c5-7278-9486-e39bf9dc85ab"
+        ],
+        "opensInto": "01a1dfda-06c5-7278-9486-e3999a1cb813",
+        "operation": "swing"
+      },
+      {
+        "uid": "01a1dfda-06e1-741c-8eb9-6ca6da25147a",
+        "level": "zemin",
+        "between": [
+          "01a1dfda-06c5-7278-9486-e39d25d6d8d6",
+          "01a1dfda-06c5-7278-9486-e3999a1cb813"
+        ],
+        "opensInto": "01a1dfda-06c5-7278-9486-e39d25d6d8d6",
+        "operation": "swing"
+      },
+      {
+        "uid": "01a1dfda-06e1-741c-8eb9-6ca7d264ae09",
+        "level": "zemin",
+        "between": [
+          "01a1dfda-06c5-7278-9486-e39f8e07d64b",
+          "01a1dfda-06c5-7278-9486-e3999a1cb813"
+        ],
+        "opensInto": "01a1dfda-06c5-7278-9486-e39f8e07d64b",
+        "operation": "swing"
+      },
+      {
+        "uid": "01a1dfda-06e1-741c-8eb9-6ca84ff93522",
+        "level": "zemin",
+        "between": [
+          "01a1dfda-06c5-7278-9486-e39bf9dc85ab",
+          "01a1dfda-06c5-7278-9486-e39cf0fe5491"
+        ],
+        "opensInto": "01a1dfda-06c5-7278-9486-e39bf9dc85ab",
+        "operation": "swing"
+      },
+      {
+        "uid": "01a1dfda-06e1-741c-8eb9-6ca9ef8f9b89",
+        "level": "zemin",
+        "between": [
+          "01a1dfda-06c5-7278-9486-e3999a1cb813",
+          null
+        ],
+        "opensInto": "01a1dfda-06c5-7278-9486-e3999a1cb813",
+        "operation": "swing"
+      },
+      {
+        "uid": "01a1dfda-0709-75f9-b155-c59a25e94cf3",
+        "level": "k1",
+        "between": [
+          "01a1dfda-0704-70dd-a975-499fcf59dea1",
+          "01a1dfda-0704-70dd-a975-499e70342853"
+        ],
+        "opensInto": "01a1dfda-0704-70dd-a975-499fcf59dea1",
+        "operation": "swing",
+        "stair": true
+      },
+      {
+        "uid": "01a1dfda-0709-75f9-b155-c59bd5fb560f",
+        "level": "k1",
+        "between": [
+          "01a1dfda-0704-70dd-a975-499fcf59dea1",
+          "01a1dfda-0704-70dd-a975-49a0e9eca5a0"
+        ],
+        "opensInto": "01a1dfda-0704-70dd-a975-499fcf59dea1",
+        "operation": "swing"
+      },
+      {
+        "uid": "01a1dfda-0709-75f9-b155-c59ca37f1c9c",
+        "level": "k1",
+        "between": [
+          "01a1dfda-0704-70dd-a975-49a3b97636d7",
+          "01a1dfda-0704-70dd-a975-499fcf59dea1"
+        ],
+        "opensInto": "01a1dfda-0704-70dd-a975-49a3b97636d7",
+        "operation": "swing"
+      },
+      {
+        "uid": "01a1dfda-0709-75f9-b155-c59de0c23b39",
+        "level": "k1",
+        "between": [
+          "01a1dfda-0704-70dd-a975-49a0e9eca5a0",
+          "01a1dfda-0704-70dd-a975-49a1c1b85ee4"
+        ],
+        "opensInto": "01a1dfda-0704-70dd-a975-49a0e9eca5a0",
+        "operation": "swing"
+      },
+      {
+        "uid": "01a1dfda-0709-75f9-b155-c59e206e0cd6",
+        "level": "k1",
+        "between": [
+          "01a1dfda-0704-70dd-a975-49a1c1b85ee4",
+          "01a1dfda-0704-70dd-a975-49a2bb4d2324"
+        ],
+        "opensInto": "01a1dfda-0704-70dd-a975-49a1c1b85ee4",
+        "operation": "swing"
+      }
+    ]
   },
   "cut": false
 }

@@ -163,12 +163,42 @@ Okumalar (metin açıkça söylemiyor, kural böyle okuyor; bağımsız durumlar
 - Ulusal kuralların iki paketi (`tr.kentos.mevzuat`, `tr.kentos.mimari-mevzuat`) yan yana kaldı; birleşmeleri K63'teki
   gibi ayrı iştir.
 
+## §8. Kaçış yolu kapıları: BYKHY 47/2 ve 47/3 (K65)
+
+- **Kaynak:** Binaların Yangından Korunması Hakkında Yönetmelik, mevzuat.gov.tr derlenmiş metni
+  (`MevzuatMetin/21.5.200712937.pdf`, son değişiklik RG 1.7.2025/32943): 47 nci madde değişiklik görmedi; yönetmelik
+  yayımı günü (19.12.2007) yürürlüğe girdi (170 inci madde). 47/2: "Kullanıcı yükü 50 kişiyi aşan mekânlardaki çıkış
+  kapılarının kaçış yönüne doğru açılması şarttır." 47/3: kaçış merdiveni ve yangın güvenlik holü kapıları duman
+  sızdırmaz, 4 kattan az kata hizmet veriyorsa en az 60, bodrum katlara ve 4 kattan fazla kata hizmet veriyorsa en az
+  90 dakika yangına dayanıklı, kendiliğinden kapanır. 4/aa kullanıcı yükü: bir mekânda bulunma ihtimali olan insan sayısı.
+- **K65 — Okuma:**
+  - Mekânın çıkış kapısı sınırındaki kapıdır; kaçış yönü mekândan dışarıdır: kanadı mekânın içine açılan döner kanatlı
+    kapı kalır. Kanat yönü kapının `side`'ıdır (oda listesinin kapının odasını okuduğu kural, ADR 8028). Sürgülü,
+    katlanır ya da cebe giren kapıda "kaçış yönüne açılma" okunmaz: uzman incelemesi. Sabit kapı çıkış değildir.
+  - Kişi Mimari denetimin hesabıdır (Ek-5/A: kullanımın kişi başı m²'si, alanın üstü yuvarlanır; ADR 8035):
+    `fire_audit::room_people` olgulara verir, Python yeniden hesaplamaz. Tam 50 kişi "aşan" değildir.
+  - Merdivenin hizmet verdiği kat, kaçış merdiveninin odası olan kattır (kaçış yollarının okuması: Merdiven adlı, hiçbir
+    konutun kendi odası olmayan mahal); bodrumsuz tam 4 kat metinde yok: uzman incelemesi.
+  - Kapının sınıfı müellifin beyanıdır (kapının ya da tipinin, ADR 8068), TS EN 13501-2 yazımıyla okunur: dakikası
+    sınıfın sayısı, `S…` duman sızdırmaz, `C…` kendiliğinden kapanır; E harfi yoksa sınıf değildir. Beyan yok ya da
+    okunamıyor: eksik veri.
+- **Olgular** (`building` bölümüne eklendi): `rooms` (kişisi olan mahaller), `doors` (iki yanındaki mahaller, kanadın
+  açıldığı, işleyiş, beyan edilen sınıf, merdivene ya da güvenlik holüne açılıp açılmadığı), katın `stair`'i.
+- **Kural:** `mimari_mevzuat.kapilar` (paket 0.2.0; eklenti yüzü `kapilar`), bulgu kodları `bykhy_exit_door_swing` ve
+  `bykhy_stair_door_rating`. Kural setinin satırı kapsam dışı maddeleri artık saymakla yetinir ("2 madde kapsam dışı").
+- **Sınamalar:** `fixtures/standards/v1/kapilar.json` 20 bağımsız durum (47'nin metninden elle); Python sınaması;
+  olgular (`a_room_carries_its_people_and_a_door_says_its_rooms_and_where_it_swings`: kanadın sol ve sağ yanı); başsız
+  `a_crowded_room_s_door_and_the_stair_s_door_are_read_by_bykhy_47`; masaüstü
+  `the_doors_of_a_crowded_room_and_of_the_stair_are_read_by_bykhy_47`; resim `5-kapilar-{acik,koyu}.png`.
+
 ## Sıradaki adımlar
 
-- BIM-13'ün kalan kuralları: kapı açılış yönü, emsalin 22. madde sınırları (%20, %50, 70 m²) ve kat ara toplamları,
-  merdiven altı 1,80 m, yangın kompartımanı ve sınırındaki açıklık, beyan edilen dayanımın (BIM-07) yönetmeliğin
-  istediğiyle karşılaştırılması, erişilebilir yol (TS 9111'in değerleri TSE metninden doğrulanmadan kural olmaz). İç
-  yükseklik ADR 8040 §3'te Rust'ta yapılmıştı.
+- BIM-13'ün kalan kuralları: emsalin 22. madde sınırları (%20, %50, 70 m²) ve kat ara toplamları, merdiven altı
+  1,80 m, yangın kompartımanı ve sınırındaki açıklık, beyan edilen dayanımın (BIM-07) öbür elemanlarda (taşıyıcı
+  sistem, kompartıman duvarı, Ek-3/B ve Ek-3/C) karşılaştırılması, erişilebilir yol (TS 9111'in değerleri TSE metninden
+  doğrulanmadan kural olmaz). Kapı açılış yönü ve kaçış merdiveni kapıları §8'de yapıldı; iç yükseklik ADR 8040 §3'te.
+- 47'nin öbür fıkraları (temiz genişlik 80 cm ve tek kanatta en çok 120 cm, eşik, dönel kapı, 100 kişide panik kolu,
+  110 N) ayrı kural.
 - Maddenin özet satırı uzman onayını bilmiyor (onay ev sahibinde uygulanıyor): onaylanan madde "uzman incelemesi" kalır,
   onay satırda görünür.
 - Öbür tarihli maddeler: 28/1-c (12.8.2023) ve 39/1 (13.8.2025) Rust'ta tek hâlle okunuyor; geçiş hükümleri okunmadan

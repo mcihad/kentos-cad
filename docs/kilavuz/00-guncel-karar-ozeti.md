@@ -236,6 +236,8 @@
       `cad.arch.audit`'te aynı bulgu ve kural seti.
     - Uzman onayı istisnadır (K64): paketin bulgusu `cad.arch.exceptions`'a `findings` ile verilir; uzman incelemesinin
       istisnası "Uzman onayı" diye görünür, bulgu değişince düşer; katla ilgili bulgu katın mahallerini adlandırır.
+    - Kaçış yolu kapıları (K65, §8): BYKHY 47/2 kalabalık mekânın (Ek-5/A ile 50'yi aşan) kapısı kanadıyla dışarı açılır;
+      47/3 kaçış merdiveni ve güvenlik holü kapısının beyan edilen sınıfı (TS EN 13501-2) 60/90 dakika, S ve C ister.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

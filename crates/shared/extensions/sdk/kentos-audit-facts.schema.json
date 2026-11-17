@@ -67,6 +67,13 @@
     "BuildingFacts": {
       "description": "The building as the regulation's rules count it.",
       "properties": {
+        "doors": {
+          "description": "The doors, by persistent id (docs/adr/8078 §8).",
+          "items": {
+            "$ref": "#/$defs/DoorFacts"
+          },
+          "type": "array"
+        },
         "dwellings": {
           "description": "Those of them whose nature is a dwelling's (Daire, Mesken, Konut) or not given.",
           "format": "uint32",
@@ -79,6 +86,13 @@
             "string",
             "null"
           ]
+        },
+        "rooms": {
+          "description": "The rooms that carry people as the escape rules count them (BYKHY Ek-5/A, docs/adr/8035), by persistent id.",
+          "items": {
+            "$ref": "#/$defs/RoomPeople"
+          },
+          "type": "array"
         },
         "storeys": {
           "description": "Every storey of the project, lowest first.",
@@ -545,6 +559,64 @@
         "uid",
         "unit",
         "at"
+      ],
+      "type": "object"
+    },
+    "DoorFacts": {
+      "description": "A door: the rooms on its two sides, the one its leaf swings into, how it opens, its declared fire class, and whether\nit opens into an escape stair's room or a fire safety lobby.",
+      "properties": {
+        "between": {
+          "description": "The rooms on its two sides by persistent id, the path's left first; none: no room there (outdoors, a wall's\nother face with nothing drawn).",
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "fireRating": {
+          "description": "The fire class the author declares, the door's own else its type's (docs/adr/8068): `EI2 60-S200C5`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lobby": {
+          "description": "One of its sides is a fire safety lobby (a room named Yangın güvenlik holü).",
+          "type": "boolean"
+        },
+        "opensInto": {
+          "description": "The room its leaf swings into; none for a door that does not swing or swings where no room is.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "operation": {
+          "description": "`swing`, `sliding`, `folding`, `revolving`, `pocket` … as the opening's operation is named.",
+          "type": "string"
+        },
+        "stair": {
+          "description": "One of its sides is an escape stair's room (a room named or used as Merdiven that is no dwelling unit's own).",
+          "type": "boolean"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "between",
+        "operation"
       ],
       "type": "object"
     },
@@ -1131,6 +1203,34 @@
         }
       ]
     },
+    "RoomPeople": {
+      "description": "A room's people: its use's square metres a person over its area, rounded up (BYKHY Ek-5/A as Mimari denetim reads\nit).",
+      "properties": {
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "Its name (and number).",
+          "type": "string"
+        },
+        "persons": {
+          "format": "double",
+          "type": "number"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "name",
+        "persons"
+      ],
+      "type": "object"
+    },
     "Storey": {
       "description": "A storey of the project.",
       "properties": {
@@ -1254,6 +1354,10 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "stair": {
+          "description": "An escape stair's room stands on it: the stair serves it (BYKHY 47/3 counts them).",
+          "type": "boolean"
         },
         "technical": {
           "description": "Technical rooms on it, whatever their group: a heat centre, a boiler room, an electricity room, a water tank, a\nclimate plant, a generator room, a pump or a transformer room, by their name or use.",

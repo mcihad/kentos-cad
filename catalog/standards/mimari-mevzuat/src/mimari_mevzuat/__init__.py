@@ -7,6 +7,7 @@ uzman incelemesidir; her maddenin özet satırı geçti, kaldı, eksik veri, uzm
 
 - ``asansor``: Planlı Alanlar İmar Yönetmeliği 34/1 ve 34/8 (28.7.2018, 11.7.2021, 1.7.2026 hâlleri), Sivas İmar
   Yönetmeliği 34/1 ve 34/8.
+- ``kapilar``: Binaların Yangından Korunması Hakkında Yönetmelik 47/2 ve 47/3 (kaçış yolu kapıları).
 - ``mimari.denetle``: masaüstünün Denetim sekmesi ve başsız denetim tek süreçte bunu çağırır.
 
 Bulgu çizimin ölçüsüdür, onay değildir.

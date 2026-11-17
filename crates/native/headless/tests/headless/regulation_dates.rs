@@ -119,11 +119,13 @@ fn package(output: &Value) -> Vec<(String, Option<String>, String)> {
         .collect()
 }
 
+/// The lift articles' outcomes (the door rule's rows are its own test's).
 fn outcomes(output: &Value) -> Vec<(String, Value, String)> {
     output["ruleSet"]["rules"]
         .as_array()
         .into_iter()
         .flatten()
+        .filter(|r| r["rule"].as_str().is_some_and(|x| x.contains(" 34/")))
         .map(|r| (r["rule"].as_str().unwrap().to_owned(), r["version"].clone(), r["state"].as_str().unwrap().to_owned()))
         .collect()
 }
@@ -193,4 +195,104 @@ fn a_headless_audit_reads_the_elevator_articles_by_the_application_date() {
     assert!(out.get("ruleSet").is_none() && package(&out).is_empty(), "{out}");
     let out = audited(&mut doc, json!({"checks": ["walls"]}));
     assert!(out.get("ruleSet").is_none(), "{out}");
+}
+
+/// An office's storey (docs/adr/8078 §8): a meeting room of 10 × 12 m, the corridor north of it, the escape stair's room
+/// north of that; a door from the room to the corridor opening to `side`, a door from the corridor into the stair; the
+/// stair door's declared class `rating`.
+fn office_storey(side: &str, rating: &str) -> Document {
+    let mut doc = basement_with_annexes();
+    let mut settings = doc.settings().clone();
+    let arch = settings.arch.as_mut().expect("Mimari");
+    arch.levels = serde_json::from_value(json!([{"id": "k00", "name": "Zemin kat", "elevation": 0.0, "height": 3.0}]))
+        .expect("the storey");
+    arch.program = serde_json::from_value(json!({"units": [
+        {"id": "b1", "number": "1", "nature": "Büro"}, {"id": "o", "number": "O", "kind": "common"}
+    ]}))
+    .expect("the program");
+    doc.set_settings(settings);
+    let gone: Vec<Value> = doc.entities_with_uids().map(|(u, _)| json!(u.to_string())).collect();
+    let mut call = |doc: &mut Document, name: &str, input: Value| -> Value {
+        let answer = kentos_native_application::registry::run(
+            &mut kentos_native_application::ExecutionContext::new(doc),
+            name,
+            CallOp::Execute,
+            input,
+        )
+        .unwrap();
+        assert_eq!(answer["status"], "completed", "{name}: {answer}");
+        answer
+    };
+    call(&mut doc, "cad.entities.delete", json!({"uids": gone}));
+    let layer = doc.layers().active().to_owned();
+    let p = |x: f64, y: f64| json!({"x": x, "y": y});
+    let wall = |a: (f64, f64), b: (f64, f64), w: f64| json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": w, "arch": {"level": "k00"}});
+    let walls = call(
+        &mut doc,
+        "cad.walls.create",
+        json!({"layerId": layer, "walls": [
+            wall((0.0, 0.0), (10.0, 0.0), 0.2), wall((10.0, 0.0), (10.0, 16.0), 0.2), wall((10.0, 16.0), (0.0, 16.0), 0.2),
+            wall((0.0, 16.0), (0.0, 0.0), 0.2), wall((0.0, 12.0), (10.0, 12.0), 0.1), wall((0.0, 14.0), (10.0, 14.0), 0.1)
+        ]}),
+    );
+    let host = |i: usize| walls["output"]["uids"][i].as_str().unwrap().to_owned();
+    let doors = call(
+        &mut doc,
+        "cad.openings.create",
+        json!({"layerId": layer, "openings": [
+            {"host": host(4), "at": 5.0, "form": "door", "width": 1.0, "head": 2.1, "side": side},
+            {"host": host(5), "at": 5.0, "form": "door", "width": 1.0, "head": 2.1}
+        ]}),
+    );
+    let stair_door = doors["output"]["uids"][1].clone();
+    call(
+        &mut doc,
+        "cad.arch.performance",
+        json!({"operation": {"kind": "objects", "uids": [stair_door], "fireRating": {"value": rating, "basis": {"kind": "author"}}}}),
+    );
+    let rect = |x0: f64, y0: f64, x1: f64, y1: f64| vec![p(x0, y0), p(x1, y0), p(x1, y1), p(x0, y1)];
+    call(
+        &mut doc,
+        "cad.spaces.create",
+        json!({"layerId": layer, "spaces": [
+            {"parts": [{"outer": {"pts": rect(0.1, 0.1, 9.9, 11.95)}}], "name": "Toplantı salonu", "unit": "b1", "arch": {"level": "k00"}},
+            {"parts": [{"outer": {"pts": rect(0.1, 12.05, 9.9, 13.95)}}], "name": "Koridor", "unit": "b1", "arch": {"level": "k00"}},
+            {"parts": [{"outer": {"pts": rect(0.1, 14.05, 9.9, 15.9)}}], "name": "Merdiven", "unit": "o", "arch": {"level": "k00"}}
+        ]}),
+    );
+    dated(&mut doc, Some("02.07.2026"));
+    doc
+}
+
+fn doors_said(output: &Value) -> Vec<(String, Option<String>, String)> {
+    output["findings"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|f| f["code"].as_str().is_some_and(|c| c.starts_with("bykhy_exit_door") || c.starts_with("bykhy_stair_door")))
+        .map(|f| (f["code"].as_str().unwrap().to_owned(), f["state"].as_str().map(str::to_owned), f["message"].as_str().unwrap().to_owned()))
+        .collect()
+}
+
+#[test]
+fn a_crowded_room_s_door_and_the_stair_s_door_are_read_by_bykhy_47() {
+    let ask = json!({"checks": ["regulation"]});
+    let state = |out: &Value, rule: &str| {
+        out["ruleSet"]["rules"].as_array().unwrap().iter().find(|r| r["rule"] == rule).map(|r| r["state"].as_str().unwrap().to_owned())
+    };
+    // The room's door opens to the corridor (the path's left, out of the room); the stair door is EI2 60-S200C5.
+    let mut doc = office_storey("left", "EI2 60-S200C5");
+    let out = audited(&mut doc, ask.clone());
+    assert_eq!(doors_said(&out), Vec::new(), "{}", out["ruleSet"]);
+    assert_eq!(state(&out, "BYKHY 47/2").as_deref(), Some("passed"));
+    assert_eq!(state(&out, "BYKHY 47/3").as_deref(), Some("passed"));
+    // Turned into the room: 47/2 says it; a stair door of 30 minutes: 47/3 says it.
+    let mut doc = office_storey("right", "EI 30");
+    let out = audited(&mut doc, ask);
+    let said = doors_said(&out);
+    assert_eq!(said.len(), 2, "{said:#?}");
+    assert!(said[0].2.contains("Toplantı salonu") && said[0].2.contains("içine açılıyor"), "{said:#?}");
+    assert!(said[1].2.contains("30 dakika < 60 dakika") && said[1].2.contains("duman sızdırmaz değil"), "{said:#?}");
+    assert_eq!(state(&out, "BYKHY 47/2").as_deref(), Some("failed"));
+    assert_eq!(state(&out, "BYKHY 47/3").as_deref(), Some("failed"));
 }

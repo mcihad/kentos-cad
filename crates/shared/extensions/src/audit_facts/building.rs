@@ -29,6 +29,51 @@ pub struct BuildingFacts {
     /// Yönetmeliği, RG 10.11.2022/32009); absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub local: Option<String>,
+    /// The rooms that carry people as the escape rules count them (BYKHY Ek-5/A, docs/adr/8035), by persistent id.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rooms: Vec<RoomPeople>,
+    /// The doors, by persistent id (docs/adr/8078 §8).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub doors: Vec<DoorFacts>,
+}
+
+/// A room's people: its use's square metres a person over its area, rounded up (BYKHY Ek-5/A as Mimari denetim reads
+/// it).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct RoomPeople {
+    pub uid: String,
+    pub level: Option<String>,
+    /// Its name (and number).
+    pub name: String,
+    pub persons: f64,
+}
+
+/// A door: the rooms on its two sides, the one its leaf swings into, how it opens, its declared fire class, and whether
+/// it opens into an escape stair's room or a fire safety lobby.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct DoorFacts {
+    pub uid: String,
+    pub level: Option<String>,
+    /// The rooms on its two sides by persistent id, the path's left first; none: no room there (outdoors, a wall's
+    /// other face with nothing drawn).
+    pub between: [Option<String>; 2],
+    /// The room its leaf swings into; none for a door that does not swing or swings where no room is.
+    pub opens_into: Option<String>,
+    /// `swing`, `sliding`, `folding`, `revolving`, `pocket` … as the opening's operation is named.
+    pub operation: String,
+    /// The fire class the author declares, the door's own else its type's (docs/adr/8068): `EI2 60-S200C5`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fire_rating: Option<String>,
+    /// One of its sides is an escape stair's room (a room named or used as Merdiven that is no dwelling unit's own).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub stair: bool,
+    /// One of its sides is a fire safety lobby (a room named Yangın güvenlik holü).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub lobby: bool,
 }
 
 /// A storey and what stands on it. A room is one that is neither a void (a shaft, a gallery) nor outdoors, counted by
@@ -63,6 +108,9 @@ pub struct StoreyHolds {
     /// The rooms counted on it, by their persistent ids in order: what a finding about the storey names.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rooms: Vec<String>,
+    /// An escape stair's room stands on it: the stair serves it (BYKHY 47/3 counts them).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub stair: bool,
 }
 
 impl BuildingFacts {
@@ -76,6 +124,11 @@ impl BuildingFacts {
         self.storeys
             .sort_by(|a, b| a.elevation.total_cmp(&b.elevation).then_with(|| a.level.cmp(&b.level)));
         self.local = self.local.filter(|l| !l.is_empty());
+        for r in &mut self.rooms {
+            r.persons = round(r.persons, LENGTH);
+        }
+        self.rooms.sort_by(|a, b| a.uid.cmp(&b.uid));
+        self.doors.sort_by(|a, b| a.uid.cmp(&b.uid));
         self
     }
 
@@ -100,6 +153,7 @@ mod tests {
             units: 6,
             dwellings: 6,
             local: Some(String::new()),
+            ..BuildingFacts::default()
         }
         .normalized();
         let order: Vec<&str> = facts.storeys.iter().map(|s| s.level.as_str()).collect();
