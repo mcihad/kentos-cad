@@ -14,6 +14,15 @@ import type {
   DossierFileView,
   DossierList,
   DossierMessageView,
+  FeeAssess,
+  FeeAssessment,
+  FeeDefinition,
+  FeePaid,
+  FeePreview,
+  FeeSchedule,
+  FeeScheduleCopy,
+  FeeScheduleEdit,
+  FeeTry,
   FileRevisions,
   MemberView,
   MunicipalityCard,
@@ -158,4 +167,22 @@ export const cloud = {
   attachmentUrl: (tenant: string, project: string, id: string, inline = false) =>
     `/v1/tenants/${tenant}/projects/${project}/attachments/${id}${inline ? '?inline=1' : ''}`,
   removeAttachment: (tenant: string, project: string, id: string) => del<void>(`/v1/tenants/${tenant}/projects/${project}/attachments/${id}`),
+};
+
+/** Fees and charges (docs/adr/9003): an organisation's tariffs and a dossier's assessments. */
+export const fees = {
+  schedules: (tenant: string) => get<FeeSchedule[]>(`/v1/tenants/${tenant}/fees/schedules`),
+  schedule: (tenant: string, id: string) => get<FeeSchedule>(`/v1/tenants/${tenant}/fees/schedules/${id}`),
+  create: (tenant: string, input: FeeScheduleEdit) => post<FeeSchedule>(`/v1/tenants/${tenant}/fees/schedules`, input),
+  update: (tenant: string, id: string, input: FeeScheduleEdit) => put<FeeSchedule>(`/v1/tenants/${tenant}/fees/schedules/${id}`, input),
+  remove: (tenant: string, id: string) => del<void>(`/v1/tenants/${tenant}/fees/schedules/${id}`),
+  activate: (tenant: string, id: string) => post<FeeSchedule>(`/v1/tenants/${tenant}/fees/schedules/${id}/activate`),
+  copy: (tenant: string, id: string, input: FeeScheduleCopy) => post<FeeSchedule>(`/v1/tenants/${tenant}/fees/schedules/${id}/copy`, input),
+  template: (tenant: string) => get<FeeDefinition>(`/v1/tenants/${tenant}/fees/template`),
+  tryOut: (tenant: string, input: FeeTry) => post<FeePreview>(`/v1/tenants/${tenant}/fees/try`, input),
+  ofDossier: (id: string) => get<FeeAssessment[]>(`/v1/dossiers/${id}/fees`),
+  preview: (id: string, input: FeeAssess) => post<FeePreview>(`/v1/dossiers/${id}/fees/preview`, input),
+  issue: (id: string, input: FeeAssess) => post<FeeAssessment>(`/v1/dossiers/${id}/fees`, input),
+  paid: (id: string, fee: string, input: FeePaid) => post<FeeAssessment>(`/v1/dossiers/${id}/fees/${fee}/paid`, input),
+  cancel: (id: string, fee: string, reason: string) => post<FeeAssessment>(`/v1/dossiers/${id}/fees/${fee}/cancel`, { reason }),
 };

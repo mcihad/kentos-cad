@@ -202,6 +202,24 @@ CAD görünümü olmayan telefon, web sayfası ve ajan için.
 - **Büro:** sorumlu meslek mensubu dosyayı bürosuyla paylaşır (`PUT /v1/dossiers/{id}/office {"officeId": "…"}`) ya da
   başvuruyu baştan büro adına açar (`officeId`). Büroda düzenleyici belge hazırlar ve yazışır, proje yöneticisi gönderir
   ve teslim eder; büronun listesi `GET /v1/tenants/{büro}/dossiers`.
+- **Harç ve ücret** (ADR 9003). Tarife bir JSON belgesidir:
+  - `parameters`: girdiler;
+  - `tables`: seçeneğe ve miktar dilimine göre birim tutar;
+  - `items`: maktu, birim başına ya da KentOS ifade dilinde formül.
+
+  Uçlar:
+  - `GET /v1/tenants/{t}/fees/template`: 2464 sayılı Kanun'un yapısı, tutarlar 0.
+  - `POST /v1/tenants/{t}/fees/try`: kaydetmeden dener.
+  - `POST …/fees/schedules`, `…/{id}/activate`, `…/{id}/copy {"factor": 1.25}`: tarifeyi yazar, yürürlüğe koyar,
+    yeni yıla kopyalar.
+
+  Dosyada sıra şöyledir:
+  1. `POST /v1/dossiers/{id}/fees/preview {"inputs": {}}` sorulacak girdileri verir.
+  2. Aynı gövde `POST /v1/dossiers/{id}/fees` ile tahakkuk olur.
+  3. Ödeme `…/fees/{fee}/paid {"receiptNo"}` ile kaydedilir.
+
+  Tutarlar kuruştur (tam sayı). Her satırın `basis` alanı hesabı yazıyla verir. “Karardan önce ödenir” bir kalem
+  ödenmeden başvuru onaylanmaz: `approve` adımı bu durumda 400 döner.
 
 ## 8. Bildirimler: zil, e-posta, SMS
 

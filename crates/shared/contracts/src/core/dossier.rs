@@ -321,6 +321,16 @@ pub struct DossierDetail {
     /// The caller is its responsible professional and may share it with an office of theirs or take it back.
     #[serde(default)]
     pub can_share_with_office: bool,
+    /// Whether the caller issues fees on it and records their payment (docs/adr/9003): the municipality's editors and
+    /// above, on an open application.
+    #[serde(default)]
+    pub can_assess_fees: bool,
+    /// Whether the caller cancels its fees: the municipality's project managers and above.
+    #[serde(default)]
+    pub can_cancel_fees: bool,
+    /// Its assessments not cancelled (issued or paid).
+    #[serde(default)]
+    pub fee_count: u32,
     /// The package being prepared: `round + 1`.
     pub pending_round: u32,
     pub rounds: Vec<DossierRound>,

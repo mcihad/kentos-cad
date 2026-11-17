@@ -294,6 +294,12 @@ pub async fn act(
     if step.note == Note::Required && note.is_none() {
         return Err(AppError::invalid_at("note", note_needed(input.action)));
     }
+    // An application is not approved before the fees its tariff says are paid first (2464 sayılı Kanun Ek Madde 5).
+    if input.action == DossierAction::Approve
+        && let Some(why) = super::fees::decision_refusal(&mut tx, &held).await?
+    {
+        return Err(AppError::invalid(why));
+    }
     let side = held.party.side();
     let mut round = held.row.round();
     let mut files = 0;

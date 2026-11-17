@@ -78,3 +78,22 @@ export function slugOf(name: string): string {
 export function count(n: number, noun: string): string {
   return `${n} ${noun}`;
 }
+
+/** Kuruş as Turkish lira: 123450 → "1.234,50 TL" (docs/adr/9003). */
+export function money(kurus: number): string {
+  return `${(kurus / 100).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL`;
+}
+
+/** A rate or a quantity as read: 3.75 → "3,75", 1250 → "1.250". */
+export function decimal(n: number): string {
+  return n.toLocaleString('tr-TR', { maximumFractionDigits: 4 });
+}
+
+/** A number as a person types it: "152,5", "1.250" (thousands), "1.234,5" or "152.5"; null when it is none. */
+export function parseDecimal(text: string): number | null {
+  const t = text.replace(/\s/g, '');
+  if (!t) return null;
+  const plain = t.includes(',') ? t.replace(/\./g, '').replace(',', '.') : /^\d{1,3}(\.\d{3})+$/.test(t) ? t.replace(/\./g, '') : t;
+  const n = Number(plain);
+  return Number.isFinite(n) ? n : null;
+}

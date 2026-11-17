@@ -41,6 +41,19 @@ canImport: boolean,
  */
 canShareWithOffice: boolean, 
 /**
+ * Whether the caller issues fees on it and records their payment (docs/adr/9003): the municipality's editors and
+ * above, on an open application.
+ */
+canAssessFees: boolean, 
+/**
+ * Whether the caller cancels its fees: the municipality's project managers and above.
+ */
+canCancelFees: boolean, 
+/**
+ * Its assessments not cancelled (issued or paid).
+ */
+feeCount: number, 
+/**
  * The package being prepared: `round + 1`.
  */
 pendingRound: number, rounds: Array<DossierRound>, pending: Array<DossierFileView>, messages: Array<DossierMessageView>, events: Array<DossierEventView>, checklist: DocChecklist | null, professional: ProfessionalView | null, organization: DossierOrganization, 

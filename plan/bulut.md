@@ -62,6 +62,13 @@ sıradakileri tutar. Bir madde ancak sınaması ve gerçek pencerede görüntüs
 - [x] `BUL-26` **API'nin açıklaması:** `GET /v1/openapi.json` (OpenAPI 3.1, 120 işlem), `GET /v1/llms.txt`,
   `docs/api/README.md`; testler kataloğu yönlendiriciyle eşit tutar (ADR 9000 §16).
 
+- [x] `BUL-22` **Harç ve ücret** (sahibin 18 Kasım isteği: “parametrik olsun, gelişime açık olsun”):
+  - Tarife veridir: girdiler, dilimli birim tutar tabloları, maktu / birim başına / formül kalemleri, koşul, sınır,
+    KDV. 2464'e göre başlangıç tutarsız gelir; yeni yıl katsayıyla kopyalanır.
+  - Tahakkuk, ödeme ve iptal dosyaya bağlıdır; bildirim ve geçmiş kaydı tutulur.
+  - Ek Madde 5 kapısı: ödenmeden onay yok.
+  - Portalda kurumun tarife sayfası ve dosyanın sekmesi (ADR 9003).
+
 ## Sıradakiler
 
 - [ ] `BUL-10` Portala kurum kimliğiyle giriş (OpenID Connect; sunucu tarafı ADR 0007'de hazır).
@@ -72,7 +79,6 @@ sıradakileri tutar. Bir madde ancak sınaması ve gerçek pencerede görüntüs
 - [ ] `BUL-18` Kişisel verinin saklama süresi ve kapanan dosyaların arşivi (KVKK).
 - [ ] `BUL-20` Belediyenin istatistikleri ve dönem raporları (PDF ve Excel).
 - [ ] `BUL-21` Resmî yazı, e-imza ve e-tebligat bağlantısı. Kapsamı ve kurumun kabulü sahibin kararı.
-- [ ] `BUL-22` Harç ve ücret (sahibin mesajındaki “para yüzü” bir ödeme yüzü demekse). Kapsamı sahibin kararı.
 
 ## Çalıştırma
 

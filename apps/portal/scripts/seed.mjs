@@ -177,6 +177,37 @@ await zeynep.login('zeynep.demir');
 const ali = new Person('ali');
 await ali.login('ali.celik');
 
+// ── Fees and charges (docs/adr/9003) ─────────────────────────────────
+// Örnek's tariffs: 2025's, revalued into 2026's (in force) and copied again as 2027's draft. The structure is 2464
+// sayılı Kanun's (the template); every amount here is an example, not any municipality's decision.
+const template = await mehmet.req('GET', `/v1/tenants/${ornek.id}/fees/template`);
+const priced = structuredClone(template);
+[8, 16, 24, 32, 40, 32, 48, 64, 80].forEach((rate, i) => (priced.tables[0].rows[i].rate = rate));
+for (const t of priced.tables.slice(1)) [t.rows[0].rate, t.rows[1].rate] = [1, 3];
+priced.parameters.push({
+  key: 'bagimsiz_bolum', label: 'Bağımsız bölüm sayısı', kind: 'number', unit: 'adet', choices: [], required: false,
+  help: 'Kat irtifakı kurulacaksa; yoksa boş bırakın.',
+});
+priced.items.push({
+  code: 'kat_irtifaki_ucreti', label: 'Kat irtifakı proje onay ücreti', legalBasis: '2464 sayılı Kanun m.97, meclis tarifesi',
+  group: 'Ücret', rule: { kind: 'per_unit', quantity: 'bagimsiz_bolum', table: null, rate: 120 }, appliesTo: ['building_permit'],
+  condition: null, minimum: 240, maximum: null, vatPercent: 20, beforeDecision: false,
+});
+priced.paymentNote = 'Belediye veznesine ya da belediyenin banka hesabına dosya numarasıyla ödenir; makbuzun numarasını yazışmaya ekleyin.';
+const fees = `/v1/tenants/${ornek.id}/fees/schedules`;
+const y2025 = await mehmet.req('POST', fees, {
+  name: '2025 Ücret Tarifesi', year: 2025, validFrom: '2025-01-01', validTo: null,
+  decision: 'Örnek karar 2024/180 (tutarlar örnektir)', definition: priced,
+});
+await mehmet.req('POST', `${fees}/${y2025.id}/activate`);
+const y2026 = await mehmet.req('POST', `${fees}/${y2025.id}/copy`, { year: 2026, validFrom: '2026-01-01', factor: 1.25 });
+await mehmet.req('PUT', `${fees}/${y2026.id}`, {
+  name: y2026.name, year: 2026, validFrom: '2026-01-01', validTo: null,
+  decision: 'Örnek karar 2025/214 (tutarlar örnektir)', definition: y2026.definition,
+});
+await mehmet.req('POST', `${fees}/${y2026.id}/activate`);
+const y2027 = await mehmet.req('POST', `${fees}/${y2026.id}/copy`, { year: 2027, validFrom: '2027-01-01', factor: 1.2 });
+
 // ── Applications ─────────────────────────────────────────────────────
 const site = (neighbourhood, block, parcel, address = null) => ({ province: 'Örnek', district: 'Merkez', neighbourhood, block, parcel, address });
 
@@ -203,6 +234,10 @@ await ayse.upload(a1, 'mekanik-tesisat-projesi.pdf', pdf('Mekanik tesisat projes
 await ayse.upload(a1, 'statik-hesap-raporu.pdf', pdf('Statik hesap raporu'), PDF, 'calculations');
 await ayse.upload(a1, 'roperli-kroki-duzeltilmis.pdf', pdf('Roperli kroki (duzeltilmis)', ['Komsu parsel mesafeleri eklendi']), PDF, 'site_sketch');
 await ayse.act(a1, 'send', { note: 'Eksikleri tamamladık; röperli krokide komşu parsel mesafelerini ekledik.' });
+// The building permit's fees are assessed while it waits for the decision; not paid yet.
+await zeynep.req('POST', `/v1/dossiers/${a1}/fees`, {
+  inputs: { yapi_turu: 'konut', insaat_alani: '452,6', bolge: 'konut', bagimsiz_bolum: 8 }, dueOn: daysFromNow(15),
+});
 // The municipality opens the submitted project in its own workspace.
 const a1d = await ali.req('GET', `/v1/dossiers/${a1}`);
 const a1kcad = a1d.rounds[0].files.find((f) => f.isProject);
@@ -216,6 +251,9 @@ const a2 = (await ayse.req('POST', '/v1/me/dossiers', {
 await ayse.upload(a2, 'Tadilat-398-12.kcad', kcad('konut-3-1.kcad'), KCAD, 'kentos_project');
 await ayse.upload(a2, 'tadilat-mimari-proje.pdf', pdf('Tadilat mimari projesi'), PDF, 'architectural');
 await ayse.act(a2, 'send');
+// Its fees first: assessed, paid at the cash office, then approved (2464 Ek Madde 5).
+const a2fee = await zeynep.req('POST', `/v1/dossiers/${a2}/fees`, { inputs: { yapi_turu: 'isyeri', insaat_alani: 64, bolge: 'ticaret' }, dueOn: null });
+await zeynep.req('POST', `/v1/dossiers/${a2}/fees/${a2fee.id}/paid`, { receiptNo: 'MKB-2026-0412', paidOn: null });
 await ali.act(a2, 'approve', { note: 'Proje imar durumuna ve yönetmeliğe uygun bulundu.' });
 
 // An occupancy permit: a document asked for.
@@ -401,4 +439,4 @@ for (const [name, bytes] of [
   }
 }
 
-console.log(JSON.stringify({ ornek: ornek.id, yesilvadi: yesilvadi.id, a1, a2, a3, a4, a5, a6, t1, t2, t3, orgProject: orgProject.id }));
+console.log(JSON.stringify({ ornek: ornek.id, yesilvadi: yesilvadi.id, a1, a2, a3, a4, a5, a6, t1, t2, t3, orgProject: orgProject.id, fees: { y2025: y2025.id, y2026: y2026.id, y2027: y2027.id } }));

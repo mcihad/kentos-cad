@@ -8321,6 +8321,16 @@
             "description": "Whether the caller prepares the next package now (files may be added to it).",
             "type": "boolean"
           },
+          "canAssessFees": {
+            "default": false,
+            "description": "Whether the caller issues fees on it and records their payment (docs/adr/9003): the municipality's editors and\nabove, on an open application.",
+            "type": "boolean"
+          },
+          "canCancelFees": {
+            "default": false,
+            "description": "Whether the caller cancels its fees: the municipality's project managers and above.",
+            "type": "boolean"
+          },
           "canDelete": {
             "description": "Whether the caller may remove the draft.",
             "type": "boolean"
@@ -8359,6 +8369,13 @@
               "$ref": "#/components/schemas/DossierEventView"
             },
             "type": "array"
+          },
+          "feeCount": {
+            "default": 0,
+            "description": "Its assessments not cancelled (issued or paid).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
           },
           "messages": {
             "items": {
@@ -10748,6 +10765,794 @@
           "id",
           "version",
           "entity"
+        ],
+        "type": "object"
+      },
+      "FeeAssess": {
+        "description": "`POST /v1/dossiers/{id}/fees/preview` and `…/fees`: the values for the active tariff's inputs.",
+        "properties": {
+          "dueOn": {
+            "default": null,
+            "description": "When it is to be paid by, `YYYY-MM-DD`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "inputs": {
+            "additionalProperties": true,
+            "type": "object"
+          }
+        },
+        "required": [
+          "inputs"
+        ],
+        "type": "object"
+      },
+      "FeeAssessment": {
+        "description": "A tariff applied to a dossier.",
+        "properties": {
+          "cancelReason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dueOn": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "inputs": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "issuedAt": {
+            "type": "string"
+          },
+          "issuedByName": {
+            "type": "string"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/FeeLine"
+            },
+            "type": "array"
+          },
+          "paidAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "paidRecordedByName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "paymentNote": {
+            "description": "How to pay, from the tariff.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "receiptNo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scheduleId": {
+            "type": "string"
+          },
+          "scheduleName": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/FeeAssessmentState"
+          },
+          "total": {
+            "description": "Kuruş, VAT included.",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "scheduleId",
+          "scheduleName",
+          "inputs",
+          "lines",
+          "total",
+          "state",
+          "issuedAt",
+          "issuedByName"
+        ],
+        "type": "object"
+      },
+      "FeeAssessmentState": {
+        "description": "Where an assessment is.",
+        "oneOf": [
+          {
+            "enum": [
+              "paid",
+              "cancelled"
+            ],
+            "type": "string"
+          },
+          {
+            "const": "issued",
+            "description": "Issued (tahakkuk): to be paid.",
+            "type": "string"
+          }
+        ]
+      },
+      "FeeCancel": {
+        "description": "`POST /v1/dossiers/{id}/fees/{fee}/cancel`.",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "type": "object"
+      },
+      "FeeChoice": {
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "value",
+          "label"
+        ],
+        "type": "object"
+      },
+      "FeeDefinition": {
+        "description": "A tariff's content: what it asks, its tables and its items.",
+        "properties": {
+          "items": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/FeeItem"
+            },
+            "type": "array"
+          },
+          "parameters": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/FeeParameter"
+            },
+            "type": "array"
+          },
+          "paymentNote": {
+            "default": null,
+            "description": "How to pay, shown to the professional (bank, IBAN, the cash office).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "rounding": {
+            "$ref": "#/components/schemas/FeeRounding",
+            "default": "kurus"
+          },
+          "tables": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/FeeTable"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "FeeItem": {
+        "description": "One fee or charge of the tariff.",
+        "properties": {
+          "appliesTo": {
+            "default": [],
+            "description": "The dossier kinds it applies to; none: every kind.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "beforeDecision": {
+            "default": false,
+            "description": "Paid before the dossier's decision (2464 Ek Madde 5: before the permit).",
+            "type": "boolean"
+          },
+          "code": {
+            "description": "Unique in the tariff (`bina_insaat_harci`).",
+            "type": "string"
+          },
+          "condition": {
+            "default": null,
+            "description": "Applies only when this is true (`değil @kamu_binasi`); none: always.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "group": {
+            "default": "",
+            "description": "`harç` (a fee of the law) or `ücret` (a charge of the council's tariff, 2464 m.97); shown as the line's group.",
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "legalBasis": {
+            "default": "",
+            "description": "What it rests on (“2464 sayılı Kanun Ek Madde 1 ve 6”).",
+            "type": "string"
+          },
+          "maximum": {
+            "default": null,
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "minimum": {
+            "default": null,
+            "description": "Bounds of the amount, TL.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "rule": {
+            "$ref": "#/components/schemas/FeeRule"
+          },
+          "vatPercent": {
+            "default": 0.0,
+            "description": "VAT on top, percent (a fee of the law carries none).",
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "required": [
+          "code",
+          "label",
+          "rule"
+        ],
+        "type": "object"
+      },
+      "FeeLine": {
+        "description": "One line of an assessment.",
+        "properties": {
+          "amount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "basis": {
+            "description": "How it was found, in words: “152 m² × 3,75 TL (Konut, 151–200 m²)”.",
+            "type": "string"
+          },
+          "beforeDecision": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "legalBasis": {
+            "type": "string"
+          },
+          "vat": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "label",
+          "group",
+          "legalBasis",
+          "basis",
+          "amount",
+          "vat",
+          "beforeDecision"
+        ],
+        "type": "object"
+      },
+      "FeePaid": {
+        "description": "`POST /v1/dossiers/{id}/fees/{fee}/paid`.",
+        "properties": {
+          "paidOn": {
+            "default": null,
+            "description": "`YYYY-MM-DD`; absent: today.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "receiptNo": {
+            "description": "The receipt (makbuz) number.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "receiptNo"
+        ],
+        "type": "object"
+      },
+      "FeeParameter": {
+        "description": "An input the tariff's items read: in a formula and a condition as `@key`.",
+        "properties": {
+          "choices": {
+            "default": [],
+            "description": "For a choice.",
+            "items": {
+              "$ref": "#/components/schemas/FeeChoice"
+            },
+            "type": "array"
+          },
+          "help": {
+            "default": null,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "key": {
+            "description": "Lower-case letters, digits and `_`, starting with a letter (`insaat_alani`).",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/FeeParameterKind"
+          },
+          "label": {
+            "type": "string"
+          },
+          "required": {
+            "default": false,
+            "description": "Asked of the staff on every assessment; one not given makes the assessment refused.",
+            "type": "boolean"
+          },
+          "unit": {
+            "default": null,
+            "description": "`m²`, `m³`, `sayfa`… for a number.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "kind"
+        ],
+        "type": "object"
+      },
+      "FeeParameterKind": {
+        "description": "What an input is.",
+        "oneOf": [
+          {
+            "const": "number",
+            "description": "A number (an area, a volume, a count), in its `unit`.",
+            "type": "string"
+          },
+          {
+            "const": "choice",
+            "description": "One of `choices` (a building's use, a zone).",
+            "type": "string"
+          },
+          {
+            "const": "flag",
+            "description": "Yes or no (an exemption).",
+            "type": "string"
+          }
+        ]
+      },
+      "FeePreview": {
+        "description": "What a preview gives: the lines and why some inputs are missing, nothing saved.",
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/FeeLine"
+            },
+            "type": "array"
+          },
+          "missing": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Inputs not given or not valid, by key, with why.",
+            "type": "object"
+          },
+          "parameters": {
+            "description": "The inputs the dossier's kind needs, to ask.",
+            "items": {
+              "$ref": "#/components/schemas/FeeParameter"
+            },
+            "type": "array"
+          },
+          "scheduleId": {
+            "type": "string"
+          },
+          "scheduleName": {
+            "type": "string"
+          },
+          "total": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "scheduleId",
+          "scheduleName",
+          "parameters",
+          "lines",
+          "total",
+          "missing"
+        ],
+        "type": "object"
+      },
+      "FeeRounding": {
+        "description": "How amounts are rounded, line by line.",
+        "oneOf": [
+          {
+            "const": "kurus",
+            "description": "To the kuruş, half up.",
+            "type": "string"
+          },
+          {
+            "const": "lira_down",
+            "description": "Down to whole lira.",
+            "type": "string"
+          },
+          {
+            "const": "lira",
+            "description": "To the nearest lira, half up.",
+            "type": "string"
+          }
+        ]
+      },
+      "FeeRule": {
+        "description": "How an item's amount is found.",
+        "oneOf": [
+          {
+            "description": "A fixed amount (maktu), TL.",
+            "properties": {
+              "amount": {
+                "format": "double",
+                "type": "number"
+              },
+              "kind": {
+                "const": "fixed",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "amount"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "A number input times a rate: the rate a table gives, or a single rate.",
+            "properties": {
+              "kind": {
+                "const": "per_unit",
+                "type": "string"
+              },
+              "quantity": {
+                "type": "string"
+              },
+              "rate": {
+                "default": null,
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "table": {
+                "default": null,
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "quantity"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Any formula over `@inputs` and `@tables`, in the expression language (`@alan * @birim * 1.5`).",
+            "properties": {
+              "expression": {
+                "type": "string"
+              },
+              "kind": {
+                "const": "formula",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "expression"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "FeeSchedule": {
+        "description": "A municipality's tariff.",
+        "properties": {
+          "decision": {
+            "description": "The decision it carries out (“Meclis kararı 2025/245, 12.12.2025”): the council's tariff for the charges (2464\nm.97); the fees' amounts are the law's and the decision for the municipality's group (m.95, m.96/A), revalued.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "definition": {
+            "$ref": "#/components/schemas/FeeDefinition"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/FeeScheduleState"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "updatedByName": {
+            "type": "string"
+          },
+          "validFrom": {
+            "description": "`YYYY-MM-DD`.",
+            "type": "string"
+          },
+          "validTo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "year": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "year",
+          "validFrom",
+          "state",
+          "definition",
+          "updatedAt",
+          "updatedByName"
+        ],
+        "type": "object"
+      },
+      "FeeScheduleCopy": {
+        "description": "`POST …/fees/schedules/{id}/copy`: next year's tariff from this one.",
+        "properties": {
+          "factor": {
+            "description": "Every rate, fixed amount and bound times this (the year's revaluation: `1.25` for a 25 % rise).",
+            "format": "double",
+            "type": "number"
+          },
+          "validFrom": {
+            "type": "string"
+          },
+          "year": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "year",
+          "validFrom",
+          "factor"
+        ],
+        "type": "object"
+      },
+      "FeeScheduleEdit": {
+        "description": "`POST`/`PUT …/fees/schedules`: a tariff as it is written.",
+        "properties": {
+          "decision": {
+            "default": null,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "definition": {
+            "$ref": "#/components/schemas/FeeDefinition"
+          },
+          "name": {
+            "type": "string"
+          },
+          "validFrom": {
+            "type": "string"
+          },
+          "validTo": {
+            "default": null,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "year": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "year",
+          "validFrom",
+          "definition"
+        ],
+        "type": "object"
+      },
+      "FeeScheduleState": {
+        "description": "Where a tariff is in its life.",
+        "oneOf": [
+          {
+            "const": "draft",
+            "description": "Being written; not applied to dossiers.",
+            "type": "string"
+          },
+          {
+            "const": "active",
+            "description": "The one applied to new assessments while its dates hold.",
+            "type": "string"
+          },
+          {
+            "const": "retired",
+            "description": "Replaced; its assessments keep it.",
+            "type": "string"
+          }
+        ]
+      },
+      "FeeTable": {
+        "description": "A rate table: the first row whose choice and bracket match gives the rate; in a formula as `@<key>`.",
+        "properties": {
+          "by": {
+            "default": null,
+            "description": "The choice parameter the rows' `when` is matched with, if any.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "quantity": {
+            "default": null,
+            "description": "The number parameter the rows' brackets are matched with, if any.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/FeeTableRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "rows"
+        ],
+        "type": "object"
+      },
+      "FeeTableRow": {
+        "description": "A rate for a choice's value and a quantity's bracket; an empty `when` or bound matches every value.",
+        "properties": {
+          "from": {
+            "default": null,
+            "description": "Inclusive bounds of the quantity (`101`–`120` m²).",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "maxRate": {
+            "default": null,
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "minRate": {
+            "default": null,
+            "description": "The bounds the rate must stay within, when given: the law's “en az – en çok” (2464 Ek Madde 6, m.84).",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "rate": {
+            "description": "TL per unit of the quantity.",
+            "format": "double",
+            "type": "number"
+          },
+          "to": {
+            "default": null,
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "when": {
+            "default": null,
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "rate"
+        ],
+        "type": "object"
+      },
+      "FeeTry": {
+        "description": "`POST /v1/tenants/{tenant}/fees/try`: what a tariff (saved or not, e.g. a draft being edited) makes of a dossier\nkind's inputs; nothing is saved.",
+        "properties": {
+          "definition": {
+            "$ref": "#/components/schemas/FeeDefinition"
+          },
+          "inputs": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "kind": {
+            "description": "The dossier kind (`building_permit`, …): the items that apply to it.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "definition",
+          "kind",
+          "inputs"
         ],
         "type": "object"
       },
@@ -38340,6 +39145,290 @@
         ]
       }
     },
+    "/v1/dossiers/{id}/fees": {
+      "get": {
+        "description": "İki taraf da okur: her satır neye dayandığını yazar (\"152,5 m² × 48 TL (Konut, 151–200 m²)\").",
+        "operationId": "getDossiersByIdFees",
+        "parameters": [
+          {
+            "description": "Dosyanın (başvuru ya da aktarım) kimliği.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FeeAssessment"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Dosyanın tahakkukları",
+        "tags": [
+          "Portal: harç ve ücret"
+        ]
+      },
+      "post": {
+        "description": "Belediyenin düzenleyicisi ve üstü. Eksik ya da yanlış girdi alanıyla 400 döner. Meslek mensubu tarafı bildirim alır. Kararın öncesinde ödenecek bir kalem varsa başvuru ödeme kaydedilene kadar onaylanmaz (2464 Ek Madde 5).",
+        "operationId": "postDossiersByIdFees",
+        "parameters": [
+          {
+            "description": "Dosyanın (başvuru ya da aktarım) kimliği.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeeAssess"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeeAssessment"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Tahakkuk et",
+        "tags": [
+          "Portal: harç ve ücret"
+        ]
+      }
+    },
+    "/v1/dossiers/{id}/fees/preview": {
+      "post": {
+        "description": "Belediyenin düzenleyicisi ve üstü. Yürürlükteki tarife bu girdilerle ne yapar; hiçbir şey kaydedilmez. Boş girdiyle çağrılırsa bu dosya türünün sorduğu girdileri (`parameters`) ve eksikleri (`missing`) verir.",
+        "operationId": "postDossiersByIdFeesPreview",
+        "parameters": [
+          {
+            "description": "Dosyanın (başvuru ya da aktarım) kimliği.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeeAssess"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeePreview"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Tahakkuku önizle",
+        "tags": [
+          "Portal: harç ve ücret"
+        ]
+      }
+    },
+    "/v1/dossiers/{id}/fees/{fee}/cancel": {
+      "post": {
+        "description": "Belediyenin proje yöneticisi ve üstü, gerekçeyle. Ödenmiş tahakkuk da iptal edilir; iadesi veznenin işidir.",
+        "operationId": "postDossiersByIdFeesByFeeCancel",
+        "parameters": [
+          {
+            "description": "Dosyanın (başvuru ya da aktarım) kimliği.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kaydın kimliği.",
+            "in": "path",
+            "name": "fee",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeeCancel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeeAssessment"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Tahakkuku iptal et",
+        "tags": [
+          "Portal: harç ve ücret"
+        ]
+      }
+    },
+    "/v1/dossiers/{id}/fees/{fee}/paid": {
+      "post": {
+        "description": "Belediyenin düzenleyicisi ve üstü: makbuz numarası ve ödeme günü (yoksa bugün).",
+        "operationId": "postDossiersByIdFeesByFeePaid",
+        "parameters": [
+          {
+            "description": "Dosyanın (başvuru ya da aktarım) kimliği.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kaydın kimliği.",
+            "in": "path",
+            "name": "fee",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeePaid"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeeAssessment"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Ödemeyi kaydet",
+        "tags": [
+          "Portal: harç ve ücret"
+        ]
+      }
+    },
     "/v1/dossiers/{id}/files": {
       "post": {
         "description": "Küçük belge için tek istek: gövde dosyanın baytlarıdır (en çok 200 MB). Dosya taranır; reddedilen saklanmaz (422). Büyük ya da kesintili bağlantıda `/v1/uploads` ve `files/from-upload` kullanılır.",
@@ -41824,6 +42913,486 @@
         ]
       }
     },
+    "/v1/tenants/{tenant}/fees/schedules": {
+      "get": {
+        "description": "Kurumun tarifeleri, en yeni yıl önce: taslak, yürürlükte (`active`, en çok bir tane) ve geçmiş.",
+        "operationId": "getTenantsByTenantFeesSchedules",
+        "parameters": [
+          {
+            "description": "Kurumun kimliği (UUID); `GET /v1/me` üyeliklerinde.",
+            "in": "path",
+            "name": "tenant",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FeeSchedule"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Ücret tarifeleri",
+        "tags": [
+          "Portal: harç ve ücret"
+        ]
+      },
+      "post": {
+        "description": "Kurumun yöneticisi ve üstü. Tarife veridir: girdiler (`parameters`), birim tutar tabloları (`tables`, seçeneğe ve miktar dilimine göre satır) ve kalemler (`items`: maktu, birim başına ya da formül; koşul, en az/en çok, KDV, kararın öncesinde ödenir mi). Yeni bir harç yeni bir kalemdir. Formül ve koşul KentOS ifade dilindedir; girdiler ve tablolar `@ad` ile okunur. Doğrulanamayan tarife hangi alanda yanlış olduğunu söyleyen 400 ile reddedilir.",
+        "operationId": "postTenantsByTenantFeesSchedules",
+        "parameters": [
+          {
+            "description": "Kurumun kimliği (UUID); `GET /v1/me` üyeliklerinde.",
+            "in": "path",
+            "name": "tenant",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeeScheduleEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeeSchedule"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Tarife taslağı yaz",
+        "tags": [
+          "Portal: harç ve ücret"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant}/fees/schedules/{id}": {
+      "delete": {
+        "description": "Yalnız taslak.",
+        "operationId": "deleteTenantsByTenantFeesSchedulesById",
+        "parameters": [
+          {
+            "description": "Kurumun kimliği (UUID); `GET /v1/me` üyeliklerinde.",
+            "in": "path",
+            "name": "tenant",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kaydın kimliği.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Başarılı; gövde yok."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Taslağı sil",
+        "tags": [
+          "Portal: harç ve ücret"
+        ]
+      },
+      "get": {
+        "description": "Kurumun üyeleri okur.",
+        "operationId": "getTenantsByTenantFeesSchedulesById",
+        "parameters": [
+          {
+            "description": "Kurumun kimliği (UUID); `GET /v1/me` üyeliklerinde.",
+            "in": "path",
+            "name": "tenant",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kaydın kimliği.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeeSchedule"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Tarife",
+        "tags": [
+          "Portal: harç ve ücret"
+        ]
+      },
+      "put": {
+        "description": "Yalnız taslak değişir; yürürlükteki ya da geçmiş tarife kopyalanıp yeni taslak yazılır.",
+        "operationId": "putTenantsByTenantFeesSchedulesById",
+        "parameters": [
+          {
+            "description": "Kurumun kimliği (UUID); `GET /v1/me` üyeliklerinde.",
+            "in": "path",
+            "name": "tenant",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kaydın kimliği.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeeScheduleEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeeSchedule"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Taslağı değiştir",
+        "tags": [
+          "Portal: harç ve ücret"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant}/fees/schedules/{id}/activate": {
+      "post": {
+        "description": "Taslak yürürlüğe girer, yerini aldığı tarife geçmişe düşer. Yapılmış tahakkuklar değişmez: her biri yapıldığı tarifenin adını ve satırlarını taşır.",
+        "operationId": "postTenantsByTenantFeesSchedulesByIdActivate",
+        "parameters": [
+          {
+            "description": "Kurumun kimliği (UUID); `GET /v1/me` üyeliklerinde.",
+            "in": "path",
+            "name": "tenant",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kaydın kimliği.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeeSchedule"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Yürürlüğe koy",
+        "tags": [
+          "Portal: harç ve ücret"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant}/fees/schedules/{id}/copy": {
+      "post": {
+        "description": "Tarifenin bütün tutarları yeniden değerleme katsayısıyla (`factor`, yüzde 25 artış için 1,25) çarpılıp kuruşa yuvarlanarak yeni bir taslak olur.",
+        "operationId": "postTenantsByTenantFeesSchedulesByIdCopy",
+        "parameters": [
+          {
+            "description": "Kurumun kimliği (UUID); `GET /v1/me` üyeliklerinde.",
+            "in": "path",
+            "name": "tenant",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Kaydın kimliği.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeeScheduleCopy"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeeSchedule"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Yeni yıla kopyala",
+        "tags": [
+          "Portal: harç ve ücret"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant}/fees/template": {
+      "get": {
+        "description": "Bina inşaat harcı (Ek Madde 1, 5, 6: kullanım ve toplam alan dilimi), plan ve proje tasdik harcı ve yapı kullanma izni harcı (m.80, m.84: bölgeye göre) ile istisna girdisi. Bütün birim tutarlar 0'dır: harçların yılın tutarları belediyenin grubu için verilen karardır (2464 m.95, m.96/A) ve yeniden değerlenir; ücretleri meclisin tarifesi belirler (m.97).",
+        "operationId": "getTenantsByTenantFeesTemplate",
+        "parameters": [
+          {
+            "description": "Kurumun kimliği (UUID); `GET /v1/me` üyeliklerinde.",
+            "in": "path",
+            "name": "tenant",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeeDefinition"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "2464'e göre başlangıç tarifesi",
+        "tags": [
+          "Portal: harç ve ücret"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant}/fees/try": {
+      "post": {
+        "description": "Kurumun üyeleri: kaydedilmemiş bir tarife (düzenlenen taslak) bir dosya türünün girdileriyle ne yapar; hiçbir şey kaydedilmez. Tarife önce doğrulanır.",
+        "operationId": "postTenantsByTenantFeesTry",
+        "parameters": [
+          {
+            "description": "Kurumun kimliği (UUID); `GET /v1/me` üyeliklerinde.",
+            "in": "path",
+            "name": "tenant",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeeTry"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeePreview"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Tarifeyi dene",
+        "tags": [
+          "Portal: harç ve ücret"
+        ]
+      }
+    },
     "/v1/tenants/{tenant}/members": {
       "get": {
         "description": "Kurumun üyeleri ve rolleri.",
@@ -44799,6 +46368,10 @@
     {
       "description": "Sistem yöneticisinin kurumları, hesapları, meslek mensubu doğrulaması ve kayıt defteri.",
       "name": "Portal: platform yönetimi"
+    },
+    {
+      "description": "Belediyenin yıllık ücret tarifesi (2464 sayılı Kanun) ve dosyalara tahakkuk, ödeme, iptal.",
+      "name": "Portal: harç ve ücret"
     },
     {
       "description": "Hesabın bildirimleri.",

@@ -331,4 +331,50 @@ const b64 = (bytes) => Buffer.from(bytes).toString('base64');
   b.close();
 }
 
+// ── Fees and charges (docs/adr/9003) ─────────────────────────────────
+{
+  const res = await fetch(`${API}/v1/auth/login`, { method: 'POST', headers: { 'x-kentos-client': 'web', 'content-type': 'application/json' }, body: JSON.stringify({ login: 'mehmet.kaya', password: PASSWORD }) });
+  const cookie = res.headers.get('set-cookie').split(';')[0];
+  const tariffs = await (await fetch(`${API}/v1/tenants/${known.tenant}/fees/schedules`, { headers: { cookie } })).json();
+  const draft = tariffs.find((t) => t.state === 'draft').id;
+  const A2 = known.byTitle['398 ada 12 parsel mimari proje tadilatı'];
+  const panelTo = (title) => `[...document.querySelectorAll('.panel')].find((p) => p.querySelector('h2')?.textContent === ${JSON.stringify(title)})?.scrollIntoView({ block: 'start' }); true`;
+  let b = await signIn('mehmet.kaya', PASSWORD, { width: 1560, height: 1100 });
+  await open(b, `${ORG}/harclar`);
+  await shot(b, '87-belediye-harc-tarifeleri');
+  await open(b, `${ORG}/harclar/${draft}`);
+  await shot(b, '88-belediye-tarife-taslagi');
+  await b.eval(panelTo('Birim tutar tabloları'));
+  await sleep(250);
+  await shot(b, '89-belediye-tarife-tablolari');
+  await b.eval(panelTo('Kalemler'));
+  await sleep(600);
+  await shot(b, '90-belediye-tarife-kalemleri-ve-deneme');
+  await b.eval(`(() => { const p = [...document.querySelectorAll('.panel')].find((p) => p.querySelector('h2')?.textContent === 'Kalemler'); [...p.querySelectorAll('button')].find((x) => x.textContent.trim() === 'Düzenle').click(); return true; })()`);
+  await sleep(400);
+  await shot(b, '91-belediye-kalem-duzenleme');
+  await closeDialog(b);
+  b.close();
+  b = await signIn('zeynep.demir', PASSWORD, { width: 1560, height: 1100 });
+  await open(b, `${ORG}/dosya/${A1}?sekme=harc`);
+  await b.waitFor(`!!document.querySelector('.fee-lines')`, 10000);
+  await shot(b, '92-belediye-dosyada-harc');
+  const pick = (name, value) => `(() => { const el = document.querySelector('[name=${name}]'); el.value = ${JSON.stringify(value)}; el.dispatchEvent(new Event(el.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true })); return true; })()`;
+  await click(b, 'button', 'Ek tahakkuk');
+  await b.eval(pick('yapi_turu', 'isyeri'));
+  await b.eval(pick('insaat_alani', '86,4'));
+  await b.eval(pick('bolge', 'ticaret'));
+  await sleep(700);
+  await b.eval(`[...document.querySelectorAll('.panel')].find((p) => p.querySelector('h2')?.textContent === 'Yeni tahakkuk')?.scrollIntoView({ block: 'start' }); true`);
+  await sleep(250);
+  await shot(b, '93-belediye-tahakkuk-onizleme');
+  b.close();
+  b = await signIn('ayse.yilmaz', PASSWORD, { width: 1560, height: 1100 });
+  await open(b, `#/mesleki/dosya/${A1}?sekme=harc`);
+  await shot(b, '94-mimar-odenecek-harc');
+  await open(b, `#/mesleki/dosya/${A2}?sekme=harc`);
+  await shot(b, '95-mimar-odenmis-harc');
+  b.close();
+}
+
 console.log(shots.join('\n'));

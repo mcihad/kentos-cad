@@ -81,6 +81,19 @@ pub(crate) fn event_text(
         "cancel" => format!("{actor} aktarımı iptal etti."),
         "edited" => format!("{actor} dosyanın bilgilerini değiştirdi."),
         "imported" => format!("{actor}, “{}” dosyasını proje olarak açtı.", text("file")),
+        "fee_issued" => format!("{actor} harç ve ücret tahakkuk ettirdi: {}.", text("total")),
+        "fee_paid" => format!("{actor} {} tutarındaki ödemeyi kaydetti (makbuz {}).", text("total"), text("receipt")),
+        "fee_cancelled" if detail.get("wasPaid").and_then(serde_json::Value::as_bool) == Some(true) => format!(
+            "{actor} ödenmiş {} tutarındaki tahakkuku iptal etti: {} (iadesi veznenin işi).",
+            text("total"),
+            text("reason")
+        ),
+        "fee_cancelled" => format!("{actor} {} tutarındaki tahakkuku iptal etti: {}.", text("total"), text("reason")),
+        "signed" => format!(
+            "{actor} {} dosyayı e-imzaladı ({}).",
+            detail.get("files").and_then(serde_json::Value::as_u64).unwrap_or(0),
+            text("subject")
+        ),
         other => format!("{actor}: {other}"),
     }
 }
@@ -138,6 +151,11 @@ pub(crate) async fn assemble(
     .bind(id)
     .fetch_all(&mut **tx)
     .await?;
+    let fee_count: i64 =
+        sqlx::query_scalar("select count(*) from kentos.dossier_fee where dossier_id = $1 and state <> 'cancelled'")
+            .bind(id)
+            .fetch_one(&mut **tx)
+            .await?;
     // Each round's sending: the step that sent it.
     let sent_at: BTreeMap<u32, String> = events
         .iter()
@@ -258,6 +276,11 @@ pub(crate) async fn assemble(
             Party::Member(role) => role >= kentos_contracts::TenantRole::ProjectManager,
         },
         can_share_with_office: party == Party::Professional && !flow::closed(status),
+        can_assess_fees: matches!(party, Party::Member(r) if r >= kentos_contracts::TenantRole::Editor)
+            && direction == DossierDirection::Application
+            && !flow::closed(status),
+        can_cancel_fees: matches!(party, Party::Member(r) if r >= kentos_contracts::TenantRole::ProjectManager),
+        fee_count: u32::try_from(fee_count).unwrap_or(0),
         pending_round: held.row.round() + 1,
         rounds: rounds.into_values().collect(),
         pending,

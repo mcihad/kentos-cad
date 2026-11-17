@@ -194,6 +194,8 @@ pub mod access_keys;
 pub mod cloud_files;
 #[path = "core/notification_settings.rs"]
 pub mod notification_settings;
+#[path = "core/fees.rs"]
+pub mod fees;
 // The cloud portal (docs/adr/9000): accounts, catalog, organisations and platform administration; dossiers.
 #[path = "core/dossier.rs"]
 pub mod dossier;
@@ -419,6 +421,7 @@ pub use document::*;
 pub use access_keys::*;
 pub use cloud_files::*;
 pub use notification_settings::*;
+pub use fees::*;
 pub use dossier::*;
 pub use portal::*;
 pub use entity::*;

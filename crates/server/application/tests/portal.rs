@@ -991,3 +991,154 @@ async fn an_office_works_on_its_professionals_dossier_by_role() {
     let timeline = detail::detail(&db.app, &ayse, id).await.unwrap().events;
     assert!(timeline.iter().any(|e| e.text.contains("Yılmaz Mimarlık ile paylaşımını kaldırdı")), "{timeline:?}");
 }
+
+/// A tariff of 2464's structure with example rates.
+fn priced_tariff() -> kentos_contracts::FeeDefinition {
+    let mut d = kentos_application::portal::fees::template();
+    for (row, rate) in d.tables[0].rows.iter_mut().zip([12.0, 24.0, 36.0, 48.0, 60.0, 48.0, 72.0, 96.0, 120.0]) {
+        row.rate = rate;
+    }
+    for t in &mut d.tables[1..] {
+        t.rows[0].rate = 1.25;
+        t.rows[1].rate = 3.75;
+    }
+    d.payment_note = Some("Vezneye ya da belediyenin hesabına dosya numarasıyla ödenir.".into());
+    d
+}
+
+#[tokio::test]
+async fn fees_are_issued_by_the_tariff_and_paid_before_the_permit() {
+    use kentos_application::portal::fees;
+    use kentos_contracts::{FeeAssess, FeeAssessmentState, FeeCancel, FeePaid, FeeScheduleCopy, FeeScheduleEdit};
+
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let store = blobs();
+    let root = sistem(&db).await;
+    let tenant = municipality(&db, &root, "harcli", "mehmet").await;
+    let mehmet = signed_in(&db, "mehmet").await;
+    let owner = tenancy::access(&db.app, &mehmet, tenant).await.unwrap();
+    let (zeynep, zeynep_access) = staff(&db, &mehmet, tenant, "zeynep", TenantRole::Editor).await;
+    let (ali, _) = staff(&db, &mehmet, tenant, "ali", TenantRole::ProjectManager).await;
+    let ayse = professional(&db, &root, "ayse", Profession::Architect).await;
+    let id = dossiers::create_application(
+        &db.app,
+        &ayse,
+        &ApplicationCreate {
+            tenant_id: tenant.to_string(),
+            kind: "building_permit".into(),
+            title: "412 ada 7 parsel konut yapı ruhsatı".into(),
+            description: "Bodrum, zemin ve 3 kat.".into(),
+            site: site(),
+            owner_name: Some("Hasan Er".into()),
+            office_id: None,
+        },
+    )
+    .await
+    .unwrap();
+    add_file(&db, &store, &ayse, id, ("mimari.pdf", b"%PDF-1.4 mimari", "architectural"), Purpose::Package)
+        .await
+        .unwrap();
+    act(&db, &ayse, id, DossierAction::Send, None).await.unwrap();
+
+    // The tariff is the admins'; an editor reads it but does not write it.
+    let edit = FeeScheduleEdit {
+        name: "2026 Ücret Tarifesi".into(),
+        year: 2026,
+        valid_from: "2026-01-01".into(),
+        valid_to: None,
+        decision: Some("Meclisin 2025/214 sayılı kararı".into()),
+        definition: priced_tariff(),
+    };
+    let refused = fees::create_schedule(&db.app, &zeynep_access, &edit).await.unwrap_err();
+    assert!(matches!(refused, AppError::Forbidden(_)), "{refused:?}");
+    let draft = fees::create_schedule(&db.app, &owner, &edit).await.unwrap();
+    // No tariff in force yet: nothing to issue, nothing holds the decision back.
+    let none = fees::preview(&db.app, &zeynep, id, &FeeAssess { inputs: Default::default(), due_on: None })
+        .await
+        .unwrap_err();
+    assert!(none.to_string().contains("yürürlükte bir ücret tarifesi yok"), "{none}");
+    let draft_id = Uuid::parse_str(&draft.id).unwrap();
+    let active = fees::activate(&db.app, &owner, draft_id).await.unwrap();
+    assert_eq!(active.state, kentos_contracts::FeeScheduleState::Active);
+    assert_eq!(fees::schedules(&db.app, &zeynep_access).await.unwrap().len(), 1);
+
+    // The permit waits for its fee: first to be issued, then to be paid (2464 Ek Madde 5).
+    let early = act(&db, &ali, id, DossierAction::Approve, None).await.unwrap_err();
+    assert!(early.to_string().contains("tahakkuk ettirilmeli"), "{early}");
+    // The professional reads fees but does not issue them.
+    let theirs = fees::preview(&db.app, &ayse, id, &FeeAssess { inputs: Default::default(), due_on: None })
+        .await
+        .unwrap_err();
+    assert!(matches!(theirs, AppError::Forbidden(_)), "{theirs:?}");
+    // An empty preview asks what the kind needs.
+    let asked = fees::preview(&db.app, &zeynep, id, &FeeAssess { inputs: Default::default(), due_on: None })
+        .await
+        .unwrap();
+    let keys: Vec<&str> = asked.parameters.iter().map(|p| p.key.as_str()).collect();
+    assert_eq!(keys, ["yapi_turu", "insaat_alani", "bolge", "kamu_istisnasi"]);
+    assert!(asked.missing.contains_key("insaat_alani") && asked.lines.is_empty());
+    let inputs: kentos_contracts::FeeInputs = [
+        ("yapi_turu".to_owned(), serde_json::json!("konut")),
+        ("insaat_alani".to_owned(), serde_json::json!(152.5)),
+        ("bolge".to_owned(), serde_json::json!("konut")),
+    ]
+    .into_iter()
+    .collect();
+    let fee = fees::issue(&db.app, &zeynep, id, &FeeAssess { inputs: inputs.clone(), due_on: None })
+        .await
+        .unwrap();
+    // 152,5 m² × 48 TL (151–200 m²) + 152,5 m² × 1,25 TL (konut bölgesi) = 7.320 + 190,63.
+    assert_eq!(fee.total, 732_000 + 19_063);
+    assert_eq!(fee.lines[0].basis, "152,5 m² × 48 TL (Konut, 151–200 m²)");
+    assert_eq!(fee.schedule_name, "2026 Ücret Tarifesi");
+    assert!(notified(&db, &ayse).await.contains(&"dossier.fee_issued".to_owned()));
+    let seen = fees::dossier_fees(&db.app, &ayse, id).await.unwrap();
+    assert_eq!((seen.len(), seen[0].state), (1, FeeAssessmentState::Issued));
+    assert!(seen[0].payment_note.as_deref().is_some_and(|n| n.contains("Vezneye")));
+    let unpaid = act(&db, &ali, id, DossierAction::Approve, None).await.unwrap_err();
+    assert!(unpaid.to_string().contains("ödenmedi"), "{unpaid}");
+
+    let fee_id = Uuid::parse_str(&fee.id).unwrap();
+    let paid = fees::paid(&db.app, &zeynep, id, fee_id, &FeePaid { receipt_no: "MKB-2026-118".into(), paid_on: None })
+        .await
+        .unwrap();
+    assert_eq!(paid.state, FeeAssessmentState::Paid);
+    assert!(notified(&db, &ayse).await.contains(&"dossier.fee_paid".to_owned()));
+    let twice = fees::paid(&db.app, &zeynep, id, fee_id, &FeePaid { receipt_no: "X".into(), paid_on: None })
+        .await
+        .unwrap_err();
+    assert!(twice.to_string().contains("ödenecek durumda değil"), "{twice}");
+    let approved = act(&db, &ali, id, DossierAction::Approve, None).await.unwrap();
+    assert_eq!(approved.summary.status, DossierStatus::Approved);
+    let texts: Vec<String> = approved.events.iter().map(|e| e.text.clone()).collect();
+    assert!(texts.iter().any(|t| t.contains("harç ve ücret tahakkuk ettirdi: 7.510,63 TL")), "{texts:?}");
+    assert!(texts.iter().any(|t| t.contains("makbuz MKB-2026-118")), "{texts:?}");
+
+    // Cancelling is a manager's, with a reason; a paid one too.
+    let by_editor = fees::cancel(&db.app, &zeynep, id, fee_id, &FeeCancel { reason: "Yanlış alan".into() })
+        .await
+        .unwrap_err();
+    assert!(matches!(by_editor, AppError::Forbidden(_)), "{by_editor:?}");
+    let cancelled = fees::cancel(&db.app, &ali, id, fee_id, &FeeCancel { reason: "Alan yanlış girildi".into() })
+        .await
+        .unwrap();
+    assert_eq!((cancelled.state, cancelled.receipt_no), (FeeAssessmentState::Cancelled, None));
+
+    // Next year's draft: every amount revalued; the issued assessment keeps its own lines.
+    let next = fees::copy_schedule(
+        &db.app,
+        &owner,
+        draft_id,
+        &FeeScheduleCopy { year: 2027, valid_from: "2027-01-01".into(), factor: 1.5 },
+    )
+    .await
+    .unwrap();
+    assert_eq!(next.definition.tables[0].rows[3].rate, 72.0);
+    assert_eq!(next.state, kentos_contracts::FeeScheduleState::Draft);
+    let frozen = fees::update_schedule(&db.app, &owner, draft_id, &edit).await.unwrap_err();
+    assert!(frozen.to_string().contains("değişmez"), "{frozen}");
+    fees::delete_schedule(&db.app, &owner, Uuid::parse_str(&next.id).unwrap()).await.unwrap();
+    assert_eq!(fees::dossier_fees(&db.app, &ayse, id).await.unwrap()[0].lines[0].amount, 732_000);
+}

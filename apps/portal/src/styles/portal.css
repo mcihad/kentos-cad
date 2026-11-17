@@ -2313,3 +2313,88 @@ textarea.input {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Fees and charges (docs/adr/9003): a tariff's tables edited in place, an assessment's lines with their basis. */
+.fee-code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 12px;
+  color: var(--c-text-2, inherit);
+  overflow-wrap: break-word;
+}
+
+.fee-cell {
+  width: 110px;
+  min-width: 0;
+  padding: 4px 8px;
+  height: 32px;
+}
+
+select.fee-cell {
+  width: 170px;
+}
+
+.fee-cell.is-invalid {
+  border-color: var(--c-danger);
+}
+
+.fee-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fee-range > .input:not(.fee-cell) {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+
+.fee-table + .fee-table {
+  margin-top: 6px;
+}
+
+.fee-table-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.fee-table-head .row-actions {
+  margin-left: auto;
+}
+
+.row-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.fee-lines tfoot th {
+  border-top: 1px solid var(--c-border);
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.fee-lines tfoot .right {
+  text-align: right;
+}
+
+.fee-flag {
+  color: var(--c-warning-text, var(--c-warning));
+  font-size: 12px;
+}
+
+.fee-json {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 12px;
+  min-height: 240px;
+}
+
+.fee-advanced > summary {
+  cursor: pointer;
+  padding: 14px 18px;
+  font-weight: 600;
+}

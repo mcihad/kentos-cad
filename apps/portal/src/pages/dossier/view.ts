@@ -12,6 +12,7 @@ import { avatar, badge, button, facts, notice, panel, statusBadge, tabs } from '
 import { toast } from '../../ui/toast';
 import type { PageFn } from '../page';
 import { actionButtons, deleteDraft, editDossier } from './actions';
+import { feesTab } from './fees';
 import { packagesPanel } from './files';
 import { type Reader, siteText } from './list';
 import { threadPanel, timelinePanel } from './thread';
@@ -289,8 +290,15 @@ export function dossierPage(reader: Reader | 'office'): PageFn {
       ),
       h('div', { class: 'page-actions' }, ...extra, ...actionButtons(d, reload)),
     );
+    const feesShown = application && (d.side === 'municipality' || d.feeCount > 0);
     const body =
-      tab === 'yazisma' ? threadPanel(d, reload) : tab === 'gecmis' ? timelinePanel(d) : h('div', { class: 'stack' }, d.description ? panel('Açıklama', h('div', { class: 'msg-body' }, d.description)) : null, packagesPanel(d, reload));
+      tab === 'yazisma'
+        ? threadPanel(d, reload)
+        : tab === 'gecmis'
+          ? timelinePanel(d)
+          : tab === 'harc' && feesShown
+            ? await feesTab(d, params.slug, reload)
+            : h('div', { class: 'stack' }, d.description ? panel('Açıklama', h('div', { class: 'msg-body' }, d.description)) : null, packagesPanel(d, reload));
     const page = h(
       'div',
       { class: 'page' },
@@ -307,6 +315,7 @@ export function dossierPage(reader: Reader | 'office'): PageFn {
             [
               { key: 'paket', label: 'Paketler ve belgeler', href: withQuery({ sekme: null }) },
               { key: 'yazisma', label: 'Yazışma', count: d.messages.length, href: withQuery({ sekme: 'yazisma' }) },
+              ...(feesShown ? [{ key: 'harc', label: 'Harç ve ücret', count: d.feeCount, href: withQuery({ sekme: 'harc' }) }] : []),
               { key: 'gecmis', label: 'Geçmiş', count: d.events.length, href: withQuery({ sekme: 'gecmis' }) },
             ],
             tab,

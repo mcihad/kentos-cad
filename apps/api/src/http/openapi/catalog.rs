@@ -104,6 +104,7 @@ const PORTAL_ACCOUNT: &str = "Portal: hesap";
 const DOSSIERS: &str = "Portal: dosyalar";
 const ORGANIZATION: &str = "Portal: kurum";
 const PLATFORM: &str = "Portal: platform yönetimi";
+const FEES: &str = "Portal: harç ve ücret";
 const NOTIFICATIONS: &str = "Bildirimler";
 const SHEETS: &str = "Pafta şablonları";
 const EXTENSIONS: &str = "Eklenti kataloğu";
@@ -120,6 +121,7 @@ pub(super) const TAGS: &[(&str, &str)] = &[
     (DOSSIERS, "Belediye ile meslek mensubu arasındaki başvuru ve aktarım dosyaları, belgeleri ve yazışmaları."),
     (ORGANIZATION, "Kurumun portal ayarları, üyeleri ve meslek mensubu rehberi."),
     (PLATFORM, "Sistem yöneticisinin kurumları, hesapları, meslek mensubu doğrulaması ve kayıt defteri."),
+    (FEES, "Belediyenin yıllık ücret tarifesi (2464 sayılı Kanun) ve dosyalara tahakkuk, ödeme, iptal."),
     (NOTIFICATIONS, "Hesabın bildirimleri."),
     (SHEETS, "Pafta şablonu kitaplığı."),
     (EXTENSIONS, "Kurumun eklenti kataloğu (yükleme, inceleme, onay, kurulum)."),
@@ -459,6 +461,59 @@ pub(super) fn ops() -> Vec<Op> {
         op("PATCH", "/v1/tenants/{tenant}/members/{user}", ORGANIZATION, "Üyeliği değiştir",
             "Rol ya da etkinlik; kurumun son sahibi düşürülemez.",
             Body(of::<c::MemberEdit>), Json(200, of::<Vec<c::MemberView>>)),
+        op("GET", "/v1/tenants/{tenant}/fees/schedules", FEES, "Ücret tarifeleri",
+            "Kurumun tarifeleri, en yeni yıl önce: taslak, yürürlükte (`active`, en çok bir tane) ve geçmiş.",
+            No, Json(200, of::<Vec<c::FeeSchedule>>)),
+        op("POST", "/v1/tenants/{tenant}/fees/schedules", FEES, "Tarife taslağı yaz",
+            "Kurumun yöneticisi ve üstü. Tarife veridir: girdiler (`parameters`), birim tutar tabloları (`tables`, \
+             seçeneğe ve miktar dilimine göre satır) ve kalemler (`items`: maktu, birim başına ya da formül; koşul, \
+             en az/en çok, KDV, kararın öncesinde ödenir mi). Yeni bir harç yeni bir kalemdir. Formül ve koşul \
+             KentOS ifade dilindedir; girdiler ve tablolar `@ad` ile okunur. Doğrulanamayan tarife hangi alanda \
+             yanlış olduğunu söyleyen 400 ile reddedilir.",
+            Body(of::<c::FeeScheduleEdit>), Json(201, of::<c::FeeSchedule>)),
+        op("GET", "/v1/tenants/{tenant}/fees/schedules/{id}", FEES, "Tarife", "Kurumun üyeleri okur.",
+            No, Json(200, of::<c::FeeSchedule>)),
+        op("PUT", "/v1/tenants/{tenant}/fees/schedules/{id}", FEES, "Taslağı değiştir",
+            "Yalnız taslak değişir; yürürlükteki ya da geçmiş tarife kopyalanıp yeni taslak yazılır.",
+            Body(of::<c::FeeScheduleEdit>), Json(200, of::<c::FeeSchedule>)),
+        op("DELETE", "/v1/tenants/{tenant}/fees/schedules/{id}", FEES, "Taslağı sil", "Yalnız taslak.",
+            No, Empty(204)),
+        op("POST", "/v1/tenants/{tenant}/fees/schedules/{id}/activate", FEES, "Yürürlüğe koy",
+            "Taslak yürürlüğe girer, yerini aldığı tarife geçmişe düşer. Yapılmış tahakkuklar değişmez: her biri \
+             yapıldığı tarifenin adını ve satırlarını taşır.",
+            No, Json(200, of::<c::FeeSchedule>)),
+        op("POST", "/v1/tenants/{tenant}/fees/schedules/{id}/copy", FEES, "Yeni yıla kopyala",
+            "Tarifenin bütün tutarları yeniden değerleme katsayısıyla (`factor`, yüzde 25 artış için 1,25) çarpılıp \
+             kuruşa yuvarlanarak yeni bir taslak olur.",
+            Body(of::<c::FeeScheduleCopy>), Json(201, of::<c::FeeSchedule>)),
+        op("GET", "/v1/tenants/{tenant}/fees/template", FEES, "2464'e göre başlangıç tarifesi",
+            "Bina inşaat harcı (Ek Madde 1, 5, 6: kullanım ve toplam alan dilimi), plan ve proje tasdik harcı ve yapı \
+             kullanma izni harcı (m.80, m.84: bölgeye göre) ile istisna girdisi. Bütün birim tutarlar 0'dır: harçların yılın \
+             tutarları belediyenin grubu için verilen karardır (2464 m.95, m.96/A) ve yeniden değerlenir; ücretleri \
+             meclisin tarifesi belirler (m.97).",
+            No, Json(200, of::<c::FeeDefinition>)),
+        op("POST", "/v1/tenants/{tenant}/fees/try", FEES, "Tarifeyi dene",
+            "Kurumun üyeleri: kaydedilmemiş bir tarife (düzenlenen taslak) bir dosya türünün girdileriyle ne yapar; \
+             hiçbir şey kaydedilmez. Tarife önce doğrulanır.",
+            Body(of::<c::FeeTry>), Json(200, of::<c::FeePreview>)),
+        op("GET", "/v1/dossiers/{id}/fees", FEES, "Dosyanın tahakkukları",
+            "İki taraf da okur: her satır neye dayandığını yazar (\"152,5 m² × 48 TL (Konut, 151–200 m²)\").",
+            No, Json(200, of::<Vec<c::FeeAssessment>>)),
+        op("POST", "/v1/dossiers/{id}/fees/preview", FEES, "Tahakkuku önizle",
+            "Belediyenin düzenleyicisi ve üstü. Yürürlükteki tarife bu girdilerle ne yapar; hiçbir şey kaydedilmez. \
+             Boş girdiyle çağrılırsa bu dosya türünün sorduğu girdileri (`parameters`) ve eksikleri (`missing`) verir.",
+            Body(of::<c::FeeAssess>), Json(200, of::<c::FeePreview>)),
+        op("POST", "/v1/dossiers/{id}/fees", FEES, "Tahakkuk et",
+            "Belediyenin düzenleyicisi ve üstü. Eksik ya da yanlış girdi alanıyla 400 döner. Meslek mensubu tarafı \
+             bildirim alır. Kararın öncesinde ödenecek bir kalem varsa başvuru ödeme kaydedilene kadar onaylanmaz \
+             (2464 Ek Madde 5).",
+            Body(of::<c::FeeAssess>), Json(201, of::<c::FeeAssessment>)),
+        op("POST", "/v1/dossiers/{id}/fees/{fee}/paid", FEES, "Ödemeyi kaydet",
+            "Belediyenin düzenleyicisi ve üstü: makbuz numarası ve ödeme günü (yoksa bugün).",
+            Body(of::<c::FeePaid>), Json(200, of::<c::FeeAssessment>)),
+        op("POST", "/v1/dossiers/{id}/fees/{fee}/cancel", FEES, "Tahakkuku iptal et",
+            "Belediyenin proje yöneticisi ve üstü, gerekçeyle. Ödenmiş tahakkuk da iptal edilir; iadesi veznenin işidir.",
+            Body(of::<c::FeeCancel>), Json(200, of::<c::FeeAssessment>)),
         op("GET", "/v1/tenants/{tenant}/professionals", ORGANIZATION, "Meslek mensubu rehberi",
             "Doğrulanmış ve rehberde görünmeyi seçmiş meslek mensupları.",
             No, Json(200, of::<Vec<c::ProfessionalCard>>)).query(&[

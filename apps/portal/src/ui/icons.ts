@@ -50,6 +50,8 @@ const PATHS = {
   hourglass: '<path d="M5.5 3h9M5.5 17h9"/><path d="M6.5 3c0 4 7 4 7 7s-7 3-7 7M13.5 3c0 4-7 4-7 7s7 3 7 7"/>',
   more: '<circle cx="5" cy="10" r=".9"/><circle cx="10" cy="10" r=".9"/><circle cx="15" cy="10" r=".9"/>',
   refresh: '<path d="M16 10a6 6 0 1 1-1.8-4.3"/><path d="M16 3.5v3.3h-3.3"/>',
+  receipt: '<path d="M5 2.5h10v15l-1.7-1.2-1.6 1.2-1.7-1.2-1.7 1.2-1.6-1.2L5 17.5z"/><path d="M7.5 6.5h5M7.5 9.5h5M7.5 12.5h3"/>',
+  signature: '<path d="M2.5 16.5h7"/><path d="m12 3.5 4.5 4.5L9.5 15H5v-4.5z"/><path d="m10.3 5.2 4.5 4.5"/>',
   grid: '<rect x="3" y="3" width="5.5" height="5.5" rx="1"/><rect x="11.5" y="3" width="5.5" height="5.5" rx="1"/><rect x="3" y="11.5" width="5.5" height="5.5" rx="1"/><rect x="11.5" y="11.5" width="5.5" height="5.5" rx="1"/>',
 } as const;
 

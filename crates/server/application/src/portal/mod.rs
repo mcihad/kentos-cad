@@ -18,6 +18,7 @@ pub mod catalog;
 pub mod clock;
 pub mod detail;
 pub mod dossiers;
+pub mod fees;
 pub mod files;
 pub mod flow;
 pub mod lists;
