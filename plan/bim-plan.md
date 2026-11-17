@@ -589,8 +589,11 @@ söyler; başsız `cad.arch.audit` (MCP, Python) aynı bulguyu ve kural setini v
 aynı çizim 30.6.2026'da geçer, 2.7.2026'da 34/8'den kalır, tarihsiz eksik veridir; yağmurlama sınaması ADR 8035'in
 (`fire_escape_tests`). İç yükseklik ADR 8040 §3'te Rust'ta yapılmıştı.
 **Kalan:** kapı açılış yönü; emsalin 22. madde sınırları ve kat ara toplamları; merdiven altı 1,80 m; yangın kompartımanı;
-beyan edilen dayanımın karşılaştırılması; erişilebilir yol (TS 9111 metni); uzman onayının kaydı (Python bulgusunu
-`cad.arch.exceptions` tanımıyor); 28/1-c ve 39/1'in tarihli hâlleri; plan notu katmanı; bölge türü; konut dışı (B22).
+beyan edilen dayanımın karşılaştırılması; erişilebilir yol (TS 9111 metni); 28/1-c ve 39/1'in tarihli hâlleri; plan
+notu katmanı; bölge türü; konut dışı (B22).
+**Yapıldı (17 Kasım 2026, ADR 8078 §6, K64):** uzman onayı kayıtlı: paketin bulgusu `cad.arch.exceptions`'a verilerek
+istisna yapılır; uzman incelemesi bulgusunun istisnası "Uzman onayı"dır, notu uzmanın sözü; bulgu değişince düşer, katla
+ilgili bulgu katın mahallerini adlandırdığı için mahal eklenince yeni bulgu açılır.
 
 **Kullanıcı sonucu:** Denetim, başvuru tarihinde yürürlükte olan kuralları uygular. Her bulgu geçti, kaldı, eksik veri,
 uzman incelemesi ya da kapsam dışıdır. Yorum isteyen konu kendiliğinden "uygun" sayılmaz. Dayanak Z9; Ek A.

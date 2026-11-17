@@ -149,14 +149,39 @@ fn a_headless_audit_reads_the_elevator_articles_by_the_application_date() {
     assert_eq!(found.len(), 1, "{found:#?}");
     assert_eq!(found[0].0, "paiy_elevator_not_serving");
     assert!(found[0].2.starts_with("Bodrum kat: asansör bu kata ulaşmıyor"), "{}", found[0].2);
-    let finding = out["findings"].as_array().unwrap().iter().find(|f| f["code"] == "paiy_elevator_not_serving").unwrap();
+    let finding = out["findings"].as_array().unwrap().iter().find(|f| f["code"] == "paiy_elevator_not_serving").unwrap().clone();
     assert_eq!(finding["check"], "regulation");
     assert_eq!(finding["rule"], "PAİY 34/8 · RG 1.7.2026/33297");
-    assert!(finding["key"].as_str().unwrap().starts_with("paiy_elevator_not_serving::Bodrum kat"));
+    // It names the basement's rooms: its key is theirs, a click shows them.
+    assert_eq!(finding["uids"].as_array().map(Vec::len), Some(3));
+    assert!(finding["key"].as_str().unwrap().starts_with("paiy_elevator_not_serving:"));
     assert_eq!(outcomes(&out)[1], ("PAİY 34/8".to_owned(), json!("1.7.2026"), "failed".to_owned()));
     // It follows the regulation group's own findings, before any other group's.
     let checks: Vec<&str> = out["findings"].as_array().unwrap().iter().map(|f| f["check"].as_str().unwrap()).collect();
     assert!(checks.iter().all(|c| *c == "regulation"), "{checks:?}");
+    // Left on purpose over the protocol: the finding given as the audit listed it, then hidden and counted.
+    let excepted = out["excepted"].as_u64().unwrap();
+    let marked = kentos_headless::call_envelope(
+        &mut doc,
+        None,
+        CallEnvelope {
+            command: "cad.arch.exceptions".into(),
+            version: None,
+            op: CallOp::Execute,
+            request_id: None,
+            expected: None,
+            relax_constraints: false,
+            input: json!({"operation": "mark", "keys": [finding["key"]], "note": "İdare bodruma asansör istemedi.",
+                          "findings": [finding]}),
+        },
+    );
+    assert!(matches!(marked.result, CommandResult::Completed { .. }), "{:?}", marked.result);
+    let out = audited(&mut doc, ask.clone());
+    assert!(package(&out).is_empty(), "{out}");
+    assert_eq!(out["excepted"].as_u64(), Some(excepted + 1));
+    let shown = audited(&mut doc, json!({"checks": ["regulation"], "exceptions": "show"}));
+    let f = shown["findings"].as_array().unwrap().iter().find(|f| f["code"] == "paiy_elevator_not_serving").unwrap();
+    assert_eq!((f["exception"].as_bool(), f["note"].as_str()), (Some(true), Some("İdare bodruma asansör istemedi.")));
     dated(&mut doc, None);
     let out = audited(&mut doc, ask);
     let found = package(&out);

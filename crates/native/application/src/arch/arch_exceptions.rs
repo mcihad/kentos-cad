@@ -1,8 +1,9 @@
 //! `cad.arch.exceptions` (docs/adr/0732 §3): Mimari denetim's findings marked as left on purpose, the marks taken away,
 //! or those whose finding is gone dropped. A finding is named by its lasting key as `cad.arch.audit` gives it for the
 //! drawing as it is now; the exception keeps its code, objects and the digest of the finding (its code, objects, words
-//! and place), so it lapses once the finding changes. The exceptions are the project's settings, written as one undo
-//! step. The shared cases are `fixtures/commands/v1/cad.arch.exceptions.json` (`scripts/fixtures/arch_audit_cases.py`).
+//! and place), so it lapses once the finding changes. A standards package's finding (docs/adr/8078) is given by the
+//! host that runs its Python (`findings`) and marked the same way. The exceptions are the project's settings, written as
+//! one undo step. The shared cases are `fixtures/commands/v1/cad.arch.exceptions.json` (`scripts/fixtures/arch_audit_cases.py`).
 
 use kentos_commands::{
     ArchAudit, ArchAuditException, ArchExceptionOperation, ArchExceptions, ArchExceptionsEdited, CommandResult,
@@ -63,6 +64,17 @@ fn check(doc: &Document, input: &ArchExceptions) -> Result<Checked, Stop> {
             )));
         }
     }
+    for (i, f) in input.findings.iter().enumerate() {
+        if f.key.is_empty() || f.code.is_empty() || input.findings[..i].iter().any(|g| g.key == f.key) {
+            return Err(Stop::failed(error(
+                codes::INVALID_INPUT,
+                "Verilen bulgunun anahtarı ya da kodu yok, ya da anahtarı iki kez verilmiş; cad.arch.audit'in verdiği \
+                 bulguyu olduğu gibi verin."
+                    .into(),
+                Some(format!("findings[{i}]")),
+            )));
+        }
+    }
     if let Some(note) = &input.note
         && (note.chars().count() > NOTE_MAX || note.chars().any(|c| c.is_control() && c != '\n'))
     {
@@ -85,7 +97,9 @@ fn check(doc: &Document, input: &ArchExceptions) -> Result<Checked, Stop> {
             let (all, _) = every_finding(doc, &audit).map_err(under_audit)?;
             let mut chosen = Vec::with_capacity(input.keys.len());
             for (i, k) in input.keys.iter().enumerate() {
-                let Some(f) = all.iter().find(|f| f.key == *k) else {
+                // The command's own finding, else one a standards package gave (docs/adr/8078).
+                let Some(f) = all.iter().find(|f| f.key == *k).or_else(|| input.findings.iter().find(|f| f.key == *k))
+                else {
                     return Err(Stop::failed(error(
                         codes::FINDING_NOT_FOUND,
                         format!("Çizimin bugünkü denetiminde “{k}” anahtarlı bulgu yok; önce cad.arch.audit ile denetleyin."),

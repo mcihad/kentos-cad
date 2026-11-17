@@ -66,14 +66,20 @@ impl App {
                         n => format!("{n} nesne"),
                     };
                     // An exception's row says so and its note; a lapsed one's says it lapsed (docs/adr/0732 §5).
+                    // An exception on an uzman incelemesi finding is the reviewer's approval (docs/adr/8078).
+                    let mark = if f.state == Some(kentos_commands::ArchAuditState::ExpertReview) {
+                        "Uzman onayı"
+                    } else {
+                        "İstisna"
+                    };
                     let (message, ink) = if f.exception {
                         let note = f
                             .note
                             .as_deref()
                             .map_or_else(String::new, |n| format!(" — {n}"));
-                        (format!("İstisna · {}{note}", f.message), Ink::Quiet)
+                        (format!("{mark} · {}{note}", f.message), Ink::Quiet)
                     } else if f.lapsed {
-                        (format!("İstisna düştü · {}", f.message), Ink::Warning)
+                        (format!("{mark} düştü · {}", f.message), Ink::Warning)
                     } else if let Some(state) = f.state {
                         // Eksik veri and uzman incelemesi are no failures (docs/adr/8078): said first, never quiet.
                         let ink = match state {

@@ -1996,6 +1996,49 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
     Ok((findings, run))
 }
 
+/// A stored exception laid on a finding (docs/adr/0732 §3): its note, and an exception while the finding is as it was
+/// then, lapsed once it changed.
+fn laid(exceptions: &[kentos_commands::ArchAuditException], f: &mut ArchAuditFinding) {
+    if let Some(x) = exceptions.iter().find(|x| x.key == f.key) {
+        f.note = x.note.clone();
+        if x.digest == finding_digest(f) {
+            f.exception = true;
+        } else {
+            f.lapsed = true;
+        }
+    }
+}
+
+/// Whether a finding is listed in `view`.
+fn listed(view: ArchAuditExceptionView, f: &ArchAuditFinding) -> bool {
+    match view {
+        ArchAuditExceptionView::Hide => !f.exception,
+        ArchAuditExceptionView::Show => true,
+        ArchAuditExceptionView::Only => f.exception || f.lapsed,
+    }
+}
+
+/// The project's exceptions laid on findings the command does not make — a standards package's (docs/adr/8078) — as
+/// its own answer lays them: those `view` lists, and how many are exceptions (listed or not) and how many lapsed.
+pub fn lay_exceptions(
+    doc: &Document,
+    findings: Vec<ArchAuditFinding>,
+    view: ArchAuditExceptionView,
+) -> (Vec<ArchAuditFinding>, u32, u32) {
+    let exceptions = doc.settings().arch.as_ref().map(|a| a.audit_exceptions.as_slice()).unwrap_or_default();
+    let (mut excepted, mut lapsed) = (0u32, 0u32);
+    let mut out = Vec::new();
+    for mut f in findings {
+        laid(exceptions, &mut f);
+        excepted += u32::from(f.exception);
+        lapsed += u32::from(f.lapsed);
+        if listed(view, &f) {
+            out.push(f);
+        }
+    }
+    (out, excepted, lapsed)
+}
+
 /// The answer and its warnings: the findings in the part asked, the project's exceptions laid on them (docs/adr/0732
 /// §3) and listed as asked.
 fn answer(doc: &Document, input: &ArchAudit) -> Result<(ArchAudited, Vec<CommandWarning>), Stop> {
@@ -2017,23 +2060,10 @@ fn answer(doc: &Document, input: &ArchAudit) -> Result<(ArchAudited, Vec<Command
             outside += 1;
             continue;
         }
-        if let Some(x) = exceptions.iter().find(|x| x.key == f.key) {
-            f.note = x.note.clone();
-            if x.digest == finding_digest(&f) {
-                f.exception = true;
-                excepted += 1;
-            } else {
-                f.lapsed = true;
-                lapsed += 1;
-            }
-        }
-        let marked = f.exception || f.lapsed;
-        let listed = match view {
-            ArchAuditExceptionView::Hide => !f.exception,
-            ArchAuditExceptionView::Show => true,
-            ArchAuditExceptionView::Only => marked,
-        };
-        if listed {
+        laid(exceptions, &mut f);
+        excepted += u32::from(f.exception);
+        lapsed += u32::from(f.lapsed);
+        if listed(view, &f) {
             findings.push(f);
         }
     }

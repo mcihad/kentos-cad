@@ -207,11 +207,9 @@ pub const SIVAS_AIR_SHAFT_ARTICLE: Article = Article::sivas("32/3");
 pub const SIVAS_DOOR_ARTICLE: Article = Article::sivas("39/1-c");
 
 /// The codes the group finds, in their order: PAİY's and the local regulation's, then the fire regulation's
-/// (docs/adr/8035). The rule set's own (`regulation_date_needed`, `regulation_text_unknown`), 34/1's and 34/8's are the
-/// standards package's Python (catalog/standards/mimari-mevzuat, docs/adr/8078), listed for their order beside these.
-pub const CODES: [&str; 52] = [
-    codes::REGULATION_DATE_NEEDED,
-    codes::REGULATION_TEXT_UNKNOWN,
+/// (docs/adr/8035). Only the codes this group makes: an exception on a standards package's finding (34/1's and 34/8's,
+/// the rule set's own; catalog/standards/mimari-mevzuat, docs/adr/8078) is never stale to it, nor pruned by it.
+pub const CODES: [&str; 48] = [
     codes::PAIY_ROOM_MISSING,
     codes::PAIY_ROOM_AREA_BELOW,
     codes::PAIY_ROOM_WIDTH_BELOW,
@@ -231,8 +229,6 @@ pub const CODES: [&str; 52] = [
     codes::PAIY_RAILING_GAP,
     codes::PAIY_LIGHTWELL_SMALL,
     codes::PAIY_AIR_SHAFT_SMALL,
-    codes::PAIY_ELEVATOR_MISSING,
-    codes::PAIY_ELEVATOR_NOT_SERVING,
     codes::PAIY_ELEVATOR_SMALL,
     codes::PAIY_ELEVATOR_STRETCHER,
     codes::PAIY_ELEVATOR_LANDING_NARROW,

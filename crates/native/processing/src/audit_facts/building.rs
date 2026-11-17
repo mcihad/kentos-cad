@@ -36,7 +36,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
     let units: Vec<_> = program.units.iter().filter(|u| u.kind == UnitKind::Unit).collect();
     let dwellings = units.iter().filter(|u| dwelling_nature(u.nature.as_deref())).count();
     let shafts = elevators(doc, &mut storeys);
-    for e in doc.entities() {
+    for (uid, e) in doc.entities_with_uids() {
         let Entity::Space(s) = e else { continue };
         let x = &s.space;
         let Some(at) = e.own_level().and_then(|id| storeys.iter().position(|l| l.level == id)) else {
@@ -48,6 +48,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             continue;
         }
         let storey = &mut storeys[at];
+        storey.rooms.push(uid.to_string());
         let tech = technical(name, usage);
         match x.unit.as_deref().and_then(|u| program.unit(u)).map(|u| u.kind) {
             Some(UnitKind::Unit) => storey.units += 1,

@@ -9,7 +9,9 @@
 //! - **A rule that does not answer** (no Python, a broken package) leaves the Rust findings as they are and says why in
 //!   a warning (`regulation_rule_unavailable`): an empty list is not taken for a pass.
 
-use kentos_commands::{CommandResult, CommandWarning};
+use kentos_commands::{
+    ArchAuditCheck, ArchAuditExceptionView, ArchAuditFinding, ArchAuditState, CommandResult, CommandWarning, Vec2,
+};
 use kentos_domain::Document;
 use kentos_extensions::audit_facts::ProjectAuditFacts;
 use serde_json::{Value, json};
@@ -48,7 +50,25 @@ pub fn add(doc: &Document, command: &str, input: &Value, result: &mut CommandRes
     };
     match kentos_standards::call(PACKAGE, MODULE, FUNCTION, vec![facts(doc)]) {
         Ok(answer) => {
-            let found = findings(&answer);
+            // The project's exceptions laid on them as on the command's own (docs/adr/0732 §3), listed as asked.
+            let view: ArchAuditExceptionView =
+                input.get("exceptions").and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
+            let (laid, excepted, lapsed) =
+                kentos_native_application::arch_audit::lay_exceptions(doc, findings(&answer), view);
+            let found: Vec<Value> = laid.iter().filter_map(|f| serde_json::to_value(f).ok()).collect();
+            if let Some(n) = output.get("excepted").and_then(Value::as_u64) {
+                output["excepted"] = json!(n + u64::from(excepted));
+            }
+            if lapsed > 0 {
+                warnings.push(CommandWarning {
+                    code: kentos_commands::codes::EXCEPTION_LAPSED.into(),
+                    message: format!(
+                        "Mevzuat kurallarının {lapsed} istisnasının bulgusu verildiğinden beri değişti; bulgular yeniden \
+                         açık. İstisnayı yeniden verin ya da kaldırın."
+                    ),
+                    path: None,
+                });
+            }
             if let Some(list) = output.get_mut("findings").and_then(Value::as_array_mut) {
                 let at = list
                     .iter()
@@ -76,37 +96,41 @@ pub fn add(doc: &Document, command: &str, input: &Value, result: &mut CommandRes
 }
 
 /// The rule's findings as the audit's: the Mevzuat group's, keyed, with their state and article.
-fn findings(answer: &Value) -> Vec<Value> {
-    let mut keys: Vec<String> = Vec::new();
-    let mut out = Vec::new();
+fn findings(answer: &Value) -> Vec<ArchAuditFinding> {
+    let mut out: Vec<ArchAuditFinding> = Vec::new();
     for f in answer["findings"].as_array().into_iter().flatten() {
-        let code = f["code"].as_str().unwrap_or_default();
-        let uids: Vec<&str> = f["uids"].as_array().into_iter().flatten().filter_map(Value::as_str).collect();
+        let text = |k: &str| f[k].as_str().unwrap_or_default().to_owned();
+        let code = text("code");
+        let uids: Vec<String> = f["uids"].as_array().into_iter().flatten().filter_map(Value::as_str).map(str::to_owned).collect();
         let mut key = format!("{code}:{}", uids.join(","));
         if uids.is_empty() {
             key.push(':');
-            key.push_str(f["message"].as_str().unwrap_or_default());
+            key.push_str(&text("message"));
         }
-        while keys.contains(&key) {
+        while out.iter().any(|o| o.key == key) {
             key.push_str("#2");
         }
-        keys.push(key.clone());
-        let mut x = json!({
-            "key": key,
-            "check": "regulation",
-            "code": code,
-            "message": f["message"],
-            "repair": f["repair"],
-            "uids": uids,
-            "at": {"x": 0.0, "y": 0.0},
+        let state = match f["state"].as_str() {
+            Some("missingData") => Some(ArchAuditState::MissingData),
+            Some("expertReview") => Some(ArchAuditState::ExpertReview),
+            _ => None,
+        };
+        out.push(ArchAuditFinding {
+            key,
+            check: ArchAuditCheck::Regulation,
+            code,
+            message: text("message"),
+            repair: text("repair"),
+            uids,
+            at: Vec2 { x: 0.0, y: 0.0 },
+            fix: None,
+            exception: false,
+            lapsed: false,
+            note: None,
+            nature: None,
+            rule: f["rule"].as_str().map(str::to_owned),
+            state,
         });
-        if let Some(rule) = f["rule"].as_str() {
-            x["rule"] = json!(rule);
-        }
-        if let Some(state) = f["state"].as_str() {
-            x["state"] = json!(state);
-        }
-        out.push(x);
     }
     out
 }

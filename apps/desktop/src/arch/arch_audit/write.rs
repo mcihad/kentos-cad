@@ -104,11 +104,17 @@ impl App {
         if keys.is_empty() {
             return;
         }
+        // A standards package's finding is given as the package answered (docs/adr/8078).
+        let given: Vec<&kentos_commands::ArchAuditFinding> =
+            self.arch.arch_audit.standards.iter().filter(|f| keys.contains(&f.key)).collect();
         let mut input = serde_json::json!({
             "operation": "mark",
             "keys": keys,
             "audit": self.arch_audit_finding_input(),
         });
+        if !given.is_empty() {
+            input["findings"] = serde_json::to_value(&given).unwrap_or_default();
+        }
         let note = note.trim();
         if !note.is_empty() {
             input["note"] = note.into();

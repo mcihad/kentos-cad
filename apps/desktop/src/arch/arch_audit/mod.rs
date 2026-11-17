@@ -113,6 +113,8 @@ pub(crate) struct Audited {
     pub outside: u32,
     /// The exceptions in the scope, listed or not.
     pub excepted: u32,
+    /// Those of them on the standards packages' findings (standards.rs), so a new answer counts them once.
+    pub standards_excepted: u32,
     /// The exceptions whose finding is gone, by their keys.
     pub stale: Vec<String>,
 }
@@ -449,6 +451,7 @@ impl App {
                     revision: doc.model.revision(),
                     outside: output.outside,
                     excepted: output.excepted,
+                    standards_excepted: 0,
                     stale: output.stale,
                 });
                 for w in warnings {

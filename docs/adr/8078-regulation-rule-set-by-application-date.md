@@ -115,14 +115,38 @@ Okumalar (metin açıkça söylemiyor, kural böyle okuyor; bağımsız durumlar
   166 geçti.
 - Python: paketin 8 sınaması; `kentos kek verify` iki paket için 0 uyarı.
 
+## §6. Uzman onayı (K64)
+
+- **Sorun:** uzman incelemesi bulgusu bir kişinin kararını bekler; plan "uzman onayı kayıtlıdır; etkilediği nesne
+  değişince eskir" der ve ikinci bir denetim sistemi kurmayı yasaklar (ADV-23: mevcut istisna mekanizması). Ama
+  `cad.arch.exceptions` yalnız kendi denetiminin (Rust) bulgusunu tanıyordu: paketin bulgusu işaretlenemiyordu.
+- **K64 — Onay istisnadır, bulgu verilerek.** `cad.arch.exceptions`'ın `findings` girdisi: paketin Python'unu çalıştıran
+  ev sahibi (masaüstü, MCP, Python) paketin bulgusunu `cad.arch.audit`'in listelediği gibi verir; `mark` onu da anahtarıyla
+  işaretler, özeti öbürleriyle aynıdır (kodu, nesneleri, sözü, yeri). Uzman incelemesi bulgusunun istisnası uzmanın
+  onayıdır, notu uzmanın sözüdür; Denetim'de satırı "Uzman onayı ·" diye başlar ("Uzman onayı düştü ·" eskiyince).
+- **Eskime:** bulgu değişince (sözü, yeri) özet tutmaz, onay düşer. Paketin katla ilgili bulgusu artık katın
+  mahallerini adlandırır (olguların `building.storeys[].rooms`'u): anahtarı mahallerindir, tabloda tıklanınca seçilir;
+  bodruma bir mahal eklenince anahtar değişir, eski onay hiçbir bulguyu örtmez, yeni bulgu açıktır. Nesnesiz bulgunun
+  istisnası olmaz (`auditExceptions`'ın nesne kuralı ve `.kcad` biçimi değişmedi).
+- **Kendi denetimi paketin istisnasını silmez:** Mevzuat grubunun kod listesi yalnız Rust'un ürettiği kodlardır; paketin
+  koduna bağlı istisna Rust denetimine göre ne eski (`stale`) ne de temizlenir (`prune`). (İlk dilimde paketin kodları
+  sıra için listeye eklenmişti: onları "bulgusu kalmamış" sayardı; çıkarıldı.)
+- **Ev sahibi istisnayı paketin bulgusuna bağlar:** `arch_audit::lay_exceptions` komutun kendi bulgularına uyguladığı
+  kuralı (istisna, düşmüş, not; İstisnalar: Gizle/Göster/Yalnız) paketin bulgularına uygular; masaüstü ve başsız aynı
+  işlevi çağırır, sayılar bir kez eklenir.
+- **Sınamalar:** masaüstü `an_expert_s_approval_of_a_package_finding_is_kept_until_the_finding_changes` (onaylanır, gizlenir,
+  bir kez sayılır, Göster'de notuyla; bodruma depo eklenince yeni bulgu açık), başsız `regulation_dates` (protokolle
+  işaretlenir, gizlenir, Göster'de istisna ve not), ortak durumlar `cad.arch.exceptions` 28 (paket bulgusu verilerek
+  onay, kodsuz verilen bulgunun reddi, verilmeyen paket bulgusunun reddi). Resim `4-uzman-onayi-{acik,koyu}.png`.
+
 ## Sıradaki adımlar
 
 - BIM-13'ün kalan kuralları: kapı açılış yönü, emsalin 22. madde sınırları (%20, %50, 70 m²) ve kat ara toplamları,
   merdiven altı 1,80 m, yangın kompartımanı ve sınırındaki açıklık, beyan edilen dayanımın (BIM-07) yönetmeliğin
   istediğiyle karşılaştırılması, erişilebilir yol (TS 9111'in değerleri TSE metninden doğrulanmadan kural olmaz). İç
   yükseklik ADR 8040 §3'te Rust'ta yapılmıştı.
-- Uzman onayının kaydı: Python bulgusunu `cad.arch.exceptions` tanımıyor; onay etkilediği nesne değişince eskimeli
-  (cevabın eskimesi gibi, ADR 8077 K59).
+- Maddenin özet satırı uzman onayını bilmiyor (onay ev sahibinde uygulanıyor): onaylanan madde "uzman incelemesi" kalır,
+  onay satırda görünür.
 - Öbür tarihli maddeler: 28/1-c (12.8.2023) ve 39/1 (13.8.2025) Rust'ta tek hâlle okunuyor; geçiş hükümleri okunmadan
   hâlleri ayrılmaz. 5/27'nin 1.7.2026 değişikliği (Geçici 3/11 onu da sayar) okunmadı.
 - Sivas 34/1'in "bina girişi bodrum kattan yapılan yapılarda asansör yapılması zorunlu olan kata göre işlem" cümlesi

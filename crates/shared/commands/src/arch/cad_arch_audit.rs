@@ -540,9 +540,15 @@ pub enum ArchExceptionOperation {
 /// one undo step (“İstisna”, “İstisnayı kaldır”, “İstisnaları temizle”). The findings are found by `audit` (absent: every
 /// group with the default thresholds and no profile); its `within` and `exceptions` are not read.
 ///
+/// A standards package's finding (docs/adr/8078: the national regulation's, the digital project's) is no finding of the
+/// command's own audit: a host that runs the package's Python gives it in `findings` as `cad.arch.audit` listed it, and
+/// mark names it by its key like any other; its exception lapses once the package says it otherwise. An exception on an
+/// uzman incelemesi finding is the reviewer's approval, its note the reviewer's words.
+///
 /// Refusals, in this order: `invalid_input` (mark or unmark without a key, a key twice, a note of more than 1000
-/// characters), the audit's own (its paths under `audit.`), `finding_not_found` (`keys[i]`: no finding of the drawing as
-/// it is now has it, for mark; no exception has it, for unmark). Prune with nothing to drop, or marks already as asked,
+/// characters, a given finding without a key or a code, or one key given twice), the audit's own (its paths under
+/// `audit.`), `finding_not_found` (`keys[i]`: no finding of the drawing as it is now has it, nor a given one, for mark;
+/// no exception has it, for unmark). Prune with nothing to drop, or marks already as asked,
 /// change nothing and write no step. `expectedRevision` given and the drawing not at it: nothing is written, a conflict.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -561,6 +567,10 @@ pub struct ArchExceptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub audit: Option<ArchAudit>,
+    /// The standards packages' findings the caller holds, as `cad.arch.audit` listed them (docs/adr/8078), for mark.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ArchAuditFinding>>", optional))]
+    pub findings: Vec<ArchAuditFinding>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]

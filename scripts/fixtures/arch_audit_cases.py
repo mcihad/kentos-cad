@@ -1671,6 +1671,27 @@ def exceptions_cases():
     case("Olmayan bulgu istisna yapılamaz", [refuse({"operation": "mark", "keys": [tag["key"], "arch_wall_short:yok"]},
          "finding_not_found", "Çizimin bugünkü denetiminde “arch_wall_short:yok” anahtarlı bulgu yok; önce "
          "cad.arch.audit ile denetleyin.", "keys[1]")])
+    # A standards package's finding (ADR 8078): the host gives it as the audit listed it; its exception is recorded the
+    # same way (the digest of its code, objects, words and place), and the command's own audit does not list it.
+    pkg = {"key": "paiy_elevator_not_serving:" + U(0x8078),
+           "check": "regulation", "code": "paiy_elevator_not_serving",
+           "message": "Bodrum kat: yalnız teknik hacim var, asansör ulaşmıyor — PAİY 34/8 (1.7.2026)",
+           "repair": "Teknik hacimlerin ortak alan sayılıp sayılmadığına idare karar verir.", "uids": [U(0x8078)],
+           "at": {"x": 0.0, "y": 0.0}, "rule": "PAİY 34/8 · RG 1.7.2026/33297", "state": "expertReview"}
+    approved = with_exceptions(d, [record(pkg, "Kazan dairesi ortak alan sayılmaz: idare görüşü.")])
+    case("Paketin bulgusu verilerek onaylanır (uzman onayı)", [
+        run({"operation": "mark", "keys": [pkg["key"]], "note": "Kazan dairesi ortak alan sayılmaz: idare görüşü.",
+             "findings": [pkg]}, [pkg["key"]], 1),
+        asked(approved, {}, expect={"canUndo": True, "revision": "same"}, command="cad.arch.audit"),
+    ])
+    case("Verilen bulgunun kodu yoksa reddedilir", [refuse(
+        {"operation": "mark", "keys": [pkg["key"]], "findings": [dict(pkg, code="")]}, "invalid_input",
+        "Verilen bulgunun anahtarı ya da kodu yok, ya da anahtarı iki kez verilmiş; cad.arch.audit'in verdiği bulguyu "
+        "olduğu gibi verin.", "findings[0]")])
+    case("Verilmeyen paket bulgusu istisna yapılamaz", [refuse({"operation": "mark", "keys": [pkg["key"]]},
+         "finding_not_found",
+         f"Çizimin bugünkü denetiminde “{pkg['key']}” anahtarlı bulgu yok; önce cad.arch.audit ile denetleyin.",
+         "keys[0]")])
     case("Olmayan istisna kaldırılamaz", [refuse({"operation": "unmark", "keys": [gap["key"]]}, "finding_not_found",
          f"“{gap['key']}” anahtarlı istisna yok.", "keys[0]")], setup=one)
     case("Denetimin reddi audit yoluyla", [refuse({"operation": "mark", "keys": [tag["key"]], "audit": {"maxGap": -1.0}},

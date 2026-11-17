@@ -1100,6 +1100,13 @@
           "minimum": 0,
           "type": "integer"
         },
+        "rooms": {
+          "description": "The rooms counted on it, by their persistent ids in order: what a finding about the storey names.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "technical": {
           "description": "Technical rooms on it, whatever their group: a heat centre, a boiler room, an electricity room, a water tank, a\nclimate plant, a generator room, a pump or a transformer room, by their name or use.",
           "format": "uint32",

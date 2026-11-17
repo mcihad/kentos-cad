@@ -60,6 +60,9 @@ pub struct StoreyHolds {
     pub inhabited: u32,
     /// Elevators on it: elevator shafts (a space named Asansör, not its lobby) and Asansör blocks standing on it.
     pub elevators: u32,
+    /// The rooms counted on it, by their persistent ids in order: what a finding about the storey names.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rooms: Vec<String>,
 }
 
 impl BuildingFacts {
@@ -67,6 +70,8 @@ impl BuildingFacts {
     pub fn normalized(mut self) -> BuildingFacts {
         for s in &mut self.storeys {
             s.elevation = round(s.elevation, LENGTH);
+            s.rooms.sort();
+            s.rooms.dedup();
         }
         self.storeys
             .sort_by(|a, b| a.elevation.total_cmp(&b.elevation).then_with(|| a.level.cmp(&b.level)));

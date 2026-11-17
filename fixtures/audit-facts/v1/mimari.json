@@ -1938,7 +1938,16 @@
         "other": 0,
         "technical": 0,
         "inhabited": 2,
-        "elevators": 1
+        "elevators": 1,
+        "rooms": [
+          "01a1dfda-06c5-7278-9486-e3989deaadbb",
+          "01a1dfda-06c5-7278-9486-e3999a1cb813",
+          "01a1dfda-06c5-7278-9486-e39ad272edb3",
+          "01a1dfda-06c5-7278-9486-e39bf9dc85ab",
+          "01a1dfda-06c5-7278-9486-e39cf0fe5491",
+          "01a1dfda-06c5-7278-9486-e39d25d6d8d6",
+          "01a1dfda-06c5-7278-9486-e39f8e07d64b"
+        ]
       },
       {
         "level": "k1",
@@ -1950,7 +1959,15 @@
         "other": 0,
         "technical": 0,
         "inhabited": 3,
-        "elevators": 0
+        "elevators": 0,
+        "rooms": [
+          "01a1dfda-0704-70dd-a975-499e70342853",
+          "01a1dfda-0704-70dd-a975-499fcf59dea1",
+          "01a1dfda-0704-70dd-a975-49a0e9eca5a0",
+          "01a1dfda-0704-70dd-a975-49a1c1b85ee4",
+          "01a1dfda-0704-70dd-a975-49a2bb4d2324",
+          "01a1dfda-0704-70dd-a975-49a3b97636d7"
+        ]
       }
     ],
     "units": 4,

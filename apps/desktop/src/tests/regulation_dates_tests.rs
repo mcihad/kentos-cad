@@ -27,6 +27,13 @@ fn run(app: &mut App, name: &str, input: Value) {
 /// Three storeys of flats over a basement holding two storage rooms (each a flat's annex) and the common boiler room;
 /// the elevator's shaft (a void named Asansör) on the three storeys, not in the basement.
 pub(crate) fn basement_with_annexes() -> App {
+    building(&[("Depo", "e1"), ("Depo", "e2"), ("Kazan dairesi", "o")], 3)
+}
+
+/// `upper` storeys of flats (a living room and a bedroom of one flat each, the common stair hall, the elevator's shaft)
+/// over a basement holding `basement`'s rooms, each named and in its program group (`e1`, `e2`: the first two flats'
+/// annexes; `o`: the common area).
+fn building(basement: &[(&str, &str)], upper: usize) -> App {
     kentos_postgis::connections::keep_in_memory();
     let (mut app, _) = App::start_in(Some(Module::Architecture), None, Settings::memory(), Recovery::off());
     app.db_store = Box::leak(Box::new(kentos_postgis::connections::ConnectionStore::open(None)));
@@ -34,14 +41,12 @@ pub(crate) fn basement_with_annexes() -> App {
     let task = app.update(Message::Run("file.new"));
     drive(&mut app, task);
     let level = |id: &str, name: &str, z: f64| json!({ "id": id, "name": name, "elevation": z, "height": 3.0 });
-    run(
-        &mut app,
-        "cad.settings.set",
-        json!({ "arch": { "levels": [
-            level("b01", "Bodrum kat", -3.0), level("k00", "Zemin kat", 0.0), level("k01", "1. kat", 3.0),
-            level("k02", "2. kat", 6.0)
-        ] } }),
-    );
+    let mut levels = vec![level("b01", "Bodrum kat", -3.0)];
+    for k in 0..upper {
+        let name = if k == 0 { "Zemin kat".to_owned() } else { format!("{k}. kat") };
+        levels.push(level(&format!("k{k:02}"), &name, 3.0 * k as f64));
+    }
+    run(&mut app, "cad.settings.set", json!({ "arch": { "levels": levels } }));
     run(
         &mut app,
         "cad.program.edit",
@@ -49,6 +54,7 @@ pub(crate) fn basement_with_annexes() -> App {
             {"id": "d1", "number": "1", "nature": "Daire"},
             {"id": "d2", "number": "2", "nature": "Daire"},
             {"id": "d3", "number": "3", "nature": "Daire"},
+            {"id": "d4", "number": "4", "nature": "Daire"},
             {"id": "e1", "number": "E1", "kind": "annex", "annexOf": "d1", "nature": "Depo"},
             {"id": "e2", "number": "E2", "kind": "annex", "annexOf": "d2", "nature": "Depo"},
             {"id": "o", "number": "O", "name": "Ortak alan", "kind": "common"}
@@ -60,16 +66,14 @@ pub(crate) fn basement_with_annexes() -> App {
         json!({"parts": [{"outer": {"pts": [p(x0, 0.0), p(x0 + 4.0, 0.0), p(x0 + 4.0, 4.0), p(x0, 4.0)]}}],
                "name": name, "unit": unit, "void": void, "arch": {"level": level}})
     };
-    let mut spaces = vec![
-        room(0.0, "Depo", "b01", "e1", false),
-        room(4.0, "Depo", "b01", "e2", false),
-        room(8.0, "Kazan dairesi", "b01", "o", false),
-    ];
-    for (level, unit) in [("k00", "d1"), ("k01", "d2"), ("k02", "d3")] {
-        spaces.push(room(0.0, "Salon", level, unit, false));
-        spaces.push(room(4.0, "Yatak odası", level, unit, false));
-        spaces.push(room(8.0, "Merdiven holü", level, "o", false));
-        spaces.push(room(12.0, "Asansör", level, "o", true));
+    let mut spaces: Vec<Value> =
+        basement.iter().enumerate().map(|(i, (name, unit))| room(4.0 * i as f64, name, "b01", unit, false)).collect();
+    for k in 0..upper {
+        let (level, unit) = (format!("k{k:02}"), format!("d{}", k + 1));
+        spaces.push(room(0.0, "Salon", &level, &unit, false));
+        spaces.push(room(4.0, "Yatak odası", &level, &unit, false));
+        spaces.push(room(8.0, "Merdiven holü", &level, "o", false));
+        spaces.push(room(12.0, "Asansör", &level, "o", true));
     }
     run(&mut app, "cad.spaces.create", json!({"layerId": layer, "spaces": spaces}));
     app
@@ -179,6 +183,60 @@ fn the_application_date_chooses_the_version_of_the_elevator_articles() {
     assert_eq!(regulation(&app), Vec::new());
 }
 
+/// Uzman onayı (docs/adr/8078): four storeys over a basement holding only the boiler room. 34/8 as of 1.7.2026 asks the
+/// elevator to reach a basement with a common area, 34/1 does not count a technical room: the reviewer decides. Their
+/// approval is İstisna yap on the package's finding with their words: hidden and counted, listed with İstisnalar:
+/// Göster; once the basement holds a flat's storage too the finding is another one, open again.
+#[test]
+fn an_expert_s_approval_of_a_package_finding_is_kept_until_the_finding_changes() {
+    use crate::arch_audit::Event;
+    let event = |app: &mut App, e: Event| {
+        let _ = app.update(Message::Arch(crate::arch::Event::ArchAudit(e)));
+    };
+    let mut app = building(&[("Kazan dairesi", "o")], 4);
+    dated(&mut app, Some("02.07.2026"));
+    checked(&mut app);
+    let listed = |app: &App| {
+        let a = app.arch.arch_audit.audited.as_ref().expect("checked");
+        a.findings.iter().filter(|f| f.code == "paiy_elevator_not_serving").cloned().collect::<Vec<_>>()
+    };
+    let asked = listed(&app);
+    assert_eq!(asked.len(), 1, "{asked:#?}");
+    assert_eq!(asked[0].state, Some(ArchAuditState::ExpertReview));
+    let row = crate::arch_audit_scenes::row_of(&app, "paiy_elevator_not_serving");
+    event(&mut app, Event::Press(row));
+    event(&mut app, Event::Except(None));
+    event(&mut app, Event::Note("Kazan dairesi ortak alan sayılmaz: idarenin görüşü.".to_owned()));
+    event(&mut app, Event::ExceptConfirm);
+    app.arch_audit_standards_settle();
+    let exceptions = app.document.as_ref().expect("a drawing").model.settings().arch.as_ref().expect("Mimari").audit_exceptions.clone();
+    assert_eq!(exceptions.len(), 1, "{exceptions:#?}");
+    assert_eq!(exceptions[0].code, "paiy_elevator_not_serving");
+    assert!(listed(&app).is_empty(), "the approved finding is hidden");
+    assert_eq!(app.arch.arch_audit.audited.as_ref().expect("checked").excepted, 1, "counted once");
+    event(&mut app, Event::View(1));
+    app.arch_audit_standards_settle();
+    let shown = listed(&app);
+    assert_eq!(shown.len(), 1);
+    assert!(shown[0].exception && !shown[0].lapsed);
+    assert_eq!(shown[0].note.as_deref(), Some("Kazan dairesi ortak alan sayılmaz: idarenin görüşü."));
+    event(&mut app, Event::View(0));
+    // A flat's storage in the basement: 34/8 asks for the elevator there plainly; that finding is open.
+    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let p = |x: f64, y: f64| json!({"x": x, "y": y});
+    run(
+        &mut app,
+        "cad.spaces.create",
+        json!({"layerId": layer, "spaces": [{"parts": [{"outer": {"pts": [p(20.0, 0.0), p(24.0, 0.0), p(24.0, 4.0), p(20.0, 4.0)]}}],
+            "name": "Depo", "unit": "e1", "arch": {"level": "b01"}}]}),
+    );
+    checked(&mut app);
+    let open = listed(&app);
+    assert_eq!(open.len(), 1, "{open:#?}");
+    assert_eq!((open[0].state, open[0].exception), (None, false));
+    assert!(open[0].message.contains("katta eklenti ve teknik hacim"), "{}", open[0].message);
+}
+
 /// The Denetim tab with the rule set over its table: applied for on 30.6.2026, on 2.7.2026 and with no date, light and
 /// dark; `.run/gui-evidence/mevzuat-tarih-8078/`:
 ///
@@ -218,5 +276,34 @@ fn screens() {
             snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
             println!("{}", file.display());
         }
+        // The reviewer's approval of the basement holding only the boiler room, listed with İstisnalar: Göster.
+        use crate::arch_audit::Event;
+        let event = |app: &mut App, e: Event| {
+            let _ = app.update(Message::Arch(crate::arch::Event::ArchAudit(e)));
+        };
+        let mut app = building(&[("Kazan dairesi", "o")], 4);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        dated(&mut app, Some("02.07.2026"));
+        checked(&mut app);
+        let row = crate::arch_audit_scenes::row_of(&app, "paiy_elevator_not_serving");
+        event(&mut app, Event::Press(row));
+        event(&mut app, Event::Except(None));
+        event(&mut app, Event::Note("Kazan dairesi ortak alan sayılmaz: idarenin görüşü.".to_owned()));
+        event(&mut app, Event::ExceptConfirm);
+        app.arch_audit_standards_settle();
+        event(&mut app, Event::View(1));
+        app.arch_audit_standards_settle();
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_elevator_not_serving");
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("4-uzman-onayi-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
     }
 }

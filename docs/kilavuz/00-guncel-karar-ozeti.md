@@ -234,6 +234,8 @@
     - Kurallar yeni pakette (`tr.kentos.mimari-mevzuat`, K63); main'in `tr.kentos.mevzuat`'ı bu dalda yok, birleştirmede
       birleşir. 34/1 Rust'tan taşındı, 34/2 ve 34/5 Rust'ta; olgular `building` bölümünde. Masaüstü Denetim'de ve başsız
       `cad.arch.audit`'te aynı bulgu ve kural seti.
+    - Uzman onayı istisnadır (K64): paketin bulgusu `cad.arch.exceptions`'a `findings` ile verilir; uzman incelemesinin
+      istisnası "Uzman onayı" diye görünür, bulgu değişince düşer; katla ilgili bulgu katın mahallerini adlandırır.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

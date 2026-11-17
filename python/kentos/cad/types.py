@@ -17046,16 +17046,24 @@ class ArchExceptions(_Model):
     one undo step (“İstisna”, “İstisnayı kaldır”, “İstisnaları temizle”). The findings are found by `audit` (absent: every
     group with the default thresholds and no profile); its `within` and `exceptions` are not read.
 
+    A standards package's finding (docs/adr/8078: the national regulation's, the digital project's) is no finding of the
+    command's own audit: a host that runs the package's Python gives it in `findings` as `cad.arch.audit` listed it, and
+    mark names it by its key like any other; its exception lapses once the package says it otherwise. An exception on an
+    uzman incelemesi finding is the reviewer's approval, its note the reviewer's words.
+
     Refusals, in this order: `invalid_input` (mark or unmark without a key, a key twice, a note of more than 1000
-    characters), the audit's own (its paths under `audit.`), `finding_not_found` (`keys[i]`: no finding of the drawing as
-    it is now has it, for mark; no exception has it, for unmark). Prune with nothing to drop, or marks already as asked,
+    characters, a given finding without a key or a code, or one key given twice), the audit's own (its paths under
+    `audit.`), `finding_not_found` (`keys[i]`: no finding of the drawing as it is now has it, nor a given one, for mark;
+    no exception has it, for unmark). Prune with nothing to drop, or marks already as asked,
     change nothing and write no step. `expectedRevision` given and the drawing not at it: nothing is written, a conflict.
     Attributes:
+        findings: The standards packages' findings the caller holds, as `cad.arch.audit` listed them (docs/adr/8078), for mark.
         note: Why the findings are left, for mark.
     """
     operation: ArchExceptionOperation | ArchExceptionOperationName
     audit: ArchAudit | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    findings: list[ArchAuditFinding] | Unset = UNSET
     keys: list[str] | Unset = UNSET
     note: str | None | Unset = UNSET
 
@@ -17066,6 +17074,8 @@ class ArchExceptions(_Model):
             out["audit"] = None if self.audit is None else self.audit.to_json()
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.findings is not UNSET:
+            out["findings"] = [e0.to_json() for e0 in self.findings]
         if self.keys is not UNSET:
             out["keys"] = list(self.keys)
         if self.note is not UNSET:
@@ -17078,6 +17088,7 @@ class ArchExceptions(_Model):
             operation=_enum_in(ArchExceptionOperation, data["operation"]),
             audit=UNSET if "audit" not in data else None if data["audit"] is None else ArchAudit.from_json(data["audit"]),
             expected_revision=data.get("expectedRevision", UNSET),
+            findings=[ArchAuditFinding.from_json(e0) for e0 in data["findings"]] if "findings" in data else UNSET,
             keys=list(data["keys"]) if "keys" in data else UNSET,
             note=data.get("note", UNSET),
         )

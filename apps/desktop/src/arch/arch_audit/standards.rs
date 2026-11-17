@@ -79,13 +79,14 @@ impl App {
 
     /// After a check: the last answer put back, and the rules asked again when the check was the whole drawing's.
     pub(super) fn arch_audit_standards_after_check(&mut self) {
+        let doc = self.document.as_ref().map(|d| &d.model);
         let panel = &mut self.arch.arch_audit;
         let whole = matches!(panel.scope, AuditScope::All);
         let last: BTreeSet<&str> = panel.standards.iter().map(|f| f.key.as_str()).collect();
         if let Some(a) = panel.audited.as_mut() {
             a.findings.retain(|f| !f.code.starts_with(CODES) && !last.contains(f.key.as_str()));
-            if whole {
-                a.findings.extend(panel.standards.iter().cloned());
+            if whole && let Some(doc) = doc {
+                put(doc, panel.view, &panel.standards, a);
             }
         }
         panel.standards_due = whole;
@@ -120,6 +121,7 @@ impl App {
         if generation != self.arch.arch_audit.standards_generation {
             return;
         }
+        let doc = self.document.as_ref().map(|d| &d.model);
         let panel = &mut self.arch.arch_audit;
         let last: BTreeSet<String> = panel.standards.iter().map(|f| f.key.clone()).collect();
         let (digital, regulation) = match &answer {
@@ -151,7 +153,9 @@ impl App {
         {
             let kept = panel.selected.and_then(|i| a.findings.get(i)).map(|f| f.key.clone());
             a.findings.retain(|f| !f.code.starts_with(CODES) && !last.contains(&f.key));
-            a.findings.extend(panel.standards.iter().cloned());
+            if let Some(doc) = doc {
+                put(doc, panel.view, &panel.standards, a);
+            }
             panel.selected = kept.and_then(|k| a.findings.iter().position(|f| f.key == k));
             panel.chosen.retain(|i| *i < a.findings.len());
         }
@@ -169,6 +173,21 @@ impl App {
         let answer = answer(input);
         self.arch_audit_standards_answer(generation, answer);
     }
+}
+
+/// The packages' findings put in the table: the project's exceptions laid on them as the command lays them on its own
+/// (an exception on an uzman incelemesi finding is the reviewer's approval), listed as the bar's İstisnalar asks, those
+/// that are exceptions counted.
+fn put(
+    doc: &kentos_domain::Document,
+    view: kentos_commands::ArchAuditExceptionView,
+    standards: &[ArchAuditFinding],
+    audited: &mut super::Audited,
+) {
+    let (laid, excepted, _) = kentos_native_application::arch_audit::lay_exceptions(doc, standards.to_vec(), view);
+    audited.excepted = audited.excepted.saturating_sub(audited.standards_excepted) + excepted;
+    audited.standards_excepted = excepted;
+    audited.findings.extend(laid);
 }
 
 /// Both packages' answers, each its own or its error: the Dijital proje rule after the file is written and read back

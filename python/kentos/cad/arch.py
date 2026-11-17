@@ -16,6 +16,7 @@ from .types import (  # noqa: F401
     ArchAuditCheckName,
     ArchAuditExceptionView,
     ArchAuditExceptionViewName,
+    ArchAuditFinding,
     ArchAuditWithin,
     ArchAudited,
     ArchEdit,
@@ -719,6 +720,7 @@ class _ArchExceptions(LocalCommand[ArchExceptions, ArchExceptionsEdited, ArchExc
         operation: ArchExceptionOperation | ArchExceptionOperationName,
         audit: ArchAudit | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        findings: Sequence[ArchAuditFinding] | Unset = UNSET,
         keys: Sequence[str] | Unset = UNSET,
         note: str | None | Unset = UNSET,
         request_id: str | None = None,
@@ -743,6 +745,7 @@ class _ArchExceptions(LocalCommand[ArchExceptions, ArchExceptionsEdited, ArchExc
             operation:
             audit:
             expected_revision:
+            findings: The standards packages' findings the caller holds, as `cad.arch.audit` listed them (docs/adr/8078), for mark.
             keys:
             note: Why the findings are left, for mark.
             request_id: Names this write: sent again with the same call it is answered as
@@ -761,6 +764,7 @@ class _ArchExceptions(LocalCommand[ArchExceptions, ArchExceptionsEdited, ArchExc
             operation=operation,
             audit=audit,
             expected_revision=expected_revision,
+            findings=_opt(findings, lambda x: list(x)),
             keys=_opt(keys, lambda x: list(x)),
             note=note,
         ), request_id=request_id, expected=expected)
@@ -773,6 +777,7 @@ class _ArchExceptions(LocalCommand[ArchExceptions, ArchExceptionsEdited, ArchExc
         operation: ArchExceptionOperation | ArchExceptionOperationName,
         audit: ArchAudit | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        findings: Sequence[ArchAuditFinding] | Unset = UNSET,
         keys: Sequence[str] | Unset = UNSET,
         note: str | None | Unset = UNSET,
     ) -> ArchExceptionsEdited:
@@ -783,6 +788,7 @@ class _ArchExceptions(LocalCommand[ArchExceptions, ArchExceptionsEdited, ArchExc
             operation=operation,
             audit=audit,
             expected_revision=expected_revision,
+            findings=_opt(findings, lambda x: list(x)),
             keys=_opt(keys, lambda x: list(x)),
             note=note,
         ))
@@ -795,6 +801,7 @@ class _ArchExceptions(LocalCommand[ArchExceptions, ArchExceptionsEdited, ArchExc
         operation: ArchExceptionOperation | ArchExceptionOperationName,
         audit: ArchAudit | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        findings: Sequence[ArchAuditFinding] | Unset = UNSET,
         keys: Sequence[str] | Unset = UNSET,
         note: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -805,6 +812,7 @@ class _ArchExceptions(LocalCommand[ArchExceptions, ArchExceptionsEdited, ArchExc
             operation=operation,
             audit=audit,
             expected_revision=expected_revision,
+            findings=_opt(findings, lambda x: list(x)),
             keys=_opt(keys, lambda x: list(x)),
             note=note,
         ))
@@ -817,6 +825,7 @@ class _ArchExceptions(LocalCommand[ArchExceptions, ArchExceptionsEdited, ArchExc
         operation: ArchExceptionOperation | ArchExceptionOperationName,
         audit: ArchAudit | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        findings: Sequence[ArchAuditFinding] | Unset = UNSET,
         keys: Sequence[str] | Unset = UNSET,
         note: str | None | Unset = UNSET,
         op: str = "execute",
@@ -832,6 +841,7 @@ class _ArchExceptions(LocalCommand[ArchExceptions, ArchExceptionsEdited, ArchExc
             operation=operation,
             audit=audit,
             expected_revision=expected_revision,
+            findings=_opt(findings, lambda x: list(x)),
             keys=_opt(keys, lambda x: list(x)),
             note=note,
         ), op=op, request_id=request_id, expected=expected)

@@ -127,8 +127,11 @@ def _ne(gerek: str | None, neden: str | None) -> str:
     return neden or "aranmaz"
 
 
-def _bulgu(code: str, ileti: str, onarim: str, kural: str, iz: str, state: str | None = None) -> dict[str, Any]:
-    out: dict[str, Any] = {"code": code, "message": ileti, "repair": onarim, "uids": [], "rule": kural, "_iz": iz}
+def _bulgu(code: str, ileti: str, onarim: str, kural: str, iz: str, state: str | None = None,
+           uids: list[str] | None = None) -> dict[str, Any]:
+    """Bir bulgu; ``uids`` adını verdiği nesneler (katın mahalleri: tabloda seçilir, istisnası onlara bağlanır)."""
+    out: dict[str, Any] = {"code": code, "message": ileti, "repair": onarim, "uids": list(uids or []), "rule": kural,
+                           "_iz": iz}
     if state:
         out["state"] = state
     return out
@@ -216,7 +219,7 @@ def kural(bina: _Bina, sivas: bool, gun: date) -> y.Sonuc:
                 eksik["Sivas"].append(k["name"])
             bulgular.append(_bulgu("paiy_elevator_not_serving",
                                    f"{k['name']}: asansör bu kata ulaşmıyor — {kim.kisa()}", ULASMIYOR, kim.kural(),
-                                   f"{k['level']}:ulaşmıyor"))
+                                   f"{k['level']}:ulaşmıyor", uids=k.get("rooms")))
         for k in bina.bodrum:
             if k["elevators"]:
                 continue
@@ -231,20 +234,20 @@ def kural(bina: _Bina, sivas: bool, gun: date) -> y.Sonuc:
             if u is True and r is True:
                 bulgular.append(_bulgu("paiy_elevator_not_serving",
                                        f"{k['name']}: asansör bu kata ulaşmıyor (katta {icinde}) — {s8.kisa()}; "
-                                       f"{h8.kisa()}", ULASMIYOR, s8.kural(), f"{k['level']}:ulaşmıyor"))
+                                       f"{h8.kisa()}", ULASMIYOR, s8.kural(), f"{k['level']}:ulaşmıyor", uids=k.get("rooms")))
             elif u is True and r is False:
                 bulgular.append(_bulgu("regulation_conflict",
                                        f"{k['name']} (katta {icinde}): asansör ulaşmıyor; {s8.kisa()} ulaşmasını "
                                        f"aramıyor, {h8.kisa()} arıyor — çelişkide idare karar verir", ULASMIYOR,
-                                       f"{s8.kural()} ↔ {h8.kural()}", f"{k['level']}:çelişki"))
+                                       f"{s8.kural()} ↔ {h8.kural()}", f"{k['level']}:çelişki", uids=k.get("rooms")))
             elif u is True:
                 bulgular.append(_bulgu("paiy_elevator_not_serving",
                                        f"{k['name']}: asansör bu kata ulaşmıyor (katta {icinde}) — {h8.kisa()}",
-                                       ULASMIYOR, h8.kural(), f"{k['level']}:ulaşmıyor"))
+                                       ULASMIYOR, h8.kural(), f"{k['level']}:ulaşmıyor", uids=k.get("rooms")))
             elif r is True:
                 bulgular.append(_bulgu("paiy_elevator_not_serving",
                                        f"{k['name']}: asansör bu kata ulaşmıyor (katta {icinde}) — {s8.kisa()}",
-                                       ULASMIYOR, s8.kural(), f"{k['level']}:ulaşmıyor"))
+                                       ULASMIYOR, s8.kural(), f"{k['level']}:ulaşmıyor", uids=k.get("rooms")))
             elif u == "uzman" or r == "uzman":
                 kim = h8 if u == "uzman" else s8
                 bulgular.append(_bulgu("paiy_elevator_not_serving",
@@ -252,7 +255,7 @@ def kural(bina: _Bina, sivas: bool, gun: date) -> y.Sonuc:
                                        f"olan bodruma ulaşmasını ister, 34/1 teknik hacmi saymaz — {kim.kisa()}",
                                        "Teknik hacimlerin ortak alan sayılıp sayılmadığına idare karar verir; "
                                        "gerekiyorsa kuyuyu bu katta da çizin.", kim.kural(),
-                                       f"{k['level']}:teknik", y.UZMAN))
+                                       f"{k['level']}:teknik", y.UZMAN, uids=k.get("rooms")))
     for ad, hal8, uygulanir in (("PAİY", h8, bina.asansor and ulusal8), ("Sivas", s8, bina.asansor)):
         if hal8 is None:
             continue

@@ -14166,6 +14166,737 @@
       ]
     },
     {
+      "name": "Paketin bulgusu verilerek onaylanır (uzman onayı)",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.exceptions",
+          "input": {
+            "operation": "mark",
+            "keys": [
+              "paiy_elevator_not_serving:0192f5a1-7030-7000-8000-000000008078"
+            ],
+            "note": "Kazan dairesi ortak alan sayılmaz: idare görüşü.",
+            "findings": [
+              {
+                "key": "paiy_elevator_not_serving:0192f5a1-7030-7000-8000-000000008078",
+                "check": "regulation",
+                "code": "paiy_elevator_not_serving",
+                "message": "Bodrum kat: yalnız teknik hacim var, asansör ulaşmıyor — PAİY 34/8 (1.7.2026)",
+                "repair": "Teknik hacimlerin ortak alan sayılıp sayılmadığına idare karar verir.",
+                "uids": [
+                  "0192f5a1-7030-7000-8000-000000008078"
+                ],
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "rule": "PAİY 34/8 · RG 1.7.2026/33297",
+                "state": "expertReview"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "paiy_elevator_not_serving:0192f5a1-7030-7000-8000-000000008078"
+              ],
+              "exceptions": 1,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": true,
+            "revision": "changed",
+            "dirty": true
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.audit",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "wall_join_acute:0192f5a1-7030-7000-8000-000000000006,0192f5a1-7030-7000-8000-000000000007",
+                  "check": "walls",
+                  "code": "wall_join_acute",
+                  "message": "Köşe çok dar; gönye birleşimi duvarın çok dışına taşar, birleştirilmedi.",
+                  "repair": "Bir ucu Alın yapın: o duvar diğerinin yüzünde durur.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000006",
+                    "0192f5a1-7030-7000-8000-000000000007"
+                  ],
+                  "at": {
+                    "x": 24.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu Alın yap",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000006"
+                        ],
+                        "operation": {
+                          "kind": "joins",
+                          "end": "butt"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "key": "arch_wall_end_gap:0192f5a1-7030-7000-8000-000000000003,0192f5a1-7030-7000-8000-000000000002:end",
+                  "check": "walls",
+                  "code": "arch_wall_end_gap",
+                  "message": "Duvarın bitiş ucuyla öbür duvar arasında 0.040 m boşluk var; birleşmiyor.",
+                  "repair": "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000003",
+                    "0192f5a1-7030-7000-8000-000000000002"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 4.14
+                  },
+                  "fix": {
+                    "label": "Bitiş ucunu öbür duvara uzat",
+                    "step": {
+                      "command": "cad.walls.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000003"
+                        ],
+                        "operation": {
+                          "kind": "extend",
+                          "to": "0192f5a1-7030-7000-8000-000000000002",
+                          "end": "end"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "key": "arch_wall_ends_apart:0192f5a1-7030-7000-8000-000000000004,0192f5a1-7030-7000-8000-000000000005",
+                  "check": "walls",
+                  "code": "arch_wall_ends_apart",
+                  "message": "İki duvarın uçları arasında 0.050 m boşluk var; birleşmiyor.",
+                  "repair": "Bir ucu tutamaçla öbür uca taşıyın (Uç kenetiyle); uçlar buluşunca duvarlar birleşir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000004",
+                    "0192f5a1-7030-7000-8000-000000000005"
+                  ],
+                  "at": {
+                    "x": 8.515,
+                    "y": 2.02
+                  }
+                },
+                {
+                  "key": "arch_opening_broken:0192f5a1-7030-7000-8000-00000000000a",
+                  "check": "openings",
+                  "code": "arch_opening_broken",
+                  "message": "Açıklığın duvarı yok (K02).",
+                  "repair": "Açıklığı bir duvara taşıyın (Açıklığı taşı) ya da silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000a"
+                  ],
+                  "at": {
+                    "x": 8.5,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "key": "tag_missing_type:0192f5a1-7030-7000-8000-000000000009",
+                  "check": "openings",
+                  "code": "tag_missing_type",
+                  "message": "“P01” açıklığının türü yok.",
+                  "repair": "Öznitelikler'de açıklığın Tür'ünü seçin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000009"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "key": "arch_space_broken:0192f5a1-7030-7000-8000-00000000000d",
+                  "check": "spaces",
+                  "code": "arch_space_broken",
+                  "message": "102 Yatak odası: Mahali duvarlar artık kapatmıyor; sınırı son hâliyle kaldı.",
+                  "repair": "Duvarları kapatın ya da mahali yeniden bulun (Mahali düzenle › Duvarlardan bul).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000d"
+                  ],
+                  "at": {
+                    "x": 2.525,
+                    "y": 6.0
+                  }
+                },
+                {
+                  "key": "arch_space_small:0192f5a1-7030-7000-8000-00000000000f",
+                  "check": "spaces",
+                  "code": "arch_space_small",
+                  "message": "104 Şaft: alanı 0.075 m²; çok küçük bir parça.",
+                  "repair": "İki duvar arasında kalan bir boşluk mahal sayılmış olabilir; gereksizse mahalı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000f"
+                  ],
+                  "at": {
+                    "x": 12.15,
+                    "y": 10.125
+                  }
+                },
+                {
+                  "key": "arch_space_narrow:0192f5a1-7030-7000-8000-00000000000e",
+                  "check": "spaces",
+                  "code": "arch_space_narrow",
+                  "message": "103: ortalama eni 0.050 m; çok dar bir parça.",
+                  "repair": "İki duvar arasında kalan bir boşluk mahal sayılmış olabilir; gereksizse mahalı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000e"
+                  ],
+                  "at": {
+                    "x": 3.5,
+                    "y": 10.025
+                  }
+                },
+                {
+                  "key": "tag_duplicate_number:0192f5a1-7030-7000-8000-000000000008,0192f5a1-7030-7000-8000-00000000000b",
+                  "check": "numbers",
+                  "code": "tag_duplicate_number",
+                  "message": "“K01” numarası 2 açıklıkta.",
+                  "repair": "Numaralardan birini değiştirin (Öznitelikler ya da Numarala).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000008",
+                    "0192f5a1-7030-7000-8000-00000000000b"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  }
+                },
+                {
+                  "key": "tag_duplicate_number:0192f5a1-7030-7000-8000-00000000000c,0192f5a1-7030-7000-8000-000000000010",
+                  "check": "numbers",
+                  "code": "tag_duplicate_number",
+                  "message": "“101” numarası 2 mahalde.",
+                  "repair": "Numaralardan birini değiştirin (Öznitelikler ya da Numarala).",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000000c",
+                    "0192f5a1-7030-7000-8000-000000000010"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 2.0
+                  }
+                },
+                {
+                  "key": "tag_target_gone:0192f5a1-7030-7000-8000-000000000012",
+                  "check": "tags",
+                  "code": "tag_target_gone",
+                  "message": "“K09” etiketinin nesnesi çizimde yok.",
+                  "repair": "Nesneyi geri getirin ya da etiketi silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000012"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": -1.5
+                  }
+                },
+                {
+                  "key": "tag_target_gone:0192f5a1-7030-7000-8000-000000000013",
+                  "check": "tags",
+                  "code": "tag_target_gone",
+                  "message": "“K10” etiketinin nesnesi çizimde yok.",
+                  "repair": "Nesneyi geri getirin ya da etiketi silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000013"
+                  ],
+                  "at": {
+                    "x": 31.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Etiketi sil",
+                    "step": {
+                      "command": "cad.entities.delete",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000013"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "key": "arch_dimension_set_broken:0192f5a1-7030-7000-8000-000000000015",
+                  "check": "dimensions",
+                  "code": "arch_dimension_set_broken",
+                  "message": "Ölçü dizisinin duvarı çizimde yok; ölçüler son yerlerinde duruyor.",
+                  "repair": "Duvarı ya da açıklığı düzeltin; dizi kendiliğinden güncellenir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000015"
+                  ],
+                  "at": {
+                    "x": 20.0,
+                    "y": -2.0
+                  },
+                  "fix": {
+                    "label": "Diziyi bağımsız ölçülere ayır",
+                    "step": {
+                      "command": "cad.dimensionsets.edit",
+                      "input": {
+                        "id": "0192f5a1-7030-7000-8000-000000000500",
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "key": "arch_dimension_broken:0192f5a1-7030-7000-8000-000000000014",
+                  "check": "dimensions",
+                  "code": "arch_dimension_broken",
+                  "message": "İlişkili ölçünün bağı koptu (a); noktaları eski yerlerinde, değeri nesnenin bugünkü ölçüsü değil.",
+                  "repair": "Yeniden bağla ile noktaları nesneye bağlayın, değer güncellenir; bağı çözmek değeri değiştirmez, ölçü kısmen bağlı kalır.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000014"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": -1.0
+                  },
+                  "fix": {
+                    "label": "Bağı çöz (noktalar eski yerinde, değer değişmez)",
+                    "step": {
+                      "command": "cad.dimensions.reassociate",
+                      "input": {
+                        "uid": "0192f5a1-7030-7000-8000-000000000014",
+                        "points": [
+                          {
+                            "point": "a",
+                            "to": null
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "key": "arch_grid_label_duplicate:0192f5a1-7030-7000-8000-000000000016,0192f5a1-7030-7000-8000-00000000001e",
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001e"
+                  ],
+                  "at": {
+                    "x": 30.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Üst üste binen aksı sil",
+                    "step": {
+                      "command": "cad.entities.delete",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001e"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "key": "arch_grid_label_duplicate:0192f5a1-7030-7000-8000-000000000016,0192f5a1-7030-7000-8000-00000000001f",
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-00000000001f"
+                  ],
+                  "at": {
+                    "x": 32.0,
+                    "y": 2.0
+                  },
+                  "fix": {
+                    "label": "Aksı “B” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001f"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "B"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "key": "arch_grid_label_duplicate:0192f5a1-7030-7000-8000-000000000022,0192f5a1-7030-7000-8000-000000000023",
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“1” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000022",
+                    "0192f5a1-7030-7000-8000-000000000023"
+                  ],
+                  "at": {
+                    "x": 33.0,
+                    "y": 7.0
+                  },
+                  "fix": {
+                    "label": "Aksı “3” olarak adlandır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000023"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "label": "3"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "key": "arch_grid_label_duplicate:0192f5a1-7030-7000-8000-000000000016,0192f5a1-7030-7000-8000-000000000020",
+                  "check": "grids",
+                  "code": "arch_grid_label_duplicate",
+                  "message": "“A” etiketi bu katta birden çok aksta.",
+                  "repair": "Akslardan birini yeniden adlandırın (Öznitelikler ya da Aksları numarala); üst üste binen fazla aksı silin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000016",
+                    "0192f5a1-7030-7000-8000-000000000020"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 2.0
+                  }
+                },
+                {
+                  "key": "arch_column_grid_gone:0192f5a1-7030-7000-8000-000000000017",
+                  "check": "columns",
+                  "code": "arch_column_grid_gone",
+                  "message": "Kolonun akslarından biri yok ya da akslar kesişmiyor; kolon son yerinde kaldı.",
+                  "repair": "Aksı geri getirin ya da kolonu başka akslara bağlayın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000017"
+                  ],
+                  "at": {
+                    "x": 30.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Kolonu akslardan ayır",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000017"
+                        ],
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "key": "arch_viewmark_target_gone:0192f5a1-7030-7000-8000-000000000019",
+                  "check": "viewmarks",
+                  "code": "arch_viewmark_target_gone",
+                  "message": "“A” işareti: İşaretin hedefi (adlı görünüm ya da paftadaki pencere) yok; işaret son yazısıyla kaldı.",
+                  "repair": "Başvurular'dan yeniden bağlayın ya da bağı kopartın.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000019"
+                  ],
+                  "at": {
+                    "x": 0.0,
+                    "y": -3.0
+                  },
+                  "fix": {
+                    "label": "İşareti hedefinden ayır",
+                    "step": {
+                      "command": "cad.viewmarks.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000019"
+                        ],
+                        "operation": {
+                          "kind": "detach"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "key": "arch_level_missing:0192f5a1-7030-7000-8000-00000000001c",
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Duvarın katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001c"
+                  ],
+                  "at": {
+                    "x": 14.0,
+                    "y": 6.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001c"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "key": "arch_level_missing:0192f5a1-7030-7000-8000-000000000010",
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahalın katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000010"
+                  ],
+                  "at": {
+                    "x": 21.5,
+                    "y": 11.5
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000010"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "key": "arch_level_missing:0192f5a1-7030-7000-8000-000000000018",
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Kolonun katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-000000000018"
+                  ],
+                  "at": {
+                    "x": 34.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-000000000018"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "key": "arch_level_missing:0192f5a1-7030-7000-8000-00000000001b",
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Rampanın katı “kat-9” projede yok.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001b"
+                  ],
+                  "at": {
+                    "x": 40.0,
+                    "y": 5.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001b"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "key": "arch_level_missing:0192f5a1-7030-7000-8000-00000000001d",
+                  "check": "levels",
+                  "code": "arch_level_missing",
+                  "message": "Mahal ayırıcının katı yok; projede 2 kat var.",
+                  "repair": "Düzelt ya da Kata ver ile katını verin; Öznitelikler'de Kat (L) de seçilir.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001d"
+                  ],
+                  "at": {
+                    "x": 52.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Katını Zemin kat yap",
+                    "step": {
+                      "command": "cad.levels.assign",
+                      "input": {
+                        "level": "zemin",
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001d"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "key": "stair_rise_level:0192f5a1-7030-7000-8000-00000000001a",
+                  "check": "stairs",
+                  "code": "stair_rise_level",
+                  "message": "16 rıht × 0.175 m = 2.800 m; katın yüksekliği 3.000 m.",
+                  "repair": "Rıht yüksekliğini katın yüksekliğinden alın ya da rıht sayısını değiştirin.",
+                  "uids": [
+                    "0192f5a1-7030-7000-8000-00000000001a"
+                  ],
+                  "at": {
+                    "x": 40.0,
+                    "y": 0.0
+                  },
+                  "fix": {
+                    "label": "Yüksekliği kattan al",
+                    "step": {
+                      "command": "cad.arch.edit",
+                      "input": {
+                        "uids": [
+                          "0192f5a1-7030-7000-8000-00000000001a"
+                        ],
+                        "operation": {
+                          "kind": "set",
+                          "heightFromLevel": true
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "outside": 0,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "canUndo": true,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verilen bulgunun kodu yoksa reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.exceptions",
+          "input": {
+            "operation": "mark",
+            "keys": [
+              "paiy_elevator_not_serving:0192f5a1-7030-7000-8000-000000008078"
+            ],
+            "findings": [
+              {
+                "key": "paiy_elevator_not_serving:0192f5a1-7030-7000-8000-000000008078",
+                "check": "regulation",
+                "code": "",
+                "message": "Bodrum kat: yalnız teknik hacim var, asansör ulaşmıyor — PAİY 34/8 (1.7.2026)",
+                "repair": "Teknik hacimlerin ortak alan sayılıp sayılmadığına idare karar verir.",
+                "uids": [
+                  "0192f5a1-7030-7000-8000-000000008078"
+                ],
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "rule": "PAİY 34/8 · RG 1.7.2026/33297",
+                "state": "expertReview"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "Verilen bulgunun anahtarı ya da kodu yok, ya da anahtarı iki kez verilmiş; cad.arch.audit'in verdiği bulguyu olduğu gibi verin.",
+              "path": "findings[0]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verilmeyen paket bulgusu istisna yapılamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.arch.exceptions",
+          "input": {
+            "operation": "mark",
+            "keys": [
+              "paiy_elevator_not_serving:0192f5a1-7030-7000-8000-000000008078"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "finding_not_found",
+              "message": "Çizimin bugünkü denetiminde “paiy_elevator_not_serving:0192f5a1-7030-7000-8000-000000008078” anahtarlı bulgu yok; önce cad.arch.audit ile denetleyin.",
+              "path": "keys[0]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "Olmayan istisna kaldırılamaz",
       "steps": [
         {
