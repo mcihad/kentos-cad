@@ -18,8 +18,8 @@ Maddenin her hâli bodrumu başka şeyle sayar (``data/surumler.json``):
 (bağımsız bölüm, ortak alan, eklenti, grupsuz), teknik ve iskân edilen mahal sayısı, asansörleri (Asansör adlı mahal ya
 da Asansör bloğu); programın bağımsız bölümleri ve konutları. ±0,00 ve üstündeki her kat sayılır (projenin katları);
 bodrum içindekine göre sayılır; asansörün ulaşması mahali olan katlarda aranır.
-Grupsuz mahal hiçbir bağımsız bölümün değildir: ortak alan gibi okunur. "Uygulama imar planına göre kat adedi" künyenin
-``kat_adedi``'dir, yazılmamışsa çiziminki. Yerel yönetmelik daha sıkıysa o bağlar ve PAİY'ninki iletide yanında yazılır;
+Grupsuz mahal hiçbir bağımsız bölümün değildir: ortak alan gibi okunur. "Uygulama imar planına göre kat adedi" parselin
+plan notudur (``storeys``, docs/adr/8098), yoksa künyenin ``kat_adedi``'si, ikisi de yazılmamışsa çiziminki. Yerel yönetmelik daha sıkıysa o bağlar ve PAİY'ninki iletide yanında yazılır;
 gevşekse ve çizim yalnız ona uyuyorsa çelişkidir, idare karar verir (PAİY 69/3).
 """
 
@@ -81,21 +81,26 @@ def _icinde(s: dict[str, Any]) -> str:
     return ", ".join(parca[:-1]) + (" ve " if len(parca) > 1 else "") + parca[-1]
 
 
-def _plan(permit: dict[str, Any]) -> int | None:
+def _plan(permit: dict[str, Any], bina: dict[str, Any]) -> tuple[int | None, str | None]:
+    """Uygulama imar planına göre kat adedi ve nereden okunduğu: parselin plan notu (docs/adr/8098), yoksa künyenin
+    ``kat_adedi``'si."""
+    for n in bina.get("planNotes") or []:
+        if n.get("key") == "storeys":
+            return int(round(float(n["value"]))), "plan notundan"
     metin = str((permit.get("particulars") or {}).get("kat_adedi") or "").strip()
-    return int(metin) if re.fullmatch(r"\d+", metin) else None
+    return (int(metin), "künyeden") if re.fullmatch(r"\d+", metin) else (None, None)
 
 
 class _Bina:
     """Kuralın okuduğu bina: katları, bodrumları, tek konut olup olmadığı, asansörü."""
 
-    def __init__(self, bina: dict[str, Any], plan: int | None) -> None:
+    def __init__(self, bina: dict[str, Any], plan: tuple[int | None, str | None]) -> None:
         self.katlar = bina.get("storeys") or []
         self.ust = [s for s in self.katlar if s["elevation"] >= -1e-6]
         self.hizmet = [s for s in self.ust if _odali(s)]
         self.bodrum = [s for s in self.katlar if s["elevation"] < -1e-6]
         self.tek_konut = bina.get("units") == 1 and bina.get("dwellings") == 1
-        self.plan = plan
+        self.plan, self.plan_kaynak = plan
         self.asansor = any(s["elevators"] > 0 for s in self.katlar)
 
     def gerek(self, hal: y.Hal) -> tuple[str | None, str, str | None]:
@@ -104,7 +109,7 @@ class _Bina:
         plandan = bool(hal.anahtar.get("planStoreys")) and self.plan is not None
         ust = self.plan if plandan else len(self.ust)
         n = ust + len(sayilan)
-        soz = (f"bodrum dahil {n} kat" if sayilan else f"{n} kat") + (", kat adedi künyeden" if plandan else "")
+        soz = (f"bodrum dahil {n} kat" if sayilan else f"{n} kat") + (f", kat adedi {self.plan_kaynak}" if plandan else "")
         if hal.yonetmelik == "PAİY":
             if self.tek_konut:
                 return None, soz, "tek bağımsız bölümlü konutta aranmaz"
@@ -276,7 +281,7 @@ def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Son
     veri = facts.get("building") or {}
     if not veri.get("storeys"):
         return y.Sonuc([], [])
-    bina = _Bina(veri, _plan(facts.get("permit") or {}))
+    bina = _Bina(veri, _plan(facts.get("permit") or {}, veri))
     sivas = veri.get("local") == "sivas"
     maddeler = ULUSAL + (YEREL if sivas else [])
     return y.denetle(lambda g: kural(bina, sivas, g), maddeler, gun, neden, "asansör kuralı")

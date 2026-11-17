@@ -591,7 +591,8 @@ aynı çizim 30.6.2026'da geçer, 2.7.2026'da 34/8'den kalır, tarihsiz eksik ve
 (`fire_escape_tests`). İç yükseklik ADR 8040 §3'te Rust'ta yapılmıştı.
 **Kalan:** Ek-3'te korunumlu şaft beyanı ve yangın kesici (ADR 8082 §6, 8090 §6); duvar stilinin taşıyıcılığı (ADR 8090
 §6); çatının Broof sınıfı ve mahal kaplamalarının malzemesi (ADR 8091 §6); 62/4'ün kuyu havalandırması (ADR 8087 §6, 8092 §6);
-erişilebilir yol (TS 9111 metni); plan notlarının öbür konuları (ADR 8084 §6); blok başına bölge ve taşıyıcı sistem (ADR
+erişilebilir yol (TS 9111 metni); plan notlarının öbür konuları (çatı, bodrum, çıkmalar; CBS'in Hmax'ı ve KatAdedi'si: ADR
+8084 §6, 8098 §6); blok başına bölge ve taşıyıcı sistem (ADR
 8085 §6, 8094 §6);
 konut dışı (B22);
 emsalde 22/1-j ve 5/8'in bodrum listesi (ADR 8079 §6).
@@ -686,6 +687,10 @@ yerel yönetmelik Sivas ise kalın taş duvarlar %30'un içinde okunur, sınır�
 içinde sayılan (`exemptCap`); olgular Emsal ve TAKS tablosunu bir kez sayar (paket 0.20.0, 4 bağımsız durum).
 **Yapıldı (17 Kasım 2026, [ADR 8097](../docs/adr/8097-emsal-zone-facade-corner.md), K142):** emsal zonlarının cephe
 köşesi: iki mahalin konturunun ortak köşesi ortak duvarın ekseninden bölünür, zonun alanı mahallerinin brüt alanıdır.
+**Yapıldı (17 Kasım 2026, [ADR 8098](../docs/adr/8098-plan-building-height-and-storeys.md), K143–K146):** plan notunda
+planın bina yüksekliği ve kat adedi (`.kcad` mimari verisi 16); PAİY 5/11: ±0,00'dan son katın tavan döşemesinin
+üstüne ve zemin ile normal katlar (asma kat, çatı arası, bodrum sayılmaz) planınkini aşamaz (paket 0.21.0, 8 bağımsız
+durum).
 
 **Kullanıcı sonucu:** Denetim, başvuru tarihinde yürürlükte olan kuralları uygular. Her bulgu geçti, kaldı, eksik veri,
 uzman incelemesi ya da kapsam dışıdır. Yorum isteyen konu kendiliğinden "uygun" sayılmaz. Dayanak Z9; Ek A.

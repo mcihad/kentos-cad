@@ -261,6 +261,17 @@ def cases():
     stone = {"levels": levels, "structure": {"system": "cutStoneMasonry", "traditional": True}}
     out.append({"name": "Mimari: taşıyıcı sistem, geleneksel kesme taş yığma (ADR 8094)",
                 "steps": [step("execute", {"arch": stone}, done(["arch"]), {**FLAGS, "settings": {"arch": stone}})]})
+    # The plan's building height and storey count (docs/adr/8098): a height up to 1000 m, a whole number of storeys.
+    limits = {"levels": levels, "planNotes": [
+        {"key": "buildingHeight", "value": 9.5, "source": "UİP 12.3.2019, plan notu 3"},
+        {"key": "storeys", "value": 3, "source": "UİP 12.3.2019, plan notu 3"}]}
+    out.append({"name": "Mimari: planın bina yüksekliği ve kat adedi notları (ADR 8098)",
+                "steps": [step("execute", {"arch": limits}, done(["arch"]), {**FLAGS, "settings": {"arch": limits}})]})
+    out.append(refused("kat adedi tam sayı değil",
+                       {"arch": {"levels": levels, "planNotes": [
+                           {"key": "storeys", "value": 2.5, "source": "UİP 12.3.2019, plan notu 3"}]}},
+                       "invalid_arch", "“Kat adedi (en çok)” plan notunun değeri 1 ile 200 arasında bir tam sayı olmalı.",
+                       "arch.planNotes.0.value"))
     out.append(refused("betonarme binada geleneksel mimari öğeler",
                        {"arch": {"levels": levels, "structure": {"system": "reinforcedConcrete", "traditional": True}}},
                        "invalid_arch",
@@ -616,7 +627,7 @@ def build():
         "command": "cad.settings.set",
         "commandVersion": 1,
         "title": "Proje ayarları",
-        "note": "Written by scripts/fixtures/settings_set_command_cases.py from the contract's rules and docs/adr/0165, 0167, 0168, 0205, 0248 §5, 0339 §3, 0720, 0801, 8094; do not edit by hand.",
+        "note": "Written by scripts/fixtures/settings_set_command_cases.py from the contract's rules and docs/adr/0165, 0167, 0168, 0205, 0248 §5, 0339 §3, 0720, 0801, 8094, 8098; do not edit by hand.",
         "setup": setup(),
         "cases": cases()+room_choice_cases(),
     }

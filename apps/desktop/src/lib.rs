@@ -1563,6 +1563,9 @@ mod cut_stone_tests;
 #[path = "tests/stone_wall_tests.rs"]
 mod stone_wall_tests;
 #[cfg(test)]
+#[path = "tests/plan_limits_tests.rs"]
+mod plan_limits_tests;
+#[cfg(test)]
 #[path = "tests/storey_link_tests.rs"]
 mod storey_link_tests;
 #[cfg(test)]

@@ -1702,7 +1702,8 @@ pub enum LocalRules {
 
 /// What a plan note gives a value for (docs/adr/8084): a measure a rule of the regulation reads, the plan's value
 /// coming before the regulations' where PAİY lets a plan say more (69/2–3; 28/1: “uygulama imar planında daha fazla
-/// belirlenmemiş ise”).
+/// belirlenmemiş ise”), or the plan's own limit PAİY points to (5/11: “uygulama imar planında … gösterilen kat adedi veya
+/// bina yüksekliği aşılamaz”, docs/adr/8098).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -1714,16 +1715,24 @@ pub enum PlanNoteKey {
     /// Kat yüksekliği, en çok (28/1): every storey's on and over ±0.00 floor to floor (the ground storey's too, unless
     /// a note gives its own), m.
     StoreyHeight,
+    /// Bina yüksekliği, en çok (5/11, 4/1-n; docs/adr/8098): from the building's ±0.00 to its eaves level (the top of
+    /// its last storey's ceiling slab, 4/1-ppp), m.
+    BuildingHeight,
+    /// Kat adedi, en çok (5/11; docs/adr/8098): the ground and normal storeys, a whole number.
+    Storeys,
 }
 
 impl PlanNoteKey {
-    pub const ALL: [PlanNoteKey; 2] = [PlanNoteKey::GroundStoreyHeight, PlanNoteKey::StoreyHeight];
+    pub const ALL: [PlanNoteKey; 4] =
+        [PlanNoteKey::GroundStoreyHeight, PlanNoteKey::StoreyHeight, PlanNoteKey::BuildingHeight, PlanNoteKey::Storeys];
 
     /// As the form and a finding name it.
     pub fn label(self) -> &'static str {
         match self {
             PlanNoteKey::GroundStoreyHeight => "Zemin kat yüksekliği (en çok)",
             PlanNoteKey::StoreyHeight => "Kat yüksekliği (en çok)",
+            PlanNoteKey::BuildingHeight => "Bina yüksekliği (en çok)",
+            PlanNoteKey::Storeys => "Kat adedi (en çok)",
         }
     }
 
@@ -1732,9 +1741,31 @@ impl PlanNoteKey {
         match self {
             PlanNoteKey::GroundStoreyHeight => "groundStoreyHeight",
             PlanNoteKey::StoreyHeight => "storeyHeight",
+            PlanNoteKey::BuildingHeight => "buildingHeight",
+            PlanNoteKey::Storeys => "storeys",
         }
     }
+
+    /// The value's unit as the form writes it: metres, or storeys for the storey count.
+    pub fn unit(self) -> &'static str {
+        match self {
+            PlanNoteKey::Storeys => "kat",
+            _ => "m",
+        }
+    }
+
+    /// Whether a note of it is the plan's own limit 5/11 reads (docs/adr/8098), not a storey's height 28/1 leaves to
+    /// the plan.
+    pub fn is_plan_limit(self) -> bool {
+        matches!(self, PlanNoteKey::BuildingHeight | PlanNoteKey::Storeys)
+    }
 }
+
+/// The most a building height plan note may give, m.
+pub const PLAN_BUILDING_HEIGHT_MAX: f64 = 1000.0;
+
+/// The most storeys a storey count plan note may give.
+pub const PLAN_STOREYS_MAX: f64 = 200.0;
 
 /// A plan note's value (docs/adr/8084): what it is for, the value as the note writes it (metres for a height) and where
 /// it stands (“UİP 12.3.2019, plan notu 7”), as the architect reads it from the plan: KentOS does not read a note's
@@ -1762,10 +1793,23 @@ impl PlanNote {
             return Some(("planNotes".into(), format!("En çok {PLAN_NOTES_MAX} plan notu verilebilir.")));
         }
         for (i, n) in notes.iter().enumerate() {
-            if !(n.value.is_finite() && n.value > 0.0 && n.value <= 20.0) {
+            let wrong = match n.key {
+                PlanNoteKey::GroundStoreyHeight | PlanNoteKey::StoreyHeight => {
+                    (!(n.value.is_finite() && n.value > 0.0 && n.value <= 20.0)).then_some("sıfırdan büyük, en çok 20 m")
+                }
+                PlanNoteKey::BuildingHeight => (!(n.value.is_finite()
+                    && n.value > 0.0
+                    && n.value <= PLAN_BUILDING_HEIGHT_MAX))
+                    .then_some("sıfırdan büyük, en çok 1000 m"),
+                PlanNoteKey::Storeys => (!(n.value.is_finite()
+                    && n.value.fract() == 0.0
+                    && (1.0..=PLAN_STOREYS_MAX).contains(&n.value)))
+                    .then_some("1 ile 200 arasında bir tam sayı"),
+            };
+            if let Some(what) = wrong {
                 return Some((
                     format!("planNotes.{i}.value"),
-                    format!("“{}” plan notunun değeri sıfırdan büyük, en çok 20 m olmalı.", n.key.label()),
+                    format!("“{}” plan notunun değeri {what} olmalı.", n.key.label()),
                 ));
             }
             let source = n.source.trim();
@@ -2230,6 +2274,11 @@ impl ArchSettings {
     /// Whether it keeps the parcel's plan notes (Mimari data 11, docs/adr/8084).
     pub fn has_plan_notes(&self) -> bool {
         !self.plan_notes.is_empty()
+    }
+
+    /// Whether a plan note gives the plan's building height or storey count (Mimari data 16, docs/adr/8098).
+    pub fn has_plan_limits(&self) -> bool {
+        self.plan_notes.iter().any(|n| n.key.is_plan_limit())
     }
 
     /// Whether it says the parcel's area's use (Mimari data 12, docs/adr/8085).
@@ -2925,6 +2974,36 @@ mod plan_cut_tests {
         a.plan_notes[1] = note(PlanNoteKey::GroundStoreyHeight, 4.0, "plan notu 9");
         assert_eq!(path(&a).as_deref(), Some("planNotes.1.key"));
         assert!(!serde_json::to_string(&ArchSettings::default()).unwrap().contains("planNotes"));
+    }
+
+    /// The plan's building height and storey count (docs/adr/8098): a height up to 1000 m, a whole number of storeys from
+    /// 1 to 200; written by their names.
+    #[test]
+    fn the_plan_s_building_height_and_storey_count_are_notes_of_their_own() {
+        let note = |key, value| PlanNote { key, value, source: "UİP 12.3.2019, plan notu 3".into() };
+        let mut a = ArchSettings {
+            plan_notes: vec![note(PlanNoteKey::BuildingHeight, 9.5), note(PlanNoteKey::Storeys, 3.0)],
+            ..Default::default()
+        };
+        assert_eq!(a.problem(), None);
+        assert!(a.has_plan_limits());
+        let json = serde_json::to_value(&a).unwrap();
+        assert_eq!(json["planNotes"][0]["key"], "buildingHeight");
+        assert_eq!(json["planNotes"][1]["key"], "storeys");
+        assert_eq!(serde_json::from_value::<ArchSettings>(json).unwrap(), a);
+        let path = |a: &ArchSettings| a.problem().map(|(p, _)| p);
+        a.plan_notes[1].value = 2.5;
+        assert_eq!(path(&a).as_deref(), Some("planNotes.1.value"), "a storey count is a whole number");
+        a.plan_notes[1].value = 201.0;
+        assert_eq!(path(&a).as_deref(), Some("planNotes.1.value"));
+        a.plan_notes[1].value = 3.0;
+        a.plan_notes[0].value = 24.0;
+        assert_eq!(path(&a), None, "a building is higher than a storey");
+        a.plan_notes[0].value = 1001.0;
+        assert_eq!(path(&a).as_deref(), Some("planNotes.0.value"));
+        assert!(!ArchSettings { plan_notes: vec![note(PlanNoteKey::StoreyHeight, 3.0)], ..Default::default() }
+            .has_plan_limits());
+        assert_eq!((PlanNoteKey::Storeys.unit(), PlanNoteKey::BuildingHeight.unit()), ("kat", "m"));
     }
 
     /// Bölge (docs/adr/8085): written by its name, absent when not said; the facts' names are the same.

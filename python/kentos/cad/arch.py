@@ -135,19 +135,21 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     kompartıman bykhy_compartment_storeys_over, 24/4; merdiven yuvası ve şaft olmayan
     katlar arası boşluk atriumdur, duman kontrolü ve 90 m²'den küçükse duman perdesi
     çizimde okunmaz, uzman incelemesi bykhy_atrium, 24/5) ve kat yüksekliği ile kapılar
-    da (konut projesinde zemin ve normal katlar 3,60 m, 12.8.2023'ten bodrum hariç üç
-    kata kadar 4,00, paiy_storey_height_over, 28/1-c; konut bölgesinde zemin dahil üç
-    kata kadar geleneksel kesme taş yığma binada 9.10.2021'den 4,50, 28/1-d; kapı
-    yüksekliği 2,10 m paiy_door_height_below, net temiz genişlik bina girişinde 1,50,
-    bağımsız bölüm girişinde 1,00, öbür kapılarda 0,90 m, 13.8.2025'e kadar balkon ve
-    tuvalet kapısında 0,80 paiy_door_width_below, 39/1) ve yapı elemanlarının dayanımı
-    da (BYKHY Ek-3/B, Ek-3/C: taşıyıcı sistemin kolon ve kirişi R, döşemeler REI, dış
-    duvarlar ve kompartıman duvarları EI, korunumlu yangın merdiveni yuvası REI 120,
-    teras döşemesi REI, çatı EI, kullanım sınıfına, yağmurlamaya, bina yüksekliğine ve
-    bodrum derinliğine göre; beyan edilen sınıf yetmezse ya da yoksa kat ve eleman türü
-    başına bykhy_element_resistance, yağmurlamasız konut dışı bina 30,50 m'yi aşarsa
-    bykhy_height_not_permitted) ve şaftlarla asansörler de (yüksek binada tesisat şaftı
-    ve bacanın duvarı en az EI 120, kapağı en az E 90 ve duman sızdırmaz
+    da (planın plan notundaki bina yüksekliği — ±0,00'dan son katın tavan döşemesinin
+    üstüne — ve kat adedi aşılırsa paiy_building_height_over, paiy_storey_count_over,
+    PAİY 5/11; konut projesinde zemin ve normal katlar 3,60 m, 12.8.2023'ten bodrum
+    hariç üç kata kadar 4,00, paiy_storey_height_over, 28/1-c; konut bölgesinde zemin
+    dahil üç kata kadar geleneksel kesme taş yığma binada 9.10.2021'den 4,50, 28/1-d;
+    kapı yüksekliği 2,10 m paiy_door_height_below, net temiz genişlik bina girişinde
+    1,50, bağımsız bölüm girişinde 1,00, öbür kapılarda 0,90 m, 13.8.2025'e kadar balkon
+    ve tuvalet kapısında 0,80 paiy_door_width_below, 39/1) ve yapı elemanlarının
+    dayanımı da (BYKHY Ek-3/B, Ek-3/C: taşıyıcı sistemin kolon ve kirişi R, döşemeler
+    REI, dış duvarlar ve kompartıman duvarları EI, korunumlu yangın merdiveni yuvası REI
+    120, teras döşemesi REI, çatı EI, kullanım sınıfına, yağmurlamaya, bina yüksekliğine
+    ve bodrum derinliğine göre; beyan edilen sınıf yetmezse ya da yoksa kat ve eleman
+    türü başına bykhy_element_resistance, yağmurlamasız konut dışı bina 30,50 m'yi
+    aşarsa bykhy_height_not_permitted) ve şaftlarla asansörler de (yüksek binada tesisat
+    şaftı ve bacanın duvarı en az EI 120, kapağı en az E 90 ve duman sızdırmaz
     bykhy_shaft_resistance, 25/3; tesisat şaftının kapağı kaçış merdivenine ya da yangın
     güvenlik holüne açılırsa bykhy_shaft_cover_stair, 41/9; asansör kuyusu en az EI 60
     bykhy_elevator_shaft, 62/2; asansör kapısı koridor, hol ve benzeri dışında kullanım
@@ -357,19 +359,21 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         kompartıman bykhy_compartment_storeys_over, 24/4; merdiven yuvası ve şaft olmayan
         katlar arası boşluk atriumdur, duman kontrolü ve 90 m²'den küçükse duman perdesi
         çizimde okunmaz, uzman incelemesi bykhy_atrium, 24/5) ve kat yüksekliği ile kapılar
-        da (konut projesinde zemin ve normal katlar 3,60 m, 12.8.2023'ten bodrum hariç üç
-        kata kadar 4,00, paiy_storey_height_over, 28/1-c; konut bölgesinde zemin dahil üç
-        kata kadar geleneksel kesme taş yığma binada 9.10.2021'den 4,50, 28/1-d; kapı
-        yüksekliği 2,10 m paiy_door_height_below, net temiz genişlik bina girişinde 1,50,
-        bağımsız bölüm girişinde 1,00, öbür kapılarda 0,90 m, 13.8.2025'e kadar balkon ve
-        tuvalet kapısında 0,80 paiy_door_width_below, 39/1) ve yapı elemanlarının dayanımı
-        da (BYKHY Ek-3/B, Ek-3/C: taşıyıcı sistemin kolon ve kirişi R, döşemeler REI, dış
-        duvarlar ve kompartıman duvarları EI, korunumlu yangın merdiveni yuvası REI 120,
-        teras döşemesi REI, çatı EI, kullanım sınıfına, yağmurlamaya, bina yüksekliğine ve
-        bodrum derinliğine göre; beyan edilen sınıf yetmezse ya da yoksa kat ve eleman türü
-        başına bykhy_element_resistance, yağmurlamasız konut dışı bina 30,50 m'yi aşarsa
-        bykhy_height_not_permitted) ve şaftlarla asansörler de (yüksek binada tesisat şaftı
-        ve bacanın duvarı en az EI 120, kapağı en az E 90 ve duman sızdırmaz
+        da (planın plan notundaki bina yüksekliği — ±0,00'dan son katın tavan döşemesinin
+        üstüne — ve kat adedi aşılırsa paiy_building_height_over, paiy_storey_count_over,
+        PAİY 5/11; konut projesinde zemin ve normal katlar 3,60 m, 12.8.2023'ten bodrum
+        hariç üç kata kadar 4,00, paiy_storey_height_over, 28/1-c; konut bölgesinde zemin
+        dahil üç kata kadar geleneksel kesme taş yığma binada 9.10.2021'den 4,50, 28/1-d;
+        kapı yüksekliği 2,10 m paiy_door_height_below, net temiz genişlik bina girişinde
+        1,50, bağımsız bölüm girişinde 1,00, öbür kapılarda 0,90 m, 13.8.2025'e kadar balkon
+        ve tuvalet kapısında 0,80 paiy_door_width_below, 39/1) ve yapı elemanlarının
+        dayanımı da (BYKHY Ek-3/B, Ek-3/C: taşıyıcı sistemin kolon ve kirişi R, döşemeler
+        REI, dış duvarlar ve kompartıman duvarları EI, korunumlu yangın merdiveni yuvası REI
+        120, teras döşemesi REI, çatı EI, kullanım sınıfına, yağmurlamaya, bina yüksekliğine
+        ve bodrum derinliğine göre; beyan edilen sınıf yetmezse ya da yoksa kat ve eleman
+        türü başına bykhy_element_resistance, yağmurlamasız konut dışı bina 30,50 m'yi
+        aşarsa bykhy_height_not_permitted) ve şaftlarla asansörler de (yüksek binada tesisat
+        şaftı ve bacanın duvarı en az EI 120, kapağı en az E 90 ve duman sızdırmaz
         bykhy_shaft_resistance, 25/3; tesisat şaftının kapağı kaçış merdivenine ya da yangın
         güvenlik holüne açılırsa bykhy_shaft_cover_stair, 41/9; asansör kuyusu en az EI 60
         bykhy_elevator_shaft, 62/2; asansör kapısı koridor, hol ve benzeri dışında kullanım

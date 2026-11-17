@@ -5937,16 +5937,21 @@ PlanBoxName = Literal["index", "geometry", "local"]
 class PlanNoteKey(_StrEnum):
     """What a plan note gives a value for (docs/adr/8084): a measure a rule of the regulation reads, the plan's value
     coming before the regulations' where PAİY lets a plan say more (69/2–3; 28/1: “uygulama imar planında daha fazla
-    belirlenmemiş ise”).
+    belirlenmemiş ise”), or the plan's own limit PAİY points to (5/11: “uygulama imar planında … gösterilen kat adedi veya
+    bina yüksekliği aşılamaz”, docs/adr/8098).
 
     - ``groundStoreyHeight``: Zemin kat yüksekliği, en çok (28/1): the ground storey's floor to floor, m.
     - ``storeyHeight``: Kat yüksekliği, en çok (28/1): every storey's on and over ±0.00 floor to floor (the ground storey's too, unless
+    - ``buildingHeight``: Bina yüksekliği, en çok (5/11, 4/1-n; docs/adr/8098): from the building's ±0.00 to its eaves level (the top of
+    - ``storeys``: Kat adedi, en çok (5/11; docs/adr/8098): the ground and normal storeys, a whole number.
     """
     GROUND_STOREY_HEIGHT = "groundStoreyHeight"
     STOREY_HEIGHT = "storeyHeight"
+    BUILDING_HEIGHT = "buildingHeight"
+    STOREYS = "storeys"
 
 
-PlanNoteKeyName = Literal["groundStoreyHeight", "storeyHeight"]
+PlanNoteKeyName = Literal["groundStoreyHeight", "storeyHeight", "buildingHeight", "storeys"]
 """The names of :class:`PlanNoteKey`, for a plain string."""
 
 
@@ -16797,7 +16802,8 @@ class ArchAuditFinding(_Model):
             and `bykhy_stair_door_rating` (docs/adr/8078 §8), the emsal limits' conditions `paiy_caretaker_not_required`,
             `paiy_library_not_exempt` (docs/adr/8079), `paiy_traditional_not_exempt` (22/1-m, docs/adr/8094),
             `paiy_masonry_wall_undeclared`, `paiy_masonry_walls_not_exempt` (5/8, 20/8-j, docs/adr/8095) and
-            `local_masonry_walls_over` (Sivas 22/k, docs/adr/8096), a low space
+            `local_masonry_walls_over` (Sivas 22/k, docs/adr/8096), the plan's building height and storey count
+            `paiy_building_height_over`, `paiy_storey_count_over` (5/11, docs/adr/8098), a low space
             under a stair open into a room `paiy_under_stair_open`
             (docs/adr/8080), the fire compartments' (across storeys through galleries and stairs, docs/adr/8086)
             `bykhy_hazard_room_separation`, `bykhy_compartment_storeys_over` (24/4), `bykhy_atrium` (24/5), `bykhy_compartment_area_over` and
@@ -95285,8 +95291,9 @@ class SettingsSet(_Model):
       are cut at (docs/adr/8012); `lineGroups` (`byScale`: TS 88-23's line group of the plan's scale; `own` or
       absent: every object its own pen) how its lines are weighted (docs/adr/8013); `planNotes` the parcel's plan notes
       the regulation's rules read over the municipality's and the national one (docs/adr/8084: `key`
-      `groundStoreyHeight` or `storeyHeight`, `value` metres over 0 and at most 20, `source` where the note stands, one
-      note a key); `zone` the parcel's area's use in the plan the storey heights are read by (docs/adr/8085:
+      `groundStoreyHeight` or `storeyHeight`, `value` metres over 0 and at most 20; docs/adr/8098: `buildingHeight`
+      metres over 0 and at most 1000, `storeys` a whole number from 1 to 200; `source` where the note stands, one note a
+      key); `zone` the parcel's area's use in the plan the storey heights are read by (docs/adr/8085:
       `residential`, `residentialShops`, `mixed`, `commercial`, `other`); `structure` the building's structural system
       (docs/adr/8094: `system` `reinforcedConcrete`, `steel`, `masonry`, `cutStoneMasonry`, `timber`, `composite`;
       `traditional` only with `cutStoneMasonry`);

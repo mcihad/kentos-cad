@@ -1,5 +1,16 @@
 # Değişiklikler
 
+## 0.21.0 — 17 Kasım 2026
+
+- Bina yüksekliği ve kat adedi (`bina_yuksekligi`, yeni katkı `bina-yuksekligi`): PAİY 5/11'e göre planın bina
+  yüksekliği ve kat adedi aşılamaz; değerler projenin plan notlarıdır (`buildingHeight`, `storeys`). Bina yüksekliği
+  ±0,00'dan (binanın kot aldığı nokta) en üst katın tavan döşemesinin üstüne (4/1-n, 4/1-ppp); kat adedi ±0,00 ve
+  üstündeki zemin ve normal katlar (asma kat ve çatı arası sayılmaz). Aşan `paiy_building_height_over`,
+  `paiy_storey_count_over`; en üst katın yüksekliği yoksa eksik veri. Satırlar "Plan notu: bina yüksekliği", "Plan notu:
+  kat adedi". 8 bağımsız durum.
+- Asansör (`asansor`): 34/1'in "uygulama imar planına göre kat adedi" önce parselin plan notundan (`storeys`), yoksa
+  künyenin `kat_adedi`'sinden okunur; ileti nereden okunduğunu söyler. 1 bağımsız durum.
+
 ## 0.20.0 — 17 Kasım 2026
 
 - Sivas 22/k (`emsal.sivas_duvarlar`): yerel yönetmelik Sivas seçiliyse geleneksel kesme taş yığma binanın kalın taş

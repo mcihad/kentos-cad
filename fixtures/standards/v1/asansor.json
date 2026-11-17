@@ -1,7 +1,7 @@
 {
  "format": "kentos.regulationCases",
  "version": 1,
- "about": "Asansör kuralının bağımsız durumları (docs/adr/8078, plan/bim-plan.md BIM-13): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 34/1 ve 34/8'in 28.7.2018, 11.7.2021 ve 1.7.2026 hâllerinden, Geçici 3/11'den ve Sivas İmar Yönetmeliği 34/1 ve 34/8'den elle çıkarıldı; kuralın kodundan üretilmedi. Kat: [kimlik, ad, kot, sayılar] (verilmeyen sayı 0). Bir durum bulguların kodunu, durumunu ve iletilerinde geçmesi gerekenleri ('has'), maddelerin özet satırlarının sonucunu ve hâlinin gününü sınar.",
+ "about": "Asansör kuralının bağımsız durumları (docs/adr/8078, plan/bim-plan.md BIM-13): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 34/1 ve 34/8'in 28.7.2018, 11.7.2021 ve 1.7.2026 hâllerinden, Geçici 3/11'den ve Sivas İmar Yönetmeliği 34/1 ve 34/8'den elle çıkarıldı; kuralın kodundan üretilmedi. Kat: [kimlik, ad, kot, sayılar] (verilmeyen sayı 0). Bir durum bulguların kodunu, durumunu ve iletilerinde geçmesi gerekenleri ('has'), maddelerin özet satırlarının sonucunu ve hâlinin gününü sınar. Planın kat adedi plan notundan (docs/adr/8098): künyenin kat_adedi'sinin önünde.",
  "cases": [
   {
    "id": "a-30-06-2026",
@@ -1805,6 +1805,91 @@
    "expect": {
     "findings": [],
     "rules": {}
+   }
+  },
+  {
+   "id": "e-4-kat-plan-notu-3",
+   "neden": "11.7.2021 hâli kat adedini uygulama imar planından sayar: parselin plan notu 3 kat diyor (künyenin 4'ünün önünde, docs/adr/8098) → asansör yeri gerekir, yok → kalır; iletide kat adedinin plan notundan olduğu yazılır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "30.06.2026",
+     "kat_adedi": "4"
+    }
+   },
+   "building": {
+    "storeys": [
+     [
+      "k00",
+      "Zemin kat",
+      0.0,
+      {
+       "units": 2,
+       "common": 1,
+       "inhabited": 2
+      }
+     ],
+     [
+      "k01",
+      "1. kat",
+      3.0,
+      {
+       "units": 2,
+       "common": 1,
+       "inhabited": 2
+      }
+     ],
+     [
+      "k02",
+      "2. kat",
+      6.0,
+      {
+       "units": 2,
+       "common": 1,
+       "inhabited": 2
+      }
+     ],
+     [
+      "k03",
+      "3. kat",
+      9.0,
+      {
+       "units": 2,
+       "common": 1,
+       "inhabited": 2
+      }
+     ]
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "planNotes": [
+     {
+      "key": "storeys",
+      "value": 3,
+      "source": "UİP 12.3.2019, plan notu 3"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_elevator_missing",
+      "has": [
+       "asansör yeri yok",
+       "kat adedi plan notundan",
+       "PAİY 34/1 (11.7.2021)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 34/1": [
+      "failed",
+      "11.7.2021"
+     ],
+     "PAİY 34/8": [
+      "outOfScope",
+      "11.7.2021"
+     ]
+    }
    }
   }
  ]

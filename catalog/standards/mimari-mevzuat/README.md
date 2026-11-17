@@ -6,7 +6,8 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
 - **Kural seti başvuru gününe göre** (`yururluk`): maddelerin hâlleri `src/mimari_mevzuat/data/surumler.json`'da, metni,
   Resmî Gazete'si, yürürlük günleri ve geçiş hükmüyle. Gün künyenin `basvuru_tarihi`'dir. Gün yoksa kural her hâlle
   denenir: sonuç değişiyorsa bulgu "eksik veri"dir.
-- **Asansör** (`asansor`): PAİY 34/1 ve 34/8; yerel yönetmelik seçiliyse Sivas 34/1 ve 34/8.
+- **Asansör** (`asansor`): PAİY 34/1 ve 34/8; yerel yönetmelik seçiliyse Sivas 34/1 ve 34/8. Planın kat adedi parselin
+  plan notundan, yoksa künyeden (docs/adr/8098).
 - **Kaçış yolu kapıları** (`kapilar`): BYKHY 47/2 (kalabalık mekânın kapısı kaçış yönüne açılır) ve 47/3 (kaçış merdiveni
   ve yangın güvenlik holü kapısının sınıfı).
 - **Emsal sınırları** (`emsal`, docs/adr/8079): KentOS Emsal ve TAKS tablosunda 22/1'in sınırlarını sayar (balkon %20,
@@ -41,6 +42,8 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   karma (28/1-b), zemin katı ticaretli konut alanı (28/1-ç) ve asma katlı zemin kat (docs/adr/8085); konut bölgesinde
   zemin dahil 3 kata kadar geleneksel kesme taş yığma binada 9.10.2021'den 4,50 m (28/1-d, projenin taşıyıcı sistem
   beyanıyla, docs/adr/8094). Projenin plan notu (zemin kat, kat yüksekliği) hepsinin önüne geçer (69/3).
+- **Bina yüksekliği ve kat adedi** (`bina_yuksekligi`, docs/adr/8098): planın plan notundaki bina yüksekliği (±0,00'dan
+  son katın tavan döşemesinin üstüne) ve kat adedi (zemin ve normal katlar) aşılamaz (PAİY 5/11).
 - **Kapı ölçüleri** (`kapi_olculeri`, docs/adr/8083): yükseklik 2,10 m; net genişlik bina girişinde 1,50, bölüm girişinde
   1,00, öbür kapılarda 0,90 m; 13.8.2025'e kadar ve Sivas'ta balkon ve tuvalet kapısı 0,80 m (PAİY 39/1). İki katmanın
   yargısı `katman`'da; gün yoksa her kat ve kapı ayrı denenir (`yururluk.parcalarla`).

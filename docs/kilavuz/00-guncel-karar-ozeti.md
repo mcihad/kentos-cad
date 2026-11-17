@@ -324,6 +324,9 @@
     (`exemptCap`); olgular tabloyu bir kez sayar.
   - **Emsal zonlarının cephe köşesi (17 Kasım 2026; [ADR 8097](../adr/8097-emsal-zone-facade-corner.md), K142):** iki
     mahalin konturunun ortak köşesi ortak duvarın ekseninden bölünür; zonun alanı mahallerinin brüt alanıdır.
+  - **Planın bina yüksekliği ve kat adedi (17 Kasım 2026; [ADR 8098](../adr/8098-plan-building-height-and-storeys.md),
+    K143–K146):** Plan notları'nda "Bina yüksekliği (en çok)" ve "Kat adedi (en çok)" (mimari verisi 16); PAİY 5/11
+    ile ±0,00'dan son katın tavan döşemesinin üstüne ve zemin ile normal katlar okunur.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

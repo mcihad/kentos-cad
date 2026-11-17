@@ -1,6 +1,7 @@
 //! Proje ayarları › Mimari › Plan notları (docs/adr/8084): the parcel's plan notes that give a value the regulation's
 //! rules read over the municipality's and the national one (Planlı Alanlar İmar Yönetmeliği 69/3; 28/1 leaves the storey
-//! heights to the plan), a row each: Konu, Değer (m), Kaynak, delete; Plan notu ekle. KentOS does not read a note's
+//! heights to the plan) and the plan's building height and storey count 5/11 reads (docs/adr/8098), a row each: Konu,
+//! Değer (m, or storeys), Kaynak, delete; Plan notu ekle. KentOS does not read a note's
 //! words into a number: the architect writes the value and where it stands. What does not hold is said under the rows
 //! and Kaydet waits; Kaydet writes them through `cad.settings.set`'s `arch.planNotes`.
 
@@ -74,13 +75,22 @@ pub fn read(rows: &[Note]) -> Result<Vec<PlanNote>, String> {
     let mut notes = Vec::with_capacity(rows.len());
     for r in rows {
         let Some(v) = value(&r.value) else {
-            return Err(format!("“{}” plan notunun değeri bir sayı olmalı (m).", r.key.label()));
+            return Err(format!("“{}” plan notunun değeri bir sayı olmalı ({}).", r.key.label(), r.key.unit()));
         };
         notes.push(PlanNote { key: r.key, value: v, source: r.source.trim().to_owned() });
     }
     match PlanNote::list_problem(&notes) {
         Some((_, why)) => Err(why),
         None => Ok(notes),
+    }
+}
+
+/// A value's example in its field: metres for a height, a count of storeys.
+fn placeholder(key: PlanNoteKey) -> &'static str {
+    match key {
+        PlanNoteKey::BuildingHeight => "9,50",
+        PlanNoteKey::Storeys => "3",
+        _ => "4,00",
     }
 }
 
@@ -95,7 +105,7 @@ pub(super) fn view<'a>(
             container(kentos_ui::widget::table::title("Konu"))
                 .padding([0, 8])
                 .width(Length::FillPortion(5)),
-            container(kentos_ui::widget::table::title("Değer (m)"))
+            container(kentos_ui::widget::table::title("Değer"))
                 .padding([0, 8])
                 .width(Length::FillPortion(2)),
             container(kentos_ui::widget::table::title("Kaynak"))
@@ -119,7 +129,7 @@ pub(super) fn view<'a>(
         body = body.push(
             row![
                 container(key).width(Length::FillPortion(5)),
-                container(super::arch::field("4,00", &r.value, value(&r.value).is_none(), move |t| {
+                container(super::arch::field(placeholder(r.key), &r.value, value(&r.value).is_none(), move |t| {
                     on(i, Edit::Value(t))
                 }))
                 .width(Length::FillPortion(2)),
@@ -151,7 +161,9 @@ pub(super) fn view<'a>(
         "Parselin uygulama imar planının notu bir değeri değiştiriyorsa buraya yazılır: Denetim › Mevzuat o değeri yerel \
          imar yönetmeliğinin ve Planlı Alanlar İmar Yönetmeliği'nin önüne koyar (69/3; kat yükseklikleri plana \
          bırakılmıştır, 28/1). Zemin kat yüksekliği ±0,00'daki katın, kat yüksekliği bütün zemin ve normal katların \
-         sınırıdır. KentOS notun sözünü okumaz: değeri ve notun yerini planı okuyan yazar.",
+         sınırıdır (m). Bina yüksekliği ±0,00'dan son katın tavan döşemesinin üstüne (m), kat adedi zemin ve normal \
+         katlardır; planın bu değerleri aşılamaz (5/11). KentOS notun sözünü okumaz: değeri ve notun yerini planı okuyan \
+         yazar.",
     ));
     super::group::<Message>("Plan notları", body)
 }

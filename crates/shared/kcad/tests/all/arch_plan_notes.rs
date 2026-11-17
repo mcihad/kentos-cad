@@ -89,3 +89,20 @@ fn the_building_s_structure_round_trips_under_arch_data_15() {
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
     assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the structure reads back");
 }
+
+/// Architecture data 16 (docs/adr/8098): a plan note of the plan's building height is written with `modules.arch = 16`
+/// and read back.
+#[test]
+fn the_plan_s_building_height_round_trips_under_arch_data_16() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_plan_limits(&doc));
+    doc.settings.arch.get_or_insert_with(Default::default).plan_notes.push(kentos_contracts::PlanNote {
+        key: kentos_contracts::PlanNoteKey::BuildingHeight,
+        value: 9.5,
+        source: "UİP 12.3.2019, plan notu 3".into(),
+    });
+    assert!(kentos_kcad::uses_plan_limits(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_PLAN_LIMITS);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the note reads back");
+}

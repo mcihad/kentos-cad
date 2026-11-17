@@ -58,19 +58,22 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
     grubu ölçeğe göre, own ya da yoksa her nesne kendi kaleminde), isteğe bağlı
     spaceNames/spaceUsages listeleri, kalıcı kat kimliğine bağlı spaceNumberPrefixes ve
     parselin plan notları (planNotes: key groundStoreyHeight zemin kat yüksekliği ya da
-    storeyHeight kat yüksekliği, en çok; value m, 0–20; source notun yeri, boş olmaz;
-    her konu bir kez; Denetim'in mevzuat kuralları onları yerel yönetmeliğin ve PAİY'nin
-    önüne koyar) ve parselin bölgesi (zone: residential konut alanı, residentialShops
-    zemin katında ticaret yapılabilen konut alanı, mixed karma alan, commercial ticaret
-    alanı, other 28/1'in saymadığı kullanım; kat yüksekliğini PAİY 28/1-c, ç, b, a okur;
-    yoksa konut projesinde konut alanı sayılır) ve binanın taşıyıcı sistemi (structure:
-    system reinforcedConcrete betonarme, steel çelik, masonry yığma, cutStoneMasonry
-    kesme taş yığma, timber ahşap, composite kompozit; traditional geleneksel mimari
-    öğeler barındırıyor, yalnız cutStoneMasonry ile, öbüründe invalid_arch; geleneksel
-    kesme taş yığma binada Emsal ve TAKS tablosu Taşlık, Dış sofa ve Eyvan adlı
-    mahalleri emsal harici sayar (PAİY 22/1-m), Denetim zemin dahil 3 katı geçmeyen
-    binada kat yüksekliğini 28/1-d'nin 4,50 m'siyle okur). Liste değişiminde mevcut kat
-    ve tercihleri kopyalayın; arch iç içe yama değildir. Listeler öneridir; mevcut mahal
+    storeyHeight kat yüksekliği, en çok, value m, 0–20; buildingHeight bina yüksekliği,
+    en çok, value m, 0–1000, ±0,00'dan saçak seviyesine; storeys kat adedi, en çok,
+    value 1–200 tam sayı, zemin ve normal katlar; source notun yeri, boş olmaz; her konu
+    bir kez; Denetim'in mevzuat kuralları kat yüksekliği notlarını yerel yönetmeliğin ve
+    PAİY'nin önüne koyar, bina yüksekliği ve kat adedini PAİY 5/11 ile okur) ve parselin
+    bölgesi (zone: residential konut alanı, residentialShops zemin katında ticaret
+    yapılabilen konut alanı, mixed karma alan, commercial ticaret alanı, other 28/1'in
+    saymadığı kullanım; kat yüksekliğini PAİY 28/1-c, ç, b, a okur; yoksa konut
+    projesinde konut alanı sayılır) ve binanın taşıyıcı sistemi (structure: system
+    reinforcedConcrete betonarme, steel çelik, masonry yığma, cutStoneMasonry kesme taş
+    yığma, timber ahşap, composite kompozit; traditional geleneksel mimari öğeler
+    barındırıyor, yalnız cutStoneMasonry ile, öbüründe invalid_arch; geleneksel kesme
+    taş yığma binada Emsal ve TAKS tablosu Taşlık, Dış sofa ve Eyvan adlı mahalleri
+    emsal harici sayar (PAİY 22/1-m), Denetim zemin dahil 3 katı geçmeyen binada kat
+    yüksekliğini 28/1-d'nin 4,50 m'siyle okur). Liste değişiminde mevcut kat ve
+    tercihleri kopyalayın; arch iç içe yama değildir. Listeler öneridir; mevcut mahal
     adı/numarası/kullanımı değişmez, önek yalnız açık seçimle başlangıca alınır. Ayarlar
     projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve cihazın ayarları
     (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar reddedilir.
@@ -135,22 +138,25 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         kalınlıkları (lineGroups: byScale TS 88-23 çizgi grubu ölçeğe göre, own ya da yoksa
         her nesne kendi kaleminde), isteğe bağlı spaceNames/spaceUsages listeleri, kalıcı
         kat kimliğine bağlı spaceNumberPrefixes ve parselin plan notları (planNotes: key
-        groundStoreyHeight zemin kat yüksekliği ya da storeyHeight kat yüksekliği, en çok;
-        value m, 0–20; source notun yeri, boş olmaz; her konu bir kez; Denetim'in mevzuat
-        kuralları onları yerel yönetmeliğin ve PAİY'nin önüne koyar) ve parselin bölgesi
-        (zone: residential konut alanı, residentialShops zemin katında ticaret yapılabilen
-        konut alanı, mixed karma alan, commercial ticaret alanı, other 28/1'in saymadığı
-        kullanım; kat yüksekliğini PAİY 28/1-c, ç, b, a okur; yoksa konut projesinde konut
-        alanı sayılır) ve binanın taşıyıcı sistemi (structure: system reinforcedConcrete
-        betonarme, steel çelik, masonry yığma, cutStoneMasonry kesme taş yığma, timber
-        ahşap, composite kompozit; traditional geleneksel mimari öğeler barındırıyor, yalnız
-        cutStoneMasonry ile, öbüründe invalid_arch; geleneksel kesme taş yığma binada Emsal
-        ve TAKS tablosu Taşlık, Dış sofa ve Eyvan adlı mahalleri emsal harici sayar (PAİY
-        22/1-m), Denetim zemin dahil 3 katı geçmeyen binada kat yüksekliğini 28/1-d'nin 4,50
-        m'siyle okur). Liste değişiminde mevcut kat ve tercihleri kopyalayın; arch iç içe
-        yama değildir. Listeler öneridir; mevcut mahal adı/numarası/kullanımı değişmez, önek
-        yalnız açık seçimle başlangıca alınır. Ayarlar projenin düzenlemesidir, geri alma
-        adımı değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin
+        groundStoreyHeight zemin kat yüksekliği ya da storeyHeight kat yüksekliği, en çok,
+        value m, 0–20; buildingHeight bina yüksekliği, en çok, value m, 0–1000, ±0,00'dan
+        saçak seviyesine; storeys kat adedi, en çok, value 1–200 tam sayı, zemin ve normal
+        katlar; source notun yeri, boş olmaz; her konu bir kez; Denetim'in mevzuat kuralları
+        kat yüksekliği notlarını yerel yönetmeliğin ve PAİY'nin önüne koyar, bina yüksekliği
+        ve kat adedini PAİY 5/11 ile okur) ve parselin bölgesi (zone: residential konut
+        alanı, residentialShops zemin katında ticaret yapılabilen konut alanı, mixed karma
+        alan, commercial ticaret alanı, other 28/1'in saymadığı kullanım; kat yüksekliğini
+        PAİY 28/1-c, ç, b, a okur; yoksa konut projesinde konut alanı sayılır) ve binanın
+        taşıyıcı sistemi (structure: system reinforcedConcrete betonarme, steel çelik,
+        masonry yığma, cutStoneMasonry kesme taş yığma, timber ahşap, composite kompozit;
+        traditional geleneksel mimari öğeler barındırıyor, yalnız cutStoneMasonry ile,
+        öbüründe invalid_arch; geleneksel kesme taş yığma binada Emsal ve TAKS tablosu
+        Taşlık, Dış sofa ve Eyvan adlı mahalleri emsal harici sayar (PAİY 22/1-m), Denetim
+        zemin dahil 3 katı geçmeyen binada kat yüksekliğini 28/1-d'nin 4,50 m'siyle okur).
+        Liste değişiminde mevcut kat ve tercihleri kopyalayın; arch iç içe yama değildir.
+        Listeler öneridir; mevcut mahal adı/numarası/kullanımı değişmez, önek yalnız açık
+        seçimle başlangıca alınır. Ayarlar projenin düzenlemesidir, geri alma adımı
+        değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin
         değildir; bilinmeyen anahtar reddedilir. expectedRevision verilmişse ve çizim o
         sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 

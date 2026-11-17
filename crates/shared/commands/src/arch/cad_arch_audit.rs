@@ -444,7 +444,8 @@ pub struct ArchAuditFinding {
     /// and `bykhy_stair_door_rating` (docs/adr/8078 §8), the emsal limits' conditions `paiy_caretaker_not_required`,
     /// `paiy_library_not_exempt` (docs/adr/8079), `paiy_traditional_not_exempt` (22/1-m, docs/adr/8094),
     /// `paiy_masonry_wall_undeclared`, `paiy_masonry_walls_not_exempt` (5/8, 20/8-j, docs/adr/8095) and
-    /// `local_masonry_walls_over` (Sivas 22/k, docs/adr/8096), a low space
+    /// `local_masonry_walls_over` (Sivas 22/k, docs/adr/8096), the plan's building height and storey count
+    /// `paiy_building_height_over`, `paiy_storey_count_over` (5/11, docs/adr/8098), a low space
     /// under a stair open into a room `paiy_under_stair_open`
     /// (docs/adr/8080), the fire compartments' (across storeys through galleries and stairs, docs/adr/8086)
     /// `bykhy_hazard_room_separation`, `bykhy_compartment_storeys_over` (24/4), `bykhy_atrium` (24/5), `bykhy_compartment_area_over` and
