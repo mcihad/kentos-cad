@@ -10,7 +10,7 @@ use crate::files_testing::drive;
 use crate::recovery::Recovery;
 use crate::settings::Settings;
 
-fn run(app: &mut App, name: &str, input: Value) -> Value {
+pub(crate) fn run(app: &mut App, name: &str, input: Value) -> Value {
     let doc = app.document.as_mut().expect("a drawing");
     let answer = kentos_native_application::registry::run(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
@@ -23,7 +23,7 @@ fn run(app: &mut App, name: &str, input: Value) -> Value {
     answer
 }
 
-fn blank() -> App {
+pub(crate) fn blank() -> App {
     kentos_postgis::connections::keep_in_memory();
     let (mut app, _) = App::start_in(
         Some(Module::Architecture),
@@ -40,7 +40,7 @@ fn blank() -> App {
     app
 }
 
-fn layer(app: &App) -> String {
+pub(crate) fn layer(app: &App) -> String {
     app.document
         .as_ref()
         .expect("a drawing")
@@ -50,12 +50,12 @@ fn layer(app: &App) -> String {
         .to_owned()
 }
 
-fn p(x: f64, y: f64) -> Value {
+pub(crate) fn p(x: f64, y: f64) -> Value {
     json!({"x": x, "y": y})
 }
 
 /// The fire regulation's findings: code and message.
-fn fire(app: &mut App) -> Vec<(String, String)> {
+pub(crate) fn fire(app: &mut App) -> Vec<(String, String)> {
     let answer = run(app, "cad.arch.audit", json!({ "checks": ["regulation"] }));
     answer["output"]["findings"]
         .as_array()
@@ -90,8 +90,11 @@ fn set_arch(app: &mut App, edit: impl FnOnce(&mut kentos_commands::ArchSettings)
     );
 }
 
+/// A wall: its two ends and its width.
+pub(crate) type Wall = ((f64, f64), (f64, f64), f64);
+
 /// Walls on a level: (a, b, width).
-fn walls(app: &mut App, level: &str, list: &[((f64, f64), (f64, f64), f64)]) -> Vec<String> {
+pub(crate) fn walls(app: &mut App, level: &str, list: &[Wall]) -> Vec<String> {
     let layer = layer(app);
     let walls: Vec<Value> = list
         .iter()
@@ -111,7 +114,7 @@ fn walls(app: &mut App, level: &str, list: &[((f64, f64), (f64, f64), f64)]) -> 
 }
 
 /// Seeded rooms on a level: (seed, name, unit).
-fn rooms(app: &mut App, level: &str, list: &[((f64, f64), &str, &str)]) {
+pub(crate) fn rooms(app: &mut App, level: &str, list: &[((f64, f64), &str, &str)]) {
     let layer = layer(app);
     let spaces: Vec<Value> = list
         .iter()
@@ -125,7 +128,7 @@ fn rooms(app: &mut App, level: &str, list: &[((f64, f64), &str, &str)]) {
 }
 
 /// Doors: (host wall's uid, distance along it, rough width).
-fn doors(app: &mut App, list: &[(&str, f64, f64)]) {
+pub(crate) fn doors(app: &mut App, list: &[(&str, f64, f64)]) {
     let layer = layer(app);
     let openings: Vec<Value> = list
         .iter()

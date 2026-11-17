@@ -1,8 +1,9 @@
-//! The extension catalog's routes end to end without a database (docs/adr/8059 §10): the in-memory store, the tests'
-//! named accounts and the real channel rule. A release goes from upload to installation; a program never decides;
-//! nobody reviews their own release; new content needs its own approval; what a caller may not see answers 404 and is
-//! not counted; only the approved content of a published release installs; a refusal keeps the flow's code and its
-//! Turkish reason.
+//! The extension catalog's routes end to end (docs/adr/8059 §10, §13), every case on both stores ([`on_both_stores`]):
+//! the memory store, and the persistent one on a test database of its own (skipped without one, as every database
+//! test). The tests' named accounts and the real channel rule. A release goes from upload to installation; a program
+//! never decides; nobody reviews their own release; new content needs its own approval; what a caller may not see
+//! answers 404 and is not counted; only the approved content of a published release installs; a refusal keeps the
+//! flow's code and its Turkish reason. What only the database keeps is in `persistent`.
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -10,20 +11,56 @@ use std::sync::Arc;
 use axum::Router;
 use axum::body::Body;
 use axum::http::{Request, StatusCode, header};
+use kentos_application::blobs::Blobs;
 use kentos_contracts::ApiError;
 use kentos_extensions::Limits;
-use kentos_extensions::release::Role;
+use kentos_extensions::release::{Release, Role};
+use kentos_postgres::testing::TestDb;
 use serde_json::{Value, json};
+use uuid::Uuid;
 
 use super::tests::{config, send};
 use super::{AppState, router};
-use crate::extension_catalog::memory::{MemoryStore, Where};
+use crate::extension_catalog::postgres::PgStore;
+use crate::extension_catalog::store::{ReleaseStore, Where};
 use crate::extension_catalog::{Accounts, Catalog, CatalogId, ReleaseKey};
 
+/// Runs each case on both stores: `in_memory`, and `on_the_database` on a test database of its own (skipped without
+/// one; `KENTOS_TEST_DB=required` makes that a failure). A case is `async fn case(bench: Bench)`.
+macro_rules! on_both_stores {
+    ($($case:ident),+ $(,)?) => {$(
+        mod $case {
+            #[tokio::test]
+            async fn in_memory() {
+                super::$case(super::Bench::memory()).await;
+            }
+
+            #[tokio::test]
+            async fn on_the_database() {
+                let Some(db) = kentos_postgres::testing::TestDb::create().await else {
+                    return;
+                };
+                super::$case(super::Bench::database(&db)).await;
+                db.close().await;
+            }
+        }
+    )+};
+}
+
 mod access;
+mod audits;
+mod bench;
+mod builds;
+mod experimental;
 mod flow;
+mod imitation;
+mod persistent;
 mod refusals;
 mod revocations;
+mod sbom;
+mod secrets;
+
+use bench::Bench;
 
 const PUBLISHER: &str = "ornek-belediye";
 const PUBLIC: &str = "/v1/extension-catalogs/public/releases";
@@ -37,6 +74,21 @@ const GATES: [&str; 7] = [
     "publisher",
 ];
 
+/// An account's id for a name: the name's bytes in a UUID (`ayse` is `00000000-0000-0000-0000-000061797365`), the same
+/// in memory and in the database, where accounts are rows and their ids UUIDs.
+fn id(name: &str) -> String {
+    let bytes = name.as_bytes();
+    assert!(bytes.len() <= 16, "{name}: at most 16 bytes");
+    let mut raw = [0u8; 16];
+    raw[16 - bytes.len()..].copy_from_slice(bytes);
+    Uuid::from_bytes(raw).to_string()
+}
+
+/// One's own catalog's releases, by the owner's name.
+fn personal(name: &str) -> String {
+    format!("/v1/extension-catalogs/personal:{}/releases", id(name))
+}
+
 /// How a request comes: a person in the web app, a program with the account's session, an access token.
 #[derive(Clone, Copy, Debug)]
 enum Via {
@@ -48,39 +100,42 @@ enum Via {
 }
 
 fn app_with(catalog: Option<Catalog>) -> Router {
+    app_of(catalog.map(Arc::new))
+}
+
+fn app_of(catalog: Option<Arc<Catalog>>) -> Router {
     router(AppState {
         config: Arc::new(config()),
         database: None,
         oidc: None,
         hub: crate::hub::Hub::default(),
         logins: Default::default(),
-        blobs: kentos_application::blobs::Blobs::new(
-            std::env::temp_dir().join(format!("kentos-api-blobs-{}", uuid::Uuid::now_v7())),
+        blobs: Blobs::new(
+            std::env::temp_dir().join(format!("kentos-api-blobs-{}", Uuid::now_v7())),
         ),
         proxy: None,
-        extension_catalog: catalog.map(Arc::new),
+        extension_catalog: catalog,
     })
 }
 
 /// The grants of the public catalog: Ayşe publishes for Örnek Belediyesi; Mehmet, her colleague there, also reviews;
 /// Selin reviews; Yusuf administers; the scanner reports in every catalog; Can is merely signed in.
-fn grants(store: &MemoryStore) {
+async fn grants(bench: &Bench) {
     let public = || Where::In(CatalogId::Public);
-    store.grant(public(), "ayse", Role::Publisher);
-    store.join("ayse", PUBLISHER);
-    store.grant(public(), "mehmet", Role::Publisher);
-    store.grant(public(), "mehmet", Role::Reviewer);
-    store.join("mehmet", PUBLISHER);
-    store.grant(public(), "selin", Role::Reviewer);
-    store.grant(public(), "yusuf", Role::CatalogAdmin);
-    store.grant(Where::Every, "tarayici", Role::Scanner);
+    bench.grant(public(), "ayse", Role::Publisher).await;
+    bench.join("ayse", PUBLISHER).await;
+    bench.grant(public(), "mehmet", Role::Publisher).await;
+    bench.grant(public(), "mehmet", Role::Reviewer).await;
+    bench.join("mehmet", PUBLISHER).await;
+    bench.grant(public(), "selin", Role::Reviewer).await;
+    bench.grant(public(), "yusuf", Role::CatalogAdmin).await;
+    bench.grant(Where::Every, "tarayici", Role::Scanner).await;
 }
 
-fn catalog() -> (Router, Arc<MemoryStore>) {
-    let store = Arc::new(MemoryStore::default());
-    grants(&store);
-    let app = app_with(Some(Catalog::new(store.clone(), Accounts::Named)));
-    (app, store)
+/// The routes over the bench's store with the public catalog's grants.
+async fn catalog(bench: &Bench) -> Router {
+    grants(bench).await;
+    app_with(Some(Catalog::new(bench.store(), Accounts::Named)))
 }
 
 /// The small example extension, its manifest edited, packed.
@@ -133,11 +188,12 @@ fn key(version: &str) -> ReleaseKey {
     }
 }
 
+/// A request of the account named `account` (its id goes in the tests' header).
 fn request(via: Via, method: &str, uri: &str, account: &str) -> axum::http::request::Builder {
     let b = Request::builder()
         .method(method)
         .uri(uri)
-        .header("x-kentos-test-account", account);
+        .header("x-kentos-test-account", id(account));
     match via {
         Via::Web => b.header("x-kentos-client", "web"),
         Via::Python => b.header("x-kentos-client", "python"),

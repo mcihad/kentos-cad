@@ -84,7 +84,10 @@ pub struct DoorEscape {
     /// The door, by its object.
     pub door: Slot,
     pub at: V,
+    /// None when it opens into an escape stair's room ([`DoorEscape::into_stair`]) or reaches no exit.
     pub exit: Option<ExitRoute>,
+    /// It opens into an escape stair's room: it is at its exit (docs/adr/8057 §53).
+    pub into_stair: bool,
 }
 
 /// The storeys' escape routes.
@@ -697,6 +700,7 @@ pub fn escape(doc: &Document) -> Escape {
                 } else {
                     exit_route(room, nodes, per, g.at[o])
                 },
+                into_stair: room.stair,
             });
         }
     }

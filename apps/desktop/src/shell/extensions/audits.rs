@@ -8,16 +8,22 @@
 //! Eklenti denetimi tab, each with its severity, words and object: Göster selects the object and brings it into view;
 //! Düzelt applies the rule's fix, a KentOS command, as one undo step named by the fix, and only for an extension
 //! allowed to write (`document.write`): the fix is the extension's words, the press is the user's.
+//!
+//! The facts, the answer's reading and the provenance are a cloud job's own (docs/adr/8057 §42):
+//! `kentos_processing::audit_job` (`facts_of`, `message`, `drawing_stamp`) and `kentos_contracts::audit_job`
+//! (`findings_of`, `counts`, `digest_of`), so a rule run here and in a job on the same drawing reports alike.
 
-use std::panic::AssertUnwindSafe;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 use iced::widget::{Column, button, container, row, scrollable};
 use iced::{Center, Element, Fill, Task};
+pub(crate) use kentos_commands::audit_job::Severity;
+use kentos_commands::audit_job::digest_of;
 use kentos_extensions::manifest::Capability;
 use kentos_interaction::Level;
+use kentos_processing::audit_job;
 use kentos_ui::icon::{Tone, icon};
 use kentos_ui::{label, style};
 use serde_json::{Value, json};
@@ -27,35 +33,14 @@ use crate::app::{App, Message};
 use crate::icons::from_web;
 use kentos_ui::widget::Toast;
 
-/// The most objects a rule is given: past it the facts are cut and the rule is told (`facts.cut`).
-pub(crate) const MOST_OBJECTS: usize = 50_000;
-
-/// The most findings kept of a run; the rest are counted.
-pub(crate) const MOST_FINDINGS: usize = 10_000;
+/// The most objects a rule is given: past it the facts are cut and the rule is told (`facts.cut`); a cloud job's.
+pub(crate) const MOST_OBJECTS: usize = audit_job::MOST_FEATURES;
 
 /// The findings the tab lists; the rest are counted under it.
 const LISTED: usize = 500;
 
 /// How long a rule may take.
 const TIMEOUT: Duration = Duration::from_secs(120);
-
-/// How much a finding matters, as its rule says.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum Severity {
-    Error,
-    Warning,
-    Info,
-}
-
-impl Severity {
-    pub(crate) fn word(self) -> &'static str {
-        match self {
-            Severity::Error => "Hata",
-            Severity::Warning => "Uyarı",
-            Severity::Info => "Bilgi",
-        }
-    }
-}
 
 /// A finding's fix: a KentOS command and its input, applied by the user's press.
 #[derive(Clone, Debug, PartialEq)]
@@ -86,7 +71,7 @@ pub(crate) struct AuditState {
     /// While it runs: what stops it.
     pub(crate) running: Option<Arc<AtomicBool>>,
     pub(crate) findings: Vec<Finding>,
-    /// Findings past [`MOST_FINDINGS`], counted.
+    /// Findings past the most kept (`kentos_contracts::audit_job::MOST_FINDINGS`), counted.
     pub(crate) dropped: usize,
     /// The drawing was larger than [`MOST_OBJECTS`]: the rule saw its first objects.
     pub(crate) cut: bool,
@@ -100,6 +85,23 @@ pub(crate) struct AuditState {
     pub(crate) version: String,
     pub(crate) digest: Option<String>,
     pub(crate) revision: u64,
+    /// What the rule read, once it ran, as a cloud job's report says it (docs/adr/8057 §42): the drawing's content
+    /// stamp (`drawing_stamp`) and the facts' digest (`digest_of`).
+    pub(crate) drawing: Option<String>,
+    pub(crate) facts: Option<String>,
+    /// Who asked for the run and when it began, for Çalışan işler (works/): the user, or an agent's request
+    /// (agents.rs says which).
+    pub(crate) by: crate::works::By,
+    pub(crate) started: Instant,
+}
+
+/// What a rule read, worked out with its facts on the run's thread.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct AuditRead {
+    /// The drawing was larger than [`MOST_OBJECTS`].
+    pub(crate) cut: bool,
+    pub(crate) drawing: String,
+    pub(crate) facts: String,
 }
 
 /// A rule's run, ended in the background.
@@ -109,54 +111,29 @@ pub(crate) struct AuditDone {
     pub(crate) local: String,
     pub(crate) answer: Result<Value, String>,
     pub(crate) ms: u64,
+    /// What it read; none when it stopped before its facts were worked out.
+    pub(crate) read: Option<AuditRead>,
 }
 
-/// A rule's answer (`done`) read: its findings and how many were past [`MOST_FINDINGS`], or why it gave none and
-/// its traceback.
+/// A rule's answer (`done`) read as a cloud job reads it (`kentos_contracts::audit_job::findings_of`): its findings
+/// and how many were past the most kept, or why it gave none and its traceback.
 pub(crate) fn findings_of(done: &Value) -> Result<(Vec<Finding>, usize), (String, Option<String>)> {
-    if done["ok"] != true {
-        let message = done["message"].as_str().unwrap_or("Kural cevap vermedi.");
-        let words = match done["exception"].as_str() {
-            Some(kind) => format!("{kind}: {message}"),
-            None if done["stopped"] == true => "Durduruldu.".to_owned(),
-            None => message.to_owned(),
-        };
-        return Err((words, done["error"].as_str().map(str::to_owned)));
-    }
-    let result = &done["result"];
-    if result["kind"] != "findings" {
-        return Err(("Kural bulgu listesi döndürmedi.".to_owned(), None));
-    }
-    let list = result["findings"].as_array().cloned().unwrap_or_default();
-    let dropped = list.len().saturating_sub(MOST_FINDINGS);
-    let findings = list
-        .iter()
-        .take(MOST_FINDINGS)
-        .filter_map(|f| {
-            let severity = match f["severity"].as_str()? {
-                "error" => Severity::Error,
-                "warning" => Severity::Warning,
-                "info" => Severity::Info,
-                _ => return None,
-            };
-            let message: String = f["message"].as_str()?.chars().take(2000).collect();
-            let fix = f.get("fix").and_then(|x| {
-                Some(Fix {
-                    title: x["title"].as_str()?.chars().take(120).collect(),
-                    command: x["command"].as_str()?.to_owned(),
-                    input: x.get("args").cloned().unwrap_or_else(|| json!({})),
-                })
-            });
-            Some(Finding {
-                severity,
-                message,
-                feature: f["featureId"].as_str().map(str::to_owned),
-                fix,
-                fixed: false,
-            })
+    let (found, dropped) = kentos_commands::audit_job::findings_of(done)?;
+    let findings = found
+        .into_iter()
+        .map(|f| Finding {
+            severity: f.severity,
+            message: f.message,
+            feature: f.feature_id,
+            fix: f.fix.map(|x| Fix {
+                title: x.title,
+                command: x.command,
+                input: x.args,
+            }),
+            fixed: false,
         })
         .collect();
-    Ok((findings, dropped))
+    Ok((findings, usize::try_from(dropped).unwrap_or(usize::MAX)))
 }
 
 /// Why a rule's run did not start: a stable code (an agent reads it) and the words.
@@ -242,8 +219,7 @@ impl App {
                 Box::new(move |invoke, stopped| job.run(invoke, TIMEOUT, stopped))
             }
         };
-        let facts = kentos_processing::external::audit_facts(&doc.model, MOST_OBJECTS);
-        // The measured facts are worked out on the run's thread, from the drawing as it is now (ADR 8057 §36).
+        // The facts are worked out on the run's thread, from the drawing as it is now (ADR 8057 §36, §42).
         let copy = doc.model.reading_copy();
         let (version, digest) = self.extensions.registry.as_ref().map_or_else(
             || (String::new(), None),
@@ -258,6 +234,8 @@ impl App {
         );
         let revision = doc.model.revision();
         let stop = Arc::new(AtomicBool::new(false));
+        // The picker stands on the rule now shown, wherever the run came from (ribbon, picker, agent).
+        self.extensions.audit_pick = None;
         self.extensions.audit = Some(AuditState {
             ext: ext.to_owned(),
             local: local.to_owned(),
@@ -265,13 +243,17 @@ impl App {
             running: Some(Arc::clone(&stop)),
             findings: Vec::new(),
             dropped: 0,
-            cut: facts["cut"] == true,
+            cut: false,
             ms: 0,
             error: None,
             session: doc.session,
             version,
             digest,
             revision,
+            drawing: None,
+            facts: None,
+            by: crate::works::By::You,
+            started: Instant::now(),
         });
         self.bottom_tab = crate::bottom::BottomTab::ExtAudit;
         self.command_expanded = true;
@@ -280,33 +262,27 @@ impl App {
         Ok(crate::python_setup::in_background(
             move || {
                 let stopped = || stop.load(Ordering::Relaxed);
-                // A measure that breaks on some drawing must not take the rules that never read it along: the rule
-                // runs on the layers and `facts.project` says it is missing (ext.NotAvailable).
-                let measured = std::panic::catch_unwind(AssertUnwindSafe(|| {
-                    kentos_processing::audit_facts::project_facts(
-                        &copy,
-                        kentos_processing::audit_facts::MOST_OBJECTS,
-                        &stopped,
-                    )
-                }));
-                let mut facts = facts;
-                let answer = match measured {
-                    Ok(None) => Err("Durduruldu.".to_owned()),
-                    Ok(Some(project)) => {
-                        facts["project"] = serde_json::to_value(&project).unwrap_or_default();
-                        work(json!({ "kind": "audit", "facts": facts }), &stopped)
-                    }
-                    Err(_) => work(json!({ "kind": "audit", "facts": facts }), &stopped),
+                // The layers' objects and what KentOS measured, as a cloud job gives them (a measure that breaks on
+                // some drawing leaves the rule the layers, `facts.project` then says it is missing).
+                let Some(facts) = audit_job::facts_of(&copy, &stopped) else {
+                    return (Err("Durduruldu.".to_owned()), None, 0);
                 };
-                (answer, began.elapsed().as_millis() as u64)
+                let read = AuditRead {
+                    cut: facts["cut"] == true,
+                    drawing: audit_job::drawing_stamp(&copy),
+                    facts: digest_of(&facts),
+                };
+                let answer = work(audit_job::message(facts), &stopped);
+                (answer, Some(read), began.elapsed().as_millis() as u64)
             },
-            (Err("Denetim cevapsız kaldı.".to_owned()), 0),
-            move |(answer, ms)| {
+            (Err("Denetim cevapsız kaldı.".to_owned()), None, 0),
+            move |(answer, read, ms)| {
                 msg(Event::AuditDone(Box::new(AuditDone {
                     ext: owner.clone(),
                     local: rule.clone(),
                     answer,
                     ms,
+                    read,
                 })))
             },
         ))
@@ -327,6 +303,11 @@ impl App {
             .take()
             .is_some_and(|s| s.load(Ordering::Relaxed));
         state.ms = done.ms;
+        if let Some(read) = done.read {
+            state.cut = read.cut;
+            state.drawing = Some(read.drawing);
+            state.facts = Some(read.facts);
+        }
         let title = state.title.clone();
         let part = format!("audit:{}", done.local);
         let name = self.extension_name(&done.ext);
@@ -570,51 +551,67 @@ impl App {
 
     /// Eklenti denetimi: the last rule's findings with Göster and Düzelt, or what to do first.
     pub(crate) fn ext_audit_tab(&self) -> Element<'_, Message> {
+        // The rules this program's extensions offer, a ribbon button or not (audit_picker.rs).
+        let rules = self.ext_audit_choices();
+        let picker = self.ext_audit_picker(&rules);
         let Some(state) = &self.extensions.audit else {
-            return container(label::muted(
-                "Bir eklentinin denetimini şeritteki düğmesinden çalıştırın: bulguları burada listelenir.",
-            ))
-            .padding(12)
-            .into();
+            let said = label::muted(if picker.is_some() {
+                "Bir kural seçip Denetle'ye basın ya da eklentinin şeritteki düğmesini kullanın: bulguları burada \
+                 listelenir."
+            } else {
+                "Bu programda denetim kuralı olan etkin bir eklenti yok. Eklentiler'den bir denetim eklentisi kurun \
+                 (ör. Türkiye mevzuatı)."
+            });
+            let mut body = Column::new().spacing(10);
+            if let Some(picker) = picker {
+                body = body.push(picker);
+            }
+            return container(body.push(said)).padding(12).into();
         };
         let name = self.extension_name(&state.ext);
+        let seconds = seconds_words(state.ms);
         let status = if state.running.is_some() {
             "Denetleniyor…".to_owned()
         } else if let Some(error) = &state.error {
             format!("Bulgu yok: {error}")
         } else if state.findings.is_empty() {
-            format!(
-                "Bulgu yok: kural her şeyi uygun buldu ({:.1} sn).",
-                state.ms as f64 / 1000.0
-            )
+            format!("Bulgu yok: kural her şeyi uygun buldu ({seconds} sn).")
         } else {
-            format!(
-                "{} ({:.1} sn)",
-                counts(&state.findings),
-                state.ms as f64 / 1000.0
-            )
+            format!("{} ({seconds} sn)", counts(&state.findings))
         };
         let action = if state.running.is_some() {
-            button(label::body("Durdur"))
-                .style(style::button::secondary)
-                .on_press(msg(Event::AuditStop))
+            Some(
+                button(label::body("Durdur"))
+                    .style(style::button::secondary)
+                    .on_press(msg(Event::AuditStop)),
+            )
+        } else if rules
+            .iter()
+            .any(|r| r.ext == state.ext && r.local == state.local)
+        {
+            // The picker above stands on this rule and its Denetle runs it again: one button for one action.
+            None
         } else {
-            button(label::body("Yeniden denetle"))
-                .style(style::button::secondary)
-                .on_press(msg(Event::Run(
-                    state.ext.clone(),
-                    "audit".to_owned(),
-                    state.local.clone(),
-                )))
+            Some(
+                button(label::body("Yeniden denetle"))
+                    .style(style::button::secondary)
+                    .on_press(msg(Event::Run(
+                        state.ext.clone(),
+                        "audit".to_owned(),
+                        state.local.clone(),
+                    ))),
+            )
         };
-        let head = row![
+        let mut head = row![
             icon(from_web(Some("standardsCheck"))).size(16.0),
             label::strong(format!("{name} › {}", state.title)),
             label::muted(status).width(Fill),
-            action,
         ]
         .spacing(10)
         .align_y(Center);
+        if let Some(action) = action {
+            head = head.push(action);
+        }
         let mut notes = Column::new().spacing(2);
         if let Some((words, changed)) = self.ext_audit_provenance() {
             notes = notes.push(label::muted(words));
@@ -638,13 +635,10 @@ impl App {
                 Severity::Warning => Tone::Warning,
                 Severity::Info => Tone::Accent,
             };
-            let glyph = match f.severity {
-                Severity::Error => "error",
-                Severity::Warning => "warning",
-                Severity::Info => "info",
-            };
             let mut line = row![
-                icon(from_web(Some(glyph))).size(14.0).tone(tone),
+                icon(from_web(Some(f.severity.code())))
+                    .size(14.0)
+                    .tone(tone),
                 label::muted(f.severity.word()),
                 label::body(f.message.clone()).width(Fill),
             ]
@@ -678,8 +672,12 @@ impl App {
             }
             list = list.push(line);
         }
+        let mut top = Column::new().spacing(8);
+        if let Some(picker) = picker {
+            top = top.push(picker);
+        }
         container(
-            Column::new().spacing(8).push(head).push(notes).push(
+            top.push(head).push(notes).push(
                 // The bar beside the rows, not over their buttons.
                 scrollable(container(list).padding(iced::Padding::new(0.0).right(14.0)))
                     .direction(style::field::body_scrollbar())
@@ -693,21 +691,13 @@ impl App {
     }
 }
 
-/// "2 hata, 1 uyarı" — the findings counted by severity.
+/// "2 hata, 1 uyarı" — the findings counted by severity, as a cloud job's summary says them.
 pub(crate) fn counts(findings: &[Finding]) -> String {
-    let n = |s: Severity| findings.iter().filter(|f| f.severity == s).count();
-    let parts: Vec<String> = [
-        (n(Severity::Error), "hata"),
-        (n(Severity::Warning), "uyarı"),
-        (n(Severity::Info), "bilgi"),
-    ]
-    .into_iter()
-    .filter(|(k, _)| *k > 0)
-    .map(|(k, w)| format!("{k} {w}"))
-    .collect();
-    if parts.is_empty() {
-        "Bulgu yok".to_owned()
-    } else {
-        parts.join(", ")
-    }
+    kentos_commands::audit_job::counts(findings.iter().map(|f| f.severity))
+}
+
+/// A run's time in seconds as Turkish writes it, one decimal after a comma: “2,3”. A time is not a measure: ADR 0149
+/// writes measures with a point and leaves times as they were.
+pub(crate) fn seconds_words(ms: u64) -> String {
+    kentos_ui::attribute::number::real(ms as f64 / 1000.0, 1)
 }

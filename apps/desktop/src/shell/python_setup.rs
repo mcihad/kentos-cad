@@ -224,6 +224,32 @@ pub(crate) fn in_background<T: Send + 'static>(
     )
 }
 
+/// [`in_background`] on a thread with a deep stack (64 MB): a run that drives İşlemler through the command envelope
+/// and whose tool runs a built-in tool the same way (an extension tool's examples and trials, docs/adr/8057 §47–§48)
+/// nests two processing runs on one thread; the default 2 MB overflowed in a debug build (15 November 2026).
+pub(crate) fn in_background_deep<T: Send + 'static>(
+    work: impl FnOnce() -> T + Send + 'static,
+    lost: T,
+    then: impl Fn(T) -> Message + Send + 'static,
+) -> Task<Message> {
+    Task::perform(
+        async move {
+            let (sent, got) = iced::futures::channel::oneshot::channel();
+            let spawned = std::thread::Builder::new()
+                .name("kentos-deep-run".to_owned())
+                .stack_size(64 << 20)
+                .spawn(move || {
+                    let _ = sent.send(work());
+                });
+            match spawned {
+                Ok(_) => got.await.unwrap_or(lost),
+                Err(_) => lost,
+            }
+        },
+        then,
+    )
+}
+
 impl App {
     /// Looks for uv in the background, while Python is on; nothing while off.
     pub(crate) fn python_detect(&mut self) -> Task<Message> {

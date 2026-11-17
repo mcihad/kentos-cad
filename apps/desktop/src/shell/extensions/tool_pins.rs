@@ -50,18 +50,29 @@ impl App {
         let registry = self.extensions.registry.as_ref();
         let state = registry.and_then(|r| r.state(ext));
         let name = self.extension_name(ext);
+        let version = registry
+            .and_then(|r| r.manifest(ext))
+            .map(|m| m.version.to_string())
+            .unwrap_or_default();
+        // A tool the version declares but the person's grant left out is said as that, not as missing (docs/adr/8057
+        // §122): "bu aracı içermiyor" sent the person looking for another version of an extension that has it.
+        let left_out = registry
+            .and_then(|r| r.left_out(ext).into_iter().find(|s| s.id == tool))
+            .map(|s| s.reason);
         PinnedTool::Unavailable(match state {
-            Some(kentos_extension_host::State::Active) => format!(
-                "{name} {} bu aracı içermiyor{}.",
-                registry
-                    .and_then(|r| r.manifest(ext))
-                    .map(|m| m.version.to_string())
-                    .unwrap_or_default(),
-                pin.map_or_else(String::new, |p| format!(
-                    " (form {} ile yapıldı)",
-                    p.version
-                ))
-            ),
+            Some(kentos_extension_host::State::Active) => match left_out {
+                Some(why) => format!(
+                    "{name} {version} bu aracı içeriyor ama araç kurulmadı: {why} Vermek için paketi Eklentiler'de \
+                     yeniden gözden geçirip kurun."
+                ),
+                None => format!(
+                    "{name} {version} bu aracı içermiyor{}.",
+                    pin.map_or_else(String::new, |p| format!(
+                        " (form {} ile yapıldı)",
+                        p.version
+                    ))
+                ),
+            },
             Some(state) => format!("{name} — {}. {}", state.label(), state.help()),
             None => match pin {
                 Some(p) => format!(

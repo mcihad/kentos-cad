@@ -82,9 +82,9 @@ impl Checked {
     }
 }
 
-/// The objects the database's rows name: committed file revisions, checkpoints' snapshots, succeeded jobs' artifacts
-/// and received job inputs. An upload not committed is temporary and not named. Read as the owner (row-level
-/// security shows the server role one project at a time).
+/// The objects the database's rows name: committed file revisions, checkpoints' snapshots, succeeded jobs' artifacts,
+/// received job inputs and the extension catalog's packages (docs/adr/8059 §13). An upload not committed is temporary
+/// and not named. Read as the owner (row-level security shows the server role one project at a time).
 pub async fn named(owner: &mut sqlx::PgConnection) -> Result<Vec<Named>, sqlx::Error> {
     let rows: Vec<(String, i64, String, String)> = sqlx::query_as(
         "select blob_key, size, sha256, 'project_file_revision' from kentos.project_file_revision
@@ -95,6 +95,8 @@ pub async fn named(owner: &mut sqlx::PgConnection) -> Result<Vec<Named>, sqlx::E
           where artifact_key is not null
          union all
          select blob_key, size, sha256, 'job_input' from kentos.job_input where received_at is not null
+         union all
+         select object_key, size, sha256, 'extension_package' from kentos.extension_package
          order by 1",
     )
     .fetch_all(owner)
@@ -146,11 +148,17 @@ fn digest(from: &Path, copy: Option<&Path>) -> io::Result<(u64, String)> {
     Ok((size, hex(hasher.finalize())))
 }
 
-/// The keys of the objects under a store's folder (`revisions/…`, `checkpoints/…`, `jobs/…`, `job-inputs/…`;
-/// uploads are temporary and left out).
+/// The keys of the objects under a store's folder (`revisions/…`, `checkpoints/…`, `jobs/…`, `job-inputs/…`,
+/// `extension-packages/…`; uploads are temporary and left out).
 fn keys_under(root: &Path) -> io::Result<BTreeSet<String>> {
     let mut out = BTreeSet::new();
-    for top in ["revisions", "checkpoints", "jobs", "job-inputs"] {
+    for top in [
+        "revisions",
+        "checkpoints",
+        "jobs",
+        "job-inputs",
+        "extension-packages",
+    ] {
         let mut stack = vec![root.join(top)];
         while let Some(dir) = stack.pop() {
             let entries = match std::fs::read_dir(&dir) {

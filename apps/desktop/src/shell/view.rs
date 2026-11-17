@@ -178,6 +178,7 @@ impl App {
         layers.extend(self.agent_window());
         // A package's review over Eklentiler (extensions/view.rs), and Sorunlu eklentiyi bul's window (bisect.rs).
         layers.extend(self.extension_review_window());
+        layers.extend(self.extension_submit_window());
         layers.extend(self.extension_bisect_window());
         // A dialog an extension's running code opened (extensions/dialogs.rs).
         layers.extend(self.ext_dialog_view());

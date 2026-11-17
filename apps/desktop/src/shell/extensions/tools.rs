@@ -7,48 +7,27 @@
 //!   to the extension's log once a session and its tool left out.
 //! - **Run off the window's thread:** a tool runs where İşlemler runs it (its run thread, a job's, a command's); the
 //!   bridge finds the extension's environment there and runs the code in the extension version's process
-//!   (`kentos_python_env::process::Pool`), kept between runs and closed when idle. The window waits for nothing.
+//!   (`kentos_python_env::process::Pool`), kept between runs and closed when idle. The window waits for nothing. The
+//!   reading, the start and the run are `kentos_extension_tools`', which the headless hosts share (docs/adr/8057 §70).
 //! - **Told plainly:** what happens is noted by the bridge and written by the window's thread (the extension's log, its
 //!   failure notice with Ayrıntı, a crash for the watchdog), as a command's run is (runner.rs).
 //! - **A separate process is not a sandbox** (PY-RUN-19, 20): the tool's help says so.
 
+#[cfg(test)]
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap};
-use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
-use kentos_extension_host::{ContributionKind, Record};
+use kentos_extension_host::Record;
+use kentos_extension_tools::{Library, Note, Plan, Python};
 use kentos_processing::Feedback;
 use kentos_processing::external::{self, ExternalTool, Failure, Provider};
-use kentos_python_env::process::{Ended, Heard, Pool, Start};
+use kentos_python_env::process::{Answer, Ended, Heard, Pool, Start, refuse_calls};
 use serde_json::{Value, json};
 
 use crate::app::App;
-
-/// What a run prints that goes to İşlemler' log, lines at most: the rest is in the extension's own output.
-const PRINTED_LINES: usize = 200;
-
-/// What running a tool needs, found when the registry or Python changes: no disk is read for it at the run.
-#[derive(Clone, Debug)]
-struct Plan {
-    ext: String,
-    local: String,
-    handler: String,
-    version: String,
-    source: PathBuf,
-    digest: String,
-    lock_file: String,
-}
-
-/// KentOS's own Python, when ready: what finds an extension's environment.
-#[derive(Clone, Debug)]
-struct Python {
-    interpreter: kentos_python_env::python::Interpreter,
-    root: PathBuf,
-    uv: PathBuf,
-}
 
 #[derive(Default)]
 struct Shared {
@@ -58,31 +37,6 @@ struct Shared {
     python: Option<Python>,
     /// Why there is no Python, in a sentence.
     why_not: String,
-}
-
-/// What a run tells the window's thread.
-#[derive(Clone, Debug, PartialEq)]
-pub(crate) enum Note {
-    Started {
-        ext: String,
-        part: String,
-    },
-    Worked {
-        ext: String,
-        part: String,
-        code: &'static str,
-        message: String,
-    },
-    Failed {
-        ext: String,
-        part: String,
-        title: String,
-        code: &'static str,
-        message: String,
-        detail: Option<String>,
-        /// Its process ended by itself: a crash the watchdog counts.
-        crash: bool,
-    },
 }
 
 /// The extensions' tools: what the bridge reads, its processes and its notes.
@@ -139,47 +93,85 @@ pub(crate) struct PoolJob {
     python: Python,
 }
 
+/// What the key of a trial's process ends with (`<eklenti>@<sürüm>#deneme`, [`PoolJob::run_step`]).
+pub(crate) const TRIAL_KEY: &str = "#deneme";
+
 impl PoolJob {
     /// Runs `invoke` (its `kind` and data; `local` and `handler` are filled in) in the extension version's process,
     /// `stopped` asked while it runs: the process's answer (`done`), or why there is none, in a sentence.
     pub(crate) fn run(
         &self,
-        mut invoke: Value,
+        invoke: Value,
         timeout: Duration,
         stopped: &dyn Fn() -> bool,
+    ) -> Result<Value, String> {
+        let key = self.plan.key();
+        let flow = Flow {
+            timeout,
+            stopped,
+            heard: &mut |_| {},
+            answer: &mut refuse_calls,
+        };
+        self.run_in(&key, invoke, false, flow)
+    }
+
+    /// A trial's command or map tool (trial/steps.rs, docs/adr/8057 §52), the drawing given when `document`: run in a
+    /// process of the version's own kept for trials, not the pool's (a command that runs its own extension's tool
+    /// would wait there for itself), what its code asks answered by `answer` and what it says `heard`.
+    pub(crate) fn run_step(
+        &self,
+        invoke: Value,
+        document: bool,
+        flow: Flow<'_>,
+    ) -> Result<Value, String> {
+        let key = format!("{}@{}{TRIAL_KEY}", self.plan.ext, self.plan.version);
+        self.run_in(&key, invoke, document, flow)
+    }
+
+    fn run_in(
+        &self,
+        key: &str,
+        mut invoke: Value,
+        document: bool,
+        flow: Flow<'_>,
     ) -> Result<Value, String> {
         invoke["type"] = json!("invoke");
         invoke["local"] = json!(self.plan.local);
         invoke["handler"] = json!(self.plan.handler);
-        invoke["document"] = json!(false);
-        let key = format!("{}@{}", self.plan.ext, self.plan.version);
-        match self.pool.run(
-            &key,
+        invoke["document"] = json!(document);
+        kentos_extension_tools::answered(self.pool.run_answering(
+            key,
             &|| start_of(&self.plan, &self.python),
             invoke,
-            timeout,
-            stopped,
-            &mut |_| {},
-        ) {
-            Ended::Answered(done) => Ok(done),
-            Ended::StoppedBefore => Err("Başlamadan durduruldu.".to_owned()),
-            Ended::Killed { timed_out: true } => {
-                Err("Süresini aştı; eklentinin süreci sonlandırıldı.".to_owned())
-            }
-            Ended::Killed { timed_out: false } => {
-                Err("Durdur'a cevap vermedi; eklentinin süreci sonlandırıldı.".to_owned())
-            }
-            Ended::NotStarted(why) => Err(why),
-            Ended::Crashed(words) => {
-                Err(format!("Eklentinin süreci kendiliğinden kapandı: {words}"))
-            }
-        }
+            flow.timeout,
+            flow.stopped,
+            flow.heard,
+            flow.answer,
+        ))
     }
+}
+
+/// How a run in the pool goes: how long it may take, whether it was stopped, what it says and what answers its calls.
+pub(crate) struct Flow<'a> {
+    pub(crate) timeout: Duration,
+    pub(crate) stopped: &'a dyn Fn() -> bool,
+    pub(crate) heard: &'a mut dyn FnMut(Heard),
+    pub(crate) answer: &'a mut Answer<'a>,
 }
 
 impl App {
     /// A pool job for an extension's contribution, its handler given (an audit rule's): why not, in a sentence, when
     /// its Python cannot run now.
+    /// KentOS's Python as the extensions' code runs with it, once it is ready.
+    pub(crate) fn ext_python(&self) -> Option<Python> {
+        self.extensions
+            .tools
+            .shared
+            .read()
+            .ok()
+            .and_then(|s| s.python.clone())
+    }
+
     pub(crate) fn pool_job(
         &self,
         ext: &str,
@@ -202,25 +194,14 @@ impl App {
             .as_ref()
             .ok_or("Eklenti kayıt defteri açık değil.")?;
         let manifest = registry.manifest(ext).ok_or("Eklenti kurulu değil.")?;
-        let source = registry
-            .package_dir(ext)
-            .ok_or("Eklentinin paketi bulunamadı.")?;
-        let lock_file = manifest
-            .python
-            .as_ref()
-            .map(|p| p.lock_file.clone())
-            .ok_or("Eklentinin Python işlevi yok.")?;
+        if manifest.python.is_none() {
+            return Err("Eklentinin Python işlevi yok.".to_owned());
+        }
+        let plan =
+            Plan::of(registry, ext, local, handler).ok_or("Eklentinin paketi bulunamadı.")?;
         Ok(PoolJob {
             pool: Arc::clone(&self.extensions.tools.pool),
-            plan: Plan {
-                ext: ext.to_owned(),
-                local: local.to_owned(),
-                handler: handler.to_owned(),
-                version: manifest.version.to_string(),
-                source,
-                digest: registry.digest(ext).unwrap_or_default(),
-                lock_file,
-            },
+            plan,
             python,
         })
     }
@@ -523,7 +504,7 @@ impl Answers {
                         "rows": missing.iter().map(|&i| Value::Array(rows[i].iter().map(arg_json).collect())).collect::<Vec<_>>(),
                         "document": false,
                     });
-                    let key = format!("{}@{}", plan.ext, plan.version);
+                    let key = plan.key();
                     match self.pool.run(
                         &key,
                         &|| start_of(&plan, &python),
@@ -622,7 +603,8 @@ impl std::fmt::Debug for ExtTools {
     }
 }
 
-/// Runs the extensions' tools for İşlemler.
+/// Runs the extensions' tools for İşlemler: the shared run (`kentos_extension_tools::run_tool`) with this window's
+/// plans, Python and notes.
 struct Bridge {
     shared: Arc<RwLock<Shared>>,
     pool: Arc<Pool>,
@@ -637,38 +619,10 @@ impl Bridge {
     }
 }
 
-/// The environment of `plan`'s version found, this KentOS's library in it, and how its process starts.
+/// The environment of `plan`'s version found, this KentOS's library in it (the installation carries it), and how its
+/// process starts.
 fn start_of(plan: &Plan, python: &Python) -> Result<Start, String> {
-    let lock = kentos_python_env::extension::lock_digest(&plan.source, &plan.lock_file)?;
-    let ready = kentos_python_env::extension::find(
-        &python.root,
-        &plan.ext,
-        &plan.version,
-        &lock,
-        &python.interpreter.version,
-    )
-    .ok_or_else(|| {
-        "Bu eklentinin Python ortamı hazırlanmadı: Eklentiler › Python ortamı.".to_owned()
-    })?;
-    let wheel =
-        kentos_python_env::sdk::find(&kentos_python_env::sdk::dirs(), env!("CARGO_PKG_VERSION"))?;
-    let ready =
-        kentos_python_env::extension::refresh_library(&python.uv, &python.root, &ready, &wheel)?;
-    let pycache = kentos_python_env::extension::place(&python.root, &ready.key)
-        .join(kentos_python_env::extension::BYTECODE);
-    Ok(Start {
-        python: ready.python,
-        args: super::runner::interpreter_args(&pycache),
-        hello: json!({
-            "type": "hello",
-            "protocol": 1,
-            "extension": plan.ext,
-            "version": plan.version,
-            "digest": plan.digest,
-            "source": plan.source.display().to_string(),
-            "paths": ["src"],
-        }),
-    })
+    kentos_extension_tools::start_of(plan, python, Library::Required)
 }
 
 impl Provider for Bridge {
@@ -697,231 +651,15 @@ impl Provider for Bridge {
         })?;
         let python = python
             .ok_or_else(|| Failure::Failed(format!("“{label}” çalıştırılamadı: {why_not}")))?;
-        let part = format!("processing:{}", plan.local);
-        let key = format!("{}@{}", plan.ext, plan.version);
-        let invoke = json!({
-            "kind": "processing",
-            "local": plan.local,
-            "handler": plan.handler,
-            "params": input.get("params").cloned().unwrap_or_else(|| json!({})),
-            "inputs": input.get("inputs").cloned().unwrap_or_else(|| json!({})),
-            "layers": input.get("layers").cloned().unwrap_or_else(|| json!({})),
-            "settings": {},
-            "document": false,
-        });
-        self.note(Note::Started {
-            ext: plan.ext.clone(),
-            part: part.clone(),
-        });
-        let began = Instant::now();
-        let feedback = RefCell::new(feedback);
-        let mut printed = 0usize;
-        let mut output = String::new();
-        let ended = self.pool.run(
-            &key,
+        kentos_extension_tools::run_tool(
+            &self.pool,
+            &plan,
             &|| start_of(&plan, &python),
-            invoke,
-            Duration::from_secs(tool.timeout),
-            &|| feedback.borrow().canceled(),
-            &mut |heard| {
-                let mut f = feedback.borrow_mut();
-                match heard {
-                    Heard::Progress { done, total, text } => {
-                        let share = total
-                            .filter(|t| *t > 0.0)
-                            .map_or(0.0, |t| (done / t).clamp(0.0, 1.0));
-                        f.progress(share, text.as_deref().unwrap_or_default());
-                    }
-                    Heard::Log { level, text } if level == "info" => f.info(text),
-                    Heard::Log { text, .. } => f.warn(text),
-                    Heard::Out { text, .. } => {
-                        if output.len() < 64 * 1024 {
-                            output.push_str(&text);
-                        }
-                        for line in text.lines() {
-                            if printed < PRINTED_LINES {
-                                f.info(line.to_owned());
-                            }
-                            printed += 1;
-                        }
-                    }
-                }
-            },
-        );
-        let canceled = feedback.borrow().canceled();
-        // What its process holds now (measured where the system says it): its log line says it.
-        let memory = self
-            .pool
-            .running()
-            .into_iter()
-            .find(|r| r.key == key)
-            .and_then(|r| r.memory);
-        let run = Concluded {
-            ext: &plan.ext,
-            part: &part,
-            label,
-            timeout: tool.timeout,
-            canceled,
-            took: began.elapsed().as_secs_f64(),
-            output: &output,
-            memory,
-        };
-        let (answer, note) = run.conclude(ended);
-        if let Some(note) = note {
-            self.note(note);
-        }
-        answer
-    }
-}
-
-/// How a run ended, read: what İşlemler gets and what the extension's log is told.
-struct Concluded<'a> {
-    ext: &'a str,
-    part: &'a str,
-    label: &'a str,
-    timeout: u64,
-    /// The user stopped it (Durdur).
-    canceled: bool,
-    took: f64,
-    /// What it printed.
-    output: &'a str,
-    /// Its process's resident memory after the run, bytes, where the system says it.
-    memory: Option<u64>,
-}
-
-/// A number as Turkish writes it: a decimal comma.
-fn turkish(value: f64, decimals: usize) -> String {
-    format!("{value:.decimals$}").replace('.', ",")
-}
-
-impl Concluded<'_> {
-    fn worked(&self, code: &'static str, message: String) -> Option<Note> {
-        Some(Note::Worked {
-            ext: self.ext.to_owned(),
-            part: self.part.to_owned(),
-            code,
-            message,
-        })
-    }
-
-    fn failed(
-        &self,
-        code: &'static str,
-        message: String,
-        detail: Option<String>,
-        crash: bool,
-    ) -> (Result<Value, Failure>, Option<Note>) {
-        let note = Note::Failed {
-            ext: self.ext.to_owned(),
-            part: self.part.to_owned(),
-            title: self.label.to_owned(),
-            code,
-            message: message.clone(),
-            detail,
-            crash,
-        };
-        (Err(Failure::Failed(message)), Some(note))
-    }
-
-    fn conclude(&self, ended: Ended) -> (Result<Value, Failure>, Option<Note>) {
-        let label = self.label;
-        match ended {
-            Ended::Answered(done) if done["ok"] == true => {
-                let memory = self
-                    .memory
-                    .map(|b| format!("; süreç belleği {} MB", turkish(b as f64 / 1_048_576.0, 0)))
-                    .unwrap_or_default();
-                (
-                    Ok(done["result"].clone()),
-                    self.worked(
-                        "run_finished",
-                        format!("Bitti ({} sn{memory}).", turkish(self.took, 1)),
-                    ),
-                )
-            }
-            Ended::Answered(done) if done["stopped"] == true => {
-                let words = done["stoppedAfterMs"].as_u64().map_or_else(
-                    || "Durduruldu; çizim değişmedi.".to_owned(),
-                    |ms| format!("Durdur'dan {ms} ms sonra durdu; çizim değişmedi."),
-                );
-                let note = self.worked("run_stopped", words);
-                if self.canceled {
-                    (Err(Failure::Stopped), note)
-                } else {
-                    (
-                        Err(Failure::Failed(format!(
-                            "“{label}” kendiliğinden durdu; çizim değişmedi."
-                        ))),
-                        note,
-                    )
-                }
-            }
-            Ended::Answered(done) => {
-                let message = done["message"].as_str().unwrap_or_default();
-                if done["unavailable"] == true {
-                    return self.failed(
-                        "run_unavailable",
-                        format!("“{label}” bu KentOS sürümünde çalışmaz: {message}"),
-                        None,
-                        false,
-                    );
-                }
-                if done["refused"] == true {
-                    return self.failed(
-                        "handler_refused",
-                        format!("“{label}” çalıştırılmadı: {message}"),
-                        None,
-                        false,
-                    );
-                }
-                let exception = done["exception"].as_str().unwrap_or("Hata");
-                let mut detail = done["error"].as_str().unwrap_or_default().to_owned();
-                if !self.output.is_empty() {
-                    detail = format!("{}\n{detail}", self.output);
-                }
-                self.failed(
-                    "run_failed",
-                    format!("“{label}” hata verdi: {exception}: {message}"),
-                    (!detail.is_empty()).then_some(detail),
-                    false,
-                )
-            }
-            Ended::StoppedBefore => (Err(Failure::Stopped), None),
-            Ended::Killed { timed_out: false } => (
-                Err(Failure::Stopped),
-                self.worked(
-                    "run_killed",
-                    format!(
-                        "Durdur'a {} sn içinde yanıt vermedi; süreci sonlandırıldı, çizim değişmedi.",
-                        kentos_python_env::process::KILL_AFTER.as_secs()
-                    ),
-                ),
-            ),
-            Ended::Killed { timed_out: true } => self.failed(
-                "run_timed_out",
-                format!(
-                    "“{label}” {} sn içinde bitmedi; süreci sonlandırıldı, çizim değişmedi.",
-                    self.timeout
-                ),
-                None,
-                false,
-            ),
-            Ended::NotStarted(why) => self.failed(
-                "runner_not_started",
-                format!("“{label}” çalıştırılamadı: {why}"),
-                None,
-                false,
-            ),
-            Ended::Crashed(words) => self.failed(
-                "runner_crashed",
-                format!(
-                    "“{label}” çalışırken eklentinin süreci kapandı; çizim değişmedi. {}",
-                    words.lines().next().unwrap_or_default()
-                ),
-                Some(words),
-                true,
-            ),
-        }
+            tool,
+            input,
+            feedback,
+            &|note| self.note(note),
+        )
     }
 }
 
@@ -929,88 +667,23 @@ impl App {
     /// The extensions' tools follow the registry and Python: read from their descriptors, put in İşlemler, the
     /// processes of versions no longer installed closed.
     pub(crate) fn ext_tools_changed(&mut self) {
-        let mut tools: Vec<ExternalTool> = Vec::new();
         // Where the extensions' code runs once KentOS's Python is ready: its version and this computer's platform
         // (their packages' binaries depend on both; docs/adr/8057 §15).
         let environment = match &self.python_setup.python {
-            Some(crate::python_setup::OwnPython::Ready(interpreter, _)) => format!(
-                "Python {} · {}-{}",
-                interpreter.version,
-                std::env::consts::OS,
-                std::env::consts::ARCH
-            ),
+            Some(crate::python_setup::OwnPython::Ready(interpreter, _)) => {
+                kentos_extension_tools::environment_of(interpreter)
+            }
             _ => String::new(),
         };
-        let mut plans: HashMap<String, Plan> = HashMap::new();
-        let mut refusals: Vec<(String, String, String)> = Vec::new();
-        if let Some(registry) = self.extensions.registry.as_ref() {
-            for c in registry
-                .contributions()
-                .iter()
-                .filter(|c| c.kind == ContributionKind::Processing)
-            {
-                let ext = c.lease.extension.clone();
-                let Some(manifest) = registry.manifest(&ext) else {
-                    continue;
-                };
-                let local =
-                    c.id.strip_prefix(&format!("ext.{ext}."))
-                        .unwrap_or_default()
-                        .to_owned();
-                let (Some(entry), Some(source)) = (
-                    manifest
-                        .entrypoints
-                        .processing
-                        .iter()
-                        .find(|p| p.id == local),
-                    registry.package_dir(&ext),
-                ) else {
-                    continue;
-                };
-                let read = std::fs::read_to_string(source.join(&entry.descriptor))
-                    .map_err(|e| format!("{} okunamadı: {e}", entry.descriptor))
-                    .and_then(|text| {
-                        serde_json::from_str::<Value>(&text)
-                            .map_err(|e| format!("{} JSON değil: {e}", entry.descriptor))
-                    })
-                    .and_then(|descriptor| {
-                        external::from_descriptor(
-                            &ext,
-                            &manifest.name,
-                            &manifest.version.to_string(),
-                            &local,
-                            &descriptor,
-                        )
-                    });
-                match read {
-                    Ok(mut tool) => {
-                        // The package's digest: what a model's step pins (docs/adr/8057 §13); where its code runs,
-                        // which a layer it makes records (§15).
-                        tool.digest = registry.digest(&ext).unwrap_or_default();
-                        tool.environment = environment.clone();
-                        plans.insert(
-                            tool.tool.id.clone(),
-                            Plan {
-                                ext: ext.clone(),
-                                local: local.clone(),
-                                handler: entry.handler.clone(),
-
-                                version: manifest.version.to_string(),
-                                source: source.clone(),
-                                digest: registry.digest(&ext).unwrap_or_default(),
-                                lock_file: manifest
-                                    .python
-                                    .as_ref()
-                                    .map(|p| p.lock_file.clone())
-                                    .unwrap_or_default(),
-                            },
-                        );
-                        tools.push(tool);
-                    }
-                    Err(why) => refusals.push((ext, local, why)),
-                }
-            }
-        }
+        let listed = self
+            .extensions
+            .registry
+            .as_ref()
+            .map(|registry| {
+                kentos_extension_tools::read_tools(registry, registry.contributions(), &environment)
+            })
+            .unwrap_or_default();
+        let (tools, plans, refusals) = (listed.tools, listed.plans, listed.refused);
         // A descriptor that does not fit: in the extension's log once a session, its tool left out.
         for (ext, local, why) in refusals {
             if self
@@ -1030,58 +703,23 @@ impl App {
                 );
             }
         }
-        // The extensions' expression functions (`ext.<eklenti>.<işlev>`), known by name without their code.
-        let mut expressions: HashMap<String, Plan> = HashMap::new();
-        let mut defs: Vec<kentos_expression::external::ExternalDef> = Vec::new();
-        if let Some(registry) = self.extensions.registry.as_ref() {
-            for c in registry
-                .contributions()
-                .iter()
-                .filter(|c| c.kind == ContributionKind::Expression)
-            {
-                let ext = c.lease.extension.clone();
-                let Some(manifest) = registry.manifest(&ext) else {
-                    continue;
-                };
-                let local =
-                    c.id.strip_prefix(&format!("ext.{ext}."))
-                        .unwrap_or_default();
-                let (Some(entry), Some(source)) = (
-                    manifest
-                        .entrypoints
-                        .expressions
-                        .iter()
-                        .find(|e| e.id == local),
-                    registry.package_dir(&ext),
-                ) else {
-                    continue;
-                };
-                defs.push(kentos_expression::external::ExternalDef {
-                    name: c.id.clone(),
-                    description: format!(
-                        "{} — {} eklentisinin ifade işlevi; kendi Python ortamında çalışır.",
-                        entry.title.as_deref().unwrap_or(local),
-                        manifest.name
-                    ),
-                });
-                expressions.insert(
-                    c.id.clone(),
-                    Plan {
-                        ext: ext.clone(),
-                        local: local.to_owned(),
-                        handler: entry.handler.clone(),
-                        version: manifest.version.to_string(),
-                        source,
-                        digest: registry.digest(&ext).unwrap_or_default(),
-                        lock_file: manifest
-                            .python
-                            .as_ref()
-                            .map(|p| p.lock_file.clone())
-                            .unwrap_or_default(),
-                    },
-                );
-            }
-        }
+        // The extensions' expression functions (`ext.<eklenti>.<işlev>`), known by name without their code: every
+        // one runs here (the headless hosts read them the same way, docs/adr/8057 §80).
+        let kentos_extension_tools::expressions::Offered {
+            plans: expressions,
+            defs,
+        } = self
+            .extensions
+            .registry
+            .as_ref()
+            .map(|registry| {
+                kentos_extension_tools::expressions::read_functions(
+                    registry,
+                    registry.contributions(),
+                    true,
+                )
+            })
+            .unwrap_or_default();
         // The process's lists are given once a tool or a function is offered, and kept up to date after; a window
         // that never offered one leaves them alone (in tests many windows share the process, `hold_process_lists`).
         let global = self.extensions.tools.registered || !tools.is_empty() || !defs.is_empty();
@@ -1128,19 +766,18 @@ impl App {
             }
             _ => None,
         };
-        let keys: BTreeSet<String> = plans
-            .values()
-            .map(|p| format!("{}@{}", p.ext, p.version))
-            .collect();
+        let keys: BTreeSet<String> = plans.values().map(Plan::key).collect();
         if let Ok(mut shared) = self.extensions.tools.shared.write() {
             shared.plans = plans;
             shared.expressions = expressions;
             shared.python = python;
             shared.why_not = p.why_not().to_owned();
         }
-        // A version removed, turned off or replaced: its process closed (one that runs ends with its run).
+        // A version removed, turned off or replaced: its process closed (one that runs ends with its run), its trial's
+        // too.
         for running in self.extensions.tools.pool.running() {
-            if !keys.contains(&running.key) {
+            let version = running.key.strip_suffix(TRIAL_KEY).unwrap_or(&running.key);
+            if !keys.contains(version) {
                 self.extensions.tools.pool.close(&running.key);
             }
         }
@@ -1159,13 +796,10 @@ impl App {
         };
         for note in notes {
             match note {
-                Note::Started { ext, part } => {
+                // The record a headless host writes too (`Note::record`, docs/adr/8057 §73).
+                Note::Started { .. } => {
                     if let Some(registry) = self.extensions.registry.as_mut() {
-                        registry.write_log(
-                            Record::info("run_started", "Çalıştırıldı (İşlemler).")
-                                .of(&ext, None)
-                                .part(part),
-                        );
+                        registry.write_log(note.record(None));
                     }
                 }
                 Note::Worked {

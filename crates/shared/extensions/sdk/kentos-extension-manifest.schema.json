@@ -7,6 +7,13 @@
           "$ref": "#/$defs/Module",
           "description": "The program whose audit it joins."
         },
+        "examples": {
+          "description": "Its examples (`audits/<id>.examples.json`, `kentos.auditExamples` 1): what it is given and the findings it must\ngive, run by Örnekleri çalıştır and `kentos kek test` (docs/adr/8057 §75).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "handler": {
           "type": "string"
         },
@@ -27,24 +34,33 @@
     },
     "Capability": {
       "description": "The capability vocabulary v1, fixed in ADIM 16; widening it is a new version.",
-      "enum": [
-        "document.read",
-        "document.write",
-        "datasets.read",
-        "datasets.create",
-        "datasets.manage",
-        "ui.ribbonTab",
-        "ui.panel",
-        "ui.contextMenu",
-        "processing.provider",
-        "audit.provider",
-        "expression.provider",
-        "mapTool",
-        "dataSource",
-        "files.userSelected",
-        "network"
-      ],
-      "type": "string"
+      "oneOf": [
+        {
+          "enum": [
+            "document.read",
+            "document.write",
+            "datasets.read",
+            "datasets.create",
+            "datasets.manage",
+            "ui.ribbonTab",
+            "ui.panel",
+            "ui.contextMenu",
+            "processing.provider",
+            "audit.provider",
+            "expression.provider",
+            "mapTool",
+            "dataSource",
+            "files.userSelected",
+            "network"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "files.userSelectedWrite",
+          "description": "A file written where the user chose (a panel's save picker, docs/adr/8057 §44): apart from reading, so a user\nwho let an extension read the files they choose is asked again before it writes.",
+          "type": "string"
+        }
+      ]
     },
     "Capture": {
       "description": "What a map tool asks the user to draw.",
@@ -379,6 +395,13 @@
     "ExpressionEntry": {
       "additionalProperties": false,
       "properties": {
+        "examples": {
+          "description": "Its examples (docs/adr/8057 §78): a call's arguments and the value it must give, at most 10; run by Örnekleri\nçalıştır and `kentos kek test`.",
+          "items": {
+            "$ref": "#/$defs/ExpressionExample"
+          },
+          "type": "array"
+        },
         "handler": {
           "type": "string"
         },
@@ -395,6 +418,29 @@
       "required": [
         "id",
         "handler"
+      ],
+      "type": "object"
+    },
+    "ExpressionExample": {
+      "additionalProperties": false,
+      "description": "An expression function's example: the arguments of one call (text, number, true/false or null, at most 10) and the\nvalue it must give (a number within a billionth, the rest as written).",
+      "properties": {
+        "args": {
+          "items": true,
+          "type": "array"
+        },
+        "expect": true,
+        "title": {
+          "description": "What it shows, in a few words; none: the call as written (`ada-parsel(\"101\", \"1\")`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "args",
+        "expect"
       ],
       "type": "object"
     },
@@ -437,6 +483,32 @@
       "required": [
         "id",
         "definition"
+      ],
+      "type": "object"
+    },
+    "Generated": {
+      "additionalProperties": false,
+      "description": "Who wrote a package in KentOS's workshop.",
+      "properties": {
+        "agent": {
+          "description": "The agent: KentOS Asistan, or an MCP client by the name it gave. Written by KentOS's workshop when it packs the\nfolder; an agent does not write it.",
+          "type": "string"
+        },
+        "kentos": {
+          "description": "The KentOS whose workshop packed it: its SDK and blueprint are what the agent read.",
+          "type": "string"
+        },
+        "model": {
+          "description": "Its model, when the host knows it (Asistan's profile); none from an MCP client, which does not say.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "agent",
+        "kentos"
       ],
       "type": "object"
     },
@@ -995,6 +1067,17 @@
     "format": {
       "const": "kentos.extension"
     },
+    "generated": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Generated"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Who wrote it when an agent did, in KentOS's workshop (docs/adr/8057 §76): KentOS writes it when the workshop\npacks the folder; an agent does not."
+    },
     "icon": {
       "description": "A 20×20 SVG in the package.",
       "type": [
@@ -1068,7 +1151,7 @@
       "type": "array"
     },
     "runtimes": {
-      "description": "The catalog's summary of where it runs; each tool says its own.",
+      "description": "Where it runs, as the catalog shows it: `desktop`, `headless` (MCP, the Python library), `cloud`. Each İşlemler\ntool says its own (its descriptor's `runtimes`); the expression functions run headless only when this holds\n`headless` (docs/adr/8057 §80).",
       "items": {
         "$ref": "#/$defs/Runtime"
       },

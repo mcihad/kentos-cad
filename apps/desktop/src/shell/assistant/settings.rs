@@ -8,12 +8,14 @@
 //! (`DEEPSEEK_API_KEY` …). The section lists the agents and writes a change to them at once; an agent is added or
 //! changed in a window of its own over the settings window, with its own Vazgeç and Kaydet (the settings window's
 //! Kaydet is the settings'). Two rows of Vazgeç and Kaydet in one window, the form's and the window's, asked which one
-//! kept the agent (13 November 2026).
+//! kept the agent (13 November 2026). An agent's token limits, per conversation and per day, are its form's too
+//! (docs/adr/8056 §6).
 
 use iced::widget::{Column, column, row};
 use iced::{Center, Element, Fill, Task};
-use kentos_agent::profiles::{AgentProfile, KeySource, ProfileField};
+use kentos_agent::profiles::{AgentProfile, KeySource, ProfileField, PythonRuns};
 use kentos_agent::providers::ProviderKind;
+use kentos_agent::{read_tokens, spending_words, tokens_words};
 use kentos_ui::widget::{Banner, Choice, Dialog, Form, InputField, Select, Suggest, Suggestion};
 use kentos_ui::{label, style};
 
@@ -38,6 +40,13 @@ pub enum AgentsEdit {
     Key(String),
     Keep(usize),
     Default,
+    /// Öznitelik değerleri gönderilmesin (docs/adr/8057 §103).
+    Withhold,
+    /// Kod çalıştırma › Atölyedeki kodu: its place in [`PythonRuns::ALL`] (docs/adr/8057 §104).
+    Python(usize),
+    /// The token limits, as typed (docs/adr/8056 §6).
+    ConversationTokens(String),
+    DailyTokens(String),
     /// Modelleri getir: the provider's list of models, with the key given.
     FetchModels,
     Models(Result<Vec<String>, String>),
@@ -83,6 +92,13 @@ pub struct Editor {
     kept: bool,
     keep: KeySource,
     default: bool,
+    /// The token limits as typed; empty: none.
+    conversation_tokens: String,
+    daily_tokens: String,
+    /// No attribute value is sent to it (docs/adr/8057 §103).
+    withhold: bool,
+    /// What it may do with the Python it writes (docs/adr/8057 §104).
+    python: PythonRuns,
     /// The provider's models, once fetched.
     models: Vec<String>,
     fetching: bool,
@@ -111,6 +127,10 @@ impl Editor {
             kept: false,
             keep: KeySource::Stored,
             default,
+            conversation_tokens: String::new(),
+            daily_tokens: String::new(),
+            withhold: false,
+            python: PythonRuns::Ask,
             models: Vec::new(),
             fetching: false,
             checking: false,
@@ -135,6 +155,13 @@ impl Editor {
             kept,
             keep: profile.key,
             default: profile.default,
+            conversation_tokens: profile
+                .conversation_tokens
+                .map(tokens_words)
+                .unwrap_or_default(),
+            daily_tokens: profile.daily_tokens.map(tokens_words).unwrap_or_default(),
+            withhold: profile.withhold_values,
+            python: profile.python_runs,
             models: Vec::new(),
             fetching: false,
             checking: false,
@@ -155,7 +182,21 @@ impl Editor {
         p.base_url = (!url.is_empty()).then(|| url.to_owned());
         p.key = self.keep;
         p.default = self.default;
+        p.conversation_tokens = read_tokens(&self.conversation_tokens).unwrap_or(None);
+        p.daily_tokens = read_tokens(&self.daily_tokens).unwrap_or(None);
+        p.withhold_values = self.withhold;
+        p.python_runs = self.python;
         p
+    }
+
+    /// What the limits' fields say that is not a limit.
+    fn limit_problems(&self) -> impl Iterator<Item = (ProfileField, String)> {
+        [
+            (ProfileField::ConversationTokens, &self.conversation_tokens),
+            (ProfileField::DailyTokens, &self.daily_tokens),
+        ]
+        .into_iter()
+        .filter_map(|(field, typed)| read_tokens(typed).err().map(|why| (field, why)))
     }
 
     fn problem(&self, field: ProfileField) -> Option<String> {
@@ -257,6 +298,8 @@ impl App {
                         e.key_problem = None;
                     }
                     AgentsEdit::Name(t) => e.name = t,
+                    AgentsEdit::ConversationTokens(t) => e.conversation_tokens = t,
+                    AgentsEdit::DailyTokens(t) => e.daily_tokens = t,
                     AgentsEdit::Model(t) => e.model = t,
                     AgentsEdit::BaseUrl(t) => {
                         e.base_url = t;
@@ -284,6 +327,12 @@ impl App {
                         }
                     }
                     AgentsEdit::Default => e.default = !e.default,
+                    AgentsEdit::Withhold => e.withhold = !e.withhold,
+                    AgentsEdit::Python(i) => {
+                        if let Some(&runs) = PythonRuns::ALL.get(i) {
+                            e.python = runs;
+                        }
+                    }
                     AgentsEdit::FetchModels | AgentsEdit::Check => {
                         let profile = e.profile();
                         let typed = e.key.trim().to_owned();
@@ -330,7 +379,9 @@ impl App {
             return Task::none();
         };
         let profile = e.profile();
+        let limits: Vec<_> = e.limit_problems().collect();
         e.problems = profile.problems();
+        e.problems.extend(limits);
         e.key_problem = (e.kind.preset().needs_key
             && e.keep != KeySource::Environment
             && !e.kept
@@ -378,6 +429,7 @@ impl App {
         let agents = &self.assistant.agents;
         let store = &self.assistant.store;
         let list = store.list();
+        let day = super::today();
         let mut rows = Column::new().spacing(8);
         if list.is_empty() {
             rows = rows.push(words::empty(
@@ -405,12 +457,22 @@ impl App {
             };
             rows = rows.push(
                 row![
-                    column![
-                        label::strong(p.name.clone()),
-                        label::caption(facts).style(style::text::muted)
-                    ]
-                    .spacing(2)
-                    .width(Fill),
+                    {
+                        let mut said = column![
+                            label::strong(p.name.clone()),
+                            label::caption(facts).style(style::text::muted),
+                            label::caption(spending_words(
+                                p,
+                                self.assistant.ledger.spent(&p.id, &day)
+                            ))
+                            .style(style::text::muted)
+                        ];
+                        // The organisation's policy, where the user picks the agent: not first in the chat.
+                        if let Some(why) = self.assistant.refusal(p) {
+                            said = said.push(label::caption(why).style(style::text::warning));
+                        }
+                        said.spacing(2).width(Fill)
+                    },
                     badge,
                     words::secondary("Düzenle", Some(msg(AgentsEdit::Change(p.id.clone())))),
                     words::secondary("Sil", Some(msg(AgentsEdit::Remove(p.id.clone())))),
@@ -440,7 +502,19 @@ impl App {
                 )
             })
             .unwrap_or_else(|| "Ajanlar bu oturumun belleğinde.".into());
-        form.section("Kayıt").wide(label::caption(kept)).into()
+        let ledger = self.assistant.ledger.path().map_or_else(
+            || "Harcanan tokenlar bu oturumun belleğinde sayılır.".to_owned(),
+            |p| {
+                format!(
+                    "Harcanan tokenlar günlere göre, yalnız sayı olarak (istem, yanıt ya da anahtar değil): {}",
+                    p.display()
+                )
+            },
+        );
+        form.section("Kayıt")
+            .wide(label::caption(kept))
+            .wide(label::caption(ledger))
+            .into()
     }
 
     /// The agent being added or changed, in a window over Uygulama ayarları with its own Vazgeç and Kaydet.
@@ -619,6 +693,103 @@ impl App {
                     }
                 });
         }
+        // The limits stop an agent calling tools in a loop: nobody types while it spends (docs/adr/8056 §6).
+        let today =
+            e.id.as_deref()
+                .map_or(0, |id| self.assistant.ledger.spent(id, &super::today()));
+        form = form
+            .section("Token sınırı")
+            .field(
+                "Sohbet başına",
+                input(
+                    "Sınır yok",
+                    &e.conversation_tokens,
+                    AgentsEdit::ConversationTokens,
+                    Some(ProfileField::ConversationTokens),
+                ),
+            )
+            .help("Bir sohbetin bütün turlarında gönderilen ve alınan token; sınıra varınca ajan durur, yeni sohbet sıfırdan sayar.")
+            .error(e.problem(ProfileField::ConversationTokens))
+            .field(
+                "Günlük",
+                input(
+                    "Sınır yok",
+                    &e.daily_tokens,
+                    AgentsEdit::DailyTokens,
+                    Some(ProfileField::DailyTokens),
+                ),
+            )
+            .help(format!(
+                "Bu ajanın bu bilgisayarda bir günde harcayacağı en çok token; bugün {} token harcadı.",
+                tokens_words(today)
+            ))
+            .error(e.problem(ProfileField::DailyTokens));
+        // What goes to the provider (docs/adr/8057 §103, PY-AI-13): the organisation's policy may decide it for an
+        // agent outside this computer; the box then says so and stays ticked.
+        let local = e.profile().on_this_computer();
+        let forced = self
+            .assistant
+            .policy
+            .as_ref()
+            .is_some_and(|p| p.withholds_attribute_values(local));
+        form = form
+            .section("Gönderilen veri")
+            .field(
+                "Öznitelik değerleri",
+                words::check(
+                    e.withhold || forced,
+                    "Gönderilmesin",
+                    (!forced).then(|| msg(AgentsEdit::Withhold)),
+                ),
+            )
+            .help(
+                "İşaretliyken ajan çizimin öznitelik değerlerini (malik adı, kimlik numarası, adres gibi) görmez, \
+                 onlara göre seçemez, süzemez ve hesap yapamaz; değer yazabilir. Geometri, katman ve alan adları, \
+                 yazılar gider. Bu bilgisayarda çalışan bir sunucuda veri bu bilgisayardan çıkmaz.",
+            )
+            .warning(forced.then_some(
+                "Kurum ilkesi öznitelik değerlerinin bu bilgisayarın dışındaki yapay zekâ hizmetlerine gitmesine izin \
+                 vermiyor: bu ajan onları göremez.",
+            ));
+        // Its own Python, a class apart from its tool calls (docs/adr/8057 §104, PY-AI-11): the organisation's policy
+        // may close it for every agent; the choice then says so.
+        let closed = self
+            .assistant
+            .policy
+            .as_ref()
+            .and_then(kentos_extension_host::Policy::agent_python_refusal);
+        let runs = if closed.is_some() {
+            PythonRuns::Off
+        } else {
+            e.python
+        };
+        let choices = Select::new(
+            PythonRuns::ALL.iter().map(|r| {
+                let choice = Choice::new(match r {
+                    PythonRuns::Ask => "Her seferinde sorsun",
+                    PythonRuns::Allow => "Sormadan çalıştırsın",
+                    PythonRuns::Off => "Çalıştırmasın",
+                });
+                // Closed by the policy: the other two shown, not chosen.
+                if closed.is_some() && *r != PythonRuns::Off {
+                    choice.disabled()
+                } else {
+                    choice
+                }
+            }),
+            PythonRuns::ALL.iter().position(|r| *r == runs),
+            |i| msg(AgentsEdit::Python(i)),
+        )
+        .searchable(false);
+        form = form
+            .section("Kod çalıştırma")
+            .field("Atölyedeki kodu", choices)
+            .help(
+                "Ajanın yazdığı eklenti, denenirken ya da kurulu eklentinin üstüne yüklenirken bu bilgisayarda sizin \
+                 yetkinizle çalışır; ayrı süreç bir kum havuzu değildir. Çizimi okuması ve komutlarla yazması bu \
+                 izinden ayrıdır.",
+            )
+            .warning(closed);
         form.section("Kullanım")
             .row(words::check(
                 e.default,

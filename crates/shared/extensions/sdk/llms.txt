@@ -1,0 +1,485 @@
+# KentOS eklenti SDK'sı
+
+> KentOS'un `.kek` eklentilerini yazmak için gereken her şey tek dosyada: rehber, adımlar, yetenekler, katkılar, İşlemler aracı tanımı ve `kentos.ext` imzaları. Bu metin `kentos://sdk/ai-kek-pack`'in (MCP), `extension.sdk`'nın (ajan aracı) ve `kentos kek sdk --json`'un düz metin hâlidir ve onlardan üretilir; şemalar ve uzun listeler kendi bölümlerinden alınır ("Bölümler").
+
+SDK protokolü 1 · paket biçimi kentos.ai-kek-pack sürüm 1
+
+## KentOS eklentisi yazmak (`kentos.ext`)
+
+Bir eklenti `.kek` paketidir: `manifest.json`, `src/` altında Python, bir İşlemler aracının tanımı (`tools/*.tool.json`),
+`pyproject.toml` ve `uv.lock`. KentOS kodu içe aktarmadan tanır; bir işlev yalnız çağrıldığında, eklenti sürümünün kendi
+sürecinde ve kendi Python ortamında çalışır. Ayrı süreç bir korumalı alan değildir: eklenti kullanıcının haklarıyla
+çalışır, KentOS yalnız çizimden ne verdiğini sınırlar.
+
+`from kentos import ext` (çizime yazan komut ayrıca `from kentos import cad`); bütün imzalar `api.stub`'da.
+
+### İşaretler (her biri manifestteki bir giriş noktasının yerel kimliğiyle)
+
+- `@ext.command("kimlik")` → `entrypoints.commands`: `def f(ctx: ext.CommandContext) -> ext.CommandResult`.
+  `ctx.doc` açık çizimdir (`document.read`/`document.write` verildiyse; yoksa ya da çizim açık değilse `None`):
+  `ctx.doc.layers()`,
+  `ctx.doc.entities(layer=…)`; yazmak `kentos.cad` komutlarıyla (`cad.entities.set(ctx.doc, uids=[…],
+  operation="attributes", attrs={…})`); `ctx.doc.select(uidler)` bulduğunu seçili bırakır. Bir çalıştırmanın bütün
+  yazmaları tek geri alma adımıdır; hata veren ya da durdurulan çalıştırma geri alınır.
+- `@ext.processing("kimlik")` → `entrypoints.processing` + tanım dosyası: `def f(ctx: ext.ProcessingContext,
+  <parametreler adlarıyla>) -> dict`. Nesne girdileri `ext.FeatureInput`'tur (`ctx.read_features(girdi)` →
+  `ext.Feature`: `uid`/`id`, `kind`, `layer`, `attrs`, `geometry` GeoJSON, `__geo_interface__`). Çizim yoktur;
+  kullanıcıya da sormaz (`ctx.dialog`/`ctx.confirm` reddedilir: sorulacak olan bir parametredir); çıktılar
+  tanımdaki adlarıyla bir sözlükte döner (`features`: `ext.NewFeature(attrs=…, geometry=…)` ya da girdinin şekliyle
+  `ext.NewFeature(source=f, attrs=…)` listesi; `table`: satır sözlükleri ya da DataFrame; `number`; `string`). Şekil
+  `ext.point/polyline/polygon`, GeoJSON ya da `__geo_interface__` taşıyan her şeydir (shapely, GeoPandas).
+  `ctx.summary(metin)` geçmişteki tek satırı, `ctx.select(nesneler)` bitince seçili kalanları söyler.
+- `@ext.audit("kimlik")` → `entrypoints.audits`: `def f(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]`.
+  `facts.layers()`, `facts.features(katman_kimliği_ya_da_adı)`, `facts.all_features()`, `facts.group_related(katman,
+  foreign_key=…)`, `facts.cut`. KentOS'un Rust'ta ölçtüğü olgular `facts.project` (`ext.ProjectAuditFacts`;
+  `.layer("parsel")` → `ext.LayerFacts`: geometriye göre sayılar, `area`, `length`, `invalid`, `overlaps`, `gaps`,
+  `totals`; mimari çizimde `.architecture` → `ext.ArchitectureFacts`: katlar, `exits(kat)`, mahaller (`net`, `axis`,
+  `escape`: kat çıkışına ve daire kapısına yürüyüş), `units` (PAİY 4/ğ alanları), `doors`, `zoning` (imar durumu);
+  sınıfları `factsApi`, şeması `factsSchema`): geometriyi yeniden hesaplamayın. Kural yazamaz; bulgu
+  `ext.AuditFinding(message, severity="error"|"warning"|"info", feature_id, fix=ext.SemanticFix(title, command,
+  args))`. Düzeltmeyi kullanıcı uygular (tek geri alma adımı; yalnız `document.write` izinli eklentide).
+- `@ext.expr("kimlik")` → `entrypoints.expressions`: düz işlev, değer alır değer döndürür. İfadelerde eklenti
+  kimliği ve yerel kimlikle çağrılır: `ext.tr.ornek.vitrin.ada-parsel(ada, parsel)` (etiket, stil kuralı, süzgeç, form
+  hesabı, İşlemler). Çizim beklemez: yanıt gelince yeniden çizilir. MCP ve Python'da `runtimes`: `headless` ister.
+- `@ext.map_tool("kimlik")` → `entrypoints.mapTools` (`capture`: point, line, polygon, rectangle,
+  orientedRectangle, circle): `def f(ctx: ext.MapToolContext, sekil: ext.Shape) -> ext.CommandResult`; `ctx.add_feature(katman, sekil,
+  öznitelikler)`. Şekli KentOS çizer (kenetleme, yazılan koordinat), kod yerleştirir.
+
+### Katman şeması (`schema.json`)
+
+Eklentinin katmanları `schema.json`'da bildirilir (manifestte `"schemaFile": "schema.json"`) ve bir komut onları açık
+çizime kurar: `@ext.command("katmanlari-kur") def f(ctx): return ctx.apply_declarative_schema("schema.json")`
+(`document.write` ister). Biçim `kentos.layerSchema` 1, sözcükler KentOS'un:
+
+- `layers`: her biri `name` (çizimdeki **kimliği**, `layer.id`: küçük harf, rakam, `_`; harita aracı ve denetim
+  katmanı bununla bulur: `ctx.add_feature("mezar_yeri", …)`, `facts.features("mezar_yeri")`; bir komut
+  `ctx.doc.layer("mezar_yeri")` ile, nesnelerini `ctx.doc.entities(layer="mezar_yeri")` ile okur), `title` (görünen
+  adı, `layer.name`: "Mezar yeri"; katman ağacında adla aramak kimliği bulmaz), `geometry` (point, line, area,
+  annotation, mixed; verilmezse her tür), `fields`: `{name, kind, alias, required, default, length, min, max, domain}`
+  (kind: text, integer, decimal, date, boolean, datetime, time, bigint, instant, uuid, json, binary); isteğe bağlı `form`:
+  paketteki `.kform` (manifestin `entrypoints.forms`'unda bildirilir), kurulumda katmana katmanın adıyla bağlanır.
+- Katmanın isteğe bağlı `subtypes`'ı (alt türler): `{field, types: [{code, label, fields: [{field, values, default,
+  required}]}]}`: `field` değer listeli, tek değerli bir alan; her alt tür onun bir kodu ve öbür alanları o türün
+  kayıtları için daraltır (sunulan kodlar, yeni kaydın varsayılanı, zorunluluk). `contingents`'ı (değer bileşimleri):
+  `[{name, fields: [2–8 değer listeli alan], restrictive, rows: [{cells: [{kind: "code", code} | {kind: "any"} |
+  {kind: "empty"}], subtype}]}]`: birlikte geçerli değerler; kısıtlayıcı grupta başka bileşim reddedilir. KentOS
+  kuralları her yazmada uygular, formun ve tablonun seçenekleri daralır. Grubun bir alanı doluyken öbür hücreler de
+  bir satırca karşılanmalı: alanlar tek tek doldurulacaksa boş hücreli satırlar ekleyin (`[{kind: "any"}, {kind:
+  "empty"}]` ve tersi), yoksa öznitelik tablosunda ilk yazılan alan reddedilir (inceleme bunu uyarır).
+- `group` (isteğe bağlı): `{id, name}`, katmanlar altına girer. `domains`: `{id, name, kind, values: [{code, label}]}` ya
+  da `min`/`max`. `relations`: `{id, name, parent, child, field, onDelete}`: çocuğun alanı ebeveynin kalıcı kimliğini
+  tutar (onDelete: keep, unlink, cascade, restrict).
+- Var olana dokunmaz, yalnız eksiği ekler (katmanın eksik alanlarını da); ikinci çalıştırma bir şey değiştirmez. Şema
+  paket incelemesinde denetlenir: her sorun JSON işaretçisiyle (`layer_schema`).
+
+### Panel (`ui/<id>.panel.json`)
+
+Panel bildirimseldir; kodu bir arayüz nesnesi almaz. Manifestte `entrypoints.panels` (`id`, `title`, `side`: right
+Katmanlar'ın yanında, left haritanın solunda, bottom altında; kullanıcının taşıdığı yer korunur, `definition`),
+şeritte `{"panel": "<id>"}`, yetenek `ui.panel`. Biçim `kentos.ui.panel` 1: `title`, `split: true` (çıktılar sürüklenen
+bir çizginin altında) ve `body`
+bileşenleri: `text` (`text`), `section` (`label`, `collapsed`: katlanır başlık; sonraki bileşenleri bir sonraki bölüme
+dek toplar, katlıyken değerleri yine gider, yanlış bırakılan alanı bölümü açar), `divider`, `textField` (`id`,
+`label`, `placeholder`, `value`), `numberField` (`id`, `label`,
+`min`, `max`, `unit`, `value`, `step`, `units`: ör. m, km; 0,03 km yazılır, kod `unit`'te alır), `dateField` (`id`, `label`, `value`, `min`, `max`: YYYY-AA-GG; kullanıcı GG.AA.YYYY ya
+da YYYY-AA-GG yazar ya da takvimden seçer, değeri ISO tarih metni ya da boşsa None), `timeField` (`id`, `label`,
+`value`, `min`, `max`: SS:DD; kullanıcı 14:30 ya da 14.30 yazar ya da saat seçiciden seçer, değeri SS:DD ya da
+None), `dateTimeField` (`id`, `label`, `value`, `min`, `max`: YYYY-AA-GGTSS:DD, yerel saat; değeri 2026-11-15T14:30 ya
+da None), `select` (`id`, `label`,
+`options: [{value, label}]`, `value`), `multiSelect` (`id`, `label`, `options: [{value, label}]`, `value`: başta
+seçili değerlerin listesi; her seçenek bir çip, basınca seçilir ya da bırakılır; değeri seçilenlerin listesi, seçenek
+sırasıyla, hiçbiri seçilmezse boş liste), `checkbox` (`id`,
+`label`, `value`), `layerPicker` (`id`, `label`, `geometry`: point, line, area, annotation; açık çizimin katmanları,
+değeri katmanın kimliği ya da seçilmezse None), `fieldPicker` (`id`, `label`, `layer`: bu paneldeki bir `layerPicker`'ın
+kimliği, `kinds`: alan türleri, ör. `["integer", "decimal"]`; orada seçilen katmanın alanları, değeri alanın adı ya da
+None), `featurePicker` (`id`, `label`, `layer`: bir `layerPicker`'ın kimliği, `geometry`, `multiple`: varsayılan true;
+kullanıcı "Seçimi al"a basınca çizimdeki seçimden o katmanın ve türün nesnelerini alır, değeri kalıcı kimliklerin
+listesi, `multiple: false` ise tek kimlik ya da None; kod her birini `ctx.doc.entity(uid)` ile okur; katman değişince
+alan ve nesne seçimi temizlenir), `filePicker` (`id`, `label`, `filters`: `[{name, extensions}]`; okunacak dosyanın yolu
+yazılır ya da Seç… ile seçilir, değeri mutlak yol ya da None; manifest `files.userSelected` ister; `save: true`
+yazılacak yeri sorar: `defaultName`, `files.userSelectedWrite`),
+`crsPicker` (`id`, `label`, `value`; KentOS'un sistemlerinden, verilmezse çizimin; değeri `EPSG:<kod>`), `pointPicker`
+(`id`, `label`, `value`; "x, y" yazılır ya da Haritadan seç, değeri [x, y]), `shapePicker` (`id`, `label`, `shape`:
+line, polygon, rectangle, circle; haritada çizilir, değeri GeoJSON), `relationPicker` (`id`, `label`, `relation`,
+`display`; ilişkinin üst kaydı, değeri kalıcı kimliği), `relationList` (`id`, `label`, `relation`, `of`: bir seçici,
+`columns`; o kaydın ilişkili kayıtları, canlı), `attachments` (`id`, `label`, `of`: bir seçici; o kaydın ekleri,
+Aç ve KentOS'un ekle düğmeleri), `button` (`id`,
+`label`, `command`: bir `entrypoints.commands` kimliği, `table`,
+`primary`), `table` (`id`, `label`), `tree` (`id`, `label`, `group`: 1–3 sütun adı; düğmenin satırlarını bu sütunlara
+göre açılıp kapanan gruplara dizer, her grubun sayısını yazar; yaprağın adı satırın ilk diğer sütunu, `uid`'li yaprak
+tıklanınca nesneyi gösterir), `card` (`id`, `label`, `title`, `tag`:
+sütun adları; her satır bir kart: `title` sütunu başlığında (yoksa ilk sütun), `tag` sütunu yanında, diğer sütunlar
+altında adlarıyla; `uid`'li kart tıklanınca nesneyi gösterir;
+düğmenin `table`'ı bir kartı da gösterebilir), `stats` (`id`, `label`, `title`, `value`, `unit`, `note`: sütun adları;
+her satır bir gösterge kartı: `title` sütunu adı (yoksa ilk sütun), `value` sütunu sayısı (yoksa ikinci), `unit` birimi,
+`note` altındaki notu), `chart` (`id`, `label`, `kind`: bar (varsayılan),
+pie, histogram, line; `category`: gruplanacak ya da yatay eksendeki sütun, `value`: sayı sütunu, `aggregate`: count
+(varsayılan; `value` verilirse sum), sum, mean, min, max, median; çubuk ve pasta `category` ister, histogram `value`,
+çizgi ikisini; satırları düğmenin `table`'ından ya da `of` ile bu paneldeki bir tablonun, ağacın, kartın ya da
+göstergenin satırlarından; KentOS'un grafik motoru çizer), `image` (`id`, `label`, `alt`, `height`: 80–600 px; kodun
+verdiği PNG'yi ya da JPEG'i oranını koruyarak gösterir, verilene dek `alt` yazar). Metin, sayı, tarih, saat ve an alanları, çoklu seçim ve seçiciler `required: true` alır: boş
+bırakılan komut çalışmadan adıyla söylenir, sözler alanın altında, adının yanında yıldız.
+Seçim, çoklu seçim, seçiciler, onay ve tarih/saat alanları (seçilince ya da Enter'la) isteğe
+bağlı `onChange` alır: değer değişince o komut panelin değerleriyle çalışır, satırları panelin ilk tablosuna gelir. Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
+da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırlar, message=…)` sonucu panelin tablosunu
+doldurur (boş liste de bir cevaptır: tablo boşalır; `ctx.message` tabloya dokunmaz) (`ctx.doc.entities(layer=…)` kayıt verir: `kayit.uid` kalıcı kimlik, öznitelikler `kayit.entity.attrs`'ta,
+kayıtta değil). Bir satırda `uid` (nesnenin kalıcı kimliği, `kayit.uid`) varsa satıra tıklamak nesneyi seçip yakınlaştırır;
+`uid` sütun olarak görünmez. Panel Python'suz açılır; ortam hazır değilse düğmeler nedenini söyler. İskelette
+`panel` katkısı bir örnek verir. Bileşen kuralı Python'suz çalışır, formun kurallarının ifade diliyle panelin
+girdilerini kimlikleriyle okur: `visibleWhen` (her bileşen), `requiredWhen` (zorunlu olabilen girdi), `enabledWhen`
+(düğme ve metin, sayı, tarih, saat alanları), ör. `"visibleWhen": "içerir(bilgiler, 'tarih')"`; tireli kimlik köşeli
+parantezle (`[en-sik]`). Hesaplı değer de Python'suz: `calculate` (metin; metin, sayı, tarih, saat, an alanı) değeri
+okuduğu girdiler değiştikçe yeniden hesaplar, alan yazılmaz ve kod onu değiştiremez, metinde `text` hesap boşken görünür;
+`defaultExpr` (alanlar) ilk değeri panel açılırken hesaplar (`"defaultExpr": "bugün()"`); ikisi `bugün()` ve `şimdi()`'yi
+okur, birbirini döngüyle okuyan hesaplar Kapı 1'de reddedilir. Katmanın sağ tık menüsünden (`contextMenus`, `target: "layer"`) çalışan komut tıklanan
+katmanın kimliğini `ctx.params["layer"]`'da alır. Panelden çalışan komut panelini çalışırken değiştirir (`ctx.panel`;
+panelden çalışmadıysa None; başka bir panelini `ctx.open_panel(id)` açıp verir): `set(id, value=…, options=…, enabled=…, visible=…, text=…, image=…)` (`image`: PNG ya da JPEG baytları ya da dosyasının yolu, en çok 4096 piksel; seçenekleri veriden doldurmak, düğmeyi
+kapatmak, alanı gizlemek), `rows(id, satırlar)`, `say(metin, kind)`, `focus(id)`, `close()`; yanlış kimlik ya da değer
+`kentos.HostError`, kullanıcının o sırada değiştirdiği alan onun kalır (False), kodun koyduğu değer `onChange`'i
+çalıştırmaz.
+
+### İkonlar
+
+Bir düğmenin, komutun ya da harita aracının ikonu yerleşik bir addır, tire biçiminde (`space-number`, `layer-fields`;
+bütün adlar `icons` bölümünde), ya da paketteki 20×20 çizgi SVG'si (`assets/x.svg`: `path`, `rect`, `circle`,
+`ellipse`; renk yok, tema rengiyle çizilir). Bilinmeyen ad uyarıdır: düğme düz simgeyle görünür.
+
+### Bağlamın ortak yöntemleri
+
+`ctx.progress(n, toplam, metin)`, `ctx.check()` (Durdur'a basıldıysa `ext.Stopped` atar: uzun döngülerde çağırın),
+`ctx.is_stopped()`, `ctx.log(metin, level="info"|"warning"|"error")`, `ctx.report(satırlar, title=…, message=…)`,
+`ctx.message(metin)`, `ctx.cancelled()`; kullanıcıya sormak için `ctx.dialog(başlık, alanlar, ok=…, cancel=…)` (alanlar
+bir panelin girdileri ve metinleri; düğme, komut, tablo, nesne/nokta/şekil seçici yok; Tamam değerleri kimlikleriyle,
+İptal None verir, çalışma yanıtı bekler; `steps=True`: sekmeler sihirbazın adımları), `ctx.confirm(metin)` (evet: True) ve `ctx.run_tool(araç, **parametreler)` (KentOS'un aracı; komutta komutun
+hakkıyla, `ext.layer_input("yapi")`, `ext.new_layer("Ad")`; araçta elindeki nesnelerle, sonuç `ToolAnswer`). Alanları ve seçenekleri elle JSON yerine `from kentos import ui_panel
+as ui` ile yazın: bileşen başına bir işlev, gerekli anahtarlar sırayla, kalanı adıyla (`ui.text_field("onek", "Önek",
+value="Y-")`, `ui.number_field("ilk", "İlk numara", min=1, required=True)`, `ui.select("tur", "Tür", ["A", "B"])`,
+bütün panel `ui.panel(başlık, bileşenler)`); panelin şemasından üretilir, yanlış anahtar
+`TypeError`. `ctx.params` ve `ctx.settings` sözlüklerdir. Bu KentOS'un yapamadığı bir şey
+`ext.NotAvailable` atar: KentOS onu eklentinin hatası değil eksik bir yetenek olarak söyler.
+
+### Kurallar
+
+- Her bildirilen kimliğin tek, doğru türde işaretli işlevi olur; `kentos kek verify` (ajanlarda `extension.verify`)
+  her adımda bunu, paketin kurallarını ve İşlemler aracının tanımını (parametreler, çıktılar; yeni nesne veren
+  çıktının `sinkParameter`'ı bir `layer` parametresini adlandırır) kurulumdaki gibi denetler. `kentos kek test`
+  örnekleri pencere açmadan çalıştırır.
+- Bir katkı yeteneğini ister ve nedenini yazar (`requestedCapabilities`): kullanıcı kurarken her birini görüp onaylar.
+  Ağa çıkan kod `network` ister; işletim sistemi komutu ve `eval`/`exec` uyarıdır.
+- Kütüphane `uv add <paket>` ile eklenir (`pyproject.toml` ve `uv.lock` birlikte yazılır); KentOS ortamı kilitten kurar.
+  Çalışırken `pip` ile kurmak ve `sys.path`'e dokunmak reddedilir.
+- Çeviri `l10n/<dil>.json`: düz nesne, anahtar metnin yeri (`"entrypoints.commands.<kimlik>.title"`, panelde
+  `"ui.<panel>.body.<bileşen>.label"`), değer çevirisi; manifestin dili (`l10n.default`) dosyasızdır.
+- `kentos.ext`, `kentos.ui_panel` ve JSON biçimleri kararlıdır: yalnız SDK protokolü artınca kırılır. Eskiyen ad
+  `sdk_deprecated` uyarısıdır, `kentos kek upgrade` yenisini yazar; deneysel ad (`sdk_experimental`) yayımlanamaz.
+- Bir hata eklentinin adıyla söylenir ve iz kaydıyla eklentinin günlüğüne yazılır; kullanıcıya bozuk bir çizim kalmaz.
+- Kurma, yetki verme ve yayımlama kullanıcınındır: ajan bunları sessizce geçmez, kurulu paketi ya da izni uydurmaz.
+
+## Adımlar
+
+1. İsteği ve parametrelerini netleştirin; kurulu eklentileri ve yetenekleri kentos://extensions/installed'dan okuyun.
+2. extension.blueprint ile iskeleti alın.
+3. Dosyaları yazın: atölyesi olan ajan (KentOS'un Asistan'ı, MCP) extension.workshop.write ile kendi atölyesine; kendi dosya araçları olan ajan boş bir klasöre. Kullanıcıya dosya yazdırmayın.
+4. Örnekleri isteğe göre değiştirin; her adımda extension.verify (atölyede id, klasörde path ile); doğrulanınca yanıtının dryRun'ı paketi geçici bir kayıt defterinde bağlar: eklenen katkılar, atlananlar ve nedenleri, kaldırınca kalıntı (kod çalışmaz).
+5. Kütüphane gerekiyorsa klasörde `uv add <paket>`; atölyede uv çalışmaz: Python'un kendi kitaplığıyla ve kentos ile yazın, kütüphane gerekiyorsa kullanıcıya söyleyin.
+6. Paket: atölyede extension.workshop.review paketleyip kullanıcının Gözden geçir ve kur penceresine açar; klasörde `kentos kek pack <klasör>`. Kurulum, yetki ve yayın kullanıcının incelemesiyle olur.
+7. Kullanıcı atölyeden kurduktan sonra: değişiklikleri extension.workshop.reload uygulama kapanmadan yükler (aynı sürüm, kullanıcının verdiği yeteneklerle; yeni yetenek isteyen yeniden review'a gider); extension.workshop.preview kullanıcının gördüğünü (sekme, paneller, araçlar, kapalı düğmenin nedeni) yazıyla verir; extension.workshop.trial kuralları, İşlemler araçlarını, komutları ve harita araçlarını verdiğiniz örnek nesnelerden kurulan sentetik çizimde çalıştırır (bulgular nesnenin sırasıyla, yazılanlar, pencere cevapları dialogs ile, hata ve iz kaydı; kullanıcının çizimine dokunmaz). Masaüstünün Asistan'ında ve masaüstüne bağlı ajanda (MCP'de desktop.attach).
+
+## Yetenekler
+
+- `document.read`: Açık projeyi okur (kapsam: current-project, user-selected)
+- `document.write`: Açık projeye yazar (kapsam: current-project, user-selected)
+- `datasets.read`: Veri kümelerini okur (kapsam: current-project, user-selected, plugin-owned)
+- `datasets.create`: Yeni veri kümesi oluşturur (kapsam: current-project, user-selected, plugin-owned)
+- `datasets.manage`: Veri kümelerinin şemasını yönetir (kapsam: current-project, user-selected, plugin-owned)
+- `ui.ribbonTab`: Şeride sekme ekler (kapsam: plugin-owned)
+- `ui.panel`: Panel ekler (kapsam: plugin-owned)
+- `ui.contextMenu`: Sağ tık menüsüne öğe ekler (kapsam: plugin-owned)
+- `processing.provider`: İşlemler'e araç ekler (kapsam: plugin-owned)
+- `audit.provider`: Denetim ekler (kapsam: plugin-owned)
+- `expression.provider`: İfadelere işlev ekler (kapsam: plugin-owned)
+- `mapTool`: Harita aracı ekler (kapsam: plugin-owned)
+- `dataSource`: Veri kaynağı ekler (kapsam: plugin-owned)
+- `files.userSelected`: Sizin seçtiğiniz dosyaları okur (kapsam: user-selected)
+- `files.userSelectedWrite`: Sizin seçtiğiniz yere dosya yazar (kapsam: user-selected)
+- `network`: İnternete bağlanır (kapsam: plugin-owned)
+
+## Katkılar
+
+- **command**: manifestte `entrypoints.commands`, işareti `@ext.command`; ister: document.read ya da document.write (çizime erişirse)
+- **processing**: manifestte `entrypoints.processing`, işareti `@ext.processing`, `descriptor`: `tools/<kimlik>.tool.json`; ister: processing.provider
+- **audit**: manifestte `entrypoints.audits`, işareti `@ext.audit`, `examples`: `audits/<kimlik>.examples.json`; ister: audit.provider
+- **expression**: manifestte `entrypoints.expressions`, işareti `@ext.expr`; ister: expression.provider
+- **mapTool**: manifestte `entrypoints.mapTools`, işareti `@ext.map_tool`; ister: mapTool, document.write
+- **panel**: manifestte `entrypoints.panels`, `file`: `ui/<kimlik>.panel.json`; ister: ui.panel. Bildirimsel bileşenler; düğmesi bir komutu panelin değerleriyle (ctx.params) çalıştırır, satırlar tabloya.
+- **schema**: manifestte `schemaFile`, `file`: `schema.json`; ister: document.write (kuran komut için). Katmanlar, alanları, değer listeleri, ilişkiler; bir komut ctx.apply_declarative_schema("schema.json") ile kurar.
+- **ribbonTab**: manifestte `contributions.ribbonTabs`; ister: ui.ribbonTab. Yalnız dikey eklenti (kind: vertical); öğe her katkıyı (command, panel, form…) açar.
+- **contextMenu**: manifestte `contributions.contextMenus`; ister: ui.contextMenu
+- **dataSource**: manifestte `contributions.dataSources`; ister: dataSource. Python'suz; ağdan okuyorsa network da gerekir.
+
+## İşlemler aracı tanımı (`kentos.processingTool` 1)
+
+- Alanlar: id, version, label, description, modelDescription (yapay zekâ için, en çok 2000 karakter), help, keywords, parameters, outputs, feedback, capabilities.runtimes (desktop-python; MCP/Python için headless-python), timeoutSeconds
+- Parametre türleri: `features`, `number`, `string`, `boolean`, `enum`, `field`, `point`, `layer`
+- Çıktı türleri: `features`, `table`, `number`, `string`
+- Notlar: features parametresi default: {scope: "layer", layerId: "<katman kimliği>"} ile eklentinin kendi katmanında açılır (verilmezse etkin katmanla); yeni nesne veren features çıktısı sinkParameter ile bir layer parametresini adlandırır (o parametre default: {newName: "…"} ile yeni katman önerir).
+
+## Bölümler
+
+Her bölüm tek başına alınır: `extension.sdk` ile `part`, ya da `kentos kek sdk --part <bölüm>`.
+
+- `auditExamplesSchema`: Kuralın örnekleri (kentos.auditExamples 1): nesneler (features) ya da mimari olgular (architecture) ve beklenen bulgular (count; has: severity, message, feature, fix). kentos kek test çalıştırır.
+- `compatibility`: Protokol, Python, bilgisayarlar, çalışma zamanları, eskiyen adlar: extension.sdk part=compatibility.
+- `example`: Her katkı türünün çalışan örneği (manifest, Python, panel, araç tanımı, form, katman şeması), doğrulamadan geçen bir paket: extension.sdk part=example ya da kentos kek sdk --part example. İskelet için extension.blueprint.
+- `factsApi`: Denetim kuralının okuduğu olguların Python sınıfları (facts.project: ProjectAuditFacts, LayerFacts, ArchitectureFacts, RoomFacts, UnitFacts …; alanları ve belgeleri): extension.sdk part=factsApi ya da kentos kek sdk --part factsApi.
+- `factsSchema`: Denetim kuralının okuduğu ölçülmüş olguların (facts.project, kentos.auditFacts 1) JSON Schema'sı: katman başına geometriye göre nesne sayıları, geçersiz geometriler, alanların çakışmaları ve boşluklar; mimari çizimde katlar, mahaller, PAİY alanları ve kaçış yolları: extension.sdk part=factsSchema ya da kentos kek sdk --part factsSchema.
+- `icons`: Yerleşik ikonlar tire biçiminde yazılır (zoom-extents, space-number, layer-fields). Tamamı: extension.sdk part=icons ya da kentos kek sdk --part icons. Yoksa paketteki 20×20 çizgi .svg.
+- `layerSchema`: Dikey eklentinin schema.json'u (kentos.layerSchema 1: katmanlar, alanları, değer listeleri, alt türler, değer grupları, ilişkiler) için JSON Schema: extension.sdk part=layerSchema ya da kentos kek sdk --part layerSchema. Alanın listesi, alt türün kodu, ilişkinin katmanları extension.verify'da.
+- `manifestSchema`: manifest.json'un (kentos.extension 1) JSON Schema'sı: anahtarlar, türleri, kapalı sözlükler (yetenekler, kapsamlar, programlar, katkılar): extension.sdk part=manifestSchema ya da kentos kek sdk --part manifestSchema. Kesin denetim extension.verify'da (yeteneğin kapsamı, paketteki dosyalar, işleyici).
+- `panelBehaviour`: Her panel bileşeninin değeri ve örneği, kodu başlatan olayı (onChange, command), ctx.panel.set/rows/focus'un aldıkları, klavyesi: extension.sdk part=panelBehaviour ya da kentos kek sdk --part panelBehaviour.
+- `panelBuilders`: kentos.ui_panel'in kaynağı: panel bileşenlerinin Python işlevleri (ctx.dialog alanları, set(options=…), ui.panel ile bütün panel), panelin şemasından üretilir: extension.sdk part=panelBuilders ya da kentos kek sdk --part panelBuilders.
+- `panelSchema`: kentos.ui.panel 1'in JSON Schema'sı (bileşenler, anahtarları ve türleri): extension.sdk part=panelSchema ya da kentos kek sdk --part panelSchema. Kesin denetim extension.verify'da (düğmenin komutu, seçicinin katman seçicisi, kimliklerin tekliği şemada söylenemez).
+- `toolSchema`: İşlemler aracı tanımının (tools/<id>.tool.json, kentos.processingTool 1) JSON Schema'sı: parametre ve çıktı türleri, anahtarları: extension.sdk part=toolSchema ya da kentos kek sdk --part toolSchema. Parametre adlarının ve sinkParameter'ın tutarlılığı extension.verify'da.
+- `verifyCodes`: Doğrulama kodlarının anlamı (ret; Uyarı: diyenler uyarı): extension.sdk part=verifyCodes ya da kentos kek sdk --part verifyCodes. Her bulgu iletisi ve yeriyle gelir.
+
+## `kentos.ext` imzaları
+
+```python
+from dataclasses import dataclass, field
+from typing import Any, Callable, Iterable, Iterator, Sequence, TypeVar
+
+F = TypeVar("F", bound=Callable[..., Any])
+
+
+def command(local: str) -> Callable[[F], F]:
+    """A command (``entrypoints.commands``): a button, a menu item, a context menu entry."""
+
+
+def processing(local: str) -> Callable[[F], F]:
+    """An İşlemler tool (``entrypoints.processing``)."""
+
+
+def audit(local: str) -> Callable[[F], F]:
+    """An audit rule (``entrypoints.audits``)."""
+
+
+def map_tool(local: str) -> Callable[[F], F]:
+    """A map tool (``entrypoints.mapTools``)."""
+
+
+def expr(local: str) -> Callable[[F], F]:
+    """An expression function (``entrypoints.expressions``)."""
+
+
+def marked(fn: Any) -> tuple[str, str] | None:
+    """The kind and local id a function is marked with; none when it is not."""
+
+
+class Stopped(Exception):
+    """The user stopped the run (Durdur)."""
+
+
+class NotAvailable(Exception):
+    """What this KentOS cannot do (yet, or in this runtime): the run ends, what it wrote is taken back, and KentOS says the ability is missing instead of reporting the extension's code as failed."""
+
+
+@dataclass
+class CommandResult:
+    """What a command says when it ends: a line, and rows to show (a report)."""
+    title: str | None = None
+    message: str | None = None
+    rows: list[dict[str, Any]] | None = None
+    cancelled: bool = False
+
+
+class PanelSession:
+    """One of the extension's panels, changed as the run goes: ``ctx.panel`` (the panel whose button or changed input started the run; None when it did not start from a panel) or what :meth:`CommandContext.open_panel` gives."""
+    #: The panel's id in the manifest (``entrypoints.panels[].id``).
+    id: str
+    def set(self, id: str, *, value: Any = ..., options: Iterable[Any] | None = None, enabled: bool | None = None, visible: bool | None = None, text: str | None = None, image: Any = ...) -> bool:
+        """Changes component ``id``: ``value`` (a field's text or number, a date as ``datetime.date`` or ISO text, a choice's value, a multiple choice's values, a check's True or False, a layer picker's layer id, a feature picker's persistent ids; None empties it), ``options`` (a choice's or a multiple choice's: values, or dicts with ``value`` and ``label``; a chosen value no longer among them is let go), ``…"""
+    def rows(self, id: str, rows: Iterable[dict[str, Any]], columns: Sequence[str] | None = None) -> bool:
+        """Puts ``rows`` (each a dict of column → value) in table, tree, cards, figures or chart ``id`` now, as a command's report would at its end; ``columns`` in their order, else in the order the rows first give them."""
+    def say(self, text: str, kind: str = "info") -> bool:
+        """A line under the panel's form (``info``, ``success``, ``warning``, ``error``); kept when the run ends without words of its own."""
+    def focus(self, id: str) -> bool:
+        """Puts the cursor in typed field ``id``; only in the panel shown (False otherwise: the code does not bring its tab in front of what the user looks at)."""
+    def close(self) -> bool:
+        """Closes the panel (its values with it)."""
+
+
+def layer_input(layer: str, kinds: Sequence[str] | None = None) -> dict[str, Any]:
+    """The objects of ``layer`` (its id) for ``ctx.run_tool``; ``kinds`` narrows them (``["polygon"]``)."""
+
+
+def new_layer(name: str) -> dict[str, Any]:
+    """A new layer ``name`` for ``ctx.run_tool``'s output."""
+
+
+class CommandContext:
+    """What a command is given: the drawing, its settings and parameters, and its run's controls."""
+    #: The drawing open in KentOS (kentos.cad.Document); none when no drawing is open.
+    doc: Any
+    settings: dict[str, Any]
+    params: dict[str, Any]
+    #: The panel whose button (or changed input) started the run, to change as it goes (:class:`PanelSession`); None when it did not start from a panel.
+    panel: PanelSession | None
+    def is_stopped(self) -> bool:
+        """The user pressed Durdur."""
+    def check(self) -> None:
+        """Raises :class:`Stopped` once the user pressed Durdur: call it in long loops."""
+    def progress(self, done: float, total: float | None = None, text: str | None = None) -> None:
+        """How far the run is; also a place where Durdur is answered."""
+    def log(self, text: str, level: str = "info") -> None:
+        """A line in the extension's log as the run goes (``info``, ``warning``, ``error``)."""
+    def report(self, rows: list[dict[str, Any]], title: str | None = None, message: str | None = None) -> CommandResult:
+        """Rows to show the user, each a dict of column → value; none is an answer too (a panel's table empties)."""
+    def message(self, text: str, title: str | None = None) -> CommandResult:
+        """A line to show the user."""
+    def dialog(self, title: str, body: list[dict[str, Any]], ok: str = "Tamam", cancel: str = "İptal", steps: bool = False) -> dict[str, Any] | None:
+        """Asks the user in a KentOS window over the drawing and waits for the answer: ``body`` is a panel's fields (``kentos.ui.panel`` components: ``text``, ``textField``, ``numberField``, ``dateField``, ``timeField``, ``dateTimeField``, ``select``, ``multiSelect``, ``checkbox``, ``layerPicker``, ``fieldPicker``), no buttons or commands."""
+    def confirm(self, text: str, title: str = "Onay", ok: str = "Evet", cancel: str = "Hayır") -> bool:
+        """Asks the user yes or no in a KentOS window (:meth:`dialog` with ``text``): True for ``ok``."""
+    def open_panel(self, id: str) -> PanelSession:
+        """Opens the extension's panel ``id`` (``entrypoints.panels[].id``; brought in front when it is open) and gives it to change as the run goes (:class:`PanelSession`): a command run from the ribbon shows what it did in its panel."""
+    def cancelled(self) -> CommandResult:
+        """What a run that saw Durdur returns; its writes are taken back."""
+    def run_tool(self, tool: str, /, **parameters: Any) -> Any:
+        """Runs a KentOS tool with this command's rights, in its undo step."""
+    def apply_declarative_schema(self, path: str = "schema.json") -> CommandResult:
+        """Sets up the layers, value lists and relations the package's ``schema.json`` declares, in the run's one undo step, and says what it did, a row each."""
+
+
+class Feature:
+    """An object a tool was given, as it was when the run began: its persistent id (``uid``), its kind, its layer's name, its attributes (texts, as KentOS keeps them) and its shape as GeoJSON (``geometry``; arcs tessellated as the drawing draws them)."""
+    uid: str
+    kind: str
+    layer: str
+    attrs: dict[str, str]
+    #: Its shape, a GeoJSON geometry (Point, LineString, Polygon, their multi-part kinds); none for a kind GeoJSON has no shape for (a text, a dimension).
+    geometry: dict[str, Any] | None
+    @property
+    def __geo_interface__(self) -> dict[str, Any]:
+        """The object as a GeoJSON feature: its id, its shape and its attributes as properties."""
+    @property
+    def id(self) -> str:
+        """Its persistent id (``uid``): what a finding names (``AuditFinding.feature_id``) and a fix writes to."""
+    @property
+    def entity(self) -> Any:
+        """Its whole object as :mod:`kentos.cad` types it (what ``ctx.doc.entities`` gives a command)."""
+    @property
+    def pts(self) -> list[tuple[float, float]]:
+        """Its vertices, ``(x, y)`` in metres, arcs tessellated: a point's one, a line's, an area's outline (without repeating the first); its first part's for a multi-part one; none for a kind without a shape."""
+    def number(self, name: str, default: float | None = None) -> float | None:
+        """An attribute as a number (``12,5`` read as 12.5); ``default`` when it is empty or not a number."""
+
+
+class FeatureInput(Sequence[Feature]):
+    """A features parameter's objects, in the order KentOS resolved them, and how it described them (``"12 kapalı alan; seçili nesneler"``)."""
+    description: str
+    @property
+    def __geo_interface__(self) -> dict[str, Any]:
+        ...
+
+
+def point(x: float, y: float) -> dict[str, Any]:
+    """A point, GeoJSON, in metres."""
+
+
+def polyline(pts: Iterable[Any]) -> dict[str, Any]:
+    """A line, GeoJSON: its vertices, ``(x, y)`` pairs (an array of them too)."""
+
+
+def polygon(pts: Iterable[Any], holes: Iterable[Iterable[Any]] = ()) -> dict[str, Any]:
+    """An area, GeoJSON: its outline's vertices and its holes', each ring closed as GeoJSON writes it."""
+
+
+@dataclass
+class NewFeature:
+    """An object a tool writes to an output layer: a shape of its own (``geometry``: a GeoJSON geometry, from :func:`point`, :func:`polyline`, :func:`polygon`, or anything with ``__geo_interface__``, a shapely shape) or the shape of one of its inputs (``source``: the :class:`Feature`, or its ``uid``), with its attributes; an input's attributes come with it unless ``keep_attrs`` is false."""
+    attrs: dict[str, Any] = field(default_factory=dict)
+    geometry: Any = None
+    source: Feature | str | None = None
+    keep_attrs: bool = True
+    label: str | None = None
+
+
+class ProcessingContext(CommandContext):
+    """What an İşlemler tool is given besides its parameters: its run's controls (``check``, ``progress``, ``log``) and its settings."""
+    def read_features(self, features: FeatureInput) -> Iterator[Feature]:
+        """A features parameter's objects one by one, Durdur answered between them."""
+    def summary(self, text: str) -> None:
+        """The run's one line in İşlemler' history, in place of KentOS's own ("12 nesne eklendi")."""
+    def select(self, features: Iterable[Feature | str]) -> None:
+        """Leaves these inputs selected in the drawing when the run ends (a session result, not a change)."""
+    def update(self, feature: Feature | str, /, **attrs: Any) -> None:
+        """Writes ``attrs`` into an input object of this tool, one that ``writes: true``."""
+    def run_tool(self, tool: str, /, **parameters: Any) -> ToolAnswer:
+        """Runs a KentOS built-in tool on objects this tool holds, never on the drawing."""
+
+
+class ToolAnswer:
+    """What a tool's ``ctx.run_tool`` gave back: ``summary``, ``warnings``, ``layers``."""
+    summary: str
+    warnings: list[Any]
+    layers: dict[str, list[Feature]]
+    def features(self) -> list[Feature]:
+        """Every object it made, its layers one after another."""
+
+
+class Shape:
+    """A shape the user drew with an extension's map tool, as GeoJSON (``__geo_interface__``, RFC 7946): a ``Point``, a ``LineString`` or a ``Polygon`` (a rectangle's four corners; a circle's ring of chords, with ``circle`` its centre and radius), in the project's plane: x east, y north, metres."""
+    type: str
+    coordinates: Any
+    #: A circle's centre ``(x, y)`` and radius, when the tool drew a circle; none otherwise.
+    circle: tuple[tuple[float, float], float] | None
+    @property
+    def __geo_interface__(self) -> dict[str, Any]:
+        ...
+    @property
+    def points(self) -> list[tuple[float, float]]:
+        """Its corners in order: a point's one, a line's, an area's outer ring without its closing repeat."""
+
+
+class MapToolContext(CommandContext):
+    """A map tool's context: a command's, and the writes of what the user drew."""
+    def add_feature(self, layer: str, shape: Any, attrs: dict[str, Any] | None = None) -> CommandResult:
+        """Writes ``shape`` (a :class:`Shape`, any GeoJSON geometry or anything with ``__geo_interface__``) as a new object of ``layer`` (its id, or its name when only one layer has it) with ``attrs``, and says what it wrote: an area for a polygon, a line for a line string, a point for a point."""
+
+
+class GisAuditFacts:
+    """What an audit rule reads: the drawing's layers holding objects, each object a :class:`Feature` (persistent id, kind, layer, attributes, shape as GeoJSON), taken when the audit began, and what KentOS measured in it (:attr:`project`)."""
+    #: KentOS gave only the first objects of a very large drawing (its limit): a rule may say so.
+    cut: bool
+    @property
+    def project(self) -> ProjectAuditFacts:
+        """What KentOS measured in the drawing, once and in Rust (:class:`ProjectAuditFacts`): read it rather than working the geometry out again."""
+    def layers(self) -> list[tuple[str, str]]:
+        """The layers holding objects, ``(id, name)``, in the layer tree's order."""
+    def features(self, layer: str) -> list[Feature]:
+        """A layer's objects, by its id or its name (KentOS's GIS template: ``parsel``, ``yapi``); none when no layer has it."""
+    def all_features(self) -> list[Feature]:
+        """Every object given, layer by layer."""
+    def group_related(self, layer: str, foreign_key: str) -> dict[str, list[Feature]]:
+        """A layer's objects grouped by their ``foreign_key`` attribute's value (a related table's key); objects without it are left out."""
+
+
+# facts.project's classes (ProjectAuditFacts, LayerFacts, ArchitectureFacts, RoomFacts, UnitFacts, ZoningFacts, DoorEscape …): extension.sdk part=factsApi; their JSON: part=factsSchema.
+
+
+@dataclass
+class SemanticFix:
+    """A finding's fix: a KentOS command and its arguments, run by the user's choice as one undo step."""
+    title: str
+    command: str
+    args: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class AuditFinding:
+    """One finding of an audit rule: ``error``, ``warning`` or ``info``; the object it is about; how to fix it."""
+    message: str
+    severity: str = "warning"
+    feature_id: str | None = None
+    fix: SemanticFix | None = None
+```

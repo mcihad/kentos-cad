@@ -35,6 +35,8 @@ use uuid::Uuid;
 use crate::failure::ApiFailure;
 use crate::runtime::run;
 
+mod extension_catalog;
+
 /// How long an ordinary request may take (the web's too).
 const TIMEOUT: Duration = Duration::from_secs(30);
 /// A health check's patience (the web's 4 s).

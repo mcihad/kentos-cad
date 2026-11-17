@@ -1,13 +1,25 @@
 //! The flow through the API: a release from upload to installation, only a published release's approved content
-//! installs, new content needs its own approval, and the review reads the difference from the version approved before.
+//! installs, new content needs its own approval, the review reads the difference from the version approved before,
+//! and a release that becomes published is handed to the server with its approved bytes. On both stores.
 
+use std::sync::Mutex;
+
+use axum::body::Bytes;
 use kentos_extensions::release::{Action, Channel, ReleaseFacts};
 
 use super::*;
+use crate::extension_catalog::OnPublish;
 
-#[tokio::test]
-async fn a_release_goes_from_upload_to_installation_through_the_api() {
-    let (app, store) = catalog();
+on_both_stores!(
+    a_release_goes_from_upload_to_installation_through_the_api,
+    new_content_drops_the_approval_and_needs_its_own,
+    only_a_published_release_s_approved_content_installs,
+    the_review_reads_the_difference_and_a_trusted_publisher_s_code_takes_the_fast_path,
+    a_release_that_becomes_published_is_handed_to_the_server_with_its_approved_bytes,
+);
+
+async fn a_release_goes_from_upload_to_installation_through_the_api(bench: Bench) {
+    let app = catalog(&bench).await;
     let req = request(Via::Web, "POST", PUBLIC, "ayse")
         .header(header::CONTENT_TYPE, "application/octet-stream")
         .body(Body::from(release("1.0.0")))
@@ -46,21 +58,22 @@ async fn a_release_goes_from_upload_to_installation_through_the_api() {
     let (status, view) = act(&app, Via::Mcp, "ayse", &at, json!({ "action": "publish" })).await;
     assert_eq!((status, state_of(&view)), (StatusCode::OK, "published"));
     // Every move is on the stored record, with who and how.
-    let stored = store.stored(&key("1.0.0")).unwrap();
+    let stored = bench.stored(&key("1.0.0")).await.unwrap();
     let moves: Vec<(Action, &str, Channel)> = stored
         .audit()
         .iter()
         .filter(|r| r.action != Action::Scan)
         .map(|r| (r.action, r.by.as_str(), r.via))
         .collect();
+    let (ayse, selin) = (id("ayse"), id("selin"));
     assert_eq!(
         moves,
         [
-            (Action::Upload, "ayse", Channel::Window),
-            (Action::Submit, "ayse", Channel::Program),
-            (Action::StartReview, "selin", Channel::Window),
-            (Action::Approve, "selin", Channel::Window),
-            (Action::Publish, "ayse", Channel::Program),
+            (Action::Upload, ayse.as_str(), Channel::Window),
+            (Action::Submit, ayse.as_str(), Channel::Program),
+            (Action::StartReview, selin.as_str(), Channel::Window),
+            (Action::Approve, selin.as_str(), Channel::Window),
+            (Action::Publish, ayse.as_str(), Channel::Program),
         ]
     );
     // Anyone signed in sees what was published, without the record's accounts, notes and findings.
@@ -71,7 +84,7 @@ async fn a_release_goes_from_upload_to_installation_through_the_api() {
     );
     let text = public.to_string();
     assert!(
-        public.get("release").is_none() && !text.contains("selin") && !text.contains("İlk sürüm"),
+        public.get("release").is_none() && !text.contains(&selin) && !text.contains("İlk sürüm"),
         "{text}"
     );
     let history: Vec<&str> = public["history"]
@@ -113,9 +126,8 @@ async fn a_release_goes_from_upload_to_installation_through_the_api() {
     );
 }
 
-#[tokio::test]
-async fn new_content_drops_the_approval_and_needs_its_own() {
-    let (app, store) = catalog();
+async fn new_content_drops_the_approval_and_needs_its_own(bench: Bench) {
+    let app = catalog(&bench).await;
     let first = in_review(&app, "1.0.0").await;
     let at = uri(PUBLIC, "1.0.0");
     act(&app, Via::Web, "selin", &at, json!({ "action": "approve" })).await;
@@ -126,7 +138,7 @@ async fn new_content_drops_the_approval_and_needs_its_own() {
         (status, code(&body)),
         (StatusCode::CONFLICT, "content_frozen".to_owned())
     );
-    assert_eq!(store.packages(), 1);
+    assert_eq!(bench.packages().await, 1);
     // Sent back before publication: the approval goes, and new content starts every gate again.
     let send_back = json!({ "action": "requestChanges",
         "changes": [{ "code": "listing_misleading", "note": "Özet servisleri anlatmıyor." }] });
@@ -195,12 +207,11 @@ async fn new_content_drops_the_approval_and_needs_its_own() {
     assert_eq!((status, state_of(&view)), (StatusCode::OK, "published"));
     let (_, ticket) = get(&app, Via::Desktop, &format!("{at}/install"), "can").await;
     assert_eq!(ticket["content"]["package"].as_str(), Some(second.as_str()));
-    assert_eq!(store.packages(), 2);
+    assert_eq!(bench.packages().await, 2);
 }
 
-#[tokio::test]
-async fn only_a_published_release_s_approved_content_installs() {
-    let (app, _store) = catalog();
+async fn only_a_published_release_s_approved_content_installs(bench: Bench) {
+    let app = catalog(&bench).await;
     let content = in_review(&app, "1.0.0").await;
     let at = uri(PUBLIC, "1.0.0");
     let (install, package) = (format!("{at}/install"), format!("{at}/package"));
@@ -259,7 +270,7 @@ fn moved_service(version: &str, path: &str) -> Vec<u8> {
 }
 
 /// Uploaded, scanned, sent and taken into review by Selin; the focus the server computed, then approved and published.
-async fn reviewed_and_published(app: &Router, version: &str, bytes: Vec<u8>) -> Value {
+pub(super) async fn reviewed_and_published(app: &Router, version: &str, bytes: Vec<u8>) -> Value {
     let (status, view) = upload(app, PUBLIC, "ayse", bytes).await;
     assert_eq!(status, StatusCode::CREATED, "{view}");
     let at = uri(PUBLIC, version);
@@ -283,9 +294,10 @@ async fn reviewed_and_published(app: &Router, version: &str, bytes: Vec<u8>) -> 
     view["release"]["focus"].clone()
 }
 
-#[tokio::test]
-async fn the_review_reads_the_difference_and_a_trusted_publisher_s_code_takes_the_fast_path() {
-    let (app, store) = catalog();
+async fn the_review_reads_the_difference_and_a_trusted_publisher_s_code_takes_the_fast_path(
+    bench: Bench,
+) {
+    let app = catalog(&bench).await;
     let first = reviewed_and_published(&app, "1.0.0", release("1.0.0")).await;
     assert_eq!(
         (&first["depth"], first.get("previous")),
@@ -306,7 +318,7 @@ async fn the_review_reads_the_difference_and_a_trusted_publisher_s_code_takes_th
         json!({ "kind": "code", "subject": "manifest.json", "detail": "değişen alanlar: contributions" })
     );
     // Once the catalog trusts the publisher, its code with nothing new asked for takes the fast path.
-    store.trust(CatalogId::Public, PUBLISHER);
+    bench.trust(CatalogId::Public, PUBLISHER).await;
     let third = reviewed_and_published(&app, "1.2.0", moved_service("1.2.0", "wmts-2027")).await;
     assert_eq!(
         (
@@ -316,4 +328,57 @@ async fn the_review_reads_the_difference_and_a_trusted_publisher_s_code_takes_th
         ),
         (&json!("fast"), &json!("1.1.0"), &json!(true))
     );
+}
+
+/// The server's publishing hook in the tests: what it was handed (the catalog, the version, the bytes' content digest).
+#[derive(Default)]
+struct Handed(Mutex<Vec<(String, String, String)>>);
+
+impl OnPublish for Handed {
+    fn published(&self, catalog: &CatalogId, release: &Release, bytes: Bytes) {
+        let digest = kentos_extensions::inspect(&bytes, &Limits::default())
+            .digest
+            .unwrap_or_default();
+        self.0
+            .lock()
+            .unwrap()
+            .push((catalog.to_string(), release.version().to_owned(), digest));
+    }
+}
+
+async fn a_release_that_becomes_published_is_handed_to_the_server_with_its_approved_bytes(
+    bench: Bench,
+) {
+    grants(&bench).await;
+    let handed = Arc::new(Handed::default());
+    let catalog = Catalog::new(bench.store(), Accounts::Named).on_publish(handed.clone());
+    let app = app_with(Some(catalog));
+    let content = in_review(&app, "1.0.0").await;
+    let at = uri(PUBLIC, "1.0.0");
+    act(&app, Via::Web, "selin", &at, json!({ "action": "approve" })).await;
+    assert!(
+        handed.0.lock().unwrap().is_empty(),
+        "approved is not published"
+    );
+    let (status, body) = act(&app, Via::Mcp, "ayse", &at, json!({ "action": "publish" })).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+    let once = ("public".to_owned(), "1.0.0".to_owned(), content);
+    assert_eq!(*handed.0.lock().unwrap(), std::slice::from_ref(&once));
+    // Published again is not handed again; suspended, nothing; reinstated, it is out again and handed again.
+    let (status, _) = act(&app, Via::Mcp, "ayse", &at, json!({ "action": "publish" })).await;
+    assert_eq!(status, StatusCode::CONFLICT);
+    let suspend = json!({ "action": "suspend", "reason": "Şüpheli ağ trafiği bildirildi." });
+    assert_eq!(
+        act(&app, Via::Web, "yusuf", &at, suspend).await.0,
+        StatusCode::OK
+    );
+    assert_eq!(handed.0.lock().unwrap().len(), 1);
+    let reinstate = json!({ "action": "reinstate", "reason": "Trafik bir yanlış alarmdı." });
+    let (status, view) = act(&app, Via::Web, "yusuf", &at, reinstate).await;
+    assert_eq!(
+        (status, state_of(&view)),
+        (StatusCode::OK, "published"),
+        "{view}"
+    );
+    assert_eq!(*handed.0.lock().unwrap(), [once.clone(), once]);
 }

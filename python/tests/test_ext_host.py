@@ -99,6 +99,19 @@ def ask(ctx):
     return ctx.report([values])
 
 
+@ext.command("wizard")
+def wizard(ctx):
+    # docs/adr/8057 §60: a dialog whose tabs are a wizard's steps.
+    values = ctx.dialog(
+        "Sihirbaz",
+        [{"type": "textField", "id": "a", "label": "A", "tab": "Bir"},
+         {"type": "textField", "id": "b", "label": "B", "tab": "İki"}],
+        ok="Bitir",
+        steps=True,
+    )
+    return ctx.report([values or {}])
+
+
 @ext.command("fill")
 def fill(ctx):
     # docs/adr/8057 §32: a panel's command changes its panel as it runs.
@@ -252,6 +265,19 @@ def not_a_dict(ctx, parcels):
 @ext.processing("bad-value")
 def bad_value(ctx, parcels):
     return {"parcels": object()}
+
+
+@ext.processing("asks-host")
+def asks_host(ctx, parcels):
+    """Asks KentOS for something it refuses: the failure says KentOS's words."""
+    ctx.run_tool("geometry.buffer", input=[], distance=1)
+    return {}
+
+
+@ext.command("marker")
+def marker(ctx):
+    """Whether its process says it is an extension's (docs/adr/8057 §70)."""
+    return ctx.report([{"isaret": os.environ.get("KENTOS_EXTENSION_PROCESS")}])
 '''
 
 
@@ -463,6 +489,7 @@ class ExtHostTest(unittest.TestCase):
         self.assertEqual(done["result"]["rows"], [{"onek": "A-", "ilk": 7}])
         first, second = self.kentos.dialogs
         self.assertEqual((first["title"], first["ok"], first["cancel"]), ("Numarala", "Numarala", "İptal"))
+        self.assertNotIn("steps", first, "a dialog that is no wizard does not say so")
         self.assertEqual([c["id"] for c in first["body"]], ["onek", "ilk"])
         self.assertEqual(second["body"], [{"type": "text", "text": "A-7 ile başlansın mı?"}])
         self.assertEqual((second["ok"], second["cancel"]), ("Evet", "Hayır"))
@@ -474,6 +501,17 @@ class ExtHostTest(unittest.TestCase):
         self.kentos.dialog_answers = [{"onek": "Y-", "ilk": 1}, None]
         done, _ = self.kentos.invoke("ask", "deneme.logic:ask")
         self.assertEqual(done["result"]["message"], "Onaylanmadı.")
+
+    def test_a_wizard_dialog_says_its_steps(self) -> None:
+        # docs/adr/8057 §60: steps=True goes with the dialog; its values come back as a dialog's.
+        self.kentos.hello()
+        self.kentos.dialog_answers = [{"a": "1", "b": "2"}]
+        done, _ = self.kentos.invoke("wizard", "deneme.logic:wizard")
+        self.assertTrue(done["ok"], done)
+        self.assertEqual(done["result"]["rows"], [{"a": "1", "b": "2"}])
+        (asked,) = self.kentos.dialogs
+        self.assertIs(asked["steps"], True)
+        self.assertEqual(asked["ok"], "Bitir")
 
     def test_a_panels_command_changes_its_panel_as_it_runs(self) -> None:
         # docs/adr/8057 §32: ctx.panel is the panel the run started from; its changes go to KentOS as calls, values
@@ -581,6 +619,22 @@ class ExtHostTest(unittest.TestCase):
         self.assertFalse(done["ok"])
         self.assertEqual(done["exception"], "ZeroDivisionError")
         self.assertIn("1 / 0", done["error"])
+
+    def test_a_hosts_refusal_reads_as_its_words(self) -> None:
+        # docs/adr/8057 §73: KentOS's refusal as its words and its code, not as the pair's tuple.
+        self.kentos.hello()
+        empty = {"parcels": {"description": "boş", "features": []}}
+        done, _ = self.kentos.invoke("asks-host", "deneme.logic:asks_host", kind="processing", inputs=empty)
+        self.assertFalse(done["ok"])
+        self.assertEqual(done["exception"], "HostError")
+        self.assertEqual(done["message"], "processing.run (capability)")
+
+    def test_an_extensions_process_says_it_is_one(self) -> None:
+        # A drawing its code opens offers no extension's tools (docs/adr/8057 §70): the process says what it is.
+        self.kentos.hello()
+        done, _ = self.kentos.invoke("marker", "deneme.logic:marker")
+        self.assertTrue(done["ok"], done)
+        self.assertEqual(done["result"]["rows"], [{"isaret": "1"}])
 
     def test_durdur_is_heard_while_the_code_computes(self) -> None:
         self.kentos.hello()

@@ -1,0 +1,46 @@
+# Ağaç klavyeyle: Değer say'ın ağacı (20'deki gibi dolar), Alan'dan dört Tab ağaca (tek durak), ↓ imleç 101 grubuna,
+# ← grubu kapatır, → açar, ↓ parsel 1, Enter parseli seçip gösterir. (Önce 01: ortam.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+dclick 1222 367 # Parsel sınırı: etkin katman
+wait 1000
+click 843 20    # Vitrin
+wait 1200
+click 622 57    # Değer say
+wait 2000
+click 140 388   # Katman
+wait 1000
+click 111 541   # Kadastro › Parsel sınırı
+wait 800
+click 140 450   # Alan
+wait 1000
+click 60 514    # ada: onChange, ağaç dolar
+wait 6000
+shot ak-0
+key Tab          # Seçimi al
+wait 500
+key Tab          # Say
+wait 500
+key Tab          # Seç
+wait 500
+key Tab          # ağaç: tek Tab durağı
+wait 700
+shot ak-tab
+key Down         # imleç ilk satıra: 101 grubu
+wait 700
+shot ak-1
+key Left         # açık grubu kapatır
+wait 900
+shot ak-2
+key Right        # kapalı grubu açar
+wait 900
+key Down         # 101 › ilk parsel
+wait 700
+shot ak-3
+key Return       # parseli gösterir
+wait 2500
+shot ak-4

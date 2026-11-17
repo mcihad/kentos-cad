@@ -459,13 +459,12 @@ pub fn copc_file(
         .file_name()
         .map_or_else(|| "bulut".to_owned(), |n| n.to_string_lossy().into_owned());
     let bins = to.with_file_name(format!("{name}.kutular"));
-    let part = to.with_file_name(format!("{name}.yaziliyor"));
+    let part = crate::staged::piece_of(to);
     let result = build_index(Reading::Las(Box::new(cloud), from), tick, &bins, &part);
     let _ = std::fs::remove_dir_all(&bins);
     match result {
-        Ok(()) => {
-            std::fs::rename(&part, to).map_err(|e| format!("“{}” yazılamadı: {e}.", to.display()))
-        }
+        // One that cannot be put in place leaves no piece (docs/adr/8057 §120).
+        Ok(()) => crate::staged::put_in_place(&part, to),
         Err(e) => {
             let _ = std::fs::remove_file(&part);
             Err(e)

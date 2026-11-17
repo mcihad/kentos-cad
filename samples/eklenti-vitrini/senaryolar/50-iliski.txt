@@ -1,0 +1,74 @@
+# İlişki seçicisi ve listesi: Vitrin › Katmanları kur Örnek tesis ile Bakım kaydı katmanlarını ve aralarındaki ilişkiyi
+# (bakim-tesis) kurar; Örnek tesis'e adlarıyla iki nokta konur (Nokta aracının Ad'ı, A). Vitrin › Bakım kayıtları'nda
+# Tesis bir ilişki seçicisi (relationPicker): iki tesis adlarıyla gelir. Merkez Okulu seçilince altta ilişki listesi
+# (relationList) boş; Açıklama yazılıp Ekle: komut geometrisiz bir bakım kaydı yazar, liste Python'suz yenilenir.
+# İkinci kayıt da eklenir; Park Kreşi seçilince liste boşalır. Panel bölünmüş (split): form üstte, liste altta kendi
+# kaydırmasıyla; Öznitelikler kapatılınca panel bütün yüksekliği alır. (Önce 01.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 843 20    # Vitrin
+wait 1200
+click 157 110   # Katmanları kur
+wait 6000
+click 1270 220  # Katman ara
+wait 400
+type tesis
+wait 800
+dclick 1218 311 # Örnek tesis: etkin katman
+wait 1000
+key Escape
+wait 500
+click 410 20    # Düzenle
+wait 1200
+click 32 75     # Nokta
+wait 800
+key a
+wait 600
+type Merkez Okulu
+key Return
+wait 600
+click 600 300   # birinci tesis
+wait 1200
+key a
+wait 600
+type Park Kreşi
+key Return
+wait 600
+click 1000 350  # ikinci tesis
+wait 1200
+key Escape
+wait 800
+click 843 20    # Vitrin
+wait 1200
+click 750 83    # Bakım kayıtları
+wait 2500
+click 1243 594  # Öznitelikler'i kapat: panel bütün yüksekliği alır
+wait 1200
+shot 50-panel
+click 1355 315  # Tesis
+wait 1000
+click 1340 350  # Merkez Okulu
+wait 1500
+shot 50-secildi
+click 1354 426  # Açıklama
+type Yangın tüpleri yenilendi
+wait 400
+click 1306 464  # Ekle
+wait 9000
+shot 50-eklendi
+click 1354 426  # Açıklama
+key ctrl+a
+type Çatı oluğu temizlendi
+wait 400
+click 1306 464  # Ekle
+wait 4000
+shot 50-iki
+click 1355 315  # Tesis
+wait 1000
+click 1328 379  # Park Kreşi
+wait 1500
+shot 50-park

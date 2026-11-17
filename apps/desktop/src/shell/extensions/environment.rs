@@ -92,6 +92,41 @@ struct Context {
     project_file: String,
     lock_file: String,
     version: String,
+    /// Installed from a working folder: a development environment, with its project's development group (docs/adr/8057
+    /// §97).
+    development: bool,
+    /// The organisation's wheel folder, when its policy names one: the packages come from there alone, offline
+    /// (docs/adr/8057 §123).
+    wheels: Option<PathBuf>,
+    /// This computer as the lock reads it: its system, machine and KentOS's Python.
+    target: Option<kentos_extensions::python_builds::Target>,
+}
+
+impl Context {
+    /// The locked packages this computer must not build from source (docs/adr/8057 §98): all but those the install
+    /// review listed as built here, read from the installed package's project with KentOS's Python here.
+    fn not_to_build(&self) -> Vec<String> {
+        let mut files = BTreeMap::new();
+        for path in [&self.project_file, &self.lock_file] {
+            if let Ok(bytes) = std::fs::read(self.package.join(path)) {
+                files.insert(path.clone(), bytes);
+            }
+        }
+        let project = kentos_extensions::manifest::PythonProject {
+            project_file: self.project_file.clone(),
+            lock_file: self.lock_file.clone(),
+            optional_features: BTreeMap::new(),
+        };
+        let mut parts = self
+            .python
+            .version
+            .split('.')
+            .map(|p| p.parse::<u64>().ok());
+        let python = parts.next().flatten().zip(parts.next().flatten());
+        kentos_extensions::python_builds::Target::here(python)
+            .map(|here| kentos_extensions::python_builds::wheeled_on(&project, &files, here))
+            .unwrap_or_default()
+    }
 }
 
 /// What preparing it would install, in a line: what the lock gives on this computer.
@@ -109,46 +144,6 @@ pub(crate) fn listed_words(listed: &[Listed]) -> String {
             .collect::<Vec<_>>()
             .join(", ")
     )
-}
-
-/// What a prepare that did not finish means.
-pub(crate) fn prepare_words(error: &InstallError) -> String {
-    use kentos_python_env::python::Cause;
-    let (sentence, said) = match error {
-        InstallError::Cancelled => {
-            return "Ortam hazırlama durduruldu; yarım kalan ortam silindi.".to_owned();
-        }
-        InstallError::TimedOut => {
-            return "Ortam hazırlama 30 dakikada bitmedi ve durduruldu; yeniden deneyin."
-                .to_owned();
-        }
-        InstallError::NotRun(why) => return format!("uv çalıştırılamadı: {why}."),
-        InstallError::Failed { cause, said } => (
-            match cause {
-                Cause::Network => {
-                    "Paketler indirilemedi: internete ulaşılamadı. Bağlantıyı ya da vekil sunucu \
-                                   ayarını (HTTPS_PROXY) denetleyin."
-                        .to_owned()
-                }
-                Cause::Certificate => {
-                    "Paketler indirilemedi: paket dizininin sertifikası bu bilgisayarda \
-                                       doğrulanamadı; kurumun sertifikası yüklü olmalı."
-                        .to_owned()
-                }
-                Cause::Disk => "Ortam hazırlanamadı: diskte yer yok.".to_owned(),
-                Cause::Folder => {
-                    "Ortam hazırlanamadı: KentOS'un Python klasörüne yazılamadı.".to_owned()
-                }
-                Cause::Unavailable | Cause::Other => String::new(),
-            },
-            said,
-        ),
-    };
-    match (sentence.is_empty(), said.is_empty()) {
-        (true, _) => said.clone(),
-        (false, true) => sentence,
-        (false, false) => format!("{sentence} uv: “{said}”"),
-    }
 }
 
 impl App {
@@ -196,6 +191,9 @@ impl App {
             project_file: project.project_file.clone(),
             lock_file: project.lock_file.clone(),
             version: manifest.version.to_string(),
+            development: registry.developed(id),
+            wheels: super::wheel_folder::of_policy(registry.policy()),
+            target: kentos_extensions::python_builds::Target::here(self.python_here()),
         })
     }
 
@@ -206,7 +204,16 @@ impl App {
         };
         extension::lock_digest(&c.package, &c.lock_file)
             .ok()
-            .and_then(|lock| extension::find(&c.root, id, &c.version, &lock, &c.python.version))
+            .and_then(|lock| {
+                extension::find(
+                    &c.root,
+                    id,
+                    &c.version,
+                    &lock,
+                    &c.python.version,
+                    c.development,
+                )
+            })
             .is_some()
     }
 
@@ -219,10 +226,17 @@ impl App {
             return Some(p.why_not().to_owned());
         }
         (!self.env_ready_now(id)).then(|| {
-            format!(
-                "Bu eklentinin Python ortamı hazırlanmadı: Eklentiler › {} › Python ortamı.",
-                self.extension_name(id)
-            )
+            let name = self.extension_name(id);
+            // The last try's words (a wheel this computer has none of, the internet out of reach): a form's button
+            // and a model's step say why, not only that it is not ready (docs/adr/8057 §122).
+            match self.extensions.envs.get(id).and_then(|s| s.note.as_deref()) {
+                Some(why) => format!(
+                    "Bu eklentinin Python ortamı hazırlanamadı: {why} Eklentiler › {name} › Python ortamı."
+                ),
+                None => format!(
+                    "Bu eklentinin Python ortamı hazırlanmadı: Eklentiler › {name} › Python ortamı."
+                ),
+            }
         })
     }
 
@@ -245,10 +259,15 @@ impl App {
         in_background(
             move || {
                 let lock = extension::lock_digest(&c.package, &c.lock_file)?;
-                Ok(
-                    extension::find(&c.root, &asked, &c.version, &lock, &c.python.version)
-                        .map(Box::new),
+                Ok(extension::find(
+                    &c.root,
+                    &asked,
+                    &c.version,
+                    &lock,
+                    &c.python.version,
+                    c.development,
                 )
+                .map(Box::new))
             },
             Err("arama yarıda kaldı".to_owned()),
             move |found| env_msg(EnvEvent::Found(id.clone(), found)),
@@ -286,21 +305,58 @@ impl App {
                         &c.python,
                         &extras,
                     )
-                    .map_err(InstallError::NotRun)?;
+                    .map_err(InstallError::NotRun)?
+                    .for_development(c.development);
                     let wheel = sdk::find(&sdk::dirs(), VERSION).map_err(InstallError::NotRun)?;
-                    let made = extension::prepare(
-                        &c.uv,
-                        &c.root,
-                        &c.python,
-                        &wheel,
-                        &c.package,
-                        (&c.project_file, &c.lock_file),
-                        &key,
-                        &stop,
-                        &mut |at| {
-                            let _ = told.unbounded_send(EnvEvent::Progressed(told_id.clone(), at));
-                        },
-                    )?;
+                    let mut said = |at| {
+                        let _ = told.unbounded_send(EnvEvent::Progressed(told_id.clone(), at));
+                    };
+                    let made = match &c.wheels {
+                        // The organisation's wheel folder: checked first, each package said; then wheels only,
+                        // offline, each against its hash (docs/adr/8057 §123).
+                        Some(folder) => {
+                            super::wheel_folder::check(
+                                folder,
+                                &c.package,
+                                (&c.project_file, &c.lock_file),
+                                c.target,
+                                &extras,
+                            )
+                            .map_err(|words| InstallError::Failed {
+                                cause: kentos_python_env::python::Cause::Other,
+                                said: words,
+                            })?;
+                            let from = extension::Wheels {
+                                folder: Some(folder.clone()),
+                                index: None,
+                                computer: true,
+                            };
+                            extension::prepare_wheels(
+                                &c.uv,
+                                &c.root,
+                                &c.python,
+                                &wheel,
+                                &c.package,
+                                (&c.project_file, &c.lock_file),
+                                &key,
+                                &from,
+                                &stop,
+                                &mut said,
+                            )?
+                        }
+                        None => extension::prepare(
+                            &c.uv,
+                            &c.root,
+                            &c.python,
+                            &wheel,
+                            &c.package,
+                            (&c.project_file, &c.lock_file),
+                            &key,
+                            &c.not_to_build(),
+                            &stop,
+                            &mut said,
+                        )?,
+                    };
                     // Another set of features made before: this one takes its place.
                     extension::clean_for(&c.root, &ext, Some(&key));
                     Ok(Box::new(made))
@@ -359,6 +415,17 @@ impl App {
                 let asked = id.clone();
                 return in_background(
                     move || {
+                        // From the organisation's wheel folder: what the lock installs here, each wheel looked for and
+                        // checked; uv is not asked and no index reached (docs/adr/8057 §123).
+                        if let Some(folder) = &c.wheels {
+                            return super::wheel_folder::check(
+                                folder,
+                                &c.package,
+                                (&c.project_file, &c.lock_file),
+                                c.target,
+                                &extras,
+                            );
+                        }
                         let key = extension::key_for(
                             &c.package,
                             &c.lock_file,
@@ -366,7 +433,8 @@ impl App {
                             &c.version,
                             &c.python,
                             &extras,
-                        )?;
+                        )?
+                        .for_development(c.development);
                         extension::preview(
                             &c.uv,
                             &c.root,
@@ -374,6 +442,7 @@ impl App {
                             &c.package,
                             (&c.project_file, &c.lock_file),
                             &key,
+                            &c.not_to_build(),
                         )
                     },
                     Err("önizleme yarıda kaldı".to_owned()),
@@ -424,7 +493,7 @@ impl App {
                         );
                     }
                     Err(error) => {
-                        let words = prepare_words(&error);
+                        let words = extension::prepare_words(&error);
                         state.note = Some(words.clone());
                         self.toast(
                             Toast::error(format!("{name}: Python ortamı hazırlanamadı"))
@@ -493,9 +562,37 @@ impl App {
             return form;
         };
         form = form.section("Python ortamı");
+        // Its Python packages' list for the organisation's IT (docs/adr/8057 §91), whether or not it is prepared: the
+        // lock says what would be installed. In this section, not among the actions: their row stays one line.
+        form = form.wide(
+            row![
+                words::secondary(
+                    "SBOM'u kaydet…",
+                    Some(super::msg(super::Event::SaveBom(id.to_owned())))
+                ),
+                label::caption("Python bağımlılıklarının listesi: sürümler, kaynaklar ve dosya özetleri (CycloneDX)."),
+            ]
+            .spacing(10)
+            .align_y(iced::Center),
+        );
         if !registry.grant(id).is_some_and(|g| g.python) {
             return form.wide(label::caption(
                 "Python işlevleri kurulumda seçilmedi; bu eklenti için ortam hazırlanmaz.",
+            ));
+        }
+        // Where the packages come from, when the organisation says (docs/adr/8057 §123).
+        if let Some(folder) = super::wheel_folder::of_policy(registry.policy()) {
+            form = form.wide(label::caption(format!(
+                "Kurum ilkesi: paketler internetten değil kurumun tekerlek klasöründen ({}) kurulur; her dosya kilidin \
+                 özetiyle denetlenir, kaynak paketi derlenmez.",
+                folder.display()
+            )));
+        }
+        // Being developed (docs/adr/8057 §97): its own kind of environment, said once.
+        if registry.developed(id) {
+            form = form.wide(label::caption(
+                "Geliştirme ortamı: eklenti çalışma klasöründen kurulu; projenin geliştirme bağımlılıkları da kurulur \
+                 ([dependency-groups] dev). Yayımlanan sürümün ortamı onları almaz.",
             ));
         }
         if let Err(why) = self.env_context(id) {

@@ -13,7 +13,8 @@
 //!   Ek-5/B's people a 50 cm unit width passes, times 0.50 m (33/1): its escape stairs going down (up from a basement),
 //!   its doors to the outside on the ground storey; each escape route 1.00 m from 50 people, 1.50 m from 501, 2.00 m
 //!   from 2001; a corridor 1.10 m (33/1), every route and stair 1.20 m in a high building (33/2). A room of more than
-//!   50 people has two exits, a storey of more than 500 three, of more than 1000 four (39/2).
+//!   50 people has two exits, a high-hazard one (BYKHY 17) of more than 25; a storey of more than 500 three, of more
+//!   than 1000 four (39/2).
 //! - **Erişim (33/6-b):** a room reaching no exit its storey has, or a dwelling's room not reaching its door.
 //!
 //! A finding is the drawing's measure, not an approval; protection, fire ratings and lobbies are not drawn and are
@@ -27,7 +28,7 @@ use kentos_geometry_core::Vec2 as V;
 use kentos_geometry_core::geom::region::inside_area;
 
 use crate::regulation_audit::{
-    Article, Bound, Limit, Said, Source, has, is, kind_of, metres, said, shaft_of, words,
+    Article, Bound, Limit, Said, Source, has, kind_of, metres, said, shaft_of, words,
 };
 
 /// The rule set read (docs/adr/8035): the regulation and its last amendment.
@@ -53,6 +54,16 @@ pub const ACCESS_ARTICLE: Article = bykhy("33/6-b", ORIGINAL);
 pub const WIDTH_ARTICLE: Article = bykhy("33/1", Y2015);
 pub const HIGH_ARTICLE: Article = bykhy("33/2", ORIGINAL);
 pub const COUNT_ARTICLE: Article = bykhy("39/2", Y2009);
+
+/// The people above whom a place needs two exits (39/2): “25 kişinin aşıldığı yüksek tehlikeli mekânlar ile 50 kişinin
+/// aşıldığı her mekânda en az 2 çıkış bulunması şarttır.”
+fn two_exits_above(use_: Option<Use>) -> f64 {
+    if use_ == Some(Use::HighHazard) {
+        25.0
+    } else {
+        50.0
+    }
+}
 pub const STAIRS_B_ARTICLE: Article = bykhy("48/5-b", Y2009);
 pub const STAIRS_C_ARTICLE: Article = bykhy("48/5-c", Y2009);
 pub const STAIRS_D_ARTICLE: Article = bykhy("48/5-ç", Y2009);
@@ -67,137 +78,8 @@ pub const CODES: [&str; 6] = [
     codes::BYKHY_STAIR_COUNT_BELOW,
 ];
 
-/// A building's use as Ek-5/B's rows name it.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Use {
-    HighHazard,
-    Industry,
-    Dormitory,
-    Shop,
-    Office,
-    Parking,
-    School,
-    Assembly,
-    Hospital,
-    Hotel,
-    Dwelling,
-}
-
-impl Use {
-    /// Its row's words in a finding.
-    pub fn label(self) -> &'static str {
-        match self {
-            Use::HighHazard => "yüksek tehlikeli yer",
-            Use::Industry => "endüstri yapısı",
-            Use::Dormitory => "yurt",
-            Use::Shop => "mağaza",
-            Use::Office => "büro",
-            Use::Parking => "otopark ve depo",
-            Use::School => "okul",
-            Use::Assembly => "toplanma amaçlı bina",
-            Use::Hospital => "hastane",
-            Use::Hotel => "otel",
-            Use::Dwelling => "apartman",
-        }
-    }
-
-    /// Ek-5/B: the farthest one-way and two-way walks, m, without a sprinkler system and with one.
-    pub fn walks(self) -> [[f64; 2]; 2] {
-        match self {
-            Use::HighHazard => [[10.0, 20.0], [20.0, 35.0]],
-            Use::Industry => [[15.0, 25.0], [30.0, 60.0]],
-            Use::Dormitory | Use::Office | Use::School => [[15.0, 30.0], [45.0, 75.0]],
-            Use::Shop | Use::Parking | Use::Assembly => [[15.0, 25.0], [45.0, 60.0]],
-            Use::Hospital => [[15.0, 25.0], [30.0, 45.0]],
-            Use::Hotel => [[15.0, 20.0], [30.0, 45.0]],
-            Use::Dwelling => [[15.0, 30.0], [30.0, 75.0]],
-        }
-    }
-
-    /// Ek-5/B: a dead-end corridor's farthest walk (çıkmaz koridor, 4/i), m, without a sprinkler system and with one.
-    pub fn dead_end(self) -> [f64; 2] {
-        match self {
-            Use::HighHazard => [10.0, 20.0],
-            _ => [15.0, 20.0],
-        }
-    }
-
-    /// Ek-5/B: the people a 50 cm unit width passes: a door to the outside, other doors, escape stairs, ramps and
-    /// corridors.
-    pub fn per_unit(self) -> [f64; 4] {
-        match self {
-            Use::HighHazard | Use::Dormitory | Use::Hotel | Use::Dwelling => {
-                [50.0, 40.0, 30.0, 50.0]
-            }
-            Use::Hospital => [30.0, 30.0, 30.0, 30.0],
-            _ => [100.0, 80.0, 60.0, 100.0],
-        }
-    }
-
-    /// The square metres a person of a room nothing names more plainly (Ek-5/A's row of the use's own rooms).
-    fn default_load(self) -> f64 {
-        match self {
-            Use::Shop => 5.0,
-            Use::Assembly => 1.5,
-            Use::Hospital | Use::Hotel => 20.0,
-            Use::Parking => 30.0,
-            _ => 10.0,
-        }
-    }
-
-    /// The stricter of two uses: the shorter two-way walk, then the shorter one-way walk (31/5).
-    fn stricter(self, other: Use) -> Use {
-        let key = |u: Use| (u.walks()[1][0], u.walks()[0][0], u.per_unit()[2]);
-        if key(other) < key(self) { other } else { self }
-    }
-}
-
-/// A use by its words (a unit's nature, a room's name or use); none for words that name no use.
-pub fn use_of(name: Option<&str>, usage: Option<&str>) -> Option<Use> {
-    let w = words(name, usage);
-    let any = |list: &[&str]| list.iter().any(|p| has(&w, p));
-    if any(&["DAIRE", "MESKEN", "KONUT", "APARTMAN"]) || is(&w, "EV") {
-        Some(Use::Dwelling)
-    } else if any(&[
-        "HASTANE",
-        "HUZUREVI",
-        "KLINIK",
-        "POLIKLINIK",
-        "BAKIMEVI",
-        "SAGLIK",
-    ]) {
-        Some(Use::Hospital)
-    } else if any(&["OTEL", "MOTEL", "PANSIYON"]) {
-        Some(Use::Hotel)
-    } else if any(&["YURT", "YATAKHANE"]) {
-        Some(Use::Dormitory)
-    } else if any(&["OKUL", "EGITIM", "DERSLIK", "SINIF", "KRES", "ANAOKUL"]) {
-        Some(Use::School)
-    } else if any(&["DUKKAN", "MAGAZA", "MARKET", "SATIS"]) {
-        Some(Use::Shop)
-    } else if any(&["OTOPARK", "GARAJ", "DEPO", "AMBAR"]) {
-        Some(Use::Parking)
-    } else if any(&["FABRIKA", "IMALAT", "ATOLYE", "URETIM", "SANAYI"]) {
-        Some(Use::Industry)
-    } else if any(&[
-        "LOKANTA",
-        "RESTORAN",
-        "KAFE",
-        "SINEMA",
-        "TIYATRO",
-        "KONFERANS",
-        "DUGUN",
-        "CAMI",
-        "MESCIT",
-        "KONSER",
-    ]) {
-        Some(Use::Assembly)
-    } else if any(&["BURO", "OFIS", "IDARI", "DERNEK"]) {
-        Some(Use::Office)
-    } else {
-        None
-    }
-}
+/// A building's use as Ek-5/B's rows name it, and its reading: the domain's, shared with the audit facts.
+pub use kentos_domain::fire_use::{Use, use_of};
 
 /// Ek-5/A: a room's square metres a person and whether its net area is read (rows 1–4); none for a room it does not
 /// count (a passage, a stair, a wet room, a shaft: 31/6).
@@ -724,7 +606,10 @@ fn assess(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V), walks: &mut 
             .iter()
             .find(|r| &r.level == level && r.areas.iter().any(|a| inside_area(a, p)))
     };
-    for r in rooms.iter().filter(|r| r.people > 50.0 && !r.dwelling) {
+    for r in rooms
+        .iter()
+        .filter(|r| r.people > two_exits_above(r.use_) && !r.dwelling)
+    {
         let count = escape
             .rooms
             .iter()
@@ -891,7 +776,7 @@ fn assess(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V), walks: &mut 
             4
         } else if people > 500.0 {
             3
-        } else if people > 50.0 {
+        } else if people > two_exits_above(Some(u)) {
             2
         } else {
             0

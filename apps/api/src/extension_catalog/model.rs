@@ -4,7 +4,8 @@
 use std::fmt;
 
 use kentos_extensions::release::{
-    CatalogScope, Channel, GateKind, Refusal, Release, ReleaseState, RequestedChange, ScanOutcome,
+    Action, CatalogScope, Channel, GateKind, Refusal, Release, ReleaseState, RequestedChange,
+    ScanOutcome,
 };
 use serde::Deserialize;
 
@@ -81,14 +82,17 @@ pub struct Account {
     /// The account's id: the server's user id.
     pub id: String,
     pub via: Channel,
+    /// The person signed in afresh for this call (docs/adr/8059 §9): a person's decision needs it. The server's
+    /// sessions carry none yet, so a running server takes no decision (§13).
+    pub fresh_sign_in: bool,
 }
 
 /// How a catalog route learns who calls it.
 pub enum Accounts {
-    /// The server's sessions and access tokens, as on every protected route.
+    /// The server's sessions and access tokens, as on every protected route; none of them is a fresh sign-in yet.
     Sessions,
-    /// The tests': the account the `x-kentos-test-account` header names, so the flow runs without a database. It does
-    /// not exist in a server's build.
+    /// The tests': the account the `x-kentos-test-account` header names, so the flow runs without a database; its
+    /// window's calls count as signed in afresh. It does not exist in a server's build.
     #[cfg(test)]
     Named,
 }
@@ -137,6 +141,25 @@ pub enum Move {
     },
 }
 
+impl Move {
+    /// The flow's move it asks for.
+    pub fn action(&self) -> Action {
+        match self {
+            Move::Submit { .. } => Action::Submit,
+            Move::Scan { .. } => Action::Scan,
+            Move::StartReview => Action::StartReview,
+            Move::RequestChanges { .. } => Action::RequestChanges,
+            Move::Waive { .. } => Action::Waive,
+            Move::Approve { .. } => Action::Approve,
+            Move::Publish => Action::Publish,
+            Move::Suspend { .. } => Action::Suspend,
+            Move::Reinstate { .. } => Action::Reinstate,
+            Move::Withdraw { .. } => Action::Withdraw,
+            Move::Archive { .. } => Action::Archive,
+        }
+    }
+}
+
 /// Why a catalog call did not go through.
 #[derive(Debug)]
 pub enum CatalogError {
@@ -162,6 +185,19 @@ pub(super) fn changed() -> Refusal {
     Refusal::new(
         "release_changed",
         "Sürüm siz işlem yaparken başka bir işlemle değişti; sürümü yeniden okuyup isteği yeniden gönderin.",
+    )
+}
+
+/// A person's decision on a call without a fresh sign-in (docs/adr/8059 §9, §13): what the server does not ask for yet.
+pub(super) fn fresh_sign_in_required(action: Action) -> Refusal {
+    Refusal::new(
+        "fresh_sign_in_required",
+        format!(
+            "“{}” bir kişinin kararıdır ve taze bir kimlik doğrulaması ister (kurumun kimlik sağlayıcısında yeniden \
+             giriş ya da cihazda kullanıcı doğrulaması). Bu sunucu onu henüz sormuyor; bu yüzden onay, değişiklik \
+             isteme, engel kaldırma ve askıdan alma burada verilemez. Sürüm olduğu gibi kaldı.",
+            action.title()
+        ),
     )
 }
 

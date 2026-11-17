@@ -23,7 +23,7 @@ fn descriptor() -> Value {
         "keywords": ["alan"],
         "parameters": [
             { "name": "parcels", "label": "Parseller", "type": "features", "kinds": ["polygon"],
-              "scopes": ["layer", "selection", "all"] },
+              "scopes": ["layer", "selection", "all"], "writes": true },
             { "name": "limit", "label": "Büyük parsel sınırı", "type": "number", "unit": "m²", "default": 500 },
             { "name": "output", "label": "Çıktı katmanı", "type": "layer", "default": { "newName": "Alanlar" } }
         ],
@@ -74,7 +74,11 @@ impl Provider for Stand {
         input: Value,
         feedback: &mut dyn Feedback,
     ) -> Result<Value, Failure> {
-        assert_eq!(tool.local, "olc");
+        assert!(
+            matches!(tool.local.as_str(), "olc" | "oku"),
+            "{}",
+            tool.local
+        );
         feedback.progress(0.5, "ölçülüyor");
         let mut seen = seen();
         seen.inputs.push(input.clone());
@@ -185,7 +189,16 @@ fn setup() -> ExternalTool {
         // The host gives the package's digest (docs/adr/8057 §13) and where its code runs (§15).
         tool.digest = DIGEST.into();
         tool.environment = ENVIRONMENT.into();
-        external::set_tools(vec![tool]);
+        // The same tool whose input does not say it writes (docs/adr/8057 §49).
+        let mut reads = descriptor();
+        reads["id"] = json!("oku");
+        reads["parameters"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("writes");
+        let reads =
+            external::from_descriptor("tr.ornek.deneme", "Deneme", "1.0.0", "oku", &reads).unwrap();
+        external::set_tools(vec![tool, reads]);
         external::register_provider(Arc::new(Stand));
         kentos_processing::command::register();
     });
@@ -275,6 +288,121 @@ fn a_descriptor_that_does_not_fit_is_refused_with_its_place() {
         refused(&|d| d["capabilities"] = json!({ "runtimes": ["browser"] }))
             .contains("desktop-python")
     );
+}
+
+/// Where a tool runs (docs/adr/8057 §70): every tool on the desktop; one that also declares `headless-python` in the
+/// headless hosts (MCP, Python); a runtime written wrong, a list without the desktop's or not a list is said.
+#[test]
+fn a_descriptor_says_where_its_tool_runs() {
+    let read = |runtimes: Option<Value>| {
+        let mut d = descriptor();
+        if let Some(runtimes) = runtimes {
+            d["capabilities"] = json!({ "runtimes": runtimes });
+        }
+        external::from_descriptor("tr.ornek.deneme", "Deneme", "1.0.0", "olc", &d)
+    };
+    assert!(
+        !read(None).unwrap().headless,
+        "none named: the desktop alone"
+    );
+    assert!(!read(Some(json!(["desktop-python"]))).unwrap().headless);
+    assert!(
+        read(Some(json!(["desktop-python", "headless-python"])))
+            .unwrap()
+            .headless
+    );
+    let wrong = read(Some(json!(["desktop-python", "headles-python"])))
+        .err()
+        .unwrap();
+    assert!(wrong.contains("“headles-python” bilinmiyor"), "{wrong}");
+    let alone = read(Some(json!(["headless-python"]))).err().unwrap();
+    assert!(
+        alone.contains("“desktop-python” içermeli") && alone.contains("headless-python"),
+        "{alone}"
+    );
+    assert!(
+        read(Some(json!("desktop-python")))
+            .err()
+            .unwrap()
+            .contains("ad listesi")
+    );
+}
+
+/// A tool this host does not run (an installed one a headless host leaves out, docs/adr/8057 §70) is refused with the
+/// host's words before the provider is asked, by a run, a batch and a model's check alike; a provider registered only
+/// where none is never takes the place of one already there.
+#[test]
+fn a_tool_this_host_does_not_run_is_refused_with_why() {
+    let _turn = one_at_a_time();
+    let _tool = setup();
+    seen().inputs.clear();
+    let id = "ext.tr.ornek.deneme.masaustu";
+    let why =
+        "“Masaüstü” yalnız KentOS masaüstünde çalışır: araç tanımı başsız çalışmayı bildirmiyor.";
+    external::set_unavailable(std::collections::BTreeMap::from([(
+        id.to_owned(),
+        why.to_owned(),
+    )]));
+    let hosted = kentos_native_application::processing_host::tools().expect("registered");
+    struct Never;
+    impl kentos_native_application::processing_host::BatchFlow for Never {
+        fn stopped(&self) -> bool {
+            false
+        }
+        fn progress(&self, _: u64, _: u64) {}
+    }
+    let mut doc = drawing(false);
+    let run: ProcessingRun =
+        serde_json::from_value(json!({ "tool": id, "parameters": {} })).unwrap();
+    let Err(refused) = hosted.run(&mut doc, &run, true, &Never) else {
+        panic!("refused");
+    };
+    assert_eq!(
+        (refused.code.as_str(), refused.message.as_str()),
+        ("unknown_tool", why)
+    );
+    let batch: kentos_commands::ProcessingBatch =
+        serde_json::from_value(json!({ "tool": id, "rows": [{}] })).unwrap();
+    let Err(refused) = hosted.batch(&mut doc, &batch, true, &Never) else {
+        panic!("refused");
+    };
+    assert_eq!(refused.message, why);
+    let registry = Registry::current();
+    let lookup = |t: &str| registry.tool(t);
+    let mut model = kentos_processing::model_edit::new_model("masaustu".into());
+    kentos_processing::model_edit::add_step(
+        &mut model,
+        "ext.tr.ornek.deneme.olc",
+        &lookup,
+        None,
+        None,
+    );
+    model.steps[0].tool = id.to_owned();
+    let issues = kentos_processing::model::check_model(&model, &lookup);
+    assert!(issues.iter().any(|i| i.message == why), "{issues:?}");
+    assert!(seen().inputs.is_empty(), "the provider was not asked");
+    // Another id is not one: the list says so as before.
+    let run: ProcessingRun =
+        serde_json::from_value(json!({ "tool": "ext.tr.ornek.yok.x", "parameters": {} })).unwrap();
+    let Err(other) = hosted.run(&mut doc, &run, true, &Never) else {
+        panic!("refused");
+    };
+    assert!(
+        other.message.contains("cad.processing.tools"),
+        "{}",
+        other.message
+    );
+    external::set_unavailable(std::collections::BTreeMap::new());
+    // The provider registered first stays: a headless host's never replaces it.
+    struct Other;
+    impl Provider for Other {
+        fn run(&self, _: &ExternalTool, _: Value, _: &mut dyn Feedback) -> Result<Value, Failure> {
+            Err(Failure::Failed("başka".into()))
+        }
+    }
+    let other: Arc<dyn Provider> = Arc::new(Other);
+    assert!(!external::register_provider_if_none(Arc::clone(&other)));
+    assert!(!external::is_provider(&other));
 }
 
 #[test]
@@ -411,6 +539,14 @@ fn an_answer_that_does_not_fit_writes_nothing() {
             "“total” bir sayı olmalı",
         ),
         (json!({ "outputs": { "table": [1, 2] } }), "bir satır"),
+        (
+            json!({ "update": [{ "uid": "00000000-0000-0000-0000-000000000000", "attrs": {} }] }),
+            "update[0]: “00000000-0000-0000-0000-000000000000” araca verilen nesnelerden biri değil",
+        ),
+        (
+            json!({ "update": { "a": 1 } }),
+            "update bir değişiklik listesi",
+        ),
     ];
     for (answer, words) in cases {
         seen().answer = Some(Ok(answer));
@@ -656,6 +792,7 @@ fn an_extensions_expression_function_answers_a_processing_expression_a_batch_at_
     external::set_expressions(vec![kentos_expression::external::ExternalDef {
         name: "ext.tr.ornek.deneme.ada-parsel".into(),
         description: "Ada/parsel".into(),
+        refused: None,
     }]);
     external::register_expression_calls(answers.clone());
     let tool = Registry::current().get("attributes.calculate").unwrap();
@@ -881,4 +1018,59 @@ fn an_extensions_tools_progress_reaches_the_job_running_it() {
             .unwrap_or_else(std::sync::PoisonError::into_inner),
         [(500, 1000)]
     );
+}
+
+/// docs/adr/8057 §49 (PY-TOOL-12): a tool changes its own input objects' attributes where its descriptor says the input
+/// writes, in the run's one undo step (`None` takes one away); the same change through an input that does not write is
+/// refused with nothing written.
+#[test]
+fn an_extensions_tool_changes_its_own_inputs_only_where_it_says_it_writes() {
+    let _turn = one_at_a_time();
+    let _tool = setup();
+    let parcel_of = |doc: &Document| {
+        doc.entities()
+            .find(|e| e.base().layer_id == "parsel")
+            .map(|e| Slot(e.base().id))
+            .expect("a parcel")
+    };
+    let answer = |doc: &Document| {
+        let uid = doc.uid(parcel_of(doc)).expect("its uid").to_string();
+        json!({ "kind": "outputs", "outputs": {},
+                "update": [{ "uid": uid, "attrs": { "durum": "ölçüldü", "Parsel": null, "puan": 3 } }] })
+    };
+    let mut host = Bare(drawing(false), Vec::new());
+    seen().answer = Some(Ok(answer(&host.0)));
+    let tool = Registry::current().get("ext.tr.ornek.deneme.olc").unwrap();
+    let outcome = Runner::new().run(&mut host, &tool, &values(), false, &mut Vec::new());
+    assert!(
+        !matches!(
+            outcome,
+            Outcome::Stopped {
+                status: Status::Error,
+                ..
+            }
+        ),
+        "{outcome:?}"
+    );
+    let attrs = host.0.get(parcel_of(&host.0)).unwrap().base().attrs.clone();
+    assert_eq!(attrs.get("durum").map(String::as_str), Some("ölçüldü"));
+    assert_eq!(
+        attrs.get("puan").map(String::as_str),
+        Some("3"),
+        "a number kept as text"
+    );
+    assert!(!attrs.contains_key("Parsel"), "None takes it away");
+    assert!(host.0.undo().is_some(), "one undo step");
+    // Through an input that does not say it writes: refused, nothing written.
+    let mut host = Bare(drawing(false), Vec::new());
+    seen().answer = Some(Ok(answer(&host.0)));
+    let before = host.0.get(parcel_of(&host.0)).unwrap().base().attrs.clone();
+    let tool = Registry::current().get("ext.tr.ornek.deneme.oku").unwrap();
+    let outcome = Runner::new().run(&mut host, &tool, &values(), false, &mut Vec::new());
+    assert!(
+        matches!(&outcome, Outcome::Stopped { status: Status::Error, message, .. } if message.contains("writes: true yok")),
+        "{outcome:?}"
+    );
+    assert_eq!(host.0.get(parcel_of(&host.0)).unwrap().base().attrs, before);
+    seen().answer = None;
 }

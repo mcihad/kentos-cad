@@ -73,7 +73,7 @@ fn the_spaces_are_closed_with_their_footprints_and_none_overlaps() {
     assert!((lo + 0.13).abs() <= bound && (hi - 2.43).abs() <= bound, "{wall}");
 }
 
-/// The facts the standards package's form is tried on (catalog/standards/dijital-proje/tests/test_form.py), the
+/// The facts the standards package's form is tried on (catalog/standards/tests/dijital-proje/test_form.py), the
 /// bodies' under `bodies`: written by `KENTOS_WRITE_IFC_FACTS=1`, else compared.
 #[test]
 fn the_facts_the_form_is_tried_on_are_current() {

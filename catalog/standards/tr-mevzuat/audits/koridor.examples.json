@@ -1,0 +1,306 @@
+{
+  "format": "kentos.auditExamples",
+  "schemaVersion": 1,
+  "examples": [
+    {
+      "title": "1.00 m genişliğinde hol (PAİY 29/3: en az 1.20 m)",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "number": "Z01",
+            "name": "Salon",
+            "kind": "living",
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 20.0,
+            "axis": 22.0,
+            "narrow": 4.0,
+            "escape": null
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "number": "Z02",
+            "name": "Yatak odası",
+            "kind": "bedroom",
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 12.0,
+            "axis": 13.2,
+            "narrow": 3.0,
+            "escape": null
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000003",
+            "number": "Z03",
+            "name": "Mutfak",
+            "kind": "kitchen",
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 6.0,
+            "axis": 6.6,
+            "narrow": 2.0,
+            "escape": null
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000004",
+            "number": "Z04",
+            "name": "Banyo",
+            "kind": "bath",
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 4.0,
+            "axis": 4.4,
+            "narrow": 1.6,
+            "escape": null
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000005",
+            "number": "Z05",
+            "name": "WC",
+            "kind": "toilet",
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 1.5,
+            "axis": 1.65,
+            "narrow": 1.1,
+            "escape": null
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000006",
+            "number": "Z06",
+            "name": "Hol",
+            "kind": "corridor",
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 3.0,
+            "axis": 3.3,
+            "narrow": 1.0,
+            "escape": null
+          }
+        ],
+        "units": [
+          {
+            "id": "d1",
+            "number": "1",
+            "name": null,
+            "kind": "unit",
+            "nature": "Daire",
+            "annexOf": null,
+            "dwelling": true,
+            "gross": 53.475,
+            "net": 46.5,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 53.475,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 53.475,
+                "net": 46.5
+              }
+            ]
+          }
+        ],
+        "doors": [],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 1,
+        "has": [
+          {
+            "severity": "error",
+            "message": "net genişliği 1.00 m"
+          }
+        ]
+      }
+    },
+    {
+      "title": "1.20 m genişliğinde hol: sınırda, bulgu yok",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "number": "Z01",
+            "name": "Salon",
+            "kind": "living",
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 20.0,
+            "axis": 22.0,
+            "narrow": 4.0,
+            "escape": null
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "number": "Z02",
+            "name": "Yatak odası",
+            "kind": "bedroom",
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 12.0,
+            "axis": 13.2,
+            "narrow": 3.0,
+            "escape": null
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000003",
+            "number": "Z03",
+            "name": "Mutfak",
+            "kind": "kitchen",
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 6.0,
+            "axis": 6.6,
+            "narrow": 2.0,
+            "escape": null
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000004",
+            "number": "Z04",
+            "name": "Banyo",
+            "kind": "bath",
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 4.0,
+            "axis": 4.4,
+            "narrow": 1.6,
+            "escape": null
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000005",
+            "number": "Z05",
+            "name": "WC",
+            "kind": "toilet",
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 1.5,
+            "axis": 1.65,
+            "narrow": 1.1,
+            "escape": null
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000006",
+            "number": "Z06",
+            "name": "Hol",
+            "kind": "corridor",
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 3.6,
+            "axis": 3.96,
+            "narrow": 1.2,
+            "escape": null
+          }
+        ],
+        "units": [
+          {
+            "id": "d1",
+            "number": "1",
+            "name": null,
+            "kind": "unit",
+            "nature": "Daire",
+            "annexOf": null,
+            "dwelling": true,
+            "gross": 54.165,
+            "net": 47.1,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 54.165,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 54.165,
+                "net": 47.1
+              }
+            ]
+          }
+        ],
+        "doors": [],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 0
+      }
+    }
+  ]
+}

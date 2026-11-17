@@ -221,11 +221,13 @@ cost-corridor
 cost-distance
 cost-path
 coverage-simplify
+covering
 crs
 crs-query
 crs-second
 crs-transform
 culvert-editor
+curtain-wall
 curvature
 curve-edit
 cut
@@ -514,6 +516,8 @@ hole-remove
 identify
 idw
 ifc-export
+ifc-export-cut
+ifc-view
 image-clip
 image-insert
 import
@@ -805,6 +809,7 @@ polygon-neighbors
 polygon-to-line
 polygonize
 polyline
+post
 pour-point
 print
 processing
@@ -822,6 +827,7 @@ qml-export
 qml-import
 quality-form
 quantities
+rail
 railing
 ramp
 random-points

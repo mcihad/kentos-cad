@@ -225,6 +225,7 @@ fn a_model_that_stops_in_the_middle_leaves_no_layer_behind() {
     let revision = doc.revision();
     let run = ProcessingRun {
         environment: None,
+        model: None,
         tool: "model:builtin.parcelSheet".into(),
         parameters: BTreeMap::new(),
         selection: vec![uid(&doc, 1), uid(&doc, 2)],
@@ -254,6 +255,7 @@ fn a_record_names_the_objects_the_seed_and_the_system() {
     let one = uid(&doc, 1);
     let run = ProcessingRun {
         environment: None,
+        model: None,
         tool: "sample.random".into(),
         parameters: values(&[
             ("input", json!({ "scope": "uids", "uids": [one.clone()] })),
@@ -296,6 +298,7 @@ fn running_a_record_again_is_told_apart() {
     let mut doc = load("parcels.kcad");
     let run = ProcessingRun {
         environment: None,
+        model: None,
         tool: "selection.byExpression".into(),
         parameters: values(&[("input", json!({ "scope": "layer", "layerId": "parsel" }))]),
         selection: Vec::new(),
@@ -463,6 +466,7 @@ fn a_raster_run_records_its_grids() {
         .expect("opens");
     let run = ProcessingRun {
         environment: None,
+        model: None,
         tool: "surface.slope".into(),
         parameters: values(&[
             ("input", json!({ "scope": "uids", "uids": [uid(&doc, 1)] })),
@@ -703,6 +707,7 @@ fn a_stop_heard_inside_a_run_leaves_the_drawing_as_it_was() {
     let revision = doc.revision();
     let run = ProcessingRun {
         environment: None,
+        model: None,
         tool: "attributes.calculate".into(),
         parameters: values(&[
             ("input", json!({ "scope": "layer", "layerId": "parsel" })),

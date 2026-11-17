@@ -18,9 +18,11 @@ eklentinin kendi sürecinde ve kendi Python ortamında çalıştırır. Her biri
   bulduklarını panelin Seç kutusuna koyar (``ctx.panel``: çalışan kod panelini değiştirir).
 - ``deger_sec``: Seç değişince çalışır; o değerdeki nesneleri çizimde seçer.
 - ``katman_degerleri``: katmanın sağ tık menüsünden; "Değer say"ı o katman seçili açar (``ctx.params["layer"]``).
+- ``csv_noktalar``: katmanın sağ tık menüsünden; pencerenin dosya seçicisiyle verilen CSV'deki noktaları ekler.
 - ``parsel_karti``: kartlı panel; "Parsel kartı"nda alınan her parselin alanı, yapıları ve TAKS'ı bir kartta.
 """
 
+import csv
 import struct
 import time
 import zlib
@@ -28,7 +30,7 @@ from datetime import date, datetime
 
 import numpy as np
 import shapely
-from shapely.geometry import Polygon, shape
+from shapely.geometry import Point, Polygon, shape
 
 from kentos import cad, ext
 from kentos import ui_panel as ui
@@ -95,8 +97,9 @@ def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
                         "|| ' yazılır.')"
                     ),
                 ),
-                ui.text_field("onek", "Önek", value="Y-"),
-                ui.number_field("ilk", "İlk numara", value=1, min=1, required=True),
+                # Önek ve İlk numara bir satırda yan yana (row): yer yoksa KentOS alt alta dizer.
+                ui.text_field("onek", "Önek", value="Y-", row="numara"),
+                ui.number_field("ilk", "İlk numara", value=1, min=1, required=True, row="numara"),
             ],
             ok="Numarala",
         )
@@ -123,6 +126,66 @@ def yapilari_numarala(ctx: ext.CommandContext) -> ext.CommandResult:
         )
         panel.say(ozet, "success")
     return ctx.message(ozet)
+
+
+@ext.command("yakin-yapilar")
+def yakin_yapilar(ctx: ext.CommandContext) -> ext.CommandResult:
+    """"Yakın yapılar" panelinin Bul düğmesi ve noktası değişince: panelin nokta seçicisindeki noktaya (ctx.params
+    ["nokta"]: [x, y], haritadan seçilir ya da yazılır) verilen uzaklıktaki yapılar, yakından uzağa; yapının içindeki
+    noktanın uzaklığı 0'dır. Satırlar Ara'nınki gibi: tıklanan satır yapıyı gösterir."""
+    if ctx.doc is None:
+        return ctx.message("Açık çizim yok.")
+    nokta = ctx.params.get("nokta")
+    if not nokta:
+        return ctx.message("Önce bir nokta verin: Haritadan seç ya da x, y.")
+    uzaklik = float(ctx.params.get("uzaklik") or 25)
+    yapi = _katman(ctx.doc, "yapi")
+    if yapi is None:
+        return ctx.message("Çizimde 'yapi' kimlikli ya da adlı katman yok.")
+    merkez = Point(nokta)
+    satirlar = []
+    for kayit in ctx.doc.entities(layer=yapi, kinds=["polygon"]):
+        mesafe = Polygon(kayit.entity.pts).distance(merkez)
+        if mesafe <= uzaklik:
+            satirlar.append(
+                {"uid": kayit.uid, "no": kayit.entity.attrs.get("no") or "—", "uzaklık (m)": round(mesafe, 1)}
+            )
+    satirlar.sort(key=lambda s: s["uzaklık (m)"])
+    return ctx.report(satirlar, title="Yakın yapılar", message=f"{uzaklik:g} m içinde {len(satirlar)} yapı.")
+
+
+@ext.command("alandaki-yapilar")
+def alandaki_yapilar(ctx: ext.CommandContext) -> ext.CommandResult:
+    """"Alandaki yapılar" panelinin alanı çizilince ya da kutusu değişince: panelin şekil seçicisindeki alana
+    (ctx.params["alan"]: haritada çizilen GeoJSON Polygon, shapely'nin shape() ile okunur) giren yapılar, alanın içinde
+    kalan taban alanı ve payıyla, büyükten küçüğe; "Yalnızca tamamı içinde kalanlar" işaretliyse yalnız alanın içinde
+    kalanlar. Satırlar Ara'nınki gibi: tıklanan satır yapıyı gösterir."""
+    if ctx.doc is None:
+        return ctx.message("Açık çizim yok.")
+    alan = ctx.params.get("alan")
+    if not alan:
+        return ctx.message("Önce haritada bir alan çizin.")
+    yapi = _katman(ctx.doc, "yapi")
+    if yapi is None:
+        return ctx.message("Çizimde 'yapi' kimlikli ya da adlı katman yok.")
+    sinir = shape(alan)
+    tamami = bool(ctx.params.get("tamami"))
+    satirlar = []
+    for kayit in ctx.doc.entities(layer=yapi, kinds=["polygon"]):
+        taban = Polygon(kayit.entity.pts)
+        icinde = taban.intersection(sinir).area
+        if icinde <= 0 or (tamami and not sinir.covers(taban)):
+            continue
+        satirlar.append(
+            {
+                "uid": kayit.uid,
+                "no": (kayit.entity.attrs or {}).get("no") or "—",
+                "içinde (m²)": round(icinde, 1),
+                "pay (%)": round(100 * icinde / taban.area),
+            }
+        )
+    satirlar.sort(key=lambda s: -s["içinde (m²)"])
+    return ctx.report(satirlar, title="Alandaki yapılar", message=f"{sinir.area:.0f} m²'lik alanda {len(satirlar)} yapı.")
 
 
 @ext.command("yapi-ara")
@@ -210,6 +273,25 @@ def katmanlari_kur(ctx: ext.CommandContext) -> ext.CommandResult:
     return ctx.apply_declarative_schema("schema.json")
 
 
+@ext.command("bakim-ekle")
+def bakim_ekle(ctx: ext.CommandContext) -> ext.CommandResult:
+    """"Bakım kayıtları" panelinin Ekle düğmesi: seçilen tesise (ctx.params["tesis"]: ilişki seçicisinin verdiği kalıcı
+    kimlik) geometrisiz bir bakım kaydı yazar (cad.records.create); ilişkinin alt alanı tesis_id onu tutar. Panelin
+    ilişki listesi Python'suz, çizimden yenilenir: komut satır döndürmez."""
+    if ctx.doc is None:
+        return ctx.message("Açık çizim yok.")
+    bakim = _katman(ctx.doc, "vitrin_bakim")
+    if bakim is None:
+        return ctx.message("Önce Vitrin › Katmanları kur: Bakım kaydı katmanı yok.")
+    from kentos.cad.types import RecordRow
+
+    satir = RecordRow(
+        attrs={"tesis_id": ctx.params["tesis"], "tarih": ctx.params["tarih"], "aciklama": ctx.params["aciklama"]}
+    )
+    cad.records.create(ctx.doc, layer_id=bakim, rows=[satir])
+    return ctx.message("Bakım kaydı eklendi.")
+
+
 @ext.command("hata-ornegi")
 def hata_ornegi(ctx: ext.CommandContext) -> ext.CommandResult:
     """Bilerek hata verir: KentOS hatayı, eklentinin günlüğünü ve Python iz kaydını (Ayrıntı) açıkça gösterir;
@@ -267,6 +349,45 @@ def taks(ctx: ext.ProcessingContext, parseller: ext.FeatureInput, yapilar: ext.F
     sinir = f"{limit:g}".replace(".", ",")  # Türkçe ondalık virgül
     ctx.summary(f"{len(parsel)} parselin TAKS'ı hesaplandı; {asan} parsel plan notundaki {sinir} sınırını aşıyor.")
     return {"parseller": cikti, "tablo": tablo, "asan": asan}
+
+
+@ext.processing("cekme")
+def cekme(ctx: ext.ProcessingContext, yapilar: ext.FeatureInput, parseller: ext.FeatureInput, mesafe: float) -> dict:
+    """Çekme mesafesi denetimi: her yapının çevresine KentOS'un yerleşik Tampon aracıyla (geometry.buffer) mesafe
+    kadar alan çizilir; alan yapının oturduğu parselin dışına taşıyorsa yapı parsel sınırına bu mesafeden yakındır.
+    Tamponu eklenti çizmez, KentOS'un aracı eklentiye verilen yapılar üzerinde çalışır (ctx.run_tool), kullanıcının
+    çizimine dokunmadan; karşılaştırma shapely ile. Yapıyı tamponuna sırası (öznitelik "sira") bağlar. Her yapının
+    kendi "cekme" özniteliğine durumu yazılır (ctx.update; girdinin tanımı writes: true)."""
+    uzaklik = float(mesafe if mesafe is not None else 3)
+    ctx.progress(0, 3, "KentOS'un Tampon aracı çalışıyor")
+    verilen = [{"type": "Feature", "geometry": f.geometry, "properties": {"sira": n}} for n, f in enumerate(yapilar)]
+    cevap = ctx.run_tool("geometry.buffer", input=verilen, distance=uzaklik)
+    tampon = {int(t.attrs.get("sira", -1)): t for t in cevap.features()}
+    ctx.progress(1, 3, "Tamponlar parsellerle karşılaştırılıyor")
+    parsel = np.array([shape(f.geometry) for f in ctx.read_features(parseller)], dtype=object)
+    agac = shapely.STRtree(parsel) if len(parsel) else None
+    cikti, tasanlar = [], []
+    for n, yapi in enumerate(yapilar):
+        t = tampon.get(n)
+        if t is None:
+            continue
+        alan = shape(t.geometry)
+        oturdugu = shape(yapi.geometry).representative_point()
+        icinde = [int(i) for i in agac.query(oturdugu, predicate="within")] if agac is not None else []
+        tasan = round(float(alan.difference(parsel[icinde[0]]).area), 2) if icinde else round(float(alan.area), 2)
+        durum = "uygun" if tasan <= 1e-6 else "taşıyor"
+        if durum == "taşıyor":
+            tasanlar.append(yapi)
+        # Yapının kendisine de yazılır: girdinin tanımı "writes": true der (KentOS kaynağı başka türlü değiştirmez).
+        ctx.update(yapi, cekme=durum)
+        etiket = yapi.attrs.get("no") or f"{n + 1}. yapı"
+        cikti.append(ext.NewFeature(geometry=t.geometry, attrs={
+            "yapi": etiket, "mesafe_m": uzaklik, "durum": durum, "tasan_alan_m2": tasan}))
+    ctx.progress(2, 3, "Sonuç yazılıyor")
+    ctx.select(tasanlar)
+    m = f"{uzaklik:g}".replace(".", ",")
+    ctx.summary(f"{len(cikti)} yapının {m} m çekme mesafesi denetlendi; {len(tasanlar)} yapı parsel sınırına daha yakın.")
+    return {"tamponlar": cikti, "tasan": len(tasanlar)}
 
 
 @ext.expr("ada-parsel")
@@ -401,6 +522,159 @@ def katman_degerleri(ctx: ext.CommandContext) -> ext.CommandResult:
     panel.set("katman", value=katman)
     panel.say("Bir alan seçin: değerleri sayılır.")
     return ctx.message("Değer say katmanla açıldı.")
+
+
+@ext.command("csv-noktalar")
+def csv_noktalar(ctx: ext.CommandContext) -> ext.CommandResult:
+    """Katmanın sağ tık menüsünden: seçilen CSV dosyasındaki noktaları o katmana ekler (x, y sütunları TM36 metre;
+    diğer sütunlar istenirse öznitelik olur). Dosyayı KentOS'un penceresi sorar (dosya seçici: yolu yazılır ya da Seç…
+    ile seçilir); eklenti yalnız kullanıcının verdiği dosyayı okur (files.userSelected). Pencerenin iki sekmesi var:
+    Dosya ve Seçenekler (ayırıcı, öznitelikler, dosyanın koordinat sistemi); sekmesiz açıklama her sayfada. Dosyanın
+    sistemi çizimin sistemiyle başlar; başkası seçilirse noktalar KentOS'un dönüşümüyle (cad.crs.transform) çizimin
+    sistemine taşınır. Tek geri alma adımıdır."""
+    katman = ctx.params.get("layer")
+    if not katman or ctx.doc is None:
+        return ctx.message("Bir katmanın sağ tık menüsünden çalışır: CSV'den nokta ekle.")
+    cevap = ctx.dialog(
+        "CSV'den nokta ekle",
+        [
+            ui.text("Her satır bir nokta: x ve y sütunları, dosyanın koordinat sisteminde."),
+            ui.file_picker(
+                "dosya", "CSV dosyası", filters=[ui.file_filter("CSV", "csv")], required=True, tab="Dosya"
+            ),
+            ui.select(
+                "ayirici",
+                "Ayırıcı",
+                [ui.choice(",", "Virgül (,)"), ui.choice(";", "Noktalı virgül (;)"), ui.choice("sekme", "Sekme")],
+                value=",",
+                tab="Seçenekler",
+            ),
+            ui.checkbox("oznitelik", "Diğer sütunlar öznitelik olsun", value=True, tab="Seçenekler"),
+            ui.crs_picker("crs", "Dosyanın koordinat sistemi", required=True, tab="Seçenekler"),
+        ],
+        ok="Ekle",
+    )
+    if cevap is None:
+        return ctx.message("Vazgeçildi: nokta eklenmedi.")
+    okunan, atlanan = [], 0
+    secilen = cevap.get("ayirici") or ","
+    ayirici = "\t" if secilen == "sekme" else secilen
+    with open(cevap["dosya"], newline="", encoding="utf-8-sig") as dosya:
+        for satir in csv.DictReader(dosya, delimiter=ayirici):
+            try:
+                x, y = float(satir.pop("x")), float(satir.pop("y"))
+            except (KeyError, TypeError, ValueError):
+                atlanan += 1
+                continue
+            oznitelikler = {k: v for k, v in satir.items() if k and v} if cevap.get("oznitelik") else {}
+            okunan.append((x, y, oznitelikler))
+    # Dosyanın sisteminden çizimin sistemine: KentOS'un dönüşümü (aynı sistemde noktalar yerinde kalır).
+    kod = int(cevap["crs"].split(":")[1])
+    donen = cad.crs.transform(
+        ctx.doc, points=[cad.CrsPoint(x=x, y=y) for x, y, _ in okunan], from_=cad.CrsSide(srid=kod)
+    ).points
+    eklenen, varamayan = 0, 0
+    for (_, _, oznitelikler), nokta in zip(okunan, donen):
+        if nokta is None:
+            varamayan += 1
+            continue
+        cad.point.create(ctx.doc, layer_id=katman, p=[nokta.x, nokta.y], attrs=oznitelikler)
+        eklenen += 1
+    ek = f"; {atlanan} satırın x ya da y'si okunamadı" if atlanan else ""
+    ek += f"; {varamayan} nokta çizimin sistemine dönüştürülemedi" if varamayan else ""
+    return ctx.message(f"{eklenen} nokta eklendi ({cevap['crs']}){ek}.")
+
+
+@ext.command("katman-csv")
+def katman_csv(ctx: ext.CommandContext) -> ext.CommandResult:
+    """Katmanın sağ tık menüsünden: katmanın nesnelerini seçilen yere CSV olarak yazar (x, y: nesnenin merkezi, TM36
+    metre; seçilen öznitelikler sütun olur). KentOS'un iki adımlı sihirbazıyla sorar (ctx.dialog(…, steps=True):
+    alanların sekmeleri adımlar): Sütunlar (hangi öznitelikler, ayırıcı) ve Dosya (kaydetme yeri: filePicker save; yolu
+    yazılır ya da Seç… ile seçilir, uzantısız ada .csv eklenir); İleri adımın alanlarını denetler. Eklenti yalnız
+    kullanıcının seçtiği yere yazar (files.userSelectedWrite). Çizime dokunmaz."""
+    katman = ctx.params.get("layer")
+    if not katman or ctx.doc is None:
+        return ctx.message("Bir katmanın sağ tık menüsünden çalışır: Katmanı CSV'ye yaz.")
+    kayitlar = list(ctx.doc.entities(layer=katman))
+    adlar = sorted({ad for k in kayitlar for ad in (k.entity.attrs or {})})
+    sutun_alani = (
+        ui.multi_select("sutunlar", "Sütunlar", adlar, value=adlar, tab="Sütunlar")
+        if adlar
+        else ui.text("Katmanın nesnelerinde öznitelik yok: yalnız x ve y yazılır.", tab="Sütunlar")
+    )
+    cevap = ctx.dialog(
+        "Katmanı CSV'ye yaz",
+        [
+            ui.text("Her nesne bir satır: x ve y nesnenin merkezi (TM36, metre); seçilen öznitelikler sütun olur."),
+            sutun_alani,
+            ui.select(
+                "ayirici",
+                "Ayırıcı",
+                [ui.choice(",", "Virgül (,)"), ui.choice(";", "Noktalı virgül (;)")],
+                value=",",
+                tab="Sütunlar",
+            ),
+            ui.file_picker(
+                "yer",
+                "Kaydedilecek dosya",
+                filters=[ui.file_filter("CSV", "csv")],
+                save=True,
+                default_name=f"{katman}.csv",
+                required=True,
+                tab="Dosya",
+            ),
+        ],
+        ok="Yaz",
+        steps=True,
+    )
+    if cevap is None:
+        return ctx.message("Vazgeçildi: dosya yazılmadı.")
+    sutunlar = [ad for ad in adlar if ad in (cevap.get("sutunlar") or [])]
+    satirlar = [(merkez, k.entity.attrs or {}) for k in kayitlar if (merkez := _merkez(k.entity))]
+    with open(cevap["yer"], "w", newline="", encoding="utf-8") as dosya:
+        yazici = csv.writer(dosya, delimiter=cevap.get("ayirici") or ",")
+        yazici.writerow(["x", "y", *sutunlar])
+        for (x, y), oznitelikler in satirlar:
+            yazici.writerow([f"{x:.3f}", f"{y:.3f}", *(oznitelikler.get(ad, "") for ad in sutunlar)])
+    return ctx.message(f"{len(satirlar)} nesne, {len(sutunlar)} öznitelik sütunuyla yazıldı: {cevap['yer']}")
+
+
+def _merkez(nesne) -> tuple[float, float] | None:
+    """Nesnenin merkezi: noktanın kendisi, alanın ağırlık merkezi, çizginin ilk noktası; şekli olmayanda yok."""
+    if (p := getattr(nesne, "p", None)) is not None:
+        return float(p.x), float(p.y)
+    noktalar = getattr(nesne, "pts", None) or []
+    if len(noktalar) > 2 and getattr(nesne, "kind", "") == "polygon":
+        merkez = Polygon(noktalar).centroid
+        return merkez.x, merkez.y
+    return (float(noktalar[0][0]), float(noktalar[0][1])) if noktalar else None
+
+
+@ext.command("yapi-tamponu")
+def yapi_tamponu(ctx: ext.CommandContext) -> ext.CommandResult:
+    """Vitrin sekmesinden: yapıların çevresine KentOS'un yerleşik Tampon aracıyla (geometry.buffer) sorulan uzaklıkta
+    alan çizer, yeni bir katmana. Eklenti aracı kendisi yazmaz, KentOS'unkini çağırır (ctx.run_tool): araç bu komutun
+    hakkıyla çalışır, yazdıkları komutun tek geri alma adımına girer."""
+    if ctx.doc is None:
+        return ctx.message("Açık çizim yok.")
+    cevap = ctx.dialog(
+        "Yapı tamponu",
+        [
+            ui.text("KentOS'un Tampon aracı yapıların çevresine bu uzaklıkta alan çizer; sonuç yeni katmanda."),
+            ui.number_field("uzaklik", "Uzaklık", value=3, min=0.5, max=50, unit="m", required=True),
+        ],
+        ok="Çiz",
+    )
+    if cevap is None:
+        return ctx.message("Vazgeçildi: tampon çizilmedi.")
+    uzaklik = float(cevap["uzaklik"])
+    sonuc = ctx.run_tool(
+        "geometry.buffer",
+        input=ext.layer_input("yapi"),
+        distance=uzaklik,
+        layer=ext.new_layer(f"Yapı tamponu {uzaklik:g} m"),
+    )
+    return ctx.message(f"{sonuc.summary} (KentOS'un Tampon aracı, {uzaklik:g} m).")
 
 
 @ext.command("deger-sec")

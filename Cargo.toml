@@ -17,6 +17,9 @@ members = [
     "crates/native/python-env",
     # The standards packages' Python rules asked from Rust (docs/adr/8075 §2.6).
     "crates/native/standards",
+    # An extension's İşlemler tools run in its own Python process: the desktop and the headless hosts share it
+    # (docs/adr/8057 §70).
+    "crates/native/extension-tools",
     "crates/shared/qml",
     "crates/shared/maplibre",
     # DWG codec adapter (ADR 0586): OpenCADStudio's pinned, MPL-2.0 codec;
@@ -25,7 +28,7 @@ members = [
     # Point clouds (docs/adr/0207): LAS, LAZ, COPC and text clouds, their index, looks and
     # operations; a crate of its own so the formats worker does not carry LAZ.
     "crates/shared/pointcloud",
-    # NCZ drawings (docs/adr/0138): a port of a GPL-2.0-or-later NCZ reader
+    # NCZ drawings (docs/adr/0138): a port of an NCZ reader, GPL-2.0-or-later
     # (crates/shared/ncz/README.md: not distributed before the author's permission).
     "crates/shared/ncz",
     # The project file, .kcad v2 (docs/specs/kcad-v2.md, docs/adr/0025).
@@ -138,6 +141,7 @@ default-members = [
     "crates/native/extension-host",
     "crates/native/python-env",
     "crates/native/standards",
+    "crates/native/extension-tools",
     "crates/shared/qml",
     "crates/shared/maplibre",
     "crates/native/dwg",
@@ -252,6 +256,15 @@ sqlx = { version = "=0.9.0", default-features = false, features = ["runtime-toki
 tower = { version = "=0.5.3", features = ["util"] }
 tower-http = { version = "=0.7.1", features = ["request-id", "timeout", "limit", "trace", "catch-panic", "util"] }
 uuid = { version = "=1.26.1", features = ["v4", "v7", "serde"] }
+# The server job's process group and its end (docs/adr/8057 §58): kill(2) of the group and waitid(2) without reaping;
+# std has neither. Unix only. The cloud audit box's filter (§63) takes its call numbers from it, constants only.
+libc = "=0.2.189"
+# The cloud audit box (docs/adr/8057 §61): Landlock's safe interface (rulesets, restrict_self); only the job runner,
+# only Linux.
+landlock = "=0.4.7"
+# The cloud audit box's seccomp filter (docs/adr/8057 §63): compiled and installed through a safe interface, pure Rust
+# over libc, no system library; only the job runner, only Linux on x86_64 and aarch64.
+seccompiler = "=0.5.0"
 # GeoPackage is SQLite (docs/adr/0502): SQLite compiled in, no system library; only crates/native/geopackage.
 rusqlite = { version = "=0.39.0", features = ["bundled", "functions"] }
 jsonwebtoken = { version = "=11.1.0", default-features = false, features = ["rust_crypto", "use_pem"] }

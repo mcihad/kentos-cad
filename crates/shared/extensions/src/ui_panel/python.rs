@@ -56,6 +56,12 @@ fn python_type(root: &Value, property: &Value) -> String {
         "boolean" => "bool".to_owned(),
         "array" => match property.pointer("/items/$ref").and_then(Value::as_str) {
             Some(r) if r.ends_with("/Choice") => "Sequence[Choice | str]".to_owned(),
+            // Another object (a file picker's kinds): as the schema writes it.
+            Some(_) => "Sequence[dict[str, Any]]".to_owned(),
+            // Numbers (a point's x and y).
+            None if property.pointer("/items/type").and_then(Value::as_str) == Some("number") => {
+                "Sequence[float]".to_owned()
+            }
             _ => "Sequence[str]".to_owned(),
         },
         _ => "str".to_owned(),
@@ -121,9 +127,16 @@ pub fn python_builders() -> String {
          def choice(value: str, label: str | None = None) -> Choice:\n    \
          \"\"\"One option of a ``select`` or a ``multiSelect``, its label the value when none is given.\"\"\"\n    \
          return {\"value\": str(value), \"label\": str(value if label is None else label)}\n\n\n\
-         def panel(title: str, body: Sequence[dict[str, Any]]) -> dict[str, Any]:\n    \
-         \"\"\"A whole panel (``ui/<id>.panel.json``): its title and components.\"\"\"\n    \
-         return {\"format\": FORMAT, \"schemaVersion\": SCHEMA_VERSION, \"title\": str(title), \"body\": list(body)}\n",
+         def file_filter(name: str, *extensions: str) -> dict[str, Any]:\n    \
+         \"\"\"A kind of file a ``filePicker`` offers: a name, extensions without dots (``file_filter(\"CSV\", \"csv\")``).\"\"\"\n    \
+         return {\"name\": str(name), \"extensions\": [str(e).lstrip(\".\").lower() for e in extensions]}\n\n\n\
+         def panel(title: str, body: Sequence[dict[str, Any]], *, split: bool = False) -> dict[str, Any]:\n    \
+         \"\"\"A whole panel (``ui/<id>.panel.json``): its title and components; ``split``: its outputs under a sash, in\n    \
+         a scroller of their own (docs/adr/8057 §69).\"\"\"\n    \
+         out: dict[str, Any] = {\"format\": FORMAT, \"schemaVersion\": SCHEMA_VERSION, \"title\": str(title), \"body\": list(body)}\n    \
+         if split:\n        \
+         out[\"split\"] = True\n    \
+         return out\n",
     );
     let Some(kinds) = root
         .pointer("/$defs/Component/oneOf")
@@ -153,12 +166,13 @@ pub fn python_builders() -> String {
                     .collect()
             })
             .unwrap_or_default();
-        // Its keys in the order KentOS lists them, then its rules and its worked-out values.
+        // Its keys in the order KentOS lists them, then its rules, its worked-out values, its tab and its row.
         let mut order: Vec<&str> = keys.to_vec();
         order.extend(
             super::rules::RULE_KEYS
                 .iter()
                 .chain(super::values::VALUE_KEYS.iter())
+                .chain([super::tabs::TAB_KEY, super::rows::ROW_KEY].iter())
                 .copied()
                 .filter(|r| props.get(*r).is_some()),
         );
@@ -238,7 +252,12 @@ pub fn python_builders() -> String {
         }
         out.push_str("    return out\n");
     }
-    let mut all = vec!["Choice".to_owned(), "choice".to_owned(), "panel".to_owned()];
+    let mut all = vec![
+        "Choice".to_owned(),
+        "choice".to_owned(),
+        "file_filter".to_owned(),
+        "panel".to_owned(),
+    ];
     all.extend(names);
     // `__all__`, its names packed into lines of the module's width.
     out.push_str("\n\n__all__ = [\n");
@@ -279,11 +298,11 @@ mod tests {
             "the panel's schema changed: KENTOS_WRITE_SDK=1 cargo test -p kentos-extensions --lib -- python_builders"
         );
         for function in [
-            "def text_field(\n    id: str,\n    label: str,\n    *,\n    placeholder: str | None = None,\n    value: str | None = None,\n    required: bool = False,\n    visible_when: str | None = None,\n    required_when: str | None = None,\n    enabled_when: str | None = None,\n    calculate: str | None = None,\n    default_expr: str | None = None,\n) -> dict[str, Any]:",
+            "def text_field(\n    id: str,\n    label: str,\n    *,\n    placeholder: str | None = None,\n    value: str | None = None,\n    required: bool = False,\n    visible_when: str | None = None,\n    required_when: str | None = None,\n    enabled_when: str | None = None,\n    calculate: str | None = None,\n    default_expr: str | None = None,\n    tab: str | None = None,\n    row: str | None = None,\n) -> dict[str, Any]:",
             "    layer: str | None = None,\n    geometry: str | None = None,\n    multiple: bool = True,\n",
             "def select(\n    id: str,\n    label: str,\n    options: Sequence[Choice | str],\n    *,\n    value: str | None = None,\n",
             "    kind: Literal[\"bar\", \"pie\", \"histogram\", \"line\"] | None = None,\n",
-            "def text(\n    text: str,\n    *,\n    id: str | None = None,\n    visible_when: str | None = None,\n    calculate: str | None = None,\n) -> dict[str, Any]:\n    \"\"\"A line of text.\"\"\"",
+            "def text(\n    text: str,\n    *,\n    id: str | None = None,\n    visible_when: str | None = None,\n    calculate: str | None = None,\n    tab: str | None = None,\n    row: str | None = None,\n) -> dict[str, Any]:\n    \"\"\"A line of text.\"\"\"",
         ] {
             assert!(made.contains(function), "{function}\n{made}");
         }

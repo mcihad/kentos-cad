@@ -70,13 +70,15 @@ pub enum BottomTab {
     CadInspection,
     /// Servis bilgisi's answers (services/info.rs, docs/adr/0208 §11).
     ServiceInfo,
+    /// Çalışan işler: the background work, whoever started it (works/, docs/adr/8057 §102).
+    Works,
     Messages,
     Python,
 }
 
 impl BottomTab {
     /// Every tab in the web's order; a module's program shows its own of them (module_surfaces.rs).
-    pub(crate) const ALL: [BottomTab; 15] = [
+    pub(crate) const ALL: [BottomTab; 16] = [
         BottomTab::History,
         BottomTab::Coords,
         BottomTab::Points,
@@ -90,6 +92,7 @@ impl BottomTab {
         BottomTab::ExtAudit,
         BottomTab::CadInspection,
         BottomTab::ServiceInfo,
+        BottomTab::Works,
         BottomTab::Messages,
         BottomTab::Python,
     ];
@@ -110,6 +113,7 @@ impl BottomTab {
             BottomTab::ExtAudit => "Eklenti denetimi",
             BottomTab::CadInspection => crate::cad_inspection::TAB,
             BottomTab::ServiceInfo => plan::TAB_SERVICE_INFO,
+            BottomTab::Works => "Çalışan işler",
             BottomTab::Messages => plan::TAB_MESSAGES,
             BottomTab::Python => "Python",
         }
@@ -131,6 +135,7 @@ impl BottomTab {
             BottomTab::ExtAudit => "standardsCheck",
             BottomTab::CadInspection => "audit",
             BottomTab::ServiceInfo => "serviceInfo",
+            BottomTab::Works => crate::works::GLYPH,
             BottomTab::Messages => "warning",
             BottomTab::Python => "terminal",
         }
@@ -236,6 +241,7 @@ impl App {
             BottomTab::CadInspection => self.cad_inspection_tab(),
             BottomTab::ServiceInfo => self.service_info_tab(),
             BottomTab::Messages => self.log_list(LogListing::Messages),
+            BottomTab::Works => self.works_tab(),
             BottomTab::Python => self.python_tab(),
         };
         column![

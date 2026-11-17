@@ -1,0 +1,50 @@
+{
+  "format": "kentos.ui.panel",
+  "schemaVersion": 1,
+  "title": "Yakın yapılar",
+  "body": [
+    {
+      "type": "text",
+      "text": "Haritadan seç'e basıp haritada bir nokta gösterin ya da x, y yazın: o noktaya verilen uzaklıktaki yapılar yakından uzağa listelenir; satıra tıklamak yapıyı gösterir. Uzaklık km ile de yazılır: 0,03 km."
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "pointPicker",
+      "id": "nokta",
+      "label": "Nokta",
+      "required": true,
+      "onChange": "yakin-yapilar",
+      "row": "arama"
+    },
+    {
+      "type": "numberField",
+      "id": "uzaklik",
+      "label": "Uzaklık",
+      "unit": "m",
+      "units": [
+        "m",
+        "km"
+      ],
+      "value": 25,
+      "min": 1,
+      "max": 1000,
+      "required": true,
+      "row": "arama",
+      "step": 5
+    },
+    {
+      "type": "button",
+      "id": "bul",
+      "label": "Bul",
+      "command": "yakin-yapilar",
+      "primary": true
+    },
+    {
+      "type": "table",
+      "id": "sonuc",
+      "label": "Yakındaki yapılar"
+    }
+  ]
+}

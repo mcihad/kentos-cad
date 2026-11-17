@@ -1,0 +1,126 @@
+{
+  "format": "kentos.auditExamples",
+  "schemaVersion": 1,
+  "examples": [
+    {
+      "title": "Numarasız yapı sıradaki numarayı alır",
+      "features": [
+        {
+          "layer": "yapi",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  10,
+                  0
+                ],
+                [
+                  10,
+                  12
+                ],
+                [
+                  0,
+                  12
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          },
+          "attrs": {
+            "no": "Y-01"
+          }
+        },
+        {
+          "layer": "yapi",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  20,
+                  0
+                ],
+                [
+                  30,
+                  0
+                ],
+                [
+                  30,
+                  12
+                ],
+                [
+                  20,
+                  12
+                ],
+                [
+                  20,
+                  0
+                ]
+              ]
+            ]
+          }
+        }
+      ],
+      "expect": {
+        "count": 1,
+        "has": [
+          {
+            "severity": "warning",
+            "message": "sıradaki numara Y-02",
+            "feature": 1,
+            "fix": "cad.entities.set"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Hepsi numaralı: bulgu yok",
+      "features": [
+        {
+          "layer": "yapi",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  10,
+                  0
+                ],
+                [
+                  10,
+                  12
+                ],
+                [
+                  0,
+                  12
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          },
+          "attrs": {
+            "no": "Y-01"
+          }
+        }
+      ],
+      "expect": {
+        "count": 0
+      }
+    }
+  ]
+}

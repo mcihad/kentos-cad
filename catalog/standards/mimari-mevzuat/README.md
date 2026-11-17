@@ -10,4 +10,4 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
 - **Olgular** KentOS'un ölçtüğüdür (`facts.building`, `facts.permit`); kural çizimi okumaz.
 - **Bağımsız durumlar** `fixtures/standards/v1/asansor.json`: beklenen sonuçlar mevzuat metninden elle çıkarıldı.
 
-Sınama: `python3 -I catalog/standards/mimari-mevzuat/tests/test_asansor.py`.
+Sınama: `python3 -I catalog/standards/tests/mimari-mevzuat/test_asansor.py`.

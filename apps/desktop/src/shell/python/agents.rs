@@ -80,6 +80,9 @@ impl App {
                     ),
                 );
                 self.python.link = Some(open);
+                // The commands' titles read on their own thread now, for Çalışan işler to name an agent's jobs
+                // (works/): until they are read a job says its command's id.
+                let _ = kentos_headless::command_title("");
                 Task::batch([task, super::view::follow()])
             }
             Err(e) => {
@@ -209,6 +212,9 @@ impl App {
                     })?,
             ),
         };
+        // Asistan's agent sent no attribute value (its setting or the organisation's policy): the drawing read as if
+        // every field were hidden (docs/adr/8057 §103, PY-AI-13). An agent on the link is its own program.
+        let everything = who == "Asistan" && self.assistant.withholds_values();
         // A module's program runs only the product commands it offers (docs/adr/8056 §1), as its interface does.
         if let Some(why) = self.offered_to_agent(method, &params) {
             return Err(refused("not_offered", &why));
@@ -299,6 +305,16 @@ impl App {
                 };
                 return answer.map_err(|why| refused("invalid_input", &why));
             }
+            // Its Kataloğa gönder window for the user (extensions/submit.rs, docs/adr/8057 §107): the user sends.
+            "submit_extension" => {
+                let id = params
+                    .get("id")
+                    .and_then(Value::as_str)
+                    .ok_or_else(|| refused("invalid_request", "id gerekli: eklentinin kimliği."))?;
+                return self
+                    .agent_submit(id, who_agent(who))
+                    .map_err(|why| refused("invalid_input", &why));
+            }
             "preview_extension" => {
                 let id = params
                     .get("id")
@@ -314,15 +330,55 @@ impl App {
         // A trial (extensions/trial.rs, §37) reads none: it runs on a synthetic drawing of its own.
         match method {
             "trial" => {
-                return self
+                let started = self
                     .ext_trial_start(&params)
-                    .map_err(|(code, why)| (code.to_owned(), why));
+                    .map_err(|(code, why)| (code.to_owned(), why))?;
+                // Asked by an agent on the link or by Asistan: Çalışan işler says which (works/).
+                if let Some(trial) = &mut self.extensions.trial {
+                    trial.by = crate::works::By::of(who);
+                }
+                return Ok(started);
             }
             "trial_report" => return Ok(self.ext_trial_report()),
             "audits" => return Ok(self.ext_audit_rules()),
+            // The installed extensions for the agents' common catalog (extensions/catalog_agents.rs, §109).
+            "extensions" => return Ok(self.ext_catalog()),
+            // An extension's debugging report (extensions/report.rs, §110): its keys hidden; its words through the
+            // agent's veil, as an extension's findings go (§103).
+            "extension_report" => {
+                let id = params
+                    .get("id")
+                    .and_then(Value::as_str)
+                    .ok_or_else(|| refused("invalid_request", "id gerekli: eklentinin kimliği."))?;
+                let report = self.extension_report(id).ok_or_else(|| {
+                    refused(
+                        "unknown_extension",
+                        &format!("“{id}” kurulu bir eklenti değil: catalog.search kurulu eklentileri bulur."),
+                    )
+                })?;
+                let answer = json!({ "id": id, "report": report });
+                let veil = self
+                    .document
+                    .as_ref()
+                    .and_then(|d| kentos_headless::Veil::for_agent(&d.model, everything));
+                return Ok(match veil {
+                    Some(veil) => veil.cut(answer),
+                    None => answer,
+                });
+            }
             "audit_report" => {
                 let offset = params.get("offset").and_then(Value::as_u64).unwrap_or(0);
-                return Ok(self.ext_audit_report(usize::try_from(offset).unwrap_or(usize::MAX)));
+                let report = self.ext_audit_report(usize::try_from(offset).unwrap_or(usize::MAX));
+                // An extension's findings are its own words about the drawing: they go through the agent's veil as an
+                // answer of the drawing's does (docs/adr/8057 §103).
+                let veil = self
+                    .document
+                    .as_ref()
+                    .and_then(|d| kentos_headless::Veil::for_agent(&d.model, everything));
+                return Ok(match veil {
+                    Some(veil) => veil.cut(report),
+                    None => report,
+                });
             }
             "audit" | "audit_fixed" => {
                 if named.is_some() && named != front {
@@ -338,7 +394,13 @@ impl App {
                     )
                 })?;
                 let answer = if method == "audit" {
-                    self.ext_audit_start_rule(rule)
+                    let started = self.ext_audit_start_rule(rule);
+                    if started.is_ok()
+                        && let Some(audit) = &mut self.extensions.audit
+                    {
+                        audit.by = crate::works::By::of(who);
+                    }
+                    started
                 } else {
                     let finding = params.get("finding").and_then(Value::as_u64).unwrap_or(0);
                     self.ext_audit_fixed(rule, usize::try_from(finding).unwrap_or(0))
@@ -378,12 +440,13 @@ impl App {
                 let method = if method == "wait" { "job" } else { method };
                 let before = doc.model.revision();
                 // An agent reads no value of a field the drawing hides (docs/adr/0738 §1).
-                let mut answer = kentos_headless::rpc::call_for_agent(
+                let mut answer = kentos_headless::rpc::call_for_agent_with(
                     &mut doc.model,
                     Some(&mut self.python.jobs),
                     doc.path.as_deref(),
                     method,
                     &params,
+                    everything,
                 )
                 .map_err(|e| (e.code.to_owned(), e.message))?;
                 if method == "summary"
@@ -402,6 +465,7 @@ impl App {
                 // Whether it ran a call's execution to its end: a call's answer says it; a job's, by the op it was
                 // started with (kept until it ends).
                 let job = answer.get("id").and_then(Value::as_str).map(str::to_owned);
+                let session = doc.session;
                 let executed = match method {
                     "call" => {
                         execute
@@ -415,11 +479,21 @@ impl App {
                         if method == "start" && execute && going {
                             self.python.executing.insert(id.to_owned());
                         }
+                        // Who started it, on which drawing and when, for Çalışan işler (works/, docs/adr/8057 §102).
+                        if method == "start" && going {
+                            self.python.job_starts.insert(
+                                id.to_owned(),
+                                crate::works::JobStart::of(
+                                    who, session, !execute, &params, &answer,
+                                ),
+                            );
+                        }
                         let executed = phase == "done"
                             && (self.python.executing.contains(id)
                                 || (method == "start" && execute));
                         if !going {
                             self.python.executing.remove(id);
+                            self.python.job_starts.remove(id);
                         }
                         executed
                     }),

@@ -119,6 +119,9 @@ pub struct Usage {
     pub input_tokens: u64,
     pub output_tokens: u64,
     pub elapsed: Duration,
+    /// The conversation's tokens so far, in and out, when the host counts them; with its limit, when it has one.
+    pub conversation: Option<u64>,
+    pub limit: Option<u64>,
 }
 
 #[derive(Debug, Clone)]

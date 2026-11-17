@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::providers::{Preset, ProviderKind};
 
-pub use file::device_file;
+pub use file::{device_file, device_folder};
 
 /// Where an agent's API key comes from.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -32,6 +32,29 @@ pub enum KeySource {
     Session,
     /// The provider's environment variable (`ANTHROPIC_API_KEY` …).
     Environment,
+}
+
+/// What an agent may do with the Python it writes (docs/adr/8057 §104, PY-AI-11): its workshop's code, run in a trial
+/// or loaded over the extension the user installed, runs on this computer with the user's rights, a class of its own
+/// beside the agent's tool calls on the drawing.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum PythonRuns {
+    /// Each run waits for the user's Onayla.
+    #[default]
+    Ask,
+    /// Runs without asking.
+    Allow,
+    /// Never: the tools that run it are not offered.
+    Off,
+}
+
+impl PythonRuns {
+    pub const ALL: [PythonRuns; 3] = [PythonRuns::Ask, PythonRuns::Allow, PythonRuns::Off];
+
+    fn is_ask(&self) -> bool {
+        *self == PythonRuns::Ask
+    }
 }
 
 /// An agent: a provider, a model and how to reach it.
@@ -52,6 +75,19 @@ pub struct AgentProfile {
     pub key: KeySource,
     #[serde(default)]
     pub default: bool,
+    /// The most tokens (in and out) one conversation may spend; none: no limit (docs/adr/8056 §6).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub conversation_tokens: Option<u64>,
+    /// The most tokens this agent may spend a day on this computer; none: no limit.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub daily_tokens: Option<u64>,
+    /// No attribute value of the drawing is sent to this agent: it reads the drawing as if every field were hidden
+    /// (docs/adr/8057 §103, PY-AI-13); its geometry, layers, field names and texts go.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub withhold_values: bool,
+    /// What it may do with the Python it writes (docs/adr/8057 §104, PY-AI-11).
+    #[serde(default, skip_serializing_if = "PythonRuns::is_ask")]
+    pub python_runs: PythonRuns,
 }
 
 /// A field of the agent window, for where a problem is said.
@@ -60,6 +96,8 @@ pub enum ProfileField {
     Name,
     Model,
     BaseUrl,
+    ConversationTokens,
+    DailyTokens,
 }
 
 impl AgentProfile {
@@ -81,11 +119,21 @@ impl AgentProfile {
                 KeySource::Environment
             },
             default: false,
+            conversation_tokens: None,
+            daily_tokens: None,
+            withhold_values: false,
+            python_runs: PythonRuns::Ask,
         }
     }
 
     pub fn preset(&self) -> Preset {
         self.kind.preset()
+    }
+
+    /// Whether the agent's server is on this computer (`localhost`, a loopback address): what it is sent stays here
+    /// (docs/adr/8056 §7).
+    pub fn on_this_computer(&self) -> bool {
+        crate::http::endpoint(self).is_ok_and(|e| e.local)
     }
 
     /// The address requests go to: the agent's own, else the provider's; none when neither is there.

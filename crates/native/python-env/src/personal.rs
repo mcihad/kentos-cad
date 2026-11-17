@@ -731,10 +731,14 @@ fn sync(
     if ran.status == Some(0) {
         return Ok(());
     }
-    Err(InstallError::Failed {
-        cause: python::cause_of(&ran.stderr),
-        said: python::said(&ran.stderr).unwrap_or_default(),
-    })
+    let cause = python::cause_of(&ran.stderr);
+    // A package's build says its own sentence (PY-UV-20).
+    let said = (cause == Cause::Build)
+        .then(|| python::build_words(&ran.stderr))
+        .flatten()
+        .or_else(|| python::said(&ran.stderr))
+        .unwrap_or_default();
+    Err(InstallError::Failed { cause, said })
 }
 
 /// The environment's packages with a newer version in the index (`uv pip list --outdated`); KentOS's library is not

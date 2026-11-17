@@ -24,7 +24,7 @@
 //!   is removed with it.
 
 use std::ffi::{OsStr, OsString};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
 use iced::Task;
@@ -217,19 +217,8 @@ impl Launch {
     }
 }
 
-/// The interpreter's arguments for an extension's process: isolated (`-I`: no user site, no environment variables,
-/// not the working folder on the path), its bytecode in `pycache`.
-pub(crate) fn interpreter_args(pycache: &Path) -> Vec<OsString> {
-    let mut prefix = OsString::from("pycache_prefix=");
-    prefix.push(pycache);
-    vec![
-        "-I".into(),
-        "-X".into(),
-        prefix,
-        "-m".into(),
-        "kentos.ext_host".into(),
-    ]
-}
+/// The interpreter's arguments for an extension's process, the headless hosts' too (`kentos_python_env::process`).
+pub(crate) use kentos_python_env::process::interpreter_args;
 
 /// What finding the environment needs, gathered without touching the disk.
 struct Plan {
@@ -238,6 +227,8 @@ struct Plan {
     root: PathBuf,
     interpreter: kentos_python_env::python::Interpreter,
     lock_file: String,
+    /// Installed from a working folder: its environment is a development one (docs/adr/8057 §97).
+    development: bool,
 }
 
 fn refused(code: &'static str, message: &str) -> HeadlessError {
@@ -246,7 +237,7 @@ fn refused(code: &'static str, message: &str) -> HeadlessError {
 
 /// Whether a method of the broker writes the drawing: a command's execute (by `run`, or by `call`, whose form is
 /// execute when not given) and a replay.
-fn writes(method: &str, params: &Value) -> bool {
+pub(super) fn writes(method: &str, params: &Value) -> bool {
     let op = params.get("op").and_then(Value::as_str);
     match method {
         "run" => op == Some("execute"),
@@ -258,7 +249,7 @@ fn writes(method: &str, params: &Value) -> bool {
 
 /// The extension whose tool a broker call runs (`cad.processing.run` or `batch` of an `ext.<eklenti>.<araç>`), when it
 /// is not the caller's own (PY-RUN-15, docs/adr/8057 §16).
-fn others_tool<'a>(ext: &str, params: &'a Value) -> Option<&'a str> {
+pub(super) fn others_tool<'a>(ext: &str, params: &'a Value) -> Option<&'a str> {
     let command = params.get("command").and_then(Value::as_str)?;
     if !matches!(command, "cad.processing.run" | "cad.processing.batch") {
         return None;
@@ -267,8 +258,24 @@ fn others_tool<'a>(ext: &str, params: &'a Value) -> Option<&'a str> {
     kentos_commands::action_tool_extension(tool).filter(|owner| *owner != ext)
 }
 
+/// Why an extension may not run `owner`'s tool: it does not list it among its dependencies (PY-RUN-15).
+pub(super) fn undeclared(owner: &str) -> String {
+    format!(
+        "Eklenti, bağımlılıklarında bildirmediği “{owner}” eklentisinin aracını çalıştıramaz: manifestin \
+         dependencies.extensions listesine ekleyin."
+    )
+}
+
+/// Why the broker does not answer a method it does not know ([`answered`]).
+pub(super) const NOT_FOR_EXTENSIONS: &str =
+    "Eklentiler bunu isteyemez: geri alma, yineleme ve dosya işlemleri kullanıcınındır.";
+/// Why an extension without `document.write` is not answered a write.
+pub(super) const NO_WRITE: &str = "Eklenti çizime yazma izni (document.write) istemedi; yazamaz.";
+/// Why an extension without `document.read` is not answered a read.
+pub(super) const NO_READ: &str = "Eklenti çizimi okuma izni (document.read) istemedi; okuyamaz.";
+
 /// What the broker answers at all; anything else (undo, redo, files) is the user's, never an extension's.
-fn answered(method: &str) -> bool {
+pub(super) fn answered(method: &str) -> bool {
     matches!(
         method,
         "summary"
@@ -302,12 +309,7 @@ impl App {
             .as_ref()
             .and_then(|r| r.manifest(ext))
             .is_some_and(|m| m.dependencies.extensions.iter().any(|d| d.id == owner));
-        (!declared).then(|| {
-            format!(
-                "Eklenti, bağımlılıklarında bildirmediği “{owner}” eklentisinin aracını çalıştıramaz: manifestin \
-                 dependencies.extensions listesine ekleyin."
-            )
-        })
+        (!declared).then(|| undeclared(owner))
     }
 
     /// The contribution's handler and what finding its environment needs; why not, in a sentence, when it cannot run.
@@ -372,6 +374,7 @@ impl App {
             root: root.clone(),
             interpreter: interpreter.clone(),
             lock_file: project.lock_file.clone(),
+            development: registry.developed(ext),
         })
     }
 
@@ -430,6 +433,7 @@ impl App {
                     &plan.launch.version,
                     &lock,
                     &plan.interpreter.version,
+                    plan.development,
                 )
                 .ok_or_else(|| {
                     "Bu eklentinin Python ortamı hazırlanmadı: Eklentiler › Python ortamı."
@@ -1013,23 +1017,14 @@ impl App {
             _ => {}
         }
         if !answered(method) {
-            return Err(refused(
-                "not_for_extensions",
-                "Eklentiler bunu isteyemez: geri alma, yineleme ve dosya işlemleri kullanıcınındır.",
-            ));
+            return Err(refused("not_for_extensions", NOT_FOR_EXTENSIONS));
         }
         let write = writes(method, params);
         if write && !run.write {
-            return Err(refused(
-                "capability",
-                "Eklenti çizime yazma izni (document.write) istemedi; yazamaz.",
-            ));
+            return Err(refused("capability", NO_WRITE));
         }
         if !write && !run.read {
-            return Err(refused(
-                "capability",
-                "Eklenti çizimi okuma izni (document.read) istemedi; okuyamaz.",
-            ));
+            return Err(refused("capability", NO_READ));
         }
         let Some(doc) = self.document.as_mut() else {
             return Err(refused("no_document", "Masaüstünde açık çizim yok."));
@@ -1065,16 +1060,20 @@ impl App {
         )
     }
 
-    /// Ends a run's step, kept or taken back; whether it had written.
+    /// Ends a run's step on its own drawing, kept or taken back, whether that drawing is on screen or set aside in its
+    /// tab (docs/adr/8057 §125); whether it had written.
     fn ext_close(&mut self, run: &mut ExtRun, keep: bool) -> bool {
         let Some(group) = run.group.take() else {
             return false;
         };
-        let Some(doc) = self
-            .document
-            .as_mut()
-            .filter(|d| Some(d.session) == run.session)
-        else {
+        let Some(session) = run.session else {
+            return false;
+        };
+        let on_screen = self.document.as_mut().filter(|d| d.session == session);
+        let Some(doc) = (match on_screen {
+            Some(doc) => Some(doc),
+            None => self.doc_tabs.find_mut(session),
+        }) else {
             return false;
         };
         let wrote = doc.model.group_changes() > 0;
@@ -1105,7 +1104,7 @@ impl App {
         let ok = m.get("ok").and_then(Value::as_bool) == Some(true);
         let keep = ok && !run.poisoned;
         let wrote = self.ext_close(&mut run, keep);
-        let seconds = run.started.elapsed().as_secs_f64();
+        let seconds = kentos_ui::attribute::number::real(run.started.elapsed().as_secs_f64(), 1);
         // A panel's button: its rows and words go to the panel it started from (panels.rs, docs/adr/8057 §24).
         if let Some(origin) = run.origin.clone() {
             if ok {
@@ -1159,7 +1158,7 @@ impl App {
             if run.poisoned && wrote {
                 body.push_str(" Bir grubu başarısız oldu: çizime yazdıkları geri alındı.");
             }
-            self.extension_worked(ext, &part, "run_done", &format!("{said} ({seconds:.1} sn)"));
+            self.extension_worked(ext, &part, "run_done", &format!("{said} ({seconds} sn)"));
             self.toast(Toast::success(format!("{name}: {title}")).body(body));
             self.extensions.result = Some((ext.to_owned(), title, result));
         } else if m.get("stopped").and_then(Value::as_bool) == Some(true) {
@@ -1299,6 +1298,12 @@ impl App {
         let Some(captured) = self.extensions.captured.take() else {
             return Task::none();
         };
+        // A panel's shape picker asked for it (panel_points.rs, docs/adr/8057 §62), not a map tool.
+        if self.extensions.shape_pick.is_some() {
+            return self
+                .ext_panel_shape_drawn(captured)
+                .unwrap_or_else(Task::none);
+        }
         let Some(c) = self.extensions.capturing.clone() else {
             return Task::none();
         };

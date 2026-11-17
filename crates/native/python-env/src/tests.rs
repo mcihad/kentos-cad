@@ -609,6 +609,59 @@ fn a_failed_install_says_why_and_what_to_do() {
     assert!(InstallError::TimedOut.words("3.12").contains("20 dakikada"));
 }
 
+/// uv 0.11's words when a package's build from its source fails (a build backend that stops, offline): the package
+/// and the build's last word said, as the package's failure and not the extension's; the build's own `error:` line is
+/// not taken for uv's (docs/adr/8057 §94, PY-UV-20).
+#[test]
+fn a_failed_build_is_said_as_the_packages() {
+    let wrapped = "Resolved 2 packages in 1ms\n   Building kirik @ file:///tmp/derleme/kirik-0.1.tar.gz\n  × Failed \
+                   to build `kirik @\n  │ file:///tmp/derleme/kirik-0.1.tar.gz`\n  ├─▶ The build backend returned an \
+                   error\n  ╰─▶ Call to `arka.build_wheel` failed (exit status: 1)\n\n      [stderr]\n      error: \
+                   command 'gcc' failed: No such file or directory\n\n\nhint: `kirik` was included because `proje` \
+                   (v1.0) depends on `kirik`\nhint: Build failures usually indicate a problem with the package or the \
+                   build environment\n";
+    assert_eq!(python::cause_of(wrapped), Cause::Build);
+    let words = python::build_words(wrapped).unwrap();
+    assert!(
+        words.starts_with("“kirik” kaynağından derlenemedi")
+            && words.contains("eklentinin kendi hatası değil")
+            && words.ends_with(
+                "Derlemenin son sözü: “error: command 'gcc' failed: No such file or directory”."
+            ),
+        "{words}"
+    );
+    let pinned = "  × Failed to build `tasli==0.3`\n  ├─▶ The build backend returned an error\n  ╰─▶ Call to \
+                  `setuptools.build_meta.build_wheel` failed (exit status: 1)\n      [stderr]\n      Permission \
+                  denied: 'x'\nhelp: `tasli` (v0.3) was included because `ornek` (v1.0.0) depends on `tasli`\n";
+    assert_eq!(
+        python::cause_of(pinned),
+        Cause::Build,
+        "the build's words do not decide"
+    );
+    let words = python::build_words(pinned).unwrap();
+    assert!(
+        words.starts_with("“tasli” 0.3 kaynağından derlenemedi")
+            && words.contains("“Permission denied: 'x'”"),
+        "{words}"
+    );
+    assert_eq!(python::build_words("error: something else entirely"), None);
+    // A build the review did not list, refused by uv (docs/adr/8057 §98): said with the package.
+    let refused = "error: Distribution `kirik==0.1 @ path+/tmp/derleme/kirik-0.1.tar.gz` can't be installed because \
+                   it is marked as `--no-build` but has no binary distribution";
+    let words = python::no_build_words(refused).unwrap();
+    assert!(
+        words.starts_with("“kirik” 0.1 bu bilgisayarda kaynağından derlenmek zorunda")
+            && words.contains("KentOS onu derlemez"),
+        "{words}"
+    );
+    assert_eq!(python::no_build_words(wrapped), None);
+    let failed = InstallError::Failed {
+        cause: Cause::Build,
+        said: words.clone(),
+    };
+    assert_eq!(extension::prepare_words(&failed), words);
+}
+
 /// uv's sizes and phases read: the archive's size from its first line, the bytes downloaded beside it, unpacking once
 /// it says so; nothing said yet is a start.
 #[test]
@@ -1252,6 +1305,7 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
         &package,
         ("pyproject.toml", "uv.lock"),
         &key,
+        &[],
     )
     .unwrap();
     assert_eq!(
@@ -1289,6 +1343,7 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
         &package,
         ("pyproject.toml", "uv.lock"),
         &key,
+        &[],
         &stop,
         &mut |p| seen.push(p),
     )
@@ -1323,6 +1378,7 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
         &package,
         ("pyproject.toml", "uv.lock"),
         &key,
+        &[],
         &stop,
         &mut |_| {},
     )
@@ -1332,6 +1388,85 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
         std::fs::read_to_string(&log).unwrap().lines().count(),
         calls,
         "uv not asked"
+    );
+    // Being developed (installed from its working folder, docs/adr/8057 §97): another environment, its project's
+    // development group in; a published version's key and record stay as they were.
+    let developing = key.clone().for_development(true);
+    assert_ne!(developing.hash(), key.hash());
+    let written = serde_json::to_string(&key).unwrap();
+    assert!(!written.contains("development"), "{written}");
+    assert!(
+        serde_json::to_string(&developing)
+            .unwrap()
+            .contains("\"development\":true")
+    );
+    let developed = extension::prepare(
+        &fake,
+        &root,
+        &python,
+        &wheel,
+        &package,
+        ("pyproject.toml", "uv.lock"),
+        &developing,
+        &[],
+        &stop,
+        &mut |_| {},
+    )
+    .unwrap();
+    assert_ne!(extension::place(&root, &developing), dir);
+    let last_sync = std::fs::read_to_string(&log)
+        .unwrap()
+        .lines()
+        .rfind(|l| l.contains("|sync --locked"))
+        .unwrap()
+        .to_owned();
+    assert!(
+        last_sync.contains("|sync --locked --no-install-project")
+            && !last_sync.contains("--no-dev"),
+        "{last_sync}"
+    );
+    // Each found for its own: the development one for an extension being developed, the published one else.
+    let find = |development| {
+        extension::find(
+            &root,
+            &key.id,
+            &key.version,
+            &key.lock,
+            &key.python,
+            development,
+        )
+    };
+    assert_eq!(find(false), Some(made.clone()));
+    assert_eq!(find(true), Some(developed));
+    // What `kentos kek sbom` reads licences from (docs/adr/8057 §99): the published one, whatever its Python.
+    assert_eq!(
+        extension::find_published(&root, &key.id, &key.version, &key.lock),
+        Some(made.clone())
+    );
+    assert_eq!(
+        extension::find_published(&root, &key.id, "9.9.9", &key.lock),
+        None
+    );
+    extension::remove(&root, &developing).unwrap();
+    // Only the packages the review listed as built here build (docs/adr/8057 §98): the others are named not to.
+    let _ = extension::preview(
+        &fake,
+        &root,
+        &python,
+        &package,
+        ("pyproject.toml", "uv.lock"),
+        &key,
+        &["numpy".to_owned(), "shapely".to_owned()],
+    );
+    let last_sync = std::fs::read_to_string(&log)
+        .unwrap()
+        .lines()
+        .rfind(|l| l.contains("|sync --locked"))
+        .unwrap()
+        .to_owned();
+    assert!(
+        last_sync.contains("--no-build-package numpy --no-build-package shapely --python"),
+        "{last_sync}"
     );
     // A sync that fails leaves nothing half-made.
     std::fs::write(temp.0.join("uv").join("bozuk"), b"").unwrap();
@@ -1343,6 +1478,7 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
         &package,
         ("pyproject.toml", "uv.lock"),
         &other,
+        &[],
         &stop,
         &mut |_| {},
     )
@@ -1376,7 +1512,8 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
             &python,
             &package,
             ("pyproject.toml", "uv.lock"),
-            &other
+            &other,
+            &[]
         )
         .unwrap_err()
         .contains("KentOS'un kendi kitaplığının")
@@ -1423,4 +1560,32 @@ fn an_extensions_environment_is_its_own_previewed_made_and_used_offline() {
     ));
     extension::remove(&root, &key).unwrap();
     assert!(extension::ready(&root, &key).is_none());
+}
+
+/// The lock's cooling period given back to uv as flags (docs/adr/8057 §83): `--no-config` leaves `[tool.uv]` out and
+/// uv would take a cooled lock for stale under `--locked`. A span wins over the placeholder date; a fixed date is given
+/// as it is; a package's own date too; a lock without one gives none.
+#[test]
+fn a_locks_cooling_period_is_given_back_to_uv() {
+    let words = |lock: &str| -> Vec<String> {
+        extension::cooling_args(lock)
+            .into_iter()
+            .map(|a| a.to_string_lossy().into_owned())
+            .collect()
+    };
+    let span = "version = 1\n\n[options]\nexclude-newer = \"0001-01-01T00:00:00Z\" # This has no effect\n\
+                exclude-newer-span = \"P7D\"\n\n[options.exclude-newer-package]\nnumpy = \"2026-11-01T00:00:00Z\"\n\n\
+                [[package]]\nname = \"x\"\n";
+    assert_eq!(
+        words(span),
+        [
+            "--exclude-newer",
+            "P7D",
+            "--exclude-newer-package",
+            "numpy=2026-11-01T00:00:00Z"
+        ]
+    );
+    let fixed = "version = 1\n\n[options]\nexclude-newer = \"2026-11-01T00:00:00Z\"\n";
+    assert_eq!(words(fixed), ["--exclude-newer", "2026-11-01T00:00:00Z"]);
+    assert!(words("version = 1\n\n[[package]]\nname = \"x\"\n").is_empty());
 }

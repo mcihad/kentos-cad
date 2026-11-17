@@ -11,10 +11,10 @@ click 843 20    # Vitrin
 wait 1200
 click 155 56    # Yapıları numarala: önce pencere
 wait 3000
-click 790 498   # İlk numara
+click 843 492   # İlk numara
 key ctrl+a
 key BackSpace
-click 920 538   # Numarala
+click 920 532   # Numarala
 wait 1200
 shot 30-zorunlu
 key Escape

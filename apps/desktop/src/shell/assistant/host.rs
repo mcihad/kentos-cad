@@ -3,7 +3,7 @@
 //! offer, the fields the drawing hides and the log's “Ajan: …” lines are the link's; the assistant needs no link.
 
 use kentos_headless::HeadlessError;
-use kentos_headless::agent_tools::Host;
+use kentos_headless::agent_tools::{Author, Host};
 use serde_json::{Value, json};
 
 use crate::app::App;
@@ -20,6 +20,54 @@ impl Host for AppHost<'_> {
 
     fn not_offered(&self, command: &str) -> Option<String> {
         self.0.product_not_offered(command)
+    }
+
+    /// The user's Kataloğa gönder window on the extension (docs/adr/8057 §107): the user sends.
+    fn submit_extension(&mut self, id: &str) -> Result<Value, HeadlessError> {
+        self.0
+            .agent_submit(id, "Asistan")
+            .map_err(|why| HeadlessError::new("invalid_input", why))
+    }
+
+    /// The organisation's list of the only Python packages an extension may install (docs/adr/8057 §105).
+    fn allowed_packages(&self) -> Option<Vec<String>> {
+        self.0
+            .extensions
+            .registry
+            .as_ref()?
+            .policy()?
+            .allowed_python_packages
+            .clone()
+    }
+
+    /// The agent's own Python (docs/adr/8057 §104): the user's choice for it, the organisation's policy.
+    fn python_refusal(&self) -> Option<String> {
+        self.0.assistant.python_refusal()
+    }
+
+    /// Asistan, with its profile's provider and model, as a package its workshop packs records it (docs/adr/8057 §76).
+    fn author(&self) -> Option<Author> {
+        let model = &self.0.assistant.shown.1;
+        Some(Author {
+            agent: "KentOS Asistan".to_owned(),
+            model: (!model.trim().is_empty()).then(|| model.clone()),
+        })
+    }
+
+    /// The keys of the user's AI agents (kept, this session's or the environment's) and the secrets of the user's
+    /// service connections: a workshop write holding one is refused (docs/adr/8059 §15).
+    fn own_secrets(&self) -> Vec<(String, String)> {
+        let store = &self.0.assistant.store;
+        let mut known: Vec<(String, String)> = store
+            .list()
+            .into_iter()
+            .filter_map(|p| {
+                let key = store.key_for(&p)?;
+                Some((key, format!("“{}” ajanının API anahtarı", p.name)))
+            })
+            .collect();
+        known.extend(crate::services::secrets::secrets().known());
+        known
     }
 
     /// The agents' extension workshop beside this app's extension folder (docs/adr/8057 §22).

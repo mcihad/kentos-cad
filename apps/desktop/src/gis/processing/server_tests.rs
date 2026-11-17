@@ -67,7 +67,7 @@ fn tool(app: &mut App, id: &'static str) {
 fn rows(app: &App) -> Vec<(String, Option<String>, bool)> {
     let window = app.gis.processing.dialog.as_ref().expect("a window");
     let (options, _, _) = targets_view(
-        &window.targets(&app.gis.processing.registry, &app.server_place()),
+        &window.targets(&app.gis.processing.registry, &app.processing_server_place()),
         super::plan::Choice::read(app.gis.processing.memory.target(&window.tool.id)),
     );
     options
@@ -100,6 +100,116 @@ fn job_of(mode: &str) -> ServerJob {
         error: None,
         cached_from: None,
     }
+}
+
+/// The demo extension (Vitrin) installed in `app` from its source, with extensions kept in `root`: its İşlemler tools
+/// (`ext.tr.ornek.vitrin.taks`) in the window's list.
+fn with_vitrin(app: &mut App, root: &std::path::Path) {
+    let _ = std::fs::remove_dir_all(root);
+    std::fs::create_dir_all(root).unwrap();
+    app.extensions = crate::extensions::Extensions::open(root, false).0;
+    app.extensions_changed();
+    let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../samples/eklenti-vitrini/eklenti");
+    let files: std::collections::BTreeMap<String, Vec<u8>> =
+        kentos_extension_host::store::read_files(&source)
+            .unwrap()
+            .into_iter()
+            .filter(|(path, _)| !path.contains("__pycache__"))
+            .collect();
+    let bytes = kentos_extensions::pack(&files, &kentos_extensions::Limits::default())
+        .unwrap()
+        .bytes;
+    app.open_extensions();
+    let _ = app.extensions_event(crate::extensions::Event::Picked(Some((
+        "vitrin.kek".into(),
+        bytes,
+    ))));
+    let _ = app.extensions_event(crate::extensions::Event::Install);
+    assert!(app.extensions.review.is_none(), "{:?}", app.extensions.note);
+    // Its code can run (no Python in tests): its tool opens.
+    app.extensions
+        .python_reasons
+        .insert("tr.ornek.vitrin".into(), None);
+    app.dialog = None;
+}
+
+/// The organisation's policy keeps an extension's tool off the server (docs/adr/8057 §96, PY-OPT-12): its row is off
+/// with the policy's words; KentOS's own tools go; not written, both go; a policy that does not read keeps it here.
+#[test]
+fn the_organisation_s_policy_keeps_an_extension_s_tool_off_the_server() {
+    let mut app = cloud_app(true);
+    let root = std::env::temp_dir().join(format!("kentos-ilke-sunucu-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).unwrap();
+    app.extensions = crate::extensions::Extensions::open(&root, false).0;
+    let set = |app: &mut App, text: Option<&str>| {
+        let policy = text.map(|t| kentos_extension_host::Policy::read(t).unwrap());
+        app.extensions.registry.as_mut().unwrap().set_policy(policy);
+    };
+    const TAKS: &str = "ext.tr.ornek.vitrin.taks";
+    set(
+        &mut app,
+        Some(
+            r#"{"format": "kentos.extension-policy", "schemaVersion": 1, "allowExtensionsOnServer": false}"#,
+        ),
+    );
+    assert_eq!(
+        app.server_place_for(TAKS),
+        ServerPlace::Off("kurum ilkesi eklenti kodunun sunucuda çalışmasına izin vermiyor".into())
+    );
+    assert_eq!(
+        app.server_place_for("annotation.edgeLengths"),
+        ServerPlace::Ready
+    );
+    // KentOS's own tool in the window: its server row on.
+    tool(&mut app, "processing.run.annotation.edgeLengths");
+    assert_eq!(app.processing_server_place(), ServerPlace::Ready);
+    set(
+        &mut app,
+        Some(r#"{"format": "kentos.extension-policy", "schemaVersion": 1}"#),
+    );
+    assert_eq!(
+        app.server_place_for(TAKS),
+        ServerPlace::Ready,
+        "not written: yes"
+    );
+    set(&mut app, None);
+    assert_eq!(app.server_place_for(TAKS), ServerPlace::Ready, "no policy");
+    app.extensions.registry.as_mut().unwrap().set_policy(Some(
+        kentos_extension_host::Policy::broken("okunamadı".into()),
+    ));
+    assert_eq!(
+        app.server_place_for(TAKS),
+        ServerPlace::Off("kurum ilkesi okunamıyor".into())
+    );
+    // A local drawing: the server is not a place, whatever the policy.
+    let local = local_app();
+    assert_eq!(local.server_place_for(TAKS), ServerPlace::Absent);
+    // The extension's tool in its window: the server's row off, with the policy's words.
+    let mut app = cloud_app(true);
+    with_vitrin(&mut app, &root);
+    set(
+        &mut app,
+        Some(
+            r#"{"format": "kentos.extension-policy", "schemaVersion": 1, "allowExtensionsOnServer": false}"#,
+        ),
+    );
+    app.open_processing(TAKS, None);
+    let listed = rows(&app);
+    let server = listed
+        .iter()
+        .find(|(label, _, _)| label == "KentOS sunucusunda")
+        .expect("the server's row");
+    assert_eq!(
+        (server.1.as_deref(), server.2),
+        (
+            Some("kurum ilkesi eklenti kodunun sunucuda çalışmasına izin vermiyor"),
+            true
+        ),
+        "{listed:?}"
+    );
+    let _ = std::fs::remove_dir_all(&root);
 }
 
 #[test]
@@ -314,7 +424,7 @@ fn screens() {
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let only = std::env::var("KENTOS_SHOTS_ONLY").ok();
-    let views = ["secildi", "istendi", "yetkisiz", "dosya"];
+    let views = ["secildi", "istendi", "yetkisiz", "dosya", "ilke"];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
             for name in views {
@@ -322,6 +432,10 @@ fn screens() {
                     .as_deref()
                     .is_some_and(|o| !o.split(',').any(|x| x == name))
                 {
+                    continue;
+                }
+                // The extension's window, its side scrolled to Nerede çalışır: at the wide size.
+                if name == "ilke" && width < 1440.0 {
                     continue;
                 }
                 let mut app = cloud_app(name != "yetkisiz");
@@ -334,8 +448,34 @@ fn screens() {
                     let _ = app.update(message);
                 };
                 snapshot.settle(&mut app, App::view, &mut update);
-                tool(&mut app, "processing.run.annotation.edgeLengths");
-                event(&mut app, Event::Target("server".into()));
+                if name == "ilke" {
+                    // An extension's tool under a policy that keeps its code here (docs/adr/8057 §96).
+                    with_vitrin(
+                        &mut app,
+                        &std::env::temp_dir().join("kentos-ilke-sunucu-resim"),
+                    );
+                    let policy = kentos_extension_host::Policy::read(concat!(
+                        r#"{"format": "kentos.extension-policy", "schemaVersion": 1, "#,
+                        r#""allowExtensionsOnServer": false}"#
+                    ))
+                    .unwrap();
+                    app.extensions
+                        .registry
+                        .as_mut()
+                        .unwrap()
+                        .set_policy(Some(policy));
+                    app.open_processing("ext.tr.ornek.vitrin.taks", None);
+                    snapshot.settle(&mut app, App::view, &mut update);
+                    snapshot.input(
+                        &mut app,
+                        App::view,
+                        &mut update,
+                        kentos_ui::snapshot::Input::Scroll(iced::Point::new(1045.0, 600.0), -30.0),
+                    );
+                } else {
+                    tool(&mut app, "processing.run.annotation.edgeLengths");
+                    event(&mut app, Event::Target("server".into()));
+                }
                 if name == "dosya" {
                     event(&mut app, Event::ServerSink(true));
                 }

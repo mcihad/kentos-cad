@@ -116,6 +116,8 @@ pub struct Marks {
     pub missing: Vec<[Vec2; 4]>,
     /// The clipping boundaries shown on the screen only (Kırp's Çerçeve: Ekranda, docs/adr/0351 §1).
     pub clips: std::sync::Arc<Vec<Vec<Vec2>>>,
+    /// The shown extension panel's drawn area or line and its point (docs/adr/8057 §62).
+    pub picked: Option<crate::extensions::panel_marks::Picked>,
     /// What the selected associative dimensions are bound to (docs/adr/0320 §4).
     pub bonds: Vec<kentos_interaction::dimension_bonds::Bond>,
     /// The constraints' marks (constraint_view.rs, docs/adr/0338 §1).
@@ -234,6 +236,7 @@ impl Marks {
             && self.broken.is_empty()
             && self.missing.is_empty()
             && self.clips.is_empty()
+            && self.picked.is_none()
             && self.bonds.is_empty()
             && self.constraints.is_none()
             && self.tracking.is_none()
@@ -286,6 +289,9 @@ impl<Message> canvas::Program<Message> for Marks {
         }
         missing(&mut frame, &self.missing, &self.camera, &self.colors, Tokens::of(theme).danger);
         clip_frames(&mut frame, &self.clips, &self.camera, &self.colors);
+        if let Some(p) = &self.picked {
+            crate::extensions::panel_marks::draw(&mut frame, p, &self.camera, &self.colors, accent);
+        }
         broken(
             &mut frame,
             &self.broken,
@@ -441,9 +447,9 @@ fn grips(
     }
 }
 
-/// A dynamic block's parameter grips (docs/adr/0319 §1), as AutoCAD's are told apart by their shapes: a linear's a
-/// pair of arrowheads along its line, a polar's a diamond, an angle's a disc with a ring, a point's a disc, a flip's
-/// two arrowheads facing each other; in the window box's blue, on a halo.
+/// A dynamic block's parameter grips (docs/adr/0319 §1), told apart by their shapes: a linear's a pair of arrowheads
+/// along its line, a polar's a diamond, an angle's a disc with a ring, a point's a disc, a flip's two arrowheads facing
+/// each other; in the window box's blue, on a halo.
 fn param_grips(
     frame: &mut canvas::Frame,
     grips: &[kentos_geometry_core::block_dynamic::ParamGrip],
@@ -1452,7 +1458,7 @@ fn snap_marker(
                 b.line_to(p(5.0, d));
             }
         }
-        // docs/adr/0269 §1: two squares, one over the other's corner (AutoCAD's insertion mark).
+        // docs/adr/0269 §1: two squares, one over the other's corner (the usual insertion mark).
         SnapKind::Insertion => {
             b.rectangle(p(-6.0, -6.0), Size::new(7.0, 7.0));
             b.rectangle(p(-1.0, -1.0), Size::new(7.0, 7.0));

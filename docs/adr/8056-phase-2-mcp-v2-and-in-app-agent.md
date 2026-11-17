@@ -188,3 +188,100 @@ okumada, kataloğun bölümleri araç çağırmadan. Üstelik tek katalog kayna�
 sunmayan evsahibinde dört kapı; bölümler sırasıyla beş kapı). MCP'nin kaynak testi güncellendi (kural gereği koşulmadı,
 derlemesi denetlendi). Program elle sürüldü: `resources/list` dört kaynak ve kataloğun boyutu, özet çizimi ve beş kapıyı,
 bölümler 171 / 65 / 43 / 94 / 108 komutu verdi.
+
+## §6. Ajanın token sınırı: sohbet başına ve günlük (`ADIM 21`, "maliyet/istek bütçesi")
+
+**İstek.** `plan/eklenti.md` ADIM 21 › Yüzeyler: çalışan işler ve "maliyet/istek bütçesi" kullanıcıya anlaşılır
+gösterilir. Asistan araç çağırarak kendi kendine döner: model her istekte bütün sohbeti ve araç listesini yeniden alır,
+25 araç turunda kimse bir şey yazmadan yüz binlerce token harcanabilir. Tokenlar kullanıcının parası (§4).
+
+**Ölçüm (16 Kasım, gerçek pencere, DeepSeek `deepseek-v4-pro`, sentetik Vitrin çizimi).** Tek cümlelik bir soru ve tek
+araç çağrısı ("Çizimde kaç katman var?"): iki istek, toplam **19 759–19 819 token**; yanıtın kendisi 231–290 token. Her
+isteğin ~9 900 tokenı talimat ve araç listesi. Panelin yanıt satırı yalnız yanıtın tokenını yazdığı için bu toplam
+hiçbir yerde görünmüyordu.
+
+**Karar.**
+- Her ajana iki isteğe bağlı sınır: **sohbet başına** ve **günlük** (bu bilgisayarda) en çok token, girdi + çıktı
+  (`AgentProfile.conversation_tokens`, `daily_tokens`). Boş: sınır yok; eski ajan dosyaları aynen okunur, boş alan
+  dosyaya yazılmaz.
+- **Sınır turun içinde, döngünün kendisinde uygulanır** (`kentos_agent::start_turn_counting`, `Spent`). Sağlayıcı her
+  yanıtın sonunda kullanımını bildirir ve olay araç çağrılarından önce gelir. Yanıt sınırı aşmışken model yeniden araç
+  çağırıyorsa çağrılar çalıştırılmaz, her biri "Kullanıcının token sınırına ulaşıldı; araç çalıştırılmadı." sonucunu
+  alır ve tur `FailureKind::Budget` ile durur: 25 araç turu sınırındaki yol, sonucu olmayan çağrı kalmaz, sohbet son
+  bütün adımda durur. Masaüstünün olayı duyup turu iptal etmesi seçilmedi: o arada çağrılar masaüstüne ulaşmış ya da
+  bir istek daha gitmiş olabilirdi.
+- **Turu bitiren yanıt kesilmez:** yanıt tamam ve parası ödendi. Sınırı geçmiş sohbetin bir sonraki turu başlamadan
+  reddedilir (`over_budget`), Yeniden dene de.
+- Sohbet toplamı ajana değil sohbete aittir (sohbetin ortasında ajan değişse de aynı sohbet); Yeni sohbet sıfırlar.
+  Günlük toplam `yapay-zeka-kullanimi.json`'da, ajan dosyasının yanında: yerel tarih ve ajan kimliğine göre yalnız
+  sayılar (istem, yanıt, anahtar yok), son 31 gün. Yazılamayan defter bellekte saymayı sürdürür: dolu disk ajanı
+  durdurmaz, sınır yine işler. Sayım olay geldikçe yapılır; yarıda durdurulan turun harcadığı da sayılır.
+- Kullanım bildirmeyen sağlayıcı sayılamaz ve sınırı da işlemez. Chat Completions ailesine `stream_options:
+  {include_usage: true}` gönderilir (yerel sunucular dahil); öbür üç tel biçimi kullanımı kendiliğinden bildirir.
+- **Görünüm:** her yanıtın altında "Yanıt 231 token, 4.4 sn" ve "Sohbette 19.759 / 20.000 token" (sınır yoksa
+  "Sohbette 19.759 token"); ilk satır önceden yalnız "231 token" diyordu ve neyin sayıldığı belli değildi. Uygulama
+  ayarları › Yapay zekâ'da ajan satırı "Bugün 19.759 token harcadı · sınır sohbet başına 20.000, günde 500.000 token";
+  Kayıt bölümü defterin yerini söyler. Ajan penceresinde "Token sınırı" bölümü: Sohbet başına, Günlük (yardımında
+  bugünkü harcama). Noktalı ya da boşluklu binlik yazılır ("200.000", "1 000 000"); sıfır, virgül ya da harf alanın
+  altında nedeniyle söylenir ve ajan kaydedilmez.
+- **Sözler:** "Bu sohbet “DeepSeek (deneme)” için yazdığınız sınıra ulaştı: 20.562 / 20.000 token. Yeni sohbet başlatın
+  ya da sınırı Uygulama ayarları › Yapay zekâ'dan yükseltin." Günlükte: "… bugün için yazdığınız sınıra ulaştı: … Yarın
+  ya da sınırı … yükseltince devam eder." Turun ortasında önüne "Ajan durduruldu, istediği araçlar çalıştırılmadı."
+- "Token" yazılır, "jeton" değil: panel tokenı hep "token" diye yazıyordu; uygulamada "jeton" erişim jetonu demek (sır
+  taraması, oturum) ve ikisi karışırdı.
+
+**Doğrulama.**
+- `kentos-agent` 17 + 45 test, yenileri: defterin günlere ve ajanlara göre toplaması, dosyaya yazılması ve 31 güne
+  inmesi; sınır cümleleri ve okunuşu (`read_tokens`: "1,5", "200k", "+5", "0" reddedilir); `budget` (2): kaydedilmiş
+  DeepSeek yanıtı (346 + 135 token, iki çağrı) 400 tokenlık sohbeti aşınca masaüstüne çağrı gelmez, ikisi de neden
+  çalışmadığını alır, sağlayıcıya ikinci istek gitmez; günü 990'dan sürdüren 1 000 sınırında turu bitiren yanıt bütün
+  gelir, 600'den sürdüren ve araç çağıran yanıt durdurulur.
+- Masaüstü `assistant::limits_tests` (3): 150 tokenlık araç çağrısı 100 sınırında durur, gün de sayar; sonraki istek
+  başlamadan "Yeni sohbet" der; Yeni sohbet sıfırlar ve yanıtın satırı sınırı taşır; günlük 1 000'i harcamış ajan
+  reddedilir, sağlayıcıya istek gitmez; form "1,5"i kaydetmez, "200.000" ve "1 000 000"u tutar, boşaltılan sınır
+  kalkar. `kentos-ui` `an_answer_says_its_tokens_and_the_conversations`.
+- Gerçek pencere (yukarıdaki ölçüm düzeni, ajanın sınırı 20 000): "Çizimin özetini oku, sonra her katmandaki nesneleri
+  tek tek incele…" isteğinde ajan iki aracı (Çizimin özeti, Katmanlar) çalıştırdı, üçüncü yanıtta 20.562 / 20.000'de
+  durdu; "Devam et." başlamadan reddedildi. Ayarlarda ajan satırı ve form yukarıdaki gibi.
+
+## §7. Kurum ilkesi Asistan'ı da bağlar: çizim yalnız izinli yapay zekâ adreslerine (`ADIM 21`, [PY-AI-13])
+
+**İstek.** `plan/eklenti.md` ADIM 21 › Güvenlik: "sağlayıcıya gönderilecek veri kullanıcı/kiracı politikasıyla
+sınırlanır" [PY-AI-13]. Durum: kurum ilkesinde (`kentos.extension-policy`, ADR 8057 karar 9) "dış yapay zekâya veri"
+izni (`allowDataToAi`) vardı ama yalnız eklentilere uygulanıyordu (`network.sendsDataToAi` isteyen eklenti durur).
+Uygulamanın kendi ajanı aynı çizimi, ilke ne derse desin, kullanıcının seçtiği sağlayıcıya gönderiyordu. Belediye
+çiziminin öznitelikleri kişisel veri taşıyabilir (malik adı, kimlik numarası, adres) ve sağlayıcıların çoğu yurt
+dışında (DeepSeek'in gizlilik notu: "Veriler Çin Halk Cumhuriyeti'nde işlenir"); kurumun "dışarı veri gitmez" kararı
+eklentide işleyip yerleşik ajanda işlemezse karar yarımdır.
+
+**Karar.**
+- `allowDataToAi: false` uygulama içi ajanı da bağlar: sunucusu bu bilgisayarın dışında olan ajana tur başlamaz.
+  Bu bilgisayardaki sunucu (`localhost`, geri döngü adresi; Ollama, LM Studio) serbesttir: gönderilen bu bilgisayarda
+  kalır (`AgentProfile::on_this_computer`, adresin denetimiyle aynı işlev).
+- Yeni, isteğe bağlı `allowedAiAddresses`: yazılınca ajan bu bilgisayarın dışında yalnız bu adreslere (ve altlarına)
+  bağlanır; `allowDataToAi: false` ile birlikte kurumun kendi sunucusunu açar (`https://yz.ornek.bel.tr`), tek başına
+  sağlayıcıları seçer. Eşleşme sınırda: şema ve sunucu (kapısıyla) aynı, yol aynı ya da altı, büyük/küçük harf şema ve
+  sunucuda fark etmez (`https://yz.ornek.bel.tr` ⊃ `https://YZ.ornek.bel.tr/v1`; `…bel.tr.baska.com`, başka kapı, `http`,
+  `/v10` değil). Ad, eklenti ilkesinin diğer alanları gibi; eski KentOS bilinmeyen alanı görünce ilkeyi kapalı okur
+  (ADR 8057 §84'teki yol).
+- **Denetim turdan önce, anahtardan önce:** ilkenin kapattığı ajana anahtar sorulmaz, sağlayıcıya istek gitmez; sohbet
+  nedenini ve yolunu söyler. Ayarlardaki ajan satırı aynı cümleyi uyarı renginde yazar: kullanıcı ajanı seçtiği yerde
+  görür, ilk mesajında değil. Okunamayan ilke dışarıyı kapatır (eklentilerdeki gibi kapalı başarısızlık); bu bilgisayardaki
+  ajan çalışır.
+- "Bağlantıyı dene" ve "Listeyi getir" çizim göndermez (anahtar ve kısa bir istek ya da model listesi): ilke onları
+  kapatmaz.
+- **Kapsam dışı (sonraki adım):** ilkenin izin verdiği sağlayıcıya öznitelik değerlerini göndermemek (bütün alanlara
+  çizimin gizli alan perdesi, `kentos_headless::Veil`); dış MCP istemcileri (verinin nereye gittiğini KentOS bilemez,
+  bağlantı ayrı bir izin).
+
+**Sözler.** "Kurum ilkesi çizim verisinin bu bilgisayarın dışındaki yapay zekâ hizmetlerine gitmesine izin vermiyor;
+“DeepSeek (deneme)” https://api.deepseek.com adresine bağlanıyor. Bu bilgisayarda çalışan bir sunucuyla (Ollama, LM
+Studio) bir ajan tanımlayın ya da bilgi işlem biriminize danışın." Liste yazılıysa: "Kurum ilkesi yapay zekâ ajanlarının
+yalnız şu adreslere bağlanmasına izin veriyor: …".
+
+**Doğrulama.** `kentos-extension-host` `policy::tests` (2): yerel ajan hep geçer; `allowDataToAi: false` dışarıyı
+kapatır, kurumun adresi açılır; yalnız listeli sağlayıcı; okunamayan ilke dışarıyı kapatır; sınırda eşleşme (7 durum).
+Masaüstü `assistant::limits_tests::the_organisations_policy_keeps_the_drawing_from_an_agent_outside_this_computer`:
+bu bilgisayardaki sahte sağlayıcı yanıt verir, DeepSeek ajanı anahtarı sorulmadan reddedilir, sağlayıcıya tek istek
+(ilkinin) gider. Gerçek pencere (`allowDataToAi: false`, DeepSeek ajanı): sohbet ve ayarlar yukarıdaki cümleyi yazdı,
+sağlayıcıya istek gitmedi.

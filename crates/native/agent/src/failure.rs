@@ -26,6 +26,9 @@ pub enum FailureKind {
     Stream,
     /// The user stopped it.
     Cancelled,
+    /// The tokens the user allowed the conversation or the day are spent (docs/adr/8056 §6): a new conversation, a
+    /// higher limit or tomorrow.
+    Budget,
 }
 
 /// A failed call: its kind, the message for the user and how long the provider asks to wait.
@@ -59,6 +62,14 @@ impl Failure {
 
     pub(crate) fn bad_request(message: impl Into<String>) -> Failure {
         Failure::new(FailureKind::BadRequest, message)
+    }
+
+    /// The agent stopped at the user's limit; `why` the limit's sentence ([`crate::over_budget`]).
+    pub(crate) fn budget(why: &str) -> Failure {
+        Failure::new(
+            FailureKind::Budget,
+            format!("Ajan durduruldu, istediği araçlar çalıştırılmadı. {why}"),
+        )
     }
 
     /// The answer broke off before its end.

@@ -2,7 +2,7 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.ornek.vitrin",
-  "version": "1.0.33",
+  "version": "1.0.54",
   "name": "Eklenti Vitrini",
   "icon": "assets/vitrin.svg",
   "summary": "KentOS eklenti sisteminin yeteneklerini küçük, gerçek örneklerle gösterir.",
@@ -26,7 +26,8 @@
     "cbs"
   ],
   "runtimes": [
-    "desktop"
+    "desktop",
+    "headless"
   ],
   "compatibility": {
     "sdkProtocol": {
@@ -103,6 +104,36 @@
         "id": "parsel-karti",
         "title": "Parsel kartı",
         "handler": "vitrin.logic:parsel_karti"
+      },
+      {
+        "id": "csv-noktalar",
+        "title": "CSV'den nokta ekle",
+        "handler": "vitrin.logic:csv_noktalar"
+      },
+      {
+        "id": "katman-csv",
+        "title": "Katmanı CSV'ye yaz",
+        "handler": "vitrin.logic:katman_csv"
+      },
+      {
+        "id": "yapi-tamponu",
+        "title": "Yapı tamponu",
+        "handler": "vitrin.logic:yapi_tamponu"
+      },
+      {
+        "id": "yakin-yapilar",
+        "title": "Yakın yapılar",
+        "handler": "vitrin.logic:yakin_yapilar"
+      },
+      {
+        "id": "alandaki-yapilar",
+        "title": "Alandaki yapılar",
+        "handler": "vitrin.logic:alandaki_yapilar"
+      },
+      {
+        "id": "bakim-ekle",
+        "title": "Bakım ekle",
+        "handler": "vitrin.logic:bakim_ekle"
       }
     ],
     "panels": [
@@ -123,6 +154,24 @@
         "title": "Parsel kartı",
         "side": "right",
         "definition": "ui/parsel-karti.panel.json"
+      },
+      {
+        "id": "yakin-paneli",
+        "title": "Yakın yapılar",
+        "side": "right",
+        "definition": "ui/yakin-yapilar.panel.json"
+      },
+      {
+        "id": "alan-paneli",
+        "title": "Alandaki yapılar",
+        "side": "right",
+        "definition": "ui/alandaki-yapilar.panel.json"
+      },
+      {
+        "id": "bakim-paneli",
+        "title": "Bakım kayıtları",
+        "side": "right",
+        "definition": "ui/bakim-kayitlari.panel.json"
       }
     ],
     "processing": [
@@ -130,6 +179,11 @@
         "id": "taks",
         "descriptor": "tools/taks.tool.json",
         "handler": "vitrin.logic:taks"
+      },
+      {
+        "id": "cekme",
+        "descriptor": "tools/cekme.tool.json",
+        "handler": "vitrin.logic:cekme"
       }
     ],
     "audits": [
@@ -137,20 +191,47 @@
         "id": "yapi-no",
         "title": "Yapı numarası",
         "domain": "cbs",
-        "handler": "vitrin.logic:yapi_no"
+        "handler": "vitrin.logic:yapi_no",
+        "examples": "audits/yapi-no.examples.json"
       },
       {
         "id": "parsel-cakisma",
         "title": "Parsel çakışması",
         "domain": "cbs",
-        "handler": "vitrin.logic:parsel_cakisma"
+        "handler": "vitrin.logic:parsel_cakisma",
+        "examples": "audits/parsel-cakisma.examples.json"
       }
     ],
     "expressions": [
       {
         "id": "ada-parsel",
         "title": "Ada/parsel yazımı",
-        "handler": "vitrin.logic:ada_parsel"
+        "handler": "vitrin.logic:ada_parsel",
+        "examples": [
+          {
+            "args": [
+              "101",
+              "1"
+            ],
+            "expect": "101/1"
+          },
+          {
+            "title": "Sayı olarak gelen ada: 101.0 yerine 101",
+            "args": [
+              101.0,
+              "4"
+            ],
+            "expect": "101/4"
+          },
+          {
+            "title": "Parseli boş: değer yok",
+            "args": [
+              "101",
+              null
+            ],
+            "expect": null
+          }
+        ]
       }
     ],
     "mapTools": [
@@ -208,6 +289,15 @@
                 "audit": "yapi-no",
                 "size": "large",
                 "icon": "assets/denetim.svg"
+              },
+              {
+                "command": "yapi-tamponu",
+                "icon": "geo-buffer"
+              },
+              {
+                "processing": "cekme",
+                "label": "Çekme mesafesi",
+                "icon": "geo-buffer"
               }
             ]
           },
@@ -226,6 +316,18 @@
               {
                 "panel": "parsel-paneli",
                 "icon": "parcel-report"
+              },
+              {
+                "panel": "yakin-paneli",
+                "icon": "nearest-feature"
+              },
+              {
+                "panel": "alan-paneli",
+                "icon": "select-polygon"
+              },
+              {
+                "panel": "bakim-paneli",
+                "icon": "join"
               }
             ]
           },
@@ -265,6 +367,22 @@
         "command": "katman-degerleri",
         "target": "layer",
         "icon": "layer-fields",
+        "when": {
+          "documentOpen": true
+        }
+      },
+      {
+        "command": "csv-noktalar",
+        "target": "layer",
+        "icon": "import-csv",
+        "when": {
+          "documentOpen": true
+        }
+      },
+      {
+        "command": "katman-csv",
+        "target": "layer",
+        "icon": "export-csv",
         "when": {
           "documentOpen": true
         }
@@ -334,6 +452,16 @@
         "tiles.ornek.bel.tr"
       ],
       "sendsDataToAi": false
+    },
+    {
+      "id": "files.userSelected",
+      "scope": "user-selected",
+      "reason": "Katmanın menüsünden seçtiğiniz CSV dosyasındaki noktaları okur."
+    },
+    {
+      "id": "files.userSelectedWrite",
+      "scope": "user-selected",
+      "reason": "Katmanın menüsünden seçtiğiniz yere katmanın nesnelerini CSV olarak yazar."
     }
   ]
 }

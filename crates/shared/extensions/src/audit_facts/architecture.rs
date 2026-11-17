@@ -15,6 +15,9 @@ use serde::{Deserialize, Serialize};
 
 use super::{AREA, LENGTH, MOST_ITEMS, place, round};
 
+mod zoning;
+pub use zoning::ZoningFacts;
+
 /// The drawing's architecture.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -30,6 +33,14 @@ pub struct ArchitectureFacts {
     pub units: Vec<UnitFacts>,
     /// Each dwelling unit's door: the walk from its outer side to the nearest storey exit (BYKHY 48/4).
     pub doors: Vec<DoorEscape>,
+    /// The building has an automatic sprinkler system, as the project's settings say (`.kcad` 226): the fire
+    /// regulation's sprinklered distances are the ones read (BYKHY 48/2, Ek-5/B; docs/adr/8057 §53).
+    #[serde(default)]
+    pub sprinklers: bool,
+    /// The parcel's zoning (İmar durumu) and the building's areas against it, when the project writes one
+    /// (docs/adr/8057 §92).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zoning: Option<ZoningFacts>,
 }
 
 /// A storey of the project.
@@ -63,6 +74,14 @@ pub struct RoomFacts {
     pub name: Option<String>,
     /// Its usage, as the program's briefs name it.
     pub usage: Option<String>,
+    /// Its kind as the regulations read rooms, by its name or usage (KentOS Mimari's reading: Salon, Yatak odası,
+    /// Mutfak, Banyo, WC, Hol …); none for another room (a store, a study, a balcony).
+    #[serde(default)]
+    pub kind: Option<RoomKind>,
+    /// The use its name or usage names as BYKHY Ek-5/B's rows do (Otopark, Depo, Lokanta …), as Mimari denetim's
+    /// fire rules read a room outside a unit (docs/adr/8057 §82); none when they name none, or a dwelling's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub occupancy: Option<Occupancy>,
     /// Its storey's id.
     pub level: Option<String>,
     /// Its program group's id.
@@ -79,8 +98,31 @@ pub struct RoomFacts {
     pub net: f64,
     /// Its outline to the walls' axes, m²: what most uses' person loads read (BYKHY Ek-5/A).
     pub axis: f64,
+    /// Its net width, m: the diameter of the largest circle inside its net outline, the regulations' narrow side
+    /// (dar kenar, PAİY 29/1 and 29/3); none for a broken room.
+    #[serde(default)]
+    pub narrow: Option<f64>,
     /// Its walks; none for a void, an outdoor or a broken room and an escape stair's room.
     pub escape: Option<RoomEscape>,
+}
+
+/// A room's kind, as Planlı Alanlar İmar Yönetmeliği 29 names the rooms of a dwelling (the passages too).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub enum RoomKind {
+    /// Oturma odası (Salon).
+    Living,
+    /// Yatak odası (Ebeveyn, Çocuk, Oda).
+    Bedroom,
+    /// Mutfak veya yemek pişirme yeri.
+    Kitchen,
+    /// Banyo veya yıkanma yeri (Duş).
+    Bath,
+    /// Tuvalet (WC).
+    Toilet,
+    /// Hol, koridor, antre.
+    Corridor,
 }
 
 /// A room's walks, from its farthest point: 40 cm in front of its walls (BYKHY 32/6).
@@ -131,6 +173,36 @@ pub enum GroupKind {
     Annex,
 }
 
+/// A unit's use as BYKHY Ek-5/B's rows name it, as KentOS Mimari reads it from the unit's nature (Daire, Büro,
+/// Dükkân, Otel …): the row of its escape distances.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub enum Occupancy {
+    /// Yüksek tehlikeli yerler.
+    HighHazard,
+    /// Endüstri amaçlı yapılar.
+    Industry,
+    /// Yurtlar, yatakhaneler.
+    Dormitory,
+    /// Mağazalar, dükkânlar, marketler.
+    Shop,
+    /// Büro binaları.
+    Office,
+    /// Otoparklar ve depolar.
+    Parking,
+    /// Okul ve eğitim yapıları.
+    School,
+    /// Toplanma amaçlı binalar.
+    Assembly,
+    /// Hastaneler, huzurevleri.
+    Hospital,
+    /// Oteller, pansiyonlar.
+    Hotel,
+    /// Apartmanlar.
+    Dwelling,
+}
+
 /// A program group's article 4 areas (Planlı Alanlar İmar Yönetmeliği 4/ğ), m².
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -147,6 +219,10 @@ pub struct UnitFacts {
     pub annex_of: Option<String>,
     /// An independent unit that is a dwelling (BYKHY 48 reads its rooms).
     pub dwelling: bool,
+    /// Its use as BYKHY Ek-5/B's rows name it, read from its nature (an annex's from its unit's; docs/adr/8057 §79);
+    /// none for a common or outdoor group and for a nature that names no use.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub occupancy: Option<Occupancy>,
     /// BB brüt alanı (4/ğ-1): its rooms' outer contour, a wall it shares cut at its axis.
     pub gross: f64,
     /// BB net alanı (4/ğ-3): its rooms' net areas, voids and outdoor rooms out.
@@ -186,6 +262,9 @@ pub struct DoorEscape {
     pub at: [f64; 2],
     /// From its outer side; none when it opens into an escape stair's room or reaches no exit.
     pub exit: Option<EscapeWalk>,
+    /// It opens into an escape stair's room: it stands at its storey's exit (no walk, none needed).
+    #[serde(default, rename = "intoStair")]
+    pub into_stair: bool,
 }
 
 impl ArchitectureFacts {
@@ -216,6 +295,7 @@ impl ArchitectureFacts {
         for r in &mut self.rooms {
             r.net = round(r.net, AREA);
             r.axis = round(r.axis, AREA);
+            r.narrow = r.narrow.map(|w| round(w, LENGTH));
             if let Some(e) = &mut r.escape {
                 e.exit = e.exit.take().map(EscapeWalk::normalized);
                 e.entrance = e.entrance.take().map(EscapeWalk::normalized);
@@ -251,6 +331,7 @@ impl ArchitectureFacts {
                 .then_with(|| a.unit.cmp(&b.unit))
                 .then_with(|| a.level.cmp(&b.level))
         });
+        self.zoning = self.zoning.take().map(ZoningFacts::normalized);
         let cut = self.rooms.len() > MOST_ITEMS || self.doors.len() > MOST_ITEMS;
         self.rooms.truncate(MOST_ITEMS);
         self.doors.truncate(MOST_ITEMS);

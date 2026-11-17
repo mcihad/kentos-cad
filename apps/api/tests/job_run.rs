@@ -6,6 +6,17 @@
 
 #![allow(dead_code)]
 
+// `project.audit`: an extension's audit rule run in the child (docs/adr/8057 §42).
+#[path = "job_run/audit.rs"]
+mod audit;
+// The job's budget over the rule's Python too (docs/adr/8057 §58).
+#[path = "job_run/audit_budget.rs"]
+mod audit_budget;
+// A release's environment prepared as the server prepares it, and a real audit in it (docs/adr/8057 §66).
+#[path = "../src/audit_env.rs"]
+mod audit_env;
+#[path = "job_run/audit_env.rs"]
+mod audit_env_job;
 #[path = "../src/processing_job.rs"]
 mod processing_job;
 mod support;
@@ -52,6 +63,7 @@ fn task(input: ProcessingJobInput, budget: ProcessingBudget) -> ProcessingTask {
         snapshot: parcels(),
         request: RunRequest::Processing(input),
         file: None,
+        package: None,
         budget,
     }
 }
@@ -396,6 +408,7 @@ fn import_task(
             options,
         }),
         file: Some(staged(name, bytes)),
+        package: None,
         budget: budget(),
     }
 }
@@ -406,6 +419,7 @@ fn atlas_task(input: ProjectAtlasInput) -> ProcessingTask {
         snapshot: ATLAS.to_vec(),
         request: RunRequest::Atlas(input),
         file: None,
+        package: None,
         budget: budget(),
     }
 }

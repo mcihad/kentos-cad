@@ -1,0 +1,22 @@
+# Araçtan yerleşik araç: Vitrin › Analiz › Çekme mesafesi. Eklentinin İşlemler aracı her yapının tamponunu KentOS'un
+# yerleşik Tampon aracına çizdirir (aracın içinden ctx.run_tool: KentOS'un aracı eklentiye verilen yapılar üzerinde,
+# kullanıcının çizimine dokunmadan), tamponun yapının parselinden taşıp taşmadığını shapely ile bulur; tamponlar yeni
+# katmanda, taşan yapılar seçili. (Önce 01.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 844 20    # Vitrin sekmesi
+wait 1000
+shot 44-serit
+click 452 84    # Çekme mesafesi: İşlemler'in araç penceresi
+wait 2500
+shot 44-pencere
+click 1167 775  # Çalıştır (3 m)
+wait 6000
+shot 44-sonuc
+click 1084 772  # Kapat: tamponlar ve seçili (taşan) yapılar haritada
+wait 1200
+shot 44-harita

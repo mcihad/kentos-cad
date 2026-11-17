@@ -8,11 +8,19 @@
 //! statistic of the field. A value of a hidden field quoted in a text (“…”) is written as hidden too: a rule's
 //! words name the value they refuse. The command history's rule writes the journal's inputs (docs/adr/0443 §2).
 //! What is cut is written [`HIDDEN`]; the summary names the hidden fields.
+//!
+//! **Every field** (docs/adr/8057 §103, PY-AI-13): an agent the user or the organisation sends no attribute value
+//! ([`Veil::everything`]) reads the drawing as if every field were hidden. A free text then hides a value wherever it
+//! stands as words, not only quoted (an extension's finding writes `Malik Ali Veli` as it likes), except where the
+//! answer names what it is (`id`, `layerId`, `kind` …: [`STRUCTURAL`]); a value of fewer than three letters is hidden
+//! in an attribute map alone (`1`, `A` would cut every count). It may write a field's value: writing sends none out.
 
 use std::collections::BTreeSet;
 
 use kentos_domain::Document;
 use kentos_native_application::python_call::{HIDDEN, redacted, redacted_names};
+
+pub use every::STRUCTURAL;
 use serde_json::{Map, Value};
 
 /// The keys under which a call's texts are what it writes (an object's attribute values, a text's words, a
@@ -21,11 +29,22 @@ pub const WRITTEN: [&str; 9] = [
     "attrs", "values", "value", "text", "content", "note", "notes", "comment", "path",
 ];
 
+/// The keys under which a call's texts name a thing of the drawing or of the call (an object, a layer, a tool, a
+/// model and its steps), never a field or an expression (docs/adr/8057 §108). A layer's id is often a field's name
+/// (`parsel`, `ada`): a run on the parcels' layer was refused for naming the field; a model an agent named
+/// `parsel-tampon-birlesik` read as the expression `parsel - tampon - birlesik` and was refused too (the real window).
+pub const NAMING: [&str; 18] = [
+    "id", "uid", "uids", "layerId", "layer", "kind", "type", "scope", "command", "tool", "step",
+    "output", "code", "rule", "version", "revision", "planId", "newName",
+];
+
 /// The drawing's hidden fields and the values they hold.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Veil {
     names: Vec<String>,
     values: BTreeSet<String>,
+    /// Every field hidden ([`Veil::everything`]).
+    everything: bool,
 }
 
 impl Veil {
@@ -43,7 +62,11 @@ impl Veil {
                 }
             }
         }
-        Some(Veil { names, values })
+        Some(Veil {
+            names,
+            values,
+            everything: false,
+        })
     }
 
     /// A veil of `names` over `values` (tests and other hosts).
@@ -51,6 +74,7 @@ impl Veil {
         Veil {
             names,
             values: values.into_iter().filter(|v| !v.is_empty()).collect(),
+            everything: false,
         }
     }
 
@@ -88,10 +112,22 @@ impl Veil {
                     path.push('.');
                 }
                 path.push_str(k);
-                let found = if self.hides(k) {
+                // Every field hidden, its value may still be written: writing sends nothing out (§103).
+                let writing = content && self.everything;
+                // A model step's values are its tool's parameters, each given (`{"kind": "value", "value": …}`) as
+                // the parameter's own would be, not written values (docs/adr/8057 §108).
+                let step_values = k == "values" && map.contains_key("tool");
+                let given =
+                    k == "value" && map.get("kind").and_then(Value::as_str) == Some("value");
+                let inner = if step_values || given {
+                    content
+                } else {
+                    content || WRITTEN.contains(&k.as_str()) || NAMING.contains(&k.as_str())
+                };
+                let found = if self.hides(k) && !writing {
                     Some((path.clone(), k.clone()))
                 } else {
-                    self.named_at(item, path, content || WRITTEN.contains(&k.as_str()))
+                    self.named_at(item, path, inner)
                 };
                 path.truncate(len);
                 found
@@ -116,29 +152,68 @@ impl Veil {
         self.names.iter().find(|n| fields.contains(n)).cloned()
     }
 
+    /// The hidden field `text` reads: it is the field's name, an expression or a template that reads it (an
+    /// İşlemler tool's expression parameter, docs/adr/8057 §108).
+    pub fn read_by(&self, text: &str) -> Option<String> {
+        self.named_by(text)
+    }
+
+    /// The hidden field among `names`, written with commas between them (an İşlemler tool's field parameter).
+    pub fn among(&self, names: &str) -> Option<String> {
+        names
+            .split(',')
+            .map(str::trim)
+            .find(|n| self.hides(n))
+            .map(str::to_owned)
+    }
+
     /// An agent's call refused because it names a hidden field ([`Veil::named_in`]), as the protocol answers.
     pub fn refusal(&self, input: &Value) -> Option<kentos_commands::CommandError> {
         let (at, field) = self.named_in(input)?;
-        Some(kentos_commands::CommandError {
-            code: kentos_commands::codes::HIDDEN_FIELD.into(),
-            message: format!(
+        Some(self.refusal_at(&at, &field))
+    }
+
+    /// The refusal of a call that names hidden `field` at `at` (a place in its input, `a.b[2]`).
+    pub fn refusal_at(&self, at: &str, field: &str) -> kentos_commands::CommandError {
+        let message = if self.everything {
+            format!(
+                "Bu ajana öznitelik değerleri gönderilmiyor (kullanıcının ya da kurumun seçimi): “{field}” alanıyla \
+                 süzme, sıralama ve hesap ({at}) çizimin sahibinindir. Değer gerektiren işi kullanıcıya bırakın."
+            )
+        } else {
+            format!(
                 "“{field}” alanı çizimde ajandan gizli ({at}): o alanla süzme, sıralama, hesap ve yazma çizimin \
                  sahibinindir. Çağrıyı bu alanı anmadan yeniden yapın."
-            ),
+            )
+        };
+        kentos_commands::CommandError {
+            code: kentos_commands::codes::HIDDEN_FIELD.into(),
+            message,
             path: Some(if at.is_empty() {
                 "input".into()
             } else {
                 format!("input.{at}")
             }),
             ..kentos_commands::CommandError::default()
-        })
+        }
     }
 
     /// `answer` as an agent may read it.
     pub fn cut(&self, answer: Value) -> Value {
+        self.cut_as(answer, false)
+    }
+
+    /// `answer` cut, its texts saying what a part is (`structural`) or what the drawing holds.
+    fn cut_as(&self, answer: Value, structural: bool) -> Value {
         match answer {
             Value::Object(map) => Value::Object(self.cut_object(map)),
-            Value::Array(items) => Value::Array(items.into_iter().map(|v| self.cut(v)).collect()),
+            Value::Array(items) => Value::Array(
+                items
+                    .into_iter()
+                    .map(|v| self.cut_as(v, structural))
+                    .collect(),
+            ),
+            Value::String(text) if structural => Value::String(self.quoted(&text)),
             Value::String(text) => Value::String(self.text(&text)),
             other => other,
         }
@@ -149,6 +224,11 @@ impl Veil {
         let mut summary = self.cut(summary);
         if let Some(fields) = summary.as_object_mut() {
             fields.insert("hidden".into(), Value::from(self.names.clone()));
+            // Why, for the agent to say it right: not the drawing's hiding (measured: an agent told the user to open
+            // the fields' privacy).
+            if self.everything {
+                fields.insert("valuesWithheld".into(), Value::from(every::WITHHELD));
+            }
         }
         summary
     }
@@ -159,8 +239,19 @@ impl Veil {
         self.cut(redacted(&journal, &self.names))
     }
 
-    /// A text with every hidden value it quotes (“…”) written as hidden.
+    /// A text with every hidden value it quotes (“…”) written as hidden; every field hidden, every value it holds as
+    /// words too ([`Veil::everything`]).
     pub fn text(&self, text: &str) -> String {
+        let quoted = self.quoted(text);
+        if self.everything {
+            self.words(&quoted)
+        } else {
+            quoted
+        }
+    }
+
+    /// A text with every hidden value it quotes (“…”) written as hidden.
+    fn quoted(&self, text: &str) -> String {
         if self.values.is_empty() || !text.contains('“') {
             return text.to_owned();
         }
@@ -221,7 +312,7 @@ impl Veil {
                     Value::Object(attrs) if k == "attrs" || k == "values" => {
                         Value::Object(self.cut_attrs(attrs))
                     }
-                    other => self.cut(other),
+                    other => self.cut_as(other, STRUCTURAL.contains(&k.as_str())),
                 };
                 (k, v)
             })
@@ -294,114 +385,8 @@ fn hide(map: &mut Map<String, Value>, key: &str) {
     }
 }
 
+mod every;
+#[cfg(feature = "mod-gis")]
+pub(crate) mod reads;
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    fn veil() -> Veil {
-        Veil::new(
-            vec!["Malik".into(), "TC".into()],
-            ["Ali Yılmaz".to_owned(), "12345678901".to_owned()],
-        )
-    }
-
-    #[test]
-    fn an_attribute_map_hides_the_fields_and_keeps_the_rest() {
-        let got = veil().cut(
-            json!({ "entities": [{ "uid": "u", "entity": { "kind": "point", "id": 1,
-            "attrs": { "Malik": "Ali Yılmaz", "Ada": "101", "TC": "12345678901" } } }] }),
-        );
-        assert_eq!(
-            got["entities"][0]["entity"]["attrs"],
-            json!({ "Malik": HIDDEN, "Ada": "101", "TC": HIDDEN })
-        );
-        // A structural key of the same name elsewhere is not an attribute.
-        let named = Veil::new(vec!["name".into()], ["x".to_owned()]);
-        assert_eq!(
-            named.cut(json!({ "name": "Parseller" })),
-            json!({ "name": "Parseller" })
-        );
-    }
-
-    #[test]
-    fn a_quoted_hidden_value_is_written_hidden() {
-        assert_eq!(
-            veil().text("“TC” katmanda tekil olmalı; “12345678901” başka bir nesnede var."),
-            format!("“TC” katmanda tekil olmalı; “{HIDDEN}” başka bir nesnede var.")
-        );
-        // An unclosed quote and a value not hidden stay.
-        assert_eq!(veil().text("“Ada” “101"), "“Ada” “101");
-    }
-
-    /// fixtures/agent-veil/v1/cases.json, written by scripts/fixtures/agent_veil_cases.py from the ADR without
-    /// KentOS code.
-    #[test]
-    fn the_shared_cases_are_cut_alike() {
-        let data: Value = serde_json::from_str(include_str!(
-            "../../../../fixtures/agent-veil/v1/cases.json"
-        ))
-        .expect("the cases");
-        assert_eq!(data["hidden"], HIDDEN);
-        let cases = data["cases"].as_array().expect("cases");
-        assert!(cases.len() >= 20);
-        for case in cases {
-            let strings = |k: &str| -> Vec<String> {
-                serde_json::from_value(case[k].clone()).expect("a list of texts")
-            };
-            let veil = Veil::new(strings("names"), strings("values"));
-            assert_eq!(
-                veil.cut(case["answer"].clone()),
-                case["cut"],
-                "{}",
-                case["name"]
-            );
-        }
-    }
-
-    /// fixtures/agent-veil/v1/oracle.json, written by scripts/fixtures/agent_oracle_cases.py from docs/adr/0743 §1
-    /// without KentOS code.
-    #[test]
-    fn the_shared_cases_name_a_hidden_field_alike() {
-        let data: Value = serde_json::from_str(include_str!(
-            "../../../../fixtures/agent-veil/v1/oracle.json"
-        ))
-        .expect("the cases");
-        let cases = data["cases"].as_array().expect("cases");
-        assert!(cases.len() >= 20);
-        for case in cases {
-            let names: Vec<String> =
-                serde_json::from_value(case["names"].clone()).expect("the names");
-            let got = Veil::new(names, Vec::new())
-                .named_in(&case["input"])
-                .map(|(path, field)| json!({ "path": path, "field": field }))
-                .unwrap_or(Value::Null);
-            assert_eq!(got, case["named"], "{}", case["name"]);
-        }
-    }
-
-    #[test]
-    fn a_join_a_conflict_and_a_statistic_hide_the_field() {
-        let got = veil().cut(json!({
-            "columns": [{ "name": "Ada", "field": "Ada" }, { "name": "Malik", "field": "Malik" }],
-            "rows": [{ "id": "a/b", "left": "a", "cells": ["101", "Ali Yılmaz"] }, { "id": "c/", "left": "c", "cells": ["102", null] }],
-            "totals": [{ "column": 1, "sum": "3", "count": 1 }]
-        }));
-        assert_eq!(got["rows"][0]["cells"], json!(["101", HIDDEN]));
-        assert_eq!(got["rows"][1]["cells"], json!(["102", null]));
-        assert_eq!(
-            got["totals"][0],
-            json!({ "column": 1, "sum": HIDDEN, "count": HIDDEN })
-        );
-        let conflict = veil().cut(json!({ "name": "Malik", "layer": "Ali", "table": "Veli" }));
-        assert_eq!(
-            conflict,
-            json!({ "name": "Malik", "layer": HIDDEN, "table": HIDDEN })
-        );
-        let stat = veil().cut(json!({ "field": "TC", "read": 3, "skipped": 0, "sum": "6" }));
-        assert_eq!(
-            stat,
-            json!({ "field": "TC", "read": HIDDEN, "skipped": HIDDEN, "sum": HIDDEN })
-        );
-    }
-}
+mod tests;

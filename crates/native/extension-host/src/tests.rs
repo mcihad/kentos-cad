@@ -157,6 +157,7 @@ fn the_whole_lifecycle_leaves_nothing_of_a_lease_behind() {
     let temp = Temp::new("yasam");
     let mut r = open(&temp.0);
     let first = install(&mut r, &package(ID, "1.0.0", &[]));
+    assert!(!r.developed(ID), "from a file: a published version's environment");
     let l1 = first.activation.unwrap().unwrap().lease;
     assert_eq!(r.state(ID), Some(State::Active));
     assert_eq!(r.contributions().len(), 1);
@@ -523,11 +524,12 @@ fn what_the_user_did_not_grant_is_left_out() {
     let activation = installed.activation.unwrap().unwrap();
     assert!(r.contributions().is_empty());
     assert_eq!(activation.skipped.len(), 1);
-    assert!(
-        activation.skipped[0].reason.contains("network"),
-        "{:?}",
-        activation.skipped
+    assert_eq!(
+        activation.skipped[0].reason, "Verilmeyen yetenek: “İnternete bağlanır”.",
+        "said by its title (docs/adr/8057 §122)"
     );
+    // Asked again without activating: the same, for a form's button (docs/adr/8057 §122).
+    assert_eq!(r.left_out(ID), activation.skipped);
     let foreign = Choice {
         grant: Grant {
             capabilities: vec![Capability::FilesUserSelected],
@@ -559,6 +561,230 @@ fn mebis_folder(dir: &Path) {
         };
         fs::write(target, data).unwrap();
     }
+}
+
+/// The review lists the Python packages a package installs, its own project left out; an update's against the
+/// installed version's: another version, the same version with other files, a new one (its name a letter from a
+/// well-known package's, marked), the kept, one no longer installed (docs/adr/8057 §81).
+#[test]
+fn the_review_lists_the_python_packages_and_an_updates_difference() {
+    let temp = Temp::new("paketler");
+    let folder = temp.0.join("mebis-kaynak");
+    mebis_folder(&folder);
+    let mut r = open(&temp.0.join("kayit"));
+    let packed = |files: &BTreeMap<String, Vec<u8>>| {
+        kentos_extensions::pack(files, &Limits::default())
+            .unwrap_or_else(|p| panic!("{p:#?}"))
+            .bytes
+    };
+    let said = |review: &Review| -> Vec<(String, Change, Option<String>, Option<&'static str>)> {
+        review
+            .python_packages
+            .iter()
+            .map(|l| {
+                (
+                    format!("{} {}", l.name, l.version),
+                    l.change,
+                    l.before.clone(),
+                    l.resembles,
+                )
+            })
+            .collect()
+    };
+    let mut files = store::read_files(&folder).unwrap();
+    let first = r.review(&packed(&files), &file_source());
+    let names: Vec<(String, Change)> = said(&first)
+        .into_iter()
+        .map(|(n, c, _, _)| (n, c))
+        .collect();
+    let asked = |n: &str| (n.to_owned(), Change::Asked);
+    assert_eq!(
+        names,
+        [
+            asked("importlib-metadata 10.2.0"),
+            asked("lazy-importer 0.1.0"),
+            asked("numpy 2.5.4"),
+            asked("pygal 3.1.3"),
+            asked("shapely 2.2.0"),
+            asked("zipp 4.1.2")
+        ]
+    );
+    install(&mut r, &packed(&files));
+    let edit = |files: &mut BTreeMap<String, Vec<u8>>, path: &str, from: &str, to: &str| {
+        let text = String::from_utf8(files[path].clone()).unwrap();
+        assert!(text.contains(from), "{path}: {from}");
+        files.insert(path.to_owned(), text.replacen(from, to, 1).into_bytes());
+    };
+    edit(
+        &mut files,
+        "manifest.json",
+        "\"version\": \"1.0.0\"",
+        "\"version\": \"1.1.0\"",
+    );
+    edit(
+        &mut files,
+        "pyproject.toml",
+        "version = \"1.0.0\"",
+        "version = \"1.1.0\"",
+    );
+    edit(
+        &mut files,
+        "uv.lock",
+        "name = \"mebis\"\nversion = \"1.0.0\"",
+        "name = \"mebis\"\nversion = \"1.1.0\"",
+    );
+    edit(
+        &mut files,
+        "uv.lock",
+        "name = \"shapely\"\nversion = \"2.2.0\"",
+        "name = \"shapely\"\nversion = \"2.2.1\"",
+    );
+    edit(
+        &mut files,
+        "uv.lock",
+        "sha256:9a94cf751c9ad8ebaa835bcd3d40dacf",
+        "sha256:0a94cf751c9ad8ebaa835bcd3d40dacf",
+    );
+    let lock = String::from_utf8(files["uv.lock"].clone()).unwrap();
+    let zipp = lock.find("[[package]]\nname = \"zipp\"").unwrap();
+    let lock = format!(
+        "{}[[package]]\nname = \"reqeusts\"\nversion = \"2.32.3\"\nsource = {{ registry = \"https://pypi.org/simple\" }}\n",
+        &lock[..zipp]
+    );
+    files.insert("uv.lock".into(), lock.into_bytes());
+    let update = r.review(&packed(&files), &file_source());
+    let changed = |n: &str, c: Change, before: Option<&str>, like: Option<&'static str>| {
+        (n.to_owned(), c, before.map(str::to_owned), like)
+    };
+    assert_eq!(
+        said(&update),
+        [
+            changed("numpy 2.5.4", Change::Changed, Some("2.5.4"), None),
+            changed("reqeusts 2.32.3", Change::Added, None, Some("requests")),
+            changed("shapely 2.2.1", Change::Changed, Some("2.2.0"), None),
+            changed("importlib-metadata 10.2.0", Change::Same, None, None),
+            changed("lazy-importer 0.1.0", Change::Same, None, None),
+            changed("pygal 3.1.3", Change::Same, None, None),
+            changed("zipp 4.1.2", Change::Removed, None, None),
+        ]
+    );
+    assert!(
+        update
+            .inspection
+            .warnings
+            .iter()
+            .any(|w| w.code == "python_name_resembles"),
+        "verify's warning too"
+    );
+}
+
+/// The organisation's Python package rules (docs/adr/8057 §84): a blocked package, a list of the only allowed ones and
+/// of the allowed indexes are said in the review and refuse Kur; set afterwards, they stop the installed extension.
+#[test]
+fn the_policy_judges_the_python_packages_a_package_brings() {
+    let temp = Temp::new("paket-ilkesi");
+    let folder = temp.0.join("mebis-kaynak");
+    mebis_folder(&folder);
+    let bytes = kentos_extensions::pack(&store::read_files(&folder).unwrap(), &Limits::default())
+        .unwrap()
+        .bytes;
+    let policy = |extra: Value| {
+        let mut p = json!({"format": "kentos.extension-policy", "schemaVersion": 1});
+        for (k, v) in extra.as_object().unwrap() {
+            p[k] = v.clone();
+        }
+        Options {
+            policy: Some(Policy::read(&p.to_string()).unwrap()),
+            ..Options::default()
+        }
+    };
+    let root = temp.0.join("kayit");
+    for (rule, said) in [
+        (
+            json!({"blockedPythonPackages": ["NumPy"]}),
+            "Kurum ilkesi “numpy” Python paketini engelliyor.",
+        ),
+        (
+            json!({"blockedPythonPackages": ["numpy==2.5.3", "shapely == 2.2.0"]}),
+            "Kurum ilkesi “shapely” Python paketinin 2.2.0 sürümünü engelliyor; eklentinin yazarı başka bir sürüme \
+             kilitlemeli.",
+        ),
+        (
+            json!({"allowedPythonPackages": ["numpy", "shapely", "pygal", "zipp", "importlib-metadata"]}),
+            "Kurum ilkesi yalnız izin verdiği Python paketlerini kurduruyor; “lazy-importer” listede yok.",
+        ),
+        (
+            json!({"allowedPackageIndexes": ["https://pypi.ornek.bel.tr/simple"]}),
+            "Kurum ilkesi “importlib-metadata” paketinin geldiği yere (registry https://pypi.org/simple) izin \
+             vermiyor; izinli paket depoları: https://pypi.ornek.bel.tr/simple.",
+        ),
+        // The organisation's own names from its own index only (docs/adr/8057 §118): by name, by prefix.
+        (
+            json!({"pinnedPackageIndexes": {"Shapely": "https://pypi.ornek.bel.tr/simple/"}}),
+            "Kurum ilkesi “shapely” paketini yalnız kurumun deposundan (https://pypi.ornek.bel.tr/simple/) \
+             kurduruyor; kilit onu başka bir yerden alıyor (registry https://pypi.org/simple): aynı adla genel bir \
+             depoya konmuş başka bir paket olabilir (bağımlılık karışıklığı). Eklentinin yazarı paketi o depoya \
+             bağlamalı ([tool.uv.sources]).",
+        ),
+        (
+            json!({"pinnedPackageIndexes": {"lazy-*": "https://pypi.ornek.bel.tr/simple"}}),
+            "Kurum ilkesi “lazy-importer” paketini yalnız kurumun deposundan (https://pypi.ornek.bel.tr/simple) \
+             kurduruyor; kilit onu başka bir yerden alıyor (registry https://pypi.org/simple): aynı adla genel bir \
+             depoya konmuş başka bir paket olabilir (bağımlılık karışıklığı). Eklentinin yazarı paketi o depoya \
+             bağlamalı ([tool.uv.sources]).",
+        ),
+    ] {
+        let mut r = open_with(&root, policy(rule));
+        let review = r.review(&bytes, &file_source());
+        assert_eq!(review.policy.as_deref(), Some(said));
+        assert!(!review.installable);
+        let refused = r
+            .install(&bytes, &file_source(), &all_granted())
+            .unwrap_err();
+        assert_eq!(
+            (refused[0].code, refused[0].message.as_str()),
+            ("registry_policy", said)
+        );
+    }
+    // The least package age (docs/adr/8057 §85): the fixture's packages were uploaded in 2026, years under 100 000
+    // days; none of them under 0 days.
+    let mut r = open_with(&root, policy(json!({"minimumPackageAgeDays": 100_000})));
+    let said = r.review(&bytes, &file_source()).policy.unwrap_or_default();
+    assert!(
+        said.starts_with(
+            "Kurum ilkesi 100000 günden yeni Python paketi kurdurmuyor: “importlib-metadata” 10.2.0"
+        ),
+        "{said}"
+    );
+    assert!(r.install(&bytes, &file_source(), &all_granted()).is_err());
+    let r = open_with(&root, policy(json!({"minimumPackageAgeDays": 0})));
+    assert_eq!(r.review(&bytes, &file_source()).policy, None);
+    drop(r);
+    // Pinned to where it comes from, or a prefix whose separator another name does not take (`num-*` is not
+    // `numpy`): nothing refused.
+    let r = open_with(
+        &root,
+        policy(
+            json!({"pinnedPackageIndexes": {"shapely": "https://pypi.org/simple", "num-*": "https://x.test/simple"}}),
+        ),
+    );
+    assert_eq!(r.review(&bytes, &file_source()).policy, None);
+    drop(r);
+    // Allowed: the index written with a slash, the names as the lock has them.
+    let mut r = open_with(
+        &root,
+        policy(json!({"allowedPackageIndexes": ["https://pypi.org/simple/"]})),
+    );
+    install(&mut r, &bytes);
+    drop(r);
+    // Blocked afterwards: the installed extension stops with the reason, it is not removed.
+    let r = open_with(&root, policy(json!({"blockedPythonPackages": ["shapely"]})));
+    assert!(
+        matches!(r.state("tr.ornek.mebis"), Some(State::Blocked { reason }) if reason.contains("“shapely”")),
+        "{:?}",
+        r.state("tr.ornek.mebis")
+    );
+    assert_eq!(r.extensions().len(), 1);
 }
 
 #[test]
@@ -596,6 +822,9 @@ fn python_contributions_wait_for_the_choice_and_a_working_folder_reloads_cleanly
             .any(|s| s.id == "ext.tr.ornek.mebis.init-schema" && s.reason.contains("Python"))
     );
     assert_eq!(r.extensions()[0].trust, Trust::Local);
+    // Being developed: its Python takes a development environment (docs/adr/8057 §97); an unknown one is not.
+    assert!(r.developed("tr.ornek.mebis"));
+    assert!(!r.developed("tr.ornek.yok"));
     // The author changes a title in the working folder and reloads: same version, a new lease, nothing old left.
     let path = folder.join("manifest.json");
     let text = fs::read_to_string(&path)
@@ -751,6 +980,83 @@ fn the_review_shows_what_changes_before_anything_is_installed() {
     );
     let bad = r.review(b"paket degil", &file_source());
     assert!(!bad.installable && !bad.inspection.is_valid());
+}
+
+/// A package whose name or id reads as an installed extension's, or as a catalog's the desktop read, is said in the
+/// review (docs/adr/8059 §14): the imitations first, a resemblance said too, the same extension's update not compared;
+/// nothing is refused by it, the person answers.
+#[test]
+fn the_review_says_what_a_package_imitates() {
+    let temp = Temp::new("taklit");
+    let mut r = open(&temp.0);
+    let named = |id: &str, name: &str| {
+        let name = name.to_owned();
+        package_with(id, "1.0.0", &[], move |m| m["name"] = json!(name))
+    };
+    let codes = |review: &Review| -> Vec<(&'static str, String)> {
+        review
+            .resemblances
+            .iter()
+            .map(|x| (x.code(), x.other_id.clone()))
+            .collect()
+    };
+    install(&mut r, &named("tr.ornek.vitrin", "Vitrin"));
+    let update = package_with("tr.ornek.vitrin", "1.1.0", &[], |m| {
+        m["name"] = json!("Vitrin")
+    });
+    assert!(r.review(&update, &file_source()).resemblances.is_empty());
+    let copy = r.review(&named("tr.ornek.vltrin", "Vіtrin"), &file_source());
+    assert_eq!(
+        codes(&copy),
+        [
+            ("imitates_name", "tr.ornek.vitrin".to_owned()),
+            ("imitates_id", "tr.ornek.vitrin".to_owned())
+        ]
+    );
+    assert!(
+        copy.imitates() && copy.installable,
+        "said, never refused by it"
+    );
+    // Installed in spite of it, both stay marked while both are installed: names and ids, the icon was compared at Kur.
+    install(&mut r, &named("tr.ornek.vltrin", "Vіtrin"));
+    let marked: Vec<(String, Vec<&'static str>)> = r
+        .extensions()
+        .iter()
+        .map(|e| {
+            (
+                e.id.clone(),
+                e.resemblances.iter().map(|x| x.code()).collect(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        marked,
+        [
+            (
+                "tr.ornek.vitrin".to_owned(),
+                vec!["imitates_name", "imitates_id"]
+            ),
+            (
+                "tr.ornek.vltrin".to_owned(),
+                vec!["imitates_name", "imitates_id"]
+            )
+        ]
+    );
+    let entry = kentos_extensions::resemblance::Known {
+        id: "tr.kentos.mevzuat".into(),
+        name: "Türkiye mevzuatı".into(),
+        ..Default::default()
+    };
+    let near = r.review_beside(
+        &named("tr.baska.mevzuat", "Türkiye mevzuat"),
+        &file_source(),
+        vec![entry],
+    );
+    assert_eq!(
+        codes(&near),
+        [("resembles_name", "tr.kentos.mevzuat".to_owned())]
+    );
+    assert!(!near.imitates());
 }
 
 #[test]
@@ -1194,4 +1500,172 @@ fn the_demo_extension_binds_whole_in_a_dry_run() {
     ] {
         assert!(ids.contains(&want), "{want}: {ids:?}");
     }
+}
+
+mod l10n;
+
+/// An update's review starts from what the person granted the installed version (docs/adr/8057 §121, ECO-QA-11): a
+/// capability asked as before keeps the person's answer, one left out stays out; a new one and one that reaches
+/// further start ungranted. A scope that changes is a change, and a wider one.
+#[test]
+fn an_update_never_widens_what_the_person_granted() {
+    let temp = Temp::new("kapsam");
+    let mut r = open(&temp.0);
+    let with_document = |version: &str, scope: &'static str| {
+        package_with(ID, version, &[], move |m| {
+            m["requestedCapabilities"].as_array_mut().unwrap().push(
+                json!({"id": "document.read", "scope": scope, "reason": "Seçtiğiniz nesneleri okur."}),
+            );
+        })
+    };
+    let everything = Choice {
+        grant: Grant {
+            capabilities: vec![
+                Capability::DataSource,
+                Capability::Network,
+                Capability::DocumentRead,
+            ],
+            python: false,
+        },
+        enable: true,
+        replace_source: false,
+    };
+    r.install(
+        &with_document("1.0.0", "user-selected"),
+        &file_source(),
+        &everything,
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    let start = |r: &Registry, bytes: &[u8]| {
+        let review = r.review(bytes, &file_source());
+        let lines: Vec<(Capability, Change, bool)> = review
+            .capabilities
+            .iter()
+            .map(|l| (l.capability, l.change, l.wider))
+            .collect();
+        (
+            crate::starting_grant(&review.capabilities, r.grant(ID)),
+            lines,
+        )
+    };
+    // Asked as before, the reason said anew: the person's grant stands.
+    let reworded = package_with(ID, "1.1.0", &[], |m| {
+        m["requestedCapabilities"][1]["reason"] = json!("Karo sunucusundan altlığı okur.");
+        m["requestedCapabilities"].as_array_mut().unwrap().push(
+            json!({"id": "document.read", "scope": "user-selected", "reason": "Seçtiğiniz nesneleri okur."}),
+        );
+    });
+    let (granted, lines) = start(&r, &reworded);
+    assert!(
+        lines.contains(&(Capability::Network, Change::Changed, false)),
+        "{lines:?}"
+    );
+    assert_eq!(
+        granted,
+        [
+            Capability::DataSource,
+            Capability::Network,
+            Capability::DocumentRead
+        ]
+    );
+    // Reaching further: another server, data to an outside AI, the whole project where it read what the person picked;
+    // and a new capability. None of them is granted by the earlier answer.
+    let further = package_with(ID, "1.2.0", &[], |m| {
+        m["requestedCapabilities"][1]["hosts"] =
+            json!(["tiles.ornek.bel.tr", "toplayici.ornek.com"]);
+        m["requestedCapabilities"][1]["sendsDataToAi"] = json!(true);
+        let list = m["requestedCapabilities"].as_array_mut().unwrap();
+        list.push(json!({"id": "document.read", "scope": "current-project", "reason": "Seçtiğiniz nesneleri okur."}));
+        list.push(json!({"id": "files.userSelected", "scope": "user-selected", "reason": "Seçtiğiniz dosyayı okur."}));
+    });
+    let (granted, lines) = start(&r, &further);
+    assert_eq!(granted, [Capability::DataSource], "{lines:?}");
+    assert!(lines.contains(&(Capability::Network, Change::Changed, true)));
+    assert!(
+        lines.contains(&(Capability::DocumentRead, Change::Changed, true)),
+        "a scope is a change"
+    );
+    assert!(lines.contains(&(Capability::FilesUserSelected, Change::Added, false)));
+    // Installed with what the review started with: the extension has no more than before.
+    r.install(
+        &further,
+        &file_source(),
+        &Choice {
+            grant: Grant {
+                capabilities: granted,
+                python: false,
+            },
+            enable: true,
+            replace_source: false,
+        },
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(r.grant(ID).unwrap().capabilities, [Capability::DataSource]);
+    // What the person left out stays out at the next version asked as before.
+    let (granted, _) = start(
+        &r,
+        &package_with(ID, "1.3.0", &[], |m| {
+            m["requestedCapabilities"][1]["hosts"] =
+                json!(["tiles.ornek.bel.tr", "toplayici.ornek.com"]);
+            m["requestedCapabilities"][1]["sendsDataToAi"] = json!(true);
+            let list = m["requestedCapabilities"].as_array_mut().unwrap();
+            list.push(json!({"id": "document.read", "scope": "current-project", "reason": "Seçtiğiniz nesneleri okur."}));
+            list.push(json!({"id": "files.userSelected", "scope": "user-selected", "reason": "Seçtiğiniz dosyayı okur."}));
+        }),
+    );
+    assert_eq!(granted, [Capability::DataSource]);
+    // A first install asks everything: the person reads each line.
+    let fresh = Temp::new("kapsam-ilk");
+    let mut other = open(&fresh.0);
+    let review = other.review(&further, &file_source());
+    assert_eq!(crate::starting_grant(&review.capabilities, None).len(), 4);
+    // A scope that reaches less is a change, not a wider one: the grant stands.
+    other
+        .install(
+            &with_document("1.0.0", "current-project"),
+            &file_source(),
+            &everything,
+        )
+        .unwrap_or_else(|p| panic!("{p:#?}"));
+    let (granted, lines) = start(&other, &with_document("1.1.0", "user-selected"));
+    assert!(
+        lines.contains(&(Capability::DocumentRead, Change::Changed, false)),
+        "{lines:?}"
+    );
+    assert!(granted.contains(&Capability::DocumentRead));
+}
+
+/// An update from another publisher is said before Kur (docs/adr/8057 §126): the extension handed to another, or its id
+/// taken; the same publisher and a first install say nothing. Said, not refused: the person decides.
+#[test]
+fn an_update_from_another_publisher_is_said() {
+    use crate::PublisherChange;
+    let temp = Temp::new("yayimci");
+    let mut r = open(&temp.0);
+    let by = |version: &str, publisher: Option<&'static str>| {
+        package_with(ID, version, &[], move |m| {
+            if let Some(p) = publisher {
+                m["publisherId"] = json!(p);
+            }
+        })
+    };
+    let first = r.review(&by("1.0.0", Some("ornek-belediye")), &file_source());
+    assert_eq!(first.publisher_change, None, "a first install");
+    install(&mut r, &by("1.0.0", Some("ornek-belediye")));
+    let same = r.review(&by("1.1.0", Some("ornek-belediye")), &file_source());
+    assert_eq!(same.publisher_change, None);
+    let other = r.review(&by("1.1.0", Some("baska-yayimci")), &file_source());
+    assert_eq!(
+        other.publisher_change,
+        Some(PublisherChange {
+            before: Some("ornek-belediye".into()),
+            after: Some("baska-yayimci".into()),
+        })
+    );
+    assert!(
+        other.installable && other.publisher_changed(),
+        "said, not refused"
+    );
+    let unnamed = r.review(&by("1.1.0", None), &file_source());
+    assert_eq!(unnamed.publisher_change.map(|c| c.after), Some(None));
 }

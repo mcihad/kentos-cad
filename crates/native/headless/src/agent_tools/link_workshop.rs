@@ -1,7 +1,8 @@
 //! An agent's extension workshop on a desktop's link (docs/adr/8057 §30): the MCP server's agent, attached to a
 //! desktop, opens its workshop package in the user's Gözden geçir ve kur window, loads the changes of what the user
-//! installed from its folder, and reads what the user sees of it — the desktop's requests (`review_workshop`,
-//! `reload_extension`, `preview_extension`), as Asistan does in the app. Kur and the capabilities stay the user's.
+//! installed from its folder, reads what the user sees of it and opens its Kataloğa gönder window — the desktop's
+//! requests (`review_workshop`, `reload_extension`, `preview_extension`, `submit_extension`), as Asistan does in the
+//! app. Kur, the capabilities and sending to a catalog stay the user's.
 //! A host without them (a drawing of the server's own) says where the package is opened instead.
 
 use std::path::Path;
@@ -66,6 +67,19 @@ pub fn link_preview(host: &mut dyn Host, id: &str) -> Result<Value, HeadlessErro
                 e,
                 "Bu bağlantı eklentinin görünüşünü veremez: ajanı KentOS masaüstüne bağlayın (desktop.attach) ya da \
                  masaüstünün Asistan'ında çalışın."
+                    .to_owned(),
+            )
+        })
+}
+
+/// The user's Kataloğa gönder window opened on the desktop for the extension `id` the user installed from the workshop
+/// (docs/adr/8057 §107); the user sends.
+pub fn link_submit(host: &mut dyn Host, id: &str) -> Result<Value, HeadlessError> {
+    host.request("submit_extension", &json!({ "id": id }))
+        .map_err(|e| {
+            or_instead(
+                e,
+                "Bu bağlantı kataloğa gönderme penceresini açamaz: ajanı KentOS masaüstüne bağlayın (desktop.attach)."
                     .to_owned(),
             )
         })

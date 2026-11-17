@@ -90,6 +90,17 @@ impl Blobs {
         format!("job-inputs/{tenant}/{project}/{input}-{sha256}")
     }
 
+    /// An extension package's bytes (docs/adr/8059 §13), by the hex of its content digest: written once, never
+    /// changed, shared by every release of that content.
+    pub fn extension_package_key(digest_hex: &str) -> String {
+        format!("extension-packages/sha256-{digest_hex}")
+    }
+
+    /// Where a package's bytes are written before they take their key.
+    pub fn extension_package_staging_key(write: Uuid) -> String {
+        format!("extension-packages/staging/{write}")
+    }
+
     /// Where the object store keeps an object, for a process that reads it in place (a staged file is gigabytes at
     /// most: it is linked into a worker's folder, not read into memory).
     pub fn local_path(&self, key: &str) -> io::Result<PathBuf> {

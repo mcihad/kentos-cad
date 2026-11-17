@@ -1,0 +1,34 @@
+{
+  "format": "kentos.ui.panel",
+  "schemaVersion": 1,
+  "title": "Alandaki yapılar",
+  "body": [
+    {
+      "type": "text",
+      "text": "Haritada çiz'e basıp bir alan çizin (Enter ya da çift tık bitirir): alana giren yapılar, alanın içinde kalan taban alanı ve payıyla listelenir; satıra tıklamak yapıyı gösterir."
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "shapePicker",
+      "id": "alan",
+      "label": "Alan",
+      "shape": "polygon",
+      "required": true,
+      "onChange": "alandaki-yapilar"
+    },
+    {
+      "type": "checkbox",
+      "id": "tamami",
+      "label": "Yalnızca tamamı içinde kalanlar",
+      "value": false,
+      "onChange": "alandaki-yapilar"
+    },
+    {
+      "type": "table",
+      "id": "sonuc",
+      "label": "Alandaki yapılar"
+    }
+  ]
+}

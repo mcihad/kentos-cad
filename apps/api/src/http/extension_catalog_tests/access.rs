@@ -1,19 +1,28 @@
-//! Who may do what and who may see what: a program never decides, nobody reviews their own release, what a caller may
-//! not see answers 404 and is not counted, one's own catalog is one's own, and the catalog is off unless the server
-//! has one.
+//! Who may do what and who may see what: a program never decides, a person decides only signed in afresh, nobody
+//! reviews their own release, what a caller may not see answers 404 and is not counted, one's own catalog is one's
+//! own, and the catalog is off unless the server has one. On both stores.
 
 use axum::http::{HeaderMap, HeaderName, HeaderValue};
-use kentos_extensions::release::Channel;
+use kentos_extensions::release::{Channel, ReleaseState};
 
 use super::*;
+use crate::extension_catalog::memory::MemoryStore;
+use crate::extension_catalog::{Account, CatalogError, Move};
 use crate::http::extension_catalog::channel;
 
-#[tokio::test]
-async fn a_program_never_decides_whoever_s_token_it_carries() {
-    let (app, store) = catalog();
+on_both_stores!(
+    a_program_never_decides_whoever_s_token_it_carries,
+    a_person_decides_only_signed_in_afresh,
+    nobody_reviews_or_approves_their_own_release,
+    what_a_caller_may_not_see_answers_404_and_is_not_counted,
+    one_s_own_catalog_is_one_s_own,
+);
+
+async fn a_program_never_decides_whoever_s_token_it_carries(bench: Bench) {
+    let app = catalog(&bench).await;
     in_review(&app, "1.0.0").await;
     let at = uri(PUBLIC, "1.0.0");
-    let before = store.stored(&key("1.0.0")).unwrap();
+    let before = bench.stored(&key("1.0.0")).await.unwrap();
     let decisions = [
         json!({ "action": "approve" }),
         json!({ "action": "requestChanges", "changes": [{ "code": "broken" }] }),
@@ -29,7 +38,7 @@ async fn a_program_never_decides_whoever_s_token_it_carries() {
         }
     }
     assert_eq!(
-        store.stored(&key("1.0.0")).unwrap(),
+        bench.stored(&key("1.0.0")).await.unwrap(),
         before,
         "nothing moved"
     );
@@ -65,11 +74,87 @@ async fn a_program_never_decides_whoever_s_token_it_carries() {
     }
 }
 
-#[tokio::test]
-async fn nobody_reviews_or_approves_their_own_release() {
-    let (app, store) = catalog();
+/// The server's sessions carry no fresh sign-in yet (docs/adr/8059 §13): a person's decision in the window is refused
+/// after the flow would have allowed it, and nothing moves; the flow's own refusals come first; what is not a decision
+/// goes on; the same person signed in afresh decides.
+async fn a_person_decides_only_signed_in_afresh(bench: Bench) {
+    let app = catalog(&bench).await;
+    in_review(&app, "1.0.0").await;
+    let catalog = Catalog::new(bench.store(), Accounts::Named);
+    let at = key("1.0.0");
+    let before = bench.stored(&at).await.unwrap();
+    let account = |name: &str, via: Channel| Account {
+        id: id(name),
+        via,
+        fresh_sign_in: false,
+    };
+    let approve = Move::Approve { note: None };
+    let refused = |e: CatalogError| match e {
+        CatalogError::Refused(r) => (r.code, r.message),
+        other => panic!("{other:?}"),
+    };
+    let (code, message) = refused(
+        catalog
+            .act(&at, &account("selin", Channel::Window), &approve)
+            .await
+            .unwrap_err(),
+    );
+    assert_eq!(code, "fresh_sign_in_required");
+    assert!(
+        message.contains("“Onayla”") && message.contains("taze bir kimlik doğrulaması"),
+        "{message}"
+    );
+    let send_back = Move::RequestChanges {
+        changes: serde_json::from_value(json!([{ "code": "broken" }])).unwrap(),
+    };
+    let (code, _) = refused(
+        catalog
+            .act(&at, &account("selin", Channel::Window), &send_back)
+            .await
+            .unwrap_err(),
+    );
+    assert_eq!(code, "fresh_sign_in_required");
+    // A program is never a person, the author no reviewer, and an unseen release is not there.
+    for (name, via, expected) in [
+        ("selin", Channel::Program, "decision_by_program"),
+        ("ayse", Channel::Window, "permission_missing"),
+    ] {
+        let (code, _) = refused(
+            catalog
+                .act(&at, &account(name, via), &approve)
+                .await
+                .unwrap_err(),
+        );
+        assert_eq!(code, expected, "{name}");
+    }
+    assert!(matches!(
+        catalog
+            .act(&key("9.9.9"), &account("selin", Channel::Window), &approve)
+            .await,
+        Err(CatalogError::NotFound)
+    ));
+    assert_eq!(bench.stored(&at).await.unwrap(), before, "nothing moved");
+    // The same reviewer, signed in afresh.
+    let fresh = Account {
+        fresh_sign_in: true,
+        ..account("selin", Channel::Window)
+    };
+    let (approved, _) = catalog.act(&at, &fresh, &approve).await.unwrap();
+    assert_eq!(approved.state(), ReleaseState::Approved);
+    // Publishing is the publisher's, not a decision: it goes on without a fresh sign-in.
+    let (published, _) = catalog
+        .act(&at, &account("ayse", Channel::Program), &Move::Publish)
+        .await
+        .unwrap();
+    assert_eq!(published.state(), ReleaseState::Published);
+}
+
+async fn nobody_reviews_or_approves_their_own_release(bench: Bench) {
+    let app = catalog(&bench).await;
     // Ayşe, its author, also reviews in this catalog; Mehmet is a member of her publisher.
-    store.grant(Where::In(CatalogId::Public), "ayse", Role::Reviewer);
+    bench
+        .grant(Where::In(CatalogId::Public), "ayse", Role::Reviewer)
+        .await;
     let (_, view) = upload(&app, PUBLIC, "ayse", release("1.0.0")).await;
     let at = uri(PUBLIC, "1.0.0");
     scan_all(&app, &at, &package_of(&view)).await;
@@ -104,9 +189,8 @@ async fn nobody_reviews_or_approves_their_own_release() {
     assert_eq!((status, state_of(&view)), (StatusCode::OK, "approved"));
 }
 
-#[tokio::test]
-async fn what_a_caller_may_not_see_answers_404_and_is_not_counted() {
-    let (app, store) = catalog();
+async fn what_a_caller_may_not_see_answers_404_and_is_not_counted(bench: Bench) {
+    let app = catalog(&bench).await;
     upload(&app, PUBLIC, "ayse", release("1.0.0")).await;
     let at = uri(PUBLIC, "1.0.0");
     // Can, outside the publisher and the catalog's staff: no draft, no count, no search hit, no move.
@@ -139,11 +223,13 @@ async fn what_a_caller_may_not_see_answers_404_and_is_not_counted() {
         assert_eq!(list["total"].as_u64(), Some(1), "{account}");
     }
     // An organisation's catalog is not there for someone outside it, nor is a catalog that does not exist.
-    store.grant(
-        Where::In(CatalogId::Tenant("buro".into())),
-        "bora",
-        Role::Publisher,
-    );
+    bench
+        .grant(
+            Where::In(CatalogId::Tenant("buro".into())),
+            "bora",
+            Role::Publisher,
+        )
+        .await;
     let buro = "/v1/extension-catalogs/tenant:buro/releases";
     assert_eq!(
         get(&app, Via::Web, buro, "can").await.0,
@@ -151,7 +237,7 @@ async fn what_a_caller_may_not_see_answers_404_and_is_not_counted() {
     );
     assert_eq!(get(&app, Via::Web, buro, "bora").await.0, StatusCode::OK);
     // A member let in without a role sees what is published there.
-    store.admit(CatalogId::Tenant("buro".into()), "deniz");
+    bench.admit(CatalogId::Tenant("buro".into()), "deniz").await;
     assert_eq!(get(&app, Via::Web, buro, "deniz").await.0, StatusCode::OK);
     for missing in ["herkes", "tenant:B", "personal:"] {
         let (status, _) = get(
@@ -171,14 +257,13 @@ async fn what_a_caller_may_not_see_answers_404_and_is_not_counted() {
     );
 }
 
-#[tokio::test]
-async fn one_s_own_catalog_is_one_s_own() {
-    let (app, _store) = catalog();
-    let mine = "/v1/extension-catalogs/personal:can/releases";
+async fn one_s_own_catalog_is_one_s_own(bench: Bench) {
+    let app = catalog(&bench).await;
+    let mine = personal("can");
     // No catalog role needed and nobody else in it: its owner reviews there, the gates still pass first.
-    let (status, view) = upload(&app, mine, "can", release("1.0.0")).await;
+    let (status, view) = upload(&app, &mine, "can", release("1.0.0")).await;
     assert_eq!(status, StatusCode::CREATED, "{view}");
-    let at = uri(mine, "1.0.0");
+    let at = uri(&mine, "1.0.0");
     scan_all(&app, &at, &package_of(&view)).await;
     act(&app, Via::Web, "can", &at, json!({ "action": "submit" })).await;
     act(

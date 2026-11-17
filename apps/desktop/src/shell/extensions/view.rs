@@ -89,27 +89,6 @@ fn capability_words(title: &str, reason: &str, hosts: &[String], ai: bool) -> St
     words
 }
 
-/// Change notes as the window shows them: a package writes them in Markdown; headings and list items are read as
-/// such, the file's own title left out (the section has one).
-fn notes<'a>(text: &str) -> Element<'a, Message> {
-    let mut lines = Column::new().spacing(4);
-    for line in text.lines().map(str::trim).filter(|l| !l.is_empty()) {
-        if line.starts_with("# ") {
-            continue;
-        }
-        lines = if let Some(heading) = line.strip_prefix('#') {
-            lines.push(label::body(
-                heading.trim_start_matches('#').trim().to_owned(),
-            ))
-        } else if let Some(item) = line.strip_prefix("- ").or_else(|| line.strip_prefix("* ")) {
-            lines.push(label::caption(format!("• {item}")))
-        } else {
-            lines.push(label::caption(line.to_owned()))
-        };
-    }
-    lines.into()
-}
-
 impl App {
     /// The Eklentiler window.
     pub(crate) fn extensions_view(&self) -> Element<'_, Message> {
@@ -138,18 +117,32 @@ impl App {
             browse::PROGRAMS.iter().position(|(m, _)| *m == x.program),
             |i| msg(Event::ProgramFilter(i)),
         );
+        // The report card's signals (docs/adr/8057 §88), beside the program: the three boxes on the right one width,
+        // in one row with the parts (a second row broke the dialog's symmetry: the owner's word, 16 November). A box's
+        // list opens wider than the box, so its words show whole.
+        let signals = Select::new(
+            browse::SIGNALS
+                .iter()
+                .map(|(_, words, short)| Choice::new(*words).shown(*short)),
+            browse::SIGNALS.iter().position(|(s, _, _)| *s == x.signal),
+            |i| msg(Event::SignalFilter(i)),
+        );
+        // 150: the parts keep their natural width (about 450 px of the dialog's 1 025 at 170 each they wrapped).
+        let width = kentos_ui::theme::typography::scaled(150.0);
         let filters = row![
             container(parts).width(Fill),
             container(
-                kentos_ui::widget::text_field("Ara: ad, açıklama, anahtar sözcük", &x.query)
+                kentos_ui::widget::text_field("Ara: ad, açıklama…", &x.query)
                     .on_input(|t| msg(Event::Query(t)))
             )
-            .width(kentos_ui::theme::typography::scaled(260.0)),
-            container(programs).width(kentos_ui::theme::typography::scaled(170.0)),
+            .width(width),
+            container(programs).width(width),
+            container(signals).width(width),
         ]
         .spacing(10)
         .align_y(iced::Center);
-        let filtered = !x.query.trim().is_empty() || x.program.is_some();
+        let filtered =
+            !x.query.trim().is_empty() || x.program.is_some() || x.signal != browse::Signal::All;
         let empty = |part: Part| -> &'static str {
             if filtered {
                 return "Süzgeçle eşleşen eklenti yok.";
@@ -296,6 +289,27 @@ impl App {
         table.into()
     }
 
+    /// A retired extension's banner ([`retired_words`]), with the way to its replacement when it is not installed.
+    fn retired_banner<'a>(
+        &self,
+        d: &kentos_extensions::manifest::Deprecation,
+    ) -> Banner<'a, Message> {
+        let installed = d.replaced_by.as_ref().and_then(|next| {
+            self.extensions
+                .registry
+                .as_ref()
+                .is_some_and(|r| r.extensions().iter().any(|e| &e.id == next))
+                .then(|| self.extension_name(next))
+        });
+        let (words, find) = retired_words(d, installed.as_deref());
+        match find {
+            Some(next) => {
+                Banner::warning(words).action("Yerine geçeni bul", msg(Event::Find(next)))
+            }
+            None => Banner::warning(words),
+        }
+    }
+
     fn installed_details<'a>(&'a self, chosen: Option<ExtensionView>) -> Element<'a, Message> {
         let Some(e) = chosen else {
             return label::caption("Soldan bir eklenti seçin.").into();
@@ -303,6 +317,20 @@ impl App {
         let registry = self.extensions.registry.as_ref();
         let manifest = registry.and_then(|r| r.manifest(&e.id));
         let mut form = Form::new().label_width(120.0).section(e.name.clone());
+        // Another installed extension it reads as (docs/adr/8059 §14): the one installed in spite of the warning.
+        let (same, near): (Vec<_>, Vec<_>) = e.resemblances.iter().cloned().partition(|r| r.exact);
+        if !same.is_empty() {
+            form = form.wide(Banner::warning(format!(
+                "Kurulu başka bir eklentiyle karışabilir. {} Hangisinin hangisi olduğundan emin değilseniz birini \
+                 kaldırın.",
+                kentos_extensions::resemblance::sentences(&same).join(" ")
+            )));
+        }
+        if !near.is_empty() {
+            form = form.wide(Banner::info(
+                kentos_extensions::resemblance::sentences(&near).join(" "),
+            ));
+        }
         // The problem still standing first, where it cannot be missed (docs/adr/8057 §4).
         if let Some(p) = &e.problem {
             form = form.wide(
@@ -323,6 +351,11 @@ impl App {
             }
             form = form.wide(label::caption(said));
         }
+        // Retired by its publisher, with its replacement (plan/eklenti.md ADIM 22A › Emeklilik ve devir; §119): said
+        // before what it is, with the way to the replacement when it is not installed.
+        if let Some(d) = manifest.and_then(|m| m.deprecation.as_ref()) {
+            form = form.wide(self.retired_banner(d));
+        }
         if let Some(m) = manifest {
             form = form.wide(label::body(m.summary.clone()));
             if let Some(d) = &m.description {
@@ -341,8 +374,12 @@ impl App {
                             .map(|p| format!(" ({p})"))
                             .unwrap_or_default()
                     )),
-                )
-                .field("Lisans", label::body(m.license.clone()));
+                );
+            // Who wrote it when an agent did (docs/adr/8057 §76): KentOS's record, not the agent's word.
+            if let Some(g) = &m.generated {
+                form = form.field("Yazan", label::body(g.words()));
+            }
+            form = form.field("Lisans", label::body(m.license.clone()));
         }
         form = form
             .field("Kimlik", label::caption(e.id.clone()))
@@ -373,13 +410,19 @@ impl App {
         if let Some(m) = manifest {
             if !m.requested_capabilities.is_empty() {
                 form = form.section("Yetenekler");
+                // What the person granted is seen where it stays (docs/adr/8057 §122).
+                let grant = registry.and_then(|r| r.grant(&e.id));
                 for r in &m.requested_capabilities {
-                    form = form.wide(label::caption(capability_words(
+                    let mut words = capability_words(
                         r.id.title(),
                         &r.reason,
                         &r.hosts,
                         r.sends_data_to_ai == Some(true),
-                    )));
+                    );
+                    if !grant.is_some_and(|g| g.capabilities.contains(&r.id)) {
+                        words.push_str(" · verilmedi");
+                    }
+                    form = form.wide(label::caption(words));
                 }
             }
             if !m.dependencies.extensions.is_empty() {
@@ -463,6 +506,44 @@ impl App {
                 Some(msg(Event::Switch(id.clone(), other.clone()))),
             ));
         }
+        // Its tools', rules' and expression functions' examples (docs/adr/8057 §48, §75, §78): while one runs, the
+        // button waits.
+        let rules_give = self
+            .extensions
+            .registry
+            .as_ref()
+            .and_then(|r| r.manifest(&id))
+            .is_some_and(|m| {
+                m.entrypoints.audits.iter().any(|a| a.examples.is_some())
+                    || m.entrypoints
+                        .expressions
+                        .iter()
+                        .any(|e| !e.examples.is_empty())
+            });
+        if e.enabled && (rules_give || !kentos_extension_tools::examples::of(&id).is_empty()) {
+            let running = self
+                .extensions
+                .trial
+                .as_ref()
+                .is_some_and(|t| t.running.is_some());
+            actions = actions.push(words::secondary(
+                if running {
+                    "Örnekler çalışıyor…"
+                } else {
+                    "Örnekleri çalıştır"
+                },
+                (!running).then(|| msg(Event::RunExamples(id.clone()))),
+            ));
+        }
+        // One the user develops goes to a catalog from its folder (submit.rs, docs/adr/8057 §107).
+        if e.source.kind == kentos_extension_host::SourceKind::DeveloperFolder {
+            actions = actions.push(words::secondary(
+                "Kataloğa gönder…",
+                Some(msg(Event::Submit(super::submit::SubmitEvent::Open(
+                    id.clone(),
+                )))),
+            ));
+        }
         actions = actions
             .push(words::ghost(
                 "Verisini sıfırla",
@@ -515,22 +596,29 @@ impl App {
             return label::caption("Soldan bir eklenti seçin.").into();
         };
         let installed = self.installed_version(&entry.id);
-        let mut form = Form::new()
-            .label_width(120.0)
-            .section(entry.name.clone())
-            .wide(label::body(entry.summary.clone()));
+        let mut form = Form::new().label_width(120.0).section(entry.name.clone());
+        // Retired: said first, the replacement a press away (§119).
+        if let Some(d) = &entry.deprecation {
+            form = form.wide(self.retired_banner(d));
+        }
+        form = form.wide(label::body(entry.summary.clone()));
         if let Some(d) = &entry.description {
             form = form.wide(label::caption(d.clone()));
         }
         form = form
             .field("Programlar", label::body(modules(&entry.modules)))
-            .field("Yayımcı", label::body(entry.authors.join(", ")))
+            .field("Yayımcı", label::body(entry.authors.join(", ")));
+        if let Some(g) = &entry.generated {
+            form = form.field("Yazan", label::body(g.words()));
+        }
+        form = form
             .field("Lisans", label::body(entry.license.clone()))
             .field("Sürüm", label::body(entry.version.clone()))
             .field(
                 "Kurulu",
                 label::body(installed.clone().unwrap_or_else(|| "Hayır".to_owned())),
             );
+        form = report_card(form, entry, self.extensions.registry.as_ref());
         if !entry.requested_capabilities.is_empty() {
             form = form.section("Yetenekler");
             for r in &entry.requested_capabilities {
@@ -543,7 +631,9 @@ impl App {
             }
         }
         if let Some(text) = &entry.changelog {
-            form = form.section("Değişiklik notu").wide(notes(text));
+            form = form
+                .section("Değişiklik notu")
+                .wide(kentos_ui::widget::notes(text));
         }
         let verb = match &installed {
             None => "Gözden geçir ve kur…",
@@ -594,7 +684,11 @@ impl App {
             || r.policy.is_some()
             || r.revoked.is_some()
             || r.cycle.is_some();
-        let can = r.installable && !blocked && (!r.source_conflict || p.replace_source);
+        let can = r.installable
+            && !blocked
+            && (!r.source_conflict || p.replace_source)
+            && (!r.imitates() || p.accept_imitation)
+            && (!r.publisher_changed() || p.accept_publisher);
         let verb = match &r.installed {
             Some((v, _)) if manifest.is_some_and(|m| m.version != *v) => "Güncelle",
             Some(_) => "Yeniden kur",
@@ -611,32 +705,302 @@ impl App {
     }
 }
 
+/// A catalog entry's report card (docs/adr/8057 §86, D17): honest signals, read before choosing, no stars. Whether it
+/// runs on this KentOS, what it reads as among the installed extensions, the Python packages it brings, whether it
+/// goes on the internet or sends data to an AI service, who wrote it, how many examples it gives.
+fn report_card<'a>(
+    mut form: Form<'a, Message>,
+    entry: &CatalogEntry,
+    registry: Option<&kentos_extension_host::Registry>,
+) -> Form<'a, Message> {
+    use kentos_extensions::resemblance::{Known, resemblances, sentences};
+    form = form.section("Karne");
+    let runs = kentos_extensions::compat::compatible(&entry.compatibility, &super::host());
+    form = form.field(
+        "Bu KentOS'ta",
+        label::body(match &runs {
+            Ok(()) => "Çalışır".to_owned(),
+            Err(p) => format!("Çalışmaz: {}", p.message),
+        }),
+    );
+    // What it reads as among the installed extensions (docs/adr/8059 §14): before the review, while browsing.
+    if let Some(r) = registry {
+        let installed: Vec<Known> = r
+            .extensions()
+            .iter()
+            .filter(|e| e.id != entry.id)
+            .map(|e| Known {
+                id: e.id.clone(),
+                name: e.name.clone(),
+                ..Known::default()
+            })
+            .collect();
+        let found = resemblances(
+            &kentos_extension_host::imitation::of_entry(entry),
+            &installed,
+        );
+        let (same, near): (Vec<_>, Vec<_>) = found.into_iter().partition(|x| x.exact);
+        if !same.is_empty() {
+            form = form.wide(Banner::warning(format!(
+                "Kurulu bir eklentiyi taklit ediyor olabilir. {}",
+                sentences(&same).join(" ")
+            )));
+        }
+        if !near.is_empty() {
+            form = form.wide(Banner::info(sentences(&near).join(" ")));
+        }
+    }
+    form = form.field(
+        "Python",
+        label::body(if entry.python_packages.is_empty() {
+            "Paket kurmaz".to_owned()
+        } else {
+            format!(
+                "{} paket: {}",
+                entry.python_packages.len(),
+                entry.python_packages.join(", ")
+            )
+        }),
+    );
+    let hosts: Vec<&str> = entry
+        .requested_capabilities
+        .iter()
+        .filter(|r| r.id == kentos_extensions::manifest::Capability::Network)
+        .flat_map(|r| r.hosts.iter().map(String::as_str))
+        .collect();
+    let network = entry
+        .requested_capabilities
+        .iter()
+        .any(|r| r.id == kentos_extensions::manifest::Capability::Network);
+    form = form.field(
+        "İnternet",
+        label::body(match (network, hosts.is_empty()) {
+            (false, _) => "Bağlanmaz".to_owned(),
+            (true, true) => "Bağlanır".to_owned(),
+            (true, false) => format!("Bağlanır: {}", hosts.join(", ")),
+        }),
+    );
+    if entry
+        .requested_capabilities
+        .iter()
+        .any(|r| r.sends_data_to_ai == Some(true))
+    {
+        form = form.field(
+            "Yapay zekâ",
+            label::body("Verinizi dış bir yapay zekâ servisine gönderir"),
+        );
+    }
+    form.field(
+        "Örnekler",
+        label::body(match entry.examples {
+            0 => "Örneği yok".to_owned(),
+            n => format!("{n} örnek (Örnekleri çalıştır ve kentos kek test çalıştırır)"),
+        }),
+    )
+}
+
+/// The Python packages the package installs (docs/adr/8057 §81): on a first install one line of them all; on an update
+/// what changed, line by line, and how many did not.
+fn python_packages<'a>(
+    mut form: Form<'a, Message>,
+    lines: &[kentos_extension_host::packages::PackageLine],
+) -> Form<'a, Message> {
+    if lines.is_empty() {
+        return form;
+    }
+    let words = |l: &kentos_extension_host::packages::PackageLine| {
+        let source = l
+            .source
+            .as_ref()
+            .map(|s| format!(" ({s})"))
+            .unwrap_or_default();
+        match (l.change, &l.before) {
+            (Change::Added, _) => format!("{} {}{source} · YENİ", l.name, l.version),
+            (Change::Changed, Some(b)) if *b == l.version => {
+                format!(
+                    "{} {}{source} · aynı sürüm, başka dosyalar",
+                    l.name, l.version
+                )
+            }
+            (Change::Changed, Some(b)) if b.contains("://") => {
+                format!(
+                    "{} {} · kaynağı değişti: {b} yerine{source}",
+                    l.name, l.version
+                )
+            }
+            (Change::Changed, Some(b)) => {
+                format!("{} {b} → {}{source} · DEĞİŞTİ", l.name, l.version)
+            }
+            (Change::Removed, _) => format!("{} {} · artık kurmuyor", l.name, l.version),
+            _ => format!("{} {}{source}", l.name, l.version),
+        }
+    };
+    if lines.iter().all(|l| l.change == Change::Asked) {
+        let all: Vec<String> = lines.iter().map(words).collect();
+        return form.wide(label::caption(format!(
+            "Kuracağı Python paketleri ({}): {}.",
+            lines.len(),
+            all.join(", ")
+        )));
+    }
+    let kept = lines.iter().filter(|l| l.change == Change::Same).count();
+    for l in lines.iter().filter(|l| l.change != Change::Same) {
+        form = form.wide(label::caption(words(l)));
+    }
+    form.wide(label::caption(if kept == lines.len() {
+        format!("Python paketleri değişmedi ({kept}).")
+    } else {
+        format!("{kept} Python paketi değişmedi.")
+    }))
+}
+
+/// What the package's Python lock means on this computer (docs/adr/8057 §94): a computer it does not support, the
+/// packages built here from their sources, the ones that do not install here. Said before Kur: a build runs the
+/// package's own code here.
+fn on_this_computer<'a>(
+    mut form: Form<'a, Message>,
+    here: &kentos_extensions::python_builds::OnComputer,
+) -> Form<'a, Message> {
+    use kentos_extensions::python_builds::Need;
+    let t = &here.target;
+    let computer = format!(
+        "{} {}, Python {}.{}",
+        t.os,
+        t.machine.id(),
+        t.python.0,
+        t.python.1
+    );
+    if !here.supported {
+        return form.wide(Banner::warning(format!(
+            "Eklentinin Python kilidi bu bilgisayarı ({computer}) desteklemiyor: Python ortamı burada hazırlanamaz, \
+             Python katkıları çalışmaz. Formlar, veri kaynakları ve şerit düğmeleri Python'suz çalışır."
+        )));
+    }
+    let named = |need: Need| -> Vec<String> {
+        here.unwheeled
+            .iter()
+            .filter(|u| u.needs.iter().any(|(_, n)| *n == need))
+            .map(|u| format!("{} {}", u.name, u.version))
+            .collect()
+    };
+    let built = named(Need::Source);
+    if !built.is_empty() {
+        form = form.wide(Banner::warning(format!(
+            "Bu bilgisayar ({computer}) için hazır kurulum dosyası (wheel) olmayan paketler kaynağından derlenecek: \
+             {}. Derleme, paketin kendi derleme betiğini bu bilgisayarda sizin yetkilerinizle çalıştırır, kilitte \
+             olmayan derleme araçlarını indirir ve derleyici isteyebilir; derlenemezse Python ortamı hazırlanamaz.",
+            built.join(", ")
+        )));
+    }
+    let nothing = named(Need::Nothing);
+    if !nothing.is_empty() {
+        form = form.wide(Banner::warning(format!(
+            "Bu bilgisayarda ({computer}) kurulamayacak paketler: {} (ne hazır kurulum dosyası ne kaynağı var). \
+             Python ortamı burada hazırlanamaz.",
+            nothing.join(", ")
+        )));
+    }
+    form
+}
+
 fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a, Message> {
+    use kentos_extensions::resemblance::sentences;
     let r = &p.review;
     let mut form = Form::new().label_width(120.0);
+    // What it reads as, first (docs/adr/8059 §14): an imitation a warning to answer, a resemblance said.
+    let (imitations, near): (Vec<_>, Vec<_>) = r.resemblances.iter().partition(|x| x.exact);
+    if !imitations.is_empty() {
+        let imitations: Vec<_> = imitations.into_iter().cloned().collect();
+        form = form
+            .wide(Banner::warning(format!(
+                "Başka bir eklentiyi taklit ediyor olabilir. {} Taklit paketler kullanıcıyı yanıltmak için yapılır: \
+                 nereden geldiğinden emin değilseniz kurmayın.",
+                sentences(&imitations).join(" ")
+            )))
+            .wide(words::check(
+                p.accept_imitation,
+                "Benzerliği okudum, yine de kur",
+                Some(msg(Event::AcceptImitation(!p.accept_imitation))),
+            ));
+    }
+    // Another publisher than the installed version's (docs/adr/8057 §126), first too: the extension may have changed
+    // hands, or its id been taken.
+    if let Some(change) = &r.publisher_change {
+        let named = |p: &Option<String>| {
+            p.as_ref().map_or_else(
+                || "yayımcısı belirtilmemiş".to_owned(),
+                |id| format!("“{id}”"),
+            )
+        };
+        form = form
+            .wide(Banner::warning(format!(
+                "Yayımcısı değişti: kurulu sürüm {}, bu paket {}. Eklentinin sahibi değişmiş ya da kimliği başkasınca \
+                 kullanılmış olabilir: yeni yayımcıyı tanımıyorsanız güncellemeyin.",
+                named(&change.before),
+                named(&change.after)
+            )))
+            .wide(words::check(
+                p.accept_publisher,
+                "Yayımcının değiştiğini okudum, yine de kur",
+                Some(msg(Event::AcceptPublisher(!p.accept_publisher))),
+            ));
+    }
+    // A Python package named a letter from a well-known one's (docs/adr/8057 §81), first too: its code would run.
+    for l in r
+        .python_packages
+        .iter()
+        .filter(|l| l.change != Change::Removed)
+    {
+        if let Some(known) = l.resembles {
+            form = form.wide(Banner::warning(format!(
+                "“{}” Python paketinin adı tanınmış “{known}” paketininkine çok benziyor: doğru paket olduğundan emin \
+                 olun (yazım hatası taklidi ya da yapay zekânın uydurduğu bir ad olabilir).",
+                l.name
+            )));
+        }
+    }
+    if !near.is_empty() {
+        let near: Vec<_> = near.into_iter().cloned().collect();
+        form = form.wide(Banner::info(format!(
+            "{} Aynı eklenti sanmayın.",
+            sentences(&near).join(" ")
+        )));
+    }
     if let Some(m) = manifest {
-        form = form.section("Paket").wide(label::body(m.summary.clone()));
+        form = form.section("Paket");
+        // Retired by its publisher: said before the user decides to install it (§119).
+        if let Some(d) = &m.deprecation {
+            form = form.wide(Banner::warning(retired_words(d, None).0));
+        }
+        form = form.wide(label::body(m.summary.clone()));
         if let Some(d) = &m.description {
             form = form.wide(label::caption(d.clone()));
         }
         form = form
             .field("Tür", label::body(kind_words(m)))
             .field("Programlar", label::body(modules(&m.modules)))
-            .field("Yayımcı", label::body(m.authors.join(", ")))
-            .field("Lisans", label::body(m.license.clone()))
-            .field(
-                "Kaynak",
-                label::body(format!(
-                    "{} — {}",
-                    p.source.kind.words(),
-                    // A working folder is where its reloads come from; the package made of it is a passing file.
-                    if p.source.kind == kentos_extension_host::store::SourceKind::DeveloperFolder {
-                        &p.source.location
-                    } else {
-                        &p.file
-                    }
-                )),
-            );
+            .field("Yayımcı", label::body(m.authors.join(", ")));
+        // An agent wrote it (docs/adr/8057 §76, plan D17): said before the user decides, as a plain fact.
+        if let Some(g) = &m.generated {
+            // Only what is known: a catalog may have reviewed it, the workshop's own banner says where it comes from.
+            form = form.field("Yazan", label::body(g.words())).wide(Banner::info(
+                "Bu eklentiyi bir yapay zekâ ajanı yazdı. İstediği yetenekleri okuyup karar verin: kurulursa kodu \
+                 sizin haklarınızla çalışır.",
+            ));
+        }
+        form = form.field("Lisans", label::body(m.license.clone())).field(
+            "Kaynak",
+            label::body(format!(
+                "{} — {}",
+                p.source.kind.words(),
+                // A working folder is where its reloads come from; the package made of it is a passing file.
+                if p.source.kind == kentos_extension_host::store::SourceKind::DeveloperFolder {
+                    &p.source.location
+                } else {
+                    &p.file
+                }
+            )),
+        );
         if let Some((version, _)) = &r.installed {
             form = form.field("Kurulu sürüm", label::body(version.clone()));
         }
@@ -692,12 +1056,20 @@ fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a
     if !r.capabilities.is_empty() {
         form = form.section("İstediği yetenekler");
         for c in &r.capabilities {
-            let change = match c.change {
+            let mut change = match c.change {
                 Change::Added => " · YENİ",
+                Change::Changed if c.wider => " · GENİŞLEDİ",
                 Change::Changed => " · DEĞİŞTİ",
                 Change::Removed => " · artık istemiyor",
                 Change::Asked | Change::Same => "",
-            };
+            }
+            .to_owned();
+            // Why a line asked as before starts ungranted (docs/adr/8057 §121).
+            if matches!(c.change, Change::Same | Change::Changed)
+                && p.withheld.contains(&c.capability)
+            {
+                change.push_str(" · önceki sürüme vermemiştiniz");
+            }
             let words_line = format!(
                 "{}{change}",
                 capability_words(c.title, &c.reason, &c.hosts, c.sends_data_to_ai)
@@ -713,17 +1085,33 @@ fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a
                 ))
             };
         }
+        // An update takes nothing new by itself (docs/adr/8057 §121): said where it asks for more.
+        if r.capabilities
+            .iter()
+            .any(|c| c.change == Change::Added || c.wider)
+        {
+            form = form.wide(label::caption(
+                "Güncelleme yeni ya da genişleyen bir yeteneği kendiliğinden almaz: vermek için işaretleyin.",
+            ));
+        }
         let left_out: Vec<&'static str> = r
             .capabilities
             .iter()
             .filter(|c| c.change != Change::Removed && !p.granted.contains(&c.capability))
-            .map(|c| c.capability.id())
+            .map(|c| c.title)
             .collect();
         if !left_out.is_empty() {
             form = form.wide(label::caption(format!(
                 "İzin vermediğiniz yeteneğe bağlı katkılar kurulur ama çalışmaz: {}.",
-                left_out.join(", ")
+                left_out.join("; ")
             )));
+        }
+    }
+    // Where an update runs, when that changes (PY-CLOUD-14): a system or a runtime it drops first.
+    if !r.platforms.is_empty() {
+        form = form.section("Çalıştığı yerler");
+        for line in &r.platforms {
+            form = form.wide(label::caption(line.clone()));
         }
     }
     if p.has_python {
@@ -736,15 +1124,56 @@ fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a
             "Python katkıları, Python ortamı hazırlandığında çalışır; formlar, veri kaynakları ve şerit düğmeleri \
              Python'suz çalışır.",
         ));
+        form = python_packages(form, &r.python_packages);
+        if let Some(here) = &p.here {
+            form = on_this_computer(form, here);
+        }
     }
-    if !r.inspection.warnings.is_empty() {
+    // A package named like a well-known one is said at the top; the computers without a wheel, for this one in the
+    // Python section (the lint's sentences name every computer the package says it runs on: the author's).
+    let named = r.python_packages.iter().any(|l| l.resembles.is_some());
+    let warnings: Vec<_> = r
+        .inspection
+        .warnings
+        .iter()
+        .filter(|w| !(named && w.code == "python_name_resembles"))
+        .filter(|w| {
+            p.here.is_none() || !matches!(w.code, "python_source_build" | "python_no_wheel")
+        })
+        .collect();
+    if !warnings.is_empty() {
         form = form.section("Uyarılar");
-        for w in &r.inspection.warnings {
+        for w in warnings {
             form = form.wide(label::caption(w.to_string()));
         }
     }
     if let Some(text) = &p.changelog {
-        form = form.section("Değişiklik notu").wide(notes(text));
+        form = form
+            .section("Değişiklik notu")
+            .wide(kentos_ui::widget::notes(text));
     }
     form.into()
+}
+
+/// A retired extension's words (docs/adr/8057 §119): its publisher's, its replacement by name when `installed` (the
+/// replacement's name), else by id with the id to look for in the catalogs.
+pub(crate) fn retired_words(
+    d: &kentos_extensions::manifest::Deprecation,
+    installed: Option<&str>,
+) -> (String, Option<String>) {
+    let mut words = format!(
+        "Bu eklenti yayımcısınca emekliye ayrıldı: {}.",
+        d.message.trim().trim_end_matches('.')
+    );
+    match (&d.replaced_by, installed) {
+        (None, _) => (words, None),
+        (Some(_), Some(name)) => {
+            words.push_str(&format!(" Yerine geçen “{name}” kurulu."));
+            (words, None)
+        }
+        (Some(next), None) => {
+            words.push_str(&format!(" Yerine geçen: {next}."));
+            (words, Some(next.clone()))
+        }
+    }
 }

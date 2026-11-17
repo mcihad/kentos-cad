@@ -230,15 +230,6 @@ fn push(out: &mut Vec<Difference>, kind: DifferenceKind, subject: &str, detail: 
     });
 }
 
-/// How far a scope reaches: what the extension owns, what the user picks, the whole open project.
-fn reach(scope: Scope) -> u8 {
-    match scope {
-        Scope::PluginOwned => 0,
-        Scope::UserSelected => 1,
-        Scope::CurrentProject => 2,
-    }
-}
-
 /// A capability as asked, its entries merged (the inspector refuses one asked twice; merging keeps the widest).
 struct Asked {
     scope: Scope,
@@ -270,7 +261,7 @@ fn asked(list: &[RequestedCapability]) -> BTreeMap<Capability, Asked> {
             ai: false,
             reasons: BTreeSet::new(),
         });
-        if reach(r.scope) > reach(a.scope) {
+        if r.scope.reach() > a.scope.reach() {
             a.scope = r.scope;
         }
         a.hosts.extend(r.hosts.iter().cloned());
@@ -292,7 +283,7 @@ fn capabilities(
             continue;
         };
         let (mut wider, mut narrower) = (Vec::new(), Vec::new());
-        match reach(n.scope).cmp(&reach(o.scope)) {
+        match n.scope.reach().cmp(&o.scope.reach()) {
             std::cmp::Ordering::Greater => {
                 wider.push(format!("kapsam {} → {}", o.scope.id(), n.scope.id()))
             }

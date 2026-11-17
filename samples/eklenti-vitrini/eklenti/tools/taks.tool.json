@@ -101,7 +101,165 @@
   },
   "capabilities": {
     "runtimes": [
-      "desktop-python"
+      "desktop-python",
+      "headless-python"
     ]
-  }
+  },
+  "examples": [
+    {
+      "title": "Biri aşan iki parsel",
+      "features": [
+        {
+          "layer": "parsel",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  10,
+                  0
+                ],
+                [
+                  10,
+                  10
+                ],
+                [
+                  0,
+                  10
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          },
+          "attrs": {
+            "ada": "1",
+            "parsel": "1"
+          }
+        },
+        {
+          "layer": "parsel",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  20,
+                  0
+                ],
+                [
+                  30,
+                  0
+                ],
+                [
+                  30,
+                  10
+                ],
+                [
+                  20,
+                  10
+                ],
+                [
+                  20,
+                  0
+                ]
+              ]
+            ]
+          },
+          "attrs": {
+            "ada": "1",
+            "parsel": "2"
+          }
+        },
+        {
+          "layer": "yapi",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  6,
+                  0
+                ],
+                [
+                  6,
+                  10
+                ],
+                [
+                  0,
+                  10
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "layer": "yapi",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  22,
+                  2
+                ],
+                [
+                  24,
+                  2
+                ],
+                [
+                  24,
+                  6
+                ],
+                [
+                  22,
+                  6
+                ],
+                [
+                  22,
+                  2
+                ]
+              ]
+            ]
+          }
+        }
+      ],
+      "params": {
+        "taks_siniri": 0.4
+      },
+      "expect": {
+        "outputs": {
+          "asan": 1,
+          "parseller": {
+            "count": 2,
+            "has": [
+              {
+                "durum": "aşıyor",
+                "taks": 0.6
+              },
+              {
+                "durum": "uygun",
+                "taks": 0.08
+              }
+            ]
+          }
+        },
+        "summary": "1 parsel"
+      }
+    }
+  ]
 }

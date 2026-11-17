@@ -23,6 +23,7 @@ mod services;
 mod temporal;
 
 use std::path::PathBuf;
+use std::sync::Mutex;
 
 use kentos_commands::Bounds;
 use kentos_headless::{HeadlessError, Op, Session, new_drawing};
@@ -41,6 +42,64 @@ create_exception!(
 
 fn host(e: HeadlessError) -> PyErr {
     HostError::new_err((e.code, e.message))
+}
+
+/// The user's installed extensions' İşlemler tools that declare `headless-python` (docs/adr/8057 §70) and the
+/// expression functions of those that run headless (§80): offered at a drawing's opening (`command` none) and read
+/// again when the registry changed: before a processing command always, before any other at most every two seconds
+/// (a label, a style's rule or a form's calculation may call a function). So `cad.processing.tools` lists the tools,
+/// `.run` runs them in their own processes, and an expression's call is answered. What a run notes goes to the
+/// extension's log and is said through Python's logging when the call returns ([`say_notes`], §73). Not in an
+/// extension's own process (`kentos.ext_host` says it is one).
+fn extension_tools(command: Option<&str>) {
+    match command {
+        None => {
+            let _ =
+                kentos_extension_tools::headless::offer_installed(std::sync::Arc::new(keep_note));
+        }
+        Some(c) if c.starts_with("cad.processing.") => kentos_extension_tools::headless::refresh(),
+        Some(_) => kentos_extension_tools::headless::refresh_now_and_then(),
+    }
+}
+
+/// What the extensions' tools' runs noted since Python last looked: kept while the run holds no interpreter lock (it
+/// runs on another thread), said when a call returns. The newest [`MOST_NOTES`].
+static NOTES: Mutex<Vec<kentos_extension_tools::Note>> = Mutex::new(Vec::new());
+
+/// The most notes kept between two calls (a job's runs, a long batch).
+const MOST_NOTES: usize = 200;
+
+fn keep_note(note: kentos_extension_tools::Note) {
+    if let Ok(mut notes) = NOTES.lock() {
+        if notes.len() >= MOST_NOTES {
+            notes.remove(0);
+        }
+        notes.push(note);
+    }
+}
+
+/// The notes kept, said through Python's logging, logger `kentos.ext` (docs/adr/8057 §73): a failure as a warning with
+/// its traceback and what the code printed, which Python shows on standard error when the script configured nothing;
+/// a start and an ending as information. Not a window: the script asked and holds the answer; its own logging decides
+/// the rest.
+fn say_notes(py: Python<'_>) {
+    let notes: Vec<kentos_extension_tools::Note> = NOTES
+        .lock()
+        .map(|mut n| std::mem::take(&mut *n))
+        .unwrap_or_default();
+    if notes.is_empty() {
+        return;
+    }
+    let Ok(logger) = py
+        .import("logging")
+        .and_then(|logging| logging.call_method1("getLogger", ("kentos.ext",)))
+    else {
+        return;
+    };
+    for note in notes {
+        let level = if note.failed() { "warning" } else { "info" };
+        let _ = logger.call_method1(level, (note.said(),));
+    }
 }
 
 fn text<T: serde::Serialize + ?Sized>(value: &T) -> PyResult<String> {
@@ -73,7 +132,10 @@ impl PySession {
             ))
         })?;
         let choices = new_drawing(&input).map_err(host)?;
-        py.detach(|| Session::new(&choices))
+        py.detach(|| {
+            extension_tools(None);
+            Session::new(&choices)
+        })
             .map(|inner| Self { inner })
             .map_err(host)
     }
@@ -84,7 +146,10 @@ impl PySession {
     fn open(py: Python<'_>, path: PathBuf, file_unit: Option<String>) -> PyResult<Self> {
         let unit = file_unit.map(|u| serde_json::from_value::<kentos_commands::FileUnit>(serde_json::Value::String(u)))
             .transpose().map_err(|e| host(HeadlessError::new("invalid_input", e.to_string())))?;
-        py.detach(|| Session::open_in(&path, unit))
+        py.detach(|| {
+            extension_tools(None);
+            Session::open_in(&path, unit)
+        })
             .map(|inner| Self { inner })
             .map_err(host)
     }
@@ -94,7 +159,10 @@ impl PySession {
     #[staticmethod]
     fn from_bytes(py: Python<'_>, data: &[u8]) -> PyResult<Self> {
         let data = data.to_vec();
-        py.detach(|| Session::from_bytes(&data))
+        py.detach(|| {
+            extension_tools(None);
+            Session::from_bytes(&data)
+        })
             .map(|inner| Self { inner })
             .map_err(host)
     }
@@ -118,10 +186,12 @@ impl PySession {
             ))
         })?;
         let inner = &mut self.inner;
-        let answer = py
-            .detach(|| inner.run(command, version, op, input))
-            .map_err(host)?;
-        text(&answer)
+        let answer = py.detach(|| {
+            extension_tools(Some(command));
+            inner.run(command, version, op, input)
+        });
+        say_notes(py);
+        text(&answer.map_err(host)?)
     }
 
     /// Saves as `.kcad` v2 to `path`, or where it was read from; the answer
@@ -169,8 +239,12 @@ impl PySession {
             ))
         })?;
         let inner = &mut self.inner;
-        let answer = py.detach(|| inner.call(envelope)).map_err(host)?;
-        text(&answer)
+        let answer = py.detach(|| {
+            extension_tools(envelope["command"].as_str());
+            inner.call(envelope)
+        });
+        say_notes(py);
+        text(&answer.map_err(host)?)
     }
 
     /// Starts a command as a job (docs/adr/0253 §9); its status as JSON text.
@@ -181,19 +255,23 @@ impl PySession {
                 format!("çağrı JSON olarak okunamadı: {e}"),
             ))
         })?;
+        extension_tools(envelope["command"].as_str());
         text(&self.inner.start(envelope).map_err(host)?)
     }
 
     /// A job's status as JSON text; once computed, its write is in the drawing.
-    fn job(&mut self, id: &str) -> PyResult<String> {
-        text(&self.inner.job(id).map_err(host)?)
+    fn job(&mut self, py: Python<'_>, id: &str) -> PyResult<String> {
+        let status = self.inner.job(id);
+        say_notes(py);
+        text(&status.map_err(host)?)
     }
 
     /// Waits for a job (the interpreter's lock let go meanwhile); its status.
     fn wait(&mut self, py: Python<'_>, id: &str) -> PyResult<String> {
         let inner = &mut self.inner;
-        let status = py.detach(|| inner.wait(id)).map_err(host)?;
-        text(&status)
+        let status = py.detach(|| inner.wait(id));
+        say_notes(py);
+        text(&status.map_err(host)?)
     }
 
     /// Asks a job to stop; refused once written (`already_committed`).
@@ -215,8 +293,9 @@ impl PySession {
             ))
         })?;
         let inner = &mut self.inner;
-        let report = py.detach(|| inner.replay(journal)).map_err(host)?;
-        text(&report)
+        let report = py.detach(|| inner.replay(journal));
+        say_notes(py);
+        text(&report.map_err(host)?)
     }
 
     /// The `.kcad` v2 bytes of the drawing as it is now, verified.

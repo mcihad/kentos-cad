@@ -11,15 +11,15 @@ wait 1200
 click 155 56    # Yapıları numarala: önce pencere
 wait 3000
 shot 29-pencere
-click 790 461   # Önek
+click 595 492   # Önek
 key ctrl+a
 type B-
-click 790 498   # İlk numara
+click 843 492   # İlk numara
 key ctrl+a
 type 10
 wait 400
 shot 29-yazildi
-click 920 538   # Numarala
+click 920 532   # Numarala
 wait 1200
 shot 29-suruyor
 wait 4500

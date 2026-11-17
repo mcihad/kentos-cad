@@ -267,17 +267,23 @@ fn compile_in(source: &str, schema: &Schema) -> Result<Expr, CompileError> {
             at: first_call(source, &names).unwrap_or(1),
         });
     }
-    // An extension's function only where the host offers it (external.rs): refused where it is first called.
-    let mut unknown_external: Option<String> = None;
+    // An extension's function only where the host offers it (external.rs): refused where it is first called, in the
+    // host's words when it knows the function but does not run it here.
+    let mut unknown_external: Option<(String, Option<String>)> = None;
     lambda::each(&root, 0, &mut |n, _| {
         if let Node::External(name, _) = n
             && unknown_external.is_none()
-            && !schema.externals.iter().any(|d| &d.name == name)
         {
-            unknown_external = Some(name.clone());
+            match schema.externals.iter().find(|d| &d.name == name) {
+                Some(def) if def.refused.is_some() => {
+                    unknown_external = Some((name.clone(), def.refused.clone()));
+                }
+                Some(_) => {}
+                None => unknown_external = Some((name.clone(), None)),
+            }
         }
     });
-    if let Some(name) = unknown_external {
+    if let Some((name, refused)) = unknown_external {
         let at = lexer::tokenize(source).ok().and_then(|toks| {
             toks.windows(2).find_map(|w| match (&w[0].t, &w[1].t) {
                 (lexer::Tok::Word(n), lexer::Tok::Op("(")) if *n == name => Some(w[0].at),
@@ -285,9 +291,12 @@ fn compile_in(source: &str, schema: &Schema) -> Result<Expr, CompileError> {
             })
         });
         return Err(CompileError {
-            message: format!(
-                "Bilinmeyen işlev: {name}(): burada kurulu ve açık bir eklentinin ifade işlevi değil."
-            ),
+            message: match refused {
+                Some(why) => format!("{name}() burada çalışmaz: {why}"),
+                None => format!(
+                    "Bilinmeyen işlev: {name}(): burada kurulu ve açık bir eklentinin ifade işlevi değil."
+                ),
+            },
             at: at.unwrap_or(1),
         });
     }

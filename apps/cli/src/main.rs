@@ -3,10 +3,14 @@
 //! ```text
 //! kentos kek inspect <paket.kek> [--json]
 //! kentos kek pack <klasör> [-o <paket.kek>] [--json]
+//! kentos kek verify <klasör> [--json]
+//! kentos kek test <klasör> [--install-python] [--json]
 //! kentos kek index <klasör> [--name <ad>]
 //! kentos kek dump [--root <klasör>]
 //! kentos kek log [<kimlik>] [--son <n>] [--root <klasör>] [--json]
-//! kentos kek sdk [--part <bölüm>] [--json]
+//! kentos kek sdk [--part <bölüm>] [--json] [--text]
+//! kentos kek docs <klasör>
+//! kentos kek upgrade <klasör> [--check] [--json]
 //! ```
 //!
 //! The same inspector the installer, the catalog and `extension.verify` run (kentos_extensions): an author or an agent
@@ -21,17 +25,46 @@ use std::process::ExitCode;
 
 use kentos_extensions::{Limits, Manifest, Problem, catalog, inspect, pack};
 
+/// A line to standard output. A reader that closed it (`kentos kek sdk --text | head`) ends the program quietly, as a
+/// command line tool does; `println!` panicked there ("failed printing to stdout: Broken pipe").
+macro_rules! say {
+    ($($arg:tt)*) => {{
+        use std::io::Write as _;
+        if let Err(e) = writeln!(std::io::stdout(), $($arg)*)
+            && e.kind() == std::io::ErrorKind::BrokenPipe
+        {
+            std::process::exit(0);
+        }
+    }};
+}
+
+mod docs;
+mod kek_test;
+mod upgrade;
+
 const USAGE: &str = "Kullanım:
   kentos kek inspect <paket.kek> [--json]           paketi kodunu çalıştırmadan denetler
   kentos kek pack <klasör> [-o <paket.kek>] [--json] klasörü denetleyip paketler
   kentos kek verify <klasör> [--json]               klasörü pencere açmadan doğrular: paket, Python işaretleri,
                                                     satırlı rapor (yapay zekâ ajanlarının tek adımda düzelteceği)
+  kentos kek test <klasör> [--install-python] [--json]
+                                                    doğrular, geçici bir kayıt defterine kurar, Python ortamını
+                                                    kilidinden hazırlar; örneklerini ve tests/ sınamalarını
+                                                    (unittest) pencere açmadan çalıştırır (sürekli tümleştirmenin
+                                                    komutu; çıkış 0 geçti, 1 kaldı, 2 sınanamadı)
   kentos kek new <klasör> --id <kimlik> --name <ad> [--summary <cümle>] [--module cbs|harita|mimari|yol]
-                 [--utility] [--with command,processing,audit,expression,mapTool,schema,panel]
+                 [--utility] [--with command,processing,audit,expression,mapTool,schema,panel,form]
                                                     doğrulamadan geçen bir eklenti iskeleti yazar
-  kentos kek sdk [--part <bölüm>] [--json]          eklenti yazma rehberi ve kentos.ext imzaları (--json: paketin
-                                                    tamamı, ajanların kentos://sdk/ai-kek-pack'i)
+  kentos kek sdk [--part <bölüm>] [--json] [--text] eklenti yazma rehberi ve kentos.ext imzaları (--json: paketin
+                                                    tamamı, ajanların kentos://sdk/ai-kek-pack'i; --text: tamamı tek
+                                                    Markdown dosyası, llms.txt)
+  kentos kek docs <klasör>                          bu KentOS'un SDK'sını çevrimdışı belge paketi olarak yazar:
+                                                    rehber, Python imzaları, şemalar, kodlar, örnek eklenti
+  kentos kek upgrade <klasör> [--check] [--json]    eskiyen SDK adlarını yenileriyle yazar (--check: yazmaz, değişecek
+                                                    bir şey varsa çıkış 1)
   kentos kek index <klasör> [--name <ad>]           klasördeki paketlerin katalog dizinini (index.json) yazar
+  kentos kek sbom <klasör|paket.kek> [-o <dosya>]   paketin Python paketlerinin listesi (SBOM, CycloneDX 1.6 JSON):
+                                                    sürüm, kaynak, dosyaların SHA-256'sı; adreslerde parola yok
   kentos kek dump [--root <klasör>]                 kurulu eklentileri ve katkılarını JSON olarak döker
   kentos kek log [<kimlik>] [--son <n>] [--root <klasör>] [--json]
                                                     bir eklentinin günlüğü (kimliksiz: kayıt defterininki)";
@@ -64,8 +97,18 @@ fn main() -> ExitCode {
         ["kek", "inspect", file] => inspect_file(Path::new(file), json),
         ["kek", "pack", folder] => pack_folder(Path::new(folder), None, json),
         ["kek", "verify", folder] => verify_folder(Path::new(folder), json),
+        ["kek", "test", folder] => kek_test::run(Path::new(folder), json, false),
+        ["kek", "test", folder, "--install-python"]
+        | ["kek", "test", "--install-python", folder] => {
+            kek_test::run(Path::new(folder), json, true)
+        }
         ["kek", "new", folder, rest @ ..] => new_folder(Path::new(folder), rest),
         ["kek", "sdk"] => sdk(None, json),
+        ["kek", "docs", folder] => docs::run(Path::new(folder)),
+        ["kek", "sdk", "--text"] => {
+            say!("{}", kentos_extensions::sdk_text::llms_txt().trim_end());
+            ExitCode::SUCCESS
+        }
         ["kek", "sdk", "--part", part] => sdk(Some(part), json),
         ["kek", "pack", folder, "-o", out] => {
             pack_folder(Path::new(folder), Some(PathBuf::from(out)), json)
@@ -73,8 +116,12 @@ fn main() -> ExitCode {
         ["kek", "dump"] => dump(None),
         ["kek", "dump", "--root", root] => dump(Some(PathBuf::from(root))),
         ["kek", "index", folder] => index_folder(Path::new(folder), None),
+        ["kek", "sbom", target] => sbom(Path::new(target), None),
+        ["kek", "sbom", target, "-o", out] => sbom(Path::new(target), Some(PathBuf::from(out))),
         ["kek", "index", folder, "--name", name] => index_folder(Path::new(folder), Some(name)),
         ["kek", "log", rest @ ..] => log(rest, json),
+        ["kek", "upgrade", folder] => upgrade::run(Path::new(folder), false, json),
+        ["kek", "upgrade", folder, "--check"] => upgrade::run(Path::new(folder), true, json),
         _ => {
             eprintln!("{USAGE}");
             ExitCode::from(2)
@@ -89,9 +136,9 @@ fn fail(message: String) -> ExitCode {
 
 fn print_list(title: &str, problems: &[Problem]) {
     if !problems.is_empty() {
-        println!("{title}:");
+        say!("{title}:");
         for problem in problems {
-            println!("  • {problem}");
+            say!("  • {problem}");
         }
     }
 }
@@ -103,23 +150,26 @@ fn inspect_file(file: &Path, json: bool) -> ExitCode {
     };
     let inspection = inspect(&bytes, &Limits::default());
     if json {
-        println!(
+        say!(
             "{}",
             serde_json::to_string_pretty(&inspection).unwrap_or_default()
         );
     } else {
         if let Some(m) = &inspection.manifest {
-            println!("{} {} — {}", m.id, m.version, m.name);
+            say!("{} {} — {}", m.id, m.version, m.name);
+            if let Some(g) = &m.generated {
+                say!("Yazan: {}", g.words());
+            }
         }
         if let Some(digest) = &inspection.digest {
-            println!("İçerik özeti: {digest}");
+            say!("İçerik özeti: {digest}");
         }
         print_list("Sorunlar", &inspection.problems);
         print_list("Uyarılar", &inspection.warnings);
         if inspection.is_valid() {
-            println!("{} dosya; paket geçerli.", inspection.files.len());
+            say!("{} dosya; paket geçerli.", inspection.files.len());
         } else {
-            println!("Paket geçersiz: {} sorun.", inspection.problems.len());
+            say!("Paket geçersiz: {} sorun.", inspection.problems.len());
         }
     }
     if inspection.is_valid() {
@@ -211,7 +261,7 @@ fn sdk(part: Option<&str>, json: bool) -> ExitCode {
             }
         },
     };
-    println!("{text}");
+    say!("{text}");
     ExitCode::SUCCESS
 }
 
@@ -256,7 +306,7 @@ fn new_folder(folder: &Path, args: &[&str]) -> ExitCode {
             Some(c) => contributions.push(c),
             None => {
                 return fail(format!(
-                    "“{word}” bir katkı değil: command, processing, audit, expression, mapTool, schema, panel."
+                    "“{word}” bir katkı değil: command, processing, audit, expression, mapTool, schema, panel, form."
                 ));
             }
         }
@@ -292,14 +342,57 @@ fn new_folder(folder: &Path, args: &[&str]) -> ExitCode {
             return fail(format!("{} yazılamadı: {e}", to.display()));
         }
     }
-    println!(
+    say!(
         "{} dosya yazıldı: {}. Sıradaki: örnekleri değiştirin, `kentos kek verify {}` ile doğrulayın, `kentos kek pack` \
          ile paketleyin.",
         files.len(),
         folder.display(),
         folder.display()
     );
+    // The packages commonly needed, by their names (docs/adr/8057 §105): a library is added by a known name, not a
+    // guessed one.
+    let names: Vec<String> = kentos_extensions::python_names::suggested(None)
+        .into_iter()
+        .map(|(name, _)| name)
+        .collect();
+    say!(
+        "Kütüphane gerekirse klasörde `uv add <paket>`; sık kullanılanlar: {}.",
+        names.join(", ")
+    );
     ExitCode::SUCCESS
+}
+
+/// A working folder verified as the agents' `extension.verify` verifies it: the package's gates, and the İşlemler
+/// tools' descriptors whole, as KentOS's processing reads them (docs/adr/8057 §24, §74).
+fn verified(files: &BTreeMap<String, Vec<u8>>) -> kentos_extensions::Verification {
+    let mut v = kentos_extensions::verify(files, &Limits::default());
+    v.problems =
+        kentos_headless::agent_tools::with_tool_problems(v.manifest.as_ref(), files, &v.problems);
+    v
+}
+
+/// A verification's problems and warnings, each with its file and place.
+fn print_placed(v: &kentos_extensions::Verification) {
+    let line = |p: &Problem| {
+        let place = [p.file.as_deref(), p.at.as_deref()]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>()
+            .join(" ");
+        if place.is_empty() {
+            format!("  • {} ({})", p.message, p.code)
+        } else {
+            format!("  • {place}: {} ({})", p.message, p.code)
+        }
+    };
+    for (title, list) in [("Sorunlar", &v.problems), ("Uyarılar", &v.warnings)] {
+        if !list.is_empty() {
+            say!("{title}:");
+            for p in list {
+                say!("{}", line(p));
+            }
+        }
+    }
 }
 
 /// `kek verify` (plan/eklenti.md ADIM 21, docs/adr/8057 §18): the folder through the package's gates and its Python's
@@ -309,16 +402,7 @@ fn verify_folder(folder: &Path, json: bool) -> ExitCode {
         Ok(read) => read,
         Err(message) => return fail(message),
     };
-    let v = kentos_extensions::verify(&files, &Limits::default());
-    // The İşlemler tools' descriptors are checked here for their shape only: their whole check is KentOS's processing,
-    // which this light command does not carry (scripts/arch/deps.mjs); the install review and the agents'
-    // extension.verify make it (docs/adr/8057 §24).
-    let tools = v
-        .manifest
-        .as_ref()
-        .is_some_and(|m| !m.entrypoints.processing.is_empty());
-    let note = "İşlemler araçlarının tanımları burada yalnız biçimiyle denetlendi; tam denetimi KentOS'un kurulum \
-                incelemesi ve ajanların extension.verify'ı yapar.";
+    let v = verified(&files);
     // Kapı 3's part that runs no code (docs/adr/8057 §26): bound as KentOS binds it, in a registry of its own under the
     // temporary folder, and taken away; the user's extensions are not touched.
     let dry = v
@@ -340,56 +424,34 @@ fn verify_folder(folder: &Path, json: bool) -> ExitCode {
         });
     if json {
         let mut value = serde_json::to_value(&v).unwrap_or_default();
-        if let Some(o) = value.as_object_mut() {
-            if tools {
-                o.insert("note".to_owned(), serde_json::json!(note));
-            }
-            if let Some(dry) = &dry {
-                o.insert("dryRun".to_owned(), dry.to_json());
-            }
+        if let Some(o) = value.as_object_mut()
+            && let Some(dry) = &dry
+        {
+            o.insert("dryRun".to_owned(), dry.to_json());
         }
-        println!(
+        say!(
             "{}",
             serde_json::to_string_pretty(&value).unwrap_or_default()
         );
     } else {
         if let Some(m) = &v.manifest {
-            println!("{} {} — {}", m.id, m.version, m.name);
-        }
-        let line = |p: &Problem| {
-            let place = [p.file.as_deref(), p.at.as_deref()]
-                .into_iter()
-                .flatten()
-                .collect::<Vec<_>>()
-                .join(" ");
-            if place.is_empty() {
-                format!("  • {} ({})", p.message, p.code)
-            } else {
-                format!("  • {place}: {} ({})", p.message, p.code)
-            }
-        };
-        for (title, list) in [("Sorunlar", &v.problems), ("Uyarılar", &v.warnings)] {
-            if !list.is_empty() {
-                println!("{title}:");
-                for p in list.iter() {
-                    println!("{}", line(p));
-                }
+            say!("{} {} — {}", m.id, m.version, m.name);
+            if let Some(g) = &m.generated {
+                say!("Yazan: {}", g.words());
             }
         }
+        print_placed(&v);
         if v.is_valid() {
-            println!(
+            say!(
                 "Doğrulandı: {} uyarı. İçerik özeti {}.",
                 v.warnings.len(),
                 v.digest.as_deref().unwrap_or("-")
             );
         } else {
-            println!("Doğrulanmadı: {} sorun.", v.problems.len());
+            say!("Doğrulanmadı: {} sorun.", v.problems.len());
         }
         if let Some(dry) = &dry {
             print_dry_run(dry);
-        }
-        if tools {
-            println!("Not: {note}");
         }
     }
     if v.is_valid() {
@@ -402,16 +464,16 @@ fn verify_folder(folder: &Path, json: bool) -> ExitCode {
 /// The dry run in lines: what was bound, what was left out and why, what stayed behind.
 fn print_dry_run(dry: &kentos_extension_host::DryRun) {
     if !dry.problems.is_empty() {
-        println!("Kuru koşu: kurulamadı.");
+        say!("Kuru koşu: kurulamadı.");
         for p in &dry.problems {
-            println!("  • {} ({})", p.message, p.code);
+            say!("  • {} ({})", p.message, p.code);
         }
         return;
     }
     if dry.registered.is_empty() {
-        println!("Kuru koşu: katkı bağlanmadı.");
+        say!("Kuru koşu: katkı bağlanmadı.");
     } else {
-        println!(
+        say!(
             "Kuru koşu: {} katkı bağlandı ({}).",
             dry.registered.len(),
             dry.registered
@@ -422,21 +484,106 @@ fn print_dry_run(dry: &kentos_extension_host::DryRun) {
         );
     }
     if let Some(why) = &dry.activation {
-        println!("  • Etkinleşmedi: {why}");
+        say!("  • Etkinleşmedi: {why}");
     }
     if let Some(note) = &dry.note {
-        println!("  Not: {note}");
+        say!("  Not: {note}");
     }
     for s in &dry.skipped {
-        println!("  • Atlandı: {} — {}", s.id, s.reason);
+        say!("  • Atlandı: {} — {}", s.id, s.reason);
     }
     if dry.residue.is_empty() {
-        println!("  Kaldırınca kalıntı yok.");
+        say!("  Kaldırınca kalıntı yok.");
     } else {
         for r in &dry.residue {
-            println!("  • Kalıntı: {r}");
+            say!("  • Kalıntı: {r}");
         }
     }
+}
+
+/// `kentos kek sbom`: the package's (a folder packed as `pack` packs it, or a `.kek`) software bill of materials from
+/// its lock (`kentos_extensions::sbom`, PY-UV-29), printed or written to `out`.
+fn sbom(target: &Path, out: Option<PathBuf>) -> ExitCode {
+    let bytes = if target.is_dir() {
+        let files = match read_folder(target) {
+            Ok((files, _)) => files,
+            Err(message) => return fail(message),
+        };
+        match pack(&files, &Limits::default()) {
+            Ok(packed) => packed.bytes,
+            Err(problems) => {
+                print_list("Sorunlar", &problems);
+                say!("Paketlenmedi: {} sorun.", problems.len());
+                return ExitCode::from(1);
+            }
+        }
+    } else {
+        match std::fs::read(target) {
+            Ok(bytes) => bytes,
+            Err(e) => return fail(format!("{} okunamadı: {e}", target.display())),
+        }
+    };
+    let opened = kentos_extensions::open(&bytes, &Limits::default());
+    let Some(manifest) = opened
+        .inspection
+        .manifest
+        .as_ref()
+        .filter(|_| opened.inspection.is_valid())
+    else {
+        print_list("Sorunlar", &opened.inspection.problems);
+        say!("Paket geçersiz: SBOM yazılmadı.");
+        return ExitCode::from(1);
+    };
+    let now = kentos_extensions::sbom::utc_text(std::time::SystemTime::now());
+    let Some(mut bom) = kentos_extensions::sbom::cyclonedx(
+        manifest,
+        &opened.files,
+        &now,
+        env!("CARGO_PKG_VERSION"),
+    ) else {
+        say!(
+            "{} Python kullanmıyor ya da kilidi okunmuyor: listelenecek paket yok.",
+            manifest.id
+        );
+        return ExitCode::from(1);
+    };
+    // The packages' licences from KentOS's prepared environment of this version, when there is one (docs/adr/8057
+    // §99): `kentos kek test` and the desktop prepare one.
+    let venv = manifest.python.as_ref().and_then(|p| {
+        let lock = kentos_extensions::integrity::sha256_hex(opened.files.get(&p.lock_file)?);
+        let root = kentos_python_env::places::root()?;
+        let ready = kentos_python_env::extension::find_published(
+            &root,
+            &manifest.id,
+            &manifest.version.to_string(),
+            &lock,
+        )?;
+        Some(ready.python.parent()?.parent()?.to_path_buf())
+    });
+    let licenses = venv
+        .as_deref()
+        .map(kentos_extensions::sbom::licenses_in_venv)
+        .unwrap_or_default();
+    kentos_extensions::sbom::add_licenses(&mut bom, &licenses);
+    let licensed = match &venv {
+        Some(_) => format!("lisanslar ortamdan: {} paket", licenses.len()),
+        None => "lisanssız: bu sürümün ortamı hazırlanmadı (kentos kek test hazırlar)".to_owned(),
+    };
+    let text = serde_json::to_string_pretty(&bom).unwrap_or_default();
+    match out {
+        Some(out) => {
+            if let Err(e) = std::fs::write(&out, format!("{text}\n")) {
+                return fail(format!("{} yazılamadı: {e}", out.display()));
+            }
+            let count = bom["components"].as_array().map_or(0, Vec::len);
+            say!(
+                "SBOM yazıldı: {} ({count} Python paketi; {licensed}).",
+                out.display()
+            );
+        }
+        None => say!("{text}"),
+    }
+    ExitCode::SUCCESS
 }
 
 fn pack_folder(folder: &Path, out: Option<PathBuf>, json: bool) -> ExitCode {
@@ -449,13 +596,13 @@ fn pack_folder(folder: &Path, out: Option<PathBuf>, json: bool) -> ExitCode {
         Err(problems) => {
             if json {
                 let value = serde_json::json!({ "problems": problems });
-                println!(
+                say!(
                     "{}",
                     serde_json::to_string_pretty(&value).unwrap_or_default()
                 );
             } else {
                 print_list("Sorunlar", &problems);
-                println!("Paketlenmedi: {} sorun.", problems.len());
+                say!("Paketlenmedi: {} sorun.", problems.len());
             }
             return ExitCode::from(1);
         }
@@ -483,19 +630,19 @@ fn pack_folder(folder: &Path, out: Option<PathBuf>, json: bool) -> ExitCode {
             "leftOut": left_out,
             "warnings": packed.warnings,
         });
-        println!(
+        say!(
             "{}",
             serde_json::to_string_pretty(&value).unwrap_or_default()
         );
     } else {
-        println!(
+        say!(
             "Paketlendi: {} ({} bayt, {count} dosya)",
             out.display(),
             packed.bytes.len()
         );
-        println!("İçerik özeti: {}", packed.digest);
+        say!("İçerik özeti: {}", packed.digest);
         if !left_out.is_empty() {
-            println!("Pakete girmeyenler: {}", left_out.join(", "));
+            say!("Pakete girmeyenler: {}", left_out.join(", "));
         }
         print_list("Uyarılar", &packed.warnings);
     }
@@ -540,7 +687,7 @@ fn index_folder(folder: &Path, name: Option<&str>) -> ExitCode {
             if let Err(e) = std::fs::write(&out, index.to_json()) {
                 return fail(format!("{} yazılamadı: {e}", out.display()));
             }
-            println!(
+            say!(
                 "Katalog yazıldı: {} ({} paket)",
                 out.display(),
                 index.packages.len()
@@ -549,7 +696,7 @@ fn index_folder(folder: &Path, name: Option<&str>) -> ExitCode {
         }
         Err(problems) => {
             print_list("Sorunlar", &problems);
-            println!("Katalog yazılmadı: {} sorun.", problems.len());
+            say!("Katalog yazılmadı: {} sorun.", problems.len());
             ExitCode::from(1)
         }
     }
@@ -569,7 +716,7 @@ fn dump(root: Option<PathBuf>) -> ExitCode {
             Ok(registry) => registry,
             Err(problem) => return fail(problem.to_string()),
         };
-    println!(
+    say!(
         "{}",
         serde_json::to_string_pretty(&registry.dump()).unwrap_or_default()
     );
@@ -617,12 +764,12 @@ fn log(args: &[&str], json: bool) -> ExitCode {
     let records = journal.tail(id, count);
     if json {
         for r in &records {
-            println!("{}", serde_json::to_string(r).unwrap_or_default());
+            say!("{}", serde_json::to_string(r).unwrap_or_default());
         }
         return ExitCode::SUCCESS;
     }
     if records.is_empty() {
-        println!("Günlükte kayıt yok ({}).", journal.file(id).display());
+        say!("Günlükte kayıt yok ({}).", journal.file(id).display());
         return ExitCode::SUCCESS;
     }
     for r in &records {
@@ -636,7 +783,7 @@ fn log(args: &[&str], json: bool) -> ExitCode {
             .as_ref()
             .map(|v| format!(" · {v}"))
             .unwrap_or_default();
-        println!(
+        say!(
             "{} {:<5} {}{part}{version} — {}",
             utc(r.at),
             r.level.label(),
@@ -645,14 +792,14 @@ fn log(args: &[&str], json: bool) -> ExitCode {
         );
         if let Some(detail) = &r.detail {
             for line in detail.lines() {
-                println!("    {line}");
+                say!("    {line}");
             }
         }
     }
     if let Some(id) = id
         && let Some(p) = kentos_extension_host::journal::problem_in(&records)
     {
-        println!("\nDuran hata ({id}): {} — {}", utc(p.at), p.message);
+        say!("\nDuran hata ({id}): {} — {}", utc(p.at), p.message);
     }
     ExitCode::SUCCESS
 }
@@ -681,6 +828,77 @@ fn utc(ms: u64) -> String {
 
 #[cfg(test)]
 mod tests {
+    /// The İşlemler tools' descriptors are read whole, as KentOS's processing reads them (docs/adr/8057 §74): a
+    /// features output without the layer parameter it writes to is refused here as at Kur.
+    #[test]
+    fn verify_reads_a_tools_descriptor_whole() {
+        use kentos_extensions::blueprint::{Ask, Contribution, blueprint};
+        let made = blueprint(&Ask {
+            id: "tr.ornek.yeni".into(),
+            name: "Yeni".into(),
+            summary: "Bir İşlemler aracı.".into(),
+            vertical: false,
+            module: kentos_extensions::manifest::Module::Cbs,
+            contributions: vec![Contribution::Processing],
+        })
+        .expect("a blueprint");
+        let mut files: std::collections::BTreeMap<String, Vec<u8>> = made
+            .into_iter()
+            .map(|(path, text)| (path, text.into_bytes()))
+            .collect();
+        assert!(super::verified(&files).is_valid());
+        let path = "tools/alan-ozeti.tool.json";
+        let mut descriptor: serde_json::Value = serde_json::from_slice(&files[path]).unwrap();
+        descriptor["outputs"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({ "name": "yeni", "type": "features", "label": "Yeni" }));
+        files.insert(path.into(), serde_json::to_vec(&descriptor).unwrap());
+        let v = super::verified(&files);
+        assert!(
+            v.problems
+                .iter()
+                .any(|p| p.code == "tool_descriptor" && p.file.as_deref() == Some(path)),
+            "{:#?}",
+            v.problems
+        );
+    }
+
+    /// `kek sbom` on the example extension's folder writes its lock's two Python packages as CycloneDX; a package
+    /// without Python writes nothing (ADR 8057 §91).
+    #[test]
+    fn sbom_lists_the_locked_python_packages() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let out = std::env::temp_dir().join(format!("kentos-sbom-{}.cdx.json", std::process::id()));
+        let _ = std::fs::remove_file(&out);
+        let _ = super::sbom(
+            &root.join("samples/eklenti-vitrini/eklenti"),
+            Some(out.clone()),
+        );
+        let bom: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&out).expect("written")).unwrap();
+        assert_eq!(bom["bomFormat"], "CycloneDX");
+        let purls: Vec<&str> = bom["components"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|c| c["purl"].as_str())
+            .collect();
+        assert!(
+            purls.iter().any(|p| p.starts_with("pkg:pypi/numpy@"))
+                && purls.iter().any(|p| p.starts_with("pkg:pypi/shapely@")),
+            "{purls:?}"
+        );
+        let _ = std::fs::remove_file(&out);
+        let none =
+            std::env::temp_dir().join(format!("kentos-sbom-yok-{}.json", std::process::id()));
+        let _ = super::sbom(
+            &root.join("fixtures/extensions/v1/ornek-altlik"),
+            Some(none.clone()),
+        );
+        assert!(!none.exists(), "nothing to list, nothing written");
+    }
+
     #[test]
     fn a_log_time_is_written_in_utc() {
         assert_eq!(super::utc(0), "1970-01-01 00:00:00Z");

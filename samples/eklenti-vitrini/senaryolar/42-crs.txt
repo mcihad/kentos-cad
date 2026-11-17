@@ -1,0 +1,30 @@
+# Koordinat sistemi seçici: "CSV'den nokta ekle"nin Seçenekler sekmesinde dosyanın sistemi (crsPicker) çizimin
+# sistemiyle (TUREF / TM36) başlar. ornek-noktalar-turef.csv aynı dört noktayı TUREF coğrafi koordinatlarla (boylam,
+# enlem) taşır: TUREF seçilince KentOS'un dönüşümü (cad.crs.transform) onları TM36'ya taşır ve noktalar TM36
+# dosyasındakilerin tam üstüne düşer. (Önce 01.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 1192 283 right # Taslak: sağ tık
+wait 1000
+shot 42-menu
+click 1030 591  # CSV'den nokta ekle
+wait 3500
+click 760 498   # dosyanın yolu: coğrafi koordinatlı örnek
+type samples/eklenti-vitrini/ornek-noktalar-turef.csv
+wait 400
+click 593 461   # Seçenekler sekmesi
+wait 800
+shot 42-secenekler
+click 790 526   # dosyanın koordinat sistemi: liste
+wait 800
+shot 42-liste
+click 709 796   # TUREF (EPSG:5252): dosyanın sistemi coğrafi
+wait 600
+shot 42-turef
+click 936 575   # Ekle
+wait 4000
+shot 42-eklendi

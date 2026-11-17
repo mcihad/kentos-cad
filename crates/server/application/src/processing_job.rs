@@ -113,6 +113,8 @@ pub struct ProcessingTask {
     pub request: RunRequest,
     /// An import's file.
     pub file: Option<StagedFile>,
+    /// An audit's extension package (docs/adr/8057 §42), put beside the request as `extension.kek`.
+    pub package: Option<Vec<u8>>,
     pub budget: ProcessingBudget,
 }
 
@@ -147,6 +149,12 @@ pub trait Processor: Send + Sync {
     /// What runs the tools, for the result cache's key (docs/adr/0739 §2): a processor built again never takes the files
     /// an earlier build made. None when the server's own program runs them (its mark is in the key already).
     fn software(&self) -> Option<String> {
+        None
+    }
+
+    /// Where `project.audit` jobs take their rules from (docs/adr/8057 §42): the host's extension catalog and the
+    /// Python environments it prepared. None when the host has no catalog: such a job says so.
+    fn audits(&self) -> Option<Arc<dyn crate::audit_catalog::AuditSource>> {
         None
     }
 }

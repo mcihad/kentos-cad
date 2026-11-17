@@ -1,18 +1,22 @@
 //! What the API says when it says no: the refusal's body with the flow's code and Turkish reason, its HTTP status, and
-//! a move that lost a race to another, made again once on the newer record.
+//! a move that lost a race to another, made again once on the newer record. On both stores.
 
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use axum::body::Bytes;
-use kentos_extensions::release::{Action, Release};
+use kentos_extensions::release::Action;
 
 use super::*;
-use crate::extension_catalog::store::{Access, ReleaseStore, StoreError, StoreFuture};
+use crate::extension_catalog::store::{Access, StoreError, StoreFuture};
 use crate::http::extension_catalog::status_of;
 
-#[tokio::test]
-async fn a_refusal_keeps_the_flow_s_code_and_turkish_reason() {
-    let (app, store) = catalog();
+on_both_stores!(
+    a_refusal_keeps_the_flow_s_code_and_turkish_reason,
+    a_move_that_lost_a_race_is_made_again_on_the_newer_record_once,
+);
+
+async fn a_refusal_keeps_the_flow_s_code_and_turkish_reason(bench: Bench) {
+    let app = catalog(&bench).await;
     // The API's error body: the flow's code, its reason and remedy in Turkish, the request's id.
     upload(&app, PUBLIC, "ayse", release("1.0.0")).await;
     let at = uri(PUBLIC, "1.0.0");
@@ -57,8 +61,10 @@ async fn a_refusal_keeps_the_flow_s_code_and_turkish_reason() {
         (status, code(&body)),
         (StatusCode::CONFLICT, "version_taken".to_owned())
     );
-    store.grant(Where::In(CatalogId::Public), "kerem", Role::Publisher);
-    store.join("kerem", "baska-belediye");
+    bench
+        .grant(Where::In(CatalogId::Public), "kerem", Role::Publisher)
+        .await;
+    bench.join("kerem", "baska-belediye").await;
     let squat = kek(Some("baska-belediye"), "2.0.0", "Özet.");
     let (status, body) = upload(&app, PUBLIC, "kerem", squat).await;
     assert_eq!(
@@ -79,7 +85,7 @@ async fn a_refusal_keeps_the_flow_s_code_and_turkish_reason() {
     }
     // A change without the app's header is refused before anything, as on every route.
     let req = Request::post(format!("{at}/moves"))
-        .header("x-kentos-test-account", "ayse")
+        .header("x-kentos-test-account", id("ayse"))
         .header(header::CONTENT_TYPE, "application/json")
         .body(Body::from(json!({ "action": "submit" }).to_string()))
         .unwrap();
@@ -96,6 +102,7 @@ fn every_refusal_has_its_status() {
                 "self_review",
                 "self_scan",
                 "decision_by_program",
+                "fresh_sign_in_required",
             ],
             StatusCode::FORBIDDEN,
         ),
@@ -153,7 +160,7 @@ fn every_refusal_has_its_status() {
 
 /// A store whose first write of a moved release loses to another request's move.
 struct Racy {
-    inner: MemoryStore,
+    inner: Arc<dyn ReleaseStore>,
     raced: AtomicBool,
 }
 
@@ -195,13 +202,12 @@ impl ReleaseStore for Racy {
     }
 }
 
-#[tokio::test]
-async fn a_move_that_lost_a_race_is_made_again_on_the_newer_record_once() {
+async fn a_move_that_lost_a_race_is_made_again_on_the_newer_record_once(bench: Bench) {
+    grants(&bench).await;
     let racy = Arc::new(Racy {
-        inner: MemoryStore::default(),
+        inner: bench.store(),
         raced: AtomicBool::new(false),
     });
-    grants(&racy.inner);
     let app = app_with(Some(Catalog::new(racy.clone(), Accounts::Named)));
     let (_, view) = upload(&app, PUBLIC, "ayse", release("1.0.0")).await;
     let at = uri(PUBLIC, "1.0.0");
@@ -209,7 +215,7 @@ async fn a_move_that_lost_a_race_is_made_again_on_the_newer_record_once() {
     let (status, view) = act(&app, Via::Token, "tarayici", &at, report).await;
     assert_eq!(status, StatusCode::OK, "{view}");
     assert!(racy.raced.load(Ordering::SeqCst));
-    let stored = racy.inner.stored(&key("1.0.0")).unwrap();
+    let stored = bench.stored(&key("1.0.0")).await.unwrap();
     let actions: Vec<Action> = stored.audit().iter().map(|r| r.action).collect();
     assert_eq!(actions, [Action::Upload, Action::Scan]);
 }

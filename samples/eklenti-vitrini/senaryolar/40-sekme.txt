@@ -1,0 +1,27 @@
+# Panel içi sekme: "CSV'den nokta ekle" penceresinin iki sekmesi (bileşenlerin tab anahtarı): Dosya ve Seçenekler.
+# Sekmesiz açıklama her sayfada. Seçenekler'deyken dosya vermeden Ekle: Dosya sekmesi açılır ve alanın altında söylenir;
+# yolu yazılınca noktalar Taslak katmanına eklenir. (Önce 01.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 1192 283 right # Taslak: sağ tık
+wait 1000
+click 1030 591  # CSV'den nokta ekle
+wait 3500
+shot 40-pencere
+click 593 461   # Seçenekler sekmesi
+wait 800
+shot 40-secenekler
+click 936 552   # Ekle, dosya verilmeden: Dosya sekmesi açılır, alanın altında söylenir
+wait 800
+shot 40-zorunlu
+click 760 481   # dosyanın yolu (yazınca hata kalkar, pencere eski yerine döner)
+type samples/eklenti-vitrini/ornek-noktalar.csv
+wait 400
+shot 40-yazildi
+click 936 538   # Ekle
+wait 4000
+shot 40-eklendi

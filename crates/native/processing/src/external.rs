@@ -16,6 +16,9 @@
 //!   17), the layer fields checking every value as a built-in tool's (`writes::check`).
 //! - **Versioned:** the tools are replaced as extensions are installed, turned on or off and removed; each change
 //!   bumps [`generation`], what a list that was read compares to know it is stale.
+//! - **Where they run** (docs/adr/8057 §70): every tool runs on the desktop ([`DESKTOP_RUNTIME`]); one whose descriptor
+//!   also declares [`HEADLESS_RUNTIME`] runs in the headless hosts (MCP, Python) too, with the same id, schema and
+//!   result. A headless host lists only those, and says why another is not run there ([`unavailable`]).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, RwLock};
@@ -54,6 +57,15 @@ const KINDS: [&str; 8] = [
 const OUTPUT_KINDS: [&str; 4] = ["features", "table", "number", "string"];
 
 mod descriptor_schema;
+mod examples;
+mod hosts;
+mod updates;
+pub use examples::{MOST_EXAMPLE_FEATURES, MOST_EXAMPLES};
+pub use hosts::{
+    DESKTOP_RUNTIME, HEADLESS_RUNTIME, is_provider, register_provider_if_none, set_unavailable,
+    unavailable,
+};
+use hosts::{RUNTIMES, runtimes};
 
 pub use descriptor_schema::descriptor_schema;
 
@@ -94,6 +106,11 @@ pub struct ExternalTool {
     pub outputs: Vec<Output>,
     /// How long a run may take before it is stopped as overdue, seconds.
     pub timeout: u64,
+    /// Its examples as its descriptor gives them (docs/adr/8057 §48, PY-TOOL-23): run by the host on a drawing of
+    /// their own and checked against what each expects.
+    pub examples: Vec<Value>,
+    /// Its descriptor declares [`HEADLESS_RUNTIME`]: the headless hosts run it too (docs/adr/8057 §70).
+    pub headless: bool,
 }
 
 /// Why a run gave nothing.
@@ -276,15 +293,7 @@ pub fn from_descriptor(
     if label.is_empty() || label.chars().count() > 80 {
         return Err("label: aracın adı boş olmamalı, en çok 80 karakter.".into());
     }
-    if let Some(runtimes) = runtimes(o)
-        && !runtimes.iter().any(|r| r == "desktop-python")
-    {
-        return Err(
-            "capabilities.runtimes: bu KentOS eklenti araçlarını yalnız masaüstünde, eklentinin Python'unda çalıştırır \
-             (“desktop-python”)."
-                .into(),
-        );
-    }
+    let headless = runtimes(o)?.is_some_and(|r| r.iter().any(|r| r == HEADLESS_RUNTIME));
     let mut parameters: Vec<ParamDef> = Vec::new();
     for (i, p) in o
         .get("parameters")
@@ -407,6 +416,7 @@ pub fn from_descriptor(
             ));
         }
     };
+    let examples = examples::examples_of(o.get("examples"))?;
     let whose = format!(
         "{extension_name} eklentisinin aracı ({extension} {version}). Eklentinin kendi Python ortamında, ayrı bir \
          süreçte çalışır; ayrı süreç bir korumalı alan değildir: eklenti sizin haklarınızla çalışır, KentOS yalnız \
@@ -459,18 +469,9 @@ pub fn from_descriptor(
         local: local.to_owned(),
         outputs,
         timeout,
+        examples,
+        headless,
     })
-}
-
-/// The runtimes a descriptor names (`capabilities.runtimes`); none when it names none.
-fn runtimes(o: &Map<String, Value>) -> Option<Vec<String>> {
-    let list = o.get("capabilities")?.get("runtimes")?.as_array()?;
-    Some(
-        list.iter()
-            .filter_map(Value::as_str)
-            .map(str::to_owned)
-            .collect(),
-    )
 }
 
 /// An extension's tool's run (its [`Tool::run`]): its inputs to the provider as data, its answer read back against
@@ -730,7 +731,11 @@ fn input_of(
             }
         }
     }
-    Ok(json!({ "params": params, "inputs": inputs, "layers": layers }))
+    // The drawing's coordinate system: a built-in tool the extension's code asks for runs in it (docs/adr/8057 §47).
+    Ok(
+        json!({ "params": params, "inputs": inputs, "layers": layers,
+               "srid": ctx.doc.settings().srid }),
+    )
 }
 
 /// A value of an attribute as KentOS keeps it (text): a number as JavaScript writes it, a yes or no as `true` or
@@ -1195,9 +1200,12 @@ fn result_of(
         .get("summary")
         .and_then(Value::as_str)
         .map(|s| s.chars().take(500).collect());
-    if !add.is_empty() {
+    // Its own inputs changed in place: only those it says it writes (updates.rs, docs/adr/8057 §49).
+    let update = updates::updates_of(tool, answer, resolved, ctx, &given).map_err(words)?;
+    if !add.is_empty() || !update.is_empty() {
         result.changes = Some(ChangeSet {
             add,
+            update,
             ..ChangeSet::default()
         });
     }

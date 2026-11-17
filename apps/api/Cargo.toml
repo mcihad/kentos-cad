@@ -19,6 +19,9 @@ kentos-sheet = { path = "../../crates/shared/sheet", default-features = false }
 # The extension catalog's release flow and the package inspector (docs/adr/8059): the server moves releases only through
 # them, the same code the desktop and the agents use.
 kentos-extensions = { path = "../../crates/shared/extensions" }
+# An audit release's Python environment (docs/adr/8057 §66): made by the desktop's own machinery (keyed, made from the
+# lock, checked, marked ready last), wheels only; uv is run as a program, nothing of Python is embedded.
+kentos-python-env = { path = "../../crates/native/python-env" }
 axum = { workspace = true }
 http-body = { workspace = true }
 tokio = { workspace = true }
@@ -34,8 +37,14 @@ jsonwebtoken = { workspace = true }
 reqwest = { workspace = true }
 time = { workspace = true }
 
+# The job's process group ended at its budget, the rule's Python with it (docs/adr/8057 §58).
+[target.'cfg(unix)'.dependencies]
+libc = { workspace = true }
+
 [dev-dependencies]
 tokio = { workspace = true, features = ["io-util"] }
+# A wheel written in the catalog's SBOM test, its licence read back (docs/adr/8057 §99).
+kentos-zip = { path = "../../crates/shared/zip" }
 # The SHA-256 of an uploaded file in the file routes' tests (docs/adr/0031).
 sha2 = { workspace = true }
 # Reading back a project's snapshot in the file routes' tests (docs/adr/0033).

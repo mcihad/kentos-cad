@@ -5,17 +5,21 @@
 //! The processor ([`ChildProcessor`]) writes the task to a private work folder (the project's `.kcad`, the request and,
 //! for an import, a link to the staged file), starts `kentos-jobrun <folder>` (the headless host and the tools, a program of its own so the server does
 //! not carry them) with an empty environment (the server's secrets stay in the server), reads the progress the child
-//! prints, and watches it: every sample it reads the child's CPU time and resident memory (`/proc` where there is
-//! one, `ps` elsewhere); past the task's budget it kills the child (`cpu_limit`, `memory_limit`); when the worker says
-//! stop it kills the child; when the child ends it reads what it wrote. The child has no database and no network of
-//! its own; it reads one folder and writes to it.
+//! prints, and watches it: every sample it reads the CPU time and resident memory of the child and of every process
+//! under it (an audit rule's Python, docs/adr/8057 §58; `/proc` where there is one, `ps` elsewhere: [`tree`]); past the
+//! task's budget it ends the child's process group (`cpu_limit`, `memory_limit`); when the worker says stop it ends the
+//! group; when the child ends it reads what it wrote. The child has no database and no network of its own; it reads one
+//! folder and writes to it. An audit's extension package goes into the folder beside the request (`extension.kek`);
+//! where its rules come from is the processor's audit source (docs/adr/8057 §42).
 
 use std::io::{BufRead, BufReader, Read};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 
+use kentos_application::audit_catalog::AuditSource;
 use kentos_application::processing_job::RunRequest;
 use kentos_application::processing_job::{
     ProcessFailure, ProcessHooks, Processed, ProcessingBudget, ProcessingTask, Processor,
@@ -23,9 +27,15 @@ use kentos_application::processing_job::{
 use kentos_contracts::{ProcessingJobMode, ProcessingUsage};
 use uuid::Uuid;
 
+#[path = "processing_job/tree.rs"]
+mod tree;
+
 /// The child's program name, beside the server's own, and the variable that names another place for it.
 pub const CHILD_PROGRAM: &str = "kentos-jobrun";
 pub const CHILD_ENV: &str = "KENTOS_JOBRUN";
+/// The server's setting for the cloud audit box where it cannot close (docs/adr/8057 §61): `require` (the default)
+/// or `report`; given to the child, whose environment is otherwise empty.
+pub const AUDIT_CONFINE_ENV: &str = "KENTOS_AUDIT_CONFINE";
 /// What a child's progress line starts with: `KENTOS-PROGRESS 0.4000 words`.
 const PROGRESS_PREFIX: &str = "KENTOS-PROGRESS ";
 /// How often the parent looks at whether the child ended or the worker said stop.
@@ -50,6 +60,7 @@ const ANSWER: &str = "answer.json";
 const FAILURE: &str = "failure.json";
 const SINK: &str = "sink.gpkg";
 const ATLAS: &str = "atlas.pdf";
+const PACKAGE: &str = "extension.kek";
 
 // ── What a process takes ────────────────────────────────────────────────────
 
@@ -58,17 +69,6 @@ const ATLAS: &str = "atlas.pdf";
 pub struct Taken {
     pub cpu_seconds: f64,
     pub rss_bytes: u64,
-}
-
-/// The CPU seconds in `/proc/<pid>/stat`: user and system time in clock ticks (`hz` a second), the 14th and 15th
-/// fields, counted after the command's closing parenthesis (a command name may hold spaces).
-pub fn parse_proc_stat(stat: &str, hz: f64) -> Option<f64> {
-    let rest = stat.get(stat.rfind(')')? + 1..)?;
-    let fields: Vec<&str> = rest.split_whitespace().collect();
-    // After the parenthesis the first field is the state, the third of the file: utime is the 14th, index 11.
-    let user: f64 = fields.get(11)?.parse().ok()?;
-    let system: f64 = fields.get(12)?.parse().ok()?;
-    Some((user + system) / hz)
 }
 
 /// The resident memory in `/proc/<pid>/status`, in bytes (`VmRSS:  1234 kB`).
@@ -97,31 +97,9 @@ pub fn parse_ps_time(text: &str) -> Option<f64> {
     Some(seconds)
 }
 
-/// What the process `pid` takes now; none when it is gone or cannot be read.
+/// What the process `pid` and every process under it take now; none when it is gone or cannot be read.
 pub fn measure(pid: u32) -> Option<Taken> {
-    if let (Ok(stat), Ok(status)) = (
-        std::fs::read_to_string(format!("/proc/{pid}/stat")),
-        std::fs::read_to_string(format!("/proc/{pid}/status")),
-    ) {
-        // The kernel's clock tick is 100 a second on every Linux that ships /proc/<pid>/stat this way.
-        return Some(Taken {
-            cpu_seconds: parse_proc_stat(&stat, 100.0)?,
-            rss_bytes: parse_vmrss(&status)?,
-        });
-    }
-    let out = Command::new("ps")
-        .args(["-o", "rss=,time=", "-p", &pid.to_string()])
-        .stdin(Stdio::null())
-        .stderr(Stdio::null())
-        .output()
-        .ok()?;
-    let text = String::from_utf8_lossy(&out.stdout);
-    let mut words = text.split_whitespace();
-    let kb: u64 = words.next()?.parse().ok()?;
-    Some(Taken {
-        cpu_seconds: parse_ps_time(words.next()?)?,
-        rss_bytes: kb * 1024,
-    })
+    tree::measure(pid)
 }
 
 /// Whether `taken` is past `budget`, as the failure that stops the job (docs/adr/0559 §4).
@@ -166,6 +144,9 @@ fn usage_of(peak: &Taken, last: &Taken, own: &ProcessingUsage) -> ProcessingUsag
 pub struct ChildProcessor {
     exe: PathBuf,
     work: PathBuf,
+    /// Where `project.audit` jobs take their rules from (docs/adr/8057 §42): the catalog and its prepared
+    /// environments; none while the server's catalog is off.
+    audits: Option<Arc<dyn AuditSource>>,
 }
 
 /// A work folder, removed when it goes out of scope.
@@ -198,7 +179,18 @@ impl ChildProcessor {
 
     /// A given program and work root (tests).
     pub fn with(exe: PathBuf, work: PathBuf) -> Self {
-        ChildProcessor { exe, work }
+        ChildProcessor {
+            exe,
+            work,
+            audits: None,
+        }
+    }
+
+    /// This processor, its audits' rules taken from `audits` (docs/adr/8057 §42): the catalog the server opened
+    /// (docs/adr/8059 §13).
+    pub fn with_audits(mut self, audits: Arc<dyn AuditSource>) -> Self {
+        self.audits = Some(audits);
+        self
     }
 
     fn folder(&self, job: Uuid) -> Result<Folder, ProcessFailure> {
@@ -271,6 +263,10 @@ impl Processor for ChildProcessor {
         })
     }
 
+    fn audits(&self) -> Option<Arc<dyn AuditSource>> {
+        self.audits.clone()
+    }
+
     fn process(
         &self,
         task: &ProcessingTask,
@@ -287,6 +283,10 @@ impl Processor for ChildProcessor {
             REQUEST,
             &serde_json::to_vec(&task.request).unwrap_or_default(),
         )?;
+        // An audit's extension package, beside the request: the job runner checks it against the digest asked.
+        if let Some(package) = &task.package {
+            wrote(PACKAGE, package)?;
+        }
         // An import's file is read where the object store keeps it: linked into the folder, copied where a link cannot
         // be made (a staged file is gigabytes at most, never read into the server's memory).
         if let (RunRequest::Import(run), Some(file)) = (&task.request, &task.file) {
@@ -301,19 +301,25 @@ impl Processor for ChildProcessor {
                 )
             })?;
         }
-        let mut child = Command::new(&self.exe)
+        let mut command = Command::new(&self.exe);
+        command
             .arg(&folder.0)
             .env_clear()
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()
-            .map_err(|e| {
-                ProcessFailure::new(
-                    "tool_unavailable",
-                    format!("Araç işlemi başlatılamadı ({}): {e}", self.exe.display()),
-                )
-            })?;
+            .stderr(Stdio::piped());
+        // A group of its own: ending it at the budget or a stop ends what the child started too (a rule's Python).
+        tree::own_group(&mut command);
+        // The server's choice where the audit box cannot close (docs/adr/8057 §61): the child has no other environment.
+        if let Some(policy) = std::env::var_os(AUDIT_CONFINE_ENV) {
+            command.env(AUDIT_CONFINE_ENV, policy);
+        }
+        let mut child = command.spawn().map_err(|e| {
+            ProcessFailure::new(
+                "tool_unavailable",
+                format!("Araç işlemi başlatılamadı ({}): {e}", self.exe.display()),
+            )
+        })?;
         let pid = child.id();
         let stdin = child.stdin.take();
         let progress = child
@@ -328,8 +334,7 @@ impl Processor for ChildProcessor {
         let mut measured = began.checked_sub(every).unwrap_or(began);
         let status = loop {
             if hooks.stop.load(Ordering::SeqCst) {
-                let _ = child.kill();
-                let _ = child.wait();
+                tree::end(&mut child);
                 return Err(ProcessFailure::new("stopped", "İş durduruldu."));
             }
             // Looked at four times as often while the child starts: a run that is over in a fraction of a second is
@@ -348,16 +353,15 @@ impl Processor for ChildProcessor {
                 peak.cpu_seconds = peak.cpu_seconds.max(taken.cpu_seconds);
                 last = taken;
                 if let Some(over) = over_budget(&task.budget, &taken) {
-                    let _ = child.kill();
-                    let _ = child.wait();
+                    tree::end(&mut child);
                     return Err(over);
                 }
             }
-            match child.try_wait() {
+            match tree::ended(&mut child) {
                 Ok(Some(status)) => break status,
                 Ok(None) => std::thread::sleep(LOOK_EVERY),
                 Err(e) => {
-                    let _ = child.kill();
+                    tree::end(&mut child);
                     return Err(ProcessFailure::new(
                         "crashed",
                         format!("Araç işleminin durumu okunamadı: {e}"),
@@ -458,10 +462,28 @@ mod tests {
 
     #[test]
     fn the_cpu_time_comes_out_of_a_proc_stat_line_with_spaces_in_its_command() {
-        let stat = "4242 (kentosd job (run)) S 1 4242 4242 0 -1 4194560 1000 0 0 0 250 50 0 0 20 0 1 0 12345 99999 100 18446744073709551615";
-        assert_eq!(parse_proc_stat(stat, 100.0), Some(3.0));
-        assert_eq!(parse_proc_stat("garbage", 100.0), None);
-        assert_eq!(parse_proc_stat("1 (a) S 1 2", 100.0), None);
+        // utime 250, stime 50, cutime 120 (a child waited for: a rule's Python the job runner ended), cstime 30.
+        let stat = "4242 (kentosd job (run)) S 1 4242 4242 0 -1 4194560 1000 0 0 0 250 50 120 30 20 0 1 0 12345 99999 100 18446744073709551615";
+        let line = tree::parse_proc_line(stat, 100.0).expect("a stat line");
+        assert_eq!(
+            (line.state, line.parent, line.own, line.reaped),
+            ('S', 1, 3.0, 1.5)
+        );
+        assert_eq!(tree::parse_proc_line("garbage", 100.0), None);
+        assert_eq!(tree::parse_proc_line("1 (a) S 1 2", 100.0), None);
+    }
+
+    /// The tree under a process from every process's `ps` row: its own, its children's and theirs, nobody else's.
+    #[test]
+    fn a_process_tree_is_summed_from_ps_rows() {
+        let rows = tree::parse_ps_rows(
+            "    1     0  1000   1:00:00\n  500     1  2048     00:02\n  501   500 10240  01:30.50\n  502   501   512     00:01\n  600     1  4096     00:09\n",
+        );
+        assert_eq!(rows.len(), 5);
+        let taken = tree::tree_taken(&rows, 500).expect("the job runner's tree");
+        assert_eq!(taken.rss_bytes, (2048 + 10240 + 512) * 1024);
+        assert!((taken.cpu_seconds - 93.5).abs() < 1e-9, "{taken:?}");
+        assert_eq!(tree::tree_taken(&rows, 999), None);
     }
 
     #[test]

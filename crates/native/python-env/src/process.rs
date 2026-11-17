@@ -41,6 +41,22 @@ const KEPT_ERRORS: usize = 16 * 1024;
 /// The protocol this side speaks (`kentos.ext_host.PROTOCOL`).
 pub const PROTOCOL: u64 = 1;
 
+/// The interpreter's arguments for an extension's process: isolated (`-I`: no user site, no environment variables,
+/// not the working folder on the path), its bytecode in `pycache` (`-X pycache_prefix`, which `-I` keeps: never the
+/// package's folder, whose integrity check refuses a file added to it), the host module `kentos.ext_host`. The
+/// desktop's commands and tools and the headless hosts' tools start it alike.
+pub fn interpreter_args(pycache: &std::path::Path) -> Vec<OsString> {
+    let mut prefix = OsString::from("pycache_prefix=");
+    prefix.push(pycache);
+    vec![
+        "-I".into(),
+        "-X".into(),
+        prefix,
+        "-m".into(),
+        "kentos.ext_host".into(),
+    ]
+}
+
 /// How a process is started: its interpreter, its arguments and its hello.
 #[derive(Clone, Debug)]
 pub struct Start {
@@ -66,6 +82,18 @@ pub enum Heard {
         stream: String,
         text: String,
     },
+}
+
+/// What a run's code asks of its host (a call: `method`, `params`) answered: the result, or why not (a code and the
+/// words). An extension's İşlemler tool asks KentOS to run a built-in tool on data it holds (docs/adr/8057 §47).
+pub type Answer<'a> = dyn FnMut(&str, &Value) -> Result<Value, (String, String)> + 'a;
+
+/// The answer of a run whose host answers nothing: a tool has no drawing, its inputs came as data (PY-TOOL-09).
+pub fn refuse_calls(_: &str, _: &Value) -> Result<Value, (String, String)> {
+    Err((
+        "capability".to_owned(),
+        "Bu çalıştırma çizime erişemez: girdileri veri olarak verildi.".to_owned(),
+    ))
 }
 
 /// How a run ended.
@@ -312,8 +340,23 @@ impl Pool {
     }
 
     /// Runs `invoke` (an `invoke` message without its id) in `key`'s process, started by `start` when it has none, and
-    /// waits for its answer: what it says as it goes to `heard`, `stop` asked every 20 ms, `timeout` its whole time.
+    /// waits for its answer: what it says as it goes to `heard`, `stop` asked every 20 ms, `timeout` its whole time. A
+    /// call its code makes is refused ([`refuse_calls`]).
     pub fn run(
+        self: &Arc<Self>,
+        key: &str,
+        start: &dyn Fn() -> Result<Start, String>,
+        invoke: Value,
+        timeout: Duration,
+        stop: &dyn Fn() -> bool,
+        heard: &mut dyn FnMut(Heard),
+    ) -> Ended {
+        self.run_answering(key, start, invoke, timeout, stop, heard, &mut refuse_calls)
+    }
+
+    /// [`Pool::run`] whose code's calls `answer` answers, as they come (the run waits for each answer).
+    #[allow(clippy::too_many_arguments)]
+    pub fn run_answering(
         self: &Arc<Self>,
         key: &str,
         start: &dyn Fn() -> Result<Start, String>,
@@ -321,6 +364,7 @@ impl Pool {
         timeout: Duration,
         stop: &dyn Fn() -> bool,
         heard: &mut dyn FnMut(Heard),
+        answer: &mut Answer<'_>,
     ) -> Ended {
         self.keep_reaping();
         let place = self.place(key);
@@ -335,7 +379,16 @@ impl Pool {
             std::thread::sleep(Duration::from_millis(20));
         };
         place.ended.store(0, Ordering::Relaxed);
-        let ended = self.run_in(&place, &mut slot, start, &mut invoke, timeout, stop, heard);
+        let ended = self.run_in(
+            &place,
+            &mut slot,
+            start,
+            &mut invoke,
+            timeout,
+            stop,
+            heard,
+            answer,
+        );
         if let Some(process) = slot.as_mut() {
             process.last = Instant::now();
         }
@@ -353,6 +406,7 @@ impl Pool {
         timeout: Duration,
         stop: &dyn Fn() -> bool,
         heard: &mut dyn FnMut(Heard),
+        answer: &mut Answer<'_>,
     ) -> Ended {
         if slot.as_mut().is_none_or(|p| !p.alive()) {
             *slot = None;
@@ -451,15 +505,19 @@ impl Pool {
                             stream: m["stream"].as_str().unwrap_or("out").to_owned(),
                             text: m["text"].as_str().unwrap_or_default().to_owned(),
                         }),
-                        // A tool has no drawing: its inputs came as data (PY-TOOL-09).
+                        // What its code asks: answered by the run's host (a tool's built-in tools on its own data,
+                        // docs/adr/8057 §47), else refused; a tool has no drawing (PY-TOOL-09).
                         "call" => {
-                            let _ = process.send(&json!({
-                                "type": "reply",
-                                "id": m["id"],
-                                "ok": false,
-                                "code": "capability",
-                                "message": "Bu çalıştırma çizime erişemez: girdileri veri olarak verildi.",
-                            }));
+                            let method = m["method"].as_str().unwrap_or_default();
+                            let reply = match answer(method, &m["params"]) {
+                                Ok(result) => {
+                                    json!({ "type": "reply", "id": m["id"], "ok": true, "result": result })
+                                }
+                                Err((code, message)) => json!({
+                                    "type": "reply", "id": m["id"], "ok": false, "code": code, "message": message,
+                                }),
+                            };
+                            let _ = process.send(&reply);
                         }
                         _ => {}
                     }

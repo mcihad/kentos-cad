@@ -103,6 +103,7 @@ mod tests {
         let cx = ExecutionContext::new(&mut doc);
         let run = ProcessingRun {
             environment: None,
+            model: None,
             tool: "attributes.calculate".into(),
             parameters: Default::default(),
             selection: Vec::new(),

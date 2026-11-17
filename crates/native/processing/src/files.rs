@@ -38,7 +38,8 @@ pub trait Sink {
 }
 
 /// The COG of the tiled GeoTIFF at `part` written at `path` (docs/adr/0515): beside it first, then renamed; `part`
-/// removed. A file that is no tiled little-endian TIFF is refused, `path` untouched.
+/// removed. A file that is no tiled little-endian TIFF is refused, `path` untouched; one that cannot be put in place
+/// leaves no piece (docs/adr/8057 §120).
 pub fn cog_file(part: &std::path::Path, path: &std::path::Path) -> Result<(), String> {
     use std::io::{BufWriter, Read, Seek, SeekFrom, Write};
     let fail = |e: std::io::Error| format!("“{}” yazılamadı: {e}.", path.display());
@@ -76,7 +77,7 @@ pub fn cog_file(part: &std::path::Path, path: &std::path::Path) -> Result<(), St
         let _ = std::fs::remove_file(&staged);
         return Err(e);
     }
-    std::fs::rename(&staged, path).map_err(fail)?;
+    crate::staged::put_in_place(&staged, path)?;
     let _ = std::fs::remove_file(part);
     Ok(())
 }

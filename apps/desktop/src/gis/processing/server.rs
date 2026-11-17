@@ -52,12 +52,46 @@ impl App {
         ServerPlace::Ready
     }
 
+    /// Where the server stands for the processing window's tool: [`App::server_place_for`] its id.
+    pub(crate) fn processing_server_place(&self) -> ServerPlace {
+        let tool = self
+            .gis
+            .processing
+            .dialog
+            .as_ref()
+            .map(|w| w.tool.id.as_str());
+        self.server_place_for(tool.unwrap_or_default())
+    }
+
+    /// [`App::server_place`] for the tool `tool`: off, in the policy's words, when the organisation's policy keeps its
+    /// code off the server (an extension's tool; docs/adr/8057 §96, PY-OPT-12): the row says why and Çalıştır never
+    /// sends it there, whatever the window remembered.
+    pub(crate) fn server_place_for(&self, tool: &str) -> ServerPlace {
+        let place = self.server_place();
+        if place == ServerPlace::Absent {
+            return place;
+        }
+        let refusal = self
+            .extensions
+            .registry
+            .as_ref()
+            .and_then(|r| r.policy())
+            .and_then(|p| p.server_refusal(tool));
+        match refusal {
+            Some(why) => ServerPlace::Off(why.to_owned()),
+            None => place,
+        }
+    }
+
     /// Whether the window's run goes to the server: the place chosen and in reach.
     pub(crate) fn processing_at_server(&self) -> bool {
         let Some(window) = &self.gis.processing.dialog else {
             return false;
         };
-        let targets = window.targets(&self.gis.processing.registry, &self.server_place());
+        let targets = window.targets(
+            &self.gis.processing.registry,
+            &self.processing_server_place(),
+        );
         let choice = effective_choice(
             Choice::read(self.gis.processing.memory.target(&window.tool.id)),
             &targets.available,
@@ -119,6 +153,15 @@ impl App {
             }
             return Task::none();
         };
+        // The organisation's policy keeps an extension's code here (docs/adr/8057 §96): never sent.
+        if let ServerPlace::Off(why) = self.server_place_for(&input.tool) {
+            if let Some(window) = &mut self.gis.processing.dialog {
+                window.status = RunStatus::Invalid(format!(
+                    "Sunucuda çalıştırılamaz: {why}. Aracı bu bilgisayarda çalıştırın."
+                ));
+            }
+            return Task::none();
+        }
         if let Some(window) = &mut self.gis.processing.dialog {
             window.status = RunStatus::Asked("Sunucu işi isteniyor…".to_owned());
         }

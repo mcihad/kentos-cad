@@ -154,6 +154,9 @@ pub struct Registry {
     revocations: Revocations,
     /// The version in use's manifest of every installed extension.
     manifests: BTreeMap<String, Manifest>,
+    /// The version in use's locked Python packages, read with its manifest: what the policy's package rules judge and
+    /// an update's review compares (docs/adr/8057 §81, §84).
+    locked: BTreeMap<String, BTreeMap<String, kentos_extensions::release::LockedPackage>>,
     leases: BTreeMap<String, ExtensionLease>,
     registered: Vec<Registered>,
     generation: u64,
@@ -256,10 +259,30 @@ fn verify_files(dir: &Path, digest: &str) -> Result<(), String> {
 /// What to do when the files are not as installed.
 const MEND: &str = "Eklentiyi yeniden kurun ya da önceki sürüme dönün.";
 
+/// Whether an installed version's files in `dir` are still as installed (`digest`, their content digest), as activation
+/// checks them: what a host that runs an extension's code without activating it checks before the code starts (a
+/// headless host, docs/adr/8057 §70). Nothing is written. Why not, naming the files, and what to do, in a sentence.
+pub fn verify_installed(dir: &Path, digest: &str) -> Result<(), String> {
+    verify_files(dir, digest).map_err(|reason| format!("{reason} {MEND}"))
+}
+
 fn read_manifest(layout: &Layout, id: &str, version: &str) -> Result<Manifest, Problem> {
-    let path = layout.package(id, version).join("manifest.json");
+    let dir = layout.package(id, version);
+    let path = dir.join("manifest.json");
     let text = fs::read_to_string(&path).map_err(|e| store::io("Manifest okunamadı", &path, &e))?;
-    Manifest::read(&text)
+    // Shown in the interface's language when the package translates its texts to it (docs/adr/8057 §106).
+    Ok(kentos_extensions::l10n::localized(
+        Manifest::read(&text)?,
+        |file| package_path(&dir, file).and_then(|p| fs::read(p).ok()),
+    ))
+}
+
+/// `file`'s place in the package folder `dir`, when it stays inside it.
+fn package_path(dir: &Path, file: &str) -> Option<PathBuf> {
+    (!file.split('/').any(|p| p.is_empty() || p == "..")).then(|| {
+        file.split('/')
+            .fold(dir.to_path_buf(), |d, part| d.join(part))
+    })
 }
 
 impl Registry {
@@ -315,6 +338,7 @@ impl Registry {
             file,
             revocations,
             manifests: BTreeMap::new(),
+            locked: BTreeMap::new(),
             leases: BTreeMap::new(),
             registered: Vec::new(),
             generation: 0,
@@ -333,16 +357,29 @@ impl Registry {
         match self.file.extensions.get(id) {
             Some(entry) => match read_manifest(&self.layout, id, &entry.active) {
                 Ok(manifest) => {
-                    self.manifests.insert(id.to_owned(), manifest);
+                    let active = entry.active.clone();
+                    self.remember(id, manifest, &active);
                 }
                 Err(_) => {
                     self.manifests.remove(id);
+                    self.locked.remove(id);
                 }
             },
             None => {
                 self.manifests.remove(id);
+                self.locked.remove(id);
             }
         }
+    }
+
+    /// Keeps the version in use's manifest and its locked Python packages (read from its package folder once, not each
+    /// time the list is drawn).
+    fn remember(&mut self, id: &str, manifest: Manifest, version: &str) {
+        match crate::packages::installed(&manifest, &self.layout.package(id, version)) {
+            Some(packages) => self.locked.insert(id.to_owned(), packages),
+            None => self.locked.remove(id),
+        };
+        self.manifests.insert(id.to_owned(), manifest);
     }
 
     /// A change of the registry: under the lock, the file read again (another process may have changed it), the
@@ -474,10 +511,10 @@ impl Registry {
             return Some(format!("{} sürümü geri çekildi: {reason}.", entry.active));
         }
         let manifest = self.manifests.get(id)?;
-        self.options
-            .policy
-            .as_ref()?
+        let policy = self.options.policy.as_ref()?;
+        policy
             .refusal(manifest, entry.source.kind)
+            .or_else(|| policy.package_refusal(self.locked.get(id)?, None))
     }
 
     fn dependency_problem(&self, manifest: &Manifest) -> Option<String> {
@@ -537,12 +574,23 @@ impl Registry {
 
     /// Every installed extension, as the manager lists it.
     pub fn extensions(&self) -> Vec<ExtensionView> {
+        // Names and ids only: reading every icon each time the list is drawn would cost more than it says.
+        let known: Vec<kentos_extensions::resemblance::Known> = self
+            .manifests
+            .values()
+            .map(|m| crate::imitation::installed(m, None))
+            .collect();
         self.file
             .extensions
             .iter()
             .map(|(id, entry)| {
                 let state = self.state_of(id, entry);
                 let trust = self.trust(id, entry);
+                let resemblances = known
+                    .iter()
+                    .find(|k| k.id == *id)
+                    .map(|me| kentos_extensions::resemblance::resemblances(me, &known))
+                    .unwrap_or_default();
                 ExtensionView {
                     id: id.clone(),
                     name: self
@@ -570,6 +618,7 @@ impl Registry {
                     pinned: entry.pinned.clone(),
                     metrics: entry.metrics,
                     problem: journal::problem_in(self.log_of(id)).cloned(),
+                    resemblances,
                     log: self.log_of(id).to_vec(),
                 }
             })
@@ -579,6 +628,22 @@ impl Registry {
     /// What the active extensions add, each under its lease.
     pub fn contributions(&self) -> &[Registered] {
         &self.registered
+    }
+
+    /// What `id`'s version in use declares and leaves out, with why: a capability the person did not grant, Python
+    /// contributions not chosen (docs/adr/8057 §122). Worked out from the manifest and the grant, nothing read from disk:
+    /// a form's button asks it while the window draws.
+    pub fn left_out(&self, id: &str) -> Vec<Skipped> {
+        let (Some(entry), Some(manifest)) = (self.file.extensions.get(id), self.manifests.get(id))
+        else {
+            return Vec::new();
+        };
+        let lease = ExtensionLease {
+            extension: id.to_owned(),
+            version: entry.active.clone(),
+            generation: 0,
+        };
+        lease::contributions(manifest, &entry.grant, &lease, &BTreeMap::new()).1
     }
 
     /// What every running or ready extension adds or would add, worked out without activating anything or writing
@@ -627,6 +692,26 @@ impl Registry {
     }
 
     /// The version in use's manifest.
+    /// Whether `id` is being developed: installed from a working folder (Asistan's workshop, an agent's on the link),
+    /// so its Python runs in a development environment, not a published version's (PY-UV-10, docs/adr/8057 §97).
+    pub fn developed(&self, id: &str) -> bool {
+        self.file
+            .extensions
+            .get(id)
+            .is_some_and(|e| e.source.kind == SourceKind::DeveloperFolder)
+    }
+
+    /// The organisation's policy the registry judges by, when there is one.
+    pub fn policy(&self) -> Option<&Policy> {
+        self.options.policy.as_ref()
+    }
+
+    /// The organisation's policy read again by the host (its file changed; a test): installed extensions it now refuses
+    /// are judged at their next start.
+    pub fn set_policy(&mut self, policy: Option<Policy>) {
+        self.options.policy = policy;
+    }
+
     pub fn manifest(&self, id: &str) -> Option<&Manifest> {
         self.manifests.get(id)
     }
@@ -655,6 +740,26 @@ impl Registry {
             return fs::read(full).ok();
         }
         None
+    }
+
+    /// The translation `id`'s texts are shown with in the interface's language (docs/adr/8057 §106): a panel's, a
+    /// tool's file read through it ([`kentos_extensions::l10n::localized_json`]). None when it is written in that
+    /// language or does not translate to it.
+    pub fn texts(&self, id: &str) -> Option<kentos_extensions::l10n::Texts> {
+        kentos_extensions::l10n::for_interface(self.manifest(id)?, |file| {
+            self.package_file(id, file)
+        })
+    }
+
+    /// A file of `id`'s package as the interface shows it: a panel's, a tool's, the layer schema's texts translated
+    /// (`prefix`, its places' beginning: `ui.<panel>`, `tools.<tool>`, `schema`).
+    pub fn localized_file(&self, id: &str, path: &str, prefix: &str) -> Option<Vec<u8>> {
+        let bytes = self.package_file(id, path)?;
+        Some(kentos_extensions::l10n::localized_json(
+            bytes,
+            self.texts(id).as_ref(),
+            prefix,
+        ))
     }
 
     /// The lease of a running extension.
@@ -847,7 +952,8 @@ impl Registry {
         let (registered, skipped) = lease::contributions(&manifest, &entry.grant, &lease, &titles);
         self.registered.extend(registered);
         self.leases.insert(id.to_owned(), lease.clone());
-        self.manifests.insert(id.to_owned(), manifest);
+        let active = entry.active.clone();
+        self.remember(id, manifest, &active);
         let micros = u64::try_from(started.elapsed().as_micros()).unwrap_or(u64::MAX);
         let owner = id.to_owned();
         self.change(move |file| {
@@ -993,6 +1099,17 @@ impl Registry {
 
     /// Everything to show before the user decides; installs nothing.
     pub fn review(&self, bytes: &[u8], source: &Source) -> Review {
+        self.review_beside(bytes, source, Vec::new())
+    }
+
+    /// [`Registry::review`], the package compared also with `catalog` (the entries of the catalog the desktop read,
+    /// [`crate::imitation::of_entry`]): what it reads as among them and the installed extensions (docs/adr/8059 §14).
+    pub fn review_beside(
+        &self,
+        bytes: &[u8],
+        source: &Source,
+        catalog: Vec<kentos_extensions::resemblance::Known>,
+    ) -> Review {
         let opened = kentos_extensions::open(bytes, &self.options.limits);
         let mut inspection = opened.inspection;
         // The host's whole check of the tools: a tool it would not make is said before Kur, not after.
@@ -1013,6 +1130,10 @@ impl Registry {
             installed: None,
             source_conflict: false,
             capabilities: Vec::new(),
+            resemblances: Vec::new(),
+            platforms: Vec::new(),
+            python_packages: Vec::new(),
+            publisher_change: None,
             installable: false,
         };
         let Some(manifest) = manifest else {
@@ -1020,6 +1141,14 @@ impl Registry {
         };
         let installed = self.manifests.get(&manifest.id);
         review.capabilities = capability_lines(&manifest, installed);
+        // Who publishes it, against the installed version (docs/adr/8057 §126).
+        review.publisher_change = installed
+            .filter(|old| old.publisher_id != manifest.publisher_id)
+            .map(|old| crate::view::PublisherChange {
+                before: old.publisher_id.clone(),
+                after: manifest.publisher_id.clone(),
+            });
+        review.platforms = crate::view::platform_lines(&manifest, installed);
         if !review.inspection.is_valid() {
             return review;
         }
@@ -1042,6 +1171,34 @@ impl Registry {
             .map(|d| self.dependency_status(d))
             .collect();
         review.cycle = self.cycle_with(&manifest);
+        let mut known: Vec<kentos_extensions::resemblance::Known> = self
+            .manifests
+            .values()
+            .map(|m| crate::imitation::installed(m, self.package_dir(&m.id).as_deref()))
+            .collect();
+        known.extend(catalog);
+        review.resemblances = crate::imitation::of_package(&manifest, &opened.files, known);
+        // Its Python packages, an update's against the installed version's (docs/adr/8057 §81).
+        if let Some(new) = manifest
+            .python
+            .as_ref()
+            .and_then(|p| kentos_extensions::release::locked_packages(p, &opened.files))
+        {
+            // An installed version without Python installs none of them.
+            let old = self
+                .manifests
+                .contains_key(&manifest.id)
+                .then(|| self.locked.get(&manifest.id).cloned().unwrap_or_default());
+            review.python_packages = crate::packages::lines(&new, old.as_ref());
+            // The organisation's package rules (docs/adr/8057 §84), said before Kur as its other rules are.
+            if review.policy.is_none() {
+                review.policy = self
+                    .options
+                    .policy
+                    .as_ref()
+                    .and_then(|p| p.package_refusal(&new, Some(std::time::SystemTime::now())));
+            }
+        }
         if let Some(entry) = self.file.extensions.get(&manifest.id) {
             review.source_conflict = conflicts(&entry.source, source);
             review.installed = Some((entry.active.clone(), entry.source.clone()));
@@ -1117,12 +1274,14 @@ impl Registry {
         let id = manifest.id.clone();
         let version = manifest.version.clone();
         compatible(&manifest.compatibility, &self.host).map_err(one)?;
-        if let Some(reason) = self
-            .options
-            .policy
-            .as_ref()
-            .and_then(|p| p.refusal(&manifest, source.kind))
-        {
+        if let Some(reason) = self.options.policy.as_ref().and_then(|p| {
+            p.refusal(&manifest, source.kind).or_else(|| {
+                // Its Python packages by the organisation's package rules (docs/adr/8057 §84).
+                let project = manifest.python.as_ref()?;
+                let packages = kentos_extensions::release::locked_packages(project, &opened.files)?;
+                p.package_refusal(&packages, Some(std::time::SystemTime::now()))
+            })
+        }) {
             return Err(one(problem("registry_policy", reason)));
         }
         if let Some(reason) = self.revocations.reason(&id, &version) {

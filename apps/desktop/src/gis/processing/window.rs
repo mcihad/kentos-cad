@@ -76,7 +76,7 @@ impl App {
             format: &format,
             color: &color,
         };
-        let server = self.server_place();
+        let server = self.processing_server_place();
         let at_server = self.processing_at_server();
         let body = row![
             scrollable(form(

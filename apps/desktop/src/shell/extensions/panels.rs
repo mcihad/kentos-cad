@@ -43,21 +43,29 @@ use crate::exchange::words;
 const PANEL_SHARE: f32 = 0.6;
 /// The panels' scroller: one, showing the panel shown.
 pub(super) const SCROLLER: &str = "extension-panel";
+/// A split panel's outputs' scroller, under its sash (docs/adr/8057 §69).
+pub(super) const OUTPUTS: &str = "extension-panel-outputs";
 
-/// The panels' scroller to `y`: the panel shown as it was left (the scroller was the last panel's).
-fn scroll_back(y: f32) -> Task<Message> {
-    iced::widget::operation::scroll_to(
-        iced::widget::Id::new(SCROLLER),
-        iced::widget::scrollable::AbsoluteOffset {
-            x: None,
-            y: Some(y),
-        },
-    )
+/// The panels' scrollers to `y` and `outputs`: the panel shown as it was left (the scrollers were the last panel's).
+fn scroll_back(y: f32, outputs: f32) -> Task<Message> {
+    let to = |id: &'static str, y: f32| {
+        iced::widget::operation::scroll_to(
+            iced::widget::Id::new(id),
+            iced::widget::scrollable::AbsoluteOffset {
+                x: None,
+                y: Some(y),
+            },
+        )
+    };
+    Task::batch([to(SCROLLER, y), to(OUTPUTS, outputs)])
 }
 
 /// A panel open in the dock.
 #[derive(Clone, Debug)]
 pub(crate) struct OpenPanel {
+    /// Its own number, new each time it opens: a run's answer reaches the panel it started from, not one opened again
+    /// after it closed (PY-UI-17, docs/adr/8057 §117).
+    pub(crate) instance: u64,
     pub(crate) ext: String,
     pub(crate) local: String,
     pub(crate) definition: PanelDefinition,
@@ -102,6 +110,9 @@ pub(crate) struct OpenPanel {
     pub(crate) held: bool,
     /// Each table's and card component's page shown (panel_view.rs `pager`); its first when its rows come again.
     pub(crate) pages: BTreeMap<String, usize>,
+    /// Each row component's keyboard cursor (docs/adr/8057 §71): the row ↑ and ↓ reached, from the first of all its
+    /// rows; Enter shows its object. Gone with the rows it was on.
+    pub(crate) cursor: BTreeMap<String, usize>,
     /// Each component's rules compiled (`visibleWhen`, `requiredWhen`, `enabledWhen`; docs/adr/8057 §33), in the
     /// body's order: worked out from the panel's values as they change, no Python.
     pub(crate) rules: Vec<CompiledRules>,
@@ -112,8 +123,18 @@ pub(crate) struct OpenPanel {
     pub(crate) calculated: BTreeMap<usize, String>,
     /// The sections folded now, by place (`section`: its `collapsed` at first, then the user's; panel_view.rs).
     pub(crate) closed: std::collections::BTreeSet<usize>,
+    /// The tab the user chose (panel_tabs.rs, docs/adr/8057 §43); none: the first.
+    pub(crate) tab: Option<String>,
     /// Each `image` component's picture its code gave (panel_image.rs), checked and decoded.
     pub(crate) images: BTreeMap<String, iced::widget::image::Handle>,
+    /// A dialog shown as a wizard (`ctx.dialog(…, steps=True)`, dialogs.rs): its tabs are the steps, no tab bar.
+    pub(crate) steps: bool,
+    /// Each shape picker's drawn shape, as GeoJSON (panel_points.rs, docs/adr/8057 §62).
+    pub(crate) geoms: BTreeMap<String, Value>,
+    /// A split panel's form height as the user dragged its sash; none: the default (docs/adr/8057 §69).
+    pub(crate) split: Option<f32>,
+    /// How far down a split panel's outputs were scrolled: given back when it is shown again.
+    pub(crate) out_scroll: f32,
 }
 
 /// A component's rules, compiled against the panel's inputs (Kapı 1 passed them; one that does not compile is none).
@@ -142,6 +163,9 @@ pub(crate) struct PanelOrigin {
     pub(crate) panel: String,
     pub(crate) button: String,
     pub(crate) table: Option<String>,
+    /// The open panel's own number ([`OpenPanel::instance`]): a panel closed while its command ran and opened again is
+    /// another, which the run's answer does not reach (docs/adr/8057 §117).
+    pub(crate) instance: u64,
 }
 
 /// What a panel is told by the user.
@@ -166,8 +190,23 @@ pub(crate) enum PanelEvent {
     Fold(String),
     /// A table's or a card component's page of rows shown (its id, the page from 0).
     Page(String, usize),
+    /// A row component's keyboard cursor moved to a row (its id, the row from the first of all its rows, and the page
+    /// that holds it, shown).
+    Cursor(String, usize, usize),
     /// A section opened or folded, by its place.
     Section(usize),
+    /// A tab's page shown, by its words.
+    Tab(String),
+    /// A file picker's Seç…: the computer's file window, its choice as `Picked`.
+    PickFile(String),
+    /// A point picker's Haritadan seç: a point picked on the map, the field's words then (panel_points.rs).
+    PickPoint(String),
+    /// A shape picker's Haritada çiz: a shape drawn on the map (panel_points.rs).
+    DrawShape(String),
+    /// A shape picker's ✕: its shape let go.
+    ClearShape(String),
+    /// A number field's − (−1) or + (1): its value by its step.
+    Step(String, i8),
     /// The open panel at this place in the tabs shown.
     Activate(usize),
     /// Its tab moved: from, to (where it goes once taken out).
@@ -176,12 +215,20 @@ pub(crate) enum PanelEvent {
     Close(usize),
     /// The panel shown scrolled to here.
     Scrolled(f32),
+    /// A split panel's outputs scrolled to here (docs/adr/8057 §69).
+    ScrolledOutputs(f32),
+    /// A split panel's sash dragged: the form's height.
+    Split(f32),
+    /// A split panel's sash double-clicked: the form's default height.
+    SplitReset,
 }
 
 impl OpenPanel {
     /// The panel as its definition starts it.
     pub(crate) fn new(ext: &str, local: &str, definition: PanelDefinition) -> OpenPanel {
+        static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
         let mut panel = OpenPanel {
+            instance: NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
             ext: ext.to_owned(),
             local: local.to_owned(),
             definition,
@@ -207,11 +254,17 @@ impl OpenPanel {
             spoke: false,
             held: false,
             pages: BTreeMap::new(),
+            cursor: BTreeMap::new(),
             rules: Vec::new(),
             calc_order: Vec::new(),
             calculated: BTreeMap::new(),
             closed: std::collections::BTreeSet::new(),
+            tab: None,
             images: BTreeMap::new(),
+            steps: false,
+            geoms: BTreeMap::new(),
+            split: None,
+            out_scroll: 0.0,
         };
         // The sections folded when it opens.
         for (at, c) in panel.definition.body.iter().enumerate() {
@@ -277,6 +330,10 @@ impl OpenPanel {
                         .texts
                         .insert(id.clone(), value.clone().unwrap_or_default());
                 }
+                // A file's path, typed or chosen: none at first.
+                Component::FilePicker { id, .. } => {
+                    panel.texts.insert(id.clone(), String::new());
+                }
                 Component::NumberField { id, value, .. } => {
                     panel
                         .texts
@@ -320,6 +377,21 @@ impl OpenPanel {
                         .choices
                         .insert(id.clone(), value.clone().or(first).unwrap_or_default());
                 }
+                // Its own value; none waits for the drawing's system (panel_crs.rs `default_crs`).
+                Component::CrsPicker { id, value, .. } => {
+                    panel
+                        .choices
+                        .insert(id.clone(), value.clone().unwrap_or_default());
+                }
+                // A point as typed, to the millimetre (panel_points.rs, docs/adr/8057 §57).
+                Component::PointPicker { id, value, .. } => {
+                    panel.texts.insert(
+                        id.clone(),
+                        value
+                            .map(kentos_extensions::ui_panel::point_words)
+                            .unwrap_or_default(),
+                    );
+                }
                 _ => {}
             }
         }
@@ -349,6 +421,26 @@ impl OpenPanel {
         Ok(Value::Object(out))
     }
 
+    /// Like [`OpenPanel::check_params`], for the inputs on page `page` alone (a wizard's step and the components on
+    /// every page): which is wrong and why, said by its label; none when they are right.
+    pub(crate) fn check_page(&self, page: &str) -> Result<(), (String, String)> {
+        let mut out = Map::new();
+        for (at, c) in self.definition.body.iter().enumerate() {
+            if !self.on_page(at, Some(page)) {
+                continue;
+            }
+            let id = c.id().unwrap_or_default().to_owned();
+            if self.shown(at, c)
+                && self.asked(at, c)
+                && let Some(why) = self.missing(c)
+            {
+                return Err((id, why));
+            }
+            self.read_into(c, &mut out).map_err(|why| (id, why))?;
+        }
+        Ok(())
+    }
+
     /// The wrong input changed by `event`: its words under it go (the next ask checks it again). While its command
     /// runs, the input is the user's: the code's value does not go over it (panel_session.rs).
     pub(crate) fn forget_invalid(&mut self, event: &PanelEvent) {
@@ -359,10 +451,18 @@ impl OpenPanel {
             | PanelEvent::Picked(id, _)
             | PanelEvent::Toggle(id, _)
             | PanelEvent::Pick(id)
-            | PanelEvent::Unpick(id) => Some(id),
+            | PanelEvent::Unpick(id)
+            | PanelEvent::ClearShape(id) => Some(id),
             _ => None,
         };
         if changed.is_some_and(|id| self.invalid.as_ref().is_some_and(|(at, _)| at == id)) {
+            // The words under the form were that field's: they go with it, not left saying what is no longer so
+            // (a dialog's "dosya verilmedi" stayed under a typed path, real window, 15 November 2026).
+            if let (Some((_, why)), Some((words::Kind::Error, said))) = (&self.invalid, &self.said)
+                && said == why
+            {
+                self.said = None;
+            }
             self.invalid = None;
         }
         if let Some(id) = changed
@@ -396,6 +496,15 @@ impl OpenPanel {
         c.required() || self.holds(at, |r| r.required.as_ref()) == Some(true)
     }
 
+    /// Whether a shown input it asks for has no value yet: a change's command waits for it (docs/adr/8057 §62).
+    pub(crate) fn waits_for_value(&self) -> bool {
+        self.definition
+            .body
+            .iter()
+            .enumerate()
+            .any(|(at, c)| self.shown(at, c) && self.asked(at, c) && self.missing(c).is_some())
+    }
+
     /// A rule of component `at` worked out from the panel's values; none when it has no such rule.
     fn holds(
         &self,
@@ -420,8 +529,21 @@ impl OpenPanel {
         let joined =
             |list: Option<&Vec<String>>| list.filter(|l| !l.is_empty()).map(|l| l.join(", "));
         match self.definition.body.iter().find(|c| c.id() == Some(id))? {
-            Component::TextField { .. } => typed().map(str::to_owned),
-            Component::NumberField { .. } => typed().and_then(number_of).map(|n| n.to_string()),
+            Component::TextField { .. } | Component::FilePicker { .. } => {
+                typed().map(str::to_owned)
+            }
+            Component::PointPicker { .. } => typed()
+                .and_then(kentos_extensions::ui_panel::typed_point)
+                .map(kentos_extensions::ui_panel::point_words),
+            Component::ShapePicker { .. } => {
+                self.geoms.get(id).map(super::panel_points::shape_words)
+            }
+            Component::RelationPicker { .. } => {
+                self.choices.get(id).filter(|c| !c.is_empty()).cloned()
+            }
+            Component::NumberField { .. } => typed()
+                .and_then(|t| self.typed_number(id, t))
+                .map(|n| n.to_string()),
             Component::DateField { .. } => {
                 typed().and_then(kentos_extensions::ui_panel::typed_date)
             }
@@ -436,7 +558,8 @@ impl OpenPanel {
             }
             Component::Select { .. }
             | Component::LayerPicker { .. }
-            | Component::FieldPicker { .. } => {
+            | Component::FieldPicker { .. }
+            | Component::CrsPicker { .. } => {
                 self.choices.get(id).filter(|v| !v.is_empty()).cloned()
             }
             Component::MultiSelect { .. } => joined(self.multi.get(id)),
@@ -473,11 +596,18 @@ impl OpenPanel {
             | Component::MultiSelect { label, .. }
             | Component::DateField { label, .. }
             | Component::TimeField { label, .. }
-            | Component::DateTimeField { label, .. } => label,
+            | Component::DateTimeField { label, .. }
+            | Component::FilePicker { label, .. }
+            | Component::CrsPicker { label, .. }
+            | Component::PointPicker { label, .. }
+            | Component::ShapePicker { label, .. }
+            | Component::RelationPicker { label, .. } => label,
             _ => return None,
         };
         match c {
-            Component::LayerPicker { .. } | Component::FieldPicker { .. } => self
+            Component::LayerPicker { .. }
+            | Component::FieldPicker { .. }
+            | Component::CrsPicker { .. } => self
                 .choices
                 .get(id)
                 .is_none_or(String::is_empty)
@@ -492,6 +622,25 @@ impl OpenPanel {
                 .get(id)
                 .is_none_or(Vec::is_empty)
                 .then(|| format!("“{label}”: en az biri seçilmeli.")),
+            Component::FilePicker { .. } => self
+                .texts
+                .get(id)
+                .is_none_or(|t| t.trim().is_empty())
+                .then(|| format!("“{label}”: dosya verilmedi (yolunu yazın ya da Seç…'e basın).")),
+            Component::PointPicker { .. } => self
+                .texts
+                .get(id)
+                .is_none_or(|t| t.trim().is_empty())
+                .then(|| {
+                    format!("“{label}”: nokta verilmedi (x, y yazın ya da Haritadan seç'e basın).")
+                }),
+            Component::ShapePicker { .. } => (!self.geoms.contains_key(id))
+                .then(|| format!("“{label}”: çizilmedi (Haritada çiz'e basın).")),
+            Component::RelationPicker { .. } => self
+                .choices
+                .get(id)
+                .is_none_or(|c| c.is_empty())
+                .then(|| format!("“{label}”: kayıt seçilmedi.")),
             _ => self
                 .texts
                 .get(id)
@@ -507,11 +656,52 @@ impl OpenPanel {
                 let text = self.texts.get(id).map_or("", |t| t.trim());
                 out.insert(id.clone(), json!(text));
             }
+            // A relation's parent record: its persistent id, none when none is chosen (docs/adr/8057 §67).
+            Component::RelationPicker { id, .. } => {
+                let chosen = self.choices.get(id).filter(|c| !c.is_empty());
+                out.insert(id.clone(), chosen.map_or(Value::Null, |c| json!(c)));
+            }
+            // A drawn shape: GeoJSON, none when empty (docs/adr/8057 §62).
+            Component::ShapePicker { id, .. } => {
+                out.insert(
+                    id.clone(),
+                    self.geoms.get(id).cloned().unwrap_or(Value::Null),
+                );
+            }
+            // A point: `[x, y]`, none when empty (docs/adr/8057 §57).
+            Component::PointPicker { id, label, .. } => {
+                let typed = self.texts.get(id).map_or("", |t| t.trim());
+                let value = if typed.is_empty() {
+                    Value::Null
+                } else {
+                    let [x, y] =
+                        kentos_extensions::ui_panel::typed_point(typed).ok_or_else(|| {
+                            format!("“{label}” bir nokta olmalı: x, y (ör. 500123.45, 4401234.50).")
+                        })?;
+                    json!([x, y])
+                };
+                out.insert(id.clone(), value);
+            }
+            // A file to be read: its absolute path, checked to be a file of the kinds offered (panel_files.rs).
+            Component::FilePicker {
+                id,
+                label,
+                filters,
+                save,
+                ..
+            } => {
+                let typed = self.texts.get(id).map_or("", String::as_str);
+                out.insert(
+                    id.clone(),
+                    super::panel_files::file_value(label, filters, *save, typed)?,
+                );
+            }
             Component::NumberField {
                 id,
                 label,
                 min,
                 max,
+                unit,
                 ..
             } => {
                 let text = self.texts.get(id).map_or("", |t| t.trim());
@@ -519,14 +709,27 @@ impl OpenPanel {
                     out.insert(id.clone(), Value::Null);
                     return Ok(());
                 }
-                let Some(n) = number_of(text) else {
-                    return Err(format!("“{label}”: “{text}” bir sayı değil."));
+                // In its own unit, whichever of its units it was typed in (panel_units.rs, docs/adr/8057 §64).
+                let units = self.units_words(id);
+                let Some(n) = self.typed_number(id, text) else {
+                    return Err(match units {
+                        Some(units) => format!(
+                            "“{label}”: “{text}” okunamadı: bir sayı ya da birimiyle yazılmış bir sayı olmalı \
+                             ({units})."
+                        ),
+                        None => format!("“{label}”: “{text}” bir sayı değil."),
+                    });
                 };
                 if min.is_some_and(|m| n < m) || max.is_some_and(|m| n > m) {
+                    // With its unit when it takes others: a number typed in km is checked in m.
+                    let words = |b: f64| match unit.as_deref().filter(|_| units.is_some()) {
+                        Some(unit) => format!("{}\u{a0}{unit}", number_words(b)),
+                        None => number_words(b),
+                    };
                     return Err(format!(
                         "“{label}” {} ile {} arasında olmalı.",
-                        min.map_or_else(|| "−∞".to_owned(), number_words),
-                        max.map_or_else(|| "∞".to_owned(), number_words)
+                        min.map_or_else(|| "−∞".to_owned(), words),
+                        max.map_or_else(|| "∞".to_owned(), words)
                     ));
                 }
                 out.insert(id.clone(), json!(n));
@@ -536,6 +739,11 @@ impl OpenPanel {
                     id.clone(),
                     json!(self.choices.get(id).cloned().unwrap_or_default()),
                 );
+            }
+            // A coordinate system's `EPSG:<code>`, none when none is chosen (panel_crs.rs).
+            Component::CrsPicker { id, .. } => {
+                let chosen = self.choices.get(id).filter(|v| !v.is_empty());
+                out.insert(id.clone(), chosen.map_or(Value::Null, |v| json!(v)));
             }
             // The chosen values, in the options' order.
             Component::MultiSelect { id, options, .. } => {
@@ -707,6 +915,84 @@ impl OpenPanel {
         format!("{by} komutun satırları burada {done}.")
     }
 
+    /// A button's command answered `result`: its rows to `table` (the button's output) when it gives rows, its words
+    /// (or the rows counted) under the form; the table filled, if one was.
+    pub(super) fn take_answer(&mut self, table: Option<&String>, result: &Value) -> Option<String> {
+        let rows = result
+            .get("rows")
+            .and_then(Value::as_array)
+            .cloned()
+            .unwrap_or_default();
+        let mut columns: Vec<String> = result
+            .get("columns")
+            .and_then(Value::as_array)
+            .map(|c| {
+                c.iter()
+                    .filter_map(Value::as_str)
+                    .map(str::to_owned)
+                    .collect()
+            })
+            .unwrap_or_default();
+        if columns.is_empty() {
+            for row in &rows {
+                for key in row.as_object().into_iter().flat_map(|o| o.keys()) {
+                    if !columns.contains(key) {
+                        columns.push(key.clone());
+                    }
+                }
+            }
+        }
+        // A message answers no rows: the table keeps what it showed (a button that writes, as Yapıları numarala, does
+        // not empty the search's results).
+        let filled = table.filter(|_| result.get("rows").is_some()).cloned();
+        if let Some(table) = &filled {
+            self.tables.insert(table.clone(), (columns, rows.clone()));
+            // New rows from their first page.
+            self.pages.remove(table);
+            self.cursor.remove(table);
+        }
+        // Words its code said as it ran stay when its answer says none of its own (panel_session.rs).
+        match result.get("message").and_then(Value::as_str) {
+            Some(said) => self.said = Some((words::Kind::Ok, said.to_owned())),
+            None if self.spoke && self.said.is_some() => {}
+            None => self.said = Some((words::Kind::Ok, format!("{} satır.", rows.len()))),
+        }
+        filled
+    }
+
+    /// Number field `id`'s − (`sign` −1) or + (1): its value (else its first, else its lower bound, else 0) moved by
+    /// its step and kept within its bounds, to the step's decimals (0.1 steps do not drift into 0.30000000000000004).
+    pub(crate) fn step(&mut self, id: &str, sign: i8) {
+        let Some(Component::NumberField {
+            step: Some(step),
+            min,
+            max,
+            value,
+            ..
+        }) = self.definition.body.iter().find(|c| c.id() == Some(id))
+        else {
+            return;
+        };
+        let (step, min, max) = (*step, *min, *max);
+        let now = self
+            .texts
+            .get(id)
+            .and_then(|t| self.typed_number(id, t))
+            .or(*value)
+            .or(min)
+            .unwrap_or(0.0);
+        let decimals = step.to_string().split_once('.').map_or(0, |(_, d)| d.len()) as i32;
+        let scale = 10f64.powi(decimals);
+        let mut next = ((now + f64::from(sign) * step) * scale).round() / scale;
+        if let Some(min) = min {
+            next = next.max(min);
+        }
+        if let Some(max) = max {
+            next = next.min(max);
+        }
+        self.texts.insert(id.to_owned(), number_words(next));
+    }
+
     /// The output (a table, a tree, a card) a button's rows go to: its own, else the panel's first.
     pub(super) fn table_of(&self, table: Option<&String>) -> Option<String> {
         table.cloned().or_else(|| {
@@ -770,7 +1056,7 @@ pub(super) fn number_words(n: f64) -> String {
 }
 
 /// A typed number, its decimal sign a comma or a point.
-fn number_of(text: &str) -> Option<f64> {
+pub(super) fn number_of(text: &str) -> Option<f64> {
     text.replace(' ', "")
         .replace(',', ".")
         .parse::<f64>()
@@ -789,14 +1075,21 @@ impl super::Extensions {
         self.panels.get_mut(self.active_panel)
     }
 
+    /// The number of `ext`'s open panel `local` (0 when it is not open), for a test's run origin.
+    #[cfg(test)]
+    pub(crate) fn instance_of(&self, ext: &str, local: &str) -> u64 {
+        self.panels
+            .iter()
+            .find(|p| p.ext == ext && p.local == local)
+            .map_or(0, |p| p.instance)
+    }
+
     /// The open panel a run started from; its tab marks the answer when another panel is shown.
     fn answered(&mut self, origin: &PanelOrigin) -> Option<&mut OpenPanel> {
         let shown = self.active_panel;
-        let (at, panel) = self
-            .panels
-            .iter_mut()
-            .enumerate()
-            .find(|(_, p)| p.ext == origin.ext && p.local == origin.panel)?;
+        let (at, panel) = self.panels.iter_mut().enumerate().find(|(_, p)| {
+            p.instance == origin.instance && p.ext == origin.ext && p.local == origin.panel
+        })?;
         panel.unseen = at != shown;
         Some(panel)
     }
@@ -833,8 +1126,9 @@ impl App {
             );
             return Task::none();
         };
+        // In the interface's language when the package translates it (docs/adr/8057 §106).
         let definition = registry
-            .package_file(ext, &entry.definition)
+            .localized_file(ext, &entry.definition, &format!("ui.{}", entry.id))
             .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
             .and_then(|value| kentos_extensions::ui_panel::read(&value));
         let Some(definition) = definition else {
@@ -851,10 +1145,11 @@ impl App {
             return Task::none();
         };
         let mut panel = OpenPanel::new(ext, local, definition);
+        panel.default_crs(self.document.as_ref().map(|d| d.model.settings().srid));
         panel.side = entry.side;
         self.extensions.panels.push(panel);
         self.extensions.active_panel = self.extensions.panels.len() - 1;
-        Task::batch([scroll_back(0.0), self.show_extension_panel()])
+        Task::batch([scroll_back(0.0, 0.0), self.show_extension_panel()])
     }
 
     /// The open panel at `at` shown, scrolled as it was left; its answer seen.
@@ -863,9 +1158,9 @@ impl App {
             return Task::none();
         };
         panel.unseen = false;
-        let y = panel.scroll;
+        let (y, outputs) = (panel.scroll, panel.out_scroll);
         self.extensions.active_panel = at;
-        scroll_back(y)
+        scroll_back(y, outputs)
     }
 
     /// A panel's tab moved among the others; the panel shown stays shown.
@@ -904,7 +1199,7 @@ impl App {
         match x.panels.get_mut(x.active_panel) {
             Some(panel) => {
                 panel.unseen = false;
-                scroll_back(panel.scroll)
+                scroll_back(panel.scroll, panel.out_scroll)
             }
             None => Task::none(),
         }
@@ -1046,15 +1341,42 @@ impl App {
                 return self.ext_panel_changed(at, &id);
             }
             PanelEvent::Pick(id) => return self.ext_panel_pick(at, &id),
+            PanelEvent::PickPoint(id) => return self.ext_panel_pick_point(at, &id),
+            PanelEvent::DrawShape(id) => return self.ext_panel_draw_shape(at, &id),
+            PanelEvent::ClearShape(id) => {
+                panel.geoms.remove(&id);
+                panel.recalculate();
+                return self.ext_panel_changed(at, &id);
+            }
+            PanelEvent::Step(id, sign) => {
+                panel.step(&id, sign);
+                panel.recalculate();
+            }
             PanelEvent::Activate(to) => return self.ext_panel_activate(to),
             PanelEvent::Move(from, to) => self.ext_panel_move(from, to),
             PanelEvent::Close(which) => return self.ext_panel_close(which),
             PanelEvent::Scrolled(y) => panel.scroll = y,
+            PanelEvent::ScrolledOutputs(y) => panel.out_scroll = y,
+            PanelEvent::Split(height) => panel.split = Some(height),
+            PanelEvent::SplitReset => panel.split = None,
             PanelEvent::Press(button) => return self.ext_panel_press(at, &button),
             PanelEvent::Page(id, page) => {
                 panel.pages.insert(id, page);
             }
+            PanelEvent::Cursor(id, row, page) => {
+                panel.pages.insert(id.clone(), page);
+                panel.cursor.insert(id, row);
+            }
             PanelEvent::Section(at) => panel.toggle_section(at),
+            PanelEvent::Tab(name) => panel.show_tab(&name),
+            PanelEvent::PickFile(id) => {
+                let Some(picker) = super::panel_files::picker_of(panel, &id) else {
+                    return Task::none();
+                };
+                return super::panel_files::pick(&picker, move |path| {
+                    super::msg(super::Event::Panel(PanelEvent::Picked(id.clone(), path)))
+                });
+            }
             PanelEvent::Fold(key) => {
                 if !panel.folded.remove(&key) {
                     panel.folded.insert(key);
@@ -1170,8 +1492,9 @@ impl App {
     }
 
     /// An input changed: its `onChange` command runs with the panel's values, its rows to the panel's first table. A
-    /// change while a command runs waits for it: one rerun, with the values then.
-    fn ext_panel_changed(&mut self, at: usize, input: &str) -> Task<Message> {
+    /// change while a command runs waits for it: one rerun, with the values then. While an input it asks for has no
+    /// value yet, the command waits saying nothing, and the rows given before go.
+    pub(super) fn ext_panel_changed(&mut self, at: usize, input: &str) -> Task<Message> {
         let Some(panel) = self.extensions.panels.get_mut(at) else {
             return Task::none();
         };
@@ -1187,6 +1510,16 @@ impl App {
         };
         if panel.running.is_some() {
             panel.rerun = Some(input.to_owned());
+            return Task::none();
+        }
+        // A change runs its command only with the values it asks for. One still to be given (an area let go with ✕,
+        // a box ticked before the area is drawn) is not a mistake to say, as a button's press says it: said in red
+        // twice, real window. The answer to the values before goes: it is not the answer to these.
+        if panel.waits_for_value() {
+            panel.said = None;
+            if let Some(table) = panel.table_of(None) {
+                panel.tables.remove(&table);
+            }
             return Task::none();
         }
         self.ext_panel_start(at, input, command, None)
@@ -1236,15 +1569,35 @@ impl App {
             panel.said = Some((words::Kind::Error, why));
             return Task::none();
         }
-        // Objects taken before and deleted since are not given: the code would not find them.
+        // Objects taken before and deleted since are not given: the code would not find them. Nor a relation's record
+        // chosen before and deleted since (docs/adr/8057 §67).
         if let Some(doc) = &self.document {
+            let gone = |u: &String| {
+                kentos_domain::Uuid::parse_str(u)
+                    .ok()
+                    .and_then(|u| doc.model.slot_of(u))
+                    .is_none()
+            };
             for uids in panel.picks.values_mut() {
-                uids.retain(|u| {
-                    kentos_domain::Uuid::parse_str(u)
-                        .ok()
-                        .and_then(|u| doc.model.slot_of(u))
-                        .is_some()
-                });
+                uids.retain(|u| !gone(u));
+            }
+            let records: Vec<String> = panel
+                .definition
+                .body
+                .iter()
+                .filter_map(|c| match c {
+                    Component::RelationPicker { id, .. } => Some(id.clone()),
+                    _ => None,
+                })
+                .collect();
+            for id in records {
+                if panel
+                    .choices
+                    .get(&id)
+                    .is_some_and(|u| !u.is_empty() && gone(u))
+                {
+                    panel.choices.insert(id, String::new());
+                }
             }
         }
         let params = match panel.check_params() {
@@ -1257,11 +1610,13 @@ impl App {
             }
         };
         panel.invalid = None;
+        panel.show_in_own_units(&params);
         let origin = PanelOrigin {
             ext: ext.clone(),
             panel: panel.local.clone(),
             button: trigger.to_owned(),
             table: panel.table_of(table.as_ref()),
+            instance: panel.instance,
         };
         panel.running = Some(trigger.to_owned());
         panel.said = None;
@@ -1313,50 +1668,8 @@ impl App {
         panel.touched.clear();
         match outcome {
             Ok(result) => {
-                let rows = result
-                    .get("rows")
-                    .and_then(Value::as_array)
-                    .cloned()
-                    .unwrap_or_default();
-                let mut columns: Vec<String> = result
-                    .get("columns")
-                    .and_then(Value::as_array)
-                    .map(|c| {
-                        c.iter()
-                            .filter_map(Value::as_str)
-                            .map(str::to_owned)
-                            .collect()
-                    })
-                    .unwrap_or_default();
-                if columns.is_empty() {
-                    for row in &rows {
-                        for key in row.as_object().into_iter().flat_map(|o| o.keys()) {
-                            if !columns.contains(key) {
-                                columns.push(key.clone());
-                            }
-                        }
-                    }
-                }
-                // A message answers no rows: the table keeps what it showed (a button that writes, as Yapıları
-                // numarala, does not empty the search's results).
-                let filled = origin
-                    .table
-                    .as_ref()
-                    .filter(|_| result.get("rows").is_some())
-                    .cloned();
-                if let Some(table) = &filled {
-                    panel.tables.insert(table.clone(), (columns, rows.clone()));
-                    // New rows from their first page.
-                    panel.pages.remove(table);
-                }
-                // Words its code said as it ran stay when its answer says none of its own (panel_session.rs).
-                match result.get("message").and_then(Value::as_str) {
-                    Some(said) => panel.said = Some((words::Kind::Ok, said.to_owned())),
-                    None if panel.spoke && panel.said.is_some() => {}
-                    None => panel.said = Some((words::Kind::Ok, format!("{} satır.", rows.len()))),
-                }
                 // The charts drawing those rows, worked out again (panel_chart.rs).
-                if let Some(table) = filled {
+                if let Some(table) = panel.take_answer(origin.table.as_ref(), &result) {
                     self.ext_panel_charts(&origin.ext, &origin.panel, &table);
                 }
             }
@@ -1381,344 +1694,4 @@ impl App {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn panel() -> OpenPanel {
-        let value = json!({
-            "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Yapı ara",
-            "body": [
-                { "type": "textField", "id": "sorgu", "label": "Yapı no", "value": " Y-0 " },
-                { "type": "numberField", "id": "en-az", "label": "En az alan", "min": 0 },
-                { "type": "select", "id": "durum", "label": "Durum",
-                  "options": [{ "value": "hepsi", "label": "Hepsi" }, { "value": "numarasiz", "label": "Numarasız" }] },
-                { "type": "checkbox", "id": "secili", "label": "Yalnız seçililer" },
-                { "type": "button", "id": "ara", "label": "Ara", "command": "yapi-ara" },
-                { "type": "table", "id": "sonuc" }
-            ]
-        });
-        OpenPanel::new(
-            "tr.ornek.vitrin",
-            "yapi-ara",
-            kentos_extensions::ui_panel::read(&value).unwrap(),
-        )
-    }
-
-    /// A date field's value is the ISO date of what was typed, either way it was written; a text that is no day, and
-    /// a day out of its bounds, are said by its label; empty is none.
-    #[test]
-    fn a_components_rules_follow_the_panels_values() {
-        // docs/adr/8057 §33: a rule is worked out from the panel's values as they change: a field shown and asked
-        // while a check is on, a button usable once a number is above 0 (typed with a comma), no Python.
-        let value = json!({ "format": kentos_extensions::ui_panel::FORMAT, "schemaVersion": kentos_extensions::ui_panel::VERSION,
-            "title": "Kart",
-            "body": [
-                { "type": "checkbox", "id": "sureli", "label": "Süreli" },
-                { "type": "dateTimeField", "id": "gecerli", "label": "Geçerlilik sonu",
-                  "visibleWhen": "sureli", "requiredWhen": "sureli" },
-                { "type": "numberField", "id": "adet", "label": "Adet" },
-                { "type": "button", "id": "kaydet", "label": "Kaydet", "command": "kaydet",
-                  "enabledWhen": "adet > 0" }
-            ] });
-        let mut p = OpenPanel::new(
-            "tr.ornek.deneme",
-            "kart",
-            kentos_extensions::ui_panel::read(&value).expect("a panel"),
-        );
-        let body = p.definition.body.clone();
-        assert!(!p.shown(1, &body[1]), "hidden while the check is off");
-        assert!(p.check_params().is_ok(), "hidden: not asked");
-        assert!(!p.usable(3, &body[3]), "no number yet");
-        p.checks.insert("sureli".into(), true);
-        assert!(p.shown(1, &body[1]) && p.asked(1, &body[1]));
-        assert_eq!(
-            p.check_params().unwrap_err().0,
-            "gecerli",
-            "shown and asked: left empty"
-        );
-        p.texts.insert("gecerli".into(), "20.11.2026 17:00".into());
-        p.texts.insert("adet".into(), "2,5".into());
-        assert!(p.check_params().is_ok());
-        assert!(p.usable(3, &body[3]), "2,5 > 0");
-        // The code's own switches still win over a rule that holds.
-        p.disabled.insert("kaydet".into());
-        assert!(!p.usable(3, &body[3]));
-    }
-
-    #[test]
-    fn a_date_field_gives_the_iso_date_of_what_was_typed() {
-        let value = json!({
-            "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Tarih",
-            "body": [{ "type": "dateField", "id": "tarih", "label": "Kart tarihi", "value": "2026-11-15",
-                       "min": "2026-01-01", "max": "2026-12-31" }]
-        });
-        let mut p = OpenPanel::new(
-            "tr.ornek.vitrin",
-            "tarih",
-            kentos_extensions::ui_panel::read(&value).unwrap(),
-        );
-        assert_eq!(
-            p.texts["tarih"], "15.11.2026",
-            "its value as the field shows it"
-        );
-        assert_eq!(p.params().unwrap(), json!({ "tarih": "2026-11-15" }));
-        p.texts.insert("tarih".into(), "3.2.2026".into());
-        assert_eq!(p.params().unwrap(), json!({ "tarih": "2026-02-03" }));
-        p.texts.insert("tarih".into(), "30.02.2026".into());
-        assert_eq!(
-            p.params().unwrap_err(),
-            "“Kart tarihi”: “30.02.2026” bir tarih değil (GG.AA.YYYY ya da YYYY-AA-GG yazın)."
-        );
-        p.texts.insert("tarih".into(), "2025-12-31".into());
-        assert_eq!(
-            p.params().unwrap_err(),
-            "“Kart tarihi” 01.01.2026 ile 31.12.2026 arasında olmalı."
-        );
-        p.texts.insert("tarih".into(), " ".into());
-        assert_eq!(p.params().unwrap(), json!({ "tarih": null }));
-    }
-
-    /// A time field gives HH:MM and a date-time field the local ISO date and time, either way they were written; a
-    /// text that is neither, and one out of bounds, said by the label (the bounds in the field's own words).
-    #[test]
-    fn a_time_and_a_moment_field_give_their_values_however_written() {
-        let value = json!({
-            "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Saat",
-            "body": [
-                { "type": "timeField", "id": "saat", "label": "Saat", "value": "09:00", "min": "08:00",
-                  "max": "17:30" },
-                { "type": "dateTimeField", "id": "gecerli", "label": "Geçerlilik sonu",
-                  "value": "2026-11-20T17:00", "min": "2026-11-15T00:00" }
-            ]
-        });
-        let mut p = OpenPanel::new(
-            "tr.ornek.vitrin",
-            "saat",
-            kentos_extensions::ui_panel::read(&value).unwrap(),
-        );
-        assert_eq!(
-            (p.texts["saat"].as_str(), p.texts["gecerli"].as_str()),
-            ("09:00", "20.11.2026 17:00"),
-            "their values as the fields show them"
-        );
-        assert_eq!(
-            p.params().unwrap(),
-            json!({ "saat": "09:00", "gecerli": "2026-11-20T17:00" })
-        );
-        p.texts.insert("saat".into(), "9.05".into());
-        p.texts.insert("gecerli".into(), "2026-11-21 8:30".into());
-        assert_eq!(
-            p.params().unwrap(),
-            json!({ "saat": "09:05", "gecerli": "2026-11-21T08:30" })
-        );
-        p.texts.insert("saat".into(), "25:00".into());
-        assert_eq!(
-            p.params().unwrap_err(),
-            "“Saat”: “25:00” bir saat değil (SS:DD yazın, ör. 14:30)."
-        );
-        p.texts.insert("saat".into(), "18:00".into());
-        assert_eq!(
-            p.params().unwrap_err(),
-            "“Saat” 08:00 ile 17:30 arasında olmalı."
-        );
-        p.texts.insert("saat".into(), String::new());
-        p.texts.insert("gecerli".into(), "14.11.2026 23:59".into());
-        assert_eq!(
-            p.params().unwrap_err(),
-            "“Geçerlilik sonu” en erken 15.11.2026 00:00 olabilir."
-        );
-        p.texts.insert("gecerli".into(), "15.11.2026".into());
-        assert!(
-            p.params().unwrap_err().contains("bir tarih ve saat değil"),
-            "a moment needs its time"
-        );
-        p.texts.insert("gecerli".into(), String::new());
-        assert_eq!(
-            p.params().unwrap(),
-            json!({ "saat": null, "gecerli": null })
-        );
-    }
-
-    /// A field the user must give (`required`) left empty is said by its label, with its id for the form to say it
-    /// under the field; changing the field takes the words away.
-    #[test]
-    fn a_required_field_left_empty_is_said_under_it() {
-        let value = json!({
-            "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Zorunlu",
-            "body": [
-                { "type": "textField", "id": "onek", "label": "Önek", "required": true },
-                { "type": "numberField", "id": "ilk", "label": "İlk numara", "value": 1, "required": true },
-                { "type": "layerPicker", "id": "katman", "label": "Katman", "required": true },
-                { "type": "featurePicker", "id": "nesneler", "label": "Nesneler", "layer": "katman", "required": true },
-                { "type": "multiSelect", "id": "bilgi", "label": "Bilgiler", "required": true,
-                  "options": [{ "value": "a", "label": "A" }] },
-                { "type": "textField", "id": "not", "label": "Not" }
-            ]
-        });
-        let mut p = OpenPanel::new(
-            "tr.ornek.vitrin",
-            "zorunlu",
-            kentos_extensions::ui_panel::read(&value).unwrap(),
-        );
-        let wrong = |p: &OpenPanel| p.check_params().unwrap_err();
-        assert_eq!(
-            wrong(&p),
-            ("onek".to_owned(), "“Önek” boş bırakılamaz.".to_owned())
-        );
-        p.texts.insert("onek".into(), "Y-".into());
-        p.texts.insert("ilk".into(), "  ".into());
-        assert_eq!(wrong(&p).1, "“İlk numara” boş bırakılamaz.");
-        p.texts.insert("ilk".into(), "3".into());
-        assert_eq!(
-            wrong(&p),
-            ("katman".to_owned(), "“Katman” seçilmedi.".to_owned())
-        );
-        p.choices.insert("katman".into(), "yapi".into());
-        assert!(wrong(&p).1.contains("nesne alınmadı"));
-        p.picks.insert("nesneler".into(), vec!["u-1".into()]);
-        assert_eq!(wrong(&p).1, "“Bilgiler”: en az biri seçilmeli.");
-        p.multi.insert("bilgi".into(), vec!["a".into()]);
-        let values = p.check_params().expect("all given; Not need not be");
-        assert_eq!(values["not"], "", "an optional field left empty");
-        // The wrong field's words stay until it is changed.
-        p.invalid = Some(("onek".into(), "“Önek” boş bırakılamaz.".into()));
-        p.forget_invalid(&PanelEvent::Text("not".into(), "x".into()));
-        assert!(p.invalid.is_some(), "another field changed");
-        p.forget_invalid(&PanelEvent::Text("onek".into(), "B-".into()));
-        assert!(p.invalid.is_none());
-    }
-
-    /// A multiple choice gives the chosen values in the options' order, an empty list when none is chosen.
-    #[test]
-    fn a_multiple_choice_gives_the_chosen_values_in_the_options_order() {
-        let value = json!({
-            "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Bilgiler",
-            "body": [{ "type": "multiSelect", "id": "bilgiler", "label": "Bilgiler", "value": ["taks", "alan"],
-                       "options": [{ "value": "alan", "label": "Alan" }, { "value": "yapi", "label": "Yapı" },
-                                   { "value": "taks", "label": "TAKS" }] }]
-        });
-        let mut p = OpenPanel::new(
-            "tr.ornek.vitrin",
-            "bilgiler",
-            kentos_extensions::ui_panel::read(&value).unwrap(),
-        );
-        assert_eq!(p.params().unwrap(), json!({ "bilgiler": ["alan", "taks"] }));
-        p.multi.insert("bilgiler".into(), Vec::new());
-        assert_eq!(p.params().unwrap(), json!({ "bilgiler": [] }));
-    }
-
-    #[test]
-    fn a_card_takes_a_commands_rows_where_a_table_would() {
-        let value = json!({
-            "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Parsel kartı",
-            "body": [
-                { "type": "featurePicker", "id": "parseller", "label": "Parseller", "onChange": "parsel-karti" },
-                { "type": "card", "id": "kartlar", "title": "parsel", "tag": "durum" }
-            ]
-        });
-        let p = OpenPanel::new(
-            "tr.ornek.vitrin",
-            "parsel-paneli",
-            kentos_extensions::ui_panel::read(&value).unwrap(),
-        );
-        assert_eq!(
-            p.table_of(None).as_deref(),
-            Some("kartlar"),
-            "the panel's first output"
-        );
-        assert_eq!(panel().table_of(None).as_deref(), Some("sonuc"));
-        // Before its first rows it says what fills it: no button here, a change.
-        assert_eq!(
-            p.waiting_words("kartlar", "kart kart listelenir"),
-            "Değer değişince komutun satırları burada kart kart listelenir."
-        );
-        assert_eq!(
-            panel().waiting_words("sonuc", "listelenir"),
-            "Düğmeye basınca komutun satırları burada listelenir."
-        );
-    }
-
-    #[test]
-    fn pickers_follow_their_layer_picker_and_give_names_and_ids() {
-        let value = json!({
-            "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Değer say",
-            "body": [
-                { "type": "layerPicker", "id": "katman", "label": "Katman" },
-                { "type": "fieldPicker", "id": "alan", "label": "Alan", "layer": "katman" },
-                { "type": "featurePicker", "id": "nesneler", "label": "Nesneler", "layer": "katman" },
-                { "type": "featurePicker", "id": "bir", "label": "Bir nesne", "multiple": false },
-                { "type": "button", "id": "say", "label": "Say", "command": "deger-say" }
-            ]
-        });
-        let mut p = OpenPanel::new(
-            "tr.ornek.vitrin",
-            "deger-paneli",
-            kentos_extensions::ui_panel::read(&value).unwrap(),
-        );
-        assert_eq!(
-            p.params().unwrap(),
-            json!({ "katman": null, "alan": null, "nesneler": [], "bir": null }),
-            "nothing chosen: none, no objects"
-        );
-        p.choose("katman".into(), "parsel".into());
-        p.choose("alan".into(), "ada".into());
-        p.picks
-            .insert("nesneler".into(), vec!["a".into(), "b".into()]);
-        p.picks.insert("bir".into(), vec!["c".into()]);
-        assert_eq!(
-            p.params().unwrap(),
-            json!({ "katman": "parsel", "alan": "ada", "nesneler": ["a", "b"], "bir": "c" })
-        );
-        // The same layer again keeps them; another clears what was chosen from the one before, not the free picker.
-        p.choose("katman".into(), "parsel".into());
-        assert_eq!(p.params().unwrap()["alan"], json!("ada"));
-        p.choose("katman".into(), "yapi".into());
-        assert_eq!(
-            p.params().unwrap(),
-            json!({ "katman": "yapi", "alan": null, "nesneler": [], "bir": "c" })
-        );
-    }
-
-    #[test]
-    fn enter_presses_the_primary_button_else_the_first() {
-        let p = panel();
-        assert_eq!(p.default_button(), Some("ara"), "the only button");
-        let value = json!({
-            "format": "kentos.ui.panel", "schemaVersion": 1, "title": "İki düğme",
-            "body": [
-                { "type": "textField", "id": "sorgu", "label": "Aranan" },
-                { "type": "button", "id": "numarala", "label": "Numarala", "command": "a" },
-                { "type": "button", "id": "ara", "label": "Ara", "command": "b", "primary": true }
-            ]
-        });
-        let two = OpenPanel::new("x", "y", kentos_extensions::ui_panel::read(&value).unwrap());
-        assert_eq!(
-            two.default_button(),
-            Some("ara"),
-            "the primary one, wherever it is"
-        );
-    }
-
-    #[test]
-    fn the_values_are_the_commands_parameters_a_number_read_as_typed() {
-        let mut p = panel();
-        assert_eq!(
-            p.params().unwrap(),
-            json!({ "sorgu": "Y-0", "en-az": null, "durum": "hepsi", "secili": false })
-        );
-        p.texts.insert("en-az".into(), "12,5".into());
-        assert_eq!(p.params().unwrap()["en-az"], json!(12.5));
-        p.texts.insert("en-az".into(), "on iki".into());
-        assert_eq!(
-            p.params().unwrap_err(),
-            "“En az alan”: “on iki” bir sayı değil."
-        );
-        p.texts.insert("en-az".into(), "-3".into());
-        assert!(p.params().unwrap_err().contains("arasında olmalı"));
-        assert_eq!(
-            p.table_of(None).as_deref(),
-            Some("sonuc"),
-            "the panel's first table"
-        );
-    }
-}
+mod tests;

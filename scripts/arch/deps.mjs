@@ -100,11 +100,13 @@ const GROUPS = [
   // native crate that uses pyo3. Listed before `native`.
   // `processing` for kentos.network (docs/adr/0209 §11): a network built from the drawing as the İşlemler tools build it.
   // `postgis` registers the PostGIS provider (docs/adr/0505): its tokio and sqlx come in only through it.
-  { name: 'python', path: 'crates/native/python/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'project', 'style', 'plot', 'headless', 'processing', 'stylelib', 'geopackage', 'postgis', 'standards', 'python-env'], forbid: ['axum*', 'hyper*', 'tower*', 'reqwest', ...BROWSER, ...DESKTOP, 'gdal*', 'proj', 'proj-sys'] },
+  // `extension-tools`: the user's extensions' headless tools offered at the first drawing (docs/adr/8057 §70).
+  { name: 'python', path: 'crates/native/python/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'project', 'style', 'plot', 'headless', 'processing', 'stylelib', 'geopackage', 'postgis', 'extension-tools', 'extension-host', 'python-env', 'standards'], forbid: ['axum*', 'hyper*', 'tower*', 'reqwest', ...BROWSER, ...DESKTOP, 'gdal*', 'proj', 'proj-sys'] },
   // The MCP server (docs/adr/0133, 0134): the headless host's tools over stdio, JSON-RPC by hand;
   // the server's commands through the desktop's cloud client (`native`). No UI, database or
   // server framework. Listed before `native`.
-  { name: 'mcp', path: 'crates/native/mcp/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'processing', 'project', 'style', 'plot', 'headless', 'native', 'stylelib', 'geopackage', 'postgis', 'extension-host', 'standards', 'python-env'], forbid: ['axum*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  // `extension-tools`: the user's extensions' headless tools offered at the program's start (docs/adr/8057 §70).
+  { name: 'mcp', path: 'crates/native/mcp/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'processing', 'project', 'style', 'plot', 'headless', 'native', 'stylelib', 'geopackage', 'postgis', 'extension-host', 'extension-tools', 'python-env', 'standards'], forbid: ['axum*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The in-app AI agent's provider layer (docs/adr/8056 §4): agents, the providers' wire formats and a chat turn's tool
   // loop over HTTP, on a tokio runtime of its own. A pure network crate: no other KentOS crate (the desktop hands it the
   // tools' schemas and runs the tools), no UI, GPU, database, server framework or browser. Listed before `native`.
@@ -114,19 +116,27 @@ const GROUPS = [
   { name: 'python-env', path: 'crates/native/python-env/', targets: [HOST], uses: [], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys', 'sqlx*', 'rusqlite'] },
   // The standards packages' Python rules asked from Rust (docs/adr/8075 §2.6): a process with JSON in and out.
   { name: 'standards', path: 'crates/native/standards/', targets: [HOST], uses: ['python-env'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys', 'sqlx*', 'rusqlite'] },
+  // An extension's İşlemler tools in its own Python process (docs/adr/8057 §70): the registry, the processes and
+  // İşlemler over the headless host, shared by the desktop and the headless hosts (MCP, Python). No window, runtime,
+  // database or network; a host's entry point offers the tools, so the headless host itself stays pure. Listed before
+  // `native`.
+  { name: 'extension-tools', path: 'crates/native/extension-tools/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'processing', 'project', 'style', 'plot', 'stylelib', 'geopackage', 'headless', 'extension-host', 'standards', 'python-env'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'agent', path: 'crates/native/agent/', targets: [HOST], uses: [], forbid: ['sqlx*', 'rusqlite', 'libsqlite3-sys', 'tokio-postgres', 'postgres*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'native', path: 'crates/native/', targets: [HOST], uses: ['shared', 'domain', 'native'], forbid: ['sqlx*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*'] },
   // The forms' guard (docs/adr/0411 §4) reads a project's `@` values as the desktop's document does: the pure
   // project model (`project`, over shared and domain) is the server's to use too.
   { name: 'server', path: 'crates/server/', targets: [HOST], uses: ['shared', 'domain', 'project', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
   // The tool of a processing job runs in `jobrun`, a program of its own, so the server carries none of it (docs/adr/0559 §3).
-  { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'project', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
+  // An audit release's Python environment is made with the desktop's machinery (`python-env`, docs/adr/8057 §66).
+  { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'project', 'native', 'server', 'python-env'], forbid: [...BROWSER, ...DESKTOP] },
   // The process that runs one İşlemler tool for a server job (docs/adr/0559 §3): the headless host and the tools over
   // one project file; no database, no server framework. Listed before `native`'s catch-all like the headless host.
   // kentos, the command line (plan/eklenti.md ADIM 16): the extension packages' inspector and packer over the file
-  // system and the user's registry; nothing of a server, a window or Python.
-  { name: 'cli', path: 'apps/cli/', targets: [HOST], uses: ['shared', 'extension-host'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
-  { name: 'jobrun', path: 'apps/jobrun/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'processing', 'project', 'headless', 'style', 'plot', 'stylelib', 'geopackage', 'standards', 'python-env'], forbid: ['sqlx*', 'axum*', 'tokio*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  // system and the user's registry; `kentos kek test` runs an extension's examples as the desktop runs them
+  // (docs/adr/8057 §74), with the extension tools' crate and the headless host below it. No server, no window.
+  { name: 'cli', path: 'apps/cli/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'processing', 'project', 'style', 'plot', 'stylelib', 'geopackage', 'headless', 'extension-host', 'extension-tools', 'standards', 'python-env'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  // An extension's audit rule runs in the Python the server prepared, through `kentos.ext_host` (`python-env`, docs/adr/8057 §42).
+  { name: 'jobrun', path: 'apps/jobrun/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'processing', 'project', 'headless', 'style', 'plot', 'stylelib', 'geopackage', 'python-env', 'standards'], forbid: ['sqlx*', 'axum*', 'tokio*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The UI component library (docs/adr/0016): widgets, theme, icons; no domain, no runtime of its own.
   { name: 'ui', path: 'crates/ui/', targets: [HOST], uses: [], forbid: [...RUNTIMES, ...BROWSER, 'pyo3*'] },
   // Sheet layouts on the desktop (docs/sheet/design.md §11): the UI components over the shared
@@ -148,7 +158,7 @@ const GROUPS = [
   // Desktop programs: Iced's executor may be tokio; no server framework, no browser bindings.
   // The desktop's Python console (docs/adr/0132) answers its script's requests through the
   // headless host's `rpc`; the Python itself runs in a process of its own, never in the app.
-  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'interaction', 'processing', 'project', 'headless', 'native', 'ui', 'render', 'render3d', 'model-view-ui', 'style', 'sheet-ui', 'plot', 'stylelib', 'geopackage', 'postgis', 'launch', 'agent', 'extension-host', 'python-env', 'standards'], forbid: ['axum*', 'pyo3*', ...BROWSER] },
+  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'scene-query', 'interaction', 'processing', 'project', 'headless', 'native', 'ui', 'render', 'style', 'sheet-ui', 'plot', 'stylelib', 'geopackage', 'postgis', 'launch', 'agent', 'extension-host', 'python-env', 'extension-tools', 'render3d', 'model-view-ui', 'standards'], forbid: ['axum*', 'pyo3*', ...BROWSER] },
   // KentOS Launcher (docs/adr/0800): starts KentOS's programs and others from their manifests. The UI library and the
   // shared launch contract only: no drawing, KentOS renderer, server runtime or browser; a program it starts is a process of its own.
   { name: 'launcher', path: 'apps/launcher/', targets: [HOST], uses: ['ui', 'launch'], forbid: ['axum*', 'sqlx*', 'pyo3*', ...BROWSER] },

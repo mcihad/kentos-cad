@@ -445,8 +445,25 @@ fn insert(table: &mut Table, keys: &[String], value: Toml) -> Result<(), String>
     Ok(())
 }
 
+/// The requirements a project file (`pyproject.toml`) declares in `[project] dependencies`, as written (PEP 508:
+/// `numpy>=2`): what an extension says it needs, as the agents' catalog shows it (docs/adr/8057 §109). None read from a
+/// file that does not read.
+pub fn declared_requirements(project: &str) -> Vec<String> {
+    let Ok(root) = parse_toml(project) else {
+        return Vec::new();
+    };
+    root.get(&["project", "dependencies"])
+        .and_then(Toml::array)
+        .map(|list| {
+            list.iter()
+                .filter_map(|x| x.str().map(str::to_owned))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
 /// A Python package's name normalised (PEP 503): lower case, runs of `-`, `_` and `.` one `-`.
-pub(crate) fn normalized(name: &str) -> String {
+pub fn normalized(name: &str) -> String {
     let mut out = String::with_capacity(name.len());
     let mut dash = false;
     for c in name.trim().chars() {
@@ -758,6 +775,7 @@ pub(crate) fn check(
             );
         }
     }
+    let lock_text = lock;
     let lock = match parse_toml(lock) {
         Ok(l) => l,
         Err((line, message)) => {
@@ -890,8 +908,45 @@ pub(crate) fn check(
             stale(problems, format!("“{n}” kilitte çözülmemiş"));
         }
     }
+    // An agent's lock takes no release younger than its cooling period (docs/adr/8057 §83, D18): a name a model made
+    // up and someone registered the next day does not get in. Said of the packages KentOS stamped as an agent's.
+    let third_party = packages
+        .iter()
+        .any(|p| p.get(&["source", "registry"]).is_some());
+    let cooled = lock.get(&["options", "exclude-newer-span"]).is_some()
+        || lock
+            .get(&["options", "exclude-newer"])
+            .and_then(Toml::str)
+            .is_some_and(|date| !date.starts_with("0001-"));
+    if manifest.generated.is_some() && third_party && !cooled {
+        warnings.push(
+            Problem::new(
+                "python_lock_no_cooling",
+                "Bu eklentiyi bir yapay zekâ ajanı yazdı ve kilidi yeni yayımlanmış paket sürümlerini de alabiliyor: \
+                 pyproject.toml'un [tool.uv] bölümüne exclude-newer = \"7 days\" yazıp uv lock çalıştırın. Bir haftadan \
+                 yeni sürüm (uydurulmuş bir adı yeni kaydeden bir paket de) kilide giremez."
+                    .to_owned(),
+            )
+            .file(lock_path),
+        );
+    }
     for package in packages {
         let n = package.get(&["name"]).and_then(Toml::str).unwrap_or("?");
+        // A name one letter from a well-known package's (docs/adr/8057 §81): a mistyped `uv add` or a made-up name.
+        if normalized(n) != own
+            && let Some(known) = crate::python_names::resembles_known(n)
+        {
+            warnings.push(
+                Problem::new(
+                    "python_name_resembles",
+                    format!(
+                        "“{n}” adı tanınmış “{known}” paketininkine çok benziyor: doğru paket olduğundan emin olun \
+                         (yazım hatası taklidi ya da yapay zekânın uydurduğu bir ad olabilir)."
+                    ),
+                )
+                .file(lock_path),
+            );
+        }
         let Some(source) = package.get(&["source"]).and_then(Toml::table) else {
             continue;
         };
@@ -927,7 +982,20 @@ pub(crate) fn check(
             }
         }
     }
+    // A computer it says it runs on with no wheel of a package (docs/adr/8057 §94): built there from its source, or
+    // not installed. Warnings: a build works where a compiler is; the public catalog asks a reviewer's reason.
+    let targets = builds::Target::declared(
+        &manifest.compatibility.operating_systems,
+        Some(requires_python),
+    );
+    for found in builds::unwheeled(lock_text, &own, &targets) {
+        for (code, message) in builds::said(&found) {
+            warnings.push(Problem::new(code, message).file(lock_path));
+        }
+    }
 }
+
+pub mod builds;
 
 #[cfg(test)]
 mod tests;

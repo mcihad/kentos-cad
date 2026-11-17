@@ -23,6 +23,7 @@
 //! Pure: no file system and no network. A host reads the file and hands the bytes over.
 
 pub mod archive;
+pub mod audit_examples;
 pub mod audit_facts;
 pub mod blueprint;
 pub mod catalog;
@@ -30,17 +31,28 @@ pub mod compat;
 mod icon;
 pub mod icon_names;
 pub mod integrity;
+pub mod l10n;
 pub mod layer_schema;
 pub mod manifest;
 mod paths;
 mod pointer;
 mod problem;
+pub mod provenance;
 mod python;
+pub use python::builds as python_builds;
+pub use python::declared_requirements;
+pub mod python_names;
+mod python_rules;
 pub mod release;
+pub mod resemblance;
 pub mod revocations;
 #[cfg(all(test, feature = "schema"))]
 mod schema_check;
+pub mod sbom;
 pub mod sdk_pack;
+pub mod secrets;
+pub mod sdk_surface;
+pub mod sdk_text;
 mod text;
 pub mod ui_panel;
 pub mod verify;

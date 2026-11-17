@@ -1,6 +1,6 @@
 //! Where the extension catalog keeps its releases, their packages and its grants: a small trait, so the flow does not
-//! depend on the store (docs/adr/8059 §10). The tests' store is in memory; the persistent one is the next slice, and the
-//! promises below are what it keeps too.
+//! depend on the store (docs/adr/8059 §10). The tests' store is in memory, the server's in PostgreSQL and the object
+//! store (§13); both keep the promises below, and the catalog's tests run on both.
 
 use std::collections::BTreeSet;
 use std::future::Future;
@@ -23,6 +23,30 @@ pub enum StoreError {
     Exists,
     /// The store failed; the detail is for the log.
     Failed(String),
+}
+
+/// Which catalogs a role is granted in.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Where {
+    /// Every catalog: the catalog's own services.
+    Every,
+    In(CatalogId),
+}
+
+impl Where {
+    /// `every`, `public` or `tenant:{slug}`. One's own catalog has no grants: its owner holds its roles.
+    pub fn parse(text: &str) -> Result<Where, String> {
+        match (text, CatalogId::parse(text)) {
+            ("every", _) => Ok(Where::Every),
+            (_, Some(CatalogId::Personal(_))) => Err(format!(
+                "“{text}” bir hesabın kendi kataloğu: orada rol verilmez, sahibi yayımcı, inceleyici ve yöneticidir."
+            )),
+            (_, Some(catalog)) => Ok(Where::In(catalog)),
+            (_, None) => Err(format!(
+                "Katalog “{text}” olmaz: every, public ya da tenant:KISA-AD (kurumun kısa adı)."
+            )),
+        }
+    }
 }
 
 /// What an account may do in one catalog.

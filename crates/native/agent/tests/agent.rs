@@ -16,6 +16,8 @@ mod mock;
 
 #[path = "agent/anthropic.rs"]
 mod anthropic;
+#[path = "agent/budget.rs"]
+mod budget;
 #[path = "agent/chat.rs"]
 mod chat;
 #[path = "agent/gemini.rs"]

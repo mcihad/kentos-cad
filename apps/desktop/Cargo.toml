@@ -69,6 +69,8 @@ kentos-extension-host = { path = "../../crates/native/extension-host" }
 kentos-python-env = { path = "../../crates/native/python-env" }
 # The standards packages' rules (docs/adr/8075 §2.6).
 kentos-standards = { path = "../../crates/native/standards" }
+# The extensions' İşlemler tools in their own processes, run as the headless hosts run them (docs/adr/8057 §70).
+kentos-extension-tools = { path = "../../crates/native/extension-tools" }
 # File exchange (exchange/): the shared readers and writers of coordinate lists and DXF,
 # the ones the web runs in its formats worker (CLAUDE.md §9.7, docs/adr/0009).
 kentos-formats = { path = "../../crates/shared/formats" }

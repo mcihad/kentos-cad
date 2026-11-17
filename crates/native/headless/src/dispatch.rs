@@ -172,10 +172,21 @@ pub fn call_envelope_for_agent(
     store: Option<&Store>,
     envelope: CallEnvelope,
 ) -> CallAnswer {
-    let Some(veil) = crate::Veil::of(doc) else {
+    let veil = crate::Veil::of(doc);
+    call_envelope_veiled(doc, store, envelope, veil.as_ref())
+}
+
+/// [`call_envelope_for_agent`] through `veil` (every field's, docs/adr/8057 §103; none: the call as the owner's).
+pub fn call_envelope_veiled(
+    doc: &mut Document,
+    store: Option<&Store>,
+    envelope: CallEnvelope,
+    veil: Option<&crate::Veil>,
+) -> CallAnswer {
+    let Some(veil) = veil else {
         return call_envelope(doc, store, envelope);
     };
-    if let Some(error) = agent_refusal(&veil, &envelope.command, &envelope.input) {
+    if let Some(error) = agent_refusal(veil, &envelope.command, &envelope.input) {
         return CallAnswer::of(kentos_commands::CommandResult::Failed { error });
     }
     if file_commands::is_file_command(&envelope.command) {
@@ -193,6 +204,11 @@ pub fn agent_refusal(
 ) -> Option<kentos_commands::CommandError> {
     if let Some(error) = veil.refusal(input) {
         return Some(error);
+    }
+    // An İşlemler tool's expression and field parameters, wherever they stand (docs/adr/8057 §108).
+    #[cfg(feature = "mod-gis")]
+    if let Some((at, field)) = crate::veil::reads::processing_read(veil, command, input) {
+        return Some(veil.refusal_at(&at, &field));
     }
     let sink = matches!(command, "cad.processing.run" | "cad.processing.batch")
         && input.get("sink").is_some_and(|s| !s.is_null());

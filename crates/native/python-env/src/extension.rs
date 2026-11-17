@@ -7,6 +7,9 @@
 //! - **From the package's lock alone:** `uv sync --locked --no-dev --no-install-project`: what the author locked, not a
 //!   new resolution; development dependencies are not installed (PY-UV-17, 19). The project's two files are copied into
 //!   the environment's folder: the installed package stays read-only.
+//! - **Three kinds (PY-UV-10, docs/adr/8057 §97):** the personal environment ([`crate::personal`]), a published
+//!   version's (this), and an extension being developed (installed from its working folder): [`Key::development`],
+//!   another folder, its project's development group in (no `--no-dev`), never a published version's.
 //! - **Previewed first:** `uv sync --dry-run` says what it would install, on this computer, before anything is
 //!   downloaded (PY-UV-14).
 //! - **Made, checked, then marked ready:** after the sync, KentOS's library from the installation's wheel (offline, the
@@ -17,6 +20,9 @@
 //! - **Ready works offline (P07):** being ready is files on disk ([`ready`]); running uses the environment's own Python,
 //!   and nothing syncs or downloads then. Measured: syncing a ready environment again removes KentOS's library, as an
 //!   exact sync removes what the lock does not name, so nothing does.
+//! - **A server's way** ([`prepare_wheels`], docs/adr/8057 §66): the same key, place, library, check and record, but
+//!   the lock's packages as wheels only, each checked against the lock's hash, from a folder of wheels or an index the
+//!   server's administrator allows.
 
 use std::collections::BTreeSet;
 use std::ffi::{OsStr, OsString};
@@ -32,6 +38,12 @@ use crate::personal;
 use crate::python::{self, Cause, InstallError, Interpreter, Progress};
 use crate::sdk::Wheel;
 use crate::{places, uv};
+
+mod dependency;
+mod wheels;
+
+pub use dependency::{add_dependency, add_words, requirement_for};
+pub use wheels::{Wheels, prepare_wheels, wheel_words};
 
 /// The record a ready environment's folder holds, written last.
 pub const RECORD: &str = "ortam.json";
@@ -62,12 +74,21 @@ pub struct Key {
     pub platform: String,
     /// The optional features chosen (the extras of the project), sorted.
     pub extras: Vec<String>,
+    /// The package's content digest (`sha256:…`): a server's environment is the release's own (docs/adr/8057 §66).
+    /// Empty on the desktop, whose keys and folders stay as they were.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub digest: String,
+    /// An extension being developed (installed from its working folder): its project's development group is in, and
+    /// it is never a published version's environment (PY-UV-10, docs/adr/8057 §97). False for the others, whose keys
+    /// and folders stay as they were.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub development: bool,
 }
 
 impl Key {
     /// The folder's name: 16 hex digits of the key's SHA-256.
     pub fn hash(&self) -> String {
-        let text = format!(
+        let mut text = format!(
             "{}\n{}\n{}\n{}\n{}\n{}",
             self.id,
             self.version,
@@ -76,6 +97,13 @@ impl Key {
             self.platform,
             self.extras.join(",")
         );
+        if !self.digest.is_empty() {
+            text.push('\n');
+            text.push_str(&self.digest);
+        }
+        if self.development {
+            text.push_str("\ngelistirme");
+        }
         Sha256::digest(text.as_bytes())
             .iter()
             .take(8)
@@ -149,7 +177,18 @@ pub fn key_for(
         python: interpreter.version.clone(),
         platform: platform(),
         extras: extras.into_iter().filter(|e| !e.is_empty()).collect(),
+        digest: String::new(),
+        development: false,
     })
+}
+
+impl Key {
+    /// The same key for an extension being developed (installed from its working folder): another environment, with
+    /// its project's development group (PY-UV-10, docs/adr/8057 §97).
+    pub fn for_development(mut self, development: bool) -> Key {
+        self.development = development;
+        self
+    }
 }
 
 /// The environment for `key` when it is ready: its record there and of this key, its Python there. Files only, no uv:
@@ -176,8 +215,16 @@ fn records(root: &Path) -> Vec<Ready> {
 }
 
 /// A ready environment of an extension version on this Python and system, whatever features it was made with: the
-/// newest, so its features are the ones the user chose last. Files only: it answers offline.
-pub fn find(root: &Path, id: &str, version: &str, lock: &str, python: &str) -> Option<Ready> {
+/// newest, so its features are the ones the user chose last; a development one for an extension being developed
+/// (`development`), a published version's else. Files only: it answers offline.
+pub fn find(
+    root: &Path,
+    id: &str,
+    version: &str,
+    lock: &str,
+    python: &str,
+    development: bool,
+) -> Option<Ready> {
     let here = platform();
     records(root)
         .into_iter()
@@ -187,6 +234,25 @@ pub fn find(root: &Path, id: &str, version: &str, lock: &str, python: &str) -> O
                 && r.key.lock == lock
                 && r.key.python == python
                 && r.key.platform == here
+                && r.key.development == development
+                && r.python.is_file()
+        })
+        .max_by_key(|r| r.made_at)
+}
+
+/// A published version's ready environment on this system, whatever Python or features it was made with: the newest.
+/// What `kentos kek sbom` reads its packages' licences from (docs/adr/8057 §99). Files only.
+pub fn find_published(root: &Path, id: &str, version: &str, lock: &str) -> Option<Ready> {
+    let here = platform();
+    records(root)
+        .into_iter()
+        .filter(|r| {
+            r.key.id == id
+                && r.key.version == version
+                && r.key.lock == lock
+                && r.key.platform == here
+                && !r.key.development
+                && r.key.digest.is_empty()
                 && r.python.is_file()
         })
         .max_by_key(|r| r.made_at)
@@ -201,6 +267,17 @@ pub fn clean_for(root: &Path, id: &str, keep: Option<&Key>) -> usize {
         .filter(|r| r.key.id == id && Some(r.key.hash()) != kept)
         .filter(|r| std::fs::remove_dir_all(place(root, &r.key)).is_ok())
         .count()
+}
+
+/// Removes the environments of one version of an extension, whatever its lock, Python or digest: a server removes a
+/// release's (docs/adr/8057 §66). Says which folders went.
+pub fn remove_version(root: &Path, id: &str, version: &str) -> Vec<PathBuf> {
+    records(root)
+        .into_iter()
+        .filter(|r| r.key.id == id && r.key.version == version)
+        .map(|r| place(root, &r.key))
+        .filter(|dir| std::fs::remove_dir_all(dir).is_ok())
+        .collect()
 }
 
 /// The project's two files, copied into `dir` as uv names them.
@@ -230,11 +307,64 @@ pub fn shadows_library(lock: &str) -> bool {
 
 const SHADOWS: &str = "Eklentinin kilidi “kentos” adlı bir paket istiyor; bu ad KentOS'un kendi kitaplığının, başka yerden kurulamaz.";
 
-fn sync_args(interpreter: &Interpreter, key: &Key, dry: bool) -> Vec<OsString> {
+/// The cooling period the lock was made with (`[options]`: `exclude-newer-span`, or a fixed `exclude-newer`, and
+/// `exclude-newer-package`) as uv's flags (docs/adr/8057 §83). KentOS runs uv with `--no-config`, which leaves the
+/// project's `[tool.uv]` out, so uv would take the lock for stale and refuse it under `--locked`; the lock's own words
+/// given back keep it current. Found when a new blueprint's environment could not be prepared ("uv: “”").
+pub fn cooling_args(lock: &str) -> Vec<OsString> {
+    let mut out = Vec::new();
+    let mut section = "";
+    let value = |line: &str| -> Option<(String, String)> {
+        let (key, rest) = line.split_once('=')?;
+        let rest = rest.trim();
+        let quoted = rest.strip_prefix('"')?;
+        let end = quoted.find('"')?;
+        Some((
+            key.trim().trim_matches('"').to_owned(),
+            quoted[..end].to_owned(),
+        ))
+    };
+    let mut span = None;
+    let mut date = None;
+    for line in lock.lines() {
+        let line = line.trim();
+        if line.starts_with('[') {
+            section = line;
+            continue;
+        }
+        match section {
+            "[options]" => match value(line) {
+                Some((key, v)) if key == "exclude-newer-span" => span = Some(v),
+                Some((key, v)) if key == "exclude-newer" && !v.starts_with("0001-") => {
+                    date = Some(v)
+                }
+                _ => {}
+            },
+            "[options.exclude-newer-package]" => {
+                if let Some((name, v)) = value(line) {
+                    out.push(OsString::from("--exclude-newer-package"));
+                    out.push(OsString::from(format!("{name}={v}")));
+                }
+            }
+            _ => {}
+        }
+    }
+    if let Some(v) = span.or(date) {
+        out.splice(0..0, [OsString::from("--exclude-newer"), OsString::from(v)]);
+    }
+    out
+}
+
+fn sync_args(
+    interpreter: &Interpreter,
+    key: &Key,
+    dry: bool,
+    lock: &str,
+    no_build: &[String],
+) -> Vec<OsString> {
     let mut args: Vec<OsString> = [
         "sync",
         "--locked",
-        "--no-dev",
         "--no-install-project",
         "--no-config",
         "--no-python-downloads",
@@ -243,12 +373,22 @@ fn sync_args(interpreter: &Interpreter, key: &Key, dry: bool) -> Vec<OsString> {
     .iter()
     .map(OsString::from)
     .collect();
+    // A published version's environment takes no development group (PY-UV-19); one being developed takes it.
+    if !key.development {
+        args.insert(2, OsString::from("--no-dev"));
+    }
     if dry {
         args.push(OsString::from("--dry-run"));
     }
     for extra in &key.extras {
         args.push(OsString::from("--extra"));
         args.push(OsString::from(extra));
+    }
+    args.extend(cooling_args(lock));
+    // Only the packages the install review listed as built here are built from source (docs/adr/8057 §98).
+    for name in no_build {
+        args.push(OsString::from("--no-build-package"));
+        args.push(OsString::from(name));
     }
     args.push(OsString::from("--python"));
     args.push(interpreter.path.clone().into_os_string());
@@ -290,6 +430,7 @@ pub fn preview(
     package: &Path,
     files: (&str, &str),
     key: &Key,
+    no_build: &[String],
 ) -> Result<Vec<Listed>, String> {
     let aside = folder(root).join(format!(".onizleme-{}", key.hash()));
     let _ = std::fs::remove_dir_all(&aside);
@@ -300,7 +441,7 @@ pub fn preview(
         return Err(SHADOWS.to_owned());
     }
     let env = env_for(root, &aside.join(".venv"));
-    let args = sync_args(interpreter, key, true);
+    let args = sync_args(interpreter, key, true, &lock, no_build);
     let ran = uv::run(
         uv_path,
         &uv::os_args(&args),
@@ -311,6 +452,9 @@ pub fn preview(
     let _ = std::fs::remove_dir_all(&aside);
     let ran = ran?;
     if ran.status != Some(0) {
+        if let Some(words) = python::no_build_words(&ran.stderr) {
+            return Err(words);
+        }
         return Err(lock_words(
             &python::said(&ran.stderr).unwrap_or_else(|| ran.stderr.trim().to_owned()),
         ));
@@ -339,6 +483,45 @@ fn lock_words(said: &str) -> String {
     }
 }
 
+/// What a prepare that did not finish means, as the desktop and `kentos kek test` say it.
+pub fn prepare_words(error: &InstallError) -> String {
+    let (sentence, said) = match error {
+        InstallError::Cancelled => {
+            return "Ortam hazırlama durduruldu; yarım kalan ortam silindi.".to_owned();
+        }
+        InstallError::TimedOut => {
+            return "Ortam hazırlama 30 dakikada bitmedi ve durduruldu; yeniden deneyin."
+                .to_owned();
+        }
+        InstallError::NotRun(why) => return format!("uv çalıştırılamadı: {why}."),
+        InstallError::Failed { cause, said } => (
+            match cause {
+                Cause::Network => {
+                    "Paketler indirilemedi: internete ulaşılamadı. Bağlantıyı ya da vekil sunucu \
+                                   ayarını (HTTPS_PROXY) denetleyin."
+                        .to_owned()
+                }
+                Cause::Certificate => {
+                    "Paketler indirilemedi: paket dizininin sertifikası bu bilgisayarda \
+                                       doğrulanamadı; kurumun sertifikası yüklü olmalı."
+                        .to_owned()
+                }
+                Cause::Disk => "Ortam hazırlanamadı: diskte yer yok.".to_owned(),
+                Cause::Folder => {
+                    "Ortam hazırlanamadı: KentOS'un Python klasörüne yazılamadı.".to_owned()
+                }
+                Cause::Unavailable | Cause::Build | Cause::Other => String::new(),
+            },
+            said,
+        ),
+    };
+    match (sentence.is_empty(), said.is_empty()) {
+        (true, _) => said.clone(),
+        (false, true) => sentence,
+        (false, false) => format!("{sentence} uv: “{said}”"),
+    }
+}
+
 /// Prepares `key`'s environment from the package's lock: synced (downloads said to `told`), KentOS's library put in,
 /// checked, and only then marked ready. Stopped as soon as `cancel` is set; whatever ends it before the record, the
 /// half-made folder goes. A ready one is used as it is.
@@ -351,6 +534,7 @@ pub fn prepare(
     package: &Path,
     files: (&str, &str),
     key: &Key,
+    no_build: &[String],
     cancel: &AtomicBool,
     told: &mut dyn FnMut(Progress),
 ) -> Result<Ready, InstallError> {
@@ -367,6 +551,7 @@ pub fn prepare(
         files,
         key,
         &dir,
+        no_build,
         cancel,
         told,
     );
@@ -386,14 +571,37 @@ fn make(
     files: (&str, &str),
     key: &Key,
     dir: &Path,
+    no_build: &[String],
     cancel: &AtomicBool,
     told: &mut dyn FnMut(Progress),
 ) -> Result<Ready, InstallError> {
-    let other = |said: String| InstallError::Failed {
+    let project = start(package, files, dir)?;
+    let venv = dir.join(".venv");
+    let env = env_for(root, &venv);
+    sync(
+        uv_path,
+        root,
+        interpreter,
+        key,
+        &project,
+        &env,
+        no_build,
+        cancel,
+        told,
+    )?;
+    finish(uv_path, sdk, key, dir, &venv, &env)
+}
+
+fn other(said: String) -> InstallError {
+    InstallError::Failed {
         cause: Cause::Other,
         said,
-    };
-    // A folder without its record is a half-made one: made again from nothing.
+    }
+}
+
+/// An environment's start: its folder made again from nothing (a folder without its record is a half-made one), the
+/// package's project files copied in, a lock that names KentOS's library refused. Says where the project is.
+fn start(package: &Path, files: (&str, &str), dir: &Path) -> Result<PathBuf, InstallError> {
     let _ = std::fs::remove_dir_all(dir);
     let project = dir.join("proje");
     copy_project(package, files.0, files.1, &project).map_err(|said| InstallError::Failed {
@@ -404,9 +612,24 @@ fn make(
     if shadows_library(&lock) {
         return Err(other(SHADOWS.to_owned()));
     }
-    let venv = dir.join(".venv");
-    let env = env_for(root, &venv);
-    let args = sync_args(interpreter, key, false);
+    Ok(project)
+}
+
+/// The desktop's packages: `uv sync` of the lock into the environment's venv, its downloads told as they go.
+#[allow(clippy::too_many_arguments)]
+fn sync(
+    uv_path: &Path,
+    root: &Path,
+    interpreter: &Interpreter,
+    key: &Key,
+    project: &Path,
+    env: &[(&'static str, OsString)],
+    no_build: &[String],
+    cancel: &AtomicBool,
+    told: &mut dyn FnMut(Progress),
+) -> Result<(), InstallError> {
+    let lock = std::fs::read_to_string(project.join("uv.lock")).unwrap_or_default();
+    let args = sync_args(interpreter, key, false, &lock, no_build);
     let heard = Arc::new(Mutex::new(String::new()));
     let cache = places::cache(root);
     let mut last = Progress::Starting;
@@ -425,8 +648,8 @@ fn make(
     let ran = uv::run_watched(
         uv_path,
         &uv::os_args(&args),
-        Some(&project),
-        &refs(&env),
+        Some(project),
+        &refs(env),
         personal::SYNC_LIMIT,
         uv::Watch {
             cancel: Some(cancel),
@@ -443,13 +666,38 @@ fn make(
         return Err(InstallError::TimedOut);
     }
     if ran.status != Some(0) {
+        // A package the review did not list as built here, refused by uv (docs/adr/8057 §98).
+        if let Some(words) = python::no_build_words(&ran.stderr) {
+            return Err(InstallError::Failed {
+                cause: Cause::Unavailable,
+                said: words,
+            });
+        }
         let said = python::said(&ran.stderr).unwrap_or_default();
         return Err(match python::cause_of(&ran.stderr) {
+            // A package's build, not the extension's environment (PY-UV-20).
+            Cause::Build => InstallError::Failed {
+                cause: Cause::Build,
+                said: python::build_words(&ran.stderr).unwrap_or(said),
+            },
             Cause::Other => other(lock_words(&said)),
             cause => InstallError::Failed { cause, said },
         });
     }
-    let python = personal::python_in(&venv, std::env::consts::OS);
+    Ok(())
+}
+
+/// An environment's end, whatever put its packages in: KentOS's library from the installation's wheel (offline), the
+/// packages checked, the code compiled and the library opened, what it holds listed, and only then the record.
+fn finish(
+    uv_path: &Path,
+    sdk: &Wheel,
+    key: &Key,
+    dir: &Path,
+    venv: &Path,
+    env: &[(&'static str, OsString)],
+) -> Result<Ready, InstallError> {
+    let python = personal::python_in(venv, std::env::consts::OS);
     // KentOS's library, from the installation's wheel, offline.
     let mut library: Vec<OsString> = [
         "pip",
@@ -468,7 +716,7 @@ fn make(
         uv_path,
         &uv::os_args(&library),
         Some(dir),
-        &refs(&env),
+        &refs(env),
         CHECK_LIMIT,
     ))
     .map_err(|why| other(format!("KentOS'un Python kitaplığı kurulamadı: {why}")))?;
@@ -482,12 +730,12 @@ fn make(
         uv_path,
         &uv::os_args(&check),
         Some(dir),
-        &refs(&env),
+        &refs(env),
         CHECK_LIMIT,
     ))
     .map_err(|why| other(format!("Ortamdaki paketler birbiriyle uyuşmuyor: {why}")))?;
     precompile(&python, dir).map_err(other)?;
-    let packages = listed(uv_path, dir, &python, &env).map_err(other)?;
+    let packages = listed(uv_path, dir, &python, env).map_err(other)?;
     let record = Ready {
         format: FORMAT.to_owned(),
         key: key.clone(),

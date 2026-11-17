@@ -55,6 +55,16 @@
                 "null"
               ]
             },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "text": {
               "type": "string"
             },
@@ -90,6 +100,11 @@
             "label": {
               "type": "string"
             },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "type": {
               "const": "section",
               "type": "string"
@@ -102,6 +117,35 @@
           "required": [
             "type",
             "label"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A line across the panel between what it separates (docs/adr/8057 §59): no words, no value.",
+          "properties": {
+            "id": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "type": {
+              "const": "divider",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
           ],
           "type": "object"
         },
@@ -140,6 +184,16 @@
             },
             "requiredWhen": {
               "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
               "type": "string"
             },
             "type": {
@@ -211,6 +265,25 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "step": {
+              "default": null,
+              "description": "− and + beside it change the value by this much, within `min` and `max` (docs/adr/8057 §59).",
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "type": {
               "const": "numberField",
               "type": "string"
@@ -221,6 +294,13 @@
                 "string",
                 "null"
               ]
+            },
+            "units": {
+              "description": "The units the user may type it in besides `unit` (docs/adr/8057 §64), as KentOS's number fields take\nthem (0,03 km, 1 m + 20 cm): KentOS's (mm, cm, m, km; m², dönüm, ha; °, grad), of one kind, `unit`\namong them. The code gets the number in `unit`.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
             },
             "value": {
               "default": null,
@@ -264,6 +344,16 @@
                 "$ref": "#/$defs/Choice"
               },
               "type": "array"
+            },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
             },
             "type": {
               "const": "select",
@@ -321,6 +411,16 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "type": {
               "const": "layerPicker",
               "type": "string"
@@ -372,6 +472,16 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "type": {
               "const": "fieldPicker",
               "type": "string"
@@ -386,6 +496,325 @@
             "id",
             "label",
             "layer"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A file the user gives to be read: its path typed, or chosen in the computer's file window (Seç…), of\n`filters`' kinds when given. Its value is the file's absolute path, none until one is given; a path that is no\nfile, or of another kind, is said by its label and nothing runs. Its extension asks for `files.userSelected`.\nWith `save`, where a file is to be written (docs/adr/8057 §44): the file need not be there, its folder must; a\nname without an extension takes the first kind's; its extension asks for `files.userSelectedWrite`.",
+          "properties": {
+            "defaultName": {
+              "default": null,
+              "description": "The name the save window offers (`parseller.csv`).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "enabledWhen": {
+              "description": "Usable (pressed, typed in) only while this expression is true.",
+              "type": "string"
+            },
+            "filters": {
+              "default": [],
+              "items": {
+                "$ref": "#/$defs/FileFilter"
+              },
+              "type": "array"
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "onChange": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "placeholder": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "required": {
+              "default": false,
+              "description": "The user must give it: left empty, it is said by its label and nothing runs.",
+              "type": "boolean"
+            },
+            "requiredWhen": {
+              "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "save": {
+              "default": false,
+              "description": "Where a file is to be written, not one to be read.",
+              "type": "boolean"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "type": {
+              "const": "filePicker",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A coordinate system of KentOS's list (docs/adr/8057 §45): its value `EPSG:<code>`, `value` when given, else\nthe open drawing's own (none for a drawing without one). The code reads it as it is (`pyproj.CRS(value)` too);\nKentOS's `cad.crs.transform` takes its code (`CrsSide(srid=…)`).",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "onChange": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "required": {
+              "default": false,
+              "description": "The user must give it: left empty, it is said by its label and nothing runs.",
+              "type": "boolean"
+            },
+            "requiredWhen": {
+              "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "type": {
+              "const": "crsPicker",
+              "type": "string"
+            },
+            "value": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A point of the drawing (docs/adr/8057 §57): typed as `x, y` or picked on the map with \"Haritadan seç\" (snaps\napply); its value `[x, y]` in the drawing's plane, metres, none when empty.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "onChange": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "required": {
+              "default": false,
+              "description": "The user must give it: left empty, it is said by its label and nothing runs.",
+              "type": "boolean"
+            },
+            "requiredWhen": {
+              "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "type": {
+              "const": "pointPicker",
+              "type": "string"
+            },
+            "value": {
+              "default": null,
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": [
+                "array",
+                "null"
+              ]
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A line or an area drawn on the map (docs/adr/8057 §62): \"Haritada çiz\" draws it with KentOS's capture (snaps\napply, Esc leaves the field as it was), its ✕ empties it; its value the shape as GeoJSON in the drawing's plane\n(a rectangle a Polygon of its corners, a circle a Polygon of 64 chords with `circle`), none when empty.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "onChange": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "required": {
+              "default": false,
+              "description": "The user must give it: left empty, it is said by its label and nothing runs.",
+              "type": "boolean"
+            },
+            "requiredWhen": {
+              "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "shape": {
+              "$ref": "#/$defs/PickShape",
+              "description": "What the user draws."
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "type": {
+              "const": "shapePicker",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label",
+            "shape"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A record of a project relation's parent layer, chosen by its words (relations.rs, docs/adr/8057 §67): its\nvalue the record's persistent id, as the relation's child field holds it; none when none is chosen.",
+          "properties": {
+            "display": {
+              "default": null,
+              "description": "The parent layer's field whose value names a record; none: its label, else its first field with a value.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "onChange": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "relation": {
+              "description": "The project relation's id: its parent layer's records are offered.",
+              "type": "string"
+            },
+            "required": {
+              "default": false,
+              "description": "The user must give it: left empty, it is said by its label and nothing runs.",
+              "type": "boolean"
+            },
+            "requiredWhen": {
+              "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "type": {
+              "const": "relationPicker",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "label",
+            "relation"
           ],
           "type": "object"
         },
@@ -430,6 +859,11 @@
             },
             "requiredWhen": {
               "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
               "type": "string"
             },
             "type": {
@@ -477,6 +911,16 @@
             },
             "requiredWhen": {
               "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
               "type": "string"
             },
             "type": {
@@ -554,6 +998,16 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "type": {
               "const": "dateField",
               "type": "string"
@@ -626,6 +1080,16 @@
             },
             "requiredWhen": {
               "description": "Asked of the user while this expression is true.",
+              "type": "string"
+            },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
               "type": "string"
             },
             "type": {
@@ -702,6 +1166,16 @@
               "description": "Asked of the user while this expression is true.",
               "type": "string"
             },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "type": {
               "const": "dateTimeField",
               "type": "string"
@@ -740,6 +1214,16 @@
                 "string",
                 "null"
               ]
+            },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
             },
             "type": {
               "const": "checkbox",
@@ -781,6 +1265,16 @@
               "default": false,
               "type": "boolean"
             },
+            "row": {
+              "description": "The row (its name) whose line this component shares: the components next to each other with the same row stand side by side where each has room, one under another where not.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "table": {
               "default": null,
               "type": [
@@ -806,6 +1300,94 @@
           "type": "object"
         },
         {
+          "description": "The records a project relation ties to the record component `of` holds (relations.rs, docs/adr/8057 §67): its\nchild layer's records naming it, read from the drawing as it is (no Python), a row each; a row's click shows\nthe record. `of` is a feature picker (its first object) or a relation picker.",
+          "properties": {
+            "columns": {
+              "description": "The child layer's fields shown, by name, at most six; none: its first four.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "of": {
+              "description": "The component holding the parent record.",
+              "type": "string"
+            },
+            "relation": {
+              "description": "The project relation's id.",
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "type": {
+              "const": "relationList",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "relation",
+            "of"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "The attachments of the record component `of` holds (docs/adr/8057 §68): its photos, documents and addresses as\nÖznitelikler shows them, a photo's picture once decoded; Aç opens one, and KentOS's own Dosya ekle… and Adres\nekle… add one (the user's edit) where the record's layer is not locked. `of` is a feature picker (its first\nobject) or a relation picker.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "of": {
+              "description": "The component holding the record.",
+              "type": "string"
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
+            "type": {
+              "const": "attachments",
+              "type": "string"
+            },
+            "visibleWhen": {
+              "description": "Shown only while this expression over the panel's inputs (by id) is true.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "id",
+            "of"
+          ],
+          "type": "object"
+        },
+        {
           "description": "The rows a button's command answered.",
           "properties": {
             "id": {
@@ -817,6 +1399,11 @@
                 "string",
                 "null"
               ]
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
             },
             "type": {
               "const": "table",
@@ -851,6 +1438,11 @@
                 "string",
                 "null"
               ]
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
             },
             "type": {
               "const": "tree",
@@ -887,6 +1479,11 @@
                 "string",
                 "null"
               ]
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
             },
             "title": {
               "default": null,
@@ -975,6 +1572,11 @@
                 "null"
               ]
             },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
+            },
             "type": {
               "const": "chart",
               "type": "string"
@@ -998,7 +1600,7 @@
           "type": "object"
         },
         {
-          "description": "A picture its code gives (`ctx.panel.set(id, image=…)`, a PNG): a chart drawn in Python, a preview. `alt` says\nwhat it shows and stands in its place until the code gives one; `height` in pixels (80–600, none: 200), the\npicture fitted inside it.",
+          "description": "A picture its code gives (`ctx.panel.set(id, image=…)`, a PNG or a JPEG): a chart drawn in Python, a preview, a\nphoto. `alt` says what it shows and stands in its place until the code gives one; `height` in pixels (80–600,\nnone: 200), the picture fitted inside it.",
           "properties": {
             "alt": {
               "default": null,
@@ -1024,6 +1626,11 @@
                 "string",
                 "null"
               ]
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
             },
             "type": {
               "const": "image",
@@ -1052,6 +1659,11 @@
                 "string",
                 "null"
               ]
+            },
+            "tab": {
+              "description": "The tab (its words) whose page this component is on: the components with the same tab share a page, the bar lists the tabs in the order they first appear; without one, on every page.",
+              "maxLength": 40,
+              "type": "string"
             },
             "tag": {
               "default": null,
@@ -1083,6 +1695,35 @@
           "type": "object"
         }
       ]
+    },
+    "FileFilter": {
+      "description": "One of the kinds of file a file picker offers: its name and its extensions, without the dot.",
+      "properties": {
+        "extensions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "extensions"
+      ],
+      "type": "object"
+    },
+    "PickShape": {
+      "description": "What a shape picker asks the user to draw (docs/adr/8057 §62).",
+      "enum": [
+        "line",
+        "polygon",
+        "rectangle",
+        "circle"
+      ],
+      "type": "string"
     }
   },
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1100,6 +1741,10 @@
     },
     "schemaVersion": {
       "const": 1
+    },
+    "split": {
+      "description": "Its outputs (tables, trees, cards, figures, charts, pictures, relation and attachment lists) under a sash, in\na scroller of their own: the form stays in sight as long results scroll, and the user drags the sash to share\nthe height (docs/adr/8057 §69). Off, the panel is one scroller, the outputs under the form.",
+      "type": "boolean"
     },
     "title": {
       "type": "string"

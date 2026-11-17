@@ -1,6 +1,6 @@
 //! The dock's Eklenti tab drawn (docs/adr/8057 §24): the panel shown, its components as KentOS draws them, the open
-//! panels' tabs above it; a command's rows as a table, a tree or cards. What the panels hold and what the user does with
-//! them are panels.rs's.
+//! panels' tabs above it; a command's rows as a table, a tree or cards. What the panels hold and what the user does
+//! with them are panels.rs's.
 
 use iced::widget::{column, container, row, scrollable};
 use iced::{Element, Fill};
@@ -12,6 +12,10 @@ use kentos_ui::widget::tabs::{Tab, Tabs};
 use serde_json::Value;
 
 use super::panels::{OpenPanel, PanelEvent, SCROLLER, number_words};
+
+/// The least and most a split panel's form may be when its sash is dragged (docs/adr/8057 §69).
+const SPLIT_LEAST: f32 = 96.0;
+const SPLIT_MOST: f32 = 1600.0;
 use super::{Event, msg};
 use crate::app::{App, Message};
 use crate::exchange::words;
@@ -83,6 +87,36 @@ impl App {
             .padding(12)
             .into();
         };
+        let event = |e: PanelEvent| msg(Event::Panel(e));
+        // A split panel (docs/adr/8057 §69) knows the height it has: its form takes 3/5 until the sash is dragged.
+        let content: Element<'_, Message> = if p.definition.split {
+            iced::widget::responsive(move |size| self.panel_content(p, Some(size))).into()
+        } else {
+            self.panel_content(p, None)
+        };
+        if self.extensions.panels.len() < 2 {
+            return content;
+        }
+        // Several open: a tab each, as the drawings' (a dot: its command runs, or it answered while another was shown).
+        let tabs = Tabs::new(
+            self.extensions.panels.iter().map(|p| {
+                Tab::new(p.definition.title.as_str()).note(p.running.is_some() || p.unseen)
+            }),
+            self.extensions.active_panel,
+            move |at| event(PanelEvent::Activate(at)),
+        )
+        .on_close(move |at| event(PanelEvent::Close(at)))
+        .on_reorder(move |from, to| event(PanelEvent::Move(from, to)));
+        column![tabs, content].into()
+    }
+
+    /// The panel shown, without the open panels' tabs: its header, form, run and outputs; split under a sash when
+    /// it has `size`, the height it is given (docs/adr/8057 §69).
+    fn panel_content<'a>(
+        &'a self,
+        p: &'a OpenPanel,
+        size: Option<iced::Size>,
+    ) -> Element<'a, Message> {
         let name = self.extension_name(&p.ext);
         let why = self
             .extensions
@@ -155,31 +189,49 @@ impl App {
                 label::caption(format!("Düğmeler komut çalıştırır: {why}")),
             ));
         }
+        // Split (docs/adr/8057 §69): its run's words and its outputs under a sash, in a scroller of their own; the
+        // header and the form above stay in sight as long results scroll.
+        let split = size.is_some() && !tables.is_empty();
+        let mut outputs = column![].spacing(12).padding(12).width(Fill);
         if let Some((kind, said)) = &p.said {
-            body = body.push(words::line(*kind, label::caption(said.clone())));
+            let line = words::line(*kind, label::caption(said.clone()));
+            if split {
+                outputs = outputs.push(line);
+            } else {
+                body = body.push(line);
+            }
         }
         for table in tables {
-            body = body.push(table);
+            if split {
+                outputs = outputs.push(table);
+            } else {
+                body = body.push(table);
+            }
         }
         // Its own scroller (the pane's would take the tabs along), as far down as the panel was left.
-        let content = scrollable(body)
+        let scrolled = scrollable(body)
             .id(iced::widget::Id::new(SCROLLER))
-            .height(Fill)
             .on_scroll(move |v| event(PanelEvent::Scrolled(v.absolute_offset().y)));
-        if self.extensions.panels.len() < 2 {
-            return content.into();
+        if split {
+            // Three fifths of the height the panel has until the user drags the sash: the form first.
+            let height = p
+                .split
+                .unwrap_or_else(|| size.map_or(SPLIT_LEAST, |s| s.height * 0.6))
+                .clamp(SPLIT_LEAST, SPLIT_MOST);
+            column![
+                scrolled.height(iced::Length::Fixed(height)),
+                kentos_ui::widget::Sash::horizontal(height, move |h| event(PanelEvent::Split(h)))
+                    .range(SPLIT_LEAST..=SPLIT_MOST)
+                    .on_double_click(event(PanelEvent::SplitReset)),
+                scrollable(outputs)
+                    .id(iced::widget::Id::new(super::panels::OUTPUTS))
+                    .height(Fill)
+                    .on_scroll(move |v| event(PanelEvent::ScrolledOutputs(v.absolute_offset().y))),
+            ]
+            .into()
+        } else {
+            scrolled.height(Fill).into()
         }
-        // Several open: a tab each, as the drawings' (a dot: its command runs, or it answered while another was shown).
-        let tabs = Tabs::new(
-            self.extensions.panels.iter().map(|p| {
-                Tab::new(p.definition.title.as_str()).note(p.running.is_some() || p.unseen)
-            }),
-            self.extensions.active_panel,
-            move |at| event(PanelEvent::Activate(at)),
-        )
-        .on_close(move |at| event(PanelEvent::Close(at)))
-        .on_reorder(move |from, to| event(PanelEvent::Move(from, to)));
-        column![tabs, content].into()
     }
 
     /// A panel's components as KentOS draws them, for the dock's panel and an extension's dialog alike: its form, and
@@ -195,12 +247,33 @@ impl App {
         let mut form = Form::new().label_width(kentos_ui::theme::typography::scaled(110.0));
         let mut tables: Vec<Element<'_, Message>> = Vec::new();
         let field_id = |id: &str| super::panel_session::field_id(&p.ext, &p.local, id);
+        // Its tabs (docs/adr/8057 §43): the bar where the first component of a listed tab is; the drawn page's
+        // components and those without a tab.
+        let tabs = p.tabs();
+        let page = p.active_tab(&tabs);
+        // A wizard's steps are its tabs: the wizard's own head shows them (dialogs.rs).
+        let mut bar = !tabs.is_empty() && !p.steps;
+        // Its rows (docs/adr/8057 §55): the drawn components next to each other with the same row, one line of cells.
+        let mut rows = super::panel_rows::Rows::default();
         for (at, c) in p.definition.body.iter().enumerate() {
             // One its rule or its code hid is not drawn (panels.rs `shown`, docs/adr/8057 §32–33), nor one in a
-            // folded section (`drawn`, §38).
-            if !p.drawn(at, c) {
+            // folded section (`drawn`, §38), nor one on another tab's page (§43).
+            let drawn = p.drawn(at, c) && p.on_page(at, page);
+            let row = if drawn { p.row_at(at) } else { None };
+            if drawn && let Some(bounds) = rows.end_unless(row, form.line_count()) {
+                form = form.cells(&bounds);
+            }
+            if bar && p.tab_at(at).is_some_and(|t| tabs.contains(&t)) {
+                if let Some(bounds) = rows.end(form.line_count()) {
+                    form = form.cells(&bounds);
+                }
+                form = form.wide(super::panel_tabs::tab_bar(&tabs, page, event));
+                bar = false;
+            }
+            if !drawn {
                 continue;
             }
+            rows.go_on(row, form.line_count());
             // One its rule or its code turned off is shown faded and takes no keys.
             let usable = p.usable(at, c);
             let on = |_: &str| usable;
@@ -215,6 +288,12 @@ impl App {
                         .or_else(|| id.as_ref().and_then(|i| p.words.get(i)))
                         .unwrap_or(text);
                     form = form.wide(label::caption(text.clone()));
+                }
+                // A line across the form between what it separates (docs/adr/8057 §59).
+                Component::Divider { .. } => {
+                    form = form.wide(
+                        iced::widget::rule::horizontal(1).style(kentos_ui::style::field::hairline),
+                    );
                 }
                 // A section's heading: pressed, what it gathers folds or opens (docs/adr/8057 §38).
                 Component::Section { label: words, .. } => {
@@ -243,15 +322,52 @@ impl App {
                     }
                     form = form.field(words.clone(), field);
                 }
+                // A file to be read: its path typed, or Seç… for the computer's file window (docs/adr/8057 §41).
+                Component::FilePicker {
+                    id,
+                    label: words,
+                    placeholder,
+                    save,
+                    ..
+                } => {
+                    let value = p.texts.get(id).map_or("", String::as_str);
+                    let hint = if *save {
+                        "Kaydedilecek dosyanın yolu"
+                    } else {
+                        "Dosyanın yolu"
+                    };
+                    let mut field = kentos_ui::widget::text_field(
+                        placeholder.as_deref().unwrap_or(hint),
+                        value,
+                    )
+                    .id(field_id(id));
+                    let choose = iced::widget::button(label::body("Seç…"))
+                        .style(kentos_ui::style::button::secondary);
+                    let pick = on(id).then(|| event(PanelEvent::PickFile(id.clone())));
+                    if pick.is_some() {
+                        let typing = id.clone();
+                        field = field.on_input(move |t| event(PanelEvent::Text(typing.clone(), t)));
+                    }
+                    let choose = keyed(choose.on_press_maybe(pick.clone()).into(), pick);
+                    form = form.field(
+                        words.clone(),
+                        iced::widget::row![field, choose]
+                            .spacing(6)
+                            .align_y(iced::Alignment::Center),
+                    );
+                }
                 Component::NumberField {
                     id,
                     label: words,
                     unit,
+                    step,
                     ..
                 } => {
                     let value = p.texts.get(id).map_or("", String::as_str);
-                    let mut field =
-                        kentos_ui::widget::input_field::InputField::new("", value).id(field_id(id));
+                    // Empty, it says the units it takes (panel_units.rs, docs/adr/8057 §64).
+                    let hint = p.units_hint(id);
+                    let mut field = kentos_ui::widget::input_field::InputField::new(&hint, value)
+                        .id(field_id(id));
                     if on(id) {
                         let id = id.clone();
                         field = field.on_input(move |t| event(PanelEvent::Text(id.clone(), t)));
@@ -262,7 +378,34 @@ impl App {
                     if let Some(unit) = unit {
                         field = field.suffix(unit.clone());
                     }
-                    form = form.field(words.clone(), field);
+                    // Its step: − and + beside it (docs/adr/8057 §59).
+                    if step.is_some() {
+                        let by = |glyph, sign: i8| {
+                            let mut b = iced::widget::button(
+                                kentos_ui::icon::icon(glyph)
+                                    .size(12.0)
+                                    .tone(kentos_ui::icon::Tone::Inherit),
+                            )
+                            .padding([6, 8])
+                            .style(kentos_ui::style::button::secondary);
+                            if on(id) {
+                                b = b.on_press(event(PanelEvent::Step(id.clone(), sign)));
+                            }
+                            b
+                        };
+                        form = form.field(
+                            words.clone(),
+                            iced::widget::row![
+                                field,
+                                by(kentos_ui::icon::Icon::Minus, -1),
+                                by(kentos_ui::icon::Icon::Plus, 1)
+                            ]
+                            .spacing(4)
+                            .align_y(iced::Alignment::Center),
+                        );
+                    } else {
+                        form = form.field(words.clone(), field);
+                    }
                 }
                 Component::DateField {
                     id,
@@ -426,6 +569,50 @@ impl App {
                     );
                     form = form.field(words.clone(), pick);
                 }
+                // A point typed as `x, y` or picked on the map (panel_points.rs, docs/adr/8057 §57).
+                Component::PointPicker {
+                    id, label: words, ..
+                } => {
+                    form = form.field(
+                        words.clone(),
+                        super::panel_points::point_field(p, id, on(id), event, enter.clone()),
+                    );
+                }
+                // A record of a relation's parent layer, by its words (panel_relations.rs, docs/adr/8057 §67).
+                Component::RelationPicker {
+                    id,
+                    label: words,
+                    relation,
+                    display,
+                    ..
+                } => {
+                    form = form.field(
+                        words.clone(),
+                        super::panel_relations::relation_select(
+                            self,
+                            p,
+                            id,
+                            relation,
+                            display.as_deref(),
+                            event,
+                        ),
+                    );
+                }
+                // A line or an area drawn on the map (panel_points.rs, docs/adr/8057 §62).
+                Component::ShapePicker {
+                    id, label: words, ..
+                } => {
+                    form = form.field(
+                        words.clone(),
+                        super::panel_points::shape_field(p, id, on(id), event),
+                    );
+                }
+                // KentOS's coordinate systems, each with its datum (panel_crs.rs, docs/adr/8057 §45).
+                Component::CrsPicker {
+                    id, label: words, ..
+                } => {
+                    form = form.field(words.clone(), super::panel_crs::crs_select(p, id, event));
+                }
                 // KentOS's chips, each an option that toggles.
                 Component::MultiSelect {
                     id,
@@ -496,14 +683,19 @@ impl App {
                     };
                     let mut line = row![count].spacing(8).align_y(iced::Center);
                     if picked > 0 {
-                        line = line.push(words::ghost(
-                            "Temizle",
-                            Some(event(PanelEvent::Unpick(id.clone()))),
+                        let unpick = event(PanelEvent::Unpick(id.clone()));
+                        line = line.push(keyed(
+                            words::ghost("Temizle", Some(unpick.clone())),
+                            Some(unpick),
                         ));
                     }
+                    let take = event(PanelEvent::Pick(id.clone()));
                     let cell = column![
                         line,
-                        words::secondary("Seçimi al", Some(event(PanelEvent::Pick(id.clone())))),
+                        keyed(
+                            words::secondary("Seçimi al", Some(take.clone())),
+                            Some(take)
+                        ),
                     ]
                     .spacing(4);
                     form = form.field(words.clone(), cell);
@@ -528,16 +720,46 @@ impl App {
                     // jumped (real window, 15 November 2026); the run's line under the form names it.
                     let on = (p.running.is_none() && why.is_none() && on(id))
                         .then(|| event(PanelEvent::Press(id.clone())));
-                    form = form.row(if *primary {
-                        words::primary(words.clone(), on)
+                    let face = if *primary {
+                        words::primary(words.clone(), on.clone())
                     } else {
-                        words::secondary(words.clone(), on)
-                    });
+                        words::secondary(words.clone(), on.clone())
+                    };
+                    form = form.row(keyed(face, on));
                 }
                 Component::Table {
                     id, label: words, ..
                 } => {
                     tables.push(self.panel_table(p, id, words.as_deref()));
+                }
+                // The attachments of the record a picker holds, KentOS's adding (panel_attachments.rs, §68).
+                Component::Attachments {
+                    label: words, of, ..
+                } => {
+                    tables.push(super::panel_attachments::attachments_view(
+                        self,
+                        p,
+                        words.as_deref(),
+                        of,
+                    ));
+                }
+                // The records a relation ties to the record a picker holds, read from the drawing (§67).
+                Component::RelationList {
+                    id,
+                    label: words,
+                    relation,
+                    of,
+                    columns,
+                } => {
+                    tables.push(super::panel_relations::relation_table(
+                        self,
+                        p,
+                        id,
+                        words.as_deref(),
+                        relation,
+                        of,
+                        columns,
+                    ));
                 }
                 Component::Tree {
                     id,
@@ -612,6 +834,9 @@ impl App {
                     .map(|(_, why)| why.clone());
                 form = form.error(wrong);
             }
+        }
+        if let Some(bounds) = rows.end(form.line_count()) {
+            form = form.cells(&bounds);
         }
         (form, tables)
     }
@@ -692,7 +917,6 @@ impl App {
         id: &str,
         words: Option<&'a str>,
     ) -> Element<'a, Message> {
-        use kentos_ui::widget::table::{Column as Col, Row, Table};
         let Some((columns, rows)) = p.tables.get(id) else {
             return column![
                 label::caption(words.unwrap_or("Sonuçlar").to_owned()),
@@ -701,42 +925,113 @@ impl App {
             .spacing(4)
             .into();
         };
-        // No rows: no columns either (a command's rows name them), so no empty header bar.
-        if rows.is_empty() {
-            return column![
-                label::caption(words.unwrap_or("Sonuçlar").to_owned()),
-                label::muted("Satır yok."),
-            ]
-            .spacing(4)
-            .into();
-        }
-        // A row's `uid` names its object: a click shows it; it is not a column.
-        let shown: Vec<&String> = columns.iter().filter(|c| c.as_str() != "uid").collect();
-        let mut table = Table::new(shown.iter().map(|c| Col::new((*c).clone()).width(Fill)))
-            .empty("Satır yok.");
-        let (start, end, page) =
-            page_range(rows.len(), PAGE_ROWS, p.pages.get(id).copied().unwrap_or(0));
-        for row in &rows[start..end] {
-            let mut line = Row::new(
-                shown
-                    .iter()
-                    .map(|c| label::caption(cell_words(row.get(c.as_str()))).into()),
-            );
-            if let Some(uid) = row.get("uid").and_then(Value::as_str) {
-                line = line.on_press(msg(Event::Panel(PanelEvent::Show(uid.to_owned()))));
-            }
-            table = table.push(line);
-        }
-        let mut out = column![
-            label::caption(words.unwrap_or("Sonuçlar").to_owned()),
-            table
-        ]
-        .spacing(4);
-        if rows.len() > PAGE_ROWS {
-            out = out.push(pager(id, page, start, end, rows.len()));
-        }
-        out.into()
+        rows_table(p, id, words, columns, rows, "Satır yok.")
     }
+}
+
+/// A panel's button the keyboard presses too (docs/adr/8057 §71): Tab reaches it, Space or Enter presses it, as
+/// KentOS's form items take the keyboard (`key_focus`); one that cannot be pressed takes no focus, but one pressed
+/// keeps it while its command runs (Tab goes on from it; the real window lost it to the window's start). KentOS's
+/// other windows' buttons are not in Tab's round; the panel's are, as nothing else presses a panel's second button.
+pub(super) fn keyed<'a>(
+    button: Element<'a, Message>,
+    press: Option<Message>,
+) -> Element<'a, Message> {
+    kentos_ui::widget::key_focus(button)
+        .on_activate_maybe(press)
+        .hold()
+        .into()
+}
+
+/// Rows as a table, a page of [`PAGE_ROWS`] with its pager: a command's (a table component's) or a relation list's
+/// (panel_relations.rs); `empty` said when there are none. A row's `uid` makes it show its object.
+pub(super) fn rows_table<'a>(
+    p: &OpenPanel,
+    id: &str,
+    words: Option<&str>,
+    columns: &[String],
+    rows: &[Value],
+    empty: &str,
+) -> Element<'a, Message> {
+    use kentos_ui::widget::table::{Column as Col, Row, Table};
+    // No rows: no columns either (a command's rows name them), so no empty header bar.
+    if rows.is_empty() {
+        return column![
+            label::caption(words.unwrap_or("Sonuçlar").to_owned()),
+            label::muted(empty.to_owned()),
+        ]
+        .spacing(4)
+        .into();
+    }
+    // A row's `uid` names its object: a click shows it; it is not a column.
+    let shown: Vec<&String> = columns.iter().filter(|c| c.as_str() != "uid").collect();
+    let mut table =
+        Table::new(shown.iter().map(|c| Col::new((*c).clone()).width(Fill))).empty("Satır yok.");
+    let (start, end, page) =
+        page_range(rows.len(), PAGE_ROWS, p.pages.get(id).copied().unwrap_or(0));
+    let cursor = p.cursor.get(id).copied().filter(|&c| c < rows.len());
+    for (at, row) in rows.iter().enumerate().take(end).skip(start) {
+        let mut line = Row::new(
+            shown
+                .iter()
+                .map(|c| label::caption(cell_words(row.get(c.as_str()))).into()),
+        )
+        .selected(cursor == Some(at));
+        if let Some(uid) = row.get("uid").and_then(Value::as_str) {
+            line = line.on_press(msg(Event::Panel(PanelEvent::Show(uid.to_owned()))));
+        }
+        table = table.push(line);
+    }
+    let table = keyed_rows(table.into(), id, rows, cursor, PAGE_ROWS);
+    let mut out = column![
+        label::caption(words.unwrap_or("Sonuçlar").to_owned()),
+        table
+    ]
+    .spacing(4);
+    if rows.len() > PAGE_ROWS {
+        out = out.push(pager(id, page, start, end, rows.len()));
+    }
+    out.into()
+}
+
+/// Rows the keyboard walks (docs/adr/8057 §71): the list one stop of Tab's round; ↑ and ↓ move its cursor (the first
+/// ↓ takes the first row, the first ↑ the last), the page follows it; Enter or Space shows the cursor's object when its
+/// row has a `uid`. A row a stop each would make Tab walk hundreds of them.
+pub(super) fn keyed_rows<'a>(
+    list: Element<'a, Message>,
+    id: &str,
+    rows: &[Value],
+    cursor: Option<usize>,
+    per_page: usize,
+) -> Element<'a, Message> {
+    let count = rows.len();
+    let id = id.to_owned();
+    let show = cursor
+        .and_then(|c| rows.get(c)?.get("uid")?.as_str().map(str::to_owned))
+        .map(|uid| msg(Event::Panel(PanelEvent::Show(uid))));
+    kentos_ui::widget::key_focus(list)
+        .on_activate_maybe(show)
+        .on_step(move |by| {
+            let next = next_row(cursor, by, count)?;
+            Some(msg(Event::Panel(PanelEvent::Cursor(
+                id.clone(),
+                next,
+                next / per_page.max(1),
+            ))))
+        })
+        .into()
+}
+
+/// The row an arrow takes a cursor to among `count` rows: the first ↓ the first row, the first ↑ the last, then a step
+/// at a time, stopping at the ends; none when it does not move.
+pub(super) fn next_row(cursor: Option<usize>, by: i32, count: usize) -> Option<usize> {
+    let last = count.checked_sub(1)?;
+    let next = match cursor {
+        None if by > 0 => 0,
+        None => last,
+        Some(c) => (c as i64 + i64::from(by)).clamp(0, last as i64) as usize,
+    };
+    (cursor != Some(next)).then_some(next)
 }
 
 /// A cell's words.
@@ -802,6 +1097,13 @@ fn panel_tree<'a>(
     );
     cols.push(Col::new("Sayı").width(40).align_right());
     let all: Vec<&Value> = rows.iter().collect();
+    /// A row of the tree as it is drawn, in order: what Enter and the side arrows do on it (docs/adr/8057 §71).
+    enum Seen {
+        Group(String, bool),
+        Leaf(Option<String>),
+        More,
+    }
+    #[allow(clippy::too_many_arguments)]
     fn nodes<'a>(
         tree: &str,
         rows: &[&'a Value],
@@ -810,6 +1112,8 @@ fn panel_tree<'a>(
         depth: usize,
         path: &str,
         folded: &std::collections::BTreeSet<String>,
+        cursor: Option<usize>,
+        seen: &mut Vec<Seen>,
     ) -> Vec<Node<'a, Message>> {
         if depth == group.len() {
             let more = rows.len().saturating_sub(TREE_LEAVES);
@@ -826,15 +1130,22 @@ fn panel_tree<'a>(
                         .map(|c| label::caption(cell_words(row.get(c.as_str()))).into())
                         .collect();
                     cells.push(iced::widget::space::horizontal().width(0).into());
-                    let mut node = Node::new(name).cells(cells);
-                    if let Some(uid) = row.get("uid").and_then(Value::as_str) {
+                    let uid = row.get("uid").and_then(Value::as_str);
+                    let at = seen.len();
+                    seen.push(Seen::Leaf(uid.map(str::to_owned)));
+                    let mut node = Node::new(name).cells(cells).selected(cursor == Some(at));
+                    if let Some(uid) = uid {
                         node = node.on_press(msg(Event::Panel(PanelEvent::Show(uid.to_owned()))));
                     }
                     node
                 })
                 .collect();
             if more > 0 {
-                leaves.push(Node::new(format!("… {} daha", thousands(more))));
+                let at = seen.len();
+                seen.push(Seen::More);
+                leaves.push(
+                    Node::new(format!("… {} daha", thousands(more))).selected(cursor == Some(at)),
+                );
             }
             return leaves;
         }
@@ -848,9 +1159,12 @@ fn panel_tree<'a>(
                     .map(|_| iced::widget::space::horizontal().width(0).into())
                     .collect();
                 cells.push(label::caption(members.len().to_string()).into());
+                let at = seen.len();
+                seen.push(Seen::Group(key.clone(), open));
                 let mut node = Node::new(value.clone())
                     .folder()
                     .cells(cells)
+                    .selected(cursor == Some(at))
                     .expanded(open, msg(Event::Panel(PanelEvent::Fold(key))));
                 if open {
                     node = node.extend(nodes(
@@ -861,15 +1175,48 @@ fn panel_tree<'a>(
                         depth + 1,
                         &format!("{path}{value}/"),
                         folded,
+                        cursor,
+                        seen,
                     ));
                 }
                 node
             })
             .collect()
     }
-    let tree = TreeView::new(cols)
-        .header(leaf.len() > 1)
-        .extend(nodes(id, &all, group, &leaf, 0, "", &p.folded));
+    let cursor = p.cursor.get(id).copied();
+    let mut seen = Vec::new();
+    let tree = TreeView::new(cols).header(leaf.len() > 1).extend(nodes(
+        id, &all, group, &leaf, 0, "", &p.folded, cursor, &mut seen,
+    ));
+    // One Tab stop (docs/adr/8057 §71): ↑↓ move among the rows as drawn, Enter shows a leaf's object or opens and
+    // closes a group, → opens a closed group and ← closes an open one.
+    let count = seen.len();
+    let cursor = cursor.filter(|&c| c < count);
+    let here = cursor.and_then(|c| seen.into_iter().nth(c));
+    let enter = match &here {
+        Some(Seen::Group(key, _)) => Some(msg(Event::Panel(PanelEvent::Fold(key.clone())))),
+        Some(Seen::Leaf(Some(uid))) => Some(msg(Event::Panel(PanelEvent::Show(uid.clone())))),
+        _ => None,
+    };
+    let group_here = match here {
+        Some(Seen::Group(key, open)) => Some((key, open)),
+        _ => None,
+    };
+    let owner = id.to_owned();
+    let tree = kentos_ui::widget::key_focus(tree)
+        .on_activate_maybe(enter)
+        .on_step(move |by| {
+            let next = next_row(cursor, by, count)?;
+            Some(msg(Event::Panel(PanelEvent::Cursor(
+                owner.clone(),
+                next,
+                0,
+            ))))
+        })
+        .on_side(move |side| {
+            let (key, open) = group_here.as_ref()?;
+            ((side < 0) == *open).then(|| msg(Event::Panel(PanelEvent::Fold(key.clone()))))
+        });
     let mut out = column![title, tree].spacing(4);
     let groups = group_rows(&all, group[0].as_str()).len();
     if groups > TREE_GROUPS {
@@ -922,13 +1269,14 @@ fn panel_cards<'a>(
         .filter(|c| Some(*c) != head && Some(*c) != tag)
         .collect();
     let size = typography::caption();
-    let mut out = column![heading].spacing(6);
+    let mut cards = column![].spacing(6);
     let (start, end, page) = page_range(
         rows.len(),
         SHOWN_CARDS,
         p.pages.get(id).copied().unwrap_or(0),
     );
-    for row in &rows[start..end] {
+    let cursor = p.cursor.get(id).copied().filter(|&c| c < rows.len());
+    for (at, row) in rows.iter().enumerate().take(end).skip(start) {
         let name = head.map_or_else(|| "—".to_owned(), |c| cell_words(row.get(c)));
         // As wide as the panel, every card the same.
         let mut card = InfoCard::new(label::strong(name).wrapping(Wrapping::WordOrGlyph))
@@ -962,17 +1310,22 @@ fn panel_cards<'a>(
             );
         }
         let inside = container(card).padding([8, 10]).width(Fill);
-        out = out.push(match row.get("uid").and_then(Value::as_str) {
+        cards = cards.push(match row.get("uid").and_then(Value::as_str) {
             Some(uid) => Element::from(
                 button(inside)
                     .on_press(msg(Event::Panel(PanelEvent::Show(uid.to_owned()))))
                     .padding(0)
                     .width(Fill)
-                    .style(style::button::card(false)),
+                    .style(style::button::card(cursor == Some(at))),
             ),
             None => inside.style(style::container::bordered).into(),
         });
     }
+    let mut out = column![
+        heading,
+        keyed_rows(cards.into(), id, rows, cursor, SHOWN_CARDS)
+    ]
+    .spacing(6);
     if rows.len() > SHOWN_CARDS {
         out = out.push(pager(id, page, start, end, rows.len()));
     }
@@ -1019,7 +1372,9 @@ fn panel_stats<'a>(
             .map(|v| cell_words(Some(v)))
     };
     let mut tiles = iced::widget::Row::new().spacing(8);
-    for row in rows.iter().take(SHOWN_CARDS) {
+    let shown_rows = rows.len().min(SHOWN_CARDS);
+    let cursor = p.cursor.get(id).copied().filter(|&c| c < shown_rows);
+    for (at, row) in rows.iter().take(SHOWN_CARDS).enumerate() {
         let mut card = StatCard::new(
             given(row, title).unwrap_or_else(|| "—".to_owned()),
             given(row, value).unwrap_or_else(|| "—".to_owned()),
@@ -1037,17 +1392,63 @@ fn panel_stats<'a>(
         if let Some(uid) = row.get("uid").and_then(Value::as_str) {
             card = card.on_press(msg(Event::Panel(PanelEvent::Show(uid.to_owned()))));
         }
-        tiles = tiles.push(card);
+        tiles = tiles.push(card.selected(cursor == Some(at)));
     }
-    column![heading, tiles.wrap().vertical_spacing(8)]
-        .spacing(6)
-        .into()
+    // One Tab stop (docs/adr/8057 §71): the arrows move among the cards, Enter shows the card's object.
+    let tiles = keyed_rows(
+        tiles.wrap().vertical_spacing(8).into(),
+        id,
+        &rows[..shown_rows],
+        cursor,
+        SHOWN_CARDS,
+    );
+    column![heading, tiles].spacing(6).into()
+}
+
+/// Now as this computer's clock has it: the pickers' today and Şimdi (the forms' too).
+fn local_now() -> kentos_ui::attribute::DateTime {
+    kentos_ui::attribute::DateTime::now(
+        kentos_interaction::time_version::LOCAL_OFFSET.load(std::sync::atomic::Ordering::Relaxed)
+            / 60,
+    )
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use serde_json::json;
+
+    /// A split panel (docs/adr/8057 §69): its view is drawn with the sash; the sash dragged keeps the form's height,
+    /// double-clicked lets it go; its outputs' scroll is its own.
+    #[test]
+    fn a_split_panels_sash_keeps_the_forms_height() {
+        use kentos_extensions::ui_panel;
+        let value = json!({ "format": ui_panel::FORMAT, "schemaVersion": ui_panel::VERSION, "title": "Ara",
+            "split": true,
+            "body": [
+                { "type": "textField", "id": "q", "label": "Ara" },
+                { "type": "table", "id": "sonuc", "label": "Sonuç" }
+            ] });
+        let mut app = crate::files_testing::app_with_drawing();
+        app.extensions.panels.push(OpenPanel::new(
+            "tr.ornek.deneme",
+            "ara",
+            ui_panel::read(&value).expect("a panel"),
+        ));
+        let _ = app.extension_panel_view();
+        let _ = app.ext_panel_event(PanelEvent::Split(240.0));
+        let _ = app.ext_panel_event(PanelEvent::ScrolledOutputs(30.0));
+        assert_eq!(
+            (
+                app.extensions.panels[0].split,
+                app.extensions.panels[0].out_scroll
+            ),
+            (Some(240.0), 30.0)
+        );
+        let _ = app.extension_panel_view();
+        let _ = app.ext_panel_event(PanelEvent::SplitReset);
+        assert_eq!(app.extensions.panels[0].split, None);
+    }
 
     /// plan/eklenti.md ADIM 22's paging: a page's rows and the page clamped when the rows became fewer; counts written
     /// as Turkish writes them.
@@ -1120,6 +1521,7 @@ mod tests {
             panel: "liste".into(),
             button: "ara".into(),
             table: Some("liste".into()),
+            instance: app.extensions.panels[0].instance,
         };
         app.extensions.panels[0].running = Some("ara".into());
         app.ext_panel_answer(
@@ -1166,12 +1568,4 @@ mod tests {
             "a button's rows go to the tree"
         );
     }
-}
-
-/// Now as this computer's clock has it: the pickers' today and Şimdi (the forms' too).
-fn local_now() -> kentos_ui::attribute::DateTime {
-    kentos_ui::attribute::DateTime::now(
-        kentos_interaction::time_version::LOCAL_OFFSET.load(std::sync::atomic::Ordering::Relaxed)
-            / 60,
-    )
 }

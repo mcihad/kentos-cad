@@ -14,7 +14,7 @@ KentOS code, not KentOS's reading engine) reads KentOS's files and gives the fac
 
 The standards package's form answers them (the rule under test is the same for both readers; the readers are not).
 Writes fixtures/ifc/v1/form/<name>.json: each question's evidence and its findings (code and GlobalIds), which
-catalog/standards/dijital-proje/tests/test_form.py holds KentOS's own reading to; --check compares instead. Runs under
+catalog/standards/tests/dijital-proje/test_form.py holds KentOS's own reading to; --check compares instead. Runs under
 IfcOpenShell, offline:
 
     uv run --offline --no-project --python 3.11 --with ifcopenshell==0.9.0.post1 \\

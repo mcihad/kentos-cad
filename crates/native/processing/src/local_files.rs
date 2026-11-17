@@ -9,7 +9,7 @@
 
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{BufWriter, Read, Seek, SeekFrom, Write};
+use std::io::{Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, PoisonError};
 
@@ -22,8 +22,7 @@ use kentos_native_application::remote_host::{self, RangeRead};
 
 use crate::cloud_files::{ReadAt, cloud_read, copc_file, netcdf_reader, netcdf_slice, text_plan};
 use crate::files::{
-    Beside, CloudRead, CubeOpen, Files, RASTER_READER_BUDGET, RasterOpen, Sink, cog_file,
-    with_extension,
+    Beside, CloudRead, CubeOpen, Files, RASTER_READER_BUDGET, RasterOpen, Sink, with_extension,
 };
 use crate::raster_files::{
     is_jpeg, jpeg_pixels, mosaic_reader, mosaic_text, picture_reader, read_member, table_open,
@@ -339,22 +338,7 @@ impl Files for LocalFiles {
     }
 
     fn create(&self, path: &str) -> Result<Box<dyn Sink + '_>, String> {
-        let path = PathBuf::from(path);
-        let name = path
-            .file_name()
-            .map_or_else(|| "cikti".to_owned(), |n| n.to_string_lossy().into_owned());
-        let part = path.with_file_name(format!("{name}.yaziliyor"));
-        let file = File::create(&part).map_err(|e| {
-            format!(
-                "“{}” yazılamadı: {e}. Klasörün yazılabilir olduğunu denetleyin.",
-                path.display()
-            )
-        })?;
-        Ok(Box::new(FileSink {
-            path,
-            part,
-            file: Some(BufWriter::with_capacity(1 << 20, file)),
-        }))
+        Ok(Box::new(crate::staged::create(Path::new(path))?))
     }
 
     fn copc(
@@ -485,63 +469,4 @@ fn reader_of(source: &Bytes, budget: usize) -> Result<(Reader, bool), String> {
         return Ok((picture_reader(&source.read(0, size)?, budget)?, false));
     }
     Err("Rasterin dosyası GeoTIFF, TIFF, PNG ya da JPEG değil.".into())
-}
-
-/// A file written beside its place, then renamed.
-struct FileSink {
-    path: PathBuf,
-    part: PathBuf,
-    file: Option<BufWriter<File>>,
-}
-
-impl FileSink {
-    fn fail(&self, e: std::io::Error) -> String {
-        format!("“{}” yazılamadı: {e}.", self.path.display())
-    }
-
-    fn closed(&mut self) -> Result<(), String> {
-        let f = self.file.take().ok_or("Dosya kapalı.")?;
-        let f = f.into_inner().map_err(|e| self.fail(e.into_error()))?;
-        f.sync_all().map_err(|e| self.fail(e))
-    }
-}
-
-impl Sink for FileSink {
-    fn write(&mut self, bytes: &[u8]) -> Result<(), String> {
-        let path = self.path.display().to_string();
-        let f = self.file.as_mut().ok_or("Dosya kapalı.")?;
-        f.write_all(bytes)
-            .map_err(|e| format!("“{path}” yazılamadı: {e}."))
-    }
-
-    fn patch(&mut self, at: u64, bytes: &[u8]) -> Result<(), String> {
-        let path = self.path.display().to_string();
-        let fail = |e: std::io::Error| format!("“{path}” yazılamadı: {e}.");
-        let f = self.file.as_mut().ok_or("Dosya kapalı.")?;
-        let end = f.stream_position().map_err(fail)?;
-        f.seek(SeekFrom::Start(at)).map_err(fail)?;
-        f.write_all(bytes).map_err(fail)?;
-        f.seek(SeekFrom::Start(end)).map_err(fail)?;
-        Ok(())
-    }
-
-    fn finish(mut self: Box<Self>) -> Result<(), String> {
-        self.closed()?;
-        std::fs::rename(&self.part, &self.path).map_err(|e| self.fail(e))
-    }
-
-    fn finish_cog(mut self: Box<Self>) -> Result<(), String> {
-        self.closed()?;
-        let done = cog_file(&self.part, &self.path);
-        let _ = std::fs::remove_file(&self.part);
-        done
-    }
-}
-
-impl Drop for FileSink {
-    fn drop(&mut self) {
-        if self.file.take().is_some() {
-            let _ = std::fs::remove_file(&self.part);
-        }
-    }
 }

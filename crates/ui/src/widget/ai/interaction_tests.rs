@@ -344,3 +344,58 @@ fn an_approval_says_its_call_once_and_asks() {
         "closed, the row says what runs"
     );
 }
+
+/// An answer's usage: its own tokens, then the conversation's with the limit the host gave (docs/adr/8056 §6); no
+/// conversation line when the host does not count it.
+#[test]
+fn an_answer_says_its_tokens_and_the_conversations() {
+    let mut snapshot = Snapshot::software(Size::new(520.0, 420.0)).unwrap();
+    let answered = |conversation: Option<u64>, limit: Option<u64>| {
+        let mut state = Conversation::default();
+        state.prompt = PromptState::with_text("Kaç katman var?");
+        let Some(AiAction::Send(request)) = state.update(AiEvent::Submit) else {
+            panic!("sent");
+        };
+        state.append(request.id, "On üç katman var.");
+        state.finish(
+            request.id,
+            Some(Usage {
+                input_tokens: 19_529,
+                output_tokens: 1_290,
+                elapsed: std::time::Duration::from_millis(5_000),
+                conversation,
+                limit,
+            }),
+        );
+        state
+    };
+    let count = |snapshot: &mut Snapshot, state: &Conversation, label: &str| {
+        let count = Arc::new(Mutex::new(0));
+        snapshot.operate(
+            conversation_view(state),
+            Box::new(CountText {
+                label: label.to_owned(),
+                count: count.clone(),
+            }),
+        );
+        let n = *count.lock().unwrap();
+        n
+    };
+    let limited = answered(Some(20_819), Some(200_000));
+    assert_eq!(
+        count(&mut snapshot, &limited, "Yanıt 1.290 token, 5.0 sn"),
+        1
+    );
+    assert_eq!(
+        count(&mut snapshot, &limited, "Sohbette 20.819 / 200.000 token"),
+        1
+    );
+    let open = answered(Some(20_819), None);
+    assert_eq!(count(&mut snapshot, &open, "Sohbette 20.819 token"), 1);
+    let uncounted = answered(None, None);
+    assert_eq!(count(&mut snapshot, &uncounted, "Sohbette 20.819 token"), 0);
+    assert_eq!(
+        count(&mut snapshot, &uncounted, "Yanıt 1.290 token, 5.0 sn"),
+        1
+    );
+}

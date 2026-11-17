@@ -11,29 +11,52 @@
 //! "bir sonraki açılışta eklentisiz başlat" from this window) activates nothing.
 
 mod audit_agents;
+mod audit_picker;
 mod audits;
+pub(crate) mod catalog_agents;
 mod dialogs;
 mod panel_chart;
 mod panel_session;
+// A panel's file picker: a file the user gives to be read (docs/adr/8057 §41).
+mod panel_crs;
+mod panel_files;
 // A panel's pictures: the PNG an extension's code gives (docs/adr/8057 §40).
 mod panel_image;
+// The shown panel's drawn area or line and its point, on the map (docs/adr/8057 §62).
+pub(crate) mod panel_marks;
+// A panel's point picker: a point typed or picked on the map (docs/adr/8057 §57).
+mod panel_points;
+// A panel's relation picker and relation list, read from the drawing (docs/adr/8057 §67).
+mod panel_relations;
+// A panel's attachments: a record's photos, documents and addresses, KentOS's own adding (docs/adr/8057 §68).
+pub(crate) mod panel_attachments;
+// A panel's rows: components side by side, the cells of one line (docs/adr/8057 §55).
+mod panel_rows;
+// A number field's units: chosen beside it, the code's in its own (docs/adr/8057 §64).
+mod panel_units;
 // A panel's sections: headings that fold what they gather (docs/adr/8057 §38).
 mod panel_sections;
+mod panel_tabs;
 // A panel's worked-out values: defaults and calculations (docs/adr/8057 §35).
 mod panel_values;
 // Kapı 3's part that runs code: an agent's trial on a synthetic drawing (docs/adr/8057 §37).
 mod trial;
 mod tool_pins;
 mod bisect;
+pub(crate) mod bom;
 mod browse;
 pub(crate) mod environment;
+mod examples;
 mod panel_view;
 mod panels;
 mod workshop;
 mod problems;
+mod report;
+mod wheel_folder;
 mod ribbon;
 pub(crate) mod runner;
 mod search;
+pub(crate) mod submit;
 pub(crate) mod tools;
 mod view;
 
@@ -77,15 +100,25 @@ pub(crate) struct Pending {
     pub(crate) file: String,
     pub(crate) review: Review,
     pub(crate) changelog: Option<String>,
-    /// The capabilities the user grants, of those the package asks for.
+    /// The capabilities the user grants, of those the package asks for: at an update what the person granted the
+    /// installed version while it is asked as before (`kentos_extension_host::starting_grant`, docs/adr/8057 §121).
     pub(crate) granted: Vec<Capability>,
-    /// The Python contributions are wanted.
+    /// An update's capabilities the person left out of the installed version: they start ungranted and say so.
+    pub(crate) withheld: Vec<Capability>,
+    /// The Python contributions are wanted: at an update as the person chose for the installed version.
     pub(crate) python: bool,
     /// The package has Python contributions at all.
     pub(crate) has_python: bool,
     pub(crate) replace_source: bool,
+    /// The person read that it imitates another extension and installs it anyway (docs/adr/8059 §14).
+    pub(crate) accept_imitation: bool,
+    /// The person read that an update comes from another publisher and installs it anyway (docs/adr/8057 §126).
+    pub(crate) accept_publisher: bool,
     /// The agent whose workshop it comes from (Asistan, an agent on the link): its later changes are its own.
     pub(crate) agent: Option<String>,
+    /// What its Python lock means on this computer, with the Python KentOS uses here (docs/adr/8057 §94): supported,
+    /// and the packages built here from their sources or not installed.
+    pub(crate) here: Option<kentos_extensions::python_builds::OnComputer>,
 }
 
 /// The extensions' state in the window.
@@ -103,6 +136,8 @@ pub(crate) struct Extensions {
     pub(crate) chosen: Option<String>,
     pub(crate) catalog: Option<CatalogFolder>,
     pub(crate) review: Option<Pending>,
+    /// Kataloğa gönder's window while it is open (submit.rs, docs/adr/8057 §107).
+    pub(crate) submit: Option<submit::Submit>,
     /// The last action's outcome: an error or not, and its words.
     pub(crate) note: Option<(bool, String)>,
     /// The extensions' ribbon tabs, rebuilt from the registry when it changes (ribbon.rs).
@@ -126,6 +161,8 @@ pub(crate) struct Extensions {
     pub(crate) python_reasons: std::collections::BTreeMap<String, Option<String>>,
     /// The last audit rule's run, its findings in Eklenti denetimi (audits.rs).
     pub(crate) audit: Option<audits::AuditState>,
+    /// Eklenti denetimi's rule picker's choice: extension and local id (audit_picker.rs).
+    pub(crate) audit_pick: Option<(String, String)>,
     /// The run an agent started (audit_agents.rs): its background task, handed to the runtime when the agent's call
     /// returns; the call that started it cannot return a task.
     pub(crate) audit_job: Option<iced::Task<crate::app::Message>>,
@@ -143,6 +180,8 @@ pub(crate) struct Extensions {
     pub(crate) query: String,
     /// The program the lists are filtered by; none: every program.
     pub(crate) program: Option<kentos_extensions::manifest::Module>,
+    /// The report card's signal the lists are filtered by (docs/adr/8057 §88).
+    pub(crate) signal: browse::Signal,
     /// Each extension's Python environment, by id, once looked for (environment.rs).
     pub(crate) envs: std::collections::BTreeMap<String, environment::EnvState>,
     /// The extensions' processes, by id: one an extension version, kept between its runs (runner.rs).
@@ -157,6 +196,12 @@ pub(crate) struct Extensions {
     /// A map tool drawing (runner.rs, plan/eklenti.md ADIM 19): its extension, local id, title and what it captures;
     /// started again after each placement until Esc or a failure.
     pub(crate) capturing: Option<runner::Capturing>,
+    /// A point being picked on the map for a panel's point picker (panel_points.rs).
+    pub(crate) point_pick: Option<panel_points::PointPick>,
+    /// The panel (by place) and the field a point was just picked for: its onChange command after the update.
+    pub(crate) point_changed: Option<(usize, String)>,
+    /// A shape being drawn on the map for a panel's shape picker (panel_points.rs).
+    pub(crate) shape_pick: Option<panel_points::PointPick>,
     /// The shape just drawn, waiting for its run after the update; none: Esc.
     pub(crate) captured: Option<Option<kentos_interaction::capture::Shape>>,
     /// The drawn shape the next map tool run gives its code (GeoJSON).
@@ -198,6 +243,7 @@ impl Default for Extensions {
             chosen: None,
             catalog: None,
             review: None,
+            submit: None,
             note: None,
             tabs: Vec::new(),
             menus: Vec::new(),
@@ -208,6 +254,7 @@ impl Default for Extensions {
             icons: std::collections::BTreeMap::new(),
             python_reasons: std::collections::BTreeMap::new(),
             audit: None,
+            audit_pick: None,
             audit_job: None,
             trial: None,
             trial_job: None,
@@ -217,6 +264,7 @@ impl Default for Extensions {
             test_last_invoke: None,
             query: String::new(),
             program: None,
+            signal: browse::Signal::All,
             envs: std::collections::BTreeMap::new(),
             runners: std::collections::BTreeMap::new(),
             run_counter: 0,
@@ -224,6 +272,9 @@ impl Default for Extensions {
             result: None,
             tools: tools::ExtTools::default(),
             capturing: None,
+            point_pick: None,
+            point_changed: None,
+            shape_pick: None,
             captured: None,
             capture_shape: None,
             target_params: None,
@@ -278,6 +329,8 @@ pub(crate) enum Event {
     Choose(String),
     /// An extension's Python environment (environment.rs).
     Env(environment::EnvEvent),
+    /// Kataloğa gönder's controls (submit.rs).
+    Submit(submit::SubmitEvent),
     /// An extension's contribution run in its process: extension, kind (`command`), local id (runner.rs).
     Run(String, String, String),
     /// A right-click menu's command run on what the menu was opened on: its `ctx.params` (`{"layer": …}`).
@@ -286,6 +339,8 @@ pub(crate) enum Event {
     AuditDone(Box<audits::AuditDone>),
     /// An agent's trial ended: its report (trial.rs).
     TrialDone(Box<serde_json::Value>),
+    /// Eklenti denetimi's rule picker: the rule by its place in the list (audit_picker.rs).
+    AuditPick(usize),
     /// Eklenti denetimi's Göster, Düzelt and Durdur, by the finding's place (audits.rs).
     AuditShow(usize),
     AuditFix(usize),
@@ -309,6 +364,11 @@ pub(crate) enum Event {
     /// Go to another installed version: the extension and the version.
     Switch(String, String),
     ResetData(String),
+    /// Its tools' examples run on drawings of their own (examples.rs, docs/adr/8057 §48).
+    RunExamples(String),
+    /// SBOM'u kaydet… (bom.rs, docs/adr/8057 §91), and where it went (none: cancelled).
+    SaveBom(String),
+    BomSaved(Option<Result<String, String>>),
     PickPackage,
     /// The chosen `.kek`: its name and bytes; none when the user cancelled.
     Picked(Option<(String, Vec<u8>)>),
@@ -319,6 +379,10 @@ pub(crate) enum Event {
     Grant(Capability, bool),
     Python(bool),
     ReplaceSource(bool),
+    /// Install a package that imitates another anyway (docs/adr/8059 §14).
+    AcceptImitation(bool),
+    /// An update from another publisher installed anyway (docs/adr/8057 §126).
+    AcceptPublisher(bool),
     Install,
     CancelReview,
     SafeNext(bool),
@@ -335,6 +399,8 @@ pub(crate) enum Event {
     Dialog(panels::PanelEvent),
     /// The dialog answered: Tamam (true), İptal / Esc (false).
     DialogAnswer(bool),
+    /// A wizard dialog's İleri (1) or Geri (−1) (dialogs.rs).
+    DialogStep(i8),
     /// The chosen extension's report onto the clipboard, for its publisher or an agent.
     CopyReport(String),
     /// Its whole log, or its newest lines.
@@ -347,7 +413,11 @@ pub(crate) enum Event {
     FlashEnd(&'static str, usize, usize),
     /// The lists' word, and their program filter by its place in browse.rs's `PROGRAMS`.
     Query(String),
+    /// The catalogs' list on an extension's id: a retired one's replacement looked for (docs/adr/8057 §119).
+    Find(String),
     ProgramFilter(usize),
+    /// The report card's filter by its place in browse.rs's `SIGNALS`.
+    SignalFilter(usize),
     /// Sorunlu eklentiyi bul (bisect.rs): its window, its start, a round's answer (the problem still seen), leaving,
     /// closing the window (a bisection going on goes on), disabling the one found.
     BisectOpen,
@@ -619,8 +689,19 @@ impl App {
                 self.extensions.query = text;
                 self.choose_first();
             }
+            Event::Find(id) => {
+                self.extensions.part = Part::Available;
+                self.extensions.query = id;
+                self.choose_first();
+            }
             Event::ProgramFilter(i) => {
                 self.extensions.program = browse::PROGRAMS.get(i).and_then(|(m, _)| *m);
+                self.choose_first();
+            }
+            Event::SignalFilter(i) => {
+                self.extensions.signal = browse::SIGNALS
+                    .get(i)
+                    .map_or_else(Default::default, |(s, _, _)| *s);
                 self.choose_first();
             }
             Event::Choose(id) => {
@@ -630,6 +711,7 @@ impl App {
                 return self.env_look(&id);
             }
             Event::Env(event) => return self.env_event(event),
+            Event::Submit(event) => return self.ext_submit_event(event),
             Event::Run(ext, kind, local) => return self.ext_run(&ext, &kind, &local),
             Event::RunOn(ext, kind, local, params) => {
                 self.extensions.target_params = Some((ext.clone(), local.clone(), params));
@@ -637,10 +719,12 @@ impl App {
             }
             Event::OpenPanel(ext, local) => return self.ext_panel_open(&ext, &local),
             Event::Panel(event) => return self.ext_panel_event(event),
-            Event::Dialog(event) => self.ext_dialog_event(event),
+            Event::Dialog(event) => return self.ext_dialog_event(event),
             Event::DialogAnswer(ok) => self.ext_dialog_answer(ok),
+            Event::DialogStep(sign) => self.ext_dialog_step(sign),
             Event::AuditDone(done) => self.ext_audit_done(*done),
             Event::TrialDone(report) => self.ext_trial_done(*report),
+            Event::AuditPick(i) => self.ext_audit_pick(i),
             Event::AuditShow(i) => return self.ext_audit_show(i),
             Event::AuditFix(i) => self.ext_audit_fix(i),
             Event::AuditStop => self.ext_audit_stop(),
@@ -758,6 +842,16 @@ impl App {
                 }
                 self.extensions_changed();
             }
+            Event::SaveBom(id) => return self.save_extension_bom(&id),
+            Event::BomSaved(None) => {}
+            Event::BomSaved(Some(Ok(path))) => {
+                self.extensions_say(false, format!("SBOM kaydedildi: {path}"));
+            }
+            Event::BomSaved(Some(Err(why))) => self.extensions_say(true, why),
+            Event::RunExamples(id) => match self.ext_examples_start(&id, true) {
+                Ok((_, task)) => return task,
+                Err((_, why)) => self.extensions_say(true, why),
+            },
             Event::ResetData(id) => {
                 let result = self.extensions.registry.as_mut().map(|r| r.reset_data(&id));
                 match result {
@@ -871,6 +965,16 @@ impl App {
             Event::ReplaceSource(on) => {
                 if let Some(p) = self.extensions.review.as_mut() {
                     p.replace_source = on;
+                }
+            }
+            Event::AcceptImitation(on) => {
+                if let Some(p) = self.extensions.review.as_mut() {
+                    p.accept_imitation = on;
+                }
+            }
+            Event::AcceptPublisher(on) => {
+                if let Some(p) = self.extensions.review.as_mut() {
+                    p.accept_publisher = on;
                 }
             }
             Event::Install => self.install_reviewed(),
@@ -1096,7 +1200,8 @@ impl App {
             return;
         };
         let part = format!("form “{local}”");
-        let text = match registry.package_file(ext, &definition) {
+        // Its texts in the interface's language when the package translates them (docs/adr/8057 §106).
+        let text = match registry.localized_file(ext, &definition, &format!("forms.{local}")) {
             None => {
                 self.extension_failed(
                     ext,
@@ -1195,17 +1300,71 @@ impl App {
             self.extensions_say(true, why);
             return;
         };
-        let review = registry.review(&bytes, &source);
+        // Compared with the installed extensions and the catalog read (docs/adr/8059 §14).
+        let catalog = self
+            .extensions
+            .catalog
+            .as_ref()
+            .map(|found| {
+                found
+                    .catalog
+                    .latest(true)
+                    .into_iter()
+                    .map(kentos_extension_host::imitation::of_entry)
+                    .collect()
+            })
+            .unwrap_or_default();
+        let mut review = registry.review_beside(&bytes, &source, catalog);
         let opened = kentos_extensions::open(&bytes, &Limits::default());
+        // Read in the interface's language when the package translates its texts (docs/adr/8057 §106): its name, what
+        // it says it does and why it asks for each capability.
+        review.inspection.manifest =
+            review.inspection.manifest.take().map(|m| {
+                kentos_extensions::l10n::localized(m, |path| opened.files.get(path).cloned())
+            });
+        // The review's own lines carry the reasons as written: they are read from the translated manifest too.
+        if let Some(m) = &review.inspection.manifest {
+            for line in &mut review.capabilities {
+                if let Some(asked) = m
+                    .requested_capabilities
+                    .iter()
+                    .find(|c| c.id == line.capability)
+                {
+                    line.reason.clone_from(&asked.reason);
+                }
+            }
+        }
         let manifest = review.inspection.manifest.as_ref();
         let changelog = manifest
             .and_then(|m| m.changelog_file.as_ref())
             .and_then(|p| opened.files.get(p))
             .and_then(|b| String::from_utf8(b.clone()).ok());
-        let granted = manifest
-            .map(|m| m.capabilities().into_iter().collect())
+        // At an update the person's choice for the installed version stands; what is new or reaches further waits for
+        // them (docs/adr/8057 §121).
+        let installed = manifest
+            .filter(|_| review.installed.is_some())
+            .and_then(|m| Some((registry.grant(&m.id)?, registry.manifest(&m.id)?)));
+        let granted = kentos_extension_host::starting_grant(
+            &review.capabilities,
+            installed.map(|(grant, _)| grant),
+        );
+        let withheld = installed
+            .map(|(grant, old)| {
+                old.capabilities()
+                    .into_iter()
+                    .filter(|c| !grant.capabilities.contains(c))
+                    .collect()
+            })
             .unwrap_or_default();
         let has_python = manifest.is_some_and(|m| m.python.is_some());
+        let python = match installed {
+            Some((grant, old)) => old.python.is_some() && grant.python,
+            None => true,
+        };
+        let here = manifest.and_then(|m| {
+            let target = kentos_extensions::python_builds::Target::here(self.python_here())?;
+            kentos_extensions::python_builds::on_computer(m, &opened.files, target)
+        });
         self.extensions.review = Some(Pending {
             bytes,
             source,
@@ -1213,11 +1372,25 @@ impl App {
             review,
             changelog,
             granted,
-            python: has_python,
+            withheld,
+            python,
             has_python,
             replace_source: false,
+            accept_imitation: false,
+            accept_publisher: false,
             agent: None,
+            here,
         });
+    }
+
+    /// The Python KentOS makes the extensions' environments with here (`3.12`), when it is ready; none before.
+    fn python_here(&self) -> Option<(u64, u64)> {
+        let Some(crate::python_setup::OwnPython::Ready(python, _)) = &self.python_setup.python
+        else {
+            return None;
+        };
+        let mut parts = python.version.split('.').map(|p| p.parse::<u64>().ok());
+        Some((parts.next()??, parts.next()??))
     }
 
     /// Kur: the reviewed package with the user's choices.
@@ -1225,6 +1398,14 @@ impl App {
         let Some(pending) = self.extensions.review.as_ref() else {
             return;
         };
+        // An imitation installs only when the person said so (docs/adr/8059 §14): Kur is off until then.
+        // Nor an update from another publisher (docs/adr/8057 §126).
+        if pending.review.publisher_changed() && !pending.accept_publisher {
+            return;
+        }
+        if pending.review.imitates() && !pending.accept_imitation {
+            return;
+        }
         let Some(registry) = self.extensions.registry.as_mut() else {
             return;
         };

@@ -9,6 +9,7 @@
 //! | `POST …/releases/{extension}/{version}/moves` | a move of the flow: `{"action": "approve", "note": …}` |
 //! | `GET  …/releases/{extension}/{version}/install` | what may be installed: a published release's approved content |
 //! | `GET  …/releases/{extension}/{version}/package` | its approved bytes, checked against the approval before they leave |
+//! | `GET  …/releases/{extension}/{version}/sbom` | its software bill of materials (CycloneDX 1.6), from those bytes |
 //! | `GET  /v1/extension-catalogs/{catalog}/revocations` | the catalog's revocation list, the same for every member (§12) |
 //!
 //! `{catalog}` is `public`, `tenant:{slug}` or `personal:{account}`. A refused move answers in the API's error body
@@ -52,7 +53,8 @@ const NOT_FOUND: &str = "Böyle bir katalog ya da sürüm yok, ya da onu görme 
 /// `x-kentos-client: web`, is the catalog's window, where a person decides. An access token, the desktop, the Python
 /// SDK, the MCP server and a request that does not say are programs: they upload, send for review, report scans and
 /// publish what a person approved, but never approve, send back, lift a block or take a release out of suspension.
-/// The header is the app's word, not a proof; docs/adr/8059 §10 says what closes that before the catalog opens.
+/// The header is the app's word, not a proof: a person's decision also needs a fresh sign-in, which no session of the
+/// server carries yet (docs/adr/8059 §13), so a running server takes none.
 pub fn channel(headers: &HeaderMap) -> Channel {
     let web = headers.get(CLIENT_HEADER).and_then(|v| v.to_str().ok()) == Some("web");
     if web && !headers.contains_key(header::AUTHORIZATION) {
@@ -79,18 +81,22 @@ impl FromRequestParts<AppState> for CatalogCaller {
             )
         })?;
         let via = channel(&parts.headers);
-        let id = match catalog.accounts() {
-            Accounts::Sessions => Caller::from_request_parts(parts, state)
-                .await?
-                .0
-                .user_id
-                .to_string(),
+        // No session is a fresh sign-in yet: a running server takes no decision (docs/adr/8059 §13).
+        let (id, fresh_sign_in) = match catalog.accounts() {
+            Accounts::Sessions => {
+                let caller = Caller::from_request_parts(parts, state).await?;
+                (caller.0.user_id.to_string(), false)
+            }
             #[cfg(test)]
-            Accounts::Named => named(parts)?,
+            Accounts::Named => (named(parts)?, true),
         };
         Ok(CatalogCaller {
             catalog,
-            account: Account { id, via },
+            account: Account {
+                id,
+                via,
+                fresh_sign_in,
+            },
         })
     }
 }
@@ -192,10 +198,11 @@ pub fn status_of(code: &str) -> StatusCode {
         | "not_owner"
         | "self_review"
         | "self_scan"
-        | "decision_by_program" => StatusCode::FORBIDDEN,
+        | "decision_by_program"
+        | "fresh_sign_in_required" => StatusCode::FORBIDDEN,
         "reason_missing" | "changes_missing" | "package_invalid" | "identity_mismatch"
         | "publisher_mismatch" | "publisher_missing" | "scan_unexplained"
-        | "waiver_not_allowed" => StatusCode::UNPROCESSABLE_ENTITY,
+        | "waiver_not_allowed" | "sbom_empty" => StatusCode::UNPROCESSABLE_ENTITY,
         "package_mismatch" | "baseline_invalid" | "record_invalid" | "record_inconsistent" => {
             StatusCode::INTERNAL_SERVER_ERROR
         }
@@ -416,6 +423,61 @@ pub async fn package(
             ),
         ];
         Ok::<_, Why>((fields, bytes).into_response())
+    };
+    run.await.map_err(|e| CatalogFailure::new(e, &headers))
+}
+
+/// `GET /v1/extension-catalogs/{catalog}/releases/{extension}/{version}/sbom`: the approved package's software bill of
+/// materials (CycloneDX 1.6 JSON, `kentos_extensions::sbom`; docs/adr/8057 §91), made from the bytes `package` gives,
+/// so whoever may install the release may read it; a package without Python is refused with the reason.
+pub async fn sbom(
+    headers: HeaderMap,
+    Path(path): Path<ReleasePath>,
+    caller: CatalogCaller,
+) -> Result<Response, CatalogFailure> {
+    let run = async {
+        let (release, bytes) = caller.catalog.package(&key(path)?, &caller.account).await?;
+        let opened = kentos_extensions::open(&bytes, &kentos_extensions::Limits::default());
+        let now = kentos_extensions::sbom::utc_text(std::time::SystemTime::now());
+        let mut bom = opened.inspection.manifest.as_ref().and_then(|m| {
+            kentos_extensions::sbom::cyclonedx(m, &opened.files, &now, env!("CARGO_PKG_VERSION"))
+        });
+        // The packages' licences from the server's wheel folder, where their wheels are (docs/adr/8057 §99).
+        let lock = opened
+            .inspection
+            .manifest
+            .as_ref()
+            .and_then(|m| m.python.as_ref())
+            .and_then(|p| opened.files.get(&p.lock_file))
+            .and_then(|b| std::str::from_utf8(b).ok());
+        if let (Some(bom), Some(lock), Some(dir)) =
+            (bom.as_mut(), lock, caller.catalog.wheels_dir())
+        {
+            let licenses = kentos_extensions::sbom::licenses_in_wheels(lock, |file| {
+                (!file.contains(['/', '\\']))
+                    .then(|| std::fs::read(dir.join(file)).ok())
+                    .flatten()
+            });
+            kentos_extensions::sbom::add_licenses(bom, &licenses);
+        }
+        let Some(bom) = bom else {
+            return Err(Why::Catalog(CatalogError::Refused(Refusal::new(
+                "sbom_empty",
+                "Bu eklenti Python paketi kurmuyor: SBOM'da listelenecek bağımlılık yok.",
+            ))));
+        };
+        let file = format!("{}-{}.cdx.json", release.extension_id(), release.version());
+        let fields = [
+            (
+                header::CONTENT_TYPE,
+                "application/vnd.cyclonedx+json".to_owned(),
+            ),
+            (
+                header::CONTENT_DISPOSITION,
+                format!("attachment; filename=\"{file}\""),
+            ),
+        ];
+        Ok::<_, Why>((fields, bom.to_string()).into_response())
     };
     run.await.map_err(|e| CatalogFailure::new(e, &headers))
 }

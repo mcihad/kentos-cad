@@ -1125,7 +1125,7 @@ ADDED_SINCE = {
 
 
 def listed_tool(t: dict) -> dict:
-    return {
+    listed = {
         "id": t["id"],
         "label": t["label"],
         "category": "$any",
@@ -1145,6 +1145,11 @@ def listed_tool(t: dict) -> dict:
             for p in t["parameters"] + ADDED_SINCE.get(t["id"], [])
         ],
     }
+    # What it gives, which a model's later step is wired to by name (docs/adr/8057 §108); none listed when it has none.
+    outputs = [{"name": o["name"], "label": "$any", "kind": o["type"]} for o in t.get("outputs", [])]
+    if outputs:
+        listed["outputs"] = outputs
+    return listed
 
 
 def tools_cases() -> list[dict]:

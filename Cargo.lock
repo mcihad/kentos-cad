@@ -2748,7 +2748,10 @@ dependencies = [
  "kentos-kcad",
  "kentos-postgres",
  "kentos-project",
+ "kentos-python-env",
  "kentos-sheet",
+ "kentos-zip",
+ "libc",
  "reqwest",
  "serde",
  "serde_json",
@@ -2791,7 +2794,11 @@ name = "kentos-cli"
 version = "0.1.0"
 dependencies = [
  "kentos-extension-host",
+ "kentos-extension-tools",
  "kentos-extensions",
+ "kentos-headless",
+ "kentos-processing",
+ "kentos-python-env",
  "serde_json",
 ]
 
@@ -2853,6 +2860,7 @@ dependencies = [
  "kentos-dwg",
  "kentos-expression",
  "kentos-extension-host",
+ "kentos-extension-tools",
  "kentos-extensions",
  "kentos-formats",
  "kentos-forms",
@@ -2956,6 +2964,22 @@ version = "0.1.0"
 dependencies = [
  "kentos-extensions",
  "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "kentos-extension-tools"
+version = "0.1.0"
+dependencies = [
+ "kentos-commands",
+ "kentos-domain",
+ "kentos-expression",
+ "kentos-extension-host",
+ "kentos-extensions",
+ "kentos-headless",
+ "kentos-processing",
+ "kentos-project",
+ "kentos-python-env",
  "serde_json",
 ]
 
@@ -3113,8 +3137,15 @@ name = "kentos-jobrun"
 version = "0.1.0"
 dependencies = [
  "kentos-contracts",
+ "kentos-domain",
+ "kentos-extensions",
  "kentos-headless",
+ "kentos-kcad",
  "kentos-processing",
+ "kentos-python-env",
+ "landlock",
+ "libc",
+ "seccompiler",
  "serde_json",
 ]
 
@@ -3167,6 +3198,7 @@ dependencies = [
  "kentos-commands",
  "kentos-domain",
  "kentos-extension-host",
+ "kentos-extension-tools",
  "kentos-extensions",
  "kentos-headless",
  "kentos-kcad",
@@ -3384,6 +3416,7 @@ version = "0.1.0"
 dependencies = [
  "kentos-commands",
  "kentos-domain",
+ "kentos-extension-tools",
  "kentos-geometry-core",
  "kentos-headless",
  "kentos-native-application",
@@ -3688,6 +3721,17 @@ dependencies = [
  "arrayvec",
  "euclid",
  "smallvec",
+]
+
+[[package]]
+name = "landlock"
+version = "0.4.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4cca98e95f35b29d469dade6724c6f96cec9236640f745a0e99b0334ec320ab1"
+dependencies = [
+ "enumflags2",
+ "libc",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -5788,6 +5832,15 @@ dependencies = [
  "pkcs8",
  "subtle",
  "zeroize",
+]
+
+[[package]]
+name = "seccompiler"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4ae55de56877481d112a559bbc12667635fdaf5e005712fd4e2b2fa50ffc884"
+dependencies = [
+ "libc",
 ]
 
 [[package]]

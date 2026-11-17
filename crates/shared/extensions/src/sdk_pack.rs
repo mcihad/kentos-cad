@@ -29,7 +29,8 @@ sürecinde ve kendi Python ortamında çalışır. Ayrı süreç bir korumalı a
   yazmaları tek geri alma adımıdır; hata veren ya da durdurulan çalıştırma geri alınır.
 - `@ext.processing("kimlik")` → `entrypoints.processing` + tanım dosyası: `def f(ctx: ext.ProcessingContext,
   <parametreler adlarıyla>) -> dict`. Nesne girdileri `ext.FeatureInput`'tur (`ctx.read_features(girdi)` →
-  `ext.Feature`: `uid`/`id`, `kind`, `layer`, `attrs`, `geometry` GeoJSON, `__geo_interface__`). Çizim yoktur; çıktılar
+  `ext.Feature`: `uid`/`id`, `kind`, `layer`, `attrs`, `geometry` GeoJSON, `__geo_interface__`). Çizim yoktur;
+  kullanıcıya da sormaz (`ctx.dialog`/`ctx.confirm` reddedilir: sorulacak olan bir parametredir); çıktılar
   tanımdaki adlarıyla bir sözlükte döner (`features`: `ext.NewFeature(attrs=…, geometry=…)` ya da girdinin şekliyle
   `ext.NewFeature(source=f, attrs=…)` listesi; `table`: satır sözlükleri ya da DataFrame; `number`; `string`). Şekil
   `ext.point/polyline/polygon`, GeoJSON ya da `__geo_interface__` taşıyan her şeydir (shapely, GeoPandas).
@@ -39,13 +40,13 @@ sürecinde ve kendi Python ortamında çalışır. Ayrı süreç bir korumalı a
   foreign_key=…)`, `facts.cut`. KentOS'un Rust'ta ölçtüğü olgular `facts.project` (`ext.ProjectAuditFacts`;
   `.layer("parsel")` → `ext.LayerFacts`: geometriye göre sayılar, `area`, `length`, `invalid`, `overlaps`, `gaps`,
   `totals`; mimari çizimde `.architecture` → `ext.ArchitectureFacts`: katlar, `exits(kat)`, mahaller (`net`, `axis`,
-  `escape`: kat çıkışına ve daire kapısına yürüyüş), `units` (PAİY 4/ğ alanları), `doors`; şeması `factsSchema`):
-  geometriyi yeniden hesaplamayın. Kural yazamaz; bulgu `ext.AuditFinding(message, severity="error"|"warning"|"info",
-  feature_id, fix=ext.SemanticFix(title, command, args))`. Düzeltmeyi kullanıcı uygular (tek geri alma adımı; yalnız
-  `document.write` izinli eklentide).
+  `escape`: kat çıkışına ve daire kapısına yürüyüş), `units` (PAİY 4/ğ alanları), `doors`, `zoning` (imar durumu);
+  sınıfları `factsApi`, şeması `factsSchema`): geometriyi yeniden hesaplamayın. Kural yazamaz; bulgu
+  `ext.AuditFinding(message, severity="error"|"warning"|"info", feature_id, fix=ext.SemanticFix(title, command,
+  args))`. Düzeltmeyi kullanıcı uygular (tek geri alma adımı; yalnız `document.write` izinli eklentide).
 - `@ext.expr("kimlik")` → `entrypoints.expressions`: düz işlev, değer alır değer döndürür. İfadelerde eklenti
   kimliği ve yerel kimlikle çağrılır: `ext.tr.ornek.vitrin.ada-parsel(ada, parsel)` (etiket, stil kuralı, süzgeç, form
-  hesabı, İşlemler). Çizim beklemez: yanıt gelince yeniden çizilir.
+  hesabı, İşlemler). Çizim beklemez: yanıt gelince yeniden çizilir. MCP ve Python'da `runtimes`: `headless` ister.
 - `@ext.map_tool("kimlik")` → `entrypoints.mapTools` (`capture`: point, line, polygon, rectangle,
   orientedRectangle, circle): `def f(ctx: ext.MapToolContext, sekil: ext.Shape) -> ext.CommandResult`; `ctx.add_feature(katman, sekil,
   öznitelikler)`. Şekli KentOS çizer (kenetleme, yazılan koordinat), kod yerleştirir.
@@ -81,15 +82,16 @@ Eklentinin katmanları `schema.json`'da bildirilir (manifestte `"schemaFile": "s
 
 Panel bildirimseldir; kodu bir arayüz nesnesi almaz. Manifestte `entrypoints.panels` (`id`, `title`, `side`: right
 Katmanlar'ın yanında, left haritanın solunda, bottom altında; kullanıcının taşıdığı yer korunur, `definition`),
-şeritte `{"panel": "<id>"}`, yetenek `ui.panel`. Biçim `kentos.ui.panel` 1: `title` ve `body`
+şeritte `{"panel": "<id>"}`, yetenek `ui.panel`. Biçim `kentos.ui.panel` 1: `title`, `split: true` (çıktılar sürüklenen
+bir çizginin altında) ve `body`
 bileşenleri: `text` (`text`), `section` (`label`, `collapsed`: katlanır başlık; sonraki bileşenleri bir sonraki bölüme
-dek toplar, katlıyken değerleri yine gider, yanlış bırakılan alanı bölümü açar), `textField` (`id`, `label`,
-`placeholder`, `value`), `numberField` (`id`, `label`,
-`min`, `max`, `unit`, `value`), `dateField` (`id`, `label`, `value`, `min`, `max`: YYYY-AA-GG; kullanıcı GG.AA.YYYY ya
+dek toplar, katlıyken değerleri yine gider, yanlış bırakılan alanı bölümü açar), `divider`, `textField` (`id`,
+`label`, `placeholder`, `value`), `numberField` (`id`, `label`,
+`min`, `max`, `unit`, `value`, `step`, `units`: ör. m, km; 0,03 km yazılır, kod `unit`'te alır), `dateField` (`id`, `label`, `value`, `min`, `max`: YYYY-AA-GG; kullanıcı GG.AA.YYYY ya
 da YYYY-AA-GG yazar ya da takvimden seçer, değeri ISO tarih metni ya da boşsa None), `timeField` (`id`, `label`,
-`value`, `min`, `max`: SS:DD; kullanıcı 14:30, 14.30 ya da 9:05 yazar ya da saat seçicisinden seçer, değeri SS:DD ya da
-None), `dateTimeField` (`id`, `label`, `value`, `min`, `max`: YYYY-AA-GGTSS:DD, yerel saat; kullanıcı 15.11.2026 14:30
-yazar ya da takvim ve saatten seçer, değeri 2026-11-15T14:30 ya da None), `select` (`id`, `label`,
+`value`, `min`, `max`: SS:DD; kullanıcı 14:30 ya da 14.30 yazar ya da saat seçiciden seçer, değeri SS:DD ya da
+None), `dateTimeField` (`id`, `label`, `value`, `min`, `max`: YYYY-AA-GGTSS:DD, yerel saat; değeri 2026-11-15T14:30 ya
+da None), `select` (`id`, `label`,
 `options: [{value, label}]`, `value`), `multiSelect` (`id`, `label`, `options: [{value, label}]`, `value`: başta
 seçili değerlerin listesi; her seçenek bir çip, basınca seçilir ya da bırakılır; değeri seçilenlerin listesi, seçenek
 sırasıyla, hiçbiri seçilmezse boş liste), `checkbox` (`id`,
@@ -99,24 +101,32 @@ kimliği, `kinds`: alan türleri, ör. `["integer", "decimal"]`; orada seçilen 
 None), `featurePicker` (`id`, `label`, `layer`: bir `layerPicker`'ın kimliği, `geometry`, `multiple`: varsayılan true;
 kullanıcı "Seçimi al"a basınca çizimdeki seçimden o katmanın ve türün nesnelerini alır, değeri kalıcı kimliklerin
 listesi, `multiple: false` ise tek kimlik ya da None; kod her birini `ctx.doc.entity(uid)` ile okur; katman değişince
-alan ve nesne seçimi temizlenir), `button` (`id`, `label`, `command`: bir `entrypoints.commands` kimliği, `table`,
+alan ve nesne seçimi temizlenir), `filePicker` (`id`, `label`, `filters`: `[{name, extensions}]`; okunacak dosyanın yolu
+yazılır ya da Seç… ile seçilir, değeri mutlak yol ya da None; manifest `files.userSelected` ister; `save: true`
+yazılacak yeri sorar: `defaultName`, `files.userSelectedWrite`),
+`crsPicker` (`id`, `label`, `value`; KentOS'un sistemlerinden, verilmezse çizimin; değeri `EPSG:<kod>`), `pointPicker`
+(`id`, `label`, `value`; "x, y" yazılır ya da Haritadan seç, değeri [x, y]), `shapePicker` (`id`, `label`, `shape`:
+line, polygon, rectangle, circle; haritada çizilir, değeri GeoJSON), `relationPicker` (`id`, `label`, `relation`,
+`display`; ilişkinin üst kaydı, değeri kalıcı kimliği), `relationList` (`id`, `label`, `relation`, `of`: bir seçici,
+`columns`; o kaydın ilişkili kayıtları, canlı), `attachments` (`id`, `label`, `of`: bir seçici; o kaydın ekleri,
+Aç ve KentOS'un ekle düğmeleri), `button` (`id`,
+`label`, `command`: bir `entrypoints.commands` kimliği, `table`,
 `primary`), `table` (`id`, `label`), `tree` (`id`, `label`, `group`: 1–3 sütun adı; düğmenin satırlarını bu sütunlara
 göre açılıp kapanan gruplara dizer, her grubun sayısını yazar; yaprağın adı satırın ilk diğer sütunu, `uid`'li yaprak
-tıklanınca nesneyi gösterir; düğmenin `table`'ı bir ağacı da gösterebilir), `card` (`id`, `label`, `title`, `tag`:
+tıklanınca nesneyi gösterir), `card` (`id`, `label`, `title`, `tag`:
 sütun adları; her satır bir kart: `title` sütunu başlığında (yoksa ilk sütun), `tag` sütunu yanında, diğer sütunlar
-altında adlarıyla; dar yerde sığmayan çok sütunlu tablonun yerine; `uid`'li kart tıklanınca nesneyi gösterir;
+altında adlarıyla; `uid`'li kart tıklanınca nesneyi gösterir;
 düğmenin `table`'ı bir kartı da gösterebilir), `stats` (`id`, `label`, `title`, `value`, `unit`, `note`: sütun adları;
 her satır bir gösterge kartı: `title` sütunu adı (yoksa ilk sütun), `value` sütunu sayısı (yoksa ikinci), `unit` birimi,
-`note` altındaki notu; kartlar yan yana dizilir; özet sayıları için), `chart` (`id`, `label`, `kind`: bar (varsayılan),
+`note` altındaki notu), `chart` (`id`, `label`, `kind`: bar (varsayılan),
 pie, histogram, line; `category`: gruplanacak ya da yatay eksendeki sütun, `value`: sayı sütunu, `aggregate`: count
 (varsayılan; `value` verilirse sum), sum, mean, min, max, median; çubuk ve pasta `category` ister, histogram `value`,
 çizgi ikisini; satırları düğmenin `table`'ından ya da `of` ile bu paneldeki bir tablonun, ağacın, kartın ya da
 göstergenin satırlarından; KentOS'un grafik motoru çizer), `image` (`id`, `label`, `alt`, `height`: 80–600 px; kodun
-verdiği PNG'yi oranını koruyarak gösterir, verilene dek `alt` yazar; ör. matplotlib ya da NumPy ile çizilen grafik). Metin, sayı, tarih, saat ve an alanları, çoklu seçim ve katman/alan/nesne seçicileri `required: true` alır: boş
-bırakılan komut çalışmadan adıyla söylenir, sözler alanın altında ("“Önek” boş bırakılamaz"), adının yanında yıldız.
-`select`, `multiSelect`, `layerPicker`, `fieldPicker`, `featurePicker`, `dateField`, `timeField`, `dateTimeField` (seçiciden seçilince ya da Enter'la) ve `checkbox` isteğe
-bağlı `onChange` alır: değer değişince o komut panelin değerleriyle çalışır, satırları panelin ilk tablosuna gelir
-(çalışırken gelen değişiklik bitince bir kez yeniden çalıştırılır). Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
+verdiği PNG'yi ya da JPEG'i oranını koruyarak gösterir, verilene dek `alt` yazar). Metin, sayı, tarih, saat ve an alanları, çoklu seçim ve seçiciler `required: true` alır: boş
+bırakılan komut çalışmadan adıyla söylenir, sözler alanın altında, adının yanında yıldız.
+Seçim, çoklu seçim, seçiciler, onay ve tarih/saat alanları (seçilince ya da Enter'la) isteğe
+bağlı `onChange` alır: değer değişince o komut panelin değerleriyle çalışır, satırları panelin ilk tablosuna gelir. Düğme komutu çalıştırır: panelin değerleri `ctx.params`'tadır (kimlikleriyle: metin, sayı ya
 da boşsa None, seçimin değeri, onay true/false); komutun `ctx.report(satırlar, message=…)` sonucu panelin tablosunu
 doldurur (boş liste de bir cevaptır: tablo boşalır; `ctx.message` tabloya dokunmaz) (`ctx.doc.entities(layer=…)` kayıt verir: `kayit.uid` kalıcı kimlik, öznitelikler `kayit.entity.attrs`'ta,
 kayıtta değil). Bir satırda `uid` (nesnenin kalıcı kimliği, `kayit.uid`) varsa satıra tıklamak nesneyi seçip yakınlaştırır;
@@ -129,7 +139,7 @@ okuduğu girdiler değiştikçe yeniden hesaplar, alan yazılmaz ve kod onu değ
 `defaultExpr` (alanlar) ilk değeri panel açılırken hesaplar (`"defaultExpr": "bugün()"`); ikisi `bugün()` ve `şimdi()`'yi
 okur, birbirini döngüyle okuyan hesaplar Kapı 1'de reddedilir. Katmanın sağ tık menüsünden (`contextMenus`, `target: "layer"`) çalışan komut tıklanan
 katmanın kimliğini `ctx.params["layer"]`'da alır. Panelden çalışan komut panelini çalışırken değiştirir (`ctx.panel`;
-panelden çalışmadıysa None; başka bir panelini `ctx.open_panel(id)` açıp verir): `set(id, value=…, options=…, enabled=…, visible=…, text=…, image=…)` (`image`: PNG baytları ya da PNG dosyasının yolu, en çok 4096 piksel; seçenekleri veriden doldurmak, düğmeyi
+panelden çalışmadıysa None; başka bir panelini `ctx.open_panel(id)` açıp verir): `set(id, value=…, options=…, enabled=…, visible=…, text=…, image=…)` (`image`: PNG ya da JPEG baytları ya da dosyasının yolu, en çok 4096 piksel; seçenekleri veriden doldurmak, düğmeyi
 kapatmak, alanı gizlemek), `rows(id, satırlar)`, `say(metin, kind)`, `focus(id)`, `close()`; yanlış kimlik ya da değer
 `kentos.HostError`, kullanıcının o sırada değiştirdiği alan onun kalır (False), kodun koyduğu değer `onChange`'i
 çalıştırmaz.
@@ -145,24 +155,29 @@ bütün adlar `icons` bölümünde), ya da paketteki 20×20 çizgi SVG'si (`asse
 `ctx.progress(n, toplam, metin)`, `ctx.check()` (Durdur'a basıldıysa `ext.Stopped` atar: uzun döngülerde çağırın),
 `ctx.is_stopped()`, `ctx.log(metin, level="info"|"warning"|"error")`, `ctx.report(satırlar, title=…, message=…)`,
 `ctx.message(metin)`, `ctx.cancelled()`; kullanıcıya sormak için `ctx.dialog(başlık, alanlar, ok=…, cancel=…)` (alanlar
-bir panelin girdileri: textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, checkbox,
-layerPicker, fieldPicker, text; düğme ve komut yok; Tamam değerleri kimlikleriyle, İptal None verir, çalışma yanıtı
-bekler) ve `ctx.confirm(metin)` (evet: True). Alanları ve seçenekleri elle JSON yerine `from kentos import ui_panel
+bir panelin girdileri ve metinleri; düğme, komut, tablo, nesne/nokta/şekil seçici yok; Tamam değerleri kimlikleriyle,
+İptal None verir, çalışma yanıtı bekler; `steps=True`: sekmeler sihirbazın adımları), `ctx.confirm(metin)` (evet: True) ve `ctx.run_tool(araç, **parametreler)` (KentOS'un aracı; komutta komutun
+hakkıyla, `ext.layer_input("yapi")`, `ext.new_layer("Ad")`; araçta elindeki nesnelerle, sonuç `ToolAnswer`). Alanları ve seçenekleri elle JSON yerine `from kentos import ui_panel
 as ui` ile yazın: bileşen başına bir işlev, gerekli anahtarlar sırayla, kalanı adıyla (`ui.text_field("onek", "Önek",
 value="Y-")`, `ui.number_field("ilk", "İlk numara", min=1, required=True)`, `ui.select("tur", "Tür", ["A", "B"])`,
-`ui.choice("-", "Seçmeyin")`, bütün panel `ui.panel(başlık, bileşenler)`); panelin şemasından üretilir, yanlış anahtar
+bütün panel `ui.panel(başlık, bileşenler)`); panelin şemasından üretilir, yanlış anahtar
 `TypeError`. `ctx.params` ve `ctx.settings` sözlüklerdir. Bu KentOS'un yapamadığı bir şey
 `ext.NotAvailable` atar: KentOS onu eklentinin hatası değil eksik bir yetenek olarak söyler.
 
 ## Kurallar
 
 - Her bildirilen kimliğin tek, doğru türde işaretli işlevi olur; `kentos kek verify` (ajanlarda `extension.verify`)
-  her adımda bunu ve paketin kurallarını denetler. İşlemler aracının tanımını (parametreler, çıktılar; yeni nesne veren
-  çıktının `sinkParameter`'ı bir `layer` parametresini adlandırır) kurulumdaki gibi tam denetleyen
-  `extension.verify`'dır; komut satırındaki `kek verify` yalnız biçimine bakar ve bunu söyler.
+  her adımda bunu, paketin kurallarını ve İşlemler aracının tanımını (parametreler, çıktılar; yeni nesne veren
+  çıktının `sinkParameter`'ı bir `layer` parametresini adlandırır) kurulumdaki gibi denetler. `kentos kek test`
+  örnekleri pencere açmadan çalıştırır.
 - Bir katkı yeteneğini ister ve nedenini yazar (`requestedCapabilities`): kullanıcı kurarken her birini görüp onaylar.
   Ağa çıkan kod `network` ister; işletim sistemi komutu ve `eval`/`exec` uyarıdır.
 - Kütüphane `uv add <paket>` ile eklenir (`pyproject.toml` ve `uv.lock` birlikte yazılır); KentOS ortamı kilitten kurar.
+  Çalışırken `pip` ile kurmak ve `sys.path`'e dokunmak reddedilir.
+- Çeviri `l10n/<dil>.json`: düz nesne, anahtar metnin yeri (`"entrypoints.commands.<kimlik>.title"`, panelde
+  `"ui.<panel>.body.<bileşen>.label"`), değer çevirisi; manifestin dili (`l10n.default`) dosyasızdır.
+- `kentos.ext`, `kentos.ui_panel` ve JSON biçimleri kararlıdır: yalnız SDK protokolü artınca kırılır. Eskiyen ad
+  `sdk_deprecated` uyarısıdır, `kentos kek upgrade` yenisini yazar; deneysel ad (`sdk_experimental`) yayımlanamaz.
 - Bir hata eklentinin adıyla söylenir ve iz kaydıyla eklentinin günlüğüne yazılır; kullanıcıya bozuk bir çizim kalmaz.
 - Kurma, yetki verme ve yayımlama kullanıcınındır: ajan bunları sessizce geçmez, kurulu paketi ya da izni uydurmaz.
 "#;
@@ -171,6 +186,40 @@ value="Y-")`, `ui.number_field("ilk", "İlk numara", min=1, required=True)`, `ui
 /// fields and its public methods and properties, each with its doc's first sentence. Generated from
 /// `python/kentos/ext.py` by this module's tests (`KENTOS_WRITE_SDK=1`), which fail when the two differ.
 pub const EXT_STUB: &str = include_str!("../sdk/kentos_ext.pyi");
+
+/// Where the stub's audit facts classes begin and end (the classes `facts.project` reads, `ProjectAuditFacts` to
+/// `DoorEscape`): the class after them is `SemanticFix`.
+const FACTS_FROM: &str = "\n\n\nclass ProjectAuditFacts";
+const FACTS_UNTIL: &str = "\n\n\n@dataclass\nclass SemanticFix";
+
+/// The stub's audit facts classes as a part of their own (`factsApi`, docs/adr/8078 §7): they grow with every fact
+/// KentOS measures, so the pack names them instead of carrying them, as it does the icons and the schemas.
+fn facts_classes() -> &'static str {
+    let Some(from) = EXT_STUB.find(FACTS_FROM) else {
+        return "";
+    };
+    let until = EXT_STUB[from..].find(FACTS_UNTIL).map_or(EXT_STUB.len(), |i| from + i);
+    &EXT_STUB[from + 3..until]
+}
+
+/// The stub as the pack gives it: without its first comment lines, the maintainers' note on how it is made (the
+/// module's name is the pack's `api.module`), and with its audit facts classes named instead of written (`factsApi`).
+fn agent_stub() -> String {
+    let mut rest = EXT_STUB;
+    while rest.starts_with("# ") {
+        rest = rest.split_once('\n').map_or("", |(_, r)| r);
+    }
+    let classes = facts_classes();
+    if classes.is_empty() {
+        return rest.to_owned();
+    }
+    rest.replacen(
+        classes,
+        "# facts.project's classes (ProjectAuditFacts, LayerFacts, ArchitectureFacts, RoomFacts, UnitFacts, ZoningFacts, \
+         DoorEscape …): extension.sdk part=factsApi; their JSON: part=factsSchema.",
+        1,
+    )
+}
 
 /// `kentos.ui.panel` 1's JSON Schema, made from the panel's types (`ui_panel::json_schema`) and committed beside the stub:
 /// a part of its own, as the icons are (the pack stays under what the desktop's Asistan gives a tool's result).
@@ -192,8 +241,12 @@ pub const TOOL_SCHEMA: &str = include_str!("../sdk/kentos-processing-tool.schema
 /// (`audit_facts::json_schema`) and committed beside the stub: a part of its own (docs/adr/8057 §36).
 pub const FACTS_SCHEMA: &str = include_str!("../sdk/kentos-audit-facts.schema.json");
 
+/// An audit rule's examples file (`audits/<id>.examples.json`, `kentos.auditExamples` 1): its JSON Schema, made from
+/// its types (`audit_examples::json_schema`) and committed beside the stub: a part of its own (docs/adr/8057 §75).
+pub const AUDIT_EXAMPLES_SCHEMA: &str = include_str!("../sdk/kentos-audit-examples.schema.json");
+
 /// The pack's parts an agent may ask for alone (`extension.sdk`'s `part`, `kentos kek sdk --part`).
-pub const PARTS: [&str; 16] = [
+pub const PARTS: [&str; 20] = [
     "guide",
     "api",
     "capabilities",
@@ -206,10 +259,14 @@ pub const PARTS: [&str; 16] = [
     "icons",
     "panelSchema",
     "panelBuilders",
+    "panelBehaviour",
     "manifestSchema",
     "layerSchema",
     "toolSchema",
     "factsSchema",
+    "factsApi",
+    "auditExamplesSchema",
+    "compatibility",
 ];
 
 /// One part of the pack; none for a name the pack has not. `icons` is the whole list, which the pack only counts: its
@@ -238,13 +295,132 @@ pub fn sdk_part(part: &str) -> Option<Value> {
     if part == "factsSchema" {
         return serde_json::from_str(FACTS_SCHEMA).ok();
     }
+    if part == "factsApi" {
+        return Some(Value::String(facts_classes().to_owned()));
+    }
+    if part == "auditExamplesSchema" {
+        return serde_json::from_str(AUDIT_EXAMPLES_SCHEMA).ok();
+    }
     if part == "example" {
         return serde_json::to_value(example()).ok();
+    }
+    if part == "verifyCodes" {
+        return Some(verify_codes());
+    }
+    if part == "compatibility" {
+        return Some(compatibility());
+    }
+    // Each panel component's behaviour (docs/adr/8057 §71): the table the panel session refuses by.
+    if part == "panelBehaviour" {
+        return serde_json::to_value(crate::ui_panel::behaviour::TABLE).ok();
     }
     if !PARTS.contains(&part) {
         return None;
     }
     sdk_pack().get_mut(part).map(Value::take)
+}
+
+/// What a package can be written for, as one matrix (plan/eklenti.md ADIM 21 › API ailesi, ECO-API-11: "uyumluluk/
+/// ABI/eskime ve çalışma zamanı matrisi keşfedilebilir"; docs/adr/8057 §113): the extension protocol this KentOS speaks
+/// and its stability rule, the Python versions it runs and installs, the computers it runs on with the markers a lock
+/// names them by (the wheels' ABI), the runtimes and what each runs, and the SDK's deprecated and experimental names.
+/// Read from the constants KentOS itself checks with, so it cannot say otherwise than the gates do.
+fn compatibility() -> Value {
+    use crate::compat::{Os, SDK_PROTOCOL};
+    use crate::python_builds::{KENTOS_PYTHON, PLATFORMS, PYTHON_MINORS};
+    let platforms: Vec<Value> = PLATFORMS
+        .iter()
+        .map(|(os, machine)| {
+            json!({
+                "os": os.id(),
+                "machine": machine.id(),
+                "marker": format!(
+                    "sys_platform == '{}' and platform_machine == '{}'",
+                    os.sys_platform(),
+                    machine.platform_machine(*os)
+                ),
+            })
+        })
+        .collect();
+    let deprecated: Vec<Value> = crate::sdk_surface::DEPRECATED
+        .iter()
+        .map(|d| json!({ "name": d.name, "on": d.on, "replacement": d.replacement, "since": d.since, "note": d.note }))
+        .collect();
+    let experimental: Vec<Value> = crate::sdk_surface::EXPERIMENTAL
+        .iter()
+        .map(|e| json!({ "name": e.name, "on": e.on, "note": e.note }))
+        .collect();
+    json!({
+        "protocol": {
+            "current": SDK_PROTOCOL,
+            "manifest": "compatibility.sdkProtocol {min, max} iki ucu dahil; compatibility.kentos {min, \
+                         maxExclusive}; compatibility.operatingSystems verilmezse her sistem. Uymayan paket kurulmaz, \
+                         nedeni söylenir.",
+            "stability": "Kararlı yüzey yalnız protokol artınca kırılır; eskiyen ad en az bir KentOS sürümü kalır ve \
+                          uyarır (sdk_deprecated); deneysel ad atölyede çalışır, katalogda yayımlanamaz \
+                          (sdk_experimental). Düz yeniden adlandırmayı kentos kek upgrade yazar (ADR 8061).",
+        },
+        "python": {
+            "range": format!(">=3.{},<3.{}", PYTHON_MINORS.start(), PYTHON_MINORS.end() + 1),
+            "installs": format!("{}.{}", KENTOS_PYTHON.0, KENTOS_PYTHON.1),
+            "note": "pyproject'in requires-python'u bu aralıkta kalmalı; kilit her sistem için tekerlekle çözülür \
+                     ([tool.uv] required-environments, aşağıdaki işaretler). Tekerleği olmayan paket o bilgisayarda \
+                     kaynağından derlenir ya da kurulamaz (python_source_build, python_no_wheel).",
+        },
+        "systems": Os::ALL
+            .iter()
+            .map(|os| json!({ "id": os.id(), "sysPlatform": os.sys_platform() }))
+            .collect::<Vec<_>>(),
+        "platforms": platforms,
+        "runtimes": [
+            { "id": "desktop", "runs": "Her katkı: komut, panel, form, harita aracı, veri kaynağı, İşlemler aracı, \
+                                         denetim kuralı, ifade işlevi." },
+            { "id": "headless", "runs": "İşlemler araçları, tanımı capabilities.runtimes'ta headless-python \
+                                          bildirdiyse (MCP, Python, kentos kek test); arayüz katkıları yok." },
+            { "id": "cloud", "runs": "Bildirilebilir; bulutta eklenti kodu henüz çalışmaz (ADIM 22A)." }
+        ],
+        "deprecated": deprecated,
+        "experimental": experimental,
+    })
+}
+
+/// What each code `verify` says means, a part of its own since 16 November 2026 (1,3 KB): the pack was at the size the
+/// desktop's Asistan gives a tool's result, and every finding comes with its own message and place anyway.
+fn verify_codes() -> Value {
+    json!({
+        "python_function_missing": "İşleyicinin işlevi modülde yok (en yakını önerilir).",
+        "python_decorator_missing": "İşlev işaretsiz: üstüne türünün işaretini yazın.",
+        "python_decorator_kind": "İşaretin türü manifestteki giriş noktasıyla uyuşmuyor.",
+        "python_decorator_id": "İşaretin kimliği manifestteki yerel kimlikle uyuşmuyor.",
+        "python_decorator_twice": "Bir işlevde birden çok @ext işareti.",
+        "python_id_twice": "Aynı kimlik iki işlevde.",
+        "python_network_undeclared": "network istemeden ağ kitaplığı.",
+        "python_runtime_install": "Çalışırken pip ile kurma.",
+        "python_sys_path": "sys.path değiştirme.",
+        "python_os_command": "Uyarı: işletim sistemi komutu.",
+        "python_eval": "Uyarı: eval/exec.",
+        "python_name_resembles": "Uyarı: kilitteki paketin adı tanınmış bir paketinkine çok benziyor (yazım hatası \
+                                  taklidi ya da uydurulmuş ad).",
+        "python_lock_no_cooling": "Uyarı: ajanın yazdığı eklentinin kilidinde soğuma süresi yok ([tool.uv] \
+                                   exclude-newer = \"7 days\").",
+        "python_source_build": "Uyarı: bir bilgisayar için hazır kurulum dosyası (wheel) yok, paket orada kaynağından \
+                                derlenir; genel katalog inceleyicinin gerekçesini ister.",
+        "python_no_wheel": "Uyarı: bir bilgisayar için ne wheel ne kaynak var; paket orada kurulamaz.",
+        "sdk_deprecated": "Uyarı: eskiyen SDK adı; yerini söyler, düz yeniden adlandırmayı kentos kek upgrade yazar.",
+        "sdk_experimental": "Uyarı: deneysel SDK adı; atölyede ve yerel kurulumda çalışır, katalogda yayımlanamaz.",
+        "handler_missing": "İşleyicinin modülü pakette yok (paketin kendi denetimi).",
+        "audit_examples": "Kuralın örnek dosyası (kentos.auditExamples): biçim, nesneler, beklenen; yeriyle.",
+        "manifest_icon": "İkon yerleşik bir ad (küçük harf, tire) ya da paketteki bir .svg yolu değil.",
+        "manifest_icon_unknown": "Uyarı: bu KentOS'ta böyle bir yerleşik ikon yok; en yakınları önerilir.",
+        "layer_schema": "schema.json'da bir kural bozuk; işaretçi yeri, ileti kuralı söyler.",
+        "ui_panel": "Panel tanımında bir kural bozuk; işaretçi yeri söyler.",
+        "layer_schema_outside": "Uyarı: ilişki şemanın kurmadığı bir katmana bağlı; projede olmalı.",
+        "secret_in_text": "Uyarı: metinde API anahtarı, jeton ya da özel anahtar biçiminde bir değer; katalog yayımlamaz. \
+                           Değeri çıkarın, kullanıcının ayarından okuyun.",
+        "l10n_file": "Çeviri dosyası okunmuyor: düz bir nesne, her metnin yeri ve çevirisi (\"name\": \"…\", \
+                      \"entrypoints.commands.<kimlik>.title\": \"…\", panelde \"ui.<panel>.body.<bileşen>.label\").",
+        "l10n_stale": "Uyarı: çevirinin yerinde metin yok (yeri değişmiş): yeni yeriyle yazın."
+    })
 }
 
 /// The working example: a blueprint with every contribution, a package that verifies without a finding. A part of its
@@ -265,9 +441,9 @@ fn example() -> std::collections::BTreeMap<String, String> {
 pub fn sdk_pack() -> Value {
     let example = json!({
         "files": example().keys().collect::<Vec<_>>(),
-        "how": "Her katkı türünün küçük, çalışan örneği (manifest, Python, panel, araç tanımı, form, katman şeması), \
-                doğrulamadan sorunsuz geçen bir paket: extension.sdk part=example ya da kentos kek sdk --part example. \
-                İsteğe göre iskelet için extension.blueprint.",
+        "how": "Her katkı türünün çalışan örneği (manifest, Python, panel, araç tanımı, form, katman şeması), \
+                doğrulamadan geçen bir paket: extension.sdk part=example ya da kentos kek sdk --part example. \
+                İskelet için extension.blueprint.",
     });
     let modules: Vec<&str> = [Module::Cbs, Module::Harita, Module::Mimari, Module::Yol]
         .iter()
@@ -277,7 +453,7 @@ pub fn sdk_pack() -> Value {
         "format": "kentos.ai-kek-pack",
         "version": 1,
         "guide": GUIDE,
-        "api": { "module": "kentos.ext", "stub": EXT_STUB },
+        "api": { "module": "kentos.ext", "stub": agent_stub() },
         "capabilities": Capability::ALL.iter().map(|c| json!({
             "id": c.id(),
             "title": c.title(),
@@ -290,7 +466,7 @@ pub fn sdk_pack() -> Value {
             { "kind": "processing", "decorator": "@ext.processing", "manifest": "entrypoints.processing",
               "capabilities": ["processing.provider"], "descriptor": "tools/<kimlik>.tool.json" },
             { "kind": "audit", "decorator": "@ext.audit", "manifest": "entrypoints.audits",
-              "capabilities": ["audit.provider"] },
+              "capabilities": ["audit.provider"], "examples": "audits/<kimlik>.examples.json" },
             { "kind": "expression", "decorator": "@ext.expr", "manifest": "entrypoints.expressions",
               "capabilities": ["expression.provider"] },
             { "kind": "mapTool", "decorator": "@ext.map_tool", "manifest": "entrypoints.mapTools",
@@ -302,7 +478,7 @@ pub fn sdk_pack() -> Value {
               "capabilities": ["document.write (kuran komut için)"],
               "note": "Katmanlar, alanları, değer listeleri, ilişkiler; bir komut ctx.apply_declarative_schema(\"schema.json\") ile kurar." },
             { "kind": "ribbonTab", "manifest": "contributions.ribbonTabs", "capabilities": ["ui.ribbonTab"],
-              "note": "Yalnız dikey eklenti (kind: vertical); öğeleri command, processing, audit, mapTool gösterir." },
+              "note": "Yalnız dikey eklenti (kind: vertical); öğe her katkıyı (command, panel, form…) açar." },
             { "kind": "contextMenu", "manifest": "contributions.contextMenus", "capabilities": ["ui.contextMenu"] },
             { "kind": "dataSource", "manifest": "contributions.dataSources", "capabilities": ["dataSource"],
               "note": "Python'suz; ağdan okuyorsa network da gerekir." }
@@ -313,27 +489,20 @@ pub fn sdk_pack() -> Value {
             "parameterTypes": ["features", "number", "string", "boolean", "enum", "field", "point", "layer"],
             "outputTypes": ["features", "table", "number", "string"],
             "fields": "id, version, label, description, modelDescription (yapay zekâ için, en çok 2000 karakter), help, \
-                       keywords, parameters, outputs, feedback, capabilities.runtimes, timeoutSeconds",
+                       keywords, parameters, outputs, feedback, capabilities.runtimes (desktop-python; MCP/Python için \
+                       headless-python), timeoutSeconds",
             "notes": "features parametresi default: {scope: \"layer\", layerId: \"<katman kimliği>\"} ile eklentinin kendi \
                       katmanında açılır (verilmezse etkin katmanla); yeni nesne veren features çıktısı sinkParameter ile \
                       bir layer parametresini adlandırır (o parametre default: {newName: \"…\"} ile yeni katman önerir)."
         },
         "verifyCodes": {
-            "python_function_missing": "Manifestin işleyicisindeki işlev modülde yok (en yakını önerilir).",
-            "python_decorator_missing": "İşlev işaretsiz: üstüne türünün işaretini yazın.",
-            "python_decorator_kind": "İşaretin türü manifestteki giriş noktasıyla uyuşmuyor.",
-            "python_decorator_id": "İşaretin kimliği manifestteki yerel kimlikle uyuşmuyor.",
-            "python_decorator_twice": "Bir işlevde birden çok @ext işareti.",
-            "python_id_twice": "Aynı kimlik iki işlevde.",
-            "python_network_undeclared": "Uyarı: network yeteneği istemeden ağ kitaplığı.",
-            "python_os_command": "Uyarı: işletim sistemi komutu.",
-            "python_eval": "Uyarı: eval/exec.",
-            "handler_missing": "İşleyicinin modülü pakette yok (paketin kendi denetimi).",
-            "manifest_icon": "İkon yerleşik bir ad (küçük harf, tire) ya da paketteki bir .svg yolu değil.",
-            "manifest_icon_unknown": "Uyarı: bu KentOS'ta böyle bir yerleşik ikon yok; en yakınları önerilir.",
-            "layer_schema": "schema.json'da bir kural bozuk; işaretçi yeri, ileti kuralı söyler.",
-            "ui_panel": "Panel tanımında bir kural bozuk (bileşen türü, kimlik, düğmenin komutu …); işaretçi yeri söyler.",
-            "layer_schema_outside": "Uyarı: ilişki şemanın kurmadığı bir katmanı adlandırıyor; projede bulunmalı."
+            "how": "Doğrulama kodlarının anlamı (ret; Uyarı: diyenler uyarı): extension.sdk part=verifyCodes ya da \
+                    kentos kek sdk --part verifyCodes. Her bulgu iletisi ve yeriyle gelir.",
+        },
+        "panelBehaviour": {
+            "how": "Her panel bileşeninin değeri ve örneği, kodu başlatan olayı (onChange, command), \
+                    ctx.panel.set/rows/focus'un aldıkları, klavyesi: extension.sdk part=panelBehaviour ya da kentos \
+                    kek sdk --part panelBehaviour.",
         },
         "workflow": [
             "İsteği ve parametrelerini netleştirin; kurulu eklentileri ve yetenekleri kentos://extensions/installed'dan okuyun.",
@@ -350,10 +519,10 @@ pub fn sdk_pack() -> Value {
             "Kullanıcı atölyeden kurduktan sonra: değişiklikleri extension.workshop.reload uygulama kapanmadan yükler \
              (aynı sürüm, kullanıcının verdiği yeteneklerle; yeni yetenek isteyen yeniden review'a gider); \
              extension.workshop.preview kullanıcının gördüğünü (sekme, paneller, araçlar, kapalı düğmenin nedeni) \
-             yazıyla verir; extension.workshop.trial denetim kurallarını ve İşlemler araçlarını verdiğiniz örnek \
-             nesnelerden kurulan sentetik çizimde çalıştırır (bulgular nesnenin sırasıyla, aracın yazdıkları, hata ve \
-             iz kaydı; kullanıcının çizimine dokunmaz). Masaüstünün Asistan'ında ve masaüstüne bağlı ajanda (MCP'de \
-             desktop.attach)."
+             yazıyla verir; extension.workshop.trial kuralları, İşlemler araçlarını, komutları ve harita araçlarını \
+             verdiğiniz örnek nesnelerden kurulan sentetik çizimde çalıştırır (bulgular nesnenin sırasıyla, \
+             yazılanlar, pencere cevapları dialogs ile, hata ve iz kaydı; kullanıcının çizimine dokunmaz). \
+             Masaüstünün Asistan'ında ve masaüstüne bağlı ajanda (MCP'de desktop.attach)."
         ],
         "example": example,
         "icons": {
@@ -363,7 +532,7 @@ pub fn sdk_pack() -> Value {
         },
         "panelSchema": {
             "how": "kentos.ui.panel 1'in JSON Schema'sı (bileşenler, anahtarları ve türleri): extension.sdk \
-                    part=panelSchema ya da kentos kek sdk --part panelSchema. Kesin denetim yine extension.verify'da \
+                    part=panelSchema ya da kentos kek sdk --part panelSchema. Kesin denetim extension.verify'da \
                     (düğmenin komutu, seçicinin katman seçicisi, kimliklerin tekliği şemada söylenemez).",
         },
         "panelBuilders": {
@@ -392,6 +561,19 @@ pub fn sdk_pack() -> Value {
                     boşluklar; mimari çizimde katlar, mahaller, PAİY alanları ve kaçış yolları: extension.sdk \
                     part=factsSchema ya da kentos kek sdk --part factsSchema.",
         },
+        "factsApi": {
+            "how": "Denetim kuralının okuduğu olguların Python sınıfları (facts.project: ProjectAuditFacts, LayerFacts, \
+                    ArchitectureFacts, RoomFacts, UnitFacts …; alanları ve belgeleri): extension.sdk part=factsApi ya da \
+                    kentos kek sdk --part factsApi.",
+        },
+        "auditExamplesSchema": {
+            "how": "Kuralın örnekleri (kentos.auditExamples 1): nesneler (features) ya da mimari olgular (architecture) \
+                    ve beklenen bulgular (count; has: severity, message, feature, fix). kentos kek test çalıştırır.",
+        },
+        "compatibility": {
+            "how": "Protokol, Python, bilgisayarlar, çalışma zamanları, eskiyen adlar: extension.sdk \
+                    part=compatibility.",
+        },
     })
 }
 
@@ -400,8 +582,65 @@ mod tests {
     use super::*;
 
     /// A docstring's first sentence, on one line, at most 400 characters.
+    /// `text` without what points into KentOS's own design records (an ADR's section, the plan's step): the stub is
+    /// an extension author's, who reads the API, not the records. A parenthesis holding only such a pointer goes with
+    /// the space before it; one holding more keeps the rest.
+    fn without_records(text: &str) -> String {
+        let mut out = text.to_owned();
+        for marker in ["docs/adr/", "plan/eklenti.md"] {
+            let mut from = 0;
+            while let Some(found) = out[from..].find(marker) {
+                let at = from + found;
+                let end = at + out[at..].find([')', ';']).unwrap_or(out.len() - at);
+                if out[..at].ends_with('(') && out[end..].starts_with(')') {
+                    let open = at - 1;
+                    let start = if out[..open].ends_with(' ') {
+                        open - 1
+                    } else {
+                        open
+                    };
+                    out.replace_range(start..=end, "");
+                    from = start;
+                } else if out[..at].ends_with("; ") {
+                    out.replace_range(at - 2..end, "");
+                    from = at - 2;
+                } else if out[..at].ends_with('(') && out[end..].starts_with("; ") {
+                    out.replace_range(at..end + 2, "");
+                    from = at;
+                } else {
+                    from = at + marker.len();
+                }
+            }
+        }
+        out
+    }
+
+    /// The stub keeps the API's words and drops the pointers into KentOS's design records, alone or beside other words.
+    #[test]
+    fn design_record_pointers_leave_the_stub() {
+        assert_eq!(
+            without_records("Asks the user (docs/adr/8057 §29): body"),
+            "Asks the user: body"
+        );
+        assert_eq!(
+            without_records(
+                "facts (``kentos.auditFacts`` 1, ``factsSchema``; docs/adr/8057 §36): each"
+            ),
+            "facts (``kentos.auditFacts`` 1, ``factsSchema``): each"
+        );
+        assert_eq!(
+            without_records("a map tool (plan/eklenti.md ADIM 19), as GeoJSON"),
+            "a map tool, as GeoJSON"
+        );
+        assert_eq!(
+            without_records("(docs/adr/8057 §17; its rows)"),
+            "(its rows)"
+        );
+        assert_eq!(without_records("no pointer here"), "no pointer here");
+    }
+
     fn first_sentence(doc: &str) -> String {
-        let text = doc.split_whitespace().collect::<Vec<_>>().join(" ");
+        let text = without_records(&doc.split_whitespace().collect::<Vec<_>>().join(" "));
         let end = text
             .match_indices(". ")
             .map(|(i, _)| i + 1)
@@ -874,7 +1113,25 @@ mod tests {
             odd["body"][0]["type"] = json!("saat");
             assert!(!errors(&schema, &odd).is_empty(), "{}", path.display());
         }
-        assert_eq!(read, 3, "the Vitrin's three panels");
+        assert_eq!(read, 6, "the Vitrin's six panels");
+    }
+
+    /// The audit facts classes are a part of their own (docs/adr/8078 §7): found in the stub, named in the pack's, and
+    /// between the two every class of the stub is there once.
+    #[test]
+    fn the_facts_classes_are_a_part_of_their_own_and_nothing_is_lost() {
+        let classes = facts_classes();
+        assert!(classes.starts_with("class ProjectAuditFacts"), "{}", &classes[..classes.len().min(80)]);
+        assert!(classes.contains("class ArchitectureFacts") && classes.contains("class DoorEscape"));
+        assert!(!classes.contains("class SemanticFix") && !classes.contains("class AuditFinding"));
+        let agent = agent_stub();
+        assert!(agent.contains("part=factsApi") && !agent.contains("class ProjectAuditFacts"));
+        assert!(agent.contains("class GisAuditFacts") && agent.contains("class AuditFinding"));
+        for line in EXT_STUB.lines().filter(|l| l.starts_with("class ")) {
+            let there = usize::from(agent.lines().any(|l| l == line)) + usize::from(classes.lines().any(|l| l == line));
+            assert_eq!(there, 1, "{line}");
+        }
+        assert_eq!(sdk_part("factsApi"), Some(Value::String(classes.to_owned())));
     }
 
     #[test]
@@ -929,6 +1186,14 @@ mod tests {
             "{:#?}",
             v.problems
         );
+        // The panel behaviour part is the table the panel session refuses by (docs/adr/8057 §71).
+        let behaviour = sdk_part("panelBehaviour").expect("the part");
+        let rows = behaviour.as_array().expect("a list");
+        assert_eq!(rows.len(), crate::ui_panel::component_types().count());
+        assert_eq!(rows[3]["type"], "textField");
+        assert_eq!(rows[3]["keys"], "type");
+        assert_eq!(rows[3]["sets"], json!(["value", "enabled"]));
+        assert_eq!(rows[3]["namedBy"], "label");
         // Its parts are the ones it says, each there.
         let keys: Vec<&str> = pack
             .as_object()
@@ -977,5 +1242,58 @@ mod tests {
         ] {
             assert!(GUIDE.contains(decorator), "{decorator}");
         }
+    }
+
+    /// The compatibility matrix (docs/adr/8057 §113, ECO-API-11) says what the gates check with, and what KentOS's
+    /// Python side holds (`crates/native/python-env/compat.json`): its range, the Python it installs, its computers.
+    #[test]
+    fn the_compatibility_matrix_says_what_kentos_checks() {
+        let matrix = sdk_part("compatibility").expect("the part");
+        assert_eq!(matrix["protocol"]["current"], crate::SDK_PROTOCOL);
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../native/python-env/compat.json");
+        let compat: Value =
+            serde_json::from_slice(&std::fs::read(path).expect("compat.json")).expect("reads");
+        assert_eq!(matrix["python"]["range"], compat["python"]["range"]);
+        assert_eq!(matrix["python"]["installs"], compat["python"]["install"]);
+        let platforms: Vec<(String, String)> = matrix["platforms"]
+            .as_array()
+            .expect("platforms")
+            .iter()
+            .map(|p| {
+                (
+                    p["os"].as_str().unwrap().to_owned(),
+                    p["machine"].as_str().unwrap().to_owned(),
+                )
+            })
+            .collect();
+        let python_side: Vec<(String, String)> = compat["platforms"]
+            .as_array()
+            .expect("platforms")
+            .iter()
+            .map(|p| {
+                (
+                    p["os"].as_str().unwrap().to_owned(),
+                    p["arch"].as_str().unwrap().to_owned(),
+                )
+            })
+            .collect();
+        assert_eq!(platforms, python_side);
+        assert!(
+            matrix["platforms"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|p| p["marker"] == "sys_platform == 'win32' and platform_machine == 'AMD64'")
+        );
+        let runtimes: Vec<&str> = matrix["runtimes"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|r| r["id"].as_str())
+            .collect();
+        assert_eq!(runtimes, ["desktop", "headless", "cloud"]);
+        assert_eq!(matrix["deprecated"], json!([]));
+        assert!(PARTS.contains(&"compatibility"));
     }
 }

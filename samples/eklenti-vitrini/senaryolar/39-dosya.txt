@@ -1,0 +1,24 @@
+# Dosya seçici: katmanın sağ tık menüsündeki "CSV'den nokta ekle" KentOS'un penceresiyle dosyayı sorar (filePicker:
+# yolu yazılır ya da Seç… ile seçilir; yalnız CSV). Boşken Ekle zorunluyu söyler; örnek CSV'nin yolu yazılınca dört
+# nokta Taslak katmanına öznitelikleriyle eklenir (tek geri alma adımı). Eklenti files.userSelected ister. (Önce 01.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 1192 283 right # Taslak: sağ tık
+wait 1000
+click 1030 591  # CSV'den nokta ekle
+wait 3500
+shot 39-pencere
+click 936 519   # Ekle, dosya yokken: zorunlu
+wait 800
+shot 39-zorunlu
+click 760 462   # dosyanın yolu (hata satırı pencereyi büyüttü; yazınca hata kalkar, pencere eski yerine döner)
+type samples/eklenti-vitrini/ornek-noktalar.csv
+wait 400
+shot 39-yazildi
+click 936 519   # Ekle
+wait 4000
+shot 39-eklendi

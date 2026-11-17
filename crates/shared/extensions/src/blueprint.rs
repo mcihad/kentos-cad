@@ -1,7 +1,8 @@
 //! `extension.blueprint` (plan/eklenti.md ADIM 21; docs/adr/8057 §19): a new extension's working folder, valid by
 //! construction (`verify` passes it without a problem or a warning), with one small example of each contribution
-//! asked for: a command that reads the layers, an İşlemler tool with its descriptor, an audit rule with a fix, an
-//! expression function and a map tool. An agent or a person grows it from there.
+//! asked for: a command that reads the layers, an İşlemler tool with its descriptor and an example, an audit rule with
+//! a fix and its examples (`kentos kek test` runs both, §48, §75), an expression function, a map tool, a layer schema,
+//! a panel and a portable form bound to the schema's layer (§112). An agent or a person grows it from there.
 //!
 //! KentOS gives the files; the caller writes them (an agent's read-only tool writes nothing). The Python project has
 //! no dependency and its lock is uv's own for that (uv 0.11): adding a library is `uv add` in the folder, which writes
@@ -41,10 +42,14 @@ pub enum Contribution {
     Schema,
     /// A panel (`ui/nesne-ara.panel.json`, docs/adr/8057 §24) whose button runs a search command.
     Panel,
+    /// A portable form (`forms/alan.kform`, docs/adr/8057 §112) the schema's layer opens its objects with: the layer's
+    /// fields, its list of values from the schema's domain. Asked alone, it brings the schema.
+    Form,
 }
 
 impl Contribution {
-    /// Its name in an agent's call (`command`, `processing`, `audit`, `expression`, `mapTool`, `schema`, `panel`).
+    /// Its name in an agent's call (`command`, `processing`, `audit`, `expression`, `mapTool`, `schema`, `panel`,
+    /// `form`).
     pub fn parse(name: &str) -> Option<Contribution> {
         match name {
             "command" => Some(Contribution::Command),
@@ -54,11 +59,12 @@ impl Contribution {
             "mapTool" => Some(Contribution::MapTool),
             "schema" => Some(Contribution::Schema),
             "panel" => Some(Contribution::Panel),
+            "form" => Some(Contribution::Form),
             _ => None,
         }
     }
 
-    pub const ALL: [Contribution; 7] = [
+    pub const ALL: [Contribution; 8] = [
         Contribution::Command,
         Contribution::Processing,
         Contribution::Audit,
@@ -66,6 +72,7 @@ impl Contribution {
         Contribution::MapTool,
         Contribution::Schema,
         Contribution::Panel,
+        Contribution::Form,
     ];
 }
 
@@ -86,11 +93,15 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
         return Err("Özet boş olamaz ve en çok 200 karakterdir (tek cümle).".to_owned());
     }
     let mut asked = ask.contributions.clone();
+    // A form opens the schema's layer's objects: it brings the schema.
+    if asked.contains(&Contribution::Form) {
+        asked.push(Contribution::Schema);
+    }
     asked.sort();
     asked.dedup();
     if asked.is_empty() {
         return Err(
-            "En az bir katkı seçin: command, processing, audit, expression, mapTool.".to_owned(),
+            "En az bir katkı seçin: command, processing, audit, expression, mapTool, schema, panel, form.".to_owned(),
         );
     }
     let last = ask.id.rsplit('.').next().unwrap_or("eklenti");
@@ -152,7 +163,20 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
                 { "name": "toplam", "label": "Toplam alan (m²)", "type": "number" }
             ],
             "feedback": { "progress": true, "cancel": true },
-            "capabilities": { "runtimes": ["desktop-python"] }
+            // On the desktop and in the headless hosts (MCP, Python) alike (docs/adr/8057 §70).
+            "capabilities": { "runtimes": ["desktop-python", "headless-python"] },
+            // What it gives on objects of its own (docs/adr/8057 §48): Örnekleri çalıştır and kentos kek test check it.
+            "examples": [{
+                "title": "İki kare alan",
+                "features": [
+                    { "layer": "alan", "geometry": { "type": "Polygon",
+                      "coordinates": [[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0], [0.0, 0.0]]] } },
+                    { "layer": "alan", "geometry": { "type": "Polygon",
+                      "coordinates": [[[20.0, 0.0], [40.0, 0.0], [40.0, 20.0], [20.0, 20.0], [20.0, 0.0]]] } }
+                ],
+                "params": { "alanlar": { "scope": "layer", "layerId": "alan" } },
+                "expect": { "outputs": { "toplam": 500.0 }, "summary": "2 alan" }
+            }]
         });
         let mut descriptor = descriptor;
         // With a schema, the tool opens on the extension's own layer (not the active one).
@@ -165,7 +189,24 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
     if has(Contribution::Audit) {
         entrypoints.insert(
             "audits".into(),
-            json!([{ "id": "adsiz", "title": "Adsız nesneler", "domain": module, "handler": format!("{package}.logic:adsiz") }]),
+            json!([{ "id": "adsiz", "title": "Adsız nesneler", "domain": module, "handler": format!("{package}.logic:adsiz"),
+                     "examples": "audits/adsiz.examples.json" }]),
+        );
+        // Its examples (docs/adr/8057 §75): what it is given and the findings it must give; kentos kek test runs them.
+        files.insert(
+            "audits/adsiz.examples.json".to_owned(),
+            pretty(&json!({
+                "format": "kentos.auditExamples", "schemaVersion": 1,
+                "examples": [{
+                    "title": "Adsız nesne bulunur, düzeltmesi ad yazar",
+                    "features": [
+                        { "layer": "nesne", "geometry": { "type": "Point", "coordinates": [0.0, 0.0] },
+                          "attrs": { "ad": "Çeşme" } },
+                        { "layer": "nesne", "geometry": { "type": "Point", "coordinates": [10.0, 0.0] } }
+                    ],
+                    "expect": { "count": 1, "has": [{ "severity": "info", "feature": 1, "fix": "cad.entities.set" }] }
+                }]
+            })),
         );
         capabilities.push(json!({ "id": "audit.provider", "scope": "plugin-owned",
                                   "reason": "Adı olmayan nesneleri bulur ve ad yazan bir düzeltme önerir." }));
@@ -175,7 +216,11 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
     if has(Contribution::Expression) {
         entrypoints.insert(
             "expressions".into(),
-            json!([{ "id": "buyuk-harf", "title": "Türkçe büyük harf", "handler": format!("{package}.logic:buyuk_harf") }]),
+            json!([{ "id": "buyuk-harf", "title": "Türkçe büyük harf", "handler": format!("{package}.logic:buyuk_harf"),
+                     // A call and its value (docs/adr/8057 §78): kentos kek test runs them.
+                     "examples": [{ "args": ["istanbul"], "expect": "İSTANBUL" },
+                                  { "args": ["ılık"], "expect": "ILIK" },
+                                  { "args": [null], "expect": null }] }]),
         );
         capabilities.push(
             json!({ "id": "expression.provider", "scope": "plugin-owned",
@@ -209,6 +254,16 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
                 ]
             }]
         });
+        let mut layer_schema = layer_schema;
+        if has(Contribution::Form) {
+            // The layer opens its objects with the form; installing binds it to the layer by its name.
+            layer_schema["layers"][0]["form"] = json!(FORM_FILE);
+            entrypoints.insert(
+                "forms".into(),
+                json!([{ "id": "alan", "definition": FORM_FILE }]),
+            );
+            files.insert(FORM_FILE.to_owned(), pretty(&form_package(name, &package)));
+        }
         files.insert("schema.json".to_owned(), pretty(&layer_schema));
         python.push(SCHEMA.to_owned());
     }
@@ -294,6 +349,13 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
             json!([{ "id": last, "label": name, "module": module, "panels": [{ "label": name, "items": items }] }]),
         );
     }
+    // Its tool's and its expression function's code runs in MCP and the Python library too (docs/adr/8057 §70, §80);
+    // a command, a map tool, a panel need the desktop.
+    let runtimes = if has(Contribution::Processing) || has(Contribution::Expression) {
+        json!(["desktop", "headless"])
+    } else {
+        json!(["desktop"])
+    };
     let mut manifest = json!({
         "format": "kentos.extension",
         "schemaVersion": 1,
@@ -308,7 +370,7 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
         "changelogFile": "CHANGELOG.md",
         "kind": if ask.vertical { "vertical" } else { "utility" },
         "modules": [module],
-        "runtimes": ["desktop"],
+        "runtimes": runtimes,
         "compatibility": {
             "sdkProtocol": { "min": 1, "max": 1 },
             "kentos": { "min": "0.1.0" },
@@ -327,6 +389,12 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
     files.insert("manifest.json".to_owned(), pretty(&manifest));
     files.insert(format!("src/{package}/__init__.py"), String::new());
     files.insert(format!("src/{package}/logic.py"), python.concat());
+    // Its own tests (docs/adr/8057 §87): `kentos kek test`, Örnekleri çalıştır and an agent's trial run them with
+    // Python's unittest in its environment.
+    files.insert(
+        "tests/test_logic.py".to_owned(),
+        tests(&package, has(Contribution::Expression)),
+    );
     files.insert("pyproject.toml".to_owned(), pyproject(last, name));
     files.insert("uv.lock".to_owned(), lock(last));
     files.insert("assets/eklenti.svg".to_owned(), ICON.to_owned());
@@ -353,23 +421,26 @@ fn pyproject(project: &str, name: &str) -> String {
     format!(
         "# {name} eklentisinin Python tarafı. Kütüphaneleri eklentinin kilidi seçer, KentOS değil: `uv add <paket>` \
          bu dosyayı ve uv.lock'u yazar.\n[project]\nname = \"{project}\"\nversion = \"0.1.0\"\ndescription = \"{name} \
-         eklentisinin işlevleri\"\nrequires-python = \">=3.12,<3.14\"\ndependencies = []\n\n[tool.uv]\nenvironments = \
-         [\n{ENVIRONMENTS}]\nrequired-environments = [\n{ENVIRONMENTS}]\n"
+         eklentisinin işlevleri\"\nrequires-python = \">=3.12,<3.14\"\ndependencies = []\n\n[tool.uv]\n# Yeni yayımlanan \
+         sürüm kilide bir hafta sonra girer: yeni kaydedilmiş bir taklit paket o arada fark edilir.\nexclude-newer = \
+         \"7 days\"\nenvironments = [\n{ENVIRONMENTS}]\nrequired-environments = [\n{ENVIRONMENTS}]\n"
     )
 }
 
-/// uv's lock for a project without dependencies (uv 0.11, the three systems).
+/// uv's lock for a project without dependencies (uv 0.11, the three systems, a week's cooling: docs/adr/8057 §83).
 fn lock(project: &str) -> String {
     let markers = "    \"platform_machine == 'AMD64' and sys_platform == 'win32'\",\n    \"platform_machine == 'arm64' and \
                    sys_platform == 'darwin'\",\n    \"platform_machine == 'x86_64' and sys_platform == 'linux'\",\n";
     format!(
         "version = 1\nrevision = 3\nrequires-python = \">=3.12, <3.14\"\nresolution-markers = [\n{markers}]\n\
-         supported-markers = [\n{markers}]\nrequired-markers = [\n{markers}]\n\n[[package]]\nname = \"{project}\"\n\
+         supported-markers = [\n{markers}]\nrequired-markers = [\n{markers}]\n\n[options]\nexclude-newer = \
+         \"0001-01-01T00:00:00Z\" # This has no effect and is included for backwards compatibility when using \
+         relative exclude-newer values.\nexclude-newer-span = \"P7D\"\n\n[[package]]\nname = \"{project}\"\n\
          version = \"0.1.0\"\nsource = {{ virtual = \".\" }}\n"
     )
 }
 
-const ICON: &str = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 20\" fill=\"none\" \
+pub(crate) const ICON: &str = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 20\" fill=\"none\" \
                     stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\n  \
                     <rect x=\"3\" y=\"3\" width=\"14\" height=\"14\" rx=\"2\"/>\n  <path d=\"M7 10h6M10 7v6\"/>\n</svg>\n";
 
@@ -478,6 +549,24 @@ def buyuk_harf(metin) -> str | None:
     return str(metin).replace("i", "İ").replace("ı", "I").upper()
 "#;
 
+/// The package's own tests (docs/adr/8057 §87): its code imports; with an expression function, the function's answers.
+fn tests(package: &str, expression: bool) -> String {
+    let mut out = format!(
+        "\"\"\"Eklentinin kendi sınamaları: `kentos kek test`, Örnekleri çalıştır ve ajanın denemesi onları eklentinin \
+         ortamında Python'un\nunittest'iyle çalıştırır (kod src'den). Sınamalar unittest.TestCase sınıfında yazılır.\"\"\"\n\n\
+         import unittest\n\nfrom {package} import logic\n\n\nclass Mantik(unittest.TestCase):\n    def test_kod_yuklenir(self):\n        \
+         self.assertTrue(hasattr(logic, \"ext\"))\n"
+    );
+    if expression {
+        out.push_str(
+            "\n    def test_buyuk_harf(self):\n        self.assertEqual(logic.buyuk_harf(\"istanbul\"), \"İSTANBUL\")\n        \
+             self.assertEqual(logic.buyuk_harf(\"ılık\"), \"ILIK\")\n        self.assertIsNone(logic.buyuk_harf(None))\n",
+        );
+    }
+    out.push_str("\n\nif __name__ == \"__main__\":\n    unittest.main()\n");
+    out
+}
+
 const SCHEMA: &str = r#"
 
 @ext.command("katmanlari-kur")
@@ -529,6 +618,34 @@ def isaret_koy(ctx: ext.MapToolContext, sekil: ext.Shape) -> ext.CommandResult:
     yerleştirir)."""
     return ctx.add_feature("taslak", sekil, {"ad": "işaret"})
 "#;
+
+/// The blueprint's form in the package.
+const FORM_FILE: &str = "forms/alan.kform";
+
+/// The portable form of the schema's layer (`kentos.form-package` 1): its two fields, the name required, the state
+/// from the schema's domain, so the form and the layer say the same thing (docs/adr/8057 §112).
+fn form_package(name: &str, package: &str) -> Value {
+    let values =
+        json!([{ "code": "ETKIN", "label": "Etkin" }, { "code": "KAPALI", "label": "Kapalı" }]);
+    let domain = format!("{package}_durum");
+    json!({
+        "format": "kentos.form-package",
+        "version": 1,
+        "name": format!("{name} alanı"),
+        "body": {
+            "revision": 1,
+            "items": [
+                { "type": "field", "id": "ad", "field": "ad", "required": true },
+                { "type": "field", "id": "durum", "field": "durum" }
+            ]
+        },
+        "fields": [
+            { "name": "ad", "kind": "text" },
+            { "name": "durum", "kind": "text", "values": values, "domain": domain }
+        ],
+        "domains": [{ "id": domain, "name": "Durum", "kind": "text", "values": values }]
+    })
+}
 
 #[cfg(test)]
 mod tests {

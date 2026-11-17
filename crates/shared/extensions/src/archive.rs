@@ -10,7 +10,8 @@
 //!    code (by name and by its first bytes), nested archives, a computer's junk;
 //! 4. the content: `integrity.json` against every file, `manifest.json` and its rules, every file it names, each
 //!    as what it is (an icon, a form, a tool descriptor, a GeoPackage …), the handlers' modules, the Python project
-//!    against its lock, and every text file for invisible characters and a user's home path.
+//!    against its lock, and every text file for invisible characters, a user's home path and a key written in it
+//!    (a warning, `secrets.rs`).
 //!
 //! Nothing is written anywhere: the installer takes [`Opened::files`] only when [`Inspection::problems`] is empty.
 
@@ -527,6 +528,15 @@ fn check_tree(files: &BTreeMap<String, Vec<u8>>, stage: Stage, out: &mut Inspect
     check_references(&manifest, files, out);
     for (path, data) in files {
         text::scan(path, data, &mut out.problems, &mut out.warnings);
+        // A key written in its text (secrets.rs): warned here, the catalog's secret gate blocks it.
+        crate::secrets::scan(path, data, &mut out.warnings);
+        // What its Python must not do, at packing and at installing alike (python_rules.rs).
+        if path.ends_with(".py")
+            && let Ok(code) = std::str::from_utf8(data)
+        {
+            crate::python_rules::scan(&manifest, path, code, &mut out.problems, &mut out.warnings);
+            crate::sdk_surface::scan(path, code, &mut out.warnings);
+        }
     }
     if manifest.changelog_file.is_none() {
         out.warnings.push(
@@ -634,14 +644,65 @@ fn check_references(manifest: &Manifest, files: &BTreeMap<String, Vec<u8>>, out:
                         .collect();
                     out.problems
                         .extend(crate::ui_panel::check(path, &value, &commands));
+                    // A file picker reads a file the user gives, a save picker writes one where the user chose: its
+                    // extension says so (docs/adr/8057 §41, §44).
+                    let pickers: Vec<&serde_json::Value> = value
+                        .get("body")
+                        .and_then(serde_json::Value::as_array)
+                        .map(|b| b.iter().filter(|c| c["type"] == "filePicker").collect())
+                        .unwrap_or_default();
+                    let asks = |capability| {
+                        manifest
+                            .requested_capabilities
+                            .iter()
+                            .any(|c| c.id == capability)
+                    };
+                    if pickers.iter().any(|c| c["save"] != true)
+                        && !asks(crate::manifest::Capability::FilesUserSelected)
+                    {
+                        out.problems.push(problem(
+                            "ui_panel",
+                            "Paneldeki dosya seçici (filePicker) kullanıcının seçtiği dosyayı okur: manifest \
+                             files.userSelected yeteneğini istemeli (scope: user-selected)."
+                                .to_owned(),
+                        ));
+                    }
+                    if pickers.iter().any(|c| c["save"] == true)
+                        && !asks(crate::manifest::Capability::FilesUserSelectedWrite)
+                    {
+                        out.problems.push(problem(
+                            "ui_panel",
+                            "Paneldeki kaydetme yeri (filePicker, save) kullanıcının seçtiği yere dosya yazar: \
+                             manifest files.userSelectedWrite yeteneğini istemeli (scope: user-selected)."
+                                .to_owned(),
+                        ));
+                    }
                 }
             },
-            FileRole::Translation => {
-                if let Err(why) = json(data) {
-                    out.problems
-                        .push(problem("reference_json", format!("Dosya {why}.")));
+            // A translation (docs/adr/8057 §106): refused when it does not read; a place no text of the package
+            // stands at said (a text left untranslated is shown as written).
+            FileRole::Translation => match crate::l10n::Texts::read(data) {
+                Err(why) => out
+                    .problems
+                    .push(problem("l10n_file", format!("Çeviri dosyası {why}."))),
+                Ok(translation) => {
+                    let read = |path: &str| {
+                        files
+                            .get(path)
+                            .and_then(|b| serde_json::from_slice::<serde_json::Value>(b).ok())
+                    };
+                    let mut texts = read(manifest::FILE)
+                        .map(|m| crate::l10n::texts_at(&m, ""))
+                        .unwrap_or_default();
+                    for (file, prefix) in crate::l10n::files(manifest) {
+                        if let Some(value) = read(&file) {
+                            texts.extend(crate::l10n::texts_at(&value, &prefix));
+                        }
+                    }
+                    out.warnings
+                        .extend(crate::l10n::check(path, &translation, &texts));
                 }
-            }
+            },
             FileRole::ToolDescriptor => {
                 let id = manifest
                     .entrypoints
@@ -703,6 +764,19 @@ fn check_references(manifest: &Manifest, files: &BTreeMap<String, Vec<u8>>, out:
                         "geopackage_invalid",
                         "Dosya bir GeoPackage (SQLite) değil.".to_owned(),
                     ));
+                }
+            }
+            FileRole::AuditExamples => {
+                // Read without running anything (audit_examples.rs): what the rule is given, the findings it must give.
+                let rule = manifest
+                    .entrypoints
+                    .audits
+                    .iter()
+                    .find(|a| a.examples.as_deref() == Some(path))
+                    .map(|a| a.id.as_str())
+                    .unwrap_or_default();
+                if let Err(found) = crate::audit_examples::read(path, rule, data) {
+                    out.problems.extend(found);
                 }
             }
             FileRole::PythonProject => python.0 = Some(path.to_owned()),

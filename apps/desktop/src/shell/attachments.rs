@@ -363,6 +363,10 @@ impl App {
         if let Some((s, _)) = self.info_card {
             keys.extend(keys_of(s));
         }
+        // The shown extension panel's attachment lists (docs/adr/8057 §68).
+        for s in self.panel_attachment_slots() {
+            keys.extend(keys_of(s));
+        }
         if let Some(v) = &self.photo_viewer
             && let Some(key) = doc
                 .model

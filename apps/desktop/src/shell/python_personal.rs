@@ -36,6 +36,9 @@ use crate::exchange::words::{self, Kind as Line};
 use crate::python_setup::{OwnPython, PythonEdit, in_background, progress_words, size_words};
 use crate::settings_view::Edit;
 
+#[path = "python_personal/add_to.rs"]
+mod add_to;
+
 /// The program's version: the KentOS library's wheel must be of it.
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -62,6 +65,8 @@ pub(crate) enum Busy {
     Cleaning,
     /// Asking the index for newer versions.
     Checking,
+    /// A package added to an extension's project and locked (add_to.rs).
+    Adding,
 }
 
 /// The personal environment as the program holds it.
@@ -91,6 +96,8 @@ pub(crate) struct PersonalSetup {
     pub(crate) confirm_remove: bool,
     /// What went wrong last, said in the part.
     pub(crate) note: Option<String>,
+    /// Eklentiye ekle's chooser, open under a package's row (add_to.rs).
+    pub(crate) add_to: Option<add_to::AddTo>,
 }
 
 /// What the part's controls ask.
@@ -135,6 +142,13 @@ pub enum PersonalEdit {
     Removed(Result<(), String>),
     CleanCache,
     Cleaned(Result<(), String>),
+    /// Eklentiye ekle… on a package and its version: the chooser opens (add_to.rs).
+    AddTo(String, String),
+    /// The chooser's extension, by its place.
+    AddToPick(usize),
+    AddToConfirm,
+    AddToCancel,
+    AddedTo(Result<add_to::Added, String>),
 }
 
 fn msg(edit: PersonalEdit) -> Message {
@@ -151,6 +165,11 @@ pub(crate) fn apply_words(error: &InstallError) -> String {
             return format!("Paket kurulumu 30 dakikada bitmedi ve durduruldu; {back}.");
         }
         InstallError::NotRun(why) => return format!("uv çalıştırılamadı: {why}."),
+        // A package's build, said by the package (PY-UV-20).
+        InstallError::Failed {
+            cause: Cause::Build,
+            said,
+        } if !said.is_empty() => return format!("{said} Ortam önceki hâline döndü."),
         InstallError::Failed { cause, said } => (
             match cause {
                 Cause::Network => format!(
@@ -165,7 +184,9 @@ pub(crate) fn apply_words(error: &InstallError) -> String {
                 Cause::Folder => {
                     format!("Paketler kurulamadı: kişisel ortamın klasörüne yazılamadı; {back}.")
                 }
-                Cause::Unavailable | Cause::Other => format!("Paketler kurulamadı; {back}."),
+                Cause::Unavailable | Cause::Build | Cause::Other => {
+                    format!("Paketler kurulamadı; {back}.")
+                }
             },
             said,
         ),
@@ -687,6 +708,23 @@ impl App {
                 }
                 return self.personal_look();
             }
+            PersonalEdit::AddTo(package, version) => {
+                let me = &mut self.python_setup.personal;
+                me.note = None;
+                me.add_to = Some(add_to::AddTo {
+                    package,
+                    version,
+                    choice: 0,
+                });
+            }
+            PersonalEdit::AddToPick(choice) => {
+                if let Some(add) = self.python_setup.personal.add_to.as_mut() {
+                    add.choice = choice;
+                }
+            }
+            PersonalEdit::AddToConfirm => return self.add_to_start(),
+            PersonalEdit::AddToCancel => self.python_setup.personal.add_to = None,
+            PersonalEdit::AddedTo(ended) => self.add_to_done(ended),
         }
         Task::none()
     }
@@ -866,6 +904,7 @@ impl App {
             ));
         }
         let mut shown_installed = 0;
+        let developing = !self.developed_extensions().is_empty();
         for package in &asked {
             let line = list
                 .find(&package.name)
@@ -888,11 +927,26 @@ impl App {
                     idle.then(|| msg(PersonalEdit::Upgrade(Some(package.name.clone())))),
                 ));
             }
+            // Into an extension being developed (add_to.rs): its project's dependency, locked.
+            if developing {
+                entry = entry.push(words::ghost(
+                    "Eklentiye ekle…",
+                    idle.then(|| {
+                        msg(PersonalEdit::AddTo(
+                            package.name.clone(),
+                            package.version.clone(),
+                        ))
+                    }),
+                ));
+            }
             entry = entry.push(words::ghost(
                 "Kaldır",
                 idle.then(|| msg(PersonalEdit::PreviewRemove(package.name.clone()))),
             ));
             part = part.push(entry);
+            if let Some(add) = me.add_to.as_ref().filter(|a| a.package == package.name) {
+                part = part.push(self.add_to_part(add));
+            }
         }
         if !asked.is_empty() && shown_installed == 0 {
             part = part.push(label::caption("Aramayla eşleşen kurulu paket yok."));

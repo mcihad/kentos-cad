@@ -12,15 +12,15 @@ wait 1200
 click 155 56    # Yapıları numarala: önce pencere
 wait 3000
 shot 35-acilis
-click 790 461   # Önek
+click 595 492   # Önek
 key ctrl+a
 type B-
-click 790 498   # İlk numara
+click 843 492   # İlk numara
 key ctrl+a
 type 10
 wait 600
 shot 35-hesap
-click 848 538   # İptal: bir şey yazılmaz
+click 848 532   # İptal: bir şey yazılmaz
 wait 1500
 click 505 84    # Parsel kartı (şeritte, Panel grubunda)
 wait 2500

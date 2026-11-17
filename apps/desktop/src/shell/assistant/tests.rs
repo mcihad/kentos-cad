@@ -8,7 +8,7 @@ use std::net::TcpListener;
 use std::sync::{Arc, Mutex, PoisonError};
 
 use iced::futures::StreamExt as _;
-use kentos_agent::{AgentProfile, KeySource, ProviderKind};
+use kentos_agent::{AgentProfile, KeySource, ProviderKind, PythonRuns};
 use kentos_ui::widget::ai::{AiEvent, Phase, PromptState, ToolPhase};
 use serde_json::{Value, json};
 
@@ -19,13 +19,15 @@ use crate::settings_view::Edit;
 
 /// A provider speaking Chat Completions on 127.0.0.1: each request is answered as `answer` says for it (its place and
 /// body); the bodies are kept.
-struct Provider {
+pub(super) struct Provider {
     url: String,
     bodies: Arc<Mutex<Vec<Value>>>,
 }
 
 impl Provider {
-    fn start(answer: impl Fn(usize, &Value) -> (u16, String) + Send + 'static) -> Provider {
+    pub(super) fn start(
+        answer: impl Fn(usize, &Value) -> (u16, String) + Send + 'static,
+    ) -> Provider {
         let listener = TcpListener::bind("127.0.0.1:0").expect("a port");
         let url = format!("http://{}/v1", listener.local_addr().expect("its address"));
         let bodies = Arc::new(Mutex::new(Vec::new()));
@@ -69,7 +71,7 @@ impl Provider {
         Provider { url, bodies }
     }
 
-    fn bodies(&self) -> Vec<Value> {
+    pub(super) fn bodies(&self) -> Vec<Value> {
         self.bodies
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
@@ -84,7 +86,7 @@ fn chunk(delta: Value, finish: Option<&str>) -> String {
 }
 
 /// An answer calling tool `name` (as the wire names it) with `input`, its arguments in two pieces.
-fn calls(id: &str, name: &str, input: &Value) -> (u16, String) {
+pub(super) fn calls(id: &str, name: &str, input: &Value) -> (u16, String) {
     let arguments = input.to_string();
     let mut half = arguments.len() / 2;
     while !arguments.is_char_boundary(half) {
@@ -108,7 +110,7 @@ fn calls(id: &str, name: &str, input: &Value) -> (u16, String) {
 }
 
 /// An answer in words.
-fn says(words: &str) -> (u16, String) {
+pub(super) fn says(words: &str) -> (u16, String) {
     let sse = [
         chunk(json!({ "role": "assistant", "content": words }), None),
         chunk(json!({}), Some("stop")),
@@ -128,7 +130,7 @@ fn last_result(body: &Value) -> String {
 }
 
 /// The sample drawing, and the provider's agent the default with a key for this session only.
-fn chatting(provider: &Provider) -> App {
+pub(super) fn chatting(provider: &Provider) -> App {
     chatting_in(app_with_drawing(), provider)
 }
 
@@ -149,7 +151,7 @@ fn chatting_in(mut app: App, provider: &Provider) -> App {
     app
 }
 
-fn send(app: &mut App, words: &str) -> (u64, iced::Task<Message>) {
+pub(super) fn send(app: &mut App, words: &str) -> (u64, iced::Task<Message>) {
     app.assistant.chat.prompt = PromptState::with_text(words);
     let task = app.update(msg(Event::Chat(AiEvent::Submit)));
     let message = app.assistant.chat.pending().expect("a turn under way");
@@ -351,7 +353,7 @@ fn without_an_agent_the_chat_says_where_to_add_one() {
     assert!(app.assistant.agents.editor.is_some());
 }
 
-fn agents(app: &mut App, edit: AgentsEdit) {
+pub(super) fn agents(app: &mut App, edit: AgentsEdit) {
     let task = app.update(Message::Settings(Edit::Agents(edit)));
     drive(app, task);
 }
@@ -458,19 +460,23 @@ fn a_write_waits_for_the_user_only_when_it_takes_away() {
     let run = |command: &str, mode: &str| json!({ "command": command, "input": {}, "mode": mode });
     assert!(needs_approval(
         "cad.run",
-        &run("cad.entities.delete", "execute")
+        &run("cad.entities.delete", "execute"),
+        PythonRuns::Ask
     ));
     assert!(!needs_approval(
         "cad.run",
-        &run("cad.entities.delete", "plan")
+        &run("cad.entities.delete", "plan"),
+        PythonRuns::Ask
     ));
     assert!(!needs_approval(
         "cad.run",
-        &run("cad.polygon.create", "execute")
+        &run("cad.polygon.create", "execute"),
+        PythonRuns::Ask
     ));
     assert!(needs_approval(
         "arch.run",
-        &run("cad.entities.edit", "execute")
+        &run("cad.entities.edit", "execute"),
+        PythonRuns::Ask
     ));
     let steps = |command: &str| {
         json!({ "steps": [{ "command": "cad.polygon.create", "input": {} }, { "command": command, "input": {} }],
@@ -478,17 +484,32 @@ fn a_write_waits_for_the_user_only_when_it_takes_away() {
     };
     assert!(needs_approval(
         "command.batch",
-        &steps("cad.entities.delete")
+        &steps("cad.entities.delete"),
+        PythonRuns::Ask
     ));
-    assert!(!needs_approval("command.batch", &steps("cad.text.create")));
+    assert!(!needs_approval(
+        "command.batch",
+        &steps("cad.text.create"),
+        PythonRuns::Ask
+    ));
     assert!(needs_approval(
         "audit.apply_fix",
-        &json!({ "command": "cad.topology.repair", "mode": "execute" })
+        &json!({ "command": "cad.topology.repair", "mode": "execute" }),
+        PythonRuns::Ask
     ));
     assert!(!needs_approval(
         "catalog.search",
-        &json!({ "query": "sil" })
-    ));
+        &json!({ "query": "sil" }),
+        PythonRuns::Ask
+    )); // The agent's own Python waits for the user unless the user let it run without asking (docs/adr/8057 §104).
+    for tool in kentos_headless::agent_tools::PYTHON_RUNS {
+        assert!(needs_approval(tool, &json!({ "id": "x" }), PythonRuns::Ask));
+        assert!(!needs_approval(
+            tool,
+            &json!({ "id": "x" }),
+            PythonRuns::Allow
+        ));
+    }
 }
 
 /// A door the program never opens is not offered (measured: KentOS Mimari and GIS run no road command; Harita and
@@ -712,6 +733,16 @@ fn the_agent_runs_an_extensions_audit_rule_and_applies_its_fix() {
         agent_tools::call(&mut host, &mut guard, name, &args).unwrap();
     }
     let _ = app.extensions_event(crate::extensions::Event::Install);
+    // Who wrote it, KentOS's record as the review showed it (docs/adr/8057 §76): Asistan, kept with the extension.
+    let generated = app
+        .extensions
+        .registry
+        .as_ref()
+        .and_then(|r| r.manifest(ID))
+        .and_then(|m| m.generated.clone())
+        .expect("Asistan's stamp");
+    assert_eq!(generated.agent, "KentOS Asistan");
+    assert_eq!(generated.kentos, env!("CARGO_PKG_VERSION"));
     // Among the checks, its Python not ready here.
     let providers = agent_tools::call(
         &mut super::host::AppHost(&mut app),
@@ -795,7 +826,7 @@ fn the_agent_runs_an_extensions_audit_rule_and_applies_its_fix() {
         .unwrap_or_else(|| panic!("{plan:#}"))
         .to_owned();
     let execute = json!({ "rule": RULE, "finding": 1, "mode": "execute", "planId": plan_id });
-    assert!(needs_approval("audit.apply_fix", &execute));
+    assert!(needs_approval("audit.apply_fix", &execute, PythonRuns::Ask));
     let done = agent_tools::call(&mut host, &mut guard, "audit.apply_fix", &execute).unwrap();
     assert_eq!(done["marked"], true, "{done:#}");
     let named = app

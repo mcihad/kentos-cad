@@ -311,6 +311,70 @@ fn sources_only_on_the_authors_computer_are_refused_and_others_named() {
     );
 }
 
+/// A package whose name is a letter from a well-known one's is a warning naming both (docs/adr/8057 §81).
+#[test]
+fn a_package_named_like_a_well_known_one_is_a_warning() {
+    let lock = format!(
+        "{LOCK}\n[[package]]\nname = \"reqeusts\"\nversion = \"2.32.3\"\nsource = {{ registry = \"https://pypi.org/simple\" }}\n"
+    );
+    assert_eq!(
+        plain(PROJECT, &lock),
+        (vec![], vec!["python_name_resembles"])
+    );
+    let manifest = Manifest::read(MANIFEST).unwrap();
+    let (mut problems, mut warnings) = (Vec::new(), Vec::new());
+    check(
+        &manifest,
+        "pyproject.toml",
+        PROJECT,
+        "uv.lock",
+        &lock,
+        &mut problems,
+        &mut warnings,
+    );
+    assert!(
+        warnings[0]
+            .message
+            .contains("“reqeusts” adı tanınmış “requests” paketininkine çok benziyor"),
+        "{}",
+        warnings[0].message
+    );
+}
+
+/// An agent's lock without a cooling period is a warning; with one, or a person's lock, none (docs/adr/8057 §83).
+#[test]
+fn an_agents_lock_without_a_cooling_period_is_a_warning() {
+    let by_agent = |m: &mut Manifest| {
+        m.generated = Some(crate::provenance::Generated {
+            agent: "KentOS Asistan".into(),
+            model: None,
+            kentos: "0.1.0".into(),
+        });
+    };
+    assert_eq!(
+        checked(PROJECT, LOCK, by_agent),
+        (vec![], vec!["python_lock_no_cooling"])
+    );
+    assert_eq!(plain(PROJECT, LOCK), (vec![], vec![]), "a person's lock");
+    let cooled = LOCK.replacen(
+        "\n[[package]]",
+        "\n[options]\nexclude-newer = \"0001-01-01T00:00:00Z\" # This has no effect and is included for backwards \
+         compatibility when using relative exclude-newer values.\nexclude-newer-span = \"P7D\"\n\n[[package]]",
+        1,
+    );
+    assert_eq!(checked(PROJECT, &cooled, by_agent), (vec![], vec![]));
+    let frozen = LOCK.replacen(
+        "\n[[package]]",
+        "\n[options]\nexclude-newer = \"2026-11-01T00:00:00Z\"\n\n[[package]]",
+        1,
+    );
+    assert_eq!(
+        checked(PROJECT, &frozen, by_agent),
+        (vec![], vec![]),
+        "a fixed date cools too"
+    );
+}
+
 #[test]
 fn an_unknown_lock_version_is_a_warning_and_broken_files_are_problems() {
     assert_eq!(
@@ -336,4 +400,72 @@ fn an_unknown_lock_version_is_a_warning_and_broken_files_are_problems() {
         ["python_lock_stale"],
         "the project itself is not in the lock"
     );
+}
+
+/// A computer the manifest names with no wheel of a package is a warning naming the package and the computers: built
+/// there from its source, or not installed at all (docs/adr/8057 §94).
+#[test]
+fn a_package_without_a_wheel_for_a_named_computer_is_a_warning() {
+    let words = |lock: &str| {
+        let manifest = Manifest::read(MANIFEST).unwrap();
+        let (mut problems, mut warnings) = (Vec::new(), Vec::new());
+        check(
+            &manifest,
+            "pyproject.toml",
+            PROJECT,
+            "uv.lock",
+            lock,
+            &mut problems,
+            &mut warnings,
+        );
+        assert!(problems.is_empty(), "{problems:?}");
+        warnings
+            .into_iter()
+            .map(|w| (w.code, w.message))
+            .collect::<Vec<_>>()
+    };
+    // The macOS wheels gone: numpy and shapely are built there from their sources.
+    let no_mac: String = LOCK
+        .lines()
+        .filter(|l| !l.contains("macosx"))
+        .map(|l| format!("{l}\n"))
+        .collect();
+    let said = words(&no_mac);
+    let built: Vec<&str> = said
+        .iter()
+        .filter(|(code, _)| *code == "python_source_build")
+        .map(|(_, m)| m.as_str())
+        .collect();
+    assert_eq!(built.len(), 2, "{said:?}");
+    assert!(
+        built[0].starts_with(
+            "“numpy” 2.5.4: macOS (aarch64), Python 3.12 için hazır kurulum dosyası (wheel) yok"
+        ),
+        "{}",
+        built[0]
+    );
+    assert!(built[1].starts_with("“shapely”"), "{}", built[1]);
+    // Without its source too, numpy does not install there.
+    let no_source: String = no_mac
+        .lines()
+        .filter(|l| !l.contains("numpy-2.5.4.tar.gz"))
+        .map(|l| format!("{l}\n"))
+        .collect();
+    let said = words(&no_source);
+    assert!(
+        said.iter().any(|(code, m)| *code == "python_no_wheel"
+            && m.starts_with(
+                "“numpy” 2.5.4: macOS (aarch64), Python 3.12 için ne hazır kurulum dosyası"
+            )),
+        "{said:?}"
+    );
+}
+
+#[test]
+fn a_project_says_its_requirements_as_written() {
+    let project = "[project]\nname = \"vitrin\"\nrequires-python = \">=3.12\"\n\
+                   dependencies = [\"numpy>=2.0\", \"openpyxl\"]\n";
+    assert_eq!(declared_requirements(project), ["numpy>=2.0", "openpyxl"]);
+    assert!(declared_requirements("[project]\nname = \"bos\"\n").is_empty());
+    assert!(declared_requirements("bu bir toml değil = [").is_empty());
 }

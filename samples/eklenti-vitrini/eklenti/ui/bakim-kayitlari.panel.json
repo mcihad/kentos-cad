@@ -1,0 +1,61 @@
+{
+  "format": "kentos.ui.panel",
+  "schemaVersion": 1,
+  "title": "Bakım kayıtları",
+  "split": true,
+  "body": [
+    {
+      "type": "text",
+      "text": "Bir tesis seçin: bakım kayıtları ve tesisin ekleri altta listelenir. Ekle seçili tesise yeni bir kayıt yazar, liste kendiliğinden yenilenir. Önce Katmanları kur'a basıp Örnek tesis'e nokta koyun."
+    },
+    {
+      "type": "relationPicker",
+      "id": "tesis",
+      "label": "Tesis",
+      "relation": "bakim-tesis",
+      "display": "ad",
+      "required": true
+    },
+    {
+      "type": "section",
+      "label": "Yeni bakım"
+    },
+    {
+      "type": "dateField",
+      "id": "tarih",
+      "label": "Tarih",
+      "defaultExpr": "bugün()",
+      "required": true
+    },
+    {
+      "type": "textField",
+      "id": "aciklama",
+      "label": "Açıklama",
+      "required": true
+    },
+    {
+      "type": "button",
+      "id": "ekle",
+      "label": "Ekle",
+      "command": "bakim-ekle",
+      "primary": true
+    },
+    {
+      "type": "relationList",
+      "id": "bakimlar",
+      "label": "Bakım kayıtları",
+      "relation": "bakim-tesis",
+      "of": "tesis",
+      "columns": [
+        "tarih",
+        "aciklama"
+      ]
+    },
+    {
+      "type": "attachments",
+      "id": "ekler",
+      "label": "Tesisin ekleri",
+      "of": "tesis"
+    }
+  ]
+}

@@ -137,6 +137,7 @@ mod object_source_timing;
 mod order_cmd;
 mod polygon;
 mod processing_sink;
+mod processing_sink_faults;
 mod protocol;
 mod protocol_cases;
 #[cfg(feature = "mod-gis")]

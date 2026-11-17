@@ -66,7 +66,7 @@ while True:
             while 77 not in replies:
                 lock.wait()
         r = replies[77]
-        send({"type": "done", "id": i, "ok": True, "result": {"kind": "outputs", "refused": r["ok"] is False, "code": r.get("code")}})
+        send({"type": "done", "id": i, "ok": True, "result": {"kind": "outputs", "refused": r["ok"] is False, "code": r.get("code"), "answer": r.get("result")}})
 "#;
 
 /// The stand-in written to a folder of its own, and the system's Python 3; none without one.
@@ -290,6 +290,33 @@ fn a_tool_asking_for_the_drawing_is_refused() {
     };
     assert_eq!(done["result"]["refused"], true);
     assert_eq!(done["result"]["code"], "capability");
+}
+
+/// A run whose host answers calls (docs/adr/8057 §47): the code's call reaches it with its method and parameters and
+/// its answer comes back to the code.
+#[test]
+fn a_tools_call_is_answered_by_its_host() {
+    let (dir, python) = need_python!();
+    let pool = Arc::new(Pool::default());
+    let mut asked = Vec::new();
+    let ended = pool.run_answering(
+        "tr.ornek.deneme@1.0.0",
+        &|| Ok(start(dir.path(), &python, "tr.ornek.deneme")),
+        invoke("asks"),
+        Duration::from_secs(30),
+        &|| false,
+        &mut |_| {},
+        &mut |method, params| {
+            asked.push((method.to_owned(), params.clone()));
+            Ok(json!({ "n": 5 }))
+        },
+    );
+    let Ended::Answered(done) = ended else {
+        panic!("{ended:?}");
+    };
+    assert_eq!(done["result"]["refused"], false);
+    assert_eq!(done["result"]["answer"], json!({ "n": 5 }));
+    assert_eq!(asked, [("entities".to_owned(), json!({}))]);
 }
 
 #[test]

@@ -493,6 +493,18 @@
            "default": "$any",
            "options": "$any"
           }
+         ],
+         "outputs": [
+          {
+           "name": "points",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
+          }
          ]
         }
        ]
@@ -587,6 +599,18 @@
            "advanced": "$any",
            "default": "$any",
            "options": "$any"
+          }
+         ],
+         "outputs": [
+          {
+           "name": "changed",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
           }
          ]
         }
@@ -713,6 +737,18 @@
            "default": "$any",
            "options": "$any"
           }
+         ],
+         "outputs": [
+          {
+           "name": "matched",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
+          }
          ]
         }
        ]
@@ -838,6 +874,18 @@
            "default": "$any",
            "options": "$any"
           }
+         ],
+         "outputs": [
+          {
+           "name": "labels",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
+          }
          ]
         }
        ]
@@ -962,6 +1010,18 @@
            "advanced": "$any",
            "default": "$any",
            "options": "$any"
+          }
+         ],
+         "outputs": [
+          {
+           "name": "labels",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
           }
          ]
         }
@@ -1139,6 +1199,18 @@
            "default": "$any",
            "options": "$any"
           }
+         ],
+         "outputs": [
+          {
+           "name": "points",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
+          }
          ]
         }
        ]
@@ -1233,6 +1305,18 @@
            "advanced": "$any",
            "default": "$any",
            "options": "$any"
+          }
+         ],
+         "outputs": [
+          {
+           "name": "changed",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
           }
          ]
         }
@@ -1358,6 +1442,18 @@
            "advanced": "$any",
            "default": "$any",
            "options": "$any"
+          }
+         ],
+         "outputs": [
+          {
+           "name": "matched",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
           }
          ]
         }
@@ -1493,6 +1589,18 @@
            "default": "$any",
            "options": "$any"
           }
+         ],
+         "outputs": [
+          {
+           "name": "changed",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
+          }
          ]
         }
        ]
@@ -1587,6 +1695,18 @@
            "advanced": "$any",
            "default": "$any",
            "options": "$any"
+          }
+         ],
+         "outputs": [
+          {
+           "name": "changed",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
           }
          ]
         }
@@ -1693,6 +1813,18 @@
            "advanced": "$any",
            "default": "$any",
            "options": "$any"
+          }
+         ],
+         "outputs": [
+          {
+           "name": "changed",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
           }
          ]
         }
@@ -1810,6 +1942,18 @@
            "default": "$any",
            "options": "$any"
           }
+         ],
+         "outputs": [
+          {
+           "name": "cells",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
+          }
          ]
         }
        ]
@@ -1874,6 +2018,18 @@
            "advanced": "$any",
            "default": "$any",
            "options": "$any"
+          }
+         ],
+         "outputs": [
+          {
+           "name": "clipped",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
           }
          ]
         }
@@ -1960,6 +2116,18 @@
            "default": "$any",
            "options": "$any"
           }
+         ],
+         "outputs": [
+          {
+           "name": "dissolved",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
+          }
          ]
         }
        ]
@@ -2004,6 +2172,23 @@
            "advanced": "$any",
            "default": "$any",
            "options": "$any"
+          }
+         ],
+         "outputs": [
+          {
+           "name": "problems",
+           "label": "$any",
+           "kind": "table"
+          },
+          {
+           "name": "invalid",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
           }
          ]
         }
@@ -2070,6 +2255,23 @@
            "default": "$any",
            "options": "$any"
           }
+         ],
+         "outputs": [
+          {
+           "name": "simplified",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "report",
+           "label": "$any",
+           "kind": "table"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
+          }
          ]
         }
        ]
@@ -2134,6 +2336,18 @@
            "default": "$any",
            "options": "$any"
           }
+         ],
+         "outputs": [
+          {
+           "name": "table",
+           "label": "$any",
+           "kind": "table"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
+          }
          ]
         }
        ]
@@ -2197,6 +2411,18 @@
            "advanced": "$any",
            "default": "$any",
            "options": "$any"
+          }
+         ],
+         "outputs": [
+          {
+           "name": "table",
+           "label": "$any",
+           "kind": "table"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
           }
          ]
         }
@@ -2273,6 +2499,18 @@
            "default": "$any",
            "options": "$any"
           }
+         ],
+         "outputs": [
+          {
+           "name": "points",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
+          }
          ]
         }
        ]
@@ -2337,6 +2575,18 @@
            "advanced": "$any",
            "default": "$any",
            "options": "$any"
+          }
+         ],
+         "outputs": [
+          {
+           "name": "cells",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
           }
          ]
         }
@@ -2633,6 +2883,18 @@
            "advanced": "$any",
            "default": "$any",
            "options": "$any"
+          }
+         ],
+         "outputs": [
+          {
+           "name": "points",
+           "label": "$any",
+           "kind": "features"
+          },
+          {
+           "name": "count",
+           "label": "$any",
+           "kind": "number"
           }
          ]
         }

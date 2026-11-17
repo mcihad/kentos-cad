@@ -149,6 +149,45 @@ fn the_same_plan_in_any_order_gives_the_same_bytes() {
 }
 
 /// A drawing without rooms has no section: its facts are the layers' alone, as before it.
+/// A project with an İmar durumu gives its zoning: the plan's ratios and the areas the Emsal ve TAKS table reads, the
+/// same numbers as KentOS Mimari's own report (docs/adr/8057 §92); the fixture's plan writes none and gives none.
+#[test]
+fn the_parcels_zoning_is_read_as_the_emsal_and_taks_table_reads_it() {
+    assert!(
+        facts(plan())
+            .architecture
+            .as_ref()
+            .unwrap()
+            .zoning
+            .is_none()
+    );
+    let mut s = plan();
+    let arch = s.settings.arch.get_or_insert_with(Default::default);
+    arch.zoning = Some(kentos_commands::Zoning {
+        parcel_area: 300.0,
+        far: Some(1.5),
+        coverage: Some(0.4),
+    });
+    let doc = Document::from_snapshot_v2(s.clone()).unwrap();
+    let report = doc.zoning_report().expect("a report");
+    let f = facts(s);
+    let z = f
+        .architecture
+        .as_ref()
+        .unwrap()
+        .zoning
+        .as_ref()
+        .expect("the zoning");
+    assert_eq!((z.parcel, z.far, z.coverage), (300.0, Some(1.5), Some(0.4)));
+    let near = |a: f64, b: f64| (a - b).abs() < 1e-4;
+    assert!(
+        near(z.floors, report.floors) && near(z.footprint, report.footprint),
+        "{z:?}"
+    );
+    assert!(z.floors > 0.0 && z.footprint > 0.0, "{z:?}");
+    assert_eq!(z.cap.is_some(), report.cap.is_some());
+}
+
 #[test]
 fn a_drawing_without_rooms_has_no_architecture() {
     let text = std::fs::read_to_string(root().join("denetim.kcad")).unwrap();

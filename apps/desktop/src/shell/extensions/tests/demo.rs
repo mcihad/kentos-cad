@@ -66,7 +66,7 @@ fn vitrin_version() -> String {
 }
 
 /// samples/eklenti-vitrini's extension packed from its source, as `hazirla.sh` packs it.
-fn vitrin_package() -> Vec<u8> {
+pub(super) fn vitrin_package() -> Vec<u8> {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../samples/eklenti-vitrini/eklenti");
     let files: std::collections::BTreeMap<String, Vec<u8>> =
         kentos_extension_host::store::read_files(&root)
@@ -104,10 +104,16 @@ fn the_demo_extension_installs_with_every_contribution_on_its_tab() {
             "Katmanları kur",
             "TAKS",
             "Yapı numarası",
+            "Yapı tamponu",
+            "Çekme mesafesi",
             "Yapı ara",
             "Değer say",
             "Parsel kartı",
-            "Yapı yerleştir"
+            "Yakın yapılar",
+            "Alandaki yapılar",
+            "Bakım kayıtları",
+            "Yapı yerleştir",
+            "Parsel çakışması"
         ]
     );
 }
@@ -417,7 +423,7 @@ fn an_extension_runs_another_extensions_tool_only_when_it_depends_on_it() {
 fn an_audit_rules_findings_are_listed_shown_and_fixed_as_one_step() {
     // docs/adr/8057 §17 (plan ADIM 20): the rule's answer read into Eklenti denetimi; Göster selects the object, Düzelt
     // writes the rule's fix as one undo step named by it; a fix of an extension not allowed to write is refused.
-    use super::audits::{AuditDone, AuditState, Severity, findings_of};
+    use super::audits::{AuditDone, AuditRead, AuditState, Severity, findings_of};
     const VITRIN: &str = "tr.ornek.vitrin";
     let dir = temp("denetim");
     let mut gis = crate::processing::tests::app_with_parcels();
@@ -473,16 +479,35 @@ fn an_audit_rules_findings_are_listed_shown_and_fixed_as_one_step() {
         version: vitrin_version(),
         digest: gis.extensions.registry.as_ref().unwrap().digest(VITRIN),
         revision: gis.document.as_ref().unwrap().model.revision(),
+        drawing: None,
+        facts: None,
+        by: crate::works::By::You,
+        started: std::time::Instant::now(),
     });
+    let model = &gis.document.as_ref().unwrap().model;
+    let facts = kentos_processing::audit_job::facts_of(model, &|| false).expect("the facts");
+    let read = AuditRead {
+        cut: false,
+        drawing: kentos_processing::audit_job::drawing_stamp(model),
+        facts: kentos_commands::audit_job::digest_of(&facts),
+    };
     gis.ext_audit_done(AuditDone {
         ext: VITRIN.into(),
         local: "yapi-no".into(),
         answer: Ok(done),
         ms: 12,
+        read: Some(read.clone()),
     });
     let state = gis.extensions.audit.as_ref().unwrap();
     assert!(state.running.is_none() && state.error.is_none());
     assert_eq!(state.findings.len(), 2);
+    // What the rule read, as a cloud job's report says it (docs/adr/8057 §42).
+    let report = gis.ext_audit_report(0);
+    assert_eq!(
+        (report["drawing"].as_str(), report["facts"].as_str()),
+        (Some(read.drawing.as_str()), Some(read.facts.as_str()))
+    );
+    assert!(read.facts.starts_with("sha256:") && read.drawing.len() == 16);
     let _ = gis.ext_audit_tab();
     // Its provenance (plan ADIM 20's köken): the rule's version and package, the drawing's revision; nothing changed.
     let (words, changed) = gis.ext_audit_provenance().unwrap();
@@ -585,6 +610,16 @@ fn a_blueprint_installs_with_every_contribution_and_passes_the_desktops_own_chec
             .is_some(),
         "its İşlemler tool is listed"
     );
+    // Its portable form, bound to the schema's layer (docs/adr/8057 §112): a form among its parts.
+    let catalog = gis.ext_catalog();
+    assert!(
+        catalog["extensions"][0]["contributions"]
+            .as_array()
+            .is_some_and(|parts| parts
+                .iter()
+                .any(|p| p["kind"] == "form" && p["id"] == "ext.tr.belediye.mezarlik-bilgi.alan")),
+        "{catalog:#}"
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -653,6 +688,7 @@ fn an_extensions_panel_opens_in_the_dock_and_its_table_takes_its_commands_rows()
         panel: "yapi-paneli".into(),
         button: "ara".into(),
         table: Some("sonuc".into()),
+        instance: gis.extensions.instance_of("tr.ornek.vitrin", "yapi-paneli"),
     };
     gis.ext_panel_answer(
         &origin,
@@ -807,6 +843,7 @@ fn a_commands_progress_shows_in_its_notice_and_its_panel() {
         panel: "yapi-paneli".into(),
         button: "numarala".into(),
         table: Some("sonuc".into()),
+        instance: gis.extensions.instance_of(VITRIN, "yapi-paneli"),
     };
     // The search's rows, then its Yapıları numarala button pressed (the launch the background step hands over).
     gis.ext_panel_answer(
@@ -953,6 +990,7 @@ fn a_panels_card_shows_a_card_per_row() {
         panel: "parsel-paneli".into(),
         button: "parseller".into(),
         table: Some("kartlar".into()),
+        instance: gis.extensions.instance_of(VITRIN, "parsel-paneli"),
     };
     gis.ext_panel_answer(
         &origin,
@@ -1017,11 +1055,12 @@ fn several_panels_stay_open_in_tabs_each_with_its_own() {
         let _ = gis.extensions_event(Event::Panel(e));
     };
     let shown = |gis: &App| gis.extensions.panel().map(|p| p.local.clone());
-    let origin = |ext: &str, panel: &str, button: &str| PanelOrigin {
+    let origin = |gis: &App, ext: &str, panel: &str, button: &str| PanelOrigin {
         ext: ext.into(),
         panel: panel.into(),
         button: button.into(),
         table: None,
+        instance: gis.extensions.instance_of(ext, panel),
     };
     open(&mut gis, VITRIN, "yapi-paneli");
     say(&mut gis, PanelEvent::Text("sorgu".into(), "Y-0".into()));
@@ -1050,7 +1089,7 @@ fn several_panels_stay_open_in_tabs_each_with_its_own() {
     gis.ext_panel_answer(
         &PanelOrigin {
             table: Some("sonuc".into()),
-            ..origin(VITRIN, "yapi-paneli", "ara")
+            ..origin(&gis, VITRIN, "yapi-paneli", "ara")
         },
         Ok(json!({ "rows": [{ "no": "Y-01" }], "columns": ["no"] })),
     );
@@ -1072,14 +1111,14 @@ fn several_panels_stay_open_in_tabs_each_with_its_own() {
         ext: VITRIN.into(),
         command: "yapilari-numarala".into(),
         params: json!({}),
-        origin: origin(VITRIN, "yapi-paneli", "numarala"),
+        origin: origin(&gis, VITRIN, "yapi-paneli", "numarala"),
     });
     gis.extensions.panels[1].running = Some("say".into());
     gis.extensions.panel_calls.push(PanelCall {
         ext: VITRIN.into(),
         command: "deger-say".into(),
         params: json!({}),
-        origin: origin(VITRIN, "deger-paneli", "say"),
+        origin: origin(&gis, VITRIN, "deger-paneli", "say"),
     });
     let package = gis
         .extensions
@@ -1245,6 +1284,10 @@ fn a_disabled_extensions_panel_and_audit_fixes_go_with_it() {
         version: vitrin_version(),
         digest: None,
         revision: 0,
+        drawing: None,
+        facts: None,
+        by: crate::works::By::You,
+        started: std::time::Instant::now(),
     });
     assert_eq!(
         gis.ext_audit_fix_refused(0),
@@ -1331,6 +1374,7 @@ fn an_inputs_change_runs_its_command_and_waits_for_a_running_one() {
         panel: "deger-paneli".into(),
         button: "say".into(),
         table: Some("dagilim".into()),
+        instance: gis.extensions.instance_of(VITRIN, "deger-paneli"),
     };
     gis.ext_panel_stopped(&origin);
     assert!(gis.extensions.panel().unwrap().rerun.is_none());
@@ -1500,7 +1544,7 @@ fn a_workshop_extension_reloads_without_closing_and_its_preview_says_what_the_us
     // A capability the user did not grant: not loaded, back to the review; the installed one as it was.
     edit("manifest.json", &|m| {
         m["requestedCapabilities"].as_array_mut().unwrap().push(json!({
-            "id": "files.userSelected", "scope": "plugin-owned", "reason": "Seçilen dosyayı okur."
+            "id": "datasets.read", "scope": "plugin-owned", "reason": "Kendi veri kümelerini okur."
         }));
         m["entrypoints"]["panels"][0]["title"] = json!("Yapı süz");
     });
@@ -1538,6 +1582,7 @@ fn a_panels_command_changes_its_panel_as_it_runs() {
             panel: "yapi-paneli".into(),
             button: "ara".into(),
             table: Some("sonuc".into()),
+            instance: gis.extensions.instance_of(VITRIN, "yapi-paneli"),
         },
     });
     gis.extensions.panels[0].running = Some("ara".into());
@@ -1790,5 +1835,84 @@ fn a_layer_menus_command_gets_the_layer_it_was_run_on() {
     ));
     let sent = gis.extensions.test_last_invoke.clone().expect("its call");
     assert_eq!(sent["params"], json!({}), "{sent:#}");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// docs/adr/8057 §46 (PY-RUN-14): Vitrin's Yapı tamponu runs KentOS's built-in Tampon through the broker, with the
+/// command's own rights: in a run that may write, the five buildings' buffers land on a new layer in the run's undo
+/// step; a run that may only read is refused the tool's write.
+#[test]
+fn an_extensions_command_runs_a_builtin_tool_with_its_own_rights() {
+    use serde_json::json;
+
+    // The desktop registers İşlemler's tools when it starts (lib.rs); a test does it itself.
+    kentos_processing::command::register_as("desktop");
+    const VITRIN: &str = "tr.ornek.vitrin";
+    fn find<'a>(
+        nodes: &'a [kentos_commands::LayerNode],
+        name: &str,
+    ) -> Option<&'a kentos_commands::LayerNode> {
+        nodes.iter().find_map(|n| {
+            (n.name == name)
+                .then_some(n)
+                .or_else(|| find(&n.children, name))
+        })
+    }
+    let buffer = json!({ "command": "cad.processing.run", "op": "execute", "input": {
+        "tool": "geometry.buffer",
+        "parameters": { "input": { "scope": "layer", "layerId": "yapi" }, "distance": 3,
+                        "layer": { "newName": "Yapı tamponu 3 m" } } } });
+    let open = |name: &str, write: bool| {
+        let dir = temp(name);
+        let mut gis = app(&dir, Some(Module::Gis));
+        install(&mut gis, "vitrin.kek", vitrin_package());
+        let path =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../samples/eklenti-vitrini/vitrin.kcad");
+        let snapshot =
+            kentos_kcad::decode(&std::fs::read(path).unwrap()).expect("the demo drawing");
+        gis.document = Some(crate::document::Document::from_v2(snapshot, None).expect("opens"));
+        let package = gis
+            .extensions
+            .registry
+            .as_ref()
+            .and_then(|r| r.package_dir(VITRIN))
+            .unwrap();
+        let _ = gis.extensions_event(Event::Launch(
+            VITRIN.into(),
+            "command".into(),
+            "yapi-tamponu".into(),
+            Ok(super::runner::Launch::for_test(
+                "/bin/sh".into(),
+                package,
+                "vitrin.logic:yapi_tamponu",
+                "Yapı tamponu",
+                write,
+            )),
+        ));
+        (dir, gis)
+    };
+    // May write: the buffers on a new layer, in the run's step (named after the command).
+    let (dir, mut gis) = open("yerlesik-arac", true);
+    let answer = gis
+        .ext_answer_for_test(VITRIN, "run", &buffer)
+        .expect("the tool ran");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let model = &gis.document.as_ref().unwrap().model;
+    let layer = find(model.layers().nodes(), "Yapı tamponu 3 m").expect("its new layer");
+    assert_eq!(
+        model.count(&layer.id),
+        5,
+        "a buffer for each of the five buildings"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+    // May only read: the tool's write is refused, nothing is written.
+    let (dir, mut gis) = open("yerlesik-arac-okur", false);
+    let refused = gis.ext_answer_for_test(VITRIN, "run", &buffer);
+    assert!(
+        matches!(&refused, Err(e) if e.code == "capability" && e.message.contains("document.write")),
+        "{refused:?}"
+    );
+    let model = &gis.document.as_ref().unwrap().model;
+    assert!(find(model.layers().nodes(), "Yapı tamponu 3 m").is_none());
     let _ = std::fs::remove_dir_all(&dir);
 }

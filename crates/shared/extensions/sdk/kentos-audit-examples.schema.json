@@ -1,0 +1,846 @@
+{
+  "$defs": {
+    "ArchitectureFacts": {
+      "description": "The drawing's architecture.",
+      "properties": {
+        "doors": {
+          "description": "Each dwelling unit's door: the walk from its outer side to the nearest storey exit (BYKHY 48/4).",
+          "items": {
+            "$ref": "#/$defs/DoorEscape"
+          },
+          "type": "array"
+        },
+        "exits": {
+          "description": "Each storey holding rooms and how many storey exits it has (BYKHY 4/u): an escape stair's room, an open\nstair's foot or head, a door to the outside on a storey at or below ±0.00.",
+          "items": {
+            "$ref": "#/$defs/StoreyExits"
+          },
+          "type": "array"
+        },
+        "levels": {
+          "description": "The project's storeys, lowest first.",
+          "items": {
+            "$ref": "#/$defs/Storey"
+          },
+          "type": "array"
+        },
+        "rooms": {
+          "description": "Every room (space), a void and an outdoor one too.",
+          "items": {
+            "$ref": "#/$defs/RoomFacts"
+          },
+          "type": "array"
+        },
+        "sprinklers": {
+          "default": false,
+          "description": "The building has an automatic sprinkler system, as the project's settings say (`.kcad` 226): the fire\nregulation's sprinklered distances are the ones read (BYKHY 48/2, Ek-5/B; docs/adr/8057 §53).",
+          "type": "boolean"
+        },
+        "units": {
+          "description": "The building program's groups that have rooms, with article 4's areas, in the program's order.",
+          "items": {
+            "$ref": "#/$defs/UnitFacts"
+          },
+          "type": "array"
+        },
+        "zoning": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ZoningFacts"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The parcel's zoning (İmar durumu) and the building's areas against it, when the project writes one\n(docs/adr/8057 §92)."
+        }
+      },
+      "required": [
+        "levels",
+        "exits",
+        "rooms",
+        "units",
+        "doors"
+      ],
+      "type": "object"
+    },
+    "AuditExample": {
+      "additionalProperties": false,
+      "description": "One example: what the rule is given and what it must give.",
+      "properties": {
+        "architecture": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArchitectureFacts"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What KentOS measures in an architectural drawing, given as data: `facts.project.architecture`."
+        },
+        "expect": {
+          "$ref": "#/$defs/Expected"
+        },
+        "features": {
+          "description": "Objects as data (`{layer, geometry, attrs?}`, GeoJSON shapes, at most 500): a synthetic drawing is made of them\nand measured (`facts.layers`, `facts.project`).",
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "title": {
+          "description": "What it shows, in a few words (\"8 m² yatak odası\").",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "expect"
+      ],
+      "type": "object"
+    },
+    "DoorEscape": {
+      "description": "A dwelling unit's door and its walk to the nearest storey exit.",
+      "properties": {
+        "at": {
+          "description": "The door's middle.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "exit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EscapeWalk"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "From its outer side; none when it opens into an escape stair's room or reaches no exit."
+        },
+        "intoStair": {
+          "default": false,
+          "description": "It opens into an escape stair's room: it stands at its storey's exit (no walk, none needed).",
+          "type": "boolean"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uid": {
+          "description": "The door's persistent id.",
+          "type": "string"
+        },
+        "unit": {
+          "description": "Its unit's id.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "unit",
+        "at"
+      ],
+      "type": "object"
+    },
+    "EscapeWalk": {
+      "description": "A walk, along the points it turns at.",
+      "properties": {
+        "exits": {
+          "description": "A walk to an exit: how many exits its start reaches. None for a walk to a unit's door.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "length": {
+          "description": "Its length, m.",
+          "format": "double",
+          "type": "number"
+        },
+        "oneWay": {
+          "description": "A walk to an exit: the part it shares with the walk to the nearest other exit, m (tek yön; a dead end's); all\nof it with one exit. None for a walk to a unit's door.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "path": {
+          "description": "Its points, from its start to its end.",
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "length",
+        "path"
+      ],
+      "type": "object"
+    },
+    "Expected": {
+      "additionalProperties": false,
+      "description": "The findings an example must give.",
+      "properties": {
+        "count": {
+          "description": "How many findings, exactly (0: the rule finds nothing).",
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "has": {
+          "description": "Findings it must have, each matched by one of the rule's.",
+          "items": {
+            "$ref": "#/$defs/ExpectedFinding"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ExpectedFinding": {
+      "additionalProperties": false,
+      "description": "A finding the rule must give: every key given must match.",
+      "properties": {
+        "feature": {
+          "description": "The example's object it names (`featureId`), by its place in `features` from 0.",
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "fix": {
+          "description": "The command its fix runs.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "description": "Words its message holds.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "severity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Severity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "GroupKind": {
+      "description": "What a program group is.",
+      "oneOf": [
+        {
+          "const": "unit",
+          "description": "Bağımsız bölüm: a flat, a shop, an office.",
+          "type": "string"
+        },
+        {
+          "const": "common",
+          "description": "Ortak alan: a shared corridor, the stairs, a shaft.",
+          "type": "string"
+        },
+        {
+          "const": "outdoor",
+          "description": "Dış alan: a garden, a car park.",
+          "type": "string"
+        },
+        {
+          "const": "annex",
+          "description": "Eklenti: a place allocated to an independent unit (its `annexOf`).",
+          "type": "string"
+        }
+      ]
+    },
+    "Occupancy": {
+      "description": "A unit's use as BYKHY Ek-5/B's rows name it, as KentOS Mimari reads it from the unit's nature (Daire, Büro,\nDükkân, Otel …): the row of its escape distances.",
+      "oneOf": [
+        {
+          "const": "highHazard",
+          "description": "Yüksek tehlikeli yerler.",
+          "type": "string"
+        },
+        {
+          "const": "industry",
+          "description": "Endüstri amaçlı yapılar.",
+          "type": "string"
+        },
+        {
+          "const": "dormitory",
+          "description": "Yurtlar, yatakhaneler.",
+          "type": "string"
+        },
+        {
+          "const": "shop",
+          "description": "Mağazalar, dükkânlar, marketler.",
+          "type": "string"
+        },
+        {
+          "const": "office",
+          "description": "Büro binaları.",
+          "type": "string"
+        },
+        {
+          "const": "parking",
+          "description": "Otoparklar ve depolar.",
+          "type": "string"
+        },
+        {
+          "const": "school",
+          "description": "Okul ve eğitim yapıları.",
+          "type": "string"
+        },
+        {
+          "const": "assembly",
+          "description": "Toplanma amaçlı binalar.",
+          "type": "string"
+        },
+        {
+          "const": "hospital",
+          "description": "Hastaneler, huzurevleri.",
+          "type": "string"
+        },
+        {
+          "const": "hotel",
+          "description": "Oteller, pansiyonlar.",
+          "type": "string"
+        },
+        {
+          "const": "dwelling",
+          "description": "Apartmanlar.",
+          "type": "string"
+        }
+      ]
+    },
+    "RoomEscape": {
+      "description": "A room's walks, from its farthest point: 40 cm in front of its walls (BYKHY 32/6).",
+      "properties": {
+        "entrance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EscapeWalk"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A dwelling unit's room: to its unit's door, through its own rooms (48/2); none for another room."
+        },
+        "exit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EscapeWalk"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "To the nearest storey exit (BYKHY 32/4); none when it reaches none."
+        },
+        "hasEntrance": {
+          "description": "Whether its unit has a door on its storey (a dwelling unit's room only).",
+          "type": "boolean"
+        },
+        "passages": {
+          "description": "Its doors and gaps without a sill: its exits for BYKHY 39/2.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "storeyExits": {
+          "description": "Whether its storey has an exit it may walk to: through its own unit's rooms and the common ones (33/6-b).",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "storeyExits",
+        "hasEntrance",
+        "passages"
+      ],
+      "type": "object"
+    },
+    "RoomFacts": {
+      "description": "A room.",
+      "properties": {
+        "axis": {
+          "description": "Its outline to the walls' axes, m²: what most uses' person loads read (BYKHY Ek-5/A).",
+          "format": "double",
+          "type": "number"
+        },
+        "broken": {
+          "description": "Its boundary could not be found round its seed: its areas are its drawn rings', and it has no walks.",
+          "type": "boolean"
+        },
+        "escape": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoomEscape"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its walks; none for a void, an outdoor or a broken room and an escape stair's room."
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoomKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Its kind as the regulations read rooms, by its name or usage (KentOS Mimari's reading: Salon, Yatak odası,\nMutfak, Banyo, WC, Hol …); none for another room (a store, a study, a balcony)."
+        },
+        "level": {
+          "description": "Its storey's id.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "narrow": {
+          "default": null,
+          "description": "Its net width, m: the diameter of the largest circle inside its net outline, the regulations' narrow side\n(dar kenar, PAİY 29/1 and 29/3); none for a broken room.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "net": {
+          "description": "Its net area, m²: between the walls' inner faces, as article 4 measures it.",
+          "format": "double",
+          "type": "number"
+        },
+        "number": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "occupancy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Occupancy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The use its name or usage names as BYKHY Ek-5/B's rows do (Otopark, Depo, Lokanta …), as Mimari denetim's\nfire rules read a room outside a unit (docs/adr/8057 §82); none when they name none, or a dwelling's."
+        },
+        "outdoor": {
+          "description": "Its usage's brief is an outdoor one (a balcony, a terrace).",
+          "type": "boolean"
+        },
+        "stair": {
+          "description": "An escape stair's room (named or used so, no dwelling unit's own): reaching it is reaching the storey's exit.",
+          "type": "boolean"
+        },
+        "uid": {
+          "description": "Its persistent id.",
+          "type": "string"
+        },
+        "unit": {
+          "description": "Its program group's id.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "usage": {
+          "description": "Its usage, as the program's briefs name it.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "void": {
+          "description": "A void: a shaft, a lift shaft, an opening in the floor.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "uid",
+        "void",
+        "outdoor",
+        "broken",
+        "stair",
+        "net",
+        "axis"
+      ],
+      "type": "object"
+    },
+    "RoomKind": {
+      "description": "A room's kind, as Planlı Alanlar İmar Yönetmeliği 29 names the rooms of a dwelling (the passages too).",
+      "oneOf": [
+        {
+          "const": "living",
+          "description": "Oturma odası (Salon).",
+          "type": "string"
+        },
+        {
+          "const": "bedroom",
+          "description": "Yatak odası (Ebeveyn, Çocuk, Oda).",
+          "type": "string"
+        },
+        {
+          "const": "kitchen",
+          "description": "Mutfak veya yemek pişirme yeri.",
+          "type": "string"
+        },
+        {
+          "const": "bath",
+          "description": "Banyo veya yıkanma yeri (Duş).",
+          "type": "string"
+        },
+        {
+          "const": "toilet",
+          "description": "Tuvalet (WC).",
+          "type": "string"
+        },
+        {
+          "const": "corridor",
+          "description": "Hol, koridor, antre.",
+          "type": "string"
+        }
+      ]
+    },
+    "Severity": {
+      "description": "A finding's severity, as a rule gives it.",
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ],
+      "type": "string"
+    },
+    "Storey": {
+      "description": "A storey of the project.",
+      "properties": {
+        "elevation": {
+          "description": "Its floor's elevation, m.",
+          "format": "double",
+          "type": "number"
+        },
+        "height": {
+          "description": "Its height, m; none when the project gives none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "elevation"
+      ],
+      "type": "object"
+    },
+    "StoreyExits": {
+      "description": "A storey's exits counted.",
+      "properties": {
+        "count": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "level": {
+          "description": "The storey's id; none for the rooms on no storey.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "type": "object"
+    },
+    "UnitFacts": {
+      "description": "A program group's article 4 areas (Planlı Alanlar İmar Yönetmeliği 4/ğ), m².",
+      "properties": {
+        "annexGross": {
+          "description": "Its annexes' gross and net areas summed (an independent unit's; 0 for another group).",
+          "format": "double",
+          "type": "number"
+        },
+        "annexNet": {
+          "format": "double",
+          "type": "number"
+        },
+        "annexOf": {
+          "description": "An annex's independent unit, by its id.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dwelling": {
+          "description": "An independent unit that is a dwelling (BYKHY 48 reads its rooms).",
+          "type": "boolean"
+        },
+        "general": {
+          "description": "BB genel brüt alanı (4/ğ-2): its total and its part; none without a part.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "gross": {
+          "description": "BB brüt alanı (4/ğ-1): its rooms' outer contour, a wall it shares cut at its axis.",
+          "format": "double",
+          "type": "number"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/GroupKind"
+        },
+        "levels": {
+          "description": "Each storey's part of its gross and net.",
+          "items": {
+            "$ref": "#/$defs/UnitLevel"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "nature": {
+          "description": "What the deed calls it (Daire, Dükkân, Büro, Depo).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "net": {
+          "description": "BB net alanı (4/ğ-3): its rooms' net areas, voids and outdoor rooms out.",
+          "format": "double",
+          "type": "number"
+        },
+        "number": {
+          "description": "Its number, as the project writes it.",
+          "type": "string"
+        },
+        "occupancy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Occupancy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its use as BYKHY Ek-5/B's rows name it, read from its nature (an annex's from its unit's; docs/adr/8057 §79);\nnone for a common or outdoor group and for a nature that names no use."
+        },
+        "share": {
+          "description": "Its part of the common areas' gross, by the program's rule; none when the program shares nothing.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "total": {
+          "description": "BB toplam brüt alanı (4/ğ-4): its gross and its annexes'.",
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "number",
+        "kind",
+        "dwelling",
+        "gross",
+        "net",
+        "annexGross",
+        "annexNet",
+        "total",
+        "levels"
+      ],
+      "type": "object"
+    },
+    "UnitLevel": {
+      "description": "A group's areas on one storey, m².",
+      "properties": {
+        "gross": {
+          "format": "double",
+          "type": "number"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "net": {
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "gross",
+        "net"
+      ],
+      "type": "object"
+    },
+    "ZoningFacts": {
+      "description": "The parcel's zoning and the building's areas against it, m² (PAİY 4/1-tt, 4/1-cccc, 5/5, 5/8, 21, 22).",
+      "properties": {
+        "cap": {
+          "description": "The 30 % of the parcel's emsal area the exempt rooms may take; none without an emsal.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "coverage": {
+          "description": "TAKS the plan gives; none when it gives none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "exempt": {
+          "description": "Emsal harici, within the 30 % (22/1).",
+          "format": "double",
+          "type": "number"
+        },
+        "far": {
+          "description": "Emsal (KAKS) the plan gives; none when it gives none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "floors": {
+          "description": "Katlar alanı (emsale konu alan): the rooms counted in and the rooms out of it past the 30 % (5/8).",
+          "format": "double",
+          "type": "number"
+        },
+        "footprint": {
+          "description": "Taban alanı: the ground storey's rooms counted (all rooms in a project without storeys).",
+          "format": "double",
+          "type": "number"
+        },
+        "included": {
+          "description": "The rooms counted in (emsale dahil).",
+          "format": "double",
+          "type": "number"
+        },
+        "outside": {
+          "description": "Emsal harici apart from the 30 % (5/8's own list: fire stairs and their halls, a shelter …).",
+          "format": "double",
+          "type": "number"
+        },
+        "over": {
+          "description": "The exempt rooms' area past the 30 %, counted in the floors' area.",
+          "format": "double",
+          "type": "number"
+        },
+        "parcel": {
+          "description": "Net imar parseli alanı, as the project's İmar durumu writes it (the ratios are over it, PAİY 5/5).",
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "parcel",
+        "floors",
+        "included",
+        "exempt",
+        "outside",
+        "over",
+        "footprint"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A rule's examples file.",
+  "properties": {
+    "examples": {
+      "items": {
+        "$ref": "#/$defs/AuditExample"
+      },
+      "maxItems": 10,
+      "minItems": 1,
+      "type": "array"
+    },
+    "format": {
+      "const": "kentos.auditExamples"
+    },
+    "schemaVersion": {
+      "const": 1
+    }
+  },
+  "required": [
+    "format",
+    "schemaVersion",
+    "examples"
+  ],
+  "title": "KentOS audit rule examples (kentos.auditExamples 1)",
+  "type": "object"
+}

@@ -13,10 +13,11 @@ use std::sync::{Arc, OnceLock};
 use std::time::Instant;
 
 use kentos_commands::{
-    BatchOnError, BatchRowFailed, BatchRowRan, CommandError, CommandWarning, GpkgExported, GpkgTableExported, ProcessingBatch,
-    ProcessingBatched, ProcessingRan, ProcessingRecord, ProcessingRun, ProcessingTool,
-    ProcessingTools, ProcessingToolsListed, RecordFailure, RecordStep, RecordTotal, RunInput,
-    RunSink, SinkColumn, SinkDimension, SinkMode, SinkReport, SinkTable, ToolNote, ToolParameter, codes,
+    BatchOnError, BatchRowFailed, BatchRowRan, CommandError, CommandWarning, GpkgExported,
+    GpkgTableExported, ProcessingBatch, ProcessingBatched, ProcessingRan, ProcessingRecord,
+    ProcessingRun, ProcessingTool, ProcessingToolOutput, ProcessingTools, ProcessingToolsListed,
+    RecordFailure, RecordStep, RecordTotal, RunInput, RunSink, SinkColumn, SinkDimension, SinkMode,
+    SinkReport, SinkTable, ToolNote, ToolParameter, codes,
 };
 use kentos_domain::{ChangeMark, Document, Slot, Uuid};
 use kentos_geometry_core::geometry::Bounds;
@@ -134,6 +135,17 @@ fn described(registry: &Registry, tool: &Tool, doc: &Document) -> ProcessingTool
                     }
                     _ => Vec::new(),
                 },
+            })
+            .collect(),
+        // What a model's later step is wired to (docs/adr/8057 §108): without them an agent writing a model guessed
+        // the names and its chain did not hold.
+        outputs: tool
+            .outputs
+            .iter()
+            .map(|o| ProcessingToolOutput {
+                name: o.name.clone(),
+                label: o.label.clone(),
+                kind: o.kind.type_name().to_owned(),
             })
             .collect(),
     }
@@ -259,26 +271,43 @@ fn file_value(name: &str, v: &Value) -> Result<Value, Box<CommandError>> {
     Ok(json!({ "name": file, "rows": rows }))
 }
 
+/// Why `id` is not a tool to run here: an installed extension's tool this host does not run says why and what its
+/// descriptor must declare (a headless host's desktop-only tool, docs/adr/8057 §70); anything else, where the list is.
+fn unknown_tool(id: &str) -> String {
+    crate::external::unavailable(id).unwrap_or_else(|| {
+        format!("“{id}” bir işlem aracı değil. Araçların listesi cad.processing.tools'ta.")
+    })
+}
+
 pub(crate) fn ready(
     registry: &Registry,
     doc: &Document,
     input: &ProcessingRun,
 ) -> Result<Ready, Box<CommandError>> {
-    let Some(tool) = registry.get(&input.tool) else {
-        return Err(refused(
-            codes::UNKNOWN_TOOL,
-            format!(
-                "“{}” bir işlem aracı değil. Araçların listesi cad.processing.tools'ta.",
-                input.tool
-            ),
-            Some("tool".into()),
-        ));
+    // A model written for the run (docs/adr/8057 §108): read and checked as the library's, run as a saved one is.
+    let inline = input
+        .model
+        .as_ref()
+        .map(|value| inline_model(registry, value))
+        .transpose()?;
+    let (tool, model) = match inline {
+        Some(model) => (model_as_tool(&model, &|id| registry.tool(id)), Some(model)),
+        None => {
+            let Some(tool) = registry.get(&input.tool) else {
+                return Err(refused(
+                    codes::UNKNOWN_TOOL,
+                    unknown_tool(&input.tool),
+                    Some("tool".into()),
+                ));
+            };
+            let model = input
+                .tool
+                .strip_prefix(MODEL_PREFIX)
+                .and_then(|id| registry.model(id))
+                .cloned();
+            (tool, model)
+        }
     };
-    let model = input
-        .tool
-        .strip_prefix(MODEL_PREFIX)
-        .and_then(|id| registry.model(id))
-        .cloned();
     let selection = slots_of(doc, &input.selection, "selection")?;
     let view = input.view.map(|[min_x, min_y, max_x, max_y]| Bounds {
         min_x,
@@ -370,6 +399,68 @@ pub(crate) fn ready(
         folder,
         environment,
     })
+}
+
+/// A model written for a run (docs/adr/8057 §108): read as the library reads one, each step's tool this host's, its
+/// wiring checked as the designer checks it; why not, where.
+fn inline_model(registry: &Registry, value: &Value) -> Result<Model, Box<CommandError>> {
+    // An empty list written as an empty object (`"inputs": {}`) is read as the list: an agent wrote it so on the real
+    // window and gave the chain up for two runs (two undo steps).
+    let mut value = value.clone();
+    for key in ["inputs", "outputs"] {
+        if let Some(slot) = value.get_mut(key)
+            && slot.as_object().is_some_and(serde_json::Map::is_empty)
+        {
+            *slot = Value::Array(Vec::new());
+        }
+    }
+    let model: Model = serde_json::from_value(value).map_err(|e| {
+        refused(
+            codes::INVALID_PARAMETERS,
+            format!(
+                "model bir İşlemler modeli olarak okunmadı ({e}): id, label, inputs, steps (her adımın id'si, \
+                 tool'u ve values'u) ve outputs."
+            ),
+            Some("model".into()),
+        )
+    })?;
+    if model.steps.is_empty() {
+        return Err(refused(
+            codes::INVALID_PARAMETERS,
+            "Modelin adımı yok: en az bir araç adımı verin.".to_owned(),
+            Some("model.steps".into()),
+        ));
+    }
+    for (i, step) in model.steps.iter().enumerate() {
+        if registry.get(&step.tool).is_none() {
+            return Err(refused(
+                codes::UNKNOWN_TOOL,
+                unknown_tool(&step.tool),
+                Some(format!("model.steps[{i}].tool")),
+            ));
+        }
+    }
+    let lookup = |id: &str| registry.get(id);
+    if let Some(issue) = crate::model::check_model(&model, &lookup)
+        .into_iter()
+        .next()
+    {
+        let at = issue
+            .step
+            .as_ref()
+            .and_then(|s| model.steps.iter().position(|x| &x.id == s));
+        let step = issue
+            .step
+            .as_ref()
+            .map(|s| format!(" (adım “{s}”)"))
+            .unwrap_or_default();
+        return Err(refused(
+            codes::INVALID_PARAMETERS,
+            format!("Modelin bağlantısı tutmuyor{step}: {}", issue.message),
+            Some(at.map_or_else(|| "model".to_owned(), |i| format!("model.steps[{i}]"))),
+        ));
+    }
+    Ok(model)
 }
 
 /// The drawing as a run sees it: no screen, the input's selection and box.
@@ -662,10 +753,7 @@ impl ToolHost for Tools {
         let Some(tool) = registry.get(&input.tool) else {
             return Err(refused(
                 codes::UNKNOWN_TOOL,
-                format!(
-                    "“{}” bir işlem aracı değil. Araçların listesi cad.processing.tools'ta.",
-                    input.tool
-                ),
+                unknown_tool(&input.tool),
                 Some("tool".into()),
             ));
         };
@@ -854,6 +942,7 @@ pub(crate) fn row_run(input: &ProcessingBatch, row: &kentos_commands::BatchRow) 
     }
     ProcessingRun {
         environment: input.environment.clone(),
+        model: None,
         tool: input.tool.clone(),
         parameters,
         selection: input.selection.clone(),
@@ -1665,12 +1754,81 @@ pub(crate) enum Sunk {
     Cancelled,
 }
 
-fn unwritable(why: String) -> Box<CommandError> {
-    refused(
-        codes::FILE_UNWRITABLE,
-        format!("GeoPackage yazılamadı: {why}. Eski dosya olduğu gibi kaldı."),
-        Some("sink.path".to_owned()),
-    )
+/// How a sink's failed write is said (docs/adr/8057 §120): the file the user named, not the passing copy the write was
+/// made in, and what the failure left as it was. A read-only folder's refusal named `yeni.gpkg.kentos-525807-0` and
+/// said an old file was left as it was where there was none.
+struct Said {
+    /// What could not be done.
+    head: &'static str,
+    /// The path the user gave, and the passing copy's, which the causes name.
+    shown: String,
+    work: String,
+    /// What the failure left as it was.
+    ending: &'static str,
+}
+
+impl Said {
+    fn unwritable(&self, why: impl std::fmt::Display) -> Box<CommandError> {
+        let why = why.to_string().replace(&self.work, &self.shown);
+        refused(
+            codes::FILE_UNWRITABLE,
+            format!("{}: {why}. {}", self.head, self.ending),
+            Some("sink.path".to_owned()),
+        )
+    }
+}
+
+/// Whether the system lets the sink's file be written (docs/adr/8057 §120), asked before the write: its folder takes a
+/// file, and a file that is there takes a write. Said in words: a folder without the right to write came back as the
+/// database library's “unable to open database file”, a read-only file as “attempt to write a readonly database”.
+fn write_right(path: &Path, there: bool) -> Result<(), String> {
+    use std::io::ErrorKind;
+    let folder = path
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    let probe = passing_file(path);
+    match std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&probe)
+    {
+        Ok(file) => {
+            drop(file);
+            let _ = std::fs::remove_file(&probe);
+        }
+        Err(e) if e.kind() == ErrorKind::PermissionDenied => {
+            return Err(format!(
+                "{} klasörüne yazma izni yok; başka bir klasör seçin",
+                folder.display()
+            ));
+        }
+        Err(e) => {
+            return Err(format!(
+                "{} klasörüne yazılamıyor: {}",
+                folder.display(),
+                io_words(&e)
+            ));
+        }
+    }
+    if there && let Err(e) = std::fs::OpenOptions::new().write(true).open(path) {
+        return Err(if e.kind() == ErrorKind::PermissionDenied {
+            "dosya salt okunur ya da ona yazma izni yok".to_owned()
+        } else {
+            format!("dosya yazmaya açılamadı: {}", io_words(&e))
+        });
+    }
+    Ok(())
+}
+
+/// A system error in words where it has some.
+fn io_words(e: &std::io::Error) -> String {
+    use std::io::ErrorKind;
+    match e.kind() {
+        ErrorKind::ReadOnlyFilesystem => "sürücü salt okunur".to_owned(),
+        ErrorKind::StorageFull => "diskte yer yok".to_owned(),
+        _ => e.to_string(),
+    }
 }
 
 /// The passing file a write is made in beside the target.
@@ -1737,13 +1895,39 @@ pub(crate) fn write_sink(
     } else {
         (path.clone(), true)
     };
+    let said = Said {
+        head: "GeoPackage yazılamadı",
+        shown: path.display().to_string(),
+        work: work.display().to_string(),
+        ending: if in_place || path.exists() {
+            "Eski dosya olduğu gibi kaldı."
+        } else {
+            "Dosya yazılmadı."
+        },
+    };
+    if let Err(why) = write_right(path, !fresh) {
+        return Err(refused(
+            codes::FILE_UNWRITABLE,
+            format!("“{}” yazılamadı: {why}. {}", path.display(), said.ending),
+            at,
+        ));
+    }
     if !in_place {
         let _ = std::fs::remove_file(&work);
     }
     if !fresh && !write {
-        std::fs::copy(path, &work).map_err(|e| unwritable(e.to_string()))?;
+        std::fs::copy(path, &work).map_err(|e| said.unwritable(e))?;
     }
-    let outcome = write_tables(copy, &layers, texts, &work, target.mode, lineage, flow);
+    let outcome = write_tables(
+        copy,
+        &layers,
+        texts,
+        &work,
+        target.mode,
+        lineage,
+        flow,
+        &said,
+    );
     let finished = match outcome {
         Ok(f) => f,
         Err(e) => {
@@ -1776,13 +1960,13 @@ pub(crate) fn write_sink(
             if !in_place {
                 let _ = std::fs::remove_file(&work);
             }
-            return Err(unwritable(e.to_string()));
+            return Err(said.unwritable(e));
         }
     };
     if fresh && write {
         if let Err(e) = std::fs::rename(&work, path) {
             let _ = std::fs::remove_file(&work);
-            return Err(unwritable(e.to_string()));
+            return Err(said.unwritable(e));
         }
     } else if !in_place {
         let _ = std::fs::remove_file(&work);
@@ -1831,7 +2015,23 @@ fn write_database(
     };
     let work = passing_file(&std::env::temp_dir().join("kentos-sink.gpkg"));
     let _ = std::fs::remove_file(&work);
-    let finished = match write_tables(copy, layers, texts, &work, SinkMode::New, lineage, flow) {
+    // The passing file is where the tables are made, not the user's: said as it is.
+    let said = Said {
+        head: "Sonucun tabloları hazırlanamadı",
+        shown: work.display().to_string(),
+        work: work.display().to_string(),
+        ending: "Veritabanına dokunulmadı.",
+    };
+    let finished = match write_tables(
+        copy,
+        layers,
+        texts,
+        &work,
+        SinkMode::New,
+        lineage,
+        flow,
+        &said,
+    ) {
         Ok(f) => f,
         Err(e) => {
             let _ = std::fs::remove_file(&work);
@@ -2122,7 +2322,8 @@ struct Finished {
 }
 
 /// The tables written in `work` in one transaction: committed when every batch is in, rolled back (the session
-/// dropped) when anything stops it.
+/// dropped) when anything stops it. Its refusals name the file as `said` does.
+#[allow(clippy::too_many_arguments)]
 fn write_tables(
     copy: &Document,
     layers: &[String],
@@ -2131,17 +2332,22 @@ fn write_tables(
     mode: SinkMode,
     lineage: &Lineage<'_>,
     flow: &dyn BatchFlow,
+    said: &Said,
 ) -> Result<Finished, Stop> {
     use kentos_native_application::geopackage::{Clash, Flow, WriteStop, write_with_tables};
-    let path_text = work.display().to_string();
+    let path_text = &said.shown;
     let fresh = mode == SinkMode::New;
+    let unwritable = |why: String| Stop::Refused(said.unwritable(why));
     let mut gp = if fresh {
-        kentos_geopackage::GeoPackage::create(work).map_err(|e| Stop::Refused(unwritable(e.0)))?
+        kentos_geopackage::GeoPackage::create(work).map_err(|e| unwritable(e.0))?
     } else {
         kentos_geopackage::GeoPackage::open(work, true).map_err(|e| {
             Stop::Refused(refused(
                 codes::IMPORT_UNREADABLE,
-                format!("{path_text} GeoPackage olarak açılamadı: {}. Dosyaya dokunulmadı.", e.0),
+                format!(
+                    "{path_text} GeoPackage olarak açılamadı: {}. Dosyaya dokunulmadı.",
+                    e.0.replace(&said.work, path_text)
+                ),
                 Some("sink.path".to_owned()),
             ))
         })?
@@ -2150,14 +2356,12 @@ fn write_tables(
         Vec::new()
     } else {
         gp.layers()
-            .map_err(|e| Stop::Refused(unwritable(e.0)))?
+            .map_err(|e| unwritable(e.0))?
             .into_iter()
             .map(|l| l.name)
             .collect()
     };
-    let session = gp
-        .session()
-        .map_err(|e| Stop::Refused(unwritable(e.0)))?;
+    let session = gp.session().map_err(|e| unwritable(e.0))?;
     let stopped = || flow.stopped();
     let progress = |done: u64, total: u64| flow.progress(done, total);
     let clash = match mode {
@@ -2193,7 +2397,7 @@ fn write_tables(
             Some("sink.path".to_owned()),
         )),
         WriteStop::Srs(why) => Stop::Refused(refused(codes::CRS_MISMATCH, why, Some("sink.path".to_owned()))),
-        WriteStop::Failed(why) => Stop::Refused(unwritable(why)),
+        WriteStop::Failed(why) => unwritable(why),
     })?;
     if written.tables.is_empty() {
         // Dropping the session rolls back what little it did (the spatial reference system).
@@ -2214,15 +2418,13 @@ fn write_tables(
                 &lineage.document(&t.table, t.layer.as_deref(), t.output.as_deref(), &made),
                 &made,
             )
-            .map_err(|e| Stop::Refused(unwritable(e.0)))?;
+            .map_err(|e| unwritable(e.0))?;
     }
     if flow.stopped() {
         return Err(Stop::Cancelled);
     }
-    session
-        .commit()
-        .map_err(|e| Stop::Refused(unwritable(e.0)))?;
-    gp.close().map_err(|e| Stop::Refused(unwritable(e.0)))?;
+    session.commit().map_err(|e| unwritable(e.0))?;
+    gp.close().map_err(|e| unwritable(e.0))?;
     let replaced: Vec<String> = written
         .tables
         .iter()

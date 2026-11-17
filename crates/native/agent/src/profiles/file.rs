@@ -27,11 +27,16 @@ struct StoreFile {
 
 /// The device's agents' file: `$XDG_CONFIG_HOME/kentos-cad/yapay-zeka-ajanlari.json`, else under `~/.config`.
 pub fn device_file() -> Option<PathBuf> {
+    Some(device_folder()?.join(FILE))
+}
+
+/// The folder the device's agents' files are kept in (`kentos-cad` under the user's configuration folder).
+pub fn device_folder() -> Option<PathBuf> {
     let base = std::env::var_os("XDG_CONFIG_HOME")
         .filter(|v| !v.is_empty())
         .map(PathBuf::from)
         .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".config")))?;
-    Some(base.join("kentos-cad").join(FILE))
+    Some(base.join("kentos-cad"))
 }
 
 /// The state of the file at `path`: none there is an empty list; one that does not read is set aside.

@@ -87,6 +87,49 @@ impl App {
         folder: &Path,
         who: &str,
     ) -> Result<Value, String> {
+        let installed = self.ext_reload_folder(id, folder)?;
+        let digest = self.extensions.registry.as_ref().and_then(|r| r.digest(id));
+        let name = self.extension_name(id);
+        let activation = match &installed.activation {
+            Some(Err(problem)) => Some(problem.message.clone()),
+            _ => None,
+        };
+        if installed.already {
+            return Ok(
+                json!({ "id": id, "version": installed.version, "changed": false,
+                              "said": "Klasörde değişiklik yok: kurulu hâli aynı." }),
+            );
+        }
+        self.extension_worked(
+            id,
+            "workshop",
+            "workshop_reloaded",
+            &format!("Atölyeden yeniden yüklendi ({who})."),
+        );
+        self.toast(
+            Toast::info(format!("{name}: atölyeden yeniden yüklendi")).body(format!(
+                "{who} değişiklikleri yükledi ({}).",
+                installed.version
+            )),
+        );
+        Ok(json!({
+            "id": id,
+            "version": installed.version,
+            "digest": digest,
+            "changed": true,
+            "activation": activation,
+        }))
+    }
+
+    /// Loads `folder`'s changes over the extension installed from it, with the capabilities the user granted, its
+    /// process let go of (its next run reads the new code): what was installed, or why not (a run going, not installed
+    /// from this folder, a capability not granted). The caller says it: the workshop's reload, a dependency added from
+    /// the personal environment (python_personal/add_to.rs).
+    pub(crate) fn ext_reload_folder(
+        &mut self,
+        id: &str,
+        folder: &Path,
+    ) -> Result<kentos_extension_host::Installed, String> {
         if let Some(run) = self
             .extensions
             .runners
@@ -138,38 +181,10 @@ impl App {
                 .first()
                 .map_or_else(|| "Yeniden yüklenemedi.".to_owned(), ToString::to_string)
         })?;
-        let digest = registry.digest(id);
         // Its process goes: kept between runs of one version, it would run the old code.
         self.extensions.runners.remove(id);
         self.extensions_changed();
-        let name = self.extension_name(id);
-        let activation = match &installed.activation {
-            Some(Err(problem)) => Some(problem.message.clone()),
-            _ => None,
-        };
-        if installed.already {
-            return Ok(json!({ "id": id, "version": installed.version, "changed": false,
-                              "said": "Klasörde değişiklik yok: kurulu hâli aynı." }));
-        }
-        self.extension_worked(
-            id,
-            "workshop",
-            "workshop_reloaded",
-            &format!("Atölyeden yeniden yüklendi ({who})."),
-        );
-        self.toast(
-            Toast::info(format!("{name}: atölyeden yeniden yüklendi")).body(format!(
-                "{who} değişiklikleri yükledi ({}).",
-                installed.version
-            )),
-        );
-        Ok(json!({
-            "id": id,
-            "version": installed.version,
-            "digest": digest,
-            "changed": true,
-            "activation": activation,
-        }))
+        Ok(installed)
     }
 
     /// What the user sees of an installed extension, in words (plan ADIM 21's `preview_render`).
@@ -202,8 +217,9 @@ impl App {
             .into_iter()
             .flat_map(|m| &m.entrypoints.panels)
             .map(|entry| {
+                // As the user sees it: translated when the package translates it (docs/adr/8057 §106).
                 let definition = registry
-                    .package_file(id, &entry.definition)
+                    .localized_file(id, &entry.definition, &format!("ui.{}", entry.id))
                     .and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok())
                     .and_then(|value| kentos_extensions::ui_panel::read(&value));
                 let side = serde_json::to_value(entry.side).unwrap_or(Value::Null);

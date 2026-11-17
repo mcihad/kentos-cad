@@ -48,7 +48,7 @@ class CommandResult:
 
 
 class PanelSession:
-    """One of the extension's panels, changed as the run goes (docs/adr/8057 §32): ``ctx.panel`` (the panel whose button or changed input started the run; None when it did not start from a panel) or what :meth:`CommandContext.open_panel` gives."""
+    """One of the extension's panels, changed as the run goes: ``ctx.panel`` (the panel whose button or changed input started the run; None when it did not start from a panel) or what :meth:`CommandContext.open_panel` gives."""
     #: The panel's id in the manifest (``entrypoints.panels[].id``).
     id: str
     def set(self, id: str, *, value: Any = ..., options: Iterable[Any] | None = None, enabled: bool | None = None, visible: bool | None = None, text: str | None = None, image: Any = ...) -> bool:
@@ -61,6 +61,14 @@ class PanelSession:
         """Puts the cursor in typed field ``id``; only in the panel shown (False otherwise: the code does not bring its tab in front of what the user looks at)."""
     def close(self) -> bool:
         """Closes the panel (its values with it)."""
+
+
+def layer_input(layer: str, kinds: Sequence[str] | None = None) -> dict[str, Any]:
+    """The objects of ``layer`` (its id) for ``ctx.run_tool``; ``kinds`` narrows them (``["polygon"]``)."""
+
+
+def new_layer(name: str) -> dict[str, Any]:
+    """A new layer ``name`` for ``ctx.run_tool``'s output."""
 
 
 class CommandContext:
@@ -83,16 +91,18 @@ class CommandContext:
         """Rows to show the user, each a dict of column → value; none is an answer too (a panel's table empties)."""
     def message(self, text: str, title: str | None = None) -> CommandResult:
         """A line to show the user."""
-    def dialog(self, title: str, body: list[dict[str, Any]], ok: str = "Tamam", cancel: str = "İptal") -> dict[str, Any] | None:
-        """Asks the user in a KentOS window over the drawing and waits for the answer (docs/adr/8057 §29): ``body`` is a panel's fields (``kentos.ui.panel`` components: ``text``, ``textField``, ``numberField``, ``dateField``, ``timeField``, ``dateTimeField``, ``select``, ``multiSelect``, ``checkbox``, ``layerPicker``, ``fieldPicker``), no buttons or commands."""
+    def dialog(self, title: str, body: list[dict[str, Any]], ok: str = "Tamam", cancel: str = "İptal", steps: bool = False) -> dict[str, Any] | None:
+        """Asks the user in a KentOS window over the drawing and waits for the answer: ``body`` is a panel's fields (``kentos.ui.panel`` components: ``text``, ``textField``, ``numberField``, ``dateField``, ``timeField``, ``dateTimeField``, ``select``, ``multiSelect``, ``checkbox``, ``layerPicker``, ``fieldPicker``), no buttons or commands."""
     def confirm(self, text: str, title: str = "Onay", ok: str = "Evet", cancel: str = "Hayır") -> bool:
         """Asks the user yes or no in a KentOS window (:meth:`dialog` with ``text``): True for ``ok``."""
     def open_panel(self, id: str) -> PanelSession:
         """Opens the extension's panel ``id`` (``entrypoints.panels[].id``; brought in front when it is open) and gives it to change as the run goes (:class:`PanelSession`): a command run from the ribbon shows what it did in its panel."""
     def cancelled(self) -> CommandResult:
         """What a run that saw Durdur returns; its writes are taken back."""
+    def run_tool(self, tool: str, /, **parameters: Any) -> Any:
+        """Runs a KentOS tool with this command's rights, in its undo step."""
     def apply_declarative_schema(self, path: str = "schema.json") -> CommandResult:
-        """Sets up the layers, value lists and relations the package's ``schema.json`` declares (docs/adr/8057 §23), in the run's one undo step, and says what it did, a row each."""
+        """Sets up the layers, value lists and relations the package's ``schema.json`` declares, in the run's one undo step, and says what it did, a row each."""
 
 
 class Feature:
@@ -157,10 +167,23 @@ class ProcessingContext(CommandContext):
         """The run's one line in İşlemler' history, in place of KentOS's own ("12 nesne eklendi")."""
     def select(self, features: Iterable[Feature | str]) -> None:
         """Leaves these inputs selected in the drawing when the run ends (a session result, not a change)."""
+    def update(self, feature: Feature | str, /, **attrs: Any) -> None:
+        """Writes ``attrs`` into an input object of this tool, one that ``writes: true``."""
+    def run_tool(self, tool: str, /, **parameters: Any) -> ToolAnswer:
+        """Runs a KentOS built-in tool on objects this tool holds, never on the drawing."""
+
+
+class ToolAnswer:
+    """What a tool's ``ctx.run_tool`` gave back: ``summary``, ``warnings``, ``layers``."""
+    summary: str
+    warnings: list[Any]
+    layers: dict[str, list[Feature]]
+    def features(self) -> list[Feature]:
+        """Every object it made, its layers one after another."""
 
 
 class Shape:
-    """A shape the user drew with an extension's map tool (plan/eklenti.md ADIM 19), as GeoJSON (``__geo_interface__``, RFC 7946): a ``Point``, a ``LineString`` or a ``Polygon`` (a rectangle's four corners; a circle's ring of chords, with ``circle`` its centre and radius), in the project's plane: x east, y north, metres."""
+    """A shape the user drew with an extension's map tool, as GeoJSON (``__geo_interface__``, RFC 7946): a ``Point``, a ``LineString`` or a ``Polygon`` (a rectangle's four corners; a circle's ring of chords, with ``circle`` its centre and radius), in the project's plane: x east, y north, metres."""
     type: str
     coordinates: Any
     #: A circle's centre ``(x, y)`` and radius, when the tool drew a circle; none otherwise.
@@ -174,13 +197,13 @@ class Shape:
 
 
 class MapToolContext(CommandContext):
-    """A map tool's context (plan/eklenti.md ADIM 19): a command's, and the writes of what the user drew."""
+    """A map tool's context: a command's, and the writes of what the user drew."""
     def add_feature(self, layer: str, shape: Any, attrs: dict[str, Any] | None = None) -> CommandResult:
         """Writes ``shape`` (a :class:`Shape`, any GeoJSON geometry or anything with ``__geo_interface__``) as a new object of ``layer`` (its id, or its name when only one layer has it) with ``attrs``, and says what it wrote: an area for a polygon, a line for a line string, a point for a point."""
 
 
 class GisAuditFacts:
-    """What an audit rule reads (docs/adr/8057 §17): the drawing's layers holding objects, each object a :class:`Feature` (persistent id, kind, layer, attributes, shape as GeoJSON), taken when the audit began, and what KentOS measured in it (:attr:`project`)."""
+    """What an audit rule reads: the drawing's layers holding objects, each object a :class:`Feature` (persistent id, kind, layer, attributes, shape as GeoJSON), taken when the audit began, and what KentOS measured in it (:attr:`project`)."""
     #: KentOS gave only the first objects of a very large drawing (its limit): a rule may say so.
     cut: bool
     @property
@@ -197,18 +220,18 @@ class GisAuditFacts:
 
 
 class ProjectAuditFacts:
-    """What KentOS measured in the drawing for an audit (``kentos.auditFacts`` 1, the SDK's ``factsSchema``; docs/adr/8057 §36): each layer's objects by geometry, its invalid geometries, the overlaps of its areas and the gaps their union closes in, worked out once in Rust at the project's topology tolerance, the same on the desktop and in a cloud job."""
+    """What KentOS measured in the drawing for an audit (``kentos.auditFacts`` 1, the SDK's ``factsSchema``): each layer's objects by geometry, its invalid geometries, the overlaps of its areas and the gaps their union closes in, worked out once in Rust at the project's topology tolerance, the same on the desktop and in a cloud job."""
     #: The project's topology tolerance (m): areas nearer than it touch, a piece no wider is no overlap or gap.
     tolerance: float
     #: KentOS measured only the first objects of a very large drawing (by persistent id): a rule may say so.
     cut: bool
-    #: The drawing's storeys, rooms, program groups and escape routes (docs/adr/8057 §39); empty without rooms.
+    #: The drawing's storeys, rooms, program groups and escape routes; empty without rooms.
     architecture: ArchitectureFacts
-    #: The permit's particulars the dated scope decision reads, the building's area and storeys (docs/adr/8063); empty when the drawing gives none of the particulars.
+    #: The permit's particulars the dated scope decision reads, the building's area and storeys; empty when the drawing gives none of the particulars.
     permit: PermitFacts
-    #: The CAD drawing's layers, blocks, dimension typefaces, grids and rooms' numbers, names, storey codes and centres, as EK-3 and EK-4 read them (docs/adr/8064; the SDK's ``factsSchema`` gives its shape), and the rooms of one storey that share ground with how much (``roomOverlaps``, docs/adr/8067); empty when the drawing has neither a layer holding objects nor a room.
+    #: The CAD drawing's layers, blocks, dimension typefaces, grids and rooms' numbers, names, storey codes and centres, as EK-3 and EK-4 read them (the SDK's ``factsSchema`` gives its shape), and the rooms of one storey that share ground with how much (``roomOverlaps``, docs/adr/8067); empty when the drawing has neither a layer holding objects nor a room.
     cad: dict[str, Any]
-    #: Each storey's rooms by group and its elevators, the units (docs/adr/8078; shape in ``factsSchema``).
+    #: Each storey's rooms by group and its elevators, the units (shape in ``factsSchema``).
     building: dict[str, Any]
     def layers(self) -> list[LayerFacts]:
         """The layers holding objects, in the layer tree's order."""
@@ -262,7 +285,7 @@ class Gap:
 
 
 class ArchitectureFacts:
-    """The drawing's architecture as KentOS Mimari measured it (docs/adr/8057 §39): its storeys, every room with its net area and its outline to the walls' axes, the program's groups with PAİY 4/ğ's areas and the escape routes (BYKHY); empty when the drawing has no room."""
+    """The drawing's architecture as KentOS Mimari measured it; each field in factsSchema."""
     #: The project's storeys, lowest first.
     levels: list[Storey]
     #: Every room, a void and an outdoor one too, by persistent id.
@@ -271,6 +294,10 @@ class ArchitectureFacts:
     units: list[UnitFacts]
     #: Each dwelling unit's door and its walk to the nearest storey exit (BYKHY 48/4).
     doors: list[DoorEscape]
+    #: The project says the building has sprinklers: BYKHY's sprinklered distances hold.
+    sprinklers: bool
+    #: İmar durumu and the areas against it; None without one.
+    zoning: ZoningFacts | None
     def exits(self, level: str | None) -> int:
         """How many storey exits a storey has (BYKHY 4/u: an escape stair's room, an open stair, a door out on the ground storey), by its id; 0 for a storey without rooms."""
     def room(self, uid: str) -> RoomFacts | None:
@@ -290,7 +317,7 @@ class Storey:
 
 @dataclass(frozen=True)
 class EscapeWalk:
-    """A walk along the points it turns at, its length in metres; a walk to an exit also says the part it shares with the walk to the nearest other exit (``one_way``, tek yön: a dead end's) and how many exits its start reaches."""
+    """A walk (m) along its points; ``one_way`` its dead end's part (tek yön), ``exits`` the exits its start reaches."""
     length: float
     path: tuple[tuple[float, float], ...]
     one_way: float | None = None
@@ -299,7 +326,7 @@ class EscapeWalk:
 
 @dataclass(frozen=True)
 class RoomEscape:
-    """A room's walks from its farthest point, 40 cm in front of its walls (BYKHY 32/6): to the nearest storey exit (32/4; None when it reaches none) and, a dwelling unit's room, to its unit's door (48/2)."""
+    """A room's walks from its farthest point (BYKHY 32/6) to the nearest storey exit and its dwelling's door."""
     exit: EscapeWalk | None
     storey_exits: bool
     entrance: EscapeWalk | None
@@ -309,7 +336,7 @@ class RoomEscape:
 
 @dataclass(frozen=True)
 class RoomFacts:
-    """A room: its persistent id, number, name, usage, storey and group; whether it is a void, outdoor, broken (its boundary not found) or an escape stair's room; its net area and its outline to the walls' axes (m²); its walks (None for a void, an outdoor, a broken or a stair's room)."""
+    """A room (persistent id, storey, group, net and axis areas in m², walks); ``kind``, ``narrow`` and ``occupancy`` as factsSchema says."""
     uid: str
     number: str | None
     name: str | None
@@ -323,6 +350,9 @@ class RoomFacts:
     net: float
     axis: float
     escape: RoomEscape | None
+    kind: str | None = None
+    narrow: float | None = None
+    occupancy: str | None = None
 
 
 @dataclass(frozen=True)
@@ -335,7 +365,7 @@ class UnitLevel:
 
 @dataclass(frozen=True)
 class UnitFacts:
-    """A program group with PAİY 4/ğ's areas (m²): ``kind`` (``unit``, ``common``, ``outdoor``, ``annex``), ``gross`` (BB brüt), ``net``, ``total`` (with its annexes'), ``share`` of the common areas and ``general`` (genel brüt; None without a share)."""
+    """A program group with PAİY 4/ğ's areas (m²) and its Ek-5/B ``occupancy``; each field in factsSchema."""
     id: str
     number: str
     name: str | None
@@ -351,16 +381,33 @@ class UnitFacts:
     share: float | None
     general: float | None
     levels: tuple[UnitLevel, ...]
+    occupancy: str | None = None
+
+
+@dataclass(frozen=True)
+class ZoningFacts:
+    """İmar durumu (``far`` emsal, ``coverage`` TAKS; None: not given) and the areas against it, m²; see factsSchema."""
+    parcel: float
+    far: float | None
+    coverage: float | None
+    floors: float
+    included: float
+    exempt: float
+    outside: float
+    cap: float | None
+    over: float
+    footprint: float
 
 
 @dataclass(frozen=True)
 class DoorEscape:
-    """A dwelling unit's door: its persistent id, unit, storey and middle, and its walk from its outer side to the nearest storey exit (BYKHY 48/4; None when it opens into an escape stair's room)."""
+    """A dwelling unit's door and its walk to the nearest storey exit (BYKHY 48/4); see factsSchema."""
     uid: str
     unit: str
     level: str | None
     at: tuple[float, float]
     exit: EscapeWalk | None
+    into_stair: bool = False
 
 
 @dataclass

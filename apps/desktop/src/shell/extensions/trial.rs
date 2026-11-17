@@ -1,13 +1,16 @@
-//! Kapı 3's part that runs code (plan/eklenti.md ADIM 21; docs/adr/8057 §37): an agent's trial of an installed
+//! Kapı 3's part that runs code (plan/eklenti.md ADIM 21; docs/adr/8057 §37, §52): an agent's trial of an installed
 //! extension. A synthetic drawing is made of the objects the agent gives (a new GIS drawing on TUREF / TM36, their
-//! layers by name), never the user's; the extension's audit rules read its facts and its İşlemler tools run on it, one
-//! after another in the background, in the extension's own process. The report gives each rule's findings by the
-//! object's place in the agent's list, each tool's written layers and objects, or the extension's error with its
-//! traceback.
+//! layers by name), never the user's; on it, one after another in the background, the extension's audit rules read its
+//! facts, its İşlemler tools run, then its commands and its map tools (steps.rs, broker.rs), each in the extension's
+//! own process and each seeing what the steps before it wrote; asked for (`auditAfter`), the rules run again on the
+//! drawing the steps left. The report gives each rule's findings by the object's place in the agent's list, what each
+//! step wrote and changed, or the extension's error with its traceback.
 //!
-//! - **Only what the user installed runs:** the extension installed and its environment ready; a tool of another
-//!   extension is refused. The user's own run (the ribbon's) is not needed: the user installed it.
-//! - **One trial at a time;** Durdur (the agent's turn stopped) stops it between its steps and the running rule.
+//! - **Only what the user installed runs:** the extension installed and its environment ready, with the rights the user
+//!   gave it; a tool of another extension is refused. The user's own run (the ribbon's) is not needed: the user
+//!   installed it.
+//! - **One trial at a time;** Durdur (the agent's turn stopped) stops it between its steps and the running rule or
+//!   command.
 //! - **Nothing of the user's drawing:** the synthetic drawing lives in the background task and goes with it.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -16,19 +19,25 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 use kentos_domain::Uuid;
+use kentos_python_env::process::{Answer, Heard};
 use serde_json::{Value, json};
 
-use super::audits::{MOST_OBJECTS, Refusal, Severity, findings_of};
+use super::audits::{Refusal, findings_of};
 use super::{Event, msg};
 use crate::app::App;
 
+mod broker;
 mod drawing;
+#[cfg(test)]
+mod python_tests;
+mod steps;
 
 use drawing::written;
 pub(crate) use drawing::{Synthetic, synthetic};
+use steps::{Rights, Step};
 
 /// How long a rule may take in a trial: as on the drawing.
-const RULE_TIMEOUT: Duration = Duration::from_secs(120);
+pub(super) const RULE_TIMEOUT: Duration = Duration::from_secs(120);
 
 /// The last trial: while it runs, what stops it; once it ran, its report.
 #[derive(Clone, Debug)]
@@ -36,6 +45,12 @@ pub(crate) struct TrialState {
     pub(crate) ext: String,
     pub(crate) running: Option<Arc<AtomicBool>>,
     pub(crate) report: Option<Value>,
+    /// The user started it (the tool examples from Eklentiler, examples.rs): a toast and the log say how it went.
+    pub(crate) by_user: bool,
+    /// Who asked for it and when it began, for Çalışan işler (works/): an agent's request says which agent
+    /// (agents.rs).
+    pub(crate) by: crate::works::By,
+    pub(crate) started: Instant,
 }
 
 /// A rule's findings as a trial reports them: each by the object's place in the agent's list (`feature`), its fix's
@@ -46,13 +61,8 @@ fn findings_report(done: &Value, places: &BTreeMap<String, usize>) -> Value {
             let list: Vec<Value> = findings
                 .iter()
                 .map(|f| {
-                    let severity = match f.severity {
-                        Severity::Error => "error",
-                        Severity::Warning => "warning",
-                        Severity::Info => "info",
-                    };
                     json!({
-                        "severity": severity,
+                        "severity": f.severity.code(),
                         "message": f.message,
                         "feature": f.feature.as_ref().and_then(|u| places.get(u)),
                         "fix": f.fix.as_ref().map(|x| json!({ "title": x.title, "command": x.command })),
@@ -111,19 +121,34 @@ impl App {
         if let Some(Some(why)) = self.extensions.python_reasons.get(&ext) {
             return Err(("not_ready", format!("Eklentinin kodu çalışmıyor: {why}")));
         }
-        let features = params
-            .get("features")
-            .and_then(Value::as_array)
-            .filter(|f| {
-                !f.is_empty() && f.len() <= kentos_headless::agent_tools::TRIAL_MOST_FEATURES
-            })
-            .ok_or((
+        // Its tools' own examples, on drawings of their own (docs/adr/8057 §48): no objects of the agent's.
+        if params.get("examples") == Some(&Value::Bool(true)) {
+            let (started, task) = self.ext_examples_start(&ext, false)?;
+            self.extensions.trial_job = Some(task);
+            return Ok(started);
+        }
+        // A command or a map tool may start on an empty drawing (one that sets up the layers, §52).
+        let most = kentos_headless::agent_tools::TRIAL_MOST_FEATURES;
+        let steps_given = kentos_headless::agent_tools::trial_steps_given(params);
+        let features: &[Value] = match params.get("features") {
+            None | Some(Value::Null) => &[],
+            Some(Value::Array(f)) => f,
+            Some(_) => {
+                return Err((
+                    "invalid_input",
+                    "features bir nesne listesi olmalı.".to_owned(),
+                ));
+            }
+        };
+        if features.len() > most || (features.is_empty() && !steps_given) {
+            return Err((
                 "invalid_input",
                 format!(
-                    "features 1 ile {} arasında nesne olmalı.",
-                    kentos_headless::agent_tools::TRIAL_MOST_FEATURES
+                    "features 1 ile {most} arasında nesne olmalı (yalnız komut ya da harita aracı denerken boş \
+                     olabilir)."
                 ),
-            ))?;
+            ));
+        }
         let made = synthetic(features).map_err(|why| ("invalid_input", why))?;
         // The rules: the ones asked for, else all of the extension's.
         let asked: Option<Vec<&str>> = params
@@ -181,17 +206,24 @@ impl App {
                 ),
             ));
         }
-        if rules.is_empty() && tools.is_empty() {
+        // Its commands and map tools, checked before anything runs (steps.rs).
+        let (steps, rights) = self.trial_steps(&ext, &manifest, params, features.len())?;
+        if rules.is_empty() && tools.is_empty() && steps.is_empty() {
             return Err((
                 "invalid_input",
-                "Denenecek bir şey yok: eklentinin denetimi yok ve araç verilmedi.".to_owned(),
+                "Denenecek bir şey yok: eklentinin denetimi yok; araç, komut ya da harita aracı verilmedi."
+                    .to_owned(),
             ));
         }
+        let again = params.get("auditAfter") == Some(&Value::Bool(true));
         let stop = Arc::new(AtomicBool::new(false));
         self.extensions.trial = Some(TrialState {
             ext: ext.clone(),
             running: Some(Arc::clone(&stop)),
             report: None,
+            by_user: false,
+            by: crate::works::By::Agent,
+            started: Instant::now(),
         });
         let head = json!({
             "extension": { "id": ext, "version": manifest.version.to_string() },
@@ -201,8 +233,15 @@ impl App {
                 "note": "Sentetik çizim: kullanıcının çizimine dokunulmadı; deneme bitince silindi.",
             },
         });
-        let task = crate::python_setup::in_background(
-            move || run(made, rules, tools, head, &stop),
+        let plan = Plan {
+            rules,
+            tools,
+            steps,
+            rights,
+            again,
+        };
+        let task = crate::python_setup::in_background_deep(
+            move || run(made, plan, head, &stop),
             json!({ "status": "failed", "error": "Deneme koşusu cevapsız kaldı." }),
             |report| msg(Event::TrialDone(Box::new(report))),
         );
@@ -224,6 +263,10 @@ impl App {
 
     /// The trial ended: its report kept, the agent's call waiting for it answered.
     pub(crate) fn ext_trial_done(&mut self, report: Value) {
+        let by_user = self.extensions.trial.as_ref().is_some_and(|t| t.by_user);
+        if by_user && report["kind"] == "examples" {
+            self.ext_examples_said(&report);
+        }
         if let Some(t) = self.extensions.trial.as_mut() {
             t.running = None;
             t.report = Some(report);
@@ -244,52 +287,40 @@ impl App {
     }
 }
 
-/// The trial's steps, in the background: each rule on the drawing's facts, then each tool on the drawing; the report.
-fn run(
-    made: Synthetic,
+/// What a trial runs, in its order: the rules, the tools, the commands and map tools with the rights they run with,
+/// and whether the rules run again at the end.
+struct Plan {
     rules: Vec<Rule>,
     tools: Vec<Value>,
-    head: Value,
-    stop: &AtomicBool,
-) -> Value {
-    let Synthetic { mut doc, uids, .. } = made;
-    let places: BTreeMap<String, usize> = uids
-        .iter()
-        .enumerate()
-        .map(|(i, u)| (u.to_string(), i))
-        .collect();
-    let mut facts = kentos_processing::external::audit_facts(&doc, MOST_OBJECTS);
-    let stopped = || stop.load(Ordering::Relaxed);
-    // What KentOS measures in the drawing (`facts.project`, docs/adr/8057 §36), as the drawing's own audit gives it; a
-    // measure that breaks leaves the rules the layers (`facts.project` then says it is missing).
-    if !rules.is_empty() {
-        let measured = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            kentos_processing::audit_facts::project_facts(
-                &doc,
-                kentos_processing::audit_facts::MOST_OBJECTS,
-                &stopped,
-            )
-        }));
-        match measured {
-            Ok(Some(project)) => {
-                facts["project"] = serde_json::to_value(&project).unwrap_or_default();
-            }
-            Ok(None) => return json!({ "status": "stopped" }),
-            Err(_) => {}
-        }
+    steps: Vec<Step>,
+    rights: Rights,
+    again: bool,
+}
+
+/// The rules on `doc`'s facts (`audit_job::facts_of`, docs/adr/8057 §36, §42: the layers' objects and what KentOS
+/// measured), each with its findings by the objects' `places`; none when stopped.
+fn run_rules(
+    doc: &kentos_domain::Document,
+    rules: &[Rule],
+    places: &BTreeMap<String, usize>,
+    stopped: &dyn Fn() -> bool,
+) -> Option<Vec<Value>> {
+    if rules.is_empty() {
+        return Some(Vec::new());
     }
+    let facts = kentos_processing::audit_job::facts_of(doc, stopped)?;
     let mut audits = Vec::new();
     for (rule, title, job) in rules {
         if stopped() {
-            return json!({ "status": "stopped" });
+            return None;
         }
         let began = Instant::now();
         let mut out = match job.run(
-            json!({ "kind": "audit", "facts": facts }),
+            kentos_processing::audit_job::message(facts.clone()),
             RULE_TIMEOUT,
-            &stopped,
+            stopped,
         ) {
-            Ok(done) => findings_report(&done, &places),
+            Ok(done) => findings_report(&done, places),
             Err(why) => json!({ "status": "failed", "error": why }),
         };
         out["rule"] = json!(rule);
@@ -297,8 +328,24 @@ fn run(
         out["ms"] = json!(began.elapsed().as_millis() as u64);
         audits.push(out);
     }
+    Some(audits)
+}
+
+/// The trial's steps, in the background: the rules on the drawing's facts, each tool, each command and map tool on the
+/// drawing, then (asked for) the rules again; the report.
+fn run(made: Synthetic, plan: Plan, head: Value, stop: &AtomicBool) -> Value {
+    let Synthetic { mut doc, uids, .. } = made;
+    let places: BTreeMap<String, usize> = uids
+        .iter()
+        .enumerate()
+        .map(|(i, u)| (u.to_string(), i))
+        .collect();
+    let stopped = || stop.load(Ordering::Relaxed);
+    let Some(audits) = run_rules(&doc, &plan.rules, &places, &stopped) else {
+        return json!({ "status": "stopped" });
+    };
     let mut ran = Vec::new();
-    for input in tools {
+    for input in plan.tools {
         if stopped() {
             return json!({ "status": "stopped" });
         }
@@ -329,22 +376,112 @@ fn run(
         };
         ran.push(out);
     }
-    let found: usize = audits
-        .iter()
-        .filter_map(|a| a["findings"].as_array().map(Vec::len))
-        .sum();
-    let failed = audits.iter().filter(|a| a["status"] == "failed").count()
-        + ran.iter().filter(|t| t["status"] == "failed").count();
+    // The commands and map tools, each in the extension's process kept for trials (broker.rs).
+    let (mut commands, mut map_tools) = (Vec::new(), Vec::new());
+    let mut panels = BTreeMap::new();
+    for step in &plan.steps {
+        if stopped() {
+            return json!({ "status": "stopped" });
+        }
+        let ground = broker::Ground {
+            doc: &mut doc,
+            rights: &plan.rights,
+            panels: &mut panels,
+            places: &places,
+            uids: &uids,
+        };
+        let out = broker::run(
+            ground,
+            &step.spec,
+            &mut |invoke: Value,
+                  document: bool,
+                  answer: &mut Answer<'_>,
+                  heard: &mut dyn FnMut(Heard)| {
+                let flow = super::tools::Flow {
+                    timeout: RULE_TIMEOUT,
+                    stopped: &stopped,
+                    heard,
+                    answer,
+                };
+                step.job.run_step(invoke, document, flow)
+            },
+        );
+        if out["status"] == "stopped" {
+            return json!({ "status": "stopped" });
+        }
+        if step.spec.map_tool {
+            map_tools.push(out);
+        } else {
+            commands.push(out);
+        }
+    }
+    let after = if plan.again && !plan.rules.is_empty() {
+        match run_rules(&doc, &plan.rules, &places, &stopped) {
+            Some(audits) => Some(audits),
+            None => return json!({ "status": "stopped" }),
+        }
+    } else {
+        None
+    };
     let mut report = head;
     report["status"] = json!("done");
-    report["summary"] = json!(format!(
-        "{} kural, {found} bulgu; {} araç; {failed} adım hata verdi.",
-        audits.len(),
-        ran.len()
+    report["summary"] = json!(summary(
+        &audits,
+        &ran,
+        &commands,
+        &map_tools,
+        after.as_deref()
     ));
     report["audits"] = json!(audits);
     report["tools"] = json!(ran);
+    if !plan.steps.is_empty() {
+        report["commands"] = json!(commands);
+        report["mapTools"] = json!(map_tools);
+    }
+    if let Some(after) = after {
+        report["auditsAfter"] = json!(after);
+    }
     report
+}
+
+/// The trial in a line: the rules and their findings, the steps run and how many failed; the findings after, when the
+/// rules ran again.
+fn summary(
+    audits: &[Value],
+    tools: &[Value],
+    commands: &[Value],
+    map_tools: &[Value],
+    after: Option<&[Value]>,
+) -> String {
+    let found = |list: &[Value]| -> usize {
+        list.iter()
+            .filter_map(|a| a["findings"].as_array().map(Vec::len))
+            .sum()
+    };
+    let failed = [audits, tools, commands, map_tools]
+        .iter()
+        .flat_map(|l| l.iter())
+        .filter(|s| matches!(s["status"].as_str(), Some("failed" | "refused" | "invalid")))
+        .count()
+        + after.map_or(0, |a| a.iter().filter(|s| s["status"] == "failed").count());
+    let mut line = format!(
+        "{} kural, {} bulgu; {} araç",
+        audits.len(),
+        found(audits),
+        tools.len()
+    );
+    if !commands.is_empty() || !map_tools.is_empty() {
+        line.push_str(&format!(
+            "; {} komut, {} harita aracı",
+            commands.len(),
+            map_tools.len()
+        ));
+    }
+    if let Some(after) = after {
+        line.push_str(&format!("; adımlardan sonra {} bulgu", found(after)));
+    }
+    line.push_str(&format!("; {failed} adım hata verdi."));
+    line
 }
 
 #[cfg(test)]

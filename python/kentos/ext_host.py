@@ -373,6 +373,11 @@ def outputs_of(value: Any, ctx: ext.ProcessingContext) -> dict[str, Any]:
         out["summary"] = ctx._summary
     if ctx._select is not None:
         out["select"] = ctx._select
+    if ctx._updates:
+        # NumPy's numbers as plain ones, as an output's values are.
+        out["update"] = [
+            {"uid": uid, "attrs": {k: plain(v, k) for k, v in attrs.items()}} for uid, attrs in ctx._updates.items()
+        ]
     return out
 
 
@@ -469,7 +474,7 @@ def run(channel: Channel, streams: tuple[Stream, Stream], message: dict[str, Any
             done.update(
                 ok=False,
                 exception=type(e).__name__,
-                message=str(e)[:2000],
+                message=failure_words(e)[:2000],
                 error=traceback.format_exc()[-MAX_TRACEBACK:],
             )
     finally:
@@ -480,7 +485,18 @@ def run(channel: Channel, streams: tuple[Stream, Stream], message: dict[str, Any
     channel.send(done)
 
 
+def failure_words(e: BaseException) -> str:
+    """What a failure says: KentOS's refusal (``HostError(code, message)``) as its words and then its code, not as the
+    pair's tuple ("('capability', 'Bir İşlemler aracı …')", docs/adr/8057 §73); anything else as Python says it."""
+    if isinstance(e, _native.HostError) and len(e.args) == 2 and all(isinstance(a, str) for a in e.args):
+        return f"{e.args[1]} ({e.args[0]})"
+    return str(e)
+
+
 def main() -> int:
+    # An extension's own process: a drawing its code opens here offers no extension's İşlemler tools (no chain of
+    # processes, no way round its declared dependencies; docs/adr/8057 §70). Its own processes inherit it.
+    os.environ["KENTOS_EXTENSION_PROCESS"] = "1"
     channel = Channel(sys.stdin.buffer, sys.stdout.buffer)
     streams = (Stream(channel, "out"), Stream(channel, "err"))
     sys.stdout, sys.stderr = streams  # type: ignore[assignment]

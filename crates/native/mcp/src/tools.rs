@@ -658,6 +658,8 @@ pub fn compact(catalog: &Value) -> Vec<Value> {
 struct WithWorkshop<'a> {
     inner: &'a mut dyn kentos_headless::agent_tools::Host,
     workshop: Option<std::path::PathBuf>,
+    /// The client by the name it gave (`initialize`), as a package its workshop packs records it (§76).
+    client: Option<String>,
 }
 
 impl kentos_headless::agent_tools::Host for WithWorkshop<'_> {
@@ -677,6 +679,17 @@ impl kentos_headless::agent_tools::Host for WithWorkshop<'_> {
         self.workshop.clone()
     }
 
+    /// The MCP client by the name it gave; its model is not said over MCP.
+    fn author(&self) -> Option<kentos_headless::agent_tools::Author> {
+        Some(kentos_headless::agent_tools::Author {
+            agent: match &self.client {
+                Some(name) => format!("MCP istemcisi {name}"),
+                None => "MCP istemcisi (adını söylemedi)".to_owned(),
+            },
+            model: None,
+        })
+    }
+
     /// On a desktop's link the package opens in the user's review there, its changes load and its look is read
     /// (docs/adr/8057 §30); a drawing of the server's own says where to open it instead.
     fn review_workshop(
@@ -685,6 +698,10 @@ impl kentos_headless::agent_tools::Host for WithWorkshop<'_> {
         folder: &std::path::Path,
     ) -> Result<Value, kentos_headless::HeadlessError> {
         kentos_headless::agent_tools::link_review_workshop(&mut *self.inner, package, folder)
+    }
+
+    fn submit_extension(&mut self, id: &str) -> Result<Value, kentos_headless::HeadlessError> {
+        kentos_headless::agent_tools::link_submit(&mut *self.inner, id)
     }
 
     fn reload_extension(&mut self, id: &str) -> Result<Value, kentos_headless::HeadlessError> {
@@ -730,20 +747,29 @@ fn agent_call(server: &mut Server, name: &str, args: &Value) -> Result<Value, Va
         desktops,
         guards,
         workshop_root,
+        client,
         ..
     } = server;
     let guard = guards.entry(handle.clone()).or_default();
-    let workshop = workshop_root.clone();
+    let (workshop, client) = (workshop_root.clone(), client.clone());
     let result = if let Some(s) = drawings.get_mut(&handle) {
         kentos_headless::agent_tools::call(
-            &mut WithWorkshop { inner: s, workshop },
+            &mut WithWorkshop {
+                inner: s,
+                workshop,
+                client,
+            },
             guard,
             name,
             &args,
         )
     } else if let Some(d) = desktops.get_mut(&handle) {
         kentos_headless::agent_tools::call(
-            &mut WithWorkshop { inner: d, workshop },
+            &mut WithWorkshop {
+                inner: d,
+                workshop,
+                client,
+            },
             guard,
             name,
             &args,
@@ -1581,6 +1607,15 @@ pub fn resources(server: &Server) -> Vec<Value> {
          tanımının türleri, doğrulama kodlarının anlamı, istekten pakete adımlar ve her katkının doğrulamadan geçen \
          örneği. Ajan aracı extension.sdk aynısını verir.",
     ));
+    let mut text = resource(
+        crate::extensions::SDK_TEXT,
+        "sdk-llms-txt",
+        "Eklenti yazma paketi (düz metin)",
+        "Aynı paket tek bir Markdown dosyası olarak (llms.txt biçimi): rehber, adımlar, yetenekler, katkılar, İşlemler \
+         aracı tanımı, bölümlerin nasıl alınacağı ve kentos.ext imzaları. JSON okumayan bir okuyucu için.",
+    );
+    text["mimeType"] = json!("text/markdown");
+    out.push(text);
     let mut whole = resource(
         "kentos://catalog",
         "catalog",
@@ -1651,6 +1686,15 @@ pub fn read(server: &mut Server, params: &Value) -> Result<Value, Fault> {
         crate::extensions::installed(server.extensions_root.as_deref())
     } else if uri == crate::extensions::SDK_PACK {
         kentos_extensions::sdk_pack()
+    } else if uri == crate::extensions::SDK_TEXT {
+        // Text, not JSON: the file as it is.
+        return Ok(json!({
+            "contents": [{
+                "uri": uri,
+                "mimeType": "text/markdown",
+                "text": kentos_extensions::sdk_text::llms_txt(),
+            }]
+        }));
     } else if let Some(handle) = uri.strip_prefix("kentos://drawing/")
         && let Some(s) = server.drawings.get(handle)
     {

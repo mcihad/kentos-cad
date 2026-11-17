@@ -28,6 +28,9 @@ kentos-extension-host = { path = "../extension-host" }
 # What an agent writing an extension reads first (kentos://sdk/ai-kek-pack, docs/adr/8057 §20); the shared extension
 # fixture the tests install comes from it too.
 kentos-extensions = { path = "../../shared/extensions" }
+# The installed extensions' İşlemler tools that declare headless-python, run in their own processes as on the desktop
+# (docs/adr/8057 §70): offered at the program's start; CBS's, as İşlemler is.
+kentos-extension-tools = { path = "../extension-tools", optional = true }
 serde_json = { workspace = true }
 
 [features]
@@ -36,7 +39,7 @@ serde_json = { workspace = true }
 default = ["mod-arch", "mod-map", "mod-gis", "mod-road"]
 mod-arch = ["kentos-headless/mod-arch", "kentos-native-application/mod-arch"]
 mod-map = ["kentos-headless/mod-map", "kentos-native-application/mod-map"]
-mod-gis = ["kentos-headless/mod-gis", "kentos-native-application/mod-gis"]
+mod-gis = ["kentos-headless/mod-gis", "kentos-native-application/mod-gis", "dep:kentos-extension-tools"]
 mod-road = ["kentos-headless/mod-road", "kentos-native-application/mod-road"]
 
 [dev-dependencies]

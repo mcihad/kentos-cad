@@ -43,7 +43,7 @@ mod state;
 mod stored;
 
 pub use actor::{Actor, CatalogScope, Channel, Permission, Role};
-pub use facts::{LockedPackage, PythonFacts, ReleaseFacts};
+pub use facts::{LockedPackage, PythonFacts, ReleaseFacts, locked_packages, seconds_of};
 pub use gate::{Gate, GateKind, GateStatus, ScanOutcome, Waiver};
 pub use record::{
     Approval, AuditRecord, ChangeCode, ChangeRequest, Notice, Reason, RequestedChange,
@@ -108,6 +108,16 @@ impl fmt::Display for Refusal {
 
 impl std::error::Error for Refusal {}
 
+/// What a person sees of a release in a catalog (docs/adr/8059 §14): its name and its icon's SHA-256, read from its
+/// package when it is uploaded or its content renewed; what the publisher gate's imitation rule compares.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Listing {
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+}
+
 /// A version of an extension in a catalog: its content, where it is, its gates, its review and every move it made.
 /// Moved only by its methods; read back from storage through the same checks ([`Release::read`]).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -121,6 +131,9 @@ pub struct Release {
     /// The account that uploaded it.
     author: String,
     content: ReleaseContent,
+    /// Its name and icon as its content says them; none in a record kept before they were (docs/adr/8059 §14).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    listing: Option<Listing>,
     state: ReleaseState,
     /// One per [`GateKind::ALL`], in that order.
     gates: Vec<Gate>,
@@ -188,6 +201,7 @@ impl Release {
             publisher: publisher.to_owned(),
             author: actor.id.clone(),
             content: facts.content(),
+            listing: Some(facts.listing()),
             state: ReleaseState::Draft,
             gates: fresh_gates(),
             focus: None,
@@ -238,6 +252,7 @@ impl Release {
         }
         let from = self.state;
         self.content = content;
+        self.listing = Some(facts.listing());
         self.gates = fresh_gates();
         self.focus = None;
         self.log(actor, Action::Replace, from, at, None, None);
@@ -763,6 +778,39 @@ impl Release {
     /// In the catalog's list and search: published.
     pub fn listed(&self) -> bool {
         self.state == ReleaseState::Published
+    }
+
+    /// Its name and icon as its content says them; none in a record kept before they were.
+    pub fn listing(&self) -> Option<&Listing> {
+        self.listing.as_ref()
+    }
+
+    /// What a person sees of it, as the imitation rule reads it, under its publisher.
+    pub fn known(&self) -> Option<crate::resemblance::Known> {
+        self.listing.as_ref().map(|l| crate::resemblance::Known {
+            id: self.extension_id.clone(),
+            name: l.name.clone(),
+            icon: l.icon.clone(),
+            publisher: Some(self.publisher.clone()),
+        })
+    }
+
+    /// The publisher gate's imitation rule (docs/adr/8059 §14, D13): the listed extensions of other publishers among
+    /// `releases` (the same catalog's) whose name, id or icon this release reads as, each extension once; the findings
+    /// that keep it out. A record kept before its name and icon were is not compared.
+    pub fn imitations(&self, releases: &[Release]) -> Vec<Reason> {
+        let Some(me) = self.known() else {
+            return Vec::new();
+        };
+        let mut others: std::collections::BTreeMap<&str, crate::resemblance::Known> =
+            std::collections::BTreeMap::new();
+        for release in releases.iter().filter(|r| r.listed()) {
+            if let Some(known) = release.known() {
+                others.insert(release.extension_id.as_str(), known);
+            }
+        }
+        let others: Vec<crate::resemblance::Known> = others.into_values().collect();
+        crate::resemblance::imitations(&me, &others)
     }
 
     /// Every gate verified for this content.

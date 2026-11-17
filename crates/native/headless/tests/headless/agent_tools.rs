@@ -453,14 +453,14 @@ fn a_tool_call_reads_in_words() {
     );
     assert_eq!(
         words("catalog.search", json!({ "query": "duvar" })),
-        "Komut ara · “duvar”"
+        "Katalogda ara · “duvar”"
     );
     assert_eq!(
         words(
             "catalog.describe",
             json!({ "command": "cad.walls.rectangle" })
         ),
-        "Komutun tanımı · Dikdörtgen duvar"
+        "Tanım · Dikdörtgen duvar"
     );
     assert_eq!(
         words(
@@ -470,6 +470,22 @@ fn a_tool_call_reads_in_words() {
         "Toplu yazma · 3 adım · plan"
     );
     assert_eq!(words("scene.entities", json!({})), "Nesneler");
+    // An İşlemler run by its tool, a model written for the run by its name and steps (docs/adr/8057 §108).
+    assert_eq!(
+        words(
+            "processing.run",
+            json!({ "input": { "tool": "geometry.buffer" }, "mode": "plan" })
+        ),
+        "İşlem aracını çalıştır · geometry.buffer · plan"
+    );
+    assert_eq!(
+        words(
+            "processing.run",
+            json!({ "input": { "tool": "model:", "model": { "id": "tb", "label": "Tampon ve birleştir",
+                "steps": [{}, {}] } }, "mode": "execute", "planId": "p" })
+        ),
+        "İşlem aracını çalıştır · model “Tampon ve birleştir”, 2 adım · yazma"
+    );
 }
 
 #[test]
@@ -550,6 +566,264 @@ fn the_checks_and_the_processing_tools_have_doors_of_their_own() {
         "plan_required",
         "a processing run writes: planned first"
     );
+}
+
+/// İşlemler's list as an agent reads it first (docs/adr/8057 §108): an index of ids, names, categories and first
+/// sentences, without parameters (`processing.describe` gives a tool's); `query` narrows it. The whole list with every
+/// parameter stopped a real agent at 90 900 of its 80 000 tokens before it ran anything.
+#[test]
+fn the_processing_list_is_an_index_an_agent_can_afford() {
+    let mut s = drawing();
+    let mut guard = Guard::new();
+    let all = tool(&mut s, &mut guard, "processing.list", json!({})).expect("the index");
+    let tools = all
+        .pointer("/output/tools")
+        .and_then(Value::as_array)
+        .expect("tools");
+    let size = all.to_string().len();
+    assert!(
+        tools.iter().all(|t| t.get("parameters").is_none()
+            && t["id"].is_string()
+            && t["label"].is_string())
+    );
+    // 157 tools: 35 102 bytes as one index, the whole list 274 957 (17 Nov); a page of 50 (§114).
+    assert_eq!(tools.len(), 50);
+    assert!(size < 16_000, "{size} bytes for a page");
+    // Paged to its end by next.offset: every tool once.
+    let total = all["total"].as_u64().expect("its total") as usize;
+    let mut seen: Vec<String> = Vec::new();
+    let mut page = all.clone();
+    loop {
+        seen.extend(
+            page.pointer("/output/tools")
+                .and_then(Value::as_array)
+                .expect("tools")
+                .iter()
+                .filter_map(|t| t["id"].as_str().map(str::to_owned)),
+        );
+        let Some(next) = page["next"]["offset"].as_u64() else {
+            break;
+        };
+        page = tool(
+            &mut s,
+            &mut guard,
+            "processing.list",
+            json!({ "offset": next }),
+        )
+        .expect("a page");
+    }
+    assert_eq!(seen.len(), total);
+    seen.sort();
+    seen.dedup();
+    assert_eq!(seen.len(), total, "each tool once");
+    let tools = all
+        .pointer("/output/tools")
+        .and_then(Value::as_array)
+        .expect("tools");
+    let narrowed = tool(
+        &mut s,
+        &mut guard,
+        "processing.list",
+        json!({ "query": "tampon" }),
+    )
+    .expect("narrowed");
+    let ids: Vec<&str> = narrowed
+        .pointer("/output/tools")
+        .and_then(Value::as_array)
+        .expect("tools")
+        .iter()
+        .filter_map(|t| t["id"].as_str())
+        .collect();
+    assert!(ids.contains(&"geometry.buffer"), "{ids:?}");
+    assert!(ids.len() < tools.len());
+    // Its parameters come with processing.describe.
+    let described = tool(
+        &mut s,
+        &mut guard,
+        "processing.describe",
+        json!({ "tool": "geometry.buffer" }),
+    )
+    .expect("described");
+    assert!(
+        described["parameters"]
+            .as_array()
+            .is_some_and(|p| !p.is_empty())
+    );
+    // And its outputs, which a model's later step is wired to by name.
+    assert_eq!(described["outputs"][0]["name"], "buffers", "{described:#}");
+    assert_eq!(described["outputs"][0]["kind"], "features");
+    // Words of two tools: each word's tools.
+    let both = tool(
+        &mut s,
+        &mut guard,
+        "processing.list",
+        json!({ "query": "tampon birleştir" }),
+    )
+    .expect("both");
+    let ids: Vec<&str> = both
+        .pointer("/output/tools")
+        .and_then(Value::as_array)
+        .expect("tools")
+        .iter()
+        .filter_map(|t| t["id"].as_str())
+        .collect();
+    assert!(
+        ids.contains(&"geometry.buffer") && ids.contains(&"geometry.dissolve"),
+        "{ids:?}"
+    );
+    assert!(
+        both["note"]
+            .as_str()
+            .is_some_and(|n| n.contains("her sözcüğün")),
+        "{both}"
+    );
+    // Nothing found says what to do.
+    let none = tool(
+        &mut s,
+        &mut guard,
+        "processing.list",
+        json!({ "query": "zzqx" }),
+    )
+    .expect("an answer");
+    assert!(
+        none["note"]
+            .as_str()
+            .is_some_and(|n| n.contains("başka bir sözcükle")),
+        "{none}"
+    );
+    assert_eq!(
+        agent_tools::call_words("processing.list", &json!({ "query": "tampon" })),
+        "İşlem araçları · “tampon”"
+    );
+}
+
+/// The common catalog (docs/adr/8057 §109, PY-AI-01): a search finds İşlemler's tools and the answers' codes beside
+/// the commands, each saying what to call next; a code is described by what it means; the installed extensions are
+/// the desktop's, which a drawing of the server's own says.
+#[test]
+fn the_common_catalog_finds_tools_and_codes_and_says_what_next() {
+    let mut s = drawing();
+    let mut guard = Guard::new();
+    let found = tool(
+        &mut s,
+        &mut guard,
+        "catalog.search",
+        json!({ "query": "tampon" }),
+    )
+    .expect("found");
+    let buffer = found["others"]
+        .as_array()
+        .expect("others")
+        .iter()
+        .find(|o| o["id"] == "geometry.buffer")
+        .unwrap_or_else(|| panic!("{found:#}"));
+    assert_eq!(
+        (buffer["kind"].as_str(), buffer["next"].as_str()),
+        (Some("tool"), Some("processing.describe"))
+    );
+    assert!(found["othersTotal"].as_u64().is_some_and(|n| n >= 1));
+    // A code written as one is found first, and described.
+    let code = tool(
+        &mut s,
+        &mut guard,
+        "catalog.search",
+        json!({ "query": "plan_changed" }),
+    )
+    .expect("a code");
+    assert_eq!(code["others"][0]["id"], "plan_changed", "{code:#}");
+    assert_eq!(code["others"][0]["kind"], "code");
+    let described = tool(
+        &mut s,
+        &mut guard,
+        "catalog.describe",
+        json!({ "code": "plan_changed" }),
+    )
+    .expect("described");
+    assert_eq!(
+        (described["kind"].as_str(), described["retryable"].as_bool()),
+        (Some("conflict"), Some(true))
+    );
+    assert!(described["meaning"].as_str().is_some_and(|m| !m.is_empty()));
+    let unknown = tool(
+        &mut s,
+        &mut guard,
+        "catalog.describe",
+        json!({ "code": "yok_boyle" }),
+    );
+    assert_eq!(code_of(unknown), "unknown_code");
+    // Only codes: no commands.
+    let codes = tool(
+        &mut s,
+        &mut guard,
+        "catalog.search",
+        json!({ "query": "plan", "kinds": ["code"] }),
+    )
+    .expect("codes");
+    assert_eq!(codes["total"], 0);
+    assert!(
+        codes["others"]
+            .as_array()
+            .expect("others")
+            .iter()
+            .all(|o| o["kind"] == "code")
+    );
+    // The extensions are the desktop's: asked by name here, the answer says so.
+    let asked = tool(
+        &mut s,
+        &mut guard,
+        "catalog.search",
+        json!({ "query": "çekme", "kinds": ["extension"] }),
+    )
+    .expect("asked");
+    assert!(
+        asked["notes"][0]
+            .as_str()
+            .is_some_and(|n| n.contains("masaüstü")),
+        "{asked:#}"
+    );
+    let ext = tool(
+        &mut s,
+        &mut guard,
+        "catalog.describe",
+        json!({ "extension": "tr.ornek.vitrin" }),
+    );
+    assert_eq!(code_of(ext), "not_offered");
+    // Paged (§114): a window over the commands and the others, the next one by next.offset.
+    let first = tool(
+        &mut s,
+        &mut guard,
+        "catalog.search",
+        json!({ "query": "katman", "limit": 5 }),
+    )
+    .expect("a page");
+    assert_eq!(first["commands"].as_array().map(Vec::len), Some(5));
+    assert_eq!(first["next"]["offset"], 5, "{first:#}");
+    let second = tool(
+        &mut s,
+        &mut guard,
+        "catalog.search",
+        json!({ "query": "katman", "limit": 5, "offset": 5 }),
+    )
+    .expect("the next page");
+    assert_ne!(
+        first["commands"][0]["command"],
+        second["commands"][0]["command"]
+    );
+    assert_eq!(first["total"], second["total"]);
+    let nothing = tool(&mut s, &mut guard, "catalog.describe", json!({}));
+    assert_eq!(code_of(nothing), "invalid_input");
+    assert_eq!(
+        agent_tools::call_words("catalog.describe", &json!({ "code": "plan_changed" })),
+        "Tanım · plan_changed"
+    );
+}
+
+/// An error's code, else what the answer was.
+fn code_of(answer: Result<Value, HeadlessError>) -> String {
+    match answer {
+        Ok(v) => format!("ok {v}"),
+        Err(e) => e.code.to_owned(),
+    }
 }
 
 #[test]
@@ -658,6 +932,20 @@ fn an_agent_gets_a_blueprint_that_verifies() {
     .unwrap();
     let files = answer["files"].as_object().expect("files");
     assert!(files.contains_key("manifest.json") && files.contains_key("src/mezarlik/logic.py"));
+    // docs/adr/8057 §105: the packages it may name, each with what it is for; a name not among them is not made up.
+    let packages = answer["packages"]["list"].as_array().expect("the packages");
+    assert!(
+        packages.iter().any(|p| p["name"] == "shapely"
+            && p["purpose"]
+                .as_str()
+                .is_some_and(|w| w.contains("geometri"))),
+        "{packages:?}"
+    );
+    assert!(
+        answer["packages"]["note"]
+            .as_str()
+            .is_some_and(|n| n.contains("uydurmayın"))
+    );
     let folder = std::env::temp_dir().join(format!("kentos-blueprint-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&folder);
     for (path, text) in files {
@@ -684,6 +972,44 @@ fn an_agent_gets_a_blueprint_that_verifies() {
     .unwrap_err();
     assert!(refused.to_string().contains("bir katkı değil"), "{refused}");
     let _ = std::fs::remove_dir_all(&folder);
+}
+
+/// A drawing whose organisation lists the only Python packages an extension may install.
+struct WithAllowedPackages<'a>(&'a mut Session);
+
+impl Host for WithAllowedPackages<'_> {
+    fn request(&mut self, method: &str, params: &Value) -> Result<Value, HeadlessError> {
+        self.0.request(method, params)
+    }
+
+    fn allowed_packages(&self) -> Option<Vec<String>> {
+        Some(vec!["numpy>=2".to_owned(), "kurum-paketi".to_owned()])
+    }
+}
+
+/// docs/adr/8057 §105: under the organisation's list the blueprint offers the packages it allows alone, and says so.
+#[test]
+fn the_blueprint_offers_the_packages_the_policy_allows() {
+    let mut s = drawing();
+    let answer = agent_tools::call(
+        &mut WithAllowedPackages(&mut s),
+        &mut Guard::new(),
+        "extension.blueprint",
+        &json!({ "id": "tr.ornek.mezarlik", "name": "Mezarlık bilgi", "contributions": ["command"] }),
+    )
+    .unwrap();
+    let names: Vec<&str> = answer["packages"]["list"]
+        .as_array()
+        .expect("the packages")
+        .iter()
+        .filter_map(|p| p["name"].as_str())
+        .collect();
+    assert_eq!(names, ["numpy", "kurum-paketi"]);
+    assert!(
+        answer["packages"]["note"]
+            .as_str()
+            .is_some_and(|n| n.contains("Kurum ilkesi"))
+    );
 }
 
 #[test]
@@ -746,6 +1072,13 @@ impl Host for WithWorkshop<'_> {
         Some(self.root.clone())
     }
 
+    fn author(&self) -> Option<agent_tools::Author> {
+        Some(agent_tools::Author {
+            agent: "Sınama ajanı".to_owned(),
+            model: Some("sınama-modeli".to_owned()),
+        })
+    }
+
     fn review_package(&mut self, path: &std::path::Path) -> Result<Value, HeadlessError> {
         self.reviewed.push(path.to_owned());
         Ok(json!({ "opened": true }))
@@ -803,12 +1136,27 @@ fn an_agent_writes_an_extension_in_its_workshop_and_opens_it_for_review() {
             "extension.workshop.review",
             "extension.workshop.reload",
             "extension.workshop.preview",
+            "extension.workshop.submit",
             "extension.workshop.trial"
         ]
     );
     let call = |host: &mut WithWorkshop, guard: &mut Guard, name: &str, args: Value| {
         agent_tools::call(host, guard, name, &args)
     };
+    // docs/adr/8057 §107: a host that cannot open the user's Kataloğa gönder window says where it can be opened.
+    let refused = call(
+        &mut host,
+        &mut guard,
+        "extension.workshop.submit",
+        json!({ "id": "tr.ornek.mezarlik" }),
+    )
+    .unwrap_err();
+    assert_eq!(refused.code, "not_offered");
+    assert!(
+        refused.message.contains("desktop.attach"),
+        "{}",
+        refused.message
+    );
     // The next step a host with a workshop is told: write there, not to a folder of the user's.
     let told = call(
         &mut host,
@@ -891,6 +1239,30 @@ fn an_agent_writes_an_extension_in_its_workshop_and_opens_it_for_review() {
     assert_eq!(review["valid"], true, "{review:#}");
     let package = root.join("tr.ornek.mezarlik-0.1.0.kek");
     assert!(package.is_file());
+    // Who wrote it, KentOS's word (docs/adr/8057 §76): in the package the user reviews, and in the folder.
+    let opened = kentos_extensions::open(
+        &std::fs::read(&package).unwrap(),
+        &kentos_extensions::Limits::default(),
+    );
+    let generated = opened
+        .inspection
+        .manifest
+        .and_then(|m| m.generated)
+        .expect("the workshop's stamp");
+    assert_eq!(
+        (
+            generated.agent.as_str(),
+            generated.model.as_deref(),
+            generated.kentos.as_str()
+        ),
+        (
+            "Sınama ajanı",
+            Some("sınama-modeli"),
+            env!("CARGO_PKG_VERSION")
+        )
+    );
+    let folder = std::fs::read_to_string(root.join("tr.ornek.mezarlik/manifest.json")).unwrap();
+    assert!(folder.contains("Sınama ajanı"), "{folder}");
     assert_eq!(host.reviewed, [package]);
     // A function that lost its mark: not packed, said.
     let logic = call(

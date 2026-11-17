@@ -83,13 +83,17 @@ __all__ = [
     "Shape",
     "Stopped",
     "Storey",
+    "ToolAnswer",
     "UnitFacts",
     "UnitLevel",
+    "ZoningFacts",
     "audit",
     "command",
     "expr",
+    "layer_input",
     "map_tool",
     "marked",
+    "new_layer",
     "point",
     "polygon",
     "polyline",
@@ -297,8 +301,9 @@ class PanelSession:
         picker's persistent ids; None empties it), ``options`` (a choice's or a multiple choice's: values, or dicts
         with ``value`` and ``label``; a chosen value no longer among them is let go), ``enabled`` (buttons and typed
         fields), ``visible`` (any component with an id; a hidden required field is not asked of the user),
-        ``text`` (a ``text`` component's words) and ``image`` (an ``image`` component's picture: a PNG's bytes, e.g.
-        ``fig.savefig(buf, format="png")``, or the path of a PNG file; None takes it away; at most 4096 pixels a side)."""
+        ``text`` (a ``text`` component's words) and ``image`` (an ``image`` component's picture: a PNG's or a JPEG's
+        bytes, e.g. ``fig.savefig(buf, format="png")`` or a photo, or the path of such a file; None takes it away; at
+        most 4096 pixels a side)."""
         params: dict[str, Any] = {"id": str(id)}
         if value is not _KEEP:
             params["value"] = _json_value(value)
@@ -341,6 +346,19 @@ class PanelSession:
     def close(self) -> bool:
         """Closes the panel (its values with it)."""
         return self._ask("panel.close", {})
+
+
+def layer_input(layer: str, kinds: Sequence[str] | None = None) -> dict[str, Any]:
+    """The objects of ``layer`` (its id) for ``ctx.run_tool``; ``kinds`` narrows them (``["polygon"]``)."""
+    given: dict[str, Any] = {"scope": "layer", "layerId": str(layer)}
+    if kinds is not None:
+        given["kinds"] = [str(k) for k in kinds]
+    return given
+
+
+def new_layer(name: str) -> dict[str, Any]:
+    """A new layer ``name`` for ``ctx.run_tool``'s output."""
+    return {"newName": str(name)}
 
 
 class CommandContext:
@@ -394,19 +412,21 @@ class CommandContext:
         return CommandResult(title=title, message=text)
 
     def dialog(
-        self, title: str, body: list[dict[str, Any]], ok: str = "Tamam", cancel: str = "İptal"
+        self, title: str, body: list[dict[str, Any]], ok: str = "Tamam", cancel: str = "İptal", steps: bool = False
     ) -> dict[str, Any] | None:
         """Asks the user in a KentOS window over the drawing and waits for the answer (docs/adr/8057 §29): ``body`` is
         a panel's fields (``kentos.ui.panel`` components: ``text``, ``textField``, ``numberField``, ``dateField``,
         ``timeField``, ``dateTimeField``, ``select``, ``multiSelect``, ``checkbox``, ``layerPicker``, ``fieldPicker``),
         no buttons or commands. Tamam gives the values by id, as a panel's command gets them; İptal, Esc and Durdur give
-        None (after Durdur the run stops: :class:`Stopped`)."""
+        None (after Durdur the run stops: :class:`Stopped`). With ``steps=True`` it is a wizard (docs/adr/8057 §60):
+        the fields' ``tab``s are its steps, İleri checks a step's fields, the last step's button is ``ok``."""
         self.check()
         if not isinstance(body, list) or not all(isinstance(c, dict) for c in body):
             raise TypeError("dialog: body bir alan listesi olmalı (her biri bir dict, ör. {'type': 'textField', …}).")
-        answer = self._link.ask(
-            "dialog", {"title": str(title), "body": list(body), "ok": str(ok), "cancel": str(cancel)}
-        )
+        asked: dict[str, Any] = {"title": str(title), "body": list(body), "ok": str(ok), "cancel": str(cancel)}
+        if steps:
+            asked["steps"] = True
+        answer = self._link.ask("dialog", asked)
         self.check()
         return answer if isinstance(answer, dict) else None
 
@@ -425,6 +445,20 @@ class CommandContext:
     def cancelled(self) -> CommandResult:
         """What a run that saw Durdur returns; its writes are taken back."""
         return CommandResult(cancelled=True)
+
+    def run_tool(self, tool: str, /, **parameters: Any) -> Any:
+        """Runs a KentOS tool with this command's rights, in its undo step (docs/adr/8057 §46).
+
+        A built-in one (``geometry.buffer``), this extension's own (``ext.<eklenti>.<araç>``) or one of an extension
+        its manifest depends on. ``parameters`` are the tool's, by name: a layer's objects ``ext.layer_input("yapi")``,
+        a new layer ``ext.new_layer("Tampon")``, numbers and choices as written. A tool that writes needs
+        ``document.write``. Returns its answer (``summary``, ``outputs``, ``record``). ``cad.processing.tools(ctx.doc)``
+        lists the tools and their parameters."""
+        if self.doc is None:
+            raise NotAvailable("Açık çizim yok ya da eklentiye çizimi okuma izni verilmedi: araç çalıştırılamaz.")
+        from . import cad
+
+        return cad.processing.run(self.doc, tool=tool, parameters=parameters)
 
     def apply_declarative_schema(self, path: str = "schema.json") -> CommandResult:
         """Sets up the layers, value lists and relations the package's ``schema.json`` declares (docs/adr/8057 §23), in
@@ -800,6 +834,7 @@ class ProcessingContext(CommandContext):
         super().__init__(link, None, settings, params)
         self._summary: str | None = None
         self._select: list[str] | None = None
+        self._updates: dict[str, dict[str, Any]] = {}
 
     def read_features(self, features: FeatureInput) -> Iterator[Feature]:
         """A features parameter's objects one by one, Durdur answered between them."""
@@ -816,6 +851,75 @@ class ProcessingContext(CommandContext):
     def select(self, features: Iterable[Feature | str]) -> None:
         """Leaves these inputs selected in the drawing when the run ends (a session result, not a change)."""
         self._select = [f.uid if isinstance(f, Feature) else str(f) for f in features]
+
+    def update(self, feature: Feature | str, /, **attrs: Any) -> None:
+        """Writes ``attrs`` into an input object of this tool, one that ``writes: true`` (docs/adr/8057 §49).
+
+        Only an input whose parameter says ``"writes": true`` in the descriptor can be changed: changing the source is
+        the tool's declared choice. ``None`` takes an attribute away; numbers and yes/no are kept as text, as every
+        attribute is. KentOS checks each value against the layer's fields and writes all changes in the run's one undo
+        step; a refused change writes nothing. Called again for the same object, the attributes add up."""
+        uid = feature.uid if isinstance(feature, Feature) else str(feature)
+        self._updates.setdefault(uid, {}).update({str(k): v for k, v in attrs.items()})
+
+    def run_tool(self, tool: str, /, **parameters: Any) -> ToolAnswer:
+        """Runs a KentOS built-in tool on objects this tool holds, never on the drawing (docs/adr/8057 §47).
+
+        A features parameter is given as objects (this tool's input, :class:`Feature`s, shapely shapes, GeoJSON
+        features); KentOS runs the tool on a drawing of its own made of them, in the drawing's coordinate system, and
+        gives back what it made (:class:`ToolAnswer`) for this tool to return in its result. Another extension's tool
+        does not run from a tool. ``cad.processing.tools`` lists the built-in tools and their parameters."""
+        given = {str(name): _tool_value(value) for name, value in parameters.items()}
+        return ToolAnswer(self._link.ask("processing.run", {"tool": str(tool), "parameters": given}))
+
+
+class ToolAnswer:
+    """What a tool's ``ctx.run_tool`` gave back (docs/adr/8057 §47): ``summary``, ``warnings``, ``layers``.
+
+    ``layers`` holds the objects it made by their layer's name, each a :class:`Feature` (shapely reads it:
+    ``shape(f)``; its attributes came from the objects given, where the tool keeps them)."""
+
+    __slots__ = ("summary", "warnings", "layers")
+
+    def __init__(self, raw: Any) -> None:
+        raw = raw if isinstance(raw, dict) else {}
+        self.summary: str = str(raw.get("summary") or "")
+        self.warnings: list[Any] = list(raw.get("warnings") or [])
+        self.layers: dict[str, list[Feature]] = {
+            str(layer.get("name", "")): [Feature(f) for f in layer.get("features") or []]
+            for layer in raw.get("layers") or []
+        }
+
+    def features(self) -> list[Feature]:
+        """Every object it made, its layers one after another."""
+        return [f for made in self.layers.values() for f in made]
+
+
+def _tool_value(value: Any) -> Any:
+    """A parameter of a tool's ``ctx.run_tool`` as KentOS takes it: objects (a :class:`FeatureInput`, :class:`Feature`s,
+    shapely shapes or anything with ``__geo_interface__``, GeoJSON features) as their shapes and attributes
+    (``{"features": [...]}``); anything else as it is."""
+
+    def one(item: Any) -> dict[str, Any]:
+        geo = item.__geo_interface__ if hasattr(item, "__geo_interface__") else item
+        if isinstance(geo, dict) and geo.get("type") == "Feature":
+            geometry, properties = geo.get("geometry"), geo.get("properties") or {}
+        else:
+            geometry, properties = geo, {}
+        if isinstance(item, Feature):
+            properties = item.attrs
+        return {"geometry": geometry, "attrs": {str(k): v for k, v in dict(properties).items()}}
+
+    def is_object(item: Any) -> bool:
+        return hasattr(item, "__geo_interface__") or (isinstance(item, dict) and item.get("type") == "Feature")
+
+    if isinstance(value, FeatureInput):
+        return {"features": [one(f) for f in value]}
+    if isinstance(value, (list, tuple)) and value and all(is_object(v) for v in value):
+        return {"features": [one(v) for v in value]}
+    if is_object(value):
+        return {"features": [one(value)]}
+    return value
 
 
 class Shape:
@@ -1098,12 +1202,10 @@ class PermitFacts:
 
 
 class ArchitectureFacts:
-    """The drawing's architecture as KentOS Mimari measured it (docs/adr/8057 §39): its storeys, every room with its
-    net area and its outline to the walls' axes, the program's groups with PAİY 4/ğ's areas and the escape routes
-    (BYKHY); empty when the drawing has no room. PAİY is Planlı Alanlar İmar Yönetmeliği, BYKHY Binaların Yangından
-    Korunması Hakkında Yönetmelik; areas in m² to 4 decimals, lengths in metres to 3."""
+    """The drawing's architecture as KentOS Mimari measured it (docs/adr/8057 §39); each field in factsSchema. Areas in
+    m² to 4 decimals, lengths in metres to 3."""
 
-    __slots__ = ("levels", "rooms", "units", "doors", "_exits")
+    __slots__ = ("levels", "rooms", "units", "doors", "sprinklers", "zoning", "_exits")
 
     def __init__(self, raw: dict[str, Any]) -> None:
         #: The project's storeys, lowest first.
@@ -1119,9 +1221,13 @@ class ArchitectureFacts:
         #: Each dwelling unit's door and its walk to the nearest storey exit (BYKHY 48/4).
         self.doors: list[DoorEscape] = [
             DoorEscape(str(d.get("uid", "")), str(d.get("unit", "")), _maybe_str(d.get("level")),
-                       _place(d.get("at")), _walk(d.get("exit")))
+                       _place(d.get("at")), _walk(d.get("exit")), bool(d.get("intoStair")))
             for d in raw.get("doors") or []
         ]
+        #: The project says the building has sprinklers: BYKHY's sprinklered distances hold.
+        self.sprinklers: bool = bool(raw.get("sprinklers"))
+        #: İmar durumu and the areas against it; None without one.
+        self.zoning: ZoningFacts | None = _zoning(raw.get("zoning"))
         self._exits = {_maybe_str(e.get("level")): int(e.get("count") or 0) for e in raw.get("exits") or []}
 
     def exits(self, level: str | None) -> int:
@@ -1162,7 +1268,8 @@ def _room(raw: dict[str, Any]) -> RoomFacts:
     text = {k: _maybe_str(raw.get(k)) for k in ("number", "name", "usage", "level", "unit")}
     return RoomFacts(str(raw.get("uid", "")), *text.values(), bool(raw.get("void")), bool(raw.get("outdoor")),
                      bool(raw.get("broken")), bool(raw.get("stair")), float(raw.get("net") or 0.0),
-                     float(raw.get("axis") or 0.0), escape)
+                     float(raw.get("axis") or 0.0), escape, _maybe_str(raw.get("kind")),
+                     _maybe_float(raw.get("narrow")), _maybe_str(raw.get("occupancy")))
 
 
 def _unit(raw: dict[str, Any]) -> UnitFacts:
@@ -1172,7 +1279,7 @@ def _unit(raw: dict[str, Any]) -> UnitFacts:
         _maybe_str(raw.get("nature")), _maybe_str(raw.get("annexOf")), bool(raw.get("dwelling")), *area.values(),
         _maybe_float(raw.get("share")), _maybe_float(raw.get("general")),
         tuple(UnitLevel(_maybe_str(x.get("level")), float(x.get("gross") or 0.0), float(x.get("net") or 0.0))
-              for x in raw.get("levels") or []))
+              for x in raw.get("levels") or []), _maybe_str(raw.get("occupancy")))
 
 
 @dataclass(frozen=True)
@@ -1187,8 +1294,7 @@ class Storey:
 
 @dataclass(frozen=True)
 class EscapeWalk:
-    """A walk along the points it turns at, its length in metres; a walk to an exit also says the part it shares with
-    the walk to the nearest other exit (``one_way``, tek yön: a dead end's) and how many exits its start reaches."""
+    """A walk (m) along its points; ``one_way`` its dead end's part (tek yön), ``exits`` the exits its start reaches."""
 
     length: float
     path: tuple[tuple[float, float], ...]
@@ -1198,8 +1304,7 @@ class EscapeWalk:
 
 @dataclass(frozen=True)
 class RoomEscape:
-    """A room's walks from its farthest point, 40 cm in front of its walls (BYKHY 32/6): to the nearest storey exit
-    (32/4; None when it reaches none) and, a dwelling unit's room, to its unit's door (48/2)."""
+    """A room's walks from its farthest point (BYKHY 32/6) to the nearest storey exit and its dwelling's door."""
 
     exit: EscapeWalk | None
     storey_exits: bool
@@ -1210,9 +1315,8 @@ class RoomEscape:
 
 @dataclass(frozen=True)
 class RoomFacts:
-    """A room: its persistent id, number, name, usage, storey and group; whether it is a void, outdoor, broken (its
-    boundary not found) or an escape stair's room; its net area and its outline to the walls' axes (m²); its walks
-    (None for a void, an outdoor, a broken or a stair's room)."""
+    """A room (persistent id, storey, group, net and axis areas in m², walks); ``kind``, ``narrow`` and ``occupancy`` as
+    factsSchema says."""
 
     uid: str
     number: str | None
@@ -1227,6 +1331,9 @@ class RoomFacts:
     net: float
     axis: float
     escape: RoomEscape | None
+    kind: str | None = None
+    narrow: float | None = None
+    occupancy: str | None = None
 
 
 @dataclass(frozen=True)
@@ -1240,9 +1347,7 @@ class UnitLevel:
 
 @dataclass(frozen=True)
 class UnitFacts:
-    """A program group with PAİY 4/ğ's areas (m²): ``kind`` (``unit``, ``common``, ``outdoor``, ``annex``), ``gross``
-    (BB brüt), ``net``, ``total`` (with its annexes'), ``share`` of the common areas and ``general`` (genel brüt; None
-    without a share)."""
+    """A program group with PAİY 4/ğ's areas (m²) and its Ek-5/B ``occupancy``; each field in factsSchema."""
 
     id: str
     number: str
@@ -1259,18 +1364,46 @@ class UnitFacts:
     share: float | None
     general: float | None
     levels: tuple[UnitLevel, ...]
+    occupancy: str | None = None
+
+
+@dataclass(frozen=True)
+class ZoningFacts:
+    """İmar durumu (``far`` emsal, ``coverage`` TAKS; None: not given) and the areas against it, m²; see factsSchema."""
+
+    parcel: float
+    far: float | None
+    coverage: float | None
+    floors: float
+    included: float
+    exempt: float
+    outside: float
+    cap: float | None
+    over: float
+    footprint: float
+
+
+def _zoning(raw: Any) -> ZoningFacts | None:
+    if not isinstance(raw, dict):
+        return None
+    return ZoningFacts(
+        float(raw.get("parcel") or 0.0), _maybe_float(raw.get("far")), _maybe_float(raw.get("coverage")),
+        float(raw.get("floors") or 0.0), float(raw.get("included") or 0.0), float(raw.get("exempt") or 0.0),
+        float(raw.get("outside") or 0.0), _maybe_float(raw.get("cap")), float(raw.get("over") or 0.0),
+        float(raw.get("footprint") or 0.0),
+    )
 
 
 @dataclass(frozen=True)
 class DoorEscape:
-    """A dwelling unit's door: its persistent id, unit, storey and middle, and its walk from its outer side to the
-    nearest storey exit (BYKHY 48/4; None when it opens into an escape stair's room)."""
+    """A dwelling unit's door and its walk to the nearest storey exit (BYKHY 48/4); see factsSchema."""
 
     uid: str
     unit: str
     level: str | None
     at: tuple[float, float]
     exit: EscapeWalk | None
+    into_stair: bool = False
 
 
 @dataclass

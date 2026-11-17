@@ -90,3 +90,32 @@ pub use veil::Veil;
 pub fn catalog() -> serde_json::Value {
     serde_json::to_value(kentos_commands::catalog::catalog()).unwrap_or(serde_json::Value::Null)
 }
+
+/// A product command's title as the catalog gives it (`Kapalı alan oluştur` for `cad.polygon.create`): a list naming
+/// an agent's job by its command (the desktop's Çalışan işler). The catalog is read once, on a thread of its own, the
+/// first time a title is asked; until then none, and the caller says the command's id. The interface thread never
+/// waits for it: building the catalog's schemas took two seconds in a debug build, and the desktop's first agent job
+/// answered that much later (measured in the real window, 16 November 2026).
+pub fn command_title(id: &str) -> Option<&'static str> {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    static TITLES: std::sync::OnceLock<std::collections::HashMap<String, String>> =
+        std::sync::OnceLock::new();
+    static ASKED: AtomicBool = AtomicBool::new(false);
+    if let Some(titles) = TITLES.get() {
+        return titles.get(id).map(String::as_str);
+    }
+    if !ASKED.swap(true, Ordering::Relaxed) {
+        let _ = std::thread::Builder::new()
+            .name("kentos-komut-adlari".into())
+            .spawn(|| {
+                TITLES.get_or_init(|| {
+                    kentos_commands::catalog::catalog()
+                        .commands
+                        .into_iter()
+                        .map(|c| (c.id, c.title))
+                        .collect()
+                });
+            });
+    }
+    None
+}

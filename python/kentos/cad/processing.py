@@ -320,6 +320,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         tool: str,
         drawing: str | None | Unset = UNSET,
         environment: RasterEnvironment | None | Unset = UNSET,
+        model: Any | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         sink: RunSink | None | Unset = UNSET,
@@ -392,6 +393,12 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
                 folder (then in the project's search paths), a result written beside it. The host gives it.
             environment: The raster tools' analysis environment (docs/adr/0643 §1): every raster tool of the run (a model's steps too)
                 takes it. A tool's own area (Kapsam) comes before the environment's.
+            model: A model written for this run, as the library keeps one (`id`, `label`, `inputs`, `steps` with each step's
+                `tool` and `values` wired by `{"kind": "input" | "output" | "value", …}`, `outputs`): run as a saved model is,
+                one plan and one undo step, without being saved (docs/adr/8057 §108, PY-AI-08: an agent chains built-in and
+                extension tools from a request in words). `parameters` are its inputs; `tool` is not read (`"model:"` by
+                custom). Refused when it does not read (`invalid_parameters`, path `model`), names a tool this host has not
+                (`unknown_tool`, path `model.steps[i].tool`) or its wiring does not hold (`invalid_parameters`).
             parameters:
             selection: The objects the run takes as chosen (persistent ids, in order): a features input's `selection` scope.
             sink: Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage.
@@ -412,6 +419,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
             tool=tool,
             drawing=drawing,
             environment=environment,
+            model=model,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             sink=sink,
@@ -426,6 +434,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         tool: str,
         drawing: str | None | Unset = UNSET,
         environment: RasterEnvironment | None | Unset = UNSET,
+        model: Any | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         sink: RunSink | None | Unset = UNSET,
@@ -438,6 +447,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
             tool=tool,
             drawing=drawing,
             environment=environment,
+            model=model,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             sink=sink,
@@ -452,6 +462,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         tool: str,
         drawing: str | None | Unset = UNSET,
         environment: RasterEnvironment | None | Unset = UNSET,
+        model: Any | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         sink: RunSink | None | Unset = UNSET,
@@ -464,6 +475,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
             tool=tool,
             drawing=drawing,
             environment=environment,
+            model=model,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             sink=sink,
@@ -478,6 +490,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         tool: str,
         drawing: str | None | Unset = UNSET,
         environment: RasterEnvironment | None | Unset = UNSET,
+        model: Any | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         sink: RunSink | None | Unset = UNSET,
@@ -495,6 +508,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
             tool=tool,
             drawing=drawing,
             environment=environment,
+            model=model,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             sink=sink,

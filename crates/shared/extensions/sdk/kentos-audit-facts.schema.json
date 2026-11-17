@@ -31,12 +31,28 @@
           },
           "type": "array"
         },
+        "sprinklers": {
+          "default": false,
+          "description": "The building has an automatic sprinkler system, as the project's settings say (`.kcad` 226): the fire\nregulation's sprinklered distances are the ones read (BYKHY 48/2, Ek-5/B; docs/adr/8057 §53).",
+          "type": "boolean"
+        },
         "units": {
           "description": "The building program's groups that have rooms, with article 4's areas, in the program's order.",
           "items": {
             "$ref": "#/$defs/UnitFacts"
           },
           "type": "array"
+        },
+        "zoning": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ZoningFacts"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The parcel's zoning (İmar durumu) and the building's areas against it, when the project writes one\n(docs/adr/8057 §92)."
         }
       },
       "required": [
@@ -505,6 +521,11 @@
           ],
           "description": "From its outer side; none when it opens into an escape stair's room or reaches no exit."
         },
+        "intoStair": {
+          "default": false,
+          "description": "It opens into an escape stair's room: it stands at its storey's exit (no walk, none needed).",
+          "type": "boolean"
+        },
         "level": {
           "type": [
             "string",
@@ -777,6 +798,66 @@
       ],
       "type": "object"
     },
+    "Occupancy": {
+      "description": "A unit's use as BYKHY Ek-5/B's rows name it, as KentOS Mimari reads it from the unit's nature (Daire, Büro,\nDükkân, Otel …): the row of its escape distances.",
+      "oneOf": [
+        {
+          "const": "highHazard",
+          "description": "Yüksek tehlikeli yerler.",
+          "type": "string"
+        },
+        {
+          "const": "industry",
+          "description": "Endüstri amaçlı yapılar.",
+          "type": "string"
+        },
+        {
+          "const": "dormitory",
+          "description": "Yurtlar, yatakhaneler.",
+          "type": "string"
+        },
+        {
+          "const": "shop",
+          "description": "Mağazalar, dükkânlar, marketler.",
+          "type": "string"
+        },
+        {
+          "const": "office",
+          "description": "Büro binaları.",
+          "type": "string"
+        },
+        {
+          "const": "parking",
+          "description": "Otoparklar ve depolar.",
+          "type": "string"
+        },
+        {
+          "const": "school",
+          "description": "Okul ve eğitim yapıları.",
+          "type": "string"
+        },
+        {
+          "const": "assembly",
+          "description": "Toplanma amaçlı binalar.",
+          "type": "string"
+        },
+        {
+          "const": "hospital",
+          "description": "Hastaneler, huzurevleri.",
+          "type": "string"
+        },
+        {
+          "const": "hotel",
+          "description": "Oteller, pansiyonlar.",
+          "type": "string"
+        },
+        {
+          "const": "dwelling",
+          "description": "Apartmanlar.",
+          "type": "string"
+        }
+      ]
+    },
     "Overlap": {
       "description": "Two areas of one layer covering each other.",
       "properties": {
@@ -917,6 +998,18 @@
           ],
           "description": "Its walks; none for a void, an outdoor or a broken room and an escape stair's room."
         },
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoomKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Its kind as the regulations read rooms, by its name or usage (KentOS Mimari's reading: Salon, Yatak odası,\nMutfak, Banyo, WC, Hol …); none for another room (a store, a study, a balcony)."
+        },
         "level": {
           "description": "Its storey's id.",
           "type": [
@@ -930,6 +1023,15 @@
             "null"
           ]
         },
+        "narrow": {
+          "default": null,
+          "description": "Its net width, m: the diameter of the largest circle inside its net outline, the regulations' narrow side\n(dar kenar, PAİY 29/1 and 29/3); none for a broken room.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
         "net": {
           "description": "Its net area, m²: between the walls' inner faces, as article 4 measures it.",
           "format": "double",
@@ -940,6 +1042,17 @@
             "string",
             "null"
           ]
+        },
+        "occupancy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Occupancy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The use its name or usage names as BYKHY Ek-5/B's rows do (Otopark, Depo, Lokanta …), as Mimari denetim's\nfire rules read a room outside a unit (docs/adr/8057 §82); none when they name none, or a dwelling's."
         },
         "outdoor": {
           "description": "Its usage's brief is an outdoor one (a balcony, a terrace).",
@@ -982,6 +1095,41 @@
         "axis"
       ],
       "type": "object"
+    },
+    "RoomKind": {
+      "description": "A room's kind, as Planlı Alanlar İmar Yönetmeliği 29 names the rooms of a dwelling (the passages too).",
+      "oneOf": [
+        {
+          "const": "living",
+          "description": "Oturma odası (Salon).",
+          "type": "string"
+        },
+        {
+          "const": "bedroom",
+          "description": "Yatak odası (Ebeveyn, Çocuk, Oda).",
+          "type": "string"
+        },
+        {
+          "const": "kitchen",
+          "description": "Mutfak veya yemek pişirme yeri.",
+          "type": "string"
+        },
+        {
+          "const": "bath",
+          "description": "Banyo veya yıkanma yeri (Duş).",
+          "type": "string"
+        },
+        {
+          "const": "toilet",
+          "description": "Tuvalet (WC).",
+          "type": "string"
+        },
+        {
+          "const": "corridor",
+          "description": "Hol, koridor, antre.",
+          "type": "string"
+        }
+      ]
     },
     "Storey": {
       "description": "A storey of the project.",
@@ -1231,6 +1379,17 @@
           "description": "Its number, as the project writes it.",
           "type": "string"
         },
+        "occupancy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Occupancy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its use as BYKHY Ek-5/B's rows name it, read from its nature (an annex's from its unit's; docs/adr/8057 §79);\nnone for a common or outdoor group and for a nature that names no use."
+        },
         "share": {
           "description": "Its part of the common areas' gross, by the program's rule; none when the program shares nothing.",
           "format": "double",
@@ -1317,6 +1476,80 @@
           "type": "string"
         }
       ]
+    },
+    "ZoningFacts": {
+      "description": "The parcel's zoning and the building's areas against it, m² (PAİY 4/1-tt, 4/1-cccc, 5/5, 5/8, 21, 22).",
+      "properties": {
+        "cap": {
+          "description": "The 30 % of the parcel's emsal area the exempt rooms may take; none without an emsal.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "coverage": {
+          "description": "TAKS the plan gives; none when it gives none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "exempt": {
+          "description": "Emsal harici, within the 30 % (22/1).",
+          "format": "double",
+          "type": "number"
+        },
+        "far": {
+          "description": "Emsal (KAKS) the plan gives; none when it gives none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "floors": {
+          "description": "Katlar alanı (emsale konu alan): the rooms counted in and the rooms out of it past the 30 % (5/8).",
+          "format": "double",
+          "type": "number"
+        },
+        "footprint": {
+          "description": "Taban alanı: the ground storey's rooms counted (all rooms in a project without storeys).",
+          "format": "double",
+          "type": "number"
+        },
+        "included": {
+          "description": "The rooms counted in (emsale dahil).",
+          "format": "double",
+          "type": "number"
+        },
+        "outside": {
+          "description": "Emsal harici apart from the 30 % (5/8's own list: fire stairs and their halls, a shelter …).",
+          "format": "double",
+          "type": "number"
+        },
+        "over": {
+          "description": "The exempt rooms' area past the 30 %, counted in the floors' area.",
+          "format": "double",
+          "type": "number"
+        },
+        "parcel": {
+          "description": "Net imar parseli alanı, as the project's İmar durumu writes it (the ratios are over it, PAİY 5/5).",
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "parcel",
+        "floors",
+        "included",
+        "exempt",
+        "outside",
+        "over",
+        "footprint"
+      ],
+      "type": "object"
     }
   },
   "$schema": "https://json-schema.org/draft/2020-12/schema",

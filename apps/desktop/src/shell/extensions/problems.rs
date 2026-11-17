@@ -70,7 +70,7 @@ pub(crate) fn troubles(x: &Extensions) -> Vec<Trouble> {
 const SHORT: usize = 180;
 
 /// Records a report lists.
-const REPORTED: usize = 30;
+pub(crate) const REPORTED: usize = 30;
 
 /// A moment of a log in the device's time: “13.11.2026 18:42:07”.
 pub(crate) fn when(ms: u64) -> String {
@@ -190,64 +190,5 @@ impl App {
             .on_press(msg(Event::ShowTrouble))
             .into(),
         )
-    }
-
-    /// The report the manager copies for the extension's publisher or an agent, in Markdown: what it is and where it
-    /// came from, its state, the problem still standing with the error as it came, and its newest log.
-    pub(crate) fn extension_report(&self, id: &str) -> Option<String> {
-        let registry = self.extensions.registry.as_ref()?;
-        let e = registry.extensions().into_iter().find(|e| e.id == id)?;
-        let mut out = format!("# Eklenti raporu: {} {}\n\n", e.name, e.version);
-        out.push_str(&format!("- Kimlik: `{}`\n", e.id));
-        out.push_str(&format!("- Durum: {} — {}\n", e.state_label, e.help));
-        if let Some(m) = registry.manifest(id) {
-            let publisher = m
-                .publisher_id
-                .as_ref()
-                .map(|p| format!(" ({p})"))
-                .unwrap_or_default();
-            out.push_str(&format!("- Yayımcı: {}{publisher}\n", m.authors.join(", ")));
-        }
-        out.push_str(&format!(
-            "- Kaynak: {} — {}\n",
-            e.source.kind.words(),
-            e.source.location
-        ));
-        out.push_str(&format!("- Güven: {}\n", e.trust_label));
-        out.push_str(&format!(
-            "- Bu bilgisayardaki sürümler: {}\n",
-            e.versions.join(", ")
-        ));
-        let program = self.program.map_or("KentOS", |m| m.title());
-        out.push_str(&format!(
-            "- {program} {} · {} {}\n",
-            env!("CARGO_PKG_VERSION"),
-            std::env::consts::OS,
-            std::env::consts::ARCH
-        ));
-        out.push_str(&format!(
-            "- Günlük dosyası: `{}`\n",
-            registry.journal().file(Some(id)).display()
-        ));
-        out.push_str("\n## Sorun\n\n");
-        match &e.problem {
-            Some(p) => {
-                out.push_str(&format!("{}\n\n{}\n", head(p), p.message));
-                if let Some(detail) = &p.detail {
-                    out.push_str(&format!("\n```\n{detail}\n```\n"));
-                }
-            }
-            None => out.push_str("Şu an duran bir hata yok.\n"),
-        }
-        out.push_str("\n## Son kayıtlar (yeniden eskiye)\n\n");
-        for r in e.log.iter().rev().take(REPORTED) {
-            out.push_str(&format!("- {} — {}\n", head(r), r.message));
-            if let Some(detail) = &r.detail {
-                for line in detail.lines().take(8) {
-                    out.push_str(&format!("  > {line}\n"));
-                }
-            }
-        }
-        Some(out)
     }
 }

@@ -16,6 +16,8 @@ fn room(uid: &str, net: f64, escape: Option<RoomEscape>) -> RoomFacts {
         number: None,
         name: Some("Ofis".into()),
         usage: None,
+        kind: None,
+        occupancy: Some(Occupancy::Office),
         level: Some("zemin".into()),
         unit: Some("of".into()),
         void: false,
@@ -24,6 +26,7 @@ fn room(uid: &str, net: f64, escape: Option<RoomEscape>) -> RoomFacts {
         stair: false,
         net,
         axis: net + 1.0,
+        narrow: Some(2.400_04),
         escape,
     }
 }
@@ -37,6 +40,7 @@ fn unit(id: &str) -> UnitFacts {
         nature: Some("Daire".into()),
         annex_of: None,
         dwelling: true,
+        occupancy: Some(super::Occupancy::Dwelling),
         gross: 80.000_04,
         net: 65.123_449,
         annex_gross: 0.0,
@@ -110,7 +114,21 @@ fn facts() -> ArchitectureFacts {
             level: Some("zemin".into()),
             at: [15.000_4, 4.0],
             exit: Some(walk(12.0, Some(12.0), &[[15.0, 4.3]])),
+            into_stair: false,
         }],
+        sprinklers: true,
+        zoning: Some(ZoningFacts {
+            parcel: 300.0,
+            far: Some(1.5),
+            coverage: Some(0.4),
+            floors: 486.123_456,
+            included: 450.0,
+            exempt: 171.123_456,
+            outside: 12.0,
+            cap: Some(135.0),
+            over: 36.123_456,
+            footprint: 125.000_04,
+        }),
     }
 }
 
@@ -137,6 +155,7 @@ fn the_architecture_is_rounded_and_ordered_as_written_down() {
         .map(|r| (r.uid.as_str(), r.net, r.axis))
         .collect();
     assert_eq!(rooms, [("u1", 3.0, 4.0), ("u2", 12.3457, 13.3457)]);
+    assert_eq!(a.rooms[0].narrow, Some(2.4), "a width to 1 mm");
     let exit = a.rooms[1]
         .escape
         .as_ref()
@@ -160,6 +179,15 @@ fn the_architecture_is_rounded_and_ordered_as_written_down() {
         "the project's storeys in their order, one it does not name last"
     );
     assert_eq!(a.doors[0].at, [15.0, 4.0]);
+    let z = a.zoning.as_ref().expect("the zoning");
+    assert_eq!(
+        (z.floors, z.over, z.footprint, z.far, z.cap),
+        (486.1235, 36.1235, 125.0, Some(1.5), Some(135.0))
+    );
+    // A project without İmar durumu writes no zoning: its facts are what they were.
+    let mut bare = facts();
+    bare.zoning = None;
+    assert!(!serde_json::to_string(&bare).unwrap().contains("zoning"));
     let (again, _) = a.clone().normalized();
     assert_eq!(again, a);
 }
@@ -203,7 +231,9 @@ fn the_section_is_absent_without_rooms_and_reads_back_with_them() {
         "{}",
         bare.to_json()
     );
-    let made = bare.clone().with_architecture(facts());
+    let mut with_kind = facts();
+    with_kind.rooms[0].kind = Some(RoomKind::Bedroom);
+    let made = bare.clone().with_architecture(with_kind);
     let text = made.to_json();
     for key in [
         r#""architecture":{"levels":"#,
@@ -213,6 +243,10 @@ fn the_section_is_absent_without_rooms_and_reads_back_with_them() {
         r#""annexGross":0.0"#,
         r#""annexOf":null"#,
         r#""kind":"unit""#,
+        r#""kind":"bedroom""#,
+        r#""narrow":2.4"#,
+        r#""intoStair":false"#,
+        r#""sprinklers":true"#,
     ] {
         assert!(text.contains(key), "{key}: {text}");
     }

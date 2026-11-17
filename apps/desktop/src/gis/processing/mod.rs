@@ -24,7 +24,7 @@
 pub(crate) mod apart;
 #[cfg(test)]
 mod apart_tests;
-mod background;
+pub(crate) mod background;
 pub(crate) mod batch;
 pub(crate) mod designer;
 pub mod dialog;
@@ -635,7 +635,7 @@ impl App {
     /// another thread, the window showing how far it is (background.rs).
     fn run_processing(&mut self) -> Task<Message> {
         let variables = self.expression_variables();
-        let server = self.server_place();
+        let server = self.processing_server_place();
         // Analiz ortamı (environment.rs): a number that does not read keeps the run from starting.
         let environment = match self.processing_environment_resolved() {
             Ok(e) => e,
@@ -861,6 +861,9 @@ impl App {
         };
         match reply {
             background::Reply::Progress(share, step) => {
+                if let Some(run) = self.gis.processing.running.get_mut(at) {
+                    run.progress = Some((share, step.clone()));
+                }
                 if let Some(window) = self.window_waiting(id) {
                     window.progressed(share, step);
                 }
@@ -964,6 +967,11 @@ impl App {
         let Some(id) = self.gis.processing.dialog.as_ref().and_then(|w| w.waiting) else {
             return;
         };
+        self.processing_stop_run(id);
+    }
+
+    /// A background run stopped by its id: its window's Durdur, or Çalışan işler's (works/), its window open or not.
+    pub(crate) fn processing_stop_run(&mut self, id: u64) {
         let Some(at) = self.gis.processing.running.iter().position(|r| r.id == id) else {
             return;
         };

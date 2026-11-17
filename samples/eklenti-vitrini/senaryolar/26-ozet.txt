@@ -7,7 +7,7 @@ key Escape
 wait 800
 click 843 20    # Vitrin
 wait 1200
-click 417 75    # Yapı ara
+click 546 75    # Yapı ara
 wait 2000
 click 1312 558  # Özetle
 wait 5000

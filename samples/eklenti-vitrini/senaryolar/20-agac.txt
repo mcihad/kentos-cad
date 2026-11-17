@@ -11,7 +11,7 @@ dclick 1222 367 # Parsel sınırı: etkin katman
 wait 1000
 click 843 20    # Vitrin
 wait 1200
-click 501 57    # Değer say
+click 622 57    # Değer say
 wait 2000
 click 140 388   # Katman
 wait 1000

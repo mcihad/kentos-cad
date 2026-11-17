@@ -122,6 +122,10 @@ pub struct ExtensionView {
     /// The error still standing: the newest in its log not followed by new files or a retry.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub problem: Option<Record>,
+    /// Another installed extension it reads as, by name or id (docs/adr/8059 §14): said beside it while both are
+    /// installed, so the one installed in spite of the review's warning stays marked. Icons were compared at Kur.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub resemblances: Vec<kentos_extensions::resemblance::Resemblance>,
     /// The newest records of its log, oldest first.
     pub log: Vec<Record>,
 }
@@ -147,6 +151,11 @@ pub struct CapabilityLine {
     pub hosts: Vec<String>,
     pub sends_data_to_ai: bool,
     pub change: Change,
+    /// Changed so that it reaches further than the installed version's (docs/adr/8057 §121): a scope that reaches
+    /// further, a server it did not talk to, data sent to an outside AI it did not send. What the person granted before
+    /// does not cover it.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub wider: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
@@ -156,7 +165,7 @@ pub enum Change {
     Asked,
     /// The installed version did not ask for it.
     Added,
-    /// Asked before too; its reason, hosts or AI use changed.
+    /// Asked before too; its scope, reason, hosts or AI use changed.
     Changed,
     /// Asked before too, the same.
     Same,
@@ -185,8 +194,44 @@ pub struct Review {
     /// Installed from another source: installing this one is the user's explicit choice.
     pub source_conflict: bool,
     pub capabilities: Vec<CapabilityLine>,
+    /// What it reads as among the installed extensions and the catalog's (docs/adr/8059 §14): its name, its id or its
+    /// icon, the imitations first. Said before Kur; an imitation installs only when the person says so.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub resemblances: Vec<kentos_extensions::resemblance::Resemblance>,
+    /// What an update changes in where it runs (PY-CLOUD-14): the systems and the runtimes it says, a sentence each;
+    /// none for a first install or when they are the same.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub platforms: Vec<String>,
+    /// The Python packages its lock installs, an update's against the installed version's (docs/adr/8057 §81).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub python_packages: Vec<crate::packages::PackageLine>,
+    /// An update whose publisher is not the installed version's (docs/adr/8057 §126): the extension handed to another
+    /// publisher, or a package put out under its id by someone else. Said before Kur; it installs only when the person
+    /// says so.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub publisher_change: Option<PublisherChange>,
     /// It can be installed (it may still wait for a dependency).
     pub installable: bool,
+}
+
+/// The publishers of the installed version and of an update (`publisherId`; none when the manifest names none).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PublisherChange {
+    pub before: Option<String>,
+    pub after: Option<String>,
+}
+
+impl Review {
+    /// Whether its publisher is not the installed version's: the person must say to install it anyway.
+    pub fn publisher_changed(&self) -> bool {
+        self.publisher_change.is_some()
+    }
+
+    /// Whether it imitates another extension: the person must say to install it anyway.
+    pub fn imitates(&self) -> bool {
+        self.resemblances.iter().any(|r| r.exact)
+    }
 }
 
 /// The capabilities of `new` against `old`'s.
@@ -200,7 +245,8 @@ pub fn capability_lines(new: &Manifest, old: Option<&Manifest>) -> Vec<Capabilit
                 (None, _) => Change::Asked,
                 (Some(_), None) => Change::Added,
                 (Some(_), Some(b))
-                    if b.reason != r.reason
+                    if b.scope != r.scope
+                        || b.reason != r.reason
                         || b.hosts != r.hosts
                         || b.sends_data_to_ai != r.sends_data_to_ai =>
                 {
@@ -215,6 +261,7 @@ pub fn capability_lines(new: &Manifest, old: Option<&Manifest>) -> Vec<Capabilit
                 hosts: r.hosts.clone(),
                 sends_data_to_ai: r.sends_data_to_ai == Some(true),
                 change,
+                wider: before.is_some_and(|b| reaches_further(b, r)),
             }
         })
         .collect();
@@ -228,11 +275,113 @@ pub fn capability_lines(new: &Manifest, old: Option<&Manifest>) -> Vec<Capabilit
                     hosts: r.hosts.clone(),
                     sends_data_to_ai: r.sends_data_to_ai == Some(true),
                     change: Change::Removed,
+                    wider: false,
                 });
             }
         }
     }
     lines
+}
+
+/// Whether `now` reaches further than `before` asked, as the catalog's review reads it: a scope that reaches further
+/// (the whole open project where it was what the person picks), a server it did not talk to, data sent to an outside AI
+/// it did not send.
+fn reaches_further(
+    before: &kentos_extensions::manifest::RequestedCapability,
+    now: &kentos_extensions::manifest::RequestedCapability,
+) -> bool {
+    now.scope.reach() > before.scope.reach()
+        || now.hosts.iter().any(|h| !before.hosts.contains(h))
+        || (now.sends_data_to_ai == Some(true) && before.sends_data_to_ai != Some(true))
+}
+
+/// What a review starts granted (docs/adr/8057 §121, ECO-QA-11): at a first install everything asked, the person reading
+/// each line; at an update what the person granted the installed version (`before`), while it is asked as before. A new
+/// capability, one that now reaches further and one the person left out start ungranted: an update never widens by
+/// itself what an extension may do. The review granted everything an update asked, and a capability the person had
+/// left out came back granted, unmarked, at the next version.
+pub fn starting_grant(
+    lines: &[CapabilityLine],
+    before: Option<&crate::store::Grant>,
+) -> Vec<Capability> {
+    let had = |c: Capability| before.is_some_and(|g| g.capabilities.contains(&c));
+    lines
+        .iter()
+        .filter(|l| match l.change {
+            Change::Asked => true,
+            Change::Same => had(l.capability),
+            Change::Changed => !l.wider && had(l.capability),
+            Change::Added | Change::Removed => false,
+        })
+        .map(|l| l.capability)
+        .collect()
+}
+
+/// What `new` changes against the installed `old` in where it runs (PY-CLOUD-14): the operating systems (none written:
+/// every one) and the runtimes, what it no longer runs on first; none for a first install.
+pub fn platform_lines(new: &Manifest, old: Option<&Manifest>) -> Vec<String> {
+    use kentos_extensions::compat::Os;
+    use kentos_extensions::manifest::Runtime;
+    let Some(old) = old else {
+        return Vec::new();
+    };
+    let systems = |m: &Manifest| -> Vec<Os> {
+        let written = &m.compatibility.operating_systems;
+        if written.is_empty() {
+            Os::ALL.to_vec()
+        } else {
+            Os::ALL
+                .into_iter()
+                .filter(|o| written.contains(o))
+                .collect()
+        }
+    };
+    let (before, after) = (systems(old), systems(new));
+    let names = |list: Vec<Os>| {
+        list.iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
+    let dropped: Vec<Os> = before
+        .iter()
+        .copied()
+        .filter(|o| !after.contains(o))
+        .collect();
+    let added: Vec<Os> = after
+        .iter()
+        .copied()
+        .filter(|o| !before.contains(o))
+        .collect();
+    let mut out = Vec::new();
+    if !dropped.is_empty() {
+        out.push(format!(
+            "Artık şu sistemlerde çalışmıyor: {}.",
+            names(dropped)
+        ));
+    }
+    let runtime = |r: Runtime| match r {
+        Runtime::Desktop => "KentOS masaüstünde",
+        Runtime::Headless => "MCP ajanlarında ve KentOS'un Python kitaplığında",
+        Runtime::Cloud => "bulutta (sunucunun işlerinde)",
+    };
+    for r in [Runtime::Desktop, Runtime::Headless, Runtime::Cloud] {
+        if old.runtimes.contains(&r) && !new.runtimes.contains(&r) {
+            out.push(format!("Artık {} çalışmıyor.", runtime(r)));
+        }
+    }
+    if !added.is_empty() {
+        out.push(format!(
+            "Artık şu sistemlerde de çalışıyor: {}.",
+            names(added)
+        ));
+    }
+    for r in [Runtime::Desktop, Runtime::Headless, Runtime::Cloud] {
+        if new.runtimes.contains(&r) && !old.runtimes.contains(&r) {
+            out.push(format!("Artık {} da çalışıyor.", runtime(r)));
+        }
+    }
+    out
 }
 
 /// An extension a project names (its data in `.kcad`'s `modules.ext`, D16).
@@ -253,4 +402,50 @@ pub enum NeedStatus {
     NotRunning { reason: String },
     /// Not installed: the project opens restricted, nothing is installed for it unasked.
     Missing,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The example extension's manifest with `systems` and `runtimes` written.
+    fn manifest(systems: &[&str], runtimes: &[&str]) -> Manifest {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../fixtures/extensions/v1/ornek-altlik/manifest.json");
+        let mut m: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(root).unwrap()).unwrap();
+        m["compatibility"]["operatingSystems"] = serde_json::json!(systems);
+        m["runtimes"] = serde_json::json!(runtimes);
+        Manifest::read(&m.to_string()).expect("a manifest")
+    }
+
+    /// An update says the systems and runtimes it drops, then those it adds; a first install and the same places say
+    /// nothing; no system written is every system.
+    #[test]
+    fn an_update_says_where_it_no_longer_runs() {
+        let every = manifest(&[], &["desktop", "headless"]);
+        let two = manifest(&["linux", "macos"], &["desktop", "cloud"]);
+        assert_eq!(
+            platform_lines(&two, Some(&every)),
+            [
+                "Artık şu sistemlerde çalışmıyor: Windows.",
+                "Artık MCP ajanlarında ve KentOS'un Python kitaplığında çalışmıyor.",
+                "Artık bulutta (sunucunun işlerinde) da çalışıyor."
+            ]
+        );
+        assert_eq!(
+            platform_lines(&every, Some(&two)),
+            [
+                "Artık bulutta (sunucunun işlerinde) çalışmıyor.",
+                "Artık şu sistemlerde de çalışıyor: Windows.",
+                "Artık MCP ajanlarında ve KentOS'un Python kitaplığında da çalışıyor."
+            ]
+        );
+        assert!(platform_lines(&two, None).is_empty(), "a first install");
+        let all_written = manifest(&["windows", "macos", "linux"], &["desktop", "headless"]);
+        assert!(
+            platform_lines(&all_written, Some(&every)).is_empty(),
+            "the same places"
+        );
+    }
 }

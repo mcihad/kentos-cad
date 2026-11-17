@@ -23,10 +23,17 @@ pub const VERSION: u64 = 1;
 /// Components a panel may have.
 pub const MOST_COMPONENTS: usize = 100;
 
+pub mod behaviour;
+pub mod crs;
+mod files;
 /// The components' Python builders, `kentos.ui_panel` (docs/adr/8057 §34), made from [`json_schema`].
 #[cfg(feature = "schema")]
 pub mod python;
+pub mod relations;
+pub mod rows;
 pub mod rules;
+pub mod tabs;
+pub mod units;
 pub mod values;
 
 pub use rules::Rules;
@@ -38,10 +45,23 @@ pub use rules::Rules;
 pub struct PanelDefinition {
     pub title: String,
     pub body: Vec<Component>,
+    /// Its outputs (tables, trees, cards, figures, charts, pictures, relation and attachment lists) under a sash, in
+    /// a scroller of their own: the form stays in sight as long results scroll, and the user drags the sash to share
+    /// the height (docs/adr/8057 §69). Off, the panel is one scroller, the outputs under the form.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub split: bool,
     /// Each component's rules, in the body's order ([`rules`]): written beside its keys, read by [`read`].
     #[serde(skip)]
     #[cfg_attr(feature = "schema", schemars(skip))]
     pub rules: Vec<Rules>,
+}
+
+/// One of the kinds of file a file picker offers: its name and its extensions, without the dot.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+pub struct FileFilter {
+    pub name: String,
+    pub extensions: Vec<String>,
 }
 
 /// One of a select's choices.
@@ -73,6 +93,11 @@ pub enum Component {
         #[serde(default)]
         collapsed: bool,
     },
+    /// A line across the panel between what it separates (docs/adr/8057 §59): no words, no value.
+    Divider {
+        #[serde(default)]
+        id: Option<String>,
+    },
     /// A text the user types.
     TextField {
         id: String,
@@ -100,6 +125,14 @@ pub enum Component {
         max: Option<f64>,
         #[serde(default)]
         unit: Option<String>,
+        /// − and + beside it change the value by this much, within `min` and `max` (docs/adr/8057 §59).
+        #[serde(default)]
+        step: Option<f64>,
+        /// The units the user may type it in besides `unit` (docs/adr/8057 §64), as KentOS's number fields take
+        /// them (0,03 km, 1 m + 20 cm): KentOS's (mm, cm, m, km; m², dönüm, ha; °, grad), of one kind, `unit`
+        /// among them. The code gets the number in `unit`.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        units: Vec<String>,
     },
     /// One of its choices.
     Select {
@@ -135,6 +168,87 @@ pub enum Component {
         layer: String,
         #[serde(default)]
         kinds: Vec<String>,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
+    },
+    /// A file the user gives to be read: its path typed, or chosen in the computer's file window (Seç…), of
+    /// `filters`' kinds when given. Its value is the file's absolute path, none until one is given; a path that is no
+    /// file, or of another kind, is said by its label and nothing runs. Its extension asks for `files.userSelected`.
+    /// With `save`, where a file is to be written (docs/adr/8057 §44): the file need not be there, its folder must; a
+    /// name without an extension takes the first kind's; its extension asks for `files.userSelectedWrite`.
+    FilePicker {
+        id: String,
+        label: String,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
+        #[serde(default)]
+        filters: Vec<FileFilter>,
+        #[serde(default)]
+        placeholder: Option<String>,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
+        /// Where a file is to be written, not one to be read.
+        #[serde(default)]
+        save: bool,
+        /// The name the save window offers (`parseller.csv`).
+        #[serde(default, rename = "defaultName")]
+        default_name: Option<String>,
+    },
+    /// A coordinate system of KentOS's list (docs/adr/8057 §45): its value `EPSG:<code>`, `value` when given, else
+    /// the open drawing's own (none for a drawing without one). The code reads it as it is (`pyproj.CRS(value)` too);
+    /// KentOS's `cad.crs.transform` takes its code (`CrsSide(srid=…)`).
+    CrsPicker {
+        id: String,
+        label: String,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
+        #[serde(default)]
+        value: Option<String>,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
+    },
+    /// A point of the drawing (docs/adr/8057 §57): typed as `x, y` or picked on the map with "Haritadan seç" (snaps
+    /// apply); its value `[x, y]` in the drawing's plane, metres, none when empty.
+    PointPicker {
+        id: String,
+        label: String,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
+        #[serde(default)]
+        value: Option<[f64; 2]>,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
+    },
+    /// A line or an area drawn on the map (docs/adr/8057 §62): "Haritada çiz" draws it with KentOS's capture (snaps
+    /// apply, Esc leaves the field as it was), its ✕ empties it; its value the shape as GeoJSON in the drawing's plane
+    /// (a rectangle a Polygon of its corners, a circle a Polygon of 64 chords with `circle`), none when empty.
+    ShapePicker {
+        id: String,
+        label: String,
+        /// What the user draws.
+        shape: PickShape,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
+        #[serde(default, rename = "onChange")]
+        on_change: Option<String>,
+    },
+    /// A record of a project relation's parent layer, chosen by its words (relations.rs, docs/adr/8057 §67): its
+    /// value the record's persistent id, as the relation's child field holds it; none when none is chosen.
+    RelationPicker {
+        id: String,
+        label: String,
+        /// The project relation's id: its parent layer's records are offered.
+        relation: String,
+        /// The parent layer's field whose value names a record; none: its label, else its first field with a value.
+        #[serde(default)]
+        display: Option<String>,
+        /// The user must give it: left empty, it is said by its label and nothing runs.
+        #[serde(default)]
+        required: bool,
         #[serde(default, rename = "onChange")]
         on_change: Option<String>,
     },
@@ -241,6 +355,32 @@ pub enum Component {
         #[serde(default)]
         primary: bool,
     },
+    /// The records a project relation ties to the record component `of` holds (relations.rs, docs/adr/8057 §67): its
+    /// child layer's records naming it, read from the drawing as it is (no Python), a row each; a row's click shows
+    /// the record. `of` is a feature picker (its first object) or a relation picker.
+    RelationList {
+        id: String,
+        #[serde(default)]
+        label: Option<String>,
+        /// The project relation's id.
+        relation: String,
+        /// The component holding the parent record.
+        of: String,
+        /// The child layer's fields shown, by name, at most six; none: its first four.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        columns: Vec<String>,
+    },
+    /// The attachments of the record component `of` holds (docs/adr/8057 §68): its photos, documents and addresses as
+    /// Öznitelikler shows them, a photo's picture once decoded; Aç opens one, and KentOS's own Dosya ekle… and Adres
+    /// ekle… add one (the user's edit) where the record's layer is not locked. `of` is a feature picker (its first
+    /// object) or a relation picker.
+    Attachments {
+        id: String,
+        #[serde(default)]
+        label: Option<String>,
+        /// The component holding the record.
+        of: String,
+    },
     /// The rows a button's command answered.
     Table {
         id: String,
@@ -292,9 +432,9 @@ pub enum Component {
         #[serde(default)]
         aggregate: Option<ChartAggregate>,
     },
-    /// A picture its code gives (`ctx.panel.set(id, image=…)`, a PNG): a chart drawn in Python, a preview. `alt` says
-    /// what it shows and stands in its place until the code gives one; `height` in pixels (80–600, none: 200), the
-    /// picture fitted inside it.
+    /// A picture its code gives (`ctx.panel.set(id, image=…)`, a PNG or a JPEG): a chart drawn in Python, a preview, a
+    /// photo. `alt` says what it shows and stands in its place until the code gives one; `height` in pixels (80–600,
+    /// none: 200), the picture fitted inside it.
     Image {
         id: String,
         #[serde(default)]
@@ -355,13 +495,22 @@ impl Component {
     /// Its id, when it has one.
     pub fn id(&self) -> Option<&str> {
         match self {
-            Component::Text { id, .. } | Component::Section { id, .. } => id.as_deref(),
+            Component::Text { id, .. }
+            | Component::Section { id, .. }
+            | Component::Divider { id } => id.as_deref(),
             Component::TextField { id, .. }
             | Component::NumberField { id, .. }
             | Component::Select { id, .. }
             | Component::LayerPicker { id, .. }
             | Component::FieldPicker { id, .. }
             | Component::FeaturePicker { id, .. }
+            | Component::FilePicker { id, .. }
+            | Component::CrsPicker { id, .. }
+            | Component::PointPicker { id, .. }
+            | Component::ShapePicker { id, .. }
+            | Component::RelationPicker { id, .. }
+            | Component::RelationList { id, .. }
+            | Component::Attachments { id, .. }
             | Component::DateField { id, .. }
             | Component::TimeField { id, .. }
             | Component::DateTimeField { id, .. }
@@ -384,6 +533,11 @@ impl Component {
             | Component::LayerPicker { on_change, .. }
             | Component::FieldPicker { on_change, .. }
             | Component::FeaturePicker { on_change, .. }
+            | Component::FilePicker { on_change, .. }
+            | Component::CrsPicker { on_change, .. }
+            | Component::PointPicker { on_change, .. }
+            | Component::ShapePicker { on_change, .. }
+            | Component::RelationPicker { on_change, .. }
             | Component::DateField { on_change, .. }
             | Component::TimeField { on_change, .. }
             | Component::DateTimeField { on_change, .. }
@@ -401,6 +555,11 @@ impl Component {
             | Component::LayerPicker { required, .. }
             | Component::FieldPicker { required, .. }
             | Component::FeaturePicker { required, .. }
+            | Component::FilePicker { required, .. }
+            | Component::CrsPicker { required, .. }
+            | Component::PointPicker { required, .. }
+            | Component::ShapePicker { required, .. }
+            | Component::RelationPicker { required, .. }
             | Component::MultiSelect { required, .. }
             | Component::DateField { required, .. }
             | Component::TimeField { required, .. }
@@ -419,6 +578,11 @@ impl Component {
                 | Component::LayerPicker { .. }
                 | Component::FieldPicker { .. }
                 | Component::FeaturePicker { .. }
+                | Component::FilePicker { .. }
+                | Component::CrsPicker { .. }
+                | Component::PointPicker { .. }
+                | Component::ShapePicker { .. }
+                | Component::RelationPicker { .. }
                 | Component::DateField { .. }
                 | Component::TimeField { .. }
                 | Component::DateTimeField { .. }
@@ -500,6 +664,20 @@ pub fn json_schema() -> Value {
                         serde_json::json!({ "type": "string", "description": words }),
                     );
                 }
+                props.insert(
+                    tabs::TAB_KEY.to_owned(),
+                    serde_json::json!({ "type": "string", "maxLength": 40, "description":
+                        "The tab (its words) whose page this component is on: the components with the same tab share \
+                         a page, the bar lists the tabs in the order they first appear; without one, on every page." }),
+                );
+                if rows::takes_row(&name) {
+                    props.insert(
+                        rows::ROW_KEY.to_owned(),
+                        serde_json::json!({ "type": "string", "maxLength": 40, "description":
+                            "The row (its name) whose line this component shares: the components next to each other \
+                             with the same row stand side by side where each has room, one under another where not." }),
+                    );
+                }
             }
         }
     }
@@ -526,7 +704,13 @@ fn takes_rule(kind: &str, known: &[&str], key: &str) -> bool {
         "requiredWhen" => known.contains(&"required"),
         "enabledWhen" => matches!(
             kind,
-            "button" | "textField" | "numberField" | "dateField" | "timeField" | "dateTimeField"
+            "button"
+                | "textField"
+                | "numberField"
+                | "dateField"
+                | "timeField"
+                | "dateTimeField"
+                | "filePicker"
         ),
         _ => false,
     }
@@ -537,14 +721,32 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
     Some(match kind {
         "text" => &["id", "text"],
         "section" => &["id", "label", "collapsed"],
+        "divider" => &["id"],
         "textField" => &["id", "label", "placeholder", "value", "required"],
-        "numberField" => &["id", "label", "value", "min", "max", "unit", "required"],
+        "numberField" => &[
+            "id", "label", "value", "min", "max", "unit", "step", "units", "required",
+        ],
         "select" => &["id", "label", "options", "value", "onChange"],
         "layerPicker" => &["id", "label", "geometry", "onChange", "required"],
         "fieldPicker" => &["id", "label", "layer", "kinds", "onChange", "required"],
         "featurePicker" => &[
             "id", "label", "layer", "geometry", "multiple", "onChange", "required",
         ],
+        "filePicker" => &[
+            "id",
+            "label",
+            "filters",
+            "placeholder",
+            "onChange",
+            "required",
+            "save",
+            "defaultName",
+        ],
+        "crsPicker" | "pointPicker" => &["id", "label", "value", "onChange", "required"],
+        "shapePicker" => &["id", "label", "shape", "onChange", "required"],
+        "relationPicker" => &["id", "label", "relation", "display", "onChange", "required"],
+        "relationList" => &["id", "label", "relation", "of", "columns"],
+        "attachments" => &["id", "label", "of"],
         "checkbox" => &["id", "label", "value", "onChange"],
         "dateField" | "timeField" | "dateTimeField" => {
             &["id", "label", "value", "min", "max", "onChange", "required"]
@@ -569,8 +771,63 @@ fn keys_of(kind: &str) -> Option<&'static [&'static str]> {
     })
 }
 
-const TYPES: &str = "text, section, textField, numberField, dateField, timeField, dateTimeField, select, multiSelect, layerPicker, \
-                     fieldPicker, featurePicker, checkbox, button, table, tree, card, stats, chart, image";
+const TYPES: &str = "text, section, divider, textField, numberField, dateField, timeField, dateTimeField, select, \
+                     multiSelect, layerPicker, fieldPicker, featurePicker, filePicker, crsPicker, pointPicker, \
+                     shapePicker, relationPicker, checkbox, button, table, tree, card, stats, chart, image, relationList, \
+                     attachments";
+
+/// What a shape picker asks the user to draw (docs/adr/8057 §62).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub enum PickShape {
+    Line,
+    Polygon,
+    Rectangle,
+    Circle,
+}
+
+impl PickShape {
+    /// The GeoJSON type its shape has.
+    pub fn geojson_type(self) -> &'static str {
+        match self {
+            PickShape::Line => "LineString",
+            _ => "Polygon",
+        }
+    }
+}
+
+/// A point given as JSON (`[x, y]`, two finite numbers); none otherwise.
+pub fn point_value(value: &Value) -> Option<[f64; 2]> {
+    let xy = value.as_array().filter(|a| a.len() == 2)?;
+    let (x, y) = (xy[0].as_f64()?, xy[1].as_f64()?);
+    (x.is_finite() && y.is_finite()).then_some([x, y])
+}
+
+/// A point as a field shows it: `x, y` to the millimetre.
+pub fn point_words([x, y]: [f64; 2]) -> String {
+    format!("{x:.3}, {y:.3}")
+}
+
+/// A point as the user types it: `x, y` or `x y` with decimal points, or `x; y` with decimal commas too; none for
+/// anything else.
+pub fn typed_point(text: &str) -> Option<[f64; 2]> {
+    let text = text.trim();
+    let parts: Vec<String> = if text.contains(';') {
+        text.split(';')
+            .map(|p| p.trim().replace(',', "."))
+            .collect()
+    } else if text.split_whitespace().count() == 2 && !text.contains(", ") {
+        text.split_whitespace().map(str::to_owned).collect()
+    } else {
+        text.split(',').map(|p| p.trim().to_owned()).collect()
+    };
+    let [x, y] = parts.as_slice() else {
+        return None;
+    };
+    let (x, y) = (x.parse::<f64>().ok()?, y.parse::<f64>().ok()?);
+    (x.is_finite() && y.is_finite()).then_some([x, y])
+}
 
 /// The component types Kapı 1 knows, in its words' order: the SDK's guide and ADR 8057 §25 name each.
 pub fn component_types() -> impl Iterator<Item = &'static str> {
@@ -700,13 +957,21 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
     };
     for key in top
         .keys()
-        .filter(|k| !["format", "schemaVersion", "title", "body"].contains(&k.as_str()))
+        .filter(|k| !["format", "schemaVersion", "title", "body", "split"].contains(&k.as_str()))
     {
         add(
             format!("/{key}"),
             format!(
-                "“{key}” panelde bilinmeyen bir alan; olanlar: format, schemaVersion, title, body."
+                "“{key}” panelde bilinmeyen bir alan; olanlar: format, schemaVersion, title, body, split."
             ),
+        );
+    }
+    // The sash between its form and its outputs (docs/adr/8057 §69).
+    if top.get("split").is_some_and(|v| !v.is_boolean()) {
+        add(
+            "/split".to_owned(),
+            "split true ya da false olmalı: true, çıktıları sürüklenen bir çizginin altına, kendi kaydırmalarına alır."
+                .to_owned(),
         );
     }
     if top.get("format").and_then(Value::as_str) != Some(FORMAT) {
@@ -760,6 +1025,11 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
     let mut tables = shows.clone();
     tables.extend(of_type("chart"));
     let layer_pickers = of_type("layerPicker");
+    // What a relation list's parent may be held by (relations.rs).
+    let parents: BTreeSet<&str> = ["featurePicker", "relationPicker"]
+        .into_iter()
+        .flat_map(of_type)
+        .collect();
     // What the components' rules read: the inputs by id, typed (rules.rs).
     let inputs = rules::inputs_of(body);
     let mut ids = BTreeSet::new();
@@ -781,6 +1051,8 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
         };
         for key in c.keys().filter(|k| {
             k.as_str() != "type"
+                && k.as_str() != tabs::TAB_KEY
+                && k.as_str() != rows::ROW_KEY
                 && !known.contains(&k.as_str())
                 && !takes_rule(kind, known, k.as_str())
                 && !values::takes_value(kind, k.as_str())
@@ -798,6 +1070,10 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                     .copied()
                     .filter(|k| values::takes_value(kind, k)),
             );
+            takes.push(tabs::TAB_KEY);
+            if rows::takes_row(kind) {
+                takes.push(rows::ROW_KEY);
+            }
             add(
                 format!("{at}/{key}"),
                 format!(
@@ -877,7 +1153,7 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
             );
         }
         match c.get("id") {
-            None if kind == "text" || kind == "section" => {}
+            None if kind == "text" || kind == "section" || kind == "divider" => {}
             None => add(
                 at.clone(),
                 format!("{kind} bileşeni bir kimlik (id) ister."),
@@ -920,7 +1196,7 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
         }
         if !matches!(
             kind,
-            "table" | "tree" | "card" | "stats" | "chart" | "image"
+            "table" | "tree" | "card" | "stats" | "chart" | "image" | "divider"
         ) && text(c, "label").is_none()
         {
             add(
@@ -954,6 +1230,20 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                         format!("{at}/min"),
                         "En küçük değer (min) en büyükten (max) büyük.".to_owned(),
                     );
+                }
+                // Its step (docs/adr/8057 §59): a positive number.
+                if let Some(step) = number("step")
+                    && !step.is_some_and(|s| s.is_finite() && s > 0.0)
+                {
+                    add(
+                        format!("{at}/step"),
+                        "“step” sıfırdan büyük bir sayı olmalı: − ve + değeri bu kadar değiştirir."
+                            .to_owned(),
+                    );
+                }
+                // Its units (docs/adr/8057 §64): KentOS's, of one kind, its `unit` among them.
+                for (place, why) in units::check(c, &at) {
+                    add(place, why);
                 }
             }
             "select" | "multiSelect" => {
@@ -1211,6 +1501,52 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
                     }
                 }
             }
+            // Its kinds, and where a file is to be written (files.rs, docs/adr/8057 §41, §44).
+            "filePicker" => files::check(c, &at, &mut add),
+            // Its value a system of KentOS's list (crs.rs, docs/adr/8057 §45).
+            "crsPicker" => crs::check(c, &at, &mut add),
+            // Its relation, and a list's parent (relations.rs, docs/adr/8057 §67).
+            "relationPicker" | "relationList" => relations::check(kind, c, &at, &parents, &mut add),
+            // The record whose attachments it shows (docs/adr/8057 §68).
+            "attachments" => {
+                if !c
+                    .get("of")
+                    .and_then(Value::as_str)
+                    .is_some_and(|of| parents.contains(of))
+                {
+                    add(
+                        format!("{at}/of"),
+                        "of bu paneldeki bir nesne seçicinin (featurePicker) ya da ilişki seçicinin (relationPicker) \
+                         kimliği olmalı: ekler onun tuttuğu kaydındır."
+                            .to_owned(),
+                    );
+                }
+            }
+            // What the user draws: a line or an area (docs/adr/8057 §62).
+            "shapePicker" => {
+                if !c
+                    .get("shape")
+                    .and_then(Value::as_str)
+                    .is_some_and(|k| ["line", "polygon", "rectangle", "circle"].contains(&k))
+                {
+                    add(
+                        format!("{at}/shape"),
+                        "shape çizilecek şekil olmalı: line, polygon, rectangle ya da circle."
+                            .to_owned(),
+                    );
+                }
+            }
+            // Its value a point: two finite numbers (docs/adr/8057 §57).
+            "pointPicker" => {
+                if let Some(value) = c.get("value").filter(|v| !v.is_null())
+                    && point_value(value).is_none()
+                {
+                    add(
+                        format!("{at}/value"),
+                        "value bir nokta olmalı: iki sayılık liste [x, y] (çizimin düzleminde, metre).".to_owned(),
+                    );
+                }
+            }
             "image" => {
                 if let Some(height) = c.get("height")
                     && !height.as_f64().is_some_and(|h| (80.0..=600.0).contains(&h))
@@ -1348,6 +1684,14 @@ pub fn check(file: &str, value: &Value, commands: &[&str]) -> Vec<Problem> {
     if let Err((at, why)) = values::calc_order(&reads) {
         add(format!("/body/{}/calculate", calculated[at].0), why);
     }
+    // Its tabs: each a tab's words, at most `tabs::MOST_TABS` (docs/adr/8057 §43).
+    for (at, why) in tabs::check(body) {
+        add(at, why);
+    }
+    // Its rows: each a row's name, its cells next to each other, small, on one tab (docs/adr/8057 §55).
+    for (at, why) in rows::check(body) {
+        add(at, why);
+    }
     out
 }
 
@@ -1387,6 +1731,90 @@ mod tests {
                   "category": "ada" }
             ]
         })
+    }
+
+    /// A panel's outputs may stand under a sash (docs/adr/8057 §69): `split` true or false, said where it is written
+    /// otherwise.
+    #[test]
+    fn a_panels_split_is_true_or_false() {
+        let panel = |split: Value| {
+            json!({ "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Ara", "split": split,
+                "body": [{ "type": "table", "id": "t" }] })
+        };
+        assert!(check("p.json", &panel(json!(true)), &[]).is_empty());
+        assert!(read(&panel(json!(true))).expect("a panel").split);
+        assert!(!read(&json!({ "format": "kentos.ui.panel", "schemaVersion": 1, "title": "A", "body": [] }))
+            .expect("a panel")
+            .split);
+        let said: Vec<String> = check("p.json", &panel(json!("evet")), &[])
+            .into_iter()
+            .filter_map(|p| p.at)
+            .collect();
+        assert_eq!(said, ["/split"]);
+    }
+
+    /// A shape picker draws a line, an area, a rectangle or a circle; another shape is said where it is written.
+    #[test]
+    fn a_shape_picker_says_what_is_drawn() {
+        let value = json!({ "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Alan",
+            "body": [
+                { "type": "shapePicker", "id": "alan", "label": "Alan", "shape": "polygon", "required": true },
+                { "type": "shapePicker", "id": "yol", "label": "Yol", "shape": "spiral" }
+            ] });
+        let said: Vec<String> = check("p.json", &value, &[])
+            .into_iter()
+            .filter_map(|p| p.at)
+            .collect();
+        assert!(said.contains(&"/body/1/shape".to_owned()), "{said:?}");
+        assert!(!said.iter().any(|at| at.starts_with("/body/0")), "{said:?}");
+        assert_eq!(PickShape::Line.geojson_type(), "LineString");
+        assert_eq!(PickShape::Circle.geojson_type(), "Polygon");
+    }
+
+    /// A divider needs no id; a number field's step is a positive number, said where it is written otherwise.
+    #[test]
+    fn a_divider_is_a_line_and_a_step_is_positive() {
+        let value = json!({ "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Adım",
+            "body": [
+                { "type": "divider" },
+                { "type": "numberField", "id": "a", "label": "A", "step": 0.5, "min": 0, "max": 10 },
+                { "type": "numberField", "id": "b", "label": "B", "step": 0 }
+            ] });
+        let said: Vec<String> = check("p.json", &value, &[])
+            .into_iter()
+            .filter_map(|p| p.at)
+            .collect();
+        assert_eq!(said, ["/body/2/step"], "{said:?}");
+        let panel = read(&json!({ "format": "kentos.ui.panel", "schemaVersion": 1, "title": "Adım",
+            "body": [{ "type": "divider" }, { "type": "numberField", "id": "a", "label": "A", "step": 5 }] }))
+        .expect("a panel");
+        assert!(matches!(panel.body[0], Component::Divider { id: None }));
+        assert!(matches!(
+            panel.body[1],
+            Component::NumberField {
+                step: Some(5.0),
+                ..
+            }
+        ));
+    }
+
+    /// A point is two numbers: typed with a decimal point and a comma or a space between, or decimal commas with a
+    /// semicolon; given as JSON `[x, y]`; shown to the millimetre.
+    #[test]
+    fn a_point_is_typed_as_two_numbers() {
+        assert_eq!(
+            typed_point("500123.45, 4401234.5"),
+            Some([500123.45, 4401234.5])
+        );
+        assert_eq!(typed_point(" 10 20 "), Some([10.0, 20.0]));
+        assert_eq!(typed_point("10,5; 20,25"), Some([10.5, 20.25]));
+        assert_eq!(typed_point("10.5,20"), Some([10.5, 20.0]));
+        for wrong in ["", "10", "a, b", "1, 2, 3", "10,5 20,5"] {
+            assert_eq!(typed_point(wrong), None, "{wrong:?}");
+        }
+        assert_eq!(point_value(&serde_json::json!([1.0, 2])), Some([1.0, 2.0]));
+        assert_eq!(point_value(&serde_json::json!([1.0])), None);
+        assert_eq!(point_words([500123.456_78, 2.0]), "500123.457, 2.000");
     }
 
     #[test]

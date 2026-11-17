@@ -5,8 +5,8 @@
 use serde::Deserialize;
 
 use super::{
-    Action, Approval, AuditRecord, CatalogScope, ChangeRequest, Gate, GateKind, Notice, Refusal,
-    Release, ReleaseContent, ReleaseState, ReviewFocus,
+    Action, Approval, AuditRecord, CatalogScope, ChangeRequest, Gate, GateKind, Listing, Notice,
+    Refusal, Release, ReleaseContent, ReleaseState, ReviewFocus,
 };
 
 /// A release as stored, read through [`Release::inconsistency`].
@@ -19,6 +19,8 @@ pub(super) struct Stored {
     publisher: String,
     author: String,
     content: ReleaseContent,
+    #[serde(default)]
+    listing: Option<Listing>,
     state: ReleaseState,
     gates: Vec<Gate>,
     #[serde(default)]
@@ -43,6 +45,7 @@ impl TryFrom<Stored> for Release {
             publisher: s.publisher,
             author: s.author,
             content: s.content,
+            listing: s.listing,
             state: s.state,
             gates: s.gates,
             focus: s.focus,

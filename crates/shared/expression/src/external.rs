@@ -9,11 +9,14 @@
 //! id have them), anywhere else they stay operators.
 
 /// A function the host offers: its whole name and one line for the builder.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct ExternalDef {
     /// `ext.<extension>.<local>`.
     pub name: String,
     pub description: String,
+    /// Why a call is refused here although the extension is installed (a headless host: its manifest does not say it
+    /// runs there, docs/adr/8057 §80): the compiler refuses the call with these words, not as an unknown function.
+    pub refused: Option<String>,
 }
 
 /// An argument or an answer: what JSON carries between the engine and an extension's code.
@@ -43,7 +46,8 @@ static HOST_ANSWERS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64
 
 /// The host's functions and what answers them while drawing (docs/adr/8057 §8): one place every part that works out
 /// an expression while drawing reads (a label's text, a style's rule, a layer's filter, a form's calculation);
-/// replaced as the extensions change. Without a host (the web, a headless run) there are none.
+/// replaced as the extensions change. Without a host (the web, a headless run that offers no extension) there are none;
+/// MCP and the Python library offer the functions of the extensions that run headless (docs/adr/8057 §80).
 pub fn set_host(defs: Vec<ExternalDef>, calls: HostCalls) {
     if let Ok(mut slot) = HOST.write() {
         *slot = Some((defs, calls));
@@ -208,6 +212,7 @@ mod tests {
             externals: vec![ExternalDef {
                 name: NAME.to_owned(),
                 description: "İki katı".to_owned(),
+                refused: None,
             }],
             ..Schema::default()
         }
@@ -240,6 +245,17 @@ mod tests {
         assert!(e.message.contains("kurulu ve açık bir eklentinin"));
         let e = compile_with(&format!("{NAME}(Ad) || '!'"), &schema()).unwrap();
         assert_eq!(e.externals(), [NAME.to_owned()]);
+        // A function the host knows but does not run here (a headless host, docs/adr/8057 §80): in the host's words.
+        let mut here = schema();
+        here.externals[0].refused = Some("eklenti yalnız masaüstünde çalışır.".to_owned());
+        let Err(e) = compile_with(&format!("'x' || {NAME}(Ad)"), &here) else {
+            panic!("refused");
+        };
+        assert_eq!(
+            e.message,
+            format!("{NAME}() burada çalışmaz: eklenti yalnız masaüstünde çalışır.")
+        );
+        assert_eq!(e.at, 8);
     }
 
     #[test]

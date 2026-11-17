@@ -1,11 +1,18 @@
 //! The catalog's revocation list over HTTP (docs/adr/8059 §12): every member gets the same list, and it tells nothing
 //! an insider alone may know; everyone else gets the same 404 as on the other routes; an unchanged list costs a 304.
+//! On both stores.
 
 use kentos_extensions::revocations::Revocations;
 
 use super::*;
 
 const REVOCATIONS: &str = "/v1/extension-catalogs/public/revocations";
+
+on_both_stores!(
+    every_member_gets_the_same_list_and_it_tells_no_insider_anything,
+    outside_a_catalog_the_list_answers_the_same_404,
+    an_unchanged_list_costs_a_304_and_a_new_withdrawal_makes_a_new_list,
+);
 
 /// 1.0.0 published and withdrawn, 1.1.0 published and suspended, 1.2.0 still a draft.
 async fn taken_out(app: &Router) {
@@ -35,9 +42,8 @@ fn fetch(uri: &str, account: &str, tag: Option<&str>) -> Request<Body> {
     b.body(Body::empty()).unwrap()
 }
 
-#[tokio::test]
-async fn every_member_gets_the_same_list_and_it_tells_no_insider_anything() {
-    let (app, _store) = catalog();
+async fn every_member_gets_the_same_list_and_it_tells_no_insider_anything(bench: Bench) {
+    let app = catalog(&bench).await;
     taken_out(&app).await;
     let (status, outsider) = get(&app, Via::Desktop, REVOCATIONS, "can").await;
     assert_eq!(status, StatusCode::OK, "{outsider}");
@@ -66,7 +72,12 @@ async fn every_member_gets_the_same_list_and_it_tells_no_insider_anything() {
         assert_eq!((status, &list), (StatusCode::OK, &outsider), "{account}");
     }
     let text = outsider.to_string();
-    for insider in ["ayse", "selin", "yusuf", "tarayici", "sha256:", "1.2.0"] {
+    let accounts = ["ayse", "selin", "yusuf", "tarayici"].map(id);
+    for insider in accounts
+        .iter()
+        .map(String::as_str)
+        .chain(["sha256:", "1.2.0"])
+    {
         assert!(!text.contains(insider), "{insider} in {text}");
     }
     // The host's own reader takes it as it comes.
@@ -78,14 +89,15 @@ async fn every_member_gets_the_same_list_and_it_tells_no_insider_anything() {
     assert_eq!(list.reason("tr.ornek.altlik", "1.2.0"), None);
 }
 
-#[tokio::test]
-async fn outside_a_catalog_the_list_answers_the_same_404() {
-    let (app, store) = catalog();
-    store.grant(
-        Where::In(CatalogId::Tenant("buro".into())),
-        "bora",
-        Role::Publisher,
-    );
+async fn outside_a_catalog_the_list_answers_the_same_404(bench: Bench) {
+    let app = catalog(&bench).await;
+    bench
+        .grant(
+            Where::In(CatalogId::Tenant("buro".into())),
+            "bora",
+            Role::Publisher,
+        )
+        .await;
     let buro = "/v1/extension-catalogs/tenant:buro/revocations";
     let (status, hidden) = get(&app, Via::Web, buro, "can").await;
     assert_eq!(
@@ -98,10 +110,10 @@ async fn outside_a_catalog_the_list_answers_the_same_404() {
         (StatusCode::OK, Some(0))
     );
     // One's own catalog's list is its owner's alone: not even the catalog's scanner gets it.
-    let mine = "/v1/extension-catalogs/personal:can/revocations";
-    assert_eq!(get(&app, Via::Web, mine, "can").await.0, StatusCode::OK);
+    let mine = format!("/v1/extension-catalogs/personal:{}/revocations", id("can"));
+    assert_eq!(get(&app, Via::Web, &mine, "can").await.0, StatusCode::OK);
     for other in ["ayse", "yusuf", "tarayici"] {
-        let (status, body) = get(&app, Via::Token, mine, other).await;
+        let (status, body) = get(&app, Via::Token, &mine, other).await;
         assert_eq!(
             (status, code(&body)),
             (StatusCode::NOT_FOUND, "not_found".to_owned()),
@@ -122,9 +134,8 @@ async fn outside_a_catalog_the_list_answers_the_same_404() {
     assert_eq!(missing["message"], hidden["message"]);
 }
 
-#[tokio::test]
-async fn an_unchanged_list_costs_a_304_and_a_new_withdrawal_makes_a_new_list() {
-    let (app, _store) = catalog();
+async fn an_unchanged_list_costs_a_304_and_a_new_withdrawal_makes_a_new_list(bench: Bench) {
+    let app = catalog(&bench).await;
     let (status, headers, body) = send(&app, fetch(REVOCATIONS, "can", None)).await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(headers[header::CACHE_CONTROL], "private, no-cache");

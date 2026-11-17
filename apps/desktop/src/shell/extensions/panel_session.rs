@@ -14,6 +14,7 @@
 //!   error (said to its code and its log, not put to the user); nothing of that call is applied.
 //! - **A closed panel** answers `applied: false, closed: true`: the user closed it, not the code's mistake.
 
+use kentos_extensions::ui_panel::behaviour::{self, Prop};
 use kentos_extensions::ui_panel::{Choice, Component};
 use kentos_headless::HeadlessError;
 use serde_json::{Map, Value, json};
@@ -64,10 +65,18 @@ fn kind_of(c: &Component) -> &'static str {
     match c {
         Component::Text { .. } => "text",
         Component::Section { .. } => "section",
+        Component::Divider { .. } => "divider",
         Component::Image { .. } => "image",
+        Component::FilePicker { .. } => "filePicker",
         Component::TextField { .. } => "textField",
         Component::NumberField { .. } => "numberField",
         Component::Select { .. } => "select",
+        Component::CrsPicker { .. } => "crsPicker",
+        Component::PointPicker { .. } => "pointPicker",
+        Component::ShapePicker { .. } => "shapePicker",
+        Component::RelationPicker { .. } => "relationPicker",
+        Component::RelationList { .. } => "relationList",
+        Component::Attachments { .. } => "attachments",
         Component::LayerPicker { .. } => "layerPicker",
         Component::FieldPicker { .. } => "fieldPicker",
         Component::FeaturePicker { .. } => "featurePicker",
@@ -94,6 +103,8 @@ fn typed(c: &Component) -> bool {
             | Component::DateField { .. }
             | Component::TimeField { .. }
             | Component::DateTimeField { .. }
+            | Component::FilePicker { .. }
+            | Component::PointPicker { .. }
     )
 }
 
@@ -147,6 +158,15 @@ fn typed_words(c: &Component, value: &Value) -> Result<String, String> {
             .as_str()
             .map(str::to_owned)
             .ok_or_else(|| "bir metin olmalı".to_owned()),
+        // A file's path, as the user would type it: checked when a command reads it (panel_files.rs).
+        Component::FilePicker { .. } => value
+            .as_str()
+            .map(str::to_owned)
+            .ok_or_else(|| "bir dosyanın yolu (metin) olmalı".to_owned()),
+        // A point, `[x, y]` (docs/adr/8057 §57).
+        Component::PointPicker { .. } => kentos_extensions::ui_panel::point_value(value)
+            .map(kentos_extensions::ui_panel::point_words)
+            .ok_or_else(|| "bir nokta olmalı: [x, y]".to_owned()),
         Component::NumberField { min, max, .. } => {
             let n = value.as_f64().ok_or_else(|| "bir sayı olmalı".to_owned())?;
             if min.is_some_and(|m| n < m) || max.is_some_and(|m| n > m) {
@@ -190,7 +210,7 @@ fn layer_ids(app: &App) -> Option<Vec<String>> {
 
 /// `panel.set` on `panel`: every property checked first, then applied; whether the value went in (not when the user
 /// changed that input while the command ran).
-fn set(
+pub(super) fn set(
     panel: &mut OpenPanel,
     params: &Value,
     layers: Option<&[String]>,
@@ -204,12 +224,35 @@ fn set(
     let props: &Map<String, Value> = params
         .as_object()
         .ok_or_else(|| refused("invalid_input", "Yama bir sözlük olmalı."))?;
-    let not_taken = |prop: &str, only: &str| {
+    // What the code may change of it is the behaviour table's (docs/adr/8057 §71): asked of another, refused whole.
+    let not_taken = |prop: Prop| {
         refused(
             "invalid_input",
-            format!("“{id}” ({}) {prop} almaz: {only}.", kind_of(&c)),
+            format!(
+                "“{id}” ({}) {} almaz: yalnız {} alır.",
+                kind_of(&c),
+                prop.name(),
+                behaviour::takers(prop).join(", ")
+            ),
         )
     };
+    let takes = behaviour::of(kind_of(&c));
+    for prop in [
+        Prop::Options,
+        Prop::Text,
+        Prop::Image,
+        Prop::Enabled,
+        Prop::Value,
+    ] {
+        // A picture and a value given as None take them away; the others' None leaves them.
+        let given = match prop {
+            Prop::Image | Prop::Value => props.contains_key(prop.name()),
+            _ => props.get(prop.name()).is_some_and(|v| !v.is_null()),
+        };
+        if given && !takes.is_some_and(|b| b.takes(prop)) {
+            return Err(not_taken(prop));
+        }
+    }
     let wrong = |why: String| refused("invalid_input", format!("“{id}” ({}): {why}.", kind_of(&c)));
     // A calculated component's value is its calculation's (docs/adr/8057 §35): the code does not write it.
     if panel.calculated_id(&id)
@@ -230,12 +273,7 @@ fn set(
             Component::Select { .. } | Component::MultiSelect { .. } => {
                 Some(options_of(&id, given)?)
             }
-            _ => {
-                return Err(not_taken(
-                    "options",
-                    "yalnız select ve multiSelect seçenek alır",
-                ));
-            }
+            _ => return Err(not_taken(Prop::Options)),
         },
     };
     let words = match props.get("text").filter(|v| !v.is_null()) {
@@ -249,7 +287,7 @@ fn set(
                     .take(2000)
                     .collect::<String>(),
             ),
-            _ => return Err(not_taken("text", "yalnız text bileşeninin yazısı değişir")),
+            _ => return Err(not_taken(Prop::Text)),
         },
     };
     // A picture (docs/adr/8057 §40): a PNG as base64, checked and decoded before anything changes; null takes it away.
@@ -265,7 +303,7 @@ fn set(
                     ));
                 }
             }),
-            _ => return Err(not_taken("image", "yalnız image bileşeni görsel alır")),
+            _ => return Err(not_taken(Prop::Image)),
         },
     };
     let enabled = match props.get("enabled").filter(|v| !v.is_null()) {
@@ -274,12 +312,6 @@ fn set(
             let on = given
                 .as_bool()
                 .ok_or_else(|| wrong("enabled true ya da false olmalı".to_owned()))?;
-            if !(typed(&c) || matches!(c, Component::Button { .. })) {
-                return Err(not_taken(
-                    "enabled",
-                    "düğmeler ile metin, sayı, tarih ve saat alanları kapatılır",
-                ));
-            }
             Some(on)
         }
     };
@@ -298,6 +330,8 @@ fn set(
         Choice(String),
         Chosen(Vec<String>),
         Picks(Vec<String>),
+        /// A drawn shape as GeoJSON; none takes it away.
+        Shape(Option<Value>),
     }
     let value = match props.get("value") {
         None => None,
@@ -321,6 +355,19 @@ fn set(
                     return Err(wrong(format!("“{choice}” seçeneklerde yok")));
                 }
                 Given::Choice(choice.to_owned())
+            }
+            // One of KentOS's systems, written `EPSG:<code>` (docs/adr/8057 §45).
+            Component::CrsPicker { .. } => {
+                let code = given
+                    .as_str()
+                    .filter(|v| kentos_extensions::ui_panel::crs::code_of(v).is_some())
+                    .ok_or_else(|| {
+                        wrong(
+                            "value KentOS'un tanıdığı bir sistem olmalı, ör. \"EPSG:5256\""
+                                .to_owned(),
+                        )
+                    })?;
+                Given::Choice(code.trim().to_owned())
             }
             Component::MultiSelect {
                 options: defined, ..
@@ -387,12 +434,34 @@ fn set(
                 }
                 Given::Picks(uids)
             }
-            _ => {
-                return Err(not_taken(
-                    "value",
-                    "değer tutan bileşenlerin değeri değişir",
-                ));
-            }
+            // A relation's parent record: its persistent id, none to let it go (docs/adr/8057 §67).
+            Component::RelationPicker { .. } => match given {
+                Value::Null => Given::Choice(String::new()),
+                Value::String(uid) if kentos_domain::Uuid::parse_str(uid).is_ok() => {
+                    Given::Choice(uid.clone())
+                }
+                _ => {
+                    return Err(wrong(
+                        "value bir kaydın kalıcı kimliği olmalı (ya da None)".to_owned(),
+                    ));
+                }
+            },
+            // A drawn shape: GeoJSON of the shape's type, none to take it away (docs/adr/8057 §62).
+            Component::ShapePicker { shape, .. } => match given {
+                Value::Null => Given::Shape(None),
+                Value::Object(g)
+                    if g.get("type").and_then(Value::as_str) == Some(shape.geojson_type()) =>
+                {
+                    Given::Shape(Some(given.clone()))
+                }
+                _ => {
+                    return Err(wrong(format!(
+                        "value bir GeoJSON {} olmalı (ya da None)",
+                        shape.geojson_type()
+                    )));
+                }
+            },
+            _ => return Err(not_taken(Prop::Value)),
         }),
     };
     // Applied: the options before the value they hold.
@@ -465,6 +534,12 @@ fn set(
         Given::Picks(uids) => {
             panel.picks.insert(id.clone(), uids);
         }
+        Given::Shape(Some(shape)) => {
+            panel.geoms.insert(id.clone(), shape);
+        }
+        Given::Shape(None) => {
+            panel.geoms.remove(&id);
+        }
     }
     // A value the code put right is not wrong any more.
     if panel.invalid.as_ref().is_some_and(|(at, _)| *at == id) {
@@ -476,26 +551,25 @@ fn set(
 
 /// `panel.rows`: the rows of a table, a tree, cards, figures or a chart, as a command's report gives them (`rows`, and
 /// `columns` in their order, else in the order the rows first give them); the component's id.
-fn rows(panel: &mut OpenPanel, params: &Value) -> Result<String, HeadlessError> {
+pub(super) fn rows(panel: &mut OpenPanel, params: &Value) -> Result<String, HeadlessError> {
     let id = params
         .get("id")
         .and_then(Value::as_str)
         .ok_or_else(|| refused("invalid_input", "id gerekli: tablonun kimliği."))?
         .to_owned();
     let c = component(panel, &id)?;
-    if !matches!(
-        c,
-        Component::Table { .. }
-            | Component::Tree { .. }
-            | Component::Stats { .. }
-            | Component::Chart { .. }
-            | Component::Card { .. }
-    ) {
+    if !behaviour::of(kind_of(c)).is_some_and(|b| b.rows) {
+        let takers: Vec<&str> = behaviour::TABLE
+            .iter()
+            .filter(|b| b.rows)
+            .map(|b| b.kind)
+            .collect();
         return Err(refused(
             "invalid_input",
             format!(
-                "“{id}” ({}) satır almaz: satırlar table, tree, card, stats ya da chart'a gider.",
-                kind_of(c)
+                "“{id}” ({}) satır almaz: satırlar {} bileşenlerine gider.",
+                kind_of(c),
+                takers.join(", ")
             ),
         ));
     }
@@ -530,7 +604,62 @@ fn rows(panel: &mut OpenPanel, params: &Value) -> Result<String, HeadlessError> 
     }
     panel.tables.insert(id.clone(), (columns, list.clone()));
     panel.pages.remove(&id);
+    panel.cursor.remove(&id);
     Ok(id)
+}
+
+/// `panel.say` on `panel`: its words (`text`, at most 500 characters) and their mark (`kind`) under the form.
+pub(super) fn say(panel: &mut OpenPanel, params: &Value) -> Result<(), HeadlessError> {
+    let text = params
+        .get("text")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|t| !t.is_empty())
+        .ok_or_else(|| {
+            refused(
+                "invalid_input",
+                "text gerekli: panelin altında söylenecek söz.",
+            )
+        })?;
+    let kind = match params.get("kind").and_then(Value::as_str).unwrap_or("info") {
+        "info" => words::Kind::Info,
+        "success" | "ok" => words::Kind::Ok,
+        "warning" => words::Kind::Warn,
+        "error" => words::Kind::Error,
+        other => {
+            return Err(refused(
+                "invalid_input",
+                format!("kind “{other}” olamaz: info, success, warning ya da error."),
+            ));
+        }
+    };
+    panel.said = Some((kind, text.chars().take(500).collect()));
+    panel.spoke = true;
+    Ok(())
+}
+
+/// Why `ext`'s code may not name panel `local`: not one its manifest declares (`declared`, its panels' ids).
+pub(super) fn unknown_panel(local: &str, declared: &[String]) -> HeadlessError {
+    refused(
+        "unknown_panel",
+        format!(
+            "“{local}” eklentinin bir paneli değil; panelleri: {}.",
+            if declared.is_empty() {
+                "yok".to_owned()
+            } else {
+                declared.join(", ")
+            }
+        ),
+    )
+}
+
+/// Why a run not started from a panel has no `ctx.panel`.
+pub(super) fn no_panel() -> HeadlessError {
+    refused(
+        "no_panel",
+        "Bu çalıştırma bir panelden başlamadı: ctx.panel yalnız bir panelin düğmesinin (ya da değişen alanının) \
+         komutunda vardır; başka bir panel için ctx.open_panel.",
+    )
 }
 
 impl App {
@@ -550,6 +679,9 @@ impl App {
             .and_then(|r| r.run.as_ref())
             .ok_or_else(|| refused("busy", "Eklentinin çalışan bir işlevi yok."))?;
         let origin = run.origin.clone();
+        // The panel the run started from, by its own number: closed and opened again, it is another (§117).
+        let started_from = origin.as_ref().map(|o| o.instance);
+        let named = params.get("panel").and_then(Value::as_str).is_some();
         let local = match params.get("panel").and_then(Value::as_str) {
             // One of its own, as its installed manifest declares them.
             Some(local) => {
@@ -561,33 +693,18 @@ impl App {
                     .map(|m| m.entrypoints.panels.iter().map(|p| p.id.clone()).collect())
                     .unwrap_or_default();
                 if !declared.iter().any(|p| p == local) {
-                    return Err(refused(
-                        "unknown_panel",
-                        format!(
-                            "“{local}” eklentinin bir paneli değil; panelleri: {}.",
-                            if declared.is_empty() {
-                                "yok".to_owned()
-                            } else {
-                                declared.join(", ")
-                            }
-                        ),
-                    ));
+                    return Err(unknown_panel(local, &declared));
                 }
                 local.to_owned()
             }
-            None => origin.map(|o| o.panel).ok_or_else(|| {
-                refused(
-                    "no_panel",
-                    "Bu çalıştırma bir panelden başlamadı: ctx.panel yalnız bir panelin düğmesinin (ya da değişen \
-                     alanının) komutunda vardır; başka bir panel için ctx.open_panel.",
-                )
-            })?,
+            None => origin.map(|o| o.panel).ok_or_else(no_panel)?,
         };
         let open = |app: &App| {
-            app.extensions
-                .panels
-                .iter()
-                .position(|p| p.ext == ext && p.local == local)
+            app.extensions.panels.iter().position(|p| {
+                p.ext == ext
+                    && p.local == local
+                    && (named || started_from.is_none_or(|n| p.instance == n))
+            })
         };
         // Opened (or brought in front) and held until the run ends.
         if method == "panel.open" {
@@ -610,6 +727,7 @@ impl App {
             panel: local.clone(),
             button: String::new(),
             table: None,
+            instance: self.extensions.panels[at].instance,
         };
         match method {
             "panel.set" => {
@@ -626,32 +744,7 @@ impl App {
                 Ok(json!({ "applied": true }))
             }
             "panel.say" => {
-                let text = params
-                    .get("text")
-                    .and_then(Value::as_str)
-                    .map(str::trim)
-                    .filter(|t| !t.is_empty())
-                    .ok_or_else(|| {
-                        refused(
-                            "invalid_input",
-                            "text gerekli: panelin altında söylenecek söz.",
-                        )
-                    })?;
-                let kind = match params.get("kind").and_then(Value::as_str).unwrap_or("info") {
-                    "info" => words::Kind::Info,
-                    "success" | "ok" => words::Kind::Ok,
-                    "warning" => words::Kind::Warn,
-                    "error" => words::Kind::Error,
-                    other => {
-                        return Err(refused(
-                            "invalid_input",
-                            format!("kind “{other}” olamaz: info, success, warning ya da error."),
-                        ));
-                    }
-                };
-                let panel = &mut self.extensions.panels[at];
-                panel.said = Some((kind, text.chars().take(500).collect()));
-                panel.spoke = true;
+                say(&mut self.extensions.panels[at], params)?;
                 self.ext_panel_seen(at);
                 Ok(json!({ "applied": true }))
             }
@@ -662,12 +755,18 @@ impl App {
                     .ok_or_else(|| refused("invalid_input", "id gerekli: alanın kimliği."))?;
                 let panel = &self.extensions.panels[at];
                 let c = component(panel, id)?;
-                if !typed(c) {
+                if !behaviour::of(kind_of(c)).is_some_and(|b| b.focus) {
+                    let takers: Vec<&str> = behaviour::TABLE
+                        .iter()
+                        .filter(|b| b.focus)
+                        .map(|b| b.kind)
+                        .collect();
                     return Err(refused(
                         "invalid_input",
                         format!(
-                            "“{id}” ({}) odak almaz: imleç metin, sayı, tarih ve saat alanlarına konur.",
-                            kind_of(c)
+                            "“{id}” ({}) odak almaz: imleç yalnız {} bileşenlerine konur.",
+                            kind_of(c),
+                            takers.join(", ")
                         ),
                     ));
                 }
@@ -679,6 +778,9 @@ impl App {
                 {
                     return Ok(json!({ "applied": false }));
                 }
+                // Its page and its section brought up first: a field on another tab or in a folded section is not
+                // drawn and takes no cursor (docs/adr/8057 §38, §43).
+                self.extensions.panels[at].reveal(id);
                 self.extensions
                     .later
                     .push(iced::widget::operation::focus(field_id(
@@ -724,6 +826,9 @@ impl App {
 }
 
 #[cfg(test)]
+mod behaviour_tests;
+
+#[cfg(test)]
 mod tests {
     use kentos_extensions::ui_panel;
 
@@ -759,8 +864,8 @@ mod tests {
         }
     }
 
-    /// docs/adr/8057 §40: the code gives an `image` component a PNG (base64), checked before it is kept; null takes
-    /// it away; another component does not take one.
+    /// docs/adr/8057 §40, §115: the code gives an `image` component a PNG or a JPEG (base64), checked before it is
+    /// kept; null takes it away; another component does not take one.
     #[test]
     fn the_code_gives_an_image_component_its_picture() {
         let value = json!({ "format": ui_panel::FORMAT, "schemaVersion": ui_panel::VERSION, "title": "Görsel",
@@ -785,8 +890,8 @@ mod tests {
                 &json!({ "id": "grafik", "image": "eA==" }),
                 None
             ))
-            .contains("PNG olmalı"),
-            "not a PNG"
+            .contains("PNG ya da JPEG olmalı"),
+            "not a PNG nor a JPEG"
         );
         assert!(
             p.images.contains_key("grafik"),
@@ -933,11 +1038,12 @@ mod tests {
                 &json!({ "id": "liste", "enabled": false }),
                 None
             )),
-            "invalid_input: “liste” (table) enabled almaz: düğmeler ile metin, sayı, tarih ve saat alanları kapatılır."
+            "invalid_input: “liste” (table) enabled almaz: yalnız textField, numberField, dateField, timeField, \
+             dateTimeField, filePicker, pointPicker, button alır."
         );
         assert_eq!(
             code(set(&mut p, &json!({ "id": "tamam", "text": "x" }), None)),
-            "invalid_input: “tamam” (checkbox) text almaz: yalnız text bileşeninin yazısı değişir."
+            "invalid_input: “tamam” (checkbox) text almaz: yalnız text alır."
         );
         // A hidden required field is not asked of the user.
         assert_eq!(

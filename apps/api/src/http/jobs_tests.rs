@@ -415,6 +415,7 @@ impl kentos_application::processing_job::Processor for Kinds {
                 ..Processed::default()
             }),
             RunRequest::Processing(_) => unreachable!("a tool is not asked here"),
+            RunRequest::Audit(_) => unreachable!("an audit is not asked here"),
         }
     }
 }

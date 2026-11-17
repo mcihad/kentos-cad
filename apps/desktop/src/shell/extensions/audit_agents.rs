@@ -125,11 +125,7 @@ impl App {
                     .map(|x| json!({ "title": x.title, "command": x.command, "input": x.input }));
                 json!({
                     "finding": i + 1,
-                    "severity": match f.severity {
-                        Severity::Error => "error",
-                        Severity::Warning => "warning",
-                        Severity::Info => "info",
-                    },
+                    "severity": f.severity.code(),
                     "message": f.message,
                     "featureId": f.feature,
                     "fixed": f.fixed,
@@ -153,6 +149,10 @@ impl App {
                 "digest": state.digest,
             },
             "revision": state.revision,
+            // What the rule read, as a cloud job's report says it (docs/adr/8057 §42): the same drawing and facts
+            // stamp alike in both.
+            "drawing": state.drawing,
+            "facts": state.facts,
             "changed": changed,
             "ms": state.ms,
             "counts": {

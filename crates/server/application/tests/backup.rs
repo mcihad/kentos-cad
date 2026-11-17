@@ -192,13 +192,30 @@ async fn a_backup_is_restored_into_a_new_server() {
     .execute(&db.owner)
     .await
     .unwrap();
+    // An extension package of the catalog (docs/adr/8059 §13): a row and its object, under its content digest.
+    let package = b"bir eklenti paketinin baytlari";
+    let content = "c".repeat(64);
+    let key = Blobs::extension_package_key(&content);
+    let path = store.local_path(&key).unwrap();
+    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+    std::fs::write(&path, package).unwrap();
+    sqlx::query(
+        "insert into kentos.extension_package (digest, size, sha256, object_key) values ($1, $2, $3, $4)",
+    )
+    .bind(format!("sha256:{content}"))
+    .bind(package.len() as i64)
+    .bind(sha(package))
+    .bind(&key)
+    .execute(&db.owner)
+    .await
+    .unwrap();
 
     // The server as it is: every object named is there.
     let now = backup::check(&db.owner, &store).await.unwrap();
     assert!(now.sound(), "{now:?}");
     assert_eq!(
-        now.sound, 4,
-        "two revisions, a snapshot and an input: {now:?}"
+        now.sound, 5,
+        "two revisions, a snapshot, an input and an extension package: {now:?}"
     );
 
     // The backup.

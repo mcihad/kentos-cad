@@ -54,12 +54,18 @@ pub struct Manifest {
     pub keywords: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub changelog_file: Option<String>,
+    /// Who wrote it when an agent did, in KentOS's workshop (docs/adr/8057 §76): KentOS writes it when the workshop
+    /// packs the folder; an agent does not.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub generated: Option<crate::provenance::Generated>,
     /// A 20×20 SVG in the package.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub icon: Option<String>,
     pub kind: ExtensionKind,
     pub modules: Vec<Module>,
-    /// The catalog's summary of where it runs; each tool says its own.
+    /// Where it runs, as the catalog shows it: `desktop`, `headless` (MCP, the Python library), `cloud`. Each İşlemler
+    /// tool says its own (its descriptor's `runtimes`); the expression functions run headless only when this holds
+    /// `headless` (docs/adr/8057 §80).
     pub runtimes: Vec<Runtime>,
     pub compatibility: Compatibility,
     #[serde(default, skip_serializing_if = "Dependencies::is_empty")]
@@ -360,6 +366,10 @@ pub struct AuditEntry {
     /// The program whose audit it joins.
     pub domain: Module,
     pub handler: String,
+    /// Its examples (`audits/<id>.examples.json`, `kentos.auditExamples` 1): what it is given and the findings it must
+    /// give, run by Örnekleri çalıştır and `kentos kek test` (docs/adr/8057 §75).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub examples: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -370,7 +380,27 @@ pub struct ExpressionEntry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     pub handler: String,
+    /// Its examples (docs/adr/8057 §78): a call's arguments and the value it must give, at most 10; run by Örnekleri
+    /// çalıştır and `kentos kek test`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub examples: Vec<ExpressionExample>,
 }
+
+/// An expression function's example: the arguments of one call (text, number, true/false or null, at most 10) and the
+/// value it must give (a number within a billionth, the rest as written).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ExpressionExample {
+    /// What it shows, in a few words; none: the call as written (`ada-parsel("101", "1")`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+    pub args: Vec<serde_json::Value>,
+    pub expect: serde_json::Value,
+}
+
+/// The most examples an expression function gives, and the most arguments one call has.
+pub const MOST_EXPRESSION_EXAMPLES: usize = 10;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -633,12 +663,16 @@ pub enum Capability {
     DataSource,
     #[serde(rename = "files.userSelected")]
     FilesUserSelected,
+    /// A file written where the user chose (a panel's save picker, docs/adr/8057 §44): apart from reading, so a user
+    /// who let an extension read the files they choose is asked again before it writes.
+    #[serde(rename = "files.userSelectedWrite")]
+    FilesUserSelectedWrite,
     #[serde(rename = "network")]
     Network,
 }
 
 impl Capability {
-    pub const ALL: [Capability; 15] = [
+    pub const ALL: [Capability; 16] = [
         Capability::DocumentRead,
         Capability::DocumentWrite,
         Capability::DatasetsRead,
@@ -653,6 +687,7 @@ impl Capability {
         Capability::MapTool,
         Capability::DataSource,
         Capability::FilesUserSelected,
+        Capability::FilesUserSelectedWrite,
         Capability::Network,
     ];
 
@@ -673,6 +708,7 @@ impl Capability {
             Capability::MapTool => "mapTool",
             Capability::DataSource => "dataSource",
             Capability::FilesUserSelected => "files.userSelected",
+            Capability::FilesUserSelectedWrite => "files.userSelectedWrite",
             Capability::Network => "network",
         }
     }
@@ -694,6 +730,7 @@ impl Capability {
             Capability::MapTool => "Harita aracı ekler",
             Capability::DataSource => "Veri kaynağı ekler",
             Capability::FilesUserSelected => "Sizin seçtiğiniz dosyaları okur",
+            Capability::FilesUserSelectedWrite => "Sizin seçtiğiniz yere dosya yazar",
             Capability::Network => "İnternete bağlanır",
         }
     }
@@ -712,7 +749,9 @@ impl Capability {
                     Scope::PluginOwned,
                 ]
             }
-            Capability::FilesUserSelected => &[Scope::UserSelected],
+            Capability::FilesUserSelected | Capability::FilesUserSelectedWrite => {
+                &[Scope::UserSelected]
+            }
             Capability::UiRibbonTab
             | Capability::UiPanel
             | Capability::UiContextMenu
@@ -758,6 +797,17 @@ impl Scope {
             Scope::PluginOwned => "plugin-owned",
         }
     }
+
+    /// How far it reaches: what the extension owns, what the user picks, the whole open project. A version asking a
+    /// capability further than the one before asks a wider capability: the catalog's review reads it whole, the person's
+    /// earlier grant does not cover it (docs/adr/8057 §121).
+    pub fn reach(self) -> u8 {
+        match self {
+            Scope::PluginOwned => 0,
+            Scope::UserSelected => 1,
+            Scope::CurrentProject => 2,
+        }
+    }
 }
 
 /// A capability the extension asks for: not a permission granted; the organisation's policy and the user decide, the
@@ -792,6 +842,8 @@ pub enum FileRole {
     PanelDefinition,
     Form,
     GeoPackage,
+    /// An audit rule's examples (`kentos.auditExamples` 1).
+    AuditExamples,
 }
 
 /// A file the manifest names: where, which and what.
@@ -1375,6 +1427,51 @@ impl Checker<'_> {
     }
 }
 
+/// An expression function's examples (docs/adr/8057 §78): at most ten; each call's arguments at most ten, every one and
+/// the value expected a plain value (text, number, true/false or null), as an expression gives and takes.
+fn expression_examples(c: &mut Checker<'_>, at: &str, examples: &[ExpressionExample]) {
+    let plain = |v: &serde_json::Value| !(v.is_array() || v.is_object());
+    if examples.len() > MOST_EXPRESSION_EXAMPLES {
+        c.add(
+            "manifest_expression_example",
+            format!("{at}/examples"),
+            format!(
+                "En çok {MOST_EXPRESSION_EXAMPLES} örnek ({} var).",
+                examples.len()
+            ),
+        );
+    }
+    for (j, example) in examples.iter().enumerate() {
+        let here = format!("{at}/examples/{j}");
+        if let Some(title) = &example.title {
+            c.line(&format!("{here}/title"), "Örneğin adı", title, 80);
+        }
+        if example.args.len() > MOST_EXPRESSION_EXAMPLES {
+            c.add(
+                "manifest_expression_example",
+                format!("{here}/args"),
+                format!("Bir çağrı en çok {MOST_EXPRESSION_EXAMPLES} argüman alır."),
+            );
+        }
+        for (k, arg) in example.args.iter().enumerate() {
+            if !plain(arg) {
+                c.add(
+                    "manifest_expression_example",
+                    format!("{here}/args/{k}"),
+                    "Argüman düz bir değer olmalı: metin, sayı, true/false ya da null.".to_owned(),
+                );
+            }
+        }
+        if !plain(&example.expect) {
+            c.add(
+                "manifest_expression_example",
+                format!("{here}/expect"),
+                "Beklenen düz bir değer olmalı: metin, sayı, true/false ya da null.".to_owned(),
+            );
+        }
+    }
+}
+
 impl Manifest {
     /// Reads `manifest.json` and checks it: every rule's problem at once, or the one that keeps it from being read.
     pub fn parse(text: &str) -> Result<Manifest, Vec<Problem>> {
@@ -1680,6 +1777,9 @@ impl Manifest {
                  düğmesi ekleyin.",
             );
         }
+        if let Some(generated) = &m.generated {
+            c.problems.extend(generated.problems(FILE));
+        }
         (c.problems, c.warnings)
     }
 
@@ -1891,6 +1991,7 @@ impl Manifest {
                 c.line(&format!("{at}/title"), "Başlık", title, 80);
             }
             c.handler(&format!("{at}/handler"), &entry.handler);
+            expression_examples(c, &at, &entry.examples);
         }
         for (i, entry) in e.panels.iter().enumerate() {
             let at = format!("/entrypoints/panels/{i}");
@@ -2083,6 +2184,7 @@ impl Manifest {
                 c.when(&format!("{at}/when"), when, requested);
             }
         }
+        reach::check(self, c);
         let hosts: BTreeSet<&str> = self
             .requested_capabilities
             .iter()
@@ -2446,6 +2548,15 @@ impl Manifest {
                 FileRole::PanelDefinition,
             );
         }
+        for (i, x) in e.audits.iter().enumerate() {
+            if let Some(path) = &x.examples {
+                add(
+                    format!("/entrypoints/audits/{i}/examples"),
+                    path,
+                    FileRole::AuditExamples,
+                );
+            }
+        }
         for (i, x) in e.forms.iter().enumerate() {
             add(
                 format!("/entrypoints/forms/{i}/definition"),
@@ -2571,6 +2682,8 @@ pub fn dependency_cycle<'a>(packages: &[(&'a str, Vec<&'a str>)]) -> Option<Vec<
     }
     None
 }
+
+mod reach;
 
 #[cfg(test)]
 mod tests;

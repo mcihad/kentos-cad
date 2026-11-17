@@ -10,6 +10,8 @@ pub mod checkpoints;
 pub mod job_inputs;
 pub mod jobs;
 #[cfg(test)]
+mod jobs_audit_tests;
+#[cfg(test)]
 mod jobs_tests;
 #[cfg(test)]
 mod checkpoints_tests;
@@ -90,8 +92,8 @@ pub struct AppState {
     pub blobs: kentos_application::blobs::Blobs,
     /// The map services' proxy (docs/adr/0208 §13); `None`: off.
     pub proxy: Option<Arc<proxy::Proxy>>,
-    /// The extension catalog (docs/adr/8059 §10); `None`: off, as on every running server until its store is
-    /// persistent.
+    /// The extension catalog (docs/adr/8059 §10); `None`: off, unless `KENTOS_EXTENSION_CATALOG=on` opens it on its
+    /// persistent store (§13).
     pub extension_catalog: Option<Arc<crate::extension_catalog::Catalog>>,
 }
 
@@ -327,6 +329,10 @@ pub fn router(state: AppState) -> Router {
         .route(
             "/v1/extension-catalogs/{catalog}/releases/{extension}/{version}/package",
             get(extension_catalog::package),
+        )
+        .route(
+            "/v1/extension-catalogs/{catalog}/releases/{extension}/{version}/sbom",
+            get(extension_catalog::sbom),
         )
         .layer(package_layers);
     api.merge(uploads)

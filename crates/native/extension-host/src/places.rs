@@ -120,6 +120,25 @@ mod tests {
             refusal.contains("okunamadı") && refusal.contains("Bilgi işlem"),
             "{refusal}"
         );
+        assert!(
+            refusal.contains("satır 1, sütun 3: JSON olarak okunamadı"),
+            "{refusal}"
+        );
+        // Written for a newer KentOS: the field it does not know named, in Turkish (docs/adr/8057 §84).
+        std::fs::write(
+            &broken,
+            r#"{"format": "kentos.extension-policy", "schemaVersion": 1, "gelecekKurali": true}"#,
+        )
+        .unwrap();
+        let refusal = load_policy(&broken)
+            .unwrap()
+            .refusal(&manifest, crate::store::SourceKind::Organization)
+            .unwrap();
+        assert!(
+            refusal.contains("bu KentOS'un tanımadığı “gelecekKurali” alanı var")
+                && !refusal.contains("expected"),
+            "{refusal}"
+        );
         std::fs::write(
             &broken,
             r#"{"format": "kentos.extension-policy", "schemaVersion": 1}"#,

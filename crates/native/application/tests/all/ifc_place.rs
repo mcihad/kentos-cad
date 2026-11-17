@@ -121,7 +121,7 @@ fn a_local_model_is_turned_and_scaled_onto_its_base() {
     assert!(text.contains("IFCPROJECTEDCRS('EPSG:5256','TUREF / TM36 (EPSG:5256)','TUREF','Antalya height (EPSG:5775)'"));
     assert_eq!(text.matches("IFCMAPCONVERSIONSCALED(").count(), 1);
     // EK-9's sixth question on this file is the standards package's (docs/adr/8074): its facts are
-    // fixtures/ifc/v1/olgular/yerel-sistem.json, its answer catalog/standards/dijital-proje/tests/test_form.py's.
+    // fixtures/ifc/v1/olgular/yerel-sistem.json, its answer catalog/standards/tests/dijital-proje/test_form.py's.
     // The road's alignments in the same place: the same plane, their heights the project's own.
     let road = ifc_system::of(&doc, Some(0.0)).expect("the road's system");
     assert_eq!((road.origin, road.x_axis, road.factors), ([east, north, 0.0], crs.x_axis, crs.factors));

@@ -5,6 +5,14 @@
 
 #![allow(dead_code)]
 
+// `project.audit` against the persistent extension catalog, its environment prepared when it is published
+// (docs/adr/8059 §13).
+#[path = "job_run_db/audit_catalog.rs"]
+mod audit_catalog;
+#[path = "../src/audit_env.rs"]
+mod audit_env;
+#[path = "../src/extension_catalog.rs"]
+mod extension_catalog;
 #[path = "../src/processing_job.rs"]
 mod processing_job;
 mod support;
@@ -558,7 +566,7 @@ async fn the_atlas_of_a_sheet_is_drawn_by_the_child_and_downloaded_as_the_jobs_p
 const SHP_ZIP: &[u8] = include_bytes!("../../../fixtures/gis-import/v1/katmanlar.zip");
 const GEOJSON: &[u8] = include_bytes!("../../../fixtures/gis-import/v1/katmanli.geojson");
 const KML_WGS84: &[u8] = include_bytes!("../../../fixtures/gis-import/v1/nokta.kml");
-const QGIS_GPKG: &[u8] = include_bytes!("../../../fixtures/geopackage/v1/qgis.gpkg");
+const CIRCLE_GPKG: &[u8] = include_bytes!("../../../fixtures/geopackage/v1/qgis.gpkg");
 
 /// A Shapefile archive, a GeoJSON file and a KML are taken in by their commands and committed by the job
 /// (docs/adr/0563 §3); a GeoPackage with a circle, an area of two corners whose edges are arcs (docs/adr/0069), is
@@ -637,8 +645,8 @@ async fn shapefile_geojson_and_kml_files_and_a_circle_are_committed_by_the_job()
         snapshot::snapshot(&db.app, &access).await.unwrap().revision,
         revision
     );
-    // The QGIS GeoPackage's circle (two corners, two arcs): committed, and PostGIS holds a valid polygon of it.
-    let upload = stage_file(&db, &store, &access, "qgis.gpkg", QGIS_GPKG).await;
+    // The GeoPackage circle (two corners, two arcs): committed, and PostGIS holds a valid polygon of it.
+    let upload = stage_file(&db, &store, &access, "daire.gpkg", CIRCLE_GPKG).await;
     let job = run_one(
         &db,
         &store,

@@ -2,10 +2,12 @@
 //! server's worker (`kentosd`'s processor) with an empty environment. It carries the headless host, the tools and the
 //! file commands so the server does not; it has no database and no network of its own, and reads and writes one folder:
 //!
-//! - in: `request.json` (a `RunRequest`: an İşlemler tool, an import of the file `import.<ext>` beside it, or an atlas)
-//!   and `snapshot.kcad` (the project at the revision the worker read);
+//! - in: `request.json` (a `RunRequest`: an İşlemler tool, an import of the file `import.<ext>` beside it, an atlas, or
+//!   an extension's audit rule from the package `extension.kek` beside it, docs/adr/8057 §42) and `snapshot.kcad` (the
+//!   project at the revision the worker read);
 //! - out: `answer.json` (what was done: a summary, notes, the delta to commit or the rows of the file, what the command
-//!   answered), `sink.gpkg` (a tool's file) or `atlas.pdf`; or `failure.json` (why it did not finish) with exit code 2;
+//!   answered, an audit's report), `sink.gpkg` (a tool's file) or `atlas.pdf`; or `failure.json` (why it did not finish)
+//!   with exit code 2;
 //! - while it works it prints its progress on standard output, one line at a time (`KENTOS-PROGRESS 0.4000 words`).
 //!
 //! A tool is run as `cad.processing.run` would run it, no local file readable (`forbid_local_files`) and no path of the
@@ -14,6 +16,9 @@
 //! closes) it ends itself with 3.
 
 #![forbid(unsafe_code)]
+
+mod audit;
+mod kutu;
 
 use std::io::{Read, Write};
 use std::path::Path;
@@ -345,10 +350,12 @@ fn run_atlas(dir: &Path, input: ProjectAtlasInput) -> Result<Processed, ProcessF
     })
 }
 
-/// What this process has taken so far (docs/adr/0561 §5): where the system keeps it, the peak resident memory
-/// (`VmHWM` of `/proc/self/status`) and the CPU time of `/proc/self/stat`; elsewhere what `ps` says of this process
-/// (its resident memory now, which a run that does not give memory back has at its peak). The parent samples the child
-/// while it runs; a run over between two samples is still told here, by the child itself, at its end.
+/// What this process and the processes it ran have taken so far (docs/adr/0561 §5, docs/adr/8057 §58): where the
+/// system keeps it, the CPU time of `/proc/self/stat` with its waited-for children's (an audit rule's Python, ended and
+/// reaped before this is read) and the peak resident memory (`VmHWM` of `/proc/self/status`) with the rule process's
+/// peak added (an upper bound: the two need not peak together); elsewhere what `ps` says of this process with its ended
+/// children's time (its resident memory now, which a run that does not give memory back has at its peak). The parent
+/// samples the child's process tree while it runs; a run over between two samples is still told here, at its end.
 fn own_usage() -> ProcessingUsage {
     let pid = std::process::id();
     if let (Ok(stat), Ok(status)) = (
@@ -357,9 +364,9 @@ fn own_usage() -> ProcessingUsage {
     ) {
         let cpu = stat.rfind(')').and_then(|i| {
             let fields: Vec<&str> = stat.get(i + 1..)?.split_whitespace().collect();
-            let user: f64 = fields.get(11)?.parse().ok()?;
-            let system: f64 = fields.get(12)?.parse().ok()?;
-            Some((user + system) / 100.0)
+            let tick = |i: usize| fields.get(i)?.parse::<f64>().ok();
+            // utime, stime, cutime and cstime: this process's and its waited-for children's.
+            Some((tick(11)? + tick(12)? + tick(13)? + tick(14)?) / 100.0)
         });
         let peak = status
             .lines()
@@ -367,11 +374,11 @@ fn own_usage() -> ProcessingUsage {
             .and_then(|l| l.split_whitespace().nth(1)?.parse::<f64>().ok());
         return ProcessingUsage {
             cpu_seconds: cpu.unwrap_or(0.0),
-            peak_memory_mb: peak.map_or(0.0, |kb| kb / 1024.0),
+            peak_memory_mb: (peak.unwrap_or(0.0) + audit::rule_peak_kb() as f64) / 1024.0,
         };
     }
     let out = std::process::Command::new("ps")
-        .args(["-o", "rss=,time=", "-p", &pid.to_string()])
+        .args(["-S", "-o", "rss=,time=", "-p", &pid.to_string()])
         .stdin(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .output();
@@ -407,6 +414,7 @@ fn run_task(dir: &Path) -> Result<Processed, ProcessFailure> {
         RunRequest::Processing(input) => run_tool(dir, input),
         RunRequest::Import(run) => run_import(dir, run),
         RunRequest::Atlas(input) => run_atlas(dir, input),
+        RunRequest::Audit(run) => audit::run_audit(dir, run, &audit::ExtHost::default()),
     }?;
     processed.usage = own_usage();
     Ok(processed)
@@ -415,6 +423,13 @@ fn run_task(dir: &Path) -> Result<Processed, ProcessFailure> {
 /// The child's whole life; the exit code (0: answered, 1: the answer could not be written, 2: failed with a reason in
 /// the folder, 3: the parent went away).
 fn main() {
+    // The box mode (docs/adr/8057 §61, §63): a process of its own that restricts itself, installs the filter and
+    // becomes the rule's interpreter.
+    let mut argv = std::env::args_os().skip(1).peekable();
+    if argv.peek().is_some_and(|a| a == kutu::ARG) {
+        argv.next();
+        std::process::exit(kutu::enter(argv));
+    }
     let mut args = std::env::args().skip(1);
     let Some(dir) = args.next() else {
         eprintln!("kentos-jobrun <klasör>: klasör verilmedi");

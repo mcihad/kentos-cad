@@ -1,6 +1,8 @@
 //! The installed extensions as an agent sees them (plan/eklenti.md ADIM 18, docs/adr/8057 §3): the resource
 //! `kentos://extensions/installed` (the view `kentos kek dump` prints), the overview's short list, and the watch that
-//! tells a subscriber the list changed. No extension runs here: the user's registry is read.
+//! tells a subscriber the list changed. The user's registry is read; the İşlemler tools that declare
+//! `headless-python` run in their own processes (`Server::offer_extension_tools`, docs/adr/8057 §70), what their runs
+//! note written to the extension's log and said on standard error (§73).
 
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::path::{Path, PathBuf};
@@ -12,6 +14,9 @@ use serde_json::{Value, json};
 pub(crate) const INSTALLED: &str = "kentos://extensions/installed";
 /// The SDK in one read (plan/eklenti.md ADIM 21, docs/adr/8057 §20): what `extension.sdk` gives.
 pub(crate) const SDK_PACK: &str = "kentos://sdk/ai-kek-pack";
+
+/// The same pack as one plain text file (docs/adr/8057 §77): Markdown in the `llms.txt` form.
+pub(crate) const SDK_TEXT: &str = "kentos://sdk/llms.txt";
 
 /// What `kentos://extensions/installed` reads: every installed extension with its state, what the running or ready
 /// ones add and what was left out, from the registry in `root` (the user's, `KENTOS_EXTENSIONS_DIR` or a test's).

@@ -1,4 +1,4 @@
-//! Models (the web's `processing/model.ts`, QGIS "Model Designer"): tools
+//! Models (the web's `processing/model.ts`, the model designer's): tools
 //! wired into a flow diagram. A step runs one tool; each of its parameters
 //! takes a fixed value, one of the model's own inputs, or an output of an
 //! earlier step — a features output becomes a `{ scope: 'ids' }` value, so
@@ -447,13 +447,15 @@ pub fn check_model(model: &Model, lookup: &dyn Fn(&str) -> Option<Tool>) -> Vec<
     for s in &model.steps {
         let Some(tool) = lookup(&s.tool) else {
             // An extension's tool says which extension and version the model was made with (docs/adr/8057 §13):
-            // nothing is installed for it, the user installs it from Eklentiler.
-            let message = match &s.pin {
-                Some(p) => format!(
+            // nothing is installed for it, the user installs it from Eklentiler. One installed that this host does not
+            // run (a headless host's desktop-only tool, §70) says why.
+            let message = match (crate::external::unavailable(&s.tool), &s.pin) {
+                (Some(why), _) => why,
+                (None, Some(p)) => format!(
                     "“{}” aracının eklentisi bu bilgisayarda yok: model {} {} ile yapıldı; Eklentiler'den kurun.",
                     s.tool, p.extension, p.version
                 ),
-                None => format!("Bilinmeyen işlem aracı: {}", s.tool),
+                (None, None) => format!("Bilinmeyen işlem aracı: {}", s.tool),
             };
             issues.push(ModelIssue {
                 step: Some(s.id.clone()),

@@ -223,6 +223,8 @@ impl App {
             self.command_tasks(),
             // An extension's map tool: the shape drawn, run through its code (extensions/runner.rs).
             self.ext_capture_tasks(),
+            // A panel's point picked on the map: its field's onChange command (extensions/panel_points.rs).
+            self.ext_point_tasks(),
             // The Python environment of an extension the manager chose itself (extensions/environment.rs).
             self.ext_look_tasks(),
             self.follow_hover(),
@@ -676,6 +678,7 @@ impl App {
             Message::Python(event) => return self.python_event(event),
             Message::Assistant(event) => return self.assistant_event(event),
             Message::Extensions(event) => return self.extensions_event(event),
+            Message::Works(event) => return self.works_event(event),
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
             // Through `cad.layers.set`, as Python and MCP do (docs/adr/0248 §6).

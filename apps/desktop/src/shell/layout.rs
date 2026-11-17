@@ -213,6 +213,7 @@ fn tab_key(tab: BottomTab) -> &'static str {
         BottomTab::ExtAudit => "extAudit",
         BottomTab::CadInspection => "cadInspection",
         BottomTab::ServiceInfo => "serviceInfo",
+        BottomTab::Works => "works",
         BottomTab::Messages => "messages",
         BottomTab::Python => "python",
     }

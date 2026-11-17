@@ -710,57 +710,95 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
 [EKL-05; PY-OPT-01…14; PY-UV-01…31]
 
 **Kullanıcı seçimi ve kişisel deneyim:**
-- [ ] Tercihlere "Python ve eklentiler" alanı; kapalı kullanıcıya yorumlayıcı/uv/paket başlangıç maliyeti yüklenmez
+- [x] Tercihlere "Python ve eklentiler" alanı; kapalı kullanıcıya yorumlayıcı/uv/paket başlangıç maliyeti yüklenmez
   [PY-OPT-01]. Etkinleştirme sihirbazı uv algılama, Python seçimi, çalışma ortamı ve paket kurulumunu ayrı adımlarda
   sunar [PY-OPT-02]. "uv var / bulunamadı / sürümü uyumsuz / çalıştırılamıyor" açık yetenek olarak bildirilir [PY-OPT-03].
-- [ ] Ortam kişiseldir; aynı cihazdaki farklı hesapların paket/eklenti/sır alanları karışmaz [PY-OPT-04]. Paket arama,
+  — *tamamlandı (ADR 8057 §5): Uygulama ayarları › Python ve eklentiler, varsayılan kapalı ve kapalıyken hiçbir şey
+  aranmaz; uv'nin algılanması ve durumları.*
+- [x] Ortam kişiseldir; aynı cihazdaki farklı hesapların paket/eklenti/sır alanları karışmaz [PY-OPT-04]. Paket arama,
   sürüm seçme, ekleme/kaldırma/güncelleme, bağımlılık ağacı ve önbellek boyutu uygulama içinden [PY-OPT-05]. NumPy örnek
   akışı: ihtiyacı seç → kurulacakları gör → kişisel ortama kur → konsolda kullan → betik/eklenti bağımlılığına ekle
   [PY-OPT-06].
-- [ ] Paket seçimi yayımlanmış eklentinin ortamını değiştirmez [PY-OPT-07]; gerekli/isteğe bağlı paketler ve hangi
+  — *tamamlandı (ADR 8057 §5, §95): kişisel ortam, paket arama/ekleme/güncelleme/kaldırma, önizleme, bağımlılık
+  ağacı, önbellek; 16 Kasım: kurulu paketin satırından "Eklentiye ekle…": geliştirilen eklentinin projesine denenen
+  sürüm ve serisi yazılır ve kilitlenir (uv, eklentinin kendi ayarlarıyla), eklenti klasöründen yeniden yüklenir.
+  Betikler kişisel ortamda çalışır: onların bağımlılığı ortamın kendisidir.*
+- [x] Paket seçimi yayımlanmış eklentinin ortamını değiştirmez [PY-OPT-07]; gerekli/isteğe bağlı paketler ve hangi
   özelliğin hangisini istediği görünür [PY-OPT-08]; "yalnız form görüntüle", "analizi çalıştır", "geliştirici modu"
   farklı gereksinim taşıyabilir [PY-OPT-09]. Reddedilen bağımlılık eklentiyi nedenli pasif bırakır; her açılışta indirme
   ya da onay baskısı yok [PY-OPT-10]. Seçimler kullanıcı kapsamında hatırlanır [PY-OPT-11]; kurum politikası dış dizin ya
   da bulut yürütme sınırı koyabilir, kullanıcı onayı politikayı genişletemez [PY-OPT-12]. Kaldırma, silinecek dosya ve
   çıktıların kapsamını gösterir; kişisel betikler varsayılan temizliğe girmez [PY-OPT-13]. Her kurulum akışında ilk
   kullanıcı hazır araçlarla devam edebilir [PY-OPT-14].
+  — *tamamlandı (ADR 8057 §5, §84, §96): eklenti başına ortam, isteğe bağlı özellikler, reddedilen bağımlılık nedenli
+  pasif, eklentiyle kaldırma; ilke izinli paket depolarını ve paketleri sınırlar (§84); 16 Kasım: bulut yürütme
+  sınırı (`allowExtensionsOnServer`): eklentinin İşlemler aracında "KentOS sunucusunda" kapalı ve nedeniyle,
+  kullanıcının seçimi aşamaz (§96).*
 
 **Algılama ve kurulum:**
-- [ ] PATH'ten ve kullanıcının seçtiği yoldan uv; sürüm/platform/mimari destek matrisiyle karşılaştırılır [PY-UV-01];
+- [x] PATH'ten ve kullanıcının seçtiği yoldan uv; sürüm/platform/mimari destek matrisiyle karşılaştırılır [PY-UV-01];
   GUI'nin kabuktan farklı PATH'i hesaba katılır, elle yol ve "yeniden algıla" vardır [PY-UV-02]. uv yoksa işletim
   sistemine uygun resmî yollar sunulur; yöntem, hedef, indirme ve PATH/izin değişikliğini kullanıcı seçer, onaysız
   sistem kurulumu yok; komut ve kaynak önceden incelenebilir; yönetici izni gerektirmeyen kullanıcı yolu tercih
   edilebilir [PY-UV-03…06]. İptal, vekil sunucu, indirme hatası, sağlama toplamı, PATH'te görünmeme ve yeniden deneme
   düzgün biter [PY-UV-07]. Mevcut uv kendiliğinden değiştirilmez [PY-UV-08]. Platform ve en az uv/Python sürümleri tek
   bir uyumluluk manifestinden okunur [PY-UV-09].
+  — *tamamlandı (ADR 8057 §5): algılama ve sürüm denetimi, resmî kurulum yolları, tek uyumluluk manifesti; sahibin
+  kararıyla uv kurulumun içinde (0.11.26, 6 platformun SHA-256'sı).*
 
 **Ortam modeli ve bağımlılık çözümü:**
-- [ ] Üç ortam: kişisel analiz, eklenti geliştirme, değişmez yayın ortamı [PY-UV-10]. Yayın ortamının anahtarı
+- [x] Üç ortam: kişisel analiz, eklenti geliştirme, değişmez yayın ortamı [PY-UV-10]. Yayın ortamının anahtarı
   kullanıcı + eklenti kimliği/sürümü + kilit özeti + Python ABI + OS/mimari + seçilen ek özellikler [PY-UV-11]. Paket
   önbelleği paylaşılabilir, değişen venv paylaşılmaz; iki eklentinin çelişen NumPy'ı aynı yorumlayıcı ad alanına girmez
   [PY-UV-12].
-- [ ] `pyproject.toml` gereksinimin, `uv.lock` çözülmüş sürümün kaynağıdır; manifestte üçüncü bir liste yok [PY-UV-13].
+  — *tamamlandı (ADR 8057 §5, §97): kişisel ortam ve sürüm başına eklenti ortamı (kimlik, sürüm, kilit özeti, Python,
+  sistem, özellikler), paket önbelleği ayrı; 16 Kasım: geliştirme ortamı: çalışma klasöründen kurulan eklentinin
+  ortamı ayrı bir anahtarla (`development`), projenin geliştirme grubuyla; yayın ortamları `--no-dev` ve klasörleri
+  aynı.*
+- [x] `pyproject.toml` gereksinimin, `uv.lock` çözülmüş sürümün kaynağıdır; manifestte üçüncü bir liste yok [PY-UV-13].
   Bağımlılık önizlemesi doğrudan/geçişli, sürüm, ek özellik, Python/platform işareti, dizin, lisans ve mümkünse
   indirme boyutunu gösterir [PY-UV-14].
-- [ ] Hazırlama ile çalıştırma ayrıdır: kurulum/çözüm kullanıcı kararıyla; çalıştırma hazır ortamla, indirmesiz
+  — *tamamlandı (ADR 8057 §5): kilit kaynaktır, hazırlamadan önce `uv sync --dry-run` önizlemesi.*
+- [x] Hazırlama ile çalıştırma ayrıdır: kurulum/çözüm kullanıcı kararıyla; çalıştırma hazır ortamla, indirmesiz
   [PY-UV-15]. Çalıştırmada Python indirme kapalı [PY-UV-16]; yayın ortamında kilit güncellenmez, uyumsuzlukta yeniden
   çözülmez, geçersiz paket hatası verilir [PY-UV-17]. uv belgesine göre `--locked` güncelliği denetler, `--frozen`
   denetimi atlar, `--no-sync` eşitlemeyi atlar: birbirinin eşi değildir; hazırlamada `uv sync --locked`, çalıştırmada
   `uv run --locked --no-sync`.
-- [ ] Mevcut yayın venv'i yerinde bozulmaz; hazırlık ortamı kurulur, eşitleme/denetim/içe aktarma duman testi geçince
+  — *tamamlandı (ADR 8057 §5): hazırlık kullanıcının kararıyla, çalışırken eşitleme ya da indirme yok.*
+- [x] Mevcut yayın venv'i yerinde bozulmaz; hazırlık ortamı kurulur, eşitleme/denetim/içe aktarma duman testi geçince
   atomik etkinleşir [PY-UV-18]. Geliştirme bağımlılıkları yayına kurulmaz [PY-UV-19]. Yerel tekerlek, kaynaktan derleme
   ve işletim sistemi kütüphanesi ayrılır; başarısız derleme eklenti hatası gibi gösterilmez [PY-UV-20]; derleme kancaları
   kod yürütür, açık kapsamla yönetilir, genel yayında tekerlek önceliklidir [PY-UV-21].
-- [ ] uv argv ile çağrılır, kabuk dizgisi birleştirilmez; zaman aşımı, çıktı sınırı, istek/iş kimliği [PY-UV-22].
+  — *tamamlandı (ADR 8057 §5, §94, §98): kur, denetle, "hazır" en son yazılır. 16 Kasım (§94): kaynaktan derlenecek
+  paket kilitten okunur ve `kek verify`'da, kurulum incelemesinde (bu bilgisayar ve Python'u için) ve genel katalogda
+  (Bağımlılık denetiminin engeli, gerekçeli istisna) söylenir; düşen derleme paketin hatası olarak, derlemenin son
+  sözüyle söylenir. 16 Kasım (ADR 8057 §98): derleme yalnız incelemede listelenen paketlere açık: bu bilgisayarda
+  tekerleği uyan her kilitli paket `--no-build-package` ile uv'ye verilir; uv'nin reddi paketin adıyla söylenir.*
+- [x] uv argv ile çağrılır, kabuk dizgisi birleştirilmez; zaman aşımı, çıktı sınırı, istek/iş kimliği [PY-UV-22].
   Sistem Python'una yazma, genel `pip`, `--system` normal akışta yok [PY-UV-23]. Ortam yolu, yorumlayıcı ve çalışma
   klasörü açıkça seçilir; çevredeki `.python-version`, uv yapılandırması ya da etkin venv hedefi belirlemez [PY-UV-24].
+  — *tamamlandı (ADR 8057 §5): kabuksuz, süreli, çıktısı sınırlı uv çağrısı; sistem Python'una yazılmaz.*
 - [ ] Kurum aynası, vekil sunucu ve kimlik bilgileri kullanıcı/kiracı kapsamında; sırlar `.kek`'e, kilide ya da betik
   çıktısına yazılmaz [PY-UV-25]. Dizin önceliği ve paket kaynağı sabitlenir; özel paket adı başka genel dizinden sessizce
   çözülmez [PY-UV-26]. Çevrimdışı önbellek/tekerlek deposu platform etiketi ve özetle doğrulanır [PY-UV-27].
-- [ ] Ortam denetimi üst veri, SDK içe aktarma, gerekli paket sürüm/içe aktarma, yerel kütüphane ve eklenti uyumunu
+  — *kısmen (17 Kasım, ADR 8057 §118): kurum ilkesinin `pinnedPackageIndexes`'i kurumun paketlerini adla ya da önekle
+  tek depoya sabitler; kilit onları başka yerden alırsa inceleme, kurulum ve çalışma reddeder (bağımlılık karışıklığı)
+  [PY-UV-26]. 17 Kasım (§123): ilkenin `wheelFolder`'ı kurumun tekerlek klasörünü gösterir; masaüstü ortamı oradan
+  internetsiz, yalnız tekerleklerle ve kilidin özetleriyle hazırlar; önizleme ve hazırlama önce kilidin bu bilgisayar
+  için istediği dosyaları platform etiketi ve özetle denetler, eksiği paket paket söyler (gerçek pencere: ağ kapalı,
+  Vitrin'in ortamı klasörden) [PY-UV-27]. PY-UV-25'in kullanıcı kapsamı: vekil sunucu sistemin ayarıdır (HTTPS_PROXY),
+  pakete, kilide ya da betiğe yazılmış adres parolası paketlerken uyarılır, katalog geçidinde engellenir (§100); rapor
+  ve günlükte maskelenir (§110). Kalan: kiracı kapsamındaki özel dizin kimlik bilgileri (ECO-DEC-11, sahibin kararı).*
+- [x] Ortam denetimi üst veri, SDK içe aktarma, gerekli paket sürüm/içe aktarma, yerel kütüphane ve eklenti uyumunu
   tanılar [PY-UV-28]. Sır içermeyen kilit/ortam/SBOM raporu dışa aktarılır [PY-UV-29]. Önbellek/venv/yorumlayıcı
   temizliğinde sahiplik ve etkin iş başvuruları denetlenir [PY-UV-30]. Aracı (broker) SDK'sı host'un doğrulanmış,
   sürümü eşleşen tekerleğinden gelir; eklenti aynı SDK paket adını başka dizinden gölgeleyemez [PY-UV-31].
+  — *tamamlandı (ADR 8057 §5, §91, §99): ortam denetimi, KentOS kitaplığı kurulumdaki doğrulanmış tekerlekten,
+  eklentiyle ortamlar gider; 16 Kasım (§91): `kentos kek sbom` kilitten CycloneDX 1.6 SBOM yazar (purl, dosya özetleri,
+  bağımlılık ağacı; adreslerde parola yok), katalog onaylı sürümün listesini `…/sbom` ucunda verir, masaüstü kurulu
+  eklentinin Python ortamı bölümünde kaydeder (ortam hazırsa paketlerin lisanslarıyla). 16 Kasım (ADR 8057 §99):
+  lisanslar komut satırında KentOS'un hazırladığı yayın ortamından, katalogda sunucunun tekerlek klasöründeki
+  tekerleklerin `METADATA`'sından.*
 - [ ] **Derslerden (13 Kasım):** QGIS'te bağımlılık çatışması 2020'den beri çözülemedi ve Mayıs 2026'da çalışırken
   bağımlılık indiren eklentiler kaldırıldı; Blender bütün eklentilerin tekerleklerini tek `site-packages`'a açıyor ve en
   yüksek sürüm kazanıyor [D3]. Bu yüzden: eklenti başına ortam kesin; **çalışırken kurma/indirme yasağı eklenti koduna da
@@ -769,7 +807,11 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   soğuma süresi (`exclude-newer`) [D18]; katalogun onaylı kilitten ürettiği platform tekerlek deposundan dizine düşmeden
   hazırlama (ADIM 22A); kurum izinli paket listesi [D14]; genel çevrimiçi erişim anahtarı kapalıyken `network` yeteneği
   aracıda reddedilir [Ö·43]. Ölçülecek: venv başına disk ve hazırlama süresi, vekil sunucu ve platform tekerleği matrisi.
-  Alt yorumlayıcı yalıtım için kullanılmaz [Ö·23].
+  Alt yorumlayıcı yalıtım için kullanılmaz [Ö·23]. — *16 Kasım (ADR 8057 §83): soğuma süresi iskelette varsayılan
+  (`exclude-newer = "7 days"`); ajanın yazdığı paketin soğumasız kilidi `kek verify`'da ve incelemede uyarıdır. Kurum
+  izinli paket listesi (ADR 8057 §84): ilkede engelli ve izinli Python paketleri ile izinli paket depoları; inceleme,
+  kurulum ve kurulu eklentinin çalışması aynı kurala bakar. Genel katalogda kaynaktan derleme (ADR 8057 §94):
+  Bağımlılık denetiminin engeli, inceleyicinin gerekçesiyle kalkar.*
 - **Sürüyor (13 Kasım, ADR 8057 §5):** `crates/native/python-env`; Uygulama ayarları › Python ve eklentiler (varsayılan
   kapalı, kapalıyken hiçbir şey aranmaz); uv'nin arka planda algılanması ve sürüm denetimi; tek uyumluluk manifesti;
   resmî kurulum komutları (KentOS kurmaz); kabuksuz, süreli, sınırlı uv çağrısı; **Windows:** konsol penceresi yok,
@@ -789,7 +831,10 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   özellikler, hazırla/Durdur/ilerleme, "hazır" kaydı en son, çalışırken eşitleme ya da indirme yok; eklentiyle kaldırılır;
   yeni örnek `ornek-imar` (shapely 2.0) MEBİS'le (shapely 2.2) yan yana. **Teslim edildi; sonraya kalan:** kurum
   dizini/aynası (PY-UV-25, 26), çevrimdışı tekerlek deposu (ADIM 22A), SBOM (PY-UV-29), kişisel paketi bağımlılığa
-  ekleme, Windows'ta gerçek pencere ([ADR 8057 §5](../docs/adr/8057-phase-3-extension-packages.md)).
+  ekleme, Windows'ta gerçek pencere ([ADR 8057 §5](../docs/adr/8057-phase-3-extension-packages.md)). — *17 Kasım:
+  SBOM (§91), kurumun paket sabitlemesi (§118, PY-UV-26) ve çevrimdışı tekerlek klasörü (§123, PY-UV-27) teslim edildi;
+  kalan: kiracı kapsamındaki dizin kimlik bilgileri (ECO-DEC-11), kişisel paketi bağımlılığa ekleme, Windows'ta gerçek
+  pencere.*
 - **Kabul:** P01–P07 (§5). İstemeyen kurmayı reddeder ve normal çalışır; NumPy isteyen kendi ortamına kurar; iki
   eklentinin farklı NumPy'ı birbirini bozmaz; internet kapalıyken hazır ortam çalışır; çalıştırma kendiliğinden paket ya
   da yorumlayıcı indirmez. Testler sahte taşımayla ve temiz bir kullanıcı profiliyle; gerçek kullanıcı ortamı
@@ -876,59 +921,84 @@ işçi, işçi meşgulken `Subscription::run(ticks)` (Toplu çalıştır'ın kal
 (`spatial.rs`, `texts_key` + birim + bayraklar) yalnız `ext.` içeren katmanlarda yanıt sayacının eklenmesi.
 
 **Süreç ve aracı:**
-- [ ] Her eklenti sürümü için ayrı süreç; IPC protokol sürümü, eklenti/sürüm/özet, istek/çalışma/oturum kimliği ve zaman
+- [x] Her eklenti sürümü için ayrı süreç; IPC protokol sürümü, eklenti/sürüm/özet, istek/çalışma/oturum kimliği ve zaman
   aşımı taşır [PY-RUN-04]. Kod yürütme tembel başlar; tanımlar kod yüklenmeden gösterilir [PY-RUN-05]. Aracı bağlamı;
   izinli çizim/veri kümesi anlık görüntüsü, seçilmiş kaynaklar, birim/CRS, kullanan ve çıktı hedefi kapsamını verir
   [PY-RUN-06]. Python'a canlı belge, veritabanı bağlantısı, iç slot, UI işaretçisi ya da host sır deposu verilmez
   [PY-RUN-07]. Değişiklik yalnız doğrulanmış değişiklik kümesi/komutla; eklentinin kendini yerleşik ya da başka
   yayımcı gibi tanıtması reddedilir [PY-RUN-08].
-- [ ] stdout/stderr, günlük/ilerleme, istisna/iz ve eser ayrı kanallarda, sınırlı ve UTF-8 [PY-RUN-11]. Durdur: önce iş
+  — *tamamlandı (ADR 8057 §6, §7): sürüm başına süreç ve protokol 1, tembel içe aktarma, aracı yalnız başladığı çizim,
+  girdiler veri olarak, başka kimlikle işaretli kod çalışmaz.*
+- [x] stdout/stderr, günlük/ilerleme, istisna/iz ve eser ayrı kanallarda, sınırlı ve UTF-8 [PY-RUN-11]. Durdur: önce iş
   birlikli iptal, gerekirse süreç sonlandırma; işlenmemiş değişiklik ve geç sonuç iptal [PY-RUN-12]. Yerleşik analiz
   çağrıları üst iş/kullanan/kaynak kapsamını devralır; iç içe çağrı izni genişletemez [PY-RUN-14]. Eklentiden eklentiye
   çağrı açık bağımlılık/yetenek taşır; döngü, derinlik ve bütçe denetlenir [PY-RUN-15]. Aynı veride arayüz, eklenti ve
   AI birlikteyken kaynak revizyonu doğrulanır; başka etkin belgeye yazılmaz [PY-RUN-16].
+  — *tamamlandı (ADR 8057 §6, §16, §27, §46, §47): ayrı ve sınırlı kanallar, iş birlikli Durdur ve sonlandırma, eklentiden
+  eklentiye çağrı, yalnız başladığı çizime yazma ve planın damgası, komuttan yerleşik araç komutun hakkıyla
+  (`ctx.run_tool`), eklenti aracından yerleşik araç kendi verisiyle (§47).*
 - [ ] Güvenilir yerel Python kipi ile işletim sistemi düzeyinde korumalı kip ayrıdır; **ayrı süreç tek başına korumalı
   alan değildir** [PY-RUN-19]. Aracı yalnız aracı erişimini sınırlar; güvenilir eklentinin doğrudan dosya/ağ işlemlerini
   engellediği iddia edilmez [PY-RUN-20]. Korumalı kip seçilirse gerçek OS yalıtımıyla uygulanır; destek yoksa açıkça
   kullanılamaz [PY-RUN-21]. Önizleme/doğrulamada aracı değişiklik ve dış eser izinlerini kapatır [PY-RUN-23].
+  — *kısmen (ADR 8057 §7, §16): aracın yardımı "ayrı süreç bir korumalı alan değildir" der, önizleme ve doğrulamada
+  kod çalışmaz; kalan: işletim sistemi yalıtımlı korumalı kip (bulut kutusunda da yok, §42).*
 
 **İşlemler:**
 - [ ] Tanım şeması; parametre/çıktı kimliği tekliği, kaynak başvuruları, görünürlük/varsayılan ifadeleri ve
   desteklenen çalışma zamanı [PY-TOOL-01]. SDK describe/validate/estimate/execute yaşam döngüsünü tipli tanımlar;
   inceleme içe aktarma gerektirmez [PY-TOOL-02]. Kayıt ad alanı/yayımcı/sürüm çakışmasını reddeder [PY-TOOL-03].
   Parametre penceresi tanımdan KentOS UI ile oluşur; şema komut/model/Python/AI'ın da kaynağıdır [PY-TOOL-04].
+  — *kısmen (ADR 8057 §7, §10, §28): tanım kod yüklenmeden okunur, kurulumdan önce denetlenir, JSON Schema'sı
+  üretilir, `ext.<eklenti>.<araç>` ad alanı, parametre penceresi tanımdan; kalan: SDK'nın `estimate` aşaması.*
 - [ ] Katman/alan/nesne seçimi UUID/anlık görüntü/izdüşümle çözülür, iç slot kimliği dışarı çıkmaz [PY-TOOL-05];
   geometri/veri/alan türü, zorunlu domain, CRS, ölçek/birim ve boş girdi hesap öncesi ortak doğrulanır [PY-TOOL-06];
   okuma/düzenleme/çıktı oluşturma niyeti tanımda; gizli ve kilitli veri, kaynak ACL'si ve kiracı kapsamıyla çözülür
   [PY-TOOL-07]. Büyük girdi sayfa/parça/tampon ile; milyon nesnenin JSON kopyası zorunlu yol değildir; ölçülmüş toplu
   ikili aktarım, sınırlı kuyruk ve bellek bütçesi [PY-TOOL-08, EKL-04]. Hesap bitene dek canlı belge kilidi tutulmaz
   [PY-TOOL-09].
-- [ ] Python ham sonuç değil tipli değişiklik kümesi / katman, tablo, eser kurucusu üretir; host tamamını doğrular
+  — *kısmen (ADR 8057 §7): UUID ve GeoJSON, gizli alan kesilir, ortak doğrulama, hesap boyunca belge kilidi yok;
+  kalan: büyük girdinin sayfalı/ikili aktarımı [PY-TOOL-08] (sahibin kararı bekliyor).*
+- [x] Python ham sonuç değil tipli değişiklik kümesi / katman, tablo, eser kurucusu üretir; host tamamını doğrular
   [PY-TOOL-10]. Yeni katman adı/stili/şeması/CRS'si/kökeni mevcut çalıştırıcı yoluyla tek işlemde [PY-TOOL-11]; hedef
   seçimine göre geçici/yeni katman/dosya/bulut eseri; üzerine yazma ve kaynak değişikliği ayrı planlı seçenek
   [PY-TOOL-12]; dosya yazımı hazırlık yolu üzerinden, doğrulamadan sonra atomik, iptalde temizlik [PY-TOOL-13]; çıktı
   kuralları host'ta yeniden doğrulanır [PY-TOOL-14].
-- [ ] İlerleme/günlük/uyarı/kayıp/ölçü/sonuç/iş tutamacı tipli ve akışlı; başarı yalnız gerçek işlemeden sonra
+  — *tamamlandı (ADR 8057 §7, §49; ADR 0592): tipli sonuç bütün denetlenir, yeni katman tek adımda, GeoPackage
+  hedefi (P11), dosya geçici dosyadan atomik ve iptalde silinir, kaynağı değiştirmek tanımda `writes: true` ile
+  (`ctx.update`, tek geri alma adımı).*
+- [x] İlerleme/günlük/uyarı/kayıp/ölçü/sonuç/iş tutamacı tipli ve akışlı; başarı yalnız gerçek işlemeden sonra
   [PY-TOOL-15]. İptal istisnası, süreç öldürme, zaman aşımı, kaynak çatışması ve bellek taşması tek yaşam döngüsünde
   [PY-TOOL-16]. Kaynak düzenlemesi ya da çok katmanlı sonuç tek geri alma grubunda; dış dosya etkisinin kapsamı ayrıca
   söylenir [PY-TOOL-17]. İşlenmiş sonuçta "iptal edildi" yalanı söylenmez; `already_committed` anlamı korunur [EKL-04].
-- [ ] Eklenti analizinden yerleşik araç çağrısı (`ProcessingService`) [PY-TOOL-18]; model tablo/dosya/katman/sonucu
+  — *tamamlandı (ADR 8057 §7): akışlı ilerleme ve günlük, Durdur → 5 sn → sonlandırma, zaman aşımı, çökme ve bellek
+  tek yaşam döngüsünde, tek geri alma adımı.*
+- [x] Eklenti analizinden yerleşik araç çağrısı (`ProcessingService`) [PY-TOOL-18]; model tablo/dosya/katman/sonucu
   sonraki adıma aktarır, mevcut tablo/dosya sınırları kapanır [PY-TOOL-19]; model eklenti kimliği/sürümü/özetini ve
   ortam gereksinimini saklar, eksik eklenti model açılırken kod kurdurmaz [PY-TOOL-20]. Arayüz, komut satırı, toplu iş,
   Python, AI/MCP ve başsız sunucu aynı araç kimliği/şema/sonuç sözleşmesi [PY-TOOL-21]; çalışma kökeni (araç, eklenti,
   sürüm, ortam özeti, girdi anlık görüntüsü, parametre/birim/CRS/tohum, çıktı kimlikleri) [PY-TOOL-22]; genel araç
   üst verisinde örnek veri ve doğruluk testleri [PY-TOOL-23].
-- [ ] **Bileşik `ToolHost`:** `crates/native/application/src/processing_host.rs`'in `ToolHost`'u yerleşik Rust
+  — *tamamlandı (ADR 8057 §7, §13, §15, §46–§48): modelde yerleşiklerle zincir (P12), adım eklentiyi sabitler, her yüzeyde aynı
+  araç kimliği, çalışma kökeni, komuttan (§46) ve eklenti aracından (§47) yerleşik araç, araç tanımında örnekler ve
+  doğruluk sınaması (§48).*
+- [x] **Bileşik `ToolHost`:** `crates/native/application/src/processing_host.rs`'in `ToolHost`'u yerleşik Rust
   algoritmalarıyla `ext.<id>.<araç>` Python algoritmalarını birleştirir; Python algoritması `uv run --locked --no-sync`
   ile ayrı süreçte, `BatchFlow` (`stopped()`, `progress(done, total)`, `stop_flag()`) üzerinden gerçekten durdurulabilir;
   sonuç tek değişiklik kümesi olarak belgeye ya da hedef GeoPackage/PostGIS kaynağına yazılır; model tasarımcısında
   (`cad.processing.models`) yerleşiklerle zincirlenir, `cad.processing.batch` ile toplu koşar.
-- [ ] **Uzun iş boyunca** görüntüleme/kaydırma/yakınlaştırma/iptal çalışır; düzenleme güvenle desteklenmiyorsa yalnız ilgili
+  — *tamamlandı (ADR 8057 §7): `Registry::current()` yerleşiklerle eklenti araçlarını birleştirir, süreç havuzu,
+  gerçek Durdur, model ve toplu iş.*
+- [x] **Uzun iş boyunca** görüntüleme/kaydırma/yakınlaştırma/iptal çalışır; düzenleme güvenle desteklenmiyorsa yalnız ilgili
   belge için nedenli kısıt, bütün uygulama kilitlenmez [EKL-04]. Uzun geri çağırmalar iş olarak çalışır, arayüz
   beklemez [PY-UI-07].
-- [ ] **İfade motoru:** `kentos-expression` kayıt defterine `ext.<id>.<fonksiyon>`; etiket, tematik stil kuralı, sanal
+  — *tamamlandı (ADR 8057 §6, §27): yazan çalıştırmada yalnız çizim bekler, görüntüleme/kaydırma/Durdur çalışır;
+  ajanın aracı okuma kopyasında iş olarak.*
+- [x] **İfade motoru:** `kentos-expression` kayıt defterine `ext.<id>.<fonksiyon>`; etiket, tematik stil kuralı, sanal
   alan, süzgeç ve form hesabında; önbellekli/vektörel değerlendirme.
-- [ ] **Komutlar:** `@ext.command` sürümlü komut kaydına; şerit, Eklentiler, bağlam menüsü ve komut aramada aynı kimlik.
+  — *tamamlandı (ADR 8057 §8, §8.1): etiket, stil kuralı, süzgeç ve form hesabı bekletmeden, önbellekle.*
+- [x] **Komutlar:** `@ext.command` sürümlü komut kaydına; şerit, Eklentiler, bağlam menüsü ve komut aramada aynı kimlik.
+  — *tamamlandı (ADR 8057 §6): şerit, bağlam menüsü ve komut aramada aynı kimlik.*
 - [x] **Form eylemi:** isteğe bağlı eklenti/form eylemi için tanım/sürüm/yürütücü/izin özeti sabitlenir; eksik ya da
   çevrimdışı yürütücü açık "bekliyor/kullanılamaz" sonucudur [FORM-API-13, ECO-DEC-09]. — *14 Kasım: tek paket
   özetiyle sabitleme, üç durum (ADR 8057 §12).*
@@ -937,6 +1007,16 @@ işçi, işçi meşgulken `Subscription::run(ticks)` (Toplu çalıştır'ın kal
   bekçiye bağlanır, yanıt vermeyen süreç sonlandırılıp yeniden başlatılır, boştaki süreç kapanır; arayüzde "ayrı süreç
   kum havuzu değildir" açıkça yazılır [D6, Ö·9]; süreç başına bellek ilk dilimde ölçülür; araç tanımında kullanıcı
   etiketinden ayrı model açıklaması (`modelDescription`) ve girdi şeması: MCP listesi kod yüklemeden kurulur [D18, Ö·39].
+  — *kısmen (ADR 8057 §6, §7, §14, §70): `capabilities.runtimes`, çökme sayacı, yanıt vermeyen süreç sonlandırılır,
+  boştaki kapanır, "korumalı alan değildir" yazılı, süreç başına bellek ölçüldü, `modelDescription`; 16 Kasım: eklenti
+  araçlarının başsız koşusu: MCP ve Python kitaplığı, tanımında `headless-python` bildiren aracı aynı kimlik, şema ve
+  sonuçla, masaüstünün hazırladığı ortamda kendi sürecinde çalıştırır (masaüstüyle ortak `kentos-extension-tools`);
+  bildirmeyen başsızda listelenmez, süreç başlamadan nedeniyle reddedilir. Başsız koşu eklentinin günlüğüne yazar,
+  Python kitaplığı notları Python'un logging'iyle söyler; araç çalışırken sormaz, her konakta (§73: bu yolda işletim
+  sistemi penceresi gerekmedi). 16 Kasım (§80): başsız konaklarda ifade işlevleri: manifestinin `runtimes`'ında
+  `headless` olan eklentinin işlevleri MCP ve Python kitaplığında etiket, stil, süzgeç, form ve İşlemler ifadelerinde
+  cevaplanır (yanıt beklenir); demeyeninki derlenirken nedeniyle reddedilir. Kalan: sunucu/bulut koşusu (kentosd'nin
+  iş çalıştırıcısının ayrı yolu, bu dilimin dışında), bekçi sayacının başsız koşuyu da sayması.*
 - **Kabul (birinci dikey dilim, [EKL §5 sıra 1]):** tek kullanıcıda yerel `.kek`; NumPy kullanan tek İşlemler
   algoritması ve KentOS parametre penceresi: uv seçimi, bağımlılık açıklığı, ayrı süreç, gerçek iptal, tipli sonuç, yeni
   katman, tek geri alma; Python/MCP eşdeğerliği. İlk mühendislik hedefleri (ölçülmüş garanti değil): iptal isteği 100
@@ -966,9 +1046,88 @@ paylaşılan modülde yazılı: aynı nesneler her sırada aynı baytları verir
 okuma kopyasında arka planda ölçülür. **Mimari olgular, ikinci dilim** (ADR 8057 §39, 15 Kasım): mahali olan çizimde
 aynı sürümün isteğe bağlı `architecture` bölümü (`facts.project.architecture`): katlar ve kat çıkışları, her mahalin
 net ve eksen alanı, programın gruplarının PAİY 4/ğ alanları (`paiy_areas`), kaçış yolları (`kentos_domain::escape`:
-kat çıkışına ve daire kapısına yürüyüş, tek yön payı); 152 mahalli planda 76 ms. Kalan: kurp/görüş hesapları,
-ulusal/belediye kurallarının Python betikleri, bulut işi (`RunRequest::Audit`, aynı olguları aynı kodla) ve bulutla
-ortak köken.
+kat çıkışına ve daire kapısına yürüyüş, tek yön payı); 152 mahalli planda 76 ms. **Bulut işi, ilk dilim** (ADR 8057
+§42, 15 Kasım): `kentos-jobrun` `RunRequest::Audit` ile isteğin yanındaki paketin kuralını (içerik özeti
+denetlenir, `network` isteyen reddedilir) masaüstünün olgularıyla ve `kentos.ext_host` protokolüyle sunucunun
+hazırladığı Python'da çalıştırır; `answer.json`'a bulgular ve köken (kural ve paket özeti, çizimin içerik damgası,
+olguların özeti); aynı çizim ve kuralla masaüstü ve iş baytı baytına aynı rapor. Masaüstünün Eklenti denetimi ve
+denemesi aynı işlevlerde: olgular, cevabın okunması ve özet ortak, `audit.report` içerik damgası ve olgu özetiyle
+(bulutla ortak köken). **Sunucunun denetim işi** (ADR 8057 §50, 15 Kasım): `project.audit` var olan iş yolundan istenir
+(eklenti, kural, isteğe bağlı sürüm); sürüm kurumun kataloğundan, yoksa genel katalogdan gelir (en yeni yayımlanmış ya
+da istenen çalışabilir sürüm, baytları onaylı içerik), yorumlayıcı sunucunun `eklenti@sürüm` eşlemesinden; rapor işin
+sonucudur, projeye yazılmaz; aynı sürüm, kural, proje durumu, görünürlük ve yazılım önbellekten döner (`fresh` yeniden
+çalıştırır). O gün sayılan kalanlar 16 Kasım'da kapandı: bütçe Python'u da ölçer (ADR 8057 §58), kutu işletim sistemi
+düzeyinde ağsız ve dosyasız (§61, §63, §65), sürümün ortamı sunucuda hazırlanır (§66), katalog kalıcı ve işçiye bağlı
+(ADR 8059 §13); yayının kararları taze kimlik doğrulamasını bekliyor.
+**Ulusal kuralların ilk dilimi** (ADR 8057 §51, 16 Kasım): `catalog/standards/tr-mevzuat` (`tr.kentos.mevzuat`
+0.1.0) sıradan bir `.kek`: masaüstünün Eklenti denetimi ve bulut işi aynı yoldan çalıştırır. Dört kural yalnız
+olgularla karar verir ve maddeyi söyler: konutta 12 m²'lik piyes yoksa oturma odası (PAİY 29/1, 5/25), daire içinde
+kapıya 20/30 m (BYKHY 48/2), daire kapısından kat çıkışına Ek-5/B apartmanlar 15/30 ve 30/75 m (32/3, 48/4), kat
+çıkışı ve erişim (31/3, 33/6-b); 4 katı geçmeyen konut binası muaf (48/1); yağmurlama bilinmediği için iki eşik
+(uyarı/hata). Kalan: mahal türü ve dar kenarı, yağmurlama sistemi ve konut olmayan bölümün kullanım sınıfı olgulara
+girince PAİY 29/1'in tamamı, 29/3 ve konut olmayan bölümlerin Ek-5/B uzaklıkları; kurp/görüş hesapları; belediye
+plan notları. **Mimari olgular, üçüncü dilim** (ADR 8057 §53, 16 Kasım): mahalin türü (`kind`, Mimari denetimin adından
+ya da kullanımından okuduğu oturma, yatak, mutfak, banyo, tuvalet, hol), dar kenarı (`narrow`, net dış hattın içindeki
+en büyük dairenin çapı; ölçü Mimari denetimden `kentos_domain::room_width`'e taşındı, ikisi aynı işlevi kullanır),
+binanın yağmurlama sistemi (`sprinklers`, projenin ayarı) ve merdiven mahaline açılan konut kapısı (`intoStair`);
+sürüm 1'in isteğe bağlı alanları, eski olgular varsayılanlarla okunur. Ajanın SDK paketi sınırda kaldı: stub'dan iç
+belge göndermeleri ve bakımcı notu çıktı, sınır yükseltilmedi. Kalan: bağımsız bölümün Ek-5/B kullanım sınıfı (modelde
+yok).
+**Ulusal kuralların ikinci dilimi** (ADR 8057 §54, 16 Kasım): `tr.kentos.mevzuat` 0.2.0 §53'ün olgularıyla karar
+verir: konut piyesleri PAİY 29/1'in tablosuna (alan ve dar kenar), eksik piyes 29/2, 29/4 ve 5/25'in istisnalarıyla
+(istisna nişe ya da donanıma bağlıysa "karar verilemedi"), hol ve koridor 1.20 m (29/3); 48/2 ve Ek-5/B'nin sınırı
+projenin yağmurlama ayarının (ayarsız proje yağmurlamasız, eski olgularda iki eşik); merdivene açılan konut kapısı
+uygun, çıkışa ulaşmayan kapı her binada hata (48/3, 33/6-b). Kalan: konut olmayan bölümlerin kullanım sınıfı ve Ek-5/B
+uzaklıkları, çıkmaz koridor, 48/2'nin dubleks cümleleri, kurp/görüş hesapları, belediye plan notları.
+**Ulusal kuralların üçüncü dilimi** (ADR 8057 §56, 16 Kasım): `tr.kentos.mevzuat` 0.3.0'a iki kural: çıkmaz koridor
+(BYKHY 4/i, Ek-5/B: koridorun yürüyüşünün tek yön payı 15 m, yağmurlama ayarıyla 20 m; sütun yüksek tehlikeli yerler
+dışında her sınıfta aynı olduğu için konut olmayan binalarda da karar verilir, yalnız konutlu binada apartmanlar satırı
+ve 48/1) ve ara katlı daire (48/2: iki katlı dairenin tek kapısı üst katta olamaz, kapısız üst kat 70 m²'yi aşamaz;
+net aşarsa hata, yalnız brüt aşarsa karar verilemedi; üç katlı dairede karar yok). Kalan: konut olmayan bölümlerin
+kullanım sınıfı ve tek/iki yönlü Ek-5/B uzaklıkları, yüksek tehlikeli yer, kurp/görüş hesapları, belediye plan notları.
+**Ulusal kuralların dördüncü dilimi** (ADR 8057 §79, 16 Kasım): bölümün Ek-5/B kullanım sınıfı olgularda
+(`UnitFacts.occupancy`, niteliğinden; Mimari denetimin okuması `kentos_domain::fire_use`'a taşındı); `tr.kentos.mevzuat`
+0.4.0'a `kacis-uzakligi`: konut olmayan bölümlerde tek ve iki yönlü kaçış uzaklığı sınıfın satırıyla, yağmurlama
+ayarının sütunuyla; okunamayan sınıf büro sayılır ve söylenir; endüstri yapısında dipnot (1) "karar verilemedi".
+0.4.1 (ADR 8057 §82): mahalin adından sınıf olgularda (`RoomFacts.occupancy`); bölümsüz mahal (konut binasının bodrum
+otoparkı da) yerel denetim gibi kendi adının sınıfıyla ölçülür. Kalan: yüksek tehlikeli yer, kurp/görüş hesapları,
+belediye plan notları.
+**Ulusal kuralların beşinci dilimi** (ADR 8057 §89, 16 Kasım): yüksek tehlikeli yer (BYKHY 8/1-ğ, 17) bölümün
+niteliğinden ya da mahalin adından, yalnız açık sözlerle okunur (LPG, tüp bayii, akaryakıt istasyonu, doğalgaz dolumu,
+parlayıcı/patlayıcı madde, barut, yanıcı sıvı; binanın kendi yakıt deposu değil); yerel denetim Ek-5/B'nin satırını ve
+39/2'nin 25 kişide iki çıkışını uygular, `tr.kentos.mevzuat` 0.5.0'ın çıkmaz koridoru yağmurlamasız 10 m'ye bakar.
+**Ulusal kuralların altıncı dilimi** (ADR 8057 §92, 16 Kasım): imar durumu olgularda (`ArchitectureFacts.zoning`:
+net parsel, planın emsali ve TAKS'ı, katlar alanı, %30 hesabı, taban alanı; Mimari'nin Emsal ve TAKS tablosuyla aynı
+sayılar); `tr.kentos.mevzuat` 0.6.0'ın `imar-durumu` kuralı emsal ve TAKS'ı plana, TAKS verilmemişse 5/6'nın %60'ına
+bakar. Belediyenin plan notu kuralı aynı olgularla yazılabilir. Kalan: İmar durumunda kat adedi, Hmax, yapı nizamı ve
+çekme mesafeleri (21/4 ve 5/6'nın %40'ı onlarla); kurp/görüş hesapları.
+**Araç eklentisinin kuralları masaüstünde** (ADR 8057 §93, 16 Kasım): Eklenti denetimi sekmesinin üstünde "Kural
+[seçim] Denetle": bu programın denetimine katılan etkin her eklentinin kuralı, şeritte düğmesi olmasa da (Türkiye
+mevzuatı sekme açmaz). Yeni çalıştırma seçiciyi gösterilen kurala getirir; seçici o kuralı sunuyorsa başlıkta ikinci
+düğme yok; süre Türkçe ondalıkla ("2,3 sn").
+**Bütçe kuralın Python'unu da ölçer** (ADR 8057 §58, 16 Kasım): sunucunun gözcüsü iş çalıştırıcısını ve altındaki her
+süreci (kuralın Python'u) birlikte ölçer (Linux'ta `/proc`, öbür Unix'lerde tek `ps`; işlemci bitip beklenen çocuklarla,
+bellek toplam RSS) ve bütçe aşılınca ya da Durdur'da iş çalıştırıcısının süreç grubunu bitirir; sonuç yerleşik
+araçlarınkiyle aynı (`cpu_limit`, `memory_limit`), işin `usage`'ı Python'u da söyler. Kalan: Windows'ta iş nesnesi,
+cgroup ile kaçamaz sınır, sunucu ölünce sahipsiz kalan Python, işletim sistemi yalıtımı.
+**Kutu işletim sistemi düzeyinde** (ADR 8057 §61, 16 Kasım): Linux'ta kuralın Python'u iş çalıştırıcısının kutu kipinde
+Landlock alanına girip çalışır: dosyalarda yalnız paketi, hazırlanmış ortamı, SDK'yı ve sistem kütüphanelerini okur,
+yalnız işin karalamasına yazar; TCP, alan dışına sinyal ve soyut UNIX soketi yasak. Kapatılamayan sunucuda varsayılan
+kuralı çalıştırmamaktır (`KENTOS_AUDIT_CONFINE=require`); `report` kuralı çalıştırır ve "kutu kapatılamadı" der.
+Kalan (o gün): UDP ve ABI 9'un altında yol adlı UNIX soketleri açık; aynı gün §63'ün seccomp süzgeciyle kapandı
+(aşağıda). Kalan: Windows ve macOS'ta kutu.
+**Kutuda soket yok** (ADR 8057 §63, 16 Kasım): kutu kipi Landlock'tan sonra bir seccomp süzgeci kurar: `socket(2)` her
+aile için, UNIX datagram ve UNIX dışı çiftler ve `io_uring_setup(2)` reddedilir (x86_64 ve aarch64; x32 numaraları da),
+böylece UDP ve yol adlı UNIX soketleri de kapandı. Süzgeç kurulamayan kutu kapanmamış sayılır: `require` kuralı
+çalıştırmaz, `report` Landlock'la çalıştırır ve neyin açık kaldığını söyler.
+**Kutunun tabanı Landlock ABI 1** (ADR 8057 §65, 16 Kasım): kutu Landlock'un açık olduğu her 5.13 ve sonrası
+çekirdekte (5.15, 6.1, 6.6 LTS dahil) bütün kapanır; eski çekirdeğin bıraktığını süzgeç kapatır (yol adıyla kısaltma,
+ABI 6'nın altında sinyaller) ve Landlock'un hiç denetlemediği dosya üst verisini ve öteki süreçlerin sınır, öncelik ve
+zamanlamasını her çekirdekte reddeder; sınama aynı kuralı çekirdeğin ABI'siyle ve ABI 1'le koşturup aynı retleri görür.
+**Sunucu sürümün ortamını hazırlar** (ADR 8057 §66, 16 Kasım): `kentosd audit-env prepare` paketi işin denetlediği gibi
+denetleyip masaüstünün ortam makinesiyle, ama yalnız kilidin tekerlekleriyle ve her dosya kilitteki özetine karşı
+(hiçbir şey derlenmeden), varsayılan çevrimdışı tekerlek klasöründen, izin varsa bir paket dizininden ortamı kurar ve
+yorumlayıcısını işlerin her seferinde okuduğu eşleme dosyasına yazar; yayımlamaya bağlanması kalıcı katalogla gelir.
 
 "Geometriyi Rust çıkarır, kararı aynı Python betiği verir."
 
@@ -1011,36 +1170,46 @@ Gözden geçir ve kur penceresine açar (kurulum kullanıcının). **Canlı yük
 `extension.verify` paketi geçici kayıt defterinde bağlar, katkılarını, atlananları ve kaldırınca kalıntıyı söyler.
 **Kapı 3'ün kodu çalıştıran payı** (ADR 8057 §37): `extension.workshop.trial` kullanıcının kurduğu eklentinin denetim
 kurallarını ve İşlemler araçlarını ajanın verdiği nesnelerden kurulan sentetik çizimde çalıştırır (bulgular nesnenin
-sırasıyla, aracın yazdıkları, hata ve iz kaydı; kullanıcının çizimine dokunmaz). Kalan: komutların ve harita
-araçlarının denenmesi.
+sırasıyla, aracın yazdıkları, hata ve iz kaydı; kullanıcının çizimine dokunmaz). **Komutlar ve harita araçları**
+(ADR 8057 §52, 16 Kasım): denemede kullanıcının başlattığı gibi çalışır (şeritten ya da panelin düğmesinden, harita
+aracı manifestin istediği şekille), aracının kurallarıyla ve kullanıcının verdiği haklarla; pencereleri ajan cevaplar
+(dosya seçicili pencere İptal), paneller denemede tutulur, hata veren adımın yazdıkları geri alınır, `auditAfter`
+kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (kendi aracını çağırınca kendini beklemesin diye).
 
-- [ ] **Kod üretimi** — *kısmen: `kentos_ext.pyi` (ADR 8057 §20), ikon listesi (§21), panel tanımının JSON Schema'sı
+- [x] **Kod üretimi** — *tamamlandı: `kentos_ext.pyi` (ADR 8057 §20), ikon listesi (§21), panel tanımının JSON Schema'sı
   (§25, 15 Kasım: tiplerden üretilir, depoda durur, sapınca test kırmızı), manifestin, katman şemasının ve araç
   tanımının JSON Schema'ları (§28, 15 Kasım: aynı yol; katman şeması denetleyicinin anahtar listelerinden, araç tanımı
   okuyucunun sözlüklerinden; KentOS'un gönderdiği manifestler, katman şemaları, araç tanımları ve Vitrin'in panelleri
   şemalara karşı sınanır); denetim olgularının şeması da (ADR 8057 §36, `factsSchema`).* Rust katalog ve sözleşmelerinden `kentos_sdk.pyi` (Python tip imzaları), geçerli ikon listesi,
   `kentos.ui` bileşen şeması, `ProjectAuditFacts` şeması ve manifest/araç/panel JSON Schema'ları üretilir; üretilmiş
   dosya elle düzeltilmez, kaynak ve üretici aynı commit'te güncellenir; sapma derleme hattında hatadır [ECO-API-01, 05].
-- [ ] **`extension.blueprint(kind, module, prompt)`:** hedef modüle uygun hazır klasör iskeleti, kullanılabilir ikonlar,
+- [x] **`extension.blueprint(kind, module, prompt)`:** hedef modüle uygun hazır klasör iskeleti, kullanılabilir ikonlar,
   bileşen şemaları ve çalışan altın örnek; MCP kaynağı `kentos://sdk/ai-kek-pack` aynı paketi tek okumada verir.
-- [ ] **`extension.verify` / `kentos kek verify`** (pencere açmadan): Kapı 1 şema ve başvuru tutarlılığı (komut, ikon,
+  — *tamamlandı (ADR 8057 §19, §20): `kek new` / `extension.blueprint` ve `kentos://sdk/ai-kek-pack`.*
+- [x] **`extension.verify` / `kentos kek verify`** (pencere açmadan): Kapı 1 şema ve başvuru tutarlılığı (komut, ikon,
   katman/domain/ilişki alanı, form bağları); Kapı 2 Python AST ve imza uyumu (bildirilen her kimliğin tek dekoratörlü
   fonksiyonu, yasaklı/tehlikeli çağrı); Kapı 3 başsız kuru koşu (sentetik `.kcad` üzerinde bağlama, şerit ve panelin
   hatasız kurulması, algoritma ve denetimin örnek girdiyle geçerli değişiklik kümesi/bulgu döndürmesi, kaldırmada sıfır
   kalıntı); Kapı 4 ajanın tek adımda düzelteceği yapısal rapor ("manifest.json satır 28: `icon: 'grave'` yok; en yakın
   geçerli ikonlar: `polygon`, `grid`, `layers`"). Uydurulmuş API, eksik bağımlılık, eski şema ve kapalı belge
   açıklanabilir biçimde reddedilir [EKL-06].
+  — *tamamlandı (ADR 8057 §18, §26, §37, §52): Kapı 1, 2 ve 4; Kapı 3 kuru bağlama ve kalıntı, kuralların, İşlemler
+  araçlarının, komutların ve harita araçlarının sentetik çizimde denenmesi (kod kullanıcının kurduğu yerde, masaüstünde
+  çalışır).*
 - [x] **`extension.hot_reload` ve `extension.preview_render`** — *tamamlandı (ADR 8057 §22, 15 Kasım):
   `extension.workshop.reload` atölyeden kullanıcının kurduğu eklentiyi kullanıcının verdiği yeteneklerle uygulama
   kapanmadan yükler (yeni yetenek isteyen review'a döner, her yükleme kullanıcıya bildirilir); `extension.workshop.preview`
   sekmenin, panellerin, araçların ve kapalı düğme nedenlerinin düzen özetini yazıyla verir (görüntü ayrı iş).*
   Doğrulanan eklenti uygulama kapanmadan yüklenir; oluşan sekmenin ve panelin görüntüsü/düzen özeti ajana kanıt olarak
   döner.
-- [ ] **Akış:** kurulu yetenek/API/belge keşfi → isteğin ve parametrelerin açıklığı → taslak → bağımlılık/izin planı →
+- [x] **Akış:** kurulu yetenek/API/belge keşfi → isteğin ve parametrelerin açıklığı → taslak → bağımlılık/izin planı →
   doğrulama/test → `.kek` → kullanıcı incelemesi ve yerel etkinleştirme → istenirse yayına gönderme [EKL-06]. Kullanıcı
   seçimi gerektiren aşama (bağımlılık kurma, izin, yayın) ajan tarafından sessizce geçilmez [PY-AI-05]; ajan kurulu
   paketi ya da izni uydurmaz, yetenek sorgusundan öğrenir [PY-AI-06]; araç çağrıları sürüm/özet/kaynak anlık görüntüsüyle
   bağlanır, eskiyen sonuç fark edilir [PY-AI-07].
+  — *tamam (ADR 8057 §22, §30, §37, §107): keşif (SDK), taslak, doğrulama, deneme, paket ve kullanıcının incelemesi;
+  istenirse yayına gönderme: geliştirilen eklenti klasöründen kataloğa taslak olarak yüklenir ve incelemeye gönderilir
+  (Kataloğa gönder…); ajan yalnız pencereyi açar, gönderen kullanıcı, onay ve yayın kataloğun inceleyicisinin.*
 - [ ] **Üretim:** AI kullanıcının isteğinden eklenti iskeleti, taşınabilir UI ve İşlemler tanımı üretir, paket
   gereksinimlerini açıkça listeler [PY-AI-02]; eklentideki form/domain/ilişki taslakları form derleyicisinin ve
   politikasının kurallarına uyar, kaynak yetkisini genişletmez [PY-AI-03]; üretilen Python ayrı bir test koşusuyla
@@ -1050,17 +1219,37 @@ araçlarının denenmesi.
   eklenti/araç/form/ortam keşfi, yetenekler, şemalar, bağımlılıklar, örnekler ve hata kodları ortak katalogda [PY-AI-01];
   AI'nin form/sorgu/gönderisi etkin alan/satır politikasına uyar, tasarım/yayın/kurulum/onay ayrı ve doğru kullanıcıyla
   [ECO-API-12].
-- [ ] **Güvenlik:** eklenti açıklaması, README, veri öznitelikleri ve form yardım metni güvenilmeyen veridir; içindeki
+  — *kısmen (ADR 8057 §22, §24, §37, §108): Asistan iskelet, panel ve İşlemler aracı üretir (MEBİS), kod ayrı
+  denemede çalışır; doğal dilden zincir: ajan yerleşik ve eklenti araçlarını `cad.processing.run`'a yazdığı satır içi
+  modelle zincirler (tek plan, tek onay, tek geri alma adımı), araç dizini kısa (274 957 → 35 102 bayt), tanımlar çıktı
+  adlarını verir, modelin adımları gizli alan denetiminden geçer (17 Kasım); ortak keşif kataloğu (§109):
+  `catalog.search` komutların yanında İşlemler araçlarını, kurulu eklentileri ve parçalarını, yanıt kodlarını bulur,
+  `catalog.describe` eklentinin yeteneklerini (istenen/verilen), Python gereksinimlerini ve ortamını, parçalarının
+  kullanımını ve kodun anlamını verir; kalan: form/domain taslaklarının politikası [PY-AI-03].*
+- [x] **Güvenlik:** eklenti açıklaması, README, veri öznitelikleri ve form yardım metni güvenilmeyen veridir; içindeki
   talimatlar uç/kullanan/yetki/yayın kapsamını değiştiremez [PY-AI-09, A02]; form alan maskesi, satır ACL'si ve hassas
   izdüşüm AI bağlamında da uygulanır [PY-AI-10]; ajanın kişisel güvenilir Python yürütmesi ile kapsamlı araç çağrısı ayrı
   yetki sınıflarıdır [PY-AI-11]; sağlayıcıya gönderilecek veri kullanıcı/kiracı politikasıyla sınırlanır, bağımlılık
   kurma isteği veri gönderme onayı sayılmaz [PY-AI-13]. Anahtarlar ADR 8056 §4'teki gibi ayarlardan ayrı, günlük ve
   pakette yok.
-- [ ] **Yüzeyler:** uygulama içi ajan (Asistan) ve dış MCP aynı komut, belge kapsamı, gizli alan ayıklaması, önizleme ve
+  — *tamam (ADR 8057 §31, §103, §104; ADR 8056 §4, §7): eklentinin sözleri ajana veridir, gizli alanlar kesilir,
+  anahtarlar ayarlardan ayrı; kurum ilkesinin "dış yapay zekâya veri" izni Asistan'ı da bağlar, izinli yapay zekâ
+  adresleriyle (16 Kasım); öznitelik değerleri ajan başına ("Gönderilmesin") ya da kurum ilkesiyle
+  (`allowAttributeValuesToAi`) sağlayıcıya gitmez, çizim her alanı gizliymiş gibi okunur, eklentinin denetim bulguları
+  da (§103); ajanın kendi Python'u ayrı yetki sınıfı: ajan başına "Her seferinde sorsun / Sormadan çalıştırsın /
+  Çalıştırmasın", kurum ilkesinde `allowAgentPython`; kapalıyken araçlar sunulmaz ve reddedilir (§104).*
+- [x] **Yüzeyler:** uygulama içi ajan (Asistan) ve dış MCP aynı komut, belge kapsamı, gizli alan ayıklaması, önizleme ve
   izinleri kullanır [EKL-06]; çalışan işler, maliyet/istek bütçesi ve gönderilecek çizim verisinin kapsamı kullanıcıya
   anlaşılır gösterilir. Sürümlü Python API referansı, kavramsal başlangıç, KentOS UI ve İşlemler rehberi, paketleme, hata
   ayıklama, sürüm geçişi ve SDK sürümüyle test edilen çalışan örnekler; çevrimdışı belge paketi [EKL-06].
-- [ ] **API ailesi** (adlar SDK uyumluluk ADR'sinde kesinleşir): `python.environments.*`, `extensions.*`
+  — *tamam (ADR 8057 §22, §30, §101, §102; ADR 8056 §6): Asistan ve masaüstüne bağlı MCP aynı atölye araçlarını
+  kullanır, SDK paketi tek okumada; ajanın token sınırı sohbet başına ve günlük, sohbetin toplamı her yanıtın altında,
+  günün harcaması ayarlarda (16 Kasım); sürümlü API başvurusu ve çevrimdışı belge paketi (§101): `kentos kek docs
+  <klasör>` bu KentOS'un SDK'sını dosya dosya yazar (rehber ve `llms.txt`, Python imzaları, bütün şemalar, kodlar, iş
+  akışı, ikonlar, doğrulamadan geçen örnek eklenti, sürüm kaydı, Türkçe dizin); çalışan işler tek listede (§102):
+  durum çubuğunda yalnız iş varken bir hücre ve her programda "Çalışan işler" sekmesi; her işin başlatanı (Siz,
+  Asistan, bağlı ajan), ilerlemesi ve kendi Durdur'u; ajanın hesaplanmış işi yazılmadan durdurulur.*
+- [x] **API ailesi** (adlar SDK uyumluluk ADR'sinde kesinleşir): `python.environments.*`, `extensions.*`
   (inspect/package/check/install/prepare/enable/disable/run/update/uninstall), `extensions.catalog.*`, `ui.sessions.*`,
   `processing.tools.*`, `processing.models.*`/`jobs.*`. Okuma/doğrulama/plan çağrıları yazmaz; indirme/kurma ayrı açık
   komuttur [ECO-API-03]; her komut değişmez kaynak/sürüm/özet, kullanan/bağlam, beklenen revizyon ve sonuç/uyarı/geri
@@ -1072,21 +1261,57 @@ araçlarının denenmesi.
   girmez [ECO-API-13]; hata ayıklama raporu sır içermeden ortam özeti, kaynak sürümleri, şemalar ve hata kodunu toplar
   [ECO-API-14]; kapsam manifesti UI/komut/Python/AI/web/masaüstü/mobil/başsız ve seçenek düzeyinde tamlığı ölçer
   [ECO-API-06].
+  — *kısmen: `extension.*` doğrulama, iskelet, SDK ve atölye araçları, katalog uçları (ADR 8059 §10); hata ayıklama
+  raporu (ADR 8057 §110, 17 Kasım): ortam (Python, uv, eklentinin ortamı ve gereksinimleri, yetenekler), paket özeti,
+  manifest şeması ve protokol, duran hatanın kodu ve anlamı; anahtarlar ve ev klasörü gizli; ajan `extension.report`
+  ile okur [ECO-API-14]; keşif ortak katalogda (§109) [ECO-API-07'nin keşif kısmı]; anlamsal kaydedici Komut
+  geçmişidir (ADR 0284, 0443): Python'u, betiği ve yeniden oynatması gizli alan ve anahtar taşımaz (§111)
+  [ECO-API-13]; SDK şablonları: panel (GUI), İşlemler, taşınabilir form (§112) ve hepsi bir arada (birleşik paket)
+  `kentos kek new --with`/`extension.blueprint` ile [ECO-API-10]; uyumluluk matrisi SDK'nın `compatibility`
+  bölümünde ve ortak katalogda eklenti başına (§113) [ECO-API-11]; keşif izdüşümlü ve sayfalı (§108, §109, §114)
+  [ECO-API-07]; adlar ADR 8061 §11'de kesinleşti: yeni ad türetilmedi, aileler bugünkü adlara bağlandı, kurma,
+  etkinleştirme, ortam hazırlama ve yayın kullanıcının (API değil, ajan pencereyi açar) [ECO-API-03]; okuma, doğrulama
+  ve plan yazmaz, yazan komut planın kimliği, beklenen revizyon, uyarı, geri alma adı, iş ve eklenti aracında paket
+  özetiyle döner [ECO-API-04]; genel kapılar (`cad.run` …) aynı korumadan geçer [ECO-API-08]; `kentos kek verify`
+  kurulumun kapısıdır, yayın kataloğun oturumu ve inceleyicisiyle [ECO-API-09]. 17 Kasım (§124): kapsam manifesti
+  (`docs/inventory/eklenti-api-kapsami.json`) 22 işlemi dokuz yüzeyde yazar; sınama her adı kodda bulur ve sayıları
+  ölçer; seçenek düzeyi `cad.processing.run` için [ECO-API-06].*
 - [ ] **Derslerden (13 Kasım):**
   - **Yazılı SDK kararlılık politikası** (QEP 425 benzeri ADR, ADIM 19'un başında): kararlı yüzey yalnız ana sürümde
     kırılır, kaldırmadan önce en az bir sürüm "eskiyor" uyarısı; deneysel yüzeyler yalnız geliştirici ortamında açılır
     ve genel/kiracı katalog onları kullanan paketi reddeder [D7].
   - **Sürüm göçü:** `verify`'da kalıcı kimlikli göç kuralları ve `kentos kek upgrade` (otomatik dönüştürme); ajana
     geçiş notu. QGIS'te Qt6'ya geçişten 8 ay sonra paketlerin yalnız %42'si yeni sürümde [D7].
+    — *kısmen (ADR 8061, 16 Kasım): ilke yazılı (güvencedeki yüzey, kırılma yalnız protokol artışında, en az bir sürüm
+    eskime, deneysel yayımlanamaz, davranış kararlılığı, göç oranı ölçümü); eskiyen/deneysel ad kaydı ve Kapı 1
+    uyarıları (`sdk_deprecated`, `sdk_experimental`; bugün kayıt boş); `kentos kek upgrade` (düz yeniden adlandırmalar,
+    `--check`). 16 Kasım: genel ve kiracı kataloğu deneysel ad kullanan sürümü gönderimde paket kapısında engeller
+    (ADR 8061 §5). Kalan: JSON biçimlerinin `schemaVersion` 2 göçleri, göç oranı ölçümü.*
   - **AST kuralları:** çalışma anında paket kurma/indirme, kendi kendini güncelleme, `sys.path` oynama yasak; beyan
     edilmemiş yetenek kullanımı (ağ, dosya, alt süreç, pano) ret; görünmez Unicode ret [D5, D11, Ö·41].
+    — *kısmen (ADR 8057 §72, 16 Kasım): çalışırken kurma, `sys.path` ve beyansız ağ ret, paketlemede ve kurulumda
+    (Kapı 1); görünmez Unicode zaten Kapı 1'de; kendi dosyasını değiştiren paket açılışta durur. Kalan: alt süreç ve pano
+    için yetenek (yoksa uyarı), dosya erişimi.*
   - **Araç zinciri** tek doğrulayıcı üzerinde: `kentos kek new | verify | pack | test | serve | index | dump | upgrade`,
     CI şablonu ve başsız test koşucusu; sürümlü belge aynı commit'te; düz metin SDK belgesi (`llms.txt`) ve
     `kentos://sdk/ai-kek-pack` [D2, D18].
+    — *kısmen (ADR 8057 §74, 16 Kasım): `kek test` başsız test koşucusu (doğrulama, geçici kayıt defteri, kilitten
+    ortam, araçların örnekleri; çıkış 0 geçti, 1 kaldı, 2 sınanamadı; `--install-python`); `kek verify` araç tanımlarını
+    tam okur. Denetim kurallarının örnekleri (ADR 8057 §75): `audits/<kimlik>.examples.json`, nesneler ya da mimari
+    olgular ve beklenen bulgular; Vitrin'in iki kuralında, mevzuatın yedi kuralının hepsinde (20 örnek). `llms.txt`
+    (ADR 8057 §77): paketten üretilen tek Markdown dosyası, `kek sdk --text`, MCP `kentos://sdk/llms.txt`. Kalan:
+    `serve`, CI şablonu (komut satırının indirilebilir dağıtımını bekler). İfade işlevlerinin örnekleri (ADR 8057
+    §78): manifestte satır içi çağrı ve değer; araç, kural ve ifade örnekleri tek koşucuda.*
   - **Bağımlılık:** `blueprint` izinli ve yaygın paketleri önerir; `verify` dizinde olmayan, çok yeni ya da adı popüler
     pakete benzeyen bağımlılığı işaretler (uydurulmuş paket adı saldırısı) [D18].
+    — *tamamlandı (ADR 8057 §81, §83, §85, §105, 16 Kasım): kilitlenemeyen ad `python_lock_stale`, tanınmış bir pakete
+    bir harf uzak ad `python_name_resembles`, ajanın kilidinde soğuma süresi ve ilkenin en düşük yaşı; iskelet sık
+    kullanılan paketleri amaçlarıyla, kurumun listesi varsa yalnız onları önerir; `kek new` adlarını söyler.*
   - **Üretim kökeni:** AI ile üretilen paket hangi ajan/model ve hangi `blueprint` sürümüyle üretildiğini katalog
     kaydına yazar; kullanıcıya dürüst gösterilir [D17].
+    — *tamamlandı (ADR 8057 §76, 16 Kasım): atölye paketlerken manifestin `generated`'ını KentOS yazar (ajan, model,
+    atölyenin KentOS'u); kurulum incelemesi, kurulu eklenti ve katalog girdisi "Yazan" der, inceleme bilgi şeridiyle;
+    kataloğun listesinde süzgeci 22A'nın.*
 - **Kabul:** A01–A03 (§5). Uygulama içi ajan ve bağımsız bir dış MCP istemcisi aynı küçük eklentiyi kurulu belgeden
   üretip doğrular; README ya da çizim metni kod yürütme/kurulum/yayın yetkisi değildir. Kod üretimi başarısı, anlamsal
   araç doğruluğu ve niyeti doğru anlama ayrı değerlendirilir [PY-AI-14, ECO-QA-16].
@@ -1095,11 +1320,17 @@ araçlarının denenmesi.
 
 [argon ADIM 22; EKL-03; PY-UI-01…18]
 
-- [ ] **Bileşen envanteri ve şeması** — *ilk dilim (ADR 8057 §25): kapsam raporu: aşağıdaki listenin her maddesi
+- [x] **Bileşen envanteri ve şeması** — *tamam (17 Kasım, ADR 8057 §115: görsel önizleme JPEG de alır; envanterin
+  her satırı panelde var ya da host yüzeyi, sınırlar tabloda yazılı). İlk dilim (ADR 8057 §25): kapsam raporu: aşağıdaki listenin her maddesi
   panelde var / KentOS'ta bileşeni var ama bağlanmadı / yok / host yüzeyi; Kapı 1'in her türü raporda adıyla geçmeli
-  (test); özel çizim bileşeni olmadığı sınır olarak yazılı; kalan: özellik/olay/eylem/erişilebilirlik şeması ve
-  tarih, çoklu seçim, özet/ölçü, saat, an ve grafik bağlandı (`dateField`, `multiSelect`, `stats`, `timeField`,
-  `dateTimeField`, `chart`: KentOS'un grafik motoru, 15 Kasım).* KentOS UI bileşenlerinin özellik/olay/eylem ve erişilebilirlik davranışı Python
+  (test); özel çizim bileşeni olmadığı sınır olarak yazılı. Bağlananlar (15 Kasım): tarih, saat, an, çoklu seçim,
+  özet/ölçü, grafik (`dateField`, `timeField`, `dateTimeField`, `multiSelect`, `stats`, `chart`), katlanır bölüm
+  (`section`, §38), görsel (`image`, §40), dosya seçici (`filePicker`, §41), panel içi sekme (`tab`, §43), kaydetme yeri (`save`, §44), koordinat sistemi seçici (`crsPicker`, §45), satır ve ızgara (`row`, §55: komşu bileşenler yan yana, yer yoksa alt alta; aynı sayıda hücreli satırlar sütun gibi hizalanır), panelden harita seçimi (`pointPicker`, §57: `x, y` yazılır ya da haritada gösterilir, kenetlenir); panelden çizgi ve alan (`shapePicker`, §62: haritada çizilir, değeri GeoJSON, panel gösterildikçe haritada durur); sayı alanında birim (`units`, §64: KentOS'un sayı alanları gibi birimiyle yazılır, kod alanın biriminde alır); ilişki seçicisi ve listesi (`relationPicker`, `relationList`, §67: projenin ilişkisiyle, çizimden canlı, Python'suz); ek listesi (`attachments`, §68: kaydın fotoğrafları, belgeleri ve adresleri, KentOS'un kendi eklemesiyle); bölünmüş panel (`split`, §69: çıktılar sürüklenen çizginin altında, kendi kaydırmasıyla); ayrıca çizgi (`divider`) ve sayı adımı (`step`, §59); adımlayıcı (KentOS'un `wizard`'ı, eklentinin penceresinde: `ctx.dialog(…, steps=True)`, sekmeler adım, §60). Özellik/olay/eylem/
+  erişilebilirlik şeması (16 Kasım, §71): bileşen başına davranış tablosu (değer ve örneği, `onChange`/`command`,
+  `ctx.panel.set/rows/focus`'un aldıkları, klavye, ad); panel oturumu ondan reddeder, klavye sütunu çizilen panelde
+  ölçülür; Tab 13 türden 19'a çıktı (düğmeler, çipler, bölüm başlığı, Seçimi al, Haritada çiz, ek düğmeleri; işi süren
+  düğme odağı tutar; satırlar tek durak, ↑↓ imleç, Enter nesneyi gösterir: tablo, kart, ilişki listesi); 16 Kasım:
+  ağaç (↑↓, ←→ aç/kapa, Enter) ve gösterge kartları (oklar, Enter) da klavyeyle.* KentOS UI bileşenlerinin özellik/olay/eylem ve erişilebilirlik davranışı Python
   şemasına eşlenir: düzen (yığın/satır/ızgara, sekme, grup, akordeon, kaydırma, bölücü, adımlayıcı), basit girdi
   (metin, sayı, tarih/saat, mantıksal, seçim, çoklu seçim), CBS girdisi (katman/nesne/alan seçici, koordinat/harita
   seçimi, CRS/birim, ilişki başvurusu), kaynak ve çıktı (dosya/eser seçici, ek, görsel önizleme, çıktı hedefi), veri
@@ -1116,8 +1347,13 @@ araçlarının denenmesi.
   (Vitrin'in penceresi ve seçenekleri onunla); hesaplı değerler (ADR 8057 §35): `calculate` girdiler değiştikçe
   Python'suz hesaplanır, `defaultExpr` panel açılırken (`bugün()`, `şimdi()`), döngü Kapı 1'de reddedilir; katlanır
   bölüm (ADR 8057 §38): `section` sonraki bileşenleri toplar, katlıyken değerleri gider, yanlış alan bölümünü açar;
-  görsel (ADR 8057 §40): `image` kodun verdiği PNG'yi gösterir (`ctx.panel.set(id, image=…)`, okumadan denetlenir). Katman menüsünün komutu tıklanan katmanı `ctx.params["layer"]`'da alıyor (Vitrin'in
-  Değerlerini say'ı).* Kararlı bileşen/oturum/eylem kimlikleri, tipli değer/olay, doğrulama, salt okunur/etkin durum,
+  görsel (ADR 8057 §40): `image` kodun verdiği PNG'yi gösterir (`ctx.panel.set(id, image=…)`, okumadan denetlenir);
+  dosya seçici (ADR 8057 §41): `filePicker` okunacak dosyanın yolunu yazdırır ya da seçtirir, `files.userSelected` ister. Panel içi sekme (ADR 8057 §43): bileşenin `tab` anahtarı, sekmesiz bileşen her sayfada, yanlış alan sayfasını açar. Kaydetme yeri (ADR 8057 §44): `filePicker`'ın `save` kipi, ayrı yetenek `files.userSelectedWrite`. Koordinat sistemi seçici (ADR 8057 §45): `crsPicker`, değeri `EPSG:<kod>`, varsayılan çizimin sistemi. Katman menüsünün komutu tıklanan katmanı `ctx.params["layer"]`'da alıyor (Vitrin'in
+  Değerlerini say'ı). Geç cevap (ADR 8057 §117, 17 Kasım): her açılan panelin kendi numarası; kapanıp yeniden açılan
+  panel eski çalıştırmanın satırlarını ve `ctx.panel` çağrılarını almaz [PY-UI-17'nin pencere kapanması payı]. Belge
+  değişimi (ADR 8057 §125, 17 Kasım): yazabilen eklenti komutu çalışırken çizimi önde tutulur (konsol gibi); sekmeye
+  alınmışsa adımı kendi çiziminde biter, geç yazımı başka çizime gitmez [PY-UI-17'nin belge değişimi payı, PY-RUN-16].*
+  Kararlı bileşen/oturum/eylem kimlikleri, tipli değer/olay, doğrulama, salt okunur/etkin durum,
   düzen [PY-UI-01, 06]; `kentos.ui` Python cephesi şemadan üretilir [PY-UI-02]; aracı oluştur/yamala/kapat/odakla/bildir
   ve eylem kaydı [PY-UI-03]; yama geldiğinde kullanıcının odağı, taslağı ve kaydırması korunur [PY-UI-04]; bileşen değeri
   ile kalıcı nesne değeri ayrıdır, her tuş belge değişikliği değildir [PY-UI-05]; varsayılan/görünür/etkin/zorunlu/hesaplı
@@ -1132,6 +1368,9 @@ araçlarının denenmesi.
   kaydedilmemiş taslak tanımlı; pencere kapanması, kaldırma ve belge değişimi geç geri çağırmayı etkisiz kılar, bir
   taslak başka belgeye uygulanmaz [PY-UI-17, EKL-03]; aynı tanımın masaüstü/web/mobil önizlemesi ve başsız durum testleri
   ortak fikstürlerde [PY-UI-18]. Tablo ve listede büyük veri sayfalama ve sanallaştırmayla.
+  — *17 Kasım notu: panel şemasında ızgara ya da sütun düzeni yok; masaüstü panel dar ve geniş rıhtımda tek sütundur.
+  "Sekme akordeona" ve web/mobil önizlemesi (PY-UI-13, 18) web ve mobil arayüzüne aittir; o işler bekletiliyor
+  (ADR 0228). Özel bileşen (PY-UI-15, 16) bilinçli olarak desteklenmiyor: keyfi çizici ikinci bir tasarım dili açar.*
 - [x] **Panel köprüsü** — *tamamlandı (ADR 8057 §24): `kentos.ui.panel` 1'in yedi bileşeni (metin, metin/sayı
   alanı, seçim, onay, düğme, tablo) dock'un Eklenti sekmesinde; düğme bir komutu panelin değerleriyle (`ctx.params`)
   çalıştırır, satırları tabloya; Kapı 1 denetimi; katman, alan ve nesne seçicileri (alan seçici bağlı katmanın
@@ -1159,9 +1398,13 @@ araçlarının denenmesi.
   panelini, iki İşlemler aracını, bir MapTool'u ve bir denetim kuralını sunar; şerit, Eklentiler, İşlemler, Denetim,
   komut arama ve MCP aynı kimliğe gider; devre dışı bırakılınca hepsi hayalet komut/geri çağırma bırakmadan kalkar
   [EKL-02 kabulü].
-- [ ] **Derslerden (13 Kasım):** UI bildirimseldir ve araç takımından bağımsızdır: Python'a çizim nesnesi ya da araç
+- [x] **Derslerden (13 Kasım):** UI bildirimseldir ve araç takımından bağımsızdır: Python'a çizim nesnesi ya da araç
   takımı tipi verilmez, özel bileşen kaçış yolu da vermez (QGIS'te Qt değişince paketlerin %58'i geride kaldı) [D7];
   `l10n` anahtarları panel ve form metinlerine bağlanır.
+  — *tamam (ADR 8057 §24–25, §106, 16 Kasım): paneller şemalı JSON, araç takımı tipi ya da özel bileşen yok (§25'te
+  sınır olarak yazılı); çeviri MEBİS'in biçimiyle (anahtar metnin yeri) manifeste, şeride, panellere, formlara, İşlemler
+  araçlarına ve kurulum incelemesine bağlı; Kapı 1 bozuk çeviriyi reddeder, yerinde metni olmayanı uyarır. Katman
+  şemasının alan adlarını Python kurar: orada çeviri yok.*
 - **Kabul** — *kısmen (ADR 8057 §24–25, 15 Kasım): koyu tema, 16 px, 1100×650'de panel gerçek fare ve klavyeyle
   sınandı: dar yerde etiket alanın üstünde (ortak Form), Enter birincil düğme, Tab/Shift+Tab alanlar arasında, Boşluk
   onay kutusunu işaretler; komut yanıt verirken yazılan alan odağını ve metnini korur; yanlış sayı adıyla söylenir;
@@ -1192,21 +1435,34 @@ doğrulama gelene dek). **Üçüncü dilim — geri çekme listesi** (ADR 8059 �
 (`kentos.extension-revocations` v1) masaüstünün barındırıcısıyla paylaşılan crate'e taşındı, liste akıştan üretilir
 (yayımlanmış ve şimdi askıda ya da geri çekilmiş sürümler, `=X.Y.Z` ve duyurunun gerekçesiyle, yeni alan olmadan) ve
 `GET /v1/extension-catalogs/{katalog}/revocations` ile her üyeye aynı gelir; imzasızdır, masaüstü onu imzalanana dek
-uygulamaz. Kalan: kalıcı depo (tasarımı §11), taze kimlik doğrulama, imza (onay kaydı ve geri çekme listesi) ve OIDC,
+uygulamaz. Kalan: taze kimlik doğrulama, imza (onay kaydı ve geri çekme listesi) ve OIDC,
 platform tekerlek deposu, arayüz.
+**Dördüncü dilim** (ADR 8059 §13): katalog kalıcı depoda (PostgreSQL ve nesne deposu, göç 0042) ve
+`KENTOS_EXTENSION_CATALOG=on` ile çalışan sunucuda açık; kişinin kararları taze kimlik doğrulaması gelene dek kapalı,
+yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümün denetim ortamı yayımlamada hazırlanır ve
+`project.audit` işleri aynı katalogdan okur.
 
-- [ ] Durum makinesi: `taslak → gönderildi → denetleniyor → değişiklik isteniyor / onaylandı → yayımlandı → askıda /
+- [x] Durum makinesi: `taslak → gönderildi → denetleniyor → değişiklik isteniyor / onaylandı → yayımlandı → askıda /
   geri çekildi / arşivlendi`. Yüklenen taslağı yalnız yazarı ve yetkili inceleyenler görür; **yükleme yayın değildir**.
+  — *tamamlandı (ADR 8059, §10): saf Rust akış ve sunucu uçları; taslağı yalnız yazarı ve yetkililer görür.*
 - [ ] Yerel kullanım bulut hesabı gerektirmez; yayın açık kullanıcı eylemidir [PY-CLOUD-01]. Kişisel/özel, kiracı ve genel
   katalog kapsamları; görünürlük ile çalıştırma izni ayrı [PY-CLOUD-02]. Yayımcı ad alanı sahipliği, iletişim/destek,
   lisans, kaynak/derleme bilgisi ve sürüm notları [PY-CLOUD-03]. Gönderilen sürüm paket özeti + üst veri + kilit + SBOM +
   istenen yetenekler kümesiyle değişmez [PY-CLOUD-04].
+  — *kısmen (ADR 8059): yerel kullanım hesapsız, katalog kapsamları, gönderilen içerik özetle değişmez; kalan: yayımcı
+  ad alanı sahipliği (alan adı, OIDC).*
 - [ ] Kendiliğinden denetim: arşiv/şema/bağımlılık/lisans/uyumluluk, test sonuçları ve sır sızıntısı [PY-CLOUD-05]; kod ve
   bağımlılık duman testleri yalıtılmış inceleme işçisinde, gerçek sır ve üretim verisi olmadan [PY-CLOUD-06]. Yetkili
   inceleyicinin açık onayı olmadan yayın yok; yazar kendi genel sürümünü onaylayamaz [PY-CLOUD-07]. **Her sürüm yeniden
   onaydan geçer**; kod/kilit/izin/eser değişikliği eski onayı geçersiz kılar [PY-CLOUD-08]. Onaylama ve yayımlama ayrı
   izinler [PY-CLOUD-09]. Yayımcı onaylı özetin yerine başka içerik koyamaz; indirme ve kurulum bütünlüğü/onay kaydını
   doğrular [PY-CLOUD-10]. Ret gerekçe kodu, ilgili dosya/bağımlılık ve yeniden gönderme yoluyla [PY-CLOUD-11].
+  — *kısmen (ADR 8059): açık onay, yazar kendi genel sürümünü onaylayamaz, içerik değişince onay düşer, onay ve yayın
+  ayrı izin, ret gerekçe koduyla; 16 Kasım (ADR 8059 §15): sır taraması: dosyanın içine yazılmış anahtar (sağlayıcı
+  biçimleri, özel anahtar) paketlemede ve kurulumda uyarı, katalogda sır kapısını engeller, değer hiçbir yerde
+  söylenmez; 16 Kasım (ADR 8057 §100): yeni sağlayıcı biçimleri (OpenRouter, Groq, xAI, Perplexity, Replicate, NVIDIA,
+  Google OAuth, Mapbox, Docker Hub, Shopify) ve bağlantı adresine yazılmış parola (veritabanı, paket deposu, FTP);
+  kalan: yalıtılmış duman testi işçisi [PY-CLOUD-06; ECO-DEC-11, sahibin kararı].*
 - [ ] Liste sürüm durumu, uyumluluk, Python/yerel bağımlılık ve gerekli izinlerle süzülür [PY-CLOUD-12]; kurma ve
   çalıştırma tüketicinin seçimidir, onaylı olmak kişinin bağımlılık/izin kararını atlatmaz [PY-CLOUD-13]; güncelleme yeni
   bağımlılık/yetenek/platform farkını gösterir, eski sürüm denetimli korunur [PY-CLOUD-14]; askıya alma/geri çekme yeni
@@ -1215,8 +1471,17 @@ platform tekerlek deposu, arayüz.
   denetlenebilir [PY-CLOUD-16]; katalog işlemleri kiracı/proje sırrı ya da özel veri sızdırmaz, sayı/arama/sonuç ACL
   sonrası hesaplanır [PY-CLOUD-17]; Python/MCP/AI yayın çağrısı da aynı durum makinesine bağlı, programlı çağrı
   incelemeyi atlayamaz [PY-CLOUD-18].
+  — *kısmen (ADR 8059 §10, §12): görmeyene aynı 404, programlı çağrı incelemeyi atlayamaz, geri çekme listesi; 16 Kasım
+  (ADR 8057 §81): kurulum incelemesi kuracağı Python paketlerini, güncellemede farkını (yeni, değişen, aynı sürüm başka
+  dosyalar, kalkan) gösterir; tanınmış bir paketin adına bir harf uzak ad uyarıdır. Listenin süzgeçleri (ADR 8057 §88:
+  çalışanlar, internetsiz, paket kurmayan, yapay zekânın ya da insanın yazdığı). Platform farkı (ADR 8057 §90:
+  güncelleme incelemesi bıraktığı ve eklediği sistemleri ve çalışma yerlerini söyler). Kalan: listenin imzası ve
+  masaüstünde uygulanması.*
 - [ ] Bulut Python işleri ayrı işçi/kapta, kaynak sınırı, ağ politikası, kapsamlı kimlik bilgisi ve kiracı yalıtımıyla;
   masaüstü eklenti süreci sunucu yalıtımı sayılmaz [PY-RUN-22].
+  — *kısmen (ADR 8057 §42): iş çalıştırıcısı denetim kuralını hazırlanan ortamda, ağ isteyeni reddederek çalıştırır;
+  16 Kasım: Python'u da ölçen bütçe (§58), Linux'ta Landlock kutusu ve soket süzgeci (§61, §63). Kalan: Windows ve
+  macOS'ta yalıtım, kiracı yalıtımı.*
 - [ ] **Derslerden (13 Kasım):**
   - **Kapı durumları "açık kalmaz":** doğrulanıyor / engellendi / doğrulandı; "taranmadı" ya da "tarama hata verdi"
     hiçbir zaman "geçti" değildir (Open VSX yük altında taranmamış paketi geçirdi) [D11].
@@ -1229,14 +1494,22 @@ platform tekerlek deposu, arayüz.
     yayımcı hızlı yolu yalnız yetenek/bağımlılık farkı olmayan sürümde; ret gerekçeleri hazır kodlarla ve ajanın tek
     adımda düzelteceği biçimde; inceleyici kapasitesi baştan planlanır (Obsidian kuyruğu 2.300'ü aştı) [D12].
   - **Yayımcı:** `id` öneki doğrulanmış alan adına bağlı; görünen ad, simge ve kimlik benzerliği (taklit) denetimi; yayın
-    kısa ömürlü kimlikle (OIDC), jetonlar önekli ve süreli; iletişim doğrulaması [D13].
+    kısa ömürlü kimlikle (OIDC), jetonlar önekli ve süreli; iletişim doğrulaması [D13]. — *kısmen (16 Kasım, ADR 8059
+    §14): ad, kimlik ve simge okunan yüzüyle karşılaştırılır; taklit katalogda gönderimde yayımcı kapısını engeller,
+    masaüstünün kurulum incelemesinde Kur'u kişinin onayına bağlar; benzerlik söylenir. Kalan: alan adı, OIDC, jeton.*
   - **Platform tekerlek deposu:** katalog onaylı kilitten platform başına tekerlekleri kendisi üretir, ikilileri tarar,
     özetlerini onay kaydına bağlar; masaüstü bu depodan dizine düşmeden kurar [D3].
   - **Kurum ve çevrimdışı katalog:** kiracı kataloğu, statik indeks, erişim jetonu, engel listesi; güvensiz varsayılan
     yok [D14]. **Geri çekme:** imzalı liste, kamuya açık kaldırma kaydı, "şüpheli" ile "kesin" ayrımı, itiraz yolu [D15].
   - **Emeklilik ve devir:** "yerine geçen" eklenti, bakıcı devri, terk edilmiş paketin işaretlenmesi [D9].
+    — *kısmen (17 Kasım, ADR 8057 §119): emekli eklenti kurulu ayrıntıda ve katalog girdisinde yayımcının sözüyle
+    söylenir, yerine geçen kuruluysa adıyla, değilse "Yerine geçeni bul"la; katalog dizini emekliliği taşır. Devrin
+    istemci payı (§126): yayımcısı değişen güncelleme incelemede uyarılır, kişinin onayıyla kurulur. Kalan: katalog
+    sunucusunda devrin kendisi ve terk edilmiş paketin işaretlenmesi (kimin karar verdiğini yazan ilke ister).*
   - **Karne ve dürüst sinyaller:** geçen kapılar, yetenekler ve gerekçeleri, tespit edilen kullanım, bakım ve uyumluluk;
     **yıldız oyu yok**; AI üretim kökeni; istemci telemetrisi yasak; protokol göç oranı ve sağlık ölçütleri izlenir [D17].
+    — *kısmen (16 Kasım, ADR 8057 §86): masaüstünde katalog girdisinin karnesi (bu KentOS'ta çalışır mı, taklit/benzerlik,
+    Python paketleri, internet, yapay zekâya veri, örnek sayısı); kalan: sunucu kataloğunun geçen kapıları.*
 - **Kabul:** P14–P15 (§5). Onaysız sürüm genel/kiracı yayın ucundan görülmez ve kurulmaz; onaylı paketin tek baytı ya da
   kilidi değişirse yeniden inceleme gerekir; kullanıcı buluta yayımlamadan `.kek` ile yerelde çalışır; yerel
   yükle–çalıştır–durdur–devre dışı–etkinleştir–güncelle–geri dön–kaldır akışı gerçek arayüzde geçer [EKL-07].
@@ -1264,19 +1537,111 @@ platform tekerlek deposu, arayüz.
 
 ### 5.2 Doğrulama [ECO-QA-01…16]
 
-- [ ] JSON Schema/kod üretimi/kayıt sapması, yinelenen kimlik, kaynak başvurusu ve uyumsuz yetenek testleri [ECO-QA-01].
-- [ ] Arşiv ayrıştırıcısı yol/boyut/oran/özet/kodlama/harf/platform uç durum korpusu ve olumsuz test [ECO-QA-02] (ADIM 16).
+- [x] JSON Schema/kod üretimi/kayıt sapması, yinelenen kimlik, kaynak başvurusu ve uyumsuz yetenek testleri [ECO-QA-01].
+  — *17 Kasım'da gözden geçirildi, karşılanmış: şema sapması `sdk_pack` sınamaları (panel, manifest, katman şeması,
+  araç tanımı, olgular, kural örnekleri; `KENTOS_WRITE_SDK` yazar) ve komut kataloğunun her şeması
+  (`the_shared_catalog_gives_back_every_schema`, `KENTOS_WRITE_CATALOG`); kod üretimi sapması
+  `python_builders_are_the_schemas` (`kentos/ui_panel.py`), `the_stub_is_the_sdk_s` (`kentos_ext.pyi`),
+  `scripts/python/sdk.py --check` (Python SDK katmanı), TS bağlarının dışa aktarma sınamaları, `cad.processing.tools`
+  durumlarının üreteci (`--check`); kayıt
+  sapması `unlisted_missing_and_changed_files_are_named` (bütünlük listesi) ve kurulu paketin diskte değişen dosyası
+  (sonraki açılışta adıyla hata); yinelenen kimlik `manifest_duplicate_id`, `python_id_twice`, panel kimliklerinin
+  tekliği; kaynak başvurusu `contributions_point_at_what_exists`, `handler_missing`, formun ve çevirinin bildirimi;
+  uyumsuz yetenek `capabilities_carry_a_reason_a_scope_and_the_hosts` (`manifest_capability_missing`),
+  `a_network_library_without_the_capability_is_refused_and_os_commands_warned`, `compatibility_ranges_are_whole`.*
+- [x] Arşiv ayrıştırıcısı yol/boyut/oran/özet/kodlama/harf/platform uç durum korpusu ve olumsuz test [ECO-QA-02] (ADIM 16).
+  — *16 Kasım'da gözden geçirildi, karşılanmış (`crates/shared/extensions/src/archive/tests.rs`, `paths.rs`): yol aşımı,
+  mutlak yol, ters bölü, sürücü harfi, ASCII dışı ad, sonda nokta, aygıt adları (CON, aux.txt …), yinelenen ve harfi
+  çakışan ad, derinlik, sembolik bağ, özel dosya, klasör girdisi, sıkıştırma oranı bombası, şifreli girdi, kesik ve
+  bozuk arşiv, önüne program eklenmiş arşiv, boyut ve girdi sınırı, bütünlük listesi, ortam/önbellek/sürüm denetimi/sır/
+  yapay zekâ yapılandırması/ikili; 150 noktada kesme, bit çevirme ve sıfırlamayla paniksiz.*
 - [ ] İsteğe bağlılık/uv/Python/paket kurulumu sahte taşıma ve temiz profille [ECO-QA-03]; Windows/macOS/Linux, ABI,
   mimari/yerel tekerlek ve çevrimdışı önbellek matrisiyle kurma/çalıştırma duman testi [ECO-QA-04].
-- [ ] Süreç çökme/durdurma/yeniden başlatma, geç geri çağırma, kaldırma ve çoklu örnek fikstürleri [ECO-QA-05].
-- [ ] İşlemler eklenti/yerleşik/model/arayüz/Python/MCP için aynı anlık görüntü ve tipli sonuç uyum testi [ECO-QA-06].
-- [ ] Taşınabilir UI/kural/değer kodlayıcı/doğrulama aynı profilde eşdeğer sonuç [ECO-QA-07]; eklenti UI görsel testleri
+  — *ECO-QA-03 17 Kasım'da gözden geçirildi, karşılanmış:
+  - İsteğe bağlılık: Python kullanıcı açana dek kapalı kalır (`the_choice_is_off_until_the_user_turns_it_on_and_is_kept`).
+    Python katkıları seçimi bekler, Python'suz katkılar kaydolur
+    (`python_contributions_wait_for_the_choice_and_a_working_folder_reloads_cleanly`). Python'u hazır olmayan
+    eklentinin düğmesi "bekliyor" der (§12, §122).
+  - uv ve Python sahte uv ile sınanır (`python-env`):
+    - kurulur ve durdurulur, hatası nedeniyle söylenir, kaldırılır;
+    - uv kabuksuz ve süreli çalışır, sürümü denetlenir;
+    - kişisel ortamın değişikliği önce yanda önizlenir;
+    - eklenti ortamı kendine özgüdür, internetsiz kullanılır;
+    - sunucu ortamı yalnız tekerlek ve özetle kurulur;
+    - kurumun tekerlek klasörü kullanılır (§123), gerçek pencerede ağ kapalıyken de.
+  - Paket kurulumu iki taşımayla sınanır: katalog klasörü
+    (`a_catalog_folder_lists_its_packages_and_installs_the_verified_one`) ve katalog sunucusunun HTTP'si
+    (`a_release_goes_from_upload_to_installation_through_the_api`).
+  - Temiz profil: her sınama kayıt defterini ve Python klasörünü kendi geçici klasöründe açar; gerçek pencere oturumu
+    kendi ev dizininde çalışır (`scripts/usage/real/session.sh`).
+
+  ECO-QA-04 (Windows/macOS/Linux ve ABI matrisi) açık: o işletim sistemlerinin koşucuları ister, CI şablonu sahibin
+  kararını bekliyor.*
+- [x] Süreç çökme/durdurma/yeniden başlatma, geç geri çağırma, kaldırma ve çoklu örnek fikstürleri [ECO-QA-05].
+  — *17 Kasım'da gözden geçirildi, karşılanmış: çökme `a_crash_is_said_with_its_last_errors` (süreç, son hatalarıyla)
+  ve `a_crashing_extension_fails_for_good_and_is_not_tried_at_the_next_start` (art arda çökmede kalıcı durur, geç
+  gelen çökme bildirimi yok sayılır); durdurma `durdur_is_asked_first_and_the_process_ended_when_it_does_not_answer`;
+  yeniden başlatma ve boşta kapanma `a_run_is_answered_and_its_process_kept_for_the_next`,
+  `an_idle_process_is_closed`, kiranın kuşağı (`the_whole_lifecycle_leaves_nothing_of_a_lease_behind`: durmuş kiranın
+  ölçüsü tutulmaz); geç geri çağırma kira (`is_current`), çalıştırmanın kimliği ve panelin kendi numarası (§117,
+  `extensions/tests/late.rs`); kaldırma `a_disabled_extensions_panel_and_audit_fixes_go_with_it`,
+  `a_withdrawn_version_stops_and_its_data_stays`, kalıntısız kuru koşu; çoklu örnek
+  `two_processes_share_one_registry` ve birden çok açık panel.*
+- [x] İşlemler eklenti/yerleşik/model/arayüz/Python/MCP için aynı anlık görüntü ve tipli sonuç uyum testi [ECO-QA-06].
+  — *17 Kasım (ADR 8057 §116): aynı çizimde ürün komutu, ajanın planla-yürüt kapısı, satır içi model ve toplu
+  çalıştırma aynı nesneleri ve sayıları verir (`processing_doors`); Python ve MCP aynı yollardan geçer; pencere ortak
+  durum dosyalarıyla, eklenti aracı tek örnek koşucusuyla aynı bağımsız beklentilere bağlı.*
+- [x] Taşınabilir UI/kural/değer kodlayıcı/doğrulama aynı profilde eşdeğer sonuç [ECO-QA-07]; eklenti UI görsel testleri
   ile durum/odak/değer korunumu, kaldırma, geç geri çağırma ve doğrulama gezinmesi gerçek girdiyle [ECO-QA-08].
-- [ ] ACL testleri ham HTTP/genel komut/Python/eklenti/AI/tablo/arama/dışa aktarma ve olay yollarını kapsar [ECO-QA-09].
-- [ ] İşlemler değişiklik kümesi, tipli katman/tablo/dosya hedefi, yinelenen deneme ve hazırlanmış eser temizliği hata
+  — *17 Kasım'da gözden geçirildi, karşılanmış.
+  - ECO-QA-07, eşdeğerlik:
+    - Taşınabilir formun kuralları, değerleri ve doğrulaması KentOS kodu kullanılmadan yazılmış bağımsız bir Python
+      başvurusunun ortak durumlarında sınanır (`scripts/fixtures/forms_cases.py` → `fixtures/forms/v1/cases.json`,
+      `crates/shared/forms/tests/all/cases.rs`): ön denetim, seçenek süzgeci, varsayılan, hesap, gizlenen alan, yazım
+      profili, tekil alan.
+    - Panelin `visibleWhen`/`requiredWhen`/`enabledWhen`, `calculate` ve `defaultExpr`'i formun ifade profiliyledir
+      (§33, §35; `a_components_rules_follow_the_panels_values`).
+    - Python'un panel işlevleri şemanın kendisidir (`python_builders_are_the_schemas`).
+    - Web ve mobilin çizicileri bekletiliyor (ADR 0228).
+  - ECO-QA-08, gerçek girdiyle:
+    - Kodun yaması kullanıcının yazdığını, odağı, imleci ve kaydırmayı korur: §32, gerçek pencere `31-oturum`. Klavye
+      sırası ve odak çizilen panelden gelir (`panel_session/behaviour_tests.rs`, ekran dışı çizimle).
+    - Kaldırma: devre dışı eklentinin paneli, sekmesi ve onarımları gider
+      (`a_disabled_extensions_panel_and_audit_fixes_go_with_it`).
+    - Geç geri çağırma: §117 (`extensions/tests/late.rs`).
+    - Doğrulama gezinmesi: yanlış alanın bölümü (§38, `36-bolum`) ve sekmesi (§43) açılır, sözü alanın altında yazar
+      (§41).*
+- [x] ACL testleri ham HTTP/genel komut/Python/eklenti/AI/tablo/arama/dışa aktarma ve olay yollarını kapsar [ECO-QA-09].
+  — *17 Kasım'da gözden geçirildi, karşılanmış:
+  - Ham HTTP: uçlar çağıranın erişimini (`project_access`) uygulama katmanına verir; orada Veri girişinin erişimi
+    sınanır (`project_reach.rs`: sayı, kapsam, olay, çakışma, form araması; formları geri çekilen katman; işaretli
+    alanı kesilen kopya; dışa aktarma işi).
+  - Olay: WebSocket gerçek TCP üzerinde, yetkisi alınanın aboneliği hemen kesilir (`ws_tests.rs`).
+  - Genel komut, tablo, arama, dışa aktarma (MCP): okuma komutunun kayıt sayfası, nesne sayfaları, öznitelik haritası,
+    birleştirme, çakışma ve istatistik, ifade/süzgeç/sıralama, yazılan dosya, günlük; gizli alana yazım koşmadan
+    reddedilir (`agent_veil.rs`, `veil/tests.rs`).
+  - Python ve AI: masaüstü bağlantısındaki ajan (`an_agent_reads_no_value_of_a_field_the_drawing_withholds`);
+    Asistan'ın ilke ve ajan ayarı (`values_tests.rs`).
+  - Eklenti: ajanın çalıştırdığı eklenti aracının parametresi ve modeli (§108, `veil/reads.rs`). Eklentinin kendi
+    kodu kullanıcının verdiği `document.read`'le okur; bu kullanıcının kararıdır.*
+- [x] İşlemler değişiklik kümesi, tipli katman/tablo/dosya hedefi, yinelenen deneme ve hazırlanmış eser temizliği hata
   enjeksiyonuyla [ECO-QA-10]. Taslak/sürüm onay özeti, paket kurcalama, kapsam yükseltme ve yayımlanmamış görünürlük
   olumsuz testleri [ECO-QA-11]. Kilitli ortamda çevrimdışı çalışma, eksik tekerlek, geri alınan aracı izni ve değişen
   kaynak revizyonu [ECO-QA-12].
+  — *ECO-QA-10 17 Kasım'da karşılandı (ADR 8057 §120). Gerçek dosyalarla hata enjeksiyonu: yerine konamayan raster,
+  COG ve COPC sonucu ile bitirilmeden bırakılan yazım parça bırakmaz (`tests/staged.rs`). Salt okunur dosya ve klasör
+  GeoPackage'ı bayt bayt olduğu gibi bırakır, ret kullanıcının dosyasını adlandırır. Aynı `requestId` bir kez yazar,
+  sonradan değişen dosyanın üzerine yazmaz (`processing_sink_faults`). Her noktada durdurma, tablo çakışması, PostGIS'te
+  ikinci yazım ve tek kullanımlık plan önceden sınanmıştı.* — *ECO-QA-11 17 Kasım'da karşılandı (§121). Kapsam
+  yükseltme açığı kapandı: güncelleme incelemesi kişinin önceki cevabından başlıyor. Yeni, genişleyen (`Scope::reach`,
+  katalogla ortak ölçü) ve daha önce verilmeyen yetenek işaretsiz geliyor
+  (`an_update_never_widens_what_the_person_granted`, `tests/grants.rs`). Onay özeti ve içeriğe bağlı onay
+  (`content_frozen`), paket kurcalama (`catalog_mismatch`, aynı sürüm başka içerik, diskte değişen dosya) ve
+  yayımlanmamışın görünmemesi (404) önceden sınanmıştı.* — *ECO-QA-12 17 Kasım'da karşılandı (§122). Sabitlenen araç
+  dayanağı alınınca nedenini söylüyor: verilmeyen yetenek ya da seçilmeyen Python "içeriyor ama kurulmadı" der
+  ("içermiyor" demiyordu); çevrimdışı ya da tekerleksiz hazırlanamayan ortamın sözü düğmeye ve model adımına geliyor
+  (`tests/pins.rs`). Hazır ortamın internetsiz kullanılması, tekerlek sözleri ve sabitlemenin sürüm/yapı farkı önceden
+  sınanmıştı. Kalan: kurulu eklentinin izinlerini yeniden kurmadan değiştirmek, çevrimdışı tekerlek deposu (PY-UV-27).*
 - [ ] Başlangıç/keşif, ortam hazırlama, geri çağırma gidiş-dönüşü, büyük UI/İşlemler yükü, Python toplu işi ve host bellek
   ölçümü [ECO-QA-13]; eşikler gerçek başvuru cihazı ve korpus ölçümünden sonra sabitlenir, ölçülmüş gibi süre/FPS
   icat edilmez [ECO-QA-14]; üreticinin kendi çıktısı tek doğruluk kanıtı sayılmaz, bağımsız beklentiler yazılır

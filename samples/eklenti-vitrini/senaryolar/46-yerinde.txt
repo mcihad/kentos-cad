@@ -1,0 +1,20 @@
+# Girdiyi yerinde değiştirme: Çekme mesafesi denetiminin yapıların girdisi tanımında "writes": true der; kod her
+# yapının kendi "cekme" özniteliğine uygun / taşıyor yazar (ctx.update), tamponlarla aynı geri alma adımında. Araç
+# çalıştıktan sonra seçili kalan (parselinden taşan) üç yapının ortak özniteliklerinde cekme = taşıyor. (Önce 01.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 844 20    # Vitrin sekmesi
+wait 1000
+click 452 84    # Çekme mesafesi
+wait 2500
+click 1167 775  # Çalıştır (3 m)
+wait 6000
+click 1084 772  # Kapat
+wait 1000
+wheel 1280 700 -10   # Öznitelikler'i aşağı kaydır: seçili (taşan) üç yapının ortak öznitelikleri
+wait 800
+shot 46-oznitelik

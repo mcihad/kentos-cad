@@ -1,0 +1,229 @@
+{
+  "format": "kentos.processingTool",
+  "schemaVersion": 1,
+  "id": "cekme",
+  "version": "1.0.0",
+  "label": "Çekme mesafesi denetimi",
+  "description": "Her yapının çevresine çekme mesafesi kadar KentOS'un Tampon aracıyla alan çizer ve tamponun yapının parselinden taşıp taşmadığını söyler; tamponları yeni bir katmana, her yapının durumunu kendi \"cekme\" özniteliğine yazar.",
+  "modelDescription": "Yapıların parsel sınırına çekme (bahçe) mesafesini denetlemek için kullanın. yapilar: yapıların taban alanı çizgileri, parseller: imar parselleri, mesafe: en az çekme mesafesi (metre, ör. 3). Her yapının tamponu yeni katmana yapi, mesafe_m, durum (uygun / taşıyor) ve tasan_alan_m2 öznitelikleriyle yazılır; her yapının kendi cekme özniteliğine uygun / taşıyor yazılır (girdiyi değiştirir); parselinden taşan yapılar seçilir; taşan yapı sayısı (tasan) döner. Çizimi değiştirmeden yalnız hesap için sonucu bir GeoPackage dosyasına yönlendirin.",
+  "help": "Çekme mesafesi, yapının parsel sınırına en az uzaklığıdır (Planlı Alanlar İmar Yönetmeliği: ön, yan ve arka bahçe mesafeleri). Araç her yapının çevresine bu uzaklıkta alan çizer; alan yapının oturduğu parselin dışına taşıyorsa yapı parsel sınırına bu mesafeden yakındır.\n\nTamponu eklentinin kodu çizmez: KentOS'un yerleşik Tampon aracı, eklentiye verilen yapılar üzerinde, kullanıcının çizimine dokunmadan çalışır (ctx.run_tool); karşılaştırmayı eklentinin ortamındaki shapely yapar.",
+  "keywords": [
+    "çekme mesafesi",
+    "bahçe mesafesi",
+    "tampon",
+    "imar",
+    "parsel sınırı"
+  ],
+  "parameters": [
+    {
+      "name": "yapilar",
+      "label": "Yapılar",
+      "type": "features",
+      "kinds": [
+        "polygon"
+      ],
+      "scopes": [
+        "layer",
+        "selection",
+        "visible",
+        "all"
+      ],
+      "default": {
+        "scope": "layer",
+        "layerId": "yapi"
+      },
+      "description": "Denetlenecek yapıların taban alanı çizgileri; her birine çekme durumu (cekme) yazılır.",
+      "writes": true
+    },
+    {
+      "name": "parseller",
+      "label": "İmar parselleri",
+      "type": "features",
+      "kinds": [
+        "polygon"
+      ],
+      "scopes": [
+        "layer",
+        "selection",
+        "visible",
+        "all"
+      ],
+      "default": {
+        "scope": "layer",
+        "layerId": "parsel"
+      },
+      "description": "Yapıların oturduğu imar parselleri."
+    },
+    {
+      "name": "mesafe",
+      "label": "Çekme mesafesi",
+      "type": "number",
+      "min": 0.5,
+      "max": 20,
+      "default": 3,
+      "unit": "m",
+      "description": "Yapının parsel sınırına en az uzaklığı (ör. yan bahçe 3 m)."
+    },
+    {
+      "name": "cikti",
+      "label": "Çıktı katmanı",
+      "type": "layer",
+      "default": {
+        "newName": "Çekme mesafesi"
+      },
+      "newLayerStyle": {
+        "color": "#7c3aed",
+        "lineWeight": 0.35,
+        "fill": "#8b5cf633"
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "name": "tamponlar",
+      "label": "Yapıların çekme tamponları",
+      "type": "features",
+      "sinkParameter": "cikti"
+    },
+    {
+      "name": "tasan",
+      "label": "Parselinden taşan yapı sayısı",
+      "type": "number"
+    }
+  ],
+  "feedback": {
+    "progress": true,
+    "cancel": true
+  },
+  "capabilities": {
+    "runtimes": [
+      "desktop-python",
+      "headless-python"
+    ]
+  },
+  "examples": [
+    {
+      "title": "Kenara yakın ve ortadaki yapı",
+      "features": [
+        {
+          "layer": "parsel",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  20,
+                  0
+                ],
+                [
+                  20,
+                  20
+                ],
+                [
+                  0,
+                  20
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "layer": "yapi",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  1,
+                  1
+                ],
+                [
+                  6,
+                  1
+                ],
+                [
+                  6,
+                  6
+                ],
+                [
+                  1,
+                  6
+                ],
+                [
+                  1,
+                  1
+                ]
+              ]
+            ]
+          },
+          "attrs": {
+            "no": "Y-01"
+          }
+        },
+        {
+          "layer": "yapi",
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  8,
+                  8
+                ],
+                [
+                  12,
+                  8
+                ],
+                [
+                  12,
+                  12
+                ],
+                [
+                  8,
+                  12
+                ],
+                [
+                  8,
+                  8
+                ]
+              ]
+            ]
+          },
+          "attrs": {
+            "no": "Y-02"
+          }
+        }
+      ],
+      "params": {
+        "mesafe": 3
+      },
+      "expect": {
+        "outputs": {
+          "tasan": 1,
+          "tamponlar": {
+            "count": 2,
+            "has": [
+              {
+                "yapi": "Y-01",
+                "durum": "taşıyor"
+              },
+              {
+                "yapi": "Y-02",
+                "durum": "uygun"
+              }
+            ]
+          }
+        },
+        "summary": "1 yapı"
+      }
+    }
+  ]
+}

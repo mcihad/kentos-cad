@@ -105,6 +105,28 @@ pub struct Server {
     pub(crate) extensions_root: Option<std::path::PathBuf>,
     /// The agents' extension workshop beside it (`extension.workshop.*`, docs/adr/8057 §22).
     pub(crate) workshop_root: Option<std::path::PathBuf>,
+    /// The client by the name and version it gave at `initialize` (`clientInfo`): a package its workshop packs records
+    /// it (docs/adr/8057 §76). Its own words, a name only.
+    pub(crate) client: Option<String>,
+}
+
+/// The client's name and version as it gave them at `initialize` (`clientInfo`), printable characters only and at most
+/// 80; none when it gave no name.
+fn client_of(params: &Value) -> Option<String> {
+    let info = params.get("clientInfo")?;
+    let name = info.get("name").and_then(Value::as_str)?.trim();
+    let version = info
+        .get("version")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .trim();
+    let said: String = format!("{name} {version}")
+        .chars()
+        .filter(|c| !c.is_control())
+        .take(80)
+        .collect();
+    let said = said.trim().to_owned();
+    (!name.is_empty()).then_some(said)
 }
 
 impl Default for Server {
@@ -147,7 +169,27 @@ impl Server {
             watch: None,
             extensions_root: kentos_extension_host::places::user_root(),
             workshop_root: kentos_extension_host::places::workshop_root(),
+            client: None,
         }
+    }
+
+    /// Offers this process's İşlemler the tools of the extensions installed in its extension folder that declare
+    /// `headless-python` (docs/adr/8057 §70): `cad.processing.tools` lists them and `.run` runs them in their own
+    /// processes, from the environments the desktop prepared; a desktop-only one is refused saying what its descriptor
+    /// must declare. The program's start asks; a server a test makes offers nothing unless it asks. What a run notes
+    /// goes to the extension's log and to standard error. Whether this process runs them.
+    #[cfg(feature = "mod-gis")]
+    pub fn offer_extension_tools(&self) -> bool {
+        // Standard error: the protocol has standard output. The extension's log keeps it too (docs/adr/8057 §73).
+        let note: kentos_extension_tools::headless::Hook =
+            std::sync::Arc::new(|note| eprintln!("{}", note.said()));
+        kentos_extension_tools::headless::offer(self.extensions_root.clone(), note)
+    }
+
+    /// Closes the offered tools' processes: the program ends.
+    pub fn close_extension_tools(&self) {
+        #[cfg(feature = "mod-gis")]
+        kentos_extension_tools::headless::close();
     }
 
     /// The server reading the extensions installed in `root` instead of the user's (a test's registry, a host's).
@@ -313,6 +355,7 @@ impl Server {
             .copied()
             .unwrap_or(LEGACY[0]);
         self.legacy = Some(version.to_owned());
+        self.client = client_of(params);
         success(
             id,
             json!({
@@ -400,6 +443,9 @@ impl Server {
         if !self.tools.iter().any(|t| t["name"] == name) {
             return Err(Fault::new(-32602, format!("Unknown tool: {name}")));
         }
+        // The offered extensions' tools as the registry is now (one installed, turned on or off meanwhile).
+        #[cfg(feature = "mod-gis")]
+        kentos_extension_tools::headless::refresh();
         Ok(tools::call(self, name, &arguments))
     }
 }
@@ -419,7 +465,10 @@ fn cache_hint(method: &str, params: &Value) -> Option<(u64, &'static str)> {
         "resources/list" => Some((0, "private")),
         "resources/read" => match params.get("uri").and_then(Value::as_str) {
             Some(
-                "kentos://catalog" | "kentos://catalog/categories" | crate::extensions::SDK_PACK,
+                "kentos://catalog"
+                | "kentos://catalog/categories"
+                | crate::extensions::SDK_PACK
+                | crate::extensions::SDK_TEXT,
             ) => Some((HOUR, "public")),
             _ => Some((0, "private")),
         },

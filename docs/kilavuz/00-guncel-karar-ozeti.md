@@ -2772,6 +2772,11 @@
     sürümü ve paket özetiyle sabitler (`ExtensionPin`); düğme hazır / bekliyor / kullanılamaz der, eklentisiz açılan
     model bir şey kurmaz, hangi sürümle yapıldığını söyler (sürüm farkı uyarıdır). Eklenti aracının yazdığı katmanın
     türetim kaydı eklentiyi ve ortamı taşır; dosyada CBS verisi sürüm 1 (belge şeması değişmez, ADR 8054 §10).
+  - İşlemler aracı başsız konaklarda da (16 Kasım, ADR 8057 §70): tanımı `capabilities.runtimes`'ta `headless-python`
+    bildiren araç MCP'de ve Python kitaplığında aynı kimlik, şema ve sonuçla, masaüstünün hazırladığı ortamda kendi
+    sürecinde çalışır; bildirmeyeni başsız konak listelemez, çalıştırmayı süreç başlamadan nedeniyle reddeder. Başsız
+    koşu eklentinin günlüğüne yazar (Ayrıntı onu da gösterir); araç çalışırken kullanıcıya sormaz, hiçbir konakta:
+    sorulacak olan parametresidir (§73).
   - Denetim kuralı (`@ext.audit`) katmanları veri olarak okur, yazamaz; bulgular alt panelin Eklenti denetimi
     sekmesinde: Göster nesneye götürür, Düzelt kuralın komutunu tek geri alma adımıyla yürütür (yalnız yazma izinli
     eklentide).

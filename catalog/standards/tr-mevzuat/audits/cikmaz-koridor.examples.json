@@ -1,0 +1,660 @@
+{
+  "format": "kentos.auditExamples",
+  "schemaVersion": 1,
+  "examples": [
+    {
+      "title": "18 m çıkmaz koridor, yağmurlama sistemi yok (Ek-5/B: en çok 15 m)",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "number": "Z01",
+            "name": "Ofis",
+            "kind": null,
+            "level": "zemin",
+            "unit": "of",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 60.0,
+            "axis": 66.0,
+            "narrow": 5.0,
+            "escape": {
+              "exit": {
+                "length": 10.0,
+                "oneWay": 10.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "number": null,
+            "name": "Koridor",
+            "kind": "corridor",
+            "level": "zemin",
+            "unit": "ortak",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 27.0,
+            "axis": 29.7,
+            "narrow": 1.5,
+            "escape": {
+              "exit": {
+                "length": 18.0,
+                "oneWay": 18.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": "of",
+            "number": "1",
+            "name": null,
+            "kind": "unit",
+            "nature": "Büro",
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 70.0,
+            "net": 60.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 70.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 70.0,
+                "net": 60.0
+              }
+            ]
+          },
+          {
+            "id": "ortak",
+            "number": "O",
+            "name": null,
+            "kind": "common",
+            "nature": null,
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 30.0,
+            "net": 27.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 30.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 30.0,
+                "net": 27.0
+              }
+            ]
+          }
+        ],
+        "doors": [],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 1,
+        "has": [
+          {
+            "severity": "error",
+            "message": "çıkmaz koridor 18.00 m"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Aynı koridor yağmurlama sistemiyle (sınır 20 m): bulgu yok",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "number": "Z01",
+            "name": "Ofis",
+            "kind": null,
+            "level": "zemin",
+            "unit": "of",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 60.0,
+            "axis": 66.0,
+            "narrow": 5.0,
+            "escape": {
+              "exit": {
+                "length": 10.0,
+                "oneWay": 10.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "number": null,
+            "name": "Koridor",
+            "kind": "corridor",
+            "level": "zemin",
+            "unit": "ortak",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 27.0,
+            "axis": 29.7,
+            "narrow": 1.5,
+            "escape": {
+              "exit": {
+                "length": 18.0,
+                "oneWay": 18.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": "of",
+            "number": "1",
+            "name": null,
+            "kind": "unit",
+            "nature": "Büro",
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 70.0,
+            "net": 60.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 70.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 70.0,
+                "net": 60.0
+              }
+            ]
+          },
+          {
+            "id": "ortak",
+            "number": "O",
+            "name": null,
+            "kind": "common",
+            "nature": null,
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 30.0,
+            "net": 27.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 30.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 30.0,
+                "net": 27.0
+              }
+            ]
+          }
+        ],
+        "doors": [],
+        "sprinklers": true
+      },
+      "expect": {
+        "count": 0
+      }
+    },
+    {
+      "title": "12 m çıkmaz koridor: bulgu yok",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "number": "Z01",
+            "name": "Ofis",
+            "kind": null,
+            "level": "zemin",
+            "unit": "of",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 60.0,
+            "axis": 66.0,
+            "narrow": 5.0,
+            "escape": {
+              "exit": {
+                "length": 10.0,
+                "oneWay": 10.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "number": null,
+            "name": "Koridor",
+            "kind": "corridor",
+            "level": "zemin",
+            "unit": "ortak",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 27.0,
+            "axis": 29.7,
+            "narrow": 1.5,
+            "escape": {
+              "exit": {
+                "length": 12.0,
+                "oneWay": 12.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": "of",
+            "number": "1",
+            "name": null,
+            "kind": "unit",
+            "nature": "Büro",
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 70.0,
+            "net": 60.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 70.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 70.0,
+                "net": 60.0
+              }
+            ]
+          },
+          {
+            "id": "ortak",
+            "number": "O",
+            "name": null,
+            "kind": "common",
+            "nature": null,
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 30.0,
+            "net": 27.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 30.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 30.0,
+                "net": 27.0
+              }
+            ]
+          }
+        ],
+        "doors": [],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 0
+      }
+    },
+    {
+      "title": "12 m çıkmaz koridor, tüp bayii (yüksek tehlikeli yer, BYKHY 17), yağmurlama sistemi yok (en çok 10 m)",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "number": "Z01",
+            "name": "Satış alanı",
+            "kind": null,
+            "level": "zemin",
+            "unit": "of",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 60.0,
+            "axis": 66.0,
+            "narrow": 5.0,
+            "escape": {
+              "exit": {
+                "length": 10.0,
+                "oneWay": 10.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "number": null,
+            "name": "Koridor",
+            "kind": "corridor",
+            "level": "zemin",
+            "unit": "ortak",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 27.0,
+            "axis": 29.7,
+            "narrow": 1.5,
+            "escape": {
+              "exit": {
+                "length": 12.0,
+                "oneWay": 12.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": "of",
+            "number": "1",
+            "name": null,
+            "kind": "unit",
+            "nature": "Tüp bayii",
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 70.0,
+            "net": 60.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 70.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 70.0,
+                "net": 60.0
+              }
+            ],
+            "occupancy": "highHazard"
+          },
+          {
+            "id": "ortak",
+            "number": "O",
+            "name": null,
+            "kind": "common",
+            "nature": null,
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 30.0,
+            "net": 27.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 30.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 30.0,
+                "net": 27.0
+              }
+            ]
+          }
+        ],
+        "doors": [],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 1,
+        "has": [
+          {
+            "severity": "error",
+            "message": "çıkmaz koridor 12.00 m (koridorun en uzak noktasından bir çıkışa ya da iki yöne ayrıldığı noktaya); Ek-5/B'de çıkmaz koridor en çok 10.00 m, yağmurlama sistemiyle 20.00 m (yüksek tehlikeli yerler satırı, binanın en ağır sınıfı)"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Aynı koridor yağmurlama sistemiyle (yüksek tehlikeli yerde de 20 m): bulgu yok",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "number": "Z01",
+            "name": "Satış alanı",
+            "kind": null,
+            "level": "zemin",
+            "unit": "of",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 60.0,
+            "axis": 66.0,
+            "narrow": 5.0,
+            "escape": {
+              "exit": {
+                "length": 10.0,
+                "oneWay": 10.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "number": null,
+            "name": "Koridor",
+            "kind": "corridor",
+            "level": "zemin",
+            "unit": "ortak",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 27.0,
+            "axis": 29.7,
+            "narrow": 1.5,
+            "escape": {
+              "exit": {
+                "length": 12.0,
+                "oneWay": 12.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": "of",
+            "number": "1",
+            "name": null,
+            "kind": "unit",
+            "nature": "Tüp bayii",
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 70.0,
+            "net": 60.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 70.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 70.0,
+                "net": 60.0
+              }
+            ],
+            "occupancy": "highHazard"
+          },
+          {
+            "id": "ortak",
+            "number": "O",
+            "name": null,
+            "kind": "common",
+            "nature": null,
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 30.0,
+            "net": 27.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 30.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 30.0,
+                "net": 27.0
+              }
+            ]
+          }
+        ],
+        "doors": [],
+        "sprinklers": true
+      },
+      "expect": {
+        "count": 0
+      }
+    }
+  ]
+}

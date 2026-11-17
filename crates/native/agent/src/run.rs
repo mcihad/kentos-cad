@@ -28,6 +28,16 @@ use crate::wire::{self, Call, Live, Stop};
 /// The tool rounds a turn may take; a model still calling tools after them is stopped and told why.
 pub const MAX_TOOL_ROUNDS: usize = 25;
 
+/// The tokens spent before a turn starts, in its conversation and on the day, that it counts on from (docs/adr/8056
+/// §9): a model that calls tools again after its answer crossed one of its agent's limits is stopped there, its calls
+/// told they did not run, as after [`MAX_TOOL_ROUNDS`]. An answer that ends the turn is never cut: it is whole and
+/// already paid for; the next turn is refused before it starts.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Spent {
+    pub conversation: u64,
+    pub today: u64,
+}
+
 /// What a turn tells the desktop, in order.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Event {
@@ -118,6 +128,26 @@ pub fn start_turn(
     tools: Vec<ToolSpec>,
     user_text: String,
 ) -> Turn {
+    start_turn_counting(
+        profile,
+        key,
+        conversation,
+        tools,
+        user_text,
+        Spent::default(),
+    )
+}
+
+/// [`start_turn`] counting its tokens on from what its conversation and the day already `spent`, under the agent's
+/// limits.
+pub fn start_turn_counting(
+    profile: &AgentProfile,
+    key: Option<String>,
+    conversation: Conversation,
+    tools: Vec<ToolSpec>,
+    user_text: String,
+    spent: Spent,
+) -> Turn {
     let (events_tx, events) = mpsc::unbounded_channel();
     let (answers_tx, answers) = mpsc::unbounded_channel();
     let (stop_tx, stop) = watch::channel(false);
@@ -130,6 +160,7 @@ pub fn start_turn(
         answers,
         stop,
         progress: Arc::clone(&progress),
+        spent,
     };
     match runtime::handle() {
         Ok(rt) => {
@@ -160,6 +191,7 @@ struct Job {
     answers: mpsc::UnboundedReceiver<Answer>,
     stop: watch::Receiver<bool>,
     progress: Arc<Mutex<Conversation>>,
+    spent: Spent,
 }
 
 /// What a call not answered when the turn stopped is told.
@@ -236,6 +268,9 @@ impl Job {
                     input_tokens,
                     output_tokens,
                 });
+                let tokens = input_tokens.saturating_add(output_tokens);
+                self.spent.conversation = self.spent.conversation.saturating_add(tokens);
+                self.spent.today = self.spent.today.saturating_add(tokens);
             }
             if reply.stop == Stop::ContextFull {
                 return Err(Failure::context_full());
@@ -247,16 +282,24 @@ impl Job {
                 let _ = self.events.send(Event::Finished { conversation });
                 return Ok(());
             }
-            if round == MAX_TOOL_ROUNDS {
-                let refused = format!(
-                    "Araç turu sınırına ({MAX_TOOL_ROUNDS}) ulaşıldı; araç çalıştırılmadı."
+            if let Some(why) =
+                crate::usage::over_budget(&self.profile, self.spent.conversation, self.spent.today)
+            {
+                self.refuse(
+                    &mut conversation,
+                    &calls,
+                    "Kullanıcının token sınırına ulaşıldı; araç çalıştırılmadı.",
                 );
-                let results = calls
-                    .iter()
-                    .map(|c| ToolResult::from_answer(c, Err(refused.clone())))
-                    .collect();
-                conversation.messages.push(Message::tool_results(results));
-                self.keep(&conversation);
+                return Err(Failure::budget(&why));
+            }
+            if round == MAX_TOOL_ROUNDS {
+                self.refuse(
+                    &mut conversation,
+                    &calls,
+                    &format!(
+                        "Araç turu sınırına ({MAX_TOOL_ROUNDS}) ulaşıldı; araç çalıştırılmadı."
+                    ),
+                );
                 return Err(Failure::bad_request(format!(
                     "Ajan {MAX_TOOL_ROUNDS} araç turunda işi bitiremedi ve durduruldu. İsteği daha küçük adımlara \
                      bölün ya da “devam et” yazın."
@@ -277,6 +320,16 @@ impl Job {
             }
             round += 1;
         }
+    }
+
+    /// The calls of the model's last answer told they did not run, and why: no call stays without its result.
+    fn refuse(&self, conversation: &mut Conversation, calls: &[ToolCall], why: &str) {
+        let results = calls
+            .iter()
+            .map(|c| ToolResult::from_answer(c, Err(why.to_owned())))
+            .collect();
+        conversation.messages.push(Message::tool_results(results));
+        self.keep(conversation);
     }
 
     /// Waits for every call's answer, in any order; the turn stopped, the calls not answered are told they did not

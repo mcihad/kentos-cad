@@ -11,8 +11,21 @@ use kentos_launch::Module;
 use super::ribbon::Action;
 use super::*;
 
+mod add_to;
+mod audit_picker;
+mod bom;
+mod builds;
+mod catalog;
 mod demo;
+mod drawing_change;
+mod grants;
+mod l10n;
+mod late;
+mod pins;
 mod python;
+mod report;
+mod retired;
+mod submit;
 
 fn temp(name: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!("kentos-eklentiler-{name}-{}", std::process::id()));
@@ -183,6 +196,10 @@ fn an_updates_new_capability_is_shown_and_left_out_unless_granted() {
         pending.review.installed.as_ref().map(|(v, _)| v.as_str()),
         Some("1.0.0")
     );
+    assert!(
+        !pending.granted.contains(&Capability::UiContextMenu),
+        "an update's new capability starts ungranted (docs/adr/8057 §121)"
+    );
     let _ = gis
         .extension_review_window()
         .expect("the review over the manager");
@@ -211,7 +228,18 @@ fn an_updates_new_capability_is_shown_and_left_out_unless_granted() {
             "id": "ui.contextMenu", "scope": "plugin-owned", "reason": "Katmanın sağ tık menüsüne öznitelik tablosunu ekler."
         }));
     });
-    install(&mut gis, "kent-rehberi-1.1.0.kek", again);
+    let _ = gis.extensions_event(Event::Picked(Some((
+        "kent-rehberi-1.1.0.kek".into(),
+        again,
+    ))));
+    let pending = gis.extensions.review.as_ref().unwrap();
+    assert!(
+        !pending.granted.contains(&Capability::UiContextMenu),
+        "left out before: the person grants it, not the package (docs/adr/8057 §121)"
+    );
+    assert_eq!(pending.withheld, [Capability::UiContextMenu]);
+    let _ = gis.extensions_event(Event::Grant(Capability::UiContextMenu, true));
+    let _ = gis.extensions_event(Event::Install);
     assert_eq!(gis.extensions.menus.len(), 1);
     let item = &gis.extensions.menus[0];
     assert_eq!(item.target, kentos_extensions::manifest::MenuTarget::Layer);
@@ -235,6 +263,111 @@ fn an_updates_new_capability_is_shown_and_left_out_unless_granted() {
             .unwrap()
             .version,
         "1.0.0"
+    );
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+/// The report card's signals filter the catalog (docs/adr/8057 §88): an agent's package and a person's, one that does
+/// not run on this KentOS, none offline (both fixtures ask for the network).
+#[test]
+fn the_report_cards_signals_filter_the_catalog() {
+    let root = temp("sinyal");
+    let folder = temp("sinyal-katalog");
+    let by_agent = package("ornek-altlik", |m| {
+        m["generated"] = serde_json::json!({ "agent": "KentOS Asistan", "kentos": "0.1.0" });
+    });
+    let newer_sdk = package("ornek-kent", |m| {
+        m["compatibility"]["sdkProtocol"] = serde_json::json!({ "min": 99, "max": 99 });
+    });
+    let list = vec![
+        ("altlik.kek".to_owned(), by_agent),
+        ("kent.kek".to_owned(), newer_sdk),
+    ];
+    for (file, bytes) in &list {
+        std::fs::write(folder.join(file), bytes).unwrap();
+    }
+    let index = kentos_extensions::catalog::index("Sinyaller", &list, &Limits::default()).unwrap();
+    std::fs::write(folder.join("index.json"), index.to_json()).unwrap();
+    let mut gis = app(&root, Some(Module::Gis));
+    gis.open_extensions();
+    let _ = gis.extensions_event(Event::PickedCatalog(Some(folder.clone())));
+    let shown = |app: &mut App, signal: super::browse::Signal| -> Vec<String> {
+        let i = super::browse::SIGNALS
+            .iter()
+            .position(|(s, _, _)| *s == signal)
+            .unwrap();
+        let _ = app.extensions_event(Event::SignalFilter(i));
+        let _ = app.extensions_view();
+        app.extensions
+            .entries_of(Part::Available)
+            .iter()
+            .map(|e| e.id.clone())
+            .collect()
+    };
+    use super::browse::Signal;
+    assert_eq!(shown(&mut gis, Signal::All).len(), 2);
+    assert_eq!(shown(&mut gis, Signal::ByAgent), ["tr.ornek.altlik"]);
+    assert_eq!(shown(&mut gis, Signal::ByPerson), ["tr.ornek.kent-rehberi"]);
+    assert_eq!(shown(&mut gis, Signal::Runs), ["tr.ornek.altlik"]);
+    assert!(shown(&mut gis, Signal::Offline).is_empty());
+    assert_eq!(shown(&mut gis, Signal::NoPackages).len(), 2);
+    let _ = std::fs::remove_dir_all(&root);
+    let _ = std::fs::remove_dir_all(&folder);
+}
+
+/// A package whose id, name and icon read as an installed extension's (docs/adr/8059 §14): the review says so and Kur
+/// waits for the person's answer; answered, it installs.
+#[test]
+fn an_imitation_installs_only_when_the_person_says_so() {
+    const COPY: &str = "tr.ornek.kent-rehberl";
+    let root = temp("taklit");
+    let mut gis = app(&root, Some(Module::Gis));
+    install(&mut gis, "kent-rehberi.kek", package("ornek-kent", |_| {}));
+    let installed = |app: &App, id: &str| {
+        app.extensions
+            .registry
+            .as_ref()
+            .and_then(|r| r.manifest(id))
+            .is_some()
+    };
+    let name = gis
+        .extensions
+        .registry
+        .as_ref()
+        .unwrap()
+        .manifest(KENT)
+        .unwrap()
+        .name
+        .clone();
+    let copy = package("ornek-kent", |m| {
+        m["id"] = serde_json::json!(COPY);
+        m["name"] = serde_json::json!(name.to_uppercase());
+    });
+    let _ = gis.extensions_event(Event::Picked(Some(("kent-rehberi.kek".into(), copy))));
+    let pending = gis.extensions.review.as_ref().expect("reviewed");
+    let said: Vec<&str> = pending
+        .review
+        .resemblances
+        .iter()
+        .map(|r| r.code())
+        .collect();
+    assert_eq!(
+        said,
+        ["imitates_name", "imitates_id", "imitates_icon"],
+        "its icon too"
+    );
+    let _ = gis.extension_review_window().expect("drawn");
+    let _ = gis.extensions_event(Event::Install);
+    assert!(
+        gis.extensions.review.is_some() && !installed(&gis, COPY),
+        "Kur waits for the answer"
+    );
+    let _ = gis.extensions_event(Event::AcceptImitation(true));
+    let _ = gis.extensions_event(Event::Install);
+    assert!(
+        gis.extensions.review.is_none() && installed(&gis, COPY),
+        "{:?}",
+        gis.extensions.note
     );
     let _ = std::fs::remove_dir_all(&root);
 }

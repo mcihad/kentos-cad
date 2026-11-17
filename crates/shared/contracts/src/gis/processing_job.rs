@@ -270,6 +270,9 @@ pub enum RunRequest {
     Import(ImportRun),
     /// The atlas of a sheet, written to the folder as `atlas.pdf`.
     Atlas(ProjectAtlasInput),
+    /// An extension's audit rule on the drawing, from the package beside the request (`extension.kek`; docs/adr/8057
+    /// §42): its report in the answer's `details`.
+    Audit(crate::audit_job::AuditRun),
 }
 
 /// An import the process runs.

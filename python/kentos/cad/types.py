@@ -77847,6 +77847,12 @@ class ProcessingRun(_Model):
             folder (then in the project's search paths), a result written beside it. The host gives it.
         environment: The raster tools' analysis environment (docs/adr/0643 §1): every raster tool of the run (a model's steps too)
             takes it. A tool's own area (Kapsam) comes before the environment's.
+        model: A model written for this run, as the library keeps one (`id`, `label`, `inputs`, `steps` with each step's
+            `tool` and `values` wired by `{"kind": "input" | "output" | "value", …}`, `outputs`): run as a saved model is,
+            one plan and one undo step, without being saved (docs/adr/8057 §108, PY-AI-08: an agent chains built-in and
+            extension tools from a request in words). `parameters` are its inputs; `tool` is not read (`"model:"` by
+            custom). Refused when it does not read (`invalid_parameters`, path `model`), names a tool this host has not
+            (`unknown_tool`, path `model.steps[i].tool`) or its wiring does not hold (`invalid_parameters`).
         selection: The objects the run takes as chosen (persistent ids, in order): a features input's `selection` scope.
         sink: Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage.
         view: The box taken as on screen (minimum east, north, maximum east, north): a features input's `visible` scope. Unit: length.
@@ -77854,6 +77860,7 @@ class ProcessingRun(_Model):
     tool: str
     drawing: str | None | Unset = UNSET
     environment: RasterEnvironment | None | Unset = UNSET
+    model: Any | Unset = UNSET
     parameters: dict[str, Any] | None | Unset = UNSET
     selection: list[str] | Unset = UNSET
     sink: RunSink | None | Unset = UNSET
@@ -77866,6 +77873,8 @@ class ProcessingRun(_Model):
             out["drawing"] = self.drawing
         if self.environment is not UNSET:
             out["environment"] = None if self.environment is None else self.environment.to_json()
+        if self.model is not UNSET:
+            out["model"] = self.model
         if self.parameters is not UNSET:
             out["parameters"] = None if self.parameters is None else dict(self.parameters)
         if self.selection is not UNSET:
@@ -77882,6 +77891,7 @@ class ProcessingRun(_Model):
             tool=data["tool"],
             drawing=data.get("drawing", UNSET),
             environment=UNSET if "environment" not in data else None if data["environment"] is None else RasterEnvironment.from_json(data["environment"]),
+            model=data.get("model", UNSET),
             parameters=UNSET if "parameters" not in data else None if data["parameters"] is None else dict(data["parameters"]),
             selection=list(data["selection"]) if "selection" in data else UNSET,
             sink=UNSET if "sink" not in data else None if data["sink"] is None else RunSink.from_json(data["sink"]),
@@ -77898,6 +77908,7 @@ class ProcessingTool(_Model):
         extension: An extension's tool's extension as installed (docs/adr/8057 §13): which code runs it.
         model_description: What an extension's tool's descriptor tells an AI model about when and how to use it (docs/adr/8057 §14),
             beside `description`, which is the user's.
+        outputs: What it gives: a model's later step reads an earlier step's output by its name (docs/adr/8057 §108).
     """
     id: str
     label: str
@@ -77907,6 +77918,7 @@ class ProcessingTool(_Model):
     aliases: list[str] = field(default_factory=list)
     extension: ExtensionPin | None | Unset = UNSET
     model_description: str | None | Unset = UNSET
+    outputs: list[ProcessingToolOutput] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -77920,6 +77932,8 @@ class ProcessingTool(_Model):
             out["extension"] = None if self.extension is None else self.extension.to_json()
         if self.model_description is not UNSET:
             out["modelDescription"] = self.model_description
+        if self.outputs is not UNSET:
+            out["outputs"] = [e0.to_json() for e0 in self.outputs]
         return out
 
     @classmethod
@@ -77933,6 +77947,34 @@ class ProcessingTool(_Model):
             aliases=list(data["aliases"]) if "aliases" in data else list(),
             extension=UNSET if "extension" not in data else None if data["extension"] is None else ExtensionPin.from_json(data["extension"]),
             model_description=data.get("modelDescription", UNSET),
+            outputs=[ProcessingToolOutput.from_json(e0) for e0 in data["outputs"]] if "outputs" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProcessingToolOutput(_Model):
+    """A tool's output, as a model's step is wired to it: `{"kind": "output", "step": …, "output": name}`.
+    Attributes:
+        kind: What it holds: `features` (the objects the step wrote, a features input of a later step), `number`, `string`
+            or `table`.
+    """
+    name: str
+    label: str
+    kind: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["label"] = self.label
+        out["kind"] = self.kind
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProcessingToolOutput:
+        return cls(
+            name=data["name"],
+            label=data["label"],
+            kind=data["kind"],
         )
 
 
@@ -145617,6 +145659,7 @@ __all__ = [
     "ProcessingRecord",
     "ProcessingRun",
     "ProcessingTool",
+    "ProcessingToolOutput",
     "ProcessingTools",
     "ProcessingToolsListed",
     "ProfileAddress",

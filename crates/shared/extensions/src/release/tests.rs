@@ -27,6 +27,7 @@ fn package(name: &str, version: &str) -> (String, LockedPackage) {
         version: version.to_owned(),
         source: "registry https://pypi.org/simple".to_owned(),
         files: sha256_hex(format!("{name}-{version}").as_bytes()),
+        uploaded: None,
     };
     (name.to_owned(), package)
 }
@@ -1443,5 +1444,44 @@ fn facts_come_from_the_package_and_a_version_bump_is_not_code() {
     assert_eq!(
         ReleaseFacts::of(&open(&bytes, &limits)).unwrap_err().code,
         "package_invalid"
+    );
+}
+
+/// An instant read as the lock writes it: the newest of a package's files, fractions of any length (docs/adr/8057 §85).
+#[test]
+fn an_upload_time_is_read_as_an_instant() {
+    assert_eq!(super::seconds_of("1970-01-01T00:00:00Z"), Some(0));
+    assert_eq!(
+        super::seconds_of("2026-11-16T00:00:00Z"),
+        Some(1_794_787_200)
+    );
+    assert_eq!(
+        super::seconds_of("2000-03-01T12:30:15.5Z"),
+        Some(951_913_815)
+    );
+    assert_eq!(super::seconds_of("2026-11-16"), None);
+    assert_eq!(super::seconds_of("2026-13-01T00:00:00Z"), None);
+    let lock = "version = 1\nrevision = 3\nrequires-python = \">=3.12\"\n\n[[package]]\nname = \"proje\"\nversion = \"0.1.0\"\n\
+                source = { virtual = \".\" }\ndependencies = [{ name = \"ornek\" }]\n\n[[package]]\nname = \"ornek\"\n\
+                version = \"1.0\"\nsource = { registry = \"https://pypi.org/simple\" }\nsdist = { url = \"https://x/o.tar.gz\", \
+                hash = \"sha256:aa\", size = 1, upload-time = \"2026-10-10T20:02:43.45Z\" }\nwheels = [\n    { url = \
+                \"https://x/o.whl\", hash = \"sha256:bb\", size = 1, upload-time = \"2026-10-10T20:02:43.4Z\" },\n    { url = \
+                \"https://x/o2.whl\", hash = \"sha256:cc\", size = 1, upload-time = \"2026-10-10T20:05:31.422Z\" },\n]\n";
+    let project = crate::manifest::PythonProject {
+        project_file: "pyproject.toml".into(),
+        lock_file: "uv.lock".into(),
+        optional_features: Default::default(),
+    };
+    let files = std::collections::BTreeMap::from([
+        (
+            "pyproject.toml".to_owned(),
+            b"[project]\nname = \"proje\"\nversion = \"0.1.0\"\n".to_vec(),
+        ),
+        ("uv.lock".to_owned(), lock.as_bytes().to_vec()),
+    ]);
+    let packages = super::locked_packages(&project, &files).expect("read");
+    assert_eq!(
+        packages["ornek"].uploaded.as_deref(),
+        Some("2026-10-10T20:05:31.422Z")
     );
 }

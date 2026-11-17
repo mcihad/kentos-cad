@@ -187,6 +187,7 @@ deposu), `http/extension_catalog.rs` (uçlar), `http/extension_catalog/views.rs`
 | `POST …/releases/{eklenti}/{sürüm}/moves` | bir hareket: `{"action": "approve", …}`; adlar `Action`'ınkiler |
 | `GET …/releases/{eklenti}/{sürüm}/install` | kurulabilecek olan: yayımlanmış sürümün onaylanan içeriği |
 | `GET …/releases/{eklenti}/{sürüm}/package` | onaylanan baytlar; çıkmadan önce onaya karşı yeniden denetlenir |
+| `GET …/releases/{eklenti}/{sürüm}/sbom` | aynı baytlardan SBOM, Python bağımlılıklarının listesi (CycloneDX 1.6; ADR 8057 §91); Python'suz pakette `sbom_empty` (422) |
 
 `{katalog}`: `public`, `tenant:{kısa ad}` ya da `personal:{hesap}`. Kurum kısa adı `public` ya da `personal` olabildiği
 ve API'de "catalog" proje kataloğunun adı olduğu için yol `/v1/extension-catalogs/…`. Paket baytlarını taşıyan uçlar,
@@ -330,6 +331,208 @@ sürümlerinden üretir.
 **Kalan.** Listenin imzası ve masaüstünün imzalı listeyi eşitlemesi (§9.3). D15'in kalanı: kamuya açık kaldırma kaydı,
 "şüpheli" ile "kesin" ayrımının biçimde gösterilmesi (v1 tek tür girdi bilir; ayrım bugün gerekçenin sözünde) ve itiraz
 yolu. Kalıcı depo (§11) geldiğinde liste aynı üreticiden çıkar.
+
+## §13 Dördüncü dilim: kalıcı depo ve çalışan sunucuda katalog
+
+`ReleaseStore`'un PostgreSQL ve nesne deposu uygulaması (`extension_catalog/postgres.rs` ve `postgres/` altında
+`moves`, `packages`, `access`), göç `0042_extension_catalog.sql`, yönetici komutları (`extension_catalog/grants.rs`,
+`cli/extension_catalog.rs`) ve sunucunun bağlantısı (`main.rs`). Hareket yapma `extension_catalog/acting.rs`'e taşındı.
+Katalog yalnız `KENTOS_EXTENSION_CATALOG=on` ile açılır; varsayılan `off`, `on|off` dışındaki değer hatadır. Açıkken
+veritabanı ister, yoksa sunucu başlamaz.
+
+- **Tablolar (§11'deki gibi).** `extension_release` (yer, yayımcı, yazar, durum, içerik sütunları, `record jsonb`,
+  `moves`, zamanlar), `extension_release_move` (yalnız eklenir), `extension_package`, `extension_catalog_grant`,
+  `extension_publisher`, `extension_publisher_member`. Sütunlar kaydın kendisidir: bir `check` kısıtı kimliği,
+  durumu, içerik özetlerini, yetenekleri ve hareket sayısını `record` ile karşılaştırır; kaydından başka bir şey
+  söyleyen satır yazılamaz.
+- **Veritabanının kendi bekçisi.** Tetikleyici (`extension_release_kept`) gönderilmiş içeriği (`content_frozen`),
+  sürümün kimliğini (yer, eklenti, sürüm, yayımcı, yazar) ve kayıttaki hareketleri korur: hareket azalmaz, eski
+  hareket değişmez. Uygulama rolünün `extension_release_move` ve `extension_package` üstünde yalnız SELECT ve INSERT'ü
+  vardır, `extension_release` üstünde DELETE'i yoktur; yetkileri, yayımcıları ve güvenleri yalnız okur.
+- **Yazma.** Yeni sürüm `insert … on conflict do nothing` (satır yoksa `Exists`); hareket `update … where moves =
+  <okunan>` (satır değişmezse `Changed`). Yeni hareket satırları aynı işlemde, tablodaki eski hareketlerin kayıtla aynı
+  olduğu denetlendikten sonra eklenir.
+- **Okuma.** Kayıt `Release::read` ile okunur ve hareket tablosu kaydın hareketleriyle satır satır aynı olmalıdır.
+  Tutmayan kayıt depo hatasıdır (500, ayrıntı günlükte); sürüm hiç yüklenmez.
+- **Kapsam ve satır düzeyi güvenlik.** Her çağrı, sorulan kataloğun kapsamında bir işlemdir: kurum kataloğu kurumun
+  kimliğiyle (`app.tenant_id`), kişisel katalog hesabın kimliğiyle (`app.user_id`), genel katalog kapsamsız.
+  Politika projelerdeki gibidir: bir kurumun sürümleri ve hareketleri yalnız onun kapsamında görünür ve yazılır. Kimin
+  hangi sürümü gördüğü yine akışın kararıdır (`visible_to`); satır düzeyi güvenlik, kataloğu süzmeyi unutan bir
+  sorguyu başka kurumun satırlarından korur.
+- **Paketler.** Baytlar nesne deposunda içerik özetinin anahtarıyla bir kez yazılır: özet üstünde kilit, kendi
+  anahtarına yazma, diske indirme, yerine taşıma, sonra satır. Var olan pakete ikinci yazma bir şey değiştirmez.
+  Okurken boyut satırla karşılaştırılır; içerik yine akışın onay denetiminden geçer (§10).
+- **Yedek.** Paket nesneleri yedeğin adlandırdığı nesnelerdendir (`backup::named`): dökümle birlikte alınır, geri
+  yüklemede denetlenir.
+
+**§11'den sapmalar (kanıt neyi söylediyse).**
+
+1. Güven katalog başınadır: `extension_publisher` üstünde "güvenilir mi" sütunu yerine `extension_catalog_trust`
+   tablosu. Depo "bu katalog bu yayımcıya güveniyor mu" diye sorar; tek bir sütun, bir kurumun güvendiği yayımcıyı
+   genel katalogda da güvenilir yapardı.
+2. Nesne anahtarı `extension-packages/sha256-<hex>`: nesne deposu anahtar parçasında yalnız harf, rakam ve tire kabul
+   eder, `sha256:` içindeki iki nokta kabul edilmez. Yazılırken `extension-packages/staging/<kimlik>`.
+3. `extension_package` baytların SHA-256'sını da tutar: yedek nesneleri baytlarının özetiyle denetler, içerik özeti
+   ise dosyaların yolunun, boyutunun ve özetinin özetidir.
+4. Kurum kataloğunun `catalog_ref`'i kısa ad değil kurumun kimliğidir: kapsam kurumu kimliğiyle taşır, politika onu
+   projelerdeki gibi `kentos.current_tenant()` ile karşılaştırır. Kısa addan kimliğe `kentos.extension_catalog_tenant`
+   (security definer) çevirir: kurum satırı yalnız üyelerine görünür, tarayıcı ve denetim işçisi üye değildir.
+5. Kişisel katalogda yetki yazılmaz (`catalog_kind` `every`, `public` ya da `tenant`): sahibi rollerini zaten tutar.
+6. Komutlar `grant|revoke|trust` ile bitmedi, `publisher` (yayımcı açma ve üyelik) ve `list` de var. Genel ve kurum
+   kataloğuna yükleyen yayımcının üyesi olmalıdır (§10, `publisher_missing`); üyelik veremeyen bir araçla o kataloglar
+   kullanılamazdı.
+7. Var olmayan kurumun kataloğu kimse için yoktur (bellekteki depoda her kısa adın kataloğu vardı); hizmet hesabı da
+   orada üye sayılmaz. Kurum kataloğunun üyesi, etkin kurumda etkin üyeliği olan hesaptır (koltuk gerekmez).
+
+**Çalışan sunucuda ne açık.** §9.1 "taze kimlik doğrulama gelmeden katalog çalışan sunucuda açılmaz" diyordu;
+gerekçesi (§10) pencere başlığının taklit edilebilmesi, yani bir kişinin kararının bir programca verilebilmesiydi.
+Gerekçe kararlarla ilgili; bu yüzden kararlar kapalı, geri kalanı açık:
+
+- **Kapalı:** onay, değişiklik isteme, engel kaldırma ve askıdan alma (`Action::needs_person`). Sunucunun
+  oturumlarından gelen hesapta `Account::fresh_sign_in` hep `false`; pencereden gelen karar, akış izin verseydi bile
+  `fresh_sign_in_required` (403, `retryable: false`) alır ve hiçbir şey yazılmaz. Akışın kendi reddi önce gelir:
+  program `decision_by_program`, yetkisiz `permission_missing`, görünmeyen sürüm 404. Gerçek oturumla sınandı.
+- **Açık:** yükleme ve içerik yenileme (taslak), liste ve okuma, incelemeye gönderme, tarama raporu, incelemeye alma,
+  askıya alma (karar değil, güvenlik hareketi), geri çekme, arşivleme, yayımlama, kurulum bileti, onaylı paket, geri
+  çekme listesi. `project.audit` işleri aynı katalogdan okur (`CatalogAudits`, §66'nın eşlemesiyle).
+- **Sonuç:** yeni bir sunucuda onaylanan, dolayısıyla yayımlanan sürüm olmaz. Kurulum bileti, onaylı paket ve denetim
+  işi taze kimlik doğrulama gelene dek bir şey bulamaz (denetim işi "yayımlanmış bir sürümü yok" der); yayımcı yükler
+  ve gönderir, tarayıcı raporlar, inceleyici incelemeye alır.
+- **Sınır:** her oturum açmış hesap kendi kataloğuna paket yükleyebilir (en çok 128 MB) ve yüklenen her paket kalır;
+  kota yok. Kataloğu açan yönetici bunu bilmeli (Kalan).
+
+**Yayımlamada ortam (§66'nın çağrı yeri).** Bir hareket sürümü başka bir durumdan yayımlanmışa geçirince (yayımlama ya
+da askıdan alma) katalog sürümü ve onaylı baytlarını `OnPublish`'e verir. Sunucununki (`PrepareEnvironments`) ortamı
+ayrı bir iş parçacığında `prepare_release` ile hazırlar, sonucu günlüğe yazar ve isteği bekletmez. Denetimi ya da
+Python projesi olmayan sürümde hazırlanacak bir şey yoktur; ağ isteyen denetimin reddi günlüğe yazılır. Çalışan
+sunucuda bu yola kararlar açılınca girilir; testler ve uçtan uca sınama onu kullanır.
+
+**Ölçüm.**
+
+- `KENTOS_TEST_DB=required cargo test -p kentos-api --bin kentosd extension_catalog`: 48 test geçti (47'si katalogun,
+  1'i ayarın). 18 durum iki depoda birden koşar (`on_both_stores!`: bellekte ve kendi test veritabanında, kopya yok);
+  9'u yalnız kalıcı deponun: içeriği, kimliği ve hareketleri veritabanı korur; uygulama rolü hareket ve paketi
+  değiştiremez, silemez; eski kayıt üstüne yazma `Changed`, ikinci ilk yazma `Exists`; kurumlar arası satır düzeyi
+  güvenlik ve aynı 404; paket bir kez yazılır; hareketleri tutmayan ya da adım atlamış kayıt yüklenmez; yönetici
+  yetkileri; çalışan sunucuda oturumla karar reddi; süre. 2'si depodan bağımsız.
+- Depo süreleri (yerel PostgreSQL 18.4, hata ayıklama derlemesi; 10 sürüm × 12 hareket): yazma ortanca 3,53 ms, %95
+  4,73 ms; okuma ortanca 0,41 ms, %95 0,75 ms; en çok 10 sürümlü katalog listesi ortanca 1,43 ms, %95 2,22 ms.
+- Uçtan uca (`cargo test -p kentos-api --test job_run_db audit_catalog`): kurum kataloğunda yükleme, 7 kapı,
+  gönderme, inceleme, onay, yayımlama; yayımlamadan ortamın hazır olmasına 4,67 sn (çevrimdışı, tekerlek klasöründen);
+  `project.audit` işi gerçek `kentos-jobrun` ile 2,04 sn, kural tekerleğin modülünü içe aktarıp 5 bulgu verdi.
+- `cargo test -p kentos-application --test backup`: paketli yedek alınır, geri yüklenir, denetlenir (5 nesne).
+- Komutlar geçici bir test veritabanında elle sınandı: yetki, yayımcı ve üyelik, güven, liste, geri alma ve hatalı
+  girdilerin Türkçe sözleri; katalog açık ama veritabanı yokken sunucu başlamaz.
+
+**Bu dilimde verilen kararlar.**
+
+1. Katalog `KENTOS_EXTENSION_CATALOG=on` ile açılır, varsayılan kapalı.
+2. Çalışan sunucuda kişinin kararları taze kimlik doğrulaması gelene dek kapalı (`fresh_sign_in_required`, 403),
+   gerisi açık; ret, akışın kendi reddinden sonra gelir.
+3. Kapsam çağrının sorduğu katalogdan kurulur: depo trait'i çağıranı bilmez, görünürlük akışındır.
+4. Güven katalog başına, ayrı tabloda.
+5. Paket anahtarı `sha256-<hex>`; baytların SHA-256'sı ayrıca tutulur; paketler yedektedir.
+6. Yönetim komutlarına `publisher` ve `list` eklendi.
+7. Sürüm satırı silinmez: uygulama rolünün DELETE izni yok.
+8. Yayımlanan (ya da askıdan alınıp yeniden yayımlanan) sürümün ortamı yayımlamada hazırlanır; hazırlık isteği
+   bekletmez.
+
+**Kalan.** Taze kimlik doğrulama (kurumun kimlik sağlayıcısında yeniden giriş ya da cihazda doğrulama) ve kararların
+açılması; yetki ve yayımcı yönetim uçları (bugün yalnız komut); paket kotası, hiçbir sürümün göstermediği paketlerin ve
+yarım kalmış `staging` nesnelerinin temizliği; S3 uyumlu nesne deposu; tarayıcının hizmet kimliği; liste ve aramanın
+veritabanında yapılması (bugün kataloğun bütün kayıtları okunup süzülür); geri çekilen sürümün ortamının kaldırılması.
+
+## §14 Taklit denetimi: ad, kimlik ve simge (D13)
+
+**16 Kasım.** Kod: paylaşılan `resemblance.rs` (yeni: `skeleton`, `resemblances`, `imitations`, `sentences`); akışta
+`Listing` (sürüm kaydının adı ve simge özeti) ve `Release::imitations`; sunucu `acting.rs` (`imitation_gate`); kayıt
+defteri `imitation.rs` (yeni), `Review::resemblances`, `Registry::review_beside`; masaüstünün kurulum incelemesi.
+
+- **Sorun.** 2026'da bir düzenleyicinin pazarından kaldırılan 2.140 eklentinin 1.109'u taklitti; görünen adı benzersiz
+  olmayan bir biçimlendirici kopyası iki günde bine yakın kuruluma ulaştı
+  (`docs/research/2026-11-13-eklenti-ekosistemleri.md`, V14, V21). Yayımcı kapısı "ad, simge ve kimlik başkasınınkini
+  taklit etmez" diyordu (§4) ama onu denetleyen bir kural yoktu; masaüstüne e-postayla gelen `.kek`'i ise hiçbir kapı
+  görmez.
+- **Karar: okunan yüz.** İki metin baytlarıyla değil, okuyanın gördüğüyle karşılaştırılır (iskelet): küçük harf;
+  Türkçe harfler tabanlarıyla (ı, İ, i; ş, s …); Latin'e benzeyen Kiril ve Yunan harfleri o harf (а, е, о, р, с, і …);
+  harf yerine geçen rakam ve çiftler (0 → o; 1, l, I → i; rn → m; vv → w); harf ve rakam dışı her şey (boşluk, tire,
+  nokta, görünmez karakter) atılır. Aynı iskelet **taklittir**: göz ayırt edemez. Bir harf ya da yer değiştirmiş iki
+  harf uzaklık **benzerliktir**: çoğu zaman dürüst bir addır (iki belediyenin "Ula" ve "Urla"sı); söylenir, hiçbir
+  şeyi engellemez (D11: engelleyen kural az ve kesin). Benzerlikte 6 harften kısa ad ve 10 harften kısa kimlik
+  karşılaştırılmaz. Simgenin baytları aynıysa taklittir; KentOS iskeletinin her yeni eklentiye verdiği simge kimsenin
+  değildir.
+- **Katalogda: yayımcı kapısı, gönderimde.** Sürüm kaydı yüklemede paketinden adını ve simge özetini tutar
+  (`listing`; içerik yenilenince yenilenir). Gönderilen sürüm aynı katalogda başka bir yayımcının yayımlanmış
+  eklentisini taklit ediyorsa katalog kendisi (`kentos-katalog`, tarayıcı rolüyle) yayımcı kapısını bulgularıyla
+  engeller ve sürüm yazarına hemen döner: tarayıcı ya da inceleyici ona zaman harcamaz. Yayımcı kapısının kuralı
+  kesindir (kaldırılamaz): yazar adı ya da simgeyi değiştirip içeriği yeniler. Taklit bulunmaması kapıyı geçirmez (ad
+  alanının sahipliği tarayıcınındır), o yüzden temiz sonuç bildirilmez. Yayımcının kendi eklentileri birbiriyle
+  karşılaştırılmaz. Kayıt biçimi geriye uyumlu: `listing`'i olmayan eski kayıt okunur, karşılaştırılmaz.
+- **Masaüstünde: kurulum incelemesi.** Kurulacak paket kurulu eklentilerle ve okunan kataloğun girdileriyle
+  karşılaştırılır. E-postayla gelen `.kek`'in yayımcısını kimse denetlemediği için aynı ad alanı da karşılaştırılır;
+  yalnız güncellediği eklentinin kendisi karşılaştırılmaz. Taklit incelemenin en üstünde uyarıdır ve Kur, kişi
+  "Benzerliği okudum, yine de kur"u işaretleyene dek kapalıdır; benzerlik bilgi olarak söylenir. Bulgular öteki
+  eklenti başına tek cümle: "Adı, kimliği (tr.ornek.vltrin) ve simgesi “Eklenti Vitrini” (tr.ornek.vitrin)
+  eklentisininkilerle aynı okunuyor." İlk denemede aynı eklenti üç ayrı cümlede üç kez yazılıyordu.
+- **Kurulduktan sonra da işaretli (aynı gün).** Uyarıya rağmen kurulan taklit ve taklit edilen, ikisi de kurulu
+  kaldıkça ayrıntılarında ve kurulu eklentilerin görünümünde (`ExtensionView::resemblances`; MCP'nin
+  `kentos://extensions/installed`'ı da) birbirleriyle söylenir: "Kurulu başka bir eklentiyle karışabilir. Adı ve
+  kimliği … aynı okunuyor. Hangisinin hangisi olduğundan emin değilseniz birini kaldırın." Burada ad ve kimlik
+  karşılaştırılır; simge Kur'da karşılaştırıldı (liste her çizildiğinde her simgeyi okumak söylediğinden pahalıydı).
+- **Gerçek pencere (KentOS GIS, yalıtılmış profil, Vitrin kurulu):** Vitrin'in kimliği `tr.ornek.vltrin`, adı
+  "EKLENTİ VİTRİNİ" yapılmış kopyası ayrı bir katalogdan incelendi: üç bulgu tek cümlede, Kur kapalı; kutu
+  işaretlenince açıldı; kurulunca listede ve şeritte iki "Vitrin" göründü; kopyanın ayrıntısı uyarıyla açıldı.
+- **Sınamalar:** paylaşılan 5 (iskelet, taklit, benzerlik, simge, cümleler) ve akış 27; kayıt defteri 1 (31); masaüstü
+  1 (eklenti sınamaları 99); katalog API 1 (50; bellek deposunda; veritabanı türü yerel test veritabanının yönetici
+  adresi olmadığından atlandı).
+- **Kalan:** ad alanının doğrulanmış alan adına bağlanması (D13'ün öteki yarısı) ve tarayıcının yayımcı kapısında aynı
+  kuralı çalıştırması; inceleyicinin benzerlikleri görmesi (inceleme penceresi henüz yok); kurulu taklidin
+  ayrıntısında kalıcı bir işaret.
+
+## §15 Sır taraması: dosyanın içine yazılmış anahtar (PY-CLOUD-05, D11)
+
+**16 Kasım.** Kod: paylaşılan `secrets.rs` (yeni: `found`, `scan`, `gate_findings`); paket denetimi `archive.rs`
+(her metin dosyası); sunucu `acting.rs` (`secrets_gate`); `verifyCodes`'a `secret_in_text`.
+
+- **Sorun.** Paket denetimi gizli bilgi taşıyan dosyaları adından dışlıyordu (`content_secret`: `.env`, `.pem`, `id_rsa`,
+  `credentials.json`; yapay zekâ araçlarının ayarları), ama izinli bir dosyanın içine yazılmış anahtarı görmüyordu:
+  `src/arac.py`'de `ANAHTAR = "sk-…"`. Eklentileri yapay zekâ ajanları yazıyor (planın 1.1'i) ve ajana kullanıcının
+  anahtarı verilmiş olabilir; kataloğa giden paket anahtarı herkese verir. Sır kapısı vardı (§3), onu besleyen kural yoktu.
+- **Karar: yalnız biçiminden anahtar olan.** Sağlayıcının öneki, ardından gelen harflerin türü ve sayısı: Anthropic
+  (`sk-ant-`), OpenAI (`sk-proj-`, `sk-svcacct-`), Stripe (`sk_live_`, `rk_live_`), harf ve rakam karışık 32+ karakterli
+  `sk-` (DeepSeek ve benzerleri), GitHub (`ghp_`… 36, `github_pat_`), GitLab (`glpat-`), Slack (`xoxb-`…), Google
+  (`AIza` + 35), AWS (`AKIA`/`ASIA` + 16), Hugging Face (`hf_`), PyPI (`pypi-AgE`), npm (`npm_` + 36); ve özel anahtar
+  zırhı (`-----BEGIN … PRIVATE KEY-----`). Önek daha uzun bir sözcüğün içindeyse (`task-…`) sayılmaz. Örnek değer sayılmaz
+  (tek harfin tekrarı, "xxxx", "example", "your", "dummy", "örnek" …: `AKIA…EXAMPLE`). **Ad yargılanmaz**
+  (`api_key = …`): engelleyen kural az ve kesin olmalı (D11); tahminle uyaran kural kimseye yaramaz.
+- **Değer hiçbir yerde söylenmez:** bulgu türü ve satırı yazar ("Anthropic API anahtarı gibi görünen bir değer var",
+  "satır 5"); ileti, rapor ve kapı kaydı anahtarı taşımaz (sınamalar denetler). Depo da anahtar biçiminde bir dizgi
+  taşımaz: sınamalar örnek anahtarı çalışırken üretir.
+- **Paketlemede ve kurulumda uyarı** (`secret_in_text`): kurumun kendi iç hizmeti için yazdığı paket anahtarını bilerek
+  taşıyabilir; kişinin bilgisayarında karar onundur. `kek verify`, ajanın `extension.verify`'ı ve kurulum incelemesi
+  aynı uyarıyı satırıyla görür (ajan tek adımda düzeltir).
+- **Katalogda engel:** gönderilen sürümün paketi taranır; bulgu varsa katalog kendisi (`kentos-katalog`, tarayıcı rolüyle)
+  sır kapısını bulgularıyla engeller (`secret_found`, dosya ve satır) ve sürüm yazarına döner. Taklit kapısı (§14) gibi:
+  hiçbir şey bulunmaması kapıyı geçirmez (daha geniş kurallar tarayıcınındır), temiz sonuç bildirilmez; başka bir kapının
+  geri gönderdiği sürüme dokunulmaz. Sır kapısı gerekçeyle kaldırılabilen kapılardandır (karar 5): yanlış bir bulgu
+  inceleyicinin gerekçesiyle aşılır.
+- **Sınamalar:** paylaşılan 3 (sekiz sağlayıcının biçimi ve zırh satırıyla; örnek değer, kısa/uzun dizi, `sk-`'den sonra
+  sözcük, sözcük içi önek, ad, sertifika bulgu değil; paketleme uyarısı ve kapı bulgusu değeri söylemeden), paylaşılan
+  crate'in hepsi (161) geçti; katalog API 1 (52; README'sinde anahtar olan sürüm `changesRequested`, kapı `blocked`,
+  bulgu `secret_found` · `README.md` · `satır 5`, yanıtın hiçbir yerinde anahtar yok; anahtarsız sürüm `submitted`).
+  Mevcut paketler: mevzuat ve Vitrin 0 uyarı.
+- **Atölye kullanıcının kendi anahtarını tanır (aynı gün).** Asistan'ın `extension.workshop.write`'ı, yazacağı
+  dosyalardan biri kullanıcının yapay zekâ ajanlarından birinin anahtarını (saklanan, oturumun ya da ortam değişkeninin)
+  birebir içeriyorsa hiçbir şeyi yazmaz ve ajana kimin anahtarı olduğunu söyler: "“src/anahtar.py” kullanıcının bir
+  anahtarını içeriyor (“Deneme ajanı” ajanının API anahtarı): anahtar pakete yazılmaz …" (`secret_in_text`). Biçimden
+  bağımsızdır ve yanlış bulgu vermez: aynı dizgi. Evsahibi bildirir (`Host::own_secrets`); MCP'nin evsahibi bilmez.
+  Hizmet bağlantılarının sırları da (aynı gün): API anahtarları, parolalar, jetonlar ve istemci sırları
+  (`services::secrets::Secrets::known`; kullanıcı adı ve istemci kimliği sır değil), bağlantının adresiyle söylenir
+  ("https://harita.ornek.bel.tr bağlantısının parolası"). 8 karakterden kısa değer aranmaz (her metinde geçer).
+  Sınama: masaüstü `limits_tests::the_workshop_refuses_the_users_own_key` (ajan anahtarı ve bağlantı parolası ret,
+  değer söylenmez, dosya yazılmadı; anahtarı ortamdan okuyan aynı dosya yazıldı).
+- **Kalan:** tarayıcının daha geniş sır kuralları (ad + yüksek düzensizlik, geçmişte sızmış anahtar listeleri),
+  yalıtılmış duman testi işçisi.
 
 ## Uygularken verilen kararlar (planda yazılı değildi)
 

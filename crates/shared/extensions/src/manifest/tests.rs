@@ -694,3 +694,36 @@ fn what_works_but_should_be_mended_is_a_warning() {
     assert_eq!(found(&unused), []);
     assert_eq!(warnings(&unused), ["manifest_capability_unused"]);
 }
+
+/// A panel nothing opens, in an extension without commands (whose code could open it), is warned of; a menu item
+/// opening it, or a command, ends the warning.
+#[test]
+fn a_panel_nothing_opens_is_a_warning() {
+    let altlik: Value = serde_json::from_str(ALTLIK).unwrap();
+    let panel = with(
+        altlik,
+        "/entrypoints",
+        json!({ "panels": [
+            { "id": "bakim", "title": "Bakım", "side": "right", "definition": "ui/bakim.panel.json" }
+        ] }),
+    );
+    let panel = push(
+        panel,
+        "/requestedCapabilities",
+        json!({"id": "ui.panel", "scope": "plugin-owned", "reason": "Bakım kayıtlarını gösterir."}),
+    );
+    assert_eq!(found(&panel), []);
+    assert_eq!(warnings(&panel), ["manifest_panel_unopened"]);
+    let menu = with(
+        panel,
+        "/contributions/contextMenus",
+        json!([{ "panel": "bakim", "target": "layer" }]),
+    );
+    let menu = push(
+        menu,
+        "/requestedCapabilities",
+        json!({"id": "ui.contextMenu", "scope": "plugin-owned", "reason": "Bakım panelini katmandan açar."}),
+    );
+    assert_eq!(found(&menu), []);
+    assert_eq!(warnings(&menu), Vec::<&str>::new());
+}

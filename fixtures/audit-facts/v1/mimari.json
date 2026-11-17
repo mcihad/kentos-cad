@@ -55,6 +55,7 @@
         "number": null,
         "name": "Merdiven evi",
         "usage": null,
+        "kind": null,
         "level": "zemin",
         "unit": "ortak",
         "void": false,
@@ -63,6 +64,7 @@
         "stair": true,
         "net": 14.8225,
         "axis": 16.0,
+        "narrow": 3.85,
         "escape": null
       },
       {
@@ -70,6 +72,7 @@
         "number": null,
         "name": "Koridor",
         "usage": null,
+        "kind": "corridor",
         "level": "zemin",
         "unit": "ortak",
         "void": false,
@@ -78,6 +81,7 @@
         "stair": false,
         "net": 33.32,
         "axis": 36.0,
+        "narrow": 1.4,
         "escape": {
           "exit": {
             "length": 21.819,
@@ -109,6 +113,8 @@
         "number": "Z01",
         "name": "Dükkân",
         "usage": null,
+        "kind": null,
+        "occupancy": "shop",
         "level": "zemin",
         "unit": "dk",
         "void": false,
@@ -117,6 +123,7 @@
         "stair": false,
         "net": 30.415,
         "axis": 32.0,
+        "narrow": 3.85,
         "escape": {
           "exit": {
             "length": 11.481,
@@ -156,6 +163,7 @@
         "number": "Z02",
         "name": "Salon",
         "usage": null,
+        "kind": "living",
         "level": "zemin",
         "unit": "d1",
         "void": false,
@@ -164,6 +172,7 @@
         "stair": false,
         "net": 22.715,
         "axis": 24.0,
+        "narrow": 3.85,
         "escape": {
           "exit": {
             "length": 17.81,
@@ -217,6 +226,7 @@
         "number": "Z03",
         "name": "Yatak odası",
         "usage": null,
+        "kind": "bedroom",
         "level": "zemin",
         "unit": "d1",
         "void": false,
@@ -225,6 +235,7 @@
         "stair": false,
         "net": 22.5225,
         "axis": 24.0,
+        "narrow": 3.85,
         "escape": {
           "exit": {
             "length": 22.868,
@@ -294,6 +305,8 @@
         "number": "Z04",
         "name": "Depo",
         "usage": null,
+        "kind": null,
+        "occupancy": "parking",
         "level": "zemin",
         "unit": "dp",
         "void": false,
@@ -302,6 +315,7 @@
         "stair": false,
         "net": 19.5975,
         "axis": 21.0,
+        "narrow": 3.35,
         "escape": {
           "exit": {
             "length": 5.986,
@@ -341,6 +355,7 @@
         "number": null,
         "name": "Asansör boşluğu",
         "usage": null,
+        "kind": null,
         "level": "zemin",
         "unit": "ortak",
         "void": true,
@@ -349,6 +364,7 @@
         "stair": false,
         "net": 6.365,
         "axis": 7.0,
+        "narrow": 1.9,
         "escape": null
       },
       {
@@ -356,6 +372,8 @@
         "number": "Z05",
         "name": "Ofis",
         "usage": null,
+        "kind": null,
+        "occupancy": "office",
         "level": "zemin",
         "unit": "of",
         "void": false,
@@ -364,6 +382,7 @@
         "stair": false,
         "net": 53.0975,
         "axis": 56.0,
+        "narrow": 3.35,
         "escape": {
           "exit": {
             "length": 22.721,
@@ -403,6 +422,7 @@
         "number": null,
         "name": "Merdiven evi",
         "usage": null,
+        "kind": null,
         "level": "k1",
         "unit": "ortak",
         "void": false,
@@ -411,6 +431,7 @@
         "stair": true,
         "net": 14.8225,
         "axis": 16.0,
+        "narrow": 3.85,
         "escape": null
       },
       {
@@ -418,6 +439,7 @@
         "number": null,
         "name": "Koridor",
         "usage": null,
+        "kind": "corridor",
         "level": "k1",
         "unit": "ortak",
         "void": false,
@@ -426,6 +448,7 @@
         "stair": false,
         "net": 33.32,
         "axis": 36.0,
+        "narrow": 1.4,
         "escape": {
           "exit": {
             "length": 21.819,
@@ -457,6 +480,7 @@
         "number": "K01",
         "name": "Salon",
         "usage": null,
+        "kind": "living",
         "level": "k1",
         "unit": "d2",
         "void": false,
@@ -465,6 +489,7 @@
         "stair": false,
         "net": 30.415,
         "axis": 32.0,
+        "narrow": 3.85,
         "escape": {
           "exit": {
             "length": 11.481,
@@ -518,6 +543,7 @@
         "number": "K02",
         "name": "Yatak odası 1",
         "usage": null,
+        "kind": "bedroom",
         "level": "k1",
         "unit": "d2",
         "void": false,
@@ -526,6 +552,7 @@
         "stair": false,
         "net": 22.715,
         "axis": 24.0,
+        "narrow": 3.85,
         "escape": {
           "exit": {
             "length": 16.789,
@@ -595,6 +622,7 @@
         "number": "K03",
         "name": "Yatak odası 2",
         "usage": null,
+        "kind": "bedroom",
         "level": "k1",
         "unit": "d2",
         "void": false,
@@ -603,6 +631,7 @@
         "stair": false,
         "net": 22.5225,
         "axis": 24.0,
+        "narrow": 3.85,
         "escape": {
           "exit": {
             "length": 22.741,
@@ -688,6 +717,7 @@
         "number": "K04",
         "name": "Arşiv",
         "usage": null,
+        "kind": null,
         "level": "k1",
         "unit": "of",
         "void": false,
@@ -696,6 +726,7 @@
         "stair": false,
         "net": 79.73,
         "axis": 84.0,
+        "narrow": 3.35,
         "escape": {
           "exit": {
             "length": 22.52,
@@ -735,6 +766,7 @@
         "number": null,
         "name": "Balkon",
         "usage": "Balkon",
+        "kind": null,
         "level": "k1",
         "unit": "d2",
         "void": false,
@@ -743,6 +775,7 @@
         "stair": false,
         "net": 8.4,
         "axis": 8.4,
+        "narrow": 1.4,
         "escape": null
       }
     ],
@@ -755,6 +788,7 @@
         "nature": "Daire",
         "annexOf": null,
         "dwelling": true,
+        "occupancy": "dwelling",
         "gross": 49.61,
         "net": 45.2375,
         "annexGross": 21.965,
@@ -778,6 +812,7 @@
         "nature": "Daire",
         "annexOf": null,
         "dwelling": true,
+        "occupancy": "dwelling",
         "gross": 90.81,
         "net": 75.6525,
         "annexGross": 0.0,
@@ -801,6 +836,7 @@
         "nature": "Dükkân",
         "annexOf": null,
         "dwelling": false,
+        "occupancy": "shop",
         "gross": 32.8,
         "net": 30.415,
         "annexGross": 0.0,
@@ -824,6 +860,7 @@
         "nature": "Büro",
         "annexOf": null,
         "dwelling": false,
+        "occupancy": "office",
         "gross": 145.085,
         "net": 132.8275,
         "annexGross": 0.0,
@@ -852,6 +889,7 @@
         "nature": "Depo",
         "annexOf": "d1",
         "dwelling": false,
+        "occupancy": "dwelling",
         "gross": 21.965,
         "net": 19.5975,
         "annexGross": 0.0,
@@ -923,7 +961,8 @@
               3.85
             ]
           ]
-        }
+        },
+        "intoStair": false
       },
       {
         "uid": "01a1dfda-0709-75f9-b155-c59bd5fb560f",
@@ -951,9 +990,11 @@
               3.85
             ]
           ]
-        }
+        },
+        "intoStair": false
       }
-    ]
+    ],
+    "sprinklers": false
   },
   "cad": {
     "layers": [

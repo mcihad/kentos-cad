@@ -205,6 +205,7 @@ fn both_ways(
     });
     let input = ProcessingRun {
         environment: None,
+        model: None,
         tool: tool_id,
         parameters: with_paths(command_values(&doc, &tool, &values), &tool, c, files),
         selection,

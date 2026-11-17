@@ -91,7 +91,7 @@ Okumalar (metin açıkça söylemiyor, kural böyle okuyor; bağımsız durumlar
 - **Her yeni kural için geçen ve kalan durum, KentOS kodu olmadan yazılmış başvuruyla:** `fixtures/standards/v1/asansor.json`,
   25 durum; beklenen her sonuç §1'deki metinlerden elle çıkarıldı (`neden`). 34/1 her hâlde geçer ve kalır, 34/8 geçer,
   kalır ve uzman incelemesine kalır, Sivas katmanı bağlar ve çelişir, gün yok, okunamıyor ve bilinen metinden önce.
-  `python3 -I catalog/standards/mimari-mevzuat/tests/test_asansor.py` (8 sınama, eklenti yüzü dahil).
+  `python3 -I catalog/standards/tests/mimari-mevzuat/test_asansor.py` (8 sınama, eklenti yüzü dahil; sınamalar paketin dışında, §7).
 - **Başvuru tarihi 30.6.2026 ve 2.7.2026 olan aynı çizim farklı kural setiyle:** üç katlı, bodrumunda iki daire
   eklentisi (depo) ve kazan dairesi olan, asansör kuyusu katlarda olup bodrumda olmayan bina. 30.6.2026: 34/1 (11.7.2021)
   plana göre 3 kat, kuyu yer olarak yeter, geçti; asansör zorunlu değil, 34/8 kapsam dışı. 2.7.2026: eklentili bodrum
@@ -138,6 +138,30 @@ Okumalar (metin açıkça söylemiyor, kural böyle okuyor; bağımsız durumlar
   bir kez sayılır, Göster'de notuyla; bodruma depo eklenince yeni bulgu açık), başsız `regulation_dates` (protokolle
   işaretlenir, gizlenir, Göster'de istisna ve not), ortak durumlar `cad.arch.exceptions` 28 (paket bulgusu verilerek
   onay, kodsuz verilen bulgunun reddi, verilmeyen paket bulgusunun reddi). Resim `4-uzman-onayi-{acik,koyu}.png`.
+
+## §7. main ile birleştirme (17 Kasım 2026)
+
+- Sahip "github üzerindeki main ile birleştir ve main üzerine push yap" dedi; dal main'e birleştirildi. Üç çakışma
+  eklemeydi (çalışma alanının üyeleri, masaüstünün bağımlılıkları, `deps.mjs`): ikisi de alındı; main'in
+  `extension-tools` ve `cli` grupları başsız üzerinden `kentos-standards`'a ulaştığı için bağımlılık kuralına eklendi.
+- **Ajan paketinin sınırı:** main'in SDK paketi 48.000 baytın hemen altındaydı (Asistan'ın bir aracın sonucuna verdiği
+  en çok bayt); dalın olgu bölümleri (`permit`, `cad`, `building`) stub'a eklenince 48.691 oldu. Olguların Python
+  sınıfları (`ProjectAuditFacts` … `DoorEscape`, 7.225 bayt) paketin bir parçası oldu: `extension.sdk part=factsApi`
+  (`kentos kek sdk --part factsApi`); paketin stub'ı onları bir satırla adlandırır, şeması zaten `factsSchema`'daydı.
+  Simgeler, şemalar ve panel yapıcıları da böyle ayrıdır. Sınama: iki yarının toplamında stub'ın her sınıfı bir kez.
+- Birleşen simge listesi yeniden yazıldı; olguların altın dosyası ve şeması yeni bölümlerle yeniden üretildi.
+- MCP sınamalarından dokuzu birleştirmeden önce de main'de ve dalda kırıktı, birleştirme değiştirmedi: yedisi
+  (`drape_over_mcp`, `office_standard`, `raise_by_reference`, `road_alignments`, `road_profiles`, `mcp.rs`'in iki araç
+  listesi sınaması) `destructiveHint` bekliyor ama ajanların yıkıcı listesi ADR 8056 §2'de (1e4551bb3) 199 girdiden
+  31'e indi; `the_read_only_hint_follows_the_catalogs_effect` `cad.rasters.gpkgwrite`'ı salt okunur buluyor;
+  `the_catalog_and_the_open_drawings_are_resources` main'in eklediği `kentos://sdk/llms.txt` kaynağını (8f00ba19f)
+  bilmiyor. Listenin kararı o çizginin; TODOS.md'de ayrı iş.
+- main'in doğrulayıcısı paketin her Python dosyasında `sys.path` değiştirmeyi reddediyor (ADR 8057 §72); iki BIM
+  paketinin sınamaları paketin kendi kaynağını bulmak için bunu yapıyordu. Sınamalar paketin dışına taşındı
+  (`catalog/standards/tests/dijital-proje/`, `catalog/standards/tests/mimari-mevzuat/`): `.kek`'e girmezler, paket
+  `kentos kek verify` ile yine 0 uyarı.
+- Ulusal kuralların iki paketi (`tr.kentos.mevzuat`, `tr.kentos.mimari-mevzuat`) yan yana kaldı; birleşmeleri K63'teki
+  gibi ayrı iştir.
 
 ## Sıradaki adımlar
 

@@ -1,7 +1,9 @@
 //! A panel's sections (docs/adr/8057 §38): a `section` heading gathers the components after it, up to the next one,
 //! and the user folds it. Folding is a view, not a rule: what a folded section gathers is still shown to the rules and
 //! asked of the user ([`OpenPanel::shown`]), only not drawn; a field of it left wrong opens it, so the words under the
-//! field are seen. A section hidden (its rule, its code) hides what it gathers.
+//! field are seen. A section hidden (its rule, its code) hides what it gathers. On a panel with tabs (§43) a section
+//! gathers up to the next section or the first component on another tab: a button without a tab after a tab's section
+//! stays on every page, not folded with it.
 
 use kentos_extensions::ui_panel::Component;
 
@@ -16,7 +18,8 @@ impl OpenPanel {
                 .is_none_or(|s| !self.closed.contains(&s))
     }
 
-    /// The section component `at` is in: the nearest one above it; none above the first, and none for a section.
+    /// The section component `at` is in: the nearest one above it with no component of another tab between; none
+    /// above the first, and none for a section.
     pub(crate) fn section_of(&self, at: usize) -> Option<usize> {
         if matches!(
             self.definition.body.get(at),
@@ -24,9 +27,16 @@ impl OpenPanel {
         ) {
             return None;
         }
-        (0..at)
-            .rev()
-            .find(|i| matches!(self.definition.body[*i], Component::Section { .. }))
+        let own = self.tab_at(at);
+        for i in (0..at).rev() {
+            if self.tab_at(i) != own {
+                return None;
+            }
+            if matches!(self.definition.body[i], Component::Section { .. }) {
+                return Some(i);
+            }
+        }
+        None
     }
 
     /// Section `at` folded when open, opened when folded: the user pressed its heading (`PanelEvent::Section`).
@@ -36,15 +46,16 @@ impl OpenPanel {
         }
     }
 
-    /// Input `id`'s section opened, when it is folded: a field left wrong is said where the user sees it.
+    /// Input `id`'s page brought up and its section opened, when it is folded: a field left wrong is said where the
+    /// user sees it.
     pub(crate) fn reveal(&mut self, id: &str) {
-        if let Some(s) = self
-            .definition
-            .body
-            .iter()
-            .position(|c| c.id() == Some(id))
-            .and_then(|at| self.section_of(at))
-        {
+        let Some(at) = self.definition.body.iter().position(|c| c.id() == Some(id)) else {
+            return;
+        };
+        if let Some(tab) = self.tab_at(at).map(str::to_owned) {
+            self.show_tab(&tab);
+        }
+        if let Some(s) = self.section_of(at) {
             self.closed.remove(&s);
         }
     }

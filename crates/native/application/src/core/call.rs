@@ -682,6 +682,12 @@ fn summarize(
         }
     }
     part_stamps(doc, &changed_parts, &mut summary.stamps);
+    // The layers the write adds objects to, and the ones it adds: a derivation reading them reads new objects.
+    let fresh_layers: BTreeSet<String> = added
+        .iter()
+        .filter_map(|e| e.get("layerId").and_then(Value::as_str).map(str::to_owned))
+        .chain(report.layers.added.iter().cloned())
+        .collect();
     // The plan's id: what the write rests on and what it makes, new ids by their order.
     let mut plain_input = input.clone();
     if let Some(map) = plain_input.as_object_mut() {
@@ -705,7 +711,7 @@ fn summarize(
             "removed": removed,
             "blocks": blocks_result,
             // The layers as written, but when a new layer's tool ran: the plan and its execution run at two moments.
-            "layers": summary.stamps.layers.as_ref().map(|_| doc.layers_plan_stamp()),
+            "layers": summary.stamps.layers.as_ref().map(|_| doc.layers_plan_stamp(&fresh_layers)),
             "settings": summary.stamps.settings,
             "styles": summary.stamps.styles,
             "sheets": summary.stamps.sheets,

@@ -1,0 +1,705 @@
+{
+  "format": "kentos.auditExamples",
+  "schemaVersion": 1,
+  "examples": [
+    {
+      "title": "Büro, tek çıkış, 18 m, yağmurlama sistemi yok (Ek-5/B: tek yönde 15 m)",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "number": "Z01",
+            "name": "Ofis",
+            "kind": null,
+            "level": "zemin",
+            "unit": "of",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 80.0,
+            "axis": 88.0,
+            "narrow": 6.0,
+            "escape": {
+              "exit": {
+                "length": 18.0,
+                "oneWay": 18.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": "of",
+            "number": "1",
+            "name": null,
+            "kind": "unit",
+            "nature": "Büro",
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 120.0,
+            "net": 100.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 120.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 120.0,
+                "net": 100.0
+              }
+            ],
+            "occupancy": "office"
+          }
+        ],
+        "doors": [],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 1,
+        "has": [
+          {
+            "severity": "error",
+            "message": "en yakın kat çıkışına tek yönde 18.00 m"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Aynı yürüyüş yağmurlama sistemiyle (tek yönde 30 m): bulgu yok",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "number": "Z01",
+            "name": "Ofis",
+            "kind": null,
+            "level": "zemin",
+            "unit": "of",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 80.0,
+            "axis": 88.0,
+            "narrow": 6.0,
+            "escape": {
+              "exit": {
+                "length": 18.0,
+                "oneWay": 18.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": "of",
+            "number": "1",
+            "name": null,
+            "kind": "unit",
+            "nature": "Büro",
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 120.0,
+            "net": 100.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 120.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 120.0,
+                "net": 100.0
+              }
+            ],
+            "occupancy": "office"
+          }
+        ],
+        "doors": [],
+        "sprinklers": true
+      },
+      "expect": {
+        "count": 0
+      }
+    },
+    {
+      "title": "Dükkân, iki çıkış, 50 m (iki yönde 45 m)",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "number": "Z02",
+            "name": "Satış alanı",
+            "kind": null,
+            "level": "zemin",
+            "unit": "dk",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 120.0,
+            "axis": 132.0,
+            "narrow": 8.0,
+            "escape": {
+              "exit": {
+                "length": 50.0,
+                "oneWay": 10.0,
+                "exits": 2,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": "dk",
+            "number": "2",
+            "name": null,
+            "kind": "unit",
+            "nature": "Dükkân",
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 120.0,
+            "net": 100.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 120.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 120.0,
+                "net": 100.0
+              }
+            ],
+            "occupancy": "shop"
+          }
+        ],
+        "doors": [],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 1,
+        "has": [
+          {
+            "severity": "error",
+            "message": "iki yönde 50.00 m"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Dükkân, iki çıkış, 40 m: bulgu yok",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "number": "Z02",
+            "name": "Satış alanı",
+            "kind": null,
+            "level": "zemin",
+            "unit": "dk",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 120.0,
+            "axis": 132.0,
+            "narrow": 8.0,
+            "escape": {
+              "exit": {
+                "length": 40.0,
+                "oneWay": 10.0,
+                "exits": 2,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": "dk",
+            "number": "2",
+            "name": null,
+            "kind": "unit",
+            "nature": "Dükkân",
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 120.0,
+            "net": 100.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 120.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 120.0,
+                "net": 100.0
+              }
+            ],
+            "occupancy": "shop"
+          }
+        ],
+        "doors": [],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 0
+      }
+    },
+    {
+      "title": "Niteliği bir sınıf söylemeyen bölüm (Kuaför) büro sayılır",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000003",
+            "number": "Z03",
+            "name": "Salon",
+            "kind": null,
+            "level": "zemin",
+            "unit": "ku",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 40.0,
+            "axis": 44.0,
+            "narrow": 5.0,
+            "escape": {
+              "exit": {
+                "length": 18.0,
+                "oneWay": 18.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": "ku",
+            "number": "3",
+            "name": null,
+            "kind": "unit",
+            "nature": "Kuaför",
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 120.0,
+            "net": 100.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 120.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 120.0,
+                "net": 100.0
+              }
+            ]
+          }
+        ],
+        "doors": [],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 1,
+        "has": [
+          {
+            "severity": "error",
+            "message": "büro sayıldı"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Endüstri yapısı, tek yönde 20 m: dipnot (1) ile 22.50 m, karar verilemedi",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000004",
+            "number": "Z04",
+            "name": "İmalathane",
+            "kind": null,
+            "level": "zemin",
+            "unit": "at",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 150.0,
+            "axis": 165.0,
+            "narrow": 9.0,
+            "escape": {
+              "exit": {
+                "length": 20.0,
+                "oneWay": 20.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": "at",
+            "number": "4",
+            "name": null,
+            "kind": "unit",
+            "nature": "Atölye",
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 120.0,
+            "net": 100.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 120.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 120.0,
+                "net": 100.0
+              }
+            ],
+            "occupancy": "industry"
+          }
+        ],
+        "doors": [],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 1,
+        "has": [
+          {
+            "severity": "warning",
+            "message": "karar verilemedi"
+          }
+        ]
+      }
+    },
+    {
+      "title": "Yalnız konut olan bina: 48'in kurallarının, bulgu yok",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000005",
+            "number": "Z05",
+            "name": "Salon",
+            "kind": null,
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 30.0,
+            "axis": 33.0,
+            "narrow": 4.0,
+            "escape": {
+              "exit": {
+                "length": 40.0,
+                "oneWay": 40.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": "d1",
+            "number": "5",
+            "name": null,
+            "kind": "unit",
+            "nature": "Daire",
+            "annexOf": null,
+            "dwelling": true,
+            "gross": 120.0,
+            "net": 100.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 120.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 120.0,
+                "net": 100.0
+              }
+            ],
+            "occupancy": "dwelling"
+          }
+        ],
+        "doors": [],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 0
+      }
+    },
+    {
+      "title": "Konut binasının bodrum otoparkı (bölümsüz): adından otopark sınıfı, tek yönde 27 m (15 m)",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "bodrum",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          },
+          {
+            "level": "bodrum",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000005",
+            "number": "Z05",
+            "name": "Salon",
+            "kind": null,
+            "level": "zemin",
+            "unit": "d1",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 30.0,
+            "axis": 33.0,
+            "narrow": 4.0,
+            "escape": {
+              "exit": {
+                "length": 40.0,
+                "oneWay": 40.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000006",
+            "number": "B01",
+            "name": "Otopark",
+            "kind": null,
+            "level": "bodrum",
+            "unit": null,
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 400.0,
+            "axis": 420.0,
+            "narrow": 15.0,
+            "escape": {
+              "exit": {
+                "length": 27.0,
+                "oneWay": 27.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            },
+            "occupancy": "parking"
+          }
+        ],
+        "units": [
+          {
+            "id": "d1",
+            "number": "5",
+            "name": null,
+            "kind": "unit",
+            "nature": "Daire",
+            "annexOf": null,
+            "dwelling": true,
+            "gross": 120.0,
+            "net": 100.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 120.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 120.0,
+                "net": 100.0
+              }
+            ],
+            "occupancy": "dwelling"
+          }
+        ],
+        "doors": [],
+        "sprinklers": false
+      },
+      "expect": {
+        "count": 1,
+        "has": [
+          {
+            "severity": "error",
+            "message": "otoparklar ve depolar için tek yönde en çok 15.00 m"
+          }
+        ]
+      }
+    }
+  ]
+}

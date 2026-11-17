@@ -128,6 +128,9 @@ pub enum Cause {
     Folder,
     /// No build of the version for this system.
     Unavailable,
+    /// A package uv built from its source failed to build: the package's build on this computer, not the extension
+    /// (PY-UV-20; docs/adr/8057 §94); [`build_words`] says it.
+    Build,
     Other,
 }
 
@@ -180,7 +183,7 @@ impl InstallError {
                     Cause::Unavailable => {
                         format!("Python {version} bu sistem için indirilemiyor.")
                     }
-                    Cause::Other => "Python kurulamadı.".to_owned(),
+                    Cause::Build | Cause::Other => "Python kurulamadı.".to_owned(),
                 },
                 said,
             ),
@@ -414,11 +417,14 @@ fn removal_words(why: &str) -> String {
     }
 }
 
-/// What uv's error words mean. The certificate first: uv says a certificate failure as a failed download too.
+/// What uv's error words mean. A failed build first: the build's own words under it may say anything (a denied path, a
+/// download). Then the certificate: uv says a certificate failure as a failed download too.
 pub fn cause_of(stderr: &str) -> Cause {
     let text = stderr.to_lowercase();
     let any = |words: &[&str]| words.iter().any(|w| text.contains(w));
-    if any(&["certificate", "unknownissuer", "self signed", "self-signed"]) {
+    if any(&["failed to build `"]) {
+        Cause::Build
+    } else if any(&["certificate", "unknownissuer", "self signed", "self-signed"]) {
         Cause::Certificate
     } else if any(&[
         "no space left",
@@ -453,6 +459,69 @@ pub fn cause_of(stderr: &str) -> Cause {
     } else {
         Cause::Other
     }
+}
+
+/// A package uv could not build from its source, in sentences (PY-UV-20; docs/adr/8057 §94): which package, that it is
+/// not the extension's fault, what usually lacks, and the build's last word. uv (0.5 and later) writes
+/// ``× Failed to build `tasli==0.3` `` (a long one wrapped under `│`) and the build's own output under `[stderr]`,
+/// whose `error:` lines are the build's, never uv's. None for another failure.
+pub fn build_words(stderr: &str) -> Option<String> {
+    let flat = stderr
+        .lines()
+        .map(|l| {
+            l.trim()
+                .trim_start_matches(['×', '│', '├', '╰', '─', '▶'])
+                .trim()
+        })
+        .collect::<Vec<_>>()
+        .join(" ");
+    let (_, rest) = flat.split_once("Failed to build `")?;
+    let (pinned, _) = rest.split_once('`')?;
+    let pinned = pinned.split_whitespace().collect::<Vec<_>>().join(" ");
+    let package = match pinned.split_once("==") {
+        Some((name, version)) => format!("“{}” {}", name.trim(), version.trim()),
+        None => format!("“{}”", pinned.split(" @ ").next().unwrap_or(&pinned).trim()),
+    };
+    let last = stderr.split_once("[stderr]").and_then(|(_, after)| {
+        after
+            .lines()
+            .map(str::trim)
+            .filter(|l| !l.is_empty())
+            .take_while(|l| !l.starts_with("hint:") && !l.starts_with("help:"))
+            .last()
+            .map(|l| l.chars().take(200).collect::<String>())
+    });
+    let mut words = format!(
+        "{package} kaynağından derlenemedi: bu bilgisayar için hazır kurulum dosyası (wheel) yok ve derlemesi \
+         başarısız oldu. Bu, eklentinin kendi hatası değil; çoğu zaman derleyici ya da paketin istediği bir sistem \
+         kütüphanesi eksiktir. Yayımcıdan bu sistem için wheel'i olan bir sürüm isteyin."
+    );
+    if let Some(last) = last {
+        words.push_str(&format!(" Derlemenin son sözü: “{last}”."));
+    }
+    Some(words)
+}
+
+/// A package uv refused to build because it was not listed as built here (docs/adr/8057 §98): uv says “Distribution
+/// `kirik==0.1 @ …` can't be installed because it is marked as `--no-build` but has no binary distribution”. In a
+/// sentence with the package, or none for another failure.
+pub fn no_build_words(stderr: &str) -> Option<String> {
+    let flat = stderr.split_whitespace().collect::<Vec<_>>().join(" ");
+    if !flat.contains("is marked as `--no-build`") {
+        return None;
+    }
+    let (_, rest) = flat.split_once("Distribution `")?;
+    let (pinned, _) = rest.split_once('`')?;
+    let pinned = pinned.split(" @ ").next().unwrap_or(pinned).trim();
+    let package = match pinned.split_once("==") {
+        Some((name, version)) => format!("“{}” {}", name.trim(), version.trim()),
+        None => format!("“{pinned}”"),
+    };
+    Some(format!(
+        "{package} bu bilgisayarda kaynağından derlenmek zorunda, ama kurulum incelemesinde burada derlenecekler \
+         arasında değildi: KentOS onu derlemez. Eklentinin kilidinde bu sistemin hazır kurulum dosyası (wheel) \
+         bulunamadı; yayımcıya bildirin."
+    ))
 }
 
 /// uv's own words: its first `error:` line and the last cause under it, at most 300 characters.

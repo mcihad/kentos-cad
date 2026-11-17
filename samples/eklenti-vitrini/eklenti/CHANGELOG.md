@@ -1,5 +1,137 @@
 # Değişiklikler
 
+## 1.0.54 — 16 Kasım 2026
+
+- Paketin kendi sınamaları (`tests/test_mantik.py`, Python'un `unittest`'i): "Ada/parsel yazımı" işlevi ve Yapı
+  özeti'nin çubuk grafiği. `kentos kek test` örneklerden sonra onları eklentinin ortamında çalıştırır.
+
+## 1.0.53 — 16 Kasım 2026
+
+- "Ada/parsel yazımı" ifade işlevinin örnekleri (manifestte `examples`): `("101", "1")` → `"101/1"`, sayı olarak gelen
+  ada (`101.0`) `"101/4"` yazar, boş parsel değer vermez. Eklentiler › Örnekleri çalıştır ve `kentos kek test`
+  çalıştırır.
+
+## 1.0.52 — 16 Kasım 2026
+
+- İki denetim kuralının örnekleri (`audits/yapi-no.examples.json`, `audits/parsel-cakisma.examples.json`): numarasız
+  yapı sıradaki numarayı ve düzeltmesini alır, numaralı yapıda bulgu yok; üst üste binen iki parsel 20 m² çakışma
+  hatası verir, komşu iki parselde bulgu yok. Eklentiler › Örnekleri çalıştır ve `kentos kek test` çalıştırır.
+
+## 1.0.51 — 16 Kasım 2026
+
+- İki İşlemler aracı da (TAKS denetimi, Çekme mesafesi denetimi) `headless-python` bildirir: MCP'de ve KentOS'un
+  Python kitaplığında, masaüstündeki gibi eklentinin ortamında çalışır (aynı kimlik, şema ve sonuç).
+
+## 1.0.50 — 16 Kasım 2026
+
+- Bakım kayıtları bölünmüş panel (`"split": true`): form üstte, bakım kayıtları ve tesisin ekleri altta kendi
+  kaydırmalarıyla; aradaki çizgi sürüklenince form ile çıktılar yüksekliği paylaşır, çift tık ilk hâline döndürür.
+
+## 1.0.49 — 16 Kasım 2026
+
+- Bakım kayıtları panelinin altında "Tesisin ekleri" (`attachments`, `of: "tesis"`): seçilen tesisin fotoğrafları,
+  belgeleri ve adresleri Öznitelikler'deki gibi (fotoğrafın küçük resmi, yoksa türünün simgesi); Aç açar, KentOS'un
+  kendi Dosya ekle… ve Adres ekle…'si tesise ek ekler (kullanıcının düzenlemesi, tek geri alma adımı). Python'suz.
+
+## 1.0.48 — 16 Kasım 2026
+
+- "Bakım kayıtları" paneli (Vitrin › Panel): Tesis bir ilişki seçicisi (`relationPicker`, ilişki `bakim-tesis`,
+  `display: "ad"`): Örnek tesis'in kayıtları adlarıyla listelenir, değeri seçilen tesisin kalıcı kimliği. Altta ilişki
+  listesi (`relationList`, `of: "tesis"`): seçilen tesisin bakım kayıtları (Tarih, Açıklama), Python'suz ve çizimden
+  canlı. Yeni bakım bölümünde Ekle `bakim-ekle` komutunu çalıştırır: seçilen tesise geometrisiz bir bakım kaydı yazar
+  (`cad.records.create`), liste kendiliğinden yenilenir.
+
+## 1.0.47 — 16 Kasım 2026
+
+- Yakın yapılar'da Uzaklık km ile de yazılır (`numberField`'ın `units`'i: m, km; KentOS'un sayı alanları gibi):
+  "0,03 km" yazılınca komut 30 m alır ve alan 30 m yazar, "1 km + 20 m" de olur; sınır metreyle söylenir ("1 m ile
+  1000 m arasında"), − + metre adımlarıyla. Açıklama bunu söyler. Komut değişmedi: uzaklığı yine metre alır.
+
+## 1.0.46 — 16 Kasım 2026
+
+- "Alandaki yapılar" paneli (Vitrin › Panel): Alan alanı bir şekil seçicisi (`shapePicker`, `"shape": "polygon"`):
+  Haritada çiz'e basıp alan çizilir (kenetlenir; Enter ya da çift tık bitirir, Esc vazgeçer), alan alanın yanında köşe
+  sayısı ve büyüklüğüyle yazılır, ✕ bırakır. Alan çizilince ve "Yalnızca tamamı içinde kalanlar" değişince
+  `alandaki-yapilar` komutu alana giren yapıları, içinde kalan taban alanı ve payıyla listeler (komut alanı GeoJSON
+  olarak alır, shapely ile okur).
+
+## 1.0.45 — 16 Kasım 2026
+
+- "Katmanı CSV'ye yaz" iki adımlı bir sihirbaz (`ctx.dialog(…, steps=True)`): Sütunlar adımında hangi özniteliklerin
+  yazılacağı (hepsi seçili gelir) ve ayırıcı (virgül, noktalı virgül), Dosya adımında kaydetme yeri; İleri adımın
+  alanlarını denetler, Yaz son adımın düğmesi. Alanların sekmeleri adımlardır.
+
+## 1.0.44 — 16 Kasım 2026
+
+- Yakın yapılar panelinde açıklamanın altında ince bir çizgi (`divider`); Uzaklık'ın yanında − ve + düğmeleri değeri
+  5 m'lik adımlarla değiştirir (`numberField`'ın `step`'i, 1 ile 1000 m arasında kalır).
+
+## 1.0.43 — 16 Kasım 2026
+
+- "Yakın yapılar" paneli (Vitrin › Panel): Nokta alanı bir nokta seçicisi (`pointPicker`): Haritadan seç'e basıp
+  haritada gösterilir (kenetlenir) ya da x, y yazılır; nokta değişince ve Bul'a basınca `yakin-yapilar` komutu o
+  noktaya Uzaklık içindeki yapıları yakından uzağa listeler (shapely ile uzaklık; satıra tıklamak yapıyı gösterir).
+  Nokta ile Uzaklık bir satırda (`row`).
+
+## 1.0.42 — 16 Kasım 2026
+
+- Yapıları numarala'nın penceresinde Önek ve İlk numara bir satırda yan yana (`row`): bileşenin `row` anahtarı aynı
+  satır adını taşıyan komşu bileşenleri tek satırda dizer; yer yetmezse KentOS onları formun öbür alanları gibi alt alta
+  koyar. Değerler, zorunluluk ve hesaplı açıklama eskisi gibi.
+
+## 1.0.41 — 15 Kasım 2026
+
+- Çekme mesafesi denetimi her yapının kendi `cekme` özniteliğine durumu (uygun / taşıyor) yazar: aracın girdisi
+  tanımında `"writes": true` der, kod `ctx.update(yapi, cekme=durum)` ile; değişiklikler tamponlarla aynı geri alma
+  adımında. Kaynağı değiştirmek aracın tanımında açıkça söylenir; söylemeyen girdi değiştirilemez.
+
+## 1.0.40 — 15 Kasım 2026
+
+- İki aracın tanımında örnekler (`examples`): TAKS'ta biri aşan iki parsel, Çekme mesafesinde kenara yakın ve ortadaki
+  yapı; her biri beklenen çıktılarıyla (aşan sayısı, yazılan nesnelerin durumu, özet). Eklentiler › Vitrin › Örnekleri
+  çalıştır onları KentOS'un kendi sentetik çiziminde koşturup sonucu söyler; ajan da `extension.workshop.trial` ile
+  `examples: true`.
+
+## 1.0.39 — 15 Kasım 2026
+
+- İşlemler aracı "Çekme mesafesi denetimi" (Vitrin › Analiz › Çekme mesafesi): her yapının çevresine KentOS'un
+  yerleşik Tampon aracıyla mesafe kadar alan çizer (eklentinin aracı içinden `ctx.run_tool`: KentOS'un aracı
+  eklentiye verilen yapılar üzerinde, kullanıcının çizimine dokunmadan çalışır), tamponun yapının parselinden taşıp
+  taşmadığını shapely ile söyler; tamponlar yeni katmana `yapi`, `mesafe_m`, `durum`, `tasan_alan_m2` ile, taşanlar seçili.
+
+## 1.0.38 — 15 Kasım 2026
+
+- Vitrin sekmesinin Analiz grubunda "Yapı tamponu": eklentinin komutu KentOS'un yerleşik Tampon aracını
+  (`geometry.buffer`) çağırır (`ctx.run_tool`, `ext.layer_input`, `ext.new_layer`): uzaklığı sorar, yapıların
+  tamponlarını yeni bir katmana çizer; araç komutun hakkıyla çalışır, yazdıkları komutun tek geri alma adımına girer.
+
+## 1.0.37 — 15 Kasım 2026
+
+- "CSV'den nokta ekle"nin Seçenekler sekmesinde dosyanın koordinat sistemi (`crsPicker`): çizimin sistemiyle başlar;
+  başkası seçilirse noktalar KentOS'un dönüşümüyle (`cad.crs.transform`) çizimin sistemine taşınır. Örnek dosya
+  `samples/eklenti-vitrini/ornek-noktalar-turef.csv`: aynı dört nokta TUREF coğrafi koordinatlarla (EPSG:5252, boylam
+  ve enlem); TUREF seçilince TM36'daki noktaların tam üstüne düşer.
+
+## 1.0.36 — 15 Kasım 2026
+
+- Katmanın sağ tık menüsünde "Katmanı CSV'ye yaz": KentOS'un penceresi kaydetme yerini sorar (`filePicker` `save`:
+  yolu yazılır ya da Seç… ile kaydetme penceresinden seçilir, önerilen ad katmanın adı, uzantısız ada `.csv` eklenir);
+  her nesne bir satır (x, y: merkezi, TM36 metre; öznitelikler sütun). Eklenti yalnız kullanıcının seçtiği yere yazar:
+  yeni yetenek `files.userSelectedWrite` ("Sizin seçtiğiniz yere dosya yazar"); güncellemede yeni yetenek olarak sorulur.
+
+## 1.0.35 — 15 Kasım 2026
+
+- "CSV'den nokta ekle" penceresinin iki sekmesi var (bileşenin `tab` anahtarı): Dosya (dosya seçici) ve Seçenekler
+  (ayırıcı: virgül, noktalı virgül ya da sekme; diğer sütunlar öznitelik olsun mu). Sekmesiz açıklama her sayfada;
+  dosya verilmeden Ekle'ye basılınca Dosya sekmesi açılır ve alanın altında söylenir.
+
+## 1.0.34 — 15 Kasım 2026
+
+- Katmanın sağ tık menüsünde "CSV'den nokta ekle": KentOS'un penceresi dosyayı sorar (dosya seçici `filePicker`: yolu
+  yazılır ya da Seç… ile seçilir, yalnız CSV), x ve y sütunlarındaki noktalar o katmana eklenir, diğer sütunlar
+  öznitelik olur; tek geri alma adımı. Eklenti yalnız kullanıcının verdiği dosyayı okur (`files.userSelected`).
+  Örnek dosya: `samples/eklenti-vitrini/ornek-noktalar.csv`.
+
 ## 1.0.33 — 15 Kasım 2026
 
 - "Yapı ara"nın Özetle'si göstergelerin altında taban alanlarını çubuk grafik olarak da çizer (`image`): kod grafiği

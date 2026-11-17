@@ -29,6 +29,7 @@
 
 pub mod address;
 pub mod audit_facts;
+pub mod audit_job;
 mod batch_sink;
 pub mod batch_table;
 pub mod builtin;
@@ -56,6 +57,7 @@ pub mod record;
 pub mod registry;
 pub mod runner;
 pub mod source_inputs;
+pub mod staged;
 pub mod text;
 pub mod types;
 pub mod values;

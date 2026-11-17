@@ -15,4 +15,4 @@ Her paket bir KentOS eklentisidir (`manifest.json`, `kentos.extension` 1): `kent
   kopyasını okur.
 - Her kuralın bağımsız durumları `fixtures/standards/v1/` altındadır: beklenen sonuçlar kuralın kodundan değil,
   mevzuat metninden elle çıkarılır.
-- Sınamalar: `python3 -I catalog/standards/dijital-proje/tests/test_kapsam.py`, `python3 -I catalog/standards/mimari-mevzuat/tests/test_asansor.py`.
+- Sınamalar: `python3 -I catalog/standards/tests/dijital-proje/test_kapsam.py`, `python3 -I catalog/standards/tests/mimari-mevzuat/test_asansor.py`.

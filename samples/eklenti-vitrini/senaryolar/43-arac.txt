@@ -1,0 +1,18 @@
+# Yerleşik araç çağrısı: Vitrin › Analiz › Yapı tamponu. Eklentinin komutu uzaklığı sorar ve KentOS'un yerleşik
+# Tampon aracını (geometry.buffer) çağırır (ctx.run_tool): beş yapının tamponu yeni katmana çizilir; araç komutun
+# hakkıyla çalışır, yazdıkları komutun tek geri alma adımına girer. (Önce 01.)
+fit KentOS GIS — Eklenti vitrini
+wait 2500
+key Escape
+wait 800
+click 63 56     # Tümünü göster
+wait 1200
+click 844 20    # Vitrin sekmesi
+wait 1000
+shot 43-serit
+click 436 57    # Yapı tamponu
+wait 3500
+shot 43-pencere
+click 939 527   # Çiz (3 m)
+wait 4000
+shot 43-cizildi
