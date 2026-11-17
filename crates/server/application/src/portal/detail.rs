@@ -281,6 +281,11 @@ pub(crate) async fn assemble(
             && !flow::closed(status),
         can_cancel_fees: matches!(party, Party::Member(r) if r >= kentos_contracts::TenantRole::ProjectManager),
         fee_count: u32::try_from(fee_count).unwrap_or(0),
+        can_sign: acts
+            && match party {
+                Party::Member(r) => r >= kentos_contracts::TenantRole::Editor,
+                p => p.works_for_professional(),
+            },
         pending_round: held.row.round() + 1,
         rounds: rounds.into_values().collect(),
         pending,

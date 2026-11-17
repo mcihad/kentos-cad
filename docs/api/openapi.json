@@ -8848,6 +8848,90 @@
         ],
         "type": "string"
       },
+      "DossierSignatureView": {
+        "description": "`GET /v1/dossiers/{id}/signatures`: a verified signature kept on a file of the dossier.",
+        "properties": {
+          "digestAlgorithm": {
+            "type": "string"
+          },
+          "fileId": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "fingerprintSha256": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "issuer": {
+            "type": "string"
+          },
+          "keyAlgorithm": {
+            "type": "string"
+          },
+          "legalCheck": {
+            "$ref": "#/components/schemas/SigningLegalCheck"
+          },
+          "round": {
+            "description": "The file's round (0: not sent yet).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "serialNumber": {
+            "type": "string"
+          },
+          "side": {
+            "$ref": "#/components/schemas/DossierSide",
+            "description": "The side of the person who signed."
+          },
+          "signatureAlgorithm": {
+            "type": "string"
+          },
+          "signedAt": {
+            "description": "RFC 3339: when the card signed (the client's clock).",
+            "type": "string"
+          },
+          "signerName": {
+            "description": "The KentOS account that delivered it.",
+            "type": "string"
+          },
+          "stillMatches": {
+            "description": "Whether the file's stored bytes still have the digest that was signed.",
+            "type": "boolean"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "verifiedAt": {
+            "description": "RFC 3339: when the server verified it.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "fileId",
+          "fileName",
+          "round",
+          "side",
+          "signerName",
+          "subject",
+          "issuer",
+          "serialNumber",
+          "fingerprintSha256",
+          "keyAlgorithm",
+          "signatureAlgorithm",
+          "digestAlgorithm",
+          "signedAt",
+          "verifiedAt",
+          "stillMatches",
+          "legalCheck"
+        ],
+        "type": "object"
+      },
       "DossierSite": {
         "description": "Where the matter is; what was given of it.",
         "properties": {
@@ -29943,6 +30027,264 @@
         ],
         "type": "string"
       },
+      "SigningClientType": {
+        "description": "Where the signing happens.",
+        "oneOf": [
+          {
+            "enum": [
+              "MOBILE"
+            ],
+            "type": "string"
+          },
+          {
+            "const": "WEB",
+            "description": "A browser, through KentOS İmza on the computer.",
+            "type": "string"
+          },
+          {
+            "const": "DESKTOP",
+            "description": "The KentOS desktop, in its own process.",
+            "type": "string"
+          }
+        ]
+      },
+      "SigningFile": {
+        "description": "A file as the request names it: the digest is of the bytes the server keeps.",
+        "properties": {
+          "digest": {
+            "description": "Lowercase hex.",
+            "type": "string"
+          },
+          "digestAlgorithm": {
+            "description": "`SHA-384` (the measured cards are P-384) or `SHA-256`.",
+            "type": "string"
+          },
+          "fileId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "size": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "fileId",
+          "name",
+          "size",
+          "digestAlgorithm",
+          "digest"
+        ],
+        "type": "object"
+      },
+      "SigningFileVerdict": {
+        "properties": {
+          "error": {
+            "description": "Why not, in Turkish.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fileId": {
+            "type": "string"
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "fileId",
+          "verified"
+        ],
+        "type": "object"
+      },
+      "SigningLegalCheck": {
+        "description": "How far a signature's legal validity was checked: the key signed these bytes is proved; the certificate's chain to\nthe authority's roots and its revocation are not checked yet (`not_done`). More values will come.",
+        "enum": [
+          "not_done"
+        ],
+        "type": "string"
+      },
+      "SigningOutcome": {
+        "description": "What came of a delivery.",
+        "oneOf": [
+          {
+            "enum": [
+              "failed"
+            ],
+            "type": "string"
+          },
+          {
+            "const": "completed",
+            "description": "Every file signed and verified.",
+            "type": "string"
+          },
+          {
+            "const": "partially",
+            "description": "Some were.",
+            "type": "string"
+          }
+        ]
+      },
+      "SigningRequestCreate": {
+        "description": "`POST /v1/dossiers/{id}/signing`: the files of the dossier to sign.",
+        "properties": {
+          "clientType": {
+            "$ref": "#/components/schemas/SigningClientType"
+          },
+          "fileIds": {
+            "description": "1–50 files of the dossier (`DossierFileView.id`).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "clientType",
+          "fileIds"
+        ],
+        "type": "object"
+      },
+      "SigningRequestCreated": {
+        "description": "The request issued: its envelope goes to the signing service as it is.",
+        "properties": {
+          "batchId": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "description": "RFC 3339, UTC: after this the service refuses it.",
+            "type": "string"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/SigningFile"
+            },
+            "type": "array"
+          },
+          "signedRequest": {
+            "description": "The compact JWS (`EdDSA`, `KSI-SR`) the signing service checks against `GET /v1/signing/trust`.",
+            "type": "string"
+          },
+          "transactionId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "transactionId",
+          "batchId",
+          "signedRequest",
+          "expiresAt",
+          "files"
+        ],
+        "type": "object"
+      },
+      "SigningSigner": {
+        "description": "The signer as the server read the certificate (not as the client said).",
+        "properties": {
+          "fingerprintSha256": {
+            "description": "SHA-256 of the certificate, upper-case hex.",
+            "type": "string"
+          },
+          "issuer": {
+            "type": "string"
+          },
+          "serialNumber": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject",
+          "issuer",
+          "serialNumber",
+          "fingerprintSha256"
+        ],
+        "type": "object"
+      },
+      "SigningTrust": {
+        "description": "`GET /v1/signing/trust`: the key the signing service checks the server's requests with.",
+        "properties": {
+          "audience": {
+            "type": "string"
+          },
+          "issuer": {
+            "type": "string"
+          },
+          "publicKey": {
+            "description": "The server's Ed25519 public key: standard base64 of its 32 bytes.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "publicKey",
+          "issuer",
+          "audience"
+        ],
+        "type": "object"
+      },
+      "SigningVerdict": {
+        "description": "`POST /v1/signing/{transactionId}/result`: the server's check of what the client delivered.",
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/SigningFileVerdict"
+            },
+            "type": "array"
+          },
+          "legalCheck": {
+            "$ref": "#/components/schemas/SigningLegalCheck"
+          },
+          "reason": {
+            "description": "Why it was refused, in Turkish.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "required": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "signed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "signer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SigningSigner"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/SigningOutcome"
+          }
+        },
+        "required": [
+          "accepted",
+          "status",
+          "signed",
+          "required",
+          "files",
+          "legalCheck"
+        ],
+        "type": "object"
+      },
       "Signup": {
         "description": "`POST /v1/portal/signup`, and an administrator opening a professional's account.",
         "properties": {
@@ -40009,6 +40351,109 @@
         ]
       }
     },
+    "/v1/dossiers/{id}/signatures": {
+      "get": {
+        "description": "İki taraf da okur: belge, imzalayan (sertifikadan sunucunun okuduğu), zaman ve belgenin hâlâ imzalanan baytlarda olup olmadığı (`stillMatches`).",
+        "operationId": "getDossiersByIdSignatures",
+        "parameters": [
+          {
+            "description": "Dosyanın (başvuru ya da aktarım) kimliği.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DossierSignatureView"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Dosyanın e-imzaları",
+        "tags": [
+          "Portal: e-imza"
+        ]
+      }
+    },
+    "/v1/dossiers/{id}/signing": {
+      "post": {
+        "description": "Dosyanın 1–50 belgesi (`fileIds`). Sunucu belgelerin kendi deposundaki baytlarının SHA-384 özetini yazar ve isteği imzalar (`signedRequest`, JWS, `EdDSA`, 15 dakika). Web'de istek tarayıcıdan KentOS İmza'ya (127.0.0.1) verilir; masaüstü kendi içinde imzalar. Meslek mensubu tarafı (büronun düzenleyicisi dahil) ve belediyenin düzenleyicisi ve üstü.",
+        "operationId": "postDossiersByIdSigning",
+        "parameters": [
+          {
+            "description": "Dosyanın (başvuru ya da aktarım) kimliği.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SigningRequestCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SigningRequestCreated"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Belgeleri imzalamak için istek",
+        "tags": [
+          "Portal: e-imza"
+        ]
+      }
+    },
     "/v1/extension-catalogs/{catalog}/releases": {
       "get": {
         "description": "Katalogdaki eklenti sürümleri.",
@@ -42692,6 +43137,128 @@
         "summary": "Şablonun paylaşılabileceği kişiler",
         "tags": [
           "Pafta şablonları"
+        ]
+      }
+    },
+    "/v1/signing/trust": {
+      "get": {
+        "description": "KentOS İmza'nın (yerel imza servisi) ve masaüstünün sunucunun isteklerini doğruladığı Ed25519 açık anahtarı (`publicKey`, 32 baytın base64'ü), `issuer` ve `audience`. Sunucuda imza anahtarı yoksa 409.",
+        "operationId": "getSigningTrust",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SigningTrust"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "summary": "Sunucunun imza anahtarı",
+        "tags": [
+          "Portal: e-imza"
+        ]
+      }
+    },
+    "/v1/signing/{transaction}/cancel": {
+      "post": {
+        "description": "Yalnız açan, yalnız sonuçlanmamışken.",
+        "operationId": "postSigningByTransactionCancel",
+        "parameters": [
+          {
+            "description": "Kaydın kimliği.",
+            "in": "path",
+            "name": "transaction",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Başarılı; gövde yok."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "İsteği iptal et",
+        "tags": [
+          "Portal: e-imza"
+        ]
+      }
+    },
+    "/v1/signing/{transaction}/result": {
+      "post": {
+        "description": "Gövde KentOS İmza'nın verdiği sonucun (`BatchResult`: `transactionId`, `signer.certificateDer`, `results[].signatureValue`…) kendisidir. Sunucu kendi isteğine ve belgenin bugünkü baytlarına karşı sınar; doğrulanan imza belgede saklanır. İsteği yalnız açan teslim eder; ikinci teslim 409 ve ilk sonuç geçerlidir. Sertifika zinciri ve iptal durumu henüz denetlenmez (`legalCheck: not_done`).",
+        "operationId": "postSigningByTransactionResult",
+        "parameters": [
+          {
+            "description": "Kaydın kimliği.",
+            "in": "path",
+            "name": "transaction",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": true
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SigningVerdict"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "İmzaları teslim et",
+        "tags": [
+          "Portal: e-imza"
         ]
       }
     },
@@ -46372,6 +46939,10 @@
     {
       "description": "Belediyenin yıllık ücret tarifesi (2464 sayılı Kanun) ve dosyalara tahakkuk, ödeme, iptal.",
       "name": "Portal: harç ve ücret"
+    },
+    {
+      "description": "Dosyanın belgelerini nitelikli elektronik sertifikayla imzalamak: sunucunun imzalı isteği, KentOS İmza ya da masaüstü, sunucunun kendi kaydına karşı doğrulama (ADR 9002, 9004).",
+      "name": "Portal: e-imza"
     },
     {
       "description": "Hesabın bildirimleri.",

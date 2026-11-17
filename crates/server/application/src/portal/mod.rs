@@ -26,6 +26,7 @@ pub mod notifications;
 pub mod organization;
 pub mod platform;
 mod rows;
+pub mod signing;
 pub mod steps;
 
 use time::OffsetDateTime;

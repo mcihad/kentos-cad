@@ -26,6 +26,11 @@ kentos-sheet = { path = "../../shared/sheet", default-features = false }
 kentos-forms = { path = "../../shared/forms" }
 kentos-expression = { path = "../../shared/expression" }
 kentos-project = { path = "../../native/project" }
+# E-signing a dossier's files (docs/adr/9004): the signing service's wire types, the server's side of its signed
+# requests (Ed25519, feature `issue`) and the check of a delivery against the server's own request.
+kentos-imza-domain = { path = "../../imza/domain" }
+kentos-imza-security = { path = "../../imza/security", features = ["issue"] }
+kentos-imza-signature = { path = "../../imza/signature" }
 sha2 = { workspace = true }
 tokio = { workspace = true, features = ["fs", "io-util"] }
 serde = { workspace = true }
@@ -36,6 +41,8 @@ time = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true }
+# A software test card signs in the tests as the signing service would (tests/portal_signing.rs); tests only.
+kentos-imza-signature = { path = "../../imza/signature", features = ["mock-token"] }
 # The contracts' JSON Schema feature; the command catalog (tests/catalog.rs) is built in kentos-commands (docs/adr/0540).
 kentos-contracts = { path = "../../shared/contracts", default-features = false, features = ["schema"] }
 kentos-commands = { path = "../../shared/commands", default-features = false, features = ["schema"] }

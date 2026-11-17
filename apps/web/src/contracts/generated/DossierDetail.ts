@@ -54,6 +54,12 @@ canCancelFees: boolean,
  */
 feeCount: number, 
 /**
+ * Whether the caller e-signs its files (docs/adr/9004): the professional's side who prepares it (an office's
+ * editors too), the municipality's editors and above. Whether the server has a signing key is
+ * `GET /v1/signing/trust`'s answer.
+ */
+canSign: boolean, 
+/**
  * The package being prepared: `round + 1`.
  */
 pendingRound: number, rounds: Array<DossierRound>, pending: Array<DossierFileView>, messages: Array<DossierMessageView>, events: Array<DossierEventView>, checklist: DocChecklist | null, professional: ProfessionalView | null, organization: DossierOrganization, 

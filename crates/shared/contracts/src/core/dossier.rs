@@ -331,6 +331,11 @@ pub struct DossierDetail {
     /// Its assessments not cancelled (issued or paid).
     #[serde(default)]
     pub fee_count: u32,
+    /// Whether the caller e-signs its files (docs/adr/9004): the professional's side who prepares it (an office's
+    /// editors too), the municipality's editors and above. Whether the server has a signing key is
+    /// `GET /v1/signing/trust`'s answer.
+    #[serde(default)]
+    pub can_sign: bool,
     /// The package being prepared: `round + 1`.
     pub pending_round: u32,
     pub rounds: Vec<DossierRound>,

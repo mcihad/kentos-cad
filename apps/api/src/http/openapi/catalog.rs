@@ -105,6 +105,7 @@ const DOSSIERS: &str = "Portal: dosyalar";
 const ORGANIZATION: &str = "Portal: kurum";
 const PLATFORM: &str = "Portal: platform yönetimi";
 const FEES: &str = "Portal: harç ve ücret";
+const SIGNING: &str = "Portal: e-imza";
 const NOTIFICATIONS: &str = "Bildirimler";
 const SHEETS: &str = "Pafta şablonları";
 const EXTENSIONS: &str = "Eklenti kataloğu";
@@ -122,6 +123,8 @@ pub(super) const TAGS: &[(&str, &str)] = &[
     (ORGANIZATION, "Kurumun portal ayarları, üyeleri ve meslek mensubu rehberi."),
     (PLATFORM, "Sistem yöneticisinin kurumları, hesapları, meslek mensubu doğrulaması ve kayıt defteri."),
     (FEES, "Belediyenin yıllık ücret tarifesi (2464 sayılı Kanun) ve dosyalara tahakkuk, ödeme, iptal."),
+    (SIGNING, "Dosyanın belgelerini nitelikli elektronik sertifikayla imzalamak: sunucunun imzalı isteği, KentOS İmza \
+               ya da masaüstü, sunucunun kendi kaydına karşı doğrulama (ADR 9002, 9004)."),
     (NOTIFICATIONS, "Hesabın bildirimleri."),
     (SHEETS, "Pafta şablonu kitaplığı."),
     (EXTENSIONS, "Kurumun eklenti kataloğu (yükleme, inceleme, onay, kurulum)."),
@@ -461,6 +464,28 @@ pub(super) fn ops() -> Vec<Op> {
         op("PATCH", "/v1/tenants/{tenant}/members/{user}", ORGANIZATION, "Üyeliği değiştir",
             "Rol ya da etkinlik; kurumun son sahibi düşürülemez.",
             Body(of::<c::MemberEdit>), Json(200, of::<Vec<c::MemberView>>)),
+        op("GET", "/v1/signing/trust", SIGNING, "Sunucunun imza anahtarı",
+            "KentOS İmza'nın (yerel imza servisi) ve masaüstünün sunucunun isteklerini doğruladığı Ed25519 açık anahtarı \
+             (`publicKey`, 32 baytın base64'ü), `issuer` ve `audience`. Sunucuda imza anahtarı yoksa 409.",
+            No, Json(200, of::<c::SigningTrust>)),
+        op("POST", "/v1/dossiers/{id}/signing", SIGNING, "Belgeleri imzalamak için istek",
+            "Dosyanın 1–50 belgesi (`fileIds`). Sunucu belgelerin kendi deposundaki baytlarının SHA-384 özetini yazar \
+             ve isteği imzalar (`signedRequest`, JWS, `EdDSA`, 15 dakika). Web'de istek tarayıcıdan KentOS İmza'ya \
+             (127.0.0.1) verilir; masaüstü kendi içinde imzalar. Meslek mensubu tarafı (büronun düzenleyicisi dahil) \
+             ve belediyenin düzenleyicisi ve üstü.",
+            Body(of::<c::SigningRequestCreate>), Json(201, of::<c::SigningRequestCreated>)),
+        op("POST", "/v1/signing/{transaction}/result", SIGNING, "İmzaları teslim et",
+            "Gövde KentOS İmza'nın verdiği sonucun (`BatchResult`: `transactionId`, `signer.certificateDer`, \
+             `results[].signatureValue`…) kendisidir. Sunucu kendi isteğine ve belgenin bugünkü baytlarına karşı sınar; \
+             doğrulanan imza belgede saklanır. İsteği yalnız açan teslim eder; ikinci teslim 409 ve ilk sonuç geçerlidir. \
+             Sertifika zinciri ve iptal durumu henüz denetlenmez (`legalCheck: not_done`).",
+            Body(of::<serde_json::Value>), Json(200, of::<c::SigningVerdict>)),
+        op("POST", "/v1/signing/{transaction}/cancel", SIGNING, "İsteği iptal et",
+            "Yalnız açan, yalnız sonuçlanmamışken.", No, Empty(204)),
+        op("GET", "/v1/dossiers/{id}/signatures", SIGNING, "Dosyanın e-imzaları",
+            "İki taraf da okur: belge, imzalayan (sertifikadan sunucunun okuduğu), zaman ve belgenin hâlâ imzalanan \
+             baytlarda olup olmadığı (`stillMatches`).",
+            No, Json(200, of::<Vec<c::DossierSignatureView>>)),
         op("GET", "/v1/tenants/{tenant}/fees/schedules", FEES, "Ücret tarifeleri",
             "Kurumun tarifeleri, en yeni yıl önce: taslak, yürürlükte (`active`, en çok bir tane) ve geçmiş.",
             No, Json(200, of::<Vec<c::FeeSchedule>>)),

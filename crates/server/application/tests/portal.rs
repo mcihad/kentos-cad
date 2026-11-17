@@ -1142,3 +1142,119 @@ async fn fees_are_issued_by_the_tariff_and_paid_before_the_permit() {
     fees::delete_schedule(&db.app, &owner, Uuid::parse_str(&next.id).unwrap()).await.unwrap();
     assert_eq!(fees::dossier_fees(&db.app, &ayse, id).await.unwrap()[0].lines[0].amount, 732_000);
 }
+
+/// What the signing service does with a request: checks the server's envelope, opens it, signs with the (software)
+/// card and gives its result.
+fn signed_on_the_card(created: &kentos_contracts::SigningRequestCreated, trust: &kentos_contracts::SigningTrust) -> kentos_imza_domain::BatchResult {
+    use kentos_imza_signature::mock_token::{MOCK_PIN, MockToken};
+    use kentos_imza_signature::{Choice, RecordSink, sign_batch};
+    let guard = kentos_imza_security::TrustConfig::from_base64(&trust.public_key, trust.issuer.clone(), trust.audience.clone()).unwrap();
+    let now = time::OffsetDateTime::now_utc().format(&time::format_description::well_known::Rfc3339).unwrap();
+    let payload = kentos_imza_security::verify(&created.signed_request, &guard, &now).unwrap();
+    let mut record = kentos_imza_domain::BatchRecord::new(payload.to_batch().unwrap());
+    record.open().unwrap();
+    let batch = record.batch.clone();
+    let mut ignore = |_: &str, _: &serde_json::Value| {};
+    let mut sink = RecordSink { record: &mut record, on_event: &mut ignore };
+    sign_batch(&batch, &MockToken::new(), &Choice { slot_id: 1, certificate_id: "01".into() }, MOCK_PIN, &mut sink).unwrap();
+    record.result()
+}
+
+#[tokio::test]
+async fn a_dossier_s_files_are_signed_on_the_card_and_checked_against_the_server_s_own_record() {
+    use kentos_application::portal::signing::{self, Signer};
+    use kentos_contracts::{SigningClientType, SigningOutcome, SigningRequestCreate};
+
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let store = blobs();
+    let root = sistem(&db).await;
+    let tenant = municipality(&db, &root, "imzali", "mehmet").await;
+    let mehmet = signed_in(&db, "mehmet").await;
+    let (zeynep, _) = staff(&db, &mehmet, tenant, "zeynep", TenantRole::Editor).await;
+    let (selin, _) = staff(&db, &mehmet, tenant, "selin", TenantRole::Viewer).await;
+    let ayse = professional(&db, &root, "ayse", Profession::Architect).await;
+    let id = dossiers::create_application(
+        &db.app,
+        &ayse,
+        &ApplicationCreate {
+            tenant_id: tenant.to_string(),
+            kind: "building_permit".into(),
+            title: "412 ada 7 parsel konut yapı ruhsatı".into(),
+            description: String::new(),
+            site: site(),
+            owner_name: None,
+            office_id: None,
+        },
+    )
+    .await
+    .unwrap();
+    let a = add_file(&db, &store, &ayse, id, ("mimari.pdf", b"%PDF-1.4 mimari proje", "architectural"), Purpose::Package)
+        .await
+        .unwrap();
+    let b = add_file(&db, &store, &ayse, id, ("statik.pdf", b"%PDF-1.4 statik proje", "structural"), Purpose::Package)
+        .await
+        .unwrap();
+    act(&db, &ayse, id, DossierAction::Send, None).await.unwrap();
+    let ask = SigningRequestCreate { client_type: SigningClientType::Desktop, file_ids: vec![a.id.clone(), b.id.clone()] };
+
+    // Without the server's key there is nothing to sign with.
+    let off = signing::request(&db.app, &store, None, &ayse, id, &ask).await.unwrap_err();
+    assert!(off.to_string().contains("yapılandırılmamış"), "{off}");
+    let signer = Signer::generated().unwrap();
+    let trust = signer.trust();
+    // A viewer reads; signing is an editor's.
+    let viewer = signing::request(&db.app, &store, Some(&signer), &selin, id, &ask).await.unwrap_err();
+    assert!(matches!(viewer, AppError::Forbidden(_)), "{viewer:?}");
+
+    let created = signing::request(&db.app, &store, Some(&signer), &ayse, id, &ask).await.unwrap();
+    assert_eq!(created.files.len(), 2);
+    assert_eq!(
+        created.files[0].digest,
+        kentos_imza_security::digest::compute(kentos_imza_domain::DigestAlgorithm::Sha384, b"%PDF-1.4 mimari proje"),
+        "the digest is of the bytes the server keeps, as the signing service computes it"
+    );
+    let result = signed_on_the_card(&created, &trust);
+    let tx = Uuid::parse_str(&created.transaction_id).unwrap();
+    // Only the one who asked delivers.
+    let other = signing::deliver(&db.app, &store, &zeynep, tx, &result).await.unwrap_err();
+    assert!(matches!(other, AppError::NotFound(_)), "{other:?}");
+    let verdict = signing::deliver(&db.app, &store, &ayse, tx, &result).await.unwrap();
+    assert!(verdict.accepted, "{:?}", verdict.reason);
+    assert_eq!((verdict.status, verdict.signed, verdict.required), (SigningOutcome::Completed, 2, 2));
+    assert!(verdict.signer.as_ref().is_some_and(|s| s.fingerprint_sha256.len() == 64));
+    // The first verdict stays.
+    let again = signing::deliver(&db.app, &store, &ayse, tx, &result).await.unwrap_err();
+    assert!(again.to_string().contains("ilk teslim geçerli"), "{again}");
+
+    // Both sides read the signatures; the timeline says who signed.
+    let seen = signing::signatures(&db.app, &zeynep, id).await.unwrap();
+    assert_eq!(seen.len(), 2);
+    assert!(seen.iter().all(|s| s.still_matches && s.signer_name == "ayse kişi" && s.digest_algorithm == "SHA-384"));
+    assert_eq!(signing::signatures(&db.app, &ayse, id).await.unwrap(), seen);
+    let page = detail::detail(&db.app, &zeynep, id).await.unwrap();
+    assert!(page.events.iter().any(|e| e.action == "signed" && e.text.contains("2 dosyayı e-imzaladı")), "{:?}", page.events);
+
+    // A signature that does not match is refused, and nothing is kept for it.
+    let created = signing::request(&db.app, &store, Some(&signer), &zeynep, id, &ask).await.unwrap();
+    let mut broken = signed_on_the_card(&created, &trust);
+    let value = &mut broken.results[0].signature.signature_value;
+    let flipped = if value.starts_with('A') { 'B' } else { 'A' };
+    value.replace_range(0..1, &flipped.to_string());
+    let tx = Uuid::parse_str(&created.transaction_id).unwrap();
+    let verdict = signing::deliver(&db.app, &store, &zeynep, tx, &broken).await.unwrap();
+    assert_eq!((verdict.status, verdict.signed), (SigningOutcome::Partially, 1));
+    assert!(verdict.files.iter().any(|f| !f.verified && f.error.is_some()));
+    assert_eq!(signing::signatures(&db.app, &ayse, id).await.unwrap().len(), 3);
+
+    // A request given up is not delivered; another dossier's request is not this one's.
+    let created = signing::request(&db.app, &store, Some(&signer), &ayse, id, &ask).await.unwrap();
+    let tx = Uuid::parse_str(&created.transaction_id).unwrap();
+    let result = signed_on_the_card(&created, &trust);
+    signing::cancel(&db.app, &ayse, tx).await.unwrap();
+    let late = signing::deliver(&db.app, &store, &ayse, tx, &result).await.unwrap_err();
+    assert!(late.to_string().contains("iptal edildi"), "{late}");
+    let wrong = signing::deliver(&db.app, &store, &ayse, Uuid::now_v7(), &result).await.unwrap_err();
+    assert!(wrong.to_string().contains("ait değil"), "{wrong}");
+}

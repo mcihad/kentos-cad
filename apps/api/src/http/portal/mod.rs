@@ -7,6 +7,7 @@ mod fees;
 mod me;
 mod organization;
 mod platform;
+mod signing;
 
 use axum::Router;
 use axum::routing::{get, patch, post, put};
@@ -122,6 +123,11 @@ pub fn routes() -> Router<AppState> {
         .route("/v1/dossiers/{id}/fees/preview", post(fees::preview))
         .route("/v1/dossiers/{id}/fees/{fee}/paid", post(fees::paid))
         .route("/v1/dossiers/{id}/fees/{fee}/cancel", post(fees::cancel))
+        .route("/v1/signing/trust", get(signing::trust))
+        .route("/v1/dossiers/{id}/signing", post(signing::request))
+        .route("/v1/dossiers/{id}/signatures", get(signing::signatures))
+        .route("/v1/signing/{transaction}/result", post(signing::deliver))
+        .route("/v1/signing/{transaction}/cancel", post(signing::cancel))
 }
 
 /// A file's bytes coming to a dossier: under the upload limits (`super::router`).

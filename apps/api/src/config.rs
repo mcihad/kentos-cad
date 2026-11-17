@@ -29,6 +29,10 @@ pub struct Config {
     /// Notifications by e-mail and SMS (docs/adr/9000 §17; crate::delivery): `KENTOS_MAIL_TRANSPORT`,
     /// `KENTOS_SMS_TRANSPORT` and their settings. Absent: the bell alone.
     pub delivery: Option<crate::delivery::Delivery>,
+    /// E-signing a dossier's files (docs/adr/9004): `KENTOS_IMZA_SIGNING_KEY` (or the file `KENTOS_IMZA_SIGNING_KEY_FILE`)
+    /// is the server's Ed25519 key, never shown; `KENTOS_IMZA_ISSUER` and `KENTOS_IMZA_AUDIENCE` the names the signing
+    /// service checks. Absent: the signing routes answer 409.
+    pub signing: Option<std::sync::Arc<kentos_application::portal::signing::Signer>>,
     pub vars: BTreeMap<String, String>,
     pub database_url: Option<String>,
     pub owner_url: Option<String>,
@@ -348,11 +352,36 @@ impl Config {
             env_file,
             vars,
             delivery: None,
+            signing: None,
         };
         let delivery = crate::delivery::Delivery::configured(|k| env::lookup(&config.vars, k), &config.public_url)?;
         config.delivery = delivery;
+        config.signing = signing(|k| env::lookup(&config.vars, k))?;
         Ok(config)
     }
+}
+
+/// The server's e-signing key, from the environment or a file (a file keeps it out of the process list and the
+/// environment of child processes).
+fn signing(
+    get: impl Fn(&str) -> Option<String>,
+) -> Result<Option<std::sync::Arc<kentos_application::portal::signing::Signer>>, String> {
+    let key = match get("KENTOS_IMZA_SIGNING_KEY_FILE").filter(|p| !p.trim().is_empty()) {
+        Some(path) => Some(
+            std::fs::read_to_string(path.trim())
+                .map_err(|e| format!("KENTOS_IMZA_SIGNING_KEY_FILE okunamadı ({path}): {e}"))?,
+        ),
+        None => get("KENTOS_IMZA_SIGNING_KEY"),
+    };
+    let Some(key) = key.filter(|k| !k.trim().is_empty()) else {
+        return Ok(None);
+    };
+    let signer = kentos_application::portal::signing::Signer::from_config(
+        &key,
+        get("KENTOS_IMZA_ISSUER").as_deref(),
+        get("KENTOS_IMZA_AUDIENCE").as_deref(),
+    )?;
+    Ok(Some(std::sync::Arc::new(signer)))
 }
 
 #[cfg(test)]
