@@ -5835,8 +5835,8 @@ masaüstü `extensions/view.rs` (uyarı ve onay), `extensions/mod.rs` (`Event::A
   sıradan bir güncelleme gibi kuruluyordu. Eklentinin el değiştirmesi ve kimliğin başkasınca kullanılması tedarik
   zinciri saldırılarının bilinen yoludur; dosyadan ya da klasörden gelen pakette katalog bunu durdurmaz.
 - **Karar:** güncellemenin yayımcısı kurulu sürümünkinden farklıysa (adı değişmiş, adı kalkmış ya da yeni gelmiş)
-  inceleme en üstte uyarır: "Yayımcısı değişti: kurulu sürüm “ornek-belediye”, bu paket “baska-yayimci”. Eklentinin sahibi
-  değişmiş ya da kimliği başkasınca kullanılmış olabilir: yeni yayımcıyı tanımıyorsanız güncellemeyin." Kur, taklit
+  inceleme en üstte uyarır: "Yayımcısı değişti: kurulu sürüm “ornek-belediye”, bu paket “baska-yayimci”. Eklentinin
+  sahibi değişmiş ya da kimliği başkasınca kullanılmış olabilir: yeni yayımcıyı tanımıyorsanız güncellemeyin." Kur, taklit
   pakette olduğu gibi kişi "Yayımcının değiştiğini okudum, yine de kur" diyene dek kapalıdır. Söylenir, reddedilmez:
   meşru bir devir de olabilir; karar kişinindir. İlk kurulum ve aynı yayımcı bir şey söylemez.
 - **Yetkiler:** önceki yayımcıya verilen yetenekler §121'in kuralıyla taşınır. Yeni ve genişleyen yetenek işaretsiz
