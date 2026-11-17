@@ -42,6 +42,8 @@
 //!   in an elevator's shaft) and opening onto a passage (a corridor, a hall, an entrance, a lobby, a landing, a stair's
 //!   room); the structure's height (`fire_audit::heights`); roofs and terraces among Ek-3's elements.
 //! - **Coverings** (docs/adr/8091): each covering's IFC type, material and the material's declared reaction class.
+//! - **The structure** (docs/adr/8094): the project's declared structural system by its name and whether the building
+//!   holds traditional architectural elements; the limited uses carry 22/1-m's traditional rooms.
 
 use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
@@ -221,6 +223,8 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             .map(|n| PlanNoteFacts { key: n.key.name().to_owned(), value: n.value, source: n.source.clone() })
             .collect(),
         zone: arch.zone.map(|z| z.name().to_owned()),
+        structural_system: arch.structure.map(|s| s.system.name().to_owned()),
+        traditional: arch.structure.is_some_and(|s| s.traditional),
         rooms,
         doors,
         limits,

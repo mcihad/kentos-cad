@@ -292,6 +292,10 @@ pub enum Event {
     ArchZone(Option<kentos_commands::Zone>),
     /// Yangın güvenliği's sprinkler system switched (docs/adr/8035).
     ArchSprinklers(bool),
+    /// Taşıyıcı sistem chosen (docs/adr/8094).
+    ArchStructure(Option<kentos_commands::StructuralSystem>),
+    /// Taşıyıcı sistem's Geleneksel mimari öğeler switched (docs/adr/8094).
+    ArchTraditional(bool),
     /// Plan notları: a row changed or taken away, Plan notu ekle (docs/adr/8084).
     ArchPlanNote(usize, super::plan_notes::Edit),
     AddPlanNote,
@@ -654,6 +658,19 @@ impl App {
             Event::ArchLocalRules(rules) => s.arch_zoning.local = rules,
             Event::ArchZone(zone) => s.arch_zoning.zone = zone,
             Event::ArchSprinklers(on) => s.arch_zoning.sprinklers = on,
+            Event::ArchStructure(system) => {
+                // Traditional elements stay only with cut stone masonry (docs/adr/8094).
+                let kept = s.arch_zoning.structure.is_some_and(|x| x.traditional);
+                s.arch_zoning.structure = system.map(|system| kentos_commands::BuildingStructure {
+                    system,
+                    traditional: kept && system == kentos_commands::StructuralSystem::CutStoneMasonry,
+                });
+            }
+            Event::ArchTraditional(on) => {
+                if let Some(x) = &mut s.arch_zoning.structure {
+                    x.traditional = on && x.system == kentos_commands::StructuralSystem::CutStoneMasonry;
+                }
+            }
             Event::ArchPlanNote(i, edit) => super::plan_notes::edit(&mut s.arch_zoning.plan_notes, i, edit),
             Event::AddPlanNote => {
                 let row = super::plan_notes::new_row(&s.arch_zoning.plan_notes);
@@ -1165,6 +1182,11 @@ impl App {
                     event(Event::AddPlanNote),
                 ),
                 super::arch::fire_view(&s.arch_zoning, |on| event(Event::ArchSprinklers(on))),
+                super::arch::structure_view(
+                    &s.arch_zoning,
+                    |x| event(Event::ArchStructure(x)),
+                    |on| event(Event::ArchTraditional(on)),
+                ),
                 super::arch::in_use_view(in_use.as_ref(), event(Event::SelectLevelUsers)),
                 super::arch::choices_view(s.settings.arch.as_ref(), |e| event(Event::RoomChoices(
                     e

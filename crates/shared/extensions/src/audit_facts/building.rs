@@ -45,6 +45,14 @@ pub struct BuildingFacts {
     /// `residentialShops`, `mixed`, `commercial`, `other`; absent: not said.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zone: Option<String>,
+    /// The building's structural system as the project declares it (docs/adr/8094): `reinforcedConcrete`, `steel`,
+    /// `masonry`, `cutStoneMasonry`, `timber`, `composite`; absent: not said.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub structural_system: Option<String>,
+    /// The project says the building holds traditional architectural elements (only of cut stone masonry): PAİY 22/1-m
+    /// and 28/1-d read such a building of up to three storeys (docs/adr/8094).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub traditional: bool,
     /// The rooms that carry people as the escape rules count them (BYKHY Ek-5/A, docs/adr/8035), by persistent id.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rooms: Vec<RoomPeople>,
@@ -261,8 +269,10 @@ pub struct UnderStairRoom {
 #[serde(rename_all = "camelCase")]
 pub struct EmsalLimit {
     /// `balcony` (22/1-l: a unit's open balconies, 20 % of its net area), `storage` (22/1-k: a unit's storage annexes
-    /// on a storey under the ground, 50 % of its net area), `caretaker` (22/1-ç: the caretaker flats, 70 m² together) or
-    /// `library` (22/1-f: the library rooms, 50 m² together).
+    /// on a storey under the ground, 50 % of its net area), `caretaker` (22/1-ç: the caretaker flats, 70 m² together),
+    /// `library` (22/1-f: the library rooms, 50 m² together) or `traditional` (22/1-m, docs/adr/8094: a traditional cut
+    /// stone masonry building's taşlık, dış sofa and eyvan, no area of their own; the building's conditions are the
+    /// rule's).
     pub limit: String,
     /// The independent unit whose net area the limit is a share of, by program id (a balcony's, a storage annex's).
     #[serde(default, skip_serializing_if = "Option::is_none")]

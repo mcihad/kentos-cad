@@ -311,6 +311,10 @@
   - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
     PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
     39/1-ç döner kapının yanında normal bina girişi.
+  - **Taşıyıcı sistem, geleneksel kesme taş yığma bina (17 Kasım 2026; [ADR 8094](../adr/8094-structural-system-traditional-cut-stone.md), K129–K133):**
+    Proje ayarları › Mimari › Taşıyıcı sistem (EK-2 Tablo 2.5 ve kesme taş yığma; geleneksel mimari öğeler; mimari
+    verisi 15). Konut bölgesinde zemin dahil 3 kata kadar böyle binada 28/1-d 4,50 m; tablo Taşlık, Dış sofa, Eyvan'ı
+    emsal harici sayar (22/1-m), koşulları pakette. Kalın taş duvarların payı (20/8-j, 5/8) sıradaki dilim.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

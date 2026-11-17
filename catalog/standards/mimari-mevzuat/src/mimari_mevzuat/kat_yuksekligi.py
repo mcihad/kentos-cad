@@ -11,6 +11,11 @@ parselin plandaki kullanımına (bölgesine) göre:
   4,00 m (Sivas 3,60).
 - **ç) Zemin katında ticaret yapılabilen konut alanı:** zemin 4,50, asma katlı zemin 5,5 (12.8.2023'te kaldırıldı:
   sonra asma katlı zemin kat da 4,50), öbür katlar 3,60 (Sivas 4,50; 5,50; 3,60).
+- **d) Geleneksel kesme taş yığma bina** (9.10.2021'den, RG 31623; Sivas 28/1-d): konut bölgelerinde, geleneksel mimari
+  öğeler barındıran ve taşıyıcı sistemi kesme taş yığma bina olarak tasarlanan zemin dahil 3 katı geçmeyen binalarda
+  zemin ve normal katlarda 4,50 m. Beyanı projenindir (``structuralSystem``: ``cutStoneMasonry``, ``traditional``;
+  docs/adr/8094); konut alanında da zemin katında ticaret yapılabilen konut alanında da (ikisi de konut bölgesi) c ya da
+  ç'nin yerine okunur; 9.10.2021'den önceki başvuruda c ya da ç.
 - **Öbür kullanım** (eğitim, sağlık, sanayi …): 28/1 kat yüksekliği vermez.
 - **Plan notu** (``planNotes``): 28/1 kat yüksekliklerini plana bırakır, yerel yönetmelik plan aksini demiyorsa
   uygulanır (69/3). Zemin kat yüksekliği notu zemin katın, kat yüksekliği notu öbür zemin ve normal katların (zemin
@@ -30,7 +35,8 @@ olmadığı; ``zone``; ``units``, ``dwellings``):
   kattır, yüksekliği asma katın üstündeki ilk kata kadardır; asma kat ayrı kat sayılmaz.
 - Yükseklik katın kendi yüksekliği, yoksa üstündeki katın kotuna kadardır; ikisi de yoksa eksik veri.
 - Karma alanda konut mahali (bağımsız bölümü konut olan mahal) taşıyan kat konut katıdır.
-- 28/1-d'nin geleneksel kesme taş yığma binası (4,50 m) çizimde okunmaz.
+- 28/1-d'nin binası projenin taşıyıcı sistem beyanıyla (kesme taş yığma, geleneksel mimari öğeli) ve zemin dahil kat
+  sayısıyla (zemin ve normal katlar, en çok 3) okunur.
 """
 
 from __future__ import annotations
@@ -49,6 +55,9 @@ BOLGE_ONARIM = "Proje ayarları › Mimari › İmar durumu'nda Bölge'yi (parse
 #: Bölgeler (olguların ``zone``'u) ve okudukları bent.
 BOLGE_MADDESI = {"residential": "28/1-c", "residentialShops": "28/1-ç", "mixed": "28/1-b", "commercial": "28/1-a"}
 
+#: Geleneksel kesme taş yığma binanın bendi ve onu okuyan bölgelerin (konut bölgeleri) bentleri.
+GELENEKSEL, KONUT_BENTLERI = "28/1-d", ("28/1-c", "28/1-ç")
+
 #: Plan notlarının bu kuralın okuduğu ölçüleri (olguların ``planNotes[].key``'i) ve satırdaki adları.
 ZEMIN, KAT = "groundStoreyHeight", "storeyHeight"
 NOT_SATIRI = {ZEMIN: "Plan notu: zemin kat", KAT: "Plan notu: kat yüksekliği"}
@@ -61,6 +70,11 @@ def konut(bina: dict[str, Any]) -> bool:
     if int(bina.get("units") or 0) > 0:
         return int(bina.get("dwellings") or 0) > 0
     return any(int(s.get("bedrooms") or 0) > 0 for s in bina.get("storeys") or [])
+
+
+def geleneksel(bina: dict[str, Any]) -> bool:
+    """Proje binayı geleneksel mimari öğeli kesme taş yığma bina diye beyan ediyor mu (docs/adr/8094)."""
+    return bina.get("structuralSystem") == "cutStoneMasonry" and bool(bina.get("traditional"))
 
 
 def ustteki(bina: dict[str, Any]) -> list[dict[str, Any]]:
@@ -118,6 +132,8 @@ def nitelik(madde: str, katlar: int, zemin_mi: bool, asma: bool, konut_kati: boo
     """Ölçünün ve sınırın ardındaki ayraç: bölge ve katın ne olduğu."""
     if madde == "28/1-c":
         return f" (konut bölgesi, {katlar} kat" + (", asma katlı zemin kat)" if zemin_mi and asma else ")")
+    if madde == GELENEKSEL:
+        return f" (geleneksel kesme taş yığma bina, konut bölgesi, zemin dahil {katlar} kat)"
     yer = "asma katlı zemin kat" if zemin_mi and asma else "zemin kat" if zemin_mi else "normal kat"
     if madde == "28/1-b" and not zemin_mi:
         yer = "konut katı" if konut_kati else "konut dışı kat"
@@ -243,7 +259,18 @@ def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Son
                 "repair": BOLGE_ONARIM, "uids": [u for k in notsuz for u in k.get("rooms") or []][:20],
                 "rule": "PAİY 28/1", "_iz": "28/1:bölge", "state": y.EKSIK_VERI})
             satirlar.append(_bolge_satiri(y.EKSIK_VERI, "bölge yazılmamış ve proje konut projesi değil"))
-    maddeler = [("PAİY", madde or "28/1-c")] + ([("Sivas", madde or "28/1-c")] if sivas else [])
+    # 28/1-d: konut bölgesindeki, zemin dahil 3 katı geçmeyen geleneksel kesme taş yığma bina; bendin eklendiği
+    # 9.10.2021'den önceki başvuruda bölgenin kendi bendi (docs/adr/8094).
+    en_cok = int(y.haller("PAİY", GELENEKSEL)[-1].anahtar["storeys"])
+    d_okunur = madde in KONUT_BENTLERI and geleneksel(bina) and 0 < n <= en_cok
+
+    def bent(g: date) -> str | None:
+        h = y.hal("PAİY", GELENEKSEL, g) if d_okunur else None
+        return GELENEKSEL if h is not None and not h.anahtar.get("absent") else madde
+
+    ekler = [GELENEKSEL] if d_okunur else []
+    maddeler = ([("PAİY", m) for m in [madde or "28/1-c", *ekler]]
+                + ([("Sivas", m) for m in [madde or "28/1-c", *ekler]] if sivas else []))
     if madde and not okunan:
         hallar = [y.hal(yon, m, gun) if gun is not None else y.haller(yon, m)[-1] for yon, m in maddeler]
         satirlar += [_satir(h, y.KAPSAM_DISI, "±0,00 üstünde kat yok") for h in hallar if h is not None]
@@ -251,7 +278,7 @@ def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Son
     if madde and gun is not None and y.hal("PAİY", madde, gun) is None:
         sonuc = _bilinmiyor(madde, gun, [u for p in okunan for u in p["uids"]][:20])
         return y.Sonuc(bulgular + sonuc.bulgular, satirlar + sonuc.satirlar)
-    sonuclar = y.parcalarla(okunan, lambda p, g: _kat(p, n, madde, sivas, g), maddeler, gun, neden, KONU,
+    sonuclar = y.parcalarla(okunan, lambda p, g: _kat(p, n, bent(g), sivas, g), maddeler, gun, neden, KONU,
                             lambda p: list(p["uids"]))
     bulgular += [b for s in sonuclar for b in s.bulgular]
     notlar = {n_["key"]: n_ for n_ in bina.get("planNotes") or []}

@@ -441,8 +441,9 @@ pub struct ArchAuditFinding {
     /// `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict` (docs/adr/8034); the standards
     /// package's (docs/adr/8078: a host that runs Python lists them) `paiy_elevator_missing` and
     /// `paiy_elevator_not_serving` by the application date's version, the escape route doors' `bykhy_exit_door_swing`
-    /// and `bykhy_stair_door_rating` (docs/adr/8078 §8), the emsal limits' conditions `paiy_caretaker_not_required` and
-    /// `paiy_library_not_exempt` (docs/adr/8079), a low space under a stair open into a room `paiy_under_stair_open`
+    /// and `bykhy_stair_door_rating` (docs/adr/8078 §8), the emsal limits' conditions `paiy_caretaker_not_required`,
+    /// `paiy_library_not_exempt` (docs/adr/8079) and `paiy_traditional_not_exempt` (22/1-m, docs/adr/8094), a low space
+    /// under a stair open into a room `paiy_under_stair_open`
     /// (docs/adr/8080), the fire compartments' (across storeys through galleries and stairs, docs/adr/8086)
     /// `bykhy_hazard_room_separation`, `bykhy_compartment_storeys_over` (24/4), `bykhy_atrium` (24/5), `bykhy_compartment_area_over` and
     /// `bykhy_compartment_opening` (docs/adr/8081), the elements' declared classes against Ek-3

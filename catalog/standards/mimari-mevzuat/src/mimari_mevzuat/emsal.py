@@ -1,4 +1,4 @@
-"""Emsalin 22. madde sınırları: Planlı Alanlar İmar Yönetmeliği 22/1-ç, -f, -k, -l ve 44/1 (docs/adr/8079).
+"""Emsalin 22. madde sınırları: Planlı Alanlar İmar Yönetmeliği 22/1-ç, -f, -k, -l, -m ve 44/1 (docs/adr/8079, 8094).
 
 KentOS Emsal ve TAKS tablosunda sınırları sayar (``kentos_domain::zoning``): balkonlar bağımsız bölüm net alanının
 %20'sine (22/1-l), toprak altındaki katta depo eklentileri bölüm net alanının %50'sine (22/1-k), kapıcı daireleri toplam
@@ -14,10 +14,17 @@ bütününe bağlı koşullarına bakar ve sayımı özet satırında söyler:
   tesisat katı ve çatı arası dışında, 4/1-ııı) ve ortak alan niteliğinde olur; biri tutmuyorsa kaldı. Ortak merdivenle
   bağlantısı, dışarıdan erişiminin olmaması ve ticari kullanıma konu edilmemesi çizimden okunmaz: uzman incelemesi.
 - **22/1-k ve 22/1-l:** tablonun sayımı özet satırındadır; bulgusu yoktur.
+- **22/1-m** (9.10.2021'den, RG 31623; docs/adr/8094): taşıyıcı sistemi kesme taş yığma bina olarak tasarlanan zemin
+  dahil 3 katı geçmeyen geleneksel mimari öğeler barındıran binanın balkonları (bağımsız bölüm net alanının %20'si,
+  22/1-l'ninkiyle aynı) ve bahçeyle bağlantılı, gerektiğinde basamakla çıkılan taşlık, dış sofa ve eyvanı katlar alanına
+  girmez. Proje binayı böyle beyan ederse tablo Taşlık, Dış sofa ve Eyvan adlı mahalleri emsal harici sayar; bu kural
+  koşullarına bakar: bina zemin dahil 3 kattan çoksa ya da mahal zemin katta değilse kaldı; tutuyorsa bahçeyle bağlantısı
+  çizimden okunmaz, uzman incelemesi. Bent 9.10.2021'den önce yoktu: daha eski başvuruda kaldı. Satır yalnız böyle beyan
+  edilen binada yazılır.
 
 **Okunan olgular** (``facts.building``, KentOS'un ölçtüğü): sınırlı kullanımlar (``limits``: sınır, bağımsız bölüm,
 mahaller, alan, sınırın dışarıda bıraktığı, aşan, hepsi ortak alan mı), bağımsız bölüm ve konut bölümü sayısı, katlar
-ve mahalleri, binaların kullanımı.
+ve mahalleri, binaların kullanımı, taşıyıcı sistem beyanı (``structuralSystem``, ``traditional``).
 """
 
 from __future__ import annotations
@@ -25,9 +32,10 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 
+from . import kat_yuksekligi
 from . import yururluk as y
 
-MADDELER = [("PAİY", "22/1-ç"), ("PAİY", "22/1-f"), ("PAİY", "22/1-k"), ("PAİY", "22/1-l")]
+MADDELER = [("PAİY", "22/1-ç"), ("PAİY", "22/1-f"), ("PAİY", "22/1-k"), ("PAİY", "22/1-l"), ("PAİY", "22/1-m")]
 
 #: Normal kat sayılmayan katların adlarındaki sözcükler (4/1-ııı): tesisat katı ve çatı arası.
 _NORMAL_DISI = ("TESISAT", "CATI")
@@ -181,7 +189,64 @@ def balkon(bina: dict[str, Any], hal: y.Hal) -> tuple[list[dict[str, Any]], dict
     return [], _sayim(hal, sinirlar, "balkonu", "%20")
 
 
-_ADLAR = {"22/1-ç": "caretaker", "22/1-f": "library", "22/1-k": "storage", "22/1-l": "balcony"}
+def _zemin_mahalleri(bina: dict[str, Any]) -> set[str]:
+    """Zemin katın (±0,00 ve üstündeki katların en altı) ve asma katlarının mahalleri."""
+    katlar = kat_yuksekligi.ustteki(bina)
+    if not katlar:
+        return set()
+    zemin = min(katlar, key=lambda k: k["elevation"])
+    _, asma = kat_yuksekligi.zemin_yuksekligi(bina, zemin)
+    return {u for k in [zemin, *asma] for u in k.get("rooms") or []}
+
+
+def geleneksel(bina: dict[str, Any], hal: y.Hal) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """22/1-m: geleneksel kesme taş yığma binanın taşlık, dış sofa ve eyvanının koşulları; balkonları 22/1-l'nin
+    %20'siyle sayılır."""
+    sinirlar = _sinirlar(bina, "traditional")
+    uids = sorted({u for s in sinirlar for u in s["rooms"]})
+    alan = sum(float(s["area"]) for s in sinirlar)
+    adlar = {m["uid"]: m.get("name") or "" for m in bina.get("spaces") or []}
+    onarim = ("Mahali emsale dahil sayın (adını değiştirin ya da kullanım listesinde emsal sınıfı: Emsale dahil) ya da "
+              "binayı 22/1-m'nin koşullarına getirin.")
+    if hal.anahtar.get("absent"):
+        if not uids:
+            return [], _satir(hal, y.KAPSAM_DISI, "bent başvuru gününde yok (9.10.2021'de eklendi)")
+        ileti = (f"Taşlık, dış sofa ve eyvan emsal harici sayılmış ({_m2(alan)} m²), ama başvuru gününde 22/1-m yok: "
+                 f"bent 9.10.2021'de eklendi (RG 31623) — {hal.kisa()}")
+        return ([_bulgu("paiy_traditional_not_exempt", ileti, onarim, hal.kural(), uids, "bent yok")],
+                _satir(hal, y.KALDI, "taşlık, dış sofa ve eyvan emsal harici sayılmış; bent başvuru gününde yok"))
+    balkon = bool(_sinirlar(bina, "balcony"))
+    if not uids:
+        return [], _satir(hal, y.GECTI if balkon else y.KAPSAM_DISI,
+                          "taşlık, dış sofa ya da eyvan yok" + ("; balkonlar 22/1-l'nin %20'siyle sayıldı" if balkon
+                                                                else ""))
+    n = len(kat_yuksekligi.ustteki(bina))
+    en_cok = int(hal.anahtar["storeys"])
+    if n > en_cok:
+        ileti = (f"Taşlık, dış sofa ve eyvan emsal harici sayılmış ({_m2(alan)} m²), ama bina zemin dahil {n} katlı: "
+                 f"22/1-m zemin dahil {en_cok} katı geçmeyen binayı okur — {hal.kisa()}")
+        return ([_bulgu("paiy_traditional_not_exempt", ileti, onarim, hal.kural(), uids, f"{n} kat")],
+                _satir(hal, y.KALDI, f"bina zemin dahil {n} katlı, en çok {en_cok} olmalı"))
+    zemin = _zemin_mahalleri(bina)
+    disarda = [u for u in uids if u not in zemin]
+    if disarda:
+        ne = ", ".join(f"“{adlar.get(u) or u}”" for u in disarda)
+        ileti = (f"{ne} zemin katta değil: 22/1-m'nin taşlık, dış sofa ve eyvanı bahçeyle bağlantılı, gerektiğinde "
+                 f"basamakla çıkılan, binanın girişiyle ya da çıkma veya balkon altında yer alan alandır — {hal.kisa()}")
+        return ([_bulgu("paiy_traditional_not_exempt", ileti, onarim, hal.kural(), disarda, "zemin kat değil")],
+                _satir(hal, y.KALDI, f"{len(disarda)} mahal zemin katta değil"))
+    ileti = (f"Taşlık, dış sofa ve eyvan emsal harici ({_m2(alan)} m²; zemin dahil {n} katlı geleneksel kesme taş yığma "
+             f"bina, zemin kat): bahçeyle bağlantısı ve gerektiğinde basamakla çıkıldığı çizimden okunmuyor — "
+             f"{hal.kisa()}")
+    return ([_bulgu("paiy_traditional_not_exempt", ileti,
+                    "Mahallerin bahçeye bağlandığını uzman incelesin; uygunsa uzman onayıyla işaretleyin.", hal.kural(),
+                    uids, "okunmuyor", y.UZMAN)],
+            _satir(hal, y.UZMAN, f"{len(uids)} mahal ({_m2(alan)} m²) emsal harici; bahçeyle bağlantısı çizimden "
+                                 "okunmuyor"))
+
+
+_ADLAR = {"22/1-ç": "caretaker", "22/1-f": "library", "22/1-k": "storage", "22/1-l": "balcony",
+          "22/1-m": "traditional"}
 
 
 def _bilinmiyor(madde: str, gun: date, uids: list[str]) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -214,6 +279,19 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
         b, s = denetim(bina, hal)
         bulgular += b
         satirlar.append(s)
+    # 22/1-m yalnız geleneksel kesme taş yığma diye beyan edilen binada (docs/adr/8094).
+    if kat_yuksekligi.geleneksel(bina) or _sinirlar(bina, "traditional"):
+        hal = y.hal("PAİY", "22/1-m", gun)
+        if hal is None:
+            uids = sorted({u for s in _sinirlar(bina, "traditional") for u in s["rooms"]})
+            if uids:
+                b, s = _bilinmiyor("22/1-m", gun, uids)
+                bulgular.append(b)
+                satirlar.append(s)
+        else:
+            b, s = geleneksel(bina, hal)
+            bulgular += b
+            satirlar.append(s)
     return y.Sonuc(bulgular, satirlar)
 
 
@@ -222,4 +300,9 @@ def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Son
     bina = facts.get("building") or {}
     if not bina.get("storeys"):
         return y.Sonuc([], [])
-    return y.denetle(lambda g: kural(bina, g), MADDELER, gun, neden, "emsal sınırı kuralı")
+    sonuc = y.denetle(lambda g: kural(bina, g), MADDELER, gun, neden, "emsal sınırı kuralı")
+    # Güne bağlı sonucun bulgusu, aday günlerin bulgularının mahallerini seçer.
+    for b in sonuc.bulgular:
+        if b["code"] == "regulation_date_needed" and not b["uids"]:
+            b["uids"] = sorted({u for g in y.adaylar(MADDELER) for f in kural(bina, g).bulgular for u in f["uids"]})[:20]
+    return sonuc

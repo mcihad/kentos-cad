@@ -1538,6 +1538,107 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub zone: Option<Zone>,
+    /// Taşıyıcı sistem (docs/adr/8094; `.kcad` Mimari data 15): the building's structural system as the project
+    /// declares it and whether it holds traditional architectural elements; Planlı Alanlar İmar Yönetmeliği 22/1-m and
+    /// 28/1-d read a traditional cut stone masonry building of up to three storeys. Absent: not said.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub structure: Option<BuildingStructure>,
+}
+
+/// The building's structural system as the project declares it (docs/adr/8094): Dijital Proje Yönetmeliği EK-2 Tablo
+/// 2.5's static sub-disciplines (Betonarme, Çelik, Yığma, Ahşap, Kompozit), cut stone masonry apart from the other
+/// masonry as Planlı Alanlar İmar Yönetmeliği 20/8-j, 22/1-m and 28/1-d name it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum StructuralSystem {
+    /// Betonarme.
+    ReinforcedConcrete,
+    /// Çelik.
+    Steel,
+    /// Yığma: masonry of any unit but cut stone.
+    Masonry,
+    /// Kesme taş yığma.
+    CutStoneMasonry,
+    /// Ahşap.
+    Timber,
+    /// Kompozit.
+    Composite,
+}
+
+impl StructuralSystem {
+    pub const ALL: [StructuralSystem; 6] = [
+        StructuralSystem::ReinforcedConcrete,
+        StructuralSystem::Steel,
+        StructuralSystem::Masonry,
+        StructuralSystem::CutStoneMasonry,
+        StructuralSystem::Timber,
+        StructuralSystem::Composite,
+    ];
+
+    /// As the form and a finding name it.
+    pub fn label(self) -> &'static str {
+        match self {
+            StructuralSystem::ReinforcedConcrete => "Betonarme",
+            StructuralSystem::Steel => "Çelik",
+            StructuralSystem::Masonry => "Yığma",
+            StructuralSystem::CutStoneMasonry => "Kesme taş yığma",
+            StructuralSystem::Timber => "Ahşap",
+            StructuralSystem::Composite => "Kompozit",
+        }
+    }
+
+    /// As the audit facts and the rules write it.
+    pub fn name(self) -> &'static str {
+        match self {
+            StructuralSystem::ReinforcedConcrete => "reinforcedConcrete",
+            StructuralSystem::Steel => "steel",
+            StructuralSystem::Masonry => "masonry",
+            StructuralSystem::CutStoneMasonry => "cutStoneMasonry",
+            StructuralSystem::Timber => "timber",
+            StructuralSystem::Composite => "composite",
+        }
+    }
+}
+
+/// The building's declared structure (docs/adr/8094): its structural system and whether it holds traditional
+/// architectural elements (“geleneksel mimari öğeler barındıran”), which only a cut stone masonry building's reading
+/// takes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BuildingStructure {
+    pub system: StructuralSystem,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub traditional: bool,
+}
+
+impl BuildingStructure {
+    /// Whether it is the building Planlı Alanlar İmar Yönetmeliği 20/8-j, 22/1-m and 28/1-d read: “taşıyıcı sistemi
+    /// kesme taş yığma bina olarak tasarlanan … geleneksel mimari öğeler barındıran”. Its storeys are the rule's.
+    pub fn traditional_cut_stone(&self) -> bool {
+        self.system == StructuralSystem::CutStoneMasonry && self.traditional
+    }
+
+    /// What is wrong with it: traditional elements said of a building that is not cut stone masonry.
+    pub fn problem(&self) -> Option<(String, String)> {
+        (self.traditional && self.system != StructuralSystem::CutStoneMasonry).then(|| {
+            (
+                "structure.traditional".into(),
+                format!(
+                    "Geleneksel mimari öğeler yalnız kesme taş yığma binada okunur; taşıyıcı sistem {}. Taşıyıcı \
+                     sistemi Kesme taş yığma seçin ya da geleneksel mimari öğeleri kaldırın.",
+                    self.system.label()
+                ),
+            )
+        })
+    }
 }
 
 /// The parcel's area's use in the plan, as Planlı Alanlar İmar Yönetmeliği 28/1 reads the storeys' heights by it
@@ -2136,6 +2237,16 @@ impl ArchSettings {
         self.zone.is_some()
     }
 
+    /// Whether it says the building's structural system (Mimari data 15, docs/adr/8094).
+    pub fn has_structure(&self) -> bool {
+        self.structure.is_some()
+    }
+
+    /// Whether the building is a traditional cut stone masonry one (docs/adr/8094; PAİY 20/8-j, 22/1-m, 28/1-d).
+    pub fn traditional_cut_stone(&self) -> bool {
+        self.structure.is_some_and(|s| s.traditional_cut_stone())
+    }
+
     /// Whether it keeps building materials (KCAD 150, docs/adr/0785).
     pub fn has_materials(&self) -> bool {
         !self.materials.is_empty()
@@ -2273,6 +2384,9 @@ impl ArchSettings {
             return Some((format!("formAnswers.{}", p.0), p.1));
         }
         if let Some(p) = PlanNote::list_problem(&self.plan_notes) {
+            return Some(p);
+        }
+        if let Some(p) = self.structure.as_ref().and_then(BuildingStructure::problem) {
             return Some(p);
         }
         if let Some(z) = &self.zoning
@@ -2824,5 +2938,29 @@ mod plan_cut_tests {
             assert_eq!(serde_json::to_value(z).unwrap(), z.name());
         }
         assert!(!serde_json::to_string(&ArchSettings::default()).unwrap().contains("zone"));
+    }
+
+    /// Taşıyıcı sistem (docs/adr/8094): written by its name, traditional only when said and only of cut stone masonry.
+    #[test]
+    fn the_structure_is_written_by_its_names() {
+        let stone = BuildingStructure { system: StructuralSystem::CutStoneMasonry, traditional: true };
+        let a = ArchSettings { structure: Some(stone), ..Default::default() };
+        let json = serde_json::to_value(&a).unwrap();
+        assert_eq!(json["structure"], serde_json::json!({"system": "cutStoneMasonry", "traditional": true}));
+        assert_eq!(serde_json::from_value::<ArchSettings>(json).unwrap(), a);
+        assert!(a.traditional_cut_stone() && a.problem().is_none());
+        for s in StructuralSystem::ALL {
+            assert_eq!(serde_json::to_value(s).unwrap(), s.name());
+        }
+        let plain = BuildingStructure { system: StructuralSystem::CutStoneMasonry, traditional: false };
+        assert_eq!(serde_json::to_value(plain).unwrap(), serde_json::json!({"system": "cutStoneMasonry"}));
+        assert!(!ArchSettings { structure: Some(plain), ..Default::default() }.traditional_cut_stone());
+        let wrong = ArchSettings {
+            structure: Some(BuildingStructure { system: StructuralSystem::ReinforcedConcrete, traditional: true }),
+            ..Default::default()
+        };
+        assert_eq!(wrong.problem().map(|p| p.0).as_deref(), Some("structure.traditional"));
+        assert!(serde_json::from_value::<BuildingStructure>(serde_json::json!({"system": "stone"})).is_err());
+        assert!(!serde_json::to_string(&ArchSettings::default()).unwrap().contains("structure"));
     }
 }

@@ -1,5 +1,15 @@
 # Değişiklikler
 
+## 0.18.0 — 17 Kasım 2026
+
+- Geleneksel kesme taş yığma bina: projenin taşıyıcı sistem beyanı (`structuralSystem`: `cutStoneMasonry`, `traditional`)
+  okunur. Kat yüksekliği (`kat_yuksekligi`): konut bölgesinde (konut alanı ya da zemin katında ticaret yapılabilen konut
+  alanı) zemin dahil 3 katı geçmeyen binada zemin ve normal katlarda 4,50 m (PAİY 28/1-d, 9.10.2021'den; Sivas 28/1-d);
+  daha eski başvuruda bölgenin kendi bendi. Emsal (`emsal`): tablonun emsal harici saydığı taşlık, dış sofa ve eyvan
+  (22/1-m) bina zemin dahil 3 kattan çoksa, mahal zemin katta değilse ya da başvuru bendin eklendiği 9.10.2021'den önceyse
+  kaldı; tutuyorsa bahçeyle bağlantısı okunmadığı için uzman incelemesi (`paiy_traditional_not_exempt`); balkonları
+  22/1-l'nin %20'siyle sayılır. Güne bağlı emsal bulgusu aday günlerin mahallerini seçer. 16 bağımsız durum.
+
 ## 0.17.0 — 17 Kasım 2026
 
 - Kapı ölçüleri (`kapi_olculeri`): 39/1-b'nin çift kanadı: bina girişinde bir kanadın net genişliği en az 1,00 m (ilk

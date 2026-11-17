@@ -4,7 +4,7 @@
   "command": "cad.settings.set",
   "commandVersion": 1,
   "title": "Proje ayarları",
-  "note": "Written by scripts/fixtures/settings_set_command_cases.py from the contract's rules and docs/adr/0165, 0167, 0168, 0205, 0248 §5, 0339 §3, 0720, 0801; do not edit by hand.",
+  "note": "Written by scripts/fixtures/settings_set_command_cases.py from the contract's rules and docs/adr/0165, 0167, 0168, 0205, 0248 §5, 0339 §3, 0720, 0801, 8094; do not edit by hand.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -10101,6 +10101,133 @@
               "code": "invalid_arch",
               "message": "“Zemin kat” katının yüksekliği sıfırdan büyük olmalı.",
               "path": "arch.levels[0].height"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mimari: taşıyıcı sistem, geleneksel kesme taş yığma (ADR 8094)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "structure": {
+                "system": "cutStoneMasonry",
+                "traditional": true
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "arch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ],
+                "structure": {
+                  "system": "cutStoneMasonry",
+                  "traditional": true
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "betonarme binada geleneksel mimari öğeler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "structure": {
+                "system": "reinforcedConcrete",
+                "traditional": true
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch",
+              "message": "Geleneksel mimari öğeler yalnız kesme taş yığma binada okunur; taşıyıcı sistem Betonarme. Taşıyıcı sistemi Kesme taş yığma seçin ya da geleneksel mimari öğeleri kaldırın.",
+              "path": "arch.structure.traditional"
             }
           },
           "expect": {

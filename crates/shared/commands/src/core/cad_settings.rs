@@ -64,7 +64,9 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 ///   the regulation's rules read over the municipality's and the national one (docs/adr/8084: `key`
 ///   `groundStoreyHeight` or `storeyHeight`, `value` metres over 0 and at most 20, `source` where the note stands, one
 ///   note a key); `zone` the parcel's area's use in the plan the storey heights are read by (docs/adr/8085:
-///   `residential`, `residentialShops`, `mixed`, `commercial`, `other`);
+///   `residential`, `residentialShops`, `mixed`, `commercial`, `other`); `structure` the building's structural system
+///   (docs/adr/8094: `system` `reinforcedConcrete`, `steel`, `masonry`, `cutStoneMasonry`, `timber`, `composite`;
+///   `traditional` only with `cutStoneMasonry`);
 /// - `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with
 ///   the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
 ///   file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;

@@ -1,7 +1,8 @@
 //! Emsalin 22. madde sınırları (docs/adr/8069, 8079): the uses Planlı Alanlar İmar Yönetmeliği 22/1 lets out of katlar
 //! alanı only up to a limit — an independent unit's open balconies (22/1-l) and its storage annexes under the ground
 //! (22/1-k), the caretaker flats (22/1-ç), the library (22/1-f) — what passes each limit, and the storeys under the
-//! ground. The rooms are [`super::Room`]s, as the ratios read them.
+//! ground; and a traditional cut stone masonry building's taşlık, dış sofa and eyvan (22/1-m, docs/adr/8094), let out
+//! only in such a building. The rooms are [`super::Room`]s, as the ratios read them.
 
 use kentos_contracts::{ArchLevel, BuildingProgram, EmsalCount};
 
@@ -19,6 +20,9 @@ pub enum ZoningLimit {
     Caretaker,
     /// 22/1-f: the library rooms, 50 m² together.
     Library,
+    /// 22/1-m (docs/adr/8094): a traditional cut stone masonry building's taşlık, dış sofa and eyvan; no area of their
+    /// own (the 30 % of 5/8 holds them with the others), the building's storeys and the rooms' place are the rule's.
+    Traditional,
 }
 
 impl ZoningLimit {
@@ -29,6 +33,7 @@ impl ZoningLimit {
             ZoningLimit::Storage => "storage",
             ZoningLimit::Caretaker => "caretaker",
             ZoningLimit::Library => "library",
+            ZoningLimit::Traditional => "traditional",
         }
     }
 }
@@ -81,6 +86,14 @@ pub(super) fn says_balcony(name: Option<&str>, usage: Option<&str>) -> bool {
     })
 }
 
+/// Whether a room's words say a traditional building's taşlık, dış sofa or eyvan (PAİY 22/1-m, docs/adr/8094): a word
+/// beginning with Taşlık or Eyvan, or the words Dış and Sofa (a sofa within is a hall, not 22/1-m's).
+pub(super) fn says_traditional(words: &[String]) -> bool {
+    room_names::has(words, "TASLIK")
+        || room_names::has(words, "EYVAN")
+        || (room_names::is(words, "DIS") && room_names::has(words, "SOFA"))
+}
+
 /// The storeys under the ground, by their ids (22/1-k: "bütün cepheleri tamamen toprağın altında kalan bodrum katlar";
 /// docs/adr/8079): a storey whose top (its floor's elevation and its height, else the floor of the next storey up) is
 /// at or below its building's ±0.00. The model's graded ground lies at ±0.00: sections draw it there, and the model
@@ -115,7 +128,8 @@ pub(super) fn buried_levels(arch: &kentos_contracts::ArchSettings) -> Vec<String
 ///   balconies, terraces, annexes and common areas not in it); a balcony of no unit, or of a common area, keeps its
 ///   count;
 /// - k: a unit's storage annexes under the ground up to 50 % of its net area;
-/// - ç: the caretaker flats 70 m² together; f: the library rooms 50 m² together.
+/// - ç: the caretaker flats 70 m² together; f: the library rooms 50 m² together;
+/// - m: a traditional cut stone masonry building's taşlık, dış sofa and eyvan, all of them (no area of their own).
 ///
 /// What passes a limit counts in, shared among its rooms by their areas; a room is under the first limit that reads it.
 pub(super) fn apply(
@@ -142,15 +156,17 @@ pub(super) fn apply(
         .filter(|u| u.kind == kentos_contracts::UnitKind::Unit)
         .map(|u| u.id.as_str())
         .collect();
-    let mut asks: Vec<(ZoningLimit, Option<&str>, f64)> = Vec::new();
+    // Each limit, the unit it is a share of and what it lets out; none: all of its rooms (22/1-m).
+    let mut asks: Vec<(ZoningLimit, Option<&str>, Option<f64>)> = Vec::new();
     for limit in [ZoningLimit::Balcony, ZoningLimit::Storage] {
         for &u in &units {
             let share = if limit == ZoningLimit::Balcony { BALCONY_SHARE } else { STORAGE_SHARE };
-            asks.push((limit, Some(u), share * net_of(u)));
+            asks.push((limit, Some(u), Some(share * net_of(u))));
         }
     }
-    asks.push((ZoningLimit::Caretaker, None, CARETAKER_AREA));
-    asks.push((ZoningLimit::Library, None, LIBRARY_AREA));
+    asks.push((ZoningLimit::Caretaker, None, Some(CARETAKER_AREA)));
+    asks.push((ZoningLimit::Library, None, Some(LIBRARY_AREA)));
+    asks.push((ZoningLimit::Traditional, None, None));
     for (limit, unit, allowed) in asks {
         let members: Vec<usize> = (0..rooms.len())
             .filter(|&i| {
@@ -163,6 +179,7 @@ pub(super) fn apply(
                         ZoningLimit::Storage => r.storage_of.as_deref() == unit,
                         ZoningLimit::Caretaker => r.caretaker,
                         ZoningLimit::Library => r.library,
+                        ZoningLimit::Traditional => r.traditional,
                     }
             })
             .collect();
@@ -170,6 +187,7 @@ pub(super) fn apply(
             continue;
         }
         let area: f64 = members.iter().map(|&i| gross[i]).sum();
+        let allowed = allowed.unwrap_or(area);
         let over = (area - allowed).max(0.0);
         for &i in &members {
             limit_of[i] = Some(limit);

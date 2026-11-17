@@ -12,7 +12,8 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
 - **Emsal sınırları** (`emsal`, docs/adr/8079): KentOS Emsal ve TAKS tablosunda 22/1'in sınırlarını sayar (balkon %20,
   toprak altında depo eklentisi %50, kapıcı daireleri 70 m², kütüphane 50 m²); kural koşullarına bakar: emsal harici
   kapıcı dairesi 44/1'e göre zorunlu mu (22/1-ç), kütüphane alışveriş merkezinde ya da 40'tan fazla bağımsız bölümlü
-  binada, normal katta ve ortak alan mı (22/1-f).
+  binada, normal katta ve ortak alan mı (22/1-f), geleneksel kesme taş yığma binanın emsal harici taşlık, dış sofa ve
+  eyvanı zemin dahil 3 kata kadar binada ve zemin katta mı (22/1-m, docs/adr/8094).
 - **Merdiven altı** (`merdiven_alti`, docs/adr/8080): 1,80 m'den alçak merdiven altı kapatılır (31/6); alçak boşluk bir
   mahale açıksa kaldı.
 - **Yangın kompartımanları** (`kompartiman`, docs/adr/8081, 8086): mahaller arasındaki ayrımlardan ve katlar arası
@@ -35,8 +36,9 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   Ek-3/B 12, 9.7.2015'ten).
 - **Kat yüksekliği** (`kat_yuksekligi`, docs/adr/8083, 8084): konut projesinde zemin ve normal katlar 3,60 m;
   12.8.2023'ten bodrum hariç 3 kata kadar 4,00 m (PAİY 28/1-c); Sivas 3,60 m. Parselin bölgesine göre ticaret (28/1-a),
-  karma (28/1-b), zemin katı ticaretli konut alanı (28/1-ç) ve asma katlı zemin kat (docs/adr/8085). Projenin plan notu
-  (zemin kat, kat yüksekliği) hepsinin önüne geçer (69/3).
+  karma (28/1-b), zemin katı ticaretli konut alanı (28/1-ç) ve asma katlı zemin kat (docs/adr/8085); konut bölgesinde
+  zemin dahil 3 kata kadar geleneksel kesme taş yığma binada 9.10.2021'den 4,50 m (28/1-d, projenin taşıyıcı sistem
+  beyanıyla, docs/adr/8094). Projenin plan notu (zemin kat, kat yüksekliği) hepsinin önüne geçer (69/3).
 - **Kapı ölçüleri** (`kapi_olculeri`, docs/adr/8083): yükseklik 2,10 m; net genişlik bina girişinde 1,50, bölüm girişinde
   1,00, öbür kapılarda 0,90 m; 13.8.2025'e kadar ve Sivas'ta balkon ve tuvalet kapısı 0,80 m (PAİY 39/1). İki katmanın
   yargısı `katman`'da; gün yoksa her kat ve kapı ayrı denenir (`yururluk.parcalarla`).

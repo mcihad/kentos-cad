@@ -1,7 +1,7 @@
 {
  "format": "kentos.regulationCases",
  "version": 1,
- "about": "Kat yüksekliğinin bağımsız durumları (docs/adr/8083): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 28/1-c'nin 1.10.2017 (RG 3.7.2017/30113) ve 12.8.2023 (RG 32277 ek ibare) hâllerinden ve Sivas İmar Yönetmeliği 28/1-c'den (RG 10.11.2022/32009) elle çıkarıldı; kuralın kodundan üretilmedi. Bölgeli durumlar (docs/adr/8085) 28/1-a, b, ç'den ve 4/1-d'den, plan notlu durumlar (docs/adr/8084) PAİY 28/1'in kat yüksekliklerini plana bırakmasından ve 69/3'ten elle. Olgular KentOS'un ölçüsüdür (building.storeys: kot, kattan kata yükseklik, yatak odaları; building.planNotes: projenin yazdığı plan notları).",
+ "about": "Kat yüksekliğinin bağımsız durumları (docs/adr/8083): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 28/1-c'nin 1.10.2017 (RG 3.7.2017/30113) ve 12.8.2023 (RG 32277 ek ibare) hâllerinden ve Sivas İmar Yönetmeliği 28/1-c'den (RG 10.11.2022/32009) elle çıkarıldı; kuralın kodundan üretilmedi. Bölgeli durumlar (docs/adr/8085) 28/1-a, b, ç'den ve 4/1-d'den, plan notlu durumlar (docs/adr/8084) PAİY 28/1'in kat yüksekliklerini plana bırakmasından ve 69/3'ten elle. Olgular KentOS'un ölçüsüdür (building.storeys: kot, kattan kata yükseklik, yatak odaları; building.planNotes: projenin yazdığı plan notları). Geleneksel kesme taş yığma binanın durumları (docs/adr/8094) 28/1-d'nin RG 9.10.2021/31623 metninden ve Sivas 28/1-d'den elle (building.structuralSystem, building.traditional: projenin beyanı).",
  "cases": [
   {
    "id": "iki-kat-380-2026",
@@ -2733,6 +2733,707 @@
      ],
      "Plan notu: kat yüksekliği": [
       "failed",
+      null
+     ]
+    }
+   }
+  },
+  {
+   "id": "geleneksel-iki-kat-440",
+   "neden": "Konut alanı, geleneksel mimari öğeli kesme taş yığma, zemin dahil 2 kat, 2.7.2026 başvurusu: 28/1-d zemin ve normal katlarda 4,50 m → 4,40 m'lik iki kat geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000101"
+      ],
+      "height": 4.4
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 4.4,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000102"
+      ],
+      "height": 4.4
+     }
+    ],
+    "units": 1,
+    "dwellings": 1,
+    "commons": 0,
+    "structuralSystem": "cutStoneMasonry",
+    "traditional": true,
+    "zone": "residential"
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 28/1-d": [
+      "passed",
+      "9.10.2021"
+     ]
+    }
+   }
+  },
+  {
+   "id": "geleneksel-460",
+   "neden": "Aynı bina, 1. kat 4,60 m: 28/1-d'nin 4,50 m'sini aşar, kalır; zemin 4,40 geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000101"
+      ],
+      "height": 4.4
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 4.4,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000102"
+      ],
+      "height": 4.6
+     }
+    ],
+    "units": 1,
+    "dwellings": 1,
+    "commons": 0,
+    "structuralSystem": "cutStoneMasonry",
+    "traditional": true,
+    "zone": "residential"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "uids": [
+       "00000000-0000-4000-8000-000000000102"
+      ],
+      "has": [
+       "4.60 m > 4.50 m (geleneksel kesme taş yığma bina, konut bölgesi, zemin dahil 2 kat) — PAİY 28/1-d (9.10.2021)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-d": [
+      "failed",
+      "9.10.2021"
+     ]
+    }
+   }
+  },
+  {
+   "id": "geleneksel-2020-basvuru",
+   "neden": "Aynı 4,40 m'lik iki kat, 1.6.2020 başvurusu: 28/1-d 9.10.2021'de eklendi (RG 31623); o gün 28/1-c'nin 1.10.2017 hâli 3,60 m → iki kat kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "01.06.2020"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000101"
+      ],
+      "height": 4.4
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 4.4,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000102"
+      ],
+      "height": 4.4
+     }
+    ],
+    "units": 1,
+    "dwellings": 1,
+    "commons": 0,
+    "structuralSystem": "cutStoneMasonry",
+    "traditional": true,
+    "zone": "residential"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "4.40 m > 3.60 m (konut bölgesi, 2 kat) — PAİY 28/1-c (1.10.2017)"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "4.40 m > 3.60 m (konut bölgesi, 2 kat) — PAİY 28/1-c (1.10.2017)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-c": [
+      "failed",
+      "1.10.2017"
+     ]
+    }
+   }
+  },
+  {
+   "id": "geleneksel-dort-kat",
+   "neden": "Geleneksel kesme taş yığma ama zemin dahil 4 kat: 28/1-d 3 katı geçmeyen binayı okur; 28/1-c'nin 12.8.2023 hâli 4 katlı binada 3,60 m → 3,90 m'lik dört kat kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000110"
+      ],
+      "height": 3.9
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.9,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000111"
+      ],
+      "height": 3.9
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 7.8,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000112"
+      ],
+      "height": 3.9
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 11.7,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000113"
+      ],
+      "height": 3.9
+     }
+    ],
+    "units": 1,
+    "dwellings": 1,
+    "commons": 0,
+    "structuralSystem": "cutStoneMasonry",
+    "traditional": true,
+    "zone": "residential"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.90 m > 3.60 m (konut bölgesi, 4 kat)"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.90 m > 3.60 m (konut bölgesi, 4 kat)"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.90 m > 3.60 m (konut bölgesi, 4 kat)"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.90 m > 3.60 m (konut bölgesi, 4 kat)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-c": [
+      "failed",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kesme-tas-gelenekselsiz",
+   "neden": "Kesme taş yığma ama geleneksel mimari öğe beyan edilmemiş: 28/1-d okunmaz; 28/1-c'nin 12.8.2023 hâli bodrum hariç 3 katı geçmeyen binada 4,00 m → 4,40 m'lik iki kat kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000101"
+      ],
+      "height": 4.4
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 4.4,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000102"
+      ],
+      "height": 4.4
+     }
+    ],
+    "units": 1,
+    "dwellings": 1,
+    "commons": 0,
+    "structuralSystem": "cutStoneMasonry",
+    "zone": "residential"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "4.40 m > 4.00 m (konut bölgesi, 2 kat) — PAİY 28/1-c (12.8.2023)"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "4.40 m > 4.00 m (konut bölgesi, 2 kat) — PAİY 28/1-c (12.8.2023)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-c": [
+      "failed",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "geleneksel-ticaret-alani",
+   "neden": "Geleneksel kesme taş yığma bina ticaret alanında: 28/1-d konut bölgelerinindir; 28/1-a zeminde 4,50 (4,40 geçer), diğer katlarda 4,00 (4,40 kalır).",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000101"
+      ],
+      "height": 4.4
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 4.4,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000102"
+      ],
+      "height": 4.4
+     }
+    ],
+    "units": 1,
+    "dwellings": 1,
+    "commons": 0,
+    "structuralSystem": "cutStoneMasonry",
+    "traditional": true,
+    "zone": "commercial"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "uids": [
+       "00000000-0000-4000-8000-000000000102"
+      ],
+      "has": [
+       "4.40 m > 4.00 m (ticaret alanı, normal kat)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-a": [
+      "failed",
+      "1.10.2017"
+     ]
+    }
+   }
+  },
+  {
+   "id": "geleneksel-zemininde-ticaret",
+   "neden": "Zemin katında ticaret yapılabilen konut alanı da konut bölgesidir: 28/1-d zemin ve normal katlarda 4,50 → 4,40 m'lik iki kat geçer (28/1-ç'nin normal katlardaki 3,60'ı yerine).",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000101"
+      ],
+      "height": 4.4
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 4.4,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000102"
+      ],
+      "height": 4.4
+     }
+    ],
+    "units": 1,
+    "dwellings": 1,
+    "commons": 0,
+    "structuralSystem": "cutStoneMasonry",
+    "traditional": true,
+    "zone": "residentialShops"
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 28/1-d": [
+      "passed",
+      "9.10.2021"
+     ]
+    }
+   }
+  },
+  {
+   "id": "geleneksel-sivas",
+   "neden": "Sivas İmar Yönetmeliği 28/1-d de 4,50 m (RG 10.11.2022/32009): 4,40 m'lik iki kat ikisinde de geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000101"
+      ],
+      "height": 4.4
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 4.4,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000102"
+      ],
+      "height": 4.4
+     }
+    ],
+    "units": 1,
+    "dwellings": 1,
+    "commons": 0,
+    "structuralSystem": "cutStoneMasonry",
+    "traditional": true,
+    "zone": "residential",
+    "local": "sivas"
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 28/1-d": [
+      "passed",
+      "9.10.2021"
+     ],
+     "Sivas 28/1-d": [
+      "passed",
+      "10.11.2022"
+     ]
+    }
+   }
+  },
+  {
+   "id": "geleneksel-tarihsiz",
+   "neden": "Başvuru tarihi yok, bölge yazılmamış konut projesi: 9.10.2021'den önce 28/1-c 3,60 m (4,40 kalır), sonra 28/1-d 4,50 m (geçer) → her kat için eksik veri.",
+   "permit": {
+    "particulars": {}
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000101"
+      ],
+      "height": 4.4
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 4.4,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000102"
+      ],
+      "height": 4.4
+     }
+    ],
+    "units": 1,
+    "dwellings": 1,
+    "commons": 0,
+    "structuralSystem": "cutStoneMasonry",
+    "traditional": true
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "regulation_date_needed",
+      "state": "missingData",
+      "has": [
+       "1.10.2017–8.10.2021 başvurusunda",
+       "9.10.2021–11.8.2023 başvurusunda bulgu yok"
+      ]
+     },
+     {
+      "code": "regulation_date_needed",
+      "state": "missingData",
+      "has": [
+       "1.10.2017–8.10.2021 başvurusunda",
+       "9.10.2021–11.8.2023 başvurusunda bulgu yok"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-d": [
+      "missingData",
       null
      ]
     }

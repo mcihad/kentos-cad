@@ -28,6 +28,10 @@
 //!   on a storey under the ground (its top at or below its building's ±0.00, where the model's graded ground lies) is
 //!   out up to 50 % of its unit's net area; what passes counts in. Elsewhere a store counts in.
 //! - **The library** (22/1-f): the rooms named or used as Kütüphane together at most 50 m²; what passes counts in.
+//! - **A traditional cut stone masonry building's taşlık, dış sofa and eyvan** (22/1-m, docs/adr/8094): where the
+//!   project declares the building so (`ArchSettings::traditional_cut_stone`), a room named or used as Taşlık, Dış sofa
+//!   or Eyvan is out within the 30 %; the building's storeys (up to three, the ground one with them) and the room's
+//!   place (the garden's, by steps) are the standards package's. Its balconies are 22/1-l's 20 % (22/1-m's is the same).
 //!
 //! Each limit's excess is shared among its rooms by their areas (the artığı rastgele son mahale verilmez, as for the
 //! balconies). The conditions on the building as a whole (whether a caretaker flat is obligatory, 44/1; the library's
@@ -49,7 +53,7 @@ use crate::space_follow::SpaceSearch;
 
 mod limits;
 
-use limits::{buried_levels, names, says_balcony};
+use limits::{buried_levels, names, says_balcony, says_traditional};
 pub use limits::{BALCONY_SHARE, CARETAKER_AREA, LIBRARY_AREA, STORAGE_SHARE, ZoningLimit, ZoningLimitUse};
 
 /// The drawing's floor area ratio and coverage against the parcel's zoning, m² and ratios.
@@ -201,6 +205,8 @@ struct Room {
     caretaker: bool,
     /// An indoor library room (22/1-f): its name or use says Kütüphane.
     library: bool,
+    /// A traditional cut stone masonry building's taşlık, dış sofa or eyvan (22/1-m, docs/adr/8094).
+    traditional: bool,
     /// An indoor storage annex's room on a storey under the ground (22/1-k): the independent unit its annex group is
     /// allocated to.
     storage_of: Option<String>,
@@ -263,6 +269,8 @@ impl Document {
         let arch = self.settings().arch.as_ref().unwrap_or(&empty);
         let program = &arch.program;
         let buried = buried_levels(arch);
+        // A traditional cut stone masonry building's taşlık, dış sofa and eyvan are out (22/1-m, docs/adr/8094).
+        let traditional_building = arch.traditional_cut_stone();
         // The places under stairs lower than 1.80 m are out of a unit's net area (4/1-ğ-3, docs/adr/8080).
         let unders = self.under_stairs();
         let mut search = SpaceSearch::new(self);
@@ -288,6 +296,7 @@ impl Document {
             let indoor = !x.void && !outdoor;
             let caretaker = indoor && names("KAPICI", &own, &theirs);
             let library = indoor && room_names::has(&own, "KUTUPHANE");
+            let traditional = traditional_building && !x.void && says_traditional(&own);
             let storage_of = group
                 .filter(|g| g.kind == kentos_contracts::UnitKind::Annex)
                 .and_then(|g| g.annex_of.clone())
@@ -309,7 +318,9 @@ impl Document {
                 Some(c) => c,
                 None if outdoor => EmsalCount::Exempt,
                 None => match by_use {
-                    EmsalCount::Included if caretaker || storage_of.is_some() || stair_hall => EmsalCount::Exempt,
+                    EmsalCount::Included if caretaker || storage_of.is_some() || stair_hall || traditional => {
+                        EmsalCount::Exempt
+                    }
                     c => c,
                 },
             };
@@ -336,6 +347,7 @@ impl Document {
                 balcony: outdoor && says_balcony(name, usage),
                 caretaker,
                 library,
+                traditional,
                 storage_of,
                 net,
             });
@@ -436,7 +448,7 @@ impl Document {
                         Some(ZoningLimit::Storage) => out.storage_over += m,
                         Some(ZoningLimit::Caretaker) => out.caretaker_over += m,
                         Some(ZoningLimit::Library) => out.library_over += m,
-                        None => {}
+                        Some(ZoningLimit::Traditional) | None => {}
                     }
                 }
                 EmsalCount::Outside => {

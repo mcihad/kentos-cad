@@ -8177,6 +8177,30 @@ StepKindName = Literal["conversion", "helmert", "null", "grid", "unit", "geoid",
 """The names of :class:`StepKind`, for a plain string."""
 
 
+class StructuralSystem(_StrEnum):
+    """The building's structural system as the project declares it (docs/adr/8094): Dijital Proje Yönetmeliği EK-2 Tablo
+    2.5's static sub-disciplines (Betonarme, Çelik, Yığma, Ahşap, Kompozit), cut stone masonry apart from the other
+    masonry as Planlı Alanlar İmar Yönetmeliği 20/8-j, 22/1-m and 28/1-d name it.
+
+    - ``reinforcedConcrete``: Betonarme.
+    - ``steel``: Çelik.
+    - ``masonry``: Yığma: masonry of any unit but cut stone.
+    - ``cutStoneMasonry``: Kesme taş yığma.
+    - ``timber``: Ahşap.
+    - ``composite``: Kompozit.
+    """
+    REINFORCED_CONCRETE = "reinforcedConcrete"
+    STEEL = "steel"
+    MASONRY = "masonry"
+    CUT_STONE_MASONRY = "cutStoneMasonry"
+    TIMBER = "timber"
+    COMPOSITE = "composite"
+
+
+StructuralSystemName = Literal["reinforcedConcrete", "steel", "masonry", "cutStoneMasonry", "timber", "composite"]
+"""The names of :class:`StructuralSystem`, for a plain string."""
+
+
 class StyleEditOperation(_StrEnum):
     """What `cad.styles.edit` does.
 
@@ -16770,8 +16794,9 @@ class ArchAuditFinding(_Model):
             `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict` (docs/adr/8034); the standards
             package's (docs/adr/8078: a host that runs Python lists them) `paiy_elevator_missing` and
             `paiy_elevator_not_serving` by the application date's version, the escape route doors' `bykhy_exit_door_swing`
-            and `bykhy_stair_door_rating` (docs/adr/8078 §8), the emsal limits' conditions `paiy_caretaker_not_required` and
-            `paiy_library_not_exempt` (docs/adr/8079), a low space under a stair open into a room `paiy_under_stair_open`
+            and `bykhy_stair_door_rating` (docs/adr/8078 §8), the emsal limits' conditions `paiy_caretaker_not_required`,
+            `paiy_library_not_exempt` (docs/adr/8079) and `paiy_traditional_not_exempt` (22/1-m, docs/adr/8094), a low space
+            under a stair open into a room `paiy_under_stair_open`
             (docs/adr/8080), the fire compartments' (across storeys through galleries and stairs, docs/adr/8086)
             `bykhy_hazard_room_separation`, `bykhy_compartment_storeys_over` (24/4), `bykhy_atrium` (24/5), `bykhy_compartment_area_over` and
             `bykhy_compartment_opening` (docs/adr/8081), the elements' declared classes against Ek-3
@@ -17662,6 +17687,9 @@ class ArchSettings(_Model):
         space_usages: Suggested room usages in project order, never a mandatory classification.
         sprinklers: Yağmurlama sistemi (docs/adr/8035; `.kcad` schema 226): the building has an automatic sprinkler system, so the
             fire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.
+        structure: Taşıyıcı sistem (docs/adr/8094; `.kcad` Mimari data 15): the building's structural system as the project
+            declares it and whether it holds traditional architectural elements; Planlı Alanlar İmar Yönetmeliği 22/1-m and
+            28/1-d read a traditional cut stone masonry building of up to three storeys. Absent: not said.
         zone: Bölge (docs/adr/8085; `.kcad` Mimari data 12): what the parcel's plan uses its area for, as PAİY 28/1 reads a
             storey's height by it (a, b, c, ç). Absent: not said; a dwelling's project is read in a dwelling area.
         zoning: İmar durumu (docs/adr/8030; `.kcad` schema 222): the parcel's area and the plan's coefficients the floor area
@@ -17691,6 +17719,7 @@ class ArchSettings(_Model):
     space_number_prefixes: dict[str, str] | Unset = UNSET
     space_usages: list[str] | Unset = UNSET
     sprinklers: bool | Unset = UNSET
+    structure: BuildingStructure | None | Unset = UNSET
     zone: Zone | ZoneName | None | Unset = UNSET
     zoning: Zoning | None | Unset = UNSET
 
@@ -17744,6 +17773,8 @@ class ArchSettings(_Model):
             out["spaceUsages"] = list(self.space_usages)
         if self.sprinklers is not UNSET:
             out["sprinklers"] = self.sprinklers
+        if self.structure is not UNSET:
+            out["structure"] = None if self.structure is None else self.structure.to_json()
         if self.zone is not UNSET:
             out["zone"] = None if self.zone is None else _enum_out(self.zone)
         if self.zoning is not UNSET:
@@ -17777,6 +17808,7 @@ class ArchSettings(_Model):
             space_number_prefixes=dict(data["spaceNumberPrefixes"]) if "spaceNumberPrefixes" in data else UNSET,
             space_usages=list(data["spaceUsages"]) if "spaceUsages" in data else UNSET,
             sprinklers=data.get("sprinklers", UNSET),
+            structure=UNSET if "structure" not in data else None if data["structure"] is None else BuildingStructure.from_json(data["structure"]),
             zone=UNSET if "zone" not in data else None if data["zone"] is None else _enum_in(Zone, data["zone"]),
             zoning=UNSET if "zoning" not in data else None if data["zoning"] is None else Zoning.from_json(data["zoning"]),
         )
@@ -22815,6 +22847,30 @@ class BuildingSectionsQuery(_Model):
         return cls(
             mark=data.get("mark", UNSET),
             uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BuildingStructure(_Model):
+    """The building's declared structure (docs/adr/8094): its structural system and whether it holds traditional
+    architectural elements (“geleneksel mimari öğeler barındıran”), which only a cut stone masonry building's reading
+    takes.
+    """
+    system: StructuralSystem | StructuralSystemName
+    traditional: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["system"] = _enum_out(self.system)
+        if self.traditional is not UNSET:
+            out["traditional"] = self.traditional
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BuildingStructure:
+        return cls(
+            system=_enum_in(StructuralSystem, data["system"]),
+            traditional=data.get("traditional", UNSET),
         )
 
 
@@ -95229,7 +95285,9 @@ class SettingsSet(_Model):
       the regulation's rules read over the municipality's and the national one (docs/adr/8084: `key`
       `groundStoreyHeight` or `storeyHeight`, `value` metres over 0 and at most 20, `source` where the note stands, one
       note a key); `zone` the parcel's area's use in the plan the storey heights are read by (docs/adr/8085:
-      `residential`, `residentialShops`, `mixed`, `commercial`, `other`);
+      `residential`, `residentialShops`, `mixed`, `commercial`, `other`); `structure` the building's structural system
+      (docs/adr/8094: `system` `reinforcedConcrete`, `steel`, `masonry`, `cutStoneMasonry`, `timber`, `composite`;
+      `traditional` only with `cutStoneMasonry`);
     - `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with
       the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
       file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
@@ -143480,6 +143538,7 @@ __all__ = [
     "BuildingSectionsOperation",
     "BuildingSectionsQueried",
     "BuildingSectionsQuery",
+    "BuildingStructure",
     "CadElement",
     "CadImportScale",
     "CadPaperShapeKind",
@@ -146845,6 +146904,8 @@ __all__ = [
     "StretchSpread",
     "StretchTopology",
     "StretchWindow",
+    "StructuralSystem",
+    "StructuralSystemName",
     "StructuresPipeGround",
     "StyleEditOperation",
     "StyleEditOperationName",

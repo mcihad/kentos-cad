@@ -591,10 +591,11 @@ aynı çizim 30.6.2026'da geçer, 2.7.2026'da 34/8'den kalır, tarihsiz eksik ve
 (`fire_escape_tests`). İç yükseklik ADR 8040 §3'te Rust'ta yapılmıştı.
 **Kalan:** Ek-3'te korunumlu şaft beyanı ve yangın kesici (ADR 8082 §6, 8090 §6); duvar stilinin taşıyıcılığı (ADR 8090
 §6); çatının Broof sınıfı ve mahal kaplamalarının malzemesi (ADR 8091 §6); 62/4'ün kuyu havalandırması (ADR 8087 §6, 8092 §6);
-erişilebilir yol (TS 9111 metni); plan notlarının öbür konuları (ADR 8084 §6); blok başına bölge ve 28/1-d (ADR 8085
-§6);
+erişilebilir yol (TS 9111 metni); plan notlarının öbür konuları (ADR 8084 §6); blok başına bölge ve taşıyıcı sistem (ADR
+8085 §6, 8094 §6);
 konut dışı (B22);
-emsalde 22/1-j, 22/1-m ve 5/8'in bodrum listesi (ADR 8079 §6).
+emsalde kalın taş duvarların payı (20/8-j, 5/8; ADR 8094 §6, sıradaki), Sivas 22/k, 22/1-j ve 5/8'in bodrum listesi (ADR
+8079 §6).
 **Yapıldı (17 Kasım 2026, ADR 8078 §6, K64):** uzman onayı kayıtlı: paketin bulgusu `cad.arch.exceptions`'a verilerek
 istisna yapılır; uzman incelemesi bulgusunun istisnası "Uzman onayı"dır, notu uzmanın sözü; bulgu değişince düşer, katla
 ilgili bulgu katın mahallerini adlandırdığı için mahal eklenince yeni bulgu açılır.
@@ -672,6 +673,11 @@ Ek-3/C'nin bodrum süresince EI) ulaşılır (paket 0.16.0, 7 bağımsız durum)
 **Yapıldı (17 Kasım 2026, [ADR 8093](../docs/adr/8093-double-door-leaf-revolving-door.md), K127–K128):** PAİY 39/1-b'nin
 çift kanatlı bina girişinde bir kanadı (en az 1,00 m, ilk kanadın tek başına net geçişi) ve 39/1-ç'nin döner kapısı
 (yanında normal bina girişi); olgulara kanat enleri (paket 0.17.0, 5 bağımsız durum).
+**Yapıldı (17 Kasım 2026, [ADR 8094](../docs/adr/8094-structural-system-traditional-cut-stone.md), K129–K133):** taşıyıcı
+sistem beyanı (Proje ayarları › Mimari › Taşıyıcı sistem: EK-2 Tablo 2.5 ve kesme taş yığma, geleneksel mimari öğeler;
+`.kcad` mimari verisi 15); konut bölgesinde zemin dahil 3 kata kadar geleneksel kesme taş yığma binada PAİY ve Sivas 28/1-d
+4,50 m; Emsal ve TAKS tablosu Taşlık, Dış sofa, Eyvan'ı emsal harici sayar, 22/1-m'nin koşulları pakette (0.18.0; 16
+bağımsız durum).
 
 **Kullanıcı sonucu:** Denetim, başvuru tarihinde yürürlükte olan kuralları uygular. Her bulgu geçti, kaldı, eksik veri,
 uzman incelemesi ya da kapsam dışıdır. Yorum isteyen konu kendiliğinden "uygun" sayılmaz. Dayanak Z9; Ek A.

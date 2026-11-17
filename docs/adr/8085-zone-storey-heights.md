@@ -81,6 +81,6 @@ aslı Lexpera'nın Resmî Gazete metninden, Sivas'ınki Resmî Gazete'nin eski s
 
 - **Blok başına bölge** (birden çok bloklu parsel, ADR 8072); **CBS kararından öneri:** parselin tek kararının
   kullanımı bölgeyi önersin, onayla yazılsın.
-- **28/1-d** (geleneksel kesme taş yığma, 4,50 m) taşıyıcı sistem beyanıyla; **28/2** (planın bina yüksekliği kat
+- **28/1-d** (geleneksel kesme taş yığma, 4,50 m) taşıyıcı sistem beyanıyla (yapıldı: ADR [8094](8094-structural-system-traditional-cut-stone.md)); **28/2** (planın bina yüksekliği kat
   yüksekliğiyle verilmemişse) ve **28/3** (tesisat katı).
 - **Asma katın kendi koşulları** (4/1-d: bölümün 1/3'ü, iç yükseklik 2,40, cepheye 3,00 m; konut alanında asma kat).

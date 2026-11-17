@@ -5,6 +5,7 @@ import type { ArchMaterial } from "./ArchMaterial";
 import type { ArchModule } from "./ArchModule";
 import type { BuildingPerformance } from "./BuildingPerformance";
 import type { BuildingProgram } from "./BuildingProgram";
+import type { BuildingStructure } from "./BuildingStructure";
 import type { FormAnswer } from "./FormAnswer";
 import type { LevelView } from "./LevelView";
 import type { LineGroups } from "./LineGroups";
@@ -136,4 +137,10 @@ planNotes?: Array<PlanNote>,
  * Bölge (docs/adr/8085; `.kcad` Mimari data 12): what the parcel's plan uses its area for, as PAİY 28/1 reads a
  * storey's height by it (a, b, c, ç). Absent: not said; a dwelling's project is read in a dwelling area.
  */
-zone?: Zone, };
+zone?: Zone, 
+/**
+ * Taşıyıcı sistem (docs/adr/8094; `.kcad` Mimari data 15): the building's structural system as the project
+ * declares it and whether it holds traditional architectural elements; Planlı Alanlar İmar Yönetmeliği 22/1-m and
+ * 28/1-d read a traditional cut stone masonry building of up to three storeys. Absent: not said.
+ */
+structure?: BuildingStructure, };

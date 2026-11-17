@@ -73,3 +73,19 @@ fn a_material_s_reaction_class_round_trips_under_arch_data_14() {
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
     assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the class reads back");
 }
+
+/// Architecture data 15 (docs/adr/8094): the building's structural system is written with `modules.arch = 15` and read
+/// back.
+#[test]
+fn the_building_s_structure_round_trips_under_arch_data_15() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_structure(&doc));
+    doc.settings.arch.get_or_insert_with(Default::default).structure = Some(kentos_contracts::BuildingStructure {
+        system: kentos_contracts::StructuralSystem::CutStoneMasonry,
+        traditional: true,
+    });
+    assert!(kentos_kcad::uses_structure(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_STRUCTURE);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the structure reads back");
+}

@@ -1,7 +1,7 @@
 {
   "format": "kentos.regulationCases",
   "version": 1,
-  "about": "Emsal sınırlarının bağımsız durumları (docs/adr/8079): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 22/1-ç, -f, -k, -l ve 44/1'in metninden (RG 25.7.2019/30842, 23.1.2021/31373, 11.7.2021/31538; 44/1 RG 3.7.2017/30113) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un sayımıdır (building.limits): durumlar sınırların koşullarını sınar, sayımın kendisini Rust'ın sınamaları sınar.",
+  "about": "Emsal sınırlarının bağımsız durumları (docs/adr/8079): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 22/1-ç, -f, -k, -l ve 44/1'in metninden (RG 25.7.2019/30842, 23.1.2021/31373, 11.7.2021/31538; 44/1 RG 3.7.2017/30113) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un sayımıdır (building.limits): durumlar sınırların koşullarını sınar, sayımın kendisini Rust'ın sınamaları sınar. 22/1-m'nin durumları (docs/adr/8094) bendin RG 9.10.2021/31623 ve 31.12.2022/32060 hâllerinden elle (building.structuralSystem, building.traditional: projenin beyanı; spaces: mahallerin adları).",
   "cases": [
     {
       "id": "kapici-70-konut",
@@ -2340,6 +2340,754 @@
           ],
           "PAİY 22/1-l": [
             "expertReview",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "id": "taslik-zemin-kat",
+      "neden": "Geleneksel kesme taş yığma, zemin dahil 2 kat, zemin kattaki taşlık emsal harici (22/1-m, 31.12.2022 hâli): bina ve yeri tutuyor; bahçeyle bağlantısı çizimden okunmaz → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000201",
+              "00000000-0000-4000-8000-000000000202"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000203"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "limits": [
+          {
+            "limit": "traditional",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000201"
+            ],
+            "area": 18.0,
+            "allowed": 18.0,
+            "over": 0.0
+          }
+        ],
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000201",
+            "level": "k00",
+            "name": "Taşlık",
+            "area": 18.0
+          }
+        ],
+        "structuralSystem": "cutStoneMasonry",
+        "traditional": true
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_traditional_not_exempt",
+            "state": "expertReview",
+            "has": [
+              "18.00 m²",
+              "bahçeyle bağlantısı"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ],
+          "PAİY 22/1-m": [
+            "expertReview",
+            "31.12.2022"
+          ]
+        }
+      }
+    },
+    {
+      "id": "taslik-dort-kat",
+      "neden": "Taşlık emsal harici sayılmış ama bina zemin dahil 4 katlı: 22/1-m zemin dahil 3 katı geçmeyen binayı okur → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000201"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000211"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000212"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k03",
+            "name": "3. kat",
+            "elevation": 9.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000213"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "limits": [
+          {
+            "limit": "traditional",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000201"
+            ],
+            "area": 18.0,
+            "allowed": 18.0,
+            "over": 0.0
+          }
+        ],
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000201",
+            "level": "k00",
+            "name": "Taşlık",
+            "area": 18.0
+          }
+        ],
+        "structuralSystem": "cutStoneMasonry",
+        "traditional": true
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_traditional_not_exempt",
+            "has": [
+              "zemin dahil 4 katlı"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ],
+          "PAİY 22/1-m": [
+            "failed",
+            "31.12.2022"
+          ]
+        }
+      }
+    },
+    {
+      "id": "eyvan-birinci-katta",
+      "neden": "Eyvan 1. katta: 22/1-m'nin alanı bahçeyle bağlantılı, gerektiğinde basamakla çıkılan, girişle ya da çıkma veya balkon altında yer alan alandır (zemin kat) → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000201",
+              "00000000-0000-4000-8000-000000000202"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000203"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "limits": [
+          {
+            "limit": "traditional",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000203"
+            ],
+            "area": 12.0,
+            "allowed": 12.0,
+            "over": 0.0
+          }
+        ],
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000203",
+            "level": "k01",
+            "name": "Eyvan",
+            "area": 18.0
+          }
+        ],
+        "structuralSystem": "cutStoneMasonry",
+        "traditional": true
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_traditional_not_exempt",
+            "has": [
+              "“Eyvan” zemin katta değil"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ],
+          "PAİY 22/1-m": [
+            "failed",
+            "31.12.2022"
+          ]
+        }
+      }
+    },
+    {
+      "id": "taslik-2020-basvuru",
+      "neden": "1.6.2020 başvurusu: 22/1-m 9.10.2021'de eklendi (RG 31623); o gün taşlık katlar alanına girer → emsal harici sayılmış taşlık kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "01.06.2020"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000201",
+              "00000000-0000-4000-8000-000000000202"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000203"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "limits": [
+          {
+            "limit": "traditional",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000201"
+            ],
+            "area": 18.0,
+            "allowed": 18.0,
+            "over": 0.0
+          }
+        ],
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000201",
+            "level": "k00",
+            "name": "Taşlık",
+            "area": 18.0
+          }
+        ],
+        "structuralSystem": "cutStoneMasonry",
+        "traditional": true
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_traditional_not_exempt",
+            "has": [
+              "9.10.2021'de eklendi"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-m": [
+            "failed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "geleneksel-yalniz-balkon",
+      "neden": "Geleneksel kesme taş yığma binada taşlık yok, balkonlar 22/1-l'nin %20'si içinde: 22/1-m'nin balkon payı da %20 → satır geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000201",
+              "00000000-0000-4000-8000-000000000202"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000203"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "limits": [
+          {
+            "limit": "balcony",
+            "unit": "d1",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000204"
+            ],
+            "area": 6.0,
+            "allowed": 16.0,
+            "over": 0.0
+          }
+        ],
+        "spaces": [],
+        "structuralSystem": "cutStoneMasonry",
+        "traditional": true
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "passed",
+            "11.7.2021"
+          ],
+          "PAİY 22/1-m": [
+            "passed",
+            "31.12.2022"
+          ]
+        }
+      }
+    },
+    {
+      "id": "taslik-2022-basvuru",
+      "neden": "1.6.2022 başvurusu: 22/1-m'nin 9.10.2021 hâli (duvarlarıyla) yürürlükte; taşlık zemin katta, bina 2 katlı → uzman incelemesi, satırın hâli 9.10.2021.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "01.06.2022"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000201",
+              "00000000-0000-4000-8000-000000000202"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000203"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "limits": [
+          {
+            "limit": "traditional",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000201"
+            ],
+            "area": 18.0,
+            "allowed": 18.0,
+            "over": 0.0
+          }
+        ],
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000201",
+            "level": "k00",
+            "name": "Taşlık",
+            "area": 18.0
+          }
+        ],
+        "structuralSystem": "cutStoneMasonry",
+        "traditional": true
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_traditional_not_exempt",
+            "state": "expertReview"
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ],
+          "PAİY 22/1-m": [
+            "expertReview",
+            "9.10.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "taslik-tarihsiz",
+      "neden": "Başvuru tarihi yok: 9.10.2021'den önce bent yok (kalır), sonra uzman incelemesi → eksik veri.",
+      "permit": {
+        "particulars": {}
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000201",
+              "00000000-0000-4000-8000-000000000202"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000203"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "limits": [
+          {
+            "limit": "traditional",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000201"
+            ],
+            "area": 18.0,
+            "allowed": 18.0,
+            "over": 0.0
+          }
+        ],
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000201",
+            "level": "k00",
+            "name": "Taşlık",
+            "area": 18.0
+          }
+        ],
+        "structuralSystem": "cutStoneMasonry",
+        "traditional": true
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "regulation_date_needed",
+            "state": "missingData",
+            "has": [
+              "11.7.2021–8.10.2021 başvurusunda"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "missingData",
+            null
+          ],
+          "PAİY 22/1-f": [
+            "missingData",
+            null
+          ],
+          "PAİY 22/1-k": [
+            "missingData",
+            null
+          ],
+          "PAİY 22/1-l": [
+            "missingData",
+            null
+          ],
+          "PAİY 22/1-m": [
+            "missingData",
             null
           ]
         }

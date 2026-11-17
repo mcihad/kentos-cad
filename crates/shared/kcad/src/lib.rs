@@ -988,7 +988,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_MATERIAL_REACTIONS),
+    ("arch", "mimari", ARCH_WITH_STRUCTURE),
     ("gis", "CBS", GIS_WITH_EXTENSION_DERIVATIONS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -1156,15 +1156,26 @@ pub fn uses_material_reactions(doc: &kentos_contracts::DocumentSnapshotV2) -> bo
     doc.settings.arch.as_ref().is_some_and(|a| a.materials.iter().any(|m| m.reaction.is_some()))
 }
 
-/// The architecture data version `doc` needs: 14 for a material's reaction class, 13 for a declared load-bearing or
-/// escape route role, 12 for the parcel's
+/// Architecture data version 15 (docs/adr/8094): the building's declared structural system (`settings.arch.structure`).
+/// Version 15 holds versions 1–14's data too. The document schema stays as it is.
+pub const ARCH_WITH_STRUCTURE: u16 = 15;
+
+/// Whether `doc` holds architecture data 15 ([`ARCH_WITH_STRUCTURE`]).
+pub fn uses_structure(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_structure)
+}
+
+/// The architecture data version `doc` needs: 15 for the building's structural system, 14 for a material's reaction
+/// class, 13 for a declared load-bearing or escape route role, 12 for the parcel's
 /// area's use, 11 for its plan notes, 10 for the form's answers, 9 for a
 /// building's code, use or ±0.00 or a shared level, 8 for a roof's
 /// layers, 7 for a sloped slab, 6 for a beams' or coverings'
 /// schedule, 5 for a covering, 4 for a post, a rail or a column's own height, 3 for a curtain wall, 2 for a block's
 /// building element, 1 for the performance declarations, else 0 (not raised).
 pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
-    if uses_material_reactions(doc) {
+    if uses_structure(doc) {
+        ARCH_WITH_STRUCTURE
+    } else if uses_material_reactions(doc) {
         ARCH_WITH_MATERIAL_REACTIONS
     } else if uses_declared_roles(doc) {
         ARCH_WITH_DECLARED_ROLES

@@ -63,8 +63,14 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
     önüne koyar) ve parselin bölgesi (zone: residential konut alanı, residentialShops
     zemin katında ticaret yapılabilen konut alanı, mixed karma alan, commercial ticaret
     alanı, other 28/1'in saymadığı kullanım; kat yüksekliğini PAİY 28/1-c, ç, b, a okur;
-    yoksa konut projesinde konut alanı sayılır). Liste değişiminde mevcut kat ve
-    tercihleri kopyalayın; arch iç içe yama değildir. Listeler öneridir; mevcut mahal
+    yoksa konut projesinde konut alanı sayılır) ve binanın taşıyıcı sistemi (structure:
+    system reinforcedConcrete betonarme, steel çelik, masonry yığma, cutStoneMasonry
+    kesme taş yığma, timber ahşap, composite kompozit; traditional geleneksel mimari
+    öğeler barındırıyor, yalnız cutStoneMasonry ile, öbüründe invalid_arch; geleneksel
+    kesme taş yığma binada Emsal ve TAKS tablosu Taşlık, Dış sofa ve Eyvan adlı
+    mahalleri emsal harici sayar (PAİY 22/1-m), Denetim zemin dahil 3 katı geçmeyen
+    binada kat yüksekliğini 28/1-d'nin 4,50 m'siyle okur). Liste değişiminde mevcut kat
+    ve tercihleri kopyalayın; arch iç içe yama değildir. Listeler öneridir; mevcut mahal
     adı/numarası/kullanımı değişmez, önek yalnız açık seçimle başlangıca alınır. Ayarlar
     projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve cihazın ayarları
     (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar reddedilir.
@@ -135,7 +141,13 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         (zone: residential konut alanı, residentialShops zemin katında ticaret yapılabilen
         konut alanı, mixed karma alan, commercial ticaret alanı, other 28/1'in saymadığı
         kullanım; kat yüksekliğini PAİY 28/1-c, ç, b, a okur; yoksa konut projesinde konut
-        alanı sayılır). Liste değişiminde mevcut kat ve tercihleri kopyalayın; arch iç içe
+        alanı sayılır) ve binanın taşıyıcı sistemi (structure: system reinforcedConcrete
+        betonarme, steel çelik, masonry yığma, cutStoneMasonry kesme taş yığma, timber
+        ahşap, composite kompozit; traditional geleneksel mimari öğeler barındırıyor, yalnız
+        cutStoneMasonry ile, öbüründe invalid_arch; geleneksel kesme taş yığma binada Emsal
+        ve TAKS tablosu Taşlık, Dış sofa ve Eyvan adlı mahalleri emsal harici sayar (PAİY
+        22/1-m), Denetim zemin dahil 3 katı geçmeyen binada kat yüksekliğini 28/1-d'nin 4,50
+        m'siyle okur). Liste değişiminde mevcut kat ve tercihleri kopyalayın; arch iç içe
         yama değildir. Listeler öneridir; mevcut mahal adı/numarası/kullanımı değişmez, önek
         yalnız açık seçimle başlangıca alınır. Ayarlar projenin düzenlemesidir, geri alma
         adımı değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin

@@ -1557,6 +1557,9 @@ mod plan_notes_tests;
 #[path = "tests/zone_tests.rs"]
 mod zone_tests;
 #[cfg(test)]
+#[path = "tests/cut_stone_tests.rs"]
+mod cut_stone_tests;
+#[cfg(test)]
 #[path = "tests/storey_link_tests.rs"]
 mod storey_link_tests;
 #[cfg(test)]

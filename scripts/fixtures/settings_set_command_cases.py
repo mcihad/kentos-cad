@@ -256,6 +256,16 @@ def cases():
                        "Katlar geçersiz: “zemin” kimlikli kat iki kez var. Her katın kimliği ve adı ayrı olmalı.", "arch.levels"))
     out.append(refused("katın yüksekliği sıfır", {"arch": {"levels": [dict(levels[0], height=0)]}}, "invalid_arch",
                        "“Zemin kat” katının yüksekliği sıfırdan büyük olmalı.", "arch.levels[0].height"))
+    # The building's structural system (docs/adr/8094): written as given; traditional elements only of cut stone
+    # masonry (PAİY 22/1-m, 28/1-d read “taşıyıcı sistemi kesme taş yığma … geleneksel mimari öğeler barındıran”).
+    stone = {"levels": levels, "structure": {"system": "cutStoneMasonry", "traditional": True}}
+    out.append({"name": "Mimari: taşıyıcı sistem, geleneksel kesme taş yığma (ADR 8094)",
+                "steps": [step("execute", {"arch": stone}, done(["arch"]), {**FLAGS, "settings": {"arch": stone}})]})
+    out.append(refused("betonarme binada geleneksel mimari öğeler",
+                       {"arch": {"levels": levels, "structure": {"system": "reinforcedConcrete", "traditional": True}}},
+                       "invalid_arch",
+                       "Geleneksel mimari öğeler yalnız kesme taş yığma binada okunur; taşıyıcı sistem Betonarme. Taşıyıcı "
+                       "sistemi Kesme taş yığma seçin ya da geleneksel mimari öğeleri kaldırın.", "arch.structure.traditional"))
     # What the elevations are and the coordinates' epoch (docs/adr/0519 §1): assigned, no elevation moves; unknown and 0
     # take them away; ellipsoidal heights and an epoch need a system, and go with it.
     ortho = {"kind": "orthometric", "verticalSrid": 5775, "geoid": {"name": "TG-20"}}
@@ -606,7 +616,7 @@ def build():
         "command": "cad.settings.set",
         "commandVersion": 1,
         "title": "Proje ayarları",
-        "note": "Written by scripts/fixtures/settings_set_command_cases.py from the contract's rules and docs/adr/0165, 0167, 0168, 0205, 0248 §5, 0339 §3, 0720, 0801; do not edit by hand.",
+        "note": "Written by scripts/fixtures/settings_set_command_cases.py from the contract's rules and docs/adr/0165, 0167, 0168, 0205, 0248 §5, 0339 §3, 0720, 0801, 8094; do not edit by hand.",
         "setup": setup(),
         "cases": cases()+room_choice_cases(),
     }

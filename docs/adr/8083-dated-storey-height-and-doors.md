@@ -123,7 +123,7 @@ sayısı (Sivas) ve mevzuat.gov.tr'nin derlenmiş PAİY metni (değişiklik işa
 
 - **Bölge türü** (plan "bölge türü"): 28/1-a, b, ç (ticaret, karma, zemini ticaretli konut bölgesi) ve 28/1-c'nin konut
   bölgesi varsayımı projenin imar durumundan okunsun.
-- **28/1-d:** geleneksel kesme taş yığma bina 4,50 m (taşıyıcı sistem beyanı modelde yok).
+- **28/1-d:** geleneksel kesme taş yığma bina 4,50 m — yapıldı: ADR [8094](8094-structural-system-traditional-cut-stone.md) (taşıyıcı sistem beyanı).
 - **39/1-b'nin bir kanadı:** çift kanatlı bina girişinde bir kanadın 1,00 m'si (`OpeningSizes.clear_first` ilk kanadı
   ölçer; geniş kanadın tek başına net geçişi gerekir). 39/1-ç döner kapının yanındaki normal kapı; 39/1-d okunmaz. İkisi
   [ADR 8093](8093-double-door-leaf-revolving-door.md)'te yapıldı.

@@ -102,6 +102,15 @@ pub struct ZoningTexts {
     pub plan_notes: Vec<super::plan_notes::Note>,
     /// Bölge: the parcel's area's use in the plan (docs/adr/8085).
     pub zone: Option<kentos_commands::Zone>,
+    /// Taşıyıcı sistem: the building's structural system and its traditional elements (docs/adr/8094).
+    pub structure: Option<kentos_commands::BuildingStructure>,
+}
+
+/// Taşıyıcı sistem's choices (docs/adr/8094): not said, or a system.
+fn structure_choices() -> Vec<(Option<kentos_commands::StructuralSystem>, &'static str)> {
+    std::iter::once((None, "Yazılmamış"))
+        .chain(kentos_commands::StructuralSystem::ALL.into_iter().map(|s| (Some(s), s.label())))
+        .collect()
 }
 
 /// Bölge's choices (docs/adr/8085): not said, or the plan's use.
@@ -146,6 +155,7 @@ impl ZoningTexts {
             sprinklers: arch.is_some_and(|a| a.sprinklers),
             plan_notes: super::plan_notes::rows(arch.map_or(&[][..], |a| a.plan_notes.as_slice())),
             zone: arch.and_then(|a| a.zone),
+            structure: arch.and_then(|a| a.structure),
         }
     }
 
@@ -289,6 +299,45 @@ pub(super) fn fire_view<'a>(
     super::group::<Message>("Yangın güvenliği", body)
 }
 
+/// Taşıyıcı sistem (docs/adr/8094): the building's structural system and, of a cut stone masonry one, whether it holds
+/// traditional architectural elements.
+pub(super) fn structure_view<'a>(
+    t: &'a ZoningTexts,
+    on_system: impl Fn(Option<kentos_commands::StructuralSystem>) -> Message + 'a,
+    on_traditional: impl Fn(bool) -> Message + 'a,
+) -> Element<'a, Message> {
+    let choices = structure_choices();
+    let at = choices.iter().position(|(s, _)| *s == t.structure.map(|x| x.system));
+    let mut body = Column::new().spacing(6).push(
+        row![
+            container(label::body("Sistem")).width(typography::scaled(140.0)),
+            container(
+                Select::new(choices.iter().map(|(_, l)| Choice::new(*l)), at, move |i| {
+                    on_system(structure_choices().get(i).and_then(|(s, _)| *s))
+                })
+                .searchable(false)
+            )
+            .width(typography::scaled(330.0)),
+        ]
+        .spacing(8)
+        .align_y(Center),
+    );
+    // Traditional elements are read of a cut stone masonry building only (PAİY 20/8-j, 22/1-m, 28/1-d).
+    if let Some(x) = t.structure.filter(|x| x.system == kentos_commands::StructuralSystem::CutStoneMasonry) {
+        body = body.push(
+            kentos_ui::widget::Switch::new(x.traditional, on_traditional)
+                .label("Geleneksel mimari öğeler barındırıyor"),
+        );
+    }
+    body = body.push(label::caption(
+        "Statik projenin taşıyıcı sistemidir. Geleneksel mimari öğeler barındıran, zemin dahil 3 katı geçmeyen kesme taş \
+         yığma binada Denetim › Mevzuat konut bölgesinde kat yüksekliğini 4,50 m'yle okur (Planlı Alanlar İmar \
+         Yönetmeliği 28/1-d); Emsal ve TAKS tablosu Taşlık, Dış sofa ve Eyvan adlı mahalleri emsal harici sayar (22/1-m), \
+         koşullarını Denetim söyler. KentOS bir onay vermez.",
+    ));
+    super::group::<Message>("Taşıyıcı sistem", body)
+}
+
 fn shown(n: Option<f64>) -> String {
     n.map(|v| format!("{v}")).unwrap_or_default()
 }
@@ -419,6 +468,8 @@ pub fn read(
     // The parcel's plan notes (docs/adr/8084) and its area's use (docs/adr/8085).
     let plan_notes = super::plan_notes::read(&zoning.plan_notes)?;
     let zone = zoning.zone;
+    // The building's structural system (docs/adr/8094).
+    let structure = zoning.structure;
     let site = {
         let mut s = choices.and_then(|a| a.site.clone()).unwrap_or_default();
         s.datum = datum;
@@ -487,6 +538,7 @@ pub fn read(
         sprinklers,
         plan_notes,
         zone,
+        structure,
         // The building's fire protection class (docs/adr/8068) and the form's answers (docs/adr/8077) are their own
         // windows': kept as the project has them.
         performance: choices.and_then(|a| a.performance.clone()),

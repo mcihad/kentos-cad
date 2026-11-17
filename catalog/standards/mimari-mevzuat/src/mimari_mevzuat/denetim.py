@@ -44,8 +44,9 @@ def kapi_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
 
 @ext.audit("emsal")
 def emsal_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
-    """Emsalin 22. madde sınırlarının koşulları (22/1-ç kapıcı dairesinin 44/1'e göre zorunluluğu, 22/1-f kütüphane)."""
-    return _bulgular(facts, ("paiy_caretaker_", "paiy_library_"))
+    """Emsalin 22. madde sınırlarının koşulları (22/1-ç kapıcı dairesinin 44/1'e göre zorunluluğu, 22/1-f kütüphane,
+    22/1-m geleneksel kesme taş yığma binanın taşlık, dış sofa ve eyvanı)."""
+    return _bulgular(facts, ("paiy_caretaker_", "paiy_library_", "paiy_traditional_"))
 
 
 @ext.audit("merdiven-alti")

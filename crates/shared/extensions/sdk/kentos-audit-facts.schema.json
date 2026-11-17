@@ -180,11 +180,22 @@
           },
           "type": "array"
         },
+        "structuralSystem": {
+          "description": "The building's structural system as the project declares it (docs/adr/8094): `reinforcedConcrete`, `steel`,\n`masonry`, `cutStoneMasonry`, `timber`, `composite`; absent: not said.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "structureHeight": {
           "default": 0.0,
           "description": "Yapı yüksekliği (BYKHY 4/bbb): every storey built, basements, mezzanines and attics with them, as the fire rules\nmeasure it, m (docs/adr/8087: BYKHY 25/3's high building and 62/7's elevator doors read it).",
           "format": "double",
           "type": "number"
+        },
+        "traditional": {
+          "description": "The project says the building holds traditional architectural elements (only of cut stone masonry): PAİY 22/1-m\nand 28/1-d read such a building of up to three storeys (docs/adr/8094).",
+          "type": "boolean"
         },
         "underStairs": {
           "description": "The stairs with places under them lower than 1.80 m (docs/adr/8080; PAİY 4/1-ğ-3, 31/6), by persistent id.",
@@ -887,7 +898,7 @@
           "type": "boolean"
         },
         "limit": {
-          "description": "`balcony` (22/1-l: a unit's open balconies, 20 % of its net area), `storage` (22/1-k: a unit's storage annexes\non a storey under the ground, 50 % of its net area), `caretaker` (22/1-ç: the caretaker flats, 70 m² together) or\n`library` (22/1-f: the library rooms, 50 m² together).",
+          "description": "`balcony` (22/1-l: a unit's open balconies, 20 % of its net area), `storage` (22/1-k: a unit's storage annexes\non a storey under the ground, 50 % of its net area), `caretaker` (22/1-ç: the caretaker flats, 70 m² together),\n`library` (22/1-f: the library rooms, 50 m² together) or `traditional` (22/1-m, docs/adr/8094: a traditional cut\nstone masonry building's taşlık, dış sofa and eyvan, no area of their own; the building's conditions are the\nrule's).",
           "type": "string"
         },
         "over": {
