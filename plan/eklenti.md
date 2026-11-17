@@ -831,7 +831,10 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   özellikler, hazırla/Durdur/ilerleme, "hazır" kaydı en son, çalışırken eşitleme ya da indirme yok; eklentiyle kaldırılır;
   yeni örnek `ornek-imar` (shapely 2.0) MEBİS'le (shapely 2.2) yan yana. **Teslim edildi; sonraya kalan:** kurum
   dizini/aynası (PY-UV-25, 26), çevrimdışı tekerlek deposu (ADIM 22A), SBOM (PY-UV-29), kişisel paketi bağımlılığa
-  ekleme, Windows'ta gerçek pencere ([ADR 8057 §5](../docs/adr/8057-phase-3-extension-packages.md)).
+  ekleme, Windows'ta gerçek pencere ([ADR 8057 §5](../docs/adr/8057-phase-3-extension-packages.md)). — *17 Kasım:
+  SBOM (§91), kurumun paket sabitlemesi (§118, PY-UV-26) ve çevrimdışı tekerlek klasörü (§123, PY-UV-27) teslim edildi;
+  kalan: kiracı kapsamındaki dizin kimlik bilgileri (ECO-DEC-11), kişisel paketi bağımlılığa ekleme, Windows'ta gerçek
+  pencere.*
 - **Kabul:** P01–P07 (§5). İstemeyen kurmayı reddeder ve normal çalışır; NumPy isteyen kendi ortamına kurar; iki
   eklentinin farklı NumPy'ı birbirini bozmaz; internet kapalıyken hazır ortam çalışır; çalıştırma kendiliğinden paket ya
   da yorumlayıcı indirmez. Testler sahte taşımayla ve temiz bir kullanıcı profiliyle; gerçek kullanıcı ortamı
