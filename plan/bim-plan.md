@@ -615,8 +615,10 @@ beş sonuçtan dördü Tutuyor, idare Bekleniyor; qpdf/Poppler, IfcOpenShell ve 
 **Yapıldı (17 Kasım 2026, [ADR 8077](../docs/adr/8077-ek9-author-answers-in-the-drawing.md)):** müellifin cevapları
 çizimde (`settings.arch.formAnswers`, `cad.form.answer` v1, mimari verisi 10): basılan form ve yayın aynı cevabı okur;
 pencere taslağı Denetle ve Yayınla'da tek geri alma adımıyla çizime yazar; 26 ortak durum.
-**Kalan:** cevabın eskimesi (modelin revizyonu cevapta yok); 2+1'de paket; MCP'nin uçtan uca sınaması; Python tipli
-katmanından ortak durumlar bağımsız `.kcad` okuyucusunun mimari verisi 1–10'u bilmemesi yüzünden duruyor.
+2+1 dairesinin paketi de gerçek kuralla yayımlanıyor: kuralın bulguları çizimin eksikleriydi (duvar stili, döşeme
+katmanı, üst döşeme, parselin katmanı), tamamlanınca geçti (ADR 8077 §5).
+**Kalan:** cevabın eskimesi (modelin revizyonu cevapta yok); MCP'nin uçtan uca sınaması; Python tipli katmanından ortak
+durumlar bağımsız `.kcad` okuyucusunun mimari verisi 1–10'u bilmemesi yüzünden duruyor.
 
 **Kullanıcı sonucu:** Tek komut, aynı model revizyonundan mimari modeli, bütün PDF/A paftaları, çizelgeleri ve kontrol
 formunu üretir. Hepsi yazıldıktan sonra dosyadan denetlenir; biri kalırsa hiçbir şey yayımlanmaz. Dayanak Md. 9/1, 15; e-PYS
@@ -757,7 +759,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B12 ✓ | Okuma yüzü ve motor denemesi | IFC-07 | Yazılan dosya geri okunur; motor kararı ADR 8061'de (§11; gerçek dünyadan 35 dosya da aynı okunur) |
 | B12b ~ | IFC görüntüleyici | IFC-12 | Dosya kendi penceresinde: ağaç, özellikler, kesit; dışa aktarılan tek tıkla görülür (ilk dilim ADR 8073; gerçek pencerede kabul ve kesitin tutamakları kaldı) |
 | B13 ~ | Yazılmış dosyadan doğrulama, IDS ve kontrol formu | IFC-08 | 21 sorunun kanıtı dosyadan (ADR 8074; ikinci okuyucu ve IfcTester KentOS'la aynı; son yazılan dosya, beş sonuç raporu ve bütçe kaldı) |
-| B14 ~ | BIM ruhsat paketi | BIM-14 | Tek komut, tek revizyon, tek paket (ADR 8075; gerçek paket ADR 8076; müellifin cevapları çizimde ve basılan formda ADR 8077; 2+1, cevabın eskimesi, MCP kaldı) |
+| B14 ~ | BIM ruhsat paketi | BIM-14 | Tek komut, tek revizyon, tek paket (ADR 8075; gerçek paket ADR 8076; müellifin cevapları çizimde ve basılan formda ADR 8077; 2+1 de yayımlanıyor; cevabın eskimesi, MCP kaldı) |
 | B15 | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti |
 | B16 | Bilgi yönetimi ve teslim kaydı | BIM-15 | Teslim ve iade kayıtlı |
 | B17 | Büro ve belediye pilotu | BIM-16, IFC-11 | İdarenin yazılı cevabı |

@@ -70,7 +70,23 @@
   formun kaydı cevapları taşır.
 - Resimler: `.run/gui-evidence/ek9-cevaplar-8077/` (basılan form, sorular ve cevaplar).
 
-## §5. Açık işler
+## §5. 2+1 dairesinin paketi (B14'ün kalanı)
+
+Kabul akışının 2+1 dairesi (`fixtures/acceptance/v1/flat.json`, komutlarıyla çizilen) aynı beyanlarla gerçek kurala
+verildi (`tests/headless/bim_package.rs::the_flat_s_declared_package_holds`). Kuralın ilk bulguları yazıcının değil,
+çizimin eksikleriydi; müellifin tamamladıkları:
+
+- Duvarların stili yok: malzeme ve sıva yok (`IfcMaterial.Name`, `WallCoveringThickness`) → dış duvarlara Dış duvar 25,
+  bölmelere İç duvar 15.
+- Döşemenin malzemesi ve katmanı yok (`IfcMaterial.Name`, `FloorCoveringThickness`) → Betonarme, zemine oturan diziliş.
+- Katın üstünde döşeme yok: yükseklikleri ve tavan sıvası bilinmiyor (`Height`, `EavesHeight`, `CeilingCoveringThickness`)
+  → katın yüksekliğinde teras döşemesi.
+- Parsel modelin katmanında serbest çizgi (`digital_free_on_model_layer`) → Vaziyet katmanı.
+- 5. soru: kapı ve pencerelerin adında açıklama yok (K49) → müellifin cevabı.
+
+Tamamlanınca paket yayımlandı: beş sonuçtan dördü Tutuyor, idare Bekleniyor; formun kaydı müellifin dört cevabını taşır.
+
+## §6. Açık işler
 
 - **Cevabın eskimesi:** model değişince bir cevap eskiyebilir (10. sorunun alan tabloları gibi); cevap modelin revizyonunu
   taşımıyor, uyarı yok.
@@ -78,4 +94,4 @@
   ADR 8068'den beri her mimari sürüm artışında güncellenmedi. Python SDK'nın tipli katmanından ortak durumlar
   (`test_command_cases`) mimari verisi ≥1 olan ilk belgede duruyor; bu dilimin durumları da oradan geçemiyor. Ayrı iş:
   TODOS.md.
-- 2+1'de paket ve MCP'nin uçtan uca sınaması B14'ün kalanıdır.
+- MCP'nin uçtan uca sınaması B14'ün kalanıdır.

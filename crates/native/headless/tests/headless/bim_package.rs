@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 use kentos_commands::{CallEnvelope, CallOp, CommandResult, SheetsPublished, encoding::sha256_hex};
 use kentos_domain::Document;
-use serde_json::{Value, json};
+use serde_json::{Value, Value as Json, json};
 
 fn run(doc: &mut Document, name: &str, input: Value) -> Value {
     let answer = kentos_native_application::registry::run(
@@ -47,6 +47,14 @@ fn declare(snap: &mut kentos_commands::DocumentSnapshotV2) {
         kind: kentos_commands::VariableKind::Text,
         value: kentos_commands::VariableValue::Text("yeni bina".into()),
     });
+    // The Vaziyet planı's own layer, apart from the model's (a free line on a model layer stops the package).
+    snap.layers.push(
+        serde_json::from_value(json!({
+            "id": "vaziyet", "name": "Vaziyet", "type": "layer", "visible": true, "locked": false, "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []
+        }))
+        .expect("a layer"),
+    );
     snap.settings.srid = 5256;
     snap.settings.heights = Some(kentos_commands::HeightReference {
         kind: kentos_commands::HeightKind::Orthometric,
@@ -71,7 +79,7 @@ fn declare_in(doc: &mut Document) {
     let made = run(
         doc,
         "cad.entities.create",
-        json!({"layerId": "0", "objects": [{"geometry": {"kind": "polyline", "closed": true, "pts": [
+        json!({"layerId": "vaziyet", "objects": [{"geometry": {"kind": "polyline", "closed": true, "pts": [
             p(lo[0] - 3.0, lo[1] - 5.0), p(hi[0] + 3.0, lo[1] - 5.0), p(hi[0] + 3.0, hi[1] + 3.0), p(lo[0] - 3.0, hi[1] + 3.0)
         ]}}]}),
     );
@@ -90,21 +98,33 @@ fn declare_in(doc: &mut Document) {
         doc.entities_with_uids().filter(|(_, e)| keep(e)).map(|(u, _)| u.to_string()).collect()
     };
     use kentos_commands::Entity as E;
+    // Each kind the drawing has (an apartment may have no stair).
     let structure = uids(doc, &|e| matches!(e, E::Wall(_) | E::Slab(_) | E::Column(_) | E::Beam(_) | E::Stair(_)));
-    run(doc, "cad.arch.performance", json!({"operation": {"kind": "objects", "uids": structure, "fireRating": author("REI 60")}}));
+    if !structure.is_empty() {
+        run(doc, "cad.arch.performance", json!({"operation": {"kind": "objects", "uids": structure, "fireRating": author("REI 60")}}));
+    }
     let doors = uids(doc, &|e| matches!(e, E::Opening(o) if o.opening.form == kentos_commands::OpeningForm::Door));
-    run(doc, "cad.arch.performance", json!({"operation": {"kind": "objects", "uids": doors, "fireRating": author("EI 30"),
-        "exit": {"exit": false, "basis": {"kind": "author"}}}}));
+    if !doors.is_empty() {
+        run(doc, "cad.arch.performance", json!({"operation": {"kind": "objects", "uids": doors, "fireRating": author("EI 30"),
+            "exit": {"exit": false, "basis": {"kind": "author"}}}}));
+    }
     let stairs = uids(doc, &|e| matches!(e, E::Stair(_)));
-    run(doc, "cad.arch.performance", json!({"operation": {"kind": "objects", "uids": stairs, "exit": {"exit": true, "basis": {"kind": "author"}}}}));
+    if !stairs.is_empty() {
+        run(doc, "cad.arch.performance", json!({"operation": {"kind": "objects", "uids": stairs, "exit": {"exit": true, "basis": {"kind": "author"}}}}));
+    }
     run(doc, "cad.arch.performance", json!({"operation": {"kind": "building", "fireProtectionClass": author("Konut, düşük tehlike")}}));
 }
 
 /// The section building with a künye and its permit set made (Ruhsat takımı, docs/adr/8037); `declared`, completed
 /// for the model as an author does.
 fn permit_drawing(declared: bool) -> Document {
-    let mut snap: kentos_commands::DocumentSnapshotV2 =
+    let snap: kentos_commands::DocumentSnapshotV2 =
         kentos_kcad::decode(include_bytes!("../../../../../fixtures/arch/v1/section-building.kcad")).unwrap();
+    permit_drawing_of(snap, declared)
+}
+
+/// [`permit_drawing`] on any drawing's snapshot.
+fn permit_drawing_of(mut snap: kentos_commands::DocumentSnapshotV2, declared: bool) -> Document {
     if declared {
         declare(&mut snap);
     }
@@ -273,4 +293,74 @@ fn a_declared_building_is_published_whole() {
     if keep.is_none() {
         let _ = fs::remove_dir_all(&path);
     }
+}
+
+/// The acceptance flow's 2+1 apartment (fixtures/acceptance/v1/flat.json, drawn by its commands) declared as an author
+/// does, its package published with the real rule (docs/adr/8076, 8077; plan/bim-plan.md BIM-14 "2+1'de paket").
+/// What the apartment's author completes for the model beyond the declarations (the real rule's first findings on it):
+/// the walls' styles by their widths (Dış duvar 25 outside, İç duvar 15 inside: their materials and plasters), the
+/// floor slab's material and layers (Zemine oturan döşeme) and a terrace slab over the storey (its height and ceiling).
+fn complete_flat(snap: &mut kentos_commands::DocumentSnapshotV2) {
+    use kentos_commands::Entity as E;
+    let styles: Vec<kentos_commands::WallStyleDef> = kentos_commands::builtin_wall_styles()
+        .into_iter()
+        .filter(|s| s.id == "kentos-dis-duvar-25" || s.id == "kentos-ic-duvar-15")
+        .collect();
+    for e in &mut snap.entities {
+        if let E::Wall(w) = e {
+            let id = if w.wall.width >= 0.2 { "kentos-dis-duvar-25" } else { "kentos-ic-duvar-15" };
+            let style = styles.iter().find(|s| s.id == id).expect("the style");
+            w.wall.style = Some(id.into());
+            w.wall.components = style.components.clone();
+        }
+    }
+    snap.settings.wall_styles.extend(styles);
+    let height = snap.settings.arch.as_ref().and_then(|a| a.levels.first()).and_then(|l| l.height).expect("its height");
+    let at = snap.entities.iter().position(|e| matches!(e, E::Slab(_))).expect("the floor slab");
+    let layered = |over: Json, under: Json| -> Json { json!({"over": over, "under": under}) };
+    let mut floor = serde_json::to_value(&snap.entities[at]).expect("the slab");
+    floor["material"] = json!("Betonarme");
+    floor["layers"] = layered(
+        json!([{"kind": "finish", "thickness": 0.02}, {"kind": "screed", "thickness": 0.05},
+               {"kind": "insulation", "thickness": 0.05}, {"kind": "waterproofing", "thickness": 0.01}]),
+        json!([]),
+    );
+    let mut terrace = floor.clone();
+    snap.entities[at] = serde_json::from_value(floor).expect("the floor slab");
+    let next = snap.entities.iter().map(|e| e.base().id).max().unwrap_or(0) + 1;
+    terrace["id"] = json!(next);
+    terrace["offset"] = json!(height);
+    terrace["role"] = json!("terrace");
+    terrace["layers"] = layered(
+        json!([{"kind": "finish", "thickness": 0.03}, {"kind": "waterproofing", "thickness": 0.01},
+               {"kind": "screed", "thickness": 0.05}, {"kind": "insulation", "thickness": 0.08}]),
+        json!([{"kind": "plaster", "thickness": 0.02}]),
+    );
+    snap.entities.push(serde_json::from_value(terrace).expect("the terrace"));
+    snap.uids.push(serde_json::from_value(json!("0192f5a1-8077-7000-8000-00000000f1a7")).expect("an id"));
+}
+
+#[test]
+fn the_flat_s_declared_package_holds() {
+    let (session, _) = crate::flat_timing::drawn();
+    let mut snap = session.document().to_snapshot_v2();
+    complete_flat(&mut snap);
+    let mut doc = permit_drawing_of(snap, true);
+    // The 5th question too: the apartment's doors and windows are named without a description (K49), the author's call.
+    let mut given = answers();
+    given.as_array_mut().expect("a list").push(json!({"no": 5, "yes": true, "note": "Açıklama EK-5 kalıbında isteğe bağlı"}));
+    run(&mut doc, "cad.form.answer", json!({"answers": given}));
+    let path = folder("daire");
+    let published = report(&publish(&mut doc, &path, CallOp::Execute, json!([])));
+    let errors: Vec<(&str, &str)> =
+        published.issues.iter().filter(|i| i.error).map(|i| (i.code.as_str(), i.message.as_str())).collect();
+    assert!(published.ready, "{errors:#?}");
+    let bim = published.bim.as_ref().expect("the package's part");
+    assert_eq!(bim.results.iter().map(|r| r.holds).collect::<Vec<_>>(), [Some(true), Some(true), Some(true), Some(true), None]);
+    // The model delivered beside the sheets; the form's record keeps the author's five answers.
+    assert!(path.join(&bim.model).is_file());
+    let record: Value = serde_json::from_slice(&fs::read(path.join(&bim.form)).expect("the form's record")).unwrap();
+    let nos: Vec<u64> = record["answers"].as_array().expect("answers").iter().filter_map(|a| a["no"].as_u64()).collect();
+    assert_eq!(nos, [1, 5, 7, 10]);
+    let _ = fs::remove_dir_all(&path);
 }
