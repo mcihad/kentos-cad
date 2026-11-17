@@ -1,7 +1,8 @@
 # ADR 8061: Eklenti SDK'sının kararlılık ilkesi — neyin güvencede olduğu, nasıl eskidiği, nasıl göç edildiği
 
 - **Durum:** kabul edildi ve ilk dilimi uygulandı (16 Kasım 2026): ilke yazılı; eskiyen ve deneysel ad kaydı
-  (`kentos_extensions::sdk_surface`, bugün boş), paketlemede ve kurulumda uyarıları, `kentos kek upgrade`.
+  (`kentos_extensions::sdk_surface`, bugün boş), paketlemede ve kurulumda uyarıları, `kentos kek upgrade`; 17 Kasım:
+  API ailesinin adları (§11).
 - **Bağlam:** plan/eklenti.md D7 ve ADIM 21'in dersi ("yazılı SDK kararlılık politikası … ADIM 19'un başında"; "sürüm
   göçü: `verify`'da kalıcı kimlikli göç kuralları ve `kentos kek upgrade`"); araştırma notu
   `docs/research/2026-11-13-qgis-eklenti-sistemi.md` §5; ADR 8057 §1 (uyumluluk, `compat.rs`), §15 (çalışma kökeni),
@@ -116,6 +117,28 @@ geride kaldığını söylüyor [H2]. (Ölçümün yeri ADIM 22A'nın katalog y�
 | Ad | Kimin | Durum | Yerine | KentOS | Not |
 |---|---|---|---|---|---|
 | — | — | — | — | — | Bugün eskiyen ya da deneysel ad yok. |
+
+## §11. API ailesinin adları (17 Kasım 2026)
+
+plan/eklenti.md ADIM 21'in "API ailesi" maddesi aileleri kavramsal adlarla sayar ve adların burada kesinleşmesini
+ister. Karar: **yeni ad türetilmez, bugünkü adlar kesinleşir**; her aile bugün çalışan adlara bağlanır. Kullanıcının
+kararı olan işler (kurmak, etkinleştirmek, kapatmak, kaldırmak, Python ortamını hazırlamak, yayımlamak) programa ve
+ajana **API olarak açılmaz**: ajan yalnız kullanıcının penceresini açar (PY-AI-05, ECO-API-03).
+
+| Aile | Bugünkü adlar | Kimin |
+|---|---|---|
+| `python.environments.*` | Uygulama ayarları › Python ve eklentiler; eklentinin Python ortamı bölümü (önizle, hazırla, kaldır); CI'da `kentos kek test --install-python`; ajan hazır olup olmadığını `catalog.describe` (extension) ile okur | kullanıcının |
+| `extensions.*` inspect/package/check | `kentos kek inspect`, `pack`, `verify`, `test`, `sbom`, `docs`, `upgrade`; ajan `extension.verify`, `extension.workshop.trial`, `extension.report` | program ve ajan |
+| `extensions.*` install/enable/disable/update/uninstall/prepare | Eklentiler penceresi; ajan `extension.workshop.review` (inceleme penceresini açar), `extension.workshop.reload` (kullanıcının atölyeden kurduğu eklentinin değişikliği) | kullanıcının |
+| `extensions.*` run | katkının kendi kapısı: `processing.run`, `audit.run`/`audit.apply_fix`; eklenti komutu şeritten | program ve ajan; komut kullanıcının |
+| `extensions.catalog.*` | katalog sunucusunun `/v1/extension-catalogs/{katalog}/releases` uçları (ADR 8059 §10); `kentos kek index`; masaüstünde Kataloğa gönder, ajan `extension.workshop.submit` (pencereyi açar) | yükleme program, onay ve yayın inceleyicinin |
+| `ui.sessions.*` | eklentinin Python'u için `ctx.panel.*` (güvencedeki yüzey, §1); dışarıya API değil | eklenti |
+| `processing.tools.*` | ürün komutları `cad.processing.tools`, `cad.processing.run`, `cad.processing.batch` (komut kataloğunun sürümüyle); ajan `processing.list`, `processing.describe`, `processing.run`, `processing.batch`; Python `kentos.cad.processing` | program ve ajan |
+| `processing.models.*`/`jobs.*` | modeller `cad.processing.tools` (`models: true`), `model:<kimlik>` ve satır içi `model` (ADR 8057 §108); işler bağlantının ve MCP'nin `start`, `job`, `wait`, `cancel`'ı, masaüstünde Çalışan işler | program ve ajan |
+| keşif | `catalog.search`, `catalog.describe` (komut, eklenti, kod), `extension.sdk` ve bölümleri (ADR 8057 §109, §113, §114) | program ve ajan |
+
+Güvence §1'deki gibidir: `extension.*` araçlarının adları ve sonuç şemaları, `kentos kek` alt komutları ve çıkış
+kodları; ürün komutları komut kataloğunun kendi sürümüyle (`commandVersion`) değişir.
 
 ## Kaynaklar
 

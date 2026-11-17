@@ -1259,7 +1259,12 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   [ECO-API-13]; SDK şablonları: panel (GUI), İşlemler, taşınabilir form (§112) ve hepsi bir arada (birleşik paket)
   `kentos kek new --with`/`extension.blueprint` ile [ECO-API-10]; uyumluluk matrisi SDK'nın `compatibility`
   bölümünde ve ortak katalogda eklenti başına (§113) [ECO-API-11]; keşif izdüşümlü ve sayfalı (§108, §109, §114)
-  [ECO-API-07]; kalan: adların SDK uyumluluk ADR'sinde kesinleşmesi ve listenin geri kalanı.*
+  [ECO-API-07]; adlar ADR 8061 §11'de kesinleşti: yeni ad türetilmedi, aileler bugünkü adlara bağlandı, kurma,
+  etkinleştirme, ortam hazırlama ve yayın kullanıcının (API değil, ajan pencereyi açar) [ECO-API-03]; okuma, doğrulama
+  ve plan yazmaz, yazan komut planın kimliği, beklenen revizyon, uyarı, geri alma adı, iş ve eklenti aracında paket
+  özetiyle döner [ECO-API-04]; genel kapılar (`cad.run` …) aynı korumadan geçer [ECO-API-08]; `kentos kek verify`
+  kurulumun kapısıdır, yayın kataloğun oturumu ve inceleyicisiyle [ECO-API-09]; kalan: kapsam manifesti
+  [ECO-API-06].*
 - [ ] **Derslerden (13 Kasım):**
   - **Yazılı SDK kararlılık politikası** (QEP 425 benzeri ADR, ADIM 19'un başında): kararlı yüzey yalnız ana sürümde
     kırılır, kaldırmadan önce en az bir sürüm "eskiyor" uyarısı; deneysel yüzeyler yalnız geliştirici ortamında açılır
