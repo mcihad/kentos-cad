@@ -116,19 +116,23 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     paiy_library_not_exempt, geleneksel kesme taş yığma binada — settings.arch.structure
     — zemin dahil 3 kattan çok katlı binanın ya da zemin katta olmayan taşlık, dış sofa
     ve eyvan paiy_traditional_not_exempt, tutuyorsa bahçeyle bağlantısı okunmadığı için
-    uzman incelemesi, 22/1-m; sınırları Emsal ve TAKS tablosu sayar) ve merdiven altı da
-    (1,80 m'den alçak boşluğu bir mahale açık merdiven paiy_under_stair_open, 31/6; o
-    yer bağımsız bölüm net alanından düşülür, 4/1-ğ-3) ve yangın kompartımanları da
-    (BYKHY 24: iki mahal arasında açık yer ya da en az EI 60 beyan edilmemiş duvar veya
-    açıklık varsa aynı kompartıman; kazan dairesi, otopark, elektrik, trafo, jeneratör
-    odasının ayrımı kompartıman duvarı değilse bykhy_hazard_room_separation, kompartıman
-    Ek-4'ün kullanım sınıfı alanını aşarsa bykhy_compartment_area_over, EI 60 duvarda
-    yangına dayanıksız açıklık bykhy_compartment_opening; döşeme boşluğu, şaft olmayan
-    boşluk mahal ve merdiven katları aynı kompartımana koyar; 21,50 m'yi aşan konut
-    harici, 30,50 m'yi aşan konut binasında bu yüksekliğin üstündeki katlarda üç kattan
-    çok katı birleştiren kompartıman bykhy_compartment_storeys_over, 24/4; merdiven
-    yuvası ve şaft olmayan katlar arası boşluk atriumdur, duman kontrolü ve 90 m²'den
-    küçükse duman perdesi çizimde okunmaz, uzman incelemesi bykhy_atrium, 24/5) ve kat
+    uzman incelemesi, 22/1-m; böyle binada 12,50 cm'den kalın, taşıyıcılığı beyan
+    edilmemiş duvar paiy_masonry_wall_undeclared, taş duvarların kalın kısmının 5/8 ve
+    20/8-j'ye göre dışarıda sayılamadığı bina ya da başvuru günü
+    paiy_masonry_walls_not_exempt; sınırları ve taş duvarların 25/12,50 cm'yi aşan
+    kısmını Emsal ve TAKS tablosu sayar) ve merdiven altı da (1,80 m'den alçak boşluğu
+    bir mahale açık merdiven paiy_under_stair_open, 31/6; o yer bağımsız bölüm net
+    alanından düşülür, 4/1-ğ-3) ve yangın kompartımanları da (BYKHY 24: iki mahal
+    arasında açık yer ya da en az EI 60 beyan edilmemiş duvar veya açıklık varsa aynı
+    kompartıman; kazan dairesi, otopark, elektrik, trafo, jeneratör odasının ayrımı
+    kompartıman duvarı değilse bykhy_hazard_room_separation, kompartıman Ek-4'ün
+    kullanım sınıfı alanını aşarsa bykhy_compartment_area_over, EI 60 duvarda yangına
+    dayanıksız açıklık bykhy_compartment_opening; döşeme boşluğu, şaft olmayan boşluk
+    mahal ve merdiven katları aynı kompartımana koyar; 21,50 m'yi aşan konut harici,
+    30,50 m'yi aşan konut binasında bu yüksekliğin üstündeki katlarda üç kattan çok katı
+    birleştiren kompartıman bykhy_compartment_storeys_over, 24/4; merdiven yuvası ve
+    şaft olmayan katlar arası boşluk atriumdur, duman kontrolü ve 90 m²'den küçükse
+    duman perdesi çizimde okunmaz, uzman incelemesi bykhy_atrium, 24/5) ve kat
     yüksekliği ile kapılar da (konut projesinde zemin ve normal katlar 3,60 m,
     12.8.2023'ten bodrum hariç üç kata kadar 4,00, paiy_storey_height_over, 28/1-c;
     konut bölgesinde zemin dahil üç kata kadar geleneksel kesme taş yığma binada
@@ -333,19 +337,23 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         paiy_library_not_exempt, geleneksel kesme taş yığma binada — settings.arch.structure
         — zemin dahil 3 kattan çok katlı binanın ya da zemin katta olmayan taşlık, dış sofa
         ve eyvan paiy_traditional_not_exempt, tutuyorsa bahçeyle bağlantısı okunmadığı için
-        uzman incelemesi, 22/1-m; sınırları Emsal ve TAKS tablosu sayar) ve merdiven altı da
-        (1,80 m'den alçak boşluğu bir mahale açık merdiven paiy_under_stair_open, 31/6; o
-        yer bağımsız bölüm net alanından düşülür, 4/1-ğ-3) ve yangın kompartımanları da
-        (BYKHY 24: iki mahal arasında açık yer ya da en az EI 60 beyan edilmemiş duvar veya
-        açıklık varsa aynı kompartıman; kazan dairesi, otopark, elektrik, trafo, jeneratör
-        odasının ayrımı kompartıman duvarı değilse bykhy_hazard_room_separation, kompartıman
-        Ek-4'ün kullanım sınıfı alanını aşarsa bykhy_compartment_area_over, EI 60 duvarda
-        yangına dayanıksız açıklık bykhy_compartment_opening; döşeme boşluğu, şaft olmayan
-        boşluk mahal ve merdiven katları aynı kompartımana koyar; 21,50 m'yi aşan konut
-        harici, 30,50 m'yi aşan konut binasında bu yüksekliğin üstündeki katlarda üç kattan
-        çok katı birleştiren kompartıman bykhy_compartment_storeys_over, 24/4; merdiven
-        yuvası ve şaft olmayan katlar arası boşluk atriumdur, duman kontrolü ve 90 m²'den
-        küçükse duman perdesi çizimde okunmaz, uzman incelemesi bykhy_atrium, 24/5) ve kat
+        uzman incelemesi, 22/1-m; böyle binada 12,50 cm'den kalın, taşıyıcılığı beyan
+        edilmemiş duvar paiy_masonry_wall_undeclared, taş duvarların kalın kısmının 5/8 ve
+        20/8-j'ye göre dışarıda sayılamadığı bina ya da başvuru günü
+        paiy_masonry_walls_not_exempt; sınırları ve taş duvarların 25/12,50 cm'yi aşan
+        kısmını Emsal ve TAKS tablosu sayar) ve merdiven altı da (1,80 m'den alçak boşluğu
+        bir mahale açık merdiven paiy_under_stair_open, 31/6; o yer bağımsız bölüm net
+        alanından düşülür, 4/1-ğ-3) ve yangın kompartımanları da (BYKHY 24: iki mahal
+        arasında açık yer ya da en az EI 60 beyan edilmemiş duvar veya açıklık varsa aynı
+        kompartıman; kazan dairesi, otopark, elektrik, trafo, jeneratör odasının ayrımı
+        kompartıman duvarı değilse bykhy_hazard_room_separation, kompartıman Ek-4'ün
+        kullanım sınıfı alanını aşarsa bykhy_compartment_area_over, EI 60 duvarda yangına
+        dayanıksız açıklık bykhy_compartment_opening; döşeme boşluğu, şaft olmayan boşluk
+        mahal ve merdiven katları aynı kompartımana koyar; 21,50 m'yi aşan konut harici,
+        30,50 m'yi aşan konut binasında bu yüksekliğin üstündeki katlarda üç kattan çok katı
+        birleştiren kompartıman bykhy_compartment_storeys_over, 24/4; merdiven yuvası ve
+        şaft olmayan katlar arası boşluk atriumdur, duman kontrolü ve 90 m²'den küçükse
+        duman perdesi çizimde okunmaz, uzman incelemesi bykhy_atrium, 24/5) ve kat
         yüksekliği ile kapılar da (konut projesinde zemin ve normal katlar 3,60 m,
         12.8.2023'ten bodrum hariç üç kata kadar 4,00, paiy_storey_height_over, 28/1-c;
         konut bölgesinde zemin dahil üç kata kadar geleneksel kesme taş yığma binada

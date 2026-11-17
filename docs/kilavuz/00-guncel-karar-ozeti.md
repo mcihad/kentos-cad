@@ -314,7 +314,11 @@
   - **Taşıyıcı sistem, geleneksel kesme taş yığma bina (17 Kasım 2026; [ADR 8094](../adr/8094-structural-system-traditional-cut-stone.md), K129–K133):**
     Proje ayarları › Mimari › Taşıyıcı sistem (EK-2 Tablo 2.5 ve kesme taş yığma; geleneksel mimari öğeler; mimari
     verisi 15). Konut bölgesinde zemin dahil 3 kata kadar böyle binada 28/1-d 4,50 m; tablo Taşlık, Dış sofa, Eyvan'ı
-    emsal harici sayar (22/1-m), koşulları pakette. Kalın taş duvarların payı (20/8-j, 5/8) sıradaki dilim.
+    emsal harici sayar (22/1-m), koşulları pakette.
+  - **Kalın taş duvarlar (17 Kasım 2026; [ADR 8095](../adr/8095-thick-stone-walls-out-of-emsal.md), K134–K138):** böyle
+    binada taşıyıcı taş duvarların 25 cm'yi (iç duvarda 12,50 cm'yi) aşan kısmı Emsal ve TAKS tablosunda %30 dışında
+    (5/8), dış duvarlarınki taban alanı dışında (20/8-j); dış duvarın payı dış yüzdeki şerit, iç duvarınki iki yüzdeki
+    şeritler; emsal zonunun açıklamasında yazılır. Beyansız kalın duvar eksik veri.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

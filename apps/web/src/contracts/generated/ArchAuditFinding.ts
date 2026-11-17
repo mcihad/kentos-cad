@@ -28,19 +28,26 @@ key: string, check: ArchAuditCheck,
  * `program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,
  * `program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1); the fixtures group's
  * `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/8025); the regulation group's
- * `paiy_room_area_below`, `paiy_room_width_below`, `paiy_room_missing`, `paiy_corridor_narrow`,
- * `paiy_storey_height_over`, `paiy_door_height_below`, `paiy_door_width_below` (docs/adr/8033),
+ * `paiy_room_area_below`, `paiy_room_width_below`, `paiy_room_missing`, `paiy_corridor_narrow` (docs/adr/8033),
  * `paiy_inside_height_below` (docs/adr/8040 §3),
  * `paiy_stair_width_narrow`, `paiy_stair_landing_short`, `paiy_stair_riser_high`, `paiy_stair_step`,
  * `paiy_railing_missing`, `paiy_ramp_steep`, `paiy_window_railing`, `paiy_lightwell_small`, `paiy_air_shaft_small`,
  * `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict` (docs/adr/8034); the standards
  * package's (docs/adr/8078: a host that runs Python lists them) `paiy_elevator_missing` and
  * `paiy_elevator_not_serving` by the application date's version, the escape route doors' `bykhy_exit_door_swing`
- * and `bykhy_stair_door_rating` (docs/adr/8078 §8), the emsal limits' conditions `paiy_caretaker_not_required` and
- * `paiy_library_not_exempt` (docs/adr/8079), a low space under a stair open into a room `paiy_under_stair_open`
- * (docs/adr/8080), the fire compartments' `bykhy_hazard_room_separation`, `bykhy_compartment_area_over` and
+ * and `bykhy_stair_door_rating` (docs/adr/8078 §8), the emsal limits' conditions `paiy_caretaker_not_required`,
+ * `paiy_library_not_exempt` (docs/adr/8079), `paiy_traditional_not_exempt` (22/1-m, docs/adr/8094),
+ * `paiy_masonry_wall_undeclared` and `paiy_masonry_walls_not_exempt` (5/8, 20/8-j, docs/adr/8095), a low space
+ * under a stair open into a room `paiy_under_stair_open`
+ * (docs/adr/8080), the fire compartments' (across storeys through galleries and stairs, docs/adr/8086)
+ * `bykhy_hazard_room_separation`, `bykhy_compartment_storeys_over` (24/4), `bykhy_atrium` (24/5), `bykhy_compartment_area_over` and
  * `bykhy_compartment_opening` (docs/adr/8081), the elements' declared classes against Ek-3
- * `bykhy_element_resistance` and `bykhy_height_not_permitted` (docs/adr/8082), `regulation_date_needed` (eksik veri) and
+ * `bykhy_element_resistance` and `bykhy_height_not_permitted` (docs/adr/8082; roofs and terraces, docs/adr/8087),
+ * the shafts' and elevators' `bykhy_shaft_resistance` (25/3), `bykhy_shaft_cover_stair` (41/9),
+ * `bykhy_elevator_shaft` (62/2), `bykhy_elevator_door_room` (62/4), `bykhy_elevator_door_stair` (62/6) and
+ * `bykhy_elevator_door_resistance` (62/7, Ek-3/B 12; docs/adr/8087), the storeys' and doors' sizes
+ * `paiy_storey_height_over`, `paiy_door_height_below` and `paiy_door_width_below` (docs/adr/8083),
+ * `regulation_date_needed` (eksik veri) and
  * `regulation_text_unknown` (uzman incelemesi); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
  * `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/8035); `parking_short`,
  * `shelter_short`, `shelter_exit_count`, `shelter_height_low` (docs/adr/8036); `paiy_sections_missing`,

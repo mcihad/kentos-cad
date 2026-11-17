@@ -43,13 +43,15 @@
 //!   room); the structure's height (`fire_audit::heights`); roofs and terraces among Ek-3's elements.
 //! - **Coverings** (docs/adr/8091): each covering's IFC type, material and the material's declared reaction class.
 //! - **The structure** (docs/adr/8094): the project's declared structural system by its name and whether the building
-//!   holds traditional architectural elements; the limited uses carry 22/1-m's traditional rooms.
+//!   holds traditional architectural elements; the limited uses carry 22/1-m's traditional rooms. A traditional cut
+//!   stone masonry building's stone walls (docs/adr/8095): their parts as Emsal ve TAKS tablosu counts them
+//!   (`Document::zoning_masonry`) and the thick walls with no load-bearing declaration.
 
 use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
 use kentos_extensions::audit_facts::building::{
-    BuildingFacts, CoveringFacts, DoorFacts, ElementFacts, EmsalLimit, LinkFacts, PlanNoteFacts, RoomPeople,
+    BuildingFacts, CoveringFacts, DoorFacts, ElementFacts, EmsalLimit, LinkFacts, MasonryFacts, PlanNoteFacts, RoomPeople,
     SeparatingElement, SeparationFacts, ShaftFacts, SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom,
 };
 
@@ -225,6 +227,10 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         zone: arch.zone.map(|z| z.name().to_owned()),
         structural_system: arch.structure.map(|s| s.system.name().to_owned()),
         traditional: arch.structure.is_some_and(|s| s.traditional),
+        masonry: arch.traditional_cut_stone().then(|| {
+            let m = doc.zoning_masonry();
+            MasonryFacts { walls: m.walls, footprint: m.footprint, thick: m.thick, undeclared: m.undeclared }
+        }),
         rooms,
         doors,
         limits,

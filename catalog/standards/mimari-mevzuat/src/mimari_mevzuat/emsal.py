@@ -14,6 +14,11 @@ bütününe bağlı koşullarına bakar ve sayımı özet satırında söyler:
   tesisat katı ve çatı arası dışında, 4/1-ııı) ve ortak alan niteliğinde olur; biri tutmuyorsa kaldı. Ortak merdivenle
   bağlantısı, dışarıdan erişiminin olmaması ve ticari kullanıma konu edilmemesi çizimden okunmaz: uzman incelemesi.
 - **22/1-k ve 22/1-l:** tablonun sayımı özet satırındadır; bulgusu yoktur.
+- **Kalın taş duvarlar** (docs/adr/8095): böyle binada taşıyıcı yığma taş dış duvarların 25 cm'yi, iç duvarların
+  12,50 cm'yi aşan kısmını tablo %30'un dışında (5/8, 31.12.2022'den), dış duvarınkini taban alanı dışında (20/8-j,
+  9.10.2021'den) sayar. 12,50 cm'den kalın, taşıyıcılığı beyan edilmemiş duvar eksik veridir (payı emsale dahil
+  sayıldı); bina zemin dahil 3 kattan çoksa ya da başvuru 9.10.2021'den önceyse kaldı; 9.10.2021–30.12.2022
+  başvurusunda duvarların payı 22/1-m'de, %30'un içindeydi: tablo bugünkü hâliyle saydığı için uzman incelemesi.
 - **22/1-m** (9.10.2021'den, RG 31623; docs/adr/8094): taşıyıcı sistemi kesme taş yığma bina olarak tasarlanan zemin
   dahil 3 katı geçmeyen geleneksel mimari öğeler barındıran binanın balkonları (bağımsız bölüm net alanının %20'si,
   22/1-l'ninkiyle aynı) ve bahçeyle bağlantılı, gerektiğinde basamakla çıkılan taşlık, dış sofa ve eyvanı katlar alanına
@@ -35,7 +40,8 @@ from typing import Any
 from . import kat_yuksekligi
 from . import yururluk as y
 
-MADDELER = [("PAİY", "22/1-ç"), ("PAİY", "22/1-f"), ("PAİY", "22/1-k"), ("PAİY", "22/1-l"), ("PAİY", "22/1-m")]
+MADDELER = [("PAİY", "22/1-ç"), ("PAİY", "22/1-f"), ("PAİY", "22/1-k"), ("PAİY", "22/1-l"), ("PAİY", "22/1-m"),
+            ("PAİY", "20/8-j"), ("PAİY", "5/8")]
 
 #: Normal kat sayılmayan katların adlarındaki sözcükler (4/1-ııı): tesisat katı ve çatı arası.
 _NORMAL_DISI = ("TESISAT", "CATI")
@@ -249,6 +255,85 @@ _ADLAR = {"22/1-ç": "caretaker", "22/1-f": "library", "22/1-k": "storage", "22/
           "22/1-m": "traditional"}
 
 
+def duvarlar(bina: dict[str, Any], gun: date) -> y.Sonuc:
+    """20/8-j ve 5/8: geleneksel kesme taş yığma binanın kalın taş duvarlarının payı, tablonun saydığı gibi."""
+    m = bina.get("masonry")
+    if not kat_yuksekligi.geleneksel(bina) or m is None:
+        return y.Sonuc([], [])
+    duvar, taban = float(m.get("walls") or 0.0), float(m.get("footprint") or 0.0)
+    kalin, beyansiz = list(m.get("thick") or []), list(m.get("undeclared") or [])
+    h20, h58 = y.hal("PAİY", "20/8-j", gun), y.hal("PAİY", "5/8", gun)
+    if h20 is None or h58 is None:
+        if not kalin:
+            return y.Sonuc([], [])
+        sonuc = [_bilinmiyor(madde, gun, kalin[:20]) for madde in ("20/8-j", "5/8")]
+        return y.Sonuc([b for b, _ in sonuc], [r for _, r in sonuc])
+    bulgular: list[dict[str, Any]] = []
+    if beyansiz:
+        bulgular.append(_bulgu(
+            "paiy_masonry_wall_undeclared",
+            f"{len(beyansiz)} duvar 12,50 cm'den kalın ama taşıyıcı olup olmadığı beyan edilmemiş: kalın kısmı emsale ve "
+            f"taban alanına dahil sayıldı — {h58.kisa()}",
+            "Duvarın taşıyıcı olup olmadığını beyan edin (Öznitelikler › Taşıyıcı).", h58.kural(), beyansiz[:20],
+            "beyansız", y.EKSIK_VERI))
+    if not kalin:
+        not_ = "12,50 cm'den kalın taşıyıcı taş duvar yok"
+        durum = y.EKSIK_VERI if beyansiz else y.KAPSAM_DISI
+        return y.Sonuc(bulgular, [_satir(h20, durum, not_), _satir(h58, durum, not_)])
+    n = len(kat_yuksekligi.ustteki(bina))
+    en_cok = int(y.haller("PAİY", "20/8-j")[-1].anahtar["storeys"])
+    onarim = ("Duvarların kalın kısmını emsale dahil sayın: taşıyıcı sistem beyanını (Proje ayarları › Mimari › Taşıyıcı "
+              "sistem) binanın gerçek durumuna getirin.")
+    if n > en_cok:
+        bulgular.append(_bulgu(
+            "paiy_masonry_walls_not_exempt",
+            f"Taş duvarların kalın kısmı emsal harici ({_m2(duvar)} m²) ve dış duvarlarınki taban alanı dışında "
+            f"({_m2(taban)} m²) sayılmış, ama bina zemin dahil {n} katlı: 20/8-j ve 5/8 zemin dahil {en_cok} katı "
+            f"geçmeyen binayı okur — {h58.kisa()}", onarim, h58.kural(), kalin[:20], f"{n} kat"))
+        not_ = f"bina zemin dahil {n} katlı, en çok {en_cok} olmalı"
+        return y.Sonuc(bulgular, [_satir(h20, y.KALDI, not_), _satir(h58, y.KALDI, not_)])
+    eksik = " (beyansız kalın duvarlar emsale dahil)" if beyansiz else ""
+    # 20/8-j: dış duvarların 25 cm'yi aşan kısmı taban alanı dışında (9.10.2021'den).
+    if h20.anahtar.get("absent"):
+        if taban > 0:
+            bulgular.append(_bulgu(
+                "paiy_masonry_walls_not_exempt",
+                f"Dış taş duvarların kalın kısmı taban alanı dışında sayılmış ({_m2(taban)} m²), ama başvuru gününde "
+                f"20/8-j yok: bent 9.10.2021'de eklendi (RG 31623) — {h20.kisa()}", onarim, h20.kural(), kalin[:20],
+                "20/8-j yok"))
+            satir20 = _satir(h20, y.KALDI, "dış duvarların kalın kısmı taban alanı dışında sayılmış; bent başvuru "
+                                           "gününde yok")
+        else:
+            satir20 = _satir(h20, y.KAPSAM_DISI, "bent başvuru gününde yok (9.10.2021'de eklendi)")
+    elif taban > 0:
+        satir20 = _satir(h20, y.EKSIK_VERI if beyansiz else y.GECTI,
+                         f"dış taş duvarların 25 cm'yi aşan kısmı ({_m2(taban)} m²) taban alanı dışında" + eksik)
+    else:
+        satir20 = _satir(h20, y.EKSIK_VERI if beyansiz else y.KAPSAM_DISI,
+                         "zemin katta 25 cm'den kalın taşıyıcı dış taş duvar yok" + eksik)
+    # 5/8: duvarların kalın kısmı %30'un dışında (31.12.2022'den); önce 22/1-m'de, %30'un içinde (9.10.2021'den).
+    h22 = y.hal("PAİY", "22/1-m", gun)
+    if h58.anahtar.get("walls"):
+        satir58 = _satir(h58, y.EKSIK_VERI if beyansiz else y.GECTI,
+                         f"taş duvarların kalın kısmı ({_m2(duvar)} m²) emsal harici, %30 dışında" + eksik)
+    elif h22 is not None and h22.anahtar.get("walls"):
+        bulgular.append(_bulgu(
+            "paiy_masonry_walls_not_exempt",
+            f"Taş duvarların kalın kısmı ({_m2(duvar)} m²) başvuru gününde 22/1-m'deydi, %30'un içinde; Emsal ve TAKS "
+            f"tablosu onu bugünkü 5/8'e göre %30'un dışında saydı — {h22.kisa()}",
+            "%30'un hesabını duvarların kalın kısmı dahil uzman incelesin; uygunsa uzman onayıyla işaretleyin.",
+            h22.kural(), kalin[:20], "22/1-m", y.UZMAN))
+        satir58 = _satir(h58, y.UZMAN, "duvarların kalın kısmı başvuru gününde 22/1-m'de, %30'un içinde")
+    else:
+        bulgular.append(_bulgu(
+            "paiy_masonry_walls_not_exempt",
+            f"Taş duvarların kalın kısmı emsal harici sayılmış ({_m2(duvar)} m²), ama başvuru gününde emsal harici değil: "
+            f"22/1-m 9.10.2021'de, 5/8'in ibaresi 31.12.2022'de eklendi — {h58.kisa()}", onarim, h58.kural(),
+            kalin[:20], "5/8 yok"))
+        satir58 = _satir(h58, y.KALDI, "duvarların kalın kısmı başvuru gününde emsal harici değil")
+    return y.Sonuc(bulgular, [satir20, satir58])
+
+
 def _bilinmiyor(madde: str, gun: date, uids: list[str]) -> tuple[dict[str, Any], dict[str, Any]]:
     """Başvuru günü maddenin kural setindeki ilk hâlinden önce: uzman incelemesi."""
     ilk = y.haller("PAİY", madde)[0]
@@ -292,7 +377,9 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
             b, s = geleneksel(bina, hal)
             bulgular += b
             satirlar.append(s)
-    return y.Sonuc(bulgular, satirlar)
+    # Kalın taş duvarlar (docs/adr/8095).
+    d = duvarlar(bina, gun)
+    return y.Sonuc(bulgular + d.bulgular, satirlar + d.satirlar)
 
 
 def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Sonuc:

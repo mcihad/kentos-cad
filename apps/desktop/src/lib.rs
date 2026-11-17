@@ -1560,6 +1560,9 @@ mod zone_tests;
 #[path = "tests/cut_stone_tests.rs"]
 mod cut_stone_tests;
 #[cfg(test)]
+#[path = "tests/stone_wall_tests.rs"]
+mod stone_wall_tests;
+#[cfg(test)]
 #[path = "tests/storey_link_tests.rs"]
 mod storey_link_tests;
 #[cfg(test)]

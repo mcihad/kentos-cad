@@ -134,6 +134,17 @@
             "null"
           ]
         },
+        "masonry": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MasonryFacts"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A traditional cut stone masonry building's stone walls as Emsal ve TAKS tablosu counts them (docs/adr/8095; PAİY\n5/8, 20/8-j); absent for any other building."
+        },
         "planNotes": {
           "description": "The parcel's plan notes the project writes (docs/adr/8084), a rule reads over the municipality's and the national\nregulation (PAİY 69/3), in the project's order.",
           "items": {
@@ -1196,6 +1207,36 @@
         "roomsAbove",
         "area",
         "stack"
+      ],
+      "type": "object"
+    },
+    "MasonryFacts": {
+      "description": "A traditional cut stone masonry building's stone walls (docs/adr/8095): their load-bearing walls' parts past 25 cm\n(exterior) and 12.50 cm (interior) within the rooms' contours, out of katlar alanı apart from the 30 % (`walls`, m²);\nof them, the exterior walls' on the ground storeys, out of taban alanı (`footprint`, m²); the load-bearing stone\nwalls thicker than 12.50 cm (`thick`) and the walls as thick with no load-bearing declaration (`undeclared`: their\npart counts in), by persistent id.",
+      "properties": {
+        "footprint": {
+          "format": "double",
+          "type": "number"
+        },
+        "thick": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "undeclared": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "walls": {
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "walls",
+        "footprint"
       ],
       "type": "object"
     },

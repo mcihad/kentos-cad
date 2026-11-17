@@ -1,5 +1,14 @@
 # Değişiklikler
 
+## 0.19.0 — 17 Kasım 2026
+
+- Kalın taş duvarlar (`emsal.duvarlar`): geleneksel kesme taş yığma binada taşıyıcı yığma taş duvarların 25 cm'yi (iç
+  duvarda 12,50 cm'yi) aşan kısmı emsal harici, %30 dışında (PAİY 5/8, 31.12.2022'den), dış duvarlarınki taban alanı
+  dışında (20/8-j, 9.10.2021'den); tablonun saydığı paylar olguların `building.masonry`'sinde. 12,50 cm'den kalın,
+  taşıyıcılığı beyan edilmemiş duvar eksik veri (`paiy_masonry_wall_undeclared`); zemin dahil 3 kattan çok katlı binada
+  ya da 9.10.2021'den önceki başvuruda kaldı, 9.10.2021–30.12.2022 başvurusunda duvarlar 22/1-m'de, %30'un içindeydi:
+  uzman incelemesi (`paiy_masonry_walls_not_exempt`). 6 bağımsız durum.
+
 ## 0.18.0 — 17 Kasım 2026
 
 - Geleneksel kesme taş yığma bina: projenin taşıyıcı sistem beyanı (`structuralSystem`: `cutStoneMasonry`, `traditional`)

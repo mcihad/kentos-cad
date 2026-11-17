@@ -28,6 +28,9 @@
 //!   on a storey under the ground (its top at or below its building's ±0.00, where the model's graded ground lies) is
 //!   out up to 50 % of its unit's net area; what passes counts in. Elsewhere a store counts in.
 //! - **The library** (22/1-f): the rooms named or used as Kütüphane together at most 50 m²; what passes counts in.
+//! - **A traditional cut stone masonry building's thick stone walls** (5/8, 20/8-j, docs/adr/8095; `masonry`): the
+//!   load-bearing stone walls' parts past 25 cm (exterior) and 12.50 cm (interior) within each room's contour are out
+//!   apart from the 30 %, the exterior ones' out of taban alanı too.
 //! - **A traditional cut stone masonry building's taşlık, dış sofa and eyvan** (22/1-m, docs/adr/8094): where the
 //!   project declares the building so (`ArchSettings::traditional_cut_stone`), a room named or used as Taşlık, Dış sofa
 //!   or Eyvan is out within the 30 %; the building's storeys (up to three, the ground one with them) and the room's
@@ -52,9 +55,11 @@ use crate::room_names;
 use crate::space_follow::SpaceSearch;
 
 mod limits;
+mod masonry;
 
 use limits::{buried_levels, names, says_balcony, says_traditional};
 pub use limits::{BALCONY_SHARE, CARETAKER_AREA, LIBRARY_AREA, STORAGE_SHARE, ZoningLimit, ZoningLimitUse};
+pub use masonry::{EXTERIOR_KEPT, INTERIOR_KEPT};
 
 /// The drawing's floor area ratio and coverage against the parcel's zoning, m² and ratios.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -97,6 +102,16 @@ pub struct ZoningReport {
     /// Each room as the ratios count it (docs/adr/8069: the model's emsal zones are made of them), in the drawing's
     /// order; voids left out.
     pub rooms: Vec<ZoningRoom>,
+    /// A traditional cut stone masonry building's load-bearing stone walls' parts past 25 cm (exterior) and 12.50 cm
+    /// (interior), out of katlar alanı apart from the 30 % (5/8, docs/adr/8095): counted in `outside`.
+    pub masonry: f64,
+    /// Of them, the exterior walls' on the ground storeys the footprint counts, out of taban alanı (20/8-j).
+    pub masonry_footprint: f64,
+    /// The load-bearing stone walls thicker than 12.50 cm of such a building, by persistent id.
+    pub masonry_walls: Vec<String>,
+    /// The walls thicker than 12.50 cm of such a building with no load-bearing declaration, by persistent id: their
+    /// part counts in.
+    pub masonry_undeclared: Vec<String>,
 }
 
 /// A room as the ratios count it: its persistent id, its storey, how it counts, its contour's area and shape, the limit
@@ -110,8 +125,21 @@ pub struct ZoningRoom {
     pub moved: f64,
     pub limit: Option<ZoningLimit>,
     pub shape: Vec<Area>,
+    /// The stone walls' part within its contour, out of katlar alanı apart from the 30 % (docs/adr/8095).
+    pub walls: f64,
 }
 
+
+/// A traditional cut stone masonry building's stone walls as the ratios count them (docs/adr/8095): their parts out
+/// apart from the 30 % and, of the exterior walls on the ground storeys, out of taban alanı (m²); the load-bearing stone
+/// walls thicker than 12.50 cm and those as thick with no load-bearing declaration, by persistent id.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ZoningMasonry {
+    pub walls: f64,
+    pub footprint: f64,
+    pub thick: Vec<String>,
+    pub undeclared: Vec<String>,
+}
 
 /// One storey's rooms as the ratios count them, m².
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -212,6 +240,8 @@ struct Room {
     storage_of: Option<String>,
     /// Its net area, between its walls' faces (PAİY 4/1-ğ-3).
     net: f64,
+    /// Its net outline: the stone walls' mass is its storey's contours less these (docs/adr/8095).
+    net_shape: Vec<Area>,
 }
 
 fn measured(
@@ -324,13 +354,13 @@ impl Document {
                     c => c,
                 },
             };
-            let net = if x.void {
-                0.0
+            let (net, net_shape) = if x.void {
+                (0.0, Vec::new())
             } else {
                 let outline = measured(&mut search, x, SpaceMethod::Net);
                 let low = crate::under_stair::low_on(&unders, &x.arch.level);
                 let all = kentos_geometry_core::geom::space::area(&outline);
-                all - crate::under_stair::taken(&outline, &low).min(all)
+                (all - crate::under_stair::taken(&outline, &low).min(all), outline)
             };
             rooms.push(Room {
                 level: x.arch.level.clone(),
@@ -350,11 +380,17 @@ impl Document {
                 traditional,
                 storage_of,
                 net,
+                net_shape,
             });
         }
         // Each room's contour on its level, a shared wall's façade corner halved between two rooms.
         let mut gross = vec![0.0; rooms.len()];
         let mut shapes: Vec<Vec<Area>> = vec![Vec::new(); rooms.len()];
+        // A traditional cut stone masonry building's stone walls' parts within each room's contour (docs/adr/8095):
+        // the exterior walls' and the interior walls', halved where two contours meet as the gross is.
+        let stone = if traditional_building { masonry::walls(self) } else { Default::default() };
+        let mut outer_part = vec![0.0; rooms.len()];
+        let mut inner_part = vec![0.0; rooms.len()];
         let levels: std::collections::BTreeSet<Option<String>> =
             rooms.iter().map(|r| r.level.clone()).collect();
         for level in &levels {
@@ -382,6 +418,7 @@ impl Document {
                 let b = bounds(&c);
                 cut.push((i, c, b));
             }
+            let mut overlaps: Vec<(usize, usize, Vec<Area>)> = Vec::new();
             for a in 0..cut.len() {
                 for b in a + 1..cut.len() {
                     let (Some(p), Some(q)) = (cut[a].2, cut[b].2) else {
@@ -395,12 +432,38 @@ impl Document {
                     if o > 0.0 {
                         gross[cut[a].0] -= o / 2.0;
                         gross[cut[b].0] -= o / 2.0;
+                        overlaps.push((cut[a].0, cut[b].0, both));
+                    }
+                }
+            }
+            if let Some(walls) = stone.storeys.get(level) {
+                let contours: Vec<Area> = cut.iter().flat_map(|(_, c, _)| c.iter().cloned()).collect();
+                let nets: Vec<Area> = here.iter().flat_map(|&i| rooms[i].net_shape.iter().cloned()).collect();
+                let (outer, inner) = masonry::parts(walls, &contours, &nets);
+                for (part, into) in [(&outer, &mut outer_part), (&inner, &mut inner_part)] {
+                    if part.is_empty() {
+                        continue;
+                    }
+                    let within = |a: &[Area]| {
+                        kentos_geometry_core::geom::space::area(&region::intersect_area_sets(&[a.to_vec(), part.clone()]))
+                    };
+                    for (i, c, _) in &cut {
+                        into[*i] = within(c);
+                    }
+                    for (a, b, both) in &overlaps {
+                        let o = within(both);
+                        into[*a] -= o / 2.0;
+                        into[*b] -= o / 2.0;
                     }
                 }
             }
         }
+        // The stone walls' parts are out apart from the 30 % (5/8, docs/adr/8095): a room counts its contour less its
+        // part, in or out.
+        let walls_of: Vec<f64> = outer_part.iter().zip(&inner_part).map(|(a, b)| a + b).collect();
+        let kept: Vec<f64> = gross.iter().zip(&walls_of).map(|(g, w)| g - w).collect();
         // The limits of 22/1 (docs/adr/8069, 8079): each limited use's part past its limit counted in.
-        let (moved, limit_of, used) = limits::apply(&rooms, &gross, &uids, program);
+        let (moved, limit_of, used) = limits::apply(&rooms, &kept, &uids, program);
         let parcel = zoning.map_or(0.0, |z| z.parcel_area);
         let mut out = ZoningReport {
             parcel,
@@ -417,7 +480,7 @@ impl Document {
                 .unwrap_or(usize::MAX - 1),
             None => usize::MAX,
         };
-        for (((r, g), m), limit) in rooms.iter().zip(&gross).zip(&moved).zip(&limit_of) {
+        for (i, (((r, g), m), limit)) in rooms.iter().zip(&kept).zip(&moved).zip(&limit_of).enumerate() {
             if r.void {
                 continue;
             }
@@ -451,12 +514,16 @@ impl Document {
                         Some(ZoningLimit::Traditional) | None => {}
                     }
                 }
-                EmsalCount::Outside => {
-                    out.outside += g;
-                    level.outside += g;
-                }
+                EmsalCount::Outside => {}
             }
+            // A room out apart from the 30 % (5/8's own) keeps its whole contour there, its walls' part with it.
+            let out_apart = if r.count == EmsalCount::Outside { gross[i] } else { walls_of[i] };
+            out.outside += out_apart;
+            level.outside += out_apart;
+            out.masonry += walls_of[i];
         }
+        out.masonry_walls = stone.thick;
+        out.masonry_undeclared = stone.undeclared;
         out.rooms = rooms
             .iter()
             .enumerate()
@@ -469,6 +536,7 @@ impl Document {
                 moved: moved[i],
                 limit: limit_of[i],
                 shape: shapes[i].clone(),
+                walls: walls_of[i],
             })
             .collect();
         out.limits = used;
@@ -501,18 +569,21 @@ impl Document {
                 && r.count != EmsalCount::Outside
                 && (grounds.is_empty() || r.level.as_ref().is_some_and(|l| grounds.contains(l)))
         };
+        // The exterior stone walls' parts are out of taban alanı (20/8-j, docs/adr/8095); the interior walls' are not.
+        let footing: Vec<f64> = gross.iter().zip(&outer_part).map(|(g, w)| g - w).collect();
         out.grounds = grounds
             .iter()
             .map(|g| {
                 let on: f64 = rooms
                     .iter()
-                    .zip(&gross)
+                    .zip(&footing)
                     .filter(|(r, _)| counted(r) && r.level.as_ref() == Some(g))
                     .map(|(_, a)| a)
                     .sum();
                 (g.clone(), on)
             })
             .collect();
+        out.masonry_footprint = rooms.iter().zip(&outer_part).filter(|(r, _)| counted(r)).map(|(_, w)| w).sum();
         let outline: Vec<Area> = rooms
             .iter()
             .zip(&shapes)
@@ -527,9 +598,9 @@ impl Document {
         // One ground storey: its rooms' gross, as before; several (blocks, a podium and a tower): the area their
         // contours cover on the parcel together, an overlap once.
         out.footprint = if grounds.len() > 1 {
-            out.footprint_shape.iter().map(region::net_area).sum()
+            out.footprint_shape.iter().map(region::net_area).sum::<f64>() - out.masonry_footprint
         } else {
-            rooms.iter().zip(&gross).filter(|(r, _)| counted(r)).map(|(_, g)| g).sum()
+            rooms.iter().zip(&footing).filter(|(r, _)| counted(r)).map(|(_, g)| g).sum()
         };
         out
     }
@@ -546,6 +617,19 @@ impl Document {
     pub fn zoning_limits(&self) -> Vec<ZoningLimitUse> {
         let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning);
         self.zoning_measured(zoning).limits
+    }
+
+    /// A traditional cut stone masonry building's stone walls as the ratios count them, with or without the parcel's
+    /// zoning (docs/adr/8095).
+    pub fn zoning_masonry(&self) -> ZoningMasonry {
+        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning);
+        let r = self.zoning_measured(zoning);
+        ZoningMasonry {
+            walls: r.masonry,
+            footprint: r.masonry_footprint,
+            thick: r.masonry_walls,
+            undeclared: r.masonry_undeclared,
+        }
     }
 
     /// The building's footprint as the ratios count it (docs/adr/8032): its area and outline, with or without a zoning.
@@ -682,6 +766,15 @@ impl Document {
                 String::new(),
             ]);
         }
+        // Of it, a traditional cut stone masonry building's stone walls past 25 cm and 12.50 cm (5/8, docs/adr/8095).
+        if r.masonry > 0.0 {
+            rows.push(vec![
+                named("Taş duvarların kalın kısmı, %30 dışında"),
+                String::new(),
+                area(r.masonry),
+                String::new(),
+            ]);
+        }
         limited(
             &mut rows,
             "TAKS".into(),
@@ -698,6 +791,15 @@ impl Document {
             true,
             &area,
         );
+        // The exterior stone walls past 25 cm, out of taban alanı (20/8-j, docs/adr/8095).
+        if r.masonry_footprint > 0.0 {
+            rows.push(vec![
+                named("Dış taş duvarların kalın kısmı, taban alanı dışında"),
+                String::new(),
+                area(r.masonry_footprint),
+                String::new(),
+            ]);
+        }
         rows.push(vec![
             named("Yapı inşaat alanı"),
             String::new(),

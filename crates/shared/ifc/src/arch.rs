@@ -183,7 +183,9 @@ pub struct Fixture {
 /// An emsal area of a storey (docs/adr/8069; EK-6 Tablo 6.60): its storey's level id, how its rooms count, its rings
 /// (even-odd, the rooms' contours together) and, counted in, the part of its storey's balconies past their units' 20 %
 /// (m²; PAİY 22/1-l) and of its other limited uses past their limits (docs/adr/8079): storage annexes past their
-/// units' 50 % (22/1-k), caretaker flats past 70 m² together (22/1-ç), library rooms past 50 m² (22/1-f).
+/// units' 50 % (22/1-k), caretaker flats past 70 m² together (22/1-ç), library rooms past 50 m² (22/1-f); and, within
+/// its rings, a traditional cut stone masonry building's stone walls past 25 cm and 12.50 cm, out apart from the 30 %
+/// (5/8, docs/adr/8095).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct EmsalArea {
     pub level: Option<String>,
@@ -193,6 +195,7 @@ pub struct EmsalArea {
     pub storage: f64,
     pub caretaker: f64,
     pub library: f64,
+    pub walls: f64,
 }
 
 /// A unit of the building program (docs/adr/8069; EK-6 Tablo 6.68): its id's bits, its number and name, its kind and its
@@ -229,6 +232,13 @@ fn emsal_state(a: &EmsalArea) -> (&'static str, &'static str, String) {
                 words.push_str(&clause.replace("{}", &format!("{part:.2}")));
                 words.push_str(if counted_in { tail } else { " emsale dahil" });
             }
+        }
+        // The stone walls' part within the zone's rings is out apart from the 30 % (docs/adr/8095).
+        if a.walls > 0.0 {
+            words.push_str(&format!(
+                "; 5/8: {:.2} m² taşıyıcı yığma taş duvarların kalın kısmı emsal harici, %30 dışında",
+                a.walls
+            ));
         }
         words
     };

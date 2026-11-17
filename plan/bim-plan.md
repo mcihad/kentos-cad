@@ -594,8 +594,7 @@ aynı çizim 30.6.2026'da geçer, 2.7.2026'da 34/8'den kalır, tarihsiz eksik ve
 erişilebilir yol (TS 9111 metni); plan notlarının öbür konuları (ADR 8084 §6); blok başına bölge ve taşıyıcı sistem (ADR
 8085 §6, 8094 §6);
 konut dışı (B22);
-emsalde kalın taş duvarların payı (20/8-j, 5/8; ADR 8094 §6, sıradaki), Sivas 22/k, 22/1-j ve 5/8'in bodrum listesi (ADR
-8079 §6).
+emsalde Sivas 22/k, 22/1-j ve 5/8'in bodrum listesi (ADR 8079 §6, 8094 §6).
 **Yapıldı (17 Kasım 2026, ADR 8078 §6, K64):** uzman onayı kayıtlı: paketin bulgusu `cad.arch.exceptions`'a verilerek
 istisna yapılır; uzman incelemesi bulgusunun istisnası "Uzman onayı"dır, notu uzmanın sözü; bulgu değişince düşer, katla
 ilgili bulgu katın mahallerini adlandırdığı için mahal eklenince yeni bulgu açılır.
@@ -678,6 +677,10 @@ sistem beyanı (Proje ayarları › Mimari › Taşıyıcı sistem: EK-2 Tablo 2
 `.kcad` mimari verisi 15); konut bölgesinde zemin dahil 3 kata kadar geleneksel kesme taş yığma binada PAİY ve Sivas 28/1-d
 4,50 m; Emsal ve TAKS tablosu Taşlık, Dış sofa, Eyvan'ı emsal harici sayar, 22/1-m'nin koşulları pakette (0.18.0; 16
 bağımsız durum).
+**Yapıldı (17 Kasım 2026, [ADR 8095](../docs/adr/8095-thick-stone-walls-out-of-emsal.md), K134–K138):** böyle binada
+taşıyıcı taş duvarların 25 cm'yi (iç duvarda 12,50 cm'yi) aşan kısmı Emsal ve TAKS tablosunda %30 dışında (5/8), dış
+duvarlarınki taban alanı dışında (20/8-j); dış duvarda dış yüzdeki şerit, iç duvarda iki yüzdeki şeritler, katın duvar
+kütlesiyle kesilir; emsal zonunun açıklamasında yazılır; beyansız kalın duvar eksik veri (paket 0.19.0, 6 bağımsız durum).
 
 **Kullanıcı sonucu:** Denetim, başvuru tarihinde yürürlükte olan kuralları uygular. Her bulgu geçti, kaldı, eksik veri,
 uzman incelemesi ya da kapsam dışıdır. Yorum isteyen konu kendiliğinden "uygun" sayılmaz. Dayanak Z9; Ek A.

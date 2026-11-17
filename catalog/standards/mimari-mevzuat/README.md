@@ -13,7 +13,8 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   toprak altında depo eklentisi %50, kapıcı daireleri 70 m², kütüphane 50 m²); kural koşullarına bakar: emsal harici
   kapıcı dairesi 44/1'e göre zorunlu mu (22/1-ç), kütüphane alışveriş merkezinde ya da 40'tan fazla bağımsız bölümlü
   binada, normal katta ve ortak alan mı (22/1-f), geleneksel kesme taş yığma binanın emsal harici taşlık, dış sofa ve
-  eyvanı zemin dahil 3 kata kadar binada ve zemin katta mı (22/1-m, docs/adr/8094).
+  eyvanı zemin dahil 3 kata kadar binada ve zemin katta mı (22/1-m, docs/adr/8094); kalın taş duvarların payı (5/8,
+  20/8-j, docs/adr/8095): beyansız kalın duvar, katı ve başvuru günü.
 - **Merdiven altı** (`merdiven_alti`, docs/adr/8080): 1,80 m'den alçak merdiven altı kapatılır (31/6); alçak boşluk bir
   mahale açıksa kaldı.
 - **Yangın kompartımanları** (`kompartiman`, docs/adr/8081, 8086): mahaller arasındaki ayrımlardan ve katlar arası

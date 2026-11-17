@@ -53,6 +53,10 @@ pub struct BuildingFacts {
     /// and 28/1-d read such a building of up to three storeys (docs/adr/8094).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub traditional: bool,
+    /// A traditional cut stone masonry building's stone walls as Emsal ve TAKS tablosu counts them (docs/adr/8095; PAİY
+    /// 5/8, 20/8-j); absent for any other building.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub masonry: Option<MasonryFacts>,
     /// The rooms that carry people as the escape rules count them (BYKHY Ek-5/A, docs/adr/8035), by persistent id.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rooms: Vec<RoomPeople>,
@@ -101,6 +105,23 @@ pub struct BuildingFacts {
     /// measure it, m (docs/adr/8087: BYKHY 25/3's high building and 62/7's elevator doors read it).
     #[serde(default)]
     pub structure_height: f64,
+}
+
+/// A traditional cut stone masonry building's stone walls (docs/adr/8095): their load-bearing walls' parts past 25 cm
+/// (exterior) and 12.50 cm (interior) within the rooms' contours, out of katlar alanı apart from the 30 % (`walls`, m²);
+/// of them, the exterior walls' on the ground storeys, out of taban alanı (`footprint`, m²); the load-bearing stone
+/// walls thicker than 12.50 cm (`thick`) and the walls as thick with no load-bearing declaration (`undeclared`: their
+/// part counts in), by persistent id.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct MasonryFacts {
+    pub walls: f64,
+    pub footprint: f64,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub thick: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub undeclared: Vec<String>,
 }
 
 /// A shaft and what encloses it (docs/adr/8087): its persistent id, storey and name, `elevator` (an elevator's shaft) or
@@ -447,6 +468,12 @@ impl BuildingFacts {
             l.area = round(l.area, AREA);
             l.allowed = round(l.allowed, AREA);
             l.over = round(l.over, AREA);
+        }
+        if let Some(m) = &mut self.masonry {
+            m.walls = round(m.walls, AREA);
+            m.footprint = round(m.footprint, AREA);
+            m.thick.sort();
+            m.undeclared.sort();
         }
         self.uses.retain(|u| !u.trim().is_empty());
         for u in &mut self.under_stairs {

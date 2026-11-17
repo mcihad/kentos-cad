@@ -96,11 +96,18 @@ fn emsal_areas(doc: &Document) -> Vec<kentos_ifc::arch::EmsalArea> {
                     0.0
                 }
             };
+            // The stone walls' part within the zone's rooms, out apart from the 30 % (docs/adr/8095).
+            let walls = if count == EmsalCount::Outside {
+                0.0
+            } else {
+                rooms.iter().filter(|r| r.level == level && r.count == count).map(|r| r.walls).sum()
+            };
             kentos_ifc::arch::EmsalArea {
                 moved: part(ZoningLimit::Balcony),
                 storage: part(ZoningLimit::Storage),
                 caretaker: part(ZoningLimit::Caretaker),
                 library: part(ZoningLimit::Library),
+                walls,
                 level,
                 count,
                 rings,
