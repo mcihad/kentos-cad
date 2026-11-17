@@ -44,6 +44,17 @@ export type { FeeScheduleState } from '../../../web/src/contracts/generated/FeeS
 export type { FeeTable } from '../../../web/src/contracts/generated/FeeTable';
 export type { FeeTableRow } from '../../../web/src/contracts/generated/FeeTableRow';
 export type { FeeTry } from '../../../web/src/contracts/generated/FeeTry';
+export type { DossierSignatureView } from '../../../web/src/contracts/generated/DossierSignatureView';
+export type { SigningClientType } from '../../../web/src/contracts/generated/SigningClientType';
+export type { SigningFile } from '../../../web/src/contracts/generated/SigningFile';
+export type { SigningFileVerdict } from '../../../web/src/contracts/generated/SigningFileVerdict';
+export type { SigningLegalCheck } from '../../../web/src/contracts/generated/SigningLegalCheck';
+export type { SigningOutcome } from '../../../web/src/contracts/generated/SigningOutcome';
+export type { SigningRequestCreate } from '../../../web/src/contracts/generated/SigningRequestCreate';
+export type { SigningRequestCreated } from '../../../web/src/contracts/generated/SigningRequestCreated';
+export type { SigningSigner } from '../../../web/src/contracts/generated/SigningSigner';
+export type { SigningTrust } from '../../../web/src/contracts/generated/SigningTrust';
+export type { SigningVerdict } from '../../../web/src/contracts/generated/SigningVerdict';
 export type { FileRevision } from '../../../web/src/contracts/generated/FileRevision';
 export type { FileRevisions } from '../../../web/src/contracts/generated/FileRevisions';
 export type { KindOption } from '../../../web/src/contracts/generated/KindOption';

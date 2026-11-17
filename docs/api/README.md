@@ -221,6 +221,16 @@ CAD görünümü olmayan telefon, web sayfası ve ajan için.
   Tutarlar kuruştur (tam sayı). Her satırın `basis` alanı hesabı yazıyla verir. “Karardan önce ödenir” bir kalem
   ödenmeden başvuru onaylanmaz: `approve` adımı bu durumda 400 döner.
 
+- **E-imza** (ADR 9002, 9004):
+  1. `POST /v1/dossiers/{id}/signing {"clientType":"WEB|DESKTOP","fileIds":[…]}` sunucunun imzaladığı isteği
+     (`signedRequest`, JWS) verir. İstek belgelerin sunucudaki baytlarının SHA-384 özetini taşır.
+  2. KentOS İmza (127.0.0.1) isteği `GET /v1/signing/trust` anahtarıyla doğrular ve kartla imzalar.
+  3. Sonucu olduğu gibi `POST /v1/signing/{işlem}/result` ile teslim edin. Sunucu kendi kaydına karşı sınar ve
+     `SigningVerdict` döner.
+
+  İmzalar `GET /v1/dossiers/{id}/signatures` ile okunur. Zincir ve iptal denetimi henüz yoktur:
+  `legalCheck: "not_done"`.
+
 ## 8. Bildirimler: zil, e-posta, SMS
 
 - Zil: `GET /v1/me/notifications?unread=true`, okundu: `POST /v1/me/notifications/read {"all": true}`.

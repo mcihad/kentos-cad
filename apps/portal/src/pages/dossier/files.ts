@@ -3,7 +3,7 @@
 // reader's own workspace or their organisation's.
 import { sendFile } from '../../api/files';
 import { dossier as api, portal } from '../../api/portal';
-import type { DossierDetail, DossierFileView, DossierRound, ProjectSummary } from '../../api/types';
+import type { DossierDetail, DossierFileView, DossierRound, DossierSignatureView, ProjectSummary } from '../../api/types';
 import { catalog } from '../../app/state';
 import { type Child, h, replaceChildren } from '../../lib/dom';
 import { bytes, moment } from '../../lib/format';
@@ -13,6 +13,10 @@ import { icon } from '../../ui/icons';
 import { button, empty, notice, panel } from '../../ui/kit';
 import { toast } from '../../ui/toast';
 import { scanBadge, uploadRow } from '../../ui/uploads';
+import { signDialog, signatureMark } from './sign';
+
+/** A file's verified e-signatures, by its id. */
+export type Signatures = Map<string, DossierSignatureView[]>;
 
 function fileIcon(f: DossierFileView): HTMLElement {
   const pdf = f.mediaType === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf');
@@ -50,7 +54,7 @@ function importFile(d: DossierDetail, f: DossierFileView): void {
   });
 }
 
-function fileRow(d: DossierDetail, f: DossierFileView, reload: () => void): HTMLElement {
+function fileRow(d: DossierDetail, f: DossierFileView, reload: () => void, sigs: Signatures): HTMLElement {
   const actions: Child[] = [h('a', { class: 'icon-btn', href: api.fileUrl(d.summary.id, f.id), title: 'İndir', 'aria-label': `${f.name} dosyasını indir`, download: f.name }, icon('download', 18))];
   if (f.isProject && f.state === 'final' && d.canImport) {
     const open = h('button', { class: 'icon-btn', type: 'button', title: 'Proje olarak aç', 'aria-label': 'Proje olarak aç' }, icon('open', 18));
@@ -78,7 +82,7 @@ function fileRow(d: DossierDetail, f: DossierFileView, reload: () => void): HTML
       'div',
       { class: 'file-text' },
       h('div', { class: 'file-name', title: `${f.name} (SHA-256 ${f.sha256})` }, f.name),
-      h('div', { class: 'file-meta' }, `${f.docTypeLabel}, ${bytes(f.size)}. ${f.addedByName} ekledi.${source}`, scanBadge(f.scan, f.scanNote)),
+      h('div', { class: 'file-meta' }, `${f.docTypeLabel}, ${bytes(f.size)}. ${f.addedByName} ekledi.${source}`, scanBadge(f.scan, f.scanNote), signatureMark(f, sigs.get(f.id) ?? [])),
     ),
     h('div', { class: 'file-actions' }, ...actions),
   );
@@ -189,16 +193,18 @@ function dropZone(d: DossierDetail, reload: () => void): HTMLElement {
 }
 
 /** The packages panel: the one being prepared (when the reader prepares it), then every sent one, newest first. */
-export function packagesPanel(d: DossierDetail, reload: () => void): HTMLElement {
+export function packagesPanel(d: DossierDetail, reload: () => void, sigs: Signatures = new Map()): HTMLElement {
   const parts: Child[] = [];
+  const signButton = (files: DossierFileView[]) =>
+    d.canSign && files.length ? button('E-imzala', { kind: 'ghost', icon: 'signature', onClick: () => signDialog(d, files, reload) }) : null;
   if (d.canAddFiles) {
     const title = d.summary.direction === 'application' ? (d.summary.round ? `Hazırlanan ${d.pendingRound}. sürüm` : 'Hazırlanan başvuru paketi') : d.side === 'municipality' ? 'Gönderilecek paket' : `Hazırlanan ${d.pendingRound - 1}. teslim`;
     parts.push(
       h(
         'div',
         { class: 'round is-pending' },
-        h('div', { class: 'round-head' }, icon('upload', 16), h('strong', null, title), h('span', { class: 'muted' }, 'Gönderene kadar yalnız siz görürsünüz; gönderilen dosya değiştirilmez.')),
-        d.pending.length ? h('div', { class: 'files' }, ...d.pending.map((f) => fileRow(d, f, reload))) : null,
+        h('div', { class: 'round-head' }, icon('upload', 16), h('strong', null, title), h('span', { class: 'muted' }, 'Gönderene kadar yalnız siz görürsünüz; gönderilen dosya değiştirilmez.'), h('span', { class: 'round-actions' }, signButton(d.pending))),
+        d.pending.length ? h('div', { class: 'files' }, ...d.pending.map((f) => fileRow(d, f, reload, sigs))) : null,
         dropZone(d, reload),
       ),
     );
@@ -208,8 +214,8 @@ export function packagesPanel(d: DossierDetail, reload: () => void): HTMLElement
       h(
         'div',
         { class: 'round' },
-        h('div', { class: 'round-head' }, icon('folder', 16), h('strong', null, roundTitle(d, r)), h('span', { class: 'muted' }, r.sentAt ? `${moment(r.sentAt)} gönderildi, ${r.files.length} dosya` : `${r.files.length} dosya`)),
-        h('div', { class: 'files' }, ...r.files.map((f) => fileRow(d, f, reload))),
+        h('div', { class: 'round-head' }, icon('folder', 16), h('strong', null, roundTitle(d, r)), h('span', { class: 'muted' }, r.sentAt ? `${moment(r.sentAt)} gönderildi, ${r.files.length} dosya` : `${r.files.length} dosya`), h('span', { class: 'round-actions' }, signButton(r.files))),
+        h('div', { class: 'files' }, ...r.files.map((f) => fileRow(d, f, reload, sigs))),
       ),
     );
   }

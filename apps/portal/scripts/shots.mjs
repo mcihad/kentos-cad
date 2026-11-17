@@ -16,6 +16,9 @@ const ADMIN_PASSWORD = process.env.PORTAL_ADMIN_PASSWORD;
 const OUT = join(new URL('.', import.meta.url).pathname, '../../../.run/gui-evidence/portal');
 mkdirSync(OUT, { recursive: true });
 const only = process.argv.slice(2);
+// SHOTS_BLOCK=harc,imza runs only those blocks (each block opens its own browser).
+const blocks = process.env.SHOTS_BLOCK?.split(',').map((b) => b.trim()).filter(Boolean) ?? [];
+const block = (name) => !blocks.length || blocks.includes(name);
 const shots = [];
 
 // A Turkish browser: dates and numbers in the browser's own controls as a Turkish user sees them.
@@ -78,7 +81,7 @@ const T2 = known.byTitle['Belediye hizmet binası cephe düzenlemesi'];
 const ORG = '#/kurum/ornek-belediyesi';
 
 // ── Signing in ───────────────────────────────────────────────────────
-{
+if (block('giris')) {
   const b = await launch(`${PORTAL}#/giris`, { width: 1560, height: 1000, args: TR });
   await b.waitFor(`!!document.querySelector('input[name=login]')`, 20000);
   await sleep(300);
@@ -92,7 +95,7 @@ const ORG = '#/kurum/ornek-belediyesi';
 }
 
 // ── The platform administrator ───────────────────────────────────────
-{
+if (block('sistem')) {
   const b = await signIn('sistem', ADMIN_PASSWORD);
   await open(b, '#/sistem');
   await shot(b, '10-sistem-genel-bakis');
@@ -120,7 +123,7 @@ const ORG = '#/kurum/ornek-belediyesi';
 }
 
 // ── The municipality: its owner, its project manager, its editor ─────
-{
+if (block('belediye')) {
   const b = await signIn('mehmet.kaya');
   await open(b, ORG);
   await shot(b, '20-belediye-genel-bakis');
@@ -141,7 +144,7 @@ const ORG = '#/kurum/ornek-belediyesi';
   await shot(b, '27-belediye-ayarlar');
   b.close();
 }
-{
+if (block('belediye')) {
   const b = await signIn('ali.celik', PASSWORD, { width: 1560, height: 1180 });
   await open(b, `${ORG}/dosya/${A1}`);
   await shot(b, '30-belediye-basvuru-paketler');
@@ -164,7 +167,7 @@ const ORG = '#/kurum/ornek-belediyesi';
 }
 
 // ── The architect ────────────────────────────────────────────────────
-{
+if (block('mimar')) {
   const b = await signIn('ayse.yilmaz', PASSWORD, { width: 1560, height: 1080 });
   await open(b, '#/mesleki');
   await shot(b, '40-mimar-genel-bakis');
@@ -192,7 +195,7 @@ const ORG = '#/kurum/ornek-belediyesi';
 }
 
 // ── The surveyor ─────────────────────────────────────────────────────
-{
+if (block('haritaci')) {
   const b = await signIn('can.ozturk', PASSWORD, { width: 1560, height: 1080 });
   await open(b, `#/mesleki/dosya/${T1}`);
   await shot(b, '50-haritaci-teslim-edilen-is');
@@ -202,7 +205,7 @@ const ORG = '#/kurum/ornek-belediyesi';
 }
 
 // ── A professional waiting for the check ─────────────────────────────
-{
+if (block('bekleyen')) {
   const b = await signIn('elif.sahin');
   await open(b, '#/mesleki');
   await shot(b, '60-muhendis-dogrulama-bekliyor');
@@ -232,7 +235,7 @@ async function drop(b, files) {
 }
 const b64 = (bytes) => Buffer.from(bytes).toString('base64');
 
-{
+if (block('bulut')) {
   const b = await signIn('ayse.yilmaz', PASSWORD, { width: 1560, height: 1180 });
   await open(b, '#/hesabim');
   await shot(b, '70-hesabim-oturumlar-ve-anahtarlar');
@@ -247,7 +250,7 @@ const b64 = (bytes) => Buffer.from(bytes).toString('base64');
   await shot(b, '72-mimar-belgeler-tarandi');
   b.close();
 }
-{
+if (block('bulut')) {
   const orgProjects = await projectsOf('mehmet.kaya', 'organization', known.tenant);
   const project = orgProjects.find((p) => p.name.startsWith('Konut')) ?? orgProjects[0];
   const b = await signIn('mehmet.kaya', PASSWORD, { width: 1560, height: 1240 });
@@ -273,7 +276,7 @@ const b64 = (bytes) => Buffer.from(bytes).toString('base64');
   await shot(b, '77-proje-koyu-tema');
   b.close();
 }
-{
+if (block('bulut')) {
   const mine = await projectsOf('can.ozturk', 'mine');
   const project = mine.find((p) => p.storage === 'file') ?? mine[0];
   const b = await signIn('can.ozturk', PASSWORD, { width: 1560, height: 1080 });
@@ -285,7 +288,7 @@ const b64 = (bytes) => Buffer.from(bytes).toString('base64');
   await shot(b, '79-haritaci-dosya-projesi-revizyonlar');
   b.close();
 }
-{
+if (block('bulut')) {
   const b = await signIn('sistem', ADMIN_PASSWORD);
   await open(b, '#/sistem/kayit');
   await shot(b, '80-sistem-reddedilen-dosyalar');
@@ -293,7 +296,7 @@ const b64 = (bytes) => Buffer.from(bytes).toString('base64');
   await shot(b, '81-sistem-bildirim-kanallari');
   b.close();
 }
-{
+if (block('bulut')) {
   const b = await signIn('ayse.yilmaz', PASSWORD, { width: 1560, height: 1400 });
   await open(b, '#/hesabim');
   await b.eval(`[...document.querySelectorAll('.panel')].find((p) => p.textContent.includes('Bildirimler'))?.scrollIntoView({ block: 'start' }); true`);
@@ -303,7 +306,7 @@ const b64 = (bytes) => Buffer.from(bytes).toString('base64');
 }
 
 // ── An office's shared dossiers (docs/adr/9000 §18) ──────────────────
-{
+if (block('buro')) {
   const titled = (list, title) => list.items.find((d) => d.title === title).id;
   const login = async (who) => {
     const res = await fetch(`${API}/v1/auth/login`, { method: 'POST', headers: { 'x-kentos-client': 'web', 'content-type': 'application/json' }, body: JSON.stringify({ login: who, password: PASSWORD }) });
@@ -332,7 +335,7 @@ const b64 = (bytes) => Buffer.from(bytes).toString('base64');
 }
 
 // ── Fees and charges (docs/adr/9003) ─────────────────────────────────
-{
+if (block('harc')) {
   const res = await fetch(`${API}/v1/auth/login`, { method: 'POST', headers: { 'x-kentos-client': 'web', 'content-type': 'application/json' }, body: JSON.stringify({ login: 'mehmet.kaya', password: PASSWORD }) });
   const cookie = res.headers.get('set-cookie').split(';')[0];
   const tariffs = await (await fetch(`${API}/v1/tenants/${known.tenant}/fees/schedules`, { headers: { cookie } })).json();
@@ -374,6 +377,30 @@ const b64 = (bytes) => Buffer.from(bytes).toString('base64');
   await shot(b, '94-mimar-odenecek-harc');
   await open(b, `#/mesleki/dosya/${A2}?sekme=harc`);
   await shot(b, '95-mimar-odenmis-harc');
+  b.close();
+}
+
+// ── E-signing (docs/adr/9004): the test card; KentOS İmza and its PIN window on a virtual display ──
+if (block('imza')) {
+  const A1 = known.byTitle['412 ada 7 parsel konut yapı ruhsatı'];
+  const b = await signIn('ayse.yilmaz', PASSWORD, { width: 1560, height: 1100 });
+  await open(b, `#/mesleki/dosya/${A1}`);
+  await b.waitFor(`!!document.querySelector('.sign-mark')`, 10000);
+  await shot(b, '96-mimar-e-imzali-belgeler');
+  await b.eval(`document.querySelector('.sign-mark').click(); true`);
+  await sleep(400);
+  await shot(b, '97-mimar-imza-ayrintisi');
+  await closeDialog(b);
+  await click(b, 'button', 'E-imzala');
+  await shot(b, '98-mimar-e-imzala-penceresi');
+  await click(b, '.dialog button', 'İmzala');
+  await b.waitFor(`document.querySelector('.dialog')?.textContent.includes('PIN’inizi KentOS İmza penceresine girin')`, 30000);
+  await shot(b, '99-mimar-pin-bekleniyor');
+  await click(b, '.dialog button', 'Vazgeç');
+  await open(b, '#/hesabim');
+  await b.eval(`[...document.querySelectorAll('.panel')].find((p) => p.querySelector('h2')?.textContent === 'E-imza')?.scrollIntoView({ block: 'start' }); true`);
+  await sleep(800);
+  await shot(b, '100-hesabim-e-imza');
   b.close();
 }
 

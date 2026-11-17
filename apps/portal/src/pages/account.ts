@@ -9,6 +9,7 @@ import { confirm, openDialog } from '../ui/dialog';
 import { type IconName, icon } from '../ui/icons';
 import { badge, button, empty, pageHeader, panel, table, twoLine } from '../ui/kit';
 import { toast } from '../ui/toast';
+import { esignPanel } from './account-esign';
 import type { PageFn } from './page';
 
 /** What a session is, as its owner knows it: the browser, or the program and its device. */
@@ -284,13 +285,14 @@ export const accountPage: PageFn = async ({ reload }) => {
   const body = h(
     'div',
     { class: 'page' },
-    pageHeader({ title: 'Hesabım', lead: 'Parolanız, giriş yaptığınız tarayıcı ve cihazlar, programların ve yapay zekâ ajanlarının anahtarları.' }),
+    pageHeader({ title: 'Hesabım', lead: 'Parolanız, giriş yaptığınız tarayıcı ve cihazlar, programların ve yapay zekâ ajanlarının anahtarları, e-imza.' }),
     h(
       'div',
       { class: 'stack' },
       sessionsPanel(sessions, reload),
       tokensPanel(tokens, reload),
       h('div', { class: 'cols-2' }, notificationsPanel(notifications, reload), passwordPanel()),
+      esignPanel(),
       h('div', { class: 'cols-2' }, panel('API', h(
         'div',
         { class: 'stack', style: 'gap: 8px' },

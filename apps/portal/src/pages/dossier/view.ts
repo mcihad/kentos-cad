@@ -1,8 +1,8 @@
 // One dossier's page, the same for both sides (docs/adr/9000 §5): where it stands in its flow, what waits for whom,
 // its legal deadline, its packages, conversation and timeline, its particulars, the documents its kind is usually sent
 // with, and the other side. The steps shown are the ones the server allows the reader now.
-import { dossier as api } from '../../api/portal';
-import type { DossierDetail } from '../../api/types';
+import { dossier as api, signing } from '../../api/portal';
+import type { DossierDetail, DossierSignatureView } from '../../api/types';
 import { withQuery } from '../../app/router';
 import { chamberOf, myOffices, professionLabel, professionalStatus } from '../../app/state';
 import { type Child, h } from '../../lib/dom';
@@ -250,6 +250,17 @@ function notices(d: DossierDetail): HTMLElement[] {
   return out;
 }
 
+/** The dossier's e-signatures by file; none when they cannot be read (the page does not wait on them). */
+async function signaturesOf(id: string): Promise<Map<string, DossierSignatureView[]>> {
+  const out = new Map<string, DossierSignatureView[]>();
+  try {
+    for (const s of await signing.signatures(id)) out.set(s.fileId, [...(out.get(s.fileId) ?? []), s]);
+  } catch {
+    // Signatures are shown when they can be read.
+  }
+  return out;
+}
+
 export function dossierPage(reader: Reader | 'office'): PageFn {
   return async ({ params, query, reload }) => {
     const d = await api.get(params.id);
@@ -298,7 +309,12 @@ export function dossierPage(reader: Reader | 'office'): PageFn {
           ? timelinePanel(d)
           : tab === 'harc' && feesShown
             ? await feesTab(d, params.slug, reload)
-            : h('div', { class: 'stack' }, d.description ? panel('Açıklama', h('div', { class: 'msg-body' }, d.description)) : null, packagesPanel(d, reload));
+            : h(
+                'div',
+                { class: 'stack' },
+                d.description ? panel('Açıklama', h('div', { class: 'msg-body' }, d.description)) : null,
+                packagesPanel(d, reload, await signaturesOf(d.summary.id)),
+              );
     const page = h(
       'div',
       { class: 'page' },

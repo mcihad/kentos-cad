@@ -14,6 +14,7 @@ import type {
   DossierFileView,
   DossierList,
   DossierMessageView,
+  DossierSignatureView,
   FeeAssess,
   FeeAssessment,
   FeeDefinition,
@@ -45,6 +46,9 @@ import type {
   ProjectDetails,
   ProjectPage,
   SessionView,
+  SigningRequestCreated,
+  SigningTrust,
+  SigningVerdict,
   Signup,
   TenantRole,
   TokenScope,
@@ -185,4 +189,14 @@ export const fees = {
   issue: (id: string, input: FeeAssess) => post<FeeAssessment>(`/v1/dossiers/${id}/fees`, input),
   paid: (id: string, fee: string, input: FeePaid) => post<FeeAssessment>(`/v1/dossiers/${id}/fees/${fee}/paid`, input),
   cancel: (id: string, fee: string, reason: string) => post<FeeAssessment>(`/v1/dossiers/${id}/fees/${fee}/cancel`, { reason }),
+};
+
+/** E-signing a dossier's files (docs/adr/9004): the server's side; the signing itself is KentOS İmza's (app/imza.ts). */
+export const signing = {
+  trust: () => get<SigningTrust>('/v1/signing/trust'),
+  request: (dossier: string, fileIds: string[]) =>
+    post<SigningRequestCreated>(`/v1/dossiers/${dossier}/signing`, { clientType: 'WEB', fileIds }),
+  deliver: (transaction: string, result: unknown) => post<SigningVerdict>(`/v1/signing/${transaction}/result`, result),
+  cancel: (transaction: string) => post<void>(`/v1/signing/${transaction}/cancel`),
+  signatures: (dossier: string) => get<DossierSignatureView[]>(`/v1/dossiers/${dossier}/signatures`),
 };

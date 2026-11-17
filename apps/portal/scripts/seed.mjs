@@ -296,6 +296,38 @@ await selin.upload(a6, 'tapu.pdf', pdf('Tapu'), PDF, 'title_deed');
 await emre.act(a6, 'send', { note: 'Büromuz adına gönderilmiştir; sorumlu mimar Ayşe Yılmaz.' });
 await zeynep.act(a6, 'start_review');
 
+// ── E-signatures (docs/adr/9004) ─────────────────────────────────────
+// When KentOS İmza runs with its test card (IMZA_URL; client PIN mode, the test card's PIN), the architect signs her
+// corrected package and the municipality signs the approved project, as the browser's flow does.
+const IMZA = process.env.IMZA_URL;
+async function esign(person, dossier, fileIds) {
+  const local = async (method, path, body) => {
+    const r = await fetch(`${IMZA}${path}`, { method, headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
+    const t = await r.text();
+    if (!r.ok) throw new Error(`imza ${path}: ${r.status} ${t}`);
+    return t ? JSON.parse(t) : {};
+  };
+  const req = await person.req('POST', `/v1/dossiers/${dossier}/signing`, { clientType: 'WEB', fileIds });
+  const batch = await local('POST', '/api/v1/signing/batches', { signedRequest: req.signedRequest });
+  await local('POST', `/api/v1/signing/batches/${batch.id}/open`);
+  await local('POST', `/api/v1/signing/batches/${batch.id}/sign`, { slotId: 1, certificateId: '01', pin: '1234' });
+  let state = batch;
+  for (let i = 0; i < 150 && !['DELIVERING', 'FAILED', 'CANCELLED', 'EXPIRED'].includes(state.status); i++) {
+    await new Promise((r) => setTimeout(r, 200));
+    state = await local('GET', `/api/v1/signing/batches/${batch.id}`);
+  }
+  if (state.status !== 'DELIVERING') throw new Error(`imza: ${state.status} ${JSON.stringify(state.lastError)}`);
+  const verdict = await person.req('POST', `/v1/signing/${req.transactionId}/result`, await local('GET', `/api/v1/signing/batches/${batch.id}/result`));
+  await local('POST', `/api/v1/signing/batches/${batch.id}/acknowledge`, { accepted: verdict.accepted, reason: verdict.reason });
+  if (!verdict.accepted) throw new Error(`imza reddedildi: ${verdict.reason}`);
+}
+if (IMZA) {
+  const a1now = await ayse.req('GET', `/v1/dossiers/${a1}`);
+  await esign(ayse, a1, a1now.rounds.at(-1).files.filter((f) => f.name.endsWith('.pdf')).map((f) => f.id));
+  const a2now = await ali.req('GET', `/v1/dossiers/${a2}`);
+  await esign(ali, a2, a2now.rounds[0].files.map((f) => f.id));
+}
+
 // ── Transfers ────────────────────────────────────────────────────────
 // A survey: the municipality's project and documents sent, taken on, opened as a project, delivered; waits for approval.
 const t1 = (await mehmet.req('POST', `/v1/tenants/${ornek.id}/dossiers`, {

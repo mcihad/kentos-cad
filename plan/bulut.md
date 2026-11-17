@@ -69,6 +69,13 @@ sıradakileri tutar. Bir madde ancak sınaması ve gerçek pencerede görüntüs
   - Ek Madde 5 kapısı: ödenmeden onay yok.
   - Portalda kurumun tarife sayfası ve dosyanın sekmesi (ADR 9003).
 
+- [x] `BUL-21` **E-imza** (sahibin 18 Kasım isteği: platformdaki e-imza, mantık aynı, arayüz KentOS'un):
+  - İmza servisi, PIN penceresi ve masaüstü ADR 9002'de.
+  - Sunucu belgelerin özetini kendi deposundan yazar, isteği Ed25519 ile imzalar, teslimi kendi kaydına ve belgenin
+    bugünkü baytlarına karşı sınar.
+  - Portalda e-imzala, imza işareti ve Hesabım › E-imza var (ADR 9004).
+  - Gerçek kartla tek deneme: `completed 1/1`.
+
 ## Sıradakiler
 
 - [ ] `BUL-10` Portala kurum kimliğiyle giriş (OpenID Connect; sunucu tarafı ADR 0007'de hazır).
@@ -78,7 +85,8 @@ sıradakileri tutar. Bir madde ancak sınaması ve gerçek pencerede görüntüs
 - [ ] `BUL-17` Gerçek zamanlı bildirim (WebSocket); şimdi dakikada bir sorulur.
 - [ ] `BUL-18` Kişisel verinin saklama süresi ve kapanan dosyaların arşivi (KVKK).
 - [ ] `BUL-20` Belediyenin istatistikleri ve dönem raporları (PDF ve Excel).
-- [ ] `BUL-21` Resmî yazı, e-imza ve e-tebligat bağlantısı. Kapsamı ve kurumun kabulü sahibin kararı.
+- [ ] `BUL-27` Resmî yazı (kararın antetli PDF'i), e-tebligat / KEP bağlantısı (kurumun anlaşması gerekir) ve
+  e-imzanın yasal denetimi (Kamu SM zinciri, OCSP / SİL, zaman damgası, CAdES / PAdES çıktısı).
 
 ## Çalıştırma
 
