@@ -132,6 +132,9 @@ members = [
     "apps/launcher",
     # The desktop's own wgpu drawing pipeline (docs/adr/0019); desktop-only like the above.
     "crates/render/wgpu",
+    # KentOS İmza's signing dialog and its PIN window (docs/adr/9002): Iced, so desktop-only like the above.
+    "crates/imza/ui",
+    "apps/imza-agent",
 ]
 default-members = [
     "crates/shared/geometry-core",

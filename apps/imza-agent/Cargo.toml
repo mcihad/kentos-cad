@@ -1,0 +1,37 @@
+[package]
+name = "kentos-imza-agent"
+description = "KentOS İmza ajanı: kullanıcının oturumunda PIN'i alan pencere; imza isteğinde öne gelir (docs/adr/9002)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "kentos-imza-agent"
+path = "src/main.rs"
+
+[dependencies]
+futures-util = { workspace = true }
+# `tokio`: the window's tasks run on tokio, as the HTTP client and the event stream need its reactor.
+iced = { workspace = true, features = ["tokio"] }
+kentos-imza-domain = { path = "../../crates/imza/domain" }
+kentos-imza-ui = { path = "../../crates/imza/ui" }
+kentos-ui = { path = "../../crates/ui", default-features = false, features = ["fonts"] }
+reqwest = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+tokio-tungstenite = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "deny"
+unimplemented = "deny"

@@ -27,6 +27,11 @@ time = { workspace = true }
 [dev-dependencies]
 ed25519-dalek = { workspace = true }
 
+# The real-window acceptance's stand-in for the server (scripts/usage/real/imza.sh): a key pair and a signed request.
+[[example]]
+name = "deneme_zarfi"
+required-features = ["issue"]
+
 [lints.rust]
 unsafe_code = "forbid"
 missing_debug_implementations = "warn"
