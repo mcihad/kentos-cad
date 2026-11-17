@@ -873,12 +873,19 @@ komut durumları.
 
 ### 5.7 Genişleme ve borç
 
-#### BIM-19 — Kat irtifakı için 3B yapı modeli (araştırma önce) [ ]
+#### BIM-19 — Kat irtifakı için 3B yapı modeli (araştırma önce) [~]
 
 Tapu ve Kadastro Genel Müdürlüğünün kat irtifakı ve kat mülkiyetinde istediği üç boyutlu sayısal yapı modeli aynı bina
 modelinden üretilebilir mi? Genelgenin güncel metni, biçim şeması, ayrıntı düzeyi, bağımsız bölüm ve eklenti kimlikleri,
 sorumlu meslek ve doğrulama servisi birincil kaynaktan okunur (araştırma notu §9). Karar ADR'ye yazılır: yapılır, ertelenir
 ya da kapsam dışı. Kaynak okunmadan kod yazılmaz.
+
+**Durum (17 Kasım 2026, [ADR 8109](../docs/adr/8109-tkgm-3d-building-model-research.md), K197–K199): ertelendi.** TKGM'nin
+2025/2 sayılı genelgesi (13.02.2025, son değişiklik 25.02.2026) mevzuat portalında doğrulandı; açık maddeleri: model onaylı
+mimari projeden, Genel Müdürlüğün sitesindeki standarda göre, yapı aplikasyon projesinin eki olarak o projenin müellifinin
+sorumluluğunda; Otomatik Doğrulama Uygulaması geometri ve öznitelikleri denetler, tapu, kadastro ve MAKS ile bütünleştirir,
+altı haneli doğrulama kodu verir. Biçim standardı ve 4–8. maddeler okunamadı: kod yazılmadı. Yapılırsa harita modülünün işi,
+mimari veri besler. Yeniden açılma: standart belgesi ve tam metin okununca.
 
 #### BIM-20 — Mimari kullanım borcu [~]
 
@@ -947,7 +954,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 |---|---|---|---|
 | B21 ~ | Tipler ve katmanlı yapı; tip nesneleri | BIM-12, IFC-04 | Değerin kaynağı görünür (ADR 8105: duvar stili `IfcWallType`, katman takımları; ADR 8106: kolon, kiriş, döşeme, çatı, korkuluk, merdiven tipi, istisna, Öznitelikler'de Tipten/Örnekten, IFC tipleri; iki ilk kabul de tamam; giydirme cephe tipi, profil takımı, eski sürüm denetimi, kitaplık kaldı) |
 | B22 ~ | Konut dışı kullanımlar (yasal en geç 1.9.2033) | BIM-13 | Kullanım sınıfına özel kurallar (ADR 8107: BYKHY 49/1-a hasta odası, 50/1-a ve 50/1-b otel, 52 tek merdivenli fabrika, mağaza, depo, büro; ADR 8108: 96/2 yağmurlama zorunluluğu kullanıma, yüksekliğe ve alana göre; 51 bağımsız durum, gerçek çizimde Denetim; 49/1-b, 49/2, 50/3, 51, eğitim, toplanma, endüstri ve depolama kaldı) |
-| B23 | Kat irtifakı için 3B yapı modeli araştırması | BIM-19 | Karar ADR'de |
+| B23 ~ | Kat irtifakı için 3B yapı modeli araştırması | BIM-19 | Karar ADR'de (ADR 8109: ertelendi; TKGM 2025/2 genelgesinin açık maddeleri okundu, biçim standardı okunamadı; yapılırsa harita modülünün işi) |
 
 - **Sürekli:** BIM-20 her fazda bir dilimle ilerler.
 - **Erken hazırlık:** B12 model geliştirmesiyle paralel başlayabilir (aşağıdaki maddeye bakın). B15 model paketlerinden
