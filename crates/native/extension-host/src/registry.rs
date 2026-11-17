@@ -1133,6 +1133,7 @@ impl Registry {
             resemblances: Vec::new(),
             platforms: Vec::new(),
             python_packages: Vec::new(),
+            publisher_change: None,
             installable: false,
         };
         let Some(manifest) = manifest else {
@@ -1140,6 +1141,13 @@ impl Registry {
         };
         let installed = self.manifests.get(&manifest.id);
         review.capabilities = capability_lines(&manifest, installed);
+        // Who publishes it, against the installed version (docs/adr/8057 §126).
+        review.publisher_change = installed
+            .filter(|old| old.publisher_id != manifest.publisher_id)
+            .map(|old| crate::view::PublisherChange {
+                before: old.publisher_id.clone(),
+                after: manifest.publisher_id.clone(),
+            });
         review.platforms = crate::view::platform_lines(&manifest, installed);
         if !review.inspection.is_valid() {
             return review;

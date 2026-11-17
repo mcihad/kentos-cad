@@ -83,3 +83,47 @@ fn declined_python_contributions_stay_declined_at_the_next_version() {
     );
     let _ = std::fs::remove_dir_all(&root);
 }
+
+/// An update from another publisher installs only when the person says so (docs/adr/8057 §126).
+#[test]
+fn an_update_from_another_publisher_waits_for_the_persons_word() {
+    let root = temp("yayimci");
+    let mut gis = app(&root, Some(Module::Gis));
+    install(&mut gis, "kent-rehberi.kek", package("ornek-kent", |_| {}));
+    let other = package("ornek-kent", |m| {
+        m["version"] = "1.1.0".into();
+        m["publisherId"] = "baska-yayimci".into();
+    });
+    let _ = gis.extensions_event(Event::Picked(Some((
+        "kent-rehberi-1.1.0.kek".into(),
+        other,
+    ))));
+    assert!(
+        gis.extensions
+            .review
+            .as_ref()
+            .unwrap()
+            .review
+            .publisher_changed()
+    );
+    let _ = gis
+        .extension_review_window()
+        .expect("the review over the manager");
+    let version = |app: &App| {
+        app.extensions
+            .registry
+            .as_ref()
+            .unwrap()
+            .lease(KENT)
+            .unwrap()
+            .version
+            .clone()
+    };
+    let _ = gis.extensions_event(Event::Install);
+    assert_eq!(version(&gis), "1.0.0", "not without the person's word");
+    assert!(gis.extensions.review.is_some(), "still in the review");
+    let _ = gis.extensions_event(Event::AcceptPublisher(true));
+    let _ = gis.extensions_event(Event::Install);
+    assert_eq!(version(&gis), "1.1.0");
+    let _ = std::fs::remove_dir_all(&root);
+}

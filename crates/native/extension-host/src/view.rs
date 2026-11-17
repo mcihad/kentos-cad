@@ -205,11 +205,29 @@ pub struct Review {
     /// The Python packages its lock installs, an update's against the installed version's (docs/adr/8057 §81).
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub python_packages: Vec<crate::packages::PackageLine>,
+    /// An update whose publisher is not the installed version's (docs/adr/8057 §126): the extension handed to another
+    /// publisher, or a package put out under its id by someone else. Said before Kur; it installs only when the person
+    /// says so.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub publisher_change: Option<PublisherChange>,
     /// It can be installed (it may still wait for a dependency).
     pub installable: bool,
 }
 
+/// The publishers of the installed version and of an update (`publisherId`; none when the manifest names none).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PublisherChange {
+    pub before: Option<String>,
+    pub after: Option<String>,
+}
+
 impl Review {
+    /// Whether its publisher is not the installed version's: the person must say to install it anyway.
+    pub fn publisher_changed(&self) -> bool {
+        self.publisher_change.is_some()
+    }
+
     /// Whether it imitates another extension: the person must say to install it anyway.
     pub fn imitates(&self) -> bool {
         self.resemblances.iter().any(|r| r.exact)

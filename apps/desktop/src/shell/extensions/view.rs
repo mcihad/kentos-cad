@@ -687,7 +687,8 @@ impl App {
         let can = r.installable
             && !blocked
             && (!r.source_conflict || p.replace_source)
-            && (!r.imitates() || p.accept_imitation);
+            && (!r.imitates() || p.accept_imitation)
+            && (!r.publisher_changed() || p.accept_publisher);
         let verb = match &r.installed {
             Some((v, _)) if manifest.is_some_and(|m| m.version != *v) => "Güncelle",
             Some(_) => "Yeniden kur",
@@ -920,6 +921,28 @@ fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a
                 p.accept_imitation,
                 "Benzerliği okudum, yine de kur",
                 Some(msg(Event::AcceptImitation(!p.accept_imitation))),
+            ));
+    }
+    // Another publisher than the installed version's (docs/adr/8057 §126), first too: the extension may have changed
+    // hands, or its id been taken.
+    if let Some(change) = &r.publisher_change {
+        let named = |p: &Option<String>| {
+            p.as_ref().map_or_else(
+                || "yayımcısı belirtilmemiş".to_owned(),
+                |id| format!("“{id}”"),
+            )
+        };
+        form = form
+            .wide(Banner::warning(format!(
+                "Yayımcısı değişti: kurulu sürüm {}, bu paket {}. Eklentinin sahibi değişmiş ya da kimliği başkasınca \
+                 kullanılmış olabilir: yeni yayımcıyı tanımıyorsanız güncellemeyin.",
+                named(&change.before),
+                named(&change.after)
+            )))
+            .wide(words::check(
+                p.accept_publisher,
+                "Yayımcının değiştiğini okudum, yine de kur",
+                Some(msg(Event::AcceptPublisher(!p.accept_publisher))),
             ));
     }
     // A Python package named a letter from a well-known one's (docs/adr/8057 §81), first too: its code would run.

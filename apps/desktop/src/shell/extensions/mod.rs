@@ -112,6 +112,8 @@ pub(crate) struct Pending {
     pub(crate) replace_source: bool,
     /// The person read that it imitates another extension and installs it anyway (docs/adr/8059 §14).
     pub(crate) accept_imitation: bool,
+    /// The person read that an update comes from another publisher and installs it anyway (docs/adr/8057 §126).
+    pub(crate) accept_publisher: bool,
     /// The agent whose workshop it comes from (Asistan, an agent on the link): its later changes are its own.
     pub(crate) agent: Option<String>,
     /// What its Python lock means on this computer, with the Python KentOS uses here (docs/adr/8057 §94): supported,
@@ -379,6 +381,8 @@ pub(crate) enum Event {
     ReplaceSource(bool),
     /// Install a package that imitates another anyway (docs/adr/8059 §14).
     AcceptImitation(bool),
+    /// An update from another publisher installed anyway (docs/adr/8057 §126).
+    AcceptPublisher(bool),
     Install,
     CancelReview,
     SafeNext(bool),
@@ -968,6 +972,11 @@ impl App {
                     p.accept_imitation = on;
                 }
             }
+            Event::AcceptPublisher(on) => {
+                if let Some(p) = self.extensions.review.as_mut() {
+                    p.accept_publisher = on;
+                }
+            }
             Event::Install => self.install_reviewed(),
             Event::CancelReview => self.extensions.review = None,
             Event::SafeNext(on) => {
@@ -1368,6 +1377,7 @@ impl App {
             has_python,
             replace_source: false,
             accept_imitation: false,
+            accept_publisher: false,
             agent: None,
             here,
         });
@@ -1389,6 +1399,10 @@ impl App {
             return;
         };
         // An imitation installs only when the person said so (docs/adr/8059 §14): Kur is off until then.
+        // Nor an update from another publisher (docs/adr/8057 §126).
+        if pending.review.publisher_changed() && !pending.accept_publisher {
+            return;
+        }
         if pending.review.imitates() && !pending.accept_imitation {
             return;
         }

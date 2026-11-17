@@ -1634,3 +1634,38 @@ fn an_update_never_widens_what_the_person_granted() {
     );
     assert!(granted.contains(&Capability::DocumentRead));
 }
+
+/// An update from another publisher is said before Kur (docs/adr/8057 §126): the extension handed to another, or its id
+/// taken; the same publisher and a first install say nothing. Said, not refused: the person decides.
+#[test]
+fn an_update_from_another_publisher_is_said() {
+    use crate::PublisherChange;
+    let temp = Temp::new("yayimci");
+    let mut r = open(&temp.0);
+    let by = |version: &str, publisher: Option<&'static str>| {
+        package_with(ID, version, &[], move |m| {
+            if let Some(p) = publisher {
+                m["publisherId"] = json!(p);
+            }
+        })
+    };
+    let first = r.review(&by("1.0.0", Some("ornek-belediye")), &file_source());
+    assert_eq!(first.publisher_change, None, "a first install");
+    install(&mut r, &by("1.0.0", Some("ornek-belediye")));
+    let same = r.review(&by("1.1.0", Some("ornek-belediye")), &file_source());
+    assert_eq!(same.publisher_change, None);
+    let other = r.review(&by("1.1.0", Some("baska-yayimci")), &file_source());
+    assert_eq!(
+        other.publisher_change,
+        Some(PublisherChange {
+            before: Some("ornek-belediye".into()),
+            after: Some("baska-yayimci".into()),
+        })
+    );
+    assert!(
+        other.installable && other.publisher_changed(),
+        "said, not refused"
+    );
+    let unnamed = r.review(&by("1.1.0", None), &file_source());
+    assert_eq!(unnamed.publisher_change.map(|c| c.after), Some(None));
+}

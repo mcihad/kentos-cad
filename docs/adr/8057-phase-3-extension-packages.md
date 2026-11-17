@@ -5823,3 +5823,30 @@ drawing_change.rs` (yeni, 2).
     çizimde kapanır ve adını taşır.
 
   Düzeltme geri alınınca iki sınama da kırmızı oldu. Masaüstünün bütün sınamaları: 2550.
+
+## §126. Yayımcısı değişen güncelleme söylenir, kişinin sözüyle kurulur (`ADIM 22A`, Emeklilik ve devir, D9)
+
+**17 Kasım.** Kod: eklenti barındırıcısı `view.rs` (`Review::publisher_change`, `PublisherChange`), `registry.rs`;
+masaüstü `extensions/view.rs` (uyarı ve onay), `extensions/mod.rs` (`Event::AcceptPublisher`). Sınamalar: barındırıcı
+`an_update_from_another_publisher_is_said`, masaüstü `an_update_from_another_publisher_waits_for_the_persons_word`.
+
+- **Sorun.** Plan "bakıcı devri" der (D9). Devrin istemci tarafında bir açık vardı: güncelleme incelemesi kurulu
+  sürümün yayımcısını yenisininkiyle karşılaştırmıyordu. Aynı kimlikle başka bir yayımcının paketi (`publisherId`)
+  sıradan bir güncelleme gibi kuruluyordu. Eklentinin el değiştirmesi ve kimliğin başkasınca kullanılması tedarik
+  zinciri saldırılarının bilinen yoludur; dosyadan ya da klasörden gelen pakette katalog bunu durdurmaz.
+- **Karar:** güncellemenin yayımcısı kurulu sürümünkinden farklıysa (adı değişmiş, adı kalkmış ya da yeni gelmiş)
+  inceleme en üstte uyarır: "Yayımcısı değişti: kurulu sürüm “ornek-belediye”, bu paket “baska-yayimci”. Eklentinin sahibi
+  değişmiş ya da kimliği başkasınca kullanılmış olabilir: yeni yayımcıyı tanımıyorsanız güncellemeyin." Kur, taklit
+  pakette olduğu gibi kişi "Yayımcının değiştiğini okudum, yine de kur" diyene dek kapalıdır. Söylenir, reddedilmez:
+  meşru bir devir de olabilir; karar kişinindir. İlk kurulum ve aynı yayımcı bir şey söylemez.
+- **Yetkiler:** önceki yayımcıya verilen yetenekler §121'in kuralıyla taşınır. Yeni ve genişleyen yetenek işaretsiz
+  gelir; yayımcı değişikliği tek başına bütün izinleri sıfırlamaz.
+- **Kalan (katalog sunucusu):** devrin kendisi (eklentiyi bir yayımcıdan ötekine kataloğun yöneticisiyle geçirmek) ve
+  terk edilmiş paketin işaretlenmesi. İkisi de kimin karar verdiğini yazan bir ilke ister.
+- **Gerçek pencere:** Kent Rehberi 1.0 “ornek-belediye”den kuruldu, 1.1 “baska-yayimci” adıyla incelendi. Uyarı en
+  üstte, onay kutusu altında, Güncelle kapalı.
+- **Sınamalar:**
+  - Barındırıcı: ilk kurulum ve aynı yayımcı bir şey söylemez; başkasının paketi önce/sonra adlarıyla söylenir ve
+    kurulabilir kalır; adı kalkan yayımcı da söylenir.
+  - Masaüstü: onaysız Kur kurmaz, inceleme açık kalır; onayla 1.1 kurulur.
+  - Masaüstünün bütün sınamaları: 2551.

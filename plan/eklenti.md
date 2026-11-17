@@ -1497,8 +1497,9 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
     yok [D14]. **Geri çekme:** imzalı liste, kamuya açık kaldırma kaydı, "şüpheli" ile "kesin" ayrımı, itiraz yolu [D15].
   - **Emeklilik ve devir:** "yerine geçen" eklenti, bakıcı devri, terk edilmiş paketin işaretlenmesi [D9].
     — *kısmen (17 Kasım, ADR 8057 §119): emekli eklenti kurulu ayrıntıda ve katalog girdisinde yayımcının sözüyle
-    söylenir, yerine geçen kuruluysa adıyla, değilse "Yerine geçeni bul"la; katalog dizini emekliliği taşır. Kalan:
-    bakıcı devri, terk edilmiş paketin işaretlenmesi (katalog sunucusu).*
+    söylenir, yerine geçen kuruluysa adıyla, değilse "Yerine geçeni bul"la; katalog dizini emekliliği taşır. Devrin
+    istemci payı (§126): yayımcısı değişen güncelleme incelemede uyarılır, kişinin onayıyla kurulur. Kalan: katalog
+    sunucusunda devrin kendisi ve terk edilmiş paketin işaretlenmesi (kimin karar verdiğini yazan ilke ister).*
   - **Karne ve dürüst sinyaller:** geçen kapılar, yetenekler ve gerekçeleri, tespit edilen kullanım, bakım ve uyumluluk;
     **yıldız oyu yok**; AI üretim kökeni; istemci telemetrisi yasak; protokol göç oranı ve sağlık ölçütleri izlenir [D17].
     — *kısmen (16 Kasım, ADR 8057 §86): masaüstünde katalog girdisinin karnesi (bu KentOS'ta çalışır mı, taklit/benzerlik,
