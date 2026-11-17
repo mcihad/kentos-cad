@@ -1515,7 +1515,18 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
 
 ### 5.2 Doğrulama [ECO-QA-01…16]
 
-- [ ] JSON Schema/kod üretimi/kayıt sapması, yinelenen kimlik, kaynak başvurusu ve uyumsuz yetenek testleri [ECO-QA-01].
+- [x] JSON Schema/kod üretimi/kayıt sapması, yinelenen kimlik, kaynak başvurusu ve uyumsuz yetenek testleri [ECO-QA-01].
+  — *17 Kasım'da gözden geçirildi, karşılanmış: şema sapması `sdk_pack` sınamaları (panel, manifest, katman şeması,
+  araç tanımı, olgular, kural örnekleri; `KENTOS_WRITE_SDK` yazar) ve komut kataloğunun her şeması
+  (`the_shared_catalog_gives_back_every_schema`, `KENTOS_WRITE_CATALOG`); kod üretimi sapması
+  `python_builders_are_the_schemas` (`kentos/ui_panel.py`), `the_stub_is_the_sdk_s` (`kentos_ext.pyi`),
+  `scripts/python/sdk.py --check` (Python SDK katmanı), TS bağlarının dışa aktarma sınamaları, `cad.processing.tools`
+  durumlarının üreteci (`--check`); kayıt
+  sapması `unlisted_missing_and_changed_files_are_named` (bütünlük listesi) ve kurulu paketin diskte değişen dosyası
+  (sonraki açılışta adıyla hata); yinelenen kimlik `manifest_duplicate_id`, `python_id_twice`, panel kimliklerinin
+  tekliği; kaynak başvurusu `contributions_point_at_what_exists`, `handler_missing`, formun ve çevirinin bildirimi;
+  uyumsuz yetenek `capabilities_carry_a_reason_a_scope_and_the_hosts` (`manifest_capability_missing`),
+  `a_network_library_without_the_capability_is_refused_and_os_commands_warned`, `compatibility_ranges_are_whole`.*
 - [x] Arşiv ayrıştırıcısı yol/boyut/oran/özet/kodlama/harf/platform uç durum korpusu ve olumsuz test [ECO-QA-02] (ADIM 16).
   — *16 Kasım'da gözden geçirildi, karşılanmış (`crates/shared/extensions/src/archive/tests.rs`, `paths.rs`): yol aşımı,
   mutlak yol, ters bölü, sürücü harfi, ASCII dışı ad, sonda nokta, aygıt adları (CON, aux.txt …), yinelenen ve harfi
