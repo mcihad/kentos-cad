@@ -1567,7 +1567,12 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
   COG ve COPC sonucu ile bitirilmeden bırakılan yazım parça bırakmaz (`tests/staged.rs`). Salt okunur dosya ve klasör
   GeoPackage'ı bayt bayt olduğu gibi bırakır, ret kullanıcının dosyasını adlandırır. Aynı `requestId` bir kez yazar,
   sonradan değişen dosyanın üzerine yazmaz (`processing_sink_faults`). Her noktada durdurma, tablo çakışması, PostGIS'te
-  ikinci yazım ve tek kullanımlık plan önceden sınanmıştı. ECO-QA-11 ve 12 açık.*
+  ikinci yazım ve tek kullanımlık plan önceden sınanmıştı.* — *ECO-QA-11 17 Kasım'da karşılandı (§121). Kapsam
+  yükseltme açığı kapandı: güncelleme incelemesi kişinin önceki cevabından başlıyor. Yeni, genişleyen (`Scope::reach`,
+  katalogla ortak ölçü) ve daha önce verilmeyen yetenek işaretsiz geliyor
+  (`an_update_never_widens_what_the_person_granted`, `tests/grants.rs`). Onay özeti ve içeriğe bağlı onay
+  (`content_frozen`), paket kurcalama (`catalog_mismatch`, aynı sürüm başka içerik, diskte değişen dosya) ve
+  yayımlanmamışın görünmemesi (404) önceden sınanmıştı. ECO-QA-12 açık.*
 - [ ] Başlangıç/keşif, ortam hazırlama, geri çağırma gidiş-dönüşü, büyük UI/İşlemler yükü, Python toplu işi ve host bellek
   ölçümü [ECO-QA-13]; eşikler gerçek başvuru cihazı ve korpus ölçümünden sonra sabitlenir, ölçülmüş gibi süre/FPS
   icat edilmez [ECO-QA-14]; üreticinin kendi çıktısı tek doğruluk kanıtı sayılmaz, bağımsız beklentiler yazılır

@@ -99,9 +99,12 @@ pub(crate) struct Pending {
     pub(crate) file: String,
     pub(crate) review: Review,
     pub(crate) changelog: Option<String>,
-    /// The capabilities the user grants, of those the package asks for.
+    /// The capabilities the user grants, of those the package asks for: at an update what the person granted the
+    /// installed version while it is asked as before (`kentos_extension_host::starting_grant`, docs/adr/8057 §121).
     pub(crate) granted: Vec<Capability>,
-    /// The Python contributions are wanted.
+    /// An update's capabilities the person left out of the installed version: they start ungranted and say so.
+    pub(crate) withheld: Vec<Capability>,
+    /// The Python contributions are wanted: at an update as the person chose for the installed version.
     pub(crate) python: bool,
     /// The package has Python contributions at all.
     pub(crate) has_python: bool,
@@ -1326,10 +1329,28 @@ impl App {
             .and_then(|m| m.changelog_file.as_ref())
             .and_then(|p| opened.files.get(p))
             .and_then(|b| String::from_utf8(b.clone()).ok());
-        let granted = manifest
-            .map(|m| m.capabilities().into_iter().collect())
+        // At an update the person's choice for the installed version stands; what is new or reaches further waits for
+        // them (docs/adr/8057 §121).
+        let installed = manifest
+            .filter(|_| review.installed.is_some())
+            .and_then(|m| Some((registry.grant(&m.id)?, registry.manifest(&m.id)?)));
+        let granted = kentos_extension_host::starting_grant(
+            &review.capabilities,
+            installed.map(|(grant, _)| grant),
+        );
+        let withheld = installed
+            .map(|(grant, old)| {
+                old.capabilities()
+                    .into_iter()
+                    .filter(|c| !grant.capabilities.contains(c))
+                    .collect()
+            })
             .unwrap_or_default();
         let has_python = manifest.is_some_and(|m| m.python.is_some());
+        let python = match installed {
+            Some((grant, old)) => old.python.is_some() && grant.python,
+            None => true,
+        };
         let here = manifest.and_then(|m| {
             let target = kentos_extensions::python_builds::Target::here(self.python_here())?;
             kentos_extensions::python_builds::on_computer(m, &opened.files, target)
@@ -1341,7 +1362,8 @@ impl App {
             review,
             changelog,
             granted,
-            python: has_python,
+            withheld,
+            python,
             has_python,
             replace_source: false,
             accept_imitation: false,

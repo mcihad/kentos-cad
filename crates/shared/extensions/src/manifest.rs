@@ -797,6 +797,17 @@ impl Scope {
             Scope::PluginOwned => "plugin-owned",
         }
     }
+
+    /// How far it reaches: what the extension owns, what the user picks, the whole open project. A version asking a
+    /// capability further than the one before asks a wider capability: the catalog's review reads it whole, the person's
+    /// earlier grant does not cover it (docs/adr/8057 §121).
+    pub fn reach(self) -> u8 {
+        match self {
+            Scope::PluginOwned => 0,
+            Scope::UserSelected => 1,
+            Scope::CurrentProject => 2,
+        }
+    }
 }
 
 /// A capability the extension asks for: not a permission granted; the organisation's policy and the user decide, the

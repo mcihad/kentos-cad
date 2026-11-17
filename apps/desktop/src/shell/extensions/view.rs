@@ -1027,12 +1027,20 @@ fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a
     if !r.capabilities.is_empty() {
         form = form.section("İstediği yetenekler");
         for c in &r.capabilities {
-            let change = match c.change {
+            let mut change = match c.change {
                 Change::Added => " · YENİ",
+                Change::Changed if c.wider => " · GENİŞLEDİ",
                 Change::Changed => " · DEĞİŞTİ",
                 Change::Removed => " · artık istemiyor",
                 Change::Asked | Change::Same => "",
-            };
+            }
+            .to_owned();
+            // Why a line asked as before starts ungranted (docs/adr/8057 §121).
+            if matches!(c.change, Change::Same | Change::Changed)
+                && p.withheld.contains(&c.capability)
+            {
+                change.push_str(" · önceki sürüme vermemiştiniz");
+            }
             let words_line = format!(
                 "{}{change}",
                 capability_words(c.title, &c.reason, &c.hosts, c.sends_data_to_ai)
@@ -1048,16 +1056,25 @@ fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a
                 ))
             };
         }
+        // An update takes nothing new by itself (docs/adr/8057 §121): said where it asks for more.
+        if r.capabilities
+            .iter()
+            .any(|c| c.change == Change::Added || c.wider)
+        {
+            form = form.wide(label::caption(
+                "Güncelleme yeni ya da genişleyen bir yeteneği kendiliğinden almaz: vermek için işaretleyin.",
+            ));
+        }
         let left_out: Vec<&'static str> = r
             .capabilities
             .iter()
             .filter(|c| c.change != Change::Removed && !p.granted.contains(&c.capability))
-            .map(|c| c.capability.id())
+            .map(|c| c.title)
             .collect();
         if !left_out.is_empty() {
             form = form.wide(label::caption(format!(
                 "İzin vermediğiniz yeteneğe bağlı katkılar kurulur ama çalışmaz: {}.",
-                left_out.join(", ")
+                left_out.join("; ")
             )));
         }
     }

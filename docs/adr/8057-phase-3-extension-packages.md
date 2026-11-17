@@ -5608,3 +5608,53 @@ kullanır), `command.rs` (`Said`); sınamalar İşlemler `tests/staged.rs` (yeni
   - salt okunur klasöre yeni dosya yazılamaz; ileti klasörü adlandırır, ara dosyanın adı görünmez.
 
   Düzeltme geri alınınca 6 sınamadan 4'ü kırmızı oldu.
+
+## §121. Güncelleme yetkiyi kendiliğinden genişletmez: kişinin önceki cevabı (ECO-QA-11, D5)
+
+**17 Kasım.** Kod: eklenti barındırıcısı `view.rs` (`starting_grant`, `CapabilityLine::wider`); eklenti paketi
+`manifest.rs` (`Scope::reach`, katalog incelemesiyle ortak); masaüstü `extensions/mod.rs` (`Pending::withheld`, Python
+seçimi), `extensions/view.rs` (işaretler). Sınamalar: barındırıcı `an_update_never_widens_what_the_person_granted`,
+masaüstü `tests/grants.rs` (yeni, 2) ve `an_updates_new_capability_is_shown_and_left_out_unless_granted`.
+
+- **Sorun.** Kurulum incelemesi paketin istediği her yeteneği işaretli açıyordu, güncellemede de:
+  - kişinin önceki sürüme vermediği yetenek sonraki sürümde işaretli ve işaretsiz bir satırla geri geliyordu; bir
+    "Güncelle" onu veriyordu;
+  - yeni yetenek "YENİ" diye gösteriliyor ama işaretli geliyordu;
+  - kapsamı genişleyen yetenek (kişinin seçtiği yerine bütün açık proje) hiç işaretlenmiyordu: fark kapsamı
+    karşılaştırmıyordu;
+  - kişinin kurmadığı Python katkıları güncellemede yeniden açık geliyordu.
+- **Karar:** ilk kurulumda istenen her yetenek işaretli gelir; kişi her satırı okur. Güncellemede inceleme kişinin
+  kurulu sürüme verdiğinden başlar:
+  - aynı biçimde istenen yetenek kişinin cevabını korur;
+  - kişinin vermediği "önceki sürüme vermemiştiniz" der ve işaretsiz gelir;
+  - yeni yetenek ("YENİ") ve daha uzağa uzanan yetenek ("GENİŞLEDİ") işaretsiz gelir.
+
+  Altında "Güncelleme yeni ya da genişleyen bir yeteneği kendiliğinden almaz: vermek için işaretleyin." yazar. Python
+  katkıları kişinin önceki seçimiyle gelir; Python yeni geliyorsa işaretsiz gelir.
+- **Genişleme nedir:** katalog incelemesinin ölçüsüyle aynıdır (`Scope::reach`: eklentinin kendisi < kişinin seçtiği <
+  açık projenin tamamı). Yeni bir sunucu ve dış yapay zekâya veri göndermeye başlamak da genişlemedir. Daralan kapsam
+  ya da yalnız değişen gerekçe "DEĞİŞTİ" der ve kişinin cevabını korur. İki ölçü ayrışsaydı katalog bir sürümü derin
+  incelemeye alıp masaüstü onu sıradan bir değişiklik sayabilirdi.
+- **Söz düzeltmesi:** "İzin vermediğiniz yeteneğe bağlı katkılar kurulur ama çalışmaz" cümlesi yetenekleri kimlikleriyle
+  (`network, document.read`) yazıyordu; artık adlarıyla yazıyor ("İnternete bağlanır; Açık projeyi okur").
+- **ECO-QA-11'in öteki parçaları gözden geçirildi, sınanmış:**
+  - Onay içeriğe bağlıdır: onaylanan içerik değişmez (`content_frozen`), yeni içerik onayı düşürür.
+  - Kurcalanan paket kurulmaz: katalogdaki boy, özet ya da içerik özeti tutmazsa reddedilir (`catalog_mismatch`;
+    masaüstü katalog klasöründe sonradan değişen dosya), aynı sürüm başka içerikle gelirse reddedilir, diskte değişen
+    dosya çalışmadan yakalanır.
+  - Yayımlanmamış sürüm kurulmaz (`not_installable`); göremeyecek kişiye varlığı söylenmez (404, sayılmaz).
+  - Kimse kendi sürümünü inceleyip onaylayamaz.
+- **Yan iş:** §117'nin eklediği satırlar `extensions/panels.rs`'yi 2045 satıra çıkarmıştı (sınır 2000, ADR 8054 §7;
+  hedefli sınamalar bunu görmedi). Paneldeki değer sınamaları `panels/tests.rs`'ye taşındı.
+- **Gerçek pencere:** Kent Rehberi 1.0 "İnternete bağlanır" verilmeden kuruldu, 1.1 incelendi. Önceki ikilide her
+  satır işaretliydi; şimdi İnternet, genişleyen proje okuma ve yeni sağ tık yeteneği işaretsiz ve nedenleriyle geliyor.
+- **Sınamalar:**
+  - Barındırıcı 1 durum:
+    - yalnız gerekçesi değişen yetenek verili kalır;
+    - yeni sunucu, dış yapay zekâ, genişleyen kapsam ve yeni yetenek verilmez;
+    - kurulan güncelleme öncekinden fazlasını almaz;
+    - bırakılan yetenek sonraki sürümde de bırakılı kalır;
+    - ilk kurulum her şeyi ister;
+    - daralan kapsam cevabı korur.
+  - Masaüstü 2: bırakılan İnternet ve kurulmayan Python katkıları sonraki sürümde de öyle kalır.
+  - Masaüstünün bütün sınamaları: 2543.

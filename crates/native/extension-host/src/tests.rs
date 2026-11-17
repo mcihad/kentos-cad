@@ -1502,3 +1502,134 @@ fn the_demo_extension_binds_whole_in_a_dry_run() {
 }
 
 mod l10n;
+
+/// An update's review starts from what the person granted the installed version (docs/adr/8057 §121, ECO-QA-11): a
+/// capability asked as before keeps the person's answer, one left out stays out; a new one and one that reaches
+/// further start ungranted. A scope that changes is a change, and a wider one.
+#[test]
+fn an_update_never_widens_what_the_person_granted() {
+    let temp = Temp::new("kapsam");
+    let mut r = open(&temp.0);
+    let with_document = |version: &str, scope: &'static str| {
+        package_with(ID, version, &[], move |m| {
+            m["requestedCapabilities"].as_array_mut().unwrap().push(
+                json!({"id": "document.read", "scope": scope, "reason": "Seçtiğiniz nesneleri okur."}),
+            );
+        })
+    };
+    let everything = Choice {
+        grant: Grant {
+            capabilities: vec![
+                Capability::DataSource,
+                Capability::Network,
+                Capability::DocumentRead,
+            ],
+            python: false,
+        },
+        enable: true,
+        replace_source: false,
+    };
+    r.install(
+        &with_document("1.0.0", "user-selected"),
+        &file_source(),
+        &everything,
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    let start = |r: &Registry, bytes: &[u8]| {
+        let review = r.review(bytes, &file_source());
+        let lines: Vec<(Capability, Change, bool)> = review
+            .capabilities
+            .iter()
+            .map(|l| (l.capability, l.change, l.wider))
+            .collect();
+        (
+            crate::starting_grant(&review.capabilities, r.grant(ID)),
+            lines,
+        )
+    };
+    // Asked as before, the reason said anew: the person's grant stands.
+    let reworded = package_with(ID, "1.1.0", &[], |m| {
+        m["requestedCapabilities"][1]["reason"] = json!("Karo sunucusundan altlığı okur.");
+        m["requestedCapabilities"].as_array_mut().unwrap().push(
+            json!({"id": "document.read", "scope": "user-selected", "reason": "Seçtiğiniz nesneleri okur."}),
+        );
+    });
+    let (granted, lines) = start(&r, &reworded);
+    assert!(
+        lines.contains(&(Capability::Network, Change::Changed, false)),
+        "{lines:?}"
+    );
+    assert_eq!(
+        granted,
+        [
+            Capability::DataSource,
+            Capability::Network,
+            Capability::DocumentRead
+        ]
+    );
+    // Reaching further: another server, data to an outside AI, the whole project where it read what the person picked;
+    // and a new capability. None of them is granted by the earlier answer.
+    let further = package_with(ID, "1.2.0", &[], |m| {
+        m["requestedCapabilities"][1]["hosts"] =
+            json!(["tiles.ornek.bel.tr", "toplayici.ornek.com"]);
+        m["requestedCapabilities"][1]["sendsDataToAi"] = json!(true);
+        let list = m["requestedCapabilities"].as_array_mut().unwrap();
+        list.push(json!({"id": "document.read", "scope": "current-project", "reason": "Seçtiğiniz nesneleri okur."}));
+        list.push(json!({"id": "files.userSelected", "scope": "user-selected", "reason": "Seçtiğiniz dosyayı okur."}));
+    });
+    let (granted, lines) = start(&r, &further);
+    assert_eq!(granted, [Capability::DataSource], "{lines:?}");
+    assert!(lines.contains(&(Capability::Network, Change::Changed, true)));
+    assert!(
+        lines.contains(&(Capability::DocumentRead, Change::Changed, true)),
+        "a scope is a change"
+    );
+    assert!(lines.contains(&(Capability::FilesUserSelected, Change::Added, false)));
+    // Installed with what the review started with: the extension has no more than before.
+    r.install(
+        &further,
+        &file_source(),
+        &Choice {
+            grant: Grant {
+                capabilities: granted,
+                python: false,
+            },
+            enable: true,
+            replace_source: false,
+        },
+    )
+    .unwrap_or_else(|p| panic!("{p:#?}"));
+    assert_eq!(r.grant(ID).unwrap().capabilities, [Capability::DataSource]);
+    // What the person left out stays out at the next version asked as before.
+    let (granted, _) = start(
+        &r,
+        &package_with(ID, "1.3.0", &[], |m| {
+            m["requestedCapabilities"][1]["hosts"] =
+                json!(["tiles.ornek.bel.tr", "toplayici.ornek.com"]);
+            m["requestedCapabilities"][1]["sendsDataToAi"] = json!(true);
+            let list = m["requestedCapabilities"].as_array_mut().unwrap();
+            list.push(json!({"id": "document.read", "scope": "current-project", "reason": "Seçtiğiniz nesneleri okur."}));
+            list.push(json!({"id": "files.userSelected", "scope": "user-selected", "reason": "Seçtiğiniz dosyayı okur."}));
+        }),
+    );
+    assert_eq!(granted, [Capability::DataSource]);
+    // A first install asks everything: the person reads each line.
+    let fresh = Temp::new("kapsam-ilk");
+    let mut other = open(&fresh.0);
+    let review = other.review(&further, &file_source());
+    assert_eq!(crate::starting_grant(&review.capabilities, None).len(), 4);
+    // A scope that reaches less is a change, not a wider one: the grant stands.
+    other
+        .install(
+            &with_document("1.0.0", "current-project"),
+            &file_source(),
+            &everything,
+        )
+        .unwrap_or_else(|p| panic!("{p:#?}"));
+    let (granted, lines) = start(&other, &with_document("1.1.0", "user-selected"));
+    assert!(
+        lines.contains(&(Capability::DocumentRead, Change::Changed, false)),
+        "{lines:?}"
+    );
+    assert!(granted.contains(&Capability::DocumentRead));
+}

@@ -37,7 +37,7 @@ pub use registry::{
 pub use store::{Channel, Grant, Source, SourceKind};
 pub use view::{
     CapabilityLine, Change, DependencyStatus, ExtensionView, NeedStatus, ProjectNeed, Review,
-    State, Trust,
+    State, Trust, starting_grant,
 };
 
 #[cfg(test)]

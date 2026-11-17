@@ -151,6 +151,11 @@ pub struct CapabilityLine {
     pub hosts: Vec<String>,
     pub sends_data_to_ai: bool,
     pub change: Change,
+    /// Changed so that it reaches further than the installed version's (docs/adr/8057 §121): a scope that reaches
+    /// further, a server it did not talk to, data sent to an outside AI it did not send. What the person granted before
+    /// does not cover it.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub wider: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
@@ -160,7 +165,7 @@ pub enum Change {
     Asked,
     /// The installed version did not ask for it.
     Added,
-    /// Asked before too; its reason, hosts or AI use changed.
+    /// Asked before too; its scope, reason, hosts or AI use changed.
     Changed,
     /// Asked before too, the same.
     Same,
@@ -222,7 +227,8 @@ pub fn capability_lines(new: &Manifest, old: Option<&Manifest>) -> Vec<Capabilit
                 (None, _) => Change::Asked,
                 (Some(_), None) => Change::Added,
                 (Some(_), Some(b))
-                    if b.reason != r.reason
+                    if b.scope != r.scope
+                        || b.reason != r.reason
                         || b.hosts != r.hosts
                         || b.sends_data_to_ai != r.sends_data_to_ai =>
                 {
@@ -237,6 +243,7 @@ pub fn capability_lines(new: &Manifest, old: Option<&Manifest>) -> Vec<Capabilit
                 hosts: r.hosts.clone(),
                 sends_data_to_ai: r.sends_data_to_ai == Some(true),
                 change,
+                wider: before.is_some_and(|b| reaches_further(b, r)),
             }
         })
         .collect();
@@ -250,11 +257,46 @@ pub fn capability_lines(new: &Manifest, old: Option<&Manifest>) -> Vec<Capabilit
                     hosts: r.hosts.clone(),
                     sends_data_to_ai: r.sends_data_to_ai == Some(true),
                     change: Change::Removed,
+                    wider: false,
                 });
             }
         }
     }
     lines
+}
+
+/// Whether `now` reaches further than `before` asked, as the catalog's review reads it: a scope that reaches further
+/// (the whole open project where it was what the person picks), a server it did not talk to, data sent to an outside AI
+/// it did not send.
+fn reaches_further(
+    before: &kentos_extensions::manifest::RequestedCapability,
+    now: &kentos_extensions::manifest::RequestedCapability,
+) -> bool {
+    now.scope.reach() > before.scope.reach()
+        || now.hosts.iter().any(|h| !before.hosts.contains(h))
+        || (now.sends_data_to_ai == Some(true) && before.sends_data_to_ai != Some(true))
+}
+
+/// What a review starts granted (docs/adr/8057 §121, ECO-QA-11): at a first install everything asked, the person reading
+/// each line; at an update what the person granted the installed version (`before`), while it is asked as before. A new
+/// capability, one that now reaches further and one the person left out start ungranted: an update never widens by
+/// itself what an extension may do. The review granted everything an update asked, and a capability the person had
+/// left out came back granted, unmarked, at the next version.
+pub fn starting_grant(
+    lines: &[CapabilityLine],
+    before: Option<&crate::store::Grant>,
+) -> Vec<Capability> {
+    let had = |c: Capability| before.is_some_and(|g| g.capabilities.contains(&c));
+    lines
+        .iter()
+        .filter(|l| match l.change {
+            Change::Asked => true,
+            Change::Same => had(l.capability),
+            Change::Changed => !l.wider && had(l.capability),
+            Change::Added | Change::Removed => false,
+        })
+        .map(|l| l.capability)
+        .collect()
 }
 
 /// What `new` changes against the installed `old` in where it runs (PY-CLOUD-14): the operating systems (none written:

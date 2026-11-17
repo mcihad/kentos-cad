@@ -17,6 +17,7 @@ mod bom;
 mod builds;
 mod catalog;
 mod demo;
+mod grants;
 mod l10n;
 mod late;
 mod python;
@@ -193,6 +194,10 @@ fn an_updates_new_capability_is_shown_and_left_out_unless_granted() {
         pending.review.installed.as_ref().map(|(v, _)| v.as_str()),
         Some("1.0.0")
     );
+    assert!(
+        !pending.granted.contains(&Capability::UiContextMenu),
+        "an update's new capability starts ungranted (docs/adr/8057 §121)"
+    );
     let _ = gis
         .extension_review_window()
         .expect("the review over the manager");
@@ -221,7 +226,18 @@ fn an_updates_new_capability_is_shown_and_left_out_unless_granted() {
             "id": "ui.contextMenu", "scope": "plugin-owned", "reason": "Katmanın sağ tık menüsüne öznitelik tablosunu ekler."
         }));
     });
-    install(&mut gis, "kent-rehberi-1.1.0.kek", again);
+    let _ = gis.extensions_event(Event::Picked(Some((
+        "kent-rehberi-1.1.0.kek".into(),
+        again,
+    ))));
+    let pending = gis.extensions.review.as_ref().unwrap();
+    assert!(
+        !pending.granted.contains(&Capability::UiContextMenu),
+        "left out before: the person grants it, not the package (docs/adr/8057 §121)"
+    );
+    assert_eq!(pending.withheld, [Capability::UiContextMenu]);
+    let _ = gis.extensions_event(Event::Grant(Capability::UiContextMenu, true));
+    let _ = gis.extensions_event(Event::Install);
     assert_eq!(gis.extensions.menus.len(), 1);
     let item = &gis.extensions.menus[0];
     assert_eq!(item.target, kentos_extensions::manifest::MenuTarget::Layer);
