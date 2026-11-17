@@ -1846,6 +1846,615 @@
       }
     },
     {
+      "name": "Cevap dayandığı kanıtı tutar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 10,
+                "yes": true,
+                "basis": " 2 zon (2 DAHIL); alanların emsal hesap tablosuyla karşılaştırılması müellifin. "
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [
+                {
+                  "no": 10,
+                  "yes": true,
+                  "basis": "2 zon (2 DAHIL); alanların emsal hesap tablosuyla karşılaştırılması müellifin."
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 10,
+                    "yes": true,
+                    "basis": "2 zon (2 DAHIL); alanların emsal hesap tablosuyla karşılaştırılması müellifin."
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 10,
+                    "yes": true,
+                    "basis": "2 zon (2 DAHIL); alanların emsal hesap tablosuyla karşılaştırılması müellifin."
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kanıt verilmezse var olan kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 10,
+                "yes": false
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [
+                {
+                  "no": 10,
+                  "yes": false,
+                  "basis": "2 zon (2 DAHIL); alanların emsal hesap tablosuyla karşılaştırılması müellifin."
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 10,
+                    "yes": false,
+                    "basis": "2 zon (2 DAHIL); alanların emsal hesap tablosuyla karşılaştırılması müellifin."
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 10,
+                    "yes": true,
+                    "basis": "2 zon (2 DAHIL); alanların emsal hesap tablosuyla karşılaştırılması müellifin."
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 10,
+                    "yes": false,
+                    "basis": "2 zon (2 DAHIL); alanların emsal hesap tablosuyla karşılaştırılması müellifin."
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kontrol formu",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "formAnswers": [
+              {
+                "no": 10,
+                "yes": true,
+                "basis": "2 zon (2 DAHIL); alanların emsal hesap tablosuyla karşılaştırılması müellifin."
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "space",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 4.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 4.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "Salon"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8077-7000-8000-000000000001",
+          "0192f5a1-8077-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Yeni kanıt eskisinin yerini alır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 10,
+                "yes": true,
+                "basis": "3 zon (3 DAHIL)"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [
+                {
+                  "no": 10,
+                  "yes": true,
+                  "basis": "3 zon (3 DAHIL)"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 10,
+                    "yes": true,
+                    "basis": "3 zon (3 DAHIL)"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 10,
+                    "yes": true,
+                    "basis": "2 zon (2 DAHIL); alanların emsal hesap tablosuyla karşılaştırılması müellifin."
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 10,
+                    "yes": true,
+                    "basis": "3 zon (3 DAHIL)"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kontrol formu",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "formAnswers": [
+              {
+                "no": 10,
+                "yes": true,
+                "basis": "2 zon (2 DAHIL); alanların emsal hesap tablosuyla karşılaştırılması müellifin."
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "space",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 4.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 4.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "Salon"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8077-7000-8000-000000000001",
+          "0192f5a1-8077-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "null kanıtı da kaldırır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 10,
+                "yes": null
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "answers": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 10,
+                    "yes": true,
+                    "basis": "2 zon (2 DAHIL); alanların emsal hesap tablosuyla karşılaştırılması müellifin."
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Kontrol formunun cevapları",
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kontrol formu",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "formAnswers": [
+              {
+                "no": 10,
+                "yes": true,
+                "basis": "2 zon (2 DAHIL); alanların emsal hesap tablosuyla karşılaştırılması müellifin."
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "space",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 4.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 4.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "Salon"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8077-7000-8000-000000000001",
+          "0192f5a1-8077-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
       "name": "Aynı cevap: değişiklik yok",
       "steps": [
         {
@@ -2531,6 +3140,216 @@
               "code": "invalid_input",
               "message": "$any",
               "path": "answers[0].note"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "null ile kanıt",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 10,
+                "yes": null,
+                "basis": "2 zon"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "$any",
+              "path": "answers[0].basis"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "formAnswers": [
+                  {
+                    "no": 10,
+                    "yes": true,
+                    "basis": "2 zon (2 DAHIL); alanların emsal hesap tablosuyla karşılaştırılması müellifin."
+                  }
+                ]
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kontrol formu",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "formAnswers": [
+              {
+                "no": 10,
+                "yes": true,
+                "basis": "2 zon (2 DAHIL); alanların emsal hesap tablosuyla karşılaştırılması müellifin."
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          },
+          {
+            "kind": "space",
+            "id": 2,
+            "layerId": "0",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 4.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 4.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "Salon"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8077-7000-8000-000000000001",
+          "0192f5a1-8077-7000-8000-000000000002"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "601 karakterlik kanıt",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 10,
+                "yes": true,
+                "basis": "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "$any",
+              "path": "answers[0].basis"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Satır sonlu kanıt",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "answers": [
+              {
+                "no": 10,
+                "yes": true,
+                "basis": "2 zon\n2 DAHIL"
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "$any",
+              "path": "answers[0].basis"
             }
           },
           "expect": {

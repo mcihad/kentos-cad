@@ -19,8 +19,13 @@ fn the_form_s_answers_round_trip_under_arch_data_10() {
 
     let mut doc = plain.clone();
     doc.settings.arch.get_or_insert_with(Default::default).form_answers = vec![
-        FormAnswer { no: 1, yes: true, note: "Bakanlığın sınırı yayımlanmadı".into() },
-        FormAnswer { no: 7, yes: false, note: String::new() },
+        FormAnswer {
+            no: 1,
+            yes: true,
+            note: "Bakanlığın sınırı yayımlanmadı".into(),
+            basis: "Dosya 0.2 MB. Bakanlığın dosya boyutu sınırı yayımlanmadı; sınırı müellif ve idare bilir.".into(),
+        },
+        FormAnswer { no: 7, yes: false, note: String::new(), basis: String::new() },
     ];
     assert!(kentos_kcad::uses_form_answers(&doc));
     assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_FORM_ANSWERS);

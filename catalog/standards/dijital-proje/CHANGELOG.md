@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 0.9.0 — 17 Kasım 2026
+
+- Cevabın eskimesi (docs/adr/8077 §7): müellifin cevabı dayandığı kanıtı (`basis`, o zamanki KentOS notu) söylüyorsa ve
+  sorunun notu artık başkaysa `form.cevapli` cevabı okumaz (`eski`), soru yeniden incelemeye kalır; `bim.denetle`
+  `digital_form_answer_stale` ile yayını durdurur. `bim.denetle`'nin satırları KentOS'un kendi notunu da taşır
+  (`gerekce`): cevabın dayanağı odur.
+
 ## 0.8.0 — 17 Kasım 2026
 
 - Müellifin cevapları çizimde (docs/adr/8077): `form.cevapli(satirlar, cevaplar)` incelemeye kalan soruların resmî

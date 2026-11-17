@@ -172,6 +172,7 @@ pub(crate) fn package(
             answer: r["cevap"].as_str().unwrap_or_default().to_owned(),
             evidence: r["kanit"].as_str().unwrap_or_default().to_owned(),
             note: r["not"].as_str().unwrap_or_default().to_owned(),
+            basis: r["gerekce"].as_str().unwrap_or_default().to_owned(),
         })
         .collect();
     let model = SheetPublishedFile {

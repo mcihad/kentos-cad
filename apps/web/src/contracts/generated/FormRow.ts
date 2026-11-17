@@ -11,4 +11,9 @@ answer: string,
 /**
  * KentOS's evidence: geçti, kaldı, inceleme.
  */
-evidence: string, note: string, };
+evidence: string, note: string, 
+/**
+ * KentOS's own note on the question, the author's answer aside: what an answer remembers as its basis
+ * (docs/adr/8077 §7).
+ */
+basis?: string, };

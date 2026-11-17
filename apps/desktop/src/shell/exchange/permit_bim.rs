@@ -31,11 +31,19 @@ pub(crate) fn switch(s: &mut State, on: bool) {
 
 /// The author's answer to question `no`: Evet, Hayır, or none (taken back).
 pub(crate) fn answer(s: &mut State, no: u8, yes: Option<bool>) {
+    // The evidence answered: the question's KentOS note in the check's report (docs/adr/8077 §7).
+    let basis = s
+        .report
+        .as_ref()
+        .and_then(|r| r.bim.as_ref())
+        .and_then(|b| b.rows.iter().find(|r| r.no == no))
+        .map(|r| r.basis.clone())
+        .unwrap_or_default();
     let Some(bim) = s.input.bim.as_mut() else { return };
     let note = bim.answers.iter().find(|a| a.no == no).map(|a| a.note.clone()).unwrap_or_default();
     bim.answers.retain(|a| a.no != no);
     if let Some(yes) = yes {
-        bim.answers.push(FormAnswer { no, yes, note });
+        bim.answers.push(FormAnswer { no, yes, note, basis });
         bim.answers.sort_by_key(|a| a.no);
     }
 }
@@ -62,7 +70,7 @@ impl App {
             .answers
             .iter()
             .filter(|a| !held.contains(a))
-            .map(|a| serde_json::json!({"no": a.no, "yes": a.yes, "note": a.note}))
+            .map(|a| serde_json::json!({"no": a.no, "yes": a.yes, "note": a.note, "basis": a.basis}))
             .collect();
         changes.extend(
             held.iter()

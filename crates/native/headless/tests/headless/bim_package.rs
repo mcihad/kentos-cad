@@ -370,3 +370,29 @@ fn the_flat_s_declared_package_holds() {
     assert_eq!(nos, [1, 5, 7, 10]);
     let _ = fs::remove_dir_all(&path);
 }
+
+/// An answer remembers the evidence it answered (docs/adr/8077 §7): answered with the report's rows' KentOS notes, the
+/// package holds; once the 10th question's evidence is another than its answer's, the answer is stale, the question
+/// open again and the publication stopped (`digital_form_answer_stale`).
+#[test]
+fn a_stale_answer_stops_the_package() {
+    let mut doc = permit_drawing(true);
+    let path = folder("eski");
+    let first = report(&publish(&mut doc, &path, CallOp::Plan, json!([])));
+    let rows = &first.bim.as_ref().expect("the package's part").rows;
+    let basis = |no: u8| rows.iter().find(|r| r.no == no).map(|r| r.basis.clone()).expect("the row");
+    assert!(basis(10).contains("zon"), "{}", basis(10));
+    let given: Vec<Value> = [1u8, 7, 10].iter().map(|&no| json!({"no": no, "yes": true, "basis": basis(no)})).collect();
+    run(&mut doc, "cad.form.answer", json!({"answers": given}));
+    let answered = report(&publish(&mut doc, &path, CallOp::Plan, json!([])));
+    assert!(answered.ready, "{:?}", answered.issues.iter().filter(|i| i.error).map(|i| &i.code).collect::<Vec<_>>());
+    // The evidence it answered is not the form's now: stale.
+    run(&mut doc, "cad.form.answer", json!({"answers": [{"no": 10, "yes": true, "basis": "3 zon (3 DAHIL); eski kanıt"}]}));
+    let stale = report(&publish(&mut doc, &path, CallOp::Plan, json!([])));
+    assert!(!stale.ready);
+    let codes: Vec<&str> = stale.issues.iter().filter(|i| i.error).map(|i| i.code.as_str()).collect();
+    assert_eq!(codes, ["digital_form_answer_stale"]);
+    let row = stale.bim.as_ref().expect("the part").rows.iter().find(|r| r.no == 10).expect("row 10");
+    assert_eq!(row.answer, "", "the stale answer is not the form's");
+    assert!(!path.exists());
+}

@@ -141,6 +141,17 @@ class MuellifCevaplari(unittest.TestCase):
         on = next(r for r in satirlar if r[0] == "10")
         self.assertEqual(on[4], "", "cevaplanmayan inceleme sorusu boş kalır")
 
+    def test_kaniti_degisen_cevap_eskir(self):
+        """ADR 8077 §7: cevap dayandığı KentOS notunu tutar; not artık başkaysa cevap okunmaz, soru yeniden açılır."""
+        satir = next(s for s in form.cevapla(KUNYE)["satirlar"] if s["no"] == 10)
+        guncel = form.cevapli([satir], [{"no": 10, "yes": True, "basis": satir["gerekce"]}])[0]
+        self.assertEqual((guncel["cevap"], guncel["muellif"], guncel["eski"]), ("Evet", True, False))
+        eski = form.cevapli([satir], [{"no": 10, "yes": True, "basis": "3 zon (3 DAHIL); eski kanıt"}])[0]
+        self.assertEqual((eski["cevap"], eski["muellif"], eski["eski"]), ("", False, True))
+        self.assertIn("yeniden cevaplayın", eski["gerekce"])
+        dayanaksiz = form.cevapli([satir], [{"no": 10, "yes": True}])[0]
+        self.assertTrue(dayanaksiz["muellif"], "dayanağı söylenmeyen cevap eskimez")
+
     def test_dosyadan_cevaplanan_soruya_cevap_okunmaz(self):
         self.assertEqual(form.tablo(KUNYE), form.tablo(KUNYE, [{"no": 4, "yes": False, "note": "Okunmaz"}]))
 

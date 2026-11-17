@@ -145,10 +145,18 @@ pub struct FormAnswer {
     #[serde(default, skip_serializing_if = "String::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
     pub note: String,
+    /// The form's evidence the author answered (the question's KentOS note then, docs/adr/8077 §7): when the form's
+    /// note is another now, the answer is stale and the question open again. Empty: not said, never stale.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub basis: String,
 }
 
 /// The longest note an answer keeps, characters: a form's cell, not a report.
 pub const MAX_FORM_NOTE: usize = 300;
+
+/// The longest evidence an answer keeps, characters: the form's longest note and a margin.
+pub const MAX_FORM_BASIS: usize = 600;
 
 impl FormAnswer {
     /// What is wrong with it: its number outside EK-9 Tablo 9.1's 1–21, or a note too long or with a control character
@@ -162,6 +170,12 @@ impl FormAnswer {
         }
         if self.note.chars().any(char::is_control) {
             return Some(("note".into(), "Not satır sonu ya da denetim karakteri içeremez; formun bir hücresidir.".into()));
+        }
+        if self.basis.chars().count() > MAX_FORM_BASIS || self.basis.chars().any(char::is_control) {
+            return Some((
+                "basis".into(),
+                format!("Cevabın dayandığı kanıt en çok {MAX_FORM_BASIS} karakterlik tek satır olur: formun notudur."),
+            ));
         }
         None
     }
@@ -229,6 +243,11 @@ pub struct FormRow {
     /// KentOS's evidence: geçti, kaldı, inceleme.
     pub evidence: String,
     pub note: String,
+    /// KentOS's own note on the question, the author's answer aside: what an answer remembers as its basis
+    /// (docs/adr/8077 §7).
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub basis: String,
 }
 
 /// The earlier delivery a publication updates (docs/adr/1320 §3).

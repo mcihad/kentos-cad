@@ -223,6 +223,7 @@
     - `settings.arch.formAnswers`, `cad.form.answer` v1 (tek geri alma adımı, mimari verisi 10); basılan form
       (`form.tablo(ifc, cevaplar)`) ve yayın aynı cevabı okur; yalnız incelemeye kalan soru müellifin cevabını alır.
     - Yayın penceresinin taslağı Denetle ve Yayınla'da çizime yazılır; çağrıda verilen cevap çizimdekinin önüne geçer.
+    - Cevap dayandığı KentOS notunu tutar (`basis`); not değişince cevap eskir, soru yeniden açılır, yayın durur (K59).
     - Bağımsız Python `.kcad` okuyucusu mimari verisi ≥1'i bilmiyor (ADR 8068'den beri): TODOS.md'de ayrı iş.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**

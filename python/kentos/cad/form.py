@@ -25,13 +25,17 @@ class _FormAnswer(LocalCommand[ArchFormAnswers, ArchFormAnswersDone, ArchFormAns
     (Dijital Proje Yön. EK-9 Tablo 9.1) KentOS'un dosyadan cevaplamadığı sorularına
     müellifin cevabını çizimde tutar (settings.arch.formAnswers): basılan form ve BIM
     ruhsat paketinin yayını onu okur. answers her biri bir soru: no (1–21), yes (true
-    Evet, false Hayır; null cevabı ve notu kaldırır) ve note (verilmezse var olan kalır,
-    boş metin kaldırır; en çok 300 karakter, satır sonu yok). Değişiklik yoksa
-    nothing_to_set; 1–21 dışında numara, iki kez verilen soru, null ile not, uzun ya da
-    denetim karakterli not invalid_input. Komut cevabı tutar; hangi sorunun onu aldığı
-    formun kuralıdır (standart paketin): KentOS'un dosyadan cevapladığı soruya verilen
-    cevap tutulur, okunmaz. Tek geri alma adımı “Kontrol formunun cevapları”; çizimin
-    geometrisi değişmez. Çıktı çizimin bütün cevapları soru sırasıyla ve sürüm.
+    Evet, false Hayır; null cevabı, notu ve dayanağı kaldırır), note (verilmezse var
+    olan kalır, boş metin kaldırır; en çok 300 karakter, satır sonu yok) ve basis
+    (cevabın dayandığı kanıt: sorunun o anki KentOS notu, yayının rows[].basis'i;
+    verilmezse var olan kalır; en çok 600 karakter, tek satır). Dayanağı söylenen
+    cevabın kanıtı sonra değişirse cevap eskir: soru yeniden müellife kalır, yayın
+    digital_form_answer_stale ile durur. Değişiklik yoksa nothing_to_set; 1–21 dışında
+    numara, iki kez verilen soru, null ile not ya da dayanak, uzun ya da denetim
+    karakterli not ya da dayanak invalid_input. Komut cevabı tutar; hangi sorunun onu
+    aldığı formun kuralıdır (standart paketin): KentOS'un dosyadan cevapladığı soruya
+    verilen cevap tutulur, okunmaz. Tek geri alma adımı “Kontrol formunun cevapları”;
+    çizimin geometrisi değişmez. Çıktı çizimin bütün cevapları soru sırasıyla ve sürüm.
     expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
     conflict olur.
     """
@@ -57,10 +61,14 @@ class _FormAnswer(LocalCommand[ArchFormAnswers, ArchFormAnswersDone, ArchFormAns
         """Kontrol formunun cevapları: Model kalite kontrol formunun (Dijital Proje Yön. EK-9
         Tablo 9.1) KentOS'un dosyadan cevaplamadığı sorularına müellifin cevabını çizimde
         tutar (settings.arch.formAnswers): basılan form ve BIM ruhsat paketinin yayını onu
-        okur. answers her biri bir soru: no (1–21), yes (true Evet, false Hayır; null cevabı
-        ve notu kaldırır) ve note (verilmezse var olan kalır, boş metin kaldırır; en çok 300
-        karakter, satır sonu yok). Değişiklik yoksa nothing_to_set; 1–21 dışında numara, iki
-        kez verilen soru, null ile not, uzun ya da denetim karakterli not invalid_input.
+        okur. answers her biri bir soru: no (1–21), yes (true Evet, false Hayır; null
+        cevabı, notu ve dayanağı kaldırır), note (verilmezse var olan kalır, boş metin
+        kaldırır; en çok 300 karakter, satır sonu yok) ve basis (cevabın dayandığı kanıt:
+        sorunun o anki KentOS notu, yayının rows[].basis'i; verilmezse var olan kalır; en
+        çok 600 karakter, tek satır). Dayanağı söylenen cevabın kanıtı sonra değişirse cevap
+        eskir: soru yeniden müellife kalır, yayın digital_form_answer_stale ile durur.
+        Değişiklik yoksa nothing_to_set; 1–21 dışında numara, iki kez verilen soru, null ile
+        not ya da dayanak, uzun ya da denetim karakterli not ya da dayanak invalid_input.
         Komut cevabı tutar; hangi sorunun onu aldığı formun kuralıdır (standart paketin):
         KentOS'un dosyadan cevapladığı soruya verilen cevap tutulur, okunmaz. Tek geri alma
         adımı “Kontrol formunun cevapları”; çizimin geometrisi değişmez. Çıktı çizimin bütün

@@ -20,8 +20,8 @@ pub const CAD_FORM_ANSWER: &str = "cad.form.answer";
 /// Its version.
 pub const CAD_FORM_ANSWER_VERSION: u32 = 1;
 
-/// One question's change: Evet (true) or Hayır (false), or null to take its answer and note away; its note, absent to
-/// keep the one it has (an empty one takes it away).
+/// One question's change: Evet (true) or Hayır (false), or null to take its answer, note and basis away; its note,
+/// absent to keep the one it has (an empty one takes it away); the evidence it answers, likewise.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -35,12 +35,18 @@ pub struct FormAnswerChange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
+    /// The form's evidence the author answered (the question's KentOS note now, a publication's `rows[].basis`);
+    /// absent: the one it has kept. An answer whose evidence changes is stale (docs/adr/8077 §7).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub basis: Option<String>,
 }
 
 /// Input of `cad.form.answer` v1.
 ///
 /// Refusals, in this order: `nothing_to_set` (no change), `invalid_input` (a number outside 1–21, a question twice, a
-/// note given with null, a note too long or with a control character), `invalid_revision`, `revision_conflict`.
+/// note or a basis given with null, a note or a basis too long or with a control character), `invalid_revision`,
+/// `revision_conflict`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

@@ -155,18 +155,25 @@ BASLIK = ["No", "Kategori / Disiplin", "Kontrol Başlığı", "Açıklama", "Eve
 
 def cevapli(satirlar: list[dict[str, Any]], cevaplar: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
     """Formun satırları müellifin cevaplarıyla (docs/adr/8077): incelemeye kalan sorunun resmî cevabı müellifin Evet'i ya
-    da Hayır'ı, notu "<not> (müellif)"; `muellif` cevabın müellifin olduğunu söyler. KentOS'un dosyadan cevapladığı
-    soruya verilen cevap okunmaz: kanıt dosyanındır."""
+    da Hayır'ı, notu "<not> (müellif)"; `muellif` cevabın müellifin olduğunu söyler, `kentos` KentOS'un kendi notunu
+    tutar. Cevap dayandığı kanıtı (`basis`: o zamanki KentOS notu) söylüyorsa ve not artık başkaysa cevap eskidir
+    (`eski`, §8): soru yeniden müellifin incelemesine kalır. KentOS'un dosyadan cevapladığı soruya verilen cevap okunmaz:
+    kanıt dosyanındır."""
     cevap = {int(c["no"]): c for c in cevaplar or []}
     out = []
     for s in satirlar:
-        s = dict(s, muellif=False)
+        s = dict(s, muellif=False, eski=False, kentos=s["gerekce"])
         c = cevap.get(s["no"])
         if s["kanit"] == INCELEME and c is not None:
-            s["cevap"] = "Evet" if c.get("yes") else "Hayır"
-            s["muellif"] = True
-            if str(c.get("note") or "").strip():
-                s["gerekce"] = f"{c['note'].strip()} (müellif)"
+            dayanak = str(c.get("basis") or "").strip()
+            if dayanak and dayanak != s["gerekce"]:
+                s["eski"] = True
+                s["gerekce"] = f"{s['gerekce']} Müellifin cevabı bu kanıttan önce verildi: soruyu yeniden cevaplayın."
+            else:
+                s["cevap"] = "Evet" if c.get("yes") else "Hayır"
+                s["muellif"] = True
+                if str(c.get("note") or "").strip():
+                    s["gerekce"] = f"{c['note'].strip()} (müellif)"
         out.append(s)
     return out
 

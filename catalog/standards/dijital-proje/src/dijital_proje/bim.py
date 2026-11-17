@@ -13,7 +13,9 @@ Cevap bir sözlüktür:
   cevaplı inceleme soruları); hepsi hatadır;
 - ``sonuclar``: beş sonuç ayrı (ifc-uyum §1): dosya okunuyor, şema, Türkiye profili, model ile pafta uyumu, idare kabulü;
   her biri anahtarı, tuttuğu (``None``: makinenin değil) ve sözüyle;
-- ``satirlar``: formun 21 satırı, resmî cevabıyla (kanıttan; incelemede müellifin cevabı) ve kanıtıyla.
+- ``satirlar``: formun 21 satırı, resmî cevabıyla (kanıttan; incelemede müellifin cevabı), kanıtıyla ve KentOS'un kendi
+  notuyla (``gerekce``: müellifin cevabının dayanağı, ADR 8077 §7). Kanıtı cevaptan sonra değişen inceleme sorusu
+  ``digital_form_answer_stale`` ile yayını durdurur.
 """
 
 from __future__ import annotations
@@ -38,7 +40,13 @@ def denetle(cizim: dict[str, Any], ifc: dict[str, Any], cevaplar: list[dict[str,
             bulgular.extend(b for b in s["bulgular"] if b.get("severity", "error") == "error")
             (model_kalan if s["no"] == 21 else profil_kalan).append(s["no"])
         elif s["kanit"] == form.INCELEME:
-            if not s["muellif"]:
+            if s["eski"]:
+                profil_kalan.append(s["no"])
+                bulgular.append(_bulgu(s, "digital_form_answer_stale",
+                                       f"Formun {s['no']}. sorusunun kanıtı müellifin cevabından sonra değişti: "
+                                       f"{s['baslik']}. {s['kentos']}",
+                                       "Soruyu yeniden inceleyip Evet ya da Hayır olarak cevaplayın."))
+            elif not s["muellif"]:
                 profil_kalan.append(s["no"])
                 bulgular.append(_bulgu(s, "digital_form_unanswered",
                                        f"Formun {s['no']}. sorusu müellifin cevabını bekliyor: {s['baslik']}. {s['gerekce']}",
@@ -48,7 +56,8 @@ def denetle(cizim: dict[str, Any], ifc: dict[str, Any], cevaplar: list[dict[str,
                 bulgular.append(_bulgu(s, "digital_form_author_no",
                                        f"Formun {s['no']}. sorusunu müellif Hayır cevapladı: {s['baslik']}",
                                        "Eksikliği giderin ya da cevabı gözden geçirin; Hayır cevaplı form teslim edilmez."))
-        satirlar.append({"no": s["no"], "baslik": s["baslik"], "cevap": resmi, "kanit": s["kanit"], "not": not_})
+        satirlar.append({"no": s["no"], "baslik": s["baslik"], "cevap": resmi, "kanit": s["kanit"], "not": not_,
+                         "gerekce": s["kentos"]})
     hatalar = [f for f in ifc.get("findings") or [] if f.get("severity") == "error"]
     turetim = [b for b in paket if str(b.get("code", "")).startswith(("digital_derived", "digital_free"))]
     sonuclar = [

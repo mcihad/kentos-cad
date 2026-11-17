@@ -188,12 +188,18 @@ fn the_author_s_answers_are_the_drawing_s_and_the_printed_form_shows_them() {
     let path = folder("cevap");
     permit_publication(&mut app, &path);
     let _ = app.sheet_publish_event(Publish::Bim(true));
+    // As the window shows them: the questions come with a check.
+    check(&mut app);
     let _ = app.sheet_publish_event(Publish::BimAnswer(1, Some(true)));
     let _ = app.sheet_publish_event(Publish::BimNote(1, "Bakanlığın sınırı yayımlanmadı".into()));
     assert!(model(&app).form_answers().is_empty(), "the window holds them until Denetle");
     check(&mut app);
-    let held = kentos_commands::FormAnswer { no: 1, yes: true, note: "Bakanlığın sınırı yayımlanmadı".into() };
-    assert_eq!(model(&app).form_answers(), [held.clone()]);
+    let stored = model(&app).form_answers().to_vec();
+    assert_eq!(stored.len(), 1);
+    let held = stored[0].clone();
+    assert_eq!((held.no, held.yes, held.note.as_str()), (1, true, "Bakanlığın sınırı yayımlanmadı"));
+    // It remembers the evidence it answered: the question's KentOS note (docs/adr/8077 §7).
+    assert!(held.basis.starts_with("Dosya ") && held.basis.contains("MB"), "{}", held.basis);
     // The printed form: the question's official answer and the author's note.
     let rows = crate::ifc_facts::form_rows(&model(&app)).expect("the form");
     let one = rows.iter().find(|r| r[0] == "1").expect("row 1");

@@ -93,10 +93,28 @@ kesit binasını açar (`fixtures/arch/v1/kesit-binasi-tam.kcad`; `KENTOS_WRITE_
 `file.publish.sheets`'i `bim` ile çağırır ve müellife kalan sorularda durdurulur (hiçbir şey yazılmaz); `cad.form.answer`
 ile cevaplar, yeniden yayımlar: beş sonuçtan dördü Tutuyor, model klasörde, formun kaydında çizimin cevapları.
 
-## §7. Açık işler
+## §7. Cevabın eskimesi (K59)
 
-- **Cevabın eskimesi:** model değişince bir cevap eskiyebilir (10. sorunun alan tabloları gibi); cevap modelin revizyonunu
-  taşımıyor, uyarı yok.
+**Karar.** Cevap dayandığı kanıtı tutar (`FormAnswer.basis`: cevaplandığı andaki KentOS notu; en çok 600 karakter, tek
+satır). Formun kuralı (`form.cevapli`) sorunun şimdiki KentOS notunu dayanakla karşılaştırır: farklıysa cevap eskidir —
+soru yeniden müellife kalır, resmî cevap boş, not "Müellifin cevabı bu kanıttan önce verildi: soruyu yeniden cevaplayın";
+yayında `digital_form_answer_stale` hatası yayını durdurur. Dayanak söylenmemişse cevap eskimez (eski çizimlerin ve
+dayanak vermeyen ajanların cevapları).
+
+- **Neden kanıt, sürüm değil:** çizimin sürümü her değişiklikte (bir yazı, bir pafta) artar; cevabı ona bağlamak her
+  düzenlemede bütün cevapları eskitirdi. Sorunun KentOS notu tam onun kanıtını söyler: 1. soruda dosyanın boyutu (0,1 MB'a
+  yuvarlı), 10. soruda zonların sayısı ve durumu; 7. ve 18. sorunun notu sabittir, cevapları kanıttan eskimez.
+- **Dayanağı kim verir:** yayının satırları KentOS'un kendi notunu taşır (`FormRow.basis`, Python'da `gerekce`); masaüstü
+  penceresi Evet/Hayır'ı o notla yazar; ajan `rows[].basis`'i `cad.form.answer`'ın `basis`'ine verir.
+- **Sınama:** paket (`test_form.MuellifCevaplari.test_kaniti_degisen_cevap_eskir`, `test_bim.…yayini_durdurur`),
+  başsız (`a_stale_answer_stops_the_package`: raporun dayanaklarıyla geçer, 10. sorunun dayanağı başka olunca durur),
+  masaüstü (pencerenin yazdığı cevap 1. sorunun "Dosya … MB" notunu taşır), ortak durumlar (33: dayanağın tutulması,
+  kalması, değişmesi, kaldırılması, retleri).
+
+## §8. Açık işler
+
+- **7. sorunun eskimesi:** gelişim seviyesi notu sabit; model ne kadar değişirse değişsin cevabı kanıttan eskimez (EK-8'in
+  ölçüsü KentOS'ta yok).
 - **Bağımsız Python `.kcad` okuyucusu** (`tools/kcad/kcad.py`) mimari verisi 1–10'u bilmiyor (`MODULE_VERSIONS` arch 0):
   ADR 8068'den beri her mimari sürüm artışında güncellenmedi. Python SDK'nın tipli katmanından ortak durumlar
   (`test_command_cases`) mimari verisi ≥1 olan ilk belgede duruyor; bu dilimin durumları da oradan geçemiyor. Ayrı iş:

@@ -7,10 +7,12 @@ and 7th questions, the 1st with a note.
 
 The rules (ADR 8077 §2):
 - `answers` empty: nothing_to_set at `answers`.
-- Each change in its order: a question given before: invalid_input at `answers[i].no`; null with a note: invalid_input at
-  `answers[i].note`; null: its number 1–21 (else invalid_input at `answers[i].no`), its answer and note taken away.
-  Evet/Hayır: its note the given one with its ends' white space taken away, else the one it has (none: empty); then its
-  number 1–21 (`answers[i].no`), its note at most 300 characters and without a control character (`answers[i].note`).
+- Each change in its order: a question given before: invalid_input at `answers[i].no`; null with a note or a basis:
+  invalid_input at `answers[i].note` (the note first), else `answers[i].basis`; null: its number 1–21 (else
+  invalid_input at `answers[i].no`), its answer, note and basis taken away. Evet/Hayır: its note and its basis the given
+  ones with their ends' white space taken away, else the ones it has (none: empty); then its number 1–21
+  (`answers[i].no`), its note at most 300 characters and without a control character (`answers[i].note`), its basis at
+  most 600 and without one (`answers[i].basis`).
 - Then expectedRevision (invalid_revision, revision_conflict). Any refusal writes nothing.
 - The answers by question; a note empty is not written. Nothing changed: no undo step, the drawing not dirty.
 - One undo step “Kontrol formunun cevapları”. The answer: the drawing's answers then, by question; the revision.
@@ -27,6 +29,7 @@ OUT = ROOT / "fixtures/commands/v1/cad.form.answer.json"
 COMMAND = "cad.form.answer"
 STEP = "Kontrol formunun cevapları"
 MAX_NOTE = 300
+MAX_BASIS = 600
 
 
 def U(n):
@@ -92,21 +95,26 @@ def run(d, inp):
         if c["yes"] is None:
             if "note" in c:
                 return refusal("invalid_input", f"answers[{i}].note"), d
+            if "basis" in c:
+                return refusal("invalid_input", f"answers[{i}].basis"), d
             if not 1 <= c["no"] <= 21:
                 return refusal("invalid_input", f"answers[{i}].no"), d
             now = [a for a in now if a["no"] != c["no"]]
             continue
-        if "note" in c:
-            note = c["note"].strip()
-        else:
-            note = next((a.get("note", "") for a in now if a["no"] == c["no"]), "")
+        held = next((a for a in now if a["no"] == c["no"]), {})
+        note = c["note"].strip() if "note" in c else held.get("note", "")
+        basis = c["basis"].strip() if "basis" in c else held.get("basis", "")
         if not 1 <= c["no"] <= 21:
             return refusal("invalid_input", f"answers[{i}].no"), d
         if len(note) > MAX_NOTE or control(note):
             return refusal("invalid_input", f"answers[{i}].note"), d
+        if len(basis) > MAX_BASIS or control(basis):
+            return refusal("invalid_input", f"answers[{i}].basis"), d
         a = {"no": c["no"], "yes": c["yes"]}
         if note:
             a["note"] = note
+        if basis:
+            a["basis"] = basis
         now = [x for x in now if x["no"] != c["no"]] + [a]
     rev = inp.get("expectedRevision")
     if rev is not None:
@@ -195,6 +203,14 @@ def cases():
     case("Dosyadan cevaplanan soruya verilen cevap da tutulur", written([{"no": 9, "yes": True}]))
     case("Yeni soru eklenir, öbürleri kalır", written([{"no": 10, "yes": False, "note": "Bir zon eksik"}], setup=held),
          setup=held)
+    based = drawing([{"no": 10, "yes": True,
+                      "basis": "2 zon (2 DAHIL); alanların emsal hesap tablosuyla karşılaştırılması müellifin."}])
+    case("Cevap dayandığı kanıtı tutar", written([{"no": 10, "yes": True, "basis":
+                                                  " 2 zon (2 DAHIL); alanların emsal hesap tablosuyla karşılaştırılması müellifin. "}]))
+    case("Kanıt verilmezse var olan kalır", written([{"no": 10, "yes": False}], setup=based), setup=based)
+    case("Yeni kanıt eskisinin yerini alır", written([{"no": 10, "yes": True, "basis": "3 zon (3 DAHIL)"}], setup=based),
+         setup=based)
+    case("null kanıtı da kaldırır", written([{"no": 10, "yes": None}], setup=based), setup=based)
     # Nothing changed.
     case("Aynı cevap: değişiklik yok", unchanged([{"no": 7, "yes": True}], setup=held), setup=held)
     case("Cevabı olmayan sorunun null'ı: değişiklik yok", unchanged([{"no": 10, "yes": None}], setup=held), setup=held)
@@ -207,6 +223,9 @@ def cases():
     case("null ile not", refused([{"no": 1, "yes": None, "note": "Not"}], setup=held), setup=held)
     case("301 karakterlik not", refused([{"no": 1, "yes": True, "note": "a" * (MAX_NOTE + 1)}]))
     case("Satır sonlu not", refused([{"no": 1, "yes": True, "note": "İlk satır\nİkinci satır"}]))
+    case("null ile kanıt", refused([{"no": 10, "yes": None, "basis": "2 zon"}], setup=based), setup=based)
+    case("601 karakterlik kanıt", refused([{"no": 10, "yes": True, "basis": "k" * (MAX_BASIS + 1)}]))
+    case("Satır sonlu kanıt", refused([{"no": 10, "yes": True, "basis": "2 zon\n2 DAHIL"}]))
     case("Biri geçersizse hiçbiri yazılmaz", refused([{"no": 1, "yes": True}, {"no": 30, "yes": True}], setup=held),
          setup=held)
     case("Sürüm sayı değil", refused([{"no": 1, "yes": True}], expectedRevision="abc"))

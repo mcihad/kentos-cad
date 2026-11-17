@@ -16995,7 +16995,8 @@ class ArchFormAnswers(_Model):
     """Input of `cad.form.answer` v1.
 
     Refusals, in this order: `nothing_to_set` (no change), `invalid_input` (a number outside 1–21, a question twice, a
-    note given with null, a note too long or with a control character), `invalid_revision`, `revision_conflict`.
+    note or a basis given with null, a note or a basis too long or with a control character), `invalid_revision`,
+    `revision_conflict`.
     """
     answers: list[FormAnswerChange]
     expected_revision: str | None | Unset = UNSET
@@ -41729,16 +41730,21 @@ class FormAnswer(_Model):
     Attributes:
         no: The question's number in EK-9 Tablo 9.1 (1–21). Unit: index.
         yes: Evet (true) or Hayır (false).
+        basis: The form's evidence the author answered (the question's KentOS note then, docs/adr/8077 §7): when the form's
+            note is another now, the answer is stale and the question open again. Empty: not said, never stale.
         note: What the author says of it, written on the form.
     """
     no: int
     yes: bool
+    basis: str | Unset = UNSET
     note: str | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["no"] = self.no
         out["yes"] = self.yes
+        if self.basis is not UNSET:
+            out["basis"] = self.basis
         if self.note is not UNSET:
             out["note"] = self.note
         return out
@@ -41748,24 +41754,30 @@ class FormAnswer(_Model):
         return cls(
             no=data["no"],
             yes=data["yes"],
+            basis=data.get("basis", UNSET),
             note=data.get("note", UNSET),
         )
 
 
 @dataclass(kw_only=True, slots=True)
 class FormAnswerChange(_Model):
-    """One question's change: Evet (true) or Hayır (false), or null to take its answer and note away; its note, absent to
-    keep the one it has (an empty one takes it away).
+    """One question's change: Evet (true) or Hayır (false), or null to take its answer, note and basis away; its note,
+    absent to keep the one it has (an empty one takes it away); the evidence it answers, likewise.
     Attributes:
         no: The question's number in EK-9 Tablo 9.1 (1–21). Unit: index.
+        basis: The form's evidence the author answered (the question's KentOS note now, a publication's `rows[].basis`);
+            absent: the one it has kept. An answer whose evidence changes is stale (docs/adr/8077 §7).
     """
     no: int
+    basis: str | None | Unset = UNSET
     note: str | None | Unset = UNSET
     yes: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["no"] = self.no
+        if self.basis is not UNSET:
+            out["basis"] = self.basis
         if self.note is not UNSET:
             out["note"] = self.note
         if self.yes is not UNSET:
@@ -41776,6 +41788,7 @@ class FormAnswerChange(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> FormAnswerChange:
         return cls(
             no=data["no"],
+            basis=data.get("basis", UNSET),
             note=data.get("note", UNSET),
             yes=data.get("yes", UNSET),
         )
@@ -42312,12 +42325,15 @@ class FormRow(_Model):
         no: Unit: index.
         answer: Evet, Hayır, or empty while the author has not answered.
         evidence: KentOS's evidence: geçti, kaldı, inceleme.
+        basis: KentOS's own note on the question, the author's answer aside: what an answer remembers as its basis
+            (docs/adr/8077 §7).
     """
     no: int
     title: str
     answer: str
     evidence: str
     note: str
+    basis: str | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -42326,6 +42342,8 @@ class FormRow(_Model):
         out["answer"] = self.answer
         out["evidence"] = self.evidence
         out["note"] = self.note
+        if self.basis is not UNSET:
+            out["basis"] = self.basis
         return out
 
     @classmethod
@@ -42336,6 +42354,7 @@ class FormRow(_Model):
             answer=data["answer"],
             evidence=data["evidence"],
             note=data["note"],
+            basis=data.get("basis", UNSET),
         )
 
 

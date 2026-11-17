@@ -73,6 +73,17 @@ class Paket(unittest.TestCase):
         self.assertEqual(kodlar(r), ["digital_form_author_no"] * 3)
         self.assertEqual({s["no"]: s["cevap"] for s in r["satirlar"]}[7], "Hayır")
 
+    def test_kaniti_degisen_cevap_yayini_durdurur(self):
+        """ADR 8077 §7: satırlar KentOS'un notunu taşır; o nota dayanan cevap geçer, başka nota dayanan durdurur."""
+        f = tam(teslim("kesit-binasi-kunye"))
+        satir = {s["no"]: s for s in bim.denetle(CIZIM, f, cevaplar())["satirlar"]}
+        dayanakli = [dict(c, basis=satir[c["no"]]["gerekce"]) for c in cevaplar()]
+        self.assertEqual(bim.denetle(CIZIM, f, dayanakli)["bulgular"], [])
+        dayanakli[2]["basis"] = "3 zon (3 DAHIL); eski kanıt"
+        r = bim.denetle(CIZIM, f, dayanakli)
+        self.assertEqual(kodlar(r), ["digital_form_answer_stale"])
+        self.assertIs(r["sonuclar"][2]["holds"], False)
+
     def test_kalan_form_satiri_durdurur(self):
         r = bim.denetle(CIZIM, teslim("kesit-binasi-kunye"), cevaplar())
         self.assertIn("digital_required_field", kodlar(r))

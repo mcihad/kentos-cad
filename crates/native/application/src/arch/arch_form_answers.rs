@@ -4,7 +4,8 @@
 //! them; the shared cases are `fixtures/commands/v1/cad.form.answer.json` (`scripts/fixtures/form_answers_cases.py`).
 //!
 //! The checks, in order (the first that fails answers): a change at all (`nothing_to_set`); each change's number in
-//! 1–21, no question twice, no note with null, a note a form's cell holds (`invalid_input`); the expected revision.
+//! 1–21, no question twice, no note or basis with null, a note a form's cell holds and a one-line basis
+//! (`invalid_input`); the expected revision.
 
 use kentos_commands::{ArchFormAnswers, ArchFormAnswersDone, CommandResult, FormAnswer};
 use kentos_domain::Document;
@@ -45,11 +46,12 @@ fn check(doc: &Document, input: &ArchFormAnswers) -> Result<Vec<FormAnswer>, Sto
         }
         match c.yes {
             None => {
-                if c.note.is_some() {
+                if c.note.is_some() || c.basis.is_some() {
+                    let field = if c.note.is_some() { "note" } else { "basis" };
                     return Err(fail(
                         codes::INVALID_INPUT,
-                        format!("{}. sorunun cevabı kaldırılırken not verilemez; notu bir cevapla verin.", c.no),
-                        format!("answers[{i}].note"),
+                        format!("{}. sorunun cevabı kaldırılırken not ya da dayanak verilemez; onları bir cevapla verin.", c.no),
+                        format!("answers[{i}].{field}"),
                     ));
                 }
                 if !(1..=21).contains(&c.no) {
@@ -62,11 +64,16 @@ fn check(doc: &Document, input: &ArchFormAnswers) -> Result<Vec<FormAnswer>, Sto
                 next.retain(|a| a.no != c.no);
             }
             Some(yes) => {
+                let held = next.iter().find(|a| a.no == c.no);
                 let note = match &c.note {
                     Some(n) => n.trim().to_owned(),
-                    None => next.iter().find(|a| a.no == c.no).map(|a| a.note.clone()).unwrap_or_default(),
+                    None => held.map(|a| a.note.clone()).unwrap_or_default(),
                 };
-                let answer = FormAnswer { no: c.no, yes, note };
+                let basis = match &c.basis {
+                    Some(b) => b.trim().to_owned(),
+                    None => held.map(|a| a.basis.clone()).unwrap_or_default(),
+                };
+                let answer = FormAnswer { no: c.no, yes, note, basis };
                 if let Some((field, why)) = answer.problem() {
                     return Err(fail(codes::INVALID_INPUT, why, format!("answers[{i}].{field}")));
                 }

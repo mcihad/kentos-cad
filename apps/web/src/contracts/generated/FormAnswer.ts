@@ -15,4 +15,9 @@ yes: boolean,
 /**
  * What the author says of it, written on the form.
  */
-note?: string, };
+note?: string, 
+/**
+ * The form's evidence the author answered (the question's KentOS note then, docs/adr/8077 §7): when the form's
+ * note is another now, the answer is stale and the question open again. Empty: not said, never stale.
+ */
+basis?: string, };
