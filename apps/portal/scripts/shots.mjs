@@ -289,6 +289,16 @@ const b64 = (bytes) => Buffer.from(bytes).toString('base64');
   const b = await signIn('sistem', ADMIN_PASSWORD);
   await open(b, '#/sistem/kayit');
   await shot(b, '80-sistem-reddedilen-dosyalar');
+  await open(b, '#/sistem/ayarlar');
+  await shot(b, '81-sistem-bildirim-kanallari');
+  b.close();
+}
+{
+  const b = await signIn('ayse.yilmaz', PASSWORD, { width: 1560, height: 1400 });
+  await open(b, '#/hesabim');
+  await b.eval(`[...document.querySelectorAll('.panel')].find((p) => p.textContent.includes('Bildirimler'))?.scrollIntoView({ block: 'start' }); true`);
+  await sleep(300);
+  await shot(b, '82-hesabim-bildirimler');
   b.close();
 }
 

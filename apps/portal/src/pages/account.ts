@@ -1,10 +1,10 @@
 // The account itself (docs/adr/9000 §12), the same for everyone on the portal: the password, the sessions open on
 // browsers and devices, and the personal access tokens a script or an AI agent signs in with.
 import { account, portal } from '../api/portal';
-import type { ApiTokenCreated, ApiTokenView, SessionView, TokenScope } from '../api/types';
+import type { ApiTokenCreated, ApiTokenView, NotificationSettings, SessionView, TokenScope } from '../api/types';
 import { h } from '../lib/dom';
 import { moment, since } from '../lib/format';
-import { form, formError, selectField, textField, values } from '../ui/forms';
+import { checked, form, formError, selectField, switchField, textField, values } from '../ui/forms';
 import { confirm, openDialog } from '../ui/dialog';
 import { type IconName, icon } from '../ui/icons';
 import { badge, button, empty, pageHeader, panel, table, twoLine } from '../ui/kit';
@@ -223,8 +223,64 @@ function passwordPanel(): HTMLElement {
   );
 }
 
+const DELIVERY: Record<string, { tone: 'success' | 'info' | 'danger'; label: string }> = {
+  sent: { tone: 'success', label: 'Gönderildi' },
+  pending: { tone: 'info', label: 'Bekliyor' },
+  failed: { tone: 'danger', label: 'Gönderilemedi' },
+};
+
+function notificationsPanel(n: NotificationSettings, reload: () => void): HTMLElement {
+  const offered = n.emailOffered || n.smsOffered;
+  const emailHint = !n.emailOffered
+    ? 'Sistem yöneticisi e-posta bildirimini açmamış.'
+    : !n.emailAddress
+      ? 'Hesabınızda e-posta adresi yok.'
+      : n.emailVerified
+        ? `${n.emailAddress} adresine.`
+        : `${n.emailAddress} henüz doğrulanmadı; doğrulanana kadar e-posta gitmez.`;
+  const f = form(
+    [
+      switchField({ label: 'Bildirimler e-posta ile de gelsin', name: 'email', checked: n.email, hint: emailHint }),
+      switchField({ label: 'Bildirimler SMS ile de gelsin', name: 'sms', checked: n.sms, hint: n.smsOffered ? 'Kısa bir ileti ve dosyanın bağlantısı.' : 'Sistem yöneticisi SMS bildirimini açmamış.' }),
+      textField({ label: 'Cep telefonu', name: 'phone', value: n.phone, placeholder: '0532 123 45 67', autocomplete: 'tel', hint: 'SMS için gerekir.' }),
+      formError(),
+      h('div', { class: 'form-actions' }, button('Kaydet', { type: 'submit' })),
+    ],
+    async (el) => {
+      const v = values(el);
+      await account.setNotificationSettings({ email: checked(el, 'email'), sms: checked(el, 'sms'), phone: v.phone.trim() || null });
+      toast('Bildirim tercihleriniz kaydedildi.');
+      reload();
+    },
+  );
+  const recent = n.recent.length
+    ? h(
+        'div',
+        { class: 'panel-section' },
+        h('div', { class: 'field-label' }, 'Son gönderilenler'),
+        h(
+          'ul',
+          { class: 'list-plain delivery-list' },
+          ...n.recent.slice(0, 6).map((d) =>
+            h(
+              'li',
+              { title: d.lastError ?? '' },
+              icon(d.channel === 'sms' ? 'phone' : 'message', 15),
+              h('span', { class: 'delivery-title' }, d.title),
+              h('span', { class: 'muted num' }, since(d.sentAt ?? d.createdAt)),
+              badge(DELIVERY[d.state]?.tone ?? 'info', DELIVERY[d.state]?.label ?? d.state),
+            ),
+          ),
+        ),
+      )
+    : null;
+  return panel('Bildirimler', h('div', null, f, recent), {
+    note: offered ? 'Zildeki bildirimler her zaman gelir.' : 'Bildirimler yalnız portalda görünür.',
+  });
+}
+
 export const accountPage: PageFn = async ({ reload }) => {
-  const [sessions, tokens] = await Promise.all([account.sessions(), account.tokens()]);
+  const [sessions, tokens, notifications] = await Promise.all([account.sessions(), account.tokens(), account.notificationSettings()]);
   const body = h(
     'div',
     { class: 'page' },
@@ -234,7 +290,8 @@ export const accountPage: PageFn = async ({ reload }) => {
       { class: 'stack' },
       sessionsPanel(sessions, reload),
       tokensPanel(tokens, reload),
-      h('div', { class: 'cols-2' }, passwordPanel(), panel('API', h(
+      h('div', { class: 'cols-2' }, notificationsPanel(notifications, reload), passwordPanel()),
+      h('div', { class: 'cols-2' }, panel('API', h(
         'div',
         { class: 'stack', style: 'gap: 8px' },
         h('p', { class: 'panel-text' }, 'Masaüstü, mobil uygulama ve ajanlar aynı API’yi kullanır. Uçların tamamı, gövdeleri ve hataları makinenin okuyacağı biçimde:'),

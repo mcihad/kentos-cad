@@ -12,6 +12,8 @@ mod access_tests;
 #[cfg(test)]
 mod cloud_files_tests;
 #[cfg(test)]
+mod delivery_tests;
+#[cfg(test)]
 mod addresses_tests;
 pub mod auth;
 #[cfg(test)]

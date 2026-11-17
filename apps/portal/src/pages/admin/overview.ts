@@ -93,8 +93,28 @@ export const adminSettings: PageFn = async ({ reload }) => {
       h('div', { class: 'form-actions' }, button('Kaydet', { kind: 'primary', type: 'submit' })),
     ],
     async (el) => {
-      await platform.setSettings(checked(el, 'signup'));
+      await platform.setSettings({ signupOpen: checked(el, 'signup') });
       toast('Platform ayarları kaydedildi.');
+      reload();
+    },
+  );
+  const way = (w: string | null) =>
+    w === 'sendmail' ? 'sunucunun e-posta programıyla (sendmail)' : w === 'webhook' ? 'kurumun ağ geçidine imzalı istekle' : w === 'folder' ? 'klasöre dosya olarak' : null;
+  const channel = (w: string | null, mail: boolean) =>
+    w
+      ? `Bu sunucu ${mail ? 'e-postayı' : 'SMS’i'} ${way(w)} gönderir.`
+      : `Bu sunucuda ${mail ? 'e-posta' : 'SMS'} gönderimi kurulmamış (KENTOS_${mail ? 'MAIL' : 'SMS'}_TRANSPORT): açılsa da ileti gitmez.`;
+  const notify = form(
+    [
+      switchField({ label: 'Bildirimler e-posta ile de gitsin', name: 'email', checked: s.emailNotifications, hint: channel(s.emailTransport ?? null, true) }),
+      switchField({ label: 'Bildirimler SMS ile de gitsin', name: 'sms', checked: s.smsNotifications, hint: channel(s.smsTransport ?? null, false) }),
+      h('div', { class: 'field-hint' }, 'Kişiler kendi tercihlerini Hesabım sayfasından seçer: e-posta yalnız doğrulanmış adrese, SMS yalnız numarasını verip açana gider.'),
+      formError(),
+      h('div', { class: 'form-actions' }, button('Kaydet', { type: 'submit' })),
+    ],
+    async (el) => {
+      await platform.setSettings({ emailNotifications: checked(el, 'email'), smsNotifications: checked(el, 'sms') });
+      toast('Bildirim kanalları kaydedildi.');
       reload();
     },
   );
@@ -102,7 +122,7 @@ export const adminSettings: PageFn = async ({ reload }) => {
     'div',
     { class: 'page' },
     pageHeader({ title: 'Platform ayarları', lead: 'Bütün kurumlar için geçerli ayarlar. Her değişiklik denetim kaydına geçer.' }),
-    h('div', { class: 'cols-2' }, panel('Kayıt', f), panel('Giriş', h('div', { class: 'stack', style: 'gap: 8px' }, h('div', null, 'Şimdilik yerel hesaplarla giriş yapılıyor (giriş adı ve parola).'), h('div', { class: 'muted' }, 'Kurumun kendi kimlik sunucusuyla giriş (OpenID Connect) sunucuda hazır; portala sonraki adımda eklenecek.')))),
+    h('div', { class: 'cols-2' }, h('div', { class: 'stack' }, panel('Kayıt', f), panel('Bildirim kanalları', notify)), panel('Giriş', h('div', { class: 'stack', style: 'gap: 8px' }, h('div', null, 'Şimdilik yerel hesaplarla giriş yapılıyor (giriş adı ve parola).'), h('div', { class: 'muted' }, 'Kurumun kendi kimlik sunucusuyla giriş (OpenID Connect) sunucuda hazır; portala sonraki adımda eklenecek.')))),
   );
   return { crumbs: [{ label: 'Sistem yönetimi', href: '#/sistem' }, { label: 'Platform ayarları' }], body };
 };

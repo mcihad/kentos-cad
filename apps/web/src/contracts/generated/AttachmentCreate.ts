@@ -7,8 +7,8 @@ export type AttachmentCreate = { uploadId: string,
 /**
  * A word on what it is (“Zemin etüdü, 2. sondaj”), at most 2000 characters.
  */
-note: string | null, 
+note?: string | null, 
 /**
  * The drawing's revision it goes with (a file project's), if any.
  */
-revision: bigint | null, };
+revision?: bigint | null, };

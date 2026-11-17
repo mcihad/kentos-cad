@@ -11,4 +11,4 @@ purpose: string,
 /**
  * A document type of the portal's catalogue (`GET /v1/portal/catalog`); absent: found from the name.
  */
-docType: string | null, };
+docType?: string | null, };

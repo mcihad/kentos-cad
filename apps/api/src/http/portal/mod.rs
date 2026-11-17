@@ -28,6 +28,10 @@ pub fn routes() -> Router<AppState> {
         .route("/v1/portal/municipalities", get(me::municipalities))
         .route("/v1/me/notifications", get(me::notifications))
         .route("/v1/me/notifications/read", post(me::read))
+        .route(
+            "/v1/me/notification-settings",
+            get(me::notification_settings).put(me::set_notification_settings),
+        )
         .route("/v1/me/dossiers", get(dossiers::mine).post(dossiers::apply))
         .route("/v1/me/dossiers/summary", get(dossiers::my_summary))
         .route("/v1/platform/summary", get(platform::summary))

@@ -521,4 +521,14 @@ pub struct PlatformEventView {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct PlatformSettings {
     pub signup_open: bool,
+    /// Notifications also go out by e-mail / SMS (docs/adr/9000 §17).
+    #[serde(default)]
+    pub email_notifications: bool,
+    #[serde(default)]
+    pub sms_notifications: bool,
+    /// How this server sends them (`sendmail`, `webhook`, `folder`); none: it is not set up to.
+    #[serde(default)]
+    pub email_transport: Option<String>,
+    #[serde(default)]
+    pub sms_transport: Option<String>,
 }

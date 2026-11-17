@@ -53,13 +53,15 @@ sıradakileri tutar. Bir madde ancak sınaması ve gerçek pencerede görüntüs
   projenin ekleri, `ETag`/`Range`/`?inline=1` indirme; başvuru belgeleri de bu yoldan (ADR 9000 §13, §15).
 - [x] `BUL-25` **Çizimin resmi:** `preview.svg` projenin ve dosyadaki KCAD belgesinin çizimini sunucuda SVG'ye çevirir;
   portalda proje sayfası çizim, ekler ve revizyonlarla (ADR 9000 §15).
+- [x] `BUL-11` **E-posta ve SMS bildirimi:** sistem yöneticisi kanalı açar, kişi Hesabım'da seçer (e-posta yalnız
+  doğrulanmış adrese); giden kutusu, `sendmail` / imzalı webhook / klasör, yeniden deneme. Yeni bağımlılık yok; doğrudan
+  SMTP ve hazır SMS sağlayıcıları sahibin onayına kalır (ADR 9000 §17).
 - [x] `BUL-26` **API'nin açıklaması:** `GET /v1/openapi.json` (OpenAPI 3.1, 120 işlem), `GET /v1/llms.txt`,
   `docs/api/README.md`; testler kataloğu yönlendiriciyle eşit tutar (ADR 9000 §16).
 
 ## Sıradakiler
 
 - [ ] `BUL-10` Portala kurum kimliğiyle giriş (OpenID Connect; sunucu tarafı ADR 0007'de hazır).
-- [ ] `BUL-11` E-posta ya da SMS ile bildirim. Gönderim kanalı ve kurumun ayarı sahibin kararı.
 - [ ] `BUL-12` Kayıtta hız sınırı ve otomatik kayıt koruması (girişin sınırıyla birlikte, ADR 0007).
 - [ ] `BUL-14` Büro kurumunda (category `office`) meslektaşların ortak dosyası: başvuruyu bir kişi değil, büro yapar.
 - [ ] `BUL-15` Aktarımda kopya yerine canlı projede misafir düzenleyici (ADR 0035) seçeneği.
@@ -72,9 +74,11 @@ sıradakileri tutar. Bir madde ancak sınaması ve gerçek pencerede görüntüs
 
 ## Çalıştırma
 
-- **Sunucu:** Göçler 0043–0045 `kentosd migrate` ile uygulanır. Yönetici `kentosd platform-admin add --user GİRİŞ` ile
+- **Sunucu:** Göçler 0043–0046 `kentosd migrate` ile uygulanır. Yönetici `kentosd platform-admin add --user GİRİŞ` ile
   atanır. Antivirüs servisi isteğe bağlıdır: `KENTOS_AV_ADDRESS=tcp://ana-makine:3310` (ya da `unix:///yol`),
-  taranamayan dosyayı geri çevirmek için `KENTOS_AV_REQUIRED=1`.
+  taranamayan dosyayı geri çevirmek için `KENTOS_AV_REQUIRED=1`. Bildirimler: `KENTOS_MAIL_TRANSPORT`
+  (`sendmail`, `webhook`, `folder`), `KENTOS_SMS_TRANSPORT` (`webhook`, `folder`), `KENTOS_MAIL_FROM`,
+  `KENTOS_SENDMAIL`, `KENTOS_NOTIFY_WEBHOOK` ve `KENTOS_NOTIFY_WEBHOOK_SECRET`, `KENTOS_NOTIFY_FOLDER`.
 - **API'nin açıklaması:** uç ya da sözleşme değişince
   `KENTOS_WRITE_OPENAPI=1 cargo test -p kentos-api --bin kentosd openapi` (`docs/api/openapi.json`'ı yeniden yazar).
   Kılavuz: `docs/api/README.md`.

@@ -359,6 +359,9 @@ a.crumb:hover {
 }
 
 .content {
+  /* Hidden controls placed absolutely (a switch's checkbox, a screen reader's text) stay in the scrolling area and
+     never make the window itself scroll. */
+  position: relative;
   flex: 1;
   overflow-y: auto;
 }
@@ -1223,6 +1226,9 @@ textarea.input {
   align-items: flex-start;
   gap: 12px;
   cursor: pointer;
+  /* The hidden checkbox is placed in it: without this it lies in the page, outside the scrolling content, and makes
+     the whole window scroll (measured: 496 px on Hesabım). */
+  position: relative;
 }
 
 .switch-input {
@@ -2168,15 +2174,16 @@ textarea.input {
   font-size: 12px;
 }
 
+/* Inside a panel's body, which has its own padding: text and sections line up with its edge. */
 .panel-text {
-  margin: 0;
-  padding: 12px 16px 4px;
+  margin: 0 0 10px;
   color: var(--c-text-2);
   line-height: 1.5;
 }
 
 .panel-section {
-  padding: 12px 16px 14px;
+  margin: 14px -16px 0;
+  padding: 14px 16px 0;
   border-top: 1px solid var(--c-line-soft);
 }
 
@@ -2282,4 +2289,27 @@ textarea.input {
 
 .uploads {
   max-width: 760px;
+}
+
+.delivery-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.delivery-list li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-text-2);
+  font-size: 12.5px;
+}
+
+.delivery-title {
+  overflow: hidden;
+  color: var(--c-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

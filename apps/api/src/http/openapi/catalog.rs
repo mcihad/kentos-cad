@@ -484,9 +484,12 @@ pub(super) fn ops() -> Vec<Op> {
         op("POST", "/v1/platform/professionals/{id}/review", PLATFORM, "Meslek mensubunu doğrula",
             "Doğrula, reddet, askıya al ya da yeniden incelemeye al.", Body(of::<c::ProfessionalReview>), Empty(204)),
         op("GET", "/v1/platform/settings", PLATFORM, "Platform ayarları",
-            "Kaydın açık olup olmadığı.", No, Json(200, of::<c::PlatformSettings>)),
+            "Kaydın açık olup olmadığı; bildirimlerin e-posta ve SMS ile de gidip gitmediği ve sunucunun bunları neyle \
+             gönderdiği (`emailTransport`, `smsTransport`: `sendmail`, `webhook`, `folder`; yoksa kurulmamış).",
+            No, Json(200, of::<c::PlatformSettings>)),
         op("PUT", "/v1/platform/settings", PLATFORM, "Platform ayarlarını değiştir",
-            "Sistem yöneticisi.", Body(of::<c::PlatformSettings>), Json(200, of::<c::PlatformSettings>)),
+            "Sistem yöneticisi; yalnız gövdedeki alanlar değişir. Kanalı açmak kişilerin kendi tercihini aşmaz.",
+            Body(of::<c::PlatformSettingsEdit>), Json(200, of::<c::PlatformSettings>)),
         op("GET", "/v1/platform/events", PLATFORM, "Kayıt defteri",
             "Platformda kimin ne yaptığı; reddedilen dosyalar dahil.",
             No, Json(200, of::<Vec<c::PlatformEventView>>)).query(SEARCH),
@@ -500,6 +503,14 @@ pub(super) fn ops() -> Vec<Op> {
         op("POST", "/v1/me/notifications/read", NOTIFICATIONS, "Okundu işaretle",
             "Belirli bildirimler ya da hepsi; listenin şimdiki hâli döner.",
             Body(of::<c::NotificationsRead>), Json(200, of::<c::Notifications>)),
+        op("GET", "/v1/me/notification-settings", NOTIFICATIONS, "E-posta ve SMS tercihleri",
+            "Bildirimlerin zilin yanında e-posta ve SMS ile de gelip gelmeyeceği, platformun hangi kanalı açtığı ve \
+             hesaba son giden 20 ileti (gönderildi, bekliyor, gönderilemedi). E-posta yalnız doğrulanmış adrese gider.",
+            No, Json(200, of::<c::NotificationSettings>)),
+        op("PUT", "/v1/me/notification-settings", NOTIFICATIONS, "E-posta ve SMS tercihlerini değiştir",
+            "SMS için telefon gerekir (`+905321234567` ya da `05321234567`; boşluk ve tireler atılır). Erişim \
+             anahtarıyla değiştirilmez (403).",
+            Body(of::<c::NotificationSettingsEdit>), Json(200, of::<c::NotificationSettings>)),
         // ── Pafta şablonları ────────────────────────────────────────────────
         op("GET", "/v1/me/sheet-templates", SHEETS, "Şablonlarım",
             "Çağıranın ve onunla paylaşılan pafta şablonları.",

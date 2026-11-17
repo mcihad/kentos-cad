@@ -15,6 +15,7 @@ use crate::config::Config;
 pub(super) fn config() -> Config {
     Config {
         scanner: Default::default(),
+        delivery: None,
         env_file: ".env.test".into(),
         vars: Default::default(),
         database_url: None,

@@ -24,7 +24,7 @@ kentos-extensions = { path = "../../crates/shared/extensions" }
 kentos-python-env = { path = "../../crates/native/python-env" }
 axum = { workspace = true }
 http-body = { workspace = true }
-tokio = { workspace = true }
+tokio = { workspace = true, features = ["process"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sqlx = { workspace = true }
@@ -36,6 +36,8 @@ tracing-subscriber = { workspace = true }
 jsonwebtoken = { workspace = true }
 reqwest = { workspace = true }
 time = { workspace = true }
+# The webhook's HMAC-SHA256 signature of a notification (docs/adr/9000 §17).
+sha2 = { workspace = true }
 
 # The job's process group ended at its budget, the rule's Python with it (docs/adr/8057 §58).
 [target.'cfg(unix)'.dependencies]

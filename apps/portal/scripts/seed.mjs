@@ -92,6 +92,8 @@ const daysFromNow = (n) => new Date(Date.now() + n * 86_400_000).toISOString().s
 
 const admin = new Person('sistem');
 await admin.login('sistem', ADMIN_PASSWORD);
+// Notifications also go out by e-mail and SMS (docs/adr/9000 §17): what the server does with them is its own setting.
+await admin.req('PUT', '/v1/platform/settings', { emailNotifications: true, smsNotifications: true });
 await admin.req('PUT', '/v1/platform/settings', { signupOpen: true });
 
 // ── Organisations ────────────────────────────────────────────────────
@@ -157,6 +159,8 @@ await admin.req('POST', `/v1/platform/professionals/${idOf('Deniz Aksoy')}/revie
 });
 await ayse.login('ayse.yilmaz');
 await can.login('can.ozturk');
+// The architect wants SMS too (a made-up number of no operator).
+await ayse.req('PUT', '/v1/me/notification-settings', { email: true, sms: true, phone: '0500 000 00 01' });
 const zeynep = new Person('zeynep');
 await zeynep.login('zeynep.demir');
 const ali = new Person('ali');

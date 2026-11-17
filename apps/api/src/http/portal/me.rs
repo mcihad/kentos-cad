@@ -8,6 +8,7 @@ use axum::response::{IntoResponse, Response};
 use kentos_application::portal::{accounts, catalog as names, notifications, organization};
 use kentos_application::{AppError, identity};
 use kentos_contracts::{
+    NotificationSettings, NotificationSettingsEdit,
     MunicipalityCard, Notifications, NotificationsRead, PasswordChange, PortalCatalog, PortalMe,
     ProfessionalEdit, SignInMethod, Signup, SignupInfo,
 };
@@ -118,6 +119,27 @@ pub async fn password(
         i64::from(identity::SESSION_MAX_HOURS) * 3600,
     );
     Ok((StatusCode::NO_CONTENT, [(header::SET_COOKIE, cookie)]).into_response())
+}
+
+/// `GET /v1/me/notification-settings`: whether notifications also come by e-mail and SMS, and what came lately.
+pub async fn notification_settings(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    caller: Caller,
+) -> Result<Json<NotificationSettings>, Failure> {
+    let run = async { kentos_application::notification_delivery::settings(state.db()?, &caller.0).await };
+    run.await.map(Json).map_err(|e| Failure::with(e, &headers))
+}
+
+/// `PUT /v1/me/notification-settings`.
+pub async fn set_notification_settings(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    caller: Caller,
+    Body(input): Body<NotificationSettingsEdit>,
+) -> Result<Json<NotificationSettings>, Failure> {
+    let run = async { kentos_application::notification_delivery::set_settings(state.db()?, &caller.0, &input).await };
+    run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
 
 /// `GET /v1/portal/municipalities`.

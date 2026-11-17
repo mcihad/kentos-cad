@@ -200,7 +200,25 @@ CAD görünümü olmayan telefon, web sayfası ve ajan için.
 - Yasal süreler (İmar Kanunu m.22 ve m.30) ayrıntıda gün olarak gelir.
 - Yazışma: `POST /v1/dossiers/{id}/messages`. Bildirimler: `GET /v1/me/notifications`.
 
-## 8. İstemcilere notlar
+## 8. Bildirimler: zil, e-posta, SMS
+
+- Zil: `GET /v1/me/notifications?unread=true`, okundu: `POST /v1/me/notifications/read {"all": true}`.
+- E-posta ve SMS: sistem yöneticisi kanalı açar (`PUT /v1/platform/settings {"emailNotifications": true}`), kişi kendi
+  seçer: `PUT /v1/me/notification-settings {"email": true, "sms": true, "phone": "0532 123 45 67"}`. E-posta yalnız
+  doğrulanmış adrese gider. `GET /v1/me/notification-settings` son 20 iletiyi ve durumlarını (`sent`, `pending`,
+  `failed`) da verir.
+- Kurumun ağ geçidine giden istek (webhook) gövdenin HMAC-SHA256'sını taşır; alan taraf şöyle doğrular:
+
+```python
+import hmac, hashlib
+expected = "sha256=" + hmac.new(SECRET.encode(), request_body, hashlib.sha256).hexdigest()
+ok = hmac.compare_digest(expected, request.headers["x-kentos-signature"])
+```
+
+  Gövde: `{"id", "channel": "email"|"sms", "to", "recipient", "subject", "text", "link", "createdAt", "attempt"}`;
+  2xx dışındaki her yanıt yeniden denenir (1, 5, 15, 60, 240 dakika), aynı `id` birden çok gelebilir.
+
+## 9. İstemcilere notlar
 
 - **Mobil uygulama:** program oturumunu (`client: "mobile"`, `label`: cihazın adı) güvenli depoda saklayın. Liste ve
   ayrıntıyı `ETag`'le önbelleğe alın; proje kartında `preview.svg?width=480` kullanın. Fotoğraf ve belgeyi 6.1'deki
@@ -210,7 +228,7 @@ CAD görünümü olmayan telefon, web sayfası ve ajan için.
 - **Yapay zekâ ajanı:** önce `GET /v1/llms.txt`, sonra gerekirse `GET /v1/openapi.json`. `read` anahtarıyla başlayın;
   gönderme, onaylama, silme gibi geri alınmaz adımlardan önce kullanıcıya sorun.
 
-## 9. Sunucu ayarları (dosyalarla ilgili)
+## 10. Sunucu ayarları (dosyalar ve bildirimler)
 
 | Ayar | Anlamı |
 |---|---|
@@ -218,6 +236,12 @@ CAD görünümü olmayan telefon, web sayfası ve ajan için.
 | `KENTOS_AV_ADDRESS` | Antivirüs servisinin adresi: `tcp://ana-makine:3310` ya da `unix:///yol/servis.sock` (INSTREAM) |
 | `KENTOS_AV_REQUIRED` | `1`: taranamayan dosya (servis kapalı, dosya sınırdan büyük) alınmaz, istemci 429 ile bekletilir |
 | `KENTOS_AV_MAX_BYTES` | Antivirüse gönderilen en büyük dosya (varsayılan 25 MiB, servisin kendi sınırı) |
+| `KENTOS_MAIL_TRANSPORT` | E-posta: `sendmail` (makinenin posta programı), `webhook` (kurumun ağ geçidi), `folder` (dosya) |
+| `KENTOS_SMS_TRANSPORT` | SMS: `webhook` ya da `folder` |
+| `KENTOS_MAIL_FROM` | Gönderen: `Örnek Belediyesi <bildirim@ornek.bel.tr>` |
+| `KENTOS_SENDMAIL` | Posta programının yolu (varsayılan `/usr/sbin/sendmail`) |
+| `KENTOS_NOTIFY_WEBHOOK`, `KENTOS_NOTIFY_WEBHOOK_SECRET` | Ağ geçidinin `https://` adresi ve imza anahtarı (en az 16 karakter) |
+| `KENTOS_NOTIFY_FOLDER` | `folder` aktarımının klasörü |
 
 ## Bu belgeyi güncellemek
 

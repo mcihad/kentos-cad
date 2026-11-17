@@ -228,7 +228,7 @@ async fn signing_up_waits_for_the_check_and_the_check_attests_the_email() {
     platform::set_settings(
         &db.app,
         &root,
-        &kentos_contracts::PlatformSettings { signup_open: true },
+        &kentos_contracts::PlatformSettingsEdit { signup_open: Some(true), ..Default::default() },
     )
     .await
     .unwrap();
@@ -299,7 +299,7 @@ async fn an_application_goes_round_by_round_under_the_law_s_deadline() {
     platform::set_settings(
         &db.app,
         &root,
-        &kentos_contracts::PlatformSettings { signup_open: true },
+        &kentos_contracts::PlatformSettingsEdit { signup_open: Some(true), ..Default::default() },
     )
     .await
     .unwrap();

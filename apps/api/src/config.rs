@@ -26,6 +26,9 @@ pub struct Config {
     /// `unix:///path`), `KENTOS_AV_REQUIRED` (refuse what it cannot scan) and `KENTOS_AV_MAX_BYTES`. Absent: the type
     /// rules alone.
     pub scanner: kentos_application::scan::Scanner,
+    /// Notifications by e-mail and SMS (docs/adr/9000 §17; crate::delivery): `KENTOS_MAIL_TRANSPORT`,
+    /// `KENTOS_SMS_TRANSPORT` and their settings. Absent: the bell alone.
+    pub delivery: Option<crate::delivery::Delivery>,
     pub vars: BTreeMap<String, String>,
     pub database_url: Option<String>,
     pub owner_url: Option<String>,
@@ -294,7 +297,7 @@ impl Config {
             }
         };
         let scanner = kentos_application::scan::Scanner::configured(|k| get(k))?;
-        Ok(Self {
+        let mut config = Self {
             scanner,
             database_url: get(DATABASE_URL),
             owner_url: get(OWNER_URL),
@@ -344,7 +347,11 @@ impl Config {
             extension_catalog: extension_catalog(get("KENTOS_EXTENSION_CATALOG").as_deref())?,
             env_file,
             vars,
-        })
+            delivery: None,
+        };
+        let delivery = crate::delivery::Delivery::configured(|k| env::lookup(&config.vars, k), &config.public_url)?;
+        config.delivery = delivery;
+        Ok(config)
     }
 }
 

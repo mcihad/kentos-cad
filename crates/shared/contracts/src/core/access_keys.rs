@@ -21,9 +21,11 @@ pub struct TokenRequest {
     pub password: String,
     /// What the program is: `desktop`, `mobile`, `agent`, `python`, … (lower-case letters, digits and `-`).
     #[serde(default)]
+    #[cfg_attr(feature = "ts", ts(optional = nullable))]
     pub client: Option<String>,
     /// The device or the program's name as its person knows it ("Ofis bilgisayarı").
     #[serde(default)]
+    #[cfg_attr(feature = "ts", ts(optional = nullable))]
     pub label: Option<String>,
 }
 

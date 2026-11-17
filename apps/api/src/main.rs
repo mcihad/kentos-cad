@@ -10,6 +10,7 @@
 mod audit_env;
 mod cli;
 mod config;
+mod delivery;
 mod extension_catalog;
 mod http;
 mod hub;
@@ -200,6 +201,10 @@ async fn serve(config: Config) -> Result<(), String> {
         tokio::spawn(prune_events(db.clone(), config.event_retention));
         tokio::spawn(purge_trash(db.clone()));
         tokio::spawn(clean_store(db.clone(), blobs.clone(), config.job_retention));
+        // Notifications by e-mail and SMS (docs/adr/9000 §17), when the server is set up to send them.
+        if let Some(delivery) = config.delivery.clone() {
+            tokio::spawn(delivery.run(db.clone()));
+        }
         let audits = audit_source(&config, catalog.as_ref());
         spawn_workers(db, &blobs, config.workers, config.job_limits, audits);
     }

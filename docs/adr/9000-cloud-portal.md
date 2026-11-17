@@ -219,7 +219,7 @@ Sıra ve ayrıntı [plan/bulut.md](../../plan/bulut.md)'dedir.
 
 **Sahibin kararını bekleyenler:**
 - Portala kurum kimliğiyle giriş (OpenID Connect).
-- E-posta ya da SMS bildirimi.
+- SMTP'ye doğrudan bağlantı ve hazır SMS sağlayıcıları (bugün `sendmail` ve imzalı webhook ile gider, §17).
 - Resmî yazı, e-imza ve e-tebligat bağlantısı.
 - Harç ve ücret (sahibin mesajındaki “para yüzü” bir ödeme yüzü demekse).
 
@@ -311,11 +311,38 @@ TODOS.md CLOUD-06 ve plan BUL-13: dışarıdan gelen dosya belediyenin personeli
 - İki dosya da sunucuya gömülüdür. Testler yönlendiricinin kaynağındaki her `.route(` ile katalogu karşılaştırır
   (eksik ya da fazla uç kırmızı) ve depodaki açıklamanın üretilenle aynı olduğunu denetler.
 
+## §17 E-posta ve SMS bildirimi
+
+Plan BUL-11; sahibin isteği: “diğerlerini yapalım” (e-posta/SMS bildirimi bu listedeydi). Kanalın kendisi (kurumun posta
+sunucusu, SMS sağlayıcısı) kurumun ayarıdır; kod hiçbirine bağlanmaz ve yeni bağımlılık eklemez.
+
+- **Tek giriş noktası:** her bildirim `kentos.notification`'a yazılır; oradaki tetikleyici (`kentos.enqueue_delivery`)
+  teslimleri giden kutusuna (`kentos.notification_delivery`) koyar. Yeni bir bildirim türü kendiliğinden e-posta/SMS
+  olur.
+- **Kim alır:** sistem yöneticisi kanalı açmadıkça hiçbir şey çıkmaz (Platform ayarları → Bildirim kanalları, denetim
+  kaydına geçer). Kişi kendi seçer (Hesabım → Bildirimler): e-posta varsayılan olarak açık ama **yalnız doğrulanmış
+  adrese** (doğrulanmamış adres, onu kim yazdıysa odur); SMS kapalı, numara verip açana. Kapalı ya da askıdaki hesaba
+  gitmez. Erişim anahtarıyla tercih değiştirilmez.
+- **Nasıl gider** (`apps/api/src/delivery.rs`, sunucu 15 saniyede bir kutuyu okur, 50'şer, 5 dakikalık kirayla):
+  - `sendmail`: makinenin kendi posta programına (`sendmail -t -i`); kurum onu kendi posta sunucusuna yönlendirir.
+  - `webhook`: kurumun ağ geçidine JSON `POST`, gövdenin HMAC-SHA256 imzasıyla (`x-kentos-signature: sha256=…`); SMS
+    sağlayıcısı (her birinin kendi API'si var) kurumun küçük bir uyarlayıcısıyla bağlanır. Adres `https://` olmalı.
+  - `folder`: her ileti bir dosya (`.eml`, `.sms.txt`): başka bir sistemin alması ve sınamak için.
+- **İletinin kendisi:** RFC 5322; konu ve Türkçe görünen adlar RFC 2047 ile kodlanır, gövde UTF-8 base64,
+  `Auto-Submitted: auto-generated`. Gövde kişiye adıyla seslenir, bildirimin metnini ve dosyanın portal bağlantısını
+  verir, tercihlerin değiştirileceği yeri söyler. SMS kısa: başlık ve bağlantı.
+- **Olmayınca:** gitmeyen ileti 1, 5, 15, 60 ve 240 dakika arayla yeniden denenir; altıncı denemede bırakılır ve nedeni
+  saklanır. Kişi son 20 iletisini ve durumunu Hesabım'da görür.
+- SMTP'ye doğrudan bağlanmak (bir kütüphaneyle) ve hazır SMS sağlayıcıları sahibin onayına kalır; `sendmail` ve
+  `webhook` ikisini de bugün karşılar.
+
 **Ölçümler (17 Kasım 2026):**
 
 | Ölçü | Değer |
 |---|---|
-| Açıklanan uç | 120 işlem, 94 yol, 783 şema, 1,38 MB |
+| Açıklanan uç (bildirimlerle) | 122 işlem, 95 yol |
+| Bildirim (örnek veri, klasör aktarımıyla canlı sunucuda) | ilk tur 45 e-posta + 5 SMS dosyaya yazıldı, kalanlar sonraki turda |
+| Bildirim testleri | HMAC (RFC 4231 örneği), base64 ve RFC 2047; kanal kapalıyken 0 teslim; imzalı webhook, yeniden deneme ve bırakma; sendmail'e giden ileti |
 | Örnek çizimlerin resmi | Konut100m2: 110 nesne çizildi, 3 ölçü atlandı; konut-3-1: 320/14; yol-ornegi: 727/0 |
 | Yeni testler | erişim 2, bulut dosyaları (HTTP) 3, tarama 5, resim 3, portal +1, açıklama 3 |
 | Tüm sunucu testleri | API 135 geçti (1 bellek sınırı testi yük altında zamanlamadan kırmızı, tek başına geçiyor); uygulama 239 |

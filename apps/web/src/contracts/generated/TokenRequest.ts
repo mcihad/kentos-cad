@@ -7,8 +7,8 @@ export type TokenRequest = { login: string, password: string,
 /**
  * What the program is: `desktop`, `mobile`, `agent`, `python`, … (lower-case letters, digits and `-`).
  */
-client: string | null, 
+client?: string | null, 
 /**
  * The device or the program's name as its person knows it ("Ofis bilgisayarı").
  */
-label: string | null, };
+label?: string | null, };

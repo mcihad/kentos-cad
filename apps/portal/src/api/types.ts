@@ -5,6 +5,7 @@ export type { ApiTokenView } from '../../../web/src/contracts/generated/ApiToken
 export type { ApplicationCreate } from '../../../web/src/contracts/generated/ApplicationCreate';
 export type { AssigneeOption } from '../../../web/src/contracts/generated/AssigneeOption';
 export type { AttachmentView } from '../../../web/src/contracts/generated/AttachmentView';
+export type { DeliveryView } from '../../../web/src/contracts/generated/DeliveryView';
 export type { DocChecklist } from '../../../web/src/contracts/generated/DocChecklist';
 export type { DossierAction } from '../../../web/src/contracts/generated/DossierAction';
 export type { DossierActionRequest } from '../../../web/src/contracts/generated/DossierActionRequest';
@@ -28,11 +29,15 @@ export type { KindOption } from '../../../web/src/contracts/generated/KindOption
 export type { LegalClock } from '../../../web/src/contracts/generated/LegalClock';
 export type { MemberView } from '../../../web/src/contracts/generated/MemberView';
 export type { MunicipalityCard } from '../../../web/src/contracts/generated/MunicipalityCard';
+export type { NotificationSettings } from '../../../web/src/contracts/generated/NotificationSettings';
+export type { NotificationSettingsEdit } from '../../../web/src/contracts/generated/NotificationSettingsEdit';
 export type { NotificationView } from '../../../web/src/contracts/generated/NotificationView';
 export type { Notifications } from '../../../web/src/contracts/generated/Notifications';
 export type { OrganizationCategory } from '../../../web/src/contracts/generated/OrganizationCategory';
 export type { OrganizationPortal } from '../../../web/src/contracts/generated/OrganizationPortal';
 export type { PlatformEventView } from '../../../web/src/contracts/generated/PlatformEventView';
+export type { PlatformSettings } from '../../../web/src/contracts/generated/PlatformSettings';
+export type { PlatformSettingsEdit } from '../../../web/src/contracts/generated/PlatformSettingsEdit';
 export type { PlatformSummary } from '../../../web/src/contracts/generated/PlatformSummary';
 export type { PlatformTenant } from '../../../web/src/contracts/generated/PlatformTenant';
 export type { PlatformTenantDetail } from '../../../web/src/contracts/generated/PlatformTenantDetail';

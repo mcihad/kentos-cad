@@ -7,7 +7,7 @@ use axum::http::{HeaderMap, StatusCode};
 use kentos_application::AppError;
 use kentos_application::portal::{accounts, catalog, platform};
 use kentos_contracts::{
-    PlatformEventView, PlatformSettings, PlatformSummary, PlatformTenant, PlatformTenantCreate,
+    PlatformEventView, PlatformSettings, PlatformSettingsEdit, PlatformSummary, PlatformTenant, PlatformTenantCreate,
     PlatformTenantDetail, PlatformTenantEdit, PlatformUser, PlatformUserCreate, PlatformUserEdit,
     ProfessionalReview, ProfessionalView, Signup,
 };
@@ -190,25 +190,38 @@ pub async fn events(
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
 
+/// The platform's settings, with how this server sends notifications (its own settings, not the database's).
+fn with_ways(state: &AppState, mut s: PlatformSettings) -> PlatformSettings {
+    if let Some(d) = &state.config.delivery {
+        (s.email_transport, s.sms_transport) = d.ways();
+    }
+    s
+}
+
 pub async fn settings(
     State(state): State<AppState>,
     headers: HeaderMap,
     caller: Caller,
 ) -> Result<Json<PlatformSettings>, Failure> {
     let run = async { platform::settings(state.db()?, &caller.0).await };
-    run.await.map(Json).map_err(|e| Failure::with(e, &headers))
+    run.await
+        .map(|s| Json(with_ways(&state, s)))
+        .map_err(|e| Failure::with(e, &headers))
 }
 
+/// `PUT /v1/platform/settings`: the fields the body names change.
 pub async fn set_settings(
     State(state): State<AppState>,
     headers: HeaderMap,
     caller: Caller,
-    Body(input): Body<PlatformSettings>,
+    Body(input): Body<PlatformSettingsEdit>,
 ) -> Result<Json<PlatformSettings>, Failure> {
     let run = async {
         let db = state.db()?;
         platform::set_settings(db, &caller.0, &input).await?;
         platform::settings(db, &caller.0).await
     };
-    run.await.map(Json).map_err(|e| Failure::with(e, &headers))
+    run.await
+        .map(|s| Json(with_ways(&state, s)))
+        .map_err(|e| Failure::with(e, &headers))
 }

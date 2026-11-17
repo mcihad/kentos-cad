@@ -101,6 +101,7 @@ pub struct DossierFileFromUpload {
     pub purpose: String,
     /// A document type of the portal's catalogue (`GET /v1/portal/catalog`); absent: found from the name.
     #[serde(default)]
+    #[cfg_attr(feature = "ts", ts(optional = nullable))]
     pub doc_type: Option<String>,
 }
 
@@ -114,9 +115,11 @@ pub struct AttachmentCreate {
     pub upload_id: String,
     /// A word on what it is (“Zemin etüdü, 2. sondaj”), at most 2000 characters.
     #[serde(default)]
+    #[cfg_attr(feature = "ts", ts(optional = nullable))]
     pub note: Option<String>,
     /// The drawing's revision it goes with (a file project's), if any.
     #[serde(default)]
+    #[cfg_attr(feature = "ts", ts(optional = nullable))]
     pub revision: Option<i64>,
 }
 

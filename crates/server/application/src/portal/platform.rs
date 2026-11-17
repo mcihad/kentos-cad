@@ -4,7 +4,7 @@
 //! change goes through a security-definer function that checks the caller and records the change (migration 0043).
 
 use kentos_contracts::{
-    MemberView, NewOwner, PlatformEventView, PlatformSettings, PlatformSummary, PlatformTenant,
+    MemberView, NewOwner, PlatformEventView, PlatformSettings, PlatformSettingsEdit, PlatformSummary, PlatformTenant,
     PlatformTenantCreate, PlatformTenantDetail, PlatformTenantEdit, PlatformUser,
     PlatformUserCreate, PlatformUserEdit, ProfessionalReview, ProfessionalStatus, ProfessionalView,
 };
@@ -551,6 +551,10 @@ fn event_text(action: &str, actor: &str, label: &str, detail: &serde_json::Value
         "professional.pending" => format!("{actor}, “{label}” kaydını yeniden incelemeye aldı."),
         "setting.signup" if flag("open") => format!("{actor}, meslek mensubu kaydını açtı."),
         "setting.signup" => format!("{actor}, meslek mensubu kaydını kapattı."),
+        "setting.notifications" => {
+            let on = |k: &str| if flag(k) { "açık" } else { "kapalı" };
+            format!("{actor}, bildirim kanallarını değiştirdi: e-posta {}, SMS {}.", on("email"), on("sms"))
+        }
         "file.refused" => {
             let why = detail.get("reason").and_then(serde_json::Value::as_str).unwrap_or("türü alınmıyor");
             if detail.get("verdict").and_then(serde_json::Value::as_str) == Some("infected") {
@@ -595,21 +599,43 @@ pub async fn events(db: &Db, actor: &Actor, limit: u32) -> AppResult<Vec<Platfor
 /// `GET /v1/platform/settings`.
 pub async fn settings(db: &Db, actor: &Actor) -> AppResult<PlatformSettings> {
     let mut tx = admin_tx(db, actor).await?;
-    let signup_open: bool = sqlx::query_scalar("select signup_open from kentos.platform_setting")
-        .fetch_one(&mut *tx)
-        .await?;
+    let (signup_open, email_notifications, sms_notifications): (bool, bool, bool) = sqlx::query_as(
+        "select signup_open, email_notifications, sms_notifications from kentos.platform_setting",
+    )
+    .fetch_one(&mut *tx)
+    .await?;
     tx.commit().await?;
-    Ok(PlatformSettings { signup_open })
+    Ok(PlatformSettings {
+        signup_open,
+        email_notifications,
+        sms_notifications,
+        email_transport: None,
+        sms_transport: None,
+    })
 }
 
 /// `PUT /v1/platform/settings`.
-pub async fn set_settings(db: &Db, actor: &Actor, input: &PlatformSettings) -> AppResult<()> {
+/// `PUT /v1/platform/settings`: what the edit names changes, the rest stays.
+pub async fn set_settings(db: &Db, actor: &Actor, input: &PlatformSettingsEdit) -> AppResult<()> {
     let mut tx = admin_tx(db, actor).await?;
-    let code: Option<String> = sqlx::query_scalar("select kentos.platform_set_signup($1)")
-        .bind(input.signup_open)
+    if let Some(open) = input.signup_open {
+        let code: Option<String> = sqlx::query_scalar("select kentos.platform_set_signup($1)")
+            .bind(open)
+            .fetch_one(&mut *tx)
+            .await?;
+        answer(code)?;
+    }
+    if input.email_notifications.is_some() || input.sms_notifications.is_some() {
+        let code: Option<String> = sqlx::query_scalar(
+            "select kentos.platform_set_notifications(coalesce($1, s.email_notifications), coalesce($2, s.sms_notifications))
+               from kentos.platform_setting s",
+        )
+        .bind(input.email_notifications)
+        .bind(input.sms_notifications)
         .fetch_one(&mut *tx)
         .await?;
-    answer(code)?;
+        answer(code)?;
+    }
     tx.commit().await?;
     Ok(())
 }

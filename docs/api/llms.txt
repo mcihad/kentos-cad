@@ -48,7 +48,7 @@ Bu metin bir ajanın ilk okuyacağıdır. Kurallar kısa; ayrıntı OpenAPI aç�
   - Ayrıntı `GET /v1/dossiers/{id}`: `actions` o an atılabilecek adımlardır.
   - Adım: `POST /v1/dossiers/{id}/actions {"action":"…","expectedStatus":"…","note":"…"}`. 409 başkası önce
     davrandı demektir: ayrıntıyı yeniden okuyun.
-- Bildirimler: `GET /v1/me/notifications?unread=true`.
+- Bildirimler: `GET /v1/me/notifications?unread=true`; e-posta/SMS tercihi `GET`/`PUT /v1/me/notification-settings`.
 
 ## Belgeler
 

@@ -17,9 +17,13 @@ import type {
   FileRevisions,
   MemberView,
   MunicipalityCard,
+  NotificationSettings,
+  NotificationSettingsEdit,
   Notifications,
   OrganizationPortal,
   PlatformEventView,
+  PlatformSettings,
+  PlatformSettingsEdit,
   PlatformSummary,
   PlatformTenant,
   PlatformTenantDetail,
@@ -125,8 +129,8 @@ export const platform = {
   review: (id: string, status: ProfessionalStatus, note: string) =>
     post<void>(`/v1/platform/professionals/${id}/review`, { status, note }),
   events: (limit = 100) => get<PlatformEventView[]>(`/v1/platform/events${query({ limit })}`),
-  settings: () => get<{ signupOpen: boolean }>('/v1/platform/settings'),
-  setSettings: (signupOpen: boolean) => put<{ signupOpen: boolean }>('/v1/platform/settings', { signupOpen }),
+  settings: () => get<PlatformSettings>('/v1/platform/settings'),
+  setSettings: (edit: PlatformSettingsEdit) => put<PlatformSettings>('/v1/platform/settings', edit),
 };
 
 /** The account itself (docs/adr/9000 §12): its sessions and its personal access tokens. */
@@ -137,6 +141,8 @@ export const account = {
   createToken: (name: string, scope: TokenScope, expiresInDays: number) =>
     post<ApiTokenCreated>('/v1/me/tokens', { name, scope, expiresInDays }),
   revokeToken: (id: string) => del<void>(`/v1/me/tokens/${id}`),
+  notificationSettings: () => get<NotificationSettings>('/v1/me/notification-settings'),
+  setNotificationSettings: (edit: NotificationSettingsEdit) => put<NotificationSettings>('/v1/me/notification-settings', edit),
 };
 
 /** A cloud project's page (docs/adr/9000 §15): what it is, its drawing, its revisions and its attachments. */

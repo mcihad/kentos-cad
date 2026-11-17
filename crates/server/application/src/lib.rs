@@ -35,6 +35,7 @@ pub mod jobs;
 mod journal;
 pub mod lifecycle;
 pub mod listing;
+pub mod notification_delivery;
 pub mod people;
 pub mod portal;
 pub mod preview;

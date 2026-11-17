@@ -6413,6 +6413,54 @@
         ],
         "type": "object"
       },
+      "DeliveryView": {
+        "description": "One notification's way to the account by e-mail or SMS.",
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "attempts": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "channel": {
+            "description": "`email` or `sms`.",
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "lastError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sentAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "description": "`pending` (on its way or to be tried again), `sent` or `failed` (given up).",
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel",
+          "address",
+          "state",
+          "title",
+          "attempts",
+          "createdAt"
+        ],
+        "type": "object"
+      },
       "DerivationInput": {
         "additionalProperties": false,
         "description": "A layer a derivation read: the layer then (its id and name), its content digest when read\n(`sources::layer_digest`, docs/adr/0511), and for a bound layer its source.",
@@ -19096,6 +19144,83 @@
         },
         "type": "object"
       },
+      "NotificationSettings": {
+        "description": "`GET /v1/me/notification-settings`: how the account's notifications also reach it, and what reached it lately.",
+        "properties": {
+          "email": {
+            "description": "The account's own choice: e-mail too (on unless turned off).",
+            "type": "boolean"
+          },
+          "emailAddress": {
+            "description": "Where the e-mails go: the account's address; none, no e-mail.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "emailOffered": {
+            "description": "Whether the platform sends e-mail at all.",
+            "type": "boolean"
+          },
+          "emailVerified": {
+            "description": "Only a verified address gets e-mail: an unverified one is whoever typed it.",
+            "type": "boolean"
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "recent": {
+            "description": "The account's last deliveries, newest first.",
+            "items": {
+              "$ref": "#/components/schemas/DeliveryView"
+            },
+            "type": "array"
+          },
+          "sms": {
+            "description": "SMS too (off until turned on with a number).",
+            "type": "boolean"
+          },
+          "smsOffered": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "email",
+          "sms",
+          "emailVerified",
+          "emailOffered",
+          "smsOffered",
+          "recent"
+        ],
+        "type": "object"
+      },
+      "NotificationSettingsEdit": {
+        "description": "`PUT /v1/me/notification-settings`.",
+        "properties": {
+          "email": {
+            "type": "boolean"
+          },
+          "phone": {
+            "default": null,
+            "description": "`+905321234567` or `05321234567`; spaces, dashes and brackets are dropped. Needed for SMS.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sms": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "email",
+          "sms"
+        ],
+        "type": "object"
+      },
       "NotificationView": {
         "properties": {
           "at": {
@@ -21723,13 +21848,64 @@
       },
       "PlatformSettings": {
         "properties": {
+          "emailNotifications": {
+            "default": false,
+            "description": "Notifications also go out by e-mail / SMS (docs/adr/9000 §17).",
+            "type": "boolean"
+          },
+          "emailTransport": {
+            "default": null,
+            "description": "How this server sends them (`sendmail`, `webhook`, `folder`); none: it is not set up to.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "signupOpen": {
             "type": "boolean"
+          },
+          "smsNotifications": {
+            "default": false,
+            "type": "boolean"
+          },
+          "smsTransport": {
+            "default": null,
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
           "signupOpen"
         ],
+        "type": "object"
+      },
+      "PlatformSettingsEdit": {
+        "description": "`PUT /v1/platform/settings`: what changes; a field left out stays as it is.",
+        "properties": {
+          "emailNotifications": {
+            "default": null,
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "signupOpen": {
+            "default": null,
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "smsNotifications": {
+            "default": null,
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
         "type": "object"
       },
       "PlatformSummary": {
@@ -39655,6 +39831,79 @@
         ]
       }
     },
+    "/v1/me/notification-settings": {
+      "get": {
+        "description": "Bildirimlerin zilin yanında e-posta ve SMS ile de gelip gelmeyeceği, platformun hangi kanalı açtığı ve hesaba son giden 20 ileti (gönderildi, bekliyor, gönderilemedi). E-posta yalnız doğrulanmış adrese gider.",
+        "operationId": "getMeNotificationSettings",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationSettings"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "summary": "E-posta ve SMS tercihleri",
+        "tags": [
+          "Bildirimler"
+        ]
+      },
+      "put": {
+        "description": "SMS için telefon gerekir (`+905321234567` ya da `05321234567`; boşluk ve tireler atılır). Erişim anahtarıyla değiştirilmez (403).",
+        "operationId": "putMeNotificationSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationSettingsEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationSettings"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "E-posta ve SMS tercihlerini değiştir",
+        "tags": [
+          "Bildirimler"
+        ]
+      }
+    },
     "/v1/me/notifications": {
       "get": {
         "description": "Yeniden eskiye; okunmamış sayısıyla.",
@@ -40317,7 +40566,7 @@
     },
     "/v1/platform/settings": {
       "get": {
-        "description": "Kaydın açık olup olmadığı.",
+        "description": "Kaydın açık olup olmadığı; bildirimlerin e-posta ve SMS ile de gidip gitmediği ve sunucunun bunları neyle gönderdiği (`emailTransport`, `smsTransport`: `sendmail`, `webhook`, `folder`; yoksa kurulmamış).",
         "operationId": "getPlatformSettings",
         "responses": {
           "200": {
@@ -40346,13 +40595,13 @@
         ]
       },
       "put": {
-        "description": "Sistem yöneticisi.",
+        "description": "Sistem yöneticisi; yalnız gövdedeki alanlar değişir. Kanalı açmak kişilerin kendi tercihini aşmaz.",
         "operationId": "putPlatformSettings",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlatformSettings"
+                "$ref": "#/components/schemas/PlatformSettingsEdit"
               }
             }
           },
