@@ -1,0 +1,585 @@
+{
+  "format": "kentos.extension-api-coverage",
+  "schemaVersion": 1,
+  "about": "Eklenti API ailesinin (ADR 8061 §11) her işleminin her yüzeydeki girişi, plan/eklenti.md ECO-API-06: ad yazılıysa vardır ve sınama (crates/native/headless/tests/headless/coverage.rs) onu kodda bulur; {\"pencere\": ad} yalnız kullanıcının penceresini açar (kullanıcının kararı); {\"yok\": neden} bilerek yoktur. Ölçülen sayılar sınamanın hesapladığıdır.",
+  "surfaces": {
+    "masaustu": "Masaüstü arayüzü: {file, text} dosyada geçen çapa",
+    "komut": "Ürün komutu (komut kataloğu; Python, MCP ve bağlantı aynı kapıdan)",
+    "kek": "Komut satırı: kentos kek <alt komut>",
+    "python": "Python kitaplığı: modül:ad (python/kentos/<modül>.py)",
+    "ajan": "Ajan ve MCP aracı (Asistan, bağlı ajan, MCP sunucusu)",
+    "katalog": "Katalog sunucusunun HTTP ucu: /v1/extension-catalogs sonrası",
+    "basliksiz": "Masaüstü açık değilken: yüzey:ad",
+    "web": "Web arayüzü",
+    "mobil": "Mobil uygulama"
+  },
+  "absent": {
+    "web": "Web arayüzündeki işler bekletiliyor (ADR 0228): eklentiler masaüstünde ve başsız çalışır.",
+    "mobil": "KentOS'un mobil uygulaması yok."
+  },
+  "operations": [
+    {
+      "id": "python.environments.prepare",
+      "masaustu": {
+        "file": "apps/desktop/src/shell/extensions/environment.rs",
+        "text": "Ortamı hazırla"
+      },
+      "komut": {
+        "yok": "Çizimin komutu değil."
+      },
+      "kek": "test",
+      "python": {
+        "yok": "Ortamı hazırlamak kullanıcının kararı (ADR 8061 §11)."
+      },
+      "ajan": {
+        "yok": "Kullanıcının kararı; ajan hazır olup olmadığını catalog.describe ile okur."
+      },
+      "katalog": {
+        "yok": "Sunucu sürümün ortamını kendisi hazırlar (ADR 8057 §66)."
+      },
+      "basliksiz": "kek:test"
+    },
+    {
+      "id": "extensions.inspect",
+      "masaustu": {
+        "file": "apps/desktop/src/shell/extensions/view.rs",
+        "text": "İstediği yetenekler"
+      },
+      "komut": {
+        "yok": "Çizimin komutu değil."
+      },
+      "kek": "inspect",
+      "python": {
+        "yok": "Python kitaplığı çizim içindir; paketi kek ve ajan denetler."
+      },
+      "ajan": "extension.verify",
+      "katalog": "/{catalog}/releases",
+      "basliksiz": "kek:inspect"
+    },
+    {
+      "id": "extensions.package",
+      "masaustu": {
+        "file": "apps/desktop/src/shell/extensions/workshop.rs",
+        "text": "fn review_workshop_package"
+      },
+      "komut": {
+        "yok": "Çizimin komutu değil."
+      },
+      "kek": "pack",
+      "python": {
+        "yok": "Python kitaplığı çizim içindir."
+      },
+      "ajan": {
+        "pencere": "extension.workshop.review"
+      },
+      "katalog": {
+        "yok": "Katalog paketlenmiş sürümü alır."
+      },
+      "basliksiz": "kek:pack"
+    },
+    {
+      "id": "extensions.check",
+      "masaustu": {
+        "file": "apps/desktop/src/shell/extensions/mod.rs",
+        "text": "fn install_reviewed"
+      },
+      "komut": {
+        "yok": "Çizimin komutu değil."
+      },
+      "kek": "verify",
+      "python": {
+        "yok": "Python kitaplığı çizim içindir."
+      },
+      "ajan": "extension.verify",
+      "katalog": "/{catalog}/releases/{extension}/{version}/moves",
+      "basliksiz": "kek:verify"
+    },
+    {
+      "id": "extensions.trial",
+      "masaustu": {
+        "file": "apps/desktop/src/shell/extensions/examples.rs",
+        "text": "Örnekleri çalıştır"
+      },
+      "komut": {
+        "yok": "Çizimin komutu değil."
+      },
+      "kek": "test",
+      "python": {
+        "yok": "Python kitaplığı çizim içindir."
+      },
+      "ajan": "extension.workshop.trial",
+      "katalog": {
+        "yok": "Katalog sürümü kendi kapısında sınar."
+      },
+      "basliksiz": "kek:test"
+    },
+    {
+      "id": "extensions.sbom",
+      "masaustu": {
+        "file": "apps/desktop/src/shell/extensions/environment.rs",
+        "text": "SBOM'u kaydet"
+      },
+      "komut": {
+        "yok": "Çizimin komutu değil."
+      },
+      "kek": "sbom",
+      "python": {
+        "yok": "Python kitaplığı çizim içindir."
+      },
+      "ajan": {
+        "yok": "Bağımlılık listesi bilgi işlem içindir; ajan raporu okur (extension.report)."
+      },
+      "katalog": "/{catalog}/releases/{extension}/{version}/sbom",
+      "basliksiz": "kek:sbom"
+    },
+    {
+      "id": "extensions.report",
+      "masaustu": {
+        "file": "apps/desktop/src/shell/extensions/report.rs",
+        "text": "Eklenti raporu"
+      },
+      "komut": {
+        "yok": "Çizimin komutu değil."
+      },
+      "kek": "log",
+      "python": {
+        "yok": "Python kitaplığı çizim içindir."
+      },
+      "ajan": "extension.report",
+      "katalog": {
+        "yok": "Rapor kurulu eklentinindir."
+      },
+      "basliksiz": "kek:log"
+    },
+    {
+      "id": "extensions.upgrade",
+      "masaustu": {
+        "yok": "Eskiyen adların göçü yazarın işidir; masaüstü uyarır (ADR 8061 §5)."
+      },
+      "komut": {
+        "yok": "Çizimin komutu değil."
+      },
+      "kek": "upgrade",
+      "python": {
+        "yok": "Python kitaplığı çizim içindir."
+      },
+      "ajan": {
+        "yok": "Ajan kek upgrade'i önerir; dosyaları atölyede kendisi yazar (extension.workshop.write)."
+      },
+      "katalog": {
+        "yok": "Katalog eskiyen adı gönderimde uyarır."
+      },
+      "basliksiz": "kek:upgrade"
+    },
+    {
+      "id": "extensions.install",
+      "masaustu": {
+        "file": "apps/desktop/src/shell/extensions/mod.rs",
+        "text": "fn install_reviewed"
+      },
+      "komut": {
+        "yok": "Kurmak kullanıcının kararı (ADR 8061 §11)."
+      },
+      "kek": {
+        "yok": "Kurmak kullanıcının kararı; kek test geçici bir kayıt defterine kurar."
+      },
+      "python": {
+        "yok": "Kurmak kullanıcının kararı."
+      },
+      "ajan": {
+        "pencere": "extension.workshop.review"
+      },
+      "katalog": "/{catalog}/releases/{extension}/{version}/install",
+      "basliksiz": {
+        "yok": "Kurulum masaüstünün eklenti kayıt defterindedir."
+      }
+    },
+    {
+      "id": "extensions.enable",
+      "masaustu": {
+        "file": "apps/desktop/src/shell/extensions/view.rs",
+        "text": "Devre dışı bırak"
+      },
+      "komut": {
+        "yok": "Kullanıcının kararı."
+      },
+      "kek": {
+        "yok": "Kullanıcının kararı."
+      },
+      "python": {
+        "yok": "Kullanıcının kararı."
+      },
+      "ajan": {
+        "yok": "Kullanıcının kararı (ADR 8061 §11)."
+      },
+      "katalog": {
+        "yok": "Etkinleştirmek bilgisayarın kaydıdır."
+      },
+      "basliksiz": {
+        "yok": "Eklenti kayıt defteri masaüstündedir."
+      }
+    },
+    {
+      "id": "extensions.update",
+      "masaustu": {
+        "file": "apps/desktop/src/shell/extensions/browse.rs",
+        "text": "Güncellenebilir"
+      },
+      "komut": {
+        "yok": "Kullanıcının kararı."
+      },
+      "kek": {
+        "yok": "Kullanıcının kararı."
+      },
+      "python": {
+        "yok": "Kullanıcının kararı."
+      },
+      "ajan": "extension.workshop.reload",
+      "katalog": "/{catalog}/releases",
+      "basliksiz": {
+        "yok": "Eklenti kayıt defteri masaüstündedir."
+      }
+    },
+    {
+      "id": "extensions.uninstall",
+      "masaustu": {
+        "file": "apps/desktop/src/shell/extensions/view.rs",
+        "text": "\"Kaldır\""
+      },
+      "komut": {
+        "yok": "Kullanıcının kararı."
+      },
+      "kek": {
+        "yok": "Kullanıcının kararı."
+      },
+      "python": {
+        "yok": "Kullanıcının kararı."
+      },
+      "ajan": {
+        "yok": "Kullanıcının kararı (ADR 8061 §11)."
+      },
+      "katalog": {
+        "yok": "Kaldırmak bilgisayarın kaydıdır."
+      },
+      "basliksiz": {
+        "yok": "Eklenti kayıt defteri masaüstündedir."
+      }
+    },
+    {
+      "id": "extensions.run.processing",
+      "masaustu": {
+        "file": "apps/desktop/src/gis/processing/plan.rs",
+        "text": "\"Çalıştır\""
+      },
+      "komut": "cad.processing.run",
+      "kek": {
+        "yok": "kek paketler içindir; çizimde çalıştırmak Python, MCP ve masaüstünündür."
+      },
+      "python": "cad/processing:run",
+      "ajan": "processing.run",
+      "katalog": {
+        "yok": "Sunucu işi komutun kendi kapısındadır (ADR 8057 §96)."
+      },
+      "basliksiz": "ajan:processing.run"
+    },
+    {
+      "id": "extensions.run.audit",
+      "masaustu": {
+        "file": "apps/desktop/src/shell/extensions/audits.rs",
+        "text": "Denetleniyor"
+      },
+      "komut": {
+        "yok": "Denetim kuralları masaüstünün ve ajanın kapısındadır."
+      },
+      "kek": {
+        "yok": "kek paketler içindir."
+      },
+      "python": {
+        "yok": "Denetim kuralları eklentinin süreciyle masaüstünde çalışır."
+      },
+      "ajan": "audit.run",
+      "katalog": {
+        "yok": "Katalog kuralın örneklerini sürümün kapısında sınar."
+      },
+      "basliksiz": {
+        "yok": "Denetim kuralları masaüstünün eklenti kayıt defterindedir."
+      }
+    },
+    {
+      "id": "extensions.catalog.submit",
+      "masaustu": {
+        "file": "apps/desktop/src/shell/extensions/submit.rs",
+        "text": "Kataloğa gönder"
+      },
+      "komut": {
+        "yok": "Çizimin komutu değil."
+      },
+      "kek": {
+        "yok": "Gönderen kullanıcıdır; kek katalog klasörünün dizinini yazar (index)."
+      },
+      "python": {
+        "yok": "Python kitaplığı çizim içindir."
+      },
+      "ajan": {
+        "pencere": "extension.workshop.submit"
+      },
+      "katalog": "/{catalog}/releases",
+      "basliksiz": {
+        "yok": "Gönderen kullanıcıdır."
+      }
+    },
+    {
+      "id": "extensions.catalog.index",
+      "masaustu": {
+        "file": "apps/desktop/src/shell/extensions/view.rs",
+        "text": "Katalog klasörü"
+      },
+      "komut": {
+        "yok": "Çizimin komutu değil."
+      },
+      "kek": "index",
+      "python": {
+        "yok": "Python kitaplığı çizim içindir."
+      },
+      "ajan": "catalog.search",
+      "katalog": "/{catalog}/releases",
+      "basliksiz": "kek:index"
+    },
+    {
+      "id": "extensions.catalog.revocations",
+      "masaustu": {
+        "file": "crates/native/extension-host/src/registry.rs",
+        "text": "geri çekildi"
+      },
+      "komut": {
+        "yok": "Çizimin komutu değil."
+      },
+      "kek": {
+        "yok": "Geri çekme kataloğun inceleyicisinindir."
+      },
+      "python": {
+        "yok": "Python kitaplığı çizim içindir."
+      },
+      "ajan": {
+        "yok": "Geri çekme kataloğun inceleyicisinindir."
+      },
+      "katalog": "/{catalog}/revocations",
+      "basliksiz": {
+        "yok": "Geri çekilen sürümü masaüstünün kayıt defteri durdurur."
+      }
+    },
+    {
+      "id": "processing.tools.list",
+      "masaustu": {
+        "file": "apps/desktop/src/gis/processing/panel.rs",
+        "text": "İşlem ara"
+      },
+      "komut": "cad.processing.tools",
+      "kek": {
+        "yok": "kek paketler içindir."
+      },
+      "python": "cad/processing:tools",
+      "ajan": "processing.list",
+      "katalog": {
+        "yok": "Katalog sürümleri listeler, araçları değil."
+      },
+      "basliksiz": "ajan:processing.list"
+    },
+    {
+      "id": "processing.tools.describe",
+      "masaustu": {
+        "file": "apps/desktop/src/gis/processing/panel.rs",
+        "text": "İşlem ara"
+      },
+      "komut": "cad.processing.tools",
+      "kek": {
+        "yok": "kek paketler içindir."
+      },
+      "python": "cad/processing:tools",
+      "ajan": "processing.describe",
+      "katalog": {
+        "yok": "Katalog sürümleri listeler, araçları değil."
+      },
+      "basliksiz": "ajan:processing.describe"
+    },
+    {
+      "id": "processing.batch",
+      "masaustu": {
+        "file": "apps/desktop/src/gis/processing/apart.rs",
+        "text": "Toplu çalıştır"
+      },
+      "komut": "cad.processing.batch",
+      "kek": {
+        "yok": "kek paketler içindir."
+      },
+      "python": "cad/processing:batch",
+      "ajan": "processing.batch",
+      "katalog": {
+        "yok": "Sunucu işi komutun kendi kapısındadır."
+      },
+      "basliksiz": "ajan:processing.batch"
+    },
+    {
+      "id": "processing.models",
+      "masaustu": {
+        "file": "apps/desktop/src/gis/processing/panel.rs",
+        "text": "Yeni model"
+      },
+      "komut": "cad.processing.run",
+      "kek": {
+        "yok": "kek paketler içindir."
+      },
+      "python": "cad/processing:run",
+      "ajan": "processing.run",
+      "katalog": {
+        "yok": "Modeller projenindir."
+      },
+      "basliksiz": "ajan:processing.run"
+    },
+    {
+      "id": "discovery",
+      "masaustu": {
+        "file": "apps/desktop/src/gis/processing/panel.rs",
+        "text": "İşlem ara"
+      },
+      "komut": "cad.processing.tools",
+      "kek": "sdk",
+      "python": "cad/processing:tools",
+      "ajan": "catalog.search",
+      "katalog": "/{catalog}/releases",
+      "basliksiz": "ajan:catalog.search"
+    }
+  ],
+  "options": {
+    "operation": "extensions.run.processing",
+    "about": "cad.processing.run'ın seçenekleri: komutun girdisi ve çağrı zarfı (requestId, expected).",
+    "rows": [
+      {
+        "option": "tool",
+        "komut": "tool",
+        "python": "tool",
+        "ajan": "input.tool"
+      },
+      {
+        "option": "parameters",
+        "komut": "parameters",
+        "python": "parameters",
+        "ajan": "input.parameters"
+      },
+      {
+        "option": "selection",
+        "komut": "selection",
+        "python": "selection",
+        "ajan": "input.selection"
+      },
+      {
+        "option": "view",
+        "komut": "view",
+        "python": "view",
+        "ajan": "input.view"
+      },
+      {
+        "option": "sink",
+        "komut": "sink",
+        "python": "sink",
+        "ajan": "input.sink"
+      },
+      {
+        "option": "model",
+        "komut": "model",
+        "python": "model",
+        "ajan": "input.model"
+      },
+      {
+        "option": "environment",
+        "komut": "environment",
+        "python": "environment",
+        "ajan": "input.environment"
+      },
+      {
+        "option": "drawing",
+        "komut": "drawing",
+        "python": "drawing",
+        "ajan": "input.drawing"
+      },
+      {
+        "option": "requestId",
+        "komut": "zarf:request_id",
+        "python": "request_id",
+        "ajan": {
+          "yok": "Ajan planla-yürüt ile yazar: plan tek kullanımlıktır (plan_required), aynı yazım ikinci kez yapılmaz."
+        }
+      },
+      {
+        "option": "expected",
+        "komut": "zarf:expected",
+        "python": "expected",
+        "ajan": "planId"
+      }
+    ]
+  },
+  "measured": {
+    "operations": 22,
+    "options": {
+      "ajan": {
+        "var": 9,
+        "yok": 1
+      },
+      "komut": {
+        "var": 10,
+        "yok": 0
+      },
+      "python": {
+        "var": 10,
+        "yok": 0
+      }
+    },
+    "surfaces": {
+      "ajan": {
+        "pencere": 3,
+        "var": 13,
+        "yok": 6
+      },
+      "basliksiz": {
+        "pencere": 0,
+        "var": 15,
+        "yok": 7
+      },
+      "katalog": {
+        "pencere": 0,
+        "var": 9,
+        "yok": 13
+      },
+      "kek": {
+        "pencere": 0,
+        "var": 10,
+        "yok": 12
+      },
+      "komut": {
+        "pencere": 0,
+        "var": 6,
+        "yok": 16
+      },
+      "masaustu": {
+        "pencere": 0,
+        "var": 21,
+        "yok": 1
+      },
+      "mobil": {
+        "pencere": 0,
+        "var": 0,
+        "yok": 22
+      },
+      "python": {
+        "pencere": 0,
+        "var": 6,
+        "yok": 16
+      },
+      "web": {
+        "pencere": 0,
+        "var": 0,
+        "yok": 22
+      }
+    }
+  }
+}

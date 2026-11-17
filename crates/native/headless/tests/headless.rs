@@ -17,6 +17,8 @@ mod agent_tools;
 mod processing_doors;
 #[path = "headless/processing_model.rs"]
 mod processing_model;
+#[path = "headless/coverage.rs"]
+mod coverage;
 #[path = "headless/pens.rs"]
 mod pens;
 #[path = "headless/scales.rs"]

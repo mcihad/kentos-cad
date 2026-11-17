@@ -5751,3 +5751,49 @@ masaüstü `tests/grants.rs` (yeni, 2) ve `an_updates_new_capability_is_shown_an
     - yol olarak verilen tekerlek adı okunmaz;
     - klasör ilkeden okunur.
   - Masaüstünün bütün sınamaları: 2548.
+
+## §124. API'nin kapsam manifesti: her yüzeyde ne var, ölçülerek (`ADIM 21`, ECO-API-06)
+
+**17 Kasım.** Dosya: `docs/inventory/eklenti-api-kapsami.json` (yeni); sınama: başsız `tests/headless/coverage.rs`
+(yeni, 2).
+
+- **Sorun.** ECO-API-06 "kapsam manifesti UI/komut/Python/AI/web/masaüstü/mobil/başsız ve seçenek düzeyinde tamlığı
+  ölçer" der. API ailesinin adları ADR 8061 §11'de kesinleşmişti ama hangi işlemin hangi yüzeyde olduğu yazılı
+  değildi. Elle yazılmış bir tablo da kodla ayrışır.
+- **Karar:** manifest ailenin 22 işlemini dokuz yüzeyde yazar: masaüstü, ürün komutu, `kentos kek`, Python, ajan/MCP,
+  katalog HTTP, başsız, web, mobil. Her yüzeyde üç durumdan biri vardır:
+  - giriş adı: işlem vardır;
+  - `{"pencere": araç}`: ajan yalnız kullanıcının penceresini açar, çünkü karar kullanıcınındır (kurmak, göndermek);
+  - `{"yok": neden}`: işlem bilerek yoktur, nedeniyle.
+
+  Web ve mobil için tek neden yazılır: web işleri ADR 0228'le bekletiliyor, mobil uygulama yok.
+- **Ölçülür, söylenmez:** sınama her adı yüzeyin kendi kaydında arar:
+  - ajan araçlarının listesi, komut kataloğu;
+  - `kentos kek` alt komutları, Python kitaplığının adları;
+  - katalog sunucusunun yolları, masaüstünde dosya + söz çapası.
+
+  Sınama sayıları da kendisi hesaplar ve manifestinkiyle karşılaştırır. Bulunmayan ad ya da sayılmamış bir sayı
+  kırmızıdır; kırmızı ileti doğru sayıları da yazar. Bir ad bozulunca iki yanlışı da adıyla söyledi.
+- **Seçenek düzeyi** `cad.processing.run` için: komutun sekiz girdisi ve çağrı zarfının `requestId`'si ile `expected`'ı;
+  her biri komutta, Python'da ve ajanda aranır. Ajanda `requestId` yoktur ve bu bilinçlidir: ajan planla-yürüt ile
+  yazar, plan tek kullanımlıktır (§120).
+- **Ölçülen (22 işlem):**
+
+  | Yüzey | Var | Pencere | Yok |
+  |---|---|---|---|
+  | masaüstü | 21 | 0 | 1 |
+  | ajan/MCP | 13 | 3 | 6 |
+  | başsız | 15 | 0 | 7 |
+  | `kentos kek` | 10 | 0 | 12 |
+  | katalog HTTP | 9 | 0 | 13 |
+  | ürün komutu | 6 | 0 | 16 |
+  | Python | 6 | 0 | 16 |
+  | web, mobil | 0 | 0 | 22 |
+
+  Seçenekler: komut 10/10, Python 10/10, ajan 9/10.
+
+  "Yok"ların çoğu tasarım gereğidir: kurmak, etkinleştirmek ve kaldırmak kullanıcının kararıdır; çizimin komutu
+  paketle uğraşmaz; Python kitaplığı çizim içindir. Masaüstündeki tek "yok" eski adların göçüdür (`kek upgrade`):
+  yazarın işidir.
+- **Sınamalar:** her ad bulunur ve sayılar ölçülenle aynıdır; ailenin her bölümü manifesttedir, her işlem bir kez
+  yazılır.

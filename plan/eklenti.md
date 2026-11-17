@@ -786,7 +786,9 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   [PY-UV-26]. 17 Kasım (§123): ilkenin `wheelFolder`'ı kurumun tekerlek klasörünü gösterir; masaüstü ortamı oradan
   internetsiz, yalnız tekerleklerle ve kilidin özetleriyle hazırlar; önizleme ve hazırlama önce kilidin bu bilgisayar
   için istediği dosyaları platform etiketi ve özetle denetler, eksiği paket paket söyler (gerçek pencere: ağ kapalı,
-  Vitrin'in ortamı klasörden) [PY-UV-27]. Kalan: kurum aynası/vekil sunucunun kimlik bilgileri (PY-UV-25).*
+  Vitrin'in ortamı klasörden) [PY-UV-27]. PY-UV-25'in kullanıcı kapsamı: vekil sunucu sistemin ayarıdır (HTTPS_PROXY),
+  pakete, kilide ya da betiğe yazılmış adres parolası paketlerken uyarılır, katalog geçidinde engellenir (§100); rapor
+  ve günlükte maskelenir (§110). Kalan: kiracı kapsamındaki özel dizin kimlik bilgileri (ECO-DEC-11, sahibin kararı).*
 - [x] Ortam denetimi üst veri, SDK içe aktarma, gerekli paket sürüm/içe aktarma, yerel kütüphane ve eklenti uyumunu
   tanılar [PY-UV-28]. Sır içermeyen kilit/ortam/SBOM raporu dışa aktarılır [PY-UV-29]. Önbellek/venv/yorumlayıcı
   temizliğinde sahiplik ve etkin iş başvuruları denetlenir [PY-UV-30]. Aracı (broker) SDK'sı host'un doğrulanmış,
@@ -1244,7 +1246,7 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   akışı, ikonlar, doğrulamadan geçen örnek eklenti, sürüm kaydı, Türkçe dizin); çalışan işler tek listede (§102):
   durum çubuğunda yalnız iş varken bir hücre ve her programda "Çalışan işler" sekmesi; her işin başlatanı (Siz,
   Asistan, bağlı ajan), ilerlemesi ve kendi Durdur'u; ajanın hesaplanmış işi yazılmadan durdurulur.*
-- [ ] **API ailesi** (adlar SDK uyumluluk ADR'sinde kesinleşir): `python.environments.*`, `extensions.*`
+- [x] **API ailesi** (adlar SDK uyumluluk ADR'sinde kesinleşir): `python.environments.*`, `extensions.*`
   (inspect/package/check/install/prepare/enable/disable/run/update/uninstall), `extensions.catalog.*`, `ui.sessions.*`,
   `processing.tools.*`, `processing.models.*`/`jobs.*`. Okuma/doğrulama/plan çağrıları yazmaz; indirme/kurma ayrı açık
   komuttur [ECO-API-03]; her komut değişmez kaynak/sürüm/özet, kullanan/bağlam, beklenen revizyon ve sonuç/uyarı/geri
@@ -1268,8 +1270,9 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   etkinleştirme, ortam hazırlama ve yayın kullanıcının (API değil, ajan pencereyi açar) [ECO-API-03]; okuma, doğrulama
   ve plan yazmaz, yazan komut planın kimliği, beklenen revizyon, uyarı, geri alma adı, iş ve eklenti aracında paket
   özetiyle döner [ECO-API-04]; genel kapılar (`cad.run` …) aynı korumadan geçer [ECO-API-08]; `kentos kek verify`
-  kurulumun kapısıdır, yayın kataloğun oturumu ve inceleyicisiyle [ECO-API-09]; kalan: kapsam manifesti
-  [ECO-API-06].*
+  kurulumun kapısıdır, yayın kataloğun oturumu ve inceleyicisiyle [ECO-API-09]. 17 Kasım (§124): kapsam manifesti
+  (`docs/inventory/eklenti-api-kapsami.json`) 22 işlemi dokuz yüzeyde yazar; sınama her adı kodda bulur ve sayıları
+  ölçer; seçenek düzeyi `cad.processing.run` için [ECO-API-06].*
 - [ ] **Derslerden (13 Kasım):**
   - **Yazılı SDK kararlılık politikası** (QEP 425 benzeri ADR, ADIM 19'un başında): kararlı yüzey yalnız ana sürümde
     kırılır, kaldırmadan önce en az bir sürüm "eskiyor" uyarısı; deneysel yüzeyler yalnız geliştirici ortamında açılır
