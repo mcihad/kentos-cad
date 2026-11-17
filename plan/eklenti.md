@@ -1488,6 +1488,9 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
   - **Kurum ve çevrimdışı katalog:** kiracı kataloğu, statik indeks, erişim jetonu, engel listesi; güvensiz varsayılan
     yok [D14]. **Geri çekme:** imzalı liste, kamuya açık kaldırma kaydı, "şüpheli" ile "kesin" ayrımı, itiraz yolu [D15].
   - **Emeklilik ve devir:** "yerine geçen" eklenti, bakıcı devri, terk edilmiş paketin işaretlenmesi [D9].
+    — *kısmen (17 Kasım, ADR 8057 §119): emekli eklenti kurulu ayrıntıda ve katalog girdisinde yayımcının sözüyle
+    söylenir, yerine geçen kuruluysa adıyla, değilse "Yerine geçeni bul"la; katalog dizini emekliliği taşır. Kalan:
+    bakıcı devri, terk edilmiş paketin işaretlenmesi (katalog sunucusu).*
   - **Karne ve dürüst sinyaller:** geçen kapılar, yetenekler ve gerekçeleri, tespit edilen kullanım, bakım ve uyumluluk;
     **yıldız oyu yok**; AI üretim kökeni; istemci telemetrisi yasak; protokol göç oranı ve sağlık ölçütleri izlenir [D17].
     — *kısmen (16 Kasım, ADR 8057 §86): masaüstünde katalog girdisinin karnesi (bu KentOS'ta çalışır mı, taklit/benzerlik,

@@ -5534,3 +5534,22 @@ olan panel sınamalarının çalışma kökenleri.
   çevrimdışı tekerlek deposunun platform etiketi ve özetle doğrulanması (PY-UV-27).
 - **Sınama:** eklenti paketi kayıt defteri 2 durum (adla ve önekle sabitlenen paketin genel depodan gelişi reddedilir,
   inceleme ve kurulum aynı sözle) ve 1 izin (gerçek deposuna sabitlenen ve ayracı tutmayan önek: ret yok).
+
+## §119. Emekli eklenti söylenir, yerine geçene götürür (`ADIM 22A`, Emeklilik ve devir, D9)
+
+**17 Kasım.** Kod: eklenti paketi `catalog.rs` (`CatalogEntry::deprecation`); masaüstü `extensions/view.rs`
+(`retired_words`, `retired_banner`; kurulu ayrıntıda ve katalog girdisinde), `extensions/mod.rs` (`Event::Find`);
+sınamalar `catalog.rs`, `extensions/tests/retired.rs` (yeni).
+
+- **Sorun.** Manifestin `deprecation`'ı (yayımcının sözü ve `replacedBy`) şemada vardı ama hiçbir yerde
+  gösterilmiyordu: emekliye ayrılmış bir eklenti kurulu listede ve katalogda sıradan bir eklenti gibi duruyordu, yerine
+  geçen eklentiye giden yol yoktu (plan: "Emeklilik ve devir: yerine geçen eklenti").
+- **Karar:** kurulu eklentinin ayrıntısında ve katalog girdisinde, ne olduğundan önce uyarı: "Bu eklenti yayımcısınca
+  emekliye ayrıldı: {söz}." Yerine geçen kuruluysa adıyla ("Yerine geçen “Kent Rehberi” kurulu."), değilse kimliğiyle
+  ve "Yerine geçeni bul" düğmesiyle: Bulunabilir listesi o kimlikle açılır. Katalog dizini (`kentos kek index`)
+  emekliliği girdiye yazar; emekli olmayanın girdisinde alan yazılmaz, eski KentOS yeni alanı yok sayar (§86'nın
+  kuralı). Ajanların ortak kataloğu da söyler (§113'ün `compatibility.deprecated`'ı).
+- **Kalan (katalog sunucusu):** bakıcı devri ve terk edilmiş paketin işaretlenmesi.
+- **Sınamalar:** eklenti paketi 1 (emekli paketin girdisi yerine geçeni adlandırır, gidiş-dönüşte aynı; emekli
+  olmayanda alan yok); masaüstü 1 (sözler: yerine geçen yokken, kuruluyken, adıyla; emekli paket kurulur, manifesti
+  emekliliği taşır; Yerine geçeni bul Bulunabilir'i kimlikle açar).

@@ -289,6 +289,27 @@ impl App {
         table.into()
     }
 
+    /// A retired extension's banner ([`retired_words`]), with the way to its replacement when it is not installed.
+    fn retired_banner<'a>(
+        &self,
+        d: &kentos_extensions::manifest::Deprecation,
+    ) -> Banner<'a, Message> {
+        let installed = d.replaced_by.as_ref().and_then(|next| {
+            self.extensions
+                .registry
+                .as_ref()
+                .is_some_and(|r| r.extensions().iter().any(|e| &e.id == next))
+                .then(|| self.extension_name(next))
+        });
+        let (words, find) = retired_words(d, installed.as_deref());
+        match find {
+            Some(next) => {
+                Banner::warning(words).action("Yerine geçeni bul", msg(Event::Find(next)))
+            }
+            None => Banner::warning(words),
+        }
+    }
+
     fn installed_details<'a>(&'a self, chosen: Option<ExtensionView>) -> Element<'a, Message> {
         let Some(e) = chosen else {
             return label::caption("Soldan bir eklenti seçin.").into();
@@ -329,6 +350,11 @@ impl App {
                 said.push_str(&format!("\n{detail}"));
             }
             form = form.wide(label::caption(said));
+        }
+        // Retired by its publisher, with its replacement (plan/eklenti.md ADIM 22A › Emeklilik ve devir; §119): said
+        // before what it is, with the way to the replacement when it is not installed.
+        if let Some(d) = manifest.and_then(|m| m.deprecation.as_ref()) {
+            form = form.wide(self.retired_banner(d));
         }
         if let Some(m) = manifest {
             form = form.wide(label::body(m.summary.clone()));
@@ -564,10 +590,12 @@ impl App {
             return label::caption("Soldan bir eklenti seçin.").into();
         };
         let installed = self.installed_version(&entry.id);
-        let mut form = Form::new()
-            .label_width(120.0)
-            .section(entry.name.clone())
-            .wide(label::body(entry.summary.clone()));
+        let mut form = Form::new().label_width(120.0).section(entry.name.clone());
+        // Retired: said first, the replacement a press away (§119).
+        if let Some(d) = &entry.deprecation {
+            form = form.wide(self.retired_banner(d));
+        }
+        form = form.wide(label::body(entry.summary.clone()));
         if let Some(d) = &entry.description {
             form = form.wide(label::caption(d.clone()));
         }
@@ -1074,4 +1102,27 @@ fn review_form<'a>(p: &'a Pending, manifest: Option<&'a Manifest>) -> Element<'a
             .wide(kentos_ui::widget::notes(text));
     }
     form.into()
+}
+
+/// A retired extension's words (docs/adr/8057 §119): its publisher's, its replacement by name when `installed` (the
+/// replacement's name), else by id with the id to look for in the catalogs.
+pub(crate) fn retired_words(
+    d: &kentos_extensions::manifest::Deprecation,
+    installed: Option<&str>,
+) -> (String, Option<String>) {
+    let mut words = format!(
+        "Bu eklenti yayımcısınca emekliye ayrıldı: {}.",
+        d.message.trim().trim_end_matches('.')
+    );
+    match (&d.replaced_by, installed) {
+        (None, _) => (words, None),
+        (Some(_), Some(name)) => {
+            words.push_str(&format!(" Yerine geçen “{name}” kurulu."));
+            (words, None)
+        }
+        (Some(next), None) => {
+            words.push_str(&format!(" Yerine geçen: {next}."));
+            (words, Some(next.clone()))
+        }
+    }
 }

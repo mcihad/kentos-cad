@@ -405,6 +405,8 @@ pub(crate) enum Event {
     FlashEnd(&'static str, usize, usize),
     /// The lists' word, and their program filter by its place in browse.rs's `PROGRAMS`.
     Query(String),
+    /// The catalogs' list on an extension's id: a retired one's replacement looked for (docs/adr/8057 §119).
+    Find(String),
     ProgramFilter(usize),
     /// The report card's filter by its place in browse.rs's `SIGNALS`.
     SignalFilter(usize),
@@ -677,6 +679,11 @@ impl App {
             }
             Event::Query(text) => {
                 self.extensions.query = text;
+                self.choose_first();
+            }
+            Event::Find(id) => {
+                self.extensions.part = Part::Available;
+                self.extensions.query = id;
                 self.choose_first();
             }
             Event::ProgramFilter(i) => {

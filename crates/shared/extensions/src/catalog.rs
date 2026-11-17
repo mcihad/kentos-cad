@@ -76,6 +76,10 @@ pub struct CatalogEntry {
     /// çalıştır and `kentos kek test` run.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub examples: u32,
+    /// Retired by its publisher, with what replaces it (its manifest's `deprecation`; docs/adr/8057 §119): the list
+    /// says so and leads to the replacement.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub deprecation: Option<crate::manifest::Deprecation>,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -331,6 +335,7 @@ fn entry(
         digest,
         python_packages: Vec::new(),
         examples: 0,
+        deprecation: m.deprecation,
     }
 }
 
@@ -431,6 +436,11 @@ mod tests {
             !catalog.to_json().contains("\"examples\": 0"),
             "nothing written when none"
         );
+        assert!(
+            catalog.packages.iter().all(|e| e.deprecation.is_none())
+                && !catalog.to_json().contains("deprecation"),
+            "not retired: nothing written"
+        );
         assert_eq!(Catalog::read(&catalog.to_json()).unwrap(), catalog);
         // A field an older KentOS does not know (a newer `kek index`'s) leaves the package listed.
         let newer = catalog.to_json().replacen(
@@ -454,6 +464,35 @@ mod tests {
             .verify(&packages[1].1, &Limits::default())
             .unwrap_err();
         assert_eq!(p.code, "catalog_mismatch");
+    }
+
+    /// A retired package's entry says so and names its replacement (docs/adr/8057 §119).
+    #[test]
+    fn a_retired_packages_entry_names_its_replacement() {
+        let mut files = folder("ornek-altlik");
+        let mut manifest: serde_json::Value =
+            serde_json::from_slice(&files["manifest.json"]).unwrap();
+        manifest["deprecation"] = serde_json::json!({
+            "message": "Kent Rehberi'ne taşındı.",
+            "replacedBy": "tr.ornek.kent-rehberi"
+        });
+        files.insert(
+            "manifest.json".into(),
+            serde_json::to_vec_pretty(&manifest).unwrap(),
+        );
+        let bytes = pack(&files, &Limits::default()).unwrap().bytes;
+        let catalog = index(
+            "Örnek",
+            &[("altlik.kek".to_owned(), bytes)],
+            &Limits::default(),
+        )
+        .unwrap();
+        let retired = catalog.packages[0].deprecation.as_ref().expect("retired");
+        assert_eq!(
+            retired.replaced_by.as_deref(),
+            Some("tr.ornek.kent-rehberi")
+        );
+        assert_eq!(Catalog::read(&catalog.to_json()).unwrap(), catalog);
     }
 
     #[test]
