@@ -1,7 +1,7 @@
 {
   "format": "kentos.regulationCases",
   "version": 1,
-  "about": "Emsal sınırlarının bağımsız durumları (docs/adr/8079): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 22/1-ç, -f, -k, -l ve 44/1'in metninden (RG 25.7.2019/30842, 23.1.2021/31373, 11.7.2021/31538; 44/1 RG 3.7.2017/30113) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un sayımıdır (building.limits): durumlar sınırların koşullarını sınar, sayımın kendisini Rust'ın sınamaları sınar. 22/1-m'nin durumları (docs/adr/8094) bendin RG 9.10.2021/31623 ve 31.12.2022/32060 hâllerinden elle (building.structuralSystem, building.traditional: projenin beyanı; spaces: mahallerin adları). Kalın taş duvarların durumları (docs/adr/8095) 20/8-j'nin RG 9.10.2021/31623, 5/8'in RG 31.12.2022/32060 metninden ve 22/1-m'nin iki hâlinden elle (building.masonry: tablonun saydığı paylar).",
+  "about": "Emsal sınırlarının bağımsız durumları (docs/adr/8079): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 22/1-ç, -f, -k, -l ve 44/1'in metninden (RG 25.7.2019/30842, 23.1.2021/31373, 11.7.2021/31538; 44/1 RG 3.7.2017/30113) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un sayımıdır (building.limits): durumlar sınırların koşullarını sınar, sayımın kendisini Rust'ın sınamaları sınar. 22/1-m'nin durumları (docs/adr/8094) bendin RG 9.10.2021/31623 ve 31.12.2022/32060 hâllerinden elle (building.structuralSystem, building.traditional: projenin beyanı; spaces: mahallerin adları). Kalın taş duvarların durumları (docs/adr/8095) 20/8-j'nin RG 9.10.2021/31623, 5/8'in RG 31.12.2022/32060 metninden ve 22/1-m'nin iki hâlinden elle (building.masonry: tablonun saydığı paylar). Sivas 22/k'nin durumları (docs/adr/8096) Sivas İmar Yönetmeliği'nin (RG 10.11.2022/32009) “toplamı %30'u geçmemek üzere”sinden elle (building.exemptCap: tablonun %30'u ve içinde saydığı).",
   "cases": [
     {
       "id": "kapici-70-konut",
@@ -3747,6 +3747,442 @@
           "PAİY 5/8": [
             "outOfScope",
             "31.12.2022"
+          ]
+        }
+      }
+    },
+    {
+      "id": "sivas-duvar-sinir-icinde",
+      "neden": "Sivas 22/k duvarları %30'un içinde sayar: emsal harici 0 + 16,875 m², sınır 60 m² (200 m² parsel, emsal 1,00) → geçer; PAİY 5/8 onları dışında sayar, geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000301",
+              "00000000-0000-4000-8000-000000000302"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000303"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "limits": [],
+        "local": "sivas",
+        "structuralSystem": "cutStoneMasonry",
+        "traditional": true,
+        "masonry": {
+          "walls": 16.875,
+          "footprint": 7.75,
+          "thick": [
+            "00000000-0000-4000-8000-000000000401",
+            "00000000-0000-4000-8000-000000000402",
+            "00000000-0000-4000-8000-000000000403"
+          ]
+        },
+        "exemptCap": {
+          "cap": 60.0,
+          "exempt": 0.0
+        }
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ],
+          "PAİY 22/1-m": [
+            "outOfScope",
+            "31.12.2022"
+          ],
+          "PAİY 20/8-j": [
+            "passed",
+            "9.10.2021"
+          ],
+          "PAİY 5/8": [
+            "passed",
+            "31.12.2022"
+          ],
+          "Sivas 22/k": [
+            "passed",
+            "10.11.2022"
+          ]
+        }
+      }
+    },
+    {
+      "id": "sivas-duvar-sinir-asiyor",
+      "neden": "Sınır 15 m² (50 m² parsel, emsal 1,00), %30'un içinde 2 m² harici: duvarlarla 18,875 m² > 15 m² → Sivas 22/k kalır (aşan 3,875 m² emsale girer); PAİY 5/8'e göre geçer, sıkı olan Sivas bağlar.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000301",
+              "00000000-0000-4000-8000-000000000302"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000303"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "limits": [],
+        "local": "sivas",
+        "structuralSystem": "cutStoneMasonry",
+        "traditional": true,
+        "masonry": {
+          "walls": 16.875,
+          "footprint": 7.75,
+          "thick": [
+            "00000000-0000-4000-8000-000000000401",
+            "00000000-0000-4000-8000-000000000402",
+            "00000000-0000-4000-8000-000000000403"
+          ]
+        },
+        "exemptCap": {
+          "cap": 15.0,
+          "exempt": 2.0
+        }
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "local_masonry_walls_over",
+            "has": [
+              "emsal harici 18.88 m², sınır 15.00 m²; aşan 3.88 m² emsale girer"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ],
+          "PAİY 22/1-m": [
+            "outOfScope",
+            "31.12.2022"
+          ],
+          "PAİY 20/8-j": [
+            "passed",
+            "9.10.2021"
+          ],
+          "PAİY 5/8": [
+            "passed",
+            "31.12.2022"
+          ],
+          "Sivas 22/k": [
+            "failed",
+            "10.11.2022"
+          ]
+        }
+      }
+    },
+    {
+      "id": "sivas-duvar-emsalsiz",
+      "neden": "İmar durumunda emsal yok: %30'un sınırı okunmaz → Sivas 22/k eksik veri.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000301",
+              "00000000-0000-4000-8000-000000000302"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000303"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "limits": [],
+        "local": "sivas",
+        "structuralSystem": "cutStoneMasonry",
+        "traditional": true,
+        "masonry": {
+          "walls": 16.875,
+          "footprint": 7.75,
+          "thick": [
+            "00000000-0000-4000-8000-000000000401",
+            "00000000-0000-4000-8000-000000000402",
+            "00000000-0000-4000-8000-000000000403"
+          ]
+        }
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "local_masonry_walls_over",
+            "state": "missingData",
+            "has": [
+              "emsal yazılmamış"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ],
+          "PAİY 22/1-m": [
+            "outOfScope",
+            "31.12.2022"
+          ],
+          "PAİY 20/8-j": [
+            "passed",
+            "9.10.2021"
+          ],
+          "PAİY 5/8": [
+            "passed",
+            "31.12.2022"
+          ],
+          "Sivas 22/k": [
+            "missingData",
+            "10.11.2022"
+          ]
+        }
+      }
+    },
+    {
+      "id": "sivas-duvar-sivas-oncesi",
+      "neden": "1.6.2022 başvurusu: Sivas İmar Yönetmeliği 10.11.2022'de yürürlüğe girdi → Sivas satırı yok; duvarlar o gün PAİY 22/1-m'de (%30 içinde), uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "01.06.2022"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000301",
+              "00000000-0000-4000-8000-000000000302"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000303"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "limits": [],
+        "local": "sivas",
+        "structuralSystem": "cutStoneMasonry",
+        "traditional": true,
+        "masonry": {
+          "walls": 16.875,
+          "footprint": 7.75,
+          "thick": [
+            "00000000-0000-4000-8000-000000000401",
+            "00000000-0000-4000-8000-000000000402",
+            "00000000-0000-4000-8000-000000000403"
+          ]
+        },
+        "exemptCap": {
+          "cap": 60.0,
+          "exempt": 0.0
+        }
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_masonry_walls_not_exempt",
+            "state": "expertReview"
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ],
+          "PAİY 22/1-m": [
+            "outOfScope",
+            "9.10.2021"
+          ],
+          "PAİY 20/8-j": [
+            "passed",
+            "9.10.2021"
+          ],
+          "PAİY 5/8": [
+            "expertReview",
+            "1.10.2017"
           ]
         }
       }

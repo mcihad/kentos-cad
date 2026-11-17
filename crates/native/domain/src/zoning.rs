@@ -130,17 +130,6 @@ pub struct ZoningRoom {
 }
 
 
-/// A traditional cut stone masonry building's stone walls as the ratios count them (docs/adr/8095): their parts out
-/// apart from the 30 % and, of the exterior walls on the ground storeys, out of taban alanı (m²); the load-bearing stone
-/// walls thicker than 12.50 cm and those as thick with no load-bearing declaration, by persistent id.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct ZoningMasonry {
-    pub walls: f64,
-    pub footprint: f64,
-    pub thick: Vec<String>,
-    pub undeclared: Vec<String>,
-}
-
 /// One storey's rooms as the ratios count them, m².
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ZoningLevel {
@@ -605,6 +594,13 @@ impl Document {
         out
     }
 
+    /// The ratios' whole count, with or without the parcel's zoning (a parcel of 0 without one): what the audit facts
+    /// read at once (docs/adr/8095).
+    pub fn zoning_counted(&self) -> ZoningReport {
+        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning);
+        self.zoning_measured(zoning)
+    }
+
     /// Each room as the ratios count it, with or without the parcel's zoning (docs/adr/8069): what the model's emsal zones
     /// are made of.
     pub fn zoning_rooms(&self) -> Vec<ZoningRoom> {
@@ -617,19 +613,6 @@ impl Document {
     pub fn zoning_limits(&self) -> Vec<ZoningLimitUse> {
         let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning);
         self.zoning_measured(zoning).limits
-    }
-
-    /// A traditional cut stone masonry building's stone walls as the ratios count them, with or without the parcel's
-    /// zoning (docs/adr/8095).
-    pub fn zoning_masonry(&self) -> ZoningMasonry {
-        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning);
-        let r = self.zoning_measured(zoning);
-        ZoningMasonry {
-            walls: r.masonry,
-            footprint: r.masonry_footprint,
-            thick: r.masonry_walls,
-            undeclared: r.masonry_undeclared,
-        }
     }
 
     /// The building's footprint as the ratios count it (docs/adr/8032): its area and outline, with or without a zoning.

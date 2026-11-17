@@ -59,7 +59,7 @@ Metinler ADR 8094 §1'dekilerdir (derlenmiş PAİY, 9.10.2021 ve 31.12.2022 değ
 
 - **Alan hesabı:** `zoning/masonry.rs` (`EXTERIOR_KEPT`, `INTERIOR_KEPT`, `walls`, `parts`); `zoning_measured` payı mahal
   mahal böler (`Room::net_shape`, cephe köşeleri); `ZoningReport::{masonry, masonry_footprint, masonry_walls,
-  masonry_undeclared}`, `ZoningRoom::walls`, `Document::zoning_masonry` (`ZoningMasonry`); tablonun iki satırı.
+  masonry_undeclared}`, `ZoningRoom::walls`; olgular sayımı `Document::zoning_counted` ile bir kez okur (ADR 8096); tablonun iki satırı.
 - **IFC:** `EmsalArea::walls`, zonun açıklaması (`kentos_ifc::arch::emsal_state`); `arch_ifc::emsal_areas`.
 - **Olgular:** `MasonryFacts` (`walls`, `footprint`, `thick`, `undeclared`); SDK'nın şeması yeniden yazıldı.
 - **Paket:** `emsal.duvarlar`; `data/surumler.json`'a PAİY 20/8-j (yok, 9.10.2021) ve 5/8 (1.10.2017, 31.12.2022);
@@ -88,5 +88,5 @@ Metinler ADR 8094 §1'dekilerdir (derlenmiş PAİY, 9.10.2021 ve 31.12.2022 değ
   dışında kalan kare) değebilir; karma duvarlı köşede pay biraz fazla çıkabilir.
 - **İç taş duvarların T birleşimi:** öbür iç taş duvarın çekirdeği düşülür; çekirdeği olmayan (12,50 cm'den ince
   taşıyıcı) duvarla birleşimde tam gövde düşülür.
-- **Sivas 22/k** (yerel yönetmeliğin kesme taş yığma bendi, toplamı %30'u geçmemek üzere) paketin emsal kuralında
-  okunmuyor.
+- **Sivas 22/k** (yerel yönetmeliğin kesme taş yığma bendi, toplamı %30'u geçmemek üzere) — yapıldı: ADR
+  [8096](8096-sivas-22k-thick-walls-within-30.md).

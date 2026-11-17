@@ -57,6 +57,10 @@ pub struct BuildingFacts {
     /// 5/8, 20/8-j); absent for any other building.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub masonry: Option<MasonryFacts>,
+    /// Emsal ve TAKS tablosu's 30 % (PAİY 5/8; docs/adr/8096): the parcel's emsal area's 30 % and the emsal harici it
+    /// counts within it, m²; absent without the parcel's zoning and its emsal.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub exempt_cap: Option<ExemptCap>,
     /// The rooms that carry people as the escape rules count them (BYKHY Ek-5/A, docs/adr/8035), by persistent id.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rooms: Vec<RoomPeople>,
@@ -122,6 +126,16 @@ pub struct MasonryFacts {
     pub thick: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub undeclared: Vec<String>,
+}
+
+/// The 30 % of 5/8 as Emsal ve TAKS tablosu counts it (docs/adr/8096): its limit (`cap`, 30 % of the parcel's emsal
+/// area) and the emsal harici within it (`exempt`), m².
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct ExemptCap {
+    pub cap: f64,
+    pub exempt: f64,
 }
 
 /// A shaft and what encloses it (docs/adr/8087): its persistent id, storey and name, `elevator` (an elevator's shaft) or
@@ -468,6 +482,10 @@ impl BuildingFacts {
             l.area = round(l.area, AREA);
             l.allowed = round(l.allowed, AREA);
             l.over = round(l.over, AREA);
+        }
+        if let Some(c) = &mut self.exempt_cap {
+            c.cap = round(c.cap, AREA);
+            c.exempt = round(c.exempt, AREA);
         }
         if let Some(m) = &mut self.masonry {
             m.walls = round(m.walls, AREA);

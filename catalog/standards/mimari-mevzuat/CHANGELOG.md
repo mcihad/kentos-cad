@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 0.20.0 — 17 Kasım 2026
+
+- Sivas 22/k (`emsal.sivas_duvarlar`): yerel yönetmelik Sivas seçiliyse geleneksel kesme taş yığma binanın kalın taş
+  duvarları "toplamı %30'u geçmemek üzere" sayılır: tablonun %30'un içinde saydığına duvarların kalın kısmı eklenince
+  sınırı aşarsa kaldı (`local_masonry_walls_over`; PAİY 5/8 onları %30'un dışında sayar, sıkı olan bağlar), emsal
+  yazılmamışsa eksik veri. Olgular `building.exemptCap`'i (5/8'in %30'u ve içinde sayılan) taşır. 4 bağımsız durum.
+
 ## 0.19.0 — 17 Kasım 2026
 
 - Kalın taş duvarlar (`emsal.duvarlar`): geleneksel kesme taş yığma binada taşıyıcı yığma taş duvarların 25 cm'yi (iç

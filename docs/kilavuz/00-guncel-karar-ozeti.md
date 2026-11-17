@@ -319,6 +319,9 @@
     binada taşıyıcı taş duvarların 25 cm'yi (iç duvarda 12,50 cm'yi) aşan kısmı Emsal ve TAKS tablosunda %30 dışında
     (5/8), dış duvarlarınki taban alanı dışında (20/8-j); dış duvarın payı dış yüzdeki şerit, iç duvarınki iki yüzdeki
     şeritler; emsal zonunun açıklamasında yazılır. Beyansız kalın duvar eksik veri.
+  - **Sivas 22/k (17 Kasım 2026; [ADR 8096](../adr/8096-sivas-22k-thick-walls-within-30.md), K139–K141):** Sivas
+    seçiliyse kalın taş duvarlar %30'un içinde okunur (PAİY 5/8 dışında sayar, sıkı olan bağlar); olgulara 5/8'in %30'u
+    (`exemptCap`); olgular tabloyu bir kez sayar.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

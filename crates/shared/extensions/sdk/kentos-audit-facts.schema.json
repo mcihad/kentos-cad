@@ -107,6 +107,17 @@
           },
           "type": "array"
         },
+        "exemptCap": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExemptCap"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Emsal ve TAKS tablosu's 30 % (PAİY 5/8; docs/adr/8096): the parcel's emsal area's 30 % and the emsal harici it\ncounts within it, m²; absent without the parcel's zoning and its emsal."
+        },
         "height": {
           "default": 0.0,
           "description": "Bina yüksekliği (BYKHY 4/h): the storeys on ±0.00 and above, as the fire rules measure them, m.",
@@ -983,6 +994,24 @@
       "required": [
         "length",
         "path"
+      ],
+      "type": "object"
+    },
+    "ExemptCap": {
+      "description": "The 30 % of 5/8 as Emsal ve TAKS tablosu counts it (docs/adr/8096): its limit (`cap`, 30 % of the parcel's emsal\narea) and the emsal harici within it (`exempt`), m².",
+      "properties": {
+        "cap": {
+          "format": "double",
+          "type": "number"
+        },
+        "exempt": {
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "cap",
+        "exempt"
       ],
       "type": "object"
     },

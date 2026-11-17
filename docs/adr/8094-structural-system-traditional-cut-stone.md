@@ -105,7 +105,7 @@ Gazete'nin eski sayısından (WebFetch) okundu.
 ## §6. Sıradaki adımlar
 
 - **Kalın taş duvarların payı** (K133): 20/8-j, 5/8 ve 22/1-m'nin 9.10.2021 hâli; tablo, TAKS ve emsal zonları — yapıldı: ADR [8095](8095-thick-stone-walls-out-of-emsal.md).
-- **Sivas 22/k:** yerel yönetmeliğin kesme taş yığma bendi paketin emsal kuralında okunmuyor.
+- **Sivas 22/k:** yerel yönetmeliğin kesme taş yığma bendi — duvarları yapıldı: ADR [8096](8096-sivas-22k-thick-walls-within-30.md).
 - **Blok başına taşıyıcı sistem:** bina programının binasında (ADR 8072); bugün projenin bütün binalarının.
 - **Künye:** ruhsat takımının `tasiyici_sistem` metni boşsa beyanın adıyla dolabilir.
 - **22/1-j:** "emsal hesabına konu alanın %5'i"nin tabanı (çizimin katlar alanı mı, planın izin verdiği alan mı) kaynak

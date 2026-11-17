@@ -19,6 +19,10 @@ bütününe bağlı koşullarına bakar ve sayımı özet satırında söyler:
   9.10.2021'den) sayar. 12,50 cm'den kalın, taşıyıcılığı beyan edilmemiş duvar eksik veridir (payı emsale dahil
   sayıldı); bina zemin dahil 3 kattan çoksa ya da başvuru 9.10.2021'den önceyse kaldı; 9.10.2021–30.12.2022
   başvurusunda duvarların payı 22/1-m'de, %30'un içindeydi: tablo bugünkü hâliyle saydığı için uzman incelemesi.
+- **Sivas 22/k** (docs/adr/8096): Sivas İmar Yönetmeliği kalın taş duvarları, balkonları ve taşlığı "toplamı %30'u
+  geçmemek üzere" sayar: duvarlar %30'un içindedir. PAİY 5/8 (31.12.2022'den) onları dışında sayar; sıkı olan Sivas
+  bağlar. Tablonun %30'un içinde saydığına duvarların kalın kısmı eklenince sınırı aşarsa kaldı; emsal yazılmamışsa
+  eksik veri.
 - **22/1-m** (9.10.2021'den, RG 31623; docs/adr/8094): taşıyıcı sistemi kesme taş yığma bina olarak tasarlanan zemin
   dahil 3 katı geçmeyen geleneksel mimari öğeler barındıran binanın balkonları (bağımsız bölüm net alanının %20'si,
   22/1-l'ninkiyle aynı) ve bahçeyle bağlantılı, gerektiğinde basamakla çıkılan taşlık, dış sofa ve eyvanı katlar alanına
@@ -42,6 +46,9 @@ from . import yururluk as y
 
 MADDELER = [("PAİY", "22/1-ç"), ("PAİY", "22/1-f"), ("PAİY", "22/1-k"), ("PAİY", "22/1-l"), ("PAİY", "22/1-m"),
             ("PAİY", "20/8-j"), ("PAİY", "5/8")]
+
+#: Yerel yönetmelik Sivas seçiliyse okunan maddeler.
+YEREL = [("Sivas", "22/k")]
 
 #: Normal kat sayılmayan katların adlarındaki sözcükler (4/1-ııı): tesisat katı ve çatı arası.
 _NORMAL_DISI = ("TESISAT", "CATI")
@@ -334,6 +341,39 @@ def duvarlar(bina: dict[str, Any], gun: date) -> y.Sonuc:
     return y.Sonuc(bulgular, [satir20, satir58])
 
 
+def sivas_duvarlar(bina: dict[str, Any], gun: date) -> y.Sonuc:
+    """Sivas 22/k: kalın taş duvarlar %30'un içinde; tablonun %30'un içinde saydığıyla birlikte sınırı aşıyor mu."""
+    m = bina.get("masonry")
+    h = y.hal("Sivas", "22/k", gun)
+    if bina.get("local") != "sivas" or not kat_yuksekligi.geleneksel(bina) or m is None or h is None:
+        return y.Sonuc([], [])
+    duvar, kalin = float(m.get("walls") or 0.0), list(m.get("thick") or [])
+    if duvar <= 0:
+        return y.Sonuc([], [_satir(h, y.KAPSAM_DISI, "12,50 cm'den kalın taşıyıcı taş duvar yok")])
+    n = len(kat_yuksekligi.ustteki(bina))
+    if n > int(h.anahtar["storeys"]):
+        return y.Sonuc([], [_satir(h, y.KALDI, f"bina zemin dahil {n} katlı; bulgusu PAİY 20/8-j ve 5/8'in")])
+    sinir = bina.get("exemptCap")
+    if sinir is None:
+        return y.Sonuc([_bulgu("local_masonry_walls_over",
+                               f"Sivas 22/k taş duvarların kalın kısmını ({_m2(duvar)} m²) %30'un içinde sayar; imar "
+                               f"durumunda emsal yazılmamış: %30'un sınırı okunmuyor — {h.kisa()}",
+                               "İmar durumunda parsel alanını ve emsali yazın (Proje ayarları › Mimari › İmar durumu).",
+                               h.kural(), kalin[:20], "emsal yok", y.EKSIK_VERI)],
+                       [_satir(h, y.EKSIK_VERI, "imar durumunda emsal yok")])
+    cap, harici = float(sinir["cap"]), float(sinir["exempt"])
+    icinde = harici + duvar
+    if icinde > cap + 1e-9:
+        return y.Sonuc([_bulgu("local_masonry_walls_over",
+                               f"Sivas 22/k taş duvarların kalın kısmını ({_m2(duvar)} m²) %30'un içinde sayar: emsal "
+                               f"harici {_m2(icinde)} m², sınır {_m2(cap)} m²; aşan {_m2(icinde - cap)} m² emsale girer "
+                               f"(PAİY 5/8 onları %30'un dışında sayar; sıkı olan bağlar) — {h.kisa()}",
+                               "Emsal harici alanları azaltın ya da emsale eklenen kısımla emsali yeniden hesaplayın.",
+                               h.kural(), kalin[:20], "%30")],
+                       [_satir(h, y.KALDI, f"duvarlarla emsal harici {_m2(icinde)} m² > {_m2(cap)} m²")])
+    return y.Sonuc([], [_satir(h, y.GECTI, f"duvarlarla emsal harici {_m2(icinde)} m² ≤ {_m2(cap)} m²")])
+
+
 def _bilinmiyor(madde: str, gun: date, uids: list[str]) -> tuple[dict[str, Any], dict[str, Any]]:
     """Başvuru günü maddenin kural setindeki ilk hâlinden önce: uzman incelemesi."""
     ilk = y.haller("PAİY", madde)[0]
@@ -377,9 +417,10 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
             b, s = geleneksel(bina, hal)
             bulgular += b
             satirlar.append(s)
-    # Kalın taş duvarlar (docs/adr/8095).
+    # Kalın taş duvarlar (docs/adr/8095) ve Sivas'ın 22/k'si (docs/adr/8096).
     d = duvarlar(bina, gun)
-    return y.Sonuc(bulgular + d.bulgular, satirlar + d.satirlar)
+    k = sivas_duvarlar(bina, gun)
+    return y.Sonuc(bulgular + d.bulgular + k.bulgular, satirlar + d.satirlar + k.satirlar)
 
 
 def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Sonuc:
@@ -387,9 +428,10 @@ def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Son
     bina = facts.get("building") or {}
     if not bina.get("storeys"):
         return y.Sonuc([], [])
-    sonuc = y.denetle(lambda g: kural(bina, g), MADDELER, gun, neden, "emsal sınırı kuralı")
+    maddeler = MADDELER + (YEREL if bina.get("local") == "sivas" else [])
+    sonuc = y.denetle(lambda g: kural(bina, g), maddeler, gun, neden, "emsal sınırı kuralı")
     # Güne bağlı sonucun bulgusu, aday günlerin bulgularının mahallerini seçer.
     for b in sonuc.bulgular:
         if b["code"] == "regulation_date_needed" and not b["uids"]:
-            b["uids"] = sorted({u for g in y.adaylar(MADDELER) for f in kural(bina, g).bulgular for u in f["uids"]})[:20]
+            b["uids"] = sorted({u for g in y.adaylar(maddeler) for f in kural(bina, g).bulgular for u in f["uids"]})[:20]
     return sonuc

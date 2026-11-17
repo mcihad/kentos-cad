@@ -234,3 +234,41 @@ fn screens() {
         println!("{}", file.display());
     }
 }
+
+/// Sivas 22/k (docs/adr/8096) counts the walls' part within the 30 %: on the 200 m² parcel of emsal 1.00 its 60 m² holds
+/// the 16.875 m²; on a 50 m² parcel its 15 m² does not (1.875 m² past it), while PAİY 5/8 still counts them apart.
+#[test]
+fn sivas_counts_the_thick_walls_within_the_30_percent() {
+    let (mut app, walls) = stone_house();
+    bearing(&mut app, &walls);
+    let mut arch = app.document.as_ref().expect("a drawing").model.settings().arch.clone().expect("arch");
+    arch.local_rules = Some(kentos_commands::LocalRules::Sivas);
+    run(&mut app, "cad.settings.set", json!({ "arch": serde_json::to_value(&arch).expect("serialises") }));
+    let rows = |app: &App| -> Vec<(String, O)> {
+        let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+        set.rules
+            .iter()
+            .filter(|r| ["PAİY 5/8", "Sivas 22/k"].contains(&r.rule.as_str()))
+            .map(|r| (r.rule.clone(), r.state))
+            .collect()
+    };
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let facts = kentos_processing::audit_facts::building::measure(doc).normalized();
+    let cap = facts.exempt_cap.expect("the 30 %");
+    assert!(near(cap.cap, 60.0) && near(cap.exempt, 0.0), "{cap:?}");
+    checked(&mut app);
+    assert_eq!(rows(&app), [("PAİY 5/8".to_owned(), O::Passed), ("Sivas 22/k".to_owned(), O::Passed)]);
+
+    arch.zoning = Some(kentos_commands::Zoning { parcel_area: 50.0, far: Some(1.0), coverage: None });
+    run(&mut app, "cad.settings.set", json!({ "arch": serde_json::to_value(&arch).expect("serialises") }));
+    checked(&mut app);
+    assert_eq!(rows(&app), [("PAİY 5/8".to_owned(), O::Passed), ("Sivas 22/k".to_owned(), O::Failed)]);
+    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let f = audited.findings.iter().find(|f| f.code == "local_masonry_walls_over").expect("Sivas's finding");
+    assert!(
+        f.message.contains("emsal harici 16.88 m², sınır 15.00 m²; aşan 1.88 m² emsale girer"),
+        "{}",
+        f.message
+    );
+    assert_eq!(f.uids.len(), 9, "the thick stone walls: {f:?}");
+}

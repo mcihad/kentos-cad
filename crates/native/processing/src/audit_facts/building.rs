@@ -45,13 +45,15 @@
 //! - **The structure** (docs/adr/8094): the project's declared structural system by its name and whether the building
 //!   holds traditional architectural elements; the limited uses carry 22/1-m's traditional rooms. A traditional cut
 //!   stone masonry building's stone walls (docs/adr/8095): their parts as Emsal ve TAKS tablosu counts them
-//!   (`Document::zoning_masonry`) and the thick walls with no load-bearing declaration.
+//!   and the thick walls with no load-bearing declaration; with the parcel's emsal, the 30 % of 5/8 and the emsal harici
+//!   counted within it. Emsal ve TAKS tablosu's count is read once (`Document::zoning_counted`).
 
 use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
 use kentos_extensions::audit_facts::building::{
-    BuildingFacts, CoveringFacts, DoorFacts, ElementFacts, EmsalLimit, LinkFacts, MasonryFacts, PlanNoteFacts, RoomPeople,
+    BuildingFacts, CoveringFacts, DoorFacts, ElementFacts, EmsalLimit, ExemptCap, LinkFacts, MasonryFacts, PlanNoteFacts,
+    RoomPeople,
     SeparatingElement, SeparationFacts, ShaftFacts, SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom,
 };
 
@@ -123,9 +125,12 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         }
     }
     let (rooms, doors) = people_and_doors(doc, &mut storeys);
-    let limits = doc
-        .zoning_limits()
-        .into_iter()
+    // Emsal ve TAKS tablosu's count once: its limited uses, the rooms' gross, the stone walls and the 30 %.
+    let counted = doc.zoning_counted();
+    let limits = counted
+        .limits
+        .iter()
+        .cloned()
         .map(|l| EmsalLimit {
             limit: l.limit.name().to_owned(),
             unit: l.unit,
@@ -163,7 +168,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         })
         .collect();
     let gross: std::collections::HashMap<String, f64> =
-        doc.zoning_rooms().into_iter().map(|r| (r.uid, r.gross)).collect();
+        counted.rooms.iter().map(|r| (r.uid.clone(), r.gross)).collect();
     // An escape stair's room: named or used as Merdiven, no dwelling unit's own (the escape routes' reading).
     let stair_rooms: std::collections::HashSet<String> = doc
         .entities_with_uids()
@@ -227,10 +232,13 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         zone: arch.zone.map(|z| z.name().to_owned()),
         structural_system: arch.structure.map(|s| s.system.name().to_owned()),
         traditional: arch.structure.is_some_and(|s| s.traditional),
-        masonry: arch.traditional_cut_stone().then(|| {
-            let m = doc.zoning_masonry();
-            MasonryFacts { walls: m.walls, footprint: m.footprint, thick: m.thick, undeclared: m.undeclared }
+        masonry: arch.traditional_cut_stone().then(|| MasonryFacts {
+            walls: counted.masonry,
+            footprint: counted.masonry_footprint,
+            thick: counted.masonry_walls.clone(),
+            undeclared: counted.masonry_undeclared.clone(),
         }),
+        exempt_cap: counted.cap.map(|cap| ExemptCap { cap, exempt: counted.exempt }),
         rooms,
         doors,
         limits,

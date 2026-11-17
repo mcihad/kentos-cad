@@ -594,7 +594,7 @@ aynı çizim 30.6.2026'da geçer, 2.7.2026'da 34/8'den kalır, tarihsiz eksik ve
 erişilebilir yol (TS 9111 metni); plan notlarının öbür konuları (ADR 8084 §6); blok başına bölge ve taşıyıcı sistem (ADR
 8085 §6, 8094 §6);
 konut dışı (B22);
-emsalde Sivas 22/k, 22/1-j ve 5/8'in bodrum listesi (ADR 8079 §6, 8094 §6).
+emsalde 22/1-j ve 5/8'in bodrum listesi (ADR 8079 §6).
 **Yapıldı (17 Kasım 2026, ADR 8078 §6, K64):** uzman onayı kayıtlı: paketin bulgusu `cad.arch.exceptions`'a verilerek
 istisna yapılır; uzman incelemesi bulgusunun istisnası "Uzman onayı"dır, notu uzmanın sözü; bulgu değişince düşer, katla
 ilgili bulgu katın mahallerini adlandırdığı için mahal eklenince yeni bulgu açılır.
@@ -681,6 +681,9 @@ bağımsız durum).
 taşıyıcı taş duvarların 25 cm'yi (iç duvarda 12,50 cm'yi) aşan kısmı Emsal ve TAKS tablosunda %30 dışında (5/8), dış
 duvarlarınki taban alanı dışında (20/8-j); dış duvarda dış yüzdeki şerit, iç duvarda iki yüzdeki şeritler, katın duvar
 kütlesiyle kesilir; emsal zonunun açıklamasında yazılır; beyansız kalın duvar eksik veri (paket 0.19.0, 6 bağımsız durum).
+**Yapıldı (17 Kasım 2026, [ADR 8096](../docs/adr/8096-sivas-22k-thick-walls-within-30.md), K139–K141):** Sivas 22/k:
+yerel yönetmelik Sivas ise kalın taş duvarlar %30'un içinde okunur, sınırı aşan emsale girer; olgulara 5/8'in %30'u ve
+içinde sayılan (`exemptCap`); olgular Emsal ve TAKS tablosunu bir kez sayar (paket 0.20.0, 4 bağımsız durum).
 
 **Kullanıcı sonucu:** Denetim, başvuru tarihinde yürürlükte olan kuralları uygular. Her bulgu geçti, kaldı, eksik veri,
 uzman incelemesi ya da kapsam dışıdır. Yorum isteyen konu kendiliğinden "uygun" sayılmaz. Dayanak Z9; Ek A.
