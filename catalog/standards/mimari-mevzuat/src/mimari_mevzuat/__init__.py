@@ -10,6 +10,7 @@ uzman incelemesidir; her maddenin özet satırı geçti, kaldı, eksik veri, uzm
 - ``kapilar``: Binaların Yangından Korunması Hakkında Yönetmelik 47/2 ve 47/3 (kaçış yolu kapıları).
 - ``kullanim``: aynı yönetmeliğin kullanım sınıfına özel kaçış hükümleri: 49/1-a (hasta odası), 50/1-a ve 50/1-b
   (otel), 52 (fabrika, mağaza, depo, büro, ayakta tedavi merkezi).
+- ``yagmurlama``: aynı yönetmeliğin 96/2'si (otomatik yağmurlama sisteminin zorunlu olduğu binalar).
 - ``mimari.denetle``: masaüstünün Denetim sekmesi ve başsız denetim tek süreçte bunu çağırır.
 
 Bulgu çizimin ölçüsüdür, onay değildir.

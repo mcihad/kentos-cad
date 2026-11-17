@@ -452,6 +452,31 @@
     },
     {
       "regulation": "BYKHY",
+      "article": "96/2",
+      "title": "Otomatik yağmurlama sisteminin zorunlu olduğu yerler",
+      "transition": "96/2'nin b, c ve d bentleri 10.8.2009 tarihli ve 2009/15316 sayılı Bakanlar Kurulu Kararıyla değişti (RG 9.9.2009/27344); a, ç ve e bentleri ilk metindir. Bentlerin önceki metinleri kural setinde yok: 9.9.2009'dan önceki başvuru uzman incelemesi.",
+      "versions": [
+        {
+          "id": "2009",
+          "from": "2009-09-09",
+          "until": null,
+          "label": "9.9.2009",
+          "gazette": "19.12.2007/26735; 96/2-b, c, d 9.9.2009/27344",
+          "height": 30.5,
+          "dwellingHeight": 51.5,
+          "parking": 600,
+          "rooms": 100,
+          "beds": 200,
+          "bedsHeight": 21.5,
+          "shops": 2000,
+          "flammable": 1000,
+          "text": "(2) Aşağıda belirtilen yerlerde otomatik yağmurlama sistemi kurulması mecburidir: a) Yapı yüksekliği 30.50 m’den fazla olan konut haricindeki bütün binalarda, b) (Değişik: 10/8/2009-2009/15316 K.) Yapı yüksekliği 51.50 m’yi geçen konutlarda, c) (Değişik: 10/8/2009-2009/15316 K.) Alanlarının toplamı 600 m2’den büyük olan kapalı otoparklarda ve 10’dan fazla aracın asansörle alındığı kapalı otoparklarda, ç) Birden fazla katlı bir bina içerisindeki yatılan oda sayısı 100’ü veya yatak sayısı 200’ü geçen otellerde, yurtlarda, pansiyonlarda, misafirhanelerde ve yapı yüksekliği 21.50 m’den fazla olan bütün yataklı tesislerde, d) (Değişik: 10/8/2009-2009/15316 K.) Toplam alanı 2000 m2’nin üzerinde olan katlı mağazalarda, alışveriş, ticaret ve eğlence yerlerinde, e) Toplam alanı 1000 m2’den fazla olan, kolay alevlenici ve parlayıcı madde üretilen veya bulundurulan yapılarda.",
+          "source": "RG 19.12.2007/26735 (BKK 2007/12937) ve RG 9.9.2009/27344 (BKK 2009/15316), mevzuat.gov.tr derlenmiş metni (SHA-256 d82d06d2…a7d9, son değişiklik RG 1.7.2025/32943), 96 ncı madde; docs/adr/8108 §1"
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
       "article": "24/2",
       "title": "Yangın tehlikesi olan kapalı alanlar",
       "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 24 üncü maddenin bu fıkrası değişmedi.",

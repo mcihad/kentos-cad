@@ -617,6 +617,10 @@ otelde yatak odası ile iç koridor arası en az 60 dakika, ikiden çok katlı o
 yok: 15,50 m'nin altında eksik veri); 50/1-b: koridora açılan kapı 30 dakika ve kendiliğinden kapanır; 52 (9.9.2009): 52'nin
 binasında tek merdivende (a) yapı yüksekliği ve (b) katın kişisi tutmazsa kaldı, tutarsa uzman incelemesi. 25 bağımsız
 durum; gerçek çizimde büro ve otel Denetim'de. Olgulara alan eklenmedi.
+**Yapıldı (17 Kasım 2026, [ADR 8108](../docs/adr/8108-sprinklers-required-by-use.md), K194–K196):** yağmurlama zorunluluğu
+(paket 0.23.0, `yagmurlama`): BYKHY 96/2'nin bentleri, beyan yoksa `bykhy_sprinklers_required` (30,50 m konut harici, 51,50 m
+konut, 600 m² otopark, 100 odalı katlı konaklama ve 21,50 m yataklı tesis, 2000 m² katlı mağaza ve eğlence yeri, 1000 m²
+parlayıcı madde yapısı); alanlar mahallerin net alanı. 26 bağımsız durum; 33 m'lik büro Denetim'de.
 **Yapıldı (17 Kasım 2026, [ADR 8079](../docs/adr/8079-emsal-article-22-limits.md), K66–K69):** emsalin 22. madde
 sınırları alan hesabında: toprak altındaki katta bölümün depo eklentisi bölüm net alanının %50'sine (22/1-k), kapıcı
 daireleri toplam 70 m²'ye (22/1-ç), kütüphane 50 m²'ye (22/1-f) kadar dışarıda, aşan kısım emsale girer ve tablonun
@@ -941,7 +945,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
 | B21 ~ | Tipler ve katmanlı yapı; tip nesneleri | BIM-12, IFC-04 | Değerin kaynağı görünür (ADR 8105: duvar stili `IfcWallType`, katman takımları; ADR 8106: kolon, kiriş, döşeme, çatı, korkuluk, merdiven tipi, istisna, Öznitelikler'de Tipten/Örnekten, IFC tipleri; iki ilk kabul de tamam; giydirme cephe tipi, profil takımı, eski sürüm denetimi, kitaplık kaldı) |
-| B22 ~ | Konut dışı kullanımlar (yasal en geç 1.9.2033) | BIM-13 | Kullanım sınıfına özel kurallar (ADR 8107: BYKHY 49/1-a hasta odası, 50/1-a ve 50/1-b otel, 52 tek merdivenli fabrika, mağaza, depo, büro; 25 bağımsız durum, gerçek çizimde Denetim; 49/1-b, 49/2, 50/3, 51, eğitim, toplanma, endüstri ve depolama kaldı) |
+| B22 ~ | Konut dışı kullanımlar (yasal en geç 1.9.2033) | BIM-13 | Kullanım sınıfına özel kurallar (ADR 8107: BYKHY 49/1-a hasta odası, 50/1-a ve 50/1-b otel, 52 tek merdivenli fabrika, mağaza, depo, büro; ADR 8108: 96/2 yağmurlama zorunluluğu kullanıma, yüksekliğe ve alana göre; 51 bağımsız durum, gerçek çizimde Denetim; 49/1-b, 49/2, 50/3, 51, eğitim, toplanma, endüstri ve depolama kaldı) |
 | B23 | Kat irtifakı için 3B yapı modeli araştırması | BIM-19 | Karar ADR'de |
 
 - **Sürekli:** BIM-20 her fazda bir dilimle ilerler.

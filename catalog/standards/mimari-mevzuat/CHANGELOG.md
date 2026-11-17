@@ -1,5 +1,14 @@
 # Değişiklikler
 
+## 0.23.0 — 17 Kasım 2026
+
+- Yağmurlama zorunluluğu (`yagmurlama`, yeni katkı `yagmurlama`; docs/adr/8108): BYKHY 96/2'nin bentleri, proje
+  yağmurlamayı beyan etmemişse `bykhy_sprinklers_required`: a) 30,50 m'yi aşan konut harici (karma da), b) 51,50 m'yi
+  geçen konut, c) alanlarının toplamı 600 m²'yi aşan kapalı otopark, ç) 100 odayı aşan katlı konaklama yapısı (yatak
+  sayısı çizimde yok: odası 100'ü geçmeyen katlıda eksik veri) ve 21,50 m'yi aşan yataklı tesis, d) 2000 m²'yi aşan katlı
+  mağaza, alışveriş, ticaret ve eğlence yeri (karma binada ticaret mahalleri), e) 1000 m²'yi aşan parlayıcı madde yapısı
+  (uzman incelemesi). Metin resmî metinle birebir. 26 bağımsız durum.
+
 ## 0.22.0 — 17 Kasım 2026
 
 - Kullanım sınıfına özel kaçış hükümleri (`kullanim`, yeni katkı `kullanim`; docs/adr/8107): binanın kullanımı bina

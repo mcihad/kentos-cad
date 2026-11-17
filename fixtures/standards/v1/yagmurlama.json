@@ -1,0 +1,5164 @@
+{
+ "format": "kentos.regulationCases",
+ "version": 1,
+ "about": "Yağmurlama zorunluluğunun bağımsız durumları (docs/adr/8108): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik 96/2'nin metninden (a, ç, e RG 19.12.2007/26735; b, c, d RG 9.9.2009/27344) elle çıkarıldı; kuralın kodundan üretilmedi (scripts/fixtures/yagmurlama_cases.py olguları kurar, beklenenleri olduğu gibi yazar).",
+ "cases": [
+  {
+   "id": "buro-yuksek",
+   "neden": "11 katlı büro, yapı yüksekliği 33 m, yağmurlama yok: a) 'yapı yüksekliği 30.50 m'den fazla olan konut haricindeki bütün binalarda' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k04",
+      "name": "4. kat",
+      "elevation": 12.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k05",
+      "name": "5. kat",
+      "elevation": 15.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k06",
+      "name": "6. kat",
+      "elevation": 18.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k07",
+      "name": "7. kat",
+      "elevation": 21.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k08",
+      "name": "8. kat",
+      "elevation": 24.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k09",
+      "name": "9. kat",
+      "elevation": 27.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k10",
+      "name": "10. kat",
+      "elevation": 30.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Büro"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "level": "k02",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000004",
+      "level": "k03",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000005",
+      "level": "k04",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000006",
+      "level": "k05",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000007",
+      "level": "k06",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000008",
+      "level": "k07",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000009",
+      "level": "k08",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000010",
+      "level": "k09",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000011",
+      "level": "k10",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 33.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_sprinklers_required",
+      "has": [
+       "30,50 m",
+       "33,00 m",
+       "BYKHY 96/2-a"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 96/2": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "buro-yuksek-beyanli",
+   "neden": "Aynı büro, yağmurlama beyan edilmiş → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k04",
+      "name": "4. kat",
+      "elevation": 12.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k05",
+      "name": "5. kat",
+      "elevation": 15.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k06",
+      "name": "6. kat",
+      "elevation": 18.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k07",
+      "name": "7. kat",
+      "elevation": 21.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k08",
+      "name": "8. kat",
+      "elevation": 24.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k09",
+      "name": "9. kat",
+      "elevation": 27.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k10",
+      "name": "10. kat",
+      "elevation": 30.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Büro"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000012",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000013",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000014",
+      "level": "k02",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000015",
+      "level": "k03",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000016",
+      "level": "k04",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000017",
+      "level": "k05",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000018",
+      "level": "k06",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000019",
+      "level": "k07",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000020",
+      "level": "k08",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000021",
+      "level": "k09",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000022",
+      "level": "k10",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 33.0,
+    "sprinklers": true
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 96/2": [
+      "passed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "buro-alcak",
+   "neden": "8 katlı büro, 24 m: hiçbir bent istemiyor → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k04",
+      "name": "4. kat",
+      "elevation": 12.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k05",
+      "name": "5. kat",
+      "elevation": 15.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k06",
+      "name": "6. kat",
+      "elevation": 18.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k07",
+      "name": "7. kat",
+      "elevation": 21.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Büro"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000023",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000024",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000025",
+      "level": "k02",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000026",
+      "level": "k03",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000027",
+      "level": "k04",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000028",
+      "level": "k05",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000029",
+      "level": "k06",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000030",
+      "level": "k07",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 24.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 96/2": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "konut-40",
+   "neden": "40 m'lik konut: a) konut haricindekiler, b) 51,50 m'yi geçen konut → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k04",
+      "name": "4. kat",
+      "elevation": 12.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k05",
+      "name": "5. kat",
+      "elevation": 15.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k06",
+      "name": "6. kat",
+      "elevation": 18.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k07",
+      "name": "7. kat",
+      "elevation": 21.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k08",
+      "name": "8. kat",
+      "elevation": 24.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k09",
+      "name": "9. kat",
+      "elevation": 27.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k10",
+      "name": "10. kat",
+      "elevation": 30.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k11",
+      "name": "11. kat",
+      "elevation": 33.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k12",
+      "name": "12. kat",
+      "elevation": 36.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 24,
+    "dwellings": 24,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [],
+    "structureHeight": 40.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 96/2": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "konut-54",
+   "neden": "54 m'lik konut: b) 'yapı yüksekliği 51.50 m'yi geçen konutlarda' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k04",
+      "name": "4. kat",
+      "elevation": 12.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k05",
+      "name": "5. kat",
+      "elevation": 15.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k06",
+      "name": "6. kat",
+      "elevation": 18.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k07",
+      "name": "7. kat",
+      "elevation": 21.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k08",
+      "name": "8. kat",
+      "elevation": 24.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k09",
+      "name": "9. kat",
+      "elevation": 27.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k10",
+      "name": "10. kat",
+      "elevation": 30.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k11",
+      "name": "11. kat",
+      "elevation": 33.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k12",
+      "name": "12. kat",
+      "elevation": 36.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k13",
+      "name": "13. kat",
+      "elevation": 39.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k14",
+      "name": "14. kat",
+      "elevation": 42.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k15",
+      "name": "15. kat",
+      "elevation": 45.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k16",
+      "name": "16. kat",
+      "elevation": 48.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k17",
+      "name": "17. kat",
+      "elevation": 51.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 34,
+    "dwellings": 34,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [],
+    "structureHeight": 54.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_sprinklers_required",
+      "has": [
+       "konut",
+       "51,50 m",
+       "BYKHY 96/2-b"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 96/2": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "karma-32",
+   "neden": "Konut ve ticaret karması 32 m: konut haricindeki bina sayılır (sıkı olan) → a) kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k04",
+      "name": "4. kat",
+      "elevation": 12.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k05",
+      "name": "5. kat",
+      "elevation": 15.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k06",
+      "name": "6. kat",
+      "elevation": 18.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k07",
+      "name": "7. kat",
+      "elevation": 21.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k08",
+      "name": "8. kat",
+      "elevation": 24.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k09",
+      "name": "9. kat",
+      "elevation": 27.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k10",
+      "name": "10. kat",
+      "elevation": 30.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 20,
+    "dwellings": 18,
+    "uses": [
+     "Konut",
+     "Ticaret"
+    ],
+    "spaces": [],
+    "structureHeight": 32.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_sprinklers_required",
+      "has": [
+       "konut haricindeki",
+       "32,00 m"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 96/2": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otopark-650",
+   "neden": "Konut binasının 650 m²'lik kapalı otoparkı: c) 'alanlarının toplamı 600 m2'den büyük olan kapalı otoparklarda' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 6,
+    "dwellings": 6,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000031",
+      "level": "k00",
+      "name": "Otopark",
+      "area": 650.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_sprinklers_required",
+      "has": [
+       "650 m²",
+       "600 m²",
+       "BYKHY 96/2-c"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 96/2": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otopark-550",
+   "neden": "550 m²'lik otopark → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 6,
+    "dwellings": 6,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000032",
+      "level": "k00",
+      "name": "Otopark",
+      "area": 550.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 96/2": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otopark-toplam",
+   "neden": "İki otopark mahali 350 + 300 m²: bent alanların toplamını sayar → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 6,
+    "dwellings": 6,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000033",
+      "level": "k00",
+      "name": "Otopark",
+      "area": 350.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000034",
+      "level": "k01",
+      "name": "Garaj",
+      "area": 300.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_sprinklers_required",
+      "has": [
+       "650 m²"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 96/2": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otel-110-oda",
+   "neden": "Dört katlı otel, 110 oda: ç) 'yatılan oda sayısı 100'ü … geçen otellerde' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000035",
+      "level": "k01",
+      "name": "Oda 1",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000036",
+      "level": "k02",
+      "name": "Oda 2",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000037",
+      "level": "k03",
+      "name": "Oda 3",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000038",
+      "level": "k01",
+      "name": "Oda 4",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000039",
+      "level": "k02",
+      "name": "Oda 5",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000040",
+      "level": "k03",
+      "name": "Oda 6",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000041",
+      "level": "k01",
+      "name": "Oda 7",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000042",
+      "level": "k02",
+      "name": "Oda 8",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000043",
+      "level": "k03",
+      "name": "Oda 9",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000044",
+      "level": "k01",
+      "name": "Oda 10",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000045",
+      "level": "k02",
+      "name": "Oda 11",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000046",
+      "level": "k03",
+      "name": "Oda 12",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000047",
+      "level": "k01",
+      "name": "Oda 13",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000048",
+      "level": "k02",
+      "name": "Oda 14",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000049",
+      "level": "k03",
+      "name": "Oda 15",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000050",
+      "level": "k01",
+      "name": "Oda 16",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000051",
+      "level": "k02",
+      "name": "Oda 17",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000052",
+      "level": "k03",
+      "name": "Oda 18",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000053",
+      "level": "k01",
+      "name": "Oda 19",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000054",
+      "level": "k02",
+      "name": "Oda 20",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000055",
+      "level": "k03",
+      "name": "Oda 21",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000056",
+      "level": "k01",
+      "name": "Oda 22",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000057",
+      "level": "k02",
+      "name": "Oda 23",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000058",
+      "level": "k03",
+      "name": "Oda 24",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000059",
+      "level": "k01",
+      "name": "Oda 25",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000060",
+      "level": "k02",
+      "name": "Oda 26",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000061",
+      "level": "k03",
+      "name": "Oda 27",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000062",
+      "level": "k01",
+      "name": "Oda 28",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000063",
+      "level": "k02",
+      "name": "Oda 29",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000064",
+      "level": "k03",
+      "name": "Oda 30",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000065",
+      "level": "k01",
+      "name": "Oda 31",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000066",
+      "level": "k02",
+      "name": "Oda 32",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000067",
+      "level": "k03",
+      "name": "Oda 33",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000068",
+      "level": "k01",
+      "name": "Oda 34",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000069",
+      "level": "k02",
+      "name": "Oda 35",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000070",
+      "level": "k03",
+      "name": "Oda 36",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000071",
+      "level": "k01",
+      "name": "Oda 37",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000072",
+      "level": "k02",
+      "name": "Oda 38",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000073",
+      "level": "k03",
+      "name": "Oda 39",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000074",
+      "level": "k01",
+      "name": "Oda 40",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000075",
+      "level": "k02",
+      "name": "Oda 41",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000076",
+      "level": "k03",
+      "name": "Oda 42",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000077",
+      "level": "k01",
+      "name": "Oda 43",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000078",
+      "level": "k02",
+      "name": "Oda 44",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000079",
+      "level": "k03",
+      "name": "Oda 45",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000080",
+      "level": "k01",
+      "name": "Oda 46",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000081",
+      "level": "k02",
+      "name": "Oda 47",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000082",
+      "level": "k03",
+      "name": "Oda 48",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000083",
+      "level": "k01",
+      "name": "Oda 49",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000084",
+      "level": "k02",
+      "name": "Oda 50",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000085",
+      "level": "k03",
+      "name": "Oda 51",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000086",
+      "level": "k01",
+      "name": "Oda 52",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000087",
+      "level": "k02",
+      "name": "Oda 53",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000088",
+      "level": "k03",
+      "name": "Oda 54",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000089",
+      "level": "k01",
+      "name": "Oda 55",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000090",
+      "level": "k02",
+      "name": "Oda 56",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000091",
+      "level": "k03",
+      "name": "Oda 57",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000092",
+      "level": "k01",
+      "name": "Oda 58",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000093",
+      "level": "k02",
+      "name": "Oda 59",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000094",
+      "level": "k03",
+      "name": "Oda 60",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000095",
+      "level": "k01",
+      "name": "Oda 61",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000096",
+      "level": "k02",
+      "name": "Oda 62",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000097",
+      "level": "k03",
+      "name": "Oda 63",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000098",
+      "level": "k01",
+      "name": "Oda 64",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000099",
+      "level": "k02",
+      "name": "Oda 65",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000100",
+      "level": "k03",
+      "name": "Oda 66",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k01",
+      "name": "Oda 67",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000102",
+      "level": "k02",
+      "name": "Oda 68",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000103",
+      "level": "k03",
+      "name": "Oda 69",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000104",
+      "level": "k01",
+      "name": "Oda 70",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000105",
+      "level": "k02",
+      "name": "Oda 71",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000106",
+      "level": "k03",
+      "name": "Oda 72",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000107",
+      "level": "k01",
+      "name": "Oda 73",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000108",
+      "level": "k02",
+      "name": "Oda 74",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000109",
+      "level": "k03",
+      "name": "Oda 75",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000110",
+      "level": "k01",
+      "name": "Oda 76",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000111",
+      "level": "k02",
+      "name": "Oda 77",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000112",
+      "level": "k03",
+      "name": "Oda 78",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000113",
+      "level": "k01",
+      "name": "Oda 79",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000114",
+      "level": "k02",
+      "name": "Oda 80",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000115",
+      "level": "k03",
+      "name": "Oda 81",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000116",
+      "level": "k01",
+      "name": "Oda 82",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000117",
+      "level": "k02",
+      "name": "Oda 83",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000118",
+      "level": "k03",
+      "name": "Oda 84",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000119",
+      "level": "k01",
+      "name": "Oda 85",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000120",
+      "level": "k02",
+      "name": "Oda 86",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000121",
+      "level": "k03",
+      "name": "Oda 87",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000122",
+      "level": "k01",
+      "name": "Oda 88",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000123",
+      "level": "k02",
+      "name": "Oda 89",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000124",
+      "level": "k03",
+      "name": "Oda 90",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000125",
+      "level": "k01",
+      "name": "Oda 91",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000126",
+      "level": "k02",
+      "name": "Oda 92",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000127",
+      "level": "k03",
+      "name": "Oda 93",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000128",
+      "level": "k01",
+      "name": "Oda 94",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000129",
+      "level": "k02",
+      "name": "Oda 95",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000130",
+      "level": "k03",
+      "name": "Oda 96",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000131",
+      "level": "k01",
+      "name": "Oda 97",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000132",
+      "level": "k02",
+      "name": "Oda 98",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000133",
+      "level": "k03",
+      "name": "Oda 99",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000134",
+      "level": "k01",
+      "name": "Oda 100",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000135",
+      "level": "k02",
+      "name": "Oda 101",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000136",
+      "level": "k03",
+      "name": "Oda 102",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000137",
+      "level": "k01",
+      "name": "Oda 103",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000138",
+      "level": "k02",
+      "name": "Oda 104",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000139",
+      "level": "k03",
+      "name": "Oda 105",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000140",
+      "level": "k01",
+      "name": "Oda 106",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000141",
+      "level": "k02",
+      "name": "Oda 107",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000142",
+      "level": "k03",
+      "name": "Oda 108",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000143",
+      "level": "k01",
+      "name": "Oda 109",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000144",
+      "level": "k02",
+      "name": "Oda 110",
+      "area": 20.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_sprinklers_required",
+      "has": [
+       "110 yatılan oda > 100",
+       "BYKHY 96/2-ç"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 96/2": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otel-40-oda",
+   "neden": "Dört katlı otel, 40 oda: yatak sayısı 200'ü geçerse gerekir, çizimde yok → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000145",
+      "level": "k01",
+      "name": "Oda 1",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000146",
+      "level": "k02",
+      "name": "Oda 2",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000147",
+      "level": "k03",
+      "name": "Oda 3",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000148",
+      "level": "k01",
+      "name": "Oda 4",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000149",
+      "level": "k02",
+      "name": "Oda 5",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000150",
+      "level": "k03",
+      "name": "Oda 6",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000151",
+      "level": "k01",
+      "name": "Oda 7",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000152",
+      "level": "k02",
+      "name": "Oda 8",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000153",
+      "level": "k03",
+      "name": "Oda 9",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000154",
+      "level": "k01",
+      "name": "Oda 10",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000155",
+      "level": "k02",
+      "name": "Oda 11",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000156",
+      "level": "k03",
+      "name": "Oda 12",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000157",
+      "level": "k01",
+      "name": "Oda 13",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000158",
+      "level": "k02",
+      "name": "Oda 14",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000159",
+      "level": "k03",
+      "name": "Oda 15",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000160",
+      "level": "k01",
+      "name": "Oda 16",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000161",
+      "level": "k02",
+      "name": "Oda 17",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000162",
+      "level": "k03",
+      "name": "Oda 18",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000163",
+      "level": "k01",
+      "name": "Oda 19",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000164",
+      "level": "k02",
+      "name": "Oda 20",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000165",
+      "level": "k03",
+      "name": "Oda 21",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000166",
+      "level": "k01",
+      "name": "Oda 22",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000167",
+      "level": "k02",
+      "name": "Oda 23",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000168",
+      "level": "k03",
+      "name": "Oda 24",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000169",
+      "level": "k01",
+      "name": "Oda 25",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000170",
+      "level": "k02",
+      "name": "Oda 26",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000171",
+      "level": "k03",
+      "name": "Oda 27",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000172",
+      "level": "k01",
+      "name": "Oda 28",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000173",
+      "level": "k02",
+      "name": "Oda 29",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000174",
+      "level": "k03",
+      "name": "Oda 30",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000175",
+      "level": "k01",
+      "name": "Oda 31",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000176",
+      "level": "k02",
+      "name": "Oda 32",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000177",
+      "level": "k03",
+      "name": "Oda 33",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000178",
+      "level": "k01",
+      "name": "Oda 34",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000179",
+      "level": "k02",
+      "name": "Oda 35",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000180",
+      "level": "k03",
+      "name": "Oda 36",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000181",
+      "level": "k01",
+      "name": "Oda 37",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000182",
+      "level": "k02",
+      "name": "Oda 38",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000183",
+      "level": "k03",
+      "name": "Oda 39",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000184",
+      "level": "k01",
+      "name": "Oda 40",
+      "area": 20.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_sprinklers_required",
+      "has": [
+       "40 yatılan oda",
+       "yatak sayısı çizimde yok"
+      ],
+      "state": "missingData"
+     }
+    ],
+    "rules": {
+     "BYKHY 96/2": [
+      "missingData",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otel-tek-katli",
+   "neden": "Tek katlı otel: ç) 'birden fazla katlı bir bina' → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000185",
+      "level": "k00",
+      "name": "Oda 1",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000186",
+      "level": "k00",
+      "name": "Oda 2",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000187",
+      "level": "k00",
+      "name": "Oda 3",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000188",
+      "level": "k00",
+      "name": "Oda 4",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000189",
+      "level": "k00",
+      "name": "Oda 5",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000190",
+      "level": "k00",
+      "name": "Oda 6",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000191",
+      "level": "k00",
+      "name": "Oda 7",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000192",
+      "level": "k00",
+      "name": "Oda 8",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000193",
+      "level": "k00",
+      "name": "Oda 9",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000194",
+      "level": "k00",
+      "name": "Oda 10",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000195",
+      "level": "k00",
+      "name": "Oda 11",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000196",
+      "level": "k00",
+      "name": "Oda 12",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000197",
+      "level": "k00",
+      "name": "Oda 13",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000198",
+      "level": "k00",
+      "name": "Oda 14",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000199",
+      "level": "k00",
+      "name": "Oda 15",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000200",
+      "level": "k00",
+      "name": "Oda 16",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000201",
+      "level": "k00",
+      "name": "Oda 17",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000202",
+      "level": "k00",
+      "name": "Oda 18",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000203",
+      "level": "k00",
+      "name": "Oda 19",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000204",
+      "level": "k00",
+      "name": "Oda 20",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000205",
+      "level": "k00",
+      "name": "Oda 21",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000206",
+      "level": "k00",
+      "name": "Oda 22",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000207",
+      "level": "k00",
+      "name": "Oda 23",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000208",
+      "level": "k00",
+      "name": "Oda 24",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000209",
+      "level": "k00",
+      "name": "Oda 25",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000210",
+      "level": "k00",
+      "name": "Oda 26",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000211",
+      "level": "k00",
+      "name": "Oda 27",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000212",
+      "level": "k00",
+      "name": "Oda 28",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000213",
+      "level": "k00",
+      "name": "Oda 29",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000214",
+      "level": "k00",
+      "name": "Oda 30",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000215",
+      "level": "k00",
+      "name": "Oda 31",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000216",
+      "level": "k00",
+      "name": "Oda 32",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000217",
+      "level": "k00",
+      "name": "Oda 33",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000218",
+      "level": "k00",
+      "name": "Oda 34",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000219",
+      "level": "k00",
+      "name": "Oda 35",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000220",
+      "level": "k00",
+      "name": "Oda 36",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000221",
+      "level": "k00",
+      "name": "Oda 37",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000222",
+      "level": "k00",
+      "name": "Oda 38",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000223",
+      "level": "k00",
+      "name": "Oda 39",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000224",
+      "level": "k00",
+      "name": "Oda 40",
+      "area": 20.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 3.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 96/2": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otel-24",
+   "neden": "Sekiz katlı otel, 24 m: ç) 'yapı yüksekliği 21.50 m'den fazla olan bütün yataklı tesislerde' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k04",
+      "name": "4. kat",
+      "elevation": 12.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k05",
+      "name": "5. kat",
+      "elevation": 15.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k06",
+      "name": "6. kat",
+      "elevation": 18.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k07",
+      "name": "7. kat",
+      "elevation": 21.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000225",
+      "level": "k01",
+      "name": "Oda 1",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000226",
+      "level": "k02",
+      "name": "Oda 2",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000227",
+      "level": "k03",
+      "name": "Oda 3",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000228",
+      "level": "k04",
+      "name": "Oda 4",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000229",
+      "level": "k05",
+      "name": "Oda 5",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000230",
+      "level": "k06",
+      "name": "Oda 6",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000231",
+      "level": "k07",
+      "name": "Oda 7",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000232",
+      "level": "k01",
+      "name": "Oda 8",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000233",
+      "level": "k02",
+      "name": "Oda 9",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000234",
+      "level": "k03",
+      "name": "Oda 10",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000235",
+      "level": "k04",
+      "name": "Oda 11",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000236",
+      "level": "k05",
+      "name": "Oda 12",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000237",
+      "level": "k06",
+      "name": "Oda 13",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000238",
+      "level": "k07",
+      "name": "Oda 14",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000239",
+      "level": "k01",
+      "name": "Oda 15",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000240",
+      "level": "k02",
+      "name": "Oda 16",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000241",
+      "level": "k03",
+      "name": "Oda 17",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000242",
+      "level": "k04",
+      "name": "Oda 18",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000243",
+      "level": "k05",
+      "name": "Oda 19",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000244",
+      "level": "k06",
+      "name": "Oda 20",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000245",
+      "level": "k07",
+      "name": "Oda 21",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000246",
+      "level": "k01",
+      "name": "Oda 22",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000247",
+      "level": "k02",
+      "name": "Oda 23",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000248",
+      "level": "k03",
+      "name": "Oda 24",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000249",
+      "level": "k04",
+      "name": "Oda 25",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000250",
+      "level": "k05",
+      "name": "Oda 26",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000251",
+      "level": "k06",
+      "name": "Oda 27",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000252",
+      "level": "k07",
+      "name": "Oda 28",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000253",
+      "level": "k01",
+      "name": "Oda 29",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000254",
+      "level": "k02",
+      "name": "Oda 30",
+      "area": 20.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 24.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_sprinklers_required",
+      "has": [
+       "yataklı tesis",
+       "21,50 m"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 96/2": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "hastane-24",
+   "neden": "24 m'lik hastane yataklı tesistir → ç) kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k04",
+      "name": "4. kat",
+      "elevation": 12.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k05",
+      "name": "5. kat",
+      "elevation": 15.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k06",
+      "name": "6. kat",
+      "elevation": 18.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k07",
+      "name": "7. kat",
+      "elevation": 21.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Hastane"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000255",
+      "level": "k01",
+      "name": "Hasta odası",
+      "area": 30.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 24.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_sprinklers_required",
+      "has": [
+       "yataklı tesis"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 96/2": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "hastane-15",
+   "neden": "15 m'lik hastane: ç'nin oda sayısı oteller, yurtlar, pansiyonlar, misafirhaneler içindir; yükseklik 21,50 m'nin altında → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k04",
+      "name": "4. kat",
+      "elevation": 12.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Hastane"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000256",
+      "level": "k01",
+      "name": "Hasta odası",
+      "area": 30.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 15.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 96/2": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "avm-2500",
+   "neden": "İki katlı alışveriş merkezi, 2500 m²: d) 'toplam alanı 2000 m2'nin üzerinde olan katlı mağazalarda, alışveriş …' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Alışveriş merkezi"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000257",
+      "level": "k00",
+      "name": "Mağaza",
+      "area": 1300.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000258",
+      "level": "k01",
+      "name": "Mağaza",
+      "area": 1200.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 8.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_sprinklers_required",
+      "has": [
+       "2500 m² > 2000 m²",
+       "BYKHY 96/2-d"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 96/2": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "avm-tek-kat",
+   "neden": "Tek katlı 2500 m² mağaza: 'katlı' değil → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Alışveriş merkezi"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000259",
+      "level": "k00",
+      "name": "Mağaza",
+      "area": 2500.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 5.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 96/2": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "avm-1800",
+   "neden": "İki katlı 1800 m² → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Alışveriş merkezi"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000260",
+      "level": "k00",
+      "name": "Mağaza",
+      "area": 900.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000261",
+      "level": "k01",
+      "name": "Mağaza",
+      "area": 900.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 8.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 96/2": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "karma-dukkan-iki-kat",
+   "neden": "Karma binada iki kata yayılan 2400 m² mağaza: bent mağazanın kendi alanını sayar → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 10,
+    "dwellings": 8,
+    "uses": [
+     "Konut",
+     "Ticaret"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000262",
+      "level": "k00",
+      "name": "Mağaza",
+      "area": 1200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000263",
+      "level": "k01",
+      "name": "Mağaza",
+      "area": 1200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000264",
+      "level": "k02",
+      "name": "Salon",
+      "area": 120.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_sprinklers_required",
+      "has": [
+       "2400 m²"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 96/2": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "karma-dukkan-tek-kat",
+   "neden": "Karma binanın zemin katında 2400 m² mağaza: katlı değil → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 10,
+    "dwellings": 8,
+    "uses": [
+     "Konut",
+     "Ticaret"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000265",
+      "level": "k00",
+      "name": "Mağaza",
+      "area": 2400.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 96/2": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "lpg",
+   "neden": "1200 m²'lik LPG dolum tesisi: e) 'kolay alevlenici ve parlayıcı madde üretilen veya bulundurulan yapılarda'; ne bulundurduğu çizimde yok → uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "LPG dolum tesisi"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000266",
+      "level": "k00",
+      "name": "Dolum salonu",
+      "area": 1200.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 6.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_sprinklers_required",
+      "has": [
+       "parlayıcı madde",
+       "1200 m² > 1000 m²",
+       "BYKHY 96/2-e"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 96/2": [
+      "expertReview",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "lpg-kucuk",
+   "neden": "600 m² → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "LPG dolum tesisi"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000267",
+      "level": "k00",
+      "name": "Dolum salonu",
+      "area": 600.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 6.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 96/2": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "iki-bent",
+   "neden": "33 m'lik büronun 700 m² otoparkı: a) ve c) ikisi de ister → iki bulgu.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k04",
+      "name": "4. kat",
+      "elevation": 12.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k05",
+      "name": "5. kat",
+      "elevation": 15.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k06",
+      "name": "6. kat",
+      "elevation": 18.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k07",
+      "name": "7. kat",
+      "elevation": 21.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k08",
+      "name": "8. kat",
+      "elevation": 24.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k09",
+      "name": "9. kat",
+      "elevation": 27.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k10",
+      "name": "10. kat",
+      "elevation": 30.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Büro"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000268",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000269",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000270",
+      "level": "k02",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000271",
+      "level": "k03",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000272",
+      "level": "k04",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000273",
+      "level": "k05",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000274",
+      "level": "k06",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000275",
+      "level": "k07",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000276",
+      "level": "k08",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000277",
+      "level": "k09",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000278",
+      "level": "k10",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000279",
+      "level": "k00",
+      "name": "Otopark",
+      "area": 700.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 33.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_sprinklers_required",
+      "has": [
+       "BYKHY 96/2-a"
+      ]
+     },
+     {
+      "code": "bykhy_sprinklers_required",
+      "has": [
+       "700 m²",
+       "BYKHY 96/2-c"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 96/2": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "basvuru-2008",
+   "neden": "33 m'lik büro, başvuru 1.6.2008: bentlerin 9.9.2009 öncesi metni kural setinde yok → satır uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "01.06.2008"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k04",
+      "name": "4. kat",
+      "elevation": 12.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k05",
+      "name": "5. kat",
+      "elevation": 15.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k06",
+      "name": "6. kat",
+      "elevation": 18.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k07",
+      "name": "7. kat",
+      "elevation": 21.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k08",
+      "name": "8. kat",
+      "elevation": 24.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k09",
+      "name": "9. kat",
+      "elevation": 27.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k10",
+      "name": "10. kat",
+      "elevation": 30.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Büro"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000280",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000281",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000282",
+      "level": "k02",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000283",
+      "level": "k03",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000284",
+      "level": "k04",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000285",
+      "level": "k05",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000286",
+      "level": "k06",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000287",
+      "level": "k07",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000288",
+      "level": "k08",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000289",
+      "level": "k09",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000290",
+      "level": "k10",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 33.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 96/2": [
+      "expertReview",
+      null
+     ]
+    }
+   }
+  },
+  {
+   "id": "tarihsiz",
+   "neden": "Başvuru tarihi yok: kural seti 9.9.2009'dan önceyi denemez, en yeni hâl → a) kalır.",
+   "permit": null,
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k04",
+      "name": "4. kat",
+      "elevation": 12.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k05",
+      "name": "5. kat",
+      "elevation": 15.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k06",
+      "name": "6. kat",
+      "elevation": 18.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k07",
+      "name": "7. kat",
+      "elevation": 21.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k08",
+      "name": "8. kat",
+      "elevation": 24.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k09",
+      "name": "9. kat",
+      "elevation": 27.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k10",
+      "name": "10. kat",
+      "elevation": 30.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Büro"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000291",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000292",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000293",
+      "level": "k02",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000294",
+      "level": "k03",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000295",
+      "level": "k04",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000296",
+      "level": "k05",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000297",
+      "level": "k06",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000298",
+      "level": "k07",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000299",
+      "level": "k08",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000300",
+      "level": "k09",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000301",
+      "level": "k10",
+      "name": "Ofis",
+      "area": 150.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 33.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_sprinklers_required",
+      "has": [
+       "BYKHY 96/2-a"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 96/2": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "sinema",
+   "neden": "İki katlı 2200 m² sinema: eğlence yeri (15/1-b) → d) kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Sinema"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000302",
+      "level": "k00",
+      "name": "Salon",
+      "area": 1100.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000303",
+      "level": "k01",
+      "name": "Salon",
+      "area": 1100.0,
+      "stair": false
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_sprinklers_required",
+      "has": [
+       "2200 m²"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 96/2": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  }
+ ]
+}

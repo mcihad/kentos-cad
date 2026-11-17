@@ -104,3 +104,9 @@ def kullanim_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     depo, büro ve ayakta tedavi merkezinin kaçış merdivenleri)."""
     return _bulgular(facts, ("bykhy_patient_", "bykhy_hotel_", "bykhy_single_stair"))
 
+
+@ext.audit("yagmurlama")
+def yagmurlama_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Otomatik yağmurlama sisteminin zorunlu olduğu binalar (BYKHY 96/2)."""
+    return _bulgular(facts, ("bykhy_sprinklers_",))
+

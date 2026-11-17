@@ -443,7 +443,8 @@ pub struct ArchAuditFinding {
     /// `paiy_elevator_not_serving` by the application date's version, the escape route doors' `bykhy_exit_door_swing`
     /// and `bykhy_stair_door_rating` (docs/adr/8078 §8), the use classes' own escape articles `bykhy_patient_room_doors`,
     /// `bykhy_hotel_room_wall`, `bykhy_hotel_storey_exits`, `bykhy_hotel_room_door` and `bykhy_single_stair` (BYKHY
-    /// 49/1-a, 50/1-a, 50/1-b, 52; docs/adr/8107), the emsal limits' conditions `paiy_caretaker_not_required`,
+    /// 49/1-a, 50/1-a, 50/1-b, 52; docs/adr/8107) and the buildings that must have sprinklers `bykhy_sprinklers_required`
+    /// (BYKHY 96/2; docs/adr/8108), the emsal limits' conditions `paiy_caretaker_not_required`,
     /// `paiy_library_not_exempt` (docs/adr/8079), `paiy_traditional_not_exempt` (22/1-m, docs/adr/8094),
     /// `paiy_masonry_wall_undeclared`, `paiy_masonry_walls_not_exempt` (5/8, 20/8-j, docs/adr/8095) and
     /// `local_masonry_walls_over` (Sivas 22/k, docs/adr/8096), the plan's building height and storey count

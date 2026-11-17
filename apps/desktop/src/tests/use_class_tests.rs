@@ -200,6 +200,28 @@ fn a_hotel_room_s_wall_and_door_to_the_corridor_are_read_from_their_declarations
     assert_eq!(rows(&app), [O::OutOfScope, O::Passed, O::Passed, O::OutOfScope]);
 }
 
+/// BYKHY 96/2-a (docs/adr/8108): an eleven-storey office, 33 m, asks for sprinklers; declared, it passes.
+#[test]
+fn a_33_metre_office_asks_for_sprinklers_until_they_are_declared() {
+    let mut app = office(&[1; 11]);
+    checked(&mut app);
+    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let row = |set: &kentos_commands::ArchAuditRuleSet| set.rules.iter().find(|r| r.rule == "BYKHY 96/2").expect("96/2").state;
+    assert_eq!(row(set), O::Failed);
+    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    assert!(
+        audited.findings.iter().any(|f| f.code == "bykhy_sprinklers_required" && f.message.contains("33,00 m")),
+        "{:?}",
+        audited.findings.iter().map(|f| &f.code).collect::<Vec<_>>()
+    );
+    // The whole architectural settings with sprinklers on (cad.settings.set writes `arch` whole).
+    let mut arch = app.document.as_ref().expect("a drawing").model.settings().arch.clone().unwrap_or_default();
+    arch.sprinklers = true;
+    run(&mut app, "cad.settings.set", json!({ "arch": arch }));
+    checked(&mut app);
+    assert_eq!(row(app.arch.arch_audit.rule_set.as_ref().expect("the rule set")), O::Passed);
+}
+
 /// Denetim's pictures (`.run/gui-evidence/kullanim-sinifi-8107/`): the office's expert review, the hotel's failing wall.
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
