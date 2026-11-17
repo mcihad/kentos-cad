@@ -5578,6 +5578,11 @@ kullanır), `command.rs` (`Said`); sınamalar İşlemler `tests/staged.rs` (yeni
 - **Karar:** ret kullanıcının verdiği yolu adlandırır. Son cümle durumu söyler: yerinde yazımda ya da üzerine yazılacak
   dosya varken "Eski dosya olduğu gibi kaldı.", yoksa "Dosya yazılmadı."; veritabanı hedefinde "Veritabanına
   dokunulmadı."
+- **Neden de söylenir:** yazmadan önce sisteme sorulur (`write_right`): klasör dosya alıyor mu, var olan dosya yazmaya
+  açılıyor mu. Veritabanı kitaplığı yazma izni olmayan klasörü "unable to open database file", salt okunur dosyayı
+  "attempt to write a readonly database" diye söylüyordu. Şimdi ileti şöyle: "“/tmp/kilitli/tampon.gpkg” yazılamadı:
+  /tmp/kilitli klasörüne yazma izni yok; başka bir klasör seçin. Dosya yazılmadı." (gerçek pencere: Tampon aracı,
+  GeoPackage dosyasına). Windows'ta korunan klasörlerde ve paylaşılan sürücülerde sık görülen bir durumdur.
 - **Yinelenen deneme (yeni sınamayla kilitlendi, davranış değişmedi):**
   - Cevabı yolda kaybolan istek aynı `requestId` ile gelirse önceki cevap döner (`replayed`) ve hiçbir şey yazılmaz:
     tablo "zaten var" diye reddedilmez, günlüğe ikinci satır düşmez.
@@ -5599,7 +5604,7 @@ kullanır), `command.rs` (`Said`); sınamalar İşlemler `tests/staged.rs` (yeni
   Uygulama 4:
   - istek yeniden gönderilir; ikinci yazım ve planın reddi kullanıcının dosyasını adlandırır;
   - yeniden gönderilen istek sonradan değişen dosyanın üzerine yazmaz;
-  - salt okunur dosyada `addTables` ve `replaceTables` reddedilir, dosya bayt bayt aynı kalır;
-  - salt okunur klasöre yeni dosya yazılamaz, ara dosya adı iletide görünmez.
+  - salt okunur dosyada `addTables` ve `replaceTables` "salt okunur" diye reddedilir, dosya bayt bayt aynı kalır;
+  - salt okunur klasöre yeni dosya yazılamaz; ileti klasörü adlandırır, ara dosyanın adı görünmez.
 
   Düzeltme geri alınınca 6 sınamadan 4'ü kırmızı oldu.

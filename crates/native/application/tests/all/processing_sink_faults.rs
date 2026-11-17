@@ -129,12 +129,16 @@ fn a_file_that_takes_no_write_is_refused_and_left_as_it_was() {
     let revision = doc.revision();
     let before = std::fs::read(&path).expect("reads");
     rights(&path, 0o444);
-    rights(&dir, 0o555);
-    if rights_hold(&dir) {
+    // A superuser writes anyway: the file's rights test nothing then.
+    if std::fs::OpenOptions::new().write(true).open(&path).is_err() {
         for mode in ["addTables", "replaceTables"] {
             let got = super::processing_sink::run(&mut doc, buffer_to(&path, mode));
             assert_eq!(got["error"]["code"], "file_unwritable", "{mode}: {got}");
             let said = got["error"]["message"].as_str().unwrap_or_default();
+            assert!(
+                said.contains("var.gpkg") && said.contains("salt okunur"),
+                "{said}"
+            );
             assert!(said.ends_with("Eski dosya olduğu gibi kaldı."), "{said}");
             assert_eq!(
                 std::fs::read(&path).expect("reads"),
@@ -144,7 +148,6 @@ fn a_file_that_takes_no_write_is_refused_and_left_as_it_was() {
             assert_eq!(doc.revision(), revision, "{mode}: the drawing");
         }
     }
-    rights(&dir, 0o755);
     rights(&path, 0o644);
     no_stray(&dir);
     let _ = std::fs::remove_dir_all(&dir);
@@ -168,6 +171,7 @@ fn a_folder_that_takes_no_file_is_refused_and_nothing_is_made() {
             said.contains("yeni.gpkg") && !said.contains(".kentos-"),
             "{said}"
         );
+        assert!(said.contains("klasörüne yazma izni yok"), "{said}");
         assert!(said.ends_with("Dosya yazılmadı."), "{said}");
         assert!(!path.exists());
     }

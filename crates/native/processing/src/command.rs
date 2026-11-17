@@ -1778,6 +1778,59 @@ impl Said {
     }
 }
 
+/// Whether the system lets the sink's file be written (docs/adr/8057 §120), asked before the write: its folder takes a
+/// file, and a file that is there takes a write. Said in words: a folder without the right to write came back as the
+/// database library's “unable to open database file”, a read-only file as “attempt to write a readonly database”.
+fn write_right(path: &Path, there: bool) -> Result<(), String> {
+    use std::io::ErrorKind;
+    let folder = path
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    let probe = passing_file(path);
+    match std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&probe)
+    {
+        Ok(file) => {
+            drop(file);
+            let _ = std::fs::remove_file(&probe);
+        }
+        Err(e) if e.kind() == ErrorKind::PermissionDenied => {
+            return Err(format!(
+                "{} klasörüne yazma izni yok; başka bir klasör seçin",
+                folder.display()
+            ));
+        }
+        Err(e) => {
+            return Err(format!(
+                "{} klasörüne yazılamıyor: {}",
+                folder.display(),
+                io_words(&e)
+            ));
+        }
+    }
+    if there && let Err(e) = std::fs::OpenOptions::new().write(true).open(path) {
+        return Err(if e.kind() == ErrorKind::PermissionDenied {
+            "dosya salt okunur ya da ona yazma izni yok".to_owned()
+        } else {
+            format!("dosya yazmaya açılamadı: {}", io_words(&e))
+        });
+    }
+    Ok(())
+}
+
+/// A system error in words where it has some.
+fn io_words(e: &std::io::Error) -> String {
+    use std::io::ErrorKind;
+    match e.kind() {
+        ErrorKind::ReadOnlyFilesystem => "sürücü salt okunur".to_owned(),
+        ErrorKind::StorageFull => "diskte yer yok".to_owned(),
+        _ => e.to_string(),
+    }
+}
+
 /// The passing file a write is made in beside the target.
 fn passing_file(path: &Path) -> PathBuf {
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -1852,6 +1905,13 @@ pub(crate) fn write_sink(
             "Dosya yazılmadı."
         },
     };
+    if let Err(why) = write_right(path, !fresh) {
+        return Err(refused(
+            codes::FILE_UNWRITABLE,
+            format!("“{}” yazılamadı: {why}. {}", path.display(), said.ending),
+            at,
+        ));
+    }
     if !in_place {
         let _ = std::fs::remove_file(&work);
     }
