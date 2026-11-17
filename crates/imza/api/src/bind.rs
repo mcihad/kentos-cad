@@ -14,7 +14,10 @@
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 
 /// Varsayılan port; portal ve ajan bu adresi bilir (`KENTOS_IMZA_PORT` ile değişir).
-pub const DEFAULT_PORT: u16 = 32145;
+///
+/// 32147: aynı makinede 32145 ve 32146'yı (ajanın tek örnek kilidi) kullanan başka bir e-imza kurulumu bulunabilir ve
+/// iki kurulum çakışmamalı (docs/adr/9002 §4; ölçüldü, geliştirme makinesinde ikisi aynı anda çalışıyor).
+pub const DEFAULT_PORT: u16 = 32147;
 
 /// Geri döngü olmayan bir adres verildi.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -125,12 +128,12 @@ mod tests {
     }
 
     #[test]
-    fn varsayilan_port_32145() {
-        assert_eq!(DEFAULT_PORT, 32145);
+    fn varsayilan_port_32147() {
+        assert_eq!(DEFAULT_PORT, 32147);
         assert_eq!(
             LoopbackAddr::ipv4(DEFAULT_PORT).to_string(),
-            "127.0.0.1:32145"
+            "127.0.0.1:32147"
         );
-        assert_eq!(LoopbackAddr::ipv6(DEFAULT_PORT).to_string(), "[::1]:32145");
+        assert_eq!(LoopbackAddr::ipv6(DEFAULT_PORT).to_string(), "[::1]:32147");
     }
 }

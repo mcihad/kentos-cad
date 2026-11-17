@@ -1,7 +1,7 @@
 //! Tarayıcı tarafı kapılar (docs/adr/9002 §4): yerel CSRF ve DNS yeniden bağlama.
 //!
 //! Geri döngüyü dinlemek tek başına bir güvenlik sınırı **değildir**: kullanıcının
-//! tarayıcısındaki HERHANGİ bir sayfa `http://127.0.0.1:32145`e istek atabilir. İki
+//! tarayıcısındaki HERHANGİ bir sayfa `http://127.0.0.1:32147`e istek atabilir. İki
 //! ayrı saldırı var ve ikisi ayrı kapı ister:
 //!
 //! | Tehdit | Ne yapar | Kapı |

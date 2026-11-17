@@ -118,6 +118,7 @@ members = [
     "crates/imza/audit",
     "crates/imza/pkcs11",
     "crates/imza/api",
+    "apps/imza-service",
     # Desktop (docs/adr/0010, 0016): the KentOS UI library and its showcase. Not in
     # default-members, so web and server work never builds Iced and wgpu (TODOS.md UI-04);
     # pnpm rust:test:desktop and make test-desktop build them.
@@ -192,6 +193,7 @@ default-members = [
     "crates/imza/audit",
     "crates/imza/pkcs11",
     "crates/imza/api",
+    "apps/imza-service",
 ]
 # GeographicLib's Rust port with libm's functions (docs/adr/0171): the release's own code, a path
 # dependency of the geometry core but not a member (its tests run by hand, its lints its authors').

@@ -3086,6 +3086,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-imza-service"
+version = "0.1.0"
+dependencies = [
+ "kentos-imza-api",
+ "kentos-imza-pkcs11",
+ "kentos-imza-security",
+ "kentos-imza-signature",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "kentos-imza-signature"
 version = "0.1.0"
 dependencies = [

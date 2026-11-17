@@ -1,7 +1,7 @@
 //! İmzalı imza isteği (docs/adr/9002 §5).
 //!
 //! **Tarayıcının localhost servisine erişebilmesi imza yetkisi DEĞİLDİR**.
-//! Kullanıcının makinesindeki **herhangi bir web sayfası** `127.0.0.1:32145`e istek
+//! Kullanıcının makinesindeki **herhangi bir web sayfası** `127.0.0.1:32147`e istek
 //! atabilir. Yetkiyi veren şey, KentOS sunucusunun **kriptografik olarak imzaladığı**
 //! istektir.
 //!
