@@ -96,3 +96,11 @@ def bina_yuksekligi_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]
 def kapi_olculeri_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Kapı yüksekliği ve net genişliği (PAİY 39/1; Sivas 39/1): bina ve bölüm girişi, öbür kapılar."""
     return _bulgular(facts, ("paiy_door_", "paiy_revolving_door_"))
+
+
+@ext.audit("kullanim")
+def kullanim_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Kullanım sınıfına özel kaçış hükümleri (BYKHY 49/1-a hasta odası, 50/1-a ve 50/1-b otel, 52 fabrika, mağaza,
+    depo, büro ve ayakta tedavi merkezinin kaçış merdivenleri)."""
+    return _bulgular(facts, ("bykhy_patient_", "bykhy_hotel_", "bykhy_single_stair"))
+

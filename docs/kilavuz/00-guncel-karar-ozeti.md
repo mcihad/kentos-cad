@@ -362,6 +362,10 @@
     ve onun yazdığı biçimde; eleman `arch.elementType` ile bağlı, istisnalarını belge her düzenlemede yeniden hesaplar
     (`update_many`). `cad.elementtypes.edit` (Tipe çevir dahil), Öznitelikler'de Tipten/Örnekten, IFC'de sınıfının tipi,
     Mimari verisi 19.
+  - **Kullanım sınıfına özel kaçış hükümleri (17 Kasım 2026; [ADR 8107](../adr/8107-use-class-escape-articles.md),
+    K188–K193; B22'nin ilk dilimi):** mimari-mevzuat 0.22.0 `kullanim`: sınıf bina programından, yoksa mahal adlarından sıkı
+    (12/2, 16/2); BYKHY 49/1-a, 50/1-a, 50/1-b, 52; olgulara alan eklenmedi; 52'de (c)–(d) çizimden kanıtlanmaz, uzman
+    incelemesi.
   - **Künye role göre (17 Kasım 2026; [ADR 8100](../adr/8100-kunye-personal-particulars-by-role.md), K152–K156):** bulut
     projesinde künyenin kişisel bilgilerini (13 değişken: yapı sahibi, müellif, sicil, büro, tapu kaydı …; teslim eden)
     yalnız `feature.write` sahibi görür (`ProjectAccess::sees_particulars`); öbürleri bilgide ve anlık görüntüde "Gizli"

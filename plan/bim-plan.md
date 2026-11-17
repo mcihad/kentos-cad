@@ -602,7 +602,7 @@ aynı çizim 30.6.2026'da geçer, 2.7.2026'da 34/8'den kalır, tarihsiz eksik ve
 erişilebilir yol (TS 9111 metni); plan notlarının öbür konuları (çatı, bodrum, çıkmalar; CBS'in Hmax'ı ve KatAdedi'si: ADR
 8084 §6, 8098 §6); blok başına bölge ve taşıyıcı sistem (ADR
 8085 §6, 8094 §6);
-konut dışı (B22);
+konut dışı (B22; ilk dilim yapıldı, aşağıda ADR 8107);
 emsalde 22/1-j ve 5/8'in bodrum listesi (ADR 8079 §6).
 **Yapıldı (17 Kasım 2026, ADR 8078 §6, K64):** uzman onayı kayıtlı: paketin bulgusu `cad.arch.exceptions`'a verilerek
 istisna yapılır; uzman incelemesi bulgusunun istisnası "Uzman onayı"dır, notu uzmanın sözü; bulgu değişince düşer, katla
@@ -610,6 +610,13 @@ ilgili bulgu katın mahallerini adlandırdığı için mahal eklenince yeni bulg
 **Yapıldı (17 Kasım 2026, ADR 8078 §8, K65):** kaçış yolu kapıları: BYKHY 47/2 (kullanıcı yükü 50'yi aşan mekânın çıkış
 kapısı dışarı açılır) ve 47/3 (kaçış merdiveni ve yangın güvenlik holü kapısının beyan edilen sınıfı: 60/90 dakika, duman
 sızdırmaz, kendiliğinden kapanır); olgulara mahallerin kişisi ve kapılar eklendi; 20 bağımsız durum.
+**Yapıldı (17 Kasım 2026, [ADR 8107](../docs/adr/8107-use-class-escape-articles.md), K188–K193, B22'nin ilk dilimi):**
+kullanım sınıfına özel kaçış hükümleri (paket 0.22.0, `kullanim`): sınıf bina programının kullanımından, yoksa mahal
+adlarından sıkı okumayla (12/2, 16/2). BYKHY 49/1-a: sağlık yapısında 15 kişiyi aşan hasta odasının 2 kapısı; 50/1-a:
+otelde yatak odası ile iç koridor arası en az 60 dakika, ikiden çok katlı otelde her katta 2 çıkış (yatak sayısı çizimde
+yok: 15,50 m'nin altında eksik veri); 50/1-b: koridora açılan kapı 30 dakika ve kendiliğinden kapanır; 52 (9.9.2009): 52'nin
+binasında tek merdivende (a) yapı yüksekliği ve (b) katın kişisi tutmazsa kaldı, tutarsa uzman incelemesi. 25 bağımsız
+durum; gerçek çizimde büro ve otel Denetim'de. Olgulara alan eklenmedi.
 **Yapıldı (17 Kasım 2026, [ADR 8079](../docs/adr/8079-emsal-article-22-limits.md), K66–K69):** emsalin 22. madde
 sınırları alan hesabında: toprak altındaki katta bölümün depo eklentisi bölüm net alanının %50'sine (22/1-k), kapıcı
 daireleri toplam 70 m²'ye (22/1-ç), kütüphane 50 m²'ye (22/1-f) kadar dışarıda, aşan kısım emsale girer ve tablonun
@@ -934,7 +941,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
 | B21 ~ | Tipler ve katmanlı yapı; tip nesneleri | BIM-12, IFC-04 | Değerin kaynağı görünür (ADR 8105: duvar stili `IfcWallType`, katman takımları; ADR 8106: kolon, kiriş, döşeme, çatı, korkuluk, merdiven tipi, istisna, Öznitelikler'de Tipten/Örnekten, IFC tipleri; iki ilk kabul de tamam; giydirme cephe tipi, profil takımı, eski sürüm denetimi, kitaplık kaldı) |
-| B22 | Konut dışı kullanımlar (yasal en geç 1.9.2033) | BIM-13 | Kullanım sınıfına özel kurallar |
+| B22 ~ | Konut dışı kullanımlar (yasal en geç 1.9.2033) | BIM-13 | Kullanım sınıfına özel kurallar (ADR 8107: BYKHY 49/1-a hasta odası, 50/1-a ve 50/1-b otel, 52 tek merdivenli fabrika, mağaza, depo, büro; 25 bağımsız durum, gerçek çizimde Denetim; 49/1-b, 49/2, 50/3, 51, eğitim, toplanma, endüstri ve depolama kaldı) |
 | B23 | Kat irtifakı için 3B yapı modeli araştırması | BIM-19 | Karar ADR'de |
 
 - **Sürekli:** BIM-20 her fazda bir dilimle ilerler.

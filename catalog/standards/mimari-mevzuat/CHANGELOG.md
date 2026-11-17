@@ -1,5 +1,17 @@
 # Değişiklikler
 
+## 0.22.0 — 17 Kasım 2026
+
+- Kullanım sınıfına özel kaçış hükümleri (`kullanim`, yeni katkı `kullanim`; docs/adr/8107): binanın kullanımı bina
+  programından (yoksa mahal adlarından, sıkı okumayla) okunur. BYKHY 49/1-a: sağlık yapısında 15 kişiyi aşan hasta
+  yatak odasının 2 kapısı (`bykhy_patient_room_doors`); 50/1-a: otelde yatak odası ile iç koridor arasındaki duvar en
+  az 60 dakika (`bykhy_hotel_room_wall`), kat sayısı ikiden fazla otelde her katta 2 çıkış (`bykhy_hotel_storey_exits`;
+  yatak sayısı çizimde yok: yapı yüksekliği 15,50 m'nin altındaysa eksik veri); 50/1-b: iç koridora açılan kapı en az
+  30 dakika ve kendiliğinden kapanır (`bykhy_hotel_room_door`); 52 (9.9.2009): fabrika, imalathane, mağaza, dükkân, depo,
+  büro ve ayakta tedavi merkezinde 2 bağımsız kaçış merdiveni, tek merdivende (a) yapı yüksekliği ve (b) katın kişisi
+  tutmazsa kaldı, tutarsa (c)–(d) uzman incelemesi (`bykhy_single_stair`). Metinler mevzuat.gov.tr'nin derlenmiş
+  metninden (SHA-256 d82d06d2…). 24 bağımsız durum.
+
 ## 0.21.0 — 17 Kasım 2026
 
 - Bina yüksekliği ve kat adedi (`bina_yuksekligi`, yeni katkı `bina-yuksekligi`): PAİY 5/11'e göre planın bina

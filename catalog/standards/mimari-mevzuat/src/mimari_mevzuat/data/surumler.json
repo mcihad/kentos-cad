@@ -376,6 +376,82 @@
     },
     {
       "regulation": "BYKHY",
+      "article": "49/1-a",
+      "title": "Kalabalık hasta yatak odasının iki kapısı",
+      "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 49/1-a değişmedi (49/1-b 2009/15316 sayılı Bakanlar Kurulu Kararıyla değişti).",
+      "versions": [
+        {
+          "id": "2007",
+          "from": "2007-12-19",
+          "until": null,
+          "label": "19.12.2007",
+          "gazette": "19.12.2007/26735",
+          "persons": 15,
+          "text": "(1) Sağlık yapıları kapsamında olan, hastanelerde, yaşlılar için dinlenme ve bakım evleri ve bedensel ve zihinsel engelliler için olan bakım evlerinde aşağıda belirtilen şartlara uyulur: a) Kullanıcı yükü 15 kişiyi aşan herhangi bir hasta yatak odası veya süit oda için birbirinden uzakta konuşlandırılmış 2 kapı bulunması gerekir.",
+          "source": "RG 19.12.2007/26735 (BKK 2007/12937), mevzuat.gov.tr derlenmiş metni (SHA-256 d82d06d2…a7d9, son değişiklik RG 1.7.2025/32943), 49 nci madde; docs/adr/8107 §1"
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "50/1-a",
+      "title": "Otel yatak odasının koridordan ayrımı ve katın çıkışları",
+      "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 50 nci madde değişmedi.",
+      "versions": [
+        {
+          "id": "2007",
+          "from": "2007-12-19",
+          "until": null,
+          "label": "19.12.2007",
+          "gazette": "19.12.2007/26735",
+          "minutes": 60,
+          "beds": 20,
+          "storeys": 2,
+          "height": 15.5,
+          "text": "(1) Otellerin, motellerin ve diğer binaların yatakhane olarak kullanılan bölümlerinin aşağıda belirtilen şartlara uygun olması gerekir: a) Yatak odaları, iç koridordan en az 60 dakika yangına karşı dayanıklı bir duvar ile ayrılır. Toplam yatak sayısı 20’den fazla veya kat sayısı ikiden fazla olan otellerde her katta en az 2 çıkış sağlanır. Yatak sayısı 20’den az ve yapı yüksekliği 15.50 m’den az olan bina veya bloklarda ise, merdiven korunumlu yapıldığı veya basınçlandırıldığı takdirde, tek merdiven yeterli kabul edilir.",
+          "source": "RG 19.12.2007/26735 (BKK 2007/12937), mevzuat.gov.tr derlenmiş metni (SHA-256 d82d06d2…a7d9, son değişiklik RG 1.7.2025/32943), 50 nci madde; docs/adr/8107 §1"
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "50/1-b",
+      "title": "Otel koridoruna açılan kapılar",
+      "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 50 nci madde değişmedi.",
+      "versions": [
+        {
+          "id": "2007",
+          "from": "2007-12-19",
+          "until": null,
+          "label": "19.12.2007",
+          "gazette": "19.12.2007/26735",
+          "minutes": 30,
+          "text": "b) İç koridora açılan kapıların yangına karşı en az 30 dakika dayanıklı olması ve kendiliğinden kapatan düzenekler ile donatılması gerekir.",
+          "source": "RG 19.12.2007/26735 (BKK 2007/12937), mevzuat.gov.tr derlenmiş metni (SHA-256 d82d06d2…a7d9, son değişiklik RG 1.7.2025/32943), 50 nci madde; docs/adr/8107 §1"
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "52",
+      "title": "Fabrika, imalathane, mağaza, dükkân, depo, büro ve ayakta tedavi merkezinin kaçış merdivenleri",
+      "transition": "52 nci madde 10.8.2009 tarihli ve 2009/15316 sayılı Bakanlar Kurulu Kararıyla değişti (RG 9.9.2009/27344); önceki metni kural setinde yok: 9.9.2009'dan önceki başvuru uzman incelemesi.",
+      "versions": [
+        {
+          "id": "2009",
+          "from": "2009-09-09",
+          "until": null,
+          "label": "9.9.2009",
+          "gazette": "19.12.2007/26735; 52 9.9.2009/27344",
+          "height": 21.5,
+          "persons": 50,
+          "text": "(1) Fabrika, imalathane, mağaza, dükkân, depo, büro binaları ve ayakta tedavi merkezlerinde en az 2 bağımsız kaçış merdiveni veya başka çıkışların sağlanması gerekir. Ancak, a) Yapı yüksekliğinin 21.50 m’den az olması, b) Bir kattaki kullanıcı sayısının 50 kişiden az olması, c) Bütün katlarda en fazla kaçış uzaklığının Ek-5/B’deki uzaklıklara uygun olması, ç) Yapımda yanmaz ürünler kullanılmış olması, d) İmalât ve depolamada kolay alevlenici ve parlayıcı maddelerin kullanılmaması, şartlarının hepsinin birlikte gerçekleşmesi hâlinde tek kaçış merdiveni yeterli kabul edilir.",
+          "source": "RG 9.9.2009/27344 (BKK 2009/15316), mevzuat.gov.tr derlenmiş metni (SHA-256 d82d06d2…a7d9, son değişiklik RG 1.7.2025/32943), 52 nci madde; docs/adr/8107 §1"
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
       "article": "24/2",
       "title": "Yangın tehlikesi olan kapalı alanlar",
       "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 24 üncü maddenin bu fıkrası değişmedi.",

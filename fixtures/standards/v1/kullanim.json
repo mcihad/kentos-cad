@@ -1,0 +1,4639 @@
+{
+ "format": "kentos.regulationCases",
+ "version": 1,
+ "about": "Kullanım sınıfına özel kaçış hükümlerinin bağımsız durumları (docs/adr/8107): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik 49/1-a, 50/1-a, 50/1-b (RG 19.12.2007/26735, değişmedi) ve 52'nin (RG 9.9.2009/27344) metninden elle çıkarıldı; kuralın kodundan üretilmedi (scripts/fixtures/kullanim_cases.py olguları kurar, beklenenleri olduğu gibi yazar).",
+ "cases": [
+  {
+   "id": "buro-iki-merdiven",
+   "neden": "Üç katlı büro, her katta iki kaçış merdiveni: 52 'en az 2 bağımsız kaçış merdiveni' → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 7.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Büro"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k00",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "level": "k01",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "level": "k02",
+      "name": "Ofis",
+      "persons": 20
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "level": "k02",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000004",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000005",
+      "level": "k00",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000006",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000007",
+      "level": "k01",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000008",
+      "level": "k02",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000009",
+      "level": "k02",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [],
+    "separations": [],
+    "structureHeight": 10.5
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "passed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "buro-tek-merdiven-yuksek",
+   "neden": "Sekiz katlı büro (yapı yüksekliği 28 m), tek merdiven: 52/a 'yapı yüksekliğinin 21.50 m'den az olması' tutmaz → zemin üstündeki yedi katın her biri kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 7.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 10.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k04",
+      "name": "4. kat",
+      "elevation": 14.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k05",
+      "name": "5. kat",
+      "elevation": 17.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k06",
+      "name": "6. kat",
+      "elevation": 21.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k07",
+      "name": "7. kat",
+      "elevation": 24.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Büro"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000010",
+      "level": "k00",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000011",
+      "level": "k01",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000012",
+      "level": "k02",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000013",
+      "level": "k03",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000014",
+      "level": "k04",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000015",
+      "level": "k05",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000016",
+      "level": "k06",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000017",
+      "level": "k07",
+      "name": "Ofis",
+      "persons": 20
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000010",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000011",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000012",
+      "level": "k02",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000013",
+      "level": "k03",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000014",
+      "level": "k04",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000015",
+      "level": "k05",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000016",
+      "level": "k06",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000017",
+      "level": "k07",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000018",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000019",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000020",
+      "level": "k02",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000021",
+      "level": "k03",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000022",
+      "level": "k04",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000023",
+      "level": "k05",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000024",
+      "level": "k06",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000025",
+      "level": "k07",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [],
+    "separations": [],
+    "structureHeight": 28.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "1. kat",
+       "1 kaçış merdiveni",
+       "21,50 m'den az değil (a)",
+       "BYKHY 52"
+      ]
+     },
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "2. kat",
+       "1 kaçış merdiveni",
+       "21,50 m'den az değil (a)",
+       "BYKHY 52"
+      ]
+     },
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "3. kat",
+       "1 kaçış merdiveni",
+       "21,50 m'den az değil (a)",
+       "BYKHY 52"
+      ]
+     },
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "4. kat",
+       "1 kaçış merdiveni",
+       "21,50 m'den az değil (a)",
+       "BYKHY 52"
+      ]
+     },
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "5. kat",
+       "1 kaçış merdiveni",
+       "21,50 m'den az değil (a)",
+       "BYKHY 52"
+      ]
+     },
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "6. kat",
+       "1 kaçış merdiveni",
+       "21,50 m'den az değil (a)",
+       "BYKHY 52"
+      ]
+     },
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "7. kat",
+       "1 kaçış merdiveni",
+       "21,50 m'den az değil (a)",
+       "BYKHY 52"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "buro-tek-merdiven-kalabalik",
+   "neden": "Üç katlı büro, tek merdiven, 1. katta 60 kişi: 52/b 'bir kattaki kullanıcı sayısının 50 kişiden az olması' tutmaz → iki üst katın her biri kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 7.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Büro"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000026",
+      "level": "k00",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000027",
+      "level": "k01",
+      "name": "Ofis",
+      "persons": 60
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000028",
+      "level": "k02",
+      "name": "Ofis",
+      "persons": 20
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000026",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000027",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000028",
+      "level": "k02",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000029",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000030",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000031",
+      "level": "k02",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [],
+    "separations": [],
+    "structureHeight": 10.5
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "1. kat",
+       "60 kişi, 50'den az değil (b)"
+      ]
+     },
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "2. kat",
+       "60 kişi, 50'den az değil (b)"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "buro-tek-merdiven-kosullar",
+   "neden": "Üç katlı büro (10,5 m), tek merdiven, katlarda 20 kişi: (a) ve (b) tutar; (c) kaçış uzaklıkları, (ç) yanmaz ürünler ve (d) kolay alevlenen madde çizimden kanıtlanmaz → uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 7.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Büro"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000032",
+      "level": "k00",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000033",
+      "level": "k01",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000034",
+      "level": "k02",
+      "name": "Ofis",
+      "persons": 20
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000032",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000033",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000034",
+      "level": "k02",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000035",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000036",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000037",
+      "level": "k02",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [],
+    "separations": [],
+    "structureHeight": 10.5
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "1. kat",
+       "çizimden kanıtlanmaz"
+      ],
+      "state": "expertReview"
+     },
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "2. kat",
+       "çizimden kanıtlanmaz"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "expertReview",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "magaza-tek-katli",
+   "neden": "Tek katlı mağaza: zemin kattan başka mahalli kat yok, 52'nin merdiven sayısı aranmaz (çıkışlarını 39/2 ve 32/8 söyler).",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Mağaza"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000038",
+      "level": "k00",
+      "name": "Ofis",
+      "persons": 20
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000038",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     }
+    ],
+    "doors": [],
+    "separations": [],
+    "structureHeight": 3.5
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "depo-programdan",
+   "neden": "Bina programı 'Depo' yazıyor (16/1-a), iki kat, tek merdiven, (a) ve (b) tutar → uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Depo"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000039",
+      "level": "k00",
+      "name": "Ofis",
+      "persons": 10
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000040",
+      "level": "k01",
+      "name": "Ofis",
+      "persons": 10
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000039",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 100.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000040",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 100.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000041",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000042",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [],
+    "separations": [],
+    "structureHeight": 7.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "1. kat",
+       "çizimden kanıtlanmaz"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "expertReview",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "program-yok-ofis-adlari",
+   "neden": "Bina programında kullanım yok, konut bölümü yok, mahaller 'Ofis': büro binası okunur; her katta iki merdiven → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 7.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 3,
+    "dwellings": 0,
+    "uses": [],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000043",
+      "level": "k00",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000044",
+      "level": "k01",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000045",
+      "level": "k02",
+      "name": "Ofis",
+      "persons": 20
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000043",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000044",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000045",
+      "level": "k02",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000046",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000047",
+      "level": "k00",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000048",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000049",
+      "level": "k01",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000050",
+      "level": "k02",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000051",
+      "level": "k02",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [],
+    "separations": [],
+    "structureHeight": 10.5
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "passed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "konut-depo-adi",
+   "neden": "Bütün bölümleri konut olan binanın 'Depo' adlı mahalleri binayı depo yapmaz (16/2: 50 m²'den küçük depolama bölümü esas binanın parçası) → dört madde kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 7.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "uses": [],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000052",
+      "level": "k00",
+      "name": "Depo",
+      "persons": 1
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000053",
+      "level": "k01",
+      "name": "Depo",
+      "persons": 1
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000054",
+      "level": "k02",
+      "name": "Depo",
+      "persons": 1
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000052",
+      "level": "k00",
+      "name": "Depo",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000053",
+      "level": "k01",
+      "name": "Depo",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000054",
+      "level": "k02",
+      "name": "Depo",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000055",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000056",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000057",
+      "level": "k02",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [],
+    "separations": [],
+    "structureHeight": 10.5
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "basvuru-2009-oncesi",
+   "neden": "Tek merdivenli üç katlı büro, başvuru 1.6.2009: 52'nin 9.9.2009 öncesi metni kural setinde yok → satır uzman incelemesi, bulgu yok.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "01.06.2009"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 7.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Büro"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000058",
+      "level": "k00",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000059",
+      "level": "k01",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000060",
+      "level": "k02",
+      "name": "Ofis",
+      "persons": 20
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000058",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000059",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000060",
+      "level": "k02",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000061",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000062",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000063",
+      "level": "k02",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [],
+    "separations": [],
+    "structureHeight": 28.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "expertReview",
+      null
+     ]
+    }
+   }
+  },
+  {
+   "id": "ayakta-tedavi",
+   "neden": "Bina programı 'Ayakta tedavi merkezi': 52'nin binası; iki kat, tek merdiven, (a) ve (b) tutar → uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Ayakta tedavi merkezi"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000064",
+      "level": "k00",
+      "name": "Ofis",
+      "persons": 10
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000065",
+      "level": "k01",
+      "name": "Ofis",
+      "persons": 10
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000064",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 100.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000065",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 100.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000066",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000067",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [],
+    "separations": [],
+    "structureHeight": 7.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "1. kat",
+       "çizimden kanıtlanmaz"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "expertReview",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otel-tutuyor",
+   "neden": "İki katlı otel: yatak odası iç koridordan EI 60 duvarla ayrılmış (50/1-a), koridora açılan kapı EI2 30-C5 (50/1-b), katta iki merdiven → ikisi de geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000068",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "persons": 10
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000069",
+      "level": "k01",
+      "name": "Oda 101",
+      "persons": 2
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000068",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000069",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 25.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000070",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000073",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000074",
+      "level": "k00",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000075",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000076",
+      "level": "k01",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000072",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000069",
+       "00000000-0000-4000-8000-000000000070"
+      ],
+      "operation": "swing",
+      "fireRating": "EI2 30-C5"
+     }
+    ],
+    "separations": [
+     {
+      "level": "k01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000069",
+       "00000000-0000-4000-8000-000000000070"
+      ],
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000071",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0
+     }
+    ],
+    "structureHeight": 6.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otel-duvar-30",
+   "neden": "Yatak odası ile iç koridor arası EI 30: 50/1-a 'en az 60 dakika' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000077",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "persons": 10
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000078",
+      "level": "k01",
+      "name": "Oda 101",
+      "persons": 2
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000077",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000078",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 25.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000079",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000082",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000083",
+      "level": "k00",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000084",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000085",
+      "level": "k01",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000081",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000078",
+       "00000000-0000-4000-8000-000000000079"
+      ],
+      "operation": "swing",
+      "fireRating": "EI2 30-C5"
+     }
+    ],
+    "separations": [
+     {
+      "level": "k01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000078",
+       "00000000-0000-4000-8000-000000000079"
+      ],
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000080",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 30"
+       }
+      ],
+      "openings": [],
+      "open": 0.0
+     }
+    ],
+    "structureHeight": 6.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_wall",
+      "has": [
+       "Oda 101",
+       "30 dakika < 60 dakika",
+       "BYKHY 50/1-a"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otel-duvar-beyansiz",
+   "neden": "Yatak odası ile koridor arasındaki duvarın yangın sınıfı beyan edilmemiş → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000086",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "persons": 10
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000087",
+      "level": "k01",
+      "name": "Oda 101",
+      "persons": 2
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000086",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000087",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 25.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000088",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000091",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000092",
+      "level": "k00",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000093",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000094",
+      "level": "k01",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000090",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000087",
+       "00000000-0000-4000-8000-000000000088"
+      ],
+      "operation": "swing",
+      "fireRating": "EI2 30-C5"
+     }
+    ],
+    "separations": [
+     {
+      "level": "k01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000087",
+       "00000000-0000-4000-8000-000000000088"
+      ],
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000089",
+        "kind": "wall",
+        "length": 4.0
+       }
+      ],
+      "openings": [],
+      "open": 0.0
+     }
+    ],
+    "structureHeight": 6.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_wall",
+      "has": [
+       "yangın sınıfı beyan edilmemiş"
+      ],
+      "state": "missingData"
+     }
+    ],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "missingData",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otel-kapi-kapanmiyor",
+   "neden": "Koridora açılan kapı EI 30, kendiliğinden kapanmıyor: 50/1-b 'kendiliğinden kapatan düzenekler' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000095",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "persons": 10
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000096",
+      "level": "k01",
+      "name": "Oda 101",
+      "persons": 2
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000095",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000096",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 25.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000097",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000100",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000102",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000103",
+      "level": "k01",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000099",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000096",
+       "00000000-0000-4000-8000-000000000097"
+      ],
+      "operation": "swing",
+      "fireRating": "EI 30"
+     }
+    ],
+    "separations": [
+     {
+      "level": "k01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000096",
+       "00000000-0000-4000-8000-000000000097"
+      ],
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000098",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0
+     }
+    ],
+    "structureHeight": 6.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_door",
+      "has": [
+       "Oda 101",
+       "kendiliğinden kapanmıyor",
+       "BYKHY 50/1-b"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otel-kapi-15dk",
+   "neden": "Koridora açılan kapı EI2 15-C5: 50/1-b 'en az 30 dakika' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000104",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "persons": 10
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000105",
+      "level": "k01",
+      "name": "Oda 101",
+      "persons": 2
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000104",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000105",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 25.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000106",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000109",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000110",
+      "level": "k00",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000111",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000112",
+      "level": "k01",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000108",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000105",
+       "00000000-0000-4000-8000-000000000106"
+      ],
+      "operation": "swing",
+      "fireRating": "EI2 15-C5"
+     }
+    ],
+    "separations": [
+     {
+      "level": "k01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000105",
+       "00000000-0000-4000-8000-000000000106"
+      ],
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000107",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0
+     }
+    ],
+    "structureHeight": 6.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_door",
+      "has": [
+       "15 dakika < 30 dakika"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otel-kapi-beyansiz",
+   "neden": "Koridora açılan kapının sınıfı yok → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000113",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "persons": 10
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000114",
+      "level": "k01",
+      "name": "Oda 101",
+      "persons": 2
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000113",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000114",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 25.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000115",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000118",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000119",
+      "level": "k00",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000120",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000121",
+      "level": "k01",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000117",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000114",
+       "00000000-0000-4000-8000-000000000115"
+      ],
+      "operation": "swing"
+     }
+    ],
+    "separations": [
+     {
+      "level": "k01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000114",
+       "00000000-0000-4000-8000-000000000115"
+      ],
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000116",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0
+     }
+    ],
+    "structureHeight": 6.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_door",
+      "has": [
+       "yangın sınıfı beyan edilmemiş"
+      ],
+      "state": "missingData"
+     }
+    ],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "missingData",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otel-tek-cikis-yuksek",
+   "neden": "Altı katlı otel (18 m), her katta tek merdiven: kat sayısı ikiden fazla, 2 çıkış gerekir; 'yatak 20'den az ve yapı yüksekliği 15.50 m'den az' istisnası 18 m'de uygulanmaz → yatak odalı beş katın her biri kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k04",
+      "name": "4. kat",
+      "elevation": 12.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k05",
+      "name": "5. kat",
+      "elevation": 15.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000122",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "persons": 10
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000123",
+      "level": "k01",
+      "name": "Oda 101",
+      "persons": 2
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000127",
+      "level": "k02",
+      "name": "Oda 101",
+      "persons": 2
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000131",
+      "level": "k03",
+      "name": "Oda 101",
+      "persons": 2
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000135",
+      "level": "k04",
+      "name": "Oda 101",
+      "persons": 2
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000139",
+      "level": "k05",
+      "name": "Oda 101",
+      "persons": 2
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000122",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000123",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 25.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000124",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000127",
+      "level": "k02",
+      "name": "Oda 101",
+      "area": 25.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000128",
+      "level": "k02",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000131",
+      "level": "k03",
+      "name": "Oda 101",
+      "area": 25.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000132",
+      "level": "k03",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000135",
+      "level": "k04",
+      "name": "Oda 101",
+      "area": 25.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000136",
+      "level": "k04",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000139",
+      "level": "k05",
+      "name": "Oda 101",
+      "area": 25.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000140",
+      "level": "k05",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000143",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000144",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000145",
+      "level": "k02",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000146",
+      "level": "k03",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000147",
+      "level": "k04",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000148",
+      "level": "k05",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000126",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000123",
+       "00000000-0000-4000-8000-000000000124"
+      ],
+      "operation": "swing",
+      "fireRating": "EI2 30-C5"
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000130",
+      "level": "k02",
+      "between": [
+       "00000000-0000-4000-8000-000000000127",
+       "00000000-0000-4000-8000-000000000128"
+      ],
+      "operation": "swing",
+      "fireRating": "EI2 30-C5"
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000134",
+      "level": "k03",
+      "between": [
+       "00000000-0000-4000-8000-000000000131",
+       "00000000-0000-4000-8000-000000000132"
+      ],
+      "operation": "swing",
+      "fireRating": "EI2 30-C5"
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000138",
+      "level": "k04",
+      "between": [
+       "00000000-0000-4000-8000-000000000135",
+       "00000000-0000-4000-8000-000000000136"
+      ],
+      "operation": "swing",
+      "fireRating": "EI2 30-C5"
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000142",
+      "level": "k05",
+      "between": [
+       "00000000-0000-4000-8000-000000000139",
+       "00000000-0000-4000-8000-000000000140"
+      ],
+      "operation": "swing",
+      "fireRating": "EI2 30-C5"
+     }
+    ],
+    "separations": [
+     {
+      "level": "k01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000123",
+       "00000000-0000-4000-8000-000000000124"
+      ],
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000125",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0
+     },
+     {
+      "level": "k02",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000127",
+       "00000000-0000-4000-8000-000000000128"
+      ],
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000129",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0
+     },
+     {
+      "level": "k03",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000131",
+       "00000000-0000-4000-8000-000000000132"
+      ],
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000133",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0
+     },
+     {
+      "level": "k04",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000135",
+       "00000000-0000-4000-8000-000000000136"
+      ],
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000137",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0
+     },
+     {
+      "level": "k05",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000139",
+       "00000000-0000-4000-8000-000000000140"
+      ],
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000141",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0
+     }
+    ],
+    "structureHeight": 18.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_storey_exits",
+      "has": [
+       "1. kat",
+       "1 çıkış",
+       "15,50 m'nin altında değil"
+      ]
+     },
+     {
+      "code": "bykhy_hotel_storey_exits",
+      "has": [
+       "2. kat",
+       "1 çıkış",
+       "15,50 m'nin altında değil"
+      ]
+     },
+     {
+      "code": "bykhy_hotel_storey_exits",
+      "has": [
+       "3. kat",
+       "1 çıkış",
+       "15,50 m'nin altında değil"
+      ]
+     },
+     {
+      "code": "bykhy_hotel_storey_exits",
+      "has": [
+       "4. kat",
+       "1 çıkış",
+       "15,50 m'nin altında değil"
+      ]
+     },
+     {
+      "code": "bykhy_hotel_storey_exits",
+      "has": [
+       "5. kat",
+       "1 çıkış",
+       "15,50 m'nin altında değil"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otel-tek-cikis-alcak",
+   "neden": "Dört katlı otel (12 m), tek merdiven: istisna yatak sayısına ve merdivenin korunumuna bağlı, ikisi de çizimde yok → üç yatak odalı kat eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 9.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000149",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "persons": 10
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000150",
+      "level": "k01",
+      "name": "Oda 101",
+      "persons": 2
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000154",
+      "level": "k02",
+      "name": "Oda 101",
+      "persons": 2
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000158",
+      "level": "k03",
+      "name": "Oda 101",
+      "persons": 2
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000149",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000150",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 25.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000151",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000154",
+      "level": "k02",
+      "name": "Oda 101",
+      "area": 25.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000155",
+      "level": "k02",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000158",
+      "level": "k03",
+      "name": "Oda 101",
+      "area": 25.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000159",
+      "level": "k03",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000162",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000163",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000164",
+      "level": "k02",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000165",
+      "level": "k03",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000153",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000150",
+       "00000000-0000-4000-8000-000000000151"
+      ],
+      "operation": "swing",
+      "fireRating": "EI2 30-C5"
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000157",
+      "level": "k02",
+      "between": [
+       "00000000-0000-4000-8000-000000000154",
+       "00000000-0000-4000-8000-000000000155"
+      ],
+      "operation": "swing",
+      "fireRating": "EI2 30-C5"
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000161",
+      "level": "k03",
+      "between": [
+       "00000000-0000-4000-8000-000000000158",
+       "00000000-0000-4000-8000-000000000159"
+      ],
+      "operation": "swing",
+      "fireRating": "EI2 30-C5"
+     }
+    ],
+    "separations": [
+     {
+      "level": "k01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000150",
+       "00000000-0000-4000-8000-000000000151"
+      ],
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000152",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0
+     },
+     {
+      "level": "k02",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000154",
+       "00000000-0000-4000-8000-000000000155"
+      ],
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000156",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0
+     },
+     {
+      "level": "k03",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000158",
+       "00000000-0000-4000-8000-000000000159"
+      ],
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000160",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0
+     }
+    ],
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_storey_exits",
+      "has": [
+       "1. kat",
+       "yatak sayısı ve merdivenin korunumu"
+      ],
+      "state": "missingData"
+     },
+     {
+      "code": "bykhy_hotel_storey_exits",
+      "has": [
+       "2. kat",
+       "yatak sayısı ve merdivenin korunumu"
+      ],
+      "state": "missingData"
+     },
+     {
+      "code": "bykhy_hotel_storey_exits",
+      "has": [
+       "3. kat",
+       "yatak sayısı ve merdivenin korunumu"
+      ],
+      "state": "missingData"
+     }
+    ],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "missingData",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otel-iki-katli-tek-cikis",
+   "neden": "İki katlı otel, tek merdiven: 20'den fazla yatakta her katta 2 çıkış gerekir, yatak sayısı çizimde yok → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000166",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "persons": 10
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000167",
+      "level": "k01",
+      "name": "Oda 101",
+      "persons": 2
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000166",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000167",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 25.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000168",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000171",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000172",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000170",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000167",
+       "00000000-0000-4000-8000-000000000168"
+      ],
+      "operation": "swing",
+      "fireRating": "EI2 30-C5"
+     }
+    ],
+    "separations": [
+     {
+      "level": "k01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000167",
+       "00000000-0000-4000-8000-000000000168"
+      ],
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000169",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0
+     }
+    ],
+    "structureHeight": 6.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_storey_exits",
+      "has": [
+       "1. kat",
+       "toplam yatak 20'den fazlaysa"
+      ],
+      "state": "missingData"
+     }
+    ],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "missingData",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yurt-programdan",
+   "neden": "Bina programı 'Öğrenci yurdu' (10: öğrenci yurtları konaklama amaçlı), 'Yatak odası' koridordan EI 60, kapı EI2 30-C5 → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Öğrenci yurdu"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000173",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "persons": 10
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000174",
+      "level": "k01",
+      "name": "Yatak odası",
+      "persons": 2
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000173",
+      "level": "k00",
+      "name": "Resepsiyon",
+      "area": 20.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000174",
+      "level": "k01",
+      "name": "Yatak odası",
+      "area": 25.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000175",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000178",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000179",
+      "level": "k00",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000180",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000181",
+      "level": "k01",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000177",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000174",
+       "00000000-0000-4000-8000-000000000175"
+      ],
+      "operation": "swing",
+      "fireRating": "EI2 30-C5"
+     }
+    ],
+    "separations": [
+     {
+      "level": "k01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000174",
+       "00000000-0000-4000-8000-000000000175"
+      ],
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000176",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0
+     }
+    ],
+    "structureHeight": 6.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "hastane-tek-kapi",
+   "neden": "Hastanede 18 kişilik hasta odası tek kapılı: 49/1-a 'kullanıcı yükü 15 kişiyi aşan … 2 kapı' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Hastane"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000182",
+      "level": "k01",
+      "name": "Hasta odası",
+      "persons": 18
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000182",
+      "level": "k01",
+      "name": "Hasta odası",
+      "area": 360.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000183",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 40.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000185",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000186",
+      "level": "k00",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000187",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000188",
+      "level": "k01",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000184",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000182",
+       "00000000-0000-4000-8000-000000000183"
+      ],
+      "operation": "swing"
+     }
+    ],
+    "separations": [],
+    "structureHeight": 7.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_patient_room_doors",
+      "has": [
+       "Hasta odası",
+       "18 kişi",
+       "1 kapısı var",
+       "BYKHY 49/1-a"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "hastane-iki-kapi",
+   "neden": "18 kişilik hasta odasının iki kapısı var → geçer (birbirinden uzaklığı metinde ölçü değil, idarenin).",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Hastane"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000189",
+      "level": "k01",
+      "name": "Hasta odası",
+      "persons": 18
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000189",
+      "level": "k01",
+      "name": "Hasta odası",
+      "area": 360.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000190",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 40.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000193",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000194",
+      "level": "k00",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000195",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000196",
+      "level": "k01",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000191",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000189",
+       "00000000-0000-4000-8000-000000000190"
+      ],
+      "operation": "swing"
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000192",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000189",
+       "00000000-0000-4000-8000-000000000190"
+      ],
+      "operation": "swing"
+     }
+    ],
+    "separations": [],
+    "structureHeight": 7.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "hastane-kucuk-oda",
+   "neden": "İki kişilik hasta odası: 15 kişiyi aşmıyor → 49/1-a kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Hastane"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000197",
+      "level": "k01",
+      "name": "Hasta odası",
+      "persons": 2
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000197",
+      "level": "k01",
+      "name": "Hasta odası",
+      "area": 40.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000198",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 40.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000200",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000201",
+      "level": "k00",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000202",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000203",
+      "level": "k01",
+      "name": "Merdiven evi 2",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000199",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000197",
+       "00000000-0000-4000-8000-000000000198"
+      ],
+      "operation": "swing"
+     }
+    ],
+    "separations": [],
+    "structureHeight": 7.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "konut-kapsam-disi",
+   "neden": "Bina programı 'Konut': dört madde de kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 7.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Konut"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000204",
+      "level": "k00",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000205",
+      "level": "k01",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000206",
+      "level": "k02",
+      "name": "Ofis",
+      "persons": 20
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000204",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000205",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000206",
+      "level": "k02",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000207",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000208",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000209",
+      "level": "k02",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [],
+    "separations": [],
+    "structureHeight": 10.5
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tarihsiz-buro",
+   "neden": "Başvuru tarihi yok: kural seti bütün maddelerin bilindiği ilk günden (9.9.2009) önceki günleri denemez (52'nin önceki metni kural setinde yok); o günden sonra tek hâl var, sonuç güne bağlı değil → tek merdivenli sekiz katlı büronun yedi katı en yeni hâlle kalır.",
+   "permit": null,
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 7.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 10.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k04",
+      "name": "4. kat",
+      "elevation": 14.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k05",
+      "name": "5. kat",
+      "elevation": 17.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k06",
+      "name": "6. kat",
+      "elevation": 21.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k07",
+      "name": "7. kat",
+      "elevation": 24.5,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Büro"
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000210",
+      "level": "k00",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000211",
+      "level": "k01",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000212",
+      "level": "k02",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000213",
+      "level": "k03",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000214",
+      "level": "k04",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000215",
+      "level": "k05",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000216",
+      "level": "k06",
+      "name": "Ofis",
+      "persons": 20
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000217",
+      "level": "k07",
+      "name": "Ofis",
+      "persons": 20
+     }
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000210",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000211",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000212",
+      "level": "k02",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000213",
+      "level": "k03",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000214",
+      "level": "k04",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000215",
+      "level": "k05",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000216",
+      "level": "k06",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000217",
+      "level": "k07",
+      "name": "Ofis",
+      "area": 200.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000218",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000219",
+      "level": "k01",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000220",
+      "level": "k02",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000221",
+      "level": "k03",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000222",
+      "level": "k04",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000223",
+      "level": "k05",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000224",
+      "level": "k06",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000225",
+      "level": "k07",
+      "name": "Merdiven evi",
+      "area": 20.0,
+      "stair": true
+     }
+    ],
+    "doors": [],
+    "separations": [],
+    "structureHeight": 28.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "1. kat",
+       "21,50 m'den az değil (a)"
+      ]
+     },
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "2. kat",
+       "21,50 m'den az değil (a)"
+      ]
+     },
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "3. kat",
+       "21,50 m'den az değil (a)"
+      ]
+     },
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "4. kat",
+       "21,50 m'den az değil (a)"
+      ]
+     },
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "5. kat",
+       "21,50 m'den az değil (a)"
+      ]
+     },
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "6. kat",
+       "21,50 m'den az değil (a)"
+      ]
+     },
+     {
+      "code": "bykhy_single_stair",
+      "has": [
+       "7. kat",
+       "21,50 m'den az değil (a)"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 49/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-a": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 50/1-b": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 52": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  }
+ ]
+}
