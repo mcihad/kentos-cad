@@ -679,6 +679,9 @@ impl App {
             .and_then(|r| r.run.as_ref())
             .ok_or_else(|| refused("busy", "Eklentinin çalışan bir işlevi yok."))?;
         let origin = run.origin.clone();
+        // The panel the run started from, by its own number: closed and opened again, it is another (§117).
+        let started_from = origin.as_ref().map(|o| o.instance);
+        let named = params.get("panel").and_then(Value::as_str).is_some();
         let local = match params.get("panel").and_then(Value::as_str) {
             // One of its own, as its installed manifest declares them.
             Some(local) => {
@@ -697,10 +700,11 @@ impl App {
             None => origin.map(|o| o.panel).ok_or_else(no_panel)?,
         };
         let open = |app: &App| {
-            app.extensions
-                .panels
-                .iter()
-                .position(|p| p.ext == ext && p.local == local)
+            app.extensions.panels.iter().position(|p| {
+                p.ext == ext
+                    && p.local == local
+                    && (named || started_from.is_none_or(|n| p.instance == n))
+            })
         };
         // Opened (or brought in front) and held until the run ends.
         if method == "panel.open" {
@@ -723,6 +727,7 @@ impl App {
             panel: local.clone(),
             button: String::new(),
             table: None,
+            instance: self.extensions.panels[at].instance,
         };
         match method {
             "panel.set" => {

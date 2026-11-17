@@ -1521,6 +1521,7 @@ mod tests {
             panel: "liste".into(),
             button: "ara".into(),
             table: Some("liste".into()),
+            instance: app.extensions.panels[0].instance,
         };
         app.extensions.panels[0].running = Some("ara".into());
         app.ext_panel_answer(

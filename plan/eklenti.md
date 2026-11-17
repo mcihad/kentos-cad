@@ -1338,7 +1338,9 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   bölüm (ADR 8057 §38): `section` sonraki bileşenleri toplar, katlıyken değerleri gider, yanlış alan bölümünü açar;
   görsel (ADR 8057 §40): `image` kodun verdiği PNG'yi gösterir (`ctx.panel.set(id, image=…)`, okumadan denetlenir);
   dosya seçici (ADR 8057 §41): `filePicker` okunacak dosyanın yolunu yazdırır ya da seçtirir, `files.userSelected` ister. Panel içi sekme (ADR 8057 §43): bileşenin `tab` anahtarı, sekmesiz bileşen her sayfada, yanlış alan sayfasını açar. Kaydetme yeri (ADR 8057 §44): `filePicker`'ın `save` kipi, ayrı yetenek `files.userSelectedWrite`. Koordinat sistemi seçici (ADR 8057 §45): `crsPicker`, değeri `EPSG:<kod>`, varsayılan çizimin sistemi. Katman menüsünün komutu tıklanan katmanı `ctx.params["layer"]`'da alıyor (Vitrin'in
-  Değerlerini say'ı).* Kararlı bileşen/oturum/eylem kimlikleri, tipli değer/olay, doğrulama, salt okunur/etkin durum,
+  Değerlerini say'ı). Geç cevap (ADR 8057 §117, 17 Kasım): her açılan panelin kendi numarası; kapanıp yeniden açılan
+  panel eski çalıştırmanın satırlarını ve `ctx.panel` çağrılarını almaz [PY-UI-17'nin pencere kapanması payı].*
+  Kararlı bileşen/oturum/eylem kimlikleri, tipli değer/olay, doğrulama, salt okunur/etkin durum,
   düzen [PY-UI-01, 06]; `kentos.ui` Python cephesi şemadan üretilir [PY-UI-02]; aracı oluştur/yamala/kapat/odakla/bildir
   ve eylem kaydı [PY-UI-03]; yama geldiğinde kullanıcının odağı, taslağı ve kaydırması korunur [PY-UI-04]; bileşen değeri
   ile kalıcı nesne değeri ayrıdır, her tuş belge değişikliği değildir [PY-UI-05]; varsayılan/görünür/etkin/zorunlu/hesaplı

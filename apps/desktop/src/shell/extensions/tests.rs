@@ -18,6 +18,7 @@ mod builds;
 mod catalog;
 mod demo;
 mod l10n;
+mod late;
 mod python;
 mod report;
 mod submit;

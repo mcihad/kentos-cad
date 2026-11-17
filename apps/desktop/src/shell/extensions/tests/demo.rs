@@ -688,6 +688,7 @@ fn an_extensions_panel_opens_in_the_dock_and_its_table_takes_its_commands_rows()
         panel: "yapi-paneli".into(),
         button: "ara".into(),
         table: Some("sonuc".into()),
+        instance: gis.extensions.instance_of("tr.ornek.vitrin", "yapi-paneli"),
     };
     gis.ext_panel_answer(
         &origin,
@@ -842,6 +843,7 @@ fn a_commands_progress_shows_in_its_notice_and_its_panel() {
         panel: "yapi-paneli".into(),
         button: "numarala".into(),
         table: Some("sonuc".into()),
+        instance: gis.extensions.instance_of(VITRIN, "yapi-paneli"),
     };
     // The search's rows, then its Yapıları numarala button pressed (the launch the background step hands over).
     gis.ext_panel_answer(
@@ -988,6 +990,7 @@ fn a_panels_card_shows_a_card_per_row() {
         panel: "parsel-paneli".into(),
         button: "parseller".into(),
         table: Some("kartlar".into()),
+        instance: gis.extensions.instance_of(VITRIN, "parsel-paneli"),
     };
     gis.ext_panel_answer(
         &origin,
@@ -1052,11 +1055,12 @@ fn several_panels_stay_open_in_tabs_each_with_its_own() {
         let _ = gis.extensions_event(Event::Panel(e));
     };
     let shown = |gis: &App| gis.extensions.panel().map(|p| p.local.clone());
-    let origin = |ext: &str, panel: &str, button: &str| PanelOrigin {
+    let origin = |gis: &App, ext: &str, panel: &str, button: &str| PanelOrigin {
         ext: ext.into(),
         panel: panel.into(),
         button: button.into(),
         table: None,
+        instance: gis.extensions.instance_of(ext, panel),
     };
     open(&mut gis, VITRIN, "yapi-paneli");
     say(&mut gis, PanelEvent::Text("sorgu".into(), "Y-0".into()));
@@ -1085,7 +1089,7 @@ fn several_panels_stay_open_in_tabs_each_with_its_own() {
     gis.ext_panel_answer(
         &PanelOrigin {
             table: Some("sonuc".into()),
-            ..origin(VITRIN, "yapi-paneli", "ara")
+            ..origin(&gis, VITRIN, "yapi-paneli", "ara")
         },
         Ok(json!({ "rows": [{ "no": "Y-01" }], "columns": ["no"] })),
     );
@@ -1107,14 +1111,14 @@ fn several_panels_stay_open_in_tabs_each_with_its_own() {
         ext: VITRIN.into(),
         command: "yapilari-numarala".into(),
         params: json!({}),
-        origin: origin(VITRIN, "yapi-paneli", "numarala"),
+        origin: origin(&gis, VITRIN, "yapi-paneli", "numarala"),
     });
     gis.extensions.panels[1].running = Some("say".into());
     gis.extensions.panel_calls.push(PanelCall {
         ext: VITRIN.into(),
         command: "deger-say".into(),
         params: json!({}),
-        origin: origin(VITRIN, "deger-paneli", "say"),
+        origin: origin(&gis, VITRIN, "deger-paneli", "say"),
     });
     let package = gis
         .extensions
@@ -1370,6 +1374,7 @@ fn an_inputs_change_runs_its_command_and_waits_for_a_running_one() {
         panel: "deger-paneli".into(),
         button: "say".into(),
         table: Some("dagilim".into()),
+        instance: gis.extensions.instance_of(VITRIN, "deger-paneli"),
     };
     gis.ext_panel_stopped(&origin);
     assert!(gis.extensions.panel().unwrap().rerun.is_none());
@@ -1577,6 +1582,7 @@ fn a_panels_command_changes_its_panel_as_it_runs() {
             panel: "yapi-paneli".into(),
             button: "ara".into(),
             table: Some("sonuc".into()),
+            instance: gis.extensions.instance_of(VITRIN, "yapi-paneli"),
         },
     });
     gis.extensions.panels[0].running = Some("ara".into());

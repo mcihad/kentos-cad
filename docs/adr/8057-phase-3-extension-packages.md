@@ -5492,3 +5492,25 @@ paketi yeniden üretildi.
   `every_command_case_matches_the_desktop_handlers`); eklentinin aracı masaüstünde (Örnekleri çalıştır), ajanın
   denemesinde ve `kentos kek test`'te tek örnek koşucusundan (`examples::run`) aynı beklentilerle geçer (§48, §74).
   Üreticinin kendi çıktısı kanıt sayılmaz (ECO-QA-15): beklentiler durum dosyalarında ve örneklerde ayrıca yazılı.
+
+## §117. Kapanan panel geç cevabı almaz: panelin kendi numarası (`ADIM 22`, Tanım ve oturum, PY-UI-17)
+
+**17 Kasım.** Kod: masaüstü `extensions/panels.rs` (`OpenPanel::instance`, `PanelOrigin::instance`, `answered`),
+`extensions/panel_session.rs` (çalışmanın kendi paneli numarasıyla); sınamalar `extensions/tests/late.rs` (yeni), var
+olan panel sınamalarının çalışma kökenleri.
+
+- **Sorun.** PY-UI-17 "pencere kapanması, kaldırma ve belge değişimi geç geri çağırmayı etkisiz kılar" der. Bir
+  çalıştırmanın cevabı ve çalışırken yaptığı `ctx.panel` çağrıları panele yalnız eklentinin ve panelin kimliğiyle
+  bağlanıyordu. Kullanıcı komutu çalışan paneli kapatıp aynı paneli yeniden açınca eski çalıştırmanın satırları yeni
+  açılan panelin tablosuna yazılıyor, kodun `ctx.panel.set`'i kullanıcının yeni panelde bir şey yazmadığı alanlarına
+  eski değerleri koyuyordu.
+- **Karar:** her açılan panelin kendi numarası olur (`instance`, açıldıkça artar); çalıştırmanın kökeni o numarayı
+  taşır. Cevap ve durdurma yalnız aynı numaralı panele gider; kodun kendi paneline yaptığı çağrı, o panel kapandıysa
+  "kapandı" cevabını alır (`{"applied": false, "closed": true}`, kapanmış panelin bugünkü cevabı). Kodun
+  `ctx.open_panel` ile açtığı ya da adıyla andığı panel adıyla bulunur (o çalıştırmanın içinde açılır).
+- **Var olan sınırlar aynı:** kaldırılan eklentinin panelleri kapanır, çağrıları reddedilir; çalıştırmanın kimliği
+  tutmayan geç "bitti" iletisi yok sayılır (`runner.rs`); silinmiş ya da başka çizimdeki nesneler komuta verilmez
+  (§67'nin seçici denetimi).
+- **Sınamalar:** masaüstü 2 (kapanıp yeniden açılan panel eski çalıştırmanın satırlarını almaz, açık kalan alır;
+  çalışan kodun kendi paneline çağrısı açıkken uygulanır, kapanıp yeniden açılınca "kapandı" cevabını alır ve yeni
+  panelin değerleri değişmez).

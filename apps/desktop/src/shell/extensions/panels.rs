@@ -63,6 +63,9 @@ fn scroll_back(y: f32, outputs: f32) -> Task<Message> {
 /// A panel open in the dock.
 #[derive(Clone, Debug)]
 pub(crate) struct OpenPanel {
+    /// Its own number, new each time it opens: a run's answer reaches the panel it started from, not one opened again
+    /// after it closed (PY-UI-17, docs/adr/8057 §117).
+    pub(crate) instance: u64,
     pub(crate) ext: String,
     pub(crate) local: String,
     pub(crate) definition: PanelDefinition,
@@ -160,6 +163,9 @@ pub(crate) struct PanelOrigin {
     pub(crate) panel: String,
     pub(crate) button: String,
     pub(crate) table: Option<String>,
+    /// The open panel's own number ([`OpenPanel::instance`]): a panel closed while its command ran and opened again is
+    /// another, which the run's answer does not reach (docs/adr/8057 §117).
+    pub(crate) instance: u64,
 }
 
 /// What a panel is told by the user.
@@ -220,7 +226,9 @@ pub(crate) enum PanelEvent {
 impl OpenPanel {
     /// The panel as its definition starts it.
     pub(crate) fn new(ext: &str, local: &str, definition: PanelDefinition) -> OpenPanel {
+        static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
         let mut panel = OpenPanel {
+            instance: NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
             ext: ext.to_owned(),
             local: local.to_owned(),
             definition,
@@ -1067,14 +1075,21 @@ impl super::Extensions {
         self.panels.get_mut(self.active_panel)
     }
 
+    /// The number of `ext`'s open panel `local` (0 when it is not open), for a test's run origin.
+    #[cfg(test)]
+    pub(crate) fn instance_of(&self, ext: &str, local: &str) -> u64 {
+        self.panels
+            .iter()
+            .find(|p| p.ext == ext && p.local == local)
+            .map_or(0, |p| p.instance)
+    }
+
     /// The open panel a run started from; its tab marks the answer when another panel is shown.
     fn answered(&mut self, origin: &PanelOrigin) -> Option<&mut OpenPanel> {
         let shown = self.active_panel;
-        let (at, panel) = self
-            .panels
-            .iter_mut()
-            .enumerate()
-            .find(|(_, p)| p.ext == origin.ext && p.local == origin.panel)?;
+        let (at, panel) = self.panels.iter_mut().enumerate().find(|(_, p)| {
+            p.instance == origin.instance && p.ext == origin.ext && p.local == origin.panel
+        })?;
         panel.unseen = at != shown;
         Some(panel)
     }
@@ -1601,6 +1616,7 @@ impl App {
             panel: panel.local.clone(),
             button: trigger.to_owned(),
             table: panel.table_of(table.as_ref()),
+            instance: panel.instance,
         };
         panel.running = Some(trigger.to_owned());
         panel.said = None;

@@ -362,6 +362,7 @@ fn the_rows_cursor_steps_shows_its_page_and_goes_with_the_rows() {
         panel: "liste".into(),
         button: "ara".into(),
         table: Some("liste".into()),
+        instance: app.extensions.panels[0].instance,
     };
     app.ext_panel_answer(
         &origin,
