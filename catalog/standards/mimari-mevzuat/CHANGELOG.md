@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 0.16.0 — 17 Kasım 2026
+
+- 62/4'ün ikinci cümlesi (`kuyular`): bodruma da inen asansörün bodrum kattaki kapısının önü yangın güvenlik holü ya da
+  korunmuş koridor (4/dd, 36/1-a: bitişik mahallerden Ek-3/C'nin bodrum süresince EI ile ayrılmış, açık yeri olmayan);
+  değilse kaldı, ayrımın sınıfı yoksa ya da Ek-3/C'nin süresi okunmuyorsa eksik veri (`bykhy_elevator_basement_lobby`).
+  `dayanim.bodrum_suresi` Ek-3/C'nin bodrum süresini paylaşır. 7 bağımsız durum.
+
 ## 0.15.0 — 17 Kasım 2026
 
 - Kaplamaların yanıcılığı (`kaplamalar`): BYKHY 26/2 (döşeme kaplaması en az normal alevlenici, yüksek binada en az zor

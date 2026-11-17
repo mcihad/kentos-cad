@@ -257,3 +257,126 @@ fn screens() {
         println!("{}", file.display());
     }
 }
+
+/// A building over a basement (docs/adr/8092): Bodrum kat −3.00 and Zemin kat ±0.00, four flats; on Bodrum kat a 10 × 6 m
+/// plan inside 20 cm walls, Depo (x 0–4), Koridor (4–8) and the lift's shaft Asansör (8–10), its sliding door in the
+/// wall at x = 8 onto Koridor. The wall at x = 4 separates Koridor from Depo, declared `between`. Its slot.
+fn basement(between: &str) -> (App, String) {
+    kentos_postgis::connections::keep_in_memory();
+    let (mut app, _) = App::start_in(Some(Module::Architecture), None, Settings::memory(), Recovery::off());
+    app.db_store = Box::leak(Box::new(kentos_postgis::connections::ConnectionStore::open(None)));
+    app.hand_over = |m, _| Ok(m.program().to_owned());
+    let task = app.update(Message::Run("file.new"));
+    drive(&mut app, task);
+    run(
+        &mut app,
+        "cad.settings.set",
+        json!({ "arch": { "levels": [
+            {"id": "b01", "name": "Bodrum kat", "elevation": -3.0, "height": 3.0},
+            {"id": "k00", "name": "Zemin kat", "elevation": 0.0, "height": 3.0}
+        ] } }),
+    );
+    run(
+        &mut app,
+        "cad.program.edit",
+        json!({"program": {"units": [
+            {"id": "d1", "number": "1", "nature": "Daire"}, {"id": "d2", "number": "2", "nature": "Daire"},
+            {"id": "d3", "number": "3", "nature": "Daire"}, {"id": "d4", "number": "4", "nature": "Daire"}
+        ]}}),
+    );
+    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let wall = |a: (f64, f64), b: (f64, f64)| json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": 0.2, "arch": {"level": "b01"}});
+    let walls = run(
+        &mut app,
+        "cad.walls.create",
+        json!({"layerId": layer, "walls": [
+            wall((0.0, 0.0), (10.0, 0.0)), wall((10.0, 0.0), (10.0, 6.0)), wall((10.0, 6.0), (0.0, 6.0)),
+            wall((0.0, 6.0), (0.0, 0.0)), wall((4.0, 0.0), (4.0, 6.0)), wall((8.0, 0.0), (8.0, 6.0))
+        ]}),
+    );
+    let host = |i: usize| walls["output"]["uids"][i].as_str().expect("a wall").to_owned();
+    let mut landing = json!({"host": host(5), "at": 3.0, "form": "door", "width": 1.0, "head": 2.1});
+    landing["operation"] = json!("slide");
+    let doors = run(&mut app, "cad.openings.create", json!({"layerId": layer, "openings": [landing]}));
+    run(
+        &mut app,
+        "cad.arch.performance",
+        json!({"operation": {"kind": "objects", "uids": [doors["output"]["uids"][0].clone()],
+            "fireRating": {"value": "E 30", "basis": {"kind": "author"}}}}),
+    );
+    run(
+        &mut app,
+        "cad.arch.performance",
+        json!({"operation": {"kind": "objects", "uids": [host(4)], "fireRating": {"value": between, "basis": {"kind": "author"}}}}),
+    );
+    let rect = |x0: f64, x1: f64| vec![p(x0, 0.1), p(x1, 0.1), p(x1, 5.9), p(x0, 5.9)];
+    run(
+        &mut app,
+        "cad.spaces.create",
+        json!({"layerId": layer, "spaces": [
+            {"parts": [{"outer": {"pts": rect(0.1, 3.9)}}], "name": "Depo", "arch": {"level": "b01"}},
+            {"parts": [{"outer": {"pts": rect(4.1, 7.9)}}], "name": "Koridor", "arch": {"level": "b01"}},
+            {"parts": [{"outer": {"pts": rect(8.1, 9.9)}}], "name": "Asansör", "void": true, "arch": {"level": "b01"}}
+        ]}),
+    );
+    crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
+    (app, host(4))
+}
+
+/// 62/4's second sentence (docs/adr/8092): the lift serving the basement reached there through Koridor, separated from
+/// Depo by EI 30, is not a protected corridor (Ek-3/C apartman, bodrum 10 m'den az: 60; 36/1-a); declared EI 60 it is.
+#[test]
+fn a_lift_serving_the_basement_is_reached_through_a_protected_corridor() {
+    let (mut app, wall) = basement("EI 30");
+    checked(&mut app);
+    let row = |app: &App| rows(app).into_iter().find(|r| r.0 == "BYKHY 62/4").map(|r| r.1);
+    assert_eq!(row(&app), Some(O::Failed));
+    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let found: Vec<&String> =
+        audited.findings.iter().filter(|f| f.code == "bykhy_elevator_basement_lobby").map(|f| &f.message).collect();
+    assert_eq!(found.len(), 1, "{found:#?}");
+    assert!(
+        found[0].starts_with("Bodrum kat: asansör kapısı korunmamış koridora açılıyor (“Koridor”, ayrımı en az EI 60 değil)"),
+        "{found:#?}"
+    );
+    declare(&mut app, &[&wall], "EI 60");
+    checked(&mut app);
+    assert_eq!(row(&app), Some(O::Passed));
+}
+
+/// Bodrum kat and Denetim's 62/4 finding, light and dark; `.run/gui-evidence/bodrum-asansoru-8092/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib shaft_tests::basement_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn basement_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/bodrum-asansoru-8092");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")] {
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let (mut app, _) = basement("EI 30");
+        let _ = app.update(Message::ActiveLevel(Some("b01".into())));
+        let _ = app.update(Message::LevelView(kentos_interaction::level_view::LevelView::Active));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        checked(&mut app);
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_elevator_basement_lobby");
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        snapshot.settle(&mut app, App::view, &mut update);
+        app.selection.set(Vec::new());
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-bodrum-asansoru-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

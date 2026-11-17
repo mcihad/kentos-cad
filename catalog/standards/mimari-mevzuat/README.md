@@ -29,7 +29,8 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   Ek-2/Ç ile.
 - **Şaftlar ve asansörler** (`kuyular`, docs/adr/8087): yüksek binada tesisat şaftı ve baca duvarı en az 120, kapağı en
   az 90 dakika ve duman sızdırmaz (BYKHY 25/3); kaçış merdivenine ya da yangın güvenlik holüne açılan şaft kapağı (41/9);
-  asansör kuyusu en az 60 dakika (62/2); asansör kapısının koridor, hol ve benzerine açılması (62/4), yangın merdiveni
+  asansör kuyusu en az 60 dakika (62/2); asansör kapısının koridor, hol ve benzerine açılması, bodrumda korunmuş
+  koridor ya da yangın güvenlik holü (62/4, docs/adr/8092), yangın merdiveni
   yuvasına açılmaması (62/6); kat kapısının dayanımı, yapı yüksekliği 51,50 m'den yüksekse E 60, alçaksa E 30 (62/7 ve
   Ek-3/B 12, 9.7.2015'ten).
 - **Kat yüksekliği** (`kat_yuksekligi`, docs/adr/8083, 8084): konut projesinde zemin ve normal katlar 3,60 m;

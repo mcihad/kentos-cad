@@ -151,6 +151,25 @@ def _okur(beyan: str | None, harfler: str, dakika: int) -> bool | None:
     return all(h in s["harf"] for h in harfler) and s["dakika"] >= dakika
 
 
+def bodrum_suresi(bina: dict[str, Any], gun: date) -> tuple[int | None, str]:
+    """Ek-3/C'nin binanın bodrum katlarına verdiği süre ve sözü (docs/adr/8092: korunumlu koridorun ayrımları, 36/1-a);
+    okunmuyorsa yok ve nedeni: Ek-3'ün o günkü hâli yok, kullanım sınıfı okunmuyor, tablo süre vermiyor ya da sınırda."""
+    hal = y.hal("BYKHY", "Ek-3", gun)
+    if hal is None:
+        return None, f"Ek-3'ün başvuru günündeki ({y.yaz(gun)}) tablosu kural setinde yok"
+    sinif_, neden = _sinif_satiri(bina, hal)
+    if sinif_ is None:
+        return None, neden or "binanın kullanım sınıfı okunmuyor"
+    sutun, soz = _sutun("bodrum", bina)
+    if sutun is None:
+        return None, f"{soz}: Ek-3/C'nin iki sütunu da tutmaz"
+    h = _istenen(sinif_, sutun, bool(bina.get("sprinklers")))
+    if "dakika" not in h:
+        return None, f"Ek-3/C bodrum katlara süre vermiyor ({soz})"
+    adi = ", ".join(s["name"] for s in sinif_["satirlar"])
+    return int(h["dakika"]), f"Ek-3/C {adi}, {soz}"
+
+
 def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
     """Başvuru günü ``gun`` olan projenin yapı elemanı dayanım bulguları."""
     hal = y.hal("BYKHY", "Ek-3", gun)

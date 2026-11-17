@@ -305,6 +305,9 @@
   - **Malzemenin yanıcılık sınıfı (17 Kasım 2026; [ADR 8091](../adr/8091-material-reaction-to-fire.md), K120–K123):**
     Malzemeler'de "Yanıcılık sınıfı" (TS EN 13501-1, `cad.arch.performance`, mimari verisi 14); BYKHY 26/2 döşeme
     kaplaması ve 26/4 tavan kaplaması Ek-2/Ç'nin tablolarıyla; nizam modelde yok, tek konutlu binada uzman incelemesi.
+  - **Bodruma inen asansör (17 Kasım 2026; [ADR 8092](../adr/8092-basement-lift-protected-corridor.md), K124–K126):**
+    bodrumdaki asansör kapısının önü yangın güvenlik holü ya da korunmuş koridor (ayrımları Ek-3/C'nin bodrum süresince
+    EI, açık yersiz; 4/dd, 36/1-a).
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

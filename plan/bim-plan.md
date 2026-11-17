@@ -590,7 +590,7 @@ söyler; başsız `cad.arch.audit` (MCP, Python) aynı bulguyu ve kural setini v
 aynı çizim 30.6.2026'da geçer, 2.7.2026'da 34/8'den kalır, tarihsiz eksik veridir; yağmurlama sınaması ADR 8035'in
 (`fire_escape_tests`). İç yükseklik ADR 8040 §3'te Rust'ta yapılmıştı.
 **Kalan:** Ek-3'te korunumlu şaft beyanı ve yangın kesici (ADR 8082 §6, 8090 §6); duvar stilinin taşıyıcılığı (ADR 8090
-§6); çatının Broof sınıfı ve mahal kaplamalarının malzemesi (ADR 8091 §6); 62/4'ün kuyu havalandırması ve bodrum asansörünün holü (ADR 8087 §6);
+§6); çatının Broof sınıfı ve mahal kaplamalarının malzemesi (ADR 8091 §6); 62/4'ün kuyu havalandırması (ADR 8087 §6, 8092 §6);
 erişilebilir yol (TS 9111 metni); plan notlarının öbür konuları (ADR 8084 §6); blok başına bölge ve 28/1-d (ADR 8085
 §6);
 konut dışı (B22); 39/1-b'nin çift kanadı (ADR 8083 §6);
@@ -666,6 +666,9 @@ R), 5 ve 6–7 (taşıyıcıysa REI), Ek-3/C not (3) (taşıyıcı olmayan dış
 13501-1 yanıcılık sınıfı (`ArchMaterial.reaction`; Malzemeler'de "Dayanım" ve "Yanıcılık sınıfı"; `.kcad` mimari verisi
 14); BYKHY 26/2 (döşeme kaplaması) ve 26/4 (tavan kaplaması, asma tavan) Ek-2/Ç'nin tablolarıyla (paket 0.15.0). 16
 bağımsız durum, 9 komut durumu.
+**Yapıldı (17 Kasım 2026, [ADR 8092](../docs/adr/8092-basement-lift-protected-corridor.md), K124–K126):** 62/4'ün ikinci
+cümlesi: bodruma inen asansöre bodrumda yangın güvenlik holünden ya da korunmuş koridordan (4/dd, 36/1-a: ayrımları
+Ek-3/C'nin bodrum süresince EI) ulaşılır (paket 0.16.0, 7 bağımsız durum).
 
 **Kullanıcı sonucu:** Denetim, başvuru tarihinde yürürlükte olan kuralları uygular. Her bulgu geçti, kaldı, eksik veri,
 uzman incelemesi ya da kapsam dışıdır. Yorum isteyen konu kendiliğinden "uygun" sayılmaz. Dayanak Z9; Ek A.
