@@ -322,6 +322,8 @@
   - **Sivas 22/k (17 Kasım 2026; [ADR 8096](../adr/8096-sivas-22k-thick-walls-within-30.md), K139–K141):** Sivas
     seçiliyse kalın taş duvarlar %30'un içinde okunur (PAİY 5/8 dışında sayar, sıkı olan bağlar); olgulara 5/8'in %30'u
     (`exemptCap`); olgular tabloyu bir kez sayar.
+  - **Emsal zonlarının cephe köşesi (17 Kasım 2026; [ADR 8097](../adr/8097-emsal-zone-facade-corner.md), K142):** iki
+    mahalin konturunun ortak köşesi ortak duvarın ekseninden bölünür; zonun alanı mahallerinin brüt alanıdır.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

@@ -684,6 +684,8 @@ kütlesiyle kesilir; emsal zonunun açıklamasında yazılır; beyansız kalın 
 **Yapıldı (17 Kasım 2026, [ADR 8096](../docs/adr/8096-sivas-22k-thick-walls-within-30.md), K139–K141):** Sivas 22/k:
 yerel yönetmelik Sivas ise kalın taş duvarlar %30'un içinde okunur, sınırı aşan emsale girer; olgulara 5/8'in %30'u ve
 içinde sayılan (`exemptCap`); olgular Emsal ve TAKS tablosunu bir kez sayar (paket 0.20.0, 4 bağımsız durum).
+**Yapıldı (17 Kasım 2026, [ADR 8097](../docs/adr/8097-emsal-zone-facade-corner.md), K142):** emsal zonlarının cephe
+köşesi: iki mahalin konturunun ortak köşesi ortak duvarın ekseninden bölünür, zonun alanı mahallerinin brüt alanıdır.
 
 **Kullanıcı sonucu:** Denetim, başvuru tarihinde yürürlükte olan kuralları uygular. Her bulgu geçti, kaldı, eksik veri,
 uzman incelemesi ya da kapsam dışıdır. Yorum isteyen konu kendiliğinden "uygun" sayılmaz. Dayanak Z9; Ek A.

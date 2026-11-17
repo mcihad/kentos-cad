@@ -176,10 +176,10 @@ fn area(rings: &[Vec<[f64; 2]>]) -> f64 {
 }
 
 /// The model's emsal zones (EK-6 Tablo 6.60): the basement holds no room counted in, so its counted-out zone names the
-/// annex's part past the 50 % as counted in. The ground's counted-in zone is the two flats' contours: each reaches the
-/// interior wall's far face along the façade wall's outer half at both ends (4 × 0.075 × 0.125 = 0.0375 m², the corner
-/// the table halves with the stair hall, docs/adr/8079 §6); less that, it and the named part make the table's Emsale
-/// konu alan (60 + 17.14375).
+/// annex's part past the 50 % as counted in. The ground's counted-in zone is the two flats' shapes: each contour reaches
+/// the interior wall's far face along the façade wall's outer half at both ends, and the corner it shares with the stair
+/// hall is split at the wall's axis (docs/adr/8097), so the zone is the flats' 60 m² gross; it and the named part make
+/// the table's Emsale konu alan (60 + 17.14375).
 #[test]
 fn a_storey_with_no_room_counted_in_names_the_part_past_the_limit_in_its_zone_counted_out() {
     let app = storage(-3.0);
@@ -193,8 +193,7 @@ fn a_storey_with_no_room_counted_in_names_the_part_past_the_limit_in_its_zone_co
     };
     let dahil: Vec<_> = b.zones.iter().filter(|z| state(z).as_deref() == Some("DAHIL")).collect();
     assert_eq!(dahil.len(), 1, "the ground storey's: {:?}", b.zones);
-    let corners = 4.0 * 0.075 * 0.125;
-    assert!(near(area(&dahil[0].rings), 60.0 + corners), "the two flats: {} {:?}", area(&dahil[0].rings), dahil[0].rings);
+    assert!(near(area(&dahil[0].rings), 60.0), "the two flats: {} {:?}", area(&dahil[0].rings), dahil[0].rings);
     let named: Vec<&str> = b
         .zones
         .iter()
@@ -204,7 +203,7 @@ fn a_storey_with_no_room_counted_in_names_the_part_past_the_limit_in_its_zone_co
         .collect();
     assert_eq!(named.len(), 1, "{:?}", b.zones);
     assert!(named[0].contains("17.14 m² depo eklentisi emsale dahil"), "{}", named[0]);
-    assert!(near(area(&dahil[0].rings) - corners + 17.14375, report(&app).floors));
+    assert!(near(area(&dahil[0].rings) + 17.14375, report(&app).floors));
 }
 
 /// The whole drawing checked in Denetim, the standards packages asked and answered.

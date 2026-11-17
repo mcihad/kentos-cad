@@ -2,7 +2,8 @@
 //! zoning, as Planlı Alanlar İmar Yönetmeliği reads them.
 //!
 //! - **Each room's gross** is its outer contour (4/ğ-1's rule, room by room): its outer-face outline less every other
-//!   room's axis outline on its level, a shared wall's façade corner halved between them.
+//!   room's axis outline on its level, a shared wall's façade corner halved between them; the room's shape (what the
+//!   emsal zones are made of) keeps its own side of the corner, split at the wall between them (docs/adr/8097).
 //! - **How it counts** is its use's brief's (`SpaceBrief::emsal`), else `emsal_by_use` by its name and use; an outdoor
 //!   room (a balcony, a terrace) is out within the 30 % (22/1-l); a void (shaft, gallery) is no room.
 //! - **Katlar alanı** (4/şş, 21): the rooms counted in; **emsal harici** (22/1) together at most 30 % of the parcel's
@@ -54,6 +55,7 @@ use crate::arch_values::core_areas;
 use crate::room_names;
 use crate::space_follow::SpaceSearch;
 
+mod corners;
 mod limits;
 mod masonry;
 
@@ -422,6 +424,18 @@ impl Document {
                         gross[cut[a].0] -= o / 2.0;
                         gross[cut[b].0] -= o / 2.0;
                         overlaps.push((cut[a].0, cut[b].0, both));
+                    }
+                }
+            }
+            // A façade corner two rooms' contours share is split at the wall between them (docs/adr/8097): each shape
+            // keeps its own side, as the gross halves the corner, so that an emsal zone's area is its rooms' gross.
+            for (a, b, both) in &overlaps {
+                if let Some((own_a, own_b)) = corners::split(both, &rooms[*a].net_shape, &rooms[*b].net_shape) {
+                    if !own_b.is_empty() {
+                        shapes[*a] = region::subtract_areas(&shapes[*a], &own_b);
+                    }
+                    if !own_a.is_empty() {
+                        shapes[*b] = region::subtract_areas(&shapes[*b], &own_a);
                     }
                 }
             }

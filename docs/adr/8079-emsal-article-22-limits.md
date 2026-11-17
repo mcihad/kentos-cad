@@ -164,6 +164,7 @@ okundu:
   KentOS onları %30 içinde sayar; asgari alanın hesabı kaldı.
 - **Emsal zonlarının cephe köşesi:** farklı sayılan iki komşunun (daire ve merdiven evi gibi) ortak duvarının cephe
   köşesi iki zonun çokgeninde de var. Tablo bu alanı yarı yarıya böler, zonlar bölmez: her köşe ara duvar kalınlığı ×
-  dış duvarın yarısı kadardır (deneme planında 0,01875 m²). Köşeyi ara duvarın ekseninden bölmek kaldı.
+  dış duvarın yarısı kadardır (deneme planında 0,01875 m²). Köşeyi ara duvarın ekseninden bölmek — yapıldı: ADR
+  [8097](8097-emsal-zone-facade-corner.md).
 - **Isıtma beyanı:** 44/1'in ara durumunu kapatmak için künyede ya da binada ısıtma sistemi.
 - **Eğimli arsa:** cephe cephe tesviye kotu (22/1-k'nin "bütün cepheleri").
