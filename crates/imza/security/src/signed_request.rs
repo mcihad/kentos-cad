@@ -192,7 +192,7 @@ pub fn verify(
     }
 
     // ── 4) Süre ──────────────────────────────────────────────────────────────
-    // Damgalar AYRIŞTIRILARAK karşılaştırılır. Platformdaki ilk yazım RFC 3339 dizelerini sözlük sırasıyla
+    // Damgalar AYRIŞTIRILARAK karşılaştırılır. İlk yazım RFC 3339 dizelerini sözlük sırasıyla
     // karşılaştırıyordu; bu yalnız iki taraf aynı biçimi (aynı ofset, aynı kesir basamağı) yazdığında doğrudur ve
     // `+03:00` ofsetli bir damga ya da kesirsiz bir `Z` süreyi sessizce kaydırırdı.
     let son = OffsetDateTime::parse(&payload.expires_at, &Rfc3339).map_err(|e| {

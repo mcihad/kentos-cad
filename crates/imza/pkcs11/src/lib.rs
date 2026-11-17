@@ -372,7 +372,7 @@ impl Pkcs11Module {
             .get_mechanism_list(slot)
             .map_err(cihaz_hatasi)?
             .into_iter()
-            .map(|m| mechanism_name(u64::from(m)))
+            .map(|m| mechanism_name(mekanizma_no(m)))
             .collect())
     }
 }
@@ -465,7 +465,7 @@ impl SigningSession {
                     "kart {ad} sunmuyor; sunduğu mekanizmalar: {}",
                     self.mekanizmalar
                         .iter()
-                        .map(|m| mechanism_name(u64::from(*m)))
+                        .map(|m| mechanism_name(mekanizma_no(*m)))
                         .collect::<Vec<_>>()
                         .join(", ")
                 ),
@@ -562,7 +562,7 @@ fn oturum_hatasi(e: cryptoki::error::Error) -> ImzaError {
 }
 
 /// `C_Sign` hatası. Kart imza sırasında çıkarıldıysa oturum ölmüştür: bu bir CİHAZ hatasıdır (`KSI-1102`) ve akış
-/// kalan dosyalarda aynı hatayı tek tek yaşamasın diye durur; platformdaki ilk yazım her hatayı `KSI-1401` sayıyor ve
+/// kalan dosyalarda aynı hatayı tek tek yaşamasın diye durur; ilk yazım her hatayı `KSI-1401` sayıyor ve
 /// akışın durdurma kuralına hiç ulaşmıyordu.
 fn imza_hatasi(e: cryptoki::error::Error) -> ImzaError {
     use cryptoki::error::{Error, RvError};
@@ -603,6 +603,16 @@ fn ozel_anahtar(
             format!("{certificate_id_hex} kimlikli özel anahtar kartta yok"),
         )
     })
+}
+
+/// Mekanizma türünün sayısı. PKCS#11'in `CK_ULONG`'u C'nin `unsigned long`'udur: Linux ve macOS'ta 64, Windows'ta 32
+/// bit; `u64::from(m)` Windows'ta derlenmiyordu (`x86_64-pc-windows-msvc` denetimi).
+#[allow(
+    clippy::useless_conversion,
+    reason = "Linux'ta `c_ulong` zaten `u64`; Windows'ta genişletme gerekir"
+)]
+fn mekanizma_no(m: cryptoki::mechanism::MechanismType) -> u64 {
+    u64::from(std::ffi::c_ulong::from(m))
 }
 
 /// PKCS#11 mekanizma numarasını **okunabilir ada** çevirir.
