@@ -85,6 +85,13 @@ impl App {
         if self.python.running.is_some() {
             return Some("Python konsolunda kod çalışıyor; bitince ya da Durdur'dan sonra çizim değiştirilebilir.".into());
         }
+        // An extension's command that may write holds its drawing as the console does (docs/adr/8057 §125): set aside
+        // mid-run, its undo step stayed open on it and took the user's later edits there.
+        if let Some(what) = self.extension_writing() {
+            return Some(format!(
+                "{what} çalışıyor; bitince ya da Durdur'dan sonra çizim değiştirilebilir."
+            ));
+        }
         if self.opening.is_some() || self.cloud.opening.is_some() {
             return Some("Bir çizim açılıyor; açılış bitince çizim değiştirilebilir.".into());
         }

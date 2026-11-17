@@ -1060,16 +1060,20 @@ impl App {
         )
     }
 
-    /// Ends a run's step, kept or taken back; whether it had written.
+    /// Ends a run's step on its own drawing, kept or taken back, whether that drawing is on screen or set aside in its
+    /// tab (docs/adr/8057 §125); whether it had written.
     fn ext_close(&mut self, run: &mut ExtRun, keep: bool) -> bool {
         let Some(group) = run.group.take() else {
             return false;
         };
-        let Some(doc) = self
-            .document
-            .as_mut()
-            .filter(|d| Some(d.session) == run.session)
-        else {
+        let Some(session) = run.session else {
+            return false;
+        };
+        let on_screen = self.document.as_mut().filter(|d| d.session == session);
+        let Some(doc) = (match on_screen {
+            Some(doc) => Some(doc),
+            None => self.doc_tabs.find_mut(session),
+        }) else {
             return false;
         };
         let wrote = doc.model.group_changes() > 0;

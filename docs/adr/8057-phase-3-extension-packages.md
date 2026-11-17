@@ -5797,3 +5797,29 @@ masaüstü `tests/grants.rs` (yeni, 2) ve `an_updates_new_capability_is_shown_an
   yazarın işidir.
 - **Sınamalar:** her ad bulunur ve sayılar ölçülenle aynıdır; ailenin her bölümü manifesttedir, her işlem bir kez
   yazılır.
+
+## §125. Eklentinin çalışması çizimini önde tutar; adımı kendi çiziminde biter (`ADIM 22`, PY-UI-17, PY-RUN-16)
+
+**17 Kasım.** Kod: masaüstü `doc_tabs.rs` (`tabs_held`), `extensions/runner.rs` (`ext_close`); sınama `extensions/tests/
+drawing_change.rs` (yeni, 2).
+
+- **Sorun.** Eklenti komutunun yazımları tek geri alma adımıdır: ilk yazımda çiziminde bir grup açılır, çalışma bitince
+  kapanır. Çizim sekmeleri (ADR 0351) Python konsolu çalışırken çizimi önde tutuyordu, yazan bir eklenti çalışırken
+  tutmuyordu. Çalışma sürerken kullanıcı Yeni sekmede aç'la başka çizim açarsa ya da sekme değiştirirse:
+  - grup arkadaki çizimde açık kalıyordu, çünkü `ext_close` yalnız öndeki çizime bakıyordu;
+  - o çizime dönülünce kullanıcının düzenlemeleri eklentinin geri alma adımına giriyordu.
+
+  Geç yazımın başka çizime gitmemesi (PY-RUN-16) kodda vardı ama sınanmamıştı.
+- **Karar:** yazabilen bir eklenti komutu çalışırken çizimi konsolun tuttuğu gibi tutulur: Yeni sekmede aç, sekme
+  değiştirmek ve Çizimi kapat "{eklenti}: “{komut}” çalışıyor; bitince ya da Durdur'dan sonra çizim değiştirilebilir."
+  der. Çizim yine de bir yoldan sekmeye alınmışsa adım sekmedeki kendi çiziminde biter. Geç yazım öndeki çizime gitmez:
+  "Çalıştırıldığı çizim artık açık değil; başka bir çizime yazılmaz."
+- **Gerçek pencere:** çekilmedi. Komut çok kısa sürdüğü için yarısında sekme açmak elle zamanlanamıyor; davranış uçtan
+  uca sınandı (uygulamanın kendi iletileriyle).
+- **Sınamalar:**
+  - Çizim önde tutulur: yazdıktan sonra Yeni sekmede aç ve Çizimi kapat nedeniyle reddedilir. Bitince tek adım komutun
+    adıyla çizimdedir, sekmeler serbesttir.
+  - Sekmeye alınmışsa: geç yazım `no_document` ile reddedilir, öndeki çizimde hiçbir şey yoktur, adım sekmedeki
+    çizimde kapanır ve adını taşır.
+
+  Düzeltme geri alınınca iki sınama da kırmızı oldu. Masaüstünün bütün sınamaları: 2550.

@@ -17,6 +17,7 @@ mod bom;
 mod builds;
 mod catalog;
 mod demo;
+mod drawing_change;
 mod grants;
 mod l10n;
 mod late;
