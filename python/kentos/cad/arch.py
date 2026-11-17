@@ -181,10 +181,18 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     daha çok kompartımanda büyüklükleri uzman incelemesi
     bykhy_patient_floor_compartments, 49/1-b; hastanede adı Koridor olan mahalin en dar
     yeri — iki yanında kendi genişliğinde daire kalan en kısa kesit — 2,00 m'den azsa
-    bykhy_hospital_corridor, 49/2): MCP ve Python'da regulation grubu bütün çizim için
-    istenince bulguları listededir (paiy_elevator_missing, paiy_elevator_not_serving,
-    yerel yönetmelikle çelişkide regulation_conflict; başvuru tarihi yok ya da
-    okunamıyor ve sonuç ona göre değişiyorsa state: missingData ile
+    bykhy_hospital_corridor, 49/2) ve kazan dairesi de (komşu mahallerle ayrımın duvarı
+    ve penceresi en az EI 120, duvarsız yer ve eşiksiz boşluk yok
+    bykhy_boiler_room_separation, 54/2; kapısı merdivene ya da hol ve koridor olmayan
+    mahale açılırsa kaldı, dışarı açılırsa uzman incelemesi bykhy_boiler_room_door,
+    54/4; net alanı 100 m²'yi aşanda iki çıkış kapısı, aşmayan tek kapılıda ısıl
+    kapasite çizimde olmadığından uzman incelemesi bykhy_boiler_room_exits, kapıları en
+    az 90 dakika, duman sızdırmaz ve kendiliğinden kapanır
+    bykhy_boiler_room_door_rating, 54/5; yakıt deposu ile kazan dairesi arasında en az
+    EI 120 bykhy_fuel_store_separation, 56/1): MCP ve Python'da regulation grubu bütün
+    çizim için istenince bulguları listededir (paiy_elevator_missing,
+    paiy_elevator_not_serving, yerel yönetmelikle çelişkide regulation_conflict; başvuru
+    tarihi yok ya da okunamıyor ve sonuç ona göre değişiyorsa state: missingData ile
     regulation_date_needed; metni kural setinde olmayan gün ya da yalnız teknik hacimli
     bodrum state: expertReview) ve her maddenin hâli ve sonucu ruleSet'tedir (passed,
     failed, missingData, expertReview, outOfScope); kural çalışmazsa
@@ -431,10 +439,18 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         daha çok kompartımanda büyüklükleri uzman incelemesi
         bykhy_patient_floor_compartments, 49/1-b; hastanede adı Koridor olan mahalin en dar
         yeri — iki yanında kendi genişliğinde daire kalan en kısa kesit — 2,00 m'den azsa
-        bykhy_hospital_corridor, 49/2): MCP ve Python'da regulation grubu bütün çizim için
-        istenince bulguları listededir (paiy_elevator_missing, paiy_elevator_not_serving,
-        yerel yönetmelikle çelişkide regulation_conflict; başvuru tarihi yok ya da
-        okunamıyor ve sonuç ona göre değişiyorsa state: missingData ile
+        bykhy_hospital_corridor, 49/2) ve kazan dairesi de (komşu mahallerle ayrımın duvarı
+        ve penceresi en az EI 120, duvarsız yer ve eşiksiz boşluk yok
+        bykhy_boiler_room_separation, 54/2; kapısı merdivene ya da hol ve koridor olmayan
+        mahale açılırsa kaldı, dışarı açılırsa uzman incelemesi bykhy_boiler_room_door,
+        54/4; net alanı 100 m²'yi aşanda iki çıkış kapısı, aşmayan tek kapılıda ısıl
+        kapasite çizimde olmadığından uzman incelemesi bykhy_boiler_room_exits, kapıları en
+        az 90 dakika, duman sızdırmaz ve kendiliğinden kapanır
+        bykhy_boiler_room_door_rating, 54/5; yakıt deposu ile kazan dairesi arasında en az
+        EI 120 bykhy_fuel_store_separation, 56/1): MCP ve Python'da regulation grubu bütün
+        çizim için istenince bulguları listededir (paiy_elevator_missing,
+        paiy_elevator_not_serving, yerel yönetmelikle çelişkide regulation_conflict; başvuru
+        tarihi yok ya da okunamıyor ve sonuç ona göre değişiyorsa state: missingData ile
         regulation_date_needed; metni kural setinde olmayan gün ya da yalnız teknik hacimli
         bodrum state: expertReview) ve her maddenin hâli ve sonucu ruleSet'tedir (passed,
         failed, missingData, expertReview, outOfScope); kural çalışmazsa

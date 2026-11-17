@@ -2274,7 +2274,8 @@
         "level": "zemin",
         "name": "Merdiven evi",
         "area": 16.81,
-        "stair": true
+        "stair": true,
+        "net": 14.8225
       },
       {
         "uid": "01a1dfda-06c5-7278-9486-e3999a1cb813",
@@ -2282,49 +2283,56 @@
         "name": "Koridor",
         "area": 36.3,
         "least": 1.4,
-        "toDoor": 7.554
+        "toDoor": 7.554,
+        "net": 33.32
       },
       {
         "uid": "01a1dfda-06c5-7278-9486-e39ad272edb3",
         "level": "zemin",
         "name": "Dükkân (Z01)",
         "area": 32.8,
-        "toDoor": 4.881
+        "toDoor": 4.881,
+        "net": 30.415
       },
       {
         "uid": "01a1dfda-06c5-7278-9486-e39bf9dc85ab",
         "level": "zemin",
         "name": "Salon (Z02)",
         "area": 24.6,
-        "toDoor": 4.21
+        "toDoor": 4.21,
+        "net": 22.715
       },
       {
         "uid": "01a1dfda-06c5-7278-9486-e39cf0fe5491",
         "level": "zemin",
         "name": "Yatak odası (Z03)",
         "area": 25.01,
-        "toDoor": 5.57
+        "toDoor": 5.57,
+        "net": 22.5225
       },
       {
         "uid": "01a1dfda-06c5-7278-9486-e39d25d6d8d6",
         "level": "zemin",
         "name": "Depo (Z04)",
         "area": 21.965,
-        "toDoor": 3.824
+        "toDoor": 3.824,
+        "net": 19.5975
       },
       {
         "uid": "01a1dfda-06c5-7278-9486-e39f8e07d64b",
         "level": "zemin",
         "name": "Ofis (Z05)",
         "area": 57.965,
-        "toDoor": 8.07
+        "toDoor": 8.07,
+        "net": 53.0975
       },
       {
         "uid": "01a1dfda-0704-70dd-a975-499e70342853",
         "level": "k1",
         "name": "Merdiven evi",
         "area": 16.81,
-        "stair": true
+        "stair": true,
+        "net": 14.8225
       },
       {
         "uid": "01a1dfda-0704-70dd-a975-499fcf59dea1",
@@ -2332,35 +2340,40 @@
         "name": "Koridor",
         "area": 36.3,
         "least": 1.4,
-        "toDoor": 11.535
+        "toDoor": 11.535,
+        "net": 33.32
       },
       {
         "uid": "01a1dfda-0704-70dd-a975-49a0e9eca5a0",
         "level": "k1",
         "name": "Salon (K01)",
         "area": 32.8,
-        "toDoor": 4.881
+        "toDoor": 4.881,
+        "net": 30.415
       },
       {
         "uid": "01a1dfda-0704-70dd-a975-49a1c1b85ee4",
         "level": "k1",
         "name": "Yatak odası 1 (K02)",
         "area": 24.6,
-        "toDoor": 1.579
+        "toDoor": 1.579,
+        "net": 22.715
       },
       {
         "uid": "01a1dfda-0704-70dd-a975-49a2bb4d2324",
         "level": "k1",
         "name": "Yatak odası 2 (K03)",
         "area": 25.01,
-        "toDoor": 5.57
+        "toDoor": 5.57,
+        "net": 22.5225
       },
       {
         "uid": "01a1dfda-0704-70dd-a975-49a3b97636d7",
         "level": "k1",
         "name": "Arşiv (K04)",
         "area": 87.12,
-        "toDoor": 11.848
+        "toDoor": 11.848,
+        "net": 79.73
       }
     ],
     "separations": [

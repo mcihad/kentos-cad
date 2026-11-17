@@ -202,6 +202,14 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             _ => None,
         })
         .collect();
+    // Each room's net floor area, between its walls' inner faces (docs/adr/8113; 54/5).
+    let net: std::collections::HashMap<String, f64> = doc
+        .entities_with_uids()
+        .filter_map(|(uid, e)| match e {
+            Entity::Space(s) if s.space.broken.is_none() => Some((uid.to_string(), search.net_area(&s.space)?)),
+            _ => None,
+        })
+        .collect();
     // Each room's walk from its farthest point to its own nearest door, inside it (docs/adr/8111; 50/3).
     let to_door: std::collections::HashMap<String, f64> = kentos_domain::escape::escape(doc)
         .rooms
@@ -218,6 +226,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             stair: stair_rooms.contains(&uid),
             least: least.get(&uid).copied(),
             to_door: to_door.get(&uid).copied(),
+            net: net.get(&uid).copied(),
             uid,
         })
         .collect();

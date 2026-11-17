@@ -1,0 +1,3643 @@
+{
+ "format": "kentos.regulationCases",
+ "version": 1,
+ "about": "Kazan dairesi ve yakıt deposunun bağımsız durumları (docs/adr/8113): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik 54/2, 54/5, 56/1'in (RG 19.12.2007/26735) ve 54/4'ün (RG 9.9.2009/27344) metninden elle çıkarıldı; kuralın kodundan üretilmedi (scripts/fixtures/kazan_cases.py olguları kurar, beklenenleri olduğu gibi yazar).",
+ "cases": [
+  {
+   "id": "iyi",
+   "neden": "40 m² kazan dairesi, duvarı EI 120, koridora EI2 90-S200C5 tek kapı: 54/2 ve 54/4 geçer; 54/5 ısıl kapasite çizimde yok, tek kapı → uzman incelemesi; yakıt deposu yok.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000001"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000003",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000004",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000005",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000001"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kazansiz",
+   "neden": "Kazan dairesi yok → hepsi kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000006",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000007",
+      "level": "b01",
+      "name": "Depo",
+      "area": 10.8,
+      "stair": false,
+      "net": 10.0
+     }
+    ],
+    "separations": [],
+    "doors": [],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 54/2": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "duvar-60",
+   "neden": "Kazan dairesi ile koridor arası EI 60: 54/2 'en az 120 dakika' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000008",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000009",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000009",
+       "00000000-0000-4000-8000-000000000008"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000010",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000011",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000012",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000009",
+       "00000000-0000-4000-8000-000000000008"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_separation",
+      "has": [
+       "EI 60",
+       "en az EI 120"
+      ]
+     },
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "duvar-beyansiz",
+   "neden": "Duvarın sınıfı beyan edilmemiş → 54/2 eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000013",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000014",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000014",
+       "00000000-0000-4000-8000-000000000013"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000015",
+        "kind": "wall",
+        "length": 4.0
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000016",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000017",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000014",
+       "00000000-0000-4000-8000-000000000013"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_separation",
+      "has": [
+       "beyan edilmemiş"
+      ],
+      "state": "missingData"
+     },
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "missingData",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "rei-120",
+   "neden": "Taşıyıcı duvar REI 120: bütünlük ve yalıtım 120 dakika → 54/2 geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000018",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000019",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000019",
+       "00000000-0000-4000-8000-000000000018"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000020",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "REI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000021",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000022",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000019",
+       "00000000-0000-4000-8000-000000000018"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "e-120",
+   "neden": "Duvar yalnız E 120 (yalıtımsız): bölme yangına dayanıklı ayrım değil → 54/2 kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000023",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000024",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000024",
+       "00000000-0000-4000-8000-000000000023"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000025",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "E 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000026",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000027",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000024",
+       "00000000-0000-4000-8000-000000000023"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_separation",
+      "has": [
+       "E 120"
+      ]
+     },
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "acik-ayrim",
+   "neden": "Kazan dairesi ile depo arasında 1,50 m duvarsız yer → 54/2 kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000028",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000029",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000033",
+      "level": "b01",
+      "name": "Depo",
+      "area": 16.2,
+      "stair": false,
+      "net": 15.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000029",
+       "00000000-0000-4000-8000-000000000028"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000030",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000031",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     },
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000029",
+       "00000000-0000-4000-8000-000000000033"
+      ],
+      "open": 1.5,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000034",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": []
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000032",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000029",
+       "00000000-0000-4000-8000-000000000028"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_separation",
+      "has": [
+       "duvarsız 1,50 m"
+      ]
+     },
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "pencere",
+   "neden": "Koridora bakan iç pencere E 30: bölmenin parçası, 120 dakika değil → 54/2 kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000035",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000036",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000036",
+       "00000000-0000-4000-8000-000000000035"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000037",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000038",
+        "kind": "window",
+        "length": 1.0,
+        "fireRating": "E 30"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000039",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000040",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000036",
+       "00000000-0000-4000-8000-000000000035"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_separation",
+      "has": [
+       "pencere",
+       "E 30"
+      ]
+     },
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "bosluk",
+   "neden": "Koridora eşiksiz boşluk: ayrım yok → 54/2 kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000041",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000042",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000042",
+       "00000000-0000-4000-8000-000000000041"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000043",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000044",
+        "kind": "gap",
+        "length": 1.0
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000045",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000046",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000042",
+       "00000000-0000-4000-8000-000000000041"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_separation",
+      "has": [
+       "eşiksiz boşluk"
+      ]
+     },
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "merdivene",
+   "neden": "Kapısı merdivene açılıyor: 54/4 'kaçış merdivenine ... doğrudan açılmaması' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000047",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000048",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000049",
+      "level": "b01",
+      "name": "Merdiven",
+      "area": 19.44,
+      "stair": true,
+      "net": 18.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000048",
+       "00000000-0000-4000-8000-000000000049"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000050",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": []
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000051",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000048",
+       "00000000-0000-4000-8000-000000000049"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5",
+      "stair": true
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_door",
+      "has": [
+       "merdivene açılıyor"
+      ]
+     },
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "failed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otoparka",
+   "neden": "Kapısı otoparka açılıyor: 'mutlaka bir ortak hol veya koridora' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000052",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000053",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000054",
+      "level": "b01",
+      "name": "Otopark",
+      "area": 324.0,
+      "stair": false,
+      "net": 300.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000053",
+       "00000000-0000-4000-8000-000000000054"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000055",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000056",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000057",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000053",
+       "00000000-0000-4000-8000-000000000054"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_door",
+      "has": [
+       "“Otopark”",
+       "hol ya da koridora"
+      ]
+     },
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "failed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "disari",
+   "neden": "Tek kapısı dışarı açılıyor: fıkra hol ya da koridor der, dışarıyı anmaz → uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000058",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000059",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     }
+    ],
+    "separations": [],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000060",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000059",
+       null
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_door",
+      "has": [
+       "dışarı"
+      ],
+      "state": "expertReview"
+     },
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "expertReview",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kapisiz",
+   "neden": "Kazan dairesinin kapısı çizilmemiş → 54/4 ve 54/5 eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000061",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000062",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     }
+    ],
+    "separations": [],
+    "doors": [],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_door",
+      "has": [
+       "kapısı çizilmemiş"
+      ],
+      "state": "missingData"
+     },
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "kapısı çizilmemiş"
+      ],
+      "state": "missingData"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "missingData",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "missingData",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "buyuk-tek-kapi",
+   "neden": "120 m² kazan dairesi tek kapı: 54/5 '100 m2'nin üzerindeki ... en az 2 çıkış kapısı' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000063",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000064",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 129.6,
+      "stair": false,
+      "net": 120.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000064",
+       "00000000-0000-4000-8000-000000000063"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000065",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000066",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000067",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000064",
+       "00000000-0000-4000-8000-000000000063"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "120,00 m² > 100 m²",
+       "1 kapı"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "buyuk-iki-kapi",
+   "neden": "120 m², iki koridora iki kapı: 54/5 geçer (yönleri idarenin).",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000068",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000069",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 129.6,
+      "stair": false,
+      "net": 120.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000073",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 16.2,
+      "stair": false,
+      "net": 15.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000069",
+       "00000000-0000-4000-8000-000000000068"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000070",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000071",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     },
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000069",
+       "00000000-0000-4000-8000-000000000073"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000074",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000075",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000072",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000069",
+       "00000000-0000-4000-8000-000000000068"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000076",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000069",
+       "00000000-0000-4000-8000-000000000073"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 54/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tam-100",
+   "neden": "Tam 100 m², tek kapı: '100 m2'nin üzerindeki' değil; kapasite çizimde yok → uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000077",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000078",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 108.0,
+      "stair": false,
+      "net": 100.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000078",
+       "00000000-0000-4000-8000-000000000077"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000079",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000080",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000081",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000078",
+       "00000000-0000-4000-8000-000000000077"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kapi-60",
+   "neden": "Kapı EI2 60-S200C5: 54/5 'en az 90 dakika' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000082",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000083",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000083",
+       "00000000-0000-4000-8000-000000000082"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000084",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000085",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 60-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000086",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000083",
+       "00000000-0000-4000-8000-000000000082"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 60-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     },
+     {
+      "code": "bykhy_boiler_room_door_rating",
+      "has": [
+       "60 dakika < 90 dakika"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kapi-s-c-yok",
+   "neden": "Kapı EI2 90: duman sızdırmaz ve kendiliğinden kapanır değil → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000087",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000088",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000088",
+       "00000000-0000-4000-8000-000000000087"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000089",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000090",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000091",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000088",
+       "00000000-0000-4000-8000-000000000087"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     },
+     {
+      "code": "bykhy_boiler_room_door_rating",
+      "has": [
+       "S yok",
+       "C yok"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kapi-beyansiz",
+   "neden": "Kapının sınıfı beyan edilmemiş → 54/5 eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000092",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000093",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000093",
+       "00000000-0000-4000-8000-000000000092"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000094",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000095",
+        "kind": "door",
+        "length": 1.0
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000096",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000093",
+       "00000000-0000-4000-8000-000000000092"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     },
+     {
+      "code": "bykhy_boiler_room_door_rating",
+      "has": [
+       "beyan edilmemiş"
+      ],
+      "state": "missingData"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "missingData",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kalorifer",
+   "neden": "Adı Kalorifer dairesi: kazan dairesi → aynı denetim.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000097",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000098",
+      "level": "b01",
+      "name": "Kalorifer dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000098",
+       "00000000-0000-4000-8000-000000000097"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000099",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000100",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000098",
+       "00000000-0000-4000-8000-000000000097"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "Kalorifer dairesi"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "isi-merkezi",
+   "neden": "Adı Isı merkezi: kazan dairesi → aynı denetim.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000102",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000103",
+      "level": "b01",
+      "name": "Isı merkezi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000103",
+       "00000000-0000-4000-8000-000000000102"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000104",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000105",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000106",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000103",
+       "00000000-0000-4000-8000-000000000102"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "Isı merkezi"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yakit-iyi",
+   "neden": "Yakıt deposu kazan dairesinden EI 120 duvar ve EI2 120 kapıyla ayrılmış → 56/1 geçer; depoyla ayrım 54/2'nin değil, depoya açılan kapı kazan dairesinin çıkış kapısı değil (54/4, 54/5 yalnız koridor kapısını okur: tek çıkış, kapasite uzman incelemesi).",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000107",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000108",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000112",
+      "level": "b01",
+      "name": "Yakıt deposu",
+      "area": 12.96,
+      "stair": false,
+      "net": 12.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000108",
+       "00000000-0000-4000-8000-000000000107"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000109",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000110",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     },
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000112",
+       "00000000-0000-4000-8000-000000000108"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000113",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000114",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 120-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000111",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000108",
+       "00000000-0000-4000-8000-000000000107"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000115",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000112",
+       "00000000-0000-4000-8000-000000000108"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 120-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "passed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yakit-90",
+   "neden": "Akaryakıt deposu ile kazan dairesi arası EI 90: 56/1 '120 dakika' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000116",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000117",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000121",
+      "level": "b01",
+      "name": "Akaryakıt deposu",
+      "area": 12.96,
+      "stair": false,
+      "net": 12.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000117",
+       "00000000-0000-4000-8000-000000000116"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000118",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000119",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     },
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000121",
+       "00000000-0000-4000-8000-000000000117"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000122",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 90"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000123",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 120-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000120",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000117",
+       "00000000-0000-4000-8000-000000000116"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000124",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000121",
+       "00000000-0000-4000-8000-000000000117"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 120-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     },
+     {
+      "code": "bykhy_fuel_store_separation",
+      "has": [
+       "EI 90",
+       "en az EI 120"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yakit-kapi-90",
+   "neden": "Yakıt deposunun kazan dairesine kapısı EI2 90: bölmenin parçası, 120 dakika değil → 56/1 kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000125",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000126",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000130",
+      "level": "b01",
+      "name": "Yakıt deposu",
+      "area": 12.96,
+      "stair": false,
+      "net": 12.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000126",
+       "00000000-0000-4000-8000-000000000125"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000127",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000128",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     },
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000130",
+       "00000000-0000-4000-8000-000000000126"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000131",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000132",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000129",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000126",
+       "00000000-0000-4000-8000-000000000125"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000133",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000130",
+       "00000000-0000-4000-8000-000000000126"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     },
+     {
+      "code": "bykhy_fuel_store_separation",
+      "has": [
+       "kapı",
+       "EI2 90-S200C5"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "basvuru-2008",
+   "neden": "Başvuru 1.6.2008: 54/4'ün 9.9.2009 öncesi metni kural setinde yok → satırı uzman incelemesi; öbürleri 2007'den.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "01.06.2008"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000134",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000135",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000135",
+       "00000000-0000-4000-8000-000000000134"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000136",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 120"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000137",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000138",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000135",
+       "00000000-0000-4000-8000-000000000134"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "expertReview",
+      null
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tarihsiz",
+   "neden": "Başvuru tarihi yok: sonuç günle değişmiyor → en yeni hâl, 54/2 kalır.",
+   "permit": null,
+   "building": {
+    "storeys": [
+     {
+      "level": "b01",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 1,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 2,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000139",
+      "level": "b01",
+      "name": "Koridor",
+      "area": 21.6,
+      "stair": false,
+      "net": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000140",
+      "level": "b01",
+      "name": "Kazan dairesi",
+      "area": 43.2,
+      "stair": false,
+      "net": 40.0
+     }
+    ],
+    "separations": [
+     {
+      "level": "b01",
+      "rooms": [
+       "00000000-0000-4000-8000-000000000140",
+       "00000000-0000-4000-8000-000000000139"
+      ],
+      "open": 0.0,
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000141",
+        "kind": "wall",
+        "length": 4.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000142",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 90-S200C5"
+       }
+      ]
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000143",
+      "level": "b01",
+      "between": [
+       "00000000-0000-4000-8000-000000000140",
+       "00000000-0000-4000-8000-000000000139"
+      ],
+      "operation": "swing",
+      "width": 1.0,
+      "clear": 0.9,
+      "fireRating": "EI2 90-S200C5"
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_boiler_room_separation",
+      "has": [
+       "EI 60"
+      ]
+     },
+     {
+      "code": "bykhy_boiler_room_exits",
+      "has": [
+       "350 kW"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 54/2": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 54/4": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 54/5": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 56/1": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  }
+ ]
+}

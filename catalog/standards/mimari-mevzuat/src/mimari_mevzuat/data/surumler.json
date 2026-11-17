@@ -508,6 +508,79 @@
     },
     {
       "regulation": "BYKHY",
+      "article": "54/2",
+      "title": "Kazan dairesinin öbür kısımlardan ayrılması",
+      "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 54/2 değişmedi.",
+      "versions": [
+        {
+          "id": "2007",
+          "from": "2007-12-19",
+          "until": null,
+          "label": "19.12.2007",
+          "gazette": "19.12.2007/26735",
+          "minutes": 120,
+          "text": "(2) Kazan dairesi, binanın diğer kısımlarından, yangına en az 120 dakika dayanıklı bölmelerle ayrılmış olarak merkezi bir yerde ve bütün hâlinde bulunur. Bina dilatasyonu, kazan dairesinden geçemez.",
+          "source": "RG 19.12.2007/26735 (BKK 2007/12937), mevzuat.gov.tr derlenmiş metni (SHA-256 d82d06d2…a7d9, son değişiklik RG 1.7.2025/32943), 54 üncü madde; docs/adr/8113 §1"
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "54/4",
+      "title": "Kazan dairesi kapısının açıldığı yer",
+      "transition": "54/4 10.8.2009 tarihli ve 2009/15316 sayılı Bakanlar Kurulu Kararıyla değişti (RG 9.9.2009/27344); önceki metni kural setinde yok: 9.9.2009'dan önceki başvuru uzman incelemesi.",
+      "versions": [
+        {
+          "id": "2009",
+          "from": "2009-09-09",
+          "until": null,
+          "label": "9.9.2009",
+          "gazette": "19.12.2007/26735; 54/4 9.9.2009/27344",
+          "text": "(4) (Değişik: 10/8/2009-2009/15316 K.) Kazan dairesi kapısının, kaçış merdivenine veya genel kullanım merdivenlerine doğrudan açılmaması ve mutlaka bir ortak hol veya koridora açılması gerekir.",
+          "source": "RG 9.9.2009/27344 (BKK 2009/15316), mevzuat.gov.tr derlenmiş metni (SHA-256 d82d06d2…a7d9, son değişiklik RG 1.7.2025/32943), 54 üncü madde; docs/adr/8113 §1"
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "54/5",
+      "title": "Kazan dairesinin çıkış kapıları",
+      "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 54/5 değişmedi.",
+      "versions": [
+        {
+          "id": "2007",
+          "from": "2007-12-19",
+          "until": null,
+          "label": "19.12.2007",
+          "gazette": "19.12.2007/26735",
+          "area": 100,
+          "power": 350,
+          "minutes": 90,
+          "text": "(5) Isıl kapasiteleri 50 kW-350 kW arasında olan kazan dairelerinde en az bir kapı, döşeme alanı 100 m2’nin üzerindeki veya ısıl kapasitesi 350 kW’ın üzerindeki kazan dairelerinde en az 2 çıkış kapısı olur. Çıkış kapılarının olabildiği kadar biribirinin ters yönünde yerleştirilmesi, yangına en az 90 dakika dayanıklı, duman sızdırmaz ve kendiliğinden kapanabilecek özellikte olması gerekir.",
+          "source": "RG 19.12.2007/26735 (BKK 2007/12937), mevzuat.gov.tr derlenmiş metni (SHA-256 d82d06d2…a7d9, son değişiklik RG 1.7.2025/32943), 54 üncü madde; docs/adr/8113 §1"
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "56/1",
+      "title": "Yakıt deposunun kazan dairesinden ayrılması",
+      "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 56/1 değişmedi.",
+      "versions": [
+        {
+          "id": "2007",
+          "from": "2007-12-19",
+          "until": null,
+          "label": "19.12.2007",
+          "gazette": "19.12.2007/26735",
+          "minutes": 120,
+          "text": "(1) Yakıt depoları, yangına dayanıklı bölmelerle korunmuş bir hacme yerleştirilir. Yakıt deposu ile kazan dairesinin yangına 120 dakika dayanıklı bir bölme ile ayrılmış olması gerekir. Depoda yeterli havalandırmanın sağlanması ve tank kapasitesinin en az üçte birini alacak şekilde havuzlama yapılması şarttır. Yakıt tankları, ilgili Türk Standartlarına göre hesaplanır ve yerleştirilir.",
+          "source": "RG 19.12.2007/26735 (BKK 2007/12937), mevzuat.gov.tr derlenmiş metni (SHA-256 d82d06d2…a7d9, son değişiklik RG 1.7.2025/32943), 56 ncı madde; docs/adr/8113 §1"
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
       "article": "96/2",
       "title": "Otomatik yağmurlama sisteminin zorunlu olduğu yerler",
       "transition": "96/2'nin b, c ve d bentleri 10.8.2009 tarihli ve 2009/15316 sayılı Bakanlar Kurulu Kararıyla değişti (RG 9.9.2009/27344); a, ç ve e bentleri ilk metindir. Bentlerin önceki metinleri kural setinde yok: 9.9.2009'dan önceki başvuru uzman incelemesi.",

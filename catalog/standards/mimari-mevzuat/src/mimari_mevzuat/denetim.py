@@ -112,6 +112,13 @@ def saglik_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     return _bulgular(facts, ("bykhy_patient_floor_", "bykhy_hospital_"))
 
 
+@ext.audit("kazan")
+def kazan_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Kazan dairesi ve yakıt deposu (BYKHY 54/2 ayrım, 54/4 kapının açıldığı yer, 54/5 çıkışlar ve kapılar, 56/1 yakıt
+    deposu)."""
+    return _bulgular(facts, ("bykhy_boiler_room_", "bykhy_fuel_store_"))
+
+
 @ext.audit("yagmurlama")
 def yagmurlama_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Otomatik yağmurlama sisteminin zorunlu olduğu binalar (BYKHY 96/2)."""

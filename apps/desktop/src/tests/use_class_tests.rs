@@ -131,7 +131,7 @@ fn hotel() -> (App, Vec<String>, String) {
     (app, walls, door)
 }
 
-fn declare(app: &mut App, uids: &[&String], value: &str) {
+pub(crate) fn declare(app: &mut App, uids: &[&String], value: &str) {
     run(
         app,
         "cad.arch.performance",

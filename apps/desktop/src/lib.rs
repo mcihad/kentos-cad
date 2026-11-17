@@ -1097,6 +1097,9 @@ mod hospital_tests;
 #[path = "tests/hotel_room_tests.rs"]
 mod hotel_room_tests;
 #[cfg(test)]
+#[path = "tests/boiler_room_tests.rs"]
+mod boiler_room_tests;
+#[cfg(test)]
 #[path = "tests/arch_ifc_tests.rs"]
 mod arch_ifc_tests;
 #[cfg(test)]

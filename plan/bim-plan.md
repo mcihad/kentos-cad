@@ -636,6 +636,11 @@ odasının içindeki kaçış uzaklığı (paket 0.25.0, `konaklama`): BYKHY 50/
 kapısına yürüyüş 15 m'yi aşan tek kapılı oda kaldı, tamamı yağmurlamalı otelde sınır 20 m; kaçış modülüne mahalin kendi
 kapısına yürüyüşü, bina olgularına `toDoor`. 25 bağımsız durum; 18 m derin otel odası Denetim'de (ikinci kapıyla geçer).
 Kalan: süitin grubunun kapısına yürüyüş, 50/4–50/5 odanın kapısından merdivene, 50/2, 50/6.
+**Yapıldı (18 Kasım 2026, [ADR 8113](../docs/adr/8113-boiler-room-and-fuel-store.md), K211–K215):** kazan dairesi ve
+yakıt deposu (paket 0.26.0, `kazan`): BYKHY 54/2 komşu mahallerle en az EI 120 ayrım, 54/4 kapı merdivene değil hol ya da
+koridora, 54/5 net alanı 100 m²'yi aşanda iki çıkış kapısı ve kapılar EI2 90 S C (ısıl kapasite çizimde yok: uzman
+incelemesi), 56/1 yakıt deposu–kazan dairesi EI 120; olgulara mahalin net alanı. 26 bağımsız durum; zemin katta kazan
+dairesi Denetim'de. Kalan: döşemelerin sınıfı, yakıt türü (55), ısıl kapasitenin beyanı, 57–60.
 **Yapıldı (17 Kasım 2026, [ADR 8079](../docs/adr/8079-emsal-article-22-limits.md), K66–K69):** emsalin 22. madde
 sınırları alan hesabında: toprak altındaki katta bölümün depo eklentisi bölüm net alanının %50'sine (22/1-k), kapıcı
 daireleri toplam 70 m²'ye (22/1-ç), kütüphane 50 m²'ye (22/1-f) kadar dışarıda, aşan kısım emsale girer ve tablonun

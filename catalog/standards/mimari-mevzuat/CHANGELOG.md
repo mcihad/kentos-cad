@@ -1,5 +1,16 @@
 # Değişiklikler
 
+## 0.26.0 — 18 Kasım 2026
+
+- Kazan dairesi ve yakıt deposu (`kazan`, yeni katkı `kazan`; docs/adr/8113): BYKHY 54/2 kazan dairesinin komşu
+  mahallerle ayrımı (duvar ve pencere en az EI 120, duvarsız yer ve eşiksiz boşluk yok; beyansız eksik veri)
+  `bykhy_boiler_room_separation`; 54/4 (9.9.2009) kapısı merdivene ya da hol ve koridor olmayan mahale açılırsa kaldı,
+  dışarı açılırsa uzman incelemesi `bykhy_boiler_room_door`; 54/5 net alanı 100 m²'yi aşan kazan dairesinde iki çıkış
+  kapısı (aşmayan tek kapılıda ısıl kapasite çizimde yok: uzman incelemesi) `bykhy_boiler_room_exits`, kapıları en az 90
+  dakika, duman sızdırmaz, kendiliğinden kapanır `bykhy_boiler_room_door_rating`; 56/1 yakıt deposu ile kazan dairesi
+  arasında en az EI 120 `bykhy_fuel_store_separation`. Olgulara mahalin net alanı (`spaces[].net`). Metinler resmî
+  metinle birebir.
+
 ## 0.25.0 — 18 Kasım 2026
 
 - Otel yatak odasının içindeki kaçış uzaklığı (`konaklama`, kullanım sınıfı katkısında; docs/adr/8111): BYKHY 50/3,

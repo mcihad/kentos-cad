@@ -229,6 +229,10 @@ pub struct SpaceFacts {
     /// sill, inside it, m (docs/adr/8111; a hotel room's, 50/3); none for a room without one, a void or a broken room.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub to_door: Option<f64>,
+    /// Its net floor area, between its walls' inner faces, m² (docs/adr/8113; a boiler room's döşeme alanı, BYKHY
+    /// 54/5); none for a broken room.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub net: Option<f64>,
 }
 
 /// An opening between two storeys (docs/adr/8086; BYKHY 4/g, 24/4, 24/5): a floor slab's hole, a void space that is no
@@ -517,6 +521,7 @@ impl BuildingFacts {
             x.area = round(x.area, AREA);
             x.least = x.least.map(|w| round(w, LENGTH));
             x.to_door = x.to_door.map(|w| round(w, LENGTH));
+            x.net = x.net.map(|a| round(a, AREA));
         }
         self.spaces.sort_by(|a, b| a.uid.cmp(&b.uid));
         for x in &mut self.separations {

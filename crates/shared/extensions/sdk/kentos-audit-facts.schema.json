@@ -1823,6 +1823,14 @@
         "name": {
           "type": "string"
         },
+        "net": {
+          "description": "Its net floor area, between its walls' inner faces, m² (docs/adr/8113; a boiler room's döşeme alanı, BYKHY\n54/5); none for a broken room.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
         "stair": {
           "description": "An escape stair's room (named or used as Merdiven, no dwelling unit's own): its enclosure across the storeys is\nno storey's compartment (docs/adr/8086).",
           "type": "boolean"

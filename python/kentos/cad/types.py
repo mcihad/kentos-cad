@@ -16998,7 +16998,10 @@ class ArchAuditFinding(_Model):
             `bykhy_hotel_room_distance` (50/3; docs/adr/8111), the buildings that must have sprinklers `bykhy_sprinklers_required`
             (BYKHY 96/2; docs/adr/8108), a hospital's or care home's large sleeping storey in one fire compartment and a
             hospital corridor narrower than 2.00 m at its least width `bykhy_patient_floor_compartments`,
-            `bykhy_hospital_corridor` (BYKHY 49/1-b, 49/2; docs/adr/8110), the emsal limits' conditions
+            `bykhy_hospital_corridor` (BYKHY 49/1-b, 49/2; docs/adr/8110), a boiler room's separation, door, exits and door
+            class and a fuel store's separation `bykhy_boiler_room_separation`, `bykhy_boiler_room_door`,
+            `bykhy_boiler_room_exits`, `bykhy_boiler_room_door_rating`, `bykhy_fuel_store_separation` (BYKHY 54/2, 54/4,
+            54/5, 56/1; docs/adr/8113), the emsal limits' conditions
             `paiy_caretaker_not_required`,
             `paiy_library_not_exempt` (docs/adr/8079), `paiy_traditional_not_exempt` (22/1-m, docs/adr/8094),
             `paiy_masonry_wall_undeclared`, `paiy_masonry_walls_not_exempt` (5/8, 20/8-j, docs/adr/8095) and
