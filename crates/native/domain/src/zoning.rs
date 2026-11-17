@@ -384,6 +384,13 @@ impl Document {
         let mut inner_part = vec![0.0; rooms.len()];
         let levels: std::collections::BTreeSet<Option<String>> =
             rooms.iter().map(|r| r.level.clone()).collect();
+        // Each room's outline to the walls' axes, its box: a contour is cut only by the outlines its box meets (the
+        // others leave it as it is), so each room is cut by its neighbours, not by the whole storey (docs/adr/8115).
+        let axis_bounds: Vec<Option<[f64; 4]>> = rooms.iter().map(|r| bounds(&r.axis)).collect();
+        let meet = |p: Option<[f64; 4]>, q: Option<[f64; 4]>| match (p, q) {
+            (Some(p), Some(q)) => !(p[2] < q[0] || q[2] < p[0] || p[3] < q[1] || q[3] < p[1]),
+            _ => false,
+        };
         for level in &levels {
             let here: Vec<usize> = (0..rooms.len())
                 .filter(|&i| rooms[i].level == *level)
@@ -393,9 +400,10 @@ impl Document {
                 if rooms[i].void || rooms[i].gross.is_empty() {
                     continue;
                 }
+                let own_bounds = bounds(&rooms[i].gross);
                 let others: Vec<Area> = here
                     .iter()
-                    .filter(|&&j| j != i)
+                    .filter(|&&j| j != i && meet(own_bounds, axis_bounds[j]))
                     .flat_map(|&j| rooms[j].axis.iter().cloned())
                     .collect();
                 let own = region::union_areas(&rooms[i].gross);

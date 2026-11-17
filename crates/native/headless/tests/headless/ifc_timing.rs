@@ -23,12 +23,24 @@ fn ifc_timing() {
         .map(|v| v.split(',').filter_map(|n| n.trim().parse().ok()).collect())
         .unwrap_or_else(|| vec![1, 20, 100]);
     let package = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../catalog/standards/dijital-proje/src");
-    println!("daire | nesne | duvar | mahal | model ms | yazma ms | MB dosya | okuma+gövde+olgu ms | tepe MB | olgu MB | form ms");
+    println!(
+        "daire | nesne | duvar | mahal | okuma kopyası ms | kesit modeli ms | model ms | yazma ms | MB dosya | \
+         okuma+gövde+olgu ms | tepe MB | olgu MB | form ms"
+    );
     for n in counts {
         let (mut s, _) = drawn();
         copied_with(&mut s, n, false);
         let doc = s.document();
         let objects = doc.entities().count();
+        // What the window's thread pays when Denetim asks (docs/adr/8115): a reading copy of the drawing.
+        let t = Instant::now();
+        let copy = doc.reading_copy();
+        let copied = t.elapsed().as_secs_f64() * 1e3;
+        drop(copy);
+        // The section model alone: the model's mapping takes it first.
+        let t = Instant::now();
+        let _ = kentos_native_application::sections::model(doc);
+        let section = t.elapsed().as_secs_f64() * 1e3;
         let t = Instant::now();
         let (b, written) = kentos_native_application::arch_ifc::building(doc, "2026-11-16T12:00:00", "KentOS Mimari");
         let model = t.elapsed().as_secs_f64() * 1e3;
@@ -61,7 +73,8 @@ fn ifc_timing() {
         assert!(answered.status.success(), "{}", String::from_utf8_lossy(&answered.stderr));
         assert_eq!(String::from_utf8_lossy(&answered.stdout).trim(), "21");
         println!(
-            "{n} | {objects} | {} | {} | {model:.1} | {write:.1} | {:.2} | {read:.1} | {top:.0} | {:.2} | {form:.0}",
+            "{n} | {objects} | {} | {} | {copied:.2} | {section:.1} | {model:.1} | {write:.1} | {:.2} | {read:.1} | {top:.0} | {:.2} | \
+             {form:.0}",
             written.walls,
             written.spaces,
             text.len() as f64 / 1e6,

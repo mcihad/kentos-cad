@@ -192,19 +192,19 @@ impl crate::app::App {
     /// Model kalite kontrol formu (`arch.qualityForm`, docs/adr/8047 §10): EK-9's model quality control form, its answers
     /// the standards package's from the file KentOS would write now (`crate::ifc_facts`, docs/adr/8074), placed from the
     /// cursor once they come. Ruhsat takımı writes its answers again and gives it a sheet of its own (EK-2 FR/MKF). The
-    /// file is written, read back and answered off the window's thread.
+    /// model is taken from a reading copy, written, read back and answered off the window's thread (docs/adr/8115).
     pub(crate) fn place_quality_form(&mut self) -> iced::Task<crate::app::Message> {
         let Some(doc) = &self.document else {
             return iced::Task::none();
         };
-        let planned = crate::ifc_facts::plan(&doc.model);
+        let copy = doc.model.reading_copy();
         let answers = doc.model.form_answers().to_vec();
         self.say(kentos_interaction::Level::Info, "Model kalite kontrol formu: IFC modeli yazılıp okunuyor…");
         iced::Task::perform(
             async move {
                 let (sent, got) = iced::futures::channel::oneshot::channel();
                 std::thread::spawn(move || {
-                    let _ = sent.send(crate::ifc_facts::form_rows_of(planned, answers));
+                    let _ = sent.send(crate::ifc_facts::form_rows_of(crate::ifc_facts::plan(&copy), answers));
                 });
                 got.await.unwrap_or_else(|_| Err("Kuralın süreci cevap vermeden kapandı.".to_owned()))
             },

@@ -356,6 +356,10 @@
     Modelde göster IFC görüntüleyicide nesneyi seçer. Öbür disiplinin modeli (dosya adının EK-2 disiplini MM değilse)
     EK-9 Tablo 9.2'nin 16 sorusuyla cevaplanır, onarımlar programdan bağımsız; komutun `table`'ı formun tablosu
     ([ADR 8114](../adr/8114-ek9-table-9-2-other-disciplines.md), K216–K218).
+  - **Model eşlemesi pencerede değil (18 Kasım 2026; [ADR 8115](../adr/8115-model-mapping-off-the-window-thread.md),
+    K219–K221):** Denetim ve kalite formu çizimin okuma kopyasını alır, olgular ve IFC eşlemesi kuralın iş parçacığında.
+    Emsal ölçümü (`zoning_measured`) mahali yalnız kutusu değen komşularıyla keser: 100 dairede eşleme 3,1 s → 216 ms,
+    alanlar aynı. Bütçe: okuma kopyası ≤ 1 ms, eşleme 100 dairede ≤ 300 ms ([ölçüm](../perf/ifc-model-2026-11-18.md)).
   - **Duvar stili IFC'de tip (17 Kasım 2026; [ADR 8105](../adr/8105-wall-style-types-and-layer-sets.md), K179–K181):**
     her duvar stili bir `IfcWallType`, duvarları ona bağlı (`IfcRelDefinesByType`, `IfcRelDeclares`); her duvarın katman
     takımı sol yüzden sağa, aynı takım paylaşılır; `IfcMaterialLayerSetUsage` duvarlar eksen çerçevesinde yazılınca.

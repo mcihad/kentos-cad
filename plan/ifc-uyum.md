@@ -484,8 +484,11 @@ kimliği `IfcLabel` yazılıyordu) düzeltildi. Bulgu IFC modelinde boyanır. 10
 **Yapıldı (18 Kasım 2026, [ADR 8114](../docs/adr/8114-ek9-table-9-2-other-disciplines.md), K216–K218):** EK-9 Tablo 9.2:
 öbür disiplinlerin (statik, mekanik, elektrik, iç mimari …) modeli dosyanın adının EK-2 disiplin alanından tanınır, 16
 soru 9.1'deki aynı soruların kanıtıyla, onarımlar programdan bağımsız; paket incelemesi modelin tablosunu verir, başka
-tablonun formunu söyler. **Kalan:** son yazılan dosyanın denetimi ve bulut işi; beş sonucun ayrı raporu (B14); model
-eşlemesinin bütçesi; disiplin modelinin formunun yazımı. (Gerçek kuzey ADR 8076 K58 ile yazılıyor.)
+tablonun formunu söyler. **Yapıldı (18 Kasım 2026, [ADR 8115](../docs/adr/8115-model-mapping-off-the-window-thread.md),
+K219–K221):** model eşlemesi Denetim'de ve kalite formunda okuma kopyasından kuralın iş parçacığında; emsal ölçümü mahali
+yalnız komşularıyla keser: 100 dairede 3,1 s → 216 ms; bütçe. **Kalan:** son yazılan dosyanın denetimi ve bulut işi;
+disiplin modelinin formunun yazımı. (Gerçek kuzey ADR 8076 K58 ile yazılıyor; beş sonuç ADR 8075'ten beri ruhsat
+paketinin `results`'ında.)
 
 **Kullanıcı sonucu:** Model kalite kontrol formunun her cevabı diske yazılmış dosyadan gelir; her "hayır" nesnesini seçer.
 Şeması temiz bir dosyanın Türkiye profilinden kaldığı görülebilir.

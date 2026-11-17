@@ -19,6 +19,13 @@ EXPRESSION_BENCH=1 EXPRESSION_N=100000,1000000 EXPRESSION_PERF_OUT=docs/perf EXP
 
 Ölçüm sırasında makinede başka ağır süreç (Vite, e2e, cargo) çalışmaz.
 
+## IFC model eşlemesi, 100 daire (2026-11-18, `13b25c654` + dilim → ADR 8115)
+
+- **Kaynak:** [ifc-model-2026-11-18.md](ifc-model-2026-11-18.md). Karar [ADR 8115](../adr/8115-model-mapping-off-the-window-thread.md)'tir.
+- Model eşlemesi 100 dairede 3 077 → 216 ms, 20 dairede 85 → 32 ms (release, M5): emsal ölçümü her mahali kattaki bütün
+  mahallerle değil, yalnız kutusu değen komşularıyla keser; alanlar aynı.
+- Denetim ve kalite formu çizimin okuma kopyasıyla (0,08 ms) çalışır; eşleme pencerenin iş parçacığında değil.
+
 ## Masaüstünde büyük karma 2B çizim (2026-11-06, `e6145d28c` + dilim → ADR 1062)
 
 - **Kaynak:** [large-desktop-2026-11-06.md](large-desktop-2026-11-06.md) (ham veri `large-desktop-{once,sonra}-2026-11-05.json`),

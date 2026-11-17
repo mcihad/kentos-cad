@@ -209,8 +209,10 @@ bulgunun duvarları; çizimdeki form iki yarısıyla; Ruhsat takımı'nın yeni 
   yoksa kuzey okundan).
 - **Son yazılan dosya:** Denetim'in bellekteki dosya yerine diske yazılan ya da teslim edilecek dosyayı okuması (K4'ün
   "diske yazılan"ı); bulut işinin aynı betiği çalıştırması.
-- **Beş sonucun ayrı raporu** (ifc-uyum §1: okunuyor, şema, Türkiye profili, model–pafta, idare): ruhsat paketinde (B14).
-- **Model eşlemesinin bütçesi:** 100 dairede 3,1 s, pencerenin iş parçacığında; ölçüm §6'da.
+- **Beş sonucun ayrı raporu** (ifc-uyum §1: okunuyor, şema, Türkiye profili, model–pafta, idare): yapıldı, ruhsat paketinin
+  `results`'ı (ADR [8075](8075-bim-permit-package.md)).
+- **Model eşlemesinin bütçesi:** yapıldı, ADR [8115](8115-model-mapping-off-the-window-thread.md): eşleme pencereden çıktı,
+  emsal ölçümü komşularla, 100 dairede 3,1 s → 216 ms.
 - **Birden çok binalı program:** form bütün projenin dosyasını okur; binanın kendi dosyası (ADR 8072 §2) için bina başına
   form B14 ile.
 - **EK-9 Tablo 9.2** (öbür disiplinlerin 16 sorusu): disiplin modelleri geldiğinde.

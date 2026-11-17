@@ -12,9 +12,10 @@
 //!
 //! A fix is the rule's KentOS command, run as any finding's: one undo step.
 //!
-//! - **Never in the way:** both rules run in their own short processes, one after the other, off the window's thread;
-//!   an answer to an older ask (its generation) is dropped, and the last answer is put back after each check until the
-//!   new one comes.
+//! - **Never in the way:** the facts, the model's mapping (docs/adr/8115: 3 s at a hundred flats) and both rules are
+//!   worked out off the window's thread, on a reading copy of the drawing taken when the check is asked; the rules run
+//!   in their own short processes, one after the other; an answer to an older ask (its generation) is dropped, and the
+//!   last answer is put back after each check until the new one comes.
 //! - **The whole drawing only:** layers, blocks, numbering and storeys are the drawing's, so a check of Etkin kat or of
 //!   the objects selected leaves them out.
 
@@ -38,43 +39,44 @@ const FUNCTION: &str = "denetle";
 /// The Dijital proje package's findings, by their codes' start (EK-3, EK-4, the sheets from the model, the form).
 const CODES: &str = "digital_";
 
-/// What both rules read, taken on the window's thread: the CAD facts, the model the written file's are taken from (none
-/// for a drawing without walls) and the building facts.
+/// What both rules read: the drawing as it was when the check was asked, a reading copy (its objects shared, no undo
+/// history); its facts and its model are worked out from it on the rules' thread.
 struct Input {
-    digital: Value,
-    planned: Option<crate::ifc_facts::Planned>,
-    regulation: Value,
+    copy: kentos_domain::Document,
+}
+
+/// The facts the Dijital proje rule reads first: the CAD drawing's section alone.
+fn standards_facts(doc: &kentos_domain::Document) -> Option<Value> {
+    let facts =
+        ProjectAuditFacts::new(0.0, Vec::new(), false).with_cad(kentos_processing::audit_facts::cad::measure(doc));
+    serde_json::to_value(facts).ok()
+}
+
+/// The facts the national regulation's rule reads: the permit's particulars (the application date, the plan's storeys)
+/// and the building's.
+fn regulation_facts(doc: &kentos_domain::Document) -> Option<Value> {
+    let mut facts = ProjectAuditFacts::new(0.0, Vec::new(), false)
+        .with_building(kentos_processing::audit_facts::building::measure(doc));
+    if let Some(permit) = kentos_processing::audit_facts::permit::measure(doc) {
+        facts = facts.with_permit(permit);
+    }
+    serde_json::to_value(facts).ok()
 }
 
 impl App {
     /// The facts the Dijital proje rule reads first: the CAD drawing's section alone.
     pub(crate) fn arch_audit_standards_facts(&self) -> Option<Value> {
-        let doc = &self.document.as_ref()?.model;
-        let facts = ProjectAuditFacts::new(0.0, Vec::new(), false)
-            .with_cad(kentos_processing::audit_facts::cad::measure(doc));
-        serde_json::to_value(facts).ok()
+        standards_facts(&self.document.as_ref()?.model)
     }
 
     /// The facts the national regulation's rule reads: the permit's particulars (the application date, the plan's
     /// storeys) and the building's.
     pub(crate) fn arch_audit_regulation_facts(&self) -> Option<Value> {
-        let doc = &self.document.as_ref()?.model;
-        let mut facts = ProjectAuditFacts::new(0.0, Vec::new(), false)
-            .with_building(kentos_processing::audit_facts::building::measure(doc));
-        if let Some(permit) = kentos_processing::audit_facts::permit::measure(doc) {
-            facts = facts.with_permit(permit);
-        }
-        serde_json::to_value(facts).ok()
+        regulation_facts(&self.document.as_ref()?.model)
     }
 
     fn arch_audit_standards_input(&self) -> Option<Input> {
-        let digital = self.arch_audit_standards_facts()?;
-        let doc = &self.document.as_ref()?.model;
-        Some(Input {
-            digital,
-            planned: crate::ifc_facts::plan(doc),
-            regulation: self.arch_audit_regulation_facts()?,
-        })
+        Some(Input { copy: self.document.as_ref()?.model.reading_copy() })
     }
 
     /// After a check: the last answer put back, and the rules asked again when the check was the whole drawing's.
@@ -97,7 +99,8 @@ impl App {
         if !std::mem::take(&mut self.arch.arch_audit.standards_due) {
             return Task::none();
         }
-        // The facts and the model now, on this thread; the file written and read back, and the rules, off it.
+        // The drawing now, a reading copy; its facts, its model, the file written and read back and the rules off this
+        // thread.
         let Some(input) = self.arch_audit_standards_input() else {
             return Task::none();
         };
@@ -193,14 +196,14 @@ fn put(
 /// Both packages' answers, each its own or its error: the Dijital proje rule after the file is written and read back
 /// (its failure the rule's), then the national regulation's.
 fn answer(input: Input) -> Result<Value, String> {
-    let digital = input
-        .planned
+    let doc = &input.copy;
+    let cad = standards_facts(doc).ok_or_else(|| "Çizimin olguları yazılamadı.".to_owned())?;
+    let building = regulation_facts(doc).ok_or_else(|| "Binanın olguları yazılamadı.".to_owned())?;
+    let digital = crate::ifc_facts::plan(doc)
         .map(crate::ifc_facts::Planned::facts)
         .transpose()
-        .and_then(|ifc| {
-            crate::standards::call(DIGITAL.0, DIGITAL.1, FUNCTION, vec![input.digital, ifc.unwrap_or(Value::Null)])
-        });
-    let regulation = crate::standards::call(REGULATION.0, REGULATION.1, FUNCTION, vec![input.regulation]);
+        .and_then(|ifc| crate::standards::call(DIGITAL.0, DIGITAL.1, FUNCTION, vec![cad, ifc.unwrap_or(Value::Null)]));
+    let regulation = crate::standards::call(REGULATION.0, REGULATION.1, FUNCTION, vec![building]);
     let side = |r: Result<Value, String>| r.map_or_else(|e| json!({ "error": e }), |v| json!({ "answer": v }));
     Ok(json!({ "digital": side(digital), "regulation": side(regulation) }))
 }
