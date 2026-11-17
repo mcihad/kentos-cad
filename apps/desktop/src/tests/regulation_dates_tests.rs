@@ -149,7 +149,7 @@ fn the_application_date_chooses_the_version_of_the_elevator_articles() {
         line,
         "Kural seti — Başvuru tarihi künyeden: 30.6.2026 · PAİY 34/1 (11.7.2021) geçti · BYKHY 24/2 (19.12.2007) kaldı \
          · BYKHY 24/6 (9.9.2009) geçti · BYKHY 62/2 (19.12.2007) eksik veri · PAİY 22/1-k (25.7.2019) geçti · PAİY 28/1-c \
-         (12.8.2023) geçti · 26 madde kapsam dışı"
+         (12.8.2023) geçti · 27 madde kapsam dışı"
     );
     // Applied for on 2.7.2026: as of 1.7.2026 the basement of annexes counts, four storeys ask for an elevator and
     // 34/8 for it to reach the basement, which it does not.

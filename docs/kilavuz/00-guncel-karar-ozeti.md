@@ -369,6 +369,9 @@
     beyan (`settings.arch.sprinklers`) yoksa bulgu; alanlar olguların mahal alanları (dış kontur, PAİY 4/1-ğ-1). Sağlık
     yapıları ([ADR 8110](../adr/8110-health-buildings-sleeping-floors-corridors.md), K200–K203): 0.24.0 `saglik`, 49/1-b
     (300 m²'yi aşan yatılan kat tek kompartımansa kaldı, birden çoksa uzman incelemesi) ve 49/2 (hastane koridoru 2,00 m).
+    Otel odası ([ADR 8111](../adr/8111-hotel-room-distance-to-its-door.md), K204–K207): 0.25.0 `konaklama`, 50/3 en uzak
+    noktadan kendi kapısına 15 m (yağmurlamalı otelde 20 m), aşan tek kapılı oda kaldı; kaçış modülünde
+    `RoomEscape.door`, olgularda `toDoor`; çok mahalli süitin kapısına yürüyüş yok.
   - **Koridorun en dar yeri (18 Kasım 2026; [ADR 8110](../adr/8110-health-buildings-sleeping-floors-corridors.md), K200–K201):**
     ortak çekirdekte `geom::neck::least_width`: iki yanında kendi genişliğinde daire kalan en kısa kesit, yoksa en büyük
     daire; bina olgularında hol ve koridorun `least`'i. En büyük daire (dar kenar, ADR 8033) koridorun en geniş yerini

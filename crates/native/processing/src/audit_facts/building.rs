@@ -202,6 +202,12 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             _ => None,
         })
         .collect();
+    // Each room's walk from its farthest point to its own nearest door, inside it (docs/adr/8111; 50/3).
+    let to_door: std::collections::HashMap<String, f64> = kentos_domain::escape::escape(doc)
+        .rooms
+        .into_iter()
+        .filter_map(|r| Some((doc.uid(r.room)?.to_string(), r.door?.length)))
+        .collect();
     let spaces = storeys
         .iter()
         .flat_map(|st| st.rooms.iter().map(move |uid| (st.level.clone(), uid.clone())))
@@ -211,6 +217,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             level: Some(level),
             stair: stair_rooms.contains(&uid),
             least: least.get(&uid).copied(),
+            to_door: to_door.get(&uid).copied(),
             uid,
         })
         .collect();

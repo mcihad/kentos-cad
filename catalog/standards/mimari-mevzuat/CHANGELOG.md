@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 0.25.0 — 18 Kasım 2026
+
+- Otel yatak odasının içindeki kaçış uzaklığı (`konaklama`, kullanım sınıfı katkısında; docs/adr/8111): BYKHY 50/3,
+  otel, motel ve pansiyonda (yurt ve yatakhane değil) odanın en uzak noktasından kapısına yürüyüş (olguların yeni
+  `spaces[].toDoor`'u: duvarlardan 0,40 m önden, odanın içinden) 15 m'yi aşan tek kapılı oda kaldı
+  (`bykhy_hotel_room_distance`, 50/3-a); tamamı yağmurlamalı otelde sınır 20 m (50/3-b), 20 m'yi aşan iki kapılı oda uzman
+  incelemesi; kapısı çizilmemiş oda eksik veri. Metin resmî metinle birebir.
+
 ## 0.24.0 — 18 Kasım 2026
 
 - Sağlık yapıları (`saglik`, yeni katkı `saglik`; docs/adr/8110): BYKHY 49/1-b (9.9.2009) hastanenin ve bakımevinin

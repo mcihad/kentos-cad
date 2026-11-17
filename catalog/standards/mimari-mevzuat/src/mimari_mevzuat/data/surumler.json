@@ -470,6 +470,25 @@
     },
     {
       "regulation": "BYKHY",
+      "article": "50/3",
+      "title": "Otel yatak odasının ve süitin içindeki kaçış uzaklığı",
+      "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 50/3 değişmedi.",
+      "versions": [
+        {
+          "id": "2007",
+          "from": "2007-12-19",
+          "until": null,
+          "label": "19.12.2007",
+          "gazette": "19.12.2007/26735",
+          "distance": 15,
+          "sprinklered": 20,
+          "text": "(3) Otel yatak odasında veya süit odada en uzak bir noktadan çıkış kapısına kadar ölçülen uzaklığın 15 m’yi aşmaması hâlinde, tek kaçış kapısı bulunması yeterli kabul edilir. Ancak: a) Otel yatak odasında veya süit odada en uzak bir noktadan çıkış kapısına kadar ölçülen uzaklığın 15 m’yi aşması hâlinde, birbirinden uzakta konuşlandırılmış en az 2 çıkış kapısı bulunması gerekir. b) Tamamı yağmurlama sistemi ile donatılmış otellerin yatak odalarında veya süit odalarında, en uzak bir noktadan kapıya kadar ölçülen uzaklığın 20 m’yi aşmaması gerekir.",
+          "source": "RG 19.12.2007/26735 (BKK 2007/12937), mevzuat.gov.tr derlenmiş metni (SHA-256 d82d06d2…a7d9, son değişiklik RG 1.7.2025/32943), 50 nci madde; docs/adr/8111 §1"
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
       "article": "52",
       "title": "Fabrika, imalathane, mağaza, dükkân, depo, büro ve ayakta tedavi merkezinin kaçış merdivenleri",
       "transition": "52 nci madde 10.8.2009 tarihli ve 2009/15316 sayılı Bakanlar Kurulu Kararıyla değişti (RG 9.9.2009/27344); önceki metni kural setinde yok: 9.9.2009'dan önceki başvuru uzman incelemesi.",

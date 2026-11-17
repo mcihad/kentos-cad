@@ -1,0 +1,2574 @@
+{
+ "format": "kentos.regulationCases",
+ "version": 1,
+ "about": "Otel yatak odasının içindeki kaçış uzaklığının bağımsız durumları (docs/adr/8111): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik 50/3'ün metninden (RG 19.12.2007/26735) elle çıkarıldı; kuralın kodundan üretilmedi (scripts/fixtures/konaklama_cases.py olguları kurar, beklenenleri olduğu gibi yazar).",
+ "cases": [
+  {
+   "id": "kisa",
+   "neden": "Otel odası, en uzak noktadan kapısına 8 m: 15 m'yi aşmıyor, tek kapı yeter → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 8.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000001"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 50/3": [
+      "passed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "uzun-tek-kapi",
+   "neden": "17 m, tek kapı: 50/3-a 'aşması hâlinde ... en az 2 çıkış kapısı' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000004",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000005",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 17.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000006",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000005",
+       "00000000-0000-4000-8000-000000000004"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_distance",
+      "has": [
+       "17,00 m > 15,00 m",
+       "1 kapı",
+       "BYKHY 50/3-a"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 50/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "uzun-iki-kapi",
+   "neden": "17 m, iki kapı: (a) iki kapı ister, var; birbirinden uzaklığı ölçü değil → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000007",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000008",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 17.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000009",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000008",
+       "00000000-0000-4000-8000-000000000007"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000010",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000008",
+       "00000000-0000-4000-8000-000000000007"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 50/3": [
+      "passed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yagmurlamali-17",
+   "neden": "Tamamı yağmurlamalı otel, 17 m tek kapı: (b) 20 m'yi aşmıyor → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000011",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000012",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 17.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000013",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000012",
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0,
+    "sprinklers": true
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 50/3": [
+      "passed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yagmurlamali-22",
+   "neden": "Yağmurlamalı, 22 m tek kapı: (b) '20 m'yi aşmaması gerekir' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000014",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000015",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 22.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000016",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000015",
+       "00000000-0000-4000-8000-000000000014"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0,
+    "sprinklers": true
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_distance",
+      "has": [
+       "22,00 m > 20,00 m",
+       "BYKHY 50/3-b"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 50/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yagmurlamali-22-iki-kapi",
+   "neden": "Yağmurlamalı, 22 m iki kapı: (b) aşmamasını, (a) iki kapıyı söyler, birlikte okunuşu idarenin → uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000017",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000018",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 22.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000019",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000018",
+       "00000000-0000-4000-8000-000000000017"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000020",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000018",
+       "00000000-0000-4000-8000-000000000017"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0,
+    "sprinklers": true
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_distance",
+      "has": [
+       "22,00 m > 20,00 m",
+       "2 kapı"
+      ],
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "BYKHY 50/3": [
+      "expertReview",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tam-15",
+   "neden": "Tam 15,00 m: 'aşmaması hâlinde' → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000021",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000022",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 15.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000023",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000022",
+       "00000000-0000-4000-8000-000000000021"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 50/3": [
+      "passed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "15-01",
+   "neden": "15,01 m tek kapı → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000024",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000025",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 15.01
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000026",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000025",
+       "00000000-0000-4000-8000-000000000024"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_distance",
+      "has": [
+       "15,01 m"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 50/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "15-005",
+   "neden": "15,005 m tek kapı → kalır; ileti milimetreyi gösterir.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000027",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000028",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 15.005
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000029",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000028",
+       "00000000-0000-4000-8000-000000000027"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_distance",
+      "has": [
+       "15,005 m"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 50/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yagmurlamali-tam-20",
+   "neden": "Yağmurlamalı, tam 20,00 m → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000030",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000031",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 20.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000032",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000031",
+       "00000000-0000-4000-8000-000000000030"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0,
+    "sprinklers": true
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 50/3": [
+      "passed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kapisiz",
+   "neden": "Odanın kapısı çizilmemiş: uzaklık ölçülemedi → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000033",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000034",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false
+     }
+    ],
+    "doors": [],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_distance",
+      "has": [
+       "kapısı çizilmemiş"
+      ],
+      "state": "missingData"
+     }
+    ],
+    "rules": {
+     "BYKHY 50/3": [
+      "missingData",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "suit",
+   "neden": "Süit, 16 m tek kapı: 'süit odada' → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000035",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000036",
+      "level": "k01",
+      "name": "Süit 301",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 16.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000037",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000036",
+       "00000000-0000-4000-8000-000000000035"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_distance",
+      "has": [
+       "Süit 301",
+       "16,00 m"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 50/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "otel-odasi-adi",
+   "neden": "Adı “Otel odası 12”, 16 m tek kapı → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000038",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000039",
+      "level": "k01",
+      "name": "Otel odası 12",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 16.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000040",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000039",
+       "00000000-0000-4000-8000-000000000038"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_distance",
+      "has": [
+       "Otel odası 12"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 50/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "motel",
+   "neden": "Motel, 16 m tek kapı → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Motel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000041",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000042",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 16.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000043",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000042",
+       "00000000-0000-4000-8000-000000000041"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_distance",
+      "has": [
+       "16,00 m"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 50/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "pansiyon",
+   "neden": "Pansiyon, 16 m tek kapı → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Pansiyon"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000044",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000045",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 16.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000046",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000045",
+       "00000000-0000-4000-8000-000000000044"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_distance",
+      "has": [
+       "16,00 m"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 50/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yurt",
+   "neden": "Öğrenci yurdu, 16 m tek kapı: 50/3 otel yatak odasını söyler → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Öğrenci yurdu"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000047",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000048",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 16.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000049",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000048",
+       "00000000-0000-4000-8000-000000000047"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 50/3": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "konut",
+   "neden": "Konut: otel değil → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 4,
+    "dwellings": 4,
+    "uses": [
+     "Konut"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000050",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000051",
+      "level": "k01",
+      "name": "Yatak odası",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 16.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000052",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000051",
+       "00000000-0000-4000-8000-000000000050"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 50/3": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "buro",
+   "neden": "Büro: otel değil → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Büro"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000053",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000054",
+      "level": "k01",
+      "name": "Oda 4",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 16.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000055",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000054",
+       "00000000-0000-4000-8000-000000000053"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 50/3": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "odasiz-otel",
+   "neden": "Otelin bu katında yatak odası yok (lobi, toplantı odası) → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000056",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000057",
+      "level": "k01",
+      "name": "Lobi",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 25.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000059",
+      "level": "k01",
+      "name": "Toplantı odası",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 18.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000058",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000057",
+       "00000000-0000-4000-8000-000000000056"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000060",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000059",
+       "00000000-0000-4000-8000-000000000056"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 50/3": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "iki-oda",
+   "neden": "Biri 9 m, biri 18 m tek kapı → yalnız Oda 102 kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000061",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000062",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 9.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000064",
+      "level": "k01",
+      "name": "Oda 102",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 18.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000063",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000062",
+       "00000000-0000-4000-8000-000000000061"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000065",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000064",
+       "00000000-0000-4000-8000-000000000061"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_distance",
+      "has": [
+       "Oda 102",
+       "18,00 m"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 50/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "suit-banyosu",
+   "neden": "Süitin banyosu otel odası değil (9 m'lik süit geçer) → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000066",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000067",
+      "level": "k01",
+      "name": "Süit 301",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 9.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000069",
+      "level": "k01",
+      "name": "Süit 301 banyosu",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 16.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000068",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000067",
+       "00000000-0000-4000-8000-000000000066"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000070",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000069",
+       "00000000-0000-4000-8000-000000000066"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 50/3": [
+      "passed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "karma",
+   "neden": "Otel ve büro karma, 16 m tek kapı → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel",
+     "Büro"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000071",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000072",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 16.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000073",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000072",
+       "00000000-0000-4000-8000-000000000071"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_distance",
+      "has": [
+       "16,00 m"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 50/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tarihsiz",
+   "neden": "Başvuru tarihi yok: 50/3 2007'den beri aynı → en yeni hâl, kalır.",
+   "permit": null,
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000074",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000075",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 17.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000076",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000075",
+       "00000000-0000-4000-8000-000000000074"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_distance",
+      "has": [
+       "17,00 m"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 50/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "basvuru-2007",
+   "neden": "Başvuru 1.6.2007: yönetmelik 19.12.2007'de yürürlüğe girdi, öncesi kural setinde yok → satır uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "01.06.2007"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [
+     "Otel"
+    ],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000077",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000078",
+      "level": "k01",
+      "name": "Oda 101",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 17.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000079",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000078",
+       "00000000-0000-4000-8000-000000000077"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 50/3": [
+      "expertReview",
+      null
+     ]
+    }
+   }
+  },
+  {
+   "id": "adlardan",
+   "neden": "Bina programında kullanım yok, mahal adı Otel odası: konaklama mahal adından → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0,
+      "stair": true
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "uses": [],
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000080",
+      "level": "k01",
+      "name": "Koridor",
+      "area": 30.0,
+      "stair": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000081",
+      "level": "k01",
+      "name": "Otel odası 5",
+      "area": 30.0,
+      "stair": false,
+      "toDoor": 16.0
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000082",
+      "level": "k01",
+      "between": [
+       "00000000-0000-4000-8000-000000000081",
+       "00000000-0000-4000-8000-000000000080"
+      ],
+      "width": 0.9,
+      "clear": 0.85
+     }
+    ],
+    "structureHeight": 9.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_hotel_room_distance",
+      "has": [
+       "16,00 m"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 50/3": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  }
+ ]
+}

@@ -37,7 +37,8 @@ key: string, check: ArchAuditCheck,
  * `paiy_elevator_not_serving` by the application date's version, the escape route doors' `bykhy_exit_door_swing`
  * and `bykhy_stair_door_rating` (docs/adr/8078 §8), the use classes' own escape articles `bykhy_patient_room_doors`,
  * `bykhy_hotel_room_wall`, `bykhy_hotel_storey_exits`, `bykhy_hotel_room_door` and `bykhy_single_stair` (BYKHY
- * 49/1-a, 50/1-a, 50/1-b, 52; docs/adr/8107), the buildings that must have sprinklers `bykhy_sprinklers_required`
+ * 49/1-a, 50/1-a, 50/1-b, 52; docs/adr/8107), a hotel room's farthest point too far from its door
+ * `bykhy_hotel_room_distance` (50/3; docs/adr/8111), the buildings that must have sprinklers `bykhy_sprinklers_required`
  * (BYKHY 96/2; docs/adr/8108), a hospital's or care home's large sleeping storey in one fire compartment and a
  * hospital corridor narrower than 2.00 m at its least width `bykhy_patient_floor_compartments`,
  * `bykhy_hospital_corridor` (BYKHY 49/1-b, 49/2; docs/adr/8110), the emsal limits' conditions

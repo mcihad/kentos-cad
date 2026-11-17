@@ -162,25 +162,28 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     en az 60 dakika bykhy_hotel_room_wall ve ikiden çok katlı otelde her katta 2 çıkış
     bykhy_hotel_storey_exits, yatak sayısı çizimde olmadığından yapı yüksekliği 15,50
     m'nin altındaysa eksik veri, 50/1-a; iç koridora açılan kapı en az 30 dakika ve
-    kendiliğinden kapanır bykhy_hotel_room_door, 50/1-b; fabrika, imalathane, mağaza,
-    dükkân, depo, büro ve ayakta tedavi merkezinde zemin üstü her katta 2 bağımsız kaçış
-    merdiveni, tek merdivende yapı yüksekliği 21,50 m ya da katın kişisi 50 tutmazsa
-    kaldı, tutarsa kaçış uzaklıkları, yanmaz ürünler ve kullanılan maddeler uzman
-    incelemesi bykhy_single_stair, 52) ve yağmurlama zorunluluğu da (proje yağmurlamayı
-    beyan etmemişse settings.arch.sprinklers: 30,50 m'yi aşan konut harici ve karma
-    bina, 51,50 m'yi geçen konut, alanlarının toplamı 600 m²'yi aşan kapalı otopark, 100
-    odayı aşan katlı konaklama yapısı — odası 100'ü geçmeyende yatak sayısı çizimde
-    olmadığından eksik veri —, 21,50 m'yi aşan yataklı tesis, 2000 m²'yi aşan katlı
-    mağaza, alışveriş, ticaret ve eğlence yeri, 1000 m²'yi aşan parlayıcı madde yapısı —
-    uzman incelemesi —; alanlar mahallerin dış konturuyla bykhy_sprinklers_required,
-    BYKHY 96/2) ve sağlık yapıları da (hastanenin ve bakımevinin 300 m²'yi aşan yatılan
-    katı tek yangın kompartımanıysa kaldı, iki ya da daha çok kompartımanda büyüklükleri
-    uzman incelemesi bykhy_patient_floor_compartments, 49/1-b; hastanede adı Koridor
-    olan mahalin en dar yeri — iki yanında kendi genişliğinde daire kalan en kısa kesit
-    — 2,00 m'den azsa bykhy_hospital_corridor, 49/2): MCP ve Python'da regulation grubu
-    bütün çizim için istenince bulguları listededir (paiy_elevator_missing,
-    paiy_elevator_not_serving, yerel yönetmelikle çelişkide regulation_conflict; başvuru
-    tarihi yok ya da okunamıyor ve sonuç ona göre değişiyorsa state: missingData ile
+    kendiliğinden kapanır bykhy_hotel_room_door, 50/1-b; otel, motel ve pansiyonda
+    odanın en uzak noktasından kapısına yürüyüş 15 m'yi aşan tek kapılı oda, tamamı
+    yağmurlamalı otelde 20 m'yi aşan oda bykhy_hotel_room_distance, 50/3; fabrika,
+    imalathane, mağaza, dükkân, depo, büro ve ayakta tedavi merkezinde zemin üstü her
+    katta 2 bağımsız kaçış merdiveni, tek merdivende yapı yüksekliği 21,50 m ya da katın
+    kişisi 50 tutmazsa kaldı, tutarsa kaçış uzaklıkları, yanmaz ürünler ve kullanılan
+    maddeler uzman incelemesi bykhy_single_stair, 52) ve yağmurlama zorunluluğu da
+    (proje yağmurlamayı beyan etmemişse settings.arch.sprinklers: 30,50 m'yi aşan konut
+    harici ve karma bina, 51,50 m'yi geçen konut, alanlarının toplamı 600 m²'yi aşan
+    kapalı otopark, 100 odayı aşan katlı konaklama yapısı — odası 100'ü geçmeyende yatak
+    sayısı çizimde olmadığından eksik veri —, 21,50 m'yi aşan yataklı tesis, 2000 m²'yi
+    aşan katlı mağaza, alışveriş, ticaret ve eğlence yeri, 1000 m²'yi aşan parlayıcı
+    madde yapısı — uzman incelemesi —; alanlar mahallerin dış konturuyla
+    bykhy_sprinklers_required, BYKHY 96/2) ve sağlık yapıları da (hastanenin ve
+    bakımevinin 300 m²'yi aşan yatılan katı tek yangın kompartımanıysa kaldı, iki ya da
+    daha çok kompartımanda büyüklükleri uzman incelemesi
+    bykhy_patient_floor_compartments, 49/1-b; hastanede adı Koridor olan mahalin en dar
+    yeri — iki yanında kendi genişliğinde daire kalan en kısa kesit — 2,00 m'den azsa
+    bykhy_hospital_corridor, 49/2): MCP ve Python'da regulation grubu bütün çizim için
+    istenince bulguları listededir (paiy_elevator_missing, paiy_elevator_not_serving,
+    yerel yönetmelikle çelişkide regulation_conflict; başvuru tarihi yok ya da
+    okunamıyor ve sonuç ona göre değişiyorsa state: missingData ile
     regulation_date_needed; metni kural setinde olmayan gün ya da yalnız teknik hacimli
     bodrum state: expertReview) ve her maddenin hâli ve sonucu ruleSet'tedir (passed,
     failed, missingData, expertReview, outOfScope); kural çalışmazsa
@@ -407,25 +410,28 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         en az 60 dakika bykhy_hotel_room_wall ve ikiden çok katlı otelde her katta 2 çıkış
         bykhy_hotel_storey_exits, yatak sayısı çizimde olmadığından yapı yüksekliği 15,50
         m'nin altındaysa eksik veri, 50/1-a; iç koridora açılan kapı en az 30 dakika ve
-        kendiliğinden kapanır bykhy_hotel_room_door, 50/1-b; fabrika, imalathane, mağaza,
-        dükkân, depo, büro ve ayakta tedavi merkezinde zemin üstü her katta 2 bağımsız kaçış
-        merdiveni, tek merdivende yapı yüksekliği 21,50 m ya da katın kişisi 50 tutmazsa
-        kaldı, tutarsa kaçış uzaklıkları, yanmaz ürünler ve kullanılan maddeler uzman
-        incelemesi bykhy_single_stair, 52) ve yağmurlama zorunluluğu da (proje yağmurlamayı
-        beyan etmemişse settings.arch.sprinklers: 30,50 m'yi aşan konut harici ve karma
-        bina, 51,50 m'yi geçen konut, alanlarının toplamı 600 m²'yi aşan kapalı otopark, 100
-        odayı aşan katlı konaklama yapısı — odası 100'ü geçmeyende yatak sayısı çizimde
-        olmadığından eksik veri —, 21,50 m'yi aşan yataklı tesis, 2000 m²'yi aşan katlı
-        mağaza, alışveriş, ticaret ve eğlence yeri, 1000 m²'yi aşan parlayıcı madde yapısı —
-        uzman incelemesi —; alanlar mahallerin dış konturuyla bykhy_sprinklers_required,
-        BYKHY 96/2) ve sağlık yapıları da (hastanenin ve bakımevinin 300 m²'yi aşan yatılan
-        katı tek yangın kompartımanıysa kaldı, iki ya da daha çok kompartımanda büyüklükleri
-        uzman incelemesi bykhy_patient_floor_compartments, 49/1-b; hastanede adı Koridor
-        olan mahalin en dar yeri — iki yanında kendi genişliğinde daire kalan en kısa kesit
-        — 2,00 m'den azsa bykhy_hospital_corridor, 49/2): MCP ve Python'da regulation grubu
-        bütün çizim için istenince bulguları listededir (paiy_elevator_missing,
-        paiy_elevator_not_serving, yerel yönetmelikle çelişkide regulation_conflict; başvuru
-        tarihi yok ya da okunamıyor ve sonuç ona göre değişiyorsa state: missingData ile
+        kendiliğinden kapanır bykhy_hotel_room_door, 50/1-b; otel, motel ve pansiyonda
+        odanın en uzak noktasından kapısına yürüyüş 15 m'yi aşan tek kapılı oda, tamamı
+        yağmurlamalı otelde 20 m'yi aşan oda bykhy_hotel_room_distance, 50/3; fabrika,
+        imalathane, mağaza, dükkân, depo, büro ve ayakta tedavi merkezinde zemin üstü her
+        katta 2 bağımsız kaçış merdiveni, tek merdivende yapı yüksekliği 21,50 m ya da katın
+        kişisi 50 tutmazsa kaldı, tutarsa kaçış uzaklıkları, yanmaz ürünler ve kullanılan
+        maddeler uzman incelemesi bykhy_single_stair, 52) ve yağmurlama zorunluluğu da
+        (proje yağmurlamayı beyan etmemişse settings.arch.sprinklers: 30,50 m'yi aşan konut
+        harici ve karma bina, 51,50 m'yi geçen konut, alanlarının toplamı 600 m²'yi aşan
+        kapalı otopark, 100 odayı aşan katlı konaklama yapısı — odası 100'ü geçmeyende yatak
+        sayısı çizimde olmadığından eksik veri —, 21,50 m'yi aşan yataklı tesis, 2000 m²'yi
+        aşan katlı mağaza, alışveriş, ticaret ve eğlence yeri, 1000 m²'yi aşan parlayıcı
+        madde yapısı — uzman incelemesi —; alanlar mahallerin dış konturuyla
+        bykhy_sprinklers_required, BYKHY 96/2) ve sağlık yapıları da (hastanenin ve
+        bakımevinin 300 m²'yi aşan yatılan katı tek yangın kompartımanıysa kaldı, iki ya da
+        daha çok kompartımanda büyüklükleri uzman incelemesi
+        bykhy_patient_floor_compartments, 49/1-b; hastanede adı Koridor olan mahalin en dar
+        yeri — iki yanında kendi genişliğinde daire kalan en kısa kesit — 2,00 m'den azsa
+        bykhy_hospital_corridor, 49/2): MCP ve Python'da regulation grubu bütün çizim için
+        istenince bulguları listededir (paiy_elevator_missing, paiy_elevator_not_serving,
+        yerel yönetmelikle çelişkide regulation_conflict; başvuru tarihi yok ya da
+        okunamıyor ve sonuç ona göre değişiyorsa state: missingData ile
         regulation_date_needed; metni kural setinde olmayan gün ya da yalnız teknik hacimli
         bodrum state: expertReview) ve her maddenin hâli ve sonucu ruleSet'tedir (passed,
         failed, missingData, expertReview, outOfScope); kural çalışmazsa

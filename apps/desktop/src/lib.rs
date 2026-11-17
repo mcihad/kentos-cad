@@ -1094,6 +1094,9 @@ mod use_class_tests;
 #[path = "tests/hospital_tests.rs"]
 mod hospital_tests;
 #[cfg(test)]
+#[path = "tests/hotel_room_tests.rs"]
+mod hotel_room_tests;
+#[cfg(test)]
 #[path = "tests/arch_ifc_tests.rs"]
 mod arch_ifc_tests;
 #[cfg(test)]

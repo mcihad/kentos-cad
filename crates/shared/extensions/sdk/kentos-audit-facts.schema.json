@@ -1827,6 +1827,14 @@
           "description": "An escape stair's room (named or used as Merdiven, no dwelling unit's own): its enclosure across the storeys is\nno storey's compartment (docs/adr/8086).",
           "type": "boolean"
         },
+        "toDoor": {
+          "description": "Its walk from its farthest point (0.40 m in front of its walls, BYKHY 32/6) to its nearest door or gap without a\nsill, inside it, m (docs/adr/8111; a hotel room's, 50/3); none for a room without one, a void or a broken room.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
         "uid": {
           "type": "string"
         }

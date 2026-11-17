@@ -17,6 +17,8 @@
 //! - **Round a room's inner corners** a route keeps the same 0.40 m: the regulation gives the start's distance only.
 //! - **One way (tek yön):** the part of the route to the nearest exit it shares with the route to the nearest other
 //!   exit; all of it when the storey has one exit.
+//! - **To its own door** (docs/adr/8111; BYKHY 50/3, a hotel room's): from a room's farthest point to its nearest door
+//!   or gap without a sill, inside it.
 //!
 //! A route is the drawing's measure, not an approval.
 
@@ -74,6 +76,8 @@ pub struct RoomEscape {
     pub has_entrance: bool,
     /// Its passages (doors, gaps without a sill), counted: its exits for 39/2.
     pub passages: usize,
+    /// From its farthest point to its nearest passage, inside it (docs/adr/8111; 50/3); none without a passage.
+    pub door: Option<Route>,
 }
 
 /// A dwelling unit's entrance: from its door's outer side to the nearest storey exit (48/4).
@@ -452,6 +456,8 @@ pub fn escape(doc: &Document) -> Escape {
         // A unit's entrances: its room's side node, the other side's node (none: the outside), the door.
         let mut entrances: Vec<(String, usize, Option<usize>, Slot, V)> = Vec::new();
         let mut doors_of: BTreeMap<usize, usize> = BTreeMap::new();
+        // Each room's side of its passages, by node.
+        let mut own_doors: BTreeMap<usize, Vec<usize>> = BTreeMap::new();
         let cross = |g: &mut Graph, a: V, b: V| -> (Option<usize>, Option<usize>) {
             let (ra, rb) = (room_at(&level, a), room_at(&level, b));
             let na = ra.map(|r| g.node(a, r));
@@ -475,6 +481,7 @@ pub fn escape(doc: &Document) -> Escape {
             let (n1, n2) = cross(&mut g, s1, s2);
             for n in [n1, n2].into_iter().flatten() {
                 *doors_of.entry(g.room[n]).or_default() += 1;
+                own_doors.entry(g.room[n]).or_default().push(n);
             }
             let door = crate::identity::Uuid::parse_str(&p.uid)
                 .ok()
@@ -670,6 +677,23 @@ pub fn escape(doc: &Document) -> Escape {
                         .max_by(|a, b| a.length.total_cmp(&b.length))
                 })
                 .flatten();
+            // To its own nearest passage, inside it (50/3).
+            let door = own_doors
+                .get(&i)
+                .map(|mine| {
+                    let (d, next) = g.reach(mine, |r| r == i);
+                    starts
+                        .iter()
+                        .filter_map(|&p| {
+                            best(&g, room, nodes, &d, p).map(|(k, l)| {
+                                let mut path = vec![p];
+                                path.extend(chain(k, &next).iter().map(|&n| g.at[n]));
+                                Route { path, length: l }
+                            })
+                        })
+                        .max_by(|a, b| a.length.total_cmp(&b.length))
+                })
+                .flatten();
             out.rooms.push(RoomEscape {
                 room: room.slot,
                 level: level.clone(),
@@ -679,6 +703,7 @@ pub fn escape(doc: &Document) -> Escape {
                 entrance,
                 has_entrance: !doors.is_empty(),
                 passages: doors_of.get(&i).copied().unwrap_or(0),
+                door,
             });
         }
         // Each dwelling unit's entrance: from its door's outer side to the nearest exit (48/4).
