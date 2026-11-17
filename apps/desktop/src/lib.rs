@@ -1554,6 +1554,9 @@ mod dated_sizes_tests;
 #[path = "tests/plan_notes_tests.rs"]
 mod plan_notes_tests;
 #[cfg(test)]
+#[path = "tests/zone_tests.rs"]
+mod zone_tests;
+#[cfg(test)]
 #[path = "tests/fire_escape_tests.rs"]
 mod fire_escape_tests;
 #[cfg(test)]

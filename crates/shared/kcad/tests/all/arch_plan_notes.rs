@@ -26,3 +26,15 @@ fn the_plan_notes_round_trip_under_arch_data_11() {
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
     assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the notes read back");
 }
+
+/// Architecture data 12 (docs/adr/8085): the parcel's area's use is written with `modules.arch = 12` and read back.
+#[test]
+fn the_zone_round_trips_under_arch_data_12() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_zone(&doc));
+    doc.settings.arch.get_or_insert_with(Default::default).zone = Some(kentos_contracts::Zone::Mixed);
+    assert!(kentos_kcad::uses_zone(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_ZONE);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the zone reads back");
+}

@@ -274,6 +274,11 @@
       verisidir: Proje ayarları › Mimari › Plan notları (konu, değer, kaynak); `.kcad`'da mimari verisi 11.
     - KentOS notun metnini sayıya çevirmez; değeri planı okuyan mimar yazar. İlk konular zemin kat ve kat yüksekliği:
       not bağladığı katta 28/1-c ve Sivas'ın önüne geçer, onların değeri yanında yazılır; büro binasında da okunur.
+  - **Bölge (17 Kasım 2026; [ADR 8085](../adr/8085-zone-storey-heights.md), K93–K97):**
+    - Parselin plandaki kullanımı İmar durumu'nda seçilir (konut, zemin katı ticaretli konut, karma, ticaret, öbür;
+      mimari verisi 12); CBS kararı gösterilir, yazılmaz.
+    - Kat yükseklikleri bölgenin bendiyle (PAİY ve Sivas 28/1-a, b, c, ç); asma kat zemin katın parçası; karma alanda
+      konut mahali olan kat konut katı. Bölgesiz konut projesi konut alanı sayılır, konut dışı bina eksik veri.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

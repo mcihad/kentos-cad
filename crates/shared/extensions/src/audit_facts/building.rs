@@ -41,6 +41,10 @@ pub struct BuildingFacts {
     /// regulation (PAİY 69/3), in the project's order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub plan_notes: Vec<PlanNoteFacts>,
+    /// What the parcel's plan uses its area for, as the project says it (docs/adr/8085): `residential`,
+    /// `residentialShops`, `mixed`, `commercial`, `other`; absent: not said.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zone: Option<String>,
     /// The rooms that carry people as the escape rules count them (BYKHY Ek-5/A, docs/adr/8035), by persistent id.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rooms: Vec<RoomPeople>,
@@ -292,6 +296,14 @@ pub struct StoreyHolds {
     /// program is a dwelling's by them (docs/adr/8083).
     #[serde(default)]
     pub bedrooms: u32,
+    /// Rooms on it of an independent unit whose nature is a dwelling's (Daire, Mesken, Konut) or not given: a storey of
+    /// homes, as PAİY 28/1-b reads a mixed area's storeys (docs/adr/8085).
+    #[serde(default)]
+    pub dwelling_rooms: u32,
+    /// It is a mezzanine (its name says Asma kat): part of the ground storey it stands in (PAİY 4/1-d, 28/1-a, b, ç's
+    /// “asma katlı zemin kat”; docs/adr/8085).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub mezzanine: bool,
     /// Elevators on it: elevator shafts (a space named Asansör, not its lobby) and Asansör blocks standing on it.
     pub elevators: u32,
     /// The rooms counted on it, by their persistent ids in order: what a finding about the storey names.

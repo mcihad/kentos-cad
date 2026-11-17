@@ -4589,6 +4589,8 @@ __all__ = [
     "XyzVerticesName",
     "XyzWithoutZ",
     "XyzWithoutZName",
+    "Zone",
+    "ZoneName",
     "Zoning",
     "ZoningCheck",
     "ZoningChecked",

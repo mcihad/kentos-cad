@@ -1,5 +1,14 @@
 # Değişiklikler
 
+## 0.9.0 — 17 Kasım 2026
+
+- Bölge (docs/adr/8085): kat yükseklikleri parselin plandaki kullanımına göre (`building.zone`): ticaret alanı 28/1-a,
+  karma alan 28/1-b (öbür katlar konutsa 3,60, değilse 4,00), konut alanı 28/1-c, zemin katında ticaret yapılabilen konut
+  alanı 28/1-ç (asma katlı zemin katın 5,5'i 12.8.2023'te kalktı); öbür kullanımda 28/1 sınır vermez. Sivas 28/1-a, b, ç
+  (zeminde 5,00, asma katlı 6,50). Asma kat (`storeys[].mezzanine`) zemin katın parçası: asma katlı zemin katın
+  yüksekliği üstündeki ilk kata kadar. Bölge yazılmamışsa konut projesinde konut alanı sayılır, öbüründe eksik veri.
+  12 bağımsız durum; 4 eski durumun beklentisi bölgeyle değişti.
+
 ## 0.8.0 — 17 Kasım 2026
 
 - Plan notu katmanı (docs/adr/8084): projenin yazdığı parsel plan notları (`building.planNotes`: zemin kat yüksekliği,

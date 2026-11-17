@@ -288,6 +288,8 @@ pub enum Event {
     ArchLines(Option<kentos_commands::LineGroups>),
     /// İmar durumu's Yerel imar yönetmeliği chosen (docs/adr/8034).
     ArchLocalRules(Option<kentos_commands::LocalRules>),
+    /// İmar durumu's Bölge chosen (docs/adr/8085).
+    ArchZone(Option<kentos_commands::Zone>),
     /// Yangın güvenliği's sprinkler system switched (docs/adr/8035).
     ArchSprinklers(bool),
     /// Plan notları: a row changed or taken away, Plan notu ekle (docs/adr/8084).
@@ -650,6 +652,7 @@ impl App {
             Event::ArchZoning(field, text) => s.arch_zoning.edit(field, text),
             Event::ArchLines(lines) => s.arch_lines = lines,
             Event::ArchLocalRules(rules) => s.arch_zoning.local = rules,
+            Event::ArchZone(zone) => s.arch_zoning.zone = zone,
             Event::ArchSprinklers(on) => s.arch_zoning.sprinklers = on,
             Event::ArchPlanNote(i, edit) => super::plan_notes::edit(&mut s.arch_zoning.plan_notes, i, edit),
             Event::AddPlanNote => {
@@ -1152,6 +1155,7 @@ impl App {
                     &s.arch_zoning,
                     |f, t| event(Event::ArchZoning(f, t)),
                     |r| event(Event::ArchLocalRules(r)),
+                    |z| event(Event::ArchZone(z)),
                     crate::zoning_badge::summary(&doc.model),
                     crate::zoning_badge::plan_lines(&doc.model),
                 ),

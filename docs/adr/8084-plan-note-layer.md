@@ -89,4 +89,4 @@
 - **Plan kararlarının değerleri:** ADR 8072 §5'in kararları (KAKS, TAKS, KatAdedi, Hmax) kaynağıyla İmar durumu'na ya da
   plan notlarına bir onayla alınsın.
 - **Planın onay günü:** notun planının onay günü başvuru gününden sonraysa uyarı; planın değişikliği sürümlensin.
-- **Bölge türü** (sıradaki madde): 28/1-a, b, ç ve 28/1-c'nin konut bölgesi varsayımı.
+- **Bölge türü:** 28/1-a, b, ç ve 28/1-c'nin konut bölgesi varsayımı [ADR 8085](8085-zone-storey-heights.md)'te yapıldı.

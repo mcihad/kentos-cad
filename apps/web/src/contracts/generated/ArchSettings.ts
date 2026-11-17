@@ -17,6 +17,7 @@ import type { PlanNote } from "./PlanNote";
 import type { SitePlan } from "./SitePlan";
 import type { SpaceMethod } from "./SpaceMethod";
 import type { WallDetail } from "./WallDetail";
+import type { Zone } from "./Zone";
 import type { Zoning } from "./Zoning";
 
 /**
@@ -126,8 +127,13 @@ formAnswers?: Array<FormAnswer>,
  */
 sprinklers?: boolean, 
 /**
- * Plan notları (docs/adr/8084; `.kcad` schema 256): the parcel's plan notes that give a value the regulation's
+ * Plan notları (docs/adr/8084; `.kcad` Mimari data 11): the parcel's plan notes that give a value the regulation's
  * rules read over the municipality's and the national one (PAİY 69/3), as the architect writes them from the
  * plan, each with where it stands. Empty: none given.
  */
-planNotes?: Array<PlanNote>, };
+planNotes?: Array<PlanNote>, 
+/**
+ * Bölge (docs/adr/8085; `.kcad` Mimari data 12): what the parcel's plan uses its area for, as PAİY 28/1 reads a
+ * storey's height by it (a, b, c, ç). Absent: not said; a dwelling's project is read in a dwelling area.
+ */
+zone?: Zone, };

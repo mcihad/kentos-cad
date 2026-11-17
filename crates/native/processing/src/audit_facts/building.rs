@@ -33,6 +33,8 @@
 //!   width (`OpeningSizes::clear`) and height (its head over its sill), what stands on its two sides (a room by its
 //!   program group, a void, nothing) and whether one of them is a toilet (`kind_of`) or a balcony (Balkon).
 //! - **The parcel's plan notes** (docs/adr/8084): the project's `planNotes` as written, the measure by its name.
+//! - **The zone** (docs/adr/8085): the project's `zone` by its name; each storey's rooms of a dwelling unit and whether
+//!   its name says Asma kat (a mezzanine, part of the ground storey).
 
 use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
@@ -65,6 +67,8 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             name: l.name.clone(),
             elevation: l.elevation,
             height: height_of(&l.id),
+            // A mezzanine by its name (docs/adr/8085), as the inside heights read it (28/4).
+            mezzanine: kentos_domain::room_names::has(&kentos_domain::room_names::words(Some(&l.name), None), "ASMA"),
             ..StoreyHolds::default()
         })
         .collect();
@@ -101,6 +105,10 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         }
         if kind == Some(RoomKind::Bedroom) {
             storey.bedrooms += 1;
+        }
+        let unit = x.unit.as_deref().and_then(|u| program.unit(u));
+        if unit.is_some_and(|u| u.kind == UnitKind::Unit && dwelling_nature(u.nature.as_deref())) {
+            storey.dwelling_rooms += 1;
         }
     }
     let (rooms, doors) = people_and_doors(doc, &mut storeys);
@@ -171,6 +179,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             .iter()
             .map(|n| PlanNoteFacts { key: n.key.name().to_owned(), value: n.value, source: n.source.clone() })
             .collect(),
+        zone: arch.zone.map(|z| z.name().to_owned()),
         rooms,
         doors,
         limits,

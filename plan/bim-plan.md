@@ -590,8 +590,8 @@ aynı çizim 30.6.2026'da geçer, 2.7.2026'da 34/8'den kalır, tarihsiz eksik ve
 (`fire_escape_tests`). İç yükseklik ADR 8040 §3'te Rust'ta yapılmıştı.
 **Kalan:** kompartımanda katlar arası açıklıklar, 24/4 ve IFC grubu (ADR 8081 §6); Ek-3'te çatılar, şaftlar, asma
 tavan, asansör kapıları ve taşıyıcı duvar (ADR 8082 §6);
-erişilebilir yol (TS 9111 metni); plan notlarının öbür konuları (ADR 8084 §6); bölge türü (28/1-a, b, ç ve 28/1-c'nin
-konut bölgesi varsayımı);
+erişilebilir yol (TS 9111 metni); plan notlarının öbür konuları (ADR 8084 §6); blok başına bölge ve 28/1-d (ADR 8085
+§6);
 konut dışı (B22); 39/1-b'nin çift kanadı (ADR 8083 §6);
 emsalde 22/1-j, 22/1-m ve 5/8'in bodrum listesi (ADR 8079 §6).
 **Yapıldı (17 Kasım 2026, ADR 8078 §6, K64):** uzman onayı kayıtlı: paketin bulgusu `cad.arch.exceptions`'a verilerek
@@ -633,6 +633,11 @@ belediye → parsel): parselin plan notları projede (Proje ayarları › Mimari
 verisi 11), olgularda ve kat yüksekliği kuralında; not bağladığı ölçüde Sivas'ın ve PAİY'nin önüne geçer (69/3; 28/1
 plana bırakır), yönetmeliklerin değeri yanında yazılır; kural setinde notun satırı. İlk konular zemin kat ve kat
 yüksekliği; KentOS notun metnini sayıya çevirmez. 7 bağımsız durum; masaüstünde notlar yazılır, kaydedilir, bağlar.
+**Yapıldı (17 Kasım 2026, [ADR 8085](../docs/adr/8085-zone-storey-heights.md), K93–K97):** bölge türü: parselin plandaki
+kullanımı İmar durumu'nda seçilir (konut, zemin katı ticaretli konut, karma, ticaret, öbür; mimari verisi 12); kat
+yükseklikleri bölgenin bendiyle (PAİY 28/1-a, b, c, ç; Sivas'ınkiler), asma kat zemin katın parçası (asma katlı zemin
+kat), karma alanda konut katı ayrı; bölge yazılmamışsa konut projesinde konut alanı, öbüründe eksik veri. 12 bağımsız
+durum; masaüstünde Ticaret alanı seçilince zemin kat 4,50'ye kalır, Sivas'la çelişki.
 
 **Kullanıcı sonucu:** Denetim, başvuru tarihinde yürürlükte olan kuralları uygular. Her bulgu geçti, kaldı, eksik veri,
 uzman incelemesi ya da kapsam dışıdır. Yorum isteyen konu kendiliğinden "uygun" sayılmaz. Dayanak Z9; Ek A.
@@ -822,7 +827,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B12b ~ | IFC görüntüleyici | IFC-12 | Dosya kendi penceresinde: ağaç, özellikler, kesit; dışa aktarılan tek tıkla görülür (ilk dilim ADR 8073; gerçek pencerede kabul ve kesitin tutamakları kaldı) |
 | B13 ~ | Yazılmış dosyadan doğrulama, IDS ve kontrol formu | IFC-08 | 21 sorunun kanıtı dosyadan (ADR 8074; ikinci okuyucu ve IfcTester KentOS'la aynı; son yazılan dosya, beş sonuç raporu ve bütçe kaldı) |
 | B14 ~ | BIM ruhsat paketi | BIM-14 | Tek komut, tek revizyon, tek paket (ADR 8075; gerçek paket ADR 8076; müellifin cevapları çizimde ve basılan formda ADR 8077; 2+1 de yayımlanıyor, MCP'de uçtan uca, eskiyen cevap durdurur ADR 8077 §7) |
-| B15 ~ | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti (ADR 8078: asansör 34/1 ve 34/8'in hâlleri, eksik veri ve uzman incelemesi, uzman onayı, kaçış yolu kapıları BYKHY 47; ADR 8079: emsalin 22/1-ç, -f, -k, -l sınırları ve koşulları, kat ara toplamı; ADR 8080: merdiven altı 1,80 m; ADR 8081: kompartıman (24/2, 24/6, 24/7); ADR 8082: Ek-3 dayanımları; ADR 8083: kat yüksekliği 28/1-c ve kapılar 39/1 tarihli hâlleriyle; ADR 8084: plan notu katmanı; çatı, şaft ve taşıyıcı duvar kaldı) |
+| B15 ~ | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti (ADR 8078: asansör 34/1 ve 34/8'in hâlleri, eksik veri ve uzman incelemesi, uzman onayı, kaçış yolu kapıları BYKHY 47; ADR 8079: emsalin 22/1-ç, -f, -k, -l sınırları ve koşulları, kat ara toplamı; ADR 8080: merdiven altı 1,80 m; ADR 8081: kompartıman (24/2, 24/6, 24/7); ADR 8082: Ek-3 dayanımları; ADR 8083: kat yüksekliği 28/1-c ve kapılar 39/1 tarihli hâlleriyle; ADR 8084: plan notu katmanı; ADR 8085: bölgeye göre kat yükseklikleri; çatı, şaft ve taşıyıcı duvar kaldı) |
 | B16 | Bilgi yönetimi ve teslim kaydı | BIM-15 | Teslim ve iade kayıtlı |
 | B17 | Büro ve belediye pilotu | BIM-16, IFC-11 | İdarenin yazılı cevabı |
 

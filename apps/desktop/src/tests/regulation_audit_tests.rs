@@ -275,7 +275,10 @@ fn a_small_dwelling_s_rooms_corridor_kitchen_and_storey_are_said() {
         messages[1].starts_with("Otopark: gereken 1 yer, çizimde 0"),
         "{found:?}"
     );
-    assert_eq!(dated_sizes(&mut app), Vec::new(), "an office's storey is not 28/1-c's");
+    // An office's storey is not 28/1-c's: with no zone written its limit turns on the plan's use (docs/adr/8085).
+    let storey = dated_sizes(&mut app);
+    assert_eq!(storey.len(), 1, "{storey:?}");
+    assert!(storey[0].1.starts_with("Bölge yazılmamış: konut projesi olmayan binada"), "{storey:?}");
 }
 
 /// A blank Mimari drawing.

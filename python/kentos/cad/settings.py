@@ -60,12 +60,16 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
     parselin plan notları (planNotes: key groundStoreyHeight zemin kat yüksekliği ya da
     storeyHeight kat yüksekliği, en çok; value m, 0–20; source notun yeri, boş olmaz;
     her konu bir kez; Denetim'in mevzuat kuralları onları yerel yönetmeliğin ve PAİY'nin
-    önüne koyar). Liste değişiminde mevcut kat ve tercihleri kopyalayın; arch iç içe
-    yama değildir. Listeler öneridir; mevcut mahal adı/numarası/kullanımı değişmez, önek
-    yalnız açık seçimle başlangıca alınır. Ayarlar projenin düzenlemesidir, geri alma
-    adımı değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin
-    değildir; bilinmeyen anahtar reddedilir. expectedRevision verilmişse ve çizim o
-    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    önüne koyar) ve parselin bölgesi (zone: residential konut alanı, residentialShops
+    zemin katında ticaret yapılabilen konut alanı, mixed karma alan, commercial ticaret
+    alanı, other 28/1'in saymadığı kullanım; kat yüksekliğini PAİY 28/1-c, ç, b, a okur;
+    yoksa konut projesinde konut alanı sayılır). Liste değişiminde mevcut kat ve
+    tercihleri kopyalayın; arch iç içe yama değildir. Listeler öneridir; mevcut mahal
+    adı/numarası/kullanımı değişmez, önek yalnız açık seçimle başlangıca alınır. Ayarlar
+    projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve cihazın ayarları
+    (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar reddedilir.
+    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+    conflict olur.
     """
     __slots__ = ()
     id = "cad.settings.set"
@@ -127,13 +131,16 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         kat kimliğine bağlı spaceNumberPrefixes ve parselin plan notları (planNotes: key
         groundStoreyHeight zemin kat yüksekliği ya da storeyHeight kat yüksekliği, en çok;
         value m, 0–20; source notun yeri, boş olmaz; her konu bir kez; Denetim'in mevzuat
-        kuralları onları yerel yönetmeliğin ve PAİY'nin önüne koyar). Liste değişiminde
-        mevcut kat ve tercihleri kopyalayın; arch iç içe yama değildir. Listeler öneridir;
-        mevcut mahal adı/numarası/kullanımı değişmez, önek yalnız açık seçimle başlangıca
-        alınır. Ayarlar projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve
-        cihazın ayarları (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar
-        reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-        yazılmaz, sonuç conflict olur.
+        kuralları onları yerel yönetmeliğin ve PAİY'nin önüne koyar) ve parselin bölgesi
+        (zone: residential konut alanı, residentialShops zemin katında ticaret yapılabilen
+        konut alanı, mixed karma alan, commercial ticaret alanı, other 28/1'in saymadığı
+        kullanım; kat yüksekliğini PAİY 28/1-c, ç, b, a okur; yoksa konut projesinde konut
+        alanı sayılır). Liste değişiminde mevcut kat ve tercihleri kopyalayın; arch iç içe
+        yama değildir. Listeler öneridir; mevcut mahal adı/numarası/kullanımı değişmez, önek
+        yalnız açık seçimle başlangıca alınır. Ayarlar projenin düzenlemesidir, geri alma
+        adımı değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin
+        değildir; bilinmeyen anahtar reddedilir. expectedRevision verilmişse ve çizim o
+        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

@@ -100,6 +100,15 @@ pub struct ZoningTexts {
     pub sprinklers: bool,
     /// Plan notları (docs/adr/8084), a row each.
     pub plan_notes: Vec<super::plan_notes::Note>,
+    /// Bölge: the parcel's area's use in the plan (docs/adr/8085).
+    pub zone: Option<kentos_commands::Zone>,
+}
+
+/// Bölge's choices (docs/adr/8085): not said, or the plan's use.
+fn zone_choices() -> Vec<(Option<kentos_commands::Zone>, &'static str)> {
+    std::iter::once((None, "Yazılmamış (konut projesinde konut alanı sayılır)"))
+        .chain(kentos_commands::Zone::ALL.into_iter().map(|z| (Some(z), z.label())))
+        .collect()
 }
 
 /// Yerel imar yönetmeliği's choices (docs/adr/8034): none, or a municipality's.
@@ -136,6 +145,7 @@ impl ZoningTexts {
             local: arch.and_then(|a| a.local_rules),
             sprinklers: arch.is_some_and(|a| a.sprinklers),
             plan_notes: super::plan_notes::rows(arch.map_or(&[][..], |a| a.plan_notes.as_slice())),
+            zone: arch.and_then(|a| a.zone),
         }
     }
 
@@ -172,6 +182,7 @@ pub(super) fn zoning_view<'a>(
     t: &'a ZoningTexts,
     on: impl Fn(ZoningField, String) -> Message + Copy + 'a,
     on_local: impl Fn(Option<kentos_commands::LocalRules>) -> Message + 'a,
+    on_zone: impl Fn(Option<kentos_commands::Zone>) -> Message + 'a,
     summary: Vec<(String, String, bool)>,
     plan: Vec<(String, bool)>,
 ) -> Element<'a, Message> {
@@ -207,6 +218,22 @@ pub(super) fn zoning_view<'a>(
             .spacing(8)
             .align_y(Center),
         )
+        .push({
+            let zones = zone_choices();
+            let at = zones.iter().position(|(z, _)| *z == t.zone);
+            row![
+                container(label::body("Bölge")).width(typography::scaled(140.0)),
+                container(
+                    Select::new(zones.iter().map(|(_, l)| Choice::new(*l)), at, move |i| {
+                        on_zone(zone_choices().get(i).and_then(|(z, _)| *z))
+                    })
+                    .searchable(false)
+                )
+                .width(typography::scaled(330.0)),
+            ]
+            .spacing(8)
+            .align_y(Center)
+        })
         .push(label::caption(
             "İmar durumundan. Emsal, emsale dahil mahallerin brüt alanının (katlar alanı) parsel alanına oranıdır; \
              emsal harici mahaller (otopark, sığınak, kazan dairesi, balkon …) parselin emsal alanının %30'unu \
@@ -215,7 +242,9 @@ pub(super) fn zoning_view<'a>(
              Parsel ve bahçe mesafeleri Mimari › Proje ▾ › Parsel ve bahçe mesafeleri ile verilir. Yerel imar \
              yönetmeliği seçilince Denetim › Mevzuat belediyenin değerlerini de okur: sıkı olan bağlar, ölçünün \
              belediyeye uyup Planlı Alanlar İmar Yönetmeliği'ne uymadığı yer çelişki olarak söylenir (idare karar \
-             verir). Planın notunun değiştirdiği değerler aşağıda, Plan notları'na yazılır. KentOS bir onay vermez.",
+             verir). Bölge, parselin planda ayrıldığı kullanımdır: Denetim › Mevzuat kat yüksekliklerini ona göre okur \
+             (Planlı Alanlar İmar Yönetmeliği 28/1). Planın notunun değiştirdiği değerler aşağıda, Plan notları'na \
+             yazılır. KentOS bir onay vermez.",
         ));
     for (words, value, over) in summary {
         body = body.push(
@@ -387,8 +416,9 @@ pub fn read(
     // The municipality's regulation the audit reads (docs/adr/8034) and the sprinkler system (docs/adr/8035).
     let local_rules = zoning.local;
     let sprinklers = zoning.sprinklers;
-    // The parcel's plan notes (docs/adr/8084).
+    // The parcel's plan notes (docs/adr/8084) and its area's use (docs/adr/8085).
     let plan_notes = super::plan_notes::read(&zoning.plan_notes)?;
+    let zone = zoning.zone;
     let site = {
         let mut s = choices.and_then(|a| a.site.clone()).unwrap_or_default();
         s.datum = datum;
@@ -456,6 +486,7 @@ pub fn read(
         local_rules,
         sprinklers,
         plan_notes,
+        zone,
         // The building's fire protection class (docs/adr/8068) and the form's answers (docs/adr/8077) are their own
         // windows': kept as the project has them.
         performance: choices.and_then(|a| a.performance.clone()),

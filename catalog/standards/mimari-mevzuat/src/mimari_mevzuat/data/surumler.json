@@ -1,7 +1,7 @@
 {
   "format": "kentos.ruleVersions",
   "version": 1,
-  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de, merdiven altınınki 8080 §1'de, kompartımanlarınki 8081 §1'de, dayanımlarınki 8082 §1'de, kat yüksekliği ve kapılarınki 8083 §1'de).",
+  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de, merdiven altınınki 8080 §1'de, kompartımanlarınki 8081 §1'de, dayanımlarınki 8082 §1'de, kat yüksekliği ve kapılarınki 8083 §1'de, bölgelerin kat yükseklikleri 8085 §1'de).",
   "regulations": {
     "PAİY": {
       "name": "Planlı Alanlar İmar Yönetmeliği",
@@ -825,6 +825,140 @@
           "reduced": 0.8,
           "text": "Bütün yapılarda; a) Kapı yükseklikleri 2.10 metreden, b) Kapı net (temiz) genişlikleri bina giriş kapılarında 1.50 metreden, kapıların çift kanatlı olması halinde bir kanat 1.00 metreden, c) Bağımsız bölüm giriş kapılarında 1.00 metreden, diğer mahallerin kapılarında 0.90 metreden, az olamaz. Balkon ve tuvalet kapıları 0.80 metreye düşürülebilir. ç) Döner kapılar, belirtilen ölçülerde yapılacak normal kapıların yanında ilave olarak bulunabilir.",
           "source": "RG 10.11.2022/32009, 39 uncu maddenin birinci fıkrası (docs/adr/8034, 8083 §1)."
+        }
+      ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "28/1-a",
+      "title": "Kat yüksekliği (ticaret alanı)",
+      "transition": "Yönetmelik 1.10.2017'de yürürlüğe girdi (71 inci madde); derlenmiş metinde bu bentte değişiklik işareti yok.",
+      "versions": [
+        {
+          "id": "2017",
+          "from": "2017-10-01",
+          "until": null,
+          "label": "1.10.2017",
+          "gazette": "3.7.2017/30113",
+          "ground": 4.5,
+          "groundMezzanine": 5.5,
+          "other": 4.0,
+          "text": "Kat yükseklikleri uygulama imar planında daha fazla belirlenmemiş ise döşeme üst kotundan döşeme üst kotuna olmak üzere en fazla; a) Ticaret bölgelerinde; zemin katlarda 4.50 metre, asma katlı zemin katlarda 5.50 metre; diğer katlarda 4.00 metre, … kabul edilerek uygulama yapılabilir.",
+          "source": "RG 3.7.2017/30113, 28 inci maddenin birinci fıkrası (Lexpera'nın Resmî Gazete metni); 1.10.2017'de yürürlüğe girdi; docs/adr/8085 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "28/1-b",
+      "title": "Kat yüksekliği (karma alan)",
+      "transition": "Yönetmelik 1.10.2017'de yürürlüğe girdi (71 inci madde); derlenmiş metinde bu bentte değişiklik işareti yok.",
+      "versions": [
+        {
+          "id": "2017",
+          "from": "2017-10-01",
+          "until": null,
+          "label": "1.10.2017",
+          "gazette": "3.7.2017/30113",
+          "ground": 4.5,
+          "groundMezzanine": 5.5,
+          "otherDwelling": 3.6,
+          "otherNonDwelling": 4.0,
+          "text": "Kat yükseklikleri uygulama imar planında daha fazla belirlenmemiş ise döşeme üst kotundan döşeme üst kotuna olmak üzere en fazla; b) Ticaretin de yapılabildiği karma alanlarda; zemin katlarda 4.50 metre, asma katlı zemin katlarda 5.50 metre; diğer katlar konut ise 3.60 metre konut harici ise 4.00 metre, … kabul edilerek uygulama yapılabilir.",
+          "source": "RG 3.7.2017/30113, 28 inci maddenin birinci fıkrası (Lexpera'nın Resmî Gazete metni); 1.10.2017'de yürürlüğe girdi; docs/adr/8085 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "28/1-ç",
+      "title": "Kat yüksekliği (zemin katında ticaret yapılabilen konut alanı)",
+      "transition": "Değişiklik yönetmeliği (RG 12.8.2023/32277) yayımı günü yürürlüğe girdi (4 üncü madde); geçici maddesi (Geçici 6) 28/1'i saymaz: başvuru gününde yürürlükteki hâl okunur.",
+      "versions": [
+        {
+          "id": "2017",
+          "from": "2017-10-01",
+          "until": "2023-08-11",
+          "label": "1.10.2017",
+          "gazette": "3.7.2017/30113",
+          "ground": 4.5,
+          "groundMezzanine": 5.5,
+          "other": 3.6,
+          "text": "Kat yükseklikleri uygulama imar planında daha fazla belirlenmemiş ise döşeme üst kotundan döşeme üst kotuna olmak üzere en fazla; ç) Zemin katında ticaret yapılabilen konut bölgelerinde ise zemin katlarda 4.50 metre, asma katlı zemin katlarda 5.5 metre, diğer katlarda 3.60 metre, … kabul edilerek uygulama yapılabilir.",
+          "source": "RG 3.7.2017/30113, 28 inci maddenin birinci fıkrası (Lexpera'nın Resmî Gazete metni); 1.10.2017'de yürürlüğe girdi; docs/adr/8085 §1."
+        },
+        {
+          "id": "2023",
+          "from": "2023-08-12",
+          "until": null,
+          "label": "12.8.2023",
+          "gazette": "3.7.2017/30113; 12.8.2023/32277 mülga ibare",
+          "ground": 4.5,
+          "groundMezzanine": null,
+          "other": 3.6,
+          "text": "Kat yükseklikleri uygulama imar planında daha fazla belirlenmemiş ise döşeme üst kotundan döşeme üst kotuna olmak üzere en fazla; ç) Zemin katında ticaret yapılabilen konut bölgelerinde ise zemin katlarda 4.50 metre, diğer katlarda 3.60 metre, … kabul edilerek uygulama yapılabilir.",
+          "source": "RG 12.8.2023/32277, 2 nci madde: (ç) bendindeki “asma katlı zemin katlarda 5.5 metre,” ibaresi yürürlükten kaldırıldı; 4 üncü madde: yayımı günü yürürlüğe girdi; docs/adr/8083 §1, 8085 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "Sivas",
+      "article": "28/1-a",
+      "title": "Kat yüksekliği (ticaret alanı, Sivas)",
+      "transition": "Sivas İmar Yön. Geçici 3: mevcut yapı ruhsatı başvurularında PAİY'nin geçici 3 üncü maddesine uyulur; yönetmelik yayımı günü (10.11.2022) yürürlüğe girdi.",
+      "versions": [
+        {
+          "id": "2022",
+          "from": "2022-11-10",
+          "until": null,
+          "label": "10.11.2022",
+          "gazette": "10.11.2022/32009",
+          "ground": 5.0,
+          "groundMezzanine": 6.5,
+          "other": 4.0,
+          "text": "Kat yükseklikleri uygulama imar planında daha fazla belirlenmemiş ise döşeme üst kotundan döşeme üst kotuna olmak üzere en fazla; a) Ticaret bölgelerinde; zemin katlarda 5.00 metre, asma katlı zemin katlarda 6.50 metre; diğer katlarda 4.00 metre, … kabul edilerek uygulama yapılabilir.",
+          "source": "RG 10.11.2022/32009, 28 inci maddenin birinci fıkrası (a); docs/adr/8085 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "Sivas",
+      "article": "28/1-b",
+      "title": "Kat yüksekliği (karma alan, Sivas)",
+      "transition": "Sivas İmar Yön. Geçici 3: mevcut yapı ruhsatı başvurularında PAİY'nin geçici 3 üncü maddesine uyulur; yönetmelik yayımı günü (10.11.2022) yürürlüğe girdi.",
+      "versions": [
+        {
+          "id": "2022",
+          "from": "2022-11-10",
+          "until": null,
+          "label": "10.11.2022",
+          "gazette": "10.11.2022/32009",
+          "ground": 5.0,
+          "groundMezzanine": 6.5,
+          "otherDwelling": 3.6,
+          "otherNonDwelling": 4.0,
+          "text": "Kat yükseklikleri uygulama imar planında daha fazla belirlenmemiş ise döşeme üst kotundan döşeme üst kotuna olmak üzere en fazla; b) Ticaretin de yapılabildiği karma alanlarda; zemin katlarda 5.00 metre, asma katlı zemin katlarda 6.50 metre; diğer katlar konut ise 3.60 metre konut harici ise 4.00 metre, … kabul edilerek uygulama yapılabilir.",
+          "source": "RG 10.11.2022/32009, 28 inci maddenin birinci fıkrası (b); docs/adr/8085 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "Sivas",
+      "article": "28/1-ç",
+      "title": "Kat yüksekliği (zemin katında ticaret yapılabilen konut alanı, Sivas)",
+      "transition": "Sivas İmar Yön. Geçici 3: mevcut yapı ruhsatı başvurularında PAİY'nin geçici 3 üncü maddesine uyulur; yönetmelik yayımı günü (10.11.2022) yürürlüğe girdi.",
+      "versions": [
+        {
+          "id": "2022",
+          "from": "2022-11-10",
+          "until": null,
+          "label": "10.11.2022",
+          "gazette": "10.11.2022/32009",
+          "ground": 4.5,
+          "groundMezzanine": 5.5,
+          "other": 3.6,
+          "text": "Kat yükseklikleri uygulama imar planında daha fazla belirlenmemiş ise döşeme üst kotundan döşeme üst kotuna olmak üzere en fazla; ç) Zemin katında ticaret yapılabilen konut bölgelerinde ise zemin katlarda 4.50 metre, asma katlı zemin katlarda 5.50 metre, diğer katlarda 3.60 metre, … kabul edilerek uygulama yapılabilir.",
+          "source": "RG 10.11.2022/32009, 28 inci maddenin birinci fıkrası (ç); docs/adr/8085 §1."
         }
       ]
     }

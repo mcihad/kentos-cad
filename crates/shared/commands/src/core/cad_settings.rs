@@ -63,7 +63,8 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 ///   absent: every object its own pen) how its lines are weighted (docs/adr/8013); `planNotes` the parcel's plan notes
 ///   the regulation's rules read over the municipality's and the national one (docs/adr/8084: `key`
 ///   `groundStoreyHeight` or `storeyHeight`, `value` metres over 0 and at most 20, `source` where the note stands, one
-///   note a key);
+///   note a key); `zone` the parcel's area's use in the plan the storey heights are read by (docs/adr/8085:
+///   `residential`, `residentialShops`, `mixed`, `commercial`, `other`);
 /// - `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with
 ///   the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
 ///   file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;

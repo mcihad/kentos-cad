@@ -988,7 +988,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_PLAN_NOTES),
+    ("arch", "mimari", ARCH_WITH_ZONE),
     ("gis", "CBS", GIS_WITH_EXTENSION_DERIVATIONS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -1125,13 +1125,25 @@ pub fn uses_plan_notes(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_plan_notes)
 }
 
-/// The architecture data version `doc` needs: 11 for the parcel's plan notes, 10 for the form's answers, 9 for a
+/// Architecture data version 12 (docs/adr/8085): the parcel's area's use in the plan (`settings.arch.zone`). Version 12
+/// holds versions 1–11's data too. The document schema stays as it is.
+pub const ARCH_WITH_ZONE: u16 = 12;
+
+/// Whether `doc` holds architecture data 12 ([`ARCH_WITH_ZONE`]).
+pub fn uses_zone(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_zone)
+}
+
+/// The architecture data version `doc` needs: 12 for the parcel's area's use, 11 for its plan notes, 10 for the form's
+/// answers, 9 for a
 /// building's code, use or ±0.00 or a shared level, 8 for a roof's
 /// layers, 7 for a sloped slab, 6 for a beams' or coverings'
 /// schedule, 5 for a covering, 4 for a post, a rail or a column's own height, 3 for a curtain wall, 2 for a block's
 /// building element, 1 for the performance declarations, else 0 (not raised).
 pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
-    if uses_plan_notes(doc) {
+    if uses_zone(doc) {
+        ARCH_WITH_ZONE
+    } else if uses_plan_notes(doc) {
         ARCH_WITH_PLAN_NOTES
     } else if uses_form_answers(doc) {
         ARCH_WITH_FORM_ANSWERS

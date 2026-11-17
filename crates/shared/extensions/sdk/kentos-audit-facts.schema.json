@@ -178,6 +178,13 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "zone": {
+          "description": "What the parcel's plan uses its area for, as the project says it (docs/adr/8085): `residential`,\n`residentialShops`, `mixed`, `commercial`, `other`; absent: not said.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -1635,6 +1642,13 @@
           "minimum": 0,
           "type": "integer"
         },
+        "dwellingRooms": {
+          "default": 0,
+          "description": "Rooms on it of an independent unit whose nature is a dwelling's (Daire, Mesken, Konut) or not given: a storey of\nhomes, as PAİY 28/1-b reads a mixed area's storeys (docs/adr/8085).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
         "elevation": {
           "description": "Its elevation over ±0.00, m.",
           "format": "double",
@@ -1663,6 +1677,10 @@
         "level": {
           "description": "The storey's id (`architecture.levels[].id`).",
           "type": "string"
+        },
+        "mezzanine": {
+          "description": "It is a mezzanine (its name says Asma kat): part of the ground storey it stands in (PAİY 4/1-d, 28/1-a, b, ç's\n“asma katlı zemin kat”; docs/adr/8085).",
+          "type": "boolean"
         },
         "name": {
           "description": "Its name.",

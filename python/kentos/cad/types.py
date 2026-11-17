@@ -9454,6 +9454,27 @@ XyzWithoutZName = Literal["zero", "skip"]
 """The names of :class:`XyzWithoutZ`, for a plain string."""
 
 
+class Zone(_StrEnum):
+    """The parcel's area's use in the plan, as Planlı Alanlar İmar Yönetmeliği 28/1 reads the storeys' heights by it
+    (docs/adr/8085): its a, b, c and ç, and a use 28/1 says nothing of (a school's, a hospital's …).
+
+    - ``residential``: Konut alanı (28/1-c).
+    - ``residentialShops``: Zemin katında ticaret yapılabilen konut alanı (28/1-ç).
+    - ``mixed``: Ticaretin de yapılabildiği karma alan: ticaret + konut (28/1-b).
+    - ``commercial``: Ticaret alanı (28/1-a).
+    - ``other``: Another use, of which 28/1 gives no storey height (eğitim, sağlık, sanayi …).
+    """
+    RESIDENTIAL = "residential"
+    RESIDENTIAL_SHOPS = "residentialShops"
+    MIXED = "mixed"
+    COMMERCIAL = "commercial"
+    OTHER = "other"
+
+
+ZoneName = Literal["residential", "residentialShops", "mixed", "commercial", "other"]
+"""The names of :class:`Zone`, for a plain string."""
+
+
 #: A value: none, true/false, a number or text.
 PaperVarValue = Union[bool, float, str, None]
 
@@ -17611,7 +17632,7 @@ class ArchSettings(_Model):
         performance: Yangın ve performans (docs/adr/8068; arch data 1): the building's declared fire protection class (EK-6 Tablo
             6.7 `FireProtectionClass`). Absent: none declared.
         phase_view: The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are.
-        plan_notes: Plan notları (docs/adr/8084; `.kcad` schema 256): the parcel's plan notes that give a value the regulation's
+        plan_notes: Plan notları (docs/adr/8084; `.kcad` Mimari data 11): the parcel's plan notes that give a value the regulation's
             rules read over the municipality's and the national one (PAİY 69/3), as the architect writes them from the
             plan, each with where it stands. Empty: none given.
         program: The building's program (docs/adr/0773, KCAD 140): buildings, wings, units and the design brief.
@@ -17623,6 +17644,8 @@ class ArchSettings(_Model):
         space_usages: Suggested room usages in project order, never a mandatory classification.
         sprinklers: Yağmurlama sistemi (docs/adr/8035; `.kcad` schema 226): the building has an automatic sprinkler system, so the
             fire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.
+        zone: Bölge (docs/adr/8085; `.kcad` Mimari data 12): what the parcel's plan uses its area for, as PAİY 28/1 reads a
+            storey's height by it (a, b, c, ç). Absent: not said; a dwelling's project is read in a dwelling area.
         zoning: İmar durumu (docs/adr/8030; `.kcad` schema 222): the parcel's area and the plan's coefficients the floor area
             ratio and the coverage are read against. Absent: none given.
     """
@@ -17650,6 +17673,7 @@ class ArchSettings(_Model):
     space_number_prefixes: dict[str, str] | Unset = UNSET
     space_usages: list[str] | Unset = UNSET
     sprinklers: bool | Unset = UNSET
+    zone: Zone | ZoneName | None | Unset = UNSET
     zoning: Zoning | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -17702,6 +17726,8 @@ class ArchSettings(_Model):
             out["spaceUsages"] = list(self.space_usages)
         if self.sprinklers is not UNSET:
             out["sprinklers"] = self.sprinklers
+        if self.zone is not UNSET:
+            out["zone"] = None if self.zone is None else _enum_out(self.zone)
         if self.zoning is not UNSET:
             out["zoning"] = None if self.zoning is None else self.zoning.to_json()
         return out
@@ -17733,6 +17759,7 @@ class ArchSettings(_Model):
             space_number_prefixes=dict(data["spaceNumberPrefixes"]) if "spaceNumberPrefixes" in data else UNSET,
             space_usages=list(data["spaceUsages"]) if "spaceUsages" in data else UNSET,
             sprinklers=data.get("sprinklers", UNSET),
+            zone=UNSET if "zone" not in data else None if data["zone"] is None else _enum_in(Zone, data["zone"]),
             zoning=UNSET if "zoning" not in data else None if data["zoning"] is None else Zoning.from_json(data["zoning"]),
         )
 
@@ -95129,7 +95156,8 @@ class SettingsSet(_Model):
       absent: every object its own pen) how its lines are weighted (docs/adr/8013); `planNotes` the parcel's plan notes
       the regulation's rules read over the municipality's and the national one (docs/adr/8084: `key`
       `groundStoreyHeight` or `storeyHeight`, `value` metres over 0 and at most 20, `source` where the note stands, one
-      note a key);
+      note a key); `zone` the parcel's area's use in the plan the storey heights are read by (docs/adr/8085:
+      `residential`, `residentialShops`, `mixed`, `commercial`, `other`);
     - `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with
       the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
       file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
@@ -147384,6 +147412,8 @@ __all__ = [
     "XyzVerticesName",
     "XyzWithoutZ",
     "XyzWithoutZName",
+    "Zone",
+    "ZoneName",
     "Zoning",
     "ZoningCheck",
     "ZoningChecked",

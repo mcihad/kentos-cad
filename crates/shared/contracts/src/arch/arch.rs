@@ -1521,12 +1521,63 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub sprinklers: bool,
-    /// Plan notları (docs/adr/8084; `.kcad` schema 256): the parcel's plan notes that give a value the regulation's
+    /// Plan notları (docs/adr/8084; `.kcad` Mimari data 11): the parcel's plan notes that give a value the regulation's
     /// rules read over the municipality's and the national one (PAİY 69/3), as the architect writes them from the
     /// plan, each with where it stands. Empty: none given.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PlanNote>>", optional))]
     pub plan_notes: Vec<PlanNote>,
+    /// Bölge (docs/adr/8085; `.kcad` Mimari data 12): what the parcel's plan uses its area for, as PAİY 28/1 reads a
+    /// storey's height by it (a, b, c, ç). Absent: not said; a dwelling's project is read in a dwelling area.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub zone: Option<Zone>,
+}
+
+/// The parcel's area's use in the plan, as Planlı Alanlar İmar Yönetmeliği 28/1 reads the storeys' heights by it
+/// (docs/adr/8085): its a, b, c and ç, and a use 28/1 says nothing of (a school's, a hospital's …).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum Zone {
+    /// Konut alanı (28/1-c).
+    Residential,
+    /// Zemin katında ticaret yapılabilen konut alanı (28/1-ç).
+    ResidentialShops,
+    /// Ticaretin de yapılabildiği karma alan: ticaret + konut (28/1-b).
+    Mixed,
+    /// Ticaret alanı (28/1-a).
+    Commercial,
+    /// Another use, of which 28/1 gives no storey height (eğitim, sağlık, sanayi …).
+    Other,
+}
+
+impl Zone {
+    pub const ALL: [Zone; 5] = [Zone::Residential, Zone::ResidentialShops, Zone::Mixed, Zone::Commercial, Zone::Other];
+
+    /// As the form and a finding name it.
+    pub fn label(self) -> &'static str {
+        match self {
+            Zone::Residential => "Konut alanı",
+            Zone::ResidentialShops => "Zemin katında ticaret yapılabilen konut alanı",
+            Zone::Mixed => "Ticaret + konut (karma) alanı",
+            Zone::Commercial => "Ticaret alanı",
+            Zone::Other => "Öbür kullanım (28/1 kat yüksekliği vermez)",
+        }
+    }
+
+    /// As the audit facts and the rules write it.
+    pub fn name(self) -> &'static str {
+        match self {
+            Zone::Residential => "residential",
+            Zone::ResidentialShops => "residentialShops",
+            Zone::Mixed => "mixed",
+            Zone::Commercial => "commercial",
+            Zone::Other => "other",
+        }
+    }
 }
 
 /// A municipality's own regulation (docs/adr/8034): its values read over Planlı Alanlar İmar Yönetmeliği's, as PAİY
@@ -2069,9 +2120,14 @@ impl ArchSettings {
         self.sprinklers
     }
 
-    /// Whether it keeps the parcel's plan notes (KCAD 256, docs/adr/8084).
+    /// Whether it keeps the parcel's plan notes (Mimari data 11, docs/adr/8084).
     pub fn has_plan_notes(&self) -> bool {
         !self.plan_notes.is_empty()
+    }
+
+    /// Whether it says the parcel's area's use (Mimari data 12, docs/adr/8085).
+    pub fn has_zone(&self) -> bool {
+        self.zone.is_some()
     }
 
     /// Whether it keeps building materials (KCAD 150, docs/adr/0785).
@@ -2749,5 +2805,18 @@ mod plan_cut_tests {
         a.plan_notes[1] = note(PlanNoteKey::GroundStoreyHeight, 4.0, "plan notu 9");
         assert_eq!(path(&a).as_deref(), Some("planNotes.1.key"));
         assert!(!serde_json::to_string(&ArchSettings::default()).unwrap().contains("planNotes"));
+    }
+
+    /// Bölge (docs/adr/8085): written by its name, absent when not said; the facts' names are the same.
+    #[test]
+    fn the_zone_is_written_by_its_name() {
+        let a = ArchSettings { zone: Some(Zone::ResidentialShops), ..Default::default() };
+        let json = serde_json::to_value(&a).unwrap();
+        assert_eq!(json["zone"], "residentialShops");
+        assert_eq!(serde_json::from_value::<ArchSettings>(json).unwrap(), a);
+        for z in Zone::ALL {
+            assert_eq!(serde_json::to_value(z).unwrap(), z.name());
+        }
+        assert!(!serde_json::to_string(&ArchSettings::default()).unwrap().contains("zone"));
     }
 }

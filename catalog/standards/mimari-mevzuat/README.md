@@ -21,8 +21,9 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
 - **Yangına dayanım süreleri** (`dayanim`, docs/adr/8082): beyan edilen sınıf Ek-3/B ve Ek-3/C'nin istediğiyle: kolon ve
   kiriş R, döşeme REI, dış ve kompartıman duvarı EI, korunumlu yangın merdiveni REI 120.
 - **Kat yüksekliği** (`kat_yuksekligi`, docs/adr/8083, 8084): konut projesinde zemin ve normal katlar 3,60 m;
-  12.8.2023'ten bodrum hariç 3 kata kadar 4,00 m (PAİY 28/1-c); Sivas 3,60 m. Projenin plan notu (zemin kat, kat
-  yüksekliği) ikisinin de önüne geçer (69/3).
+  12.8.2023'ten bodrum hariç 3 kata kadar 4,00 m (PAİY 28/1-c); Sivas 3,60 m. Parselin bölgesine göre ticaret (28/1-a),
+  karma (28/1-b), zemin katı ticaretli konut alanı (28/1-ç) ve asma katlı zemin kat (docs/adr/8085). Projenin plan notu
+  (zemin kat, kat yüksekliği) hepsinin önüne geçer (69/3).
 - **Kapı ölçüleri** (`kapi_olculeri`, docs/adr/8083): yükseklik 2,10 m; net genişlik bina girişinde 1,50, bölüm girişinde
   1,00, öbür kapılarda 0,90 m; 13.8.2025'e kadar ve Sivas'ta balkon ve tuvalet kapısı 0,80 m (PAİY 39/1). İki katmanın
   yargısı `katman`'da; gün yoksa her kat ve kapı ayrı denenir (`yururluk.parcalarla`).

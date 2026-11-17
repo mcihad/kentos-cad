@@ -1981,6 +1981,7 @@
         "technical": 0,
         "inhabited": 2,
         "bedrooms": 1,
+        "dwellingRooms": 2,
         "elevators": 1,
         "rooms": [
           "01a1dfda-06c5-7278-9486-e3989deaadbb",
@@ -2005,6 +2006,7 @@
         "technical": 0,
         "inhabited": 3,
         "bedrooms": 2,
+        "dwellingRooms": 3,
         "elevators": 0,
         "rooms": [
           "01a1dfda-0704-70dd-a975-499e70342853",
