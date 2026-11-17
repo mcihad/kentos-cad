@@ -90,6 +90,11 @@ impl Blobs {
         format!("job-inputs/{tenant}/{project}/{input}-{sha256}")
     }
 
+    /// A portal dossier's file (docs/adr/9000 §7): written once and never changed; removed with its dossier's draft.
+    pub fn dossier_key(dossier: Uuid, file: Uuid) -> String {
+        format!("dossiers/{dossier}/{file}")
+    }
+
     /// An extension package's bytes (docs/adr/8059 §13), by the hex of its content digest: written once, never
     /// changed, shared by every release of that content.
     pub fn extension_package_key(digest_hex: &str) -> String {

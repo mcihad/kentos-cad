@@ -187,6 +187,11 @@ pub mod heights;
 pub mod road;
 #[path = "core/document.rs"]
 pub mod document;
+// The cloud portal (docs/adr/9000): accounts, catalog, organisations and platform administration; dossiers.
+#[path = "core/dossier.rs"]
+pub mod dossier;
+#[path = "core/portal.rs"]
+pub mod portal;
 #[path = "core/encoding.rs"]
 pub mod encoding;
 #[path = "core/entity.rs"]
@@ -404,6 +409,8 @@ pub use crs::*;
 pub use heights::*;
 pub use road::*;
 pub use document::*;
+pub use dossier::*;
+pub use portal::*;
 pub use entity::*;
 pub use entity_merge::*;
 pub use fields::*;
