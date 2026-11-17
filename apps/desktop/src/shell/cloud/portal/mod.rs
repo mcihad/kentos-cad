@@ -20,10 +20,19 @@
 //! | `view.rs` | the window: places, filters, the list, the chosen dossier's head, steps and notices |
 //! | `view_tabs.rs` | the chosen dossier's tabs: package, messages, timeline, facts |
 //! | `view_ask.rs` | a step's or a project file's question over the window |
+//! | `esign.rs` | signing the package's files with the e-signature card, in this process (docs/adr/9002 §7) |
+//! | `esign_local.rs` | the envelope verified here, the cards read and the batch signed on threads of their own |
+//! | `esign_server.rs` | the server's e-signature endpoints as the window sees them, and a test server |
+//! | `esign_cloud.rs` | those endpoints over the signed-in cloud client |
 
+pub mod esign;
+pub mod esign_server;
 pub mod facts;
 pub mod plan;
 pub mod words;
+
+mod esign_cloud;
+mod esign_local;
 
 mod messages;
 mod package;
@@ -34,6 +43,8 @@ mod view_ask;
 mod view_tabs;
 
 #[cfg(test)]
+mod esign_tests;
+#[cfg(test)]
 mod fixtures;
 #[cfg(test)]
 mod plan_tests;
@@ -42,6 +53,7 @@ mod screens;
 #[cfg(test)]
 mod tests;
 
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -78,6 +90,8 @@ pub struct Memory {
     pub place: Option<Place>,
     pub direction: Direction,
     pub chosen: Option<String>,
+    /// The e-signature switch (docs/adr/9002 §7): off, the window is as it was without a card.
+    pub esign: bool,
 }
 
 /// A line at the window's foot: what was done, or what went wrong and how to go on.
@@ -118,6 +132,12 @@ pub struct Portal {
     pub adding: bool,
     /// The file being saved to disk, while its place is asked.
     pub download: Option<String>,
+    /// The e-signature switch: E-imzala and E-imzayla gönder are offered only when it is on.
+    pub esign_on: bool,
+    /// The package's files being signed with the card, over the window (esign.rs).
+    pub esign: Option<esign::Esign>,
+    /// A dossier's recorded e-signatures, by dossier id: each file's line says who signed it.
+    pub signatures: HashMap<String, Vec<kentos_commands::DossierSignatureView>>,
     requests: Requests,
 }
 
@@ -150,6 +170,9 @@ impl Portal {
             made: None,
             adding: false,
             download: None,
+            esign_on: memory.esign,
+            esign: None,
+            signatures: HashMap::new(),
             requests: Requests::default(),
         }
     }
@@ -160,6 +183,7 @@ impl Portal {
             place: self.place.clone(),
             direction: self.direction,
             chosen: self.chosen.clone(),
+            esign: self.esign_on,
         }
     }
 
@@ -266,6 +290,13 @@ pub enum Event {
         id: u64,
         result: Result<DossierMessageView, ApiFailure>,
     },
+    // ── The e-signature (esign.rs) ──────────────────────────────────────
+    /// The e-signature switch.
+    EsignSwitch(bool),
+    /// E-imzala (`false`) or E-imzayla gönder (`true`: the Send step's question follows the signing).
+    EsignStart(bool),
+    /// Boxed, as the other large answers are (`Detail`, `Acted`).
+    Esign(Box<esign::EsignEvent>),
 }
 
 /// The app's message of a portal event.
@@ -296,6 +327,14 @@ impl App {
         if p.asking.is_some() {
             if !p.asking.as_ref().is_some_and(|a| a.busy) {
                 p.asking = None;
+            }
+            self.dialog = Some(Dialog::Portal);
+            return;
+        }
+        // The signing window goes first too; while the card works it stays (a half signature is not left).
+        if let Some(s) = &p.esign {
+            if !s.dialog.busy() {
+                p.esign = None;
             }
             self.dialog = Some(Dialog::Portal);
             return;
@@ -362,7 +401,14 @@ impl App {
                     return Task::none();
                 };
                 match result {
-                    Ok(d) => p.detail = Some(*d),
+                    Ok(d) => {
+                        let dossier = d.summary.id.clone();
+                        let on = p.esign_on;
+                        p.detail = Some(*d);
+                        if on {
+                            return self.esign_signatures(dossier);
+                        }
+                    }
                     Err(f) => {
                         p.detail = None;
                         p.said = Some(Said::Error(format!(
@@ -410,6 +456,18 @@ impl App {
             | Event::Draft(_)
             | Event::Send
             | Event::Sent { .. } => self.portal_package_event(event),
+            Event::EsignSwitch(on) => {
+                let dossier = self.cloud.portal.as_mut().and_then(|p| {
+                    p.esign_on = on;
+                    p.chosen_detail().map(|d| d.summary.id.clone())
+                });
+                match dossier {
+                    Some(d) if on => self.esign_signatures(d),
+                    _ => Task::none(),
+                }
+            }
+            Event::EsignStart(then_send) => self.esign_start(then_send),
+            Event::Esign(e) => self.esign_event(*e),
         }
     }
 }

@@ -209,6 +209,14 @@ pub fn digest_info_prefix(digest_algorithm: &str) -> Option<&'static [u8]> {
     }
 }
 
+/// Şu andan `seconds` saniye sonrası — RFC 3339, UTC (bir isteğin son geçerlilik anı).
+#[must_use]
+pub fn rfc3339_after(seconds: i64) -> String {
+    (time::OffsetDateTime::now_utc() + time::Duration::seconds(seconds))
+        .format(&time::format_description::well_known::Rfc3339)
+        .unwrap_or_else(|_| "1970-01-01T00:00:00Z".to_owned())
+}
+
 /// Şu an — RFC 3339, UTC.
 #[must_use]
 pub fn now_rfc3339() -> String {

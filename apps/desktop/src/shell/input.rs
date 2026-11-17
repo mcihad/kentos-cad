@@ -835,6 +835,14 @@ impl App {
             {
                 return task;
             }
+            // The signing window over Portal dosyaları: Esc is its own Kapat, so the server's open request is given up
+            // (cloud/portal/esign.rs, docs/adr/9002 §7).
+            if self.dialog == Some(crate::app::Dialog::Portal)
+                && press.named() == Some(Named::Escape)
+                && let Some(task) = self.esign_escape()
+            {
+                return task;
+            }
             match press.named() {
                 // Tab and Shift+Tab go round the window's fields, its choosers and boxes too; never out to
                 // the window behind it (kentos_ui::focus, docs/adr/0400).

@@ -101,7 +101,7 @@ impl App {
             if d.pending.is_empty() {
                 part = part.push(label::caption("Pakette henüz dosya yok."));
             } else {
-                part = part.push(files_table(d, &d.pending, idle));
+                part = part.push(files_table(d, &d.pending, idle, signed(p, d)));
             }
             part = part.push(self.portal_open_part(p, d));
             out = out.push(part);
@@ -111,7 +111,7 @@ impl App {
                 column![
                     label::strong(plan::round_title(d, r)),
                     label::caption(plan::round_line(r)).style(style::text::muted),
-                    files_table(d, &r.files, idle),
+                    files_table(d, &r.files, idle, signed(p, d)),
                 ]
                 .spacing(6),
             );
@@ -253,6 +253,7 @@ fn files_table<'a>(
     d: &'a DossierDetail,
     files: &'a [DossierFileView],
     idle: bool,
+    signatures: &'a [kentos_commands::DossierSignatureView],
 ) -> Element<'a, Message> {
     let mut table = Table::new([
         Col::new("Dosya").width(Fill),
@@ -279,19 +280,53 @@ fn files_table<'a>(
             idle.then(|| msg(Event::Download(f.id.clone()))),
             false,
         ));
-        table = table.push(Row::new([
-            column![
-                label::body(f.name.clone()).wrapping(Wrapping::WordOrGlyph),
-                label::caption(plan::file_line(f))
-                    .style(style::text::muted)
-                    .wrapping(Wrapping::WordOrGlyph),
-            ]
-            .spacing(2)
-            .into(),
-            acts.into(),
-        ]));
+        let mut cell = column![
+            label::body(f.name.clone()).wrapping(Wrapping::WordOrGlyph),
+            label::caption(plan::file_line(f))
+                .style(style::text::muted)
+                .wrapping(Wrapping::WordOrGlyph),
+        ]
+        .spacing(2);
+        for s in signatures.iter().filter(|s| s.file_id == f.id) {
+            let (line, changed) = signature_line(s);
+            let t = label::caption(line).wrapping(Wrapping::WordOrGlyph);
+            cell = cell.push(if changed {
+                t.style(style::text::danger)
+            } else {
+                t
+            });
+        }
+        table = table.push(Row::new([cell.into(), acts.into()]));
     }
     table.into()
+}
+
+/// The e-signatures recorded for the chosen dossier (none until the switch is on and the server answered).
+fn signed<'a>(p: &'a Portal, d: &DossierDetail) -> &'a [kentos_commands::DossierSignatureView] {
+    p.signatures.get(&d.summary.id).map_or(&[], Vec::as_slice)
+}
+
+/// A file's e-signature line: who signed it and when (in the device's time, as the rest of the window), and that the
+/// certificate's chain and revocation were not checked (docs/adr/9002 §7); a file changed since it was signed is said
+/// so, in red.
+fn signature_line(s: &kentos_commands::DossierSignatureView) -> (String, bool) {
+    let who = kentos_imza_ui::convert::common_name(&s.subject);
+    let mut when =
+        crate::cloud::local_time::when(&s.signed_at, crate::cloud::local_time::Zone::system());
+    if when.is_empty() {
+        when = kentos_imza_ui::convert::day_of(&s.signed_at);
+    }
+    if s.still_matches {
+        (
+            format!("E-imzalı: {who}, {when} (sertifika zinciri ve iptal durumu denetlenmedi)"),
+            false,
+        )
+    } else {
+        (
+            format!("{who} e-imzalamıştı, ama dosya imzadan sonra değişmiş"),
+            true,
+        )
+    }
 }
 
 /// What the open project adds: its kind and revision, and that later changes do not go in.

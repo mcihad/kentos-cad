@@ -128,6 +128,11 @@ impl App {
         // the tree, so its list and its details keep where they were scrolled to.
         iced::widget::Stack::with_children([window])
             .extend(self.portal_ask_view(p))
+            .extend(p.esign.as_ref().map(|s| {
+                s.dialog
+                    .view_modal()
+                    .map(|m| super::esign::ev(super::esign::EsignEvent::Dialog(m)))
+            }))
             .into()
     }
 
@@ -301,10 +306,28 @@ impl App {
         head.into()
     }
 
-    /// The steps the server allows now, the filled one last.
+    /// The steps the server allows now, the filled one last; on the left the e-signature switch and, when it is on and
+    /// the package being prepared has files, E-imzala (or E-imzayla gönder when Gönder is one of the steps).
     fn portal_steps<'a>(&'a self, p: &'a Portal, d: &'a DossierDetail) -> Element<'a, Message> {
-        let mut line = row![space::horizontal()].spacing(6).align_y(Center);
         let idle = !p.working();
+        let mut line = row![
+            kentos_ui::widget::switch::Switch::new(p.esign_on, |on| msg(Event::EsignSwitch(on)))
+                .label("E-imza")
+        ]
+        .spacing(6)
+        .align_y(Center);
+        if let Some(send) = super::esign::offer(p.esign_on, d) {
+            let caption = if send {
+                "E-imzayla gönder"
+            } else {
+                "E-imzala"
+            };
+            line = line.push(words::secondary(
+                caption,
+                idle.then(|| msg(Event::EsignStart(send))),
+            ));
+        }
+        line = line.push(space::horizontal());
         for (action, look) in plan::steps(d) {
             let on = idle.then(|| msg(Event::Step(action)));
             let caption = plan::step_label(action, d);
