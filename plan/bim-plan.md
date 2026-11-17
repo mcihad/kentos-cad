@@ -619,8 +619,11 @@ pencere taslağı Denetle ve Yayınla'da tek geri alma adımıyla çizime yazar;
 katmanı, üst döşeme, parselin katmanı), tamamlanınca geçti (ADR 8077 §5).
 MCP'de uçtan uca: ajan durdurulur, `cad.form.answer` ile cevaplar, paket yayımlanır (ADR 8077 §6).
 Cevap dayandığı kanıtı tutar; kanıt değişince eskir, soru yeniden açılır, yayın durur (ADR 8077 §7, K59).
-**Kalan:** Python tipli katmanından ortak durumlar bağımsız `.kcad` okuyucusunun mimari verisi 1–10'u bilmemesi yüzünden
-duruyor (TODOS.md'de ayrı iş); 7. sorunun gelişim seviyesi ölçülmüyor.
+İlk kabul tuttu: bölüm binasında ve 2+1'de paket, eski pafta paketi durdurur, bağımsız okuyucular hatasız.
+**Kalan:** formun kalıcı kaynak türü (çizimdeki EK-9 tablosu bugün başlık satırından tanınıyor; tablo kaynağına yeni tür
+`.kcad`'in sütun biçimini ve bağımsız okuyucuyu ister); Python tipli katmanından ortak durumlar bağımsız `.kcad`
+okuyucusunun mimari verisi 1–10'u bilmemesi yüzünden duruyor (TODOS.md'de ayrı iş); 7. sorunun gelişim seviyesi
+ölçülmüyor.
 
 **Kullanıcı sonucu:** Tek komut, aynı model revizyonundan mimari modeli, bütün PDF/A paftaları, çizelgeleri ve kontrol
 formunu üretir. Hepsi yazıldıktan sonra dosyadan denetlenir; biri kalırsa hiçbir şey yayımlanmaz. Dayanak Md. 9/1, 15; e-PYS
