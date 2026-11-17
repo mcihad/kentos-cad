@@ -42120,6 +42120,37 @@
         ]
       }
     },
+    "/v1/me/notifications/stream": {
+      "get": {
+        "description": "Server-Sent Events: `unread` olayı `{\"unread\": n}` taşır; ilki şimdiki sayı, sonra çağıranın bir bildirimi yazıldıkça ya da okundukça (hangi sunucu sürecinde olursa olsun). 25 saniyede bir canlı tutma yorumu gelir. Bağlantı koparsa istemci yeniden bağlanır; arada sayfa birkaç dakikada bir sorar.",
+        "operationId": "getMeNotificationsStream",
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "summary": "Bildirimler canlı",
+        "tags": [
+          "Bildirimler"
+        ]
+      }
+    },
     "/v1/me/projects": {
       "get": {
         "description": "Çağıranın her kurumdaki kendi projeleri ve onunla paylaşılanlar.",

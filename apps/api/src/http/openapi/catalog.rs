@@ -627,6 +627,11 @@ pub(super) fn ops() -> Vec<Op> {
                 P("unread", "boolean", false, "Yalnız okunmamışlar."),
                 P("limit", "integer", false, "En çok kaç bildirim."),
             ]),
+        op("GET", "/v1/me/notifications/stream", NOTIFICATIONS, "Bildirimler canlı",
+            "Server-Sent Events: `unread` olayı `{\"unread\": n}` taşır; ilki şimdiki sayı, sonra çağıranın bir \
+             bildirimi yazıldıkça ya da okundukça (hangi sunucu sürecinde olursa olsun). 25 saniyede bir canlı tutma \
+             yorumu gelir. Bağlantı koparsa istemci yeniden bağlanır; arada sayfa birkaç dakikada bir sorar.",
+            No, Text("text/event-stream")),
         op("POST", "/v1/me/notifications/read", NOTIFICATIONS, "Okundu işaretle",
             "Belirli bildirimler ya da hepsi; listenin şimdiki hâli döner.",
             Body(of::<c::NotificationsRead>), Json(200, of::<c::Notifications>)),

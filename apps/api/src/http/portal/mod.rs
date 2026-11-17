@@ -33,6 +33,7 @@ pub fn routes() -> Router<AppState> {
         .route("/v1/portal/municipalities", get(me::municipalities))
         .route("/v1/me/notifications", get(me::notifications))
         .route("/v1/me/notifications/read", post(me::read))
+        .route("/v1/me/notifications/stream", get(me::stream))
         .route(
             "/v1/me/notification-settings",
             get(me::notification_settings).put(me::set_notification_settings),

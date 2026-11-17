@@ -233,6 +233,9 @@ CAD görünümü olmayan telefon, web sayfası ve ajan için.
 
 ## 8. Bildirimler: zil, e-posta, SMS
 
+`GET /v1/me/notifications/stream` (Server-Sent Events) okunmamış sayısını değiştikçe iter: `event: unread`,
+`data: {"unread": n}`. Yoklama yerine bunu dinleyin. Bağlantı koparsa yeniden bağlanın (ADR 9000 §23).
+
 - Zil: `GET /v1/me/notifications?unread=true`, okundu: `POST /v1/me/notifications/read {"all": true}`.
 - E-posta ve SMS: sistem yöneticisi kanalı açar (`PUT /v1/platform/settings {"emailNotifications": true}`), kişi kendi
   seçer: `PUT /v1/me/notification-settings {"email": true, "sms": true, "phone": "0532 123 45 67"}`. E-posta yalnız

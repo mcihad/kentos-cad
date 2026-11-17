@@ -524,6 +524,32 @@ Dönem Türkiye takvimiyle iki ucu dahil günlerdir. Varsayılan bu yılın baş
 
   Arşiv görüntüsü için demo veritabanında bir onaylı başvurunun tarihi 400 gün geriye alındı.
 
+## §23 Bildirimler canlı
+
+Zil, sayfa açıkken dakikada bir sorarak güncelleniyordu. Belediye eksik bildirdiğinde mimar bunu bir dakikaya kadar
+geç görüyordu, açık her sekme de sunucuyu dakikada bir yokluyordu. Artık bildirim yazıldığı an gider:
+
+- **Kaynak veritabanıdır.** `kentos.notification`'a bir satır yazılınca ya da okununca bir tetikleyici
+  `pg_notify('kentos_notification', kişi)` gönderir (migration 0052). Böylece bildirim hangi yoldan yazılırsa yazılsın
+  haber gider: uygulamanın kendisi, `notify_dossier` gibi yetkili bir işlev ya da başka bir sunucu süreci.
+- **Sunucu tek bağlantıyla dinler** (`hub::listen`, `PgListener`). Sinyali süreç içindeki kanala (`Notices`) aktarır;
+  bağlantı koparsa 5 saniye sonra yeniden kurar.
+- **Kişinin açık sayfası bir SSE akışıdır** (`GET /v1/me/notifications/stream`):
+  - ilk olay şimdiki okunmamış sayısıdır;
+  - sonra yalnız o kişinin sinyalinde, sayı kişinin kendi yetkisiyle yeniden okunur; sinyal yalnızca kimlik taşır;
+  - 25 saniyede bir canlı tutma yorumu gider;
+  - geride kalan akışa sayı yeniden gönderilir.
+- **Portal `EventSource` ile dinler.** Kopan akışı tarayıcı kendisi yeniden açar. Sayı artınca “Yeni bildiriminiz
+  var.” der. Beş dakikalık sorma yedek olarak kalır. Masaüstü ve mobil aynı akışı kullanabilir.
+
+Ölçülenler:
+
+- **Gerçek PostgreSQL'de** (`http::tests::a_notification_reaches_the_person_s_open_stream_as_it_is_written`):
+  akış önce `unread: 0` verir; veritabanına doğrudan yazılan bildirim tetikleyici, dinleyici ve akış üzerinden
+  `unread: 1` olarak gelir.
+- **Demo, portalın geliştirme sunucusunun arkasından:** ilk olay 49 ms'de geldi. Belediyenin iletisinden sonra yeni
+  sayı 18 ms'de ulaştı. Ara katman akışı tamponlamıyor.
+
 ## Kaynaklar
 
 - OpenAPI 3.1.0 (<https://spec.openapis.org/oas/v3.1.0>), JSON Schema 2020-12, llms.txt önerisi

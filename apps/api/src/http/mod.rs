@@ -102,6 +102,8 @@ pub struct AppState {
     pub database: Option<Db>,
     pub oidc: Option<Arc<Oidc>>,
     pub hub: Hub,
+    /// Notifications as they happen (docs/adr/9000 §23).
+    pub notices: crate::hub::Notices,
     pub logins: Arc<limit::LoginLimiter>,
     /// The sign-up's ticket, hidden field and limits per address (docs/adr/9000 §20).
     pub signups: Arc<signup_guard::SignupGuard>,

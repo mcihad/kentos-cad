@@ -25,6 +25,17 @@ type Row = (
     Option<String>,
 );
 
+/// The caller's unread count (the live channel's message, docs/adr/9000 §23).
+pub async fn unread(db: &Db, actor: &Actor) -> AppResult<u32> {
+    let mut tx = db.scoped(user_scope(actor)).await?;
+    let n: i64 = sqlx::query_scalar("select count(*) from kentos.notification where user_id = $1 and read_at is null")
+        .bind(actor.user_id)
+        .fetch_one(&mut *tx)
+        .await?;
+    tx.commit().await?;
+    Ok(u32::try_from(n).unwrap_or(u32::MAX))
+}
+
 /// `GET /v1/me/notifications?unread=`: the newest first.
 pub async fn list(
     db: &Db,

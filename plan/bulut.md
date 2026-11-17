@@ -96,11 +96,14 @@ sıradakileri tutar. Bir madde ancak sınaması ve gerçek pencerede görüntüs
   - Aylık grafik ve tablo.
   - XLSX, ODS ve CSV sunucudan; PDF yazdırma görünümünden (ADR 9000 §22).
 
+- [x] `BUL-17` **Bildirimler canlı:**
+  - Veritabanının sinyali (LISTEN/NOTIFY), sunucunun tek dinleyicisi ve kişinin SSE akışı.
+  - Portal sayıyı anında görür; sorma beş dakikada bir yedek olarak kalır (ADR 9000 §23).
+
 ## Sıradakiler
 
 - [ ] `BUL-10` Portala kurum kimliğiyle giriş (OpenID Connect; sunucu tarafı ADR 0007'de hazır).
 - [ ] `BUL-15` Aktarımda kopya yerine canlı projede misafir düzenleyici (ADR 0035) seçeneği.
-- [ ] `BUL-17` Gerçek zamanlı bildirim (WebSocket); şimdi dakikada bir sorulur.
 - [ ] `BUL-27` Resmî yazı (kararın antetli PDF'i), e-tebligat / KEP bağlantısı (kurumun anlaşması gerekir) ve
   e-imzanın yasal denetimi (Kamu SM zinciri, OCSP / SİL, zaman damgası, CAdES / PAdES çıktısı).
 

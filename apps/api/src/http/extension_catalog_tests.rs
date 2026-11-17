@@ -111,6 +111,7 @@ fn app_of(catalog: Option<Arc<Catalog>>) -> Router {
         hub: crate::hub::Hub::default(),
         logins: Default::default(),
         signups: Default::default(),
+        notices: Default::default(),
         blobs: Blobs::new(
             std::env::temp_dir().join(format!("kentos-api-blobs-{}", Uuid::now_v7())),
         ),

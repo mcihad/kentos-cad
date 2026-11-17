@@ -232,6 +232,11 @@ async fn serve(config: Config) -> Result<(), String> {
         spawn_workers(db, &blobs, config.workers, config.job_limits, audits);
     }
     let signups_per_hour = config.signups_per_hour;
+    let notices = hub::Notices::default();
+    if let Some(db) = &database {
+        // Notifications as they happen (docs/adr/9000 §23): the database's signal relayed to the open streams.
+        tokio::spawn(hub::listen(db.clone(), notices.clone()));
+    }
     let state = AppState {
         config: Arc::new(config),
         database,
@@ -239,6 +244,7 @@ async fn serve(config: Config) -> Result<(), String> {
         hub: hub::Hub::default(),
         logins: Default::default(),
         signups: Arc::new(http::signup_guard::SignupGuard::new(signups_per_hour)),
+        notices: notices.clone(),
         blobs,
         proxy: Some(Arc::new(proxy)),
         // Off unless the setting opens it (docs/adr/8059 §13): its routes answer 404 then.

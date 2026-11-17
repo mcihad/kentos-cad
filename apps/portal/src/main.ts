@@ -17,6 +17,7 @@ import type { PageFn } from './pages/page';
 import { proPages } from './pages/pro/routes';
 import { type Shell, counts, mountShell, setTheme } from './shell/shell';
 import { empty, loading, notice } from './ui/kit';
+import { toast } from './ui/toast';
 
 const root = document.getElementById('app') as HTMLElement;
 
@@ -162,14 +163,33 @@ async function boot(): Promise<void> {
     }
   }
   window.addEventListener('hashchange', () => void render());
-  // Notifications arrive while the page stays open.
+  // Notifications as they happen (docs/adr/9000 §23): the server's stream pushes the unread count; the browser opens
+  // it again by itself when it drops. Asking every five minutes stays as the fallback.
+  let live: EventSource | null = null;
+  const follow = () => {
+    if (!me.value) {
+      live?.close();
+      live = null;
+      return;
+    }
+    if (live || typeof EventSource === 'undefined') return;
+    live = new EventSource('/v1/me/notifications/stream');
+    live.addEventListener('unread', (e) => {
+      const n = Number(JSON.parse((e as MessageEvent).data).unread);
+      if (Number.isFinite(n)) {
+        if (n > unread.value) toast('Yeni bildiriminiz var.', 'info');
+        unread.set(n);
+      }
+    });
+  };
+  me.subscribe(follow, true);
   setInterval(() => {
     if (!me.value) return;
     void portal
       .notifications(true)
       .then((n) => unread.set(n.unread))
       .catch(() => undefined);
-  }, 60_000);
+  }, 300_000);
   await render();
 }
 

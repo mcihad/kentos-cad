@@ -224,3 +224,37 @@ pub async fn read(
 fn unix_now() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs())
 }
+
+/// `GET /v1/me/notifications/stream`: the caller's unread count as it changes (Server-Sent Events, docs/adr/9000 §23).
+/// The first event is the count now; then one each time a notification of the caller's is written or read, from any
+/// server process. Each count is read with the caller's own rights; a lagging stream is sent the count again.
+pub async fn stream(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    caller: Caller,
+) -> Result<
+    axum::response::sse::Sse<impl futures_util::Stream<Item = Result<axum::response::sse::Event, std::convert::Infallible>>>,
+    Failure,
+> {
+    use axum::response::sse::{Event, KeepAlive, Sse};
+    use tokio::sync::broadcast::error::RecvError;
+    let db = state.db().map_err(|e| Failure::with(e, &headers))?.clone();
+    let actor = caller.0;
+    let rx = state.notices.subscribe();
+    let events = futures_util::stream::unfold((db, actor, rx, true), |(db, actor, mut rx, first)| async move {
+        if !first {
+            loop {
+                match rx.recv().await {
+                    Ok(user) if user == actor.user_id => break,
+                    Ok(_) => continue,
+                    Err(RecvError::Lagged(_)) => break,
+                    Err(RecvError::Closed) => return None,
+                }
+            }
+        }
+        let unread = notifications::unread(&db, &actor).await.ok()?;
+        let event = Event::default().event("unread").data(serde_json::json!({ "unread": unread }).to_string());
+        Some((Ok(event), (db, actor, rx, false)))
+    });
+    Ok(Sse::new(events).keep_alive(KeepAlive::new().interval(std::time::Duration::from_secs(25))))
+}
