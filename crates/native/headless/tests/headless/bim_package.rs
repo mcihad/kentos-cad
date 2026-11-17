@@ -250,6 +250,12 @@ fn the_real_rule_stops_what_the_model_lacks_and_publishes_a_declared_building_wh
 
 fn a_declared_building_is_published_whole() {
     let mut doc = permit_drawing(true);
+    // `KENTOS_WRITE_BIM_DRAWING=1` keeps the declared drawing, its set made and no answer given, for the agents' test
+    // (crates/native/mcp/tests/bim_package.rs): fixtures/arch/v1/kesit-binasi-tam.kcad.
+    if std::env::var_os("KENTOS_WRITE_BIM_DRAWING").is_some() {
+        let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/kesit-binasi-tam.kcad");
+        fs::write(out, kentos_kcad::encode(&doc.to_snapshot_v2()).expect("encodes")).expect("the drawing kept");
+    }
     // The author's answers kept in the drawing (`cad.form.answer`, docs/adr/8077): the publication reads them, none given
     // to it.
     run(&mut doc, "cad.form.answer", json!({"answers": answers()}));

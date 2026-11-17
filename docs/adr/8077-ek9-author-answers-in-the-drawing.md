@@ -86,7 +86,14 @@ verildi (`tests/headless/bim_package.rs::the_flat_s_declared_package_holds`). Ku
 
 Tamamlanınca paket yayımlandı: beş sonuçtan dördü Tutuyor, idare Bekleniyor; formun kaydı müellifin dört cevabını taşır.
 
-## §6. Açık işler
+## §6. Ajanın yolu (MCP, uçtan uca)
+
+`crates/native/mcp/tests/bim_package.rs`: gerçek MCP sunucusunda ajan, yazar gibi doldurulmuş ve ruhsat takımı yapılmış
+kesit binasını açar (`fixtures/arch/v1/kesit-binasi-tam.kcad`; `KENTOS_WRITE_BIM_DRAWING=1` başsız testten yazar),
+`file.publish.sheets`'i `bim` ile çağırır ve müellife kalan sorularda durdurulur (hiçbir şey yazılmaz); `cad.form.answer`
+ile cevaplar, yeniden yayımlar: beş sonuçtan dördü Tutuyor, model klasörde, formun kaydında çizimin cevapları.
+
+## §7. Açık işler
 
 - **Cevabın eskimesi:** model değişince bir cevap eskiyebilir (10. sorunun alan tabloları gibi); cevap modelin revizyonunu
   taşımıyor, uyarı yok.
@@ -94,4 +101,3 @@ Tamamlanınca paket yayımlandı: beş sonuçtan dördü Tutuyor, idare Bekleniy
   ADR 8068'den beri her mimari sürüm artışında güncellenmedi. Python SDK'nın tipli katmanından ortak durumlar
   (`test_command_cases`) mimari verisi ≥1 olan ilk belgede duruyor; bu dilimin durumları da oradan geçemiyor. Ayrı iş:
   TODOS.md.
-- MCP'nin uçtan uca sınaması B14'ün kalanıdır.
