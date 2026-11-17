@@ -88,4 +88,4 @@ def kat_yuksekligi_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
 @ext.audit("kapi-olculeri")
 def kapi_olculeri_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Kapı yüksekliği ve net genişliği (PAİY 39/1; Sivas 39/1): bina ve bölüm girişi, öbür kapılar."""
-    return _bulgular(facts, ("paiy_door_",))
+    return _bulgular(facts, ("paiy_door_", "paiy_revolving_door_"))

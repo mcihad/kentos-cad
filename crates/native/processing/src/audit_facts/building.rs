@@ -504,6 +504,7 @@ fn people_and_doors(doc: &Document, storeys: &mut [StoreyHolds]) -> (Vec<RoomPeo
                     .and_then(|t| t.fire_rating.as_ref())
             })
             .map(|d| d.value.clone());
+        let sizes = f.sizes();
         doors.push(DoorFacts {
             uid: uid.to_string(),
             level,
@@ -516,8 +517,11 @@ fn people_and_doors(doc: &Document, storeys: &mut [StoreyHolds]) -> (Vec<RoomPeo
             fire_rating,
             stair: l.is_some_and(|x| x.3) || r.is_some_and(|x| x.3),
             lobby: l.is_some_and(|x| x.4) || r.is_some_and(|x| x.4),
-            clear: f.sizes().clear,
+            clear: sizes.clear,
             height: f.head.map(|head| head - f.sill.unwrap_or(0.0)),
+            // A double door's leaves and its first leaf's net clear (docs/adr/8093; PAİY 39/1-b).
+            leaves: if sizes.leaves.len() > 1 { sizes.leaves.clone() } else { Vec::new() },
+            clear_first: sizes.clear_first,
             sides,
             toilet: sides_what.iter().any(|w| w.1),
             balcony: sides_what.iter().any(|w| w.2),

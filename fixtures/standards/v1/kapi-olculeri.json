@@ -1,7 +1,7 @@
 {
  "format": "kentos.regulationCases",
  "version": 1,
- "about": "Kapı ölçülerinin bağımsız durumları (docs/adr/8083): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 39/1'in 1.10.2017 (RG 3.7.2017/30113, b bendi 30.9.2017/30196) ve 13.8.2025 (RG 32985) hâllerinden ve Sivas İmar Yönetmeliği 39/1'den (RG 10.11.2022/32009) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.doors: net genişlik, yükseklik, iki yanında ne olduğu, tuvalet ve balkon).",
+ "about": "Kapı ölçülerinin bağımsız durumları (docs/adr/8083): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 39/1'in 1.10.2017 (RG 3.7.2017/30113, b bendi 30.9.2017/30196) ve 13.8.2025 (RG 32985) hâllerinden ve Sivas İmar Yönetmeliği 39/1'den (RG 10.11.2022/32009) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.doors: net genişlik, yükseklik, iki yanında ne olduğu, tuvalet ve balkon). Çift kanat (39/1-b'nin bir kanadı) ve döner kapı (39/1-ç) durumları docs/adr/8093'ten.",
  "cases": [
   {
    "id": "ic-kapi-076-2026",
@@ -1307,6 +1307,365 @@
      "Sivas 39/1": [
       "failed",
       "10.11.2022"
+     ]
+    }
+   }
+  },
+  {
+   "id": "cift-kanat-tamam",
+   "neden": "Ortak alanlı binanın bina girişi çift kanatlı: iki kanat 1,10 ve 0,60 m, ikisi açıkken net 1,62 m (b: 1,50), ilk kanat tek başına net 1,04 m (b: bir kanat 1,00) → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000201",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       null
+      ],
+      "operation": "swing",
+      "sides": [
+       "common",
+       null
+      ],
+      "clear": 1.62,
+      "height": 2.1,
+      "leaves": [
+       1.1,
+       0.6
+      ],
+      "clearFirst": 1.04
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 39/1": [
+      "passed",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "cift-kanat-esit-dar",
+   "neden": "Eşit iki kanat 0,85 m: ikisi açıkken net 1,62 m tutar, bir kanat tek başına net 0,79 m < 1,00 → 39/1-b'den kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000202",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       null
+      ],
+      "operation": "swing",
+      "sides": [
+       "common",
+       null
+      ],
+      "clear": 1.62,
+      "height": 2.1,
+      "leaves": [
+       0.85,
+       0.85
+      ],
+      "clearFirst": 0.79
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_door_leaf_below",
+      "has": [
+       "Çift kanatlı bina giriş kapısının bir kanadının net genişliği 0.79 m < 1.00 m",
+       "PAİY 39/1-b (13.8.2025)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "failed",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "cift-kanat-ikincisi-genis",
+   "neden": "İkinci kanat (1,10 m) ilkinden (0,60 m) geniş: tek başına net geçişi ölçülmüyor → uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000203",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       null
+      ],
+      "operation": "swing",
+      "sides": [
+       "common",
+       null
+      ],
+      "clear": 1.62,
+      "height": 2.1,
+      "leaves": [
+       0.6,
+       1.1
+      ],
+      "clearFirst": 0.55
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_door_leaf_below",
+      "state": "expertReview",
+      "has": [
+       "ikinci kanadı (1.10 m) ilkinden (0.60 m) geniş"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "expertReview",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "doner-kapi-yaninda-normal",
+   "neden": "Döner bina giriş kapısının yanında aynı hole açılan net 1,50 m normal bina giriş kapısı var: 39/1-ç → geçer (döner kapının kendi genişliği okunmaz).",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000204",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       null
+      ],
+      "operation": "revolving",
+      "sides": [
+       "common",
+       null
+      ],
+      "clear": 0.9,
+      "height": 2.1
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000205",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       null
+      ],
+      "operation": "swing",
+      "sides": [
+       "common",
+       null
+      ],
+      "clear": 1.5,
+      "height": 2.1
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 39/1": [
+      "passed",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "doner-kapi-yalniz",
+   "neden": "Bina girişinde yalnız döner kapı: 39/1-ç döner kapıya ancak normal kapının yanında izin verir → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000206",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       null
+      ],
+      "operation": "revolving",
+      "sides": [
+       "common",
+       null
+      ],
+      "clear": 0.9,
+      "height": 2.1
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_revolving_door_alone",
+      "has": [
+       "Döner bina giriş kapısının yanında normal bir bina giriş kapısı yok",
+       "PAİY 39/1-ç (13.8.2025)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "failed",
+      "13.8.2025"
      ]
     }
    }

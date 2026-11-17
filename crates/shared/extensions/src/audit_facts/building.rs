@@ -324,6 +324,12 @@ pub struct DoorFacts {
     /// Its height, its head over its sill, m; none without a head.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<f64>,
+    /// A door of two or more leaves: each leaf's width from its start, m (docs/adr/8093; PAİY 39/1-b); empty for one.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub leaves: Vec<f64>,
+    /// A two-leaf door's net clear width with only its first leaf open, m (docs/adr/8093).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clear_first: Option<f64>,
     /// What stands on its two sides, in `between`'s order: `unit`, `common`, `annex` or `outdoor` (a room of one of the
     /// program's independent units, common areas, annexes or outdoor areas: a garden, a car park), `room` (a room in no
     /// program group), `void` (a shaft, a gallery); none: nothing drawn there. Planlı Alanlar İmar Yönetmeliği 39/1
@@ -420,6 +426,10 @@ impl BuildingFacts {
         for d in &mut self.doors {
             d.clear = d.clear.map(|c| round(c, LENGTH));
             d.height = d.height.map(|h| round(h, LENGTH));
+            d.clear_first = d.clear_first.map(|c| round(c, LENGTH));
+            for l in &mut d.leaves {
+                *l = round(*l, LENGTH);
+            }
         }
         self.doors.sort_by(|a, b| a.uid.cmp(&b.uid));
         for l in &mut self.limits {

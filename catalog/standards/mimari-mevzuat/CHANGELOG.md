@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 0.17.0 — 17 Kasım 2026
+
+- Kapı ölçüleri (`kapi_olculeri`): 39/1-b'nin çift kanadı: bina girişinde bir kanadın net genişliği en az 1,00 m (ilk
+  kanat geniş ya da eşitse tek başına net geçişi; ikinci kanat genişse uzman incelemesi; `paiy_door_leaf_below`); 39/1-ç:
+  döner bina giriş kapısının yanında (aynı mahale açılan) döner olmayan bir bina giriş kapısı yoksa kaldı
+  (`paiy_revolving_door_alone`), döner kapının kendi net genişliği okunmaz. Olgular kapıların `leaves` ve `clearFirst`'ü.
+  5 bağımsız durum.
+
 ## 0.16.0 — 17 Kasım 2026
 
 - 62/4'ün ikinci cümlesi (`kuyular`): bodruma da inen asansörün bodrum kattaki kapısının önü yangın güvenlik holü ya da

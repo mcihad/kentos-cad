@@ -125,7 +125,8 @@ sayısı (Sivas) ve mevzuat.gov.tr'nin derlenmiş PAİY metni (değişiklik işa
   bölgesi varsayımı projenin imar durumundan okunsun.
 - **28/1-d:** geleneksel kesme taş yığma bina 4,50 m (taşıyıcı sistem beyanı modelde yok).
 - **39/1-b'nin bir kanadı:** çift kanatlı bina girişinde bir kanadın 1,00 m'si (`OpeningSizes.clear_first` ilk kanadı
-  ölçer; geniş kanadın tek başına net geçişi gerekir). 39/1-ç döner kapının yanındaki normal kapı; 39/1-d okunmaz.
+  ölçer; geniş kanadın tek başına net geçişi gerekir). 39/1-ç döner kapının yanındaki normal kapı; 39/1-d okunmaz. İkisi
+  [ADR 8093](8093-double-door-leaf-revolving-door.md)'te yapıldı.
 - **`regulation_conflict`** hem Rust'ın grubunun hem paketin kodudur: paketin çelişkisine verilen istisna Rust'ın
   `stale` listesinde görünebilir (34/8'in çelişkisinde de vardı).
 - 39/5 (asansörlü eşya taşıma için 3–10 katlı binada bir balkon kapısı 0,90 m) ayrı kural.

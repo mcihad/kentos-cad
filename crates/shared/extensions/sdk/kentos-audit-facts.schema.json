@@ -729,6 +729,14 @@
             "null"
           ]
         },
+        "clearFirst": {
+          "description": "A two-leaf door's net clear width with only its first leaf open, m (docs/adr/8093).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
         "elevator": {
           "description": "One of its sides is an elevator's shaft: an elevator's landing door (docs/adr/8087; BYKHY 62/4, 62/6, 62/7).",
           "type": "boolean"
@@ -747,6 +755,14 @@
             "number",
             "null"
           ]
+        },
+        "leaves": {
+          "description": "A door of two or more leaves: each leaf's width from its start, m (docs/adr/8093; PAİY 39/1-b); empty for one.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array"
         },
         "level": {
           "type": [

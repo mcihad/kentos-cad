@@ -308,6 +308,9 @@
   - **Bodruma inen asansör (17 Kasım 2026; [ADR 8092](../adr/8092-basement-lift-protected-corridor.md), K124–K126):**
     bodrumdaki asansör kapısının önü yangın güvenlik holü ya da korunmuş koridor (ayrımları Ek-3/C'nin bodrum süresince
     EI, açık yersiz; 4/dd, 36/1-a).
+  - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
+    PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
+    39/1-ç döner kapının yanında normal bina girişi.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

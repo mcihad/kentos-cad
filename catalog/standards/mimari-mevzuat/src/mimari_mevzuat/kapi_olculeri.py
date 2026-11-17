@@ -21,8 +21,12 @@ balkon kapısı olup olmadığı; ``units``, ``commons``):
 - Bir bağımsız bölümün mahali ile ortak alanın mahali arasındaki kapı bağımsız bölüm girişidir (c).
 - Öbürleri diğer mahallerin kapısıdır (c); bir yanı tuvalet ya da balkon olan kapı, hâli izin veriyorsa 0,80 m. Balkonu
   mahal olarak çizilmemiş balkon kapısı dışarı açılır: balkon mahalini çizmek okumayı düzeltir.
-- Sabit kapı ve hiçbir yanında mahal olmayan kapı okunmaz; üst kotu olmayan kapının yüksekliği okunmaz. Çift kanatlı
-  bina girişinde bir kanadın 1,00 m'si ve döner kapının yanındaki normal kapı (ç) henüz okunmaz.
+- Sabit kapı ve hiçbir yanında mahal olmayan kapı okunmaz; üst kotu olmayan kapının yüksekliği okunmaz.
+- **Çift kanatlı bina girişi** (b, docs/adr/8093): bir kanadın net genişliği 1,00 m'den az olamaz: ilk kanat geniş ya da
+  eşitse onun tek başına net geçişi (`clearFirst`) okunur; ikinci kanat genişse tek başına net geçişi ölçülmez, uzman
+  incelemesi.
+- **Döner kapı** (ç): ancak 39/1'in ölçülerinde normal bir kapının yanında ilave olabilir: döner bina giriş kapısının
+  kendi net genişliği okunmaz, aynı mahale açılan döner olmayan bir bina giriş kapısı aranır; yoksa kaldı.
 
 **Gün yoksa** her kapı ayrı denenir (``yururluk.parcalarla``): sonucu güne göre değişmeyen kapının bulgusu en yeni hâlle
 verilir, değişeninki o kapının "eksik veri" bulgusudur.
@@ -40,6 +44,8 @@ ULUSAL = [("PAİY", "39/1")]
 YEREL = [("Sivas", "39/1")]
 KONU = "kapı kuralı"
 GENISLET = "Kapıyı genişletin ya da daha geniş bir kapı tipi seçin."
+KANAT = "Kanatlardan birini en az 1,00 m net geçiş verecek kadar genişletin (kanat payı) ya da daha geniş bir kapı seçin."
+DONER = "Döner kapının yanına 39/1'in ölçülerinde (net en az 1,50 m) normal bir bina giriş kapısı çizin."
 YUKSELT = "Kapının yüksekliğini en az 2,10 m yapın."
 
 
@@ -89,8 +95,9 @@ def _satir(hal: y.Hal, durum: str) -> dict[str, Any]:
             "state": durum, "note": ""}
 
 
-def _kapi(kapi: dict[str, Any], ortak: bool, sivas: bool, gun: date) -> y.Sonuc:
-    """Bir kapının ``gun``deki bulguları ve maddelerin bu kapıdaki durumu."""
+def _kapi(kapi: dict[str, Any], ortak: bool, sivas: bool, gun: date, kapilar: list[dict[str, Any]]) -> y.Sonuc:
+    """Bir kapının ``gun``deki bulguları ve maddelerin bu kapıdaki durumu; ``kapilar`` binanın okunan kapıları (döner
+    kapının yanındaki normal kapı için)."""
     hu = y.hal("PAİY", "39/1", gun)
     hy = y.hal("Sivas", "39/1", gun) if sivas else None
     if hu is None:
@@ -117,7 +124,8 @@ def _kapi(kapi: dict[str, Any], ortak: bool, sivas: bool, gun: date) -> y.Sonuc:
         topla(*katman.durumlar(float(h), True, ulusal, yerel))
     yer = yeri(kapi, ortak)
     v = kapi.get("clear")
-    if yer is not None and v is not None:
+    doner = kapi.get("operation") == "revolving"
+    if yer is not None and v is not None and not (doner and yer == "bina"):
         ulusal, ozne = _genislik(hu, yer, kapi)
         yerel = _genislik(hy, yer, kapi)[0] if hy is not None else None
         b = katman.bulgu("paiy_door_width_below", ozne, float(v), True, ulusal, yerel, GENISLET, uids,
@@ -125,6 +133,39 @@ def _kapi(kapi: dict[str, Any], ortak: bool, sivas: bool, gun: date) -> y.Sonuc:
         if b:
             bulgular.append(b)
         topla(*katman.durumlar(float(v), True, ulusal, yerel))
+    kanatlar = list(kapi.get("leaves") or [])
+    if yer == "bina" and len(kanatlar) == 2 and not doner:
+        # 39/1-b: çift kanatlı bina girişinde bir kanat en az 1,00 m (docs/adr/8093).
+        ilk = kapi.get("clearFirst")
+        if kanatlar[0] + 1e-9 >= kanatlar[1] and ilk is not None:
+            ulusal = katman.Sinir(float(hu.anahtar["leaf"]), hu, "b")
+            yerel = katman.Sinir(float(hy.anahtar["leaf"]), hy, "b") if hy is not None else None
+            b = katman.bulgu("paiy_door_leaf_below", "Çift kanatlı bina giriş kapısının bir kanadının net genişliği",
+                             float(ilk), True, ulusal, yerel, KANAT, uids, f"{kapi['uid']}:kanat")
+            if b:
+                bulgular.append(b)
+            topla(*katman.durumlar(float(ilk), True, ulusal, yerel))
+        else:
+            bulgular.append({"code": "paiy_door_leaf_below", "state": y.UZMAN, "uids": uids, "repair": KANAT,
+                             "message": f"Çift kanatlı bina giriş kapısının ikinci kanadı ({kanatlar[1]:.2f} m) ilkinden "
+                                        f"({kanatlar[0]:.2f} m) geniş: tek başına net geçişi ölçülmüyor; 39/1-b bir "
+                                        f"kanadın en az {float(hu.anahtar['leaf']):.2f} m olmasını ister — {hu.kisa('b')}",
+                             "rule": hu.kural("b"), "_iz": f"{kapi['uid']}:kanat"})
+            if durum_u == y.GECTI:
+                durum_u = y.UZMAN
+    if doner and yer == "bina":
+        # 39/1-ç: döner kapı ancak normal bir kapının yanında ilave; yanı: aynı mahale açılan bina girişi.
+        icerisi = {u for u in kapi.get("between") or [] if u}
+        yaninda = any(k["uid"] != kapi["uid"] and k.get("operation") != "revolving" and yeri(k, ortak) == "bina"
+                      and icerisi & {u for u in k.get("between") or [] if u} for k in kapilar)
+        if not yaninda:
+            bulgular.append({"code": "paiy_revolving_door_alone", "uids": uids, "repair": DONER,
+                             "message": f"Döner bina giriş kapısının yanında normal bir bina giriş kapısı yok: 39/1-ç "
+                                        f"döner kapıya ancak 39/1'in ölçülerinde normal bir kapının yanında ilave olarak "
+                                        f"izin verir — {hu.kisa('ç')}", "rule": hu.kural("ç"), "_iz": f"{kapi['uid']}:döner"})
+            durum_u = y.KALDI
+            if hy is not None:
+                durum_y = y.KALDI
     satirlar = [_satir(hu, durum_u)] + ([_satir(hy, durum_y)] if hy is not None and durum_y is not None else [])
     return y.Sonuc(bulgular, satirlar)
 
@@ -158,7 +199,7 @@ def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Son
                  "state": y.UZMAN}
         return y.Sonuc([bulgu], [{"rule": "PAİY 39/1", "title": ilk.baslik, "version": None, "gazette": None,
                                   "state": y.UZMAN, "note": ileti}])
-    sonuclar = y.parcalarla(kapilar, lambda k, g: _kapi(k, ortak, sivas, g), maddeler, gun, neden, KONU,
+    sonuclar = y.parcalarla(kapilar, lambda k, g: _kapi(k, ortak, sivas, g, kapilar), maddeler, gun, neden, KONU,
                             lambda k: [k["uid"]])
     bulgular = [b for s in sonuclar for b in s.bulgular]
     satirlar = []

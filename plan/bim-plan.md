@@ -593,7 +593,7 @@ aynı çizim 30.6.2026'da geçer, 2.7.2026'da 34/8'den kalır, tarihsiz eksik ve
 §6); çatının Broof sınıfı ve mahal kaplamalarının malzemesi (ADR 8091 §6); 62/4'ün kuyu havalandırması (ADR 8087 §6, 8092 §6);
 erişilebilir yol (TS 9111 metni); plan notlarının öbür konuları (ADR 8084 §6); blok başına bölge ve 28/1-d (ADR 8085
 §6);
-konut dışı (B22); 39/1-b'nin çift kanadı (ADR 8083 §6);
+konut dışı (B22);
 emsalde 22/1-j, 22/1-m ve 5/8'in bodrum listesi (ADR 8079 §6).
 **Yapıldı (17 Kasım 2026, ADR 8078 §6, K64):** uzman onayı kayıtlı: paketin bulgusu `cad.arch.exceptions`'a verilerek
 istisna yapılır; uzman incelemesi bulgusunun istisnası "Uzman onayı"dır, notu uzmanın sözü; bulgu değişince düşer, katla
@@ -669,6 +669,9 @@ bağımsız durum, 9 komut durumu.
 **Yapıldı (17 Kasım 2026, [ADR 8092](../docs/adr/8092-basement-lift-protected-corridor.md), K124–K126):** 62/4'ün ikinci
 cümlesi: bodruma inen asansöre bodrumda yangın güvenlik holünden ya da korunmuş koridordan (4/dd, 36/1-a: ayrımları
 Ek-3/C'nin bodrum süresince EI) ulaşılır (paket 0.16.0, 7 bağımsız durum).
+**Yapıldı (17 Kasım 2026, [ADR 8093](../docs/adr/8093-double-door-leaf-revolving-door.md), K127–K128):** PAİY 39/1-b'nin
+çift kanatlı bina girişinde bir kanadı (en az 1,00 m, ilk kanadın tek başına net geçişi) ve 39/1-ç'nin döner kapısı
+(yanında normal bina girişi); olgulara kanat enleri (paket 0.17.0, 5 bağımsız durum).
 
 **Kullanıcı sonucu:** Denetim, başvuru tarihinde yürürlükte olan kuralları uygular. Her bulgu geçti, kaldı, eksik veri,
 uzman incelemesi ya da kapsam dışıdır. Yorum isteyen konu kendiliğinden "uygun" sayılmaz. Dayanak Z9; Ek A.
