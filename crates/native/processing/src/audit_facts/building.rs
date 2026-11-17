@@ -20,11 +20,15 @@
 //!   safety lobby (named Yangın güvenlik holü). A storey holding an escape stair's room is the stair's.
 //! - **The limited uses** (docs/adr/8079): what Emsal ve TAKS tablosu lets out of katlar alanı only up to a limit of
 //!   22/1 (`Document::zoning_limits`), with or without the parcel's zoning; and the program's buildings' uses.
+//! - **Under the stairs** (docs/adr/8080): each stair's places lower than 1.80 m (`Document::under_stairs`) and the rooms
+//!   its spaces lie in (`Document::under_stair_rooms`), each named by its name and number.
 
 use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
-use kentos_extensions::audit_facts::building::{BuildingFacts, DoorFacts, EmsalLimit, RoomPeople, StoreyHolds};
+use kentos_extensions::audit_facts::building::{
+    BuildingFacts, DoorFacts, EmsalLimit, RoomPeople, StoreyHolds, UnderStairFacts, UnderStairRoom,
+};
 
 /// The drawing's building facts; empty (no storey) for a project without Mimari's storeys.
 pub fn measure(doc: &Document) -> BuildingFacts {
@@ -87,6 +91,32 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             common: l.common,
         })
         .collect();
+    let names: std::collections::HashMap<String, String> = doc
+        .entities_with_uids()
+        .filter_map(|(uid, e)| match e {
+            Entity::Space(s) => Some((uid.to_string(), room_name(&s.space))),
+            _ => None,
+        })
+        .collect();
+    let under_stairs = doc
+        .under_stairs()
+        .into_iter()
+        .map(|u| {
+            let area = |a: &[kentos_geometry_core::geom::arrangement::Area]| kentos_geometry_core::geom::space::area(a);
+            UnderStairFacts {
+                rooms: doc
+                    .under_stair_rooms(&u)
+                    .into_iter()
+                    .map(|(uid, area)| UnderStairRoom { name: names.get(&uid).cloned().unwrap_or_default(), uid, area })
+                    .collect(),
+                stair: u.uid,
+                level: u.level,
+                low: area(&u.low),
+                open: area(&u.open),
+                waist: u.waist,
+            }
+        })
+        .collect();
     BuildingFacts {
         storeys,
         units: units.len() as u32,
@@ -98,6 +128,16 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         doors,
         limits,
         uses: program.buildings.iter().filter_map(|b| b.usage.clone()).collect(),
+        under_stairs,
+    }
+}
+
+/// A room's name as a finding says it: its name, else its use, else "Mahal"; its number after it.
+fn room_name(x: &kentos_commands::SpaceFields) -> String {
+    let name = x.name.clone().or_else(|| x.usage.clone()).unwrap_or_else(|| "Mahal".to_owned());
+    match x.number.as_deref().filter(|n| !n.is_empty()) {
+        Some(n) => format!("{name} ({n})"),
+        None => name,
     }
 }
 

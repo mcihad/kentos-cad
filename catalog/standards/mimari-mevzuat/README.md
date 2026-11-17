@@ -13,8 +13,10 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   toprak altında depo eklentisi %50, kapıcı daireleri 70 m², kütüphane 50 m²); kural koşullarına bakar: emsal harici
   kapıcı dairesi 44/1'e göre zorunlu mu (22/1-ç), kütüphane alışveriş merkezinde ya da 40'tan fazla bağımsız bölümlü
   binada, normal katta ve ortak alan mı (22/1-f).
+- **Merdiven altı** (`merdiven_alti`, docs/adr/8080): 1,80 m'den alçak merdiven altı kapatılır (31/6); alçak boşluk bir
+  mahale açıksa kaldı.
 - **Olgular** KentOS'un ölçtüğüdür (`facts.building`, `facts.permit`); kural çizimi okumaz.
-- **Bağımsız durumlar** `fixtures/standards/v1/asansor.json`, `kapilar.json` ve `emsal.json`: beklenen sonuçlar mevzuat
+- **Bağımsız durumlar** `fixtures/standards/v1/asansor.json`, `kapilar.json`, `emsal.json` ve `merdiven-alti.json`: beklenen sonuçlar mevzuat
   metninden elle çıkarıldı.
 
-Sınama: `python3 -I catalog/standards/tests/mimari-mevzuat/test_asansor.py`, `test_kapilar.py` ve `test_emsal.py`.
+Sınama: `python3 -I catalog/standards/tests/mimari-mevzuat/test_asansor.py`, `test_kapilar.py`, `test_emsal.py` ve `test_merdiven_alti.py`.

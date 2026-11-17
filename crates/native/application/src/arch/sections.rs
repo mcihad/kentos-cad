@@ -28,7 +28,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use kentos_commands::{BeamRole, Entity, OpeningForm, SlabLayerKind, Vec2, ViewMarkForm};
 use kentos_domain::{Document, Uuid};
-use kentos_geometry_core::geom::section::{self as sec, Flight, Frame, Height, Solid, Void};
+use kentos_geometry_core::geom::section::{self as sec, Frame, Height, Solid, Void};
 use kentos_geometry_core::vec2::Vec2 as P;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -390,7 +390,7 @@ pub fn model(doc: &Document) -> Model {
             Entity::Beam(b) => beam(doc, &b.beam, owner, &mut m),
             Entity::Roof(r) => roof(doc, r, owner, &mut m),
             Entity::Railing(r) => railing(&r.railing, owner, &mut m),
-            Entity::Stair(s) => stair(&s.stair, &slabs, owner, &mut m),
+            Entity::Stair(s) => stair(doc, &s.stair, owner, &mut m),
             Entity::Ramp(r) => ramp(&r.ramp, &slabs, owner, &mut m),
             Entity::Insert(i) => fixture(doc, i, owner, &mut m),
             _ => {}
@@ -1605,70 +1605,13 @@ fn area(ring: &[P]) -> f64 {
         / 2.0
 }
 
-/// A curved stair (docs/adr/0709, 8071): each tread between its two risers a piece of the ring round its walking line's
-/// centre, its arcs true (`Model::exact`), standing as a balanced stair's winders do (docs/adr/8045 §2): its top its
-/// height, its bottom a riser and its waist under it, never under its floor (down to its floor without a waist); its
-/// centre post (docs/adr/0724 §3) a cylinder from its floor to where it arrives. The section draws the arcs' chords.
-fn curved_stair(
-    pts: &[P],
-    spec: &kentos_geometry_core::geom::arch::StairSpec,
-    (base, rh, n): (f64, f64, usize),
-    waist: Option<f64>,
-    look: &Look,
-    owner: Option<String>,
-    m: &mut Model,
-) {
-    use kentos_geometry_core::entity::polygon_ring;
-    use kentos_geometry_core::geom::arch::{Walk, riser_stations};
-    use kentos_geometry_core::geom::bulge::{bulge_of_sweep, bulge_ring_area};
-    m.left.insert((Left::Curved, owner.clone()));
-    let walk = Walk::curved(pts, spec.bulge);
-    let Some(arc) = walk.arc else {
-        return;
-    };
-    let (stations, _) = riser_stations(&walk, spec);
-    let half = spec.width / 2.0;
-    let turn = if arc.sweep < 0.0 { -1.0 } else { 1.0 };
-    // A point `k` half widths left of the walking line `s` along it.
-    let side = |s: f64, k: f64| {
-        let (p, d) = walk.point(s);
-        P::new(p.x - d.y * half * k, p.y + d.x * half * k)
-    };
-    let solid = |ring: &[P], bulges: &[f64], bottom: f64, top: f64| Solid {
-        rings: vec![polygon_ring(ring, Some(bulges))],
-        height: Height::Prism { bottom, top },
-        voids: Vec::new(),
-        marks: Vec::new(),
-        finish: None,
-    };
-    for (i, w) in stations.windows(2).enumerate() {
-        let (s0, s1) = (w[0], w[1]);
-        let b = bulge_of_sweep(turn * (s1 - s0) / arc.r);
-        // Counter-clockwise: from the side whose arc runs it so.
-        let ring_of = |k: f64| vec![side(s0, k), side(s1, k), side(s1, -k), side(s0, -k)];
-        let bulges = vec![b, 0.0, -b, 0.0];
-        let mut ring = ring_of(1.0);
-        if bulge_ring_area(&ring, Some(&bulges)) < 0.0 {
-            ring = ring_of(-1.0);
-        }
-        let top = base + rh * (i + 1) as f64;
-        let bottom = waist.map_or(base, |wst| (top - rh - wst).max(base));
-        push_exact(m, solid(&ring, &bulges, bottom, top), look.clone(), owner.clone(), vec![(ring, bulges)]);
-    }
-    if let Some(d) = spec.post.filter(|d| *d > 0.0) {
-        let ring = vec![P::new(arc.c.x + d / 2.0, arc.c.y), P::new(arc.c.x - d / 2.0, arc.c.y)];
-        let bulges = vec![1.0, 1.0];
-        let top = base + rh * n as f64;
-        push_exact(m, solid(&ring, &bulges, base, top), look.clone(), owner, vec![(ring, bulges)]);
-    }
-}
-
-/// A stair: each straight leg a flight, each landing a slab, as thick as the slab it arrives at (docs/adr/8042 §3).
-fn stair(s: &kentos_commands::StairFields, slabs: &[SlabAt], owner: Option<String>, m: &mut Model) {
-    use kentos_geometry_core::entity::Shape;
-    use kentos_geometry_core::geom::arch::{
-        Walk, riser_stations, stair_landings, tread_ring, winder_turns,
-    };
+/// A stair (docs/adr/8042 §3): its body as the geometry core builds it (`stair_body`: each straight leg a flight, a
+/// balanced stair's winders and a curved stair's treads one by one, each landing a slab), as thick as the slab it
+/// arrives at (`Document::stair_waist`, docs/adr/8080); without one, solid down to its floor. A curved stair's arcs are
+/// true (`Model::exact`); the section draws their chords.
+fn stair(doc: &Document, s: &kentos_commands::StairFields, owner: Option<String>, m: &mut Model) {
+    use kentos_geometry_core::entity::{Shape, polygon_ring};
+    use kentos_geometry_core::geom::stair_body::{StairPart, stair_body};
     let Shape::Stair { pts, stair: spec } = kentos_formats::arch_elements::core_stair(s) else {
         return;
     };
@@ -1677,152 +1620,49 @@ fn stair(s: &kentos_commands::StairFields, slabs: &[SlabAt], owner: Option<Strin
         return;
     }
     let (base, _) = floor_of(&m.levels, s.arch.level.as_deref());
-    let rh = s.riser_height;
-    let n = s.risers as usize;
-    let end = *pts.last().unwrap_or(&pts[0]);
-    let start = pts[0];
-    // Its waist: the structure of the slab it arrives at, else of the one it starts from.
-    let arrive = base + rh * n as f64;
-    let waist = slabs
-        .iter()
-        .find(|sl| sl.holds(end) && (sl.top - arrive).abs() <= 0.5)
-        .or_else(|| {
-            slabs
-                .iter()
-                .find(|sl| sl.holds(start) && (sl.top - base).abs() <= 0.5)
-        })
-        .map(|sl| sl.thickness);
+    let waist = doc.stair_waist(s);
     if waist.is_none() {
         m.left.insert((Left::StairWaist, owner.clone()));
     }
-    let look = concrete_look();
     if spec.bulge != 0.0 {
-        curved_stair(&pts, &spec, (base, rh, n), waist, &look, owner, m);
-        return;
+        m.left.insert((Left::Curved, owner.clone()));
     }
-    let walk = Walk::of(&pts);
-    let (stations, _) = riser_stations(&walk, &spec);
-    let landings = stair_landings(&walk, &spec);
-    // A balanced stair's turns (docs/adr/8045 §2): each winds from its last square riser before its zone to its first
-    // after it (else the stair's last); the flights stop there as at a landing and its treads stand one by one.
-    let winding: Vec<(f64, f64)> = winder_turns(&walk, &spec)
-        .iter()
-        .filter_map(|t| {
-            let a = stations
-                .iter()
-                .copied()
-                .rfind(|st| *st <= t.corner - t.reach + 1e-9)?;
-            let b = stations
-                .iter()
-                .copied()
-                .find(|st| *st >= t.corner + t.reach - 1e-9)
-                .or_else(|| stations.last().copied())?;
-            (b > a + 1e-9).then_some((a, b))
-        })
-        .collect();
-    let stops: &[(f64, f64)] = if winding.is_empty() {
-        &landings
-    } else {
-        &winding
-    };
-    let half = s.width / 2.0;
-    let slope = rh / s.tread;
-    let upright = waist.map_or(f64::INFINITY, |w| w * (1.0 + slope * slope).sqrt());
-    // Each segment of the walking line: its flight's stretch past the landings.
-    for k in 0..pts.len() - 1 {
-        let (a, b) = (pts[k], pts[k + 1]);
-        let (sa, sb) = (walk.at[k], walk.at[k + 1]);
-        let len = sb - sa;
-        if len <= 1e-9 {
-            continue;
-        }
-        let dir = P::new((b.x - a.x) / len, (b.y - a.y) / len);
-        let across = P::new(-dir.y, dir.x);
-        // Its flight: from the end of a landing that holds its start (else its start) to the start of one that holds
-        // its end (else its end).
-        let lo = stops
-            .iter()
-            .find(|(x, y)| *x <= sa + 1e-9 && *y > sa + 1e-9)
-            .map_or(sa, |(_, y)| *y);
-        let hi = stops
-            .iter()
-            .find(|(x, y)| *x < sb - 1e-9 && *y >= sb - 1e-9)
-            .map_or(sb, |(x, _)| *x);
-        if hi - lo <= 1e-9 {
-            continue;
-        }
-        let at = |s: f64| P::new(a.x + dir.x * (s - sa), a.y + dir.y * (s - sa));
-        let (fa, fb) = (at(lo), at(hi));
-        let ring = vec![
-            P::new(fa.x - across.x * half, fa.y - across.y * half),
-            P::new(fb.x - across.x * half, fb.y - across.y * half),
-            P::new(fb.x + across.x * half, fb.y + across.y * half),
-            P::new(fa.x + across.x * half, fa.y + across.y * half),
-        ];
-        // Its risers, by their numbers along the whole stair.
-        let mine: Vec<(usize, f64)> = stations
-            .iter()
-            .enumerate()
-            .filter(|(_, st)| **st >= lo - 1e-9 && **st < hi - 1e-9)
-            .map(|(i, st)| (i, *st))
-            .collect();
-        let Some(&(first, s0)) = mine.first() else {
-            continue;
-        };
-        let mut steps: Vec<(f64, f64)> = Vec::new();
-        if s0 > lo + 1e-9 {
-            steps.push((0.0, base + rh * first as f64));
-        }
-        for (i, st) in &mine {
-            steps.push((st - lo, base + rh * (*i + 1) as f64));
-        }
-        // The steps' roots: the first riser's foot, rising by the riser over the tread.
-        let root = base + rh * first as f64 - (s0 - lo) * slope;
-        let under_landing = if lo > sa + 1e-9 || k > 0 {
-            base + rh * first as f64 - waist.unwrap_or(0.0)
-        } else {
-            base
-        };
-        let flight = Flight {
-            start: fa,
-            dir,
-            steps,
-            soffit: root - upright,
-            slope,
-            floor: under_landing,
-        };
-        push(
-            m,
-            Solid {
-                rings: vec![ring],
-                height: Height::Flight(flight),
-                voids: Vec::new(),
-                marks: Vec::new(),
-                finish: None,
-            },
-            look.clone(),
-            owner.clone(),
-        );
-    }
-    // Its winders (docs/adr/8045 §2): each tread between its two risers, its top its height, its bottom a riser and its
-    // waist under it, never under its floor (down to its floor without a waist): a stepped underside, the warped one a
-    // balanced stair's concrete has is not modelled.
-    for (a, b) in &winding {
-        let mine: Vec<(usize, f64)> = stations
-            .iter()
-            .copied()
-            .enumerate()
-            .filter(|(_, st)| *st >= a - 1e-9 && *st <= b + 1e-9)
-            .collect();
-        for w in mine.windows(2) {
-            let ((i, s0), (_, s1)) = (w[0], w[1]);
-            let ring = tread_ring(&walk, &spec, s0, s1);
-            if ring.len() < 3 {
-                continue;
+    let look = concrete_look();
+    for part in stair_body(&pts, &spec, base, waist) {
+        match part {
+            StairPart::Flight { ring, flight } => push(
+                m,
+                Solid {
+                    rings: vec![ring],
+                    height: Height::Flight(flight),
+                    voids: Vec::new(),
+                    marks: Vec::new(),
+                    finish: None,
+                },
+                look.clone(),
+                owner.clone(),
+            ),
+            StairPart::Prism {
+                ring,
+                bulges: Some(bulges),
+                bottom,
+                top,
+            } => {
+                let solid = Solid {
+                    rings: vec![polygon_ring(&ring, Some(&bulges))],
+                    height: Height::Prism { bottom, top },
+                    voids: Vec::new(),
+                    marks: Vec::new(),
+                    finish: None,
+                };
+                push_exact(m, solid, look.clone(), owner.clone(), vec![(ring, bulges)]);
             }
-            let top = base + rh * (i + 1) as f64;
-            let bottom = waist.map_or(base, |wst| (top - rh - wst).max(base));
-            push(
+            StairPart::Prism {
+                ring,
+                bulges: None,
+                bottom,
+                top,
+            } => push(
                 m,
                 Solid {
                     rings: vec![ring],
@@ -1833,30 +1673,8 @@ fn stair(s: &kentos_commands::StairFields, slabs: &[SlabAt], owner: Option<Strin
                 },
                 look.clone(),
                 owner.clone(),
-            );
+            ),
         }
-    }
-    // Its landings: the band between their ends, as thick as its waist (or down to its floor without one).
-    let band = kentos_geometry_core::geom::arch::stair_band(&pts, &spec);
-    for (x, y) in &landings {
-        let risers_before = stations.iter().filter(|st| **st < *x + 1e-9).count();
-        let top = base + rh * risers_before as f64;
-        let bottom = waist.map_or(base, |w| top - w);
-        let Some(ring) = landing_ring(&walk, &band, *x, *y) else {
-            continue;
-        };
-        push(
-            m,
-            Solid {
-                rings: vec![ring],
-                height: Height::Prism { bottom, top },
-                voids: Vec::new(),
-                marks: Vec::new(),
-                finish: None,
-            },
-            look.clone(),
-            owner.clone(),
-        );
     }
 }
 
@@ -2033,7 +1851,7 @@ fn ramp(r: &kentos_commands::RampFields, slabs: &[SlabAt], owner: Option<String>
     let outline = band(&pts, half);
     for (x, y) in &landings {
         let top = height(*x);
-        let Some(ring) = landing_cut(&walk, &outline, *x, *y) else {
+        let Some(ring) = kentos_geometry_core::geom::stair_body::band_cut(&walk, &outline, *x, *y) else {
             continue;
         };
         push(
@@ -2052,67 +1870,6 @@ fn ramp(r: &kentos_commands::RampFields, slabs: &[SlabAt], owner: Option<String>
             owner.clone(),
         );
     }
-}
-
-/// A landing's outline: the stair's band between the walking line's points `x` and `y` along it, cut square to the
-/// line at both ends.
-fn landing_ring(
-    walk: &kentos_geometry_core::geom::arch::Walk,
-    band: &kentos_geometry_core::entity::Shape,
-    x: f64,
-    y: f64,
-) -> Option<Vec<P>> {
-    use kentos_geometry_core::entity::Shape;
-    let Shape::Polygon { pts: ring, .. } = band else {
-        return None;
-    };
-    landing_cut(walk, ring, x, y)
-}
-
-/// The band `ring` (a stair's or a ramp's, round its walking line) between the line's points `x` and `y` along it,
-/// cut square to the line at both ends.
-fn landing_cut(
-    walk: &kentos_geometry_core::geom::arch::Walk,
-    ring: &[P],
-    x: f64,
-    y: f64,
-) -> Option<Vec<P>> {
-    let (px, dx) = walk.point(x);
-    let (py, dy) = walk.point(y);
-    // Keep the band's part after the cross line at x (along dx) and before the one at y (along dy).
-    let after = move |q: P| (q.x - px.x) * dx.x + (q.y - px.y) * dx.y;
-    let before = move |q: P| (py.x - q.x) * dy.x + (py.y - q.y) * dy.y;
-    let mut out = clip(ring, &after);
-    out = clip(&out, &before);
-    (out.len() >= 3).then_some(out)
-}
-
-/// A ring cut to where `keep` is not below 0. A corner on the cut line is one corner of the cut ring, not one for each
-/// edge that meets it there (docs/adr/8071 §1: no edge of no length, every body closed and simple).
-fn clip(ring: &[P], keep: &dyn Fn(P) -> f64) -> Vec<P> {
-    let n = ring.len();
-    let mut out: Vec<P> = Vec::new();
-    let same = |p: P, q: P| (p.x - q.x).abs() <= 1e-12 && (p.y - q.y).abs() <= 1e-12;
-    let put = |p: P, out: &mut Vec<P>| {
-        if out.last().is_none_or(|q| !same(*q, p)) {
-            out.push(p);
-        }
-    };
-    for i in 0..n {
-        let (a, b) = (ring[i], ring[(i + 1) % n]);
-        let (ka, kb) = (keep(a), keep(b));
-        if ka >= 0.0 {
-            put(a, &mut out);
-        }
-        if (ka >= 0.0) != (kb >= 0.0) {
-            let t = ka / (ka - kb);
-            put(P::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t), &mut out);
-        }
-    }
-    while out.len() > 1 && same(out[0], out[out.len() - 1]) {
-        out.pop();
-    }
-    out
 }
 
 /// The block a section mark's section is drawn into: its id from the mark's (a section is its mark's), the same in

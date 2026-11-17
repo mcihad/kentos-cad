@@ -109,6 +109,6 @@ Tarih: 2026-11-08. Durum: kabul (M29, ADV-22; plan S22).
   katılması (PAİY 4/oooo).
   (Kat ara toplamı yapıldı: Metrekare cetveli aracı katları ara toplamıyla kapatır, [ADR 8079](8079-emsal-article-22-limits.md)
   K69.)
-- Merdiven altında 1,80 m'den alçak yerin net alandan düşülmesi (merdivenin kesitinden).
+- Merdiven altında 1,80 m'den alçak yerin net alandan düşülmesi (merdivenin kesitinden). (Yapıldı: [ADR 8080](8080-under-stair-1-80.md).)
 - Sıvasız duvar stilli projelerde 2,5 cm sıva payının düşülmesi (proje seçeneği).
 - Eklentiler ve toplam brüt (M31); emsal ve TAKS (M30).

@@ -1,0 +1,1213 @@
+{
+  "format": "kentos.regulationCases",
+  "version": 1,
+  "about": "Merdiven altının bağımsız durumları (docs/adr/8080): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 31/6'nın metninden (RG 3.7.2017/30113, değişmedi) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.underStairs): durumlar kapatılıp kapatılmadığını sınar, alçak yerin ölçüsünü Rust'ın sınamaları sınar.",
+  "cases": [
+    {
+      "id": "salona-acik",
+      "neden": "Dubleksin iç merdiveninin altında 1,80 m'den alçak 3,90 m² boşluk salonun içinde: 'kapatılır' tutmuyor → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "underStairs": [
+          {
+            "stair": "00000000-0000-4000-8000-000000000101",
+            "level": "k00",
+            "low": 4.5,
+            "open": 3.9,
+            "waist": true,
+            "rooms": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000001",
+                "name": "Salon",
+                "area": 3.9
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_under_stair_open",
+            "has": [
+              "Salon",
+              "3.90 m²",
+              "1.80 m",
+              "PAİY 31/6"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 31/6": [
+            "failed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "merdiven-evine-acik",
+      "neden": "Ortak merdivenin ilk kolunun altındaki alçak boşluk merdiven evinin içinde, kapatılmamış → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "underStairs": [
+          {
+            "stair": "00000000-0000-4000-8000-000000000101",
+            "level": "k00",
+            "low": 4.5,
+            "open": 3.9,
+            "waist": true,
+            "rooms": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000001",
+                "name": "Merdiven evi",
+                "area": 2.4
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_under_stair_open",
+            "has": [
+              "Merdiven evi",
+              "2.40 m²"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 31/6": [
+            "failed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "merdiven-alti-mahali",
+      "neden": "Alçak boşluk 'Merdiven altı' adlı ayrı bir mahal olarak duvarla kapatılmış → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "underStairs": [
+          {
+            "stair": "00000000-0000-4000-8000-000000000101",
+            "level": "k00",
+            "low": 4.5,
+            "open": 3.9,
+            "waist": true,
+            "rooms": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000001",
+                "name": "Merdiven altı",
+                "area": 3.9
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 31/6": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "dolap",
+      "neden": "Alçak boşluk 'Merdiven altı dolabı'nın içinde → kapalı, geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "underStairs": [
+          {
+            "stair": "00000000-0000-4000-8000-000000000101",
+            "level": "k00",
+            "low": 4.5,
+            "open": 3.9,
+            "waist": true,
+            "rooms": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000001",
+                "name": "Merdiven altı dolabı",
+                "area": 3.9
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 31/6": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "depo",
+      "neden": "Alçak boşluk bir depo mahalinin içinde → kapalı, geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "underStairs": [
+          {
+            "stair": "00000000-0000-4000-8000-000000000101",
+            "level": "k00",
+            "low": 4.5,
+            "open": 3.9,
+            "waist": true,
+            "rooms": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000001",
+                "name": "Depo",
+                "area": 3.9
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 31/6": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kiler-buyuk-harf",
+      "neden": "'KİLER' büyük harfle yazılmış: Türkçe İ katlanır, kapalı sayılır → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "underStairs": [
+          {
+            "stair": "00000000-0000-4000-8000-000000000101",
+            "level": "k00",
+            "low": 4.5,
+            "open": 3.9,
+            "waist": true,
+            "rooms": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000001",
+                "name": "KİLER",
+                "area": 3.9
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 31/6": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "vestiyer",
+      "neden": "Alçak boşluk vestiyerin içinde → kapalı, geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "underStairs": [
+          {
+            "stair": "00000000-0000-4000-8000-000000000101",
+            "level": "k00",
+            "low": 4.5,
+            "open": 3.9,
+            "waist": true,
+            "rooms": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000001",
+                "name": "Vestiyer",
+                "area": 3.9
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 31/6": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "hicbir-mahalde-degil",
+      "neden": "Alçak boşluk hiçbir mahalin içinde değil (duvarla ayrılmış, mahal çizilmemiş) → açık bir mahal yok, geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "underStairs": [
+          {
+            "stair": "00000000-0000-4000-8000-000000000101",
+            "level": "k00",
+            "low": 4.5,
+            "open": 3.9,
+            "waist": true
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 31/6": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "hol-ve-kiler",
+      "neden": "Boşluğun 1,20 m²'si holde (açık), 2,70 m²'si kilerde (kapalı): yalnız hol kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "underStairs": [
+          {
+            "stair": "00000000-0000-4000-8000-000000000101",
+            "level": "k00",
+            "low": 4.5,
+            "open": 3.9,
+            "waist": true,
+            "rooms": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000001",
+                "name": "Hol",
+                "area": 1.2
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000002",
+                "name": "Kiler",
+                "area": 2.7
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_under_stair_open",
+            "has": [
+              "Hol",
+              "1.20 m²"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 31/6": [
+            "failed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "iki-mahale-acik",
+      "neden": "Boşluk iki açık mahale taşıyor (salon ve hol): her biri ayrı bulgu, merdiven bir.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "underStairs": [
+          {
+            "stair": "00000000-0000-4000-8000-000000000101",
+            "level": "k00",
+            "low": 4.5,
+            "open": 3.9,
+            "waist": true,
+            "rooms": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000001",
+                "name": "Salon",
+                "area": 2.5
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000002",
+                "name": "Hol",
+                "area": 1.4
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_under_stair_open",
+            "has": [
+              "Salon"
+            ]
+          },
+          {
+            "code": "paiy_under_stair_open",
+            "has": [
+              "Hol"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 31/6": [
+            "failed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kucuk-parca",
+      "neden": "Salona düşen parça 0,005 m²: çizimin sınır gürültüsü, açık sayılmaz → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "underStairs": [
+          {
+            "stair": "00000000-0000-4000-8000-000000000101",
+            "level": "k00",
+            "low": 4.5,
+            "open": 3.9,
+            "waist": true,
+            "rooms": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000001",
+                "name": "Salon",
+                "area": 0.005
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000002",
+                "name": "Merdiven altı",
+                "area": 3.9
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 31/6": [
+            "passed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "doseme-yok",
+      "neden": "Merdivenin vardığı ve başladığı yerde döşeme yok: alt yüzü okunmuyor, boşluk olup olmadığı bilinmiyor → eksik veri (bulgu değil, madde satırı).",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "underStairs": [
+          {
+            "stair": "00000000-0000-4000-8000-000000000101",
+            "level": "k00",
+            "low": 3.36,
+            "open": 0.0,
+            "waist": false
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 31/6": [
+            "missingData",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "iki-merdiven",
+      "neden": "Biri kapalı (depo), öbürü hole açık: açık olanın bulgusu, madde kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "underStairs": [
+          {
+            "stair": "00000000-0000-4000-8000-000000000101",
+            "level": "k00",
+            "low": 4.5,
+            "open": 3.9,
+            "waist": true,
+            "rooms": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000001",
+                "name": "Depo",
+                "area": 3.9
+              }
+            ]
+          },
+          {
+            "stair": "00000000-0000-4000-8000-000000000102",
+            "level": "k00",
+            "low": 4.5,
+            "open": 3.9,
+            "waist": true,
+            "rooms": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000002",
+                "name": "Hol",
+                "area": 2.0
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_under_stair_open",
+            "has": [
+              "Hol",
+              "2.00 m²"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 31/6": [
+            "failed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "doseme-yok-ve-acik",
+      "neden": "Biri döşemesiz (okunmuyor), öbürü salona açık: açık olan kalır, madde kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "underStairs": [
+          {
+            "stair": "00000000-0000-4000-8000-000000000101",
+            "level": "k00",
+            "low": 3.36,
+            "open": 0.0,
+            "waist": false
+          },
+          {
+            "stair": "00000000-0000-4000-8000-000000000102",
+            "level": "k00",
+            "low": 4.5,
+            "open": 3.9,
+            "waist": true,
+            "rooms": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000002",
+                "name": "Salon",
+                "area": 3.0
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_under_stair_open",
+            "has": [
+              "Salon"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 31/6": [
+            "failed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "merdiven-yok",
+      "neden": "Altında 1,80 m'den alçak yer olan merdiven yok → kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 31/6": [
+            "outOfScope",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "tarihsiz",
+      "neden": "Başvuru tarihi yok: 31/6'nın kural setindeki tek hâli (1.10.2017) her aday günde aynı sonucu verir → salona açık, kalır.",
+      "permit": {
+        "particulars": {}
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "underStairs": [
+          {
+            "stair": "00000000-0000-4000-8000-000000000101",
+            "level": "k00",
+            "low": 4.5,
+            "open": 3.9,
+            "waist": true,
+            "rooms": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000001",
+                "name": "Salon",
+                "area": 3.9
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_under_stair_open",
+            "has": [
+              "Salon"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 31/6": [
+            "failed",
+            "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "2016-basvuru",
+      "neden": "Başvuru 1.6.2016: Planlı Alanlar İmar Yönetmeliği'nden önce (1.10.2017): metni kural setinde yok → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "01.06.2016"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "underStairs": [
+          {
+            "stair": "00000000-0000-4000-8000-000000000101",
+            "level": "k00",
+            "low": 4.5,
+            "open": 3.9,
+            "waist": true,
+            "rooms": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000001",
+                "name": "Salon",
+                "area": 3.9
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "regulation_text_unknown",
+            "state": "expertReview",
+            "has": [
+              "1.6.2016",
+              "31/6",
+              "1.10.2017"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 31/6": [
+            "expertReview",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "id": "2016-merdiven-yok",
+      "neden": "Başvuru 1.6.2016 ama altında alçak yer olan merdiven yok: madde satırı da bulgusu da yok.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "01.06.2016"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 2,
+            "common": 1,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 2,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2
+      },
+      "expect": {
+        "findings": [],
+        "rules": {}
+      }
+    }
+  ]
+}

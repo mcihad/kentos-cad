@@ -263,6 +263,8 @@ impl Document {
         let arch = self.settings().arch.as_ref().unwrap_or(&empty);
         let program = &arch.program;
         let buried = buried_levels(arch);
+        // The places under stairs lower than 1.80 m are out of a unit's net area (4/1-ğ-3, docs/adr/8080).
+        let unders = self.under_stairs();
         let mut search = SpaceSearch::new(self);
         let mut rooms = Vec::new();
         let mut uids = Vec::new();
@@ -314,7 +316,10 @@ impl Document {
             let net = if x.void {
                 0.0
             } else {
-                kentos_geometry_core::geom::space::area(&measured(&mut search, x, SpaceMethod::Net))
+                let outline = measured(&mut search, x, SpaceMethod::Net);
+                let low = crate::under_stair::low_on(&unders, &x.arch.level);
+                let all = kentos_geometry_core::geom::space::area(&outline);
+                all - crate::under_stair::taken(&outline, &low).min(all)
             };
             rooms.push(Room {
                 level: x.arch.level.clone(),

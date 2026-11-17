@@ -108,6 +108,13 @@
           },
           "type": "array"
         },
+        "underStairs": {
+          "description": "The stairs with places under them lower than 1.80 m (docs/adr/8080; PAİY 4/1-ğ-3, 31/6), by persistent id.",
+          "items": {
+            "$ref": "#/$defs/UnderStairFacts"
+          },
+          "type": "array"
+        },
         "units": {
           "description": "The building program's independent units (bağımsız bölüm).",
           "format": "uint32",
@@ -1473,6 +1480,65 @@
         "invalid",
         "overlaps",
         "gaps"
+      ],
+      "type": "object"
+    },
+    "UnderStairFacts": {
+      "description": "A stair's places under it lower than 1.80 m over the floor it starts from (docs/adr/8080), from its body as the\nsection draws it: all of them and the spaces among them (where its underside stands over its floor), m², whether its\nwaist is known (a slab it arrives at; without one only the places under treads and landings lower than 1.80 m, taken\nas solid), and the rooms its spaces lie in.",
+      "properties": {
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "low": {
+          "format": "double",
+          "type": "number"
+        },
+        "open": {
+          "format": "double",
+          "type": "number"
+        },
+        "rooms": {
+          "items": {
+            "$ref": "#/$defs/UnderStairRoom"
+          },
+          "type": "array"
+        },
+        "stair": {
+          "type": "string"
+        },
+        "waist": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "stair",
+        "low",
+        "open",
+        "waist"
+      ],
+      "type": "object"
+    },
+    "UnderStairRoom": {
+      "description": "A room an under-stair space lies in: its persistent id, its name (and number), and the area of the space in it, m².",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number"
+        },
+        "name": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "name",
+        "area"
       ],
       "type": "object"
     },

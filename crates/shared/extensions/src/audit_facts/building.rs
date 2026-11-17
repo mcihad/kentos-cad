@@ -42,6 +42,36 @@ pub struct BuildingFacts {
     /// What the program's buildings are used for, as the project writes it (Kullanım türü), in the program's order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub uses: Vec<String>,
+    /// The stairs with places under them lower than 1.80 m (docs/adr/8080; PAİY 4/1-ğ-3, 31/6), by persistent id.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub under_stairs: Vec<UnderStairFacts>,
+}
+
+/// A stair's places under it lower than 1.80 m over the floor it starts from (docs/adr/8080), from its body as the
+/// section draws it: all of them and the spaces among them (where its underside stands over its floor), m², whether its
+/// waist is known (a slab it arrives at; without one only the places under treads and landings lower than 1.80 m, taken
+/// as solid), and the rooms its spaces lie in.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct UnderStairFacts {
+    pub stair: String,
+    pub level: Option<String>,
+    pub low: f64,
+    pub open: f64,
+    pub waist: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rooms: Vec<UnderStairRoom>,
+}
+
+/// A room an under-stair space lies in: its persistent id, its name (and number), and the area of the space in it, m².
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct UnderStairRoom {
+    pub uid: String,
+    pub name: String,
+    pub area: f64,
 }
 
 /// A use 22/1 lets out of katlar alanı only up to a limit (docs/adr/8079), as Emsal ve TAKS tablosu counts it.
@@ -168,6 +198,15 @@ impl BuildingFacts {
             l.over = round(l.over, AREA);
         }
         self.uses.retain(|u| !u.trim().is_empty());
+        for u in &mut self.under_stairs {
+            u.low = round(u.low, AREA);
+            u.open = round(u.open, AREA);
+            for r in &mut u.rooms {
+                r.area = round(r.area, AREA);
+            }
+            u.rooms.sort_by(|a, b| a.uid.cmp(&b.uid));
+        }
+        self.under_stairs.sort_by(|a, b| a.stair.cmp(&b.stair));
         self
     }
 

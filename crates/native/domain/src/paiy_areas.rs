@@ -7,7 +7,8 @@
 //!   too) on its level: a wall between two of its rooms is its own, one it shares is cut at its axis.
 //! - **BB net alanı** (4/ğ-3): its rooms' clean area between the walls, voids (shaft, gallery) and outdoor rooms
 //!   (balcony, terrace) out. KentOS's wall styles keep their plaster inside the wall (İç sıva 2 cm), so a room's inner
-//!   faces are the plastered ones and the article's 2.5 cm allowance is not taken off again.
+//!   faces are the plastered ones and the article's 2.5 cm allowance is not taken off again. The places under a stair
+//!   lower than 1.80 m are out too (`Document::under_stairs`, docs/adr/8080), from the rooms they lie in.
 //! - **Ortak alan payı** and **BB genel brüt alanı** (4/ğ-2): the common areas' gross shared out by the program's rule
 //!   (`kentos.share/1`, docs/adr/0784), over the units' total gross areas; the unit's total gross and its part.
 //! - **BB toplam brüt alanı** (4/ğ-4; docs/adr/8031): the unit's gross and its annexes' (groups of kind `annex`, Kat
@@ -36,6 +37,8 @@ pub struct PaiyGroup {
     /// An independent unit's annexes' gross and net areas summed (docs/adr/8031); 0 for another group.
     pub annex_gross: f64,
     pub annex_net: f64,
+    /// The places under stairs lower than 1.80 m its rooms lie over, left out of its net (4/1-ğ-3, docs/adr/8080).
+    pub under_stair: f64,
 }
 
 impl PaiyGroup {
@@ -59,6 +62,8 @@ struct Room {
     gross: Vec<Area>,
     axis: Vec<Area>,
     net: f64,
+    /// The places under its storey's stairs lower than 1.80 m it lies over, out of `net` (docs/adr/8080).
+    under: f64,
 }
 
 /// `s` measured to its walls' `method` line: found again from its seed, else its own rings.
@@ -82,6 +87,7 @@ impl Document {
             return Vec::new();
         }
         let mut search = SpaceSearch::new(self);
+        let unders = self.under_stairs();
         let mut rooms = Vec::new();
         for e in self.entities() {
             let Entity::Space(s) = e else { continue };
@@ -99,6 +105,13 @@ impl Document {
                     kentos_geometry_core::geom::space::area(&core_areas(&x.parts))
                 })
             };
+            // The places under its storey's stairs lower than 1.80 m it lies over (4/1-ğ-3).
+            let low = crate::under_stair::low_on(&unders, &x.arch.level);
+            let under = if net > 0.0 && !low.is_empty() {
+                crate::under_stair::taken(&measured(&mut search, x, SpaceMethod::Net), &low).min(net)
+            } else {
+                0.0
+            };
             rooms.push(Room {
                 level: x.arch.level.clone(),
                 group,
@@ -106,7 +119,8 @@ impl Document {
                 void: x.void,
                 gross: measured(&mut search, x, SpaceMethod::Gross),
                 axis: measured(&mut search, x, SpaceMethod::Centerline),
-                net,
+                net: net - under,
+                under,
             });
         }
         let mut out: Vec<(String, PaiyGroup)> = program
@@ -118,20 +132,17 @@ impl Document {
                     .any(|r| !r.void && r.group.as_deref() == Some(u.id.as_str()))
             })
             .map(|u| {
-                let net = rooms
-                    .iter()
-                    .filter(|r| r.counts && r.group.as_deref() == Some(u.id.as_str()))
-                    .map(|r| r.net)
-                    .sum();
+                let mine = || rooms.iter().filter(|r| r.counts && r.group.as_deref() == Some(u.id.as_str()));
                 (
                     u.id.clone(),
                     PaiyGroup {
                         gross: 0.0,
-                        net,
+                        net: mine().map(|r| r.net).sum(),
                         share: None,
                         levels: Vec::new(),
                         annex_gross: 0.0,
                         annex_net: 0.0,
+                        under_stair: mine().map(|r| r.under).sum(),
                     },
                 )
             })

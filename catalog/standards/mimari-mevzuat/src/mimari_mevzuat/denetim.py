@@ -46,3 +46,9 @@ def kapi_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
 def emsal_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Emsalin 22. madde sınırlarının koşulları (22/1-ç kapıcı dairesinin 44/1'e göre zorunluluğu, 22/1-f kütüphane)."""
     return _bulgular(facts, ("paiy_caretaker_", "paiy_library_"))
+
+
+@ext.audit("merdiven-alti")
+def merdiven_alti_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Merdiven altı (PAİY 31/6): 1,80 m'den alçak merdiven altı kapatılır."""
+    return _bulgular(facts, ("paiy_under_stair_",))

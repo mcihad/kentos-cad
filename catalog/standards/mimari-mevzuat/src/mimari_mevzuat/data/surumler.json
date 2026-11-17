@@ -1,7 +1,7 @@
 {
   "format": "kentos.ruleVersions",
   "version": 1,
-  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de).",
+  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de, merdiven altınınki 8080 §1'de).",
   "regulations": {
     "PAİY": {
       "name": "Planlı Alanlar İmar Yönetmeliği",
@@ -194,6 +194,24 @@
           "share": 0.2,
           "text": "Bağımsız bölüm net alanının %20’sini geçmemek kaydıyla açık çıkma şartlarını taşıyan balkonlar, kat ve ara sahanlıkları dâhil açık veya kapalı merdiven evi ile açık havuzlar, katlar alanına dâhil edilmez.",
           "source": "RG 25.7.2019/30842, 7 nci madde; %20 ibaresi ve açık havuzlar RG 11.7.2021/31538; docs/adr/8069 §1, 8079 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "31/6",
+      "title": "Merdiven altı",
+      "transition": "Yönetmelik 1.10.2017'de yürürlüğe girdi (71 inci madde); 31/6 değişmedi.",
+      "versions": [
+        {
+          "id": "2017",
+          "from": "2017-10-01",
+          "until": null,
+          "label": "1.10.2017",
+          "gazette": "3.7.2017/30113",
+          "clear": 1.8,
+          "text": "Yüksekliği 1.80 metreden az olan merdiven altları kapatılır. (4/1-ğ-3) Bağımsız bölüm net alanına … merdivenlerin altlarında 1.80 metre yüksekliğinden az olan yerler … dâhil edilmez.",
+          "source": "RG 3.7.2017/30113, 31 inci maddenin altıncı fıkrası ve 4/1-ğ-3; 1.7.2026 derlemesinde değişiklik işareti yok; docs/adr/8080 §1."
         }
       ]
     },

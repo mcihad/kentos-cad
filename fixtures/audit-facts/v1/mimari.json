@@ -914,7 +914,7 @@
         "annexOf": null,
         "dwelling": false,
         "gross": 106.22,
-        "net": 96.285,
+        "net": 93.117,
         "annexGross": 0.0,
         "annexNet": 0.0,
         "total": 106.22,
@@ -924,7 +924,7 @@
           {
             "level": "zemin",
             "gross": 53.11,
-            "net": 48.1425
+            "net": 44.9745
           },
           {
             "level": "k1",
@@ -2169,6 +2169,15 @@
         "area": 8.4,
         "allowed": 15.1305,
         "over": 0.0
+      }
+    ],
+    "underStairs": [
+      {
+        "stair": "01a1dfda-06f3-72a1-8e0e-a40020218328",
+        "level": "zemin",
+        "low": 3.168,
+        "open": 0.0,
+        "waist": false
       }
     ]
   },

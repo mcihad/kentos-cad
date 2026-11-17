@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 0.4.0 — 17 Kasım 2026
+
+- Merdiven altı (`merdiven_alti`, docs/adr/8080): Planlı Alanlar İmar Yönetmeliği 31/6. KentOS merdivenin altında,
+  başladığı döşemeden 1,80 m'den alçak yerleri ölçer ve bağımsız bölüm net alanından düşer (4/1-ğ-3); kural alçak
+  boşluğun bir mahale açık mı (kaldı), dolap, depo ya da merdiven altı mahalinde mi (geçti) olduğuna bakar; döşemesi
+  olmayan merdivende eksik veri. Olgular `building.underStairs`.
+
 ## 0.3.0 — 17 Kasım 2026
 
 - Emsal sınırları (`emsal`, docs/adr/8079): Planlı Alanlar İmar Yönetmeliği 22/1-ç (emsal harici sayılan kapıcı

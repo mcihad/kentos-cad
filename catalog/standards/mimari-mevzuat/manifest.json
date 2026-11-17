@@ -2,9 +2,9 @@
   "format": "kentos.extension",
   "schemaVersion": 1,
   "id": "tr.kentos.mimari-mevzuat",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "name": "Mimari mevzuat denetimi",
-  "summary": "İmar ve yangın yönetmeliklerinin kuralları başvuru gününün hâlleriyle: asansör (PAİY 34), kaçış kapıları (BYKHY 47), emsal sınırları (PAİY 22/1, 44/1).",
+  "summary": "İmar ve yangın yönetmeliklerinin kuralları başvuru gününün hâlleriyle: asansör, merdiven altı, emsal sınırları (PAİY), kaçış kapıları (BYKHY 47).",
   "description": "KentOS'un standart kural paketi (catalog/standards/mimari-mevzuat; plan/bim-plan.md K10, BIM-13; docs/adr/8078). Kurallar KentOS'un çizimde ölçtüğü olguları (katlar ve bodrumların bina programındaki grupları, asansörler, bağımsız bölümler, kapılar, emsal tablosunun sınırlı kullanımları) okur. Maddenin hangi hâlinin uygulandığını künyedeki başvuru tarihi seçer: Planlı Alanlar İmar Yönetmeliği'nin 1.7.2026 değişikliğinde Geçici 3/11, o günden önce başvurusu yapılmış yapılara 34/1 ve 34/8'in önceki hâlini uygular. Başvuru tarihi yoksa ve sonuç ona göre değişiyorsa bulgu eksik veridir; metni kural setinde olmayan gün uzman incelemesidir. Yerel yönetmelik (Sivas) seçiliyse sıkı olan bağlar, gevşek olanın tuttuğu ölçü çelişkidir. Bulgu çizimin ölçüsüdür, onay değildir.",
   "authors": [
     "KentOS"
@@ -19,7 +19,8 @@
     "PAİY",
     "asansör",
     "kural seti",
-    "emsal"
+    "emsal",
+    "merdiven"
   ],
   "kind": "vertical",
   "modules": [
@@ -65,6 +66,12 @@
         "title": "Emsal sınırları (PAİY 22/1-ç, 22/1-f)",
         "domain": "mimari",
         "handler": "mimari_mevzuat.denetim:emsal_denetimi"
+      },
+      {
+        "id": "merdiven-alti",
+        "title": "Merdiven altı (PAİY 31/6)",
+        "domain": "mimari",
+        "handler": "mimari_mevzuat.denetim:merdiven_alti_denetimi"
       }
     ]
   },

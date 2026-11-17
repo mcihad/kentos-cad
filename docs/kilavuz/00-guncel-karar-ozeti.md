@@ -245,6 +245,13 @@
     - Binanın bütününe bağlı koşullar paketin (K67): kapıcı dairesinin 44/1 zorunluluğu (ısıtma bilinmezse eksik veri),
       kütüphanenin 22/1-f koşulları (ortak merdiven ve dış erişim uzman incelemesi). Olgular `building.limits`'te.
     - Merdiven evi emsal harici (K68, 22/1-l); Metrekare cetveli aracı katları ara toplamıyla kapatır (K69).
+  - **Merdiven altı 1,80 m (17 Kasım 2026; [ADR 8080](../adr/8080-under-stair-1-80.md), K70–K73):**
+    - Merdivenin gövdesi `kentos_geometry_core::geom::stair_body`'de tek yerde; kesit ondan çizer, bel kalınlığını
+      `Document::stair_waist` verir.
+    - Başladığı döşemeden 1,80 m'den alçak yerler grupların net alanından düşülür (4/1-ğ-3); bel bilinmezse yalnız kesin
+      kısım (1,80 m'den alçak basamak ve sahanlıkların altı).
+    - 31/6 paketin kuralı (`merdiven_alti`): alçak boşluk bir mahale açıksa kaldı; dolap, depo, merdiven altı mahalinde
+      geçti; döşemesiz merdivende eksik veri. Olgular `building.underStairs`.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.
