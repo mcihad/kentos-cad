@@ -1,7 +1,7 @@
 {
   "format": "kentos.regulationCases",
   "version": 1,
-  "about": "Yapı elemanlarının yangına dayanım sürelerinin bağımsız durumları (docs/adr/8082): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik Ek-3/B ve Ek-3/C'nin tablolarından (PDF'in 91. ve 93. sayfaları; Ek-3/C RG 9.9.2009/27344) elle çıkarıldı; kuralın kodundan üretilmedi. Çatı ve teras durumları docs/adr/8087'den (Ek-3/B 4-b, 4-c). Olgular KentOS'un ölçüsüdür (building.elements, height, basementDepth, separations).",
+  "about": "Yapı elemanlarının yangına dayanım sürelerinin bağımsız durumları (docs/adr/8082): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik Ek-3/B ve Ek-3/C'nin tablolarından (PDF'in 91. ve 93. sayfaları; Ek-3/C RG 9.9.2009/27344) elle çıkarıldı; kuralın kodundan üretilmedi. Çatı ve teras durumları docs/adr/8087'den (Ek-3/B 4-b, 4-c), asma tavanınkiler docs/adr/8089'dan (Ek-3/B 11). Olgular KentOS'un ölçüsüdür (building.elements, height, basementDepth, separations).",
   "cases": [
     {
       "id": "apartman-tamam",
@@ -1607,6 +1607,366 @@
         "rules": {
           "BYKHY Ek-3": [
             "missingData",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "asma-tavan-tamam",
+      "neden": "8 daireli apartman: 1. katın asma tavanı EI 30, Ek-3/B 11 asma tavan alt taraftan EI 30 ister → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000071",
+            "kind": "ceiling",
+            "level": "k01",
+            "fireRating": "EI 30"
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY Ek-3": [
+            "passed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "asma-tavan-yetmiyor",
+      "neden": "Aynı apartmanın asma tavanı EI 15: Ek-3/B 11 en az EI 30 → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000072",
+            "kind": "ceiling",
+            "level": "k01",
+            "fireRating": "EI 15"
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "1. kat: 1 asma tavan EI 15",
+              "Ek-3/B 11 asma tavan (alt taraftan)",
+              "en az EI 30"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "asma-tavan-beyansiz",
+      "neden": "Asma tavanın sınıfı beyan edilmemiş → eksik veri.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000073",
+            "kind": "ceiling",
+            "level": "k01"
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "state": "missingData",
+            "has": [
+              "1. kat: 1 asma tavanın yangın sınıfı beyan edilmemiş",
+              "en az EI 30"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "missingData",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ev-asma-tavan-ek3c-yok",
+      "neden": "Tek konutlu ev, bina yüksekliği 24 m: Ek-3/C'nin bir ve iki ailelik ev satırı 21,50–30,50 m sütununda '---' (süre yok) der, kolonun süresi okunmaz; asma tavanın EI 30'u Ek-3/B 11'in kendisidir, Ek-3/C'ye bağlı değil: EI 15 → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000074",
+            "kind": "column",
+            "level": "k01",
+            "fireRating": "R 15",
+            "frame": true
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000075",
+            "kind": "ceiling",
+            "level": "k01",
+            "fireRating": "EI 15"
+          }
+        ],
+        "height": 24.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "1. kat: 1 asma tavan EI 15",
+              "en az EI 30"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
             "9.9.2009"
           ]
         }

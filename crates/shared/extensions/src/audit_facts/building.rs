@@ -119,8 +119,8 @@ pub struct PlanNoteFacts {
 }
 
 /// An element BYKHY Ek-3/B reads: its persistent id, its kind (`column`, `beam`, `wall`, `slab`; `roof`, `terrace`,
-/// docs/adr/8087), its storey, its declared fire class (its own, else its type's), whether it is a column or a beam of
-/// the frame, whether a wall is on its storey's outline (docs/adr/8082).
+/// docs/adr/8087; `ceiling`, a suspended ceiling, docs/adr/8089), its storey, its declared fire class (its own, else its
+/// type's), whether it is a column or a beam of the frame, whether a wall is on its storey's outline (docs/adr/8082).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]

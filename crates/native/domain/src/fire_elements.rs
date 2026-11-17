@@ -11,6 +11,7 @@
 //! - **Floor:** a slab whose role is a floor (not a balcony's or a terrace's), no covering.
 //! - **Roof** (Ek-3/B 4, docs/adr/8087): a roof (`roof`, 4-c: exposed to fire from outside) and a terrace's slab
 //!   (`terrace`, 4-b: a roof serving as a floor), no covering.
+//! - **Suspended ceiling** (Ek-3/B 11, docs/adr/8089): a covering of IFC type `CEILING` (asma tavan, `ceiling`).
 
 use kentos_contracts::{BeamRole, Entity, SlabRole};
 use kentos_geometry_core::vec2::Vec2;
@@ -21,7 +22,7 @@ use crate::Document;
 #[derive(Clone, Debug, PartialEq)]
 pub struct FireElement {
     pub uid: String,
-    /// `column`, `beam`, `wall`, `slab`, `roof` or `terrace`.
+    /// `column`, `beam`, `wall`, `slab`, `roof`, `terrace` or `ceiling`.
     pub kind: &'static str,
     pub level: Option<String>,
     /// A column or a beam of the frame.
@@ -70,6 +71,9 @@ impl Document {
                 }
                 Entity::Roof(_) => {
                     out.push(FireElement { uid: uid.to_string(), kind: "roof", level, frame: false, exterior: false });
+                }
+                Entity::Slab(s) if s.slab.covering.as_ref().is_some_and(|c| c.predefined == "CEILING") => {
+                    out.push(FireElement { uid: uid.to_string(), kind: "ceiling", level, frame: false, exterior: false });
                 }
                 _ => {}
             }

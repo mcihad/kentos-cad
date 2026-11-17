@@ -295,6 +295,8 @@
     - Kompartımanı paket bulur (`mimari.kompartimanlar`), `cad.arch.ifc` verilen `compartments`'ı mahallerin `IfcZone`'u
       olarak yazar (`MM-ZON-Yangın_kompartımanı_N`); girdi verilmezse masaüstü, MCP ve komut satırı paketi sorar.
     - IFC modeli seçili nesnenin gruplarını "Grup" satırında söyler.
+  - **Asma tavan (17 Kasım 2026; [ADR 8089](../adr/8089-suspended-ceiling-fire-resistance.md), K114–K115):** IFC türü
+    CEILING olan kaplama Ek-3/B 11'in öğesidir: alt taraftan EI 30, Ek-3/C'den bağımsız; 26/4'ün malzeme sınıfı beyanı yok.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

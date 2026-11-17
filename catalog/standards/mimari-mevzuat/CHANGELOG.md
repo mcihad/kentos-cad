@@ -1,5 +1,10 @@
 # Değişiklikler
 
+## 0.13.0 — 17 Kasım 2026
+
+- Asma tavan (`dayanim`): Ek-3/B 11, alt taraftan EI 30; Ek-3/C'nin sütunundan bağımsız (ev satırının süre vermediği
+  yükseklikte de). Olgularda IFC türü CEILING olan kaplama (`elements[].kind` `ceiling`). 4 bağımsız durum.
+
 ## 0.12.0 — 17 Kasım 2026
 
 - Yangın kompartımanları IFC için (`mimari.kompartimanlar`): her kompartımanın mahalleri, katları (alttan üste) ve Ek-4'ün

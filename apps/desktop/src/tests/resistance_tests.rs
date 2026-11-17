@@ -165,3 +165,116 @@ fn screens() {
         println!("{}", file.display());
     }
 }
+
+/// Zemin kat's suspended ceiling (docs/adr/8089): an Alçıpan covering of IFC type CEILING, 12.5 mm, 2.60 m over the
+/// floor, under the 10 × 5 m plan's inner faces; its persistent id.
+fn ceiling(app: &mut App) -> Value {
+    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let p = |x: f64, y: f64| json!({"x": x, "y": y});
+    let made = run(
+        app,
+        "cad.slabs.create",
+        json!({"layerId": layer, "slabs": [{
+            "parts": [{"outer": {"pts": [p(0.25, 0.25), p(9.75, 0.25), p(9.75, 4.75), p(0.25, 4.75)]}}],
+            "thickness": 0.0125, "offset": 2.6, "material": "Alçıpan", "arch": {"level": "k00"},
+            "covering": {"predefined": "CEILING", "name": "Asma tavan"}
+        }]}),
+    );
+    made["output"]["uids"][0].clone()
+}
+
+/// The ceiling's Ek-3 findings (state, message).
+fn ceiling_said(app: &App) -> Vec<(Option<kentos_commands::ArchAuditState>, String)> {
+    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    audited
+        .findings
+        .iter()
+        .filter(|f| f.code == "bykhy_element_resistance" && f.message.contains("asma tavan"))
+        .map(|f| (f.state, f.message.clone()))
+        .collect()
+}
+
+/// A suspended ceiling is Ek-3/B 11's (docs/adr/8089): EI 30 from below, whatever Ek-3/C asks of the storey.
+/// Undeclared it is eksik veri; declared EI 15 it fails; EI 30 holds.
+#[test]
+fn a_suspended_ceiling_is_read_by_ek_3_b_11() {
+    use kentos_commands::ArchAuditState as S;
+    let mut app = house("R 60");
+    let uid = ceiling(&mut app);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let facts = kentos_processing::audit_facts::building::measure(doc).normalized();
+    let ceilings: Vec<_> = facts.elements.iter().filter(|e| e.kind == "ceiling").collect();
+    assert_eq!(ceilings.len(), 1, "{:?}", facts.elements);
+    assert_eq!((ceilings[0].uid.as_str(), ceilings[0].level.as_deref()), (uid.as_str().expect("an id"), Some("k00")));
+    assert_eq!(facts.elements.iter().filter(|e| e.kind == "slab").count(), 1, "the covering is no floor slab");
+    checked(&mut app);
+    let said = ceiling_said(&app);
+    assert_eq!(said.len(), 1, "{said:#?}");
+    assert_eq!(said[0].0, Some(S::MissingData));
+    assert!(
+        said[0].1.starts_with(
+            "Zemin kat: 1 asma tavanın yangın sınıfı beyan edilmemiş; Ek-3/B 11 asma tavan (alt taraftan) en az EI 30 ister"
+        ),
+        "{said:#?}"
+    );
+    let declare = |app: &mut App, value: &str| {
+        run(
+            app,
+            "cad.arch.performance",
+            json!({"operation": {"kind": "objects", "uids": [uid.clone()], "fireRating": {"value": value, "basis": {"kind": "author"}}}}),
+        );
+    };
+    declare(&mut app, "EI 15");
+    checked(&mut app);
+    let said = ceiling_said(&app);
+    assert_eq!(said.len(), 1, "{said:#?}");
+    assert_eq!(said[0].0, None);
+    assert!(said[0].1.starts_with("Zemin kat: 1 asma tavan EI 15; Ek-3/B 11"), "{said:#?}");
+    declare(&mut app, "EI 30");
+    checked(&mut app);
+    assert!(ceiling_said(&app).is_empty());
+}
+
+/// Zemin kat with its suspended ceiling and Denetim's Ek-3/B 11 finding, light and dark;
+/// `.run/gui-evidence/asma-tavan-8089/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib resistance_tests::ceiling_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn ceiling_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/asma-tavan-8089");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")] {
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut app = house("R 60");
+        let uid = ceiling(&mut app);
+        run(
+            &mut app,
+            "cad.arch.performance",
+            json!({"operation": {"kind": "objects", "uids": [uid], "fireRating": {"value": "EI 15", "basis": {"kind": "author"}}}}),
+        );
+        let _ = app.update(Message::ActiveLevel(Some("k00".into())));
+        let _ = app.update(Message::LevelView(kentos_interaction::level_view::LevelView::Active));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        checked(&mut app);
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        app.arch.arch_audit.selected =
+            audited.findings.iter().position(|f| f.code == "bykhy_element_resistance" && f.message.contains("asma tavan"));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        snapshot.settle(&mut app, App::view, &mut update);
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-asma-tavan-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

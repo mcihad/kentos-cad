@@ -1,5 +1,5 @@
 """Yapı elemanlarının yangına dayanım süreleri: Binaların Yangından Korunması Hakkında Yönetmelik Ek-3/B ve Ek-3/C
-(23, 24/1, 26/1, 29/7; docs/adr/8082, 8087).
+(23, 24/1, 26/1, 29/7; docs/adr/8082, 8087, 8089).
 
 Ek-3/C binanın kullanım sınıfına, yağmurlamasına ve elemanın yerine göre dakikayı verir: bodrum katlarda bodrumların
 derinliğine (10 m'den fazla, az), giriş ve üst katlarda bina yüksekliğine (5, 21,50, 30,50 m'den az; 30,50'den fazla).
@@ -17,6 +17,7 @@ Ek-3/B elemanın neyi taşıması gerektiğini söyler. Bu kural müellifin beya
 - **Çatı** (4): döşeme görevi yapan çatı (teras döşemesi) REI, dıştan yangına maruz çatı EI, Ek-3/C kadar (katının
   sütunuyla). Kaçış yolu olan çatı bölümü (4-a) çizimde okunmaz. Asansör kat kapıları (12) şaft kuralındadır (``kuyular``,
   62/7).
+- **Asma tavan** (11): EI 30, alt taraftan; Ek-3/C'den bağımsız (docs/adr/8089).
 - **İzin verilmez:** yağmurlamasız konut dışı bina 30,50 m'yi aşamaz.
 
 Beyan yoksa eksik veri, okunmuyorsa eksik veri; yetmiyorsa kaldı. Bulgular kat, eleman türü ve sorun başına birdir.
@@ -40,7 +41,8 @@ from .yangin_sinifi import okuma
 MADDELER = [("BYKHY", "Ek-3")]
 
 _TUR = {"column": ("kolon", "kolonun"), "beam": ("kiriş", "kirişin"), "wall": ("duvar", "duvarın"),
-        "slab": ("döşeme", "döşemenin"), "roof": ("çatı", "çatının"), "terrace": ("teras döşemesi", "teras döşemesinin")}
+        "slab": ("döşeme", "döşemenin"), "roof": ("çatı", "çatının"), "terrace": ("teras döşemesi", "teras döşemesinin"),
+        "ceiling": ("asma tavan", "asma tavanın")}
 
 
 def _katla(metin: str) -> str:
@@ -167,7 +169,7 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
                 "note": not_}
 
     if not elemanlar and not bina.get("separations"):
-        return y.Sonuc([], [satir(y.KAPSAM_DISI, "kolon, kiriş, duvar, döşeme ya da çatı yok")])
+        return y.Sonuc([], [satir(y.KAPSAM_DISI, "kolon, kiriş, duvar, döşeme, çatı ya da asma tavan yok")])
     sinif_, neden = _sinif_satiri(bina, hal)
     if sinif_ is None:
         return y.Sonuc([], [satir(y.EKSIK_VERI, neden or "")])
@@ -195,6 +197,10 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
     belirsiz: list[str] = []
     for e in elemanlar:
         kat = e.get("level")
+        if e["kind"] == "ceiling":
+            # Ek-3/B 11'in süresi sabittir: Ek-3/C'nin sütununa bakılmaz.
+            istekler[e["uid"]] = ("EI", 30, "Ek-3/B 11 asma tavan (alt taraftan)", None)
+            continue
         h, soz = ek3c(kat)
         if h is None:
             belirsiz.append(e["uid"])
@@ -310,8 +316,8 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
     elif bulgular:
         durum = satir(y.UZMAN, "taşıyıcı olup olmadığı ya da tablonun sınırı uzman incelemesi")
     elif not istekler:
-        durum = satir(y.KAPSAM_DISI, "Ek-3'ün süre istediği eleman yok (taşıyıcı sistem, döşeme, çatı, dış ya da "
-                                     "kompartıman duvarı)")
+        durum = satir(y.KAPSAM_DISI, "Ek-3'ün süre istediği eleman yok (taşıyıcı sistem, döşeme, çatı, asma tavan, dış "
+                                     "ya da kompartıman duvarı)")
     else:
         durum = satir(y.GECTI, f"{len(istekler)} eleman Ek-3'ün süresini tutuyor ({adi})")
     return y.Sonuc(bulgular, [durum])
