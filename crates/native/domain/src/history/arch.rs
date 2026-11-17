@@ -65,6 +65,11 @@ pub(crate) enum ArchOp {
         before: Arc<Vec<kentos_contracts::FormAnswer>>,
         after: Arc<Vec<kentos_contracts::FormAnswer>>,
     },
+    /// The delivery record (docs/adr/8099), before and after: a step of its own.
+    Deliveries {
+        before: Arc<Vec<kentos_contracts::Delivery>>,
+        after: Arc<Vec<kentos_contracts::Delivery>>,
+    },
 }
 
 impl ArchOp {
@@ -108,6 +113,10 @@ impl ArchOp {
                 after: before.clone(),
             },
             ArchOp::FormAnswers { before, after } => ArchOp::FormAnswers {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            ArchOp::Deliveries { before, after } => ArchOp::Deliveries {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -191,6 +200,14 @@ impl ArchOp {
                     .take()
                     .unwrap_or_default();
                 arch.form_answers = (**after).clone();
+                Arc::make_mut(&mut doc.settings).arch = (!arch.is_empty()).then_some(arch);
+            }
+            ArchOp::Deliveries { after, .. } => {
+                let mut arch = Arc::make_mut(&mut doc.settings)
+                    .arch
+                    .take()
+                    .unwrap_or_default();
+                arch.deliveries = (**after).clone();
                 Arc::make_mut(&mut doc.settings).arch = (!arch.is_empty()).then_some(arch);
             }
         }

@@ -415,6 +415,7 @@ impl App {
                 schedule: None,
                 view_refs: None,
                 digital_rules: None,
+                deliveries: None,
                 quantities: None,
             },
         };

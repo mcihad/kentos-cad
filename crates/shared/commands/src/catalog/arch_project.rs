@@ -716,6 +716,56 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 },
             ],
         },
+        // Teslim kaydı (docs/adr/8099), held together by fixtures/commands/v1/cad.delivery.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_DELIVERY_EDIT.into(),
+            version: crate::CAD_DELIVERY_EDIT_VERSION,
+            title: "Teslim kaydı".into(),
+            summary: "Projenin hangi paketinin hangi kuruma, ne zaman, hangi yoldan teslim edildiğini ve ne cevap geldiğini çizimde tutar (settings.arch.deliveries; e-PYS Yönetmeliği 4–5). change tek değişikliktir: add (revision EK-2'nin üç rakamlı revizyon numarası, 000 revizyonsuz; package { manifest yayının yayin.json'unun SHA-256'sı, 64 küçük onaltılık rakam; files dosya sayısı; path yayın klasörü; source çizimin yayımlandığı sürüm }; to kurum; channel epys, authority idarenin yazılımı, paper basılı, other; at gün YYYY-AA-GG; by yayımlayan; receipt makbuz numarası; id verilmezse üretilir, numara en büyüğün bir fazlası), respond (id; outcome accepted kabul ya da returned iade; at cevabın günü, teslimden önce olamaz; reason gerekçe, iadede zorunlu, en çok 4000 karakter; notes gerekçeleri nesnelere bağlayan inceleme notlarının kimlikleri, cad.review.notes.edit ile eklenir; receipt; var olan cevabın yerini alır) ya da remove (id; inceleme notları kalır). Kimlik UUID değilse invalid_uid, yoksa delivery_not_found, eklenen kimlik varsa duplicate_delivery, cevabın notu çizimde yoksa review_note_not_found, kaydın denetimi tutmazsa invalid_delivery (alanın yoluyla), 1000 kayıt aşılırsa too_many_deliveries. Tek geri alma adımı “Teslim kaydı”; çizimin geometrisi değişmez. Çıktı değişen kaydın kimliği ve numarası, çizimin bütün kayıtları ve sürüm. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::DeliveryEdit>(),
+            output: schema::<crate::DeliveryEdited>(),
+            plan: Some(schema::<crate::DeliveryEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "İlk paket e-PYS'ye".into(),
+                    input: json!({
+                        "change": {
+                            "kind": "add",
+                            "revision": "000",
+                            "package": { "manifest": "3f0a5c1e9b7d2846a1c0e5f3b8d9274c6e1f0a3b5c7d9e2f4a6b8c0d1e3f5a7b", "files": 14 },
+                            "to": "Sivas Belediyesi İmar ve Şehircilik Müdürlüğü",
+                            "channel": "epys",
+                            "at": "2026-11-17"
+                        }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "İade, gerekçesi iki nesneye bağlı notla".into(),
+                    input: json!({
+                        "change": {
+                            "kind": "respond",
+                            "id": "00000000-0000-4000-8000-000000000001",
+                            "outcome": "returned",
+                            "at": "2026-11-24",
+                            "reason": "Kat yüksekliği planın notunu aşıyor.",
+                            "notes": ["00000000-0000-4000-8000-0000000000aa"]
+                        }
+                    }),
+                    output: None,
+                },
+            ],
+        },
         // Yangın ve performans (docs/adr/8068), held together by fixtures/commands/v1/cad.arch.performance.json.
         CommandDescriptor {
             id: crate::CAD_ARCH_PERFORMANCE.into(),

@@ -231,6 +231,7 @@ impl App {
             }
             Dialog::Arch(arch::ArchDialogKind::ViewRefs) => crate::viewmark_refs::TITLE.to_owned(),
             Dialog::Arch(arch::ArchDialogKind::DigitalRules) => crate::digital_rules::TITLE.to_owned(),
+            Dialog::Arch(arch::ArchDialogKind::Deliveries) => crate::deliveries_window::TITLE.to_owned(),
             Dialog::SheetSet => crate::sheet_set::TITLE.to_owned(),
             Dialog::Xrefs => crate::xrefs_window::TITLE.to_owned(),
             Dialog::Flatten => crate::flatten_window::TITLE.to_owned(),
@@ -472,6 +473,7 @@ impl App {
             Some(Dialog::Arch(arch::ArchDialogKind::TagsCheck)) => self.tags_check_control(control),
             Some(Dialog::Arch(arch::ArchDialogKind::ViewRefs)) => self.view_refs_control(control),
             Some(Dialog::Arch(arch::ArchDialogKind::DigitalRules)) => self.digital_rules_control(control),
+            Some(Dialog::Arch(arch::ArchDialogKind::Deliveries)) => self.deliveries_control(control),
             Some(Dialog::SheetSet) => self.sheet_set_control(control),
             Some(Dialog::Xrefs | Dialog::XrefAttach) => self.xrefs_control(control),
             Some(Dialog::Flatten) => self.flatten_control(control),

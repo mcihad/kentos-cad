@@ -114,7 +114,7 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
 | R9 | Model, mahal ve varlık adları | Md. 10, 11; EK-5 §5.5 | ◐ kalıp var; iki yorum açık | BIM-01, IFC-02 |
 | R10 | Gelişim seviyesi | Md. 14; EK-8 | ✗ ölçülmüyor, görülemiyor | BIM-06, BIM-10, IFC-06 |
 | R11 | Model kalite kontrol formu | Md. 15; EK-9 | ◐ 21 soru bellekteki modelden | IFC-08, BIM-14 |
-| R12 | Bilgi yönetimi | Md. 4/4; TS EN ISO 19650-1/2 | ✗ | BIM-15 |
+| R12 | Bilgi yönetimi | Md. 4/4; TS EN ISO 19650-1/2 | ◐ teslim kaydı, nesneye bağlı iade gerekçesi ve öncekiyle karşılaştırma (ADR 8099); ortak veri ortamının durumları ve role göre görünürlük yok | BIM-15 |
 | R13 | Tarihe ve koşula bağlı kapsam | Md. 1; Geçici 1–2 | ✓ Ruhsat takımının Dijital teslim kapsamı, Python kuralı (ADR 8063); MCP yok | BIM-02 |
 | R14 | e-PYS: müellif yükler, idare inceler; e-imza ya da basılı; taranmış PDF kullanılmaz | e-PYS Md. 4–7 | ◐ vektör PDF/A var; paket, kayıt ve inceleme yok | BIM-14, 15, 18 |
 
@@ -149,7 +149,7 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
 | Z9 | **Mevzuat denetimi yarım:** başvuru tarihine göre kural seti, plan notu katmanı, yangın dayanımları, erişilebilirlik, emsalin 22. madde sınırları | ADV-22 ve ADV-23 "Kalanlar" | Y | BIM-13 |
 | Z10 | **Dış model okunamıyor:** statik ve tesisat modeli altlık olamıyor, çakışma bulunamıyor, iki revizyon karşılaştırılamıyor; belediye gelen IFC'yi KentOS'ta açamıyor | Depoda IFC okuyucu yok | Y | IFC-07, IFC-12, IFC-09; BIM-17, BIM-18 |
 | Z11 | **Tip sistemi yarım:** duvar stili ve kapı/pencere tipi var; döşeme, kolon, kiriş, çatı, merdiven, korkuluk tipsiz | W2 §2.1; IFC'de tip nesnesi ve katmanlı malzeme takımı yok | O | BIM-12 |
-| Z12 | **Teslim kaydı yok:** hangi revizyon, hangi dosyalarla, kime verildi, ne cevap geldi | Dosya revizyonu var (ADR 0031); teslim ve iade kaydı yok | O | BIM-15 |
+| Z12 | **Teslim kaydı (kısmen kapandı, ADR 8099):** ~~hangi revizyon, hangi dosyalarla, kime verildi, ne cevap geldi~~ çizimde kayıtlı; künyenin role göre görünürlüğü ve ortak veri ortamının durumları kaldı | Dosya revizyonu var (ADR 0031); teslim ve iade kaydı Mimari verisi 17'de | O | BIM-15 |
 | Z13 | **Hız hedefi tutmadı:** 2+1 daire gerçek pencerede 82 etkileşim ve 121,3 s (hedef ≤ 80 ve ≤ 100 s) | `architecture-advanced.md` §7; ADR 8052 | O | BIM-20 |
 | Z14 | **Kalanlar ve kabul:** ADV paketlerinin çoğu `[~]`; gerçek ofis DWG'siyle tadilat kabulü sahibin dosyasını bekliyor; örnek proje, çokgen oda, kot etiketi, 1:20 kasa profili açık | `architecture-advanced.md` §3–§5 | O | BIM-20 |
 
@@ -757,7 +757,7 @@ Md. 4/2, 6; Z4.
 **İlk kabul:** bölüm binasında ve 2+1'de paket. Bir pafta eski revizyondan kaldığında paket durur ve sebebini söyler. İki
 bağımsız model okuyucusu ve bağımsız PDF/A doğrulayıcısı hatasız.
 
-#### BIM-15 — Bilgi yönetimi ve teslim kaydı [ ]
+#### BIM-15 — Bilgi yönetimi ve teslim kaydı [~]
 
 **Kullanıcı sonucu:** Projenin hangi revizyonu, hangi dosyalarla, ne zaman, kime teslim edildi ve ne cevap geldi sorusunun
 cevabı projede kayıtlıdır. İade gerekçesi ilgili nesneye bağlıdır. Dayanak Md. 4/4; e-PYS Md. 4–7; Z12.
@@ -774,6 +774,15 @@ cevabı projede kayıtlıdır. İade gerekçesi ilgili nesneye bağlıdır. Daya
 
 **İlk kabul:** bir paket yayımlanır; "iade" cevabı gerekçesiyle girilir; gerekçe iki nesneye bağlanır; düzeltilmiş ikinci
 paket öncekiyle karşılaştırılır. Yetkisiz kullanıcı künyeyi göremez.
+
+**Yapıldı (17 Kasım 2026, [ADR 8099](../docs/adr/8099-delivery-record.md), K147–K151):** teslim kaydı çizimde (Mimari
+verisi 17): paket yayının `yayin.json`'unun SHA-256'sıyla, EK-2 revizyonu, kurum, kanal (e-PYS, idarenin yazılımı, basılı),
+gün, yayımlayan, makbuz; cevap Kabul ya da İade, iadede gerekçe zorunlu, gerekçe nesnelere inceleme notuyla bağlı.
+`cad.delivery.edit` (Python, MCP, 40 ortak durum); Mimari › Proje ▾ › Teslim kaydı. Öncekiyle karşılaştır aynı kuruma
+önceki paketin dosyalarını (pafta, ad, içerik, revizyonla değişen model adı) ve çizimini (kalıcı kimlikle) karşılaştırır,
+iade gerekçelerinin nesnelerinden kaçının değiştiğini yazar. İlk kabulün ilk dört adımı masaüstünde elle sınandı.
+**Kalan:** künyenin role göre görünürlüğü (bulut, ilk kabulün son cümlesi); ortak veri ortamının durumları (çalışma,
+paylaşım, yayın, arşiv); karşılaştırmanın Python ve MCP için salt okuyan komutu; e-PYS pilotu.
 
 #### BIM-16 — Büro ve belediye pilotu [ ]
 
@@ -881,7 +890,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B13 ~ | Yazılmış dosyadan doğrulama, IDS ve kontrol formu | IFC-08 | 21 sorunun kanıtı dosyadan (ADR 8074; ikinci okuyucu ve IfcTester KentOS'la aynı; son yazılan dosya, beş sonuç raporu ve bütçe kaldı) |
 | B14 ~ | BIM ruhsat paketi | BIM-14 | Tek komut, tek revizyon, tek paket (ADR 8075; gerçek paket ADR 8076; müellifin cevapları çizimde ve basılan formda ADR 8077; 2+1 de yayımlanıyor, MCP'de uçtan uca, eskiyen cevap durdurur ADR 8077 §7) |
 | B15 ~ | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti (ADR 8078: asansör 34/1 ve 34/8'in hâlleri, eksik veri ve uzman incelemesi, uzman onayı, kaçış yolu kapıları BYKHY 47; ADR 8079: emsalin 22/1-ç, -f, -k, -l sınırları ve koşulları, kat ara toplamı; ADR 8080: merdiven altı 1,80 m; ADR 8081: kompartıman (24/2, 24/6, 24/7); ADR 8082: Ek-3 dayanımları; ADR 8083: kat yüksekliği 28/1-c ve kapılar 39/1 tarihli hâlleriyle; ADR 8084: plan notu katmanı; ADR 8085: bölgeye göre kat yükseklikleri; ADR 8086: katlar arası açıklıklar, 24/4, 24/5; ADR 8087: şaftlar, asansörler, çatılar (25/3, 41/9, 62, Ek-3/B 4 ve 12); ADR 8088: kompartıman IFC zonu; ADR 8089: asma tavan Ek-3/B 11; ADR 8090: taşıyıcı duvar ve kaçış yolu çatısı beyanları; ADR 8091: malzemenin yanıcılık sınıfı, 26/2, 26/4; ADR 8092: bodruma inen asansör 62/4; ADR 8093: çift kanat ve döner kapı 39/1-b, ç; ADR 8094: taşıyıcı sistem, 22/1-m ve 28/1-d; ADR 8095: kalın taş duvarlar 5/8, 20/8-j; ADR 8096: Sivas 22/k; ADR 8097: emsal zonunun cephe köşesi; ADR 8098: planın bina yüksekliği ve kat adedi 5/11; korunumlu şaft, yangın kesici, Broof, kuyu havalandırması, 22/1-j ve 5/8'in bodrum listesi, blok başına bölge kaldı) |
-| B16 | Bilgi yönetimi ve teslim kaydı | BIM-15 | Teslim ve iade kayıtlı |
+| B16 ~ | Bilgi yönetimi ve teslim kaydı | BIM-15 | Teslim ve iade kayıtlı (ADR 8099: kayıt, nesneye bağlı iade gerekçesi, öncekiyle karşılaştırma; künyenin role göre görünürlüğü, ortak veri ortamının durumları ve e-PYS pilotu kaldı) |
 | B17 | Büro ve belediye pilotu | BIM-16, IFC-11 | İdarenin yazılı cevabı |
 
 ### Faz 4 — Disiplinler ve idare pilotu

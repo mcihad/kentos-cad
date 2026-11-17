@@ -543,6 +543,8 @@ pub fn read(
         // windows': kept as the project has them.
         performance: choices.and_then(|a| a.performance.clone()),
         form_answers: choices.map_or_else(Vec::new, |a| a.form_answers.clone()),
+        // So is the delivery record (docs/adr/8099).
+        deliveries: choices.map_or_else(Vec::new, |a| a.deliveries.clone()),
     };
     match arch.problem() {
         Some((_, why)) => Err(why),

@@ -327,6 +327,11 @@
   - **Planın bina yüksekliği ve kat adedi (17 Kasım 2026; [ADR 8098](../adr/8098-plan-building-height-and-storeys.md),
     K143–K146):** Plan notları'nda "Bina yüksekliği (en çok)" ve "Kat adedi (en çok)" (mimari verisi 16); PAİY 5/11
     ile ±0,00'dan son katın tavan döşemesinin üstüne ve zemin ile normal katlar okunur.
+  - **Teslim kaydı (17 Kasım 2026; [ADR 8099](../adr/8099-delivery-record.md), K147–K151):** paketin idareye teslimi
+    çizimde (mimari verisi 17): yayının `yayin.json`'unun SHA-256'sı, EK-2 revizyonu, kurum, kanal, gün, makbuz; cevap Kabul
+    ya da İade, iadenin gerekçesi inceleme notlarıyla nesnelere bağlı (`cad.delivery.edit`). Öncekiyle karşılaştır aynı
+    kuruma önceki paketin klasörünü yeniden okur ve SHA-256'yla denetler; dosyalar paftayla, adla, içerikle, revizyonla
+    değişen model adıyla eşlenir; çizimler kalıcı kimlikle. Künyenin role göre görünürlüğü bulut dilimine kaldı.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

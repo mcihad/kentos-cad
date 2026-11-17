@@ -314,6 +314,8 @@ impl App {
             "arch.qualityForm" => return self.place_quality_form(),
             // Dijital proje kuralları (digital_rules.rs, docs/adr/8062).
             "arch.digitalRules" => self.open_digital_rules(),
+            // Teslim kaydı (deliveries_window.rs, docs/adr/8099).
+            "arch.deliveries" => self.open_deliveries(),
             // Otopark and Sığınak hesabı (docs/adr/8036).
             "arch.parkingTable" => {
                 self.place_provision_table(kentos_commands::TableSource::Parking {})

@@ -28179,6 +28179,155 @@
       ]
     },
     {
+      "id": "cad.delivery.edit",
+      "version": 1,
+      "title": "Teslim kaydı",
+      "summary": "Projenin hangi paketinin hangi kuruma, ne zaman, hangi yoldan teslim edildiğini ve ne cevap geldiğini çizimde tutar (settings.arch.deliveries; e-PYS Yönetmeliği 4–5). change tek değişikliktir: add (revision EK-2'nin üç rakamlı revizyon numarası, 000 revizyonsuz; package { manifest yayının yayin.json'unun SHA-256'sı, 64 küçük onaltılık rakam; files dosya sayısı; path yayın klasörü; source çizimin yayımlandığı sürüm }; to kurum; channel epys, authority idarenin yazılımı, paper basılı, other; at gün YYYY-AA-GG; by yayımlayan; receipt makbuz numarası; id verilmezse üretilir, numara en büyüğün bir fazlası), respond (id; outcome accepted kabul ya da returned iade; at cevabın günü, teslimden önce olamaz; reason gerekçe, iadede zorunlu, en çok 4000 karakter; notes gerekçeleri nesnelere bağlayan inceleme notlarının kimlikleri, cad.review.notes.edit ile eklenir; receipt; var olan cevabın yerini alır) ya da remove (id; inceleme notları kalır). Kimlik UUID değilse invalid_uid, yoksa delivery_not_found, eklenen kimlik varsa duplicate_delivery, cevabın notu çizimde yoksa review_note_not_found, kaydın denetimi tutmazsa invalid_delivery (alanın yoluyla), 1000 kayıt aşılırsa too_many_deliveries. Tek geri alma adımı “Teslim kaydı”; çizimin geometrisi değişmez. Çıktı değişen kaydın kimliği ve numarası, çizimin bütün kayıtları ve sürüm. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.delivery.edit` v1.\n\nRefusals, in this order: `invalid_uid` (an id not a lowercase hyphenated UUID), `delivery_not_found`,\n`duplicate_delivery` (an added id the drawing has), `review_note_not_found` (a response's note), `invalid_delivery`\n(the record's checks: a revision of three digits, the manifest's SHA-256, the authority and days said, a return's\nreason, an answer before the delivery, the texts' lengths; its field's path), `too_many_deliveries`,\n`invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "change": {
+            "$ref": "#/$defs/DeliveryChange"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "change"
+        ],
+        "title": "DeliveryEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.delivery.edit` v1, and its plan: the record changed (its id and number), the drawing's record then,\nthe revision.",
+        "properties": {
+          "deliveries": {
+            "items": {
+              "$ref": "#/$defs/Delivery"
+            },
+            "type": "array"
+          },
+          "id": {
+            "type": "string"
+          },
+          "number": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "id"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "deliveries",
+          "revision"
+        ],
+        "title": "DeliveryEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.delivery.edit` v1, and its plan: the record changed (its id and number), the drawing's record then,\nthe revision.",
+        "properties": {
+          "deliveries": {
+            "items": {
+              "$ref": "#/$defs/Delivery"
+            },
+            "type": "array"
+          },
+          "id": {
+            "type": "string"
+          },
+          "number": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "id"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "deliveries",
+          "revision"
+        ],
+        "title": "DeliveryEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "delivery_not_found",
+          "duplicate_delivery",
+          "review_note_not_found",
+          "invalid_delivery",
+          "too_many_deliveries",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İlk paket e-PYS'ye",
+          "input": {
+            "change": {
+              "at": "2026-11-17",
+              "channel": "epys",
+              "kind": "add",
+              "package": {
+                "files": 14,
+                "manifest": "3f0a5c1e9b7d2846a1c0e5f3b8d9274c6e1f0a3b5c7d9e2f4a6b8c0d1e3f5a7b"
+              },
+              "revision": "000",
+              "to": "Sivas Belediyesi İmar ve Şehircilik Müdürlüğü"
+            }
+          }
+        },
+        {
+          "title": "İade, gerekçesi iki nesneye bağlı notla",
+          "input": {
+            "change": {
+              "at": "2026-11-24",
+              "id": "00000000-0000-4000-8000-000000000001",
+              "kind": "respond",
+              "notes": [
+                "00000000-0000-4000-8000-0000000000aa"
+              ],
+              "outcome": "returned",
+              "reason": "Kat yüksekliği planın notunu aşıyor."
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.arch.performance",
       "version": 1,
       "title": "Yangın ve performans",
@@ -109745,6 +109894,30 @@
       "meaning": "Bir çizim en çok 10 000 inceleme notu taşır."
     },
     {
+      "code": "invalid_delivery",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Teslim kaydı kurallarına uymuyor: revizyon numarası, paketin SHA-256'sı, kurum, gün ya da iadenin gerekçesi."
+    },
+    {
+      "code": "delivery_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte teslim kaydı çizimde yok."
+    },
+    {
+      "code": "duplicate_delivery",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte bir teslim kaydı çizimde zaten var."
+    },
+    {
+      "code": "too_many_deliveries",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bir çizim en çok 1000 teslim kaydı tutar."
+    },
+    {
       "code": "take_conflict",
       "kind": "failed",
       "retryable": false,
@@ -123479,6 +123652,13 @@
             "null"
           ],
           "x-unit": "length"
+        },
+        "deliveries": {
+          "description": "Teslim kaydı (docs/adr/8099; `.kcad` Mimari data 17): each package that went to an authority and what came back,\nin the order they went. Empty: none recorded.",
+          "items": {
+            "$ref": "#/$defs/Delivery"
+          },
+          "type": "array"
         },
         "detail": {
           "anyOf": [
@@ -139287,6 +139467,307 @@
         "south",
         "east",
         "north"
+      ],
+      "type": "object"
+    },
+    "Delivery": {
+      "additionalProperties": false,
+      "description": "One delivery of the project's package to an authority.",
+      "properties": {
+        "at": {
+          "description": "The day it went, YYYY-AA-GG.",
+          "type": "string"
+        },
+        "by": {
+          "description": "Who published it.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "channel": {
+          "$ref": "#/$defs/DeliveryChannel",
+          "default": "epys"
+        },
+        "id": {
+          "description": "Lowercase, hyphenated UUID; unique in the drawing.",
+          "type": "string"
+        },
+        "number": {
+          "description": "1, 2, 3 …: one more than the largest a delivery in the drawing has.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "package": {
+          "$ref": "#/$defs/DeliveryPackage"
+        },
+        "receipt": {
+          "description": "The system's receipt for the delivery.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "response": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeliveryResponse"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "description": "The package's EK-2 revision number: three digits, 000 unrevised.",
+          "type": "string"
+        },
+        "to": {
+          "description": "The authority it went to.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "number",
+        "revision",
+        "package",
+        "to",
+        "at"
+      ],
+      "type": "object"
+    },
+    "DeliveryChange": {
+      "description": "One change of the record.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "A package went: its record, numbered one more than the largest; `id` given or made.",
+          "properties": {
+            "at": {
+              "type": "string"
+            },
+            "by": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "channel": {
+              "$ref": "#/$defs/DeliveryChannel",
+              "default": "epys"
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "add",
+              "type": "string"
+            },
+            "package": {
+              "$ref": "#/$defs/DeliveryPackage"
+            },
+            "receipt": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "revision": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "revision",
+            "package",
+            "to",
+            "at"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "The authority's answer, in place of the one it has: accepted, or returned with its reason; the review notes\n(by id) that bind the reasons to objects.",
+          "properties": {
+            "at": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "respond",
+              "type": "string"
+            },
+            "notes": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "outcome": {
+              "$ref": "#/$defs/DeliveryOutcome"
+            },
+            "reason": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "receipt": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "outcome",
+            "at"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A mistaken record taken away (its review notes stay).",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "remove",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "id"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "DeliveryChannel": {
+      "description": "How a package went to the authority (e-PYS Yönetmeliği 4/3, 6): the ministry's system, the authority's own software\n(whose records go to e-PYS, 7/7), on paper by hand (6: with no e-signature, a printed set besides), another way.",
+      "oneOf": [
+        {
+          "const": "epys",
+          "description": "e-PYS.",
+          "type": "string"
+        },
+        {
+          "const": "authority",
+          "description": "İdarenin yazılımı.",
+          "type": "string"
+        },
+        {
+          "const": "paper",
+          "description": "Basılı (elden).",
+          "type": "string"
+        },
+        {
+          "const": "other",
+          "description": "Öbür.",
+          "type": "string"
+        }
+      ]
+    },
+    "DeliveryOutcome": {
+      "description": "What came back (e-PYS Yönetmeliği 5/2–3): accepted, or returned with its reasons.",
+      "oneOf": [
+        {
+          "const": "accepted",
+          "description": "Kabul.",
+          "type": "string"
+        },
+        {
+          "const": "returned",
+          "description": "İade.",
+          "type": "string"
+        }
+      ]
+    },
+    "DeliveryPackage": {
+      "additionalProperties": false,
+      "description": "The package a delivery took: its publication's manifest's SHA-256, the files it holds, where it was written and the\ndrawing's revision it was published from.",
+      "properties": {
+        "files": {
+          "description": "The files the package holds.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "manifest": {
+          "description": "`yayin.json`'s SHA-256, 64 lowercase hexadecimal digits.",
+          "type": "string"
+        },
+        "path": {
+          "description": "Its folder, as the author's machine names it.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "description": "The drawing's revision it was published from.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "manifest",
+        "files"
+      ],
+      "type": "object"
+    },
+    "DeliveryResponse": {
+      "additionalProperties": false,
+      "description": "The authority's answer: accepted or returned, when, why (a return's reason is said), the review notes the reasons are\nbound to objects by, and the system's receipt.",
+      "properties": {
+        "at": {
+          "description": "The day it came, YYYY-AA-GG.",
+          "type": "string"
+        },
+        "notes": {
+          "description": "The review notes' ids, each a reason bound to the objects it is about.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "outcome": {
+          "$ref": "#/$defs/DeliveryOutcome"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "receipt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "outcome",
+        "at"
       ],
       "type": "object"
     },

@@ -265,6 +265,8 @@ pub const DESTRUCTIVE: &[&str] = &[
     "cad.processing.batch",
     // It writes over the form's answers or takes them away (docs/adr/8077).
     "cad.form.answer",
+    // It writes over a delivery's answer or takes a record away (docs/adr/8099).
+    "cad.delivery.edit",
     // The drawing order of what is there shifts, as a set changes it (docs/adr/0260 §3, 0310).
     "cad.entities.order",
 ];

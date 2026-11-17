@@ -175,6 +175,11 @@ codes! {
     INVALID_REVIEW_ANCHORS = "invalid_review_anchors", Failed, false, "Notun nesne bağları 1000'i aşıyor ya da bir nesne iki kez verilmiş.";
     TOO_MANY_REVIEW_REPLIES = "too_many_review_replies", Failed, false, "Bir inceleme notu en çok 200 yanıt taşır.";
     TOO_MANY_REVIEW_NOTES = "too_many_review_notes", Failed, false, "Bir çizim en çok 10 000 inceleme notu taşır.";
+    // Teslim kaydı (docs/adr/8099).
+    INVALID_DELIVERY = "invalid_delivery", Failed, false, "Teslim kaydı kurallarına uymuyor: revizyon numarası, paketin SHA-256'sı, kurum, gün ya da iadenin gerekçesi.";
+    DELIVERY_NOT_FOUND = "delivery_not_found", Failed, false, "Bu kimlikte teslim kaydı çizimde yok.";
+    DUPLICATE_DELIVERY = "duplicate_delivery", Failed, false, "Bu kimlikte bir teslim kaydı çizimde zaten var.";
+    TOO_MANY_DELIVERIES = "too_many_deliveries", Failed, false, "Bir çizim en çok 1000 teslim kaydı tutar.";
     TAKE_CONFLICT = "take_conflict", Failed, false, "Nesne ortak tabandan sonra iki tarafta da farklı değişmiş; üzerine yazmak açıkça seçilmeli.";
     BLOCK_DEFINITION_DIFFERS = "block_definition_differs", Warning, false, "Alınan blok yerleştirmesinin tanımı iki sürümde farklı; tanım açık çizimdeki olarak kaldı.";
     INVALID_ANGLE_TOLERANCE = "invalid_angle_tolerance", Failed, false, "Açı sapması eşiği 0 ile 10 derece arasında olmalı.";

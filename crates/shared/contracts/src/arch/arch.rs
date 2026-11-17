@@ -1544,6 +1544,11 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub structure: Option<BuildingStructure>,
+    /// Teslim kaydı (docs/adr/8099; `.kcad` Mimari data 17): each package that went to an authority and what came back,
+    /// in the order they went. Empty: none recorded.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::Delivery>>", optional))]
+    pub deliveries: Vec<crate::Delivery>,
 }
 
 /// The building's structural system as the project declares it (docs/adr/8094): Dijital Proje Yönetmeliği EK-2 Tablo
@@ -2286,6 +2291,11 @@ impl ArchSettings {
         self.zone.is_some()
     }
 
+    /// Whether it keeps a delivery record (Mimari data 17, docs/adr/8099).
+    pub fn has_deliveries(&self) -> bool {
+        !self.deliveries.is_empty()
+    }
+
     /// Whether it says the building's structural system (Mimari data 15, docs/adr/8094).
     pub fn has_structure(&self) -> bool {
         self.structure.is_some()
@@ -2436,6 +2446,9 @@ impl ArchSettings {
             return Some(p);
         }
         if let Some(p) = self.structure.as_ref().and_then(BuildingStructure::problem) {
+            return Some(p);
+        }
+        if let Some(p) = crate::Delivery::list_problem(&self.deliveries) {
             return Some(p);
         }
         if let Some(z) = &self.zoning

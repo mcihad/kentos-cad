@@ -1955,6 +1955,39 @@ CutFillKindName = Literal["cut", "fill"]
 """The names of :class:`CutFillKind`, for a plain string."""
 
 
+class DeliveryChannel(_StrEnum):
+    """How a package went to the authority (e-PYS Yönetmeliği 4/3, 6): the ministry's system, the authority's own software
+    (whose records go to e-PYS, 7/7), on paper by hand (6: with no e-signature, a printed set besides), another way.
+
+    - ``epys``: e-PYS.
+    - ``authority``: İdarenin yazılımı.
+    - ``paper``: Basılı (elden).
+    - ``other``: Öbür.
+    """
+    EPYS = "epys"
+    AUTHORITY = "authority"
+    PAPER = "paper"
+    OTHER = "other"
+
+
+DeliveryChannelName = Literal["epys", "authority", "paper", "other"]
+"""The names of :class:`DeliveryChannel`, for a plain string."""
+
+
+class DeliveryOutcome(_StrEnum):
+    """What came back (e-PYS Yönetmeliği 5/2–3): accepted, or returned with its reasons.
+
+    - ``accepted``: Kabul.
+    - ``returned``: İade.
+    """
+    ACCEPTED = "accepted"
+    RETURNED = "returned"
+
+
+DeliveryOutcomeName = Literal["accepted", "returned"]
+"""The names of :class:`DeliveryOutcome`, for a plain string."""
+
+
 class DerivationStatus(_StrEnum):
     """How a derived row stands against its source.
 
@@ -10262,6 +10295,28 @@ class DeclaredBasis(_Union):
         return _variant(_DECLARED_BASIS, "DeclaredBasis", "kind", data).from_json(data)
 
 
+class DeliveryChange(_Union):
+    """One change of the record.
+
+    One of:
+
+    - :class:`AddDeliveryChange` (``kind: add``)
+    - :class:`RespondDeliveryChange` (``kind: respond``)
+    - :class:`RemoveDeliveryChange` (``kind: remove``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeliveryChange:
+        return _variant(_DELIVERY_CHANGE, "DeliveryChange", "kind", data).from_json(data)
+
+
 class DeriveWork(_Union):
     """What is derived, from what.
 
@@ -17665,6 +17720,8 @@ class ArchSettings(_Model):
         cut_height: The plan's cut height above each level's floor, metres (docs/adr/8012, KCAD 217): what crosses it is cut, a
             window over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project
             writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50). Unit: length.
+        deliveries: Teslim kaydı (docs/adr/8099; `.kcad` Mimari data 17): each package that went to an authority and what came back,
+            in the order they went. Empty: none recorded.
         form_answers: Kontrol formunun cevapları (docs/adr/8077; arch data 1): the author's answers to the model quality control form's
             questions KentOS leaves to them (EK-9 Tablo 9.1: the file size, the development level, the area tables), each
             with its note, by question; the printed form and the BIM package read them. Empty: none given.
@@ -17706,6 +17763,7 @@ class ArchSettings(_Model):
     active_level: str | None | Unset = UNSET
     audit_exceptions: list[ArchAuditException] | Unset = UNSET
     cut_height: float | None | Unset = UNSET
+    deliveries: list[Delivery] | Unset = UNSET
     detail: WallDetail | WallDetailName | None | Unset = UNSET
     form_answers: list[FormAnswer] | Unset = UNSET
     level_view: LevelView | LevelViewName | None | Unset = UNSET
@@ -17739,6 +17797,8 @@ class ArchSettings(_Model):
             out["auditExceptions"] = [e0.to_json() for e0 in self.audit_exceptions]
         if self.cut_height is not UNSET:
             out["cutHeight"] = None if self.cut_height is None else float(self.cut_height)
+        if self.deliveries is not UNSET:
+            out["deliveries"] = [e0.to_json() for e0 in self.deliveries]
         if self.detail is not UNSET:
             out["detail"] = None if self.detail is None else _enum_out(self.detail)
         if self.form_answers is not UNSET:
@@ -17795,6 +17855,7 @@ class ArchSettings(_Model):
             active_level=data.get("activeLevel", UNSET),
             audit_exceptions=[ArchAuditException.from_json(e0) for e0 in data["auditExceptions"]] if "auditExceptions" in data else UNSET,
             cut_height=UNSET if "cutHeight" not in data else None if data["cutHeight"] is None else float(data["cutHeight"]),
+            deliveries=[Delivery.from_json(e0) for e0 in data["deliveries"]] if "deliveries" in data else UNSET,
             detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
             form_answers=[FormAnswer.from_json(e0) for e0 in data["formAnswers"]] if "formAnswers" in data else UNSET,
             level_view=UNSET if "levelView" not in data else None if data["levelView"] is None else _enum_in(LevelView, data["levelView"]),
@@ -30956,6 +31017,192 @@ class DegreeBox(_Model):
             south=float(data["south"]),
             east=float(data["east"]),
             north=float(data["north"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class Delivery(_Model):
+    """One delivery of the project's package to an authority.
+    Attributes:
+        id: Lowercase, hyphenated UUID; unique in the drawing.
+        number: 1, 2, 3 …: one more than the largest a delivery in the drawing has. Unit: id.
+        revision: The package's EK-2 revision number: three digits, 000 unrevised.
+        to: The authority it went to.
+        at: The day it went, YYYY-AA-GG.
+        by: Who published it.
+        receipt: The system's receipt for the delivery.
+    """
+    id: str
+    number: int
+    revision: str
+    package: DeliveryPackage
+    to: str
+    at: str
+    by: str | None | Unset = UNSET
+    channel: DeliveryChannel | DeliveryChannelName = DeliveryChannel.EPYS
+    receipt: str | None | Unset = UNSET
+    response: DeliveryResponse | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["number"] = self.number
+        out["revision"] = self.revision
+        out["package"] = self.package.to_json()
+        out["to"] = self.to
+        out["at"] = self.at
+        if self.by is not UNSET:
+            out["by"] = self.by
+        out["channel"] = _enum_out(self.channel)
+        if self.receipt is not UNSET:
+            out["receipt"] = self.receipt
+        if self.response is not UNSET:
+            out["response"] = None if self.response is None else self.response.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Delivery:
+        return cls(
+            id=data["id"],
+            number=data["number"],
+            revision=data["revision"],
+            package=DeliveryPackage.from_json(data["package"]),
+            to=data["to"],
+            at=data["at"],
+            by=data.get("by", UNSET),
+            channel=_enum_in(DeliveryChannel, data["channel"]) if "channel" in data else DeliveryChannel.EPYS,
+            receipt=data.get("receipt", UNSET),
+            response=UNSET if "response" not in data else None if data["response"] is None else DeliveryResponse.from_json(data["response"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeliveryEdit(_Model):
+    """Input of `cad.delivery.edit` v1.
+
+    Refusals, in this order: `invalid_uid` (an id not a lowercase hyphenated UUID), `delivery_not_found`,
+    `duplicate_delivery` (an added id the drawing has), `review_note_not_found` (a response's note), `invalid_delivery`
+    (the record's checks: a revision of three digits, the manifest's SHA-256, the authority and days said, a return's
+    reason, an answer before the delivery, the texts' lengths; its field's path), `too_many_deliveries`,
+    `invalid_revision`, `revision_conflict`.
+    """
+    change: DeliveryChange
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["change"] = self.change.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeliveryEdit:
+        return cls(
+            change=DeliveryChange.from_json(data["change"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeliveryEdited(_Model):
+    """Output of `cad.delivery.edit` v1, and its plan: the record changed (its id and number), the drawing's record then,
+    the revision.
+    Attributes:
+        number: Unit: id.
+    """
+    id: str
+    number: int
+    deliveries: list[Delivery]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["number"] = self.number
+        out["deliveries"] = [e0.to_json() for e0 in self.deliveries]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeliveryEdited:
+        return cls(
+            id=data["id"],
+            number=data["number"],
+            deliveries=[Delivery.from_json(e0) for e0 in data["deliveries"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeliveryPackage(_Model):
+    """The package a delivery took: its publication's manifest's SHA-256, the files it holds, where it was written and the
+    drawing's revision it was published from.
+    Attributes:
+        manifest: `yayin.json`'s SHA-256, 64 lowercase hexadecimal digits.
+        files: The files the package holds. Unit: count.
+        path: Its folder, as the author's machine names it.
+        source: The drawing's revision it was published from.
+    """
+    manifest: str
+    files: int
+    path: str | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["manifest"] = self.manifest
+        out["files"] = self.files
+        if self.path is not UNSET:
+            out["path"] = self.path
+        if self.source is not UNSET:
+            out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeliveryPackage:
+        return cls(
+            manifest=data["manifest"],
+            files=data["files"],
+            path=data.get("path", UNSET),
+            source=data.get("source", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeliveryResponse(_Model):
+    """The authority's answer: accepted or returned, when, why (a return's reason is said), the review notes the reasons are
+    bound to objects by, and the system's receipt.
+    Attributes:
+        at: The day it came, YYYY-AA-GG.
+        notes: The review notes' ids, each a reason bound to the objects it is about.
+    """
+    outcome: DeliveryOutcome | DeliveryOutcomeName
+    at: str
+    notes: list[str] | Unset = UNSET
+    reason: str | None | Unset = UNSET
+    receipt: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["outcome"] = _enum_out(self.outcome)
+        out["at"] = self.at
+        if self.notes is not UNSET:
+            out["notes"] = list(self.notes)
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
+        if self.receipt is not UNSET:
+            out["receipt"] = self.receipt
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeliveryResponse:
+        return cls(
+            outcome=_enum_in(DeliveryOutcome, data["outcome"]),
+            at=data["at"],
+            notes=list(data["notes"]) if "notes" in data else UNSET,
+            reason=data.get("reason", UNSET),
+            receipt=data.get("receipt", UNSET),
         )
 
 
@@ -125561,6 +125808,104 @@ class DocumentDeclaredBasis(DeclaredBasis):
 
 
 @dataclass(kw_only=True, slots=True)
+class AddDeliveryChange(DeliveryChange):
+    """A package went: its record, numbered one more than the largest; `id` given or made."""
+    TAG_VALUE: ClassVar[str] = "add"
+    revision: str
+    package: DeliveryPackage
+    to: str
+    at: str
+    by: str | None | Unset = UNSET
+    channel: DeliveryChannel | DeliveryChannelName = DeliveryChannel.EPYS
+    id: str | None | Unset = UNSET
+    receipt: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "add"}
+        out["revision"] = self.revision
+        out["package"] = self.package.to_json()
+        out["to"] = self.to
+        out["at"] = self.at
+        if self.by is not UNSET:
+            out["by"] = self.by
+        out["channel"] = _enum_out(self.channel)
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.receipt is not UNSET:
+            out["receipt"] = self.receipt
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddDeliveryChange:
+        return cls(
+            revision=data["revision"],
+            package=DeliveryPackage.from_json(data["package"]),
+            to=data["to"],
+            at=data["at"],
+            by=data.get("by", UNSET),
+            channel=_enum_in(DeliveryChannel, data["channel"]) if "channel" in data else DeliveryChannel.EPYS,
+            id=data.get("id", UNSET),
+            receipt=data.get("receipt", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RespondDeliveryChange(DeliveryChange):
+    """The authority's answer, in place of the one it has: accepted, or returned with its reason; the review notes
+    (by id) that bind the reasons to objects.
+    """
+    TAG_VALUE: ClassVar[str] = "respond"
+    id: str
+    outcome: DeliveryOutcome | DeliveryOutcomeName
+    at: str
+    notes: list[str] | Unset = UNSET
+    reason: str | None | Unset = UNSET
+    receipt: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "respond"}
+        out["id"] = self.id
+        out["outcome"] = _enum_out(self.outcome)
+        out["at"] = self.at
+        if self.notes is not UNSET:
+            out["notes"] = list(self.notes)
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
+        if self.receipt is not UNSET:
+            out["receipt"] = self.receipt
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RespondDeliveryChange:
+        return cls(
+            id=data["id"],
+            outcome=_enum_in(DeliveryOutcome, data["outcome"]),
+            at=data["at"],
+            notes=list(data["notes"]) if "notes" in data else UNSET,
+            reason=data.get("reason", UNSET),
+            receipt=data.get("receipt", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveDeliveryChange(DeliveryChange):
+    """A mistaken record taken away (its review notes stay)."""
+    TAG_VALUE: ClassVar[str] = "remove"
+    id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveDeliveryChange:
+        return cls(
+            id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class VertexPointsDeriveWork(DeriveWork):
     """Köşelere nokta (docs/adr/0152 §5): a point at every vertex of the lines, polylines and areas, past the places
     two vertices share and those points already hold; named from `name` on (Yazı's Artır), each with the code
@@ -142718,6 +143063,9 @@ _CURVE_EDIT: dict[str, type[CurveEdit]] = {"close": CloseCurveEdit, "open": Open
 _DECLARED_BASIS: dict[str, type[DeclaredBasis]] = {"author": AuthorDeclaredBasis, "document": DocumentDeclaredBasis}
 
 
+_DELIVERY_CHANGE: dict[str, type[DeliveryChange]] = {"add": AddDeliveryChange, "respond": RespondDeliveryChange, "remove": RemoveDeliveryChange}
+
+
 _DERIVE_WORK: dict[str, type[DeriveWork]] = {"vertexPoints": VertexPointsDeriveWork, "centerline": CenterlineDeriveWork, "polygonize": PolygonizeDeriveWork}
 
 
@@ -143088,6 +143436,7 @@ __all__ = [
     "AddArmLeaderEdit",
     "AddAssetsPaperOp",
     "AddConstraintEdit",
+    "AddDeliveryChange",
     "AddEdgeSurfaceEdit",
     "AddEntityEdit",
     "AddFitCurveEdit",
@@ -143928,6 +144277,16 @@ __all__ = [
     "DeleteRowsTableEdit",
     "DeleteUcsTo",
     "DeleteViewsOp",
+    "Delivery",
+    "DeliveryChange",
+    "DeliveryChannel",
+    "DeliveryChannelName",
+    "DeliveryEdit",
+    "DeliveryEdited",
+    "DeliveryOutcome",
+    "DeliveryOutcomeName",
+    "DeliveryPackage",
+    "DeliveryResponse",
     "DeltaLengthenChange",
     "DepartureRow",
     "DerivationEntry",
@@ -146242,6 +146601,7 @@ __all__ = [
     "RemoveCloudPlaceBy",
     "RemoveConstraintEdit",
     "RemoveControlCurveEdit",
+    "RemoveDeliveryChange",
     "RemoveDomainsOp",
     "RemoveEntityEdit",
     "RemoveFieldEdit",
@@ -146318,6 +146678,7 @@ __all__ = [
     "ResolveFormsOp",
     "ResourceKind",
     "ResourceKindName",
+    "RespondDeliveryChange",
     "RestoreHiddenDimensionSetEdit",
     "RestoreModulesOperation",
     "RetainingWallDef",

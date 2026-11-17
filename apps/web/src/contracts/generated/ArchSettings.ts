@@ -6,6 +6,7 @@ import type { ArchModule } from "./ArchModule";
 import type { BuildingPerformance } from "./BuildingPerformance";
 import type { BuildingProgram } from "./BuildingProgram";
 import type { BuildingStructure } from "./BuildingStructure";
+import type { Delivery } from "./Delivery";
 import type { FormAnswer } from "./FormAnswer";
 import type { LevelView } from "./LevelView";
 import type { LineGroups } from "./LineGroups";
@@ -143,4 +144,9 @@ zone?: Zone,
  * declares it and whether it holds traditional architectural elements; Planlı Alanlar İmar Yönetmeliği 22/1-m and
  * 28/1-d read a traditional cut stone masonry building of up to three storeys. Absent: not said.
  */
-structure?: BuildingStructure, };
+structure?: BuildingStructure, 
+/**
+ * Teslim kaydı (docs/adr/8099; `.kcad` Mimari data 17): each package that went to an authority and what came back,
+ * in the order they went. Empty: none recorded.
+ */
+deliveries?: Array<Delivery>, };

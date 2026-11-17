@@ -1253,6 +1253,11 @@ pub mod arch_performance;
 #[cfg(feature = "mod-arch")]
 #[path = "arch/arch_form_answers.rs"]
 pub mod arch_form_answers;
+#[cfg(feature = "mod-arch")]
+#[path = "arch/delivery_edit.rs"]
+pub mod delivery_edit;
+#[path = "arch/delivery_compare.rs"]
+pub mod delivery_compare;
 // Parselin plan kararları (docs/adr/8072 §5): the zoning plan read for the building's parcel, Mimari's.
 #[cfg(feature = "mod-arch")]
 #[path = "arch/zoning_parcel.rs"]
@@ -2170,6 +2175,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_FORM_ANSWER,
         kentos_commands::CAD_FORM_ANSWER_VERSION,
+    ),
+    // Teslim kaydı ([`delivery_edit`], docs/adr/8099).
+    (
+        kentos_commands::CAD_DELIVERY_EDIT,
+        kentos_commands::CAD_DELIVERY_EDIT_VERSION,
     ),
     // Parselin plan kararları ([`zoning_parcel`], docs/adr/8072 §5).
     (

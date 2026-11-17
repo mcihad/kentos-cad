@@ -106,3 +106,26 @@ fn the_plan_s_building_height_round_trips_under_arch_data_16() {
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
     assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the note reads back");
 }
+
+/// Architecture data 17 (docs/adr/8099): the delivery record is written with `modules.arch = 17` and read back.
+#[test]
+fn the_delivery_record_round_trips_under_arch_data_17() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_deliveries(&doc));
+    doc.settings.arch.get_or_insert_with(Default::default).deliveries.push(kentos_contracts::Delivery {
+        id: "00000000-0000-4000-8000-000000000001".into(),
+        number: 1,
+        revision: "000".into(),
+        package: kentos_contracts::DeliveryPackage { manifest: "0".repeat(64), files: 14, path: None, source: None },
+        to: "Sivas Belediyesi".into(),
+        channel: kentos_contracts::DeliveryChannel::Epys,
+        at: "2026-11-17".into(),
+        by: None,
+        receipt: Some("2026-0001".into()),
+        response: None,
+    });
+    assert!(kentos_kcad::uses_deliveries(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_DELIVERIES);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the record reads back");
+}

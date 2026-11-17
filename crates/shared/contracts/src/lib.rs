@@ -56,6 +56,8 @@ pub mod opening_types;
 pub mod materials;
 #[path = "arch/performance.rs"]
 pub mod performance;
+#[path = "arch/deliveries.rs"]
+pub mod deliveries;
 #[path = "arch/arch_modules.rs"]
 pub mod arch_modules;
 #[path = "arch/arch_options.rs"]
@@ -346,6 +348,7 @@ pub use opening::*;
 pub use opening_types::*;
 pub use materials::*;
 pub use performance::*;
+pub use deliveries::*;
 pub use arch_modules::*;
 pub use arch_options::*;
 pub use slab::*;

@@ -802,6 +802,23 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: Vec::new,
     },
+    // Teslim kaydı (docs/adr/8099): the drawing's settings, no object.
+    Entry {
+        id: "cad.delivery.edit",
+        refusals: &[
+            &[
+                "invalid_uid",
+                "delivery_not_found",
+                "duplicate_delivery",
+                "review_note_not_found",
+                "invalid_delivery",
+                "too_many_deliveries",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: Vec::new,
+    },
     // Kuzey oku, Revizyon işaretle and Malzeme lejandı (docs/adr/0721).
     Entry {
         id: "cad.north.create",

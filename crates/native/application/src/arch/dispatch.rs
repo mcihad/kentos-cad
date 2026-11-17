@@ -180,6 +180,12 @@ macro_rules! arch_commands {
                 arch_form_answers,
                 kentos_commands::ArchFormAnswers
             ),
+            kentos_commands::CAD_DELIVERY_EDIT => crate::arch_dispatch::arch_arm!(
+                $command,
+                $then,
+                delivery_edit,
+                kentos_commands::DeliveryEdit
+            ),
             kentos_commands::CAD_ZONING_PARCEL => crate::arch_dispatch::arch_arm!(
                 $command,
                 $then,

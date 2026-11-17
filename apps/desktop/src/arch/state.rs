@@ -52,6 +52,8 @@ pub(crate) struct ArchUiState {
     pub(crate) quantities: Option<crate::quantities::Window>,
     /// Dijital proje kuralları' window (digital_rules.rs, docs/adr/8062).
     pub(crate) digital_rules: Option<crate::digital_rules::Window>,
+    /// Teslim kaydı's window (deliveries_window.rs, docs/adr/8099).
+    pub(crate) deliveries: Option<crate::deliveries_window::Window>,
 }
 
 /// The architecture (Mimari) module's messages, `Message::Arch`.
@@ -83,6 +85,8 @@ pub(crate) enum Event {
     Quantities(crate::quantities::Event),
     /// Dijital proje kuralları (digital_rules.rs, docs/adr/8062).
     DigitalRules(crate::digital_rules::Event),
+    /// Teslim kaydı (deliveries_window.rs, docs/adr/8099).
+    Deliveries(crate::deliveries_window::Event),
 }
 
 /// The architecture (Mimari) module's windows, `Dialog::Arch`.
@@ -124,6 +128,8 @@ pub(crate) enum ArchDialogKind {
     Quantities,
     /// Dijital proje kuralları (digital_rules.rs, docs/adr/8062); the window is `ArchUiState::digital_rules`.
     DigitalRules,
+    /// Teslim kaydı (deliveries_window.rs, docs/adr/8099); the window is `ArchUiState::deliveries`.
+    Deliveries,
 }
 
 impl App {
@@ -148,6 +154,7 @@ impl App {
             Event::ViewRefs(event) => return self.view_refs_event(event),
             Event::Quantities(event) => return self.quantities_event(event),
             Event::DigitalRules(event) => return self.digital_rules_event(event),
+            Event::Deliveries(event) => return self.deliveries_event(event),
             Event::ArchTemplate(event) => self.architecture_template_event(event),
         }
         Task::none()
@@ -173,6 +180,7 @@ impl App {
             ArchDialogKind::ViewRefs => self.view_refs_view(),
             ArchDialogKind::Quantities => self.quantities_view(),
             ArchDialogKind::DigitalRules => self.digital_rules_view(),
+            ArchDialogKind::Deliveries => self.deliveries_view(),
         }
     }
 }
