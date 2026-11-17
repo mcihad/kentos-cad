@@ -5658,3 +5658,50 @@ masaüstü `tests/grants.rs` (yeni, 2) ve `an_updates_new_capability_is_shown_an
     - daralan kapsam cevabı korur.
   - Masaüstü 2: bırakılan İnternet ve kurulmayan Python katkıları sonraki sürümde de öyle kalır.
   - Masaüstünün bütün sınamaları: 2543.
+
+## §122. Sabitlenen aracın dayanağı alınınca nedeni söylenir: izin, Python, ortam (ECO-QA-12, ECO-DEC-09)
+
+**17 Kasım.** Kod: eklenti barındırıcısı `lease.rs` (bırakılan katkının nedeni yeteneğin adıyla), `registry.rs`
+(`left_out`); masaüstü `extensions/tool_pins.rs`, `extensions/environment.rs` (`python_reason`), `extensions/view.rs`
+(kurulu ayrıntıda "verilmedi"). Sınamalar: masaüstü `tests/pins.rs` (yeni, 2), barındırıcı
+`what_the_user_did_not_grant_is_left_out`.
+
+- **Sorun.** Form eylemi ya da model adımı bir eklenti aracına sabitlenir (§12, §13). Aracın dayanağı alınınca iletisi
+  yanlıştı ya da eksikti:
+  - kişi "İşlemler'e araç ekler" yeteneğini vermediyse ya da Python katkılarını kurmadıysa araç kaydolmuyor ve düğme
+    "Vitrin 1.0.1 bu aracı içermiyor" diyordu: araç pakette vardı, kişi aracı içeren başka bir sürüm arıyordu;
+  - ortam hazırlanamadıysa (çevrimdışı, bu bilgisayara uygun tekerlek yok) düğme yalnız "hazırlanmadı" diyordu; nedeni
+    yalnız hazırlama anındaki bildirimdeydi;
+  - kurulu eklentinin ayrıntısı istenen yetenekleri yazıyor ama hangisinin verilmediğini söylemiyordu;
+  - bırakılan katkının nedeni yeteneği kimliğiyle yazıyordu (`processing.provider`).
+- **Karar:**
+  - Kayıt defteri, kullanılan sürümün bildirip bıraktığı katkıları nedenleriyle verir (`left_out`): diskten bir şey
+    okunmaz, düğme pencere çizilirken sorar. Neden yeteneğin adıyla yazılır ("Verilmeyen yetenek: “İşlemler'e araç
+    ekler”.", "Python katkıları kurulumda seçilmedi.").
+  - Düğme ve model adımı: "Vitrin 1.0.1 bu aracı içeriyor ama araç kurulmadı: … Vermek için paketi Eklentiler'de
+    yeniden gözden geçirip kurun." "İçermiyor" yalnız sürüm aracı gerçekten bildirmiyorsa söylenir.
+  - Bekleyen araç son hazırlama denemesinin sözünü taşır: "Bu eklentinin Python ortamı hazırlanamadı: Paketler
+    indirilemedi: internete ulaşılamadı. … Eklentiler › Vitrin › Python ortamı."
+  - Kurulu eklentinin ayrıntısında verilmeyen yetenek "· verilmedi" der (gerçek pencere: Kent Rehberi, İnternet
+    verilmeden kuruldu).
+- **ECO-QA-12'nin dört parçası:**
+  - *Kilitli ortamda çevrimdışı:* hazır ortam diskteki dosyalardır, uv'siz ve internetsiz kullanılır
+    (`an_extensions_environment_is_its_own_previewed_made_and_used_offline`). Hazırlanmamış ortam çevrimdışı
+    hazırlanamaz; sabitlenen araç bunu nedeniyle söyler (yeni).
+  - *Eksik tekerlek:* uv'nin sözü paket adıyla Türkçeye çevrilir
+    (`uv_s_words_for_wheels_become_turkish_with_the_package_named`,
+    `the_packages_without_a_wheel_are_found_where_they_install`; adı verilen bilgisayarda tekerleği olmayan paket
+    uyarıdır). Sabitlenen araç da son denemenin sözünü taşır (yeni).
+  - *Geri alınan aracı izni:* verilmeyen yetenek ya da seçilmeyen Python aracı kaydettirmez, düğme nedenini söyler
+    (yeni); güncelleme bırakılan izni geri vermez (§121); devre dışı bırakılan eklentinin kirası düşer, eski kirayla
+    gelen çağrı reddedilir (ECO-QA-05).
+  - *Değişen kaynak revizyonu:* sabitlemeden başka sürüm ya da aynı sürümün başka yapısı söylenir, düğme kapanmaz (§12;
+    "aynı sürüm ama içeriği farklı"); model adımı da (§13).
+- **Kalan:** kurulu eklentinin izinlerini paketi yeniden kurmadan değiştirmek (bugün paket yeniden gözden geçirilip
+  kurulur); çevrimdışı tekerlek deposu (PY-UV-27).
+- **Sınamalar:**
+  - Masaüstü 2:
+    - izni ya da Python'u verilmeyen araç "içeriyor ama kurulmadı" der, nedeniyle;
+    - Python hazır, ortam çevrimdışı hazırlanamadı: düğme ve model adımı "internete ulaşılamadı" der.
+  - Barındırıcı: bırakılan katkının nedeni yeteneğin adıyla yazılır; `left_out` etkinleştirmenin bıraktığıyla aynıdır.
+  - Masaüstünün bütün sınamaları: 2545.

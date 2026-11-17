@@ -20,6 +20,7 @@ mod demo;
 mod grants;
 mod l10n;
 mod late;
+mod pins;
 mod python;
 mod report;
 mod retired;

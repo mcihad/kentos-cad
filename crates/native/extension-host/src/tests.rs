@@ -524,11 +524,12 @@ fn what_the_user_did_not_grant_is_left_out() {
     let activation = installed.activation.unwrap().unwrap();
     assert!(r.contributions().is_empty());
     assert_eq!(activation.skipped.len(), 1);
-    assert!(
-        activation.skipped[0].reason.contains("network"),
-        "{:?}",
-        activation.skipped
+    assert_eq!(
+        activation.skipped[0].reason, "Verilmeyen yetenek: “İnternete bağlanır”.",
+        "said by its title (docs/adr/8057 §122)"
     );
+    // Asked again without activating: the same, for a form's button (docs/adr/8057 §122).
+    assert_eq!(r.left_out(ID), activation.skipped);
     let foreign = Choice {
         grant: Grant {
             capabilities: vec![Capability::FilesUserSelected],

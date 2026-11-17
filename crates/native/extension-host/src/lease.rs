@@ -75,20 +75,21 @@ pub fn contributions(
     let mut skipped = Vec::new();
     let mut add =
         |kind: ContributionKind, id: String, title: &str, needs: &[Capability], python: bool| {
-            let missing: Vec<&str> = needs
+            // Said by the capabilities' titles: a form's button shows it (docs/adr/8057 §122).
+            let missing: Vec<String> = needs
                 .iter()
                 .filter(|c| !granted(**c))
-                .map(|c| c.id())
+                .map(|c| format!("“{}”", c.title()))
                 .collect();
             if !missing.is_empty() {
                 skipped.push(Skipped {
                     id,
-                    reason: format!("İzin verilmeyen yetenek: {}.", missing.join(", ")),
+                    reason: format!("Verilmeyen yetenek: {}.", missing.join(", ")),
                 });
             } else if python && !grant.python {
                 skipped.push(Skipped {
                     id,
-                    reason: "Python katkıları seçilmedi; ortam hazırlanmadı.".to_owned(),
+                    reason: "Python katkıları kurulumda seçilmedi.".to_owned(),
                 });
             } else {
                 out.push(Registered {

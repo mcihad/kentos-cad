@@ -410,13 +410,19 @@ impl App {
         if let Some(m) = manifest {
             if !m.requested_capabilities.is_empty() {
                 form = form.section("Yetenekler");
+                // What the person granted is seen where it stays (docs/adr/8057 §122).
+                let grant = registry.and_then(|r| r.grant(&e.id));
                 for r in &m.requested_capabilities {
-                    form = form.wide(label::caption(capability_words(
+                    let mut words = capability_words(
                         r.id.title(),
                         &r.reason,
                         &r.hosts,
                         r.sends_data_to_ai == Some(true),
-                    )));
+                    );
+                    if !grant.is_some_and(|g| g.capabilities.contains(&r.id)) {
+                        words.push_str(" · verilmedi");
+                    }
+                    form = form.wide(label::caption(words));
                 }
             }
             if !m.dependencies.extensions.is_empty() {

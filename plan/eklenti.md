@@ -1559,7 +1559,7 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
 - [ ] Taşınabilir UI/kural/değer kodlayıcı/doğrulama aynı profilde eşdeğer sonuç [ECO-QA-07]; eklenti UI görsel testleri
   ile durum/odak/değer korunumu, kaldırma, geç geri çağırma ve doğrulama gezinmesi gerçek girdiyle [ECO-QA-08].
 - [ ] ACL testleri ham HTTP/genel komut/Python/eklenti/AI/tablo/arama/dışa aktarma ve olay yollarını kapsar [ECO-QA-09].
-- [ ] İşlemler değişiklik kümesi, tipli katman/tablo/dosya hedefi, yinelenen deneme ve hazırlanmış eser temizliği hata
+- [x] İşlemler değişiklik kümesi, tipli katman/tablo/dosya hedefi, yinelenen deneme ve hazırlanmış eser temizliği hata
   enjeksiyonuyla [ECO-QA-10]. Taslak/sürüm onay özeti, paket kurcalama, kapsam yükseltme ve yayımlanmamış görünürlük
   olumsuz testleri [ECO-QA-11]. Kilitli ortamda çevrimdışı çalışma, eksik tekerlek, geri alınan aracı izni ve değişen
   kaynak revizyonu [ECO-QA-12].
@@ -1572,7 +1572,11 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
   katalogla ortak ölçü) ve daha önce verilmeyen yetenek işaretsiz geliyor
   (`an_update_never_widens_what_the_person_granted`, `tests/grants.rs`). Onay özeti ve içeriğe bağlı onay
   (`content_frozen`), paket kurcalama (`catalog_mismatch`, aynı sürüm başka içerik, diskte değişen dosya) ve
-  yayımlanmamışın görünmemesi (404) önceden sınanmıştı. ECO-QA-12 açık.*
+  yayımlanmamışın görünmemesi (404) önceden sınanmıştı.* — *ECO-QA-12 17 Kasım'da karşılandı (§122). Sabitlenen araç
+  dayanağı alınınca nedenini söylüyor: verilmeyen yetenek ya da seçilmeyen Python "içeriyor ama kurulmadı" der
+  ("içermiyor" demiyordu); çevrimdışı ya da tekerleksiz hazırlanamayan ortamın sözü düğmeye ve model adımına geliyor
+  (`tests/pins.rs`). Hazır ortamın internetsiz kullanılması, tekerlek sözleri ve sabitlemenin sürüm/yapı farkı önceden
+  sınanmıştı. Kalan: kurulu eklentinin izinlerini yeniden kurmadan değiştirmek, çevrimdışı tekerlek deposu (PY-UV-27).*
 - [ ] Başlangıç/keşif, ortam hazırlama, geri çağırma gidiş-dönüşü, büyük UI/İşlemler yükü, Python toplu işi ve host bellek
   ölçümü [ECO-QA-13]; eşikler gerçek başvuru cihazı ve korpus ölçümünden sonra sabitlenir, ölçülmüş gibi süre/FPS
   icat edilmez [ECO-QA-14]; üreticinin kendi çıktısı tek doğruluk kanıtı sayılmaz, bağımsız beklentiler yazılır

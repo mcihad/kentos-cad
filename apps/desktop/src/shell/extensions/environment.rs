@@ -219,10 +219,17 @@ impl App {
             return Some(p.why_not().to_owned());
         }
         (!self.env_ready_now(id)).then(|| {
-            format!(
-                "Bu eklentinin Python ortamı hazırlanmadı: Eklentiler › {} › Python ortamı.",
-                self.extension_name(id)
-            )
+            let name = self.extension_name(id);
+            // The last try's words (a wheel this computer has none of, the internet out of reach): a form's button
+            // and a model's step say why, not only that it is not ready (docs/adr/8057 §122).
+            match self.extensions.envs.get(id).and_then(|s| s.note.as_deref()) {
+                Some(why) => format!(
+                    "Bu eklentinin Python ortamı hazırlanamadı: {why} Eklentiler › {name} › Python ortamı."
+                ),
+                None => format!(
+                    "Bu eklentinin Python ortamı hazırlanmadı: Eklentiler › {name} › Python ortamı."
+                ),
+            }
         })
     }
 

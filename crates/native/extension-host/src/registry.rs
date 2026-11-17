@@ -630,6 +630,22 @@ impl Registry {
         &self.registered
     }
 
+    /// What `id`'s version in use declares and leaves out, with why: a capability the person did not grant, Python
+    /// contributions not chosen (docs/adr/8057 §122). Worked out from the manifest and the grant, nothing read from disk:
+    /// a form's button asks it while the window draws.
+    pub fn left_out(&self, id: &str) -> Vec<Skipped> {
+        let (Some(entry), Some(manifest)) = (self.file.extensions.get(id), self.manifests.get(id))
+        else {
+            return Vec::new();
+        };
+        let lease = ExtensionLease {
+            extension: id.to_owned(),
+            version: entry.active.clone(),
+            generation: 0,
+        };
+        lease::contributions(manifest, &entry.grant, &lease, &BTreeMap::new()).1
+    }
+
     /// What every running or ready extension adds or would add, worked out without activating anything or writing
     /// the registry (`kentos kek dump`, the MCP resource): a ready one's under a lease of generation 0. With what was
     /// left out and why.
