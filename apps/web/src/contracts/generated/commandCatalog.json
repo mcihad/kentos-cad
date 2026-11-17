@@ -28328,6 +28328,135 @@
       ]
     },
     {
+      "id": "cad.underlay.edit",
+      "version": 1,
+      "title": "Altlık model",
+      "summary": "Başka bir disiplinin IFC modelini (IFC 4.3, IFC4, IFC2x3) çizimin altında salt okunur gösterilecek altlık olarak tutar (settings.arch.underlays); model çizime kopyalanmaz, gövdeleri her gösterilişte dosyadan okunur. change tek değişikliktir: add (file dosyanın mutlak yolu; dosya okunur, SHA-256'sı, boyu ve şeması yazılır; name listedeki ad, yoksa dosyanın adı; discipline ve revision kullanıcının verdiği disiplin ve revizyon; placement map dosyanın harita dönüşümüyle projenin sistemine, varsayılan, ya da origin başlangıç noktasına, dosyanın metreleri çizimin metreleri; id verilmezse üretilir), set (id; name, discipline, revision, boş metin kaldırır; placement, verilince dosya yeniden okunup yerleştirilir; shown gösterilir mi; en az biri, yoksa nothing_to_set), reload (id; dosya değiştiyse yeniden okunur, file verilirse yeni yeri; yerleşim yeniden denetlenir) ya da remove (id; dosya yerinde kalır). Yerleştirme sessiz dönüşüm yapmaz: dosyanın sistemi projeninkinden başkaysa, dosyada harita dönüşümü yoksa, projenin sistemi ya da ±0,00 kotu yoksa, yükseklik datumları farklıysa ya da dönüşümün ölçeği dosyanın birimiyle uyuşmuyorsa model_underlay_not_placed nedeniyle döner; başlangıç noktasına yerleştirme yalnız açıkça istenince. Kimlik UUID değilse invalid_uid, yoksa model_underlay_not_found, eklenen kimlik varsa duplicate_model_underlay, yol mutlak değilse invalid_file_path, dosya yoksa file_not_found, IFC olarak okunmazsa model_underlay_unreadable, kaydın denetimi tutmazsa invalid_model_underlay (alanın yoluyla), 50 altlık aşılırsa too_many_model_underlays. Tek geri alma adımı “Altlık model”; çizimin nesneleri değişmez. Çıktı değişen altlığın kimliği, çizimin bütün altlıkları ve sürüm. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.underlay.edit` v1.\n\nRefusals, in this order: `invalid_uid`, `model_underlay_not_found`, `duplicate_model_underlay`, `invalid_file_path`\n(not an absolute path), `file_not_found`, `model_underlay_unreadable` (not an IFC file the reader reads),\n`model_underlay_not_placed` (another system, no map conversion, a project with no system, other height datums, a\nscale the file's unit does not explain), `nothing_to_set`, `invalid_model_underlay` (its field's path),\n`too_many_model_underlays`, `invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "change": {
+            "$ref": "#/$defs/UnderlayChange"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "change"
+        ],
+        "title": "UnderlayEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.underlay.edit` v1, and its plan: the underlay changed (its id), the drawing's underlays then, the\nrevision.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "underlays": {
+            "items": {
+              "$ref": "#/$defs/ModelUnderlay"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "underlays",
+          "revision"
+        ],
+        "title": "UnderlayEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.underlay.edit` v1, and its plan: the underlay changed (its id), the drawing's underlays then, the\nrevision.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "underlays": {
+            "items": {
+              "$ref": "#/$defs/ModelUnderlay"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "underlays",
+          "revision"
+        ],
+        "title": "UnderlayEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "model_underlay_not_found",
+          "duplicate_model_underlay",
+          "invalid_file_path",
+          "file_not_found",
+          "model_underlay_unreadable",
+          "model_underlay_not_placed",
+          "nothing_to_set",
+          "invalid_model_underlay",
+          "too_many_model_underlays",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Statik modeli altlık olarak ekle",
+          "input": {
+            "change": {
+              "discipline": "Statik",
+              "file": "/projeler/konut/statik.ifc",
+              "kind": "add",
+              "revision": "R2"
+            }
+          }
+        },
+        {
+          "title": "Harita dönüşümü olmayan modeli başlangıç noktasına yerleştir",
+          "input": {
+            "change": {
+              "file": "/projeler/konut/mekanik.ifc",
+              "kind": "add",
+              "placement": "origin"
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.arch.performance",
       "version": 1,
       "title": "Yangın ve performans",
@@ -109918,6 +110047,42 @@
       "meaning": "Bir çizim en çok 1000 teslim kaydı tutar."
     },
     {
+      "code": "invalid_model_underlay",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Altlık model kurallarına uymuyor: ad, dosya yolu, disiplin ya da revizyon."
+    },
+    {
+      "code": "model_underlay_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte altlık model çizimde yok."
+    },
+    {
+      "code": "duplicate_model_underlay",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte bir altlık model çizimde zaten var."
+    },
+    {
+      "code": "model_underlay_unreadable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Altlık modelin dosyası bir IFC dosyası olarak okunamadı."
+    },
+    {
+      "code": "model_underlay_not_placed",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Altlık model projeye yerleştirilemedi: koordinat sistemi, harita dönüşümü ya da yükseklik datumu uyuşmuyor."
+    },
+    {
+      "code": "too_many_model_underlays",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bir çizim en çok 50 altlık model gösterir."
+    },
+    {
       "code": "take_conflict",
       "kind": "failed",
       "retryable": false,
@@ -123841,6 +124006,13 @@
             }
           ],
           "description": "Taşıyıcı sistem (docs/adr/8094; `.kcad` Mimari data 15): the building's structural system as the project\ndeclares it and whether it holds traditional architectural elements; Planlı Alanlar İmar Yönetmeliği 22/1-m and\n28/1-d read a traditional cut stone masonry building of up to three storeys. Absent: not said."
+        },
+        "underlays": {
+          "description": "Altlık modeller (docs/adr/8101; `.kcad` Mimari data 18): other disciplines' IFC models shown read-only under the\ndrawing, by their files. Empty: none.",
+          "items": {
+            "$ref": "#/$defs/ModelUnderlay"
+          },
+          "type": "array"
         },
         "zone": {
           "anyOf": [
@@ -167649,6 +167821,65 @@
           "type": "string"
         }
       ]
+    },
+    "ModelUnderlay": {
+      "additionalProperties": false,
+      "description": "One underlay model.",
+      "properties": {
+        "bytes": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "bytes"
+        },
+        "discipline": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "file": {
+          "description": "The file, as the author's machine names it.",
+          "type": "string"
+        },
+        "id": {
+          "description": "Lowercase, hyphenated UUID; unique in the drawing.",
+          "type": "string"
+        },
+        "name": {
+          "description": "As the list shows it (the file's name, unless the user named it).",
+          "type": "string"
+        },
+        "placement": {
+          "$ref": "#/$defs/UnderlayPlacement"
+        },
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "schema": {
+          "description": "Its `FILE_SCHEMA` (`IFC4X3_ADD2`, `IFC4`, `IFC2X3`).",
+          "type": "string"
+        },
+        "sha256": {
+          "description": "The file's SHA-256 when it was read in, 64 lowercase hexadecimal digits: the revision shown.",
+          "type": "string"
+        },
+        "shown": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "file",
+        "sha256",
+        "bytes",
+        "schema"
+      ],
+      "type": "object"
     },
     "ModuleBreak": {
       "description": "Why an instance's link broke: its module's definition was removed; its objects stay as they last were.",
@@ -224362,6 +224593,157 @@
         }
       ]
     },
+    "UnderlayChange": {
+      "description": "One change of the underlays.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "An IFC file shown under the drawing: its absolute path; the name the list shows (its file's name when none);\nthe discipline and revision the user gives it; how it is placed (by its map conversion when none).",
+          "properties": {
+            "discipline": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "file": {
+              "type": "string"
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "add",
+              "type": "string"
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "placement": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/UnderlayPlacement"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "revision": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "file"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Its name, discipline, revision (an empty text takes it away), placement (the file is read again to place it)\nor whether it is shown; at least one.",
+          "properties": {
+            "discipline": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "set",
+              "type": "string"
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "placement": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/UnderlayPlacement"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "revision": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "shown": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "id"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Its file read again (a new revision on disk, or the file moved to `file`): the digest, size and schema\nrenewed, the placement checked again.",
+          "properties": {
+            "file": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "reload",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "id"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Taken away; the file stays where it is.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "remove",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "id"
+          ],
+          "type": "object"
+        }
+      ]
+    },
     "UnderlayLook": {
       "additionalProperties": false,
       "description": "How a PDF underlay looks (docs/adr/0351 §2).",
@@ -224384,6 +224766,21 @@
         }
       },
       "type": "object"
+    },
+    "UnderlayPlacement": {
+      "description": "How an underlay is placed.",
+      "oneOf": [
+        {
+          "const": "map",
+          "description": "By its map conversion onto the project's system (Harita dönüşümüyle).",
+          "type": "string"
+        },
+        {
+          "const": "origin",
+          "description": "Its metres as the drawing's, by the user's choice (Başlangıç noktasına).",
+          "type": "string"
+        }
+      ]
     },
     "UnitDecision": {
       "description": "How a file's lengths were read (docs/adr/0257 §1): what the file\ndeclares, the unit the values were taken in and why, and the blocks\nwhose unit is another.",

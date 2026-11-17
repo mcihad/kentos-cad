@@ -328,6 +328,10 @@ pub struct Viewport {
     /// grid as last built.
     pub grid_shown: bool,
     grid: RefCell<Option<Grid>>,
+    /// The underlay models' plan at the active level (docs/adr/8101), by its version, and its part as last built for
+    /// an origin and two colours (the cut lines, the edges under the cut).
+    underlay: Option<(u64, Arc<Vec<kentos_ifc::underlay::PlanLine>>)>,
+    underlay_part: RefCell<Option<(u64, Vec2, [Rgba8; 2], Option<&'static kentos_geometry_core::crs::map::MapProjection>, Arc<ScenePart>)>>,
     status: Arc<Mutex<Status>>,
     /// The drawing's layers through the style engine, as last built (docs/adr/0090).
     styled: RefCell<crate::style::scene::StyledCache>,
@@ -540,7 +544,7 @@ struct Program {
     id: ViewId,
     document: u64,
     /// The grid, the drawing's parts and the highlights, bottom first.
-    parts: [Arc<ScenePart>; 6],
+    parts: [Arc<ScenePart>; 7],
     origin: Vec2,
     camera: Camera,
     settings: RenderSettings,
@@ -885,7 +889,7 @@ pub(crate) fn wheel_steps(delta: &mouse::ScrollDelta) -> f64 {
 /// One frame of the drawing area, handed to the renderer.
 pub struct Frame {
     id: ViewId,
-    parts: [Arc<ScenePart>; 6],
+    parts: [Arc<ScenePart>; 7],
     origin: Vec2,
     camera: Camera,
     settings: RenderSettings,

@@ -902,7 +902,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
-| B18 | Altlık model | IFC-09 | Statik model planda ve 3B'de altlık |
+| B18 ~ | Altlık model | IFC-09 | Statik model planda ve 3B'de altlık (ADR 8101: yerleştirme harita dönüşümüyle ya da istenince başlangıç noktasına, katın kesiti, 3B gövdeler, nesnenin ayrıntıları; gösterilemeyen nesnenin işareti ve bulutta dosyanın saklanması kaldı) |
 | B19 | Dış disiplin ve çakışma; karşılaştırma ve sorun değişimi | BIM-17, IFC-10 | Çakışmalar nesnesiyle |
 | B20 | İdare inceleme çalışma alanı | BIM-18 | Gelen paket açılır, denetlenir, iade notu çıkar |
 

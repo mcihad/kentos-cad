@@ -1549,6 +1549,11 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::Delivery>>", optional))]
     pub deliveries: Vec<crate::Delivery>,
+    /// Altlık modeller (docs/adr/8101; `.kcad` Mimari data 18): other disciplines' IFC models shown read-only under the
+    /// drawing, by their files. Empty: none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ModelUnderlay>>", optional))]
+    pub underlays: Vec<crate::ModelUnderlay>,
 }
 
 /// The building's structural system as the project declares it (docs/adr/8094): Dijital Proje Yönetmeliği EK-2 Tablo
@@ -2296,6 +2301,11 @@ impl ArchSettings {
         !self.deliveries.is_empty()
     }
 
+    /// Whether it shows underlay models (Mimari data 18, docs/adr/8101).
+    pub fn has_underlays(&self) -> bool {
+        !self.underlays.is_empty()
+    }
+
     /// Whether it says the building's structural system (Mimari data 15, docs/adr/8094).
     pub fn has_structure(&self) -> bool {
         self.structure.is_some()
@@ -2449,6 +2459,9 @@ impl ArchSettings {
             return Some(p);
         }
         if let Some(p) = crate::Delivery::list_problem(&self.deliveries) {
+            return Some(p);
+        }
+        if let Some(p) = crate::ModelUnderlay::list_problem(&self.underlays) {
             return Some(p);
         }
         if let Some(z) = &self.zoning

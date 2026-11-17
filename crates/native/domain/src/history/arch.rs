@@ -70,6 +70,11 @@ pub(crate) enum ArchOp {
         before: Arc<Vec<kentos_contracts::Delivery>>,
         after: Arc<Vec<kentos_contracts::Delivery>>,
     },
+    /// The underlay models (docs/adr/8101), before and after: a step of its own.
+    Underlays {
+        before: Arc<Vec<kentos_contracts::ModelUnderlay>>,
+        after: Arc<Vec<kentos_contracts::ModelUnderlay>>,
+    },
 }
 
 impl ArchOp {
@@ -117,6 +122,10 @@ impl ArchOp {
                 after: before.clone(),
             },
             ArchOp::Deliveries { before, after } => ArchOp::Deliveries {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            ArchOp::Underlays { before, after } => ArchOp::Underlays {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -208,6 +217,14 @@ impl ArchOp {
                     .take()
                     .unwrap_or_default();
                 arch.deliveries = (**after).clone();
+                Arc::make_mut(&mut doc.settings).arch = (!arch.is_empty()).then_some(arch);
+            }
+            ArchOp::Underlays { after, .. } => {
+                let mut arch = Arc::make_mut(&mut doc.settings)
+                    .arch
+                    .take()
+                    .unwrap_or_default();
+                arch.underlays = (**after).clone();
                 Arc::make_mut(&mut doc.settings).arch = (!arch.is_empty()).then_some(arch);
             }
         }

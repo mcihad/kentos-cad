@@ -11,6 +11,7 @@ import type { FormAnswer } from "./FormAnswer";
 import type { LevelView } from "./LevelView";
 import type { LineGroups } from "./LineGroups";
 import type { LocalRules } from "./LocalRules";
+import type { ModelUnderlay } from "./ModelUnderlay";
 import type { OpeningType } from "./OpeningType";
 import type { OptionCombo } from "./OptionCombo";
 import type { OptionSet } from "./OptionSet";
@@ -149,4 +150,9 @@ structure?: BuildingStructure,
  * Teslim kaydı (docs/adr/8099; `.kcad` Mimari data 17): each package that went to an authority and what came back,
  * in the order they went. Empty: none recorded.
  */
-deliveries?: Array<Delivery>, };
+deliveries?: Array<Delivery>, 
+/**
+ * Altlık modeller (docs/adr/8101; `.kcad` Mimari data 18): other disciplines' IFC models shown read-only under the
+ * drawing, by their files. Empty: none.
+ */
+underlays?: Array<ModelUnderlay>, };

@@ -35,7 +35,7 @@ use crate::traces::Control;
 
 /// The parts a building's tiles carry, their names and colours (linear RGB, alpha below 1: see-through): the classes,
 /// a room, then what is selected and what a check found, an element's and a room's.
-pub(crate) const PARTS: [(&str, [f32; 4]); 15] = [
+pub(crate) const PARTS: [(&str, [f32; 4]); 16] = [
     ("Duvar", [0.80, 0.78, 0.74, 1.0]),
     ("Döşeme", [0.60, 0.61, 0.64, 1.0]),
     ("Kolon", [0.52, 0.55, 0.60, 1.0]),
@@ -53,12 +53,16 @@ pub(crate) const PARTS: [(&str, [f32; 4]); 15] = [
     ("Bulgu", [0.86, 0.10, 0.08, 1.0]),
     ("Seçili mahal", [1.0, 0.62, 0.05, 0.38]),
     ("Bulgulu mahal", [0.86, 0.10, 0.08, 0.42]),
+    // Another discipline's model beside the building (docs/adr/8101): violet, a colour no class has, see-through so
+    // the building's own bodies stay readable through it.
+    ("Altlık model", [0.56, 0.42, 0.80, 0.55]),
 ];
 const ROOM: u32 = 9;
 const SELECTED: u32 = 11;
 const FOUND: u32 = 12;
 const SELECTED_ROOM: u32 = 13;
 const FOUND_ROOM: u32 = 14;
+const UNDERLAY: u32 = 15;
 const ROOMS: &str = "Mahaller";
 const STOREYS: &str = "Katlar";
 const ALL_STOREYS: &str = "Bütün katları göster";
@@ -99,6 +103,8 @@ pub(crate) struct Building3d {
     /// The plan's selection version and the findings' key `selected` and `found` were taken at
     /// (`App::follow_scene3d`): neither is taken again until one of them changes.
     pub(crate) taken: (u64, u64),
+    /// The underlay models shown (docs/adr/8101): each one's id, name and file as read.
+    pub(crate) underlays: Vec<(String, String, Arc<crate::underlays::Loaded>)>,
 }
 
 impl Building3d {
@@ -118,6 +124,7 @@ impl Building3d {
             found,
             made: (doc.generation(), doc.revision()),
             taken: (0, 0),
+            underlays: Vec::new(),
         })
     }
 
@@ -132,9 +139,9 @@ impl Building3d {
         self.meshes.iter().filter(|m| m.kind == Kind::Space).count()
     }
 
-    /// How many things the scene shows: bodies and rooms.
+    /// How many things the scene shows: bodies and rooms, and the underlay models' bodies.
     pub(crate) fn count(&self) -> usize {
-        self.shown().count()
+        self.shown().count() + self.underlays.iter().map(|(_, _, l)| l.bodies.len()).sum::<usize>()
     }
 
     /// The meshes shown: the storeys ticked, the rooms if they show.
@@ -199,12 +206,28 @@ impl Building3d {
                     through: m.kind == Kind::Space,
                 }
             })
+            .chain(self.underlays.iter().flat_map(|(id, name, l)| {
+                // An underlay's object is named by its model and its class and name; its owner says which, so a
+                // click shows it in Altlık modeller and leaves the plan's selection alone.
+                l.bodies.iter().map(move |body| Source {
+                    part: UNDERLAY,
+                    name: format!("{name}: {}", l.object_words(body.owner as usize)),
+                    owner: Some(format!("{UNDERLAY_OWNER}{id}:{}", body.owner)),
+                    vertices: body.positions.clone(),
+                    triangles: body.triangles.clone(),
+                    smooth: false,
+                    through: false,
+                })
+            }))
             .collect()
     }
 
     /// The legend: the parts the scene shows, in the parts' order.
     pub(crate) fn legend(&self) -> Vec<(&'static str, [f32; 4])> {
-        let used: BTreeSet<u32> = self.shown().map(|m| self.part_of(m)).collect();
+        let mut used: BTreeSet<u32> = self.shown().map(|m| self.part_of(m)).collect();
+        if self.underlays.iter().any(|(_, _, l)| !l.bodies.is_empty()) {
+            used.insert(UNDERLAY);
+        }
         used.into_iter().map(|p| PARTS[p as usize]).collect()
     }
 
@@ -218,6 +241,10 @@ impl Building3d {
         }
         if self.rooms {
             out.push_str(&format!(", {rooms} mahal"));
+        }
+        let under: usize = self.underlays.iter().map(|(_, _, l)| l.bodies.len()).sum();
+        if under > 0 {
+            out.push_str(&format!(", altlık modellerde {under} gövde"));
         }
         out
     }
@@ -282,18 +309,40 @@ impl Building3d {
     }
 }
 
+/// How a 3D owner names an underlay's object: `altlik:<underlay id>:<object index>`.
+pub(crate) const UNDERLAY_OWNER: &str = "altlik:";
+
+impl App {
+    /// The underlay models shown given to 3B görünüm's building, the scene made again (docs/adr/8101).
+    pub(crate) fn building3d_underlays(&mut self) {
+        let shown: Vec<(String, String, Arc<crate::underlays::Loaded>)> =
+            self.underlays_shown().into_iter().map(|(u, l)| (u.id, u.name, l)).collect();
+        if let Some(w) = self.scene3d_window.as_mut()
+            && let Some(b) = w.building.as_mut()
+        {
+            let same = b.underlays.len() == shown.len()
+                && b.underlays.iter().zip(&shown).all(|(x, y)| x.0 == y.0 && Arc::ptr_eq(&x.2, &y.2));
+            if !same {
+                b.underlays = shown;
+                w.scene = Arc::new(Scene::of(b.sources(), b.count()));
+            }
+        }
+    }
+}
+
 impl App {
     /// 3B görünüm of the drawing's building: its bodies as the IFC export makes them, the plan's selection and the
     /// last check's findings over their classes' colours.
     pub(crate) fn open_building3d(&mut self) {
         let Some(doc) = &self.document else { return };
-        let Some(b) = Building3d::of(&doc.model, self.building3d_selected(), self.building3d_found()) else {
+        let Some(mut b) = Building3d::of(&doc.model, self.building3d_selected(), self.building3d_found()) else {
             self.warn(
                 "3B görünümde gösterilecek bir bina gövdesi yok: önce duvar, döşeme, kolon ya da çatı çizin (yol projesinde 3B görünüm araziyi ve koridorları gösterir)."
                     .to_owned(),
             );
             return;
         };
+        b.underlays = self.underlays_shown().into_iter().map(|(u, l)| (u.id, u.name, l)).collect();
         let scene = Scene::of(b.sources(), b.count());
         let made = b.made;
         self.scene3d_window = Some(Box::new(Window::new(scene, Vec::new(), Some(b), made)));
@@ -307,6 +356,20 @@ impl App {
     /// A click's object selected in the plan (a click on nothing, or on what the drawing has no object for, empties
     /// the selection, as a click on nothing in the plan does), and the scene's selected parts made again.
     pub(crate) fn building3d_select(&mut self, owner: Option<String>) {
+        // An underlay's object: shown in Altlık modeller; the plan's selection stays (docs/adr/8101).
+        if let Some(rest) = owner.as_deref().and_then(|o| o.strip_prefix(UNDERLAY_OWNER))
+            && let Some((id, object)) = rest.rsplit_once(':')
+            && let Ok(object) = object.parse::<usize>()
+        {
+            if self.arch.underlays_window.is_none() {
+                self.open_underlays();
+            }
+            if let Some(w) = self.arch.underlays_window.as_mut() {
+                w.chosen = Some(id.to_owned());
+                w.object = Some((id.to_owned(), object));
+            }
+            return;
+        }
         let Some(doc) = self.document.as_ref() else { return };
         let slots: Vec<Slot> =
             owner.iter().filter_map(|u| Uuid::parse_str(u).ok()).filter_map(|u| doc.model.slot_of(u)).collect();
@@ -342,6 +405,7 @@ impl App {
         };
         b.rooms = rooms;
         b.taken = (self.selection.version(), self.building3d_found_key());
+        b.underlays = self.underlays_shown().into_iter().map(|(u, l)| (u.id, u.name, l)).collect();
         for s in &mut b.storeys {
             s.1 = !hidden.contains(&s.0);
         }

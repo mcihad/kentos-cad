@@ -92,6 +92,9 @@ macro_rules! arch_cases {
             kentos_commands::CAD_FORM_ANSWER => {
                 $then!(arch_form_answers, kentos_commands::ArchFormAnswers)
             }
+            kentos_commands::CAD_UNDERLAY_EDIT => {
+                $then!(underlay_edit, kentos_commands::UnderlayEdit)
+            }
             kentos_commands::CAD_DELIVERY_EDIT => {
                 $then!(delivery_edit, kentos_commands::DeliveryEdit)
             }

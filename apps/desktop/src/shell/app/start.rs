@@ -416,6 +416,9 @@ impl App {
                 view_refs: None,
                 digital_rules: None,
                 deliveries: None,
+                underlays: Default::default(),
+                underlays_window: None,
+                underlay_picking: false,
                 quantities: None,
             },
         };

@@ -129,3 +129,26 @@ fn the_delivery_record_round_trips_under_arch_data_17() {
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
     assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the record reads back");
 }
+
+/// Architecture data 18 (docs/adr/8101): an underlay model is written with `modules.arch = 18` and read back.
+#[test]
+fn an_underlay_model_round_trips_under_arch_data_18() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_underlays(&doc));
+    doc.settings.arch.get_or_insert_with(Default::default).underlays.push(kentos_contracts::ModelUnderlay {
+        id: "00000000-0000-4000-8000-000000000001".into(),
+        name: "Statik model".into(),
+        file: "/proje/statik.ifc".into(),
+        sha256: "0".repeat(64),
+        bytes: 141_965,
+        schema: "IFC4X3_ADD2".into(),
+        discipline: Some("Statik".into()),
+        revision: Some("R2".into()),
+        placement: kentos_contracts::UnderlayPlacement::Origin,
+        shown: false,
+    });
+    assert!(kentos_kcad::uses_underlays(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_UNDERLAYS);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the underlay reads back");
+}

@@ -316,6 +316,8 @@ impl App {
             "arch.digitalRules" => self.open_digital_rules(),
             // Teslim kaydı (deliveries_window.rs, docs/adr/8099).
             "arch.deliveries" => self.open_deliveries(),
+            // Altlık modeller (underlays_window.rs, docs/adr/8101).
+            "arch.underlays" => self.open_underlays(),
             // Otopark and Sığınak hesabı (docs/adr/8036).
             "arch.parkingTable" => {
                 self.place_provision_table(kentos_commands::TableSource::Parking {})

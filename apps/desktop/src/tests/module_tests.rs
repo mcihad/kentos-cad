@@ -985,10 +985,13 @@ fn kentos_cad_offers_every_command_and_a_module_offers_what_its_ribbon_shows() {
 #[test]
 fn komut_ara_finds_no_other_modules_work() {
     let mut mimari = program(Some(Module::Architecture));
-    for query in ["havza", "tesis", "altlık", "osm", "raster"] {
+    for query in ["havza", "tesis", "osm", "raster"] {
         let hits = found(&mut mimari, query);
         assert!(hits.is_empty(), "Mimari: {query}: {hits:?}");
     }
+    // An underlay is Mimari's own too since the underlay models (docs/adr/8101): its Altlık modeller, never KentOS
+    // CBS's basemaps.
+    assert_eq!(found(&mut mimari, "altlık"), ["arch.underlays"]);
     // A parcel is Mimari's own too since the site plan (docs/adr/8032): its Parsel ve bahçe mesafeleri, never KentOS
     // Harita's parcel drawing (`tool.parcel`).
     assert_eq!(found(&mut mimari, "parsel"), ["tool.siteParcel"]);

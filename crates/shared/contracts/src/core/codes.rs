@@ -180,6 +180,13 @@ codes! {
     DELIVERY_NOT_FOUND = "delivery_not_found", Failed, false, "Bu kimlikte teslim kaydı çizimde yok.";
     DUPLICATE_DELIVERY = "duplicate_delivery", Failed, false, "Bu kimlikte bir teslim kaydı çizimde zaten var.";
     TOO_MANY_DELIVERIES = "too_many_deliveries", Failed, false, "Bir çizim en çok 1000 teslim kaydı tutar.";
+    // Altlık modeller (docs/adr/8101).
+    INVALID_MODEL_UNDERLAY = "invalid_model_underlay", Failed, false, "Altlık model kurallarına uymuyor: ad, dosya yolu, disiplin ya da revizyon.";
+    MODEL_UNDERLAY_NOT_FOUND = "model_underlay_not_found", Failed, false, "Bu kimlikte altlık model çizimde yok.";
+    DUPLICATE_MODEL_UNDERLAY = "duplicate_model_underlay", Failed, false, "Bu kimlikte bir altlık model çizimde zaten var.";
+    MODEL_UNDERLAY_UNREADABLE = "model_underlay_unreadable", Failed, false, "Altlık modelin dosyası bir IFC dosyası olarak okunamadı.";
+    MODEL_UNDERLAY_NOT_PLACED = "model_underlay_not_placed", Failed, false, "Altlık model projeye yerleştirilemedi: koordinat sistemi, harita dönüşümü ya da yükseklik datumu uyuşmuyor.";
+    TOO_MANY_MODEL_UNDERLAYS = "too_many_model_underlays", Failed, false, "Bir çizim en çok 50 altlık model gösterir.";
     TAKE_CONFLICT = "take_conflict", Failed, false, "Nesne ortak tabandan sonra iki tarafta da farklı değişmiş; üzerine yazmak açıkça seçilmeli.";
     BLOCK_DEFINITION_DIFFERS = "block_definition_differs", Warning, false, "Alınan blok yerleştirmesinin tanımı iki sürümde farklı; tanım açık çizimdeki olarak kaldı.";
     INVALID_ANGLE_TOLERANCE = "invalid_angle_tolerance", Failed, false, "Açı sapması eşiği 0 ile 10 derece arasında olmalı.";

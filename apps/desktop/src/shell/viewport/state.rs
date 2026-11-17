@@ -19,6 +19,8 @@ impl Viewport {
             highlight: RefCell::new(highlight::Highlighted::default()),
             grid_shown: true,
             grid: RefCell::new(None),
+            underlay: None,
+            underlay_part: RefCell::new(None),
             status: Arc::new(Mutex::new(Status::default())),
             styled: RefCell::new(crate::style::scene::StyledCache::default()),
             line_types: RefCell::new(None),
@@ -82,6 +84,43 @@ impl Viewport {
             });
         }
         cache.as_ref().map_or_else(Arc::default, |g| g.part.clone())
+    }
+
+    /// The underlay models' plan at the active level (docs/adr/8101): its version and lines; drawn under the drawing.
+    pub(crate) fn set_underlay(&mut self, plan: (u64, Arc<Vec<kentos_ifc::underlay::PlanLine>>)) {
+        self.underlay = (!plan.1.is_empty()).then_some(plan);
+    }
+
+    /// The underlay models' plan as a part in `palette`'s faint ink: the cut lines whole, the edges under the cut at
+    /// 45 %; built again when the plan, the origin, the colours or the map changed.
+    fn underlay_part(&self, origin: Vec2, palette: &kentos_render_wgpu::Palette) -> Arc<ScenePart> {
+        let Some((version, lines)) = &self.underlay else {
+            return Arc::default();
+        };
+        let ink = palette.fg_dim;
+        let colors = [ink, Rgba8([ink.0[0], ink.0[1], ink.0[2], 115])];
+        let map = self.camera.map;
+        let mut kept = self.underlay_part.borrow_mut();
+        if let Some((v, o, c, m, part)) = kept.as_ref()
+            && *v == *version
+            && *o == origin
+            && *c == colors
+            && m.map(std::ptr::from_ref) == map.map(std::ptr::from_ref)
+        {
+            return part.clone();
+        }
+        let at = |p: [f64; 2]| match map {
+            Some(_) => self.camera.to_map(Vec2::new(p[0], p[1])),
+            None => Vec2::new(p[0], p[1]),
+        };
+        let (mut cut, mut under) = (Vec::new(), Vec::new());
+        for l in lines.iter() {
+            let pair = [at(l.a), at(l.b)];
+            if l.cut { cut.push(pair) } else { under.push(pair) }
+        }
+        let part = Arc::new(scene::build_lines(origin, &[(&under, colors[1]), (&cut, colors[0])]));
+        *kept = Some((*version, origin, colors, map, part.clone()));
+        part
     }
 
     /// What the view shows is another drawing now (docs/adr/0576 §3): its scene is built afresh, its camera stays.
@@ -250,6 +289,8 @@ impl Viewport {
         let spatial = styling.map(|s| s.spatial);
         let (selected, hovered) =
             self.highlights(doc, selection, accent, &fixed, &curves, &clip, spatial);
+        // The underlay models' plan over the grid, under the drawing (docs/adr/8101).
+        let underlay = self.underlay_part(origin, &palette);
         // The grid under everything (Izgara, F7).
         let grid = if self.grid_shown {
             let u = doc.settings().ucs.unwrap_or(kentos_commands::Ucs::WORLD);
@@ -276,7 +317,7 @@ impl Viewport {
         let area: Element<'a, Message> = shader(Program {
             id: self.id,
             document: doc.session,
-            parts: [grid, fixed, curves, construction, selected, hovered],
+            parts: [grid, underlay, fixed, curves, construction, selected, hovered],
             origin,
             camera: self.camera,
             settings,
@@ -438,8 +479,8 @@ impl Viewport {
             // A renderer built for the view's scale waits for the wheel to stop (docs/adr/0213 §3).
             self.camera.scale,
             self.settling().is_none(),
-            // Over the grid, under the highlights.
-            1,
+            // Over the grid and the underlay models' plan, under the highlights.
+            2,
         );
         // The masks cutting with a layer's placed labels (docs/adr/0226 §3).
         let asks = self.styled.borrow().label_masks().to_vec();

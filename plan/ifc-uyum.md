@@ -493,7 +493,7 @@ kuzeyin yazımı (IFC-02); EK-9 Tablo 9.2.
 çıkarılır. Geçerli şemaya ve kalan kapıların olumlu IDS sonucuna rağmen EK-9/8 eksik kapıyı kaynak kimliğiyle bulur. Bulgu
 planda ve 3B'de nesneyi seçer; ikinci bağımsız denetleyiciyle ayrışan satır kalmaz.
 
-#### IFC-09 — Altlık model: projede saklama ve gösterme [ ]
+#### IFC-09 — Altlık model: projede saklama ve gösterme [~]
 
 **Kullanıcı sonucu:** Başka bir yazılımın IFC 4.3 modeli KentOS projesinde salt okunur altlık olur: planda katında
 kesilmiş, 3B'de gövdesiyle, projenin koordinatında; tıklanan nesnenin sınıfı, adı ve özellikleri görünür.
@@ -511,6 +511,16 @@ kesilmiş, 3B'de gövdesiyle, projenin koordinatında; tıklanan nesnenin sını
 **İlk kabul:** KentOS'un kendi dosyası geri alındığında sayılar ve sınır kutuları aynı, gövdeler çizimin üstüne oturur;
 açık bir mimari IFC 4.3 örneği, gösterilen nesne oranı ve gösterilemeyenlerin listesiyle açılır; koordinat sistemi farklı
 bir dosya yerleştirilmeden bulgu verir; süre ve bellek ölçülür.
+
+**Yapıldı (17 Kasım 2026, [ADR 8101](../docs/adr/8101-ifc-underlay-model.md), K157–K162):** altlık kaydı çizimde (Mimari
+verisi 18; dosya yolu, SHA-256'sı, şeması, disiplini, revizyonu, yerleşimi), model kopyalanmaz. Yerleştirme dosyanın harita
+dönüşümüyle projenin sistemine (`kentos_ifc::underlay::place`); başka sistem, dönüşümsüz dosya, sistemsiz proje, farklı
+datum ve birimin açıklamadığı ölçek nedeniyle reddedilir, başlangıç noktasına yalnız istenince. Plan etkin katın kesme
+yüksekliğinde kesit ve katın tabanına kadar kırılan kenarlar, çizimin altında soluk; 3B görünümde gövdeler; planda ve 3B'de
+tıklanan nesnenin ayrıntıları; değişen dosya söylenir. `cad.underlay.edit` (Python, MCP, 32 ortak durum); Mimari › Proje ▾ ›
+Altlık modeller. İlk kabulün dört adımı masaüstünde elle sınandı (kendi modeli 16/16 gövde, kutu 10 × 5 × 7,60 m; IFC 4.3 ve
+IFC2X3 örnekleri 14/14; süre ve bellek ölçüldü). **Kalan:** gösterilemeyen nesnenin planda ve 3B'de işareti ve kutusu;
+bulut projesinde dosyanın proje varlığı olarak saklanması; büyük modelde planın arka planda hesaplanması.
 
 #### IFC-10 — Federasyon, karşılaştırma ve sorun değişimi [ ]
 

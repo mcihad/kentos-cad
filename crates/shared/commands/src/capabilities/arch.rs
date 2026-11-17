@@ -802,6 +802,27 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: Vec::new,
     },
+    // Altlık model (docs/adr/8101): the drawing's settings and the file read, no object.
+    Entry {
+        id: "cad.underlay.edit",
+        refusals: &[
+            &[
+                "invalid_uid",
+                "model_underlay_not_found",
+                "duplicate_model_underlay",
+                "invalid_file_path",
+                "file_not_found",
+                "model_underlay_unreadable",
+                "model_underlay_not_placed",
+                "nothing_to_set",
+                "invalid_model_underlay",
+                "too_many_model_underlays",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: Vec::new,
+    },
     // Teslim kaydı (docs/adr/8099): the drawing's settings, no object.
     Entry {
         id: "cad.delivery.edit",

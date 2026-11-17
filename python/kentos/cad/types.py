@@ -8828,6 +8828,20 @@ TrimEdgeModeName = Literal["none", "extend"]
 """The names of :class:`TrimEdgeMode`, for a plain string."""
 
 
+class UnderlayPlacement(_StrEnum):
+    """How an underlay is placed.
+
+    - ``map``: By its map conversion onto the project's system (Harita dönüşümüyle).
+    - ``origin``: Its metres as the drawing's, by the user's choice (Başlangıç noktasına).
+    """
+    MAP = "map"
+    ORIGIN = "origin"
+
+
+UnderlayPlacementName = Literal["map", "origin"]
+"""The names of :class:`UnderlayPlacement`, for a plain string."""
+
+
 class UnitGeometry(_StrEnum):
     """What becomes of the drawing when its unit changes.
 
@@ -13125,6 +13139,29 @@ class UcsTo(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> UcsTo:
         return _variant(_UCS_TO, "UcsTo", "kind", data).from_json(data)
+
+
+class UnderlayChange(_Union):
+    """One change of the underlays.
+
+    One of:
+
+    - :class:`AddUnderlayChange` (``kind: add``)
+    - :class:`SetUnderlayChange` (``kind: set``)
+    - :class:`ReloadUnderlayChange` (``kind: reload``)
+    - :class:`RemoveUnderlayChange` (``kind: remove``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnderlayChange:
+        return _variant(_UNDERLAY_CHANGE, "UnderlayChange", "kind", data).from_json(data)
 
 
 class ViewMarksOperation(_Union):
@@ -17755,6 +17792,8 @@ class ArchSettings(_Model):
         structure: Taşıyıcı sistem (docs/adr/8094; `.kcad` Mimari data 15): the building's structural system as the project
             declares it and whether it holds traditional architectural elements; Planlı Alanlar İmar Yönetmeliği 22/1-m and
             28/1-d read a traditional cut stone masonry building of up to three storeys. Absent: not said.
+        underlays: Altlık modeller (docs/adr/8101; `.kcad` Mimari data 18): other disciplines' IFC models shown read-only under the
+            drawing, by their files. Empty: none.
         zone: Bölge (docs/adr/8085; `.kcad` Mimari data 12): what the parcel's plan uses its area for, as PAİY 28/1 reads a
             storey's height by it (a, b, c, ç). Absent: not said; a dwelling's project is read in a dwelling area.
         zoning: İmar durumu (docs/adr/8030; `.kcad` schema 222): the parcel's area and the plan's coefficients the floor area
@@ -17786,6 +17825,7 @@ class ArchSettings(_Model):
     space_usages: list[str] | Unset = UNSET
     sprinklers: bool | Unset = UNSET
     structure: BuildingStructure | None | Unset = UNSET
+    underlays: list[ModelUnderlay] | Unset = UNSET
     zone: Zone | ZoneName | None | Unset = UNSET
     zoning: Zoning | None | Unset = UNSET
 
@@ -17843,6 +17883,8 @@ class ArchSettings(_Model):
             out["sprinklers"] = self.sprinklers
         if self.structure is not UNSET:
             out["structure"] = None if self.structure is None else self.structure.to_json()
+        if self.underlays is not UNSET:
+            out["underlays"] = [e0.to_json() for e0 in self.underlays]
         if self.zone is not UNSET:
             out["zone"] = None if self.zone is None else _enum_out(self.zone)
         if self.zoning is not UNSET:
@@ -17878,6 +17920,7 @@ class ArchSettings(_Model):
             space_usages=list(data["spaceUsages"]) if "spaceUsages" in data else UNSET,
             sprinklers=data.get("sprinklers", UNSET),
             structure=UNSET if "structure" not in data else None if data["structure"] is None else BuildingStructure.from_json(data["structure"]),
+            underlays=[ModelUnderlay.from_json(e0) for e0 in data["underlays"]] if "underlays" in data else UNSET,
             zone=UNSET if "zone" not in data else None if data["zone"] is None else _enum_in(Zone, data["zone"]),
             zoning=UNSET if "zoning" not in data else None if data["zoning"] is None else Zoning.from_json(data["zoning"]),
         )
@@ -61253,6 +61296,62 @@ class MigrationLoss(_Model):
             uids=list(data["uids"]),
             count=data["count"],
             message=data["message"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ModelUnderlay(_Model):
+    """One underlay model.
+    Attributes:
+        id: Lowercase, hyphenated UUID; unique in the drawing.
+        name: As the list shows it (the file's name, unless the user named it).
+        file: The file, as the author's machine names it.
+        sha256: The file's SHA-256 when it was read in, 64 lowercase hexadecimal digits: the revision shown.
+        bytes: Unit: bytes.
+        schema: Its `FILE_SCHEMA` (`IFC4X3_ADD2`, `IFC4`, `IFC2X3`).
+    """
+    id: str
+    name: str
+    file: str
+    sha256: str
+    bytes: int
+    schema: str
+    discipline: str | None | Unset = UNSET
+    placement: UnderlayPlacement | UnderlayPlacementName | Unset = UNSET
+    revision: str | None | Unset = UNSET
+    shown: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["file"] = self.file
+        out["sha256"] = self.sha256
+        out["bytes"] = self.bytes
+        out["schema"] = self.schema
+        if self.discipline is not UNSET:
+            out["discipline"] = self.discipline
+        if self.placement is not UNSET:
+            out["placement"] = _enum_out(self.placement)
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        if self.shown is not UNSET:
+            out["shown"] = self.shown
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ModelUnderlay:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            file=data["file"],
+            sha256=data["sha256"],
+            bytes=data["bytes"],
+            schema=data["schema"],
+            discipline=data.get("discipline", UNSET),
+            placement=_enum_in(UnderlayPlacement, data["placement"]) if "placement" in data else UNSET,
+            revision=data.get("revision", UNSET),
+            shown=data.get("shown", UNSET),
         )
 
 
@@ -115529,6 +115628,59 @@ class UcsSet(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class UnderlayEdit(_Model):
+    """Input of `cad.underlay.edit` v1.
+
+    Refusals, in this order: `invalid_uid`, `model_underlay_not_found`, `duplicate_model_underlay`, `invalid_file_path`
+    (not an absolute path), `file_not_found`, `model_underlay_unreadable` (not an IFC file the reader reads),
+    `model_underlay_not_placed` (another system, no map conversion, a project with no system, other height datums, a
+    scale the file's unit does not explain), `nothing_to_set`, `invalid_model_underlay` (its field's path),
+    `too_many_model_underlays`, `invalid_revision`, `revision_conflict`.
+    """
+    change: UnderlayChange
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["change"] = self.change.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnderlayEdit:
+        return cls(
+            change=UnderlayChange.from_json(data["change"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnderlayEdited(_Model):
+    """Output of `cad.underlay.edit` v1, and its plan: the underlay changed (its id), the drawing's underlays then, the
+    revision.
+    """
+    id: str
+    underlays: list[ModelUnderlay]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["underlays"] = [e0.to_json() for e0 in self.underlays]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnderlayEdited:
+        return cls(
+            id=data["id"],
+            underlays=[ModelUnderlay.from_json(e0) for e0 in data["underlays"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class UnderlayLook(_Model):
     """How a PDF underlay looks (docs/adr/0351 §2).
     Attributes:
@@ -142130,6 +142282,128 @@ class DeleteUcsTo(UcsTo):
 
 
 @dataclass(kw_only=True, slots=True)
+class AddUnderlayChange(UnderlayChange):
+    """An IFC file shown under the drawing: its absolute path; the name the list shows (its file's name when none);
+    the discipline and revision the user gives it; how it is placed (by its map conversion when none).
+    """
+    TAG_VALUE: ClassVar[str] = "add"
+    file: str
+    discipline: str | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    placement: UnderlayPlacement | UnderlayPlacementName | None | Unset = UNSET
+    revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "add"}
+        out["file"] = self.file
+        if self.discipline is not UNSET:
+            out["discipline"] = self.discipline
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.placement is not UNSET:
+            out["placement"] = None if self.placement is None else _enum_out(self.placement)
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddUnderlayChange:
+        return cls(
+            file=data["file"],
+            discipline=data.get("discipline", UNSET),
+            id=data.get("id", UNSET),
+            name=data.get("name", UNSET),
+            placement=UNSET if "placement" not in data else None if data["placement"] is None else _enum_in(UnderlayPlacement, data["placement"]),
+            revision=data.get("revision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SetUnderlayChange(UnderlayChange):
+    """Its name, discipline, revision (an empty text takes it away), placement (the file is read again to place it)
+    or whether it is shown; at least one.
+    """
+    TAG_VALUE: ClassVar[str] = "set"
+    id: str
+    discipline: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    placement: UnderlayPlacement | UnderlayPlacementName | None | Unset = UNSET
+    revision: str | None | Unset = UNSET
+    shown: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "set"}
+        out["id"] = self.id
+        if self.discipline is not UNSET:
+            out["discipline"] = self.discipline
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.placement is not UNSET:
+            out["placement"] = None if self.placement is None else _enum_out(self.placement)
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        if self.shown is not UNSET:
+            out["shown"] = self.shown
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetUnderlayChange:
+        return cls(
+            id=data["id"],
+            discipline=data.get("discipline", UNSET),
+            name=data.get("name", UNSET),
+            placement=UNSET if "placement" not in data else None if data["placement"] is None else _enum_in(UnderlayPlacement, data["placement"]),
+            revision=data.get("revision", UNSET),
+            shown=data.get("shown", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReloadUnderlayChange(UnderlayChange):
+    """Its file read again (a new revision on disk, or the file moved to `file`): the digest, size and schema
+    renewed, the placement checked again.
+    """
+    TAG_VALUE: ClassVar[str] = "reload"
+    id: str
+    file: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "reload"}
+        out["id"] = self.id
+        if self.file is not UNSET:
+            out["file"] = self.file
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReloadUnderlayChange:
+        return cls(
+            id=data["id"],
+            file=data.get("file", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveUnderlayChange(UnderlayChange):
+    """Taken away; the file stays where it is."""
+    TAG_VALUE: ClassVar[str] = "remove"
+    id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveUnderlayChange:
+        return cls(
+            id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SetViewMarksOperation(ViewMarksOperation):
     """The marks' number, words' height, side, direction or radius changed.
     Attributes:
@@ -143405,6 +143679,9 @@ _TRIM_BOUNDARIES: dict[str, type[TrimBoundaries]] = {"all": AllTrimBoundaries, "
 _UCS_TO: dict[str, type[UcsTo]] = {"world": WorldUcsTo, "frame": FrameUcsTo, "origin": OriginUcsTo, "rotate": RotateUcsTo, "twoPoints": TwoPointsUcsTo, "object": ObjectUcsTo, "named": NamedUcsTo, "save": SaveUcsTo, "delete": DeleteUcsTo}
 
 
+_UNDERLAY_CHANGE: dict[str, type[UnderlayChange]] = {"add": AddUnderlayChange, "set": SetUnderlayChange, "reload": ReloadUnderlayChange, "remove": RemoveUnderlayChange}
+
+
 _VIEW_MARKS_OPERATION: dict[str, type[ViewMarksOperation]] = {"set": SetViewMarksOperation, "retarget": RetargetViewMarksOperation, "detach": DetachViewMarksOperation}
 
 
@@ -143452,6 +143729,7 @@ __all__ = [
     "AddReviewNoteOp",
     "AddSheetPaperOp",
     "AddSlabsOperation",
+    "AddUnderlayChange",
     "AddVariantPaperOp",
     "AddressCodeRepeat",
     "AddressDifference",
@@ -145509,6 +145787,7 @@ __all__ = [
     "MirrorTransform",
     "ModeConstraintEdit",
     "ModelLayerPaperPlotTarget",
+    "ModelUnderlay",
     "ModuleBreak",
     "ModuleBreakName",
     "ModuleCaseworkChange",
@@ -146594,6 +146873,7 @@ __all__ = [
     "RelinkImagesOperation",
     "RelinkMapWorkOperation",
     "RelinkSourcesEditOp",
+    "ReloadUnderlayChange",
     "ReloadXrefsOperation",
     "RemoveArmLeaderEdit",
     "RemoveArrayEdit",
@@ -146626,6 +146906,7 @@ __all__ = [
     "RemoveReviewNoteOp",
     "RemoveSheetPaperOp",
     "RemoveTriangleSurfaceEdit",
+    "RemoveUnderlayChange",
     "RemoveVariantPaperOp",
     "RenameDomainMigrationStep",
     "RenameFieldMigrationStep",
@@ -146942,6 +147223,7 @@ __all__ = [
     "SetSnapGridPaperOp",
     "SetSpaceSeparatorOperation",
     "SetSpacesOperation",
+    "SetUnderlayChange",
     "SetVariantPaperOp",
     "SetViewMarksOperation",
     "SetViewportPaperOp",
@@ -147656,7 +147938,12 @@ __all__ = [
     "UcsSet",
     "UcsTo",
     "UnbreakDimensionEdit",
+    "UnderlayChange",
+    "UnderlayEdit",
+    "UnderlayEdited",
     "UnderlayLook",
+    "UnderlayPlacement",
+    "UnderlayPlacementName",
     "UnderlayXrefsOperation",
     "UnfieldTableEdit",
     "UngroupPaperOp",

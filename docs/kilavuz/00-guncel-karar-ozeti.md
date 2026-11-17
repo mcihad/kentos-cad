@@ -332,6 +332,11 @@
     ya da İade, iadenin gerekçesi inceleme notlarıyla nesnelere bağlı (`cad.delivery.edit`). Öncekiyle karşılaştır aynı
     kuruma önceki paketin klasörünü yeniden okur ve SHA-256'yla denetler; dosyalar paftayla, adla, içerikle, revizyonla
     değişen model adıyla eşlenir; çizimler kalıcı kimlikle.
+  - **Altlık model (17 Kasım 2026; [ADR 8101](../adr/8101-ifc-underlay-model.md), K157–K162):** başka disiplinin IFC
+    modeli çizimde dosyasıyla anılır (Mimari verisi 18, SHA-256), kopyalanmaz. Yerleştirme dosyanın harita dönüşümüyle
+    projenin IFC sistemine; uyuşmazlık nedenli ret, başlangıç noktasına yalnız istenince. Plan etkin katın kesme
+    yüksekliğinde kesit ve altındaki kenarlar (`kentos_ifc::underlay::plan`), görünümün ızgara ile çizim arasındaki
+    parçasında; 3B'de mor gövdeler; `cad.underlay.edit`.
   - **Künye role göre (17 Kasım 2026; [ADR 8100](../adr/8100-kunye-personal-particulars-by-role.md), K152–K156):** bulut
     projesinde künyenin kişisel bilgilerini (13 değişken: yapı sahibi, müellif, sicil, büro, tapu kaydı …; teslim eden)
     yalnız `feature.write` sahibi görür (`ProjectAccess::sees_particulars`); öbürleri bilgide ve anlık görüntüde "Gizli"

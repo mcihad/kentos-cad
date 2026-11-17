@@ -54,6 +54,12 @@ pub(crate) struct ArchUiState {
     pub(crate) digital_rules: Option<crate::digital_rules::Window>,
     /// Teslim kaydı's window (deliveries_window.rs, docs/adr/8099).
     pub(crate) deliveries: Option<crate::deliveries_window::Window>,
+    /// The underlay models' files as read and their plan (underlays.rs, docs/adr/8101).
+    pub(crate) underlays: crate::underlays::Underlays,
+    /// Altlık modeller's window (underlays_window.rs, docs/adr/8101).
+    pub(crate) underlays_window: Option<crate::underlays_window::Window>,
+    /// Planda seç waits for a point on an underlay's plan.
+    pub(crate) underlay_picking: bool,
 }
 
 /// The architecture (Mimari) module's messages, `Message::Arch`.
@@ -87,6 +93,14 @@ pub(crate) enum Event {
     DigitalRules(crate::digital_rules::Event),
     /// Teslim kaydı (deliveries_window.rs, docs/adr/8099).
     Deliveries(crate::deliveries_window::Event),
+    /// An underlay model's file read off the window's thread, for what it was read for (underlays.rs).
+    UnderlayRead(
+        String,
+        Box<crate::underlays::Key>,
+        Result<std::sync::Arc<crate::underlays::Loaded>, String>,
+    ),
+    /// Altlık modeller (underlays_window.rs, docs/adr/8101).
+    Underlays(crate::underlays_window::Event),
 }
 
 /// The architecture (Mimari) module's windows, `Dialog::Arch`.
@@ -130,6 +144,8 @@ pub(crate) enum ArchDialogKind {
     DigitalRules,
     /// Teslim kaydı (deliveries_window.rs, docs/adr/8099); the window is `ArchUiState::deliveries`.
     Deliveries,
+    /// Altlık modeller (underlays_window.rs, docs/adr/8101); the window is `ArchUiState::underlays_window`.
+    Underlays,
 }
 
 impl App {
@@ -155,6 +171,8 @@ impl App {
             Event::Quantities(event) => return self.quantities_event(event),
             Event::DigitalRules(event) => return self.digital_rules_event(event),
             Event::Deliveries(event) => return self.deliveries_event(event),
+            Event::UnderlayRead(id, key, read) => self.underlay_read(id, *key, read),
+            Event::Underlays(event) => return self.underlays_event(event),
             Event::ArchTemplate(event) => self.architecture_template_event(event),
         }
         Task::none()
@@ -181,6 +199,7 @@ impl App {
             ArchDialogKind::Quantities => self.quantities_view(),
             ArchDialogKind::DigitalRules => self.digital_rules_view(),
             ArchDialogKind::Deliveries => self.deliveries_view(),
+            ArchDialogKind::Underlays => self.underlays_view(),
         }
     }
 }

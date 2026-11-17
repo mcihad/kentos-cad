@@ -60,6 +60,8 @@ pub mod materials;
 pub mod performance;
 #[path = "arch/deliveries.rs"]
 pub mod deliveries;
+#[path = "arch/underlays.rs"]
+pub mod underlays;
 #[path = "arch/arch_modules.rs"]
 pub mod arch_modules;
 #[path = "arch/arch_options.rs"]
@@ -351,6 +353,7 @@ pub use opening_types::*;
 pub use materials::*;
 pub use performance::*;
 pub use deliveries::*;
+pub use underlays::*;
 pub use arch_modules::*;
 pub use arch_options::*;
 pub use slab::*;

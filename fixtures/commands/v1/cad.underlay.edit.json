@@ -1,0 +1,4304 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.underlay.edit",
+  "commandVersion": 1,
+  "title": "Altlık model: IFC dosyası eklenir, yerleştirilir ya da nedeniyle reddedilir, ayarlanır, yeniden okunur, kaldırılır",
+  "note": "ADR 8101. Beklenenler scripts/fixtures/underlay_cases.py'nin ADR'den yazılmış kurallarından; dosyaların SHA-256'sı, boyu, şeması ve sistemi betikte baytlarından okunur, KentOS kodu yok.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Altlık model",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50.0,
+      "workspace": "cad",
+      "arch": {
+        "site": {
+          "datum": 1285.4
+        }
+      }
+    },
+    "origin": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "layers": [
+      {
+        "id": "0",
+        "name": "0",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "0",
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 6.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.25,
+        "justify": "center"
+      }
+    ],
+    "uids": [
+      "0192f5a1-8101-7000-8000-000000000001"
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Projenin sisteminde harita dönüşümlü model",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "underlays": [
+                {
+                  "id": "0192f5a1-8101-7000-8000-00000000000a",
+                  "name": "yerel-sistem.ifc",
+                  "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                  "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                  "bytes": 156747,
+                  "schema": "IFC4X3_ADD2"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Adı, disiplini ve revizyonuyla; metinlerin uçları alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+              "name": "  Statik model ",
+              "discipline": " Statik",
+              "revision": "R2 "
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "underlays": [
+                {
+                  "id": "0192f5a1-8101-7000-8000-00000000000a",
+                  "name": "Statik model",
+                  "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                  "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                  "bytes": 156747,
+                  "schema": "IFC4X3_ADD2",
+                  "discipline": "Statik",
+                  "revision": "R2"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "Statik model",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R2"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "Statik model",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R2"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş disiplin yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+              "discipline": "   "
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "underlays": [
+                {
+                  "id": "0192f5a1-8101-7000-8000-00000000000a",
+                  "name": "yerel-sistem.ifc",
+                  "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                  "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                  "bytes": 156747,
+                  "schema": "IFC4X3_ADD2"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Başka sistemdeki IFC 4.3 örneği başlangıç noktasına",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+              "placement": "origin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "underlays": [
+                {
+                  "id": "0192f5a1-8101-7000-8000-00000000000a",
+                  "name": "bsi-ifc4x3-building-architecture.ifc",
+                  "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+                  "sha256": "96e7103812b15b65eb1fd7802d36b9962833485dce5ead4f440bbf529530881d",
+                  "bytes": 141965,
+                  "schema": "IFC4X3_ADD2",
+                  "placement": "origin"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "bsi-ifc4x3-building-architecture.ifc",
+                    "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+                    "sha256": "96e7103812b15b65eb1fd7802d36b9962833485dce5ead4f440bbf529530881d",
+                    "bytes": 141965,
+                    "schema": "IFC4X3_ADD2",
+                    "placement": "origin"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "bsi-ifc4x3-building-architecture.ifc",
+                    "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+                    "sha256": "96e7103812b15b65eb1fd7802d36b9962833485dce5ead4f440bbf529530881d",
+                    "bytes": 141965,
+                    "schema": "IFC4X3_ADD2",
+                    "placement": "origin"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Harita dönüşümsüz IFC2X3 başlangıç noktasına",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:ifc/v1/disaridan/bsi-ifc2x3-building-architecture.ifc",
+              "placement": "origin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "underlays": [
+                {
+                  "id": "0192f5a1-8101-7000-8000-00000000000a",
+                  "name": "bsi-ifc2x3-building-architecture.ifc",
+                  "file": "$fixture:ifc/v1/disaridan/bsi-ifc2x3-building-architecture.ifc",
+                  "sha256": "c4db65ba847f6b369a95d6c54fa11f4750cbe6d59f021934e8923d8d578e5885",
+                  "bytes": 92542,
+                  "schema": "IFC2X3",
+                  "placement": "origin"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "bsi-ifc2x3-building-architecture.ifc",
+                    "file": "$fixture:ifc/v1/disaridan/bsi-ifc2x3-building-architecture.ifc",
+                    "sha256": "c4db65ba847f6b369a95d6c54fa11f4750cbe6d59f021934e8923d8d578e5885",
+                    "bytes": 92542,
+                    "schema": "IFC2X3",
+                    "placement": "origin"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "bsi-ifc2x3-building-architecture.ifc",
+                    "file": "$fixture:ifc/v1/disaridan/bsi-ifc2x3-building-architecture.ifc",
+                    "sha256": "c4db65ba847f6b369a95d6c54fa11f4750cbe6d59f021934e8923d8d578e5885",
+                    "bytes": 92542,
+                    "schema": "IFC2X3",
+                    "placement": "origin"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sistemsiz projede başlangıç noktasına",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+              "placement": "origin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "underlays": [
+                {
+                  "id": "0192f5a1-8101-7000-8000-00000000000a",
+                  "name": "yerel-sistem.ifc",
+                  "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                  "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                  "bytes": 156747,
+                  "schema": "IFC4X3_ADD2",
+                  "placement": "origin"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "placement": "origin"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "placement": "origin"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Altlık model",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "site": {
+              "datum": 1285.4
+            }
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8101-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "İkinci altlık listenin sonuna",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000b",
+              "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+              "placement": "origin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "id": "0192f5a1-8101-7000-8000-00000000000b",
+              "underlays": [
+                {
+                  "id": "0192f5a1-8101-7000-8000-00000000000a",
+                  "name": "yerel-sistem.ifc",
+                  "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                  "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                  "bytes": 156747,
+                  "schema": "IFC4X3_ADD2",
+                  "discipline": "Statik",
+                  "revision": "R1"
+                },
+                {
+                  "id": "0192f5a1-8101-7000-8000-00000000000b",
+                  "name": "bsi-ifc4x3-building-architecture.ifc",
+                  "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+                  "sha256": "96e7103812b15b65eb1fd7802d36b9962833485dce5ead4f440bbf529530881d",
+                  "bytes": 141965,
+                  "schema": "IFC4X3_ADD2",
+                  "placement": "origin"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R1"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000b",
+                    "name": "bsi-ifc4x3-building-architecture.ifc",
+                    "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+                    "sha256": "96e7103812b15b65eb1fd7802d36b9962833485dce5ead4f440bbf529530881d",
+                    "bytes": 141965,
+                    "schema": "IFC4X3_ADD2",
+                    "placement": "origin"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R1"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R1"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000b",
+                    "name": "bsi-ifc4x3-building-architecture.ifc",
+                    "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+                    "sha256": "96e7103812b15b65eb1fd7802d36b9962833485dce5ead4f440bbf529530881d",
+                    "bytes": 141965,
+                    "schema": "IFC4X3_ADD2",
+                    "placement": "origin"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Altlık model",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "site": {
+              "datum": 1285.4
+            },
+            "underlays": [
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000000a",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2",
+                "discipline": "Statik",
+                "revision": "R1"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8101-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Gizlenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "set",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "shown": false
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "underlays": [
+                {
+                  "id": "0192f5a1-8101-7000-8000-00000000000a",
+                  "name": "yerel-sistem.ifc",
+                  "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                  "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                  "bytes": 156747,
+                  "schema": "IFC4X3_ADD2",
+                  "discipline": "Statik",
+                  "revision": "R1",
+                  "shown": false
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R1",
+                    "shown": false
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R1"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R1",
+                    "shown": false
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Altlık model",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "site": {
+              "datum": 1285.4
+            },
+            "underlays": [
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000000a",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2",
+                "discipline": "Statik",
+                "revision": "R1"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8101-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Yeniden adlandırılır ve revizyonu kaldırılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "set",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "name": "Statik R3",
+              "revision": ""
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "underlays": [
+                {
+                  "id": "0192f5a1-8101-7000-8000-00000000000a",
+                  "name": "Statik R3",
+                  "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                  "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                  "bytes": 156747,
+                  "schema": "IFC4X3_ADD2",
+                  "discipline": "Statik"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "Statik R3",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R1"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "Statik R3",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Altlık model",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "site": {
+              "datum": 1285.4
+            },
+            "underlays": [
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000000a",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2",
+                "discipline": "Statik",
+                "revision": "R1"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8101-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Başlangıç noktasından harita dönüşümüne geçemeyen model yerinde kalır, adı değişir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "set",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "name": "Mimari örnek"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "underlays": [
+                {
+                  "id": "0192f5a1-8101-7000-8000-00000000000a",
+                  "name": "Mimari örnek",
+                  "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+                  "sha256": "96e7103812b15b65eb1fd7802d36b9962833485dce5ead4f440bbf529530881d",
+                  "bytes": 141965,
+                  "schema": "IFC4X3_ADD2",
+                  "placement": "origin"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "Mimari örnek",
+                    "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+                    "sha256": "96e7103812b15b65eb1fd7802d36b9962833485dce5ead4f440bbf529530881d",
+                    "bytes": 141965,
+                    "schema": "IFC4X3_ADD2",
+                    "placement": "origin"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "bsi-ifc4x3-building-architecture.ifc",
+                    "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+                    "sha256": "96e7103812b15b65eb1fd7802d36b9962833485dce5ead4f440bbf529530881d",
+                    "bytes": 141965,
+                    "schema": "IFC4X3_ADD2",
+                    "placement": "origin"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "Mimari örnek",
+                    "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+                    "sha256": "96e7103812b15b65eb1fd7802d36b9962833485dce5ead4f440bbf529530881d",
+                    "bytes": 141965,
+                    "schema": "IFC4X3_ADD2",
+                    "placement": "origin"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Altlık model",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "site": {
+              "datum": 1285.4
+            },
+            "underlays": [
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000000a",
+                "name": "bsi-ifc4x3-building-architecture.ifc",
+                "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+                "sha256": "96e7103812b15b65eb1fd7802d36b9962833485dce5ead4f440bbf529530881d",
+                "bytes": 141965,
+                "schema": "IFC4X3_ADD2",
+                "placement": "origin"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8101-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Harita dönüşümünden başlangıç noktasına",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "set",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "placement": "origin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "underlays": [
+                {
+                  "id": "0192f5a1-8101-7000-8000-00000000000a",
+                  "name": "yerel-sistem.ifc",
+                  "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                  "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                  "bytes": 156747,
+                  "schema": "IFC4X3_ADD2",
+                  "discipline": "Statik",
+                  "revision": "R1",
+                  "placement": "origin"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R1",
+                    "placement": "origin"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R1"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R1",
+                    "placement": "origin"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Altlık model",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "site": {
+              "datum": 1285.4
+            },
+            "underlays": [
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000000a",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2",
+                "discipline": "Statik",
+                "revision": "R1"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8101-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Yeni yerinden yeniden okunur: başka dosya, başka şema",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "reload",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:ifc/v1/disaridan/bsi-ifc2x3-building-architecture.ifc"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "underlays": [
+                {
+                  "id": "0192f5a1-8101-7000-8000-00000000000a",
+                  "name": "bsi-ifc4x3-building-architecture.ifc",
+                  "file": "$fixture:ifc/v1/disaridan/bsi-ifc2x3-building-architecture.ifc",
+                  "sha256": "c4db65ba847f6b369a95d6c54fa11f4750cbe6d59f021934e8923d8d578e5885",
+                  "bytes": 92542,
+                  "schema": "IFC2X3",
+                  "placement": "origin"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "bsi-ifc4x3-building-architecture.ifc",
+                    "file": "$fixture:ifc/v1/disaridan/bsi-ifc2x3-building-architecture.ifc",
+                    "sha256": "c4db65ba847f6b369a95d6c54fa11f4750cbe6d59f021934e8923d8d578e5885",
+                    "bytes": 92542,
+                    "schema": "IFC2X3",
+                    "placement": "origin"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "bsi-ifc4x3-building-architecture.ifc",
+                    "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+                    "sha256": "96e7103812b15b65eb1fd7802d36b9962833485dce5ead4f440bbf529530881d",
+                    "bytes": 141965,
+                    "schema": "IFC4X3_ADD2",
+                    "placement": "origin"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "bsi-ifc4x3-building-architecture.ifc",
+                    "file": "$fixture:ifc/v1/disaridan/bsi-ifc2x3-building-architecture.ifc",
+                    "sha256": "c4db65ba847f6b369a95d6c54fa11f4750cbe6d59f021934e8923d8d578e5885",
+                    "bytes": 92542,
+                    "schema": "IFC2X3",
+                    "placement": "origin"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Altlık model",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "site": {
+              "datum": 1285.4
+            },
+            "underlays": [
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000000a",
+                "name": "bsi-ifc4x3-building-architecture.ifc",
+                "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+                "sha256": "96e7103812b15b65eb1fd7802d36b9962833485dce5ead4f440bbf529530881d",
+                "bytes": 141965,
+                "schema": "IFC4X3_ADD2",
+                "placement": "origin"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8101-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Kaldırılır, dosya yerinde kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "remove",
+              "id": "0192f5a1-8101-7000-8000-00000000000a"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "underlays": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R1"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Altlık model",
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Altlık model",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "site": {
+              "datum": 1285.4
+            },
+            "underlays": [
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000000a",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2",
+                "discipline": "Statik",
+                "revision": "R1"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8101-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Değişmemiş dosya yeniden okunur: değişiklik yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "reload",
+              "id": "0192f5a1-8101-7000-8000-00000000000a"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "underlays": [
+                {
+                  "id": "0192f5a1-8101-7000-8000-00000000000a",
+                  "name": "yerel-sistem.ifc",
+                  "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                  "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                  "bytes": 156747,
+                  "schema": "IFC4X3_ADD2",
+                  "discipline": "Statik",
+                  "revision": "R1"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R1"
+                  }
+                ]
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Altlık model",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "site": {
+              "datum": 1285.4
+            },
+            "underlays": [
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000000a",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2",
+                "discipline": "Statik",
+                "revision": "R1"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8101-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Aynı ad: değişiklik yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "set",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "discipline": "Statik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "underlays": [
+                {
+                  "id": "0192f5a1-8101-7000-8000-00000000000a",
+                  "name": "yerel-sistem.ifc",
+                  "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                  "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                  "bytes": 156747,
+                  "schema": "IFC4X3_ADD2",
+                  "discipline": "Statik",
+                  "revision": "R1"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R1"
+                  }
+                ]
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Altlık model",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "site": {
+              "datum": 1285.4
+            },
+            "underlays": [
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000000a",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2",
+                "discipline": "Statik",
+                "revision": "R1"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8101-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Başka koordinat sistemindeki model harita dönüşümüyle yerleştirilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "model_underlay_not_placed",
+              "message": "$any",
+              "path": "change.placement"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Harita dönüşümü olmayan model yerleştirilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:ifc/v1/disaridan/bsi-ifc2x3-building-architecture.ifc"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "model_underlay_not_placed",
+              "message": "$any",
+              "path": "change.placement"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sistemsiz projede harita dönüşümüyle yerleştirilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "model_underlay_not_placed",
+              "message": "$any",
+              "path": "change.placement"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Altlık model",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "site": {
+              "datum": 1285.4
+            }
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8101-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Başlangıç noktasındaki örnek harita dönüşümüne geçmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "set",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "placement": "map"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "model_underlay_not_placed",
+              "message": "$any",
+              "path": "change.placement"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "bsi-ifc4x3-building-architecture.ifc",
+                    "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+                    "sha256": "96e7103812b15b65eb1fd7802d36b9962833485dce5ead4f440bbf529530881d",
+                    "bytes": 141965,
+                    "schema": "IFC4X3_ADD2",
+                    "placement": "origin"
+                  }
+                ]
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Altlık model",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "site": {
+              "datum": 1285.4
+            },
+            "underlays": [
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000000a",
+                "name": "bsi-ifc4x3-building-architecture.ifc",
+                "file": "$fixture:ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+                "sha256": "96e7103812b15b65eb1fd7802d36b9962833485dce5ead4f440bbf529530881d",
+                "bytes": 141965,
+                "schema": "IFC4X3_ADD2",
+                "placement": "origin"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8101-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Göreli yol",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "statik.ifc"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "change.file"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan dosya",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:ifc/v1/yok.ifc"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "file_not_found",
+              "message": "$any",
+              "path": "change.file"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "IFC olmayan dosya",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:arch/v1/ifc/var.ifc"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "model_underlay_unreadable",
+              "message": "$any",
+              "path": "change.file"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kimlik UUID değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "a",
+              "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "$any",
+              "path": "change.id"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kimlik zaten var",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "duplicate_model_underlay",
+              "message": "$any",
+              "path": "change.id"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R1"
+                  }
+                ]
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Altlık model",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "site": {
+              "datum": 1285.4
+            },
+            "underlays": [
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000000a",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2",
+                "discipline": "Statik",
+                "revision": "R1"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8101-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Denetim karakterli ad",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+              "name": "Statik\u0007model"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_model_underlay",
+              "message": "$any",
+              "path": "change.name"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "201 karakterlik revizyon",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+              "revision": "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_model_underlay",
+              "message": "$any",
+              "path": "change.revision"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Elli birinci altlık",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "too_many_model_underlays",
+              "message": "$any",
+              "path": "change"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000100",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000101",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000102",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000103",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000104",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000105",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000106",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000107",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000108",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000109",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000010a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000010b",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000010c",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000010d",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000010e",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000010f",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000110",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000111",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000112",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000113",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000114",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000115",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000116",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000117",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000118",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000119",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000011a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000011b",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000011c",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000011d",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000011e",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000011f",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000120",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000121",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000122",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000123",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000124",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000125",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000126",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000127",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000128",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000129",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000012a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000012b",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000012c",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000012d",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000012e",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000012f",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000130",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  },
+                  {
+                    "id": "0192f5a1-8101-7000-8000-000000000131",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2"
+                  }
+                ]
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Altlık model",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "site": {
+              "datum": 1285.4
+            },
+            "underlays": [
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000100",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000101",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000102",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000103",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000104",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000105",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000106",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000107",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000108",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000109",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000010a",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000010b",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000010c",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000010d",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000010e",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000010f",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000110",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000111",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000112",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000113",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000114",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000115",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000116",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000117",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000118",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000119",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000011a",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000011b",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000011c",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000011d",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000011e",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000011f",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000120",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000121",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000122",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000123",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000124",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000125",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000126",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000127",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000128",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000129",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000012a",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000012b",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000012c",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000012d",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000012e",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000012f",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000130",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              },
+              {
+                "id": "0192f5a1-8101-7000-8000-000000000131",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8101-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Değiştirilecek bir şey yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "set",
+              "id": "0192f5a1-8101-7000-8000-00000000000a"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_set",
+              "message": "$any",
+              "path": "change"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R1"
+                  }
+                ]
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Altlık model",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "site": {
+              "datum": 1285.4
+            },
+            "underlays": [
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000000a",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2",
+                "discipline": "Statik",
+                "revision": "R1"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8101-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Olmayan altlığı kaldır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "remove",
+              "id": "0192f5a1-8101-7000-8000-00000000000b"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "model_underlay_not_found",
+              "message": "$any",
+              "path": "change.id"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R1"
+                  }
+                ]
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Altlık model",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "site": {
+              "datum": 1285.4
+            },
+            "underlays": [
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000000a",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2",
+                "discipline": "Statik",
+                "revision": "R1"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8101-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Yeni yeri olmayan dosya",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "reload",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:ifc/v1/yok.ifc"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "file_not_found",
+              "message": "$any",
+              "path": "change.file"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                },
+                "underlays": [
+                  {
+                    "id": "0192f5a1-8101-7000-8000-00000000000a",
+                    "name": "yerel-sistem.ifc",
+                    "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                    "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                    "bytes": 156747,
+                    "schema": "IFC4X3_ADD2",
+                    "discipline": "Statik",
+                    "revision": "R1"
+                  }
+                ]
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Altlık model",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "site": {
+              "datum": 1285.4
+            },
+            "underlays": [
+              {
+                "id": "0192f5a1-8101-7000-8000-00000000000a",
+                "name": "yerel-sistem.ifc",
+                "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
+                "sha256": "bcf33e1fb298ab356ab11889537aae19721d7bd48f379802145542b76d683828",
+                "bytes": 156747,
+                "schema": "IFC4X3_ADD2",
+                "discipline": "Statik",
+                "revision": "R1"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center"
+          }
+        ],
+        "uids": [
+          "0192f5a1-8101-7000-8000-000000000001"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Sürüm sayı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc"
+            },
+            "expectedRevision": "abc"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "$any",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizim başka sürümde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "change": {
+              "kind": "add",
+              "id": "0192f5a1-8101-7000-8000-00000000000a",
+              "file": "$fixture:arch/v1/ifc/yerel-sistem.ifc"
+            },
+            "expectedRevision": "999"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "$any",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "settings": {
+              "arch": {
+                "site": {
+                  "datum": 1285.4
+                }
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

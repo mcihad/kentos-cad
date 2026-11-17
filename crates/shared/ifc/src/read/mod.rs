@@ -222,6 +222,24 @@ pub struct Location {
     pub factors: Option<[f64; 3]>,
 }
 
+impl Location {
+    /// The map conversion as an underlay is placed by it (docs/adr/8101): the target system, the height datum, the
+    /// model origin on the map and the model's x axis; a plain conversion's `Scale` on every axis (it converts the
+    /// units, heights too), a scaled one's factors besides. None when the file names no target system.
+    pub fn frame(&self) -> Option<crate::underlay::MapFrame> {
+        let crs = self.crs.clone()?;
+        let s = self.scale.unwrap_or(1.0);
+        let f = self.factors.unwrap_or([1.0, 1.0, 1.0]);
+        Some(crate::underlay::MapFrame {
+            crs,
+            vertical: self.vertical_datum.clone(),
+            origin: [self.eastings, self.northings, self.orthogonal_height],
+            x_axis: [self.x_axis_abscissa.unwrap_or(1.0), self.x_axis_ordinate.unwrap_or(0.0)],
+            factors: [s * f[0], s * f[1], s * f[2]],
+        })
+    }
+}
+
 /// What the file is: its schema as declared and its family, its header, how many records it holds and of which
 /// classes its objects are, its units and its map conversion.
 #[derive(Debug, Clone, PartialEq)]

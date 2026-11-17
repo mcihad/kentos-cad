@@ -31,7 +31,7 @@ from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 from .versions import *  # noqa: F403
 
-from . import addresses, annotations, arc, arch, areas, arrays, asbuilt, assets, attachments, beams, blocks, casework, changeset, circle, columns, constraints, constructions, crs, curves, datasets, delivery, dimensions, dimensionsets, domains, donut, drawing, elevations, entities, extract, field, fields, file, fonts, form, forms, gis, grids, hatches, hatchpatterns, ifc, images, inserts, joins, labels, layers, leaders, legends, levels, library, line, linearref, linetypes, map, materials, meshes, modules, navigator, network, north, nurbs, objects, openings, openingtypes, options, orthophoto, parameters, parcels, pipes, plotstyles, point, pointclouds, points, polygon, polyline, processing, profiles, program, project, railings, ramps, rasters, readjustment, records, rectangle, relations, revcloud, review, revisions, road, roads, roofs, scenarios, schedules, schema, sections, sector, sensors, settings, shapes, sheets, slabs, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, survey, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs, zoning  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arch, areas, arrays, asbuilt, assets, attachments, beams, blocks, casework, changeset, circle, columns, constraints, constructions, crs, curves, datasets, delivery, dimensions, dimensionsets, domains, donut, drawing, elevations, entities, extract, field, fields, file, fonts, form, forms, gis, grids, hatches, hatchpatterns, ifc, images, inserts, joins, labels, layers, leaders, legends, levels, library, line, linearref, linetypes, map, materials, meshes, modules, navigator, network, north, nurbs, objects, openings, openingtypes, options, orthophoto, parameters, parcels, pipes, plotstyles, point, pointclouds, points, polygon, polyline, processing, profiles, program, project, railings, ramps, rasters, readjustment, records, rectangle, relations, revcloud, review, revisions, road, roads, roofs, scenarios, schedules, schema, sections, sector, sensors, settings, shapes, sheets, slabs, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, survey, tables, tags, templates, texts, time, topology, ucs, underlay, units, viewmarks, views, walls, xrefs, zoning  # noqa: E402  isort: skip
 
 __all__ = [
     "AcceptMapSurveyOperation",
@@ -68,6 +68,7 @@ __all__ = [
     "AddReviewNoteOp",
     "AddSheetPaperOp",
     "AddSlabsOperation",
+    "AddUnderlayChange",
     "AddVariantPaperOp",
     "AddressCodeRepeat",
     "AddressDifference",
@@ -2157,6 +2158,7 @@ __all__ = [
     "MirrorTransform",
     "ModeConstraintEdit",
     "ModelLayerPaperPlotTarget",
+    "ModelUnderlay",
     "ModuleBreak",
     "ModuleBreakName",
     "ModuleCaseworkChange",
@@ -3253,6 +3255,7 @@ __all__ = [
     "RelinkImagesOperation",
     "RelinkMapWorkOperation",
     "RelinkSourcesEditOp",
+    "ReloadUnderlayChange",
     "ReloadXrefsOperation",
     "RemoveArmLeaderEdit",
     "RemoveArrayEdit",
@@ -3285,6 +3288,7 @@ __all__ = [
     "RemoveReviewNoteOp",
     "RemoveSheetPaperOp",
     "RemoveTriangleSurfaceEdit",
+    "RemoveUnderlayChange",
     "RemoveVariantPaperOp",
     "RenameDomainMigrationStep",
     "RenameFieldMigrationStep",
@@ -3608,6 +3612,7 @@ __all__ = [
     "SetSnapGridPaperOp",
     "SetSpaceSeparatorOperation",
     "SetSpacesOperation",
+    "SetUnderlayChange",
     "SetVariantPaperOp",
     "SetViewMarksOperation",
     "SetViewportPaperOp",
@@ -4327,7 +4332,12 @@ __all__ = [
     "UcsSet",
     "UcsTo",
     "UnbreakDimensionEdit",
+    "UnderlayChange",
+    "UnderlayEdit",
+    "UnderlayEdited",
     "UnderlayLook",
+    "UnderlayPlacement",
+    "UnderlayPlacementName",
     "UnderlayXrefsOperation",
     "UnfieldTableEdit",
     "UngroupPaperOp",
@@ -4750,6 +4760,7 @@ __all__ = [
     "topology",
     "types",
     "ucs",
+    "underlay",
     "units",
     "viewmarks",
     "views",

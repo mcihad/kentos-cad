@@ -2613,6 +2613,9 @@ mod tests {
                     crate::CAD_FORM_ANSWER => {
                         serde_json::from_value::<crate::ArchFormAnswers>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_UNDERLAY_EDIT => {
+                        serde_json::from_value::<crate::UnderlayEdit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_DELIVERY_EDIT => {
                         serde_json::from_value::<crate::DeliveryEdit>(e.input.clone()).map(|_| ())
                     }
@@ -4467,6 +4470,9 @@ mod tests {
                         }
                         crate::CAD_FORM_ANSWER => {
                             serde_json::from_value::<crate::ArchFormAnswersDone>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_UNDERLAY_EDIT => {
+                            serde_json::from_value::<crate::UnderlayEdited>(output.clone()).map(|_| ())
                         }
                         crate::CAD_DELIVERY_EDIT => {
                             serde_json::from_value::<crate::DeliveryEdited>(output.clone()).map(|_| ())

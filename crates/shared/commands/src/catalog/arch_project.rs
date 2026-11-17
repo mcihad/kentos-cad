@@ -766,6 +766,47 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 },
             ],
         },
+        // Altlık model (docs/adr/8101), held together by fixtures/commands/v1/cad.underlay.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_UNDERLAY_EDIT.into(),
+            version: crate::CAD_UNDERLAY_EDIT_VERSION,
+            title: "Altlık model".into(),
+            summary: "Başka bir disiplinin IFC modelini (IFC 4.3, IFC4, IFC2x3) çizimin altında salt okunur gösterilecek altlık olarak tutar (settings.arch.underlays); model çizime kopyalanmaz, gövdeleri her gösterilişte dosyadan okunur. change tek değişikliktir: add (file dosyanın mutlak yolu; dosya okunur, SHA-256'sı, boyu ve şeması yazılır; name listedeki ad, yoksa dosyanın adı; discipline ve revision kullanıcının verdiği disiplin ve revizyon; placement map dosyanın harita dönüşümüyle projenin sistemine, varsayılan, ya da origin başlangıç noktasına, dosyanın metreleri çizimin metreleri; id verilmezse üretilir), set (id; name, discipline, revision, boş metin kaldırır; placement, verilince dosya yeniden okunup yerleştirilir; shown gösterilir mi; en az biri, yoksa nothing_to_set), reload (id; dosya değiştiyse yeniden okunur, file verilirse yeni yeri; yerleşim yeniden denetlenir) ya da remove (id; dosya yerinde kalır). Yerleştirme sessiz dönüşüm yapmaz: dosyanın sistemi projeninkinden başkaysa, dosyada harita dönüşümü yoksa, projenin sistemi ya da ±0,00 kotu yoksa, yükseklik datumları farklıysa ya da dönüşümün ölçeği dosyanın birimiyle uyuşmuyorsa model_underlay_not_placed nedeniyle döner; başlangıç noktasına yerleştirme yalnız açıkça istenince. Kimlik UUID değilse invalid_uid, yoksa model_underlay_not_found, eklenen kimlik varsa duplicate_model_underlay, yol mutlak değilse invalid_file_path, dosya yoksa file_not_found, IFC olarak okunmazsa model_underlay_unreadable, kaydın denetimi tutmazsa invalid_model_underlay (alanın yoluyla), 50 altlık aşılırsa too_many_model_underlays. Tek geri alma adımı “Altlık model”; çizimin nesneleri değişmez. Çıktı değişen altlığın kimliği, çizimin bütün altlıkları ve sürüm. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::UnderlayEdit>(),
+            output: schema::<crate::UnderlayEdited>(),
+            plan: Some(schema::<crate::UnderlayEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Statik modeli altlık olarak ekle".into(),
+                    input: json!({
+                        "change": {
+                            "kind": "add",
+                            "file": "/projeler/konut/statik.ifc",
+                            "discipline": "Statik",
+                            "revision": "R2"
+                        }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Harita dönüşümü olmayan modeli başlangıç noktasına yerleştir".into(),
+                    input: json!({
+                        "change": { "kind": "add", "file": "/projeler/konut/mekanik.ifc", "placement": "origin" }
+                    }),
+                    output: None,
+                },
+            ],
+        },
         // Yangın ve performans (docs/adr/8068), held together by fixtures/commands/v1/cad.arch.performance.json.
         CommandDescriptor {
             id: crate::CAD_ARCH_PERFORMANCE.into(),

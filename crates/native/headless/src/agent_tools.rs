@@ -267,6 +267,7 @@ pub const DESTRUCTIVE: &[&str] = &[
     "cad.form.answer",
     // It writes over a delivery's answer or takes a record away (docs/adr/8099).
     "cad.delivery.edit",
+    "cad.underlay.edit",
     // The drawing order of what is there shifts, as a set changes it (docs/adr/0260 §3, 0310).
     "cad.entities.order",
 ];

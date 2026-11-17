@@ -2522,6 +2522,7 @@
        "arch.sheetSet",
        "arch.qualityForm",
        "arch.deliveries",
+       "arch.underlays",
        "arch.digitalRules",
        "arch.navigator",
        "tool.viewCrop",

@@ -325,6 +325,20 @@ pub fn build_grid(
     b.into_part(0.0, BTreeMap::new())
 }
 
+/// Plain lines in groups, each group in its colour, bottom first: an underlay model's plan at a level (docs/adr/8101),
+/// its cut lines over the edges seen under the cut. One layer per group; the lines are the caller's, in world units.
+pub fn build_lines(origin: Vec2, groups: &[(&[[Vec2; 2]], Rgba8)]) -> ScenePart {
+    let mut b = Builder::new(origin);
+    for (lines, color) in groups {
+        let start = b.start();
+        for [p, q] in lines.iter() {
+            b.segment(*p, *q, *color);
+        }
+        b.finish(start);
+    }
+    b.into_part(0.0, BTreeMap::new())
+}
+
 /// Grid lines across `area` along a user coordinate system's axes (docs/adr/0261
 /// §4): the frame's origin `at` and its x axis's angle from east, radians;
 /// lines on whole multiples of the spacing from its origin, each drawn

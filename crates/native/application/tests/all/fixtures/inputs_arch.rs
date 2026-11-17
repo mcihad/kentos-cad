@@ -537,6 +537,12 @@ impl Input for kentos_commands::DeliveryEdit {
     }
 }
 
+impl Input for kentos_commands::UnderlayEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_commands::ZoningParcel {
     /// `tolerance` (docs/adr/8072 §5).
     fn number(&mut self, path: &str) -> Option<&mut f64> {

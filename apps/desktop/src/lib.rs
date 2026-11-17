@@ -110,6 +110,10 @@ mod viewmark_refs;
 mod digital_rules;
 #[path = "arch/deliveries_window.rs"]
 mod deliveries_window;
+#[path = "arch/underlays.rs"]
+mod underlays;
+#[path = "arch/underlays_window.rs"]
+mod underlays_window;
 #[path = "cad/sheet_set.rs"]
 mod sheet_set;
 #[path = "cad/xrefs_window.rs"]
@@ -1058,6 +1062,9 @@ mod digital_rules_tests;
 #[cfg(test)]
 #[path = "tests/deliveries_tests.rs"]
 mod deliveries_tests;
+#[cfg(test)]
+#[path = "tests/underlays_tests.rs"]
+mod underlays_tests;
 #[cfg(test)]
 #[path = "tests/arch_ifc_tests.rs"]
 mod arch_ifc_tests;

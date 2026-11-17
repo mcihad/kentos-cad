@@ -2476,6 +2476,13 @@
       ],
       "note": "Teslim ekle, Cevabı yaz ve Kaydı sil cad.delivery.edit'e, Seçilenlere bağla cad.review.notes.edit'e gider; Öncekiyle karşılaştır iki yayın klasörünü okur (delivery_compare: yayin.json, kaynaklar/cizim.kcad) ve yazmaz (ADR 8099)."
     },
+    "arch.underlays": {
+      "level": "semantic",
+      "via": [
+        "cad.underlay.edit"
+      ],
+      "note": "Ekle, Başlangıç noktasına yerleştir, Uygula, Yeniden oku ve Kaldır cad.underlay.edit'e gider; planın ve 3B görünümün gövdeleri dosyadan okunur, çizime yazılmaz (ADR 8101)."
+    },
     "arch.digitalRules": {
       "level": "host",
       "note": "Dijital proje kuralları penceresi yönetmeliğin kural kataloğunu (kentos-digital-project, kentos-ifc) okur; çizime ve projeye dokunmaz. Python ve MCP için salt okuyan sorgu komutu sonraki iştir (ADR 8062 §9)."

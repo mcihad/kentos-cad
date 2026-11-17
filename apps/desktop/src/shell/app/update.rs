@@ -231,6 +231,8 @@ impl App {
             self.follow_tracking(),
             // The grids the project's datum choices name, read into the core (grids.rs).
             self.follow_grids(),
+            // The underlay models' files read and their plan at the active level drawn (underlays.rs).
+            self.follow_underlays(),
             // The rows round a bound layer's part, the obstacles of its labels at the part's edge (band_ghosts.rs).
             self.follow_bands(),
             // The drawing's new calls join Komut geçmişi before the log is followed (history/).
