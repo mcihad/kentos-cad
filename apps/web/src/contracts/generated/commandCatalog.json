@@ -109258,7 +109258,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.export.block` v1 (WBLOCK, docs/adr/0316 §3): a block's objects, or the objects named by their\npersistent ids, as a new `.kcad` drawing with the layers, blocks, styles, library items and settings they use;\n`base` (a block's own base point by default) goes to the drawing's origin. Refusals, in order:\n`invalid_file_path`, `file_exists`, `no_block` (neither `block` nor `uids`), `unknown_block`, `invalid_uid`,\n`entity_not_found`, `nothing_to_export` (a block without objects), `not_finite` (`base`), `file_unwritable`.",
+        "description": "Input of `file.export.block` v1 (docs/adr/0316 §3): a block's objects, or the objects named by their\npersistent ids, as a new `.kcad` drawing with the layers, blocks, styles, library items and settings they use;\n`base` (a block's own base point by default) goes to the drawing's origin. Refusals, in order:\n`invalid_file_path`, `file_exists`, `no_block` (neither `block` nor `uids`), `unknown_block`, `invalid_uid`,\n`entity_not_found`, `nothing_to_export` (a block without objects), `not_finite` (`base`), `file_unwritable`.",
         "properties": {
           "base": {
             "anyOf": [
@@ -113158,7 +113158,7 @@
     {
       "code": "review_rule_unavailable",
       "kind": "failed",
-      "retryable": true,
+      "retryable": false,
       "meaning": "Paketin inceleme kuralı (dijital-proje) çalışmadı: Python yok ya da paket bozuk; ileti nasıl verileceğini söyler."
     },
     {

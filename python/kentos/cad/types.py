@@ -39936,7 +39936,7 @@ class ExportAtlas(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ExportBlock(_Model):
-    """Input of `file.export.block` v1 (WBLOCK, docs/adr/0316 §3): a block's objects, or the objects named by their
+    """Input of `file.export.block` v1 (docs/adr/0316 §3): a block's objects, or the objects named by their
     persistent ids, as a new `.kcad` drawing with the layers, blocks, styles, library items and settings they use;
     `base` (a block's own base point by default) goes to the drawing's origin. Refusals, in order:
     `invalid_file_path`, `file_exists`, `no_block` (neither `block` nor `uids`), `unknown_block`, `invalid_uid`,

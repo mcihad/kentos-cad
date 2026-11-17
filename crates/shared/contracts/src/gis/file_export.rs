@@ -10,14 +10,14 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
-/// The drawing as an AutoCAD 2007 DXF file.
+/// The drawing as a DXF file of the 2007 format (AC1021).
 pub const FILE_EXPORT_DXF: &str = "file.export.dxf";
 pub const FILE_EXPORT_DXF_VERSION: u32 = 1;
 /// The project's sheet book as a PDF.
 pub const FILE_EXPORT_PDF: &str = "file.export.pdf";
 pub const FILE_EXPORT_PDF_VERSION: u32 = 1;
 
-/// A block, or objects, as a drawing file of its own (WBLOCK, docs/adr/0316 §3).
+/// A block, or objects, as a drawing file of its own (docs/adr/0316 §3).
 pub const FILE_EXPORT_BLOCK: &str = "file.export.block";
 pub const FILE_EXPORT_TABLE: &str = "file.export.table";
 pub const FILE_EXPORT_TABLE_VERSION: u32 = 1;
@@ -56,7 +56,7 @@ pub const FILE_COMMANDS: &[(&str, u32)] = &[
     (FILE_EXPORT_TABLE, FILE_EXPORT_TABLE_VERSION),
 ];
 
-/// Input of `file.export.block` v1 (WBLOCK, docs/adr/0316 §3): a block's objects, or the objects named by their
+/// Input of `file.export.block` v1 (docs/adr/0316 §3): a block's objects, or the objects named by their
 /// persistent ids, as a new `.kcad` drawing with the layers, blocks, styles, library items and settings they use;
 /// `base` (a block's own base point by default) goes to the drawing's origin. Refusals, in order:
 /// `invalid_file_path`, `file_exists`, `no_block` (neither `block` nor `uids`), `unknown_block`, `invalid_uid`,
