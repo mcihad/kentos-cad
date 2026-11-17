@@ -45,6 +45,9 @@ sıradakileri tutar. Bir madde ancak sınaması ve gerçek pencerede görüntüs
 - [x] `BUL-13` **Yüklenen dosyanın taranması** (TODOS.md CLOUD-06): tür listesi ve içerik imzası, programın, betiğin,
   makronun ve arşivdeki programın reddi, EICAR, isteğe bağlı antivirüs servisi (`KENTOS_AV_ADDRESS`, INSTREAM).
   Reddedilen dosya saklanmaz, denetim kaydına düşer; saklanan dosya `Tarandı` rozetini taşır (ADR 9000 §14).
+- [x] `BUL-14` **Büronun ortak dosyası:** sorumlu meslek mensubu dosyayı bürosuyla paylaşır ya da büro adına başvurur;
+  büroda düzenleyici hazırlar ve yazışır, proje yöneticisi gönderir ve teslim eder; büronun kendi dosya sayfaları
+  (ADR 9000 §18).
 - [x] `BUL-19` **Masaüstünde portal dosyaları:** Dosya › Bulut › Portal dosyaları; aktarılan projeyi KentOS'ta açmak,
   açık projeyi pakete eklemek, adım atmak, yazışmak (ADR 9001).
 - [x] `BUL-23` **Programların girişi:** `POST /v1/auth/token` taşıyıcı oturumu (masaüstü, mobil, ajan), kişisel erişim
@@ -63,7 +66,6 @@ sıradakileri tutar. Bir madde ancak sınaması ve gerçek pencerede görüntüs
 
 - [ ] `BUL-10` Portala kurum kimliğiyle giriş (OpenID Connect; sunucu tarafı ADR 0007'de hazır).
 - [ ] `BUL-12` Kayıtta hız sınırı ve otomatik kayıt koruması (girişin sınırıyla birlikte, ADR 0007).
-- [ ] `BUL-14` Büro kurumunda (category `office`) meslektaşların ortak dosyası: başvuruyu bir kişi değil, büro yapar.
 - [ ] `BUL-15` Aktarımda kopya yerine canlı projede misafir düzenleyici (ADR 0035) seçeneği.
 - [ ] `BUL-16` Son günün resmî tatile denk gelmesinde sürenin uzaması (kaynakla birlikte).
 - [ ] `BUL-17` Gerçek zamanlı bildirim (WebSocket); şimdi dakikada bir sorulur.
@@ -74,7 +76,7 @@ sıradakileri tutar. Bir madde ancak sınaması ve gerçek pencerede görüntüs
 
 ## Çalıştırma
 
-- **Sunucu:** Göçler 0043–0046 `kentosd migrate` ile uygulanır. Yönetici `kentosd platform-admin add --user GİRİŞ` ile
+- **Sunucu:** Göçler 0043–0047 `kentosd migrate` ile uygulanır. Yönetici `kentosd platform-admin add --user GİRİŞ` ile
   atanır. Antivirüs servisi isteğe bağlıdır: `KENTOS_AV_ADDRESS=tcp://ana-makine:3310` (ya da `unix:///yol`),
   taranamayan dosyayı geri çevirmek için `KENTOS_AV_REQUIRED=1`. Bildirimler: `KENTOS_MAIL_TRANSPORT`
   (`sendmail`, `webhook`, `folder`), `KENTOS_SMS_TRANSPORT` (`webhook`, `folder`), `KENTOS_MAIL_FROM`,

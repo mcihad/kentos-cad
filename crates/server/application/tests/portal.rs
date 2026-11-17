@@ -250,6 +250,7 @@ async fn signing_up_waits_for_the_check_and_the_check_attests_the_email() {
         description: String::new(),
         site: site(),
         owner_name: None,
+        office_id: None,
     };
     let refused = dossiers::create_application(&db.app, &ayse, &draft)
         .await
@@ -318,6 +319,7 @@ async fn an_application_goes_round_by_round_under_the_law_s_deadline() {
             description: "Bodrum, zemin ve 3 kat.".into(),
             site: site(),
             owner_name: Some("Hasan Er".into()),
+            office_id: None,
         },
     )
     .await
@@ -510,6 +512,7 @@ async fn each_side_sees_only_what_is_its_own() {
             description: String::new(),
             site: site(),
             owner_name: None,
+            office_id: None,
         },
     )
     .await
@@ -721,6 +724,7 @@ async fn a_step_from_a_status_that_changed_is_a_conflict() {
             description: String::new(),
             site: DossierSite::default(),
             owner_name: None,
+            office_id: None,
         },
     )
     .await
@@ -869,6 +873,7 @@ async fn a_dossier_takes_a_scanned_upload_and_a_refusal_leaves_it_to_try_again()
             description: String::new(),
             site: site(),
             owner_name: None,
+            office_id: None,
         },
     )
     .await
@@ -899,4 +904,90 @@ async fn a_dossier_takes_a_scanned_upload_and_a_refusal_leaves_it_to_try_again()
     let his = uploaded(&db, &store, &mehmet, "kroki.png", b"\x89PNG\r\n\x1a\nkroki").await.unwrap();
     let e = files::from_upload(&db.app, &store, &ayse, id, &take("package", &his)).await.unwrap_err();
     assert!(matches!(e, AppError::NotFound(_)), "{e:?}");
+}
+
+#[tokio::test]
+async fn an_office_works_on_its_professionals_dossier_by_role() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let store = blobs();
+    let root = sistem(&db).await;
+    let ornek = municipality(&db, &root, "ornek", "mehmet").await;
+    let mehmet = signed_in(&db, "mehmet").await;
+    let ayse = professional(&db, &root, "ayse", Profession::Architect).await;
+    // Ayşe's office, with an editor, a project manager and a viewer.
+    let office = platform::create_tenant(
+        &db.app,
+        &root,
+        &PlatformTenantCreate {
+            slug: "yilmaz-mimarlik".into(),
+            name: "Yılmaz Mimarlık".into(),
+            category: OrganizationCategory::Office,
+            province: Some("Örnek".into()),
+            district: None,
+            seats: 5,
+            owner: Some(NewOwner {
+                user_id: Some(ayse.user_id.to_string()),
+                login: None,
+                password: None,
+                display_name: None,
+                email: None,
+            }),
+        },
+    )
+    .await
+    .unwrap();
+    let (selin, _) = staff(&db, &ayse, office, "selin", TenantRole::Editor).await;
+    let (emre, emre_in) = staff(&db, &ayse, office, "emre", TenantRole::ProjectManager).await;
+    let (veli, _) = staff(&db, &ayse, office, "veli", TenantRole::Viewer).await;
+    let can = professional(&db, &root, "can", Profession::Surveyor).await;
+    let apply = |office: Option<Uuid>| ApplicationCreate {
+        tenant_id: ornek.to_string(),
+        kind: "architectural_project".into(),
+        title: "412 ada 7 parsel konut".into(),
+        description: String::new(),
+        site: site(),
+        owner_name: None,
+        office_id: office.map(|o| o.to_string()),
+    };
+    // Only an office she is an editor of: not another's.
+    let e = dossiers::create_application(&db.app, &can, &apply(Some(office))).await.unwrap_err();
+    assert!(matches!(e, AppError::Invalid { .. }), "{e:?}");
+    let id = dossiers::create_application(&db.app, &ayse, &apply(Some(office))).await.unwrap();
+    // The editor prepares the package but does not send; the office's manager sends for her.
+    add_file(&db, &store, &selin, id, ("mimari.pdf", b"%PDF mimari", "architectural"), Purpose::Package)
+        .await
+        .unwrap();
+    let seen = detail::detail(&db.app, &selin, id).await.unwrap();
+    assert_eq!(seen.summary.office_name.as_deref(), Some("Yılmaz Mimarlık"));
+    assert!(seen.can_add_files && seen.actions.is_empty() && !seen.can_share_with_office);
+    let e = act(&db, &selin, id, DossierAction::Send, None).await.unwrap_err();
+    assert!(matches!(e, AppError::Forbidden(_)), "{e:?}");
+    let viewer = detail::detail(&db.app, &veli, id).await.unwrap();
+    assert!(!viewer.can_add_files && viewer.actions.is_empty());
+    act(&db, &emre, id, DossierAction::Send, None).await.unwrap();
+    // The municipality asks for changes: the professional and the office's editors and above are told, the viewer not.
+    act(&db, &mehmet, id, DossierAction::RequestChanges, Some("Otopark hesabı eksik."))
+        .await
+        .unwrap();
+    for (who, told) in [(&ayse, true), (&selin, true), (&emre, true), (&veli, false)] {
+        let kinds = notified(&db, who).await;
+        assert_eq!(kinds.iter().any(|k| k.contains("changes")), told, "{}: {kinds:?}", who.display_name);
+    }
+    // The office's list holds it; a stranger finds nothing.
+    let listed = dossiers::list_for_tenant(&db.app, &emre_in, &ListFilter { limit: 50, ..ListFilter::default() })
+        .await
+        .unwrap();
+    assert_eq!(listed.items.iter().map(|d| d.id.clone()).collect::<Vec<_>>(), vec![id.to_string()]);
+    assert!(listed.items[0].awaiting_me, "changes requested: the professional's side, the office's too");
+    assert!(matches!(detail::detail(&db.app, &can, id).await.unwrap_err(), AppError::NotFound(_)));
+    // Only she takes the sharing back; then her colleagues no longer see it.
+    let off = kentos_contracts::DossierOfficeSet { office_id: None };
+    let e = dossiers::set_office(&db.app, &emre, id, &off).await.unwrap_err();
+    assert!(matches!(e, AppError::Forbidden(_)), "{e:?}");
+    dossiers::set_office(&db.app, &ayse, id, &off).await.unwrap();
+    assert!(matches!(detail::detail(&db.app, &selin, id).await.unwrap_err(), AppError::NotFound(_)));
+    let timeline = detail::detail(&db.app, &ayse, id).await.unwrap().events;
+    assert!(timeline.iter().any(|e| e.text.contains("Yılmaz Mimarlık ile paylaşımını kaldırdı")), "{timeline:?}");
 }

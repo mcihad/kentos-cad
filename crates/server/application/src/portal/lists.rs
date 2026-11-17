@@ -39,6 +39,46 @@ const AWAITING_PROFESSIONAL: &str =
     "((d.direction = 'application' and d.status in ('draft', 'changes_requested'))
      or (d.direction = 'transfer' and d.status in ('sent', 'accepted', 'revision_requested')))";
 
+/// Whose dossiers a list shows: a municipality's, a professional's own, or an office's shared ones (docs/adr/9000 §18).
+#[derive(Clone, Copy, Debug)]
+enum Owner {
+    Municipality(Uuid),
+    Professional(Uuid),
+    Office(Uuid),
+}
+
+impl Owner {
+    fn side(self) -> DossierSide {
+        match self {
+            Owner::Municipality(_) => DossierSide::Municipality,
+            Owner::Professional(_) | Owner::Office(_) => DossierSide::Professional,
+        }
+    }
+
+    fn id(self) -> Uuid {
+        match self {
+            Owner::Municipality(i) | Owner::Professional(i) | Owner::Office(i) => i,
+        }
+    }
+
+    fn clause(self) -> &'static str {
+        match self {
+            Owner::Municipality(_) => "d.tenant_id = $1",
+            Owner::Professional(_) => "d.professional_id = $1",
+            Owner::Office(_) => "d.office_id = $1",
+        }
+    }
+
+    /// An organisation's list: an office's shared dossiers, a municipality's own.
+    async fn of(tx: &mut Transaction<'static, Postgres>, tenant: Uuid) -> AppResult<Owner> {
+        let office: bool = sqlx::query_scalar("select kentos.office_role($1) is not null")
+            .bind(tenant)
+            .fetch_one(&mut **tx)
+            .await?;
+        Ok(if office { Owner::Office(tenant) } else { Owner::Municipality(tenant) })
+    }
+}
+
 #[derive(sqlx::FromRow)]
 struct Listed {
     #[sqlx(flatten)]
@@ -48,14 +88,14 @@ struct Listed {
 
 async fn list(
     tx: &mut Transaction<'static, Postgres>,
-    side: DossierSide,
-    owner: Uuid,
+    whose: Owner,
     me: Uuid,
     filter: &ListFilter,
 ) -> AppResult<DossierList> {
-    let (base, awaiting) = match side {
-        DossierSide::Municipality => ("d.tenant_id = $1", AWAITING_MUNICIPALITY),
-        DossierSide::Professional => ("d.professional_id = $1", AWAITING_PROFESSIONAL),
+    let (side, owner, base) = (whose.side(), whose.id(), whose.clause());
+    let awaiting = match side {
+        DossierSide::Municipality => AWAITING_MUNICIPALITY,
+        DossierSide::Professional => AWAITING_PROFESSIONAL,
     };
     let sql = format!(
         "select s.*, count(*) over () as total from ({SUMMARY_SELECT}
@@ -103,14 +143,8 @@ pub async fn list_for_tenant(
     filter: &ListFilter,
 ) -> AppResult<DossierList> {
     let mut tx = db.scoped(access.scope()).await?;
-    let found = list(
-        &mut tx,
-        DossierSide::Municipality,
-        access.tenant,
-        access.actor.user_id,
-        filter,
-    )
-    .await?;
+    let whose = Owner::of(&mut tx, access.tenant).await?;
+    let found = list(&mut tx, whose, access.actor.user_id, filter).await?;
     tx.commit().await?;
     Ok(found)
 }
@@ -122,28 +156,17 @@ pub async fn list_for_professional(
     filter: &ListFilter,
 ) -> AppResult<DossierList> {
     let mut tx = db.scoped(user_scope(actor)).await?;
-    let found = list(
-        &mut tx,
-        DossierSide::Professional,
-        actor.user_id,
-        actor.user_id,
-        filter,
-    )
-    .await?;
+    let found = list(&mut tx, Owner::Professional(actor.user_id), actor.user_id, filter).await?;
     tx.commit().await?;
     Ok(found)
 }
 
 async fn dashboard(
     tx: &mut Transaction<'static, Postgres>,
-    side: DossierSide,
-    owner: Uuid,
+    whose: Owner,
     me: Uuid,
 ) -> AppResult<DossierDashboard> {
-    let base = match side {
-        DossierSide::Municipality => "d.tenant_id = $1",
-        DossierSide::Professional => "d.professional_id = $1",
-    };
+    let (owner, base) = (whose.id(), whose.clause());
     let counts: Vec<(String, String, i64)> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "select d.direction, d.status, count(*) from kentos.dossier d where {base} group by 1, 2"
     )))
@@ -159,8 +182,7 @@ async fn dashboard(
     .await?;
     let open = list(
         tx,
-        side,
-        owner,
+        whose,
         me,
         &ListFilter {
             limit: 200,
@@ -195,13 +217,8 @@ async fn dashboard(
 /// `GET /v1/tenants/{tenant}/portal/summary`.
 pub async fn dashboard_for_tenant(db: &Db, access: &Access) -> AppResult<DossierDashboard> {
     let mut tx = db.scoped(access.scope()).await?;
-    let found = dashboard(
-        &mut tx,
-        DossierSide::Municipality,
-        access.tenant,
-        access.actor.user_id,
-    )
-    .await?;
+    let whose = Owner::of(&mut tx, access.tenant).await?;
+    let found = dashboard(&mut tx, whose, access.actor.user_id).await?;
     tx.commit().await?;
     Ok(found)
 }
@@ -209,13 +226,7 @@ pub async fn dashboard_for_tenant(db: &Db, access: &Access) -> AppResult<Dossier
 /// `GET /v1/me/dossiers/summary`.
 pub async fn dashboard_for_professional(db: &Db, actor: &Actor) -> AppResult<DossierDashboard> {
     let mut tx = db.scoped(user_scope(actor)).await?;
-    let found = dashboard(
-        &mut tx,
-        DossierSide::Professional,
-        actor.user_id,
-        actor.user_id,
-    )
-    .await?;
+    let found = dashboard(&mut tx, Owner::Professional(actor.user_id), actor.user_id).await?;
     tx.commit().await?;
     Ok(found)
 }

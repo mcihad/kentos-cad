@@ -10,23 +10,36 @@
 
 use kentos_contracts::{DossierAction, DossierDirection, DossierSide, DossierStatus, TenantRole};
 
-/// Who asks: the dossier's professional, or a member of its organisation with their role.
+/// Who asks: the dossier's professional, a colleague of the office it is shared with (docs/adr/9000 §18), or a member
+/// of its organisation, the last two with their role.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Party {
     Professional,
+    Colleague(TenantRole),
     Member(TenantRole),
 }
 
 impl Party {
     pub fn side(self) -> DossierSide {
         match self {
-            Party::Professional => DossierSide::Professional,
+            Party::Professional | Party::Colleague(_) => DossierSide::Professional,
             Party::Member(_) => DossierSide::Municipality,
         }
     }
 
     fn at_least(self, role: TenantRole) -> bool {
         matches!(self, Party::Member(r) if r >= role)
+    }
+
+    /// Prepares the professional's side: the professional, or an editor of their office and above.
+    pub fn works_for_professional(self) -> bool {
+        matches!(self, Party::Professional) || matches!(self, Party::Colleague(r) if r >= TenantRole::Editor)
+    }
+
+    /// Takes the professional's steps (sends, withdraws, takes on, delivers): the professional, or a project manager
+    /// of their office and above, as the organisation's decisions are its managers'.
+    pub fn decides_for_professional(self) -> bool {
+        matches!(self, Party::Professional) || matches!(self, Party::Colleague(r) if r >= TenantRole::ProjectManager)
     }
 }
 
@@ -100,7 +113,7 @@ pub fn preparing(direction: DossierDirection, status: DossierStatus) -> Option<D
 /// Whether `party` adds files to the package being prepared.
 pub fn can_add_files(direction: DossierDirection, status: DossierStatus, party: Party) -> bool {
     match preparing(direction, status) {
-        Some(DossierSide::Professional) => party == Party::Professional,
+        Some(DossierSide::Professional) => party.works_for_professional(),
         Some(DossierSide::Municipality) => party.at_least(TenantRole::ProjectManager),
         None => false,
     }
@@ -111,7 +124,7 @@ pub fn can_edit(direction: DossierDirection, status: DossierStatus, party: Party
     use DossierStatus as S;
     match direction {
         DossierDirection::Application => {
-            party == Party::Professional && matches!(status, S::Draft | S::ChangesRequested)
+            party.works_for_professional() && matches!(status, S::Draft | S::ChangesRequested)
         }
         DossierDirection::Transfer => {
             status == S::Draft && party.at_least(TenantRole::ProjectManager)
@@ -121,7 +134,9 @@ pub fn can_edit(direction: DossierDirection, status: DossierStatus, party: Party
 
 /// Whether `party` removes it: only a draft, by its side.
 pub fn can_delete(direction: DossierDirection, status: DossierStatus, party: Party) -> bool {
-    status == DossierStatus::Draft && can_edit(direction, status, party)
+    status == DossierStatus::Draft
+        && can_edit(direction, status, party)
+        && (!matches!(party, Party::Colleague(_)) || party.decides_for_professional())
 }
 
 /// Whether `party` writes to the other side: once it was sent and until it is closed; editors and above in the
@@ -129,7 +144,7 @@ pub fn can_delete(direction: DossierDirection, status: DossierStatus, party: Par
 pub fn can_message(status: DossierStatus, party: Party) -> bool {
     status != DossierStatus::Draft
         && !closed(status)
-        && (party == Party::Professional || party.at_least(TenantRole::Editor))
+        && (party.works_for_professional() || party.at_least(TenantRole::Editor))
 }
 
 /// Why a step may not be taken: the caller's role (forbidden) or the dossier's state.
@@ -158,7 +173,8 @@ pub fn step_of(
 ) -> Result<Step, Refusal> {
     use DossierAction as A;
     use DossierStatus as S;
-    let pro = party == Party::Professional;
+    let pro = party.decides_for_professional();
+    let colleague = matches!(party, Party::Colleague(_));
     let editor = party.at_least(TenantRole::Editor);
     let manager = party.at_least(TenantRole::ProjectManager);
     let member = matches!(party, Party::Member(_));
@@ -228,6 +244,14 @@ pub fn step_of(
         _ => {
             let (message, role) = if closed(status) {
                 ("Dosya kapandı; üzerinde adım atılmaz.", false)
+            } else if colleague
+                && !pro
+                && matches!(action, A::Send | A::Withdraw | A::Accept | A::Decline | A::Deliver)
+            {
+                (
+                    "Bu adımı dosyanın sorumlu meslek mensubu ya da büroda proje yöneticisi atar.",
+                    true,
+                )
             } else if member && !editor {
                 (
                     "Bu adım için kurumunuzda en az düzenleyici olmalısınız.",
@@ -311,6 +335,28 @@ mod tests {
     const VIEWER: Party = Party::Member(TenantRole::Viewer);
     const EDITOR: Party = Party::Member(TenantRole::Editor);
     const MANAGER: Party = Party::Member(TenantRole::ProjectManager);
+
+    #[test]
+    fn an_offices_editor_prepares_and_its_manager_sends_for_the_professional() {
+        let editor = Party::Colleague(TenantRole::Editor);
+        let manager = Party::Colleague(TenantRole::ProjectManager);
+        let viewer = Party::Colleague(TenantRole::Viewer);
+        assert_eq!(editor.side(), DossierSide::Professional);
+        // An editor prepares the package and writes, but sends nothing; the office's manager sends as the
+        // professional does.
+        assert!(can_add_files(APP, S::Draft, editor) && can_edit(APP, S::Draft, editor));
+        assert!(actions(APP, S::Draft, editor).is_empty());
+        assert_eq!(actions(APP, S::Draft, manager), [A::Send]);
+        let refused = step_of(APP, S::Draft, A::Send, editor).unwrap_err();
+        assert!(refused.role && refused.message.contains("sorumlu meslek mensubu"));
+        assert_eq!(actions(TRANSFER, S::Sent, manager), [A::Accept, A::Decline]);
+        assert!(can_message(S::Submitted, editor) && !can_message(S::Submitted, viewer));
+        // A viewer reads; an editor does not delete the draft, a manager may.
+        assert!(!can_add_files(APP, S::Draft, viewer) && !can_delete(APP, S::Draft, editor));
+        assert!(can_delete(APP, S::Draft, manager));
+        // Never the municipality's steps.
+        assert!(step_of(APP, S::Submitted, A::Approve, manager).is_err());
+    }
 
     #[test]
     fn an_application_goes_round_by_round_until_it_is_decided() {

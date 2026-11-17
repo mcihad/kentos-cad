@@ -393,7 +393,7 @@ pub(super) fn ops() -> Vec<Op> {
         op("GET", "/v1/me/dossiers/summary", DOSSIERS, "Meslek mensubunun özeti",
             "Sayılar ve sırası gelen dosyalar.", No, Json(200, of::<c::DossierDashboard>)),
         op("GET", "/v1/tenants/{tenant}/dossiers", DOSSIERS, "Kurumun dosyaları",
-            "Kuruma gelen başvurular ve kurumun aktarımları.",
+            "Belediyede: kuruma gelen başvurular ve kurumun aktarımları. Büroda: büroyla paylaşılan dosyalar.",
             No, Json(200, of::<c::DossierList>)).query(DOSSIER_LIST),
         op("POST", "/v1/tenants/{tenant}/dossiers", DOSSIERS, "Aktarım oluştur (taslak)",
             "Kurum bir meslek mensubuna iş aktarır (ölçüm, proje hazırlama…).",
@@ -409,6 +409,12 @@ pub(super) fn ops() -> Vec<Op> {
             "Gönder, incelemeye al, eksik bildir, onayla, reddet, kabul et, teslim et, tamamla… Hangi adımların \
              atılabileceği ayrıntıdaki `actions`'tadır. `expectedStatus` tutmazsa 409 (bu arada başkası adım attı).",
             Body(of::<c::DossierActionRequest>), Json(200, of::<c::DossierDetail>)),
+        op("PUT", "/v1/dossiers/{id}/office", DOSSIERS, "Büroyla paylaş",
+            "Sorumlu meslek mensubu dosyayı düzenleyici ya da üstü olduğu bir büroyla paylaşır (`officeId`) ya da \
+             paylaşımı kaldırır (`null`). Büronun üyeleri meslek mensubu tarafında olur: görüntüleyici okur, \
+             düzenleyici belge hazırlar ve yazışır, proje yöneticisi gönderir ve teslim eder. Başvuru baştan büro \
+             adına da açılabilir (`officeId`). Büronun kendi listesi: `GET /v1/tenants/{büro}/dossiers`.",
+            Body(of::<c::DossierOfficeSet>), Json(200, of::<c::DossierDetail>)),
         op("POST", "/v1/dossiers/{id}/messages", DOSSIERS, "Yazışma ekle",
             "Dosyaya ileti; bekleyen ekler iletiyle gönderilir.",
             Body(of::<c::MessagePost>), Json(201, of::<c::DossierMessageView>)),

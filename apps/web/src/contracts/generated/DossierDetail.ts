@@ -37,6 +37,10 @@ canDelete: boolean,
  */
 canImport: boolean, 
 /**
+ * The caller is its responsible professional and may share it with an office of theirs or take it back.
+ */
+canShareWithOffice: boolean, 
+/**
  * The package being prepared: `round + 1`.
  */
 pendingRound: number, rounds: Array<DossierRound>, pending: Array<DossierFileView>, messages: Array<DossierMessageView>, events: Array<DossierEventView>, checklist: DocChecklist | null, professional: ProfessionalView | null, organization: DossierOrganization, 

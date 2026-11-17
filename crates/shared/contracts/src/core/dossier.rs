@@ -145,6 +145,11 @@ pub struct DossierSummary {
     pub clock: Option<LegalClock>,
     /// Whether it is waiting for the caller's side.
     pub awaiting_me: bool,
+    /// The office the professional shares it with (docs/adr/9000 §18), by id and name.
+    #[serde(default)]
+    pub office_id: Option<String>,
+    #[serde(default)]
+    pub office_name: Option<String>,
 }
 
 /// `GET …/dossiers`: a page of them, and how many there are.
@@ -313,6 +318,9 @@ pub struct DossierDetail {
     /// Whether the caller may open a KentOS project file of it as a project: a professional in their own space, a
     /// member who may create projects in the organisation (project manager and above).
     pub can_import: bool,
+    /// The caller is its responsible professional and may share it with an office of theirs or take it back.
+    #[serde(default)]
+    pub can_share_with_office: bool,
     /// The package being prepared: `round + 1`.
     pub pending_round: u32,
     pub rounds: Vec<DossierRound>,
@@ -349,6 +357,21 @@ pub struct ApplicationCreate {
     pub description: String,
     pub site: DossierSite,
     pub owner_name: Option<String>,
+    /// On behalf of an office the professional is an editor of (docs/adr/9000 §18): its colleagues share the dossier.
+    #[serde(default)]
+    #[cfg_attr(feature = "ts", ts(optional = nullable))]
+    pub office_id: Option<String>,
+}
+
+/// `PUT /v1/dossiers/{id}/office`: the responsible professional shares the dossier with an office, or takes it back
+/// (`null`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DossierOfficeSet {
+    pub office_id: Option<String>,
 }
 
 /// `POST /v1/tenants/{tenant}/dossiers`: a municipality's new transfer, as a draft.

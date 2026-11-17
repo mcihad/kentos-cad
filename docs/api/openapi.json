@@ -795,6 +795,14 @@
           "kind": {
             "type": "string"
           },
+          "officeId": {
+            "default": null,
+            "description": "On behalf of an office the professional is an editor of (docs/adr/9000 §18): its colleagues share the dossier.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "ownerName": {
             "type": [
               "string",
@@ -8328,6 +8336,11 @@
           "canMessage": {
             "type": "boolean"
           },
+          "canShareWithOffice": {
+            "default": false,
+            "description": "The caller is its responsible professional and may share it with an office of theirs or take it back.",
+            "type": "boolean"
+          },
           "checklist": {
             "anyOf": [
               {
@@ -8723,6 +8736,18 @@
         ],
         "type": "object"
       },
+      "DossierOfficeSet": {
+        "description": "`PUT /v1/dossiers/{id}/office`: the responsible professional shares the dossier with an office, or takes it back\n(`null`).",
+        "properties": {
+          "officeId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
       "DossierOrganization": {
         "description": "The organisation side of a dossier, as both sides see it.",
         "properties": {
@@ -8921,6 +8946,21 @@
           },
           "number": {
             "description": "\"2026/0007\" once sent.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "officeId": {
+            "default": null,
+            "description": "The office the professional shares it with (docs/adr/9000 §18), by id and name.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "officeName": {
+            "default": null,
             "type": [
               "string",
               "null"
@@ -38825,6 +38865,61 @@
         ]
       }
     },
+    "/v1/dossiers/{id}/office": {
+      "put": {
+        "description": "Sorumlu meslek mensubu dosyayı düzenleyici ya da üstü olduğu bir büroyla paylaşır (`officeId`) ya da paylaşımı kaldırır (`null`). Büronun üyeleri meslek mensubu tarafında olur: görüntüleyici okur, düzenleyici belge hazırlar ve yazışır, proje yöneticisi gönderir ve teslim eder. Başvuru baştan büro adına da açılabilir (`officeId`). Büronun kendi listesi: `GET /v1/tenants/{büro}/dossiers`.",
+        "operationId": "putDossiersByIdOffice",
+        "parameters": [
+          {
+            "description": "Dosyanın (başvuru ya da aktarım) kimliği.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DossierOfficeSet"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DossierDetail"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Büroyla paylaş",
+        "tags": [
+          "Portal: dosyalar"
+        ]
+      }
+    },
     "/v1/extension-catalogs/{catalog}/releases": {
       "get": {
         "description": "Katalogdaki eklenti sürümleri.",
@@ -41569,7 +41664,7 @@
     },
     "/v1/tenants/{tenant}/dossiers": {
       "get": {
-        "description": "Kuruma gelen başvurular ve kurumun aktarımları.",
+        "description": "Belediyede: kuruma gelen başvurular ve kurumun aktarımları. Büroda: büroyla paylaşılan dosyalar.",
         "operationId": "getTenantsByTenantDossiers",
         "parameters": [
           {

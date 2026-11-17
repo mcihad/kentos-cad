@@ -52,6 +52,8 @@ pub(crate) fn event_text(
     };
     let application = direction == DossierDirection::Application;
     match action {
+        "office_shared" => format!("{actor} dosyayı {} ile paylaştı; büronun meslektaşları da çalışır.", text("office")),
+        "office_unshared" => format!("{actor} dosyanın {} ile paylaşımını kaldırdı.", text("office")),
         "created" if application => format!("{actor} başvuruyu taslak olarak açtı."),
         "created" => format!("{actor} aktarımı taslak olarak hazırlamaya başladı."),
         "send" if application && round <= 1 => {
@@ -252,8 +254,10 @@ pub(crate) async fn assemble(
         can_delete: flow::can_delete(direction, status, party),
         can_import: match party {
             Party::Professional => acts,
+            Party::Colleague(role) => acts && role >= kentos_contracts::TenantRole::ProjectManager,
             Party::Member(role) => role >= kentos_contracts::TenantRole::ProjectManager,
         },
+        can_share_with_office: party == Party::Professional && !flow::closed(status),
         pending_round: held.row.round() + 1,
         rounds: rounds.into_values().collect(),
         pending,

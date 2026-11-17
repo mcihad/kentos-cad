@@ -302,4 +302,33 @@ const b64 = (bytes) => Buffer.from(bytes).toString('base64');
   b.close();
 }
 
+// ── An office's shared dossiers (docs/adr/9000 §18) ──────────────────
+{
+  const titled = (list, title) => list.items.find((d) => d.title === title).id;
+  const login = async (who) => {
+    const res = await fetch(`${API}/v1/auth/login`, { method: 'POST', headers: { 'x-kentos-client': 'web', 'content-type': 'application/json' }, body: JSON.stringify({ login: who, password: PASSWORD }) });
+    return res.headers.get('set-cookie').split(';')[0];
+  };
+  const cookie = await login('emre.tas');
+  const me = await (await fetch(`${API}/v1/portal/me`, { headers: { cookie } })).json();
+  const office = me.organizations.find((o) => o.tenantSlug === 'yilmaz-mimarlik');
+  const list = await (await fetch(`${API}/v1/tenants/${office.tenantId}/dossiers?limit=50`, { headers: { cookie } })).json();
+  const A6 = titled(list, '233 ada 4 parsel ticaret binası mimari projesi');
+  const OFFICE = '#/kurum/yilmaz-mimarlik';
+  let b = await signIn('emre.tas');
+  await open(b, OFFICE);
+  await shot(b, '83-buro-genel-bakis');
+  await open(b, `${OFFICE}/basvurular?liste=tumu`);
+  await shot(b, '84-buro-basvurulari');
+  b.close();
+  b = await signIn('selin.kara', PASSWORD, { width: 1560, height: 1080 });
+  await open(b, `${OFFICE}/dosya/${A6}`);
+  await shot(b, '85-buro-duzenleyici-dosyada');
+  b.close();
+  b = await signIn('ayse.yilmaz', PASSWORD, { width: 1560, height: 1080 });
+  await open(b, `#/mesleki/dosya/${A3}`);
+  await shot(b, '86-mimar-buroyla-paylas');
+  b.close();
+}
+
 console.log(shots.join('\n'));

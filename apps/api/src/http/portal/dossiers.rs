@@ -14,7 +14,7 @@ use kentos_application::blobs::WriteError;
 use kentos_application::portal::{detail, dossiers, files, steps};
 use kentos_contracts::{
     ApplicationCreate, DossierActionRequest, DossierDashboard, DossierDetail, DossierEdit,
-    DossierFileFromUpload, DossierFileImport, DossierFileImported, DossierFileView, DossierList, DossierMessageView,
+    DossierFileFromUpload, DossierFileImport, DossierOfficeSet, DossierFileImported, DossierFileView, DossierList, DossierMessageView,
     FromProject, MessagePost,
 };
 use serde::{Deserialize, Serialize};
@@ -285,6 +285,23 @@ pub async fn download(
 #[derive(Debug, Default, Deserialize)]
 pub struct InlineQuery {
     inline: Option<String>,
+}
+
+/// `PUT /v1/dossiers/{id}/office`: the responsible professional shares the dossier with an office, or takes it back.
+pub async fn set_office(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    caller: Caller,
+    Path(id): Path<String>,
+    Body(input): Body<DossierOfficeSet>,
+) -> Result<Json<DossierDetail>, Failure> {
+    let run = async {
+        let db = state.db()?;
+        let id = path_id(&id, "Dosya")?;
+        dossiers::set_office(db, &caller.0, id, &input).await?;
+        detail::detail(db, &caller.0, id).await
+    };
+    run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
 
 /// `POST /v1/dossiers/{id}/files/from-upload`: a received upload (`/v1/uploads`) as a pending file (201).

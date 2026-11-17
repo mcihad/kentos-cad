@@ -15,7 +15,8 @@ use super::{catalog, flow, rfc3339, turkey};
 pub(crate) const SUMMARY_SELECT: &str = "select d.id, d.direction, d.year, d.number, d.kind, d.title, d.status,
         d.tenant_id, t.slug as tenant_slug, t.name as tenant_name, d.professional_id,
         u.display_name as professional_name, p.profession, d.assignee_id, d.assignee_name, d.round, d.site,
-        d.created_at, d.updated_at, d.sent_at, d.round_sent_at, d.due_on
+        d.created_at, d.updated_at, d.sent_at, d.round_sent_at, d.due_on, d.office_id,
+        kentos.dossier_office_name(d.id) as office_name
    from kentos.dossier d
    left join kentos.tenant t on t.id = d.tenant_id
    left join kentos.app_user u on u.id = d.professional_id
@@ -45,6 +46,8 @@ pub(crate) struct SummaryRow {
     pub sent_at: Option<OffsetDateTime>,
     pub round_sent_at: Option<OffsetDateTime>,
     pub due_on: Option<Date>,
+    pub office_id: Option<Uuid>,
+    pub office_name: Option<String>,
 }
 
 impl SummaryRow {
@@ -100,6 +103,8 @@ impl SummaryRow {
                 today,
             ),
             awaiting_me: side.is_some() && flow::waiting_for(direction, status) == side,
+            office_id: self.office_id.map(|o| o.to_string()),
+            office_name: self.office_name.clone(),
         }
     }
 }

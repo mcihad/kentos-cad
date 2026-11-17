@@ -225,7 +225,6 @@ Sıra ve ayrıntı [plan/bulut.md](../../plan/bulut.md)'dedir.
 
 **Teknik işler:**
 - Kayıtta hız sınırı.
-- Büro kurumunda meslektaşların ortak dosyası.
 - Canlı projeyi misafir düzenleyiciyle paylaşma seçeneği (ADR 0035), kopya yerine.
 - Resmî tatilde sürenin uzaması.
 - Gerçek zamanlı bildirim.
@@ -336,12 +335,35 @@ sunucusu, SMS sağlayıcısı) kurumun ayarıdır; kod hiçbirine bağlanmaz ve 
 - SMTP'ye doğrudan bağlanmak (bir kütüphaneyle) ve hazır SMS sağlayıcıları sahibin onayına kalır; `sendmail` ve
   `webhook` ikisini de bugün karşılar.
 
+## §18 Büronun ortak dosyası
+
+Plan BUL-14: başvuruyu yalnız bir kişi değil, büro yürütür. Kararlar:
+
+- **Sorumlu meslek mensubu kalır.** Dosyanın `professional_id`'si imzalayan, odası denetlenen kişidir; `office_id`
+  dosyayı bir büroyla (kategori `office` olan kurum) paylaşır. Belediye hâlâ o meslek mensubuyla muhatap; dosyada
+  büronun adını görür (`kentos.dossier_office_name`, yalnız dosyayı görene).
+- **Büroda rol yetkiyi söyler** (`Party::Colleague`): görüntüleyici okur; düzenleyici belge hazırlar, taslağı düzenler,
+  yazışır; proje yöneticisi ve üstü meslek mensubunun adımlarını atar (gönderir, geri çeker, üstlenir, teslim eder) ve
+  taslağı silebilir. Bu, kurumların "çalışmak düzenleyicinin, karar yöneticinin" kuralıyla aynıdır. Sorumlu meslek
+  mensubunun doğrulanmış olması büronun adımları için de şarttır.
+- **Paylaşımı yalnız sorumlu meslek mensubu yapar ya da kaldırır** (`PUT /v1/dossiers/{id}/office`), yalnız düzenleyici
+  ya da üstü olduğu bir büroyla; başvuru baştan büro adına da açılabilir. Paylaşım ve kaldırılışı zaman çizelgesine
+  geçer. Kaldırılınca büro dosyayı hemen göremez.
+- **Satır güvenliği tek yerden:** `kentos.dossier_side` büro üyesini de meslek mensubu tarafı sayar; bütün dosya, belge,
+  yazışma ve olay politikaları onu kullandığı için ayrı politika gerekmedi. Değiştirme ve taslak silme politikaları,
+  dosya numarası veren işlev ve meslek mensubunun kaydını görme kuralı büroyu tanıyacak biçimde yenilendi (göç 0047).
+- **Bildirim** sorumlu meslek mensubuna kendi alanında, büronun düzenleyici ve üstü üyelerine büronun alanında gider
+  (görüntüleyiciye gitmez); e-posta/SMS de buradan türer (§17).
+- **Büronun portal sayfaları:** genel bakış (sırası büroda olanlar), “Başvurular” ve “Aktarılan işler”; dosya sayfası
+  büro içinden açılır. `GET /v1/tenants/{büro}/dossiers` büronun paylaşılan dosyalarını verir.
+
 **Ölçümler (17 Kasım 2026):**
 
 | Ölçü | Değer |
 |---|---|
-| Açıklanan uç (bildirimlerle) | 122 işlem, 95 yol |
+| Açıklanan uç (bildirimler ve büro ile) | 123 işlem, 96 yol |
 | Bildirim (örnek veri, klasör aktarımıyla canlı sunucuda) | ilk tur 45 e-posta + 5 SMS dosyaya yazıldı, kalanlar sonraki turda |
+| Büro testi | düzenleyici hazırlar ama gönderemez, büronun yöneticisi gönderir; bildirim meslek mensubu + düzenleyici + yöneticiye, görüntüleyiciye değil; paylaşım kalkınca büro görmez |
 | Bildirim testleri | HMAC (RFC 4231 örneği), base64 ve RFC 2047; kanal kapalıyken 0 teslim; imzalı webhook, yeniden deneme ve bırakma; sendmail'e giden ileti |
 | Örnek çizimlerin resmi | Konut100m2: 110 nesne çizildi, 3 ölçü atlandı; konut-3-1: 320/14; yol-ornegi: 727/0 |
 | Yeni testler | erişim 2, bulut dosyaları (HTTP) 3, tarama 5, resim 3, portal +1, açıklama 3 |

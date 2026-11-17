@@ -4,7 +4,7 @@
 //! lists `lists.rs` (re-exported here).
 
 use kentos_contracts::{
-    ApplicationCreate, DossierDirection, DossierEdit, DossierSide, DossierSite, DossierStatus,
+    ApplicationCreate, DossierDirection, DossierEdit, DossierOfficeSet, DossierSide, DossierSite, DossierStatus,
     TenantRole, TransferCreate,
 };
 use kentos_postgres::{Db, Scope, rescope};
@@ -54,7 +54,7 @@ impl Held {
     /// Whether the caller takes steps at all: a member always (their role decides which), the professional once
     /// verified.
     pub fn may_act(&self) -> bool {
-        self.party != Party::Professional || self.professional_status.as_deref() == Some("verified")
+        matches!(self.party, Party::Member(_)) || self.professional_status.as_deref() == Some("verified")
     }
 }
 
@@ -71,19 +71,24 @@ pub(crate) async fn hold(
     lock: bool,
 ) -> AppResult<Held> {
     let sql = if lock {
-        "select kentos.dossier_side(d.id), kentos.member_role(d.tenant_id), d.tenant_id
+        "select kentos.dossier_side(d.id), kentos.member_role(d.tenant_id), d.tenant_id,
+                d.professional_id = kentos.current_user_id(), kentos.office_role(d.office_id)
            from kentos.dossier d where d.id = $1 for update of d"
     } else {
-        "select kentos.dossier_side(d.id), kentos.member_role(d.tenant_id), d.tenant_id
+        "select kentos.dossier_side(d.id), kentos.member_role(d.tenant_id), d.tenant_id,
+                d.professional_id = kentos.current_user_id(), kentos.office_role(d.office_id)
            from kentos.dossier d where d.id = $1"
     };
-    let found: Option<(Option<String>, Option<String>, Uuid)> = sqlx::query_as(sql)
-        .bind(id)
-        .fetch_optional(&mut **tx)
-        .await?;
-    let (side, role, tenant) = found.ok_or_else(missing)?;
+    type Found = (Option<String>, Option<String>, Uuid, Option<bool>, Option<String>);
+    let found: Option<Found> = sqlx::query_as(sql).bind(id).fetch_optional(&mut **tx).await?;
+    let (side, role, tenant, own, office_role) = found.ok_or_else(missing)?;
     let party = match (side.as_deref(), role.as_deref().and_then(role_from_db)) {
-        (Some("professional"), _) => Party::Professional,
+        // The responsible professional before a colleague: a professional of their own office is both.
+        (Some("professional"), _) if own == Some(true) => Party::Professional,
+        (Some("professional"), _) => match office_role.as_deref().and_then(role_from_db) {
+            Some(r) => Party::Colleague(r),
+            None => return Err(missing()),
+        },
         (Some("municipality"), Some(role)) => Party::Member(role),
         _ => return Err(missing()),
     };
@@ -241,11 +246,15 @@ pub async fn create_application(
             ),
         ));
     }
+    let office = match input.office_id.as_deref().map(str::trim).filter(|o| !o.is_empty()) {
+        Some(o) => Some(office_for(&mut tx, id_at("officeId", o)?).await?),
+        None => None,
+    };
     let id = Uuid::now_v7();
     sqlx::query(
         "insert into kentos.dossier (id, tenant_id, professional_id, direction, kind, title, description, site,
-                                     owner_name, status, created_by)
-         values ($1, $2, $3, 'application', $4, $5, $6, $7, $8, 'draft', $3)",
+                                     owner_name, status, created_by, office_id)
+         values ($1, $2, $3, 'application', $4, $5, $6, $7, $8, 'draft', $3, $9)",
     )
     .bind(id)
     .bind(tenant)
@@ -255,6 +264,7 @@ pub async fn create_application(
     .bind(&description)
     .bind(Json(&site))
     .bind(&owner_name)
+    .bind(office)
     .execute(&mut *tx)
     .await?;
     record(
@@ -269,6 +279,68 @@ pub async fn create_application(
     .await?;
     tx.commit().await?;
     Ok(id)
+}
+
+/// An office the caller may share a dossier with: one they are an editor of, or above (docs/adr/9000 §18).
+async fn office_for(tx: &mut Transaction<'static, Postgres>, office: Uuid) -> AppResult<Uuid> {
+    let rank: Option<i32> = sqlx::query_scalar("select kentos.role_rank(kentos.office_role($1))")
+        .bind(office)
+        .fetch_one(&mut **tx)
+        .await?;
+    if rank.unwrap_or(0) < 2 {
+        return Err(AppError::invalid_at(
+            "officeId",
+            "Dosyayı yalnız düzenleyici ya da daha üst rolle üyesi olduğunuz bir büroyla paylaşabilirsiniz.",
+        ));
+    }
+    Ok(office)
+}
+
+/// `PUT /v1/dossiers/{id}/office`: its responsible professional shares the dossier with an office of theirs, or takes it
+/// back; the timeline says so.
+pub async fn set_office(db: &Db, actor: &Actor, id: Uuid, input: &DossierOfficeSet) -> AppResult<()> {
+    let mut tx = db.scoped(user_scope(actor)).await?;
+    let held = hold(&mut tx, actor, id, true).await?;
+    if held.party != Party::Professional {
+        return Err(AppError::forbidden(
+            "Dosyayı bir büroyla yalnız sorumlu meslek mensubu paylaşır ya da paylaşımı kaldırır.",
+        ));
+    }
+    if flow::closed(held.status()) {
+        return Err(AppError::invalid("Kapanmış dosyanın paylaşımı değişmez."));
+    }
+    let office = match input.office_id.as_deref().map(str::trim).filter(|o| !o.is_empty()) {
+        Some(o) => Some(office_for(&mut tx, id_at("officeId", o)?).await?),
+        None => None,
+    };
+    if office == held.row.office_id {
+        tx.commit().await?;
+        return Ok(());
+    }
+    sqlx::query("update kentos.dossier set office_id = $2, updated_at = now() where id = $1")
+        .bind(id)
+        .bind(office)
+        .execute(&mut *tx)
+        .await?;
+    let name: Option<String> = match office {
+        Some(o) => sqlx::query_scalar("select name from kentos.tenant where id = $1")
+            .bind(o)
+            .fetch_optional(&mut *tx)
+            .await?,
+        None => None,
+    };
+    record(
+        &mut tx,
+        id,
+        actor,
+        DossierSide::Professional,
+        if office.is_some() { "office_shared" } else { "office_unshared" },
+        held.row.round(),
+        serde_json::json!({ "office": name.or(held.row.office_name.clone()) }),
+    )
+    .await?;
+    tx.commit().await?;
+    Ok(())
 }
 
 /// `POST /v1/tenants/{tenant}/dossiers`: a municipality's transfer to a verified professional, as a draft.

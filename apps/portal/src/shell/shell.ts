@@ -31,6 +31,12 @@ function navOf(c: Context): NavItem[] {
       const admin = c.org.role === 'owner' || c.org.role === 'admin';
       const municipality = c.org.category === 'municipality';
       const items: NavItem[] = [{ label: 'Genel bakış', href: base, icon: 'home', match: new RegExp(`^${base}$`) }];
+      if (c.org.category === 'office') {
+        items.push(
+          { label: 'Başvurular', href: `${base}/basvurular`, icon: 'inbox', match: new RegExp(`^${base}/(basvurular|dosya)`) },
+          { label: 'Aktarılan işler', href: `${base}/isler`, icon: 'send', match: new RegExp(`^${base}/isler`) },
+        );
+      }
       if (municipality) {
         items.push(
           { label: 'Gelen başvurular', href: `${base}/basvurular`, icon: 'inbox', match: new RegExp(`^${base}/(basvurular|dosya)`) },

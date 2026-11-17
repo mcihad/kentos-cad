@@ -4,9 +4,9 @@
 import { portal, professional } from '../../api/portal';
 import type { KindOption, MunicipalityCard } from '../../api/types';
 import { go } from '../../app/router';
-import { kinds, me } from '../../app/state';
+import { kinds, me, myOffices } from '../../app/state';
 import { h, replaceChildren } from '../../lib/dom';
-import { form, formError, grid, orNull, textareaField, textField, values } from '../../ui/forms';
+import { form, formError, grid, orNull, selectField, textareaField, textField, values } from '../../ui/forms';
 import { icon } from '../../ui/icons';
 import { button, notice, pageHeader, panel } from '../../ui/kit';
 import { toast } from '../../ui/toast';
@@ -59,6 +59,7 @@ export const proNewApplication: PageFn = async ({ query }) => {
   const preset = query.get('belediye');
   const open = municipalities.filter((m) => m.acceptsApplications);
   const first = open.find((m) => m.tenantId === preset) ?? open[0];
+  const offices = myOffices();
   const kindGrid = h('div', { class: 'choice-grid', dataset: { field: 'kind' } });
   const info = h('div');
   const drawInfo = (code: string | undefined) => replaceChildren(info, kindInfo(kinds('application').find((k) => k.code === code)));
@@ -91,7 +92,15 @@ export const proNewApplication: PageFn = async ({ query }) => {
           h('div', { class: 'span-2' }, textField({ label: 'Başlık', name: 'title', required: true, placeholder: 'Örnek: 412 ada 7 parsel konut yapı ruhsatı' })),
           h('div', { class: 'span-2' }, textareaField({ label: 'Açıklama', name: 'description', rows: 4, placeholder: 'Yapının niteliği, kat adedi, belediyenin bilmesi gerekenler…' })),
           textField({ label: 'Yapı sahibi', name: 'ownerName', hint: 'Yalnız ad soyad; kimlik numarası yazmayın.' }),
-          h('div'),
+          offices.length
+            ? selectField({
+                label: 'Kimin adına',
+                name: 'officeId',
+                value: '',
+                options: [{ value: '', label: 'Kendi adıma' }, ...offices.map((o) => ({ value: o.tenantId, label: `${o.tenantName} adına` }))],
+                hint: 'Büro adına açılan başvuruda büronun meslektaşları da çalışır; sorumlu meslek mensubu yine sizsiniz.',
+              })
+            : h('div'),
         ),
       ),
       h('div', { class: 'form-section' }, h('h3', null, 'Yer'), placeFields),
@@ -108,6 +117,7 @@ export const proNewApplication: PageFn = async ({ query }) => {
         description: v.description,
         ownerName: orNull(v.ownerName),
         site: { province: orNull(v.province), district: orNull(v.district), neighbourhood: orNull(v.neighbourhood), block: orNull(v.block), parcel: orNull(v.parcel), address: orNull(v.address) },
+        officeId: orNull(v.officeId),
       });
       toast('Başvuru taslağı açıldı. Şimdi projeyi ve belgeleri ekleyin.');
       go(`#/mesleki/dosya/${made.id}`);

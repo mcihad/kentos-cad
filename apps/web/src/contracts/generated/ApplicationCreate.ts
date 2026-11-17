@@ -4,4 +4,8 @@ import type { DossierSite } from "./DossierSite";
 /**
  * `POST /v1/me/dossiers`: a professional's new application, as a draft.
  */
-export type ApplicationCreate = { tenantId: string, kind: string, title: string, description: string, site: DossierSite, ownerName: string | null, };
+export type ApplicationCreate = { tenantId: string, kind: string, title: string, description: string, site: DossierSite, ownerName: string | null, 
+/**
+ * On behalf of an office the professional is an editor of (docs/adr/9000 §18): its colleagues share the dossier.
+ */
+officeId?: string | null, };

@@ -107,6 +107,7 @@ export const dossier = {
     upload<DossierFileView>(`/v1/dossiers/${id}/files${query({ name: file.name, docType, purpose })}`, file),
   fromProject: (id: string, tenantId: string, projectId: string, docType?: string) =>
     post<DossierFileView>(`/v1/dossiers/${id}/files/from-project`, { tenantId, projectId, docType: docType ?? null }),
+  setOffice: (id: string, officeId: string | null) => put<DossierDetail>(`/v1/dossiers/${id}/office`, { officeId }),
   fromUpload: (id: string, uploadId: string, docType: string | null, purpose: 'package' | 'attachment' = 'package') =>
     post<DossierFileView>(`/v1/dossiers/${id}/files/from-upload`, { uploadId, purpose, docType }),
   removeFile: (id: string, file: string) => del<void>(`/v1/dossiers/${id}/files/${file}`),

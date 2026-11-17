@@ -106,6 +106,7 @@ pub fn routes() -> Router<AppState> {
             post(dossiers::import),
         )
         .route("/v1/dossiers/{id}/files/from-upload", post(dossiers::from_upload))
+        .route("/v1/dossiers/{id}/office", put(dossiers::set_office))
         .route("/v1/dossiers/{id}/files/{file}/preview.svg", get(dossiers::preview))
 }
 

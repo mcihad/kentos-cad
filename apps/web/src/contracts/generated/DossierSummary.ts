@@ -21,4 +21,8 @@ dueOn: string | null, clock: LegalClock | null,
 /**
  * Whether it is waiting for the caller's side.
  */
-awaitingMe: boolean, };
+awaitingMe: boolean, 
+/**
+ * The office the professional shares it with (docs/adr/9000 §18), by id and name.
+ */
+officeId: string | null, officeName: string | null, };

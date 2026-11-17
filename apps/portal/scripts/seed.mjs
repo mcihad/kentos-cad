@@ -161,6 +161,17 @@ await ayse.login('ayse.yilmaz');
 await can.login('can.ozturk');
 // The architect wants SMS too (a made-up number of no operator).
 await ayse.req('PUT', '/v1/me/notification-settings', { email: true, sms: true, phone: '0500 000 00 01' });
+// Her own office (docs/adr/9000 §18): an editor who prepares the packages, a project manager who sends them.
+const yilmaz = await admin.req('POST', '/v1/platform/tenants', {
+  slug: 'yilmaz-mimarlik', name: 'Yılmaz Mimarlık', category: 'office', province: 'Örnek', district: 'Merkez', seats: 4,
+  owner: { userId: idOf('Ayşe Yılmaz'), login: null, password: null, displayName: null, email: null },
+});
+await ayse.req('POST', `/v1/tenants/${yilmaz.id}/members`, { login: 'selin.kara', password: PASSWORD, displayName: 'Selin Kara', email: 'selin.kara@yilmaz-mimarlik.test', role: 'editor' });
+await ayse.req('POST', `/v1/tenants/${yilmaz.id}/members`, { login: 'emre.tas', password: PASSWORD, displayName: 'Emre Taş', email: 'emre.tas@yilmaz-mimarlik.test', role: 'project_manager' });
+const selin = new Person('selin');
+await selin.login('selin.kara');
+const emre = new Person('emre');
+await emre.login('emre.tas');
 const zeynep = new Person('zeynep');
 await zeynep.login('zeynep.demir');
 const ali = new Person('ali');
@@ -235,6 +246,17 @@ const a5 = (await can.req('POST', '/v1/me/dossiers', {
 await can.upload(a5, 'roperli-kroki-322-5.pdf', pdf('Roperli kroki 322/5'), PDF, 'site_sketch');
 await can.act(a5, 'send');
 await ali.act(a5, 'reject', { note: 'Kroki parsel köşe koordinatlarını göstermiyor; yeniden hazırlayıp yeni başvuru yapın.' });
+
+// An application of Ayşe's office: Selin prepares the package, Emre (the office's project manager) sends it.
+const a6 = (await ayse.req('POST', '/v1/me/dossiers', {
+  tenantId: ornek.id, kind: 'architectural_project', title: '233 ada 4 parsel ticaret binası mimari projesi',
+  description: 'Zemin ve iki normal katlı ticaret binası; otopark bodrum katta.', site: site('Yeni Mahalle', '233', '4', 'Çarşı Caddesi No: 18'),
+  ownerName: 'Kaan Yıldız', officeId: yilmaz.id,
+})).id;
+await selin.upload(a6, 'mimari-proje.pdf', pdf('Mimari proje', ['233 ada 4 parsel', 'Ticaret binasi']), PDF, 'architectural');
+await selin.upload(a6, 'tapu.pdf', pdf('Tapu'), PDF, 'title_deed');
+await emre.act(a6, 'send', { note: 'Büromuz adına gönderilmiştir; sorumlu mimar Ayşe Yılmaz.' });
+await zeynep.act(a6, 'start_review');
 
 // ── Transfers ────────────────────────────────────────────────────────
 // A survey: the municipality's project and documents sent, taken on, opened as a project, delivered; waits for approval.
@@ -379,4 +401,4 @@ for (const [name, bytes] of [
   }
 }
 
-console.log(JSON.stringify({ ornek: ornek.id, yesilvadi: yesilvadi.id, a1, a2, a3, a4, a5, t1, t2, t3, orgProject: orgProject.id }));
+console.log(JSON.stringify({ ornek: ornek.id, yesilvadi: yesilvadi.id, a1, a2, a3, a4, a5, a6, t1, t2, t3, orgProject: orgProject.id }));

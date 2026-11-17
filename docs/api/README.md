@@ -199,6 +199,9 @@ CAD görünümü olmayan telefon, web sayfası ve ajan için.
   bu arada başkası davranmıştır, ayrıntı yeniden okunur.
 - Yasal süreler (İmar Kanunu m.22 ve m.30) ayrıntıda gün olarak gelir.
 - Yazışma: `POST /v1/dossiers/{id}/messages`. Bildirimler: `GET /v1/me/notifications`.
+- **Büro:** sorumlu meslek mensubu dosyayı bürosuyla paylaşır (`PUT /v1/dossiers/{id}/office {"officeId": "…"}`) ya da
+  başvuruyu baştan büro adına açar (`officeId`). Büroda düzenleyici belge hazırlar ve yazışır, proje yöneticisi gönderir
+  ve teslim eder; büronun listesi `GET /v1/tenants/{büro}/dossiers`.
 
 ## 8. Bildirimler: zil, e-posta, SMS
 

@@ -81,3 +81,9 @@ export function roleLabel(role: string): string {
 export function categoryLabel(category: string): string {
   return ({ municipality: 'Belediye', office: 'Büro', other: 'Kurum' } as Record<string, string>)[category] ?? category;
 }
+
+/** The offices the person may share a dossier with or apply for (docs/adr/9000 §18): an editor and above, usable now. */
+export function myOffices(): PortalMembership[] {
+  const rank: Record<string, number> = { viewer: 1, editor: 2, project_manager: 3, admin: 4, owner: 5 };
+  return (me.value?.organizations ?? []).filter((o) => o.category === 'office' && o.usable && (rank[o.role] ?? 0) >= 2);
+}

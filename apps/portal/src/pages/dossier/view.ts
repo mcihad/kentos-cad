@@ -4,11 +4,12 @@
 import { dossier as api } from '../../api/portal';
 import type { DossierDetail } from '../../api/types';
 import { withQuery } from '../../app/router';
-import { chamberOf, professionLabel, professionalStatus } from '../../app/state';
+import { chamberOf, myOffices, professionLabel, professionalStatus } from '../../app/state';
 import { type Child, h } from '../../lib/dom';
 import { day, daysLeft, initials, moment } from '../../lib/format';
 import { icon } from '../../ui/icons';
 import { avatar, badge, button, facts, notice, panel, statusBadge, tabs } from '../../ui/kit';
+import { toast } from '../../ui/toast';
 import type { PageFn } from '../page';
 import { actionButtons, deleteDraft, editDossier } from './actions';
 import { packagesPanel } from './files';
@@ -147,6 +148,44 @@ function checklistPanel(d: DossierDetail): HTMLElement | null {
   );
 }
 
+/** The office the dossier is shared with (docs/adr/9000 §18), and for its professional the way to share or take back. */
+function officePanel(d: DossierDetail, reload: () => void): HTMLElement | null {
+  const s = d.summary;
+  const offices = myOffices();
+  if (!s.officeName && !(d.canShareWithOffice && offices.length)) return null;
+  const say = async (officeId: string | null) => {
+    try {
+      await api.setOffice(s.id, officeId);
+      toast(officeId ? 'Dosya büroyla paylaşıldı.' : 'Büro paylaşımı kaldırıldı.');
+      reload();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : String(e), 'danger');
+    }
+  };
+  if (s.officeName) {
+    return panel(
+      'Büro',
+      h(
+        'div',
+        { class: 'stack', style: 'gap: 10px' },
+        h('div', { class: 'party' }, h('span', { class: 'kind-icon' }, icon('building', 18)), h('div', { class: 'party-text' }, h('span', { class: 'party-name' }, s.officeName), h('span', { class: 'party-sub' }, `${s.professionalName} adına; büronun meslektaşları da çalışır`))),
+        d.canShareWithOffice ? h('div', null, button('Paylaşımı kaldır', { kind: 'ghost', icon: 'close', onClick: () => void say(null) })) : null,
+      ),
+    );
+  }
+  const select = h('select', { class: 'input', 'aria-label': 'Paylaşılacak büro' }, ...offices.map((o) => h('option', { value: o.tenantId }, o.tenantName)));
+  return panel(
+    'Büro',
+    h(
+      'div',
+      { class: 'stack', style: 'gap: 10px' },
+      h('div', { class: 'field-hint' }, 'Dosyayı büronuzla paylaşın: düzenleyiciler belge hazırlar ve yazışır, proje yöneticileri gönderir; sorumlu meslek mensubu yine sizsiniz.'),
+      select,
+      h('div', null, button('Büroyla paylaş', { icon: 'users', onClick: () => void say(select.value) })),
+    ),
+  );
+}
+
 function partyPanel(d: DossierDetail): HTMLElement {
   if (d.side === 'municipality' && d.professional) {
     const p = d.professional;
@@ -210,14 +249,19 @@ function notices(d: DossierDetail): HTMLElement[] {
   return out;
 }
 
-export function dossierPage(reader: Reader): PageFn {
+export function dossierPage(reader: Reader | 'office'): PageFn {
   return async ({ params, query, reload }) => {
     const d = await api.get(params.id);
     const s = d.summary;
     const application = s.direction === 'application';
-    const base = reader === 'municipality' ? `#/kurum/${params.slug}` : '#/mesleki';
+    const office = reader === 'office';
+    const base = reader === 'professional' ? '#/mesleki' : `#/kurum/${params.slug}`;
     const listHref = reader === 'municipality' ? `${base}/${application ? 'basvurular' : 'aktarimlar'}` : `${base}/${application ? 'basvurular' : 'isler'}`;
-    const listLabel = reader === 'municipality' ? (application ? 'Gelen başvurular' : 'Proje aktarımları') : application ? 'Başvurularım' : 'Aktarılan işler';
+    const listLabel = reader === 'municipality'
+      ? (application ? 'Gelen başvurular' : 'Proje aktarımları')
+      : office
+        ? (application ? 'Büronun başvuruları' : 'Büroya aktarılan işler')
+        : application ? 'Başvurularım' : 'Aktarılan işler';
     const tab = query.get('sekme') ?? 'paket';
     const extra: HTMLElement[] = [];
     if (d.canEdit) extra.push(button('Bilgileri düzenle', { kind: 'ghost', icon: 'settings', onClick: () => editDossier(d, reload) }));
@@ -238,6 +282,7 @@ export function dossierPage(reader: Reader): PageFn {
           { class: 'dossier-meta' },
           statusBadge(s.status, s.statusLabel),
           h('span', { class: 'meta' }, icon(reader === 'municipality' ? 'badge' : 'building', 15), counterpart),
+          s.officeName ? h('span', { class: 'meta' }, icon('users', 15), `${s.officeName} bürosu`) : null,
           site ? h('span', { class: 'meta' }, icon('pin', 15), site) : null,
           h('span', { class: 'meta' }, icon('clock', 15), `Son değişiklik ${moment(s.updatedAt)}`),
         ),
@@ -268,13 +313,15 @@ export function dossierPage(reader: Reader): PageFn {
           ),
           body,
         ),
-        h('aside', { class: 'dossier-side' }, statusPanel(d), checklistPanel(d), factsPanel(d), partyPanel(d)),
+        h('aside', { class: 'dossier-side' }, statusPanel(d), checklistPanel(d), officePanel(d, reload), factsPanel(d), partyPanel(d)),
       ),
     );
     const crumbs =
       reader === 'municipality'
         ? [{ label: d.organization.name, href: base }, { label: listLabel, href: listHref }, { label: s.number ?? 'Taslak' }]
-        : [{ label: 'Meslek mensubu', href: base }, { label: listLabel, href: listHref }, { label: s.number ?? 'Taslak' }];
+        : office
+          ? [{ label: s.officeName ?? 'Büro', href: base }, { label: listLabel, href: listHref }, { label: s.number ?? 'Taslak' }]
+          : [{ label: 'Meslek mensubu', href: base }, { label: listLabel, href: listHref }, { label: s.number ?? 'Taslak' }];
     return { crumbs, body: page, nav: listHref };
   };
 }
