@@ -238,6 +238,13 @@
       istisnası "Uzman onayı" diye görünür, bulgu değişince düşer; katla ilgili bulgu katın mahallerini adlandırır.
     - Kaçış yolu kapıları (K65, §8): BYKHY 47/2 kalabalık mekânın (Ek-5/A ile 50'yi aşan) kapısı kanadıyla dışarı açılır;
       47/3 kaçış merdiveni ve güvenlik holü kapısının beyan edilen sınıfı (TS EN 13501-2) 60/90 dakika, S ve C ister.
+  - **Emsalin 22. madde sınırları (17 Kasım 2026; [ADR 8079](../adr/8079-emsal-article-22-limits.md), K66–K69):**
+    - Sınırlar alan hesabında (K66): toprak altındaki katta (üstü binasının ±0,00'ında ya da altında) bölümün depo
+      eklentisi bölüm net alanının %50'si, kapıcı daireleri toplam 70 m², kütüphane 50 m²; aşan kısım emsale girer,
+      tabloda kendi satırı, IFC zonunun açıklamasında payı.
+    - Binanın bütününe bağlı koşullar paketin (K67): kapıcı dairesinin 44/1 zorunluluğu (ısıtma bilinmezse eksik veri),
+      kütüphanenin 22/1-f koşulları (ortak merdiven ve dış erişim uzman incelemesi). Olgular `building.limits`'te.
+    - Merdiven evi emsal harici (K68, 22/1-l); Metrekare cetveli aracı katları ara toplamıyla kapatır (K69).
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

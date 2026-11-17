@@ -1,0 +1,2349 @@
+{
+  "format": "kentos.regulationCases",
+  "version": 1,
+  "about": "Emsal sınırlarının bağımsız durumları (docs/adr/8079): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 22/1-ç, -f, -k, -l ve 44/1'in metninden (RG 25.7.2019/30842, 23.1.2021/31373, 11.7.2021/31538; 44/1 RG 3.7.2017/30113) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un sayımıdır (building.limits): durumlar sınırların koşullarını sınar, sayımın kendisini Rust'ın sınamaları sınar.",
+  "cases": [
+    {
+      "id": "kapici-70-konut",
+      "neden": "70 konut bölümü: 44/1-a (katı yakıt, 40'tan fazla konut) ve 44/1-b (öbür ısıtma, 60'tan fazla bağımsız bölüm) ikisinde de kapıcı dairesi zorunlu → 22/1-ç'nin 70 m²'si emsal harici, geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 70,
+        "dwellings": 70,
+        "limits": [
+          {
+            "limit": "caretaker",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "area": 60.0,
+            "allowed": 70.0,
+            "over": 0.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "passed",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kapici-45-konut-62-bolum",
+      "neden": "45 konut bölümü 40'tan fazla (44/1-a), 62 bağımsız bölüm 60'tan fazla (44/1-b): her ısıtmada zorunlu, geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 62,
+        "dwellings": 45,
+        "limits": [
+          {
+            "limit": "caretaker",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "area": 55.0,
+            "allowed": 70.0,
+            "over": 0.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "passed",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kapici-61-konut",
+      "neden": "61 konut bölümü 60'tan fazla: sınırın bir üstü, geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 61,
+        "dwellings": 61,
+        "limits": [
+          {
+            "limit": "caretaker",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "area": 52.0,
+            "allowed": 70.0,
+            "over": 0.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "passed",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kapici-80m2",
+      "neden": "Zorunlu kapıcı dairesi 80 m²: 70 m²'si dışarıda, 10 m² emsale girer (tablonun sayımı); koşul tutuyor, geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 90,
+        "dwellings": 90,
+        "limits": [
+          {
+            "limit": "caretaker",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "area": 80.0,
+            "allowed": 70.0,
+            "over": 10.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "passed",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kapici-30-konut",
+      "neden": "30 konut bölümü, 30 bağımsız bölüm: ne 44/1-a'nın 40'ı ne 44/1-b'nin 60'ı aşılıyor; zorunlu olmayan kapıcı dairesi emsal harici sayılamaz → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 30,
+        "dwellings": 30,
+        "limits": [
+          {
+            "limit": "caretaker",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "area": 55.0,
+            "allowed": 70.0,
+            "over": 0.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_caretaker_not_required",
+            "has": [
+              "zorunlu değil",
+              "30 konut bölümü",
+              "PAİY 22/1-ç"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "failed",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kapici-40-konut-sinir",
+      "neden": "40 konut bölümü 40'tan fazla değil (44/1-a 'fazla' der), 40 bağımsız bölüm 60'tan az → zorunlu değil, kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 40,
+        "dwellings": 40,
+        "limits": [
+          {
+            "limit": "caretaker",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "area": 50.0,
+            "allowed": 70.0,
+            "over": 0.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_caretaker_not_required",
+            "has": [
+              "zorunlu değil",
+              "40 konut bölümü"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "failed",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kapici-konut-yok",
+      "neden": "50 bağımsız bölümün hiçbiri konut değil (büro binası): 44/1 konut kullanımlı binada kapıcı dairesi ister → zorunlu değil, kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 50,
+        "dwellings": 0,
+        "limits": [
+          {
+            "limit": "caretaker",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "area": 50.0,
+            "allowed": 70.0,
+            "over": 0.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_caretaker_not_required",
+            "has": [
+              "konut bölümü yok"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "failed",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kapici-50-konut-isitma",
+      "neden": "50 konut bölümü, 50 bağımsız bölüm: katı yakıtlıysa 44/1-a'ya göre zorunlu, öbür ısıtmada 44/1-b'nin 60'ı aşılmıyor; çizim ısıtmayı söylemiyor → eksik veri.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 50,
+        "dwellings": 50,
+        "limits": [
+          {
+            "limit": "caretaker",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "area": 55.0,
+            "allowed": 70.0,
+            "over": 0.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_caretaker_not_required",
+            "state": "missingData",
+            "has": [
+              "katı yakıtlıysa zorunlu",
+              "ısıtma"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "missingData",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kapici-41-konut-60-bolum",
+      "neden": "41 konut bölümü 40'tan fazla (katı yakıtta zorunlu), 60 bağımsız bölüm 60'tan fazla değil (öbür ısıtmada değil) → eksik veri.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 60,
+        "dwellings": 41,
+        "limits": [
+          {
+            "limit": "caretaker",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "area": 55.0,
+            "allowed": 70.0,
+            "over": 0.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_caretaker_not_required",
+            "state": "missingData",
+            "has": [
+              "katı yakıtlıysa zorunlu"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "missingData",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kapici-35-konut-70-bolum",
+      "neden": "35 konut bölümü 40'ı geçmiyor (katı yakıtta zorunlu değil), 70 bağımsız bölümlü konut kullanımlı bina 60'ı geçiyor (öbür ısıtmada zorunlu) → eksik veri.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 70,
+        "dwellings": 35,
+        "limits": [
+          {
+            "limit": "caretaker",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "area": 55.0,
+            "allowed": 70.0,
+            "over": 0.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_caretaker_not_required",
+            "state": "missingData",
+            "has": [
+              "katı yakıtlı değilse zorunlu"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "missingData",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kapici-tarihsiz",
+      "neden": "Başvuru tarihi yok; 22/1-ç'nin kural setindeki tek hâli (25.7.2019) her aday günde aynı sonucu verir: 30 konut bölümünde zorunlu değil → kalır.",
+      "permit": {
+        "particulars": {}
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 30,
+        "dwellings": 30,
+        "limits": [
+          {
+            "limit": "caretaker",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "area": 55.0,
+            "allowed": 70.0,
+            "over": 0.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_caretaker_not_required",
+            "has": [
+              "zorunlu değil"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "failed",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kapici-2018-basvuru",
+      "neden": "Başvuru 1.6.2018: 22/1-ç'nin o günkü metni (her bir kapıcı dairesinin 75 m²'si) kural setinde yok → uzman incelemesi; öbür maddelerin o günde hâli de yok, kullanımları da yok: satırları yok.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "01.06.2018"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 70,
+        "dwellings": 70,
+        "limits": [
+          {
+            "limit": "caretaker",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "area": 60.0,
+            "allowed": 70.0,
+            "over": 0.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "regulation_text_unknown",
+            "state": "expertReview",
+            "has": [
+              "1.6.2018",
+              "22/1-ç",
+              "25.7.2019"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "expertReview",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "id": "kutuphane-45-bolum",
+      "neden": "45 bağımsız bölüm (40'tan fazla), 1. kat normal kat, ortak alan: ölçülebilen koşullar tutuyor; ortak merdivenle bağlantı ve dışarıdan erişim çizimden okunmuyor → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 45,
+        "dwellings": 45,
+        "limits": [
+          {
+            "limit": "library",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ],
+            "area": 30.0,
+            "allowed": 50.0,
+            "over": 0.0,
+            "common": true
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_library_not_exempt",
+            "state": "expertReview",
+            "has": [
+              "ortak merdiveniyle",
+              "PAİY 22/1-f"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "expertReview",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kutuphane-avm",
+      "neden": "Bina alışveriş merkezi (20 bağımsız bölüm): 22/1-f alışveriş merkezini 40 bölüm şartı olmadan sayar; normal kat, ortak alan → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          }
+        ],
+        "units": 20,
+        "dwellings": 0,
+        "limits": [
+          {
+            "limit": "library",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ],
+            "area": 30.0,
+            "allowed": 50.0,
+            "over": 0.0,
+            "common": true
+          }
+        ],
+        "uses": [
+          "Alışveriş merkezi"
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_library_not_exempt",
+            "state": "expertReview",
+            "has": [
+              "alışveriş merkezi"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "expertReview",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kutuphane-20-bolum",
+      "neden": "20 bağımsız bölümlü konut binası, alışveriş merkezi değil: 22/1-f'nin 'alışveriş merkezlerinde ve 40'tan fazla bağımsız bölümü bulunan binalarda' koşulu tutmuyor → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 20,
+        "dwellings": 20,
+        "limits": [
+          {
+            "limit": "library",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ],
+            "area": 30.0,
+            "allowed": 50.0,
+            "over": 0.0,
+            "common": true
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_library_not_exempt",
+            "has": [
+              "40'tan fazla değil",
+              "PAİY 22/1-f"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "failed",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kutuphane-zemin",
+      "neden": "Kütüphane zemin katta: 22/1-f 'normal katlarında' der; 4/1-ııı zemini normal kat saymaz → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 45,
+        "dwellings": 45,
+        "limits": [
+          {
+            "limit": "library",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ],
+            "area": 30.0,
+            "allowed": 50.0,
+            "over": 0.0,
+            "common": true
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_library_not_exempt",
+            "has": [
+              "Zemin kat",
+              "normal kat değil"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "failed",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kutuphane-bodrum",
+      "neden": "Kütüphane bodrum katta: normal kat değil → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 45,
+        "dwellings": 45,
+        "limits": [
+          {
+            "limit": "library",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ],
+            "area": 30.0,
+            "allowed": 50.0,
+            "over": 0.0,
+            "common": true
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_library_not_exempt",
+            "has": [
+              "Bodrum kat",
+              "normal kat değil"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "failed",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kutuphane-ortak-degil",
+      "neden": "Kütüphane bir bağımsız bölümün mahali: 22/1-f 'ortak alan niteliğinde' der → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 45,
+        "dwellings": 45,
+        "limits": [
+          {
+            "limit": "library",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ],
+            "area": 30.0,
+            "allowed": 50.0,
+            "over": 0.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_library_not_exempt",
+            "has": [
+              "ortak alan değil"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "failed",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kutuphane-iki-kosul",
+      "neden": "20 bağımsız bölüm ve zemin kat: iki koşul birden tutmuyor, ikisi de söylenir → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ]
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 20,
+        "dwellings": 20,
+        "limits": [
+          {
+            "limit": "library",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ],
+            "area": 30.0,
+            "allowed": 50.0,
+            "over": 0.0,
+            "common": true
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_library_not_exempt",
+            "has": [
+              "40'tan fazla değil",
+              "normal kat değil"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "failed",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "depo-ve-balkon-icinde",
+      "neden": "Bir bölümün toprak altındaki depo eklentisi 10 m², sınırı bölüm net alanının %50'si 25 m²; balkonu 4 m², sınırı %20'si 10 m²: ikisi de sınır içinde; bulgusu yok, satırları geçti.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 4,
+        "dwellings": 4,
+        "limits": [
+          {
+            "limit": "balcony",
+            "unit": "d1",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000004"
+            ],
+            "area": 4.0,
+            "allowed": 10.0,
+            "over": 0.0
+          },
+          {
+            "limit": "storage",
+            "unit": "d1",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000003"
+            ],
+            "area": 10.0,
+            "allowed": 25.0,
+            "over": 0.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "passed",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "passed",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "depo-ve-balkon-asan",
+      "neden": "Depo eklentisi 28.2 m² (sınırı 25 m²: 3.2 m² emsale girer), balkon 7.5 m² (sınırı 5.1425 m²: 2.3575 m² girer): tablonun sayımı; koşul yok, bulgusu yok.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 4,
+        "dwellings": 4,
+        "limits": [
+          {
+            "limit": "balcony",
+            "unit": "d1",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000004"
+            ],
+            "area": 7.5,
+            "allowed": 5.1425,
+            "over": 2.3575
+          },
+          {
+            "limit": "storage",
+            "unit": "d1",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000003"
+            ],
+            "area": 28.2,
+            "allowed": 25.0,
+            "over": 3.2
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "passed",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "passed",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "hicbiri",
+      "neden": "Sınırlı kullanım yok: dört madde kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "limits": []
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ]
+        }
+      }
+    },
+    {
+      "id": "balkon-2020-basvuru",
+      "neden": "Başvuru 1.6.2020: 22/1-l'nin kural setindeki ilk hâli 11.7.2021 (önceki payı iki kaynak farklı okuyor) → balkon için uzman incelemesi; 22/1-ç ve 22/1-k'nin 25.7.2019 hâlleri yürürlükte, kullanımları yok: kapsam dışı; 22/1-f'nin hâli o gün yok, kullanımı da yok: satırı yok.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "01.06.2020"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 4,
+        "dwellings": 4,
+        "limits": [
+          {
+            "limit": "balcony",
+            "unit": "d1",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000004"
+            ],
+            "area": 4.0,
+            "allowed": 10.0,
+            "over": 0.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "regulation_text_unknown",
+            "state": "expertReview",
+            "has": [
+              "1.6.2020",
+              "22/1-l",
+              "11.7.2021"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "expertReview",
+            null
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -441,7 +441,9 @@ pub struct ArchAuditFinding {
     /// `paiy_railing_missing`, `paiy_ramp_steep`, `paiy_window_railing`, `paiy_lightwell_small`, `paiy_air_shaft_small`,
     /// `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict` (docs/adr/8034); the standards
     /// package's (docs/adr/8078: a host that runs Python lists them) `paiy_elevator_missing` and
-    /// `paiy_elevator_not_serving` by the application date's version, `regulation_date_needed` (eksik veri) and
+    /// `paiy_elevator_not_serving` by the application date's version, the escape route doors' `bykhy_exit_door_swing`
+    /// and `bykhy_stair_door_rating` (docs/adr/8078 §8), the emsal limits' conditions `paiy_caretaker_not_required` and
+    /// `paiy_library_not_exempt` (docs/adr/8079), `regulation_date_needed` (eksik veri) and
     /// `regulation_text_unknown` (uzman incelemesi); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
     /// `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/8035); `parking_short`,
     /// `shelter_short`, `shelter_exit_count`, `shelter_height_low` (docs/adr/8036); `paiy_sections_missing`,

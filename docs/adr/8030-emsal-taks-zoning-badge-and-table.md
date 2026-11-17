@@ -100,6 +100,8 @@ Tarih: 2026-11-08. Durum: kabul (M30, ADV-22; plan S22).
 - Mahal başına emsal sınıfı (aynı kullanımın bir odası dahil, öbürü harici).
 - 22. maddenin öbür sınırları: açık balkon ve çıkmaların katlar alanının %20'si, depoların bağımsız bölüm net alanının
   %50'si, kapıcı dairesinin 70 m²'si.
+  (Yapıldı: balkonların bölüm net alanının %20'si [ADR 8069](8069-room-zone-far-model.md); depo eklentisi %50, kapıcı
+  daireleri 70 m², kütüphane 50 m² ve merdiven evi [ADR 8079](8079-emsal-article-22-limits.md).)
 - Emsal verilmeyen parselde katlar alanı = TAKS × kat adedi (21/4); KAKS verilip TAKS verilmeyende TAKS ≤ %60 (5/6).
 - Birden çok bina (57/3: her binanın ve hepsinin emsale konu alanı), bodrum katların taban alanına katılması (4/cccc).
 - Vaziyet planı (M32): parsel çizimi ve bahçe mesafeleri.

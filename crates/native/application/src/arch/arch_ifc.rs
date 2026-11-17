@@ -56,10 +56,12 @@ fn fixtures(doc: &Document) -> Vec<kentos_ifc::arch::Fixture> {
 }
 
 /// Each storey's emsal areas (docs/adr/8069): the rooms as the ratios count them (`zoning_rooms`), by storey and by how
-/// they count, their contours together; an arc of a contour as its chord. The part of a storey's balconies past their
-/// units' 20 % goes with its counted-in area.
+/// they count, their contours together; an arc of a contour as its chord. The part of a storey's limited uses past their
+/// limits (balconies past their units' 20 %; storage annexes, caretaker flats and the library, docs/adr/8079) goes with
+/// its counted-in area, or, on a storey with none, with its area counted out.
 fn emsal_areas(doc: &Document) -> Vec<kentos_ifc::arch::EmsalArea> {
     use kentos_commands::EmsalCount;
+    use kentos_domain::zoning::ZoningLimit;
     let rooms = doc.zoning_rooms();
     let mut keys: Vec<(Option<String>, u8)> = Vec::new();
     let rank = |c: EmsalCount| match c {
@@ -84,12 +86,25 @@ fn emsal_areas(doc: &Document) -> Vec<kentos_ifc::arch::EmsalArea> {
             let union = kentos_geometry_core::geom::region::union_areas(&shapes);
             let ring = |r: &kentos_geometry_core::geom::arrangement::Ring| r.pts.iter().map(|p| [p.x, p.y]).collect::<Vec<[f64; 2]>>();
             let rings = union.iter().flat_map(|a| std::iter::once(ring(&a.outer)).chain(a.holes.iter().map(ring))).collect();
-            let moved = if count == EmsalCount::Included {
-                rooms.iter().filter(|r| r.level == level).map(|r| r.moved).sum()
-            } else {
-                0.0
+            let holds = count == EmsalCount::Included
+                || (count == EmsalCount::Exempt
+                    && !rooms.iter().any(|r| r.level == level && r.count == EmsalCount::Included));
+            let part = |limit: ZoningLimit| -> f64 {
+                if holds {
+                    rooms.iter().filter(|r| r.level == level && r.limit == Some(limit)).map(|r| r.moved).sum()
+                } else {
+                    0.0
+                }
             };
-            kentos_ifc::arch::EmsalArea { level, count, rings, moved }
+            kentos_ifc::arch::EmsalArea {
+                moved: part(ZoningLimit::Balcony),
+                storage: part(ZoningLimit::Storage),
+                caretaker: part(ZoningLimit::Caretaker),
+                library: part(ZoningLimit::Library),
+                level,
+                count,
+                rings,
+            }
         })
         .collect()
 }

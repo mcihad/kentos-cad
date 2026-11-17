@@ -20,9 +20,21 @@
 //!
 //! - **Balconies** (22/1-l, docs/adr/8069): an independent unit's open balconies (an outdoor room named or used as a
 //!   balcony, of a unit) are out up to 20 % of its net area; what passes counts in.
+//! - **The stair hall** (22/1-l, docs/adr/8079): a room named or used as a stair (not the room under one) that is no
+//!   independent unit's own is out within the 30 %, its landings with it.
+//! - **Caretaker flats** (22/1-ç, docs/adr/8079): a room named or used as Kapıcı, or of a program group named or of
+//!   the nature Kapıcı, is out; together at most 70 m², what passes counts in.
+//! - **Storage annexes** (22/1-k): a room of an annex group of a unit, named or used as a store or of the nature Depo,
+//!   on a storey under the ground (its top at or below its building's ±0.00, where the model's graded ground lies) is
+//!   out up to 50 % of its unit's net area; what passes counts in. Elsewhere a store counts in.
+//! - **The library** (22/1-f): the rooms named or used as Kütüphane together at most 50 m²; what passes counts in.
 //!
-//! A ratio is the drawing's measure, not an approval; the plan's own notes and the regulation's other limits (the
-//! storage's 50 %, the caretaker's 70 m²) are the next step.
+//! Each limit's excess is shared among its rooms by their areas (the artığı rastgele son mahale verilmez, as for the
+//! balconies). The conditions on the building as a whole (whether a caretaker flat is obligatory, 44/1; the library's
+//! forty units) are the standards package's (catalog/standards/mimari-mevzuat, bim-plan K10), on the limits' facts.
+//!
+//! A ratio is the drawing's measure, not an approval; the plan's own notes and 22/1-j's basement rooms are the next
+//! step.
 
 use kentos_contracts::{
     ArchLevel, AreaUnit, BuildingProgram, CellRange, CellStyle, EmsalCount, Entity, SpaceMethod, TableAlign, Zoning,
@@ -32,7 +44,13 @@ use kentos_geometry_core::geom::region;
 
 use crate::Document;
 use crate::arch_values::core_areas;
+use crate::room_names;
 use crate::space_follow::SpaceSearch;
+
+mod limits;
+
+use limits::{buried_levels, names, says_balcony};
+pub use limits::{BALCONY_SHARE, CARETAKER_AREA, LIBRARY_AREA, STORAGE_SHARE, ZoningLimit, ZoningLimitUse};
 
 /// The drawing's floor area ratio and coverage against the parcel's zoning, m² and ratios.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -63,13 +81,22 @@ pub struct ZoningReport {
     pub footprint_shape: Vec<Area>,
     /// The independent units' balconies past 20 % of their net areas (22/1-l, docs/adr/8069), counted in `included`.
     pub balcony_over: f64,
+    /// The caretaker flats past 70 m² together (22/1-ç, docs/adr/8079), counted in `included`.
+    pub caretaker_over: f64,
+    /// The units' storage annexes under the ground past 50 % of their net areas (22/1-k), counted in `included`.
+    pub storage_over: f64,
+    /// The library rooms past 50 m² together (22/1-f), counted in `included`.
+    pub library_over: f64,
+    /// Each limited use counted out (docs/adr/8079): a unit's balconies, its storage annexes, the caretaker flats, the
+    /// library; in that order, a unit's by the program's order of its units.
+    pub limits: Vec<ZoningLimitUse>,
     /// Each room as the ratios count it (docs/adr/8069: the model's emsal zones are made of them), in the drawing's
     /// order; voids left out.
     pub rooms: Vec<ZoningRoom>,
 }
 
-/// A room as the ratios count it: its persistent id, its storey, how it counts, its contour's area and shape, and the
-/// part of it a balcony's 20 % moved into katlar alanı.
+/// A room as the ratios count it: its persistent id, its storey, how it counts, its contour's area and shape, the limit
+/// of 22/1 it is counted out under, and the part of it past that limit, moved into katlar alanı.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ZoningRoom {
     pub uid: String,
@@ -77,12 +104,10 @@ pub struct ZoningRoom {
     pub count: EmsalCount,
     pub gross: f64,
     pub moved: f64,
+    pub limit: Option<ZoningLimit>,
     pub shape: Vec<Area>,
 }
 
-/// The share of an independent unit's net area its open balconies may take out of katlar alanı (PAİY 22/1-l, as amended
-/// RG 11/7/2021-31538).
-pub const BALCONY_SHARE: f64 = 0.20;
 
 /// One storey's rooms as the ratios count them, m².
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -172,21 +197,15 @@ struct Room {
     unit: Option<String>,
     /// An outdoor room that is a balcony by its name or use (22/1-l), not a terrace.
     balcony: bool,
+    /// An indoor room of a caretaker flat (22/1-ç): its name or use says Kapıcı, or its group's name or nature does.
+    caretaker: bool,
+    /// An indoor library room (22/1-f): its name or use says Kütüphane.
+    library: bool,
+    /// An indoor storage annex's room on a storey under the ground (22/1-k): the independent unit its annex group is
+    /// allocated to.
+    storage_of: Option<String>,
     /// Its net area, between its walls' faces (PAİY 4/1-ğ-3).
     net: f64,
-}
-
-/// Whether `name` or `usage` says a balcony, Turkish letters folded.
-fn says_balcony(name: Option<&str>, usage: Option<&str>) -> bool {
-    [name, usage].into_iter().flatten().any(|t| {
-        t.chars()
-            .map(|c| match c {
-                'ı' | 'I' | 'İ' | 'i' => 'i',
-                c => c.to_lowercase().next().unwrap_or(c),
-            })
-            .collect::<String>()
-            .contains("balkon")
-    })
 }
 
 fn measured(
@@ -243,6 +262,7 @@ impl Document {
         let empty = kentos_contracts::ArchSettings::default();
         let arch = self.settings().arch.as_ref().unwrap_or(&empty);
         let program = &arch.program;
+        let buried = buried_levels(arch);
         let mut search = SpaceSearch::new(self);
         let mut rooms = Vec::new();
         let mut uids = Vec::new();
@@ -250,12 +270,46 @@ impl Document {
             let Entity::Space(s) = e else { continue };
             uids.push(uid.to_string());
             let x = &s.space;
-            let brief = x.usage.as_deref().and_then(|u| program.brief(u));
+            let (name, usage) = (x.name.as_deref(), x.usage.as_deref());
+            let brief = usage.and_then(|u| program.brief(u));
             let outdoor = brief.is_some_and(|b| b.outdoor);
+            // What 22/1 reads a room as (docs/adr/8079): by its own words, else (a room its words count in) by its
+            // program group's: a coal room in a storage annex stays a coal room.
+            let by_use = kentos_contracts::emsal_by_use(name, usage);
+            let group = x.unit.as_deref().and_then(|u| program.unit(u));
+            let own = room_names::words(name, usage);
+            let theirs = if by_use == EmsalCount::Included {
+                group.map_or_else(Vec::new, |g| room_names::words(g.name.as_deref(), g.nature.as_deref()))
+            } else {
+                Vec::new()
+            };
+            let indoor = !x.void && !outdoor;
+            let caretaker = indoor && names("KAPICI", &own, &theirs);
+            let library = indoor && room_names::has(&own, "KUTUPHANE");
+            let storage_of = group
+                .filter(|g| g.kind == kentos_contracts::UnitKind::Annex)
+                .and_then(|g| g.annex_of.clone())
+                .filter(|owner| {
+                    program.unit(owner).is_some_and(|u| u.kind == kentos_contracts::UnitKind::Unit)
+                })
+                .filter(|_| {
+                    indoor
+                        && by_use == EmsalCount::Included
+                        && names("DEPO", &own, &theirs)
+                        && !room_names::technical(name, usage)
+                        && x.arch.level.as_ref().is_some_and(|l| buried.contains(l))
+                });
+            // A stair hall (22/1-l: "kat ve ara sahanlıkları dâhil açık veya kapalı merdiven evi"): no unit's own.
+            let stair_hall = indoor
+                && room_names::stair_name(name, usage)
+                && group.is_none_or(|g| g.kind != kentos_contracts::UnitKind::Unit);
             let count = match brief.and_then(|b| b.emsal) {
                 Some(c) => c,
                 None if outdoor => EmsalCount::Exempt,
-                None => kentos_contracts::emsal_by_use(x.name.as_deref(), x.usage.as_deref()),
+                None => match by_use {
+                    EmsalCount::Included if caretaker || storage_of.is_some() || stair_hall => EmsalCount::Exempt,
+                    c => c,
+                },
             };
             let net = if x.void {
                 0.0
@@ -274,7 +328,10 @@ impl Document {
                 },
                 axis: measured(&mut search, x, SpaceMethod::Centerline),
                 unit: x.unit.clone(),
-                balcony: outdoor && says_balcony(x.name.as_deref(), x.usage.as_deref()),
+                balcony: outdoor && says_balcony(name, usage),
+                caretaker,
+                library,
+                storage_of,
                 net,
             });
         }
@@ -325,35 +382,8 @@ impl Document {
                 }
             }
         }
-        // 22/1-l (docs/adr/8069): an independent unit's open balconies are out up to 20 % of its net area (its own
-        // indoor rooms counted in, 4/1-ğ-3: balconies, terraces, annexes and common areas not in it); what passes counts
-        // in, shared among its balconies by their areas. A balcony of no unit, or of a common area, keeps its count.
-        let mut moved = vec![0.0; rooms.len()];
-        let mut units: Vec<&String> = rooms.iter().filter(|r| r.balcony).filter_map(|r| r.unit.as_ref()).collect();
-        units.sort();
-        units.dedup();
-        for u in units {
-            let kind = program.units.iter().find(|x| &x.id == u).map(|x| x.kind);
-            if kind != Some(kentos_contracts::UnitKind::Unit) {
-                continue;
-            }
-            let mine = |r: &Room| r.unit.as_ref() == Some(u) && !r.void;
-            let net: f64 = rooms
-                .iter()
-                .filter(|r| mine(r) && !r.outdoor && r.count == EmsalCount::Included)
-                .map(|r| r.net)
-                .sum();
-            let balconies: Vec<usize> = (0..rooms.len())
-                .filter(|&i| mine(&rooms[i]) && rooms[i].balcony && rooms[i].count == EmsalCount::Exempt)
-                .collect();
-            let total: f64 = balconies.iter().map(|&i| gross[i]).sum();
-            let excess = (total - BALCONY_SHARE * net).max(0.0);
-            if excess > 0.0 && total > 0.0 {
-                for &i in &balconies {
-                    moved[i] = gross[i] * excess / total;
-                }
-            }
-        }
+        // The limits of 22/1 (docs/adr/8069, 8079): each limited use's part past its limit counted in.
+        let (moved, limit_of, used) = limits::apply(&rooms, &gross, &uids, program);
         let parcel = zoning.map_or(0.0, |z| z.parcel_area);
         let mut out = ZoningReport {
             parcel,
@@ -370,7 +400,7 @@ impl Document {
                 .unwrap_or(usize::MAX - 1),
             None => usize::MAX,
         };
-        for ((r, g), m) in rooms.iter().zip(&gross).zip(&moved) {
+        for (((r, g), m), limit) in rooms.iter().zip(&gross).zip(&moved).zip(&limit_of) {
             if r.void {
                 continue;
             }
@@ -391,12 +421,18 @@ impl Document {
                     level.included += g;
                 }
                 EmsalCount::Exempt => {
-                    // A balcony's part past its unit's 20 % counts in (22/1-l).
+                    // A limited use's part past its limit counts in (22/1-l, -k, -ç, -f).
                     out.exempt += g - m;
                     level.exempt += g - m;
                     out.included += m;
                     level.included += m;
-                    out.balcony_over += m;
+                    match limit {
+                        Some(ZoningLimit::Balcony) => out.balcony_over += m,
+                        Some(ZoningLimit::Storage) => out.storage_over += m,
+                        Some(ZoningLimit::Caretaker) => out.caretaker_over += m,
+                        Some(ZoningLimit::Library) => out.library_over += m,
+                        None => {}
+                    }
                 }
                 EmsalCount::Outside => {
                     out.outside += g;
@@ -414,9 +450,11 @@ impl Document {
                 count: r.count,
                 gross: gross[i],
                 moved: moved[i],
+                limit: limit_of[i],
                 shape: shapes[i].clone(),
             })
             .collect();
+        out.limits = used;
         out.levels.sort_by_key(|l| order(&l.level));
         out.cap = out.far_limit.map(|f| 0.30 * f * parcel);
         out.over = out.cap.map_or(0.0, |c| (out.exempt - c).max(0.0));
@@ -484,6 +522,13 @@ impl Document {
     pub fn zoning_rooms(&self) -> Vec<ZoningRoom> {
         let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning);
         self.zoning_measured(zoning).rooms
+    }
+
+    /// The uses 22/1 lets out of katlar alanı only up to a limit, with or without the parcel's zoning (docs/adr/8079):
+    /// what the regulation's rules read the limits' conditions on.
+    pub fn zoning_limits(&self) -> Vec<ZoningLimitUse> {
+        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning);
+        self.zoning_measured(zoning).limits
     }
 
     /// The building's footprint as the ratios count it (docs/adr/8032): its area and outline, with or without a zoning.
@@ -592,14 +637,17 @@ impl Document {
             true,
             &area,
         );
-        // The units' balconies past 20 % of their net areas, counted into Emsale konu alan (22/1-l, docs/adr/8069).
-        if r.balcony_over > 0.0 {
-            rows.push(vec![
-                named("Balkonların %20'yi aşan kısmı, emsale eklenen"),
-                String::new(),
-                area(r.balcony_over),
-                String::new(),
-            ]);
+        // Each limited use's part past its limit, counted into Emsale konu alan (22/1-l, docs/adr/8069; 22/1-k, -ç,
+        // -f, docs/adr/8079): a row only when something passed.
+        for (over, words) in [
+            (r.balcony_over, "Balkonların %20'yi aşan kısmı, emsale eklenen"),
+            (r.storage_over, "Depo eklentilerinin %50'yi aşan kısmı, emsale eklenen"),
+            (r.caretaker_over, "Kapıcı dairelerinin 70 m²'yi aşan kısmı, emsale eklenen"),
+            (r.library_over, "Kütüphanenin 50 m²'yi aşan kısmı, emsale eklenen"),
+        ] {
+            if over > 0.0 {
+                rows.push(vec![named(words), String::new(), area(over), String::new()]);
+            }
         }
         if r.over > 0.0 {
             rows.push(vec![

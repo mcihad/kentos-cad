@@ -1536,6 +1536,9 @@ mod regulation_audit_tests;
 #[path = "tests/regulation_dates_tests.rs"]
 mod regulation_dates_tests;
 #[cfg(test)]
+#[path = "tests/emsal_limits_tests.rs"]
+mod emsal_limits_tests;
+#[cfg(test)]
 #[path = "tests/fire_escape_tests.rs"]
 mod fire_escape_tests;
 #[cfg(test)]

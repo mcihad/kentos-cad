@@ -182,13 +182,17 @@ pub struct Fixture {
 
 /// An emsal area of a storey (docs/adr/8069; EK-6 Tablo 6.60): its storey's level id, how its rooms count, its rings
 /// (even-odd, the rooms' contours together) and, counted in, the part of its storey's balconies past their units' 20 %
-/// (m²; PAİY 22/1-l).
-#[derive(Clone, Debug, PartialEq)]
+/// (m²; PAİY 22/1-l) and of its other limited uses past their limits (docs/adr/8079): storage annexes past their
+/// units' 50 % (22/1-k), caretaker flats past 70 m² together (22/1-ç), library rooms past 50 m² (22/1-f).
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct EmsalArea {
     pub level: Option<String>,
     pub count: kentos_contracts::EmsalCount,
     pub rings: Vec<Vec<[f64; 2]>>,
     pub moved: f64,
+    pub storage: f64,
+    pub caretaker: f64,
+    pub library: f64,
 }
 
 /// A unit of the building program (docs/adr/8069; EK-6 Tablo 6.68): its id's bits, its number and name, its kind and its
@@ -202,25 +206,46 @@ pub struct UnitGroup {
     pub rooms: Vec<u128>,
 }
 
-/// An emsal zone's state as EK-6 Tablo 6.60 writes it and the clauses it rests on.
-fn emsal_state(count: kentos_contracts::EmsalCount, moved: f64) -> (&'static str, &'static str, String) {
+/// The limited uses' parts an emsal zone names (docs/adr/8079): each clause's words up to its part's area, and how a zone
+/// counted in ends them (Turkish vowel harmony: “balkon da”, “eklentisi de”).
+fn limited_parts(a: &EmsalArea) -> [(f64, &'static str, &'static str); 4] {
+    [
+        (a.moved, "22/1-l: bağımsız bölüm net alanının %20'sini aşan {} m² balkon", " da dahil"),
+        (a.storage, "22/1-k: bağımsız bölüm net alanının %50'sini aşan {} m² depo eklentisi", " de dahil"),
+        (a.caretaker, "22/1-ç: kapıcı dairelerinin toplam 70 m²'sini aşan {} m²", " de dahil"),
+        (a.library, "22/1-f: kütüphanenin 50 m²'sini aşan {} m²", " de dahil"),
+    ]
+}
+
+/// An emsal zone's state as EK-6 Tablo 6.60 writes it and the clauses it rests on. A limited use's part past its limit
+/// is named in its storey's zone counted in (the room stays in its own zone, docs/adr/8069 K41), or, on a storey with
+/// none, in the zone the room is in, as counted in.
+fn emsal_state(a: &EmsalArea) -> (&'static str, &'static str, String) {
     use kentos_contracts::EmsalCount as C;
-    match count {
+    let with_parts = |mut words: String, counted_in: bool| {
+        for (part, clause, tail) in limited_parts(a) {
+            if part > 0.0 {
+                words.push_str("; ");
+                words.push_str(&clause.replace("{}", &format!("{part:.2}")));
+                words.push_str(if counted_in { tail } else { " emsale dahil" });
+            }
+        }
+        words
+    };
+    match a.count {
         C::Included => (
             "DAHIL",
             "emsale dahil alan",
-            if moved > 0.0 {
-                format!(
-                    "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil; 22/1-l: bağımsız bölüm net alanının %20'sini aşan {moved:.2} m² balkon da dahil"
-                )
-            } else {
-                "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil".to_owned()
-            },
+            with_parts("Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil".to_owned(), true),
         ),
         C::Exempt => (
             "HARIC",
             "emsal harici alan",
-            "Planlı Alanlar İmar Yönetmeliği 22/1: katlar alanına dahil edilmeyen; 5/8: emsale esas alanın %30'u içinde".to_owned(),
+            with_parts(
+                "Planlı Alanlar İmar Yönetmeliği 22/1: katlar alanına dahil edilmeyen; 5/8: emsale esas alanın %30'u içinde"
+                    .to_owned(),
+                false,
+            ),
         ),
         C::Outside => (
             "HARIC",
@@ -2000,7 +2025,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         .filter(|a| a.rings.iter().any(|r| r.len() >= 3))
         .map(|a| {
             let storey = storey_of(a.level.as_deref());
-            let (state, words, description) = emsal_state(a.count, a.moved);
+            let (state, words, description) = emsal_state(a);
             let storey_name = storeys.get(storey).map_or_else(String::new, |s| s.long_name.clone().unwrap_or_else(|| s.name.clone()));
             let top = spaces
                 .iter()

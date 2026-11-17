@@ -18,11 +18,13 @@
 //!   8028); its operation; its fire class, its own else its type's (docs/adr/8068); whether a side is an escape stair's
 //!   room (a room named or used as Merdiven that is no dwelling unit's own, as the escape routes read it) or a fire
 //!   safety lobby (named Yangın güvenlik holü). A storey holding an escape stair's room is the stair's.
+//! - **The limited uses** (docs/adr/8079): what Emsal ve TAKS tablosu lets out of katlar alanı only up to a limit of
+//!   22/1 (`Document::zoning_limits`), with or without the parcel's zoning; and the program's buildings' uses.
 
 use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
-use kentos_extensions::audit_facts::building::{BuildingFacts, DoorFacts, RoomPeople, StoreyHolds};
+use kentos_extensions::audit_facts::building::{BuildingFacts, DoorFacts, EmsalLimit, RoomPeople, StoreyHolds};
 
 /// The drawing's building facts; empty (no storey) for a project without Mimari's storeys.
 pub fn measure(doc: &Document) -> BuildingFacts {
@@ -72,6 +74,19 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         }
     }
     let (rooms, doors) = people_and_doors(doc, &mut storeys);
+    let limits = doc
+        .zoning_limits()
+        .into_iter()
+        .map(|l| EmsalLimit {
+            limit: l.limit.name().to_owned(),
+            unit: l.unit,
+            rooms: l.rooms,
+            area: l.area,
+            allowed: l.allowed,
+            over: l.over,
+            common: l.common,
+        })
+        .collect();
     BuildingFacts {
         storeys,
         units: units.len() as u32,
@@ -81,6 +96,8 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         }),
         rooms,
         doors,
+        limits,
+        uses: program.buildings.iter().filter_map(|b| b.usage.clone()).collect(),
     }
 }
 

@@ -183,3 +183,24 @@ fn a_room_carries_its_people_and_a_door_says_its_rooms_and_where_it_swings() {
         assert_eq!((door.operation.as_str(), door.stair, door.lobby), ("swing", false, false));
     }
 }
+
+/// The emsal's limited uses (docs/adr/8079): each flat's storage annex stands in the basement, whose top is at ±0.00
+/// (under the ground), so it is out up to half its flat's net area (a living room and a bedroom of 4 × 4 m: 32 m²):
+/// 16 m² of 16, nothing past it. The common stair halls and the boiler room are no limited use.
+#[test]
+fn the_storage_annexes_under_the_ground_are_the_emsal_s_limited_uses() {
+    let facts = measure(&basement_with_annexes()).normalized();
+    let got: Vec<(&str, Option<&str>, usize, f64, f64, f64, bool)> = facts
+        .limits
+        .iter()
+        .map(|l| (l.limit.as_str(), l.unit.as_deref(), l.rooms.len(), l.area, l.allowed, l.over, l.common))
+        .collect();
+    assert_eq!(
+        got,
+        [
+            ("storage", Some("d1"), 1, 16.0, 16.0, 0.0, false),
+            ("storage", Some("d2"), 1, 16.0, 16.0, 0.0, false),
+        ]
+    );
+    assert!(facts.uses.is_empty(), "the program names no building: {:?}", facts.uses);
+}

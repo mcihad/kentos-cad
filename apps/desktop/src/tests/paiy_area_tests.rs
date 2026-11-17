@@ -132,11 +132,9 @@ fn a_units_schedule_writes_the_regulation_s_net_gross_share_and_general_gross() 
     }
 }
 
-/// Metrekare cetveli (M29, docs/adr/8029; PAİY 57/2-a): two storeys of the same plan, the stair hall one common area on
-/// both; the units schedule storey by storey: each storey's units and its part of the hall, 30 m² each, the total the
-/// building's 180 m².
-#[test]
-fn a_metrekare_cetveli_lists_each_storey_s_units_and_common_areas() {
+/// Two storeys of the same plan (15 × 6 m, three bays), the stair hall one common area on both, the units 1–4; the app
+/// and the active layer.
+fn two_storeys() -> (App, String) {
     kentos_postgis::connections::keep_in_memory();
     let (mut app, _) = App::start_in(
         Some(Module::Architecture),
@@ -196,6 +194,16 @@ fn a_metrekare_cetveli_lists_each_storey_s_units_and_common_areas() {
             room(2.5, "k1", "d3"), room(7.5, "k1", "ortak"), room(12.5, "k1", "d4")
         ]}),
     );
+    (app, layer)
+}
+
+/// Metrekare cetveli (M29, docs/adr/8029; PAİY 57/2-a): two storeys of the same plan, the stair hall one common area on
+/// both; the units schedule storey by storey: each storey's units and its part of the hall, 30 m² each, the total the
+/// building's 180 m².
+#[test]
+fn a_metrekare_cetveli_lists_each_storey_s_units_and_common_areas() {
+    let (mut app, layer) = two_storeys();
+    let p = |x: f64, y: f64| json!({"x": x, "y": y});
     command(
         &mut app,
         "cad.schedules.create",
@@ -236,6 +244,41 @@ fn a_metrekare_cetveli_lists_each_storey_s_units_and_common_areas() {
         let bytes = kentos_kcad::encode(&doc.to_snapshot_v2()).expect("encodes");
         std::fs::write(std::path::Path::new(&out).join("kat.kcad"), bytes).expect("written");
     }
+}
+
+/// Kat ara toplamı (docs/adr/8079 §2; ADR 8029's leftover): Metrekare cetveli as its tool places it closes each storey
+/// with its subtotal, the storeys lowest first: Zemin kat's 90.00 and 1. kat's 90.00 (two units and the hall's part, 30 m²
+/// each), the building's 180.00.
+#[test]
+fn the_metrekare_cetveli_tool_closes_each_storey_with_its_subtotal() {
+    let (mut app, _) = two_storeys();
+    let _ = app.update(Message::Run("tool.scheduleAreas"));
+    let _ = app.submit_line("20,0");
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let cells = doc
+        .entities()
+        .find_map(|e| match e {
+            kentos_commands::Entity::Table(t) => Some(t.cells.clone()),
+            _ => None,
+        })
+        .expect("the metrekare cetveli");
+    let rows: Vec<(&str, &str)> = cells.iter().map(|r| (r[0].as_str(), r[4].as_str())).collect();
+    assert_eq!(
+        rows,
+        [
+            ("Kat", "BB brüt alanı (m²)"),
+            ("Zemin kat", "30.00"),
+            ("Zemin kat", "30.00"),
+            ("Zemin kat", "30.00"),
+            ("Zemin kat toplamı", "90.00"),
+            ("1. kat", "30.00"),
+            ("1. kat", "30.00"),
+            ("1. kat", "30.00"),
+            ("1. kat toplamı", "90.00"),
+            ("Toplam", "180.00"),
+        ],
+        "{cells:?}"
+    );
 }
 
 /// The ground storey of the first test, its middle room an Otopark (22/1-h: emsal harici by its name): the app, the

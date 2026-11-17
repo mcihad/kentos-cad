@@ -1154,7 +1154,9 @@ impl ScheduleTool {
             ),
             // The room list has no total row: it adds nothing up.
             total: !matches!(preset, SchedulePreset::Openings | SchedulePreset::RoomList),
-            subtotals: false,
+            // A metrekare cetveli closes each storey with its subtotal (kat ara toplamı, docs/adr/8079 §2), the storeys
+            // lowest first.
+            subtotals: preset == SchedulePreset::AreaTable,
             active_level: false,
             table: None,
             problem: None,

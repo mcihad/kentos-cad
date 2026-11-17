@@ -9,8 +9,12 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
 - **Asansör** (`asansor`): PAİY 34/1 ve 34/8; yerel yönetmelik seçiliyse Sivas 34/1 ve 34/8.
 - **Kaçış yolu kapıları** (`kapilar`): BYKHY 47/2 (kalabalık mekânın kapısı kaçış yönüne açılır) ve 47/3 (kaçış merdiveni
   ve yangın güvenlik holü kapısının sınıfı).
+- **Emsal sınırları** (`emsal`, docs/adr/8079): KentOS Emsal ve TAKS tablosunda 22/1'in sınırlarını sayar (balkon %20,
+  toprak altında depo eklentisi %50, kapıcı daireleri 70 m², kütüphane 50 m²); kural koşullarına bakar: emsal harici
+  kapıcı dairesi 44/1'e göre zorunlu mu (22/1-ç), kütüphane alışveriş merkezinde ya da 40'tan fazla bağımsız bölümlü
+  binada, normal katta ve ortak alan mı (22/1-f).
 - **Olgular** KentOS'un ölçtüğüdür (`facts.building`, `facts.permit`); kural çizimi okumaz.
-- **Bağımsız durumlar** `fixtures/standards/v1/asansor.json` ve `kapilar.json`: beklenen sonuçlar mevzuat metninden elle
-  çıkarıldı.
+- **Bağımsız durumlar** `fixtures/standards/v1/asansor.json`, `kapilar.json` ve `emsal.json`: beklenen sonuçlar mevzuat
+  metninden elle çıkarıldı.
 
-Sınama: `python3 -I catalog/standards/tests/mimari-mevzuat/test_asansor.py` ve `test_kapilar.py`.
+Sınama: `python3 -I catalog/standards/tests/mimari-mevzuat/test_asansor.py`, `test_kapilar.py` ve `test_emsal.py`.

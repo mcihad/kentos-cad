@@ -12,7 +12,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::{LENGTH, round};
+use super::{AREA, LENGTH, round};
 
 /// The building as the regulation's rules count it.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -35,6 +35,38 @@ pub struct BuildingFacts {
     /// The doors, by persistent id (docs/adr/8078 §8).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub doors: Vec<DoorFacts>,
+    /// The uses Planlı Alanlar İmar Yönetmeliği 22/1 lets out of katlar alanı only up to a limit, as Emsal ve TAKS
+    /// tablosu counts them (docs/adr/8079): a unit's balconies, its storage annexes, the caretaker flats, the library.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub limits: Vec<EmsalLimit>,
+    /// What the program's buildings are used for, as the project writes it (Kullanım türü), in the program's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub uses: Vec<String>,
+}
+
+/// A use 22/1 lets out of katlar alanı only up to a limit (docs/adr/8079), as Emsal ve TAKS tablosu counts it.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct EmsalLimit {
+    /// `balcony` (22/1-l: a unit's open balconies, 20 % of its net area), `storage` (22/1-k: a unit's storage annexes
+    /// on a storey under the ground, 50 % of its net area), `caretaker` (22/1-ç: the caretaker flats, 70 m² together) or
+    /// `library` (22/1-f: the library rooms, 50 m² together).
+    pub limit: String,
+    /// The independent unit whose net area the limit is a share of, by program id (a balcony's, a storage annex's).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    /// Its rooms, by persistent id.
+    pub rooms: Vec<String>,
+    /// Their area as katlar alanı counts it (each room's outer contour, PAİY 4/1-ğ-1), m².
+    pub area: f64,
+    /// What the limit lets out, m².
+    pub allowed: f64,
+    /// What passed it, counted in, m².
+    pub over: f64,
+    /// Every room of it is a common area's (a program group of kind `common`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub common: bool,
 }
 
 /// A room's people: its use's square metres a person over its area, rounded up (BYKHY Ek-5/A as Mimari denetim reads
@@ -129,6 +161,13 @@ impl BuildingFacts {
         }
         self.rooms.sort_by(|a, b| a.uid.cmp(&b.uid));
         self.doors.sort_by(|a, b| a.uid.cmp(&b.uid));
+        for l in &mut self.limits {
+            l.rooms.sort();
+            l.area = round(l.area, AREA);
+            l.allowed = round(l.allowed, AREA);
+            l.over = round(l.over, AREA);
+        }
+        self.uses.retain(|u| !u.trim().is_empty());
         self
     }
 

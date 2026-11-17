@@ -1,7 +1,7 @@
 {
   "format": "kentos.ruleVersions",
   "version": 1,
-  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de.",
+  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de).",
   "regulations": {
     "PAİY": {
       "name": "Planlı Alanlar İmar Yönetmeliği",
@@ -120,6 +120,80 @@
           "served": "unit-or-inhabited",
           "text": "Asansörlerin, bodrum katları dahil tüm katlara hizmet vermesi zorunludur. Ancak bağımsız bölüm ya da iskân edilen alan bulunmayan bodrum katlara asansörün ulaştırılması zorunlu değildir.",
           "source": "RG 10.11.2022/32009, 34 üncü madde."
+        }
+      ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "22/1-ç",
+      "title": "Kapıcı dairesi (katlar alanına dahil edilmeyen)",
+      "transition": "Değişiklik yönetmeliği yayımı günü yürürlüğe girdi (RG 25.7.2019/30842, 15 inci madde); geçiş hükmü yok.",
+      "versions": [
+        {
+          "id": "2019",
+          "from": "2019-07-25",
+          "until": null,
+          "label": "25.7.2019",
+          "gazette": "25.7.2019/30842",
+          "few": 40,
+          "many": 60,
+          "text": "Bu Yönetmelik uyarınca yapılması zorunlu olan kapıcı dairelerinin toplam 70 m2’si, katlar alanına dâhil edilmez. (44/1-a) Konut kullanımlı bağımsız bölüm sayısı 40’tan fazla olan ve katı yakıt kullanan kaloriferli veya kalorifersiz binalar için bir adet kapıcı dairesi yapılması zorunludur. (44/1-b) Katı yakıt haricindeki diğer ısıtma sistemleri kullanılan konut kullanımlı binalar için bağımsız bölüm sayısının 60’tan fazla olması halinde bir, 150’den fazla olması halinde 2 kapıcı dairesi yapılması zorunludur.",
+          "source": "RG 25.7.2019/30842, 7 nci madde (22/1-ç'nin bu hâli; yerini aldığı RG 3.7.2017/30113 metni her bir kapıcı dairesinin 75 m2'sini sayıyordu); 44/1 RG 3.7.2017/30113'ten değişmedi (1.10.2017'den yürürlükte, 71 inci madde); docs/adr/8079 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "22/1-f",
+      "title": "Kütüphane odası (katlar alanına dahil edilmeyen)",
+      "transition": "Değişiklik yönetmeliği yayımı günü yürürlüğe girdi (RG 23.1.2021/31373, 6 ncı madde); geçiş hükmü yok.",
+      "versions": [
+        {
+          "id": "2021",
+          "from": "2021-01-23",
+          "until": null,
+          "label": "23.1.2021",
+          "gazette": "23.1.2021/31373",
+          "units": 40,
+          "area": 50,
+          "text": "Alışveriş merkezlerinde ve 40’tan fazla bağımsız bölümü bulunan binaların normal katlarında, binanın ortak merdiveni ile bağlantılı, dışarıdan erişimi bulunmayan, toplamda 50 m²’yi geçmeyen, ticari kullanıma konu edilemeyen, ortak alan niteliğinde kütüphane odası, katlar alanına dâhil edilmez.",
+          "source": "RG 23.1.2021/31373, 1 inci madde; normal kat 4/1-ııı'nin tanımıyla (bodrum, zemin, tesisat katı ve çatı arası dışındaki katlar); docs/adr/8079 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "22/1-k",
+      "title": "Depo amaçlı eklentiler (katlar alanına dahil edilmeyen)",
+      "transition": "Değişiklik yönetmeliği yayımı günü yürürlüğe girdi (RG 25.7.2019/30842, 15 inci madde); geçiş hükmü yok.",
+      "versions": [
+        {
+          "id": "2019",
+          "from": "2019-07-25",
+          "until": null,
+          "label": "25.7.2019",
+          "gazette": "25.7.2019/30842",
+          "share": 0.5,
+          "text": "Bütün cepheleri tamamen toprağın altında kalan bodrum katlarda yer alan, tek başına bağımsız bölüm oluşturmayan, bağımsız bölüm net alanının %50’sini geçmeyen depo amaçlı eklentiler, katlar alanına dâhil edilmez.",
+          "source": "RG 25.7.2019/30842, 7 nci madde (yerini aldığı RG 3.7.2017/30113 metni konut bölümünün brüt alanının %10'unu aşmayan depo eklentilerini sayıyordu); docs/adr/8079 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "22/1-l",
+      "title": "Balkonlar, merdiven evi ve açık havuzlar (katlar alanına dahil edilmeyen)",
+      "transition": "Değişiklik yönetmeliği yayımı günü yürürlüğe girdi (RG 11.7.2021/31538); geçiş hükmü yok. Önceki hâlin payını iki ikincil kaynak farklı okuyor (%10, %15): kural seti 11.7.2021'den başlar.",
+      "versions": [
+        {
+          "id": "2021",
+          "from": "2021-07-11",
+          "until": null,
+          "label": "11.7.2021",
+          "gazette": "25.7.2019/30842; 11.7.2021/31538 değişik ibare",
+          "share": 0.2,
+          "text": "Bağımsız bölüm net alanının %20’sini geçmemek kaydıyla açık çıkma şartlarını taşıyan balkonlar, kat ve ara sahanlıkları dâhil açık veya kapalı merdiven evi ile açık havuzlar, katlar alanına dâhil edilmez.",
+          "source": "RG 25.7.2019/30842, 7 nci madde; %20 ibaresi ve açık havuzlar RG 11.7.2021/31538; docs/adr/8069 §1, 8079 §1."
         }
       ]
     },

@@ -40,3 +40,9 @@ def asansor_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
 def kapi_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Kaçış yolu kapıları (BYKHY 47/2 açılış yönü, 47/3 kaçış merdiveni ve yangın güvenlik holü kapıları)."""
     return _bulgular(facts, ("bykhy_exit_door", "bykhy_stair_door"))
+
+
+@ext.audit("emsal")
+def emsal_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Emsalin 22. madde sınırlarının koşulları (22/1-ç kapıcı dairesinin 44/1'e göre zorunluluğu, 22/1-f kütüphane)."""
+    return _bulgular(facts, ("paiy_caretaker_", "paiy_library_"))

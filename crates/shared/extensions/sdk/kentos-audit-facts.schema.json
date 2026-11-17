@@ -80,6 +80,13 @@
           "minimum": 0,
           "type": "integer"
         },
+        "limits": {
+          "description": "The uses Planlı Alanlar İmar Yönetmeliği 22/1 lets out of katlar alanı only up to a limit, as Emsal ve TAKS\ntablosu counts them (docs/adr/8079): a unit's balconies, its storage annexes, the caretaker flats, the library.",
+          "items": {
+            "$ref": "#/$defs/EmsalLimit"
+          },
+          "type": "array"
+        },
         "local": {
           "description": "The municipality's regulation the project reads over the national one (`sivas`: Sivas Belediyesi İmar\nYönetmeliği, RG 10.11.2022/32009); absent: none.",
           "type": [
@@ -106,6 +113,13 @@
           "format": "uint32",
           "minimum": 0,
           "type": "integer"
+        },
+        "uses": {
+          "description": "What the program's buildings are used for, as the project writes it (Kullanım türü), in the program's order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "required": [
@@ -617,6 +631,56 @@
         "uid",
         "between",
         "operation"
+      ],
+      "type": "object"
+    },
+    "EmsalLimit": {
+      "description": "A use 22/1 lets out of katlar alanı only up to a limit (docs/adr/8079), as Emsal ve TAKS tablosu counts it.",
+      "properties": {
+        "allowed": {
+          "description": "What the limit lets out, m².",
+          "format": "double",
+          "type": "number"
+        },
+        "area": {
+          "description": "Their area as katlar alanı counts it (each room's outer contour, PAİY 4/1-ğ-1), m².",
+          "format": "double",
+          "type": "number"
+        },
+        "common": {
+          "description": "Every room of it is a common area's (a program group of kind `common`).",
+          "type": "boolean"
+        },
+        "limit": {
+          "description": "`balcony` (22/1-l: a unit's open balconies, 20 % of its net area), `storage` (22/1-k: a unit's storage annexes\non a storey under the ground, 50 % of its net area), `caretaker` (22/1-ç: the caretaker flats, 70 m² together) or\n`library` (22/1-f: the library rooms, 50 m² together).",
+          "type": "string"
+        },
+        "over": {
+          "description": "What passed it, counted in, m².",
+          "format": "double",
+          "type": "number"
+        },
+        "rooms": {
+          "description": "Its rooms, by persistent id.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "unit": {
+          "description": "The independent unit whose net area the limit is a share of, by program id (a balcony's, a storage annex's).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "limit",
+        "rooms",
+        "area",
+        "allowed",
+        "over"
       ],
       "type": "object"
     },

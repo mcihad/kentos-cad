@@ -588,15 +588,22 @@ maddenin özet satırında (`ArchAuditFinding.state`, `ArchAudited.ruleSet`, K62
 söyler; başsız `cad.arch.audit` (MCP, Python) aynı bulguyu ve kural setini verir. İlk kabul tuttu: 25 bağımsız durum;
 aynı çizim 30.6.2026'da geçer, 2.7.2026'da 34/8'den kalır, tarihsiz eksik veridir; yağmurlama sınaması ADR 8035'in
 (`fire_escape_tests`). İç yükseklik ADR 8040 §3'te Rust'ta yapılmıştı.
-**Kalan:** emsalin 22. madde sınırları ve kat ara toplamları; merdiven altı 1,80 m; yangın kompartımanı; beyan edilen
-dayanımın öbür elemanlarda karşılaştırılması (Ek-3/B, Ek-3/C); erişilebilir yol (TS 9111 metni); 28/1-c ve 39/1'in
-tarihli hâlleri; plan notu katmanı; bölge türü; konut dışı (B22).
+**Kalan:** merdiven altı 1,80 m; yangın kompartımanı; beyan edilen dayanımın öbür elemanlarda karşılaştırılması
+(Ek-3/B, Ek-3/C); erişilebilir yol (TS 9111 metni); 28/1-c ve 39/1'in tarihli hâlleri; plan notu katmanı; bölge türü;
+konut dışı (B22); emsalde 22/1-j, 22/1-m ve 5/8'in bodrum listesi (ADR 8079 §6).
 **Yapıldı (17 Kasım 2026, ADR 8078 §6, K64):** uzman onayı kayıtlı: paketin bulgusu `cad.arch.exceptions`'a verilerek
 istisna yapılır; uzman incelemesi bulgusunun istisnası "Uzman onayı"dır, notu uzmanın sözü; bulgu değişince düşer, katla
 ilgili bulgu katın mahallerini adlandırdığı için mahal eklenince yeni bulgu açılır.
 **Yapıldı (17 Kasım 2026, ADR 8078 §8, K65):** kaçış yolu kapıları: BYKHY 47/2 (kullanıcı yükü 50'yi aşan mekânın çıkış
 kapısı dışarı açılır) ve 47/3 (kaçış merdiveni ve yangın güvenlik holü kapısının beyan edilen sınıfı: 60/90 dakika, duman
 sızdırmaz, kendiliğinden kapanır); olgulara mahallerin kişisi ve kapılar eklendi; 20 bağımsız durum.
+**Yapıldı (17 Kasım 2026, [ADR 8079](../docs/adr/8079-emsal-article-22-limits.md), K66–K69):** emsalin 22. madde
+sınırları alan hesabında: toprak altındaki katta bölümün depo eklentisi bölüm net alanının %50'sine (22/1-k), kapıcı
+daireleri toplam 70 m²'ye (22/1-ç), kütüphane 50 m²'ye (22/1-f) kadar dışarıda, aşan kısım emsale girer ve tablonun
+kendi satırındadır; merdiven evi emsal harici (22/1-l). IFC'nin emsal zonları aşan payı söyler. Koşullar pakette
+(`emsal`): emsal harici kapıcı dairesinin 44/1'e göre zorunluluğu (konut ve bölüm sayısından; ısıtmaya bağlı ara eksik
+veri), kütüphanenin alışveriş merkezi ya da 40'tan fazla bölüm, normal kat ve ortak alan koşulları; 23 bağımsız durum.
+Metrekare cetveli her katı ara toplamıyla kapatır (kat ara toplamı).
 
 **Kullanıcı sonucu:** Denetim, başvuru tarihinde yürürlükte olan kuralları uygular. Her bulgu geçti, kaldı, eksik veri,
 uzman incelemesi ya da kapsam dışıdır. Yorum isteyen konu kendiliğinden "uygun" sayılmaz. Dayanak Z9; Ek A.
@@ -786,7 +793,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B12b ~ | IFC görüntüleyici | IFC-12 | Dosya kendi penceresinde: ağaç, özellikler, kesit; dışa aktarılan tek tıkla görülür (ilk dilim ADR 8073; gerçek pencerede kabul ve kesitin tutamakları kaldı) |
 | B13 ~ | Yazılmış dosyadan doğrulama, IDS ve kontrol formu | IFC-08 | 21 sorunun kanıtı dosyadan (ADR 8074; ikinci okuyucu ve IfcTester KentOS'la aynı; son yazılan dosya, beş sonuç raporu ve bütçe kaldı) |
 | B14 ~ | BIM ruhsat paketi | BIM-14 | Tek komut, tek revizyon, tek paket (ADR 8075; gerçek paket ADR 8076; müellifin cevapları çizimde ve basılan formda ADR 8077; 2+1 de yayımlanıyor, MCP'de uçtan uca, eskiyen cevap durdurur ADR 8077 §7) |
-| B15 ~ | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti (ADR 8078: asansör 34/1 ve 34/8'in hâlleri, eksik veri ve uzman incelemesi, uzman onayı, kaçış yolu kapıları BYKHY 47; emsal 22, kompartıman, dayanımların kalanı kaldı) |
+| B15 ~ | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti (ADR 8078: asansör 34/1 ve 34/8'in hâlleri, eksik veri ve uzman incelemesi, uzman onayı, kaçış yolu kapıları BYKHY 47; ADR 8079: emsalin 22/1-ç, -f, -k, -l sınırları ve koşulları, kat ara toplamı; kompartıman, dayanımların kalanı kaldı) |
 | B16 | Bilgi yönetimi ve teslim kaydı | BIM-15 | Teslim ve iade kayıtlı |
 | B17 | Büro ve belediye pilotu | BIM-16, IFC-11 | İdarenin yazılı cevabı |
 

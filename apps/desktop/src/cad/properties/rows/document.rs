@@ -31,7 +31,9 @@ pub(super) fn document_section(doc: &Document, crs: bool) -> Section {
 /// status bar's badge, with the room the badge has not on a narrow bar.
 pub(super) fn zoning_section(doc: &Document) -> Option<Section> {
     let r = doc.model.zoning_report()?;
-    let comma = |v: f64| format!("{v:.2}").replace('.', ",");
+    // The display rule Emsal ve TAKS tablosu writes by (its noise rounded away first): a footprint of 89.999… m² on 400
+    // m² is TAKS 0,23 in both, not 0,22 here (docs/adr/8079 §5).
+    let comma = |v: f64| kentos_domain::text_fields::number_text(v, 1.0, 2, true);
     let against = |v: f64, l: Option<f64>| match l {
         Some(l) if v > l + 1e-9 => format!("{} / {} · aşıldı", comma(v), comma(l)),
         Some(l) => format!("{} / {}", comma(v), comma(l)),

@@ -2158,6 +2158,18 @@
         "opensInto": "01a1dfda-0704-70dd-a975-49a1c1b85ee4",
         "operation": "swing"
       }
+    ],
+    "limits": [
+      {
+        "limit": "balcony",
+        "unit": "d2",
+        "rooms": [
+          "01a1dfda-0704-70dd-a975-49a42be36102"
+        ],
+        "area": 8.4,
+        "allowed": 15.1305,
+        "over": 0.0
+      }
     ]
   },
   "cut": false

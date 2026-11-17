@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 0.3.0 — 17 Kasım 2026
+
+- Emsal sınırları (`emsal`, docs/adr/8079): Planlı Alanlar İmar Yönetmeliği 22/1-ç (emsal harici sayılan kapıcı
+  dairesinin 44/1'e göre zorunluluğu: konut bölümü ve bağımsız bölüm sayısından; ısıtmaya bağlı ara eksik veri), 22/1-f
+  (kütüphanenin alışveriş merkezi ya da 40'tan fazla bağımsız bölüm, normal kat, ortak alan koşulları; ortak merdivenle
+  bağlantı ve dışarıdan erişim uzman incelemesi), 22/1-k ve 22/1-l'nin tablodaki sayımı özet satırında. Sınırları KentOS
+  Emsal ve TAKS tablosunda sayar; olguların `building.limits`'inden okunur. 22 bağımsız durum.
+
 ## 0.2.0 — 17 Kasım 2026
 
 - Kaçış yolu kapıları (`kapilar`, docs/adr/8078 §8): BYKHY 47/2 (kullanıcı yükü 50'yi aşan mekânın çıkış kapısı kaçış
