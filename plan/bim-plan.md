@@ -741,7 +741,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
 | B6 ◐ | Binanın 3B görünümü | BIM-06 | Bina 3B'de; tıkla, planda seç; örtüşen mahal kırmızı (ADR 8067; gerçek pencere ve kesit kutusu kaldı) |
-| B7 ◐ | Yangın, performans ve malzeme; modelin zorunlu alanları | BIM-07, IFC-02 | Beyan dayanağıyla modelde; eksik alanlar nesneleriyle Denetim'de; 9. soru modelden (ADR 8068; IFC-02'nin öbür satırları kaldı) |
+| B7 ◐ | Yangın, performans ve malzeme; modelin zorunlu alanları | BIM-07, IFC-02 | Beyan dayanağıyla modelde; eksik alanlar nesneleriyle Denetim'de; 9. soru modelden; yazar gibi doldurulmuş binada zorunlu satır eksiği yok (ADR 8068, 8076; Tag politikası, ad/soyad, ölçüm anotasyonu kaldı) |
 | B8 ◐ | Mahal, zon ve emsal; mekânsal zonlar ve gruplar | BIM-08, IFC-03 | Emsal tablosu ile model aynı alanlardan (ADR 8069; kat × sınıf denetimi, çatıyla kesilen hacim kaldı) |
 | B9 ◐ | Eksik yapı elemanları; eksik sınıflar | BIM-09, IFC-03 | Kayıp listesi boş (ADR 8070; giydirme cephe kapısı, eğik eleman kaldı) |
 | B10 ✓ | Geometri doğruluğu; geometri ve görünüm tanımı | BIM-10, IFC-06 | Eğri eğri, açıklık kesik (ADR 8071) |

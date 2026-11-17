@@ -125,8 +125,17 @@
 
 ## §6. Ölçüm
 
-100 dairede model eşlemesinin süresi (ADR 8074 §6'nın ölçümü, Apple M5, release) bu dilimden sonra aşağıdadır; mahal
-başına duvar yüzü taraması ve boşluk üstündeki mahalin ızgarası eklendi.
+ADR 8074 §6'nın ölçümü (Apple M5, release; `ifc_timing`), bu dilimden sonra; parantez içinde önceki:
+
+| Daire | Nesne | Model eşlemesi ms | Yazma ms | Dosya MB | Okuma + gövde + olgu ms | Tepe bellek MB | Form ms |
+|---|---|---|---|---|---|---|---|
+| 1 | 44 | 4,2 (1,6) | 0,4 | 0,04 | 22,3 | 34 | 41 |
+| 20 | 842 | 84,4 (82,1) | 4,0 | 0,75 | 73,9 | 53 | 40 |
+| 100 | 4 202 | 3 220,2 (3 108,8) | 19,7 | 3,85 | 335,3 | 157 | 61 |
+
+100 dairede model eşlemesi 111 ms (%3,6) uzadı: her mahal katındaki duvarların yüzlerini tarıyor (K57) ve döşemelerini
+arıyor (K54). Dosya aynı boyda; yeni alanlar birkaç kayıt. Model eşlemesinin pencerenin iş parçacığındaki bütçesi
+ADR 8074'ün açık işidir.
 
 ## §7. Açık işler
 
