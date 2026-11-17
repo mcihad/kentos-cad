@@ -33,6 +33,9 @@
     "rust:wasm:raster": "cargo build -p kentos-raster-wasm --target wasm32-unknown-unknown --profile ${KENTOS_WASM_PROFILE:-wasm} && wasm-bindgen --target web --out-dir apps/web/src/io/raster/pkg target/wasm32-unknown-unknown/${KENTOS_WASM_PROFILE:-wasm}/kentos_raster_wasm.wasm",
     "test:rust": "pnpm rust:test && pnpm wasm && pnpm -C apps/web exec vitest run src/wasm src/io",
     "py:test": "sh scripts/python/test.sh",
+    "portal": "pnpm -C apps/portal dev",
+    "portal:build": "pnpm -C apps/portal build",
+    "portal:test": "pnpm -C apps/portal test",
     "api": "cargo run -q -p kentos-api --bin kentosd -- serve",
     "kentosd": "cargo run -q -p kentos-api --bin kentosd --",
     "db:setup": "cargo run -q -p kentos-api --bin kentosd -- db-setup && cargo run -q -p kentos-api --bin kentosd -- migrate && cargo run -q -p kentos-api --bin kentosd -- dev-seed"
