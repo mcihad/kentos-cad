@@ -120,6 +120,13 @@
             "null"
           ]
         },
+        "planNotes": {
+          "description": "The parcel's plan notes the project writes (docs/adr/8084), a rule reads over the municipality's and the national\nregulation (PAİY 69/3), in the project's order.",
+          "items": {
+            "$ref": "#/$defs/PlanNoteFacts"
+          },
+          "type": "array"
+        },
         "rooms": {
           "description": "The rooms that carry people as the escape rules count them (BYKHY Ek-5/A, docs/adr/8035), by persistent id.",
           "items": {
@@ -1186,6 +1193,27 @@
       },
       "required": [
         "particulars"
+      ],
+      "type": "object"
+    },
+    "PlanNoteFacts": {
+      "description": "A plan note's value: its measure (`groundStoreyHeight`, `storeyHeight`), the value (m) and where it stands as the\narchitect writes it (“UİP 12.3.2019, plan notu 7”).",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "value": {
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "key",
+        "value",
+        "source"
       ],
       "type": "object"
     },

@@ -56,11 +56,14 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
     yöntemi, tadilat görünümü, planın kesme yüksekliği (cutHeight, katın döşemesinden
     metre, 0,3–3; yoksa 1,10), çizgi kalınlıkları (lineGroups: byScale TS 88-23 çizgi
     grubu ölçeğe göre, own ya da yoksa her nesne kendi kaleminde), isteğe bağlı
-    spaceNames/spaceUsages listeleri ve kalıcı kat kimliğine bağlı spaceNumberPrefixes.
-    Liste değişiminde mevcut kat ve tercihleri kopyalayın; arch iç içe yama değildir.
-    Listeler öneridir; mevcut mahal adı/numarası/kullanımı değişmez, önek yalnız açık
-    seçimle başlangıca alınır. Ayarlar projenin düzenlemesidir, geri alma adımı
-    değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin
+    spaceNames/spaceUsages listeleri, kalıcı kat kimliğine bağlı spaceNumberPrefixes ve
+    parselin plan notları (planNotes: key groundStoreyHeight zemin kat yüksekliği ya da
+    storeyHeight kat yüksekliği, en çok; value m, 0–20; source notun yeri, boş olmaz;
+    her konu bir kez; Denetim'in mevzuat kuralları onları yerel yönetmeliğin ve PAİY'nin
+    önüne koyar). Liste değişiminde mevcut kat ve tercihleri kopyalayın; arch iç içe
+    yama değildir. Listeler öneridir; mevcut mahal adı/numarası/kullanımı değişmez, önek
+    yalnız açık seçimle başlangıca alınır. Ayarlar projenin düzenlemesidir, geri alma
+    adımı değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin
     değildir; bilinmeyen anahtar reddedilir. expectedRevision verilmişse ve çizim o
     sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
@@ -120,14 +123,17 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         bütün mimari tercihtir: katlar, ayrıntı, alan yöntemi, tadilat görünümü, planın
         kesme yüksekliği (cutHeight, katın döşemesinden metre, 0,3–3; yoksa 1,10), çizgi
         kalınlıkları (lineGroups: byScale TS 88-23 çizgi grubu ölçeğe göre, own ya da yoksa
-        her nesne kendi kaleminde), isteğe bağlı spaceNames/spaceUsages listeleri ve kalıcı
-        kat kimliğine bağlı spaceNumberPrefixes. Liste değişiminde mevcut kat ve tercihleri
-        kopyalayın; arch iç içe yama değildir. Listeler öneridir; mevcut mahal
-        adı/numarası/kullanımı değişmez, önek yalnız açık seçimle başlangıca alınır. Ayarlar
-        projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve cihazın ayarları
-        (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar reddedilir.
-        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-        conflict olur.
+        her nesne kendi kaleminde), isteğe bağlı spaceNames/spaceUsages listeleri, kalıcı
+        kat kimliğine bağlı spaceNumberPrefixes ve parselin plan notları (planNotes: key
+        groundStoreyHeight zemin kat yüksekliği ya da storeyHeight kat yüksekliği, en çok;
+        value m, 0–20; source notun yeri, boş olmaz; her konu bir kez; Denetim'in mevzuat
+        kuralları onları yerel yönetmeliğin ve PAİY'nin önüne koyar). Liste değişiminde
+        mevcut kat ve tercihleri kopyalayın; arch iç içe yama değildir. Listeler öneridir;
+        mevcut mahal adı/numarası/kullanımı değişmez, önek yalnız açık seçimle başlangıca
+        alınır. Ayarlar projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve
+        cihazın ayarları (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar
+        reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+        yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

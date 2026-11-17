@@ -7,7 +7,8 @@
 //! the facts say what is drawn, never what it means.
 //!
 //! Planlı Alanlar İmar Yönetmeliği 28/1-c and 39/1 (docs/adr/8083) read each storey's height floor to floor and its
-//! bedrooms, the program's common areas, and each door's net clear width, height and what stands on its two sides.
+//! bedrooms, the program's common areas, and each door's net clear width, height and what stands on its two sides; the
+//! parcel's plan notes (docs/adr/8084) give a rule the plan's value over the regulations'.
 //!
 //! An optional section of version 1, as [`super::architecture`]: absent when the project has no storey, so the facts
 //! of a drawing that never had one stay byte for byte what they were. The storeys lowest first (by elevation, then
@@ -36,6 +37,10 @@ pub struct BuildingFacts {
     /// Yönetmeliği, RG 10.11.2022/32009); absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub local: Option<String>,
+    /// The parcel's plan notes the project writes (docs/adr/8084), a rule reads over the municipality's and the national
+    /// regulation (PAİY 69/3), in the project's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub plan_notes: Vec<PlanNoteFacts>,
     /// The rooms that carry people as the escape rules count them (BYKHY Ek-5/A, docs/adr/8035), by persistent id.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rooms: Vec<RoomPeople>,
@@ -70,6 +75,17 @@ pub struct BuildingFacts {
     /// Bodrum katların derinliği (Ek-3/C's footnote): the lowest basement's floor under ±0.00, m; 0 without one.
     #[serde(default)]
     pub basement_depth: f64,
+}
+
+/// A plan note's value: its measure (`groundStoreyHeight`, `storeyHeight`), the value (m) and where it stands as the
+/// architect writes it (“UİP 12.3.2019, plan notu 7”).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct PlanNoteFacts {
+    pub key: String,
+    pub value: f64,
+    pub source: String,
 }
 
 /// An element BYKHY Ek-3/B reads: its persistent id, its kind (`column`, `beam`, `wall`, `slab`), its storey, its
@@ -298,6 +314,9 @@ impl BuildingFacts {
         self.storeys
             .sort_by(|a, b| a.elevation.total_cmp(&b.elevation).then_with(|| a.level.cmp(&b.level)));
         self.local = self.local.filter(|l| !l.is_empty());
+        for n in &mut self.plan_notes {
+            n.value = round(n.value, LENGTH);
+        }
         for r in &mut self.rooms {
             r.persons = round(r.persons, LENGTH);
         }

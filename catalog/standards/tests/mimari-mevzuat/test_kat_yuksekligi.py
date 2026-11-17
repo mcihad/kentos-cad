@@ -1,5 +1,6 @@
 """Kat yüksekliği kuralının sınamaları: deponun bağımsız durumları (fixtures/standards/v1/kat-yuksekligi.json, beklenenler
-Planlı Alanlar İmar Yönetmeliği 28/1-c'nin iki hâlinden ve Sivas 28/1-c'den elle; docs/adr/8083).
+Planlı Alanlar İmar Yönetmeliği 28/1-c'nin iki hâlinden, Sivas 28/1-c'den ve plan notlu durumlarda 28/1 ile 69/3'ten
+elle; docs/adr/8083, 8084).
 
     python3 -I catalog/standards/tests/mimari-mevzuat/test_kat_yuksekligi.py
 """
@@ -17,7 +18,7 @@ from mimari_mevzuat import yururluk as y  # noqa: E402
 
 DEPO = PAKET.parents[2]
 DURUMLAR = DEPO / "fixtures" / "standards" / "v1" / "kat-yuksekligi.json"
-KURALLAR = ("PAİY 28/1-c", "Sivas İmar Yön. 28/1-c", "regulation_")
+KURALLAR = ("PAİY 28/1-c", "Sivas İmar Yön. 28/1-c", "Plan notu · ", "regulation_")
 
 
 def durumlar() -> list[dict]:

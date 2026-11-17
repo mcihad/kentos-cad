@@ -25,6 +25,7 @@ pub(crate) mod ask_work;
 mod choices;
 mod content;
 mod heights;
+pub(crate) mod plan_notes;
 mod custom_crs;
 pub(crate) mod hand_over;
 mod scale;

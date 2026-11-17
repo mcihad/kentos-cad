@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 0.8.0 — 17 Kasım 2026
+
+- Plan notu katmanı (docs/adr/8084): projenin yazdığı parsel plan notları (`building.planNotes`: zemin kat yüksekliği,
+  kat yüksekliği; değeri ve yeri) kat yüksekliği kuralında yerel yönetmeliğin ve PAİY'nin önüne geçer (69/3; 28/1 kat
+  yüksekliklerini plana bırakır). Notun bağladığı katta 28/1-c ve Sivas 28/1-c kapsam dışıdır, değerleri farklıysa
+  iletide yanında yazılır; kural setinde notun kendi satırı ("Plan notu: zemin kat"). Plan notu konut projesi olmayan
+  binada da okunur. `katman.PlanNotu`; 7 bağımsız durum.
+
 ## 0.7.0 — 17 Kasım 2026
 
 - Kat yüksekliği ve kapı ölçüleri (`kat_yuksekligi`, `kapi_olculeri`, docs/adr/8083): Planlı Alanlar İmar Yönetmeliği

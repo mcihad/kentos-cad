@@ -7,6 +7,9 @@ Belediyenin imar yönetmeliği (Sivas) PAİY'nin üstüne okunur: plan aksini de
 - **İkisine de uymayan** ölçüde sıkı olan bağlar, öbürü yanında; ikisi eşitse yalnız PAİY'ninki.
 - **Yerele uyup PAİY'ye uymayan** ölçü çelişkidir (``regulation_conflict``): iki değer kaynaklarıyla yazılır, idare karar
   verir.
+- **Parselin plan notu** (docs/adr/8084) ikisinin de önüne geçer: yerel yönetmelik plan aksini demiyorsa uygulanır
+  (69/3), 28 ile 39 arasındaki maddeler planla değiştirilebilir (69/2 saymaz). Ölçü plan notunun değerini tutmuyorsa
+  kaldı; yönetmeliklerin değerleri farklıysa iletide yanında yazılır.
 
 İletiler Mimari denetimin Rust kurallarınınkiyle aynı biçimdedir (“Ortak merdivenin kolu 1.25 m < 1.30 m — Sivas 31/1-a;
 PAİY 31/1-a: 1.20 m”).
@@ -40,6 +43,21 @@ class Sinir:
         return self.hal.kural(self.bent)
 
 
+@dataclass(frozen=True)
+class PlanNotu:
+    """Parselin plan notunun bir ölçüye koyduğu değer ve yazıldığı yer, mimarın yazdığı gibi (“UİP 12.3.2019, plan notu
+    7”; docs/adr/8084)."""
+
+    deger: float
+    kaynak: str
+
+    def kisa(self) -> str:
+        return f"Plan notu ({self.kaynak})"
+
+    def kural(self) -> str:
+        return f"Plan notu · {self.kaynak}"
+
+
 def metre(v: float) -> str:
     """İki basamakla metre: “1.20 m”."""
     return f"{v:.2f} m"
@@ -69,10 +87,29 @@ def karar(v: float, en_az: bool, ulusal: Sinir, yerel: Sinir | None) -> tuple[st
     return (KALDI, yerel, ulusal) if sik else (KALDI, ulusal, yerel)
 
 
-def bulgu(kod: str, ozne: str, v: float, en_az: bool, ulusal: Sinir, yerel: Sinir | None, onarim: str,
-          uids: list[str], iz: str, nitelik: str = "") -> dict[str, Any] | None:
+def bulgu(kod: str, ozne: str, v: float, en_az: bool, ulusal: Sinir | None, yerel: Sinir | None, onarim: str,
+          uids: list[str], iz: str, nitelik: str = "", plan: PlanNotu | None = None) -> dict[str, Any] | None:
     """Ölçünün bulgusu; tuttuysa yok. ``ozne`` ölçünün adı (“Kapının net genişliği”), ``nitelik`` ölçünün ve sınırın
-    ardından ayraç içinde (“ (konut bölgesi, 2 kat)”), ``iz`` gün denenirken parçanın kimliği."""
+    ardından ayraç içinde (“ (konut bölgesi, 2 kat)”), ``iz`` gün denenirken parçanın kimliği. ``plan`` parselin plan
+    notu: varsa o bağlar, yönetmeliklerin değeri (biri yoksa ``ulusal`` da yok olabilir) farklıysa yanında yazılır."""
+    if plan is not None:
+        if tutar(v, en_az, plan):
+            return None
+        isaret = "<" if en_az else ">"
+        yan = [s for s in (ulusal, yerel) if s is not None and abs(s.deger - plan.deger) > 1e-9]
+        if len(yan) == 2 and abs(yan[0].deger - yan[1].deger) < 1e-9:
+            yan = yan[:1]
+        obur = "".join(f"; {s.kisa()}: {metre(s.deger)}" for s in yan)
+        return {
+            "code": kod,
+            "message": f"{ozne} {metre(v)} {isaret} {metre(plan.deger)} — {plan.kisa()}{obur}",
+            "repair": onarim,
+            "uids": uids,
+            "rule": plan.kural(),
+            "_iz": f"{iz}:plan:{plan.deger}",
+        }
+    if ulusal is None:
+        return None
     sonuc, a, b = karar(v, en_az, ulusal, yerel)
     if sonuc == TUTTU or a is None:
         return None

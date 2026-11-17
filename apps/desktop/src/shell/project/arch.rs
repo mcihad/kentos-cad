@@ -98,6 +98,8 @@ pub struct ZoningTexts {
     pub datum: String,
     pub local: Option<kentos_commands::LocalRules>,
     pub sprinklers: bool,
+    /// Plan notları (docs/adr/8084), a row each.
+    pub plan_notes: Vec<super::plan_notes::Note>,
 }
 
 /// Yerel imar yönetmeliği's choices (docs/adr/8034): none, or a municipality's.
@@ -133,6 +135,7 @@ impl ZoningTexts {
             datum: t(arch.and_then(|a| a.site.as_ref()).and_then(|s| s.datum)),
             local: arch.and_then(|a| a.local_rules),
             sprinklers: arch.is_some_and(|a| a.sprinklers),
+            plan_notes: super::plan_notes::rows(arch.map_or(&[][..], |a| a.plan_notes.as_slice())),
         }
     }
 
@@ -212,7 +215,7 @@ pub(super) fn zoning_view<'a>(
              Parsel ve bahçe mesafeleri Mimari › Proje ▾ › Parsel ve bahçe mesafeleri ile verilir. Yerel imar \
              yönetmeliği seçilince Denetim › Mevzuat belediyenin değerlerini de okur: sıkı olan bağlar, ölçünün \
              belediyeye uyup Planlı Alanlar İmar Yönetmeliği'ne uymadığı yer çelişki olarak söylenir (idare karar \
-             verir). KentOS bir onay vermez; planın kendi notları ayrıca okunur.",
+             verir). Planın notunun değiştirdiği değerler aşağıda, Plan notları'na yazılır. KentOS bir onay vermez.",
         ));
     for (words, value, over) in summary {
         body = body.push(
@@ -384,6 +387,8 @@ pub fn read(
     // The municipality's regulation the audit reads (docs/adr/8034) and the sprinkler system (docs/adr/8035).
     let local_rules = zoning.local;
     let sprinklers = zoning.sprinklers;
+    // The parcel's plan notes (docs/adr/8084).
+    let plan_notes = super::plan_notes::read(&zoning.plan_notes)?;
     let site = {
         let mut s = choices.and_then(|a| a.site.clone()).unwrap_or_default();
         s.datum = datum;
@@ -450,6 +455,7 @@ pub fn read(
         site,
         local_rules,
         sprinklers,
+        plan_notes,
         // The building's fire protection class (docs/adr/8068) and the form's answers (docs/adr/8077) are their own
         // windows': kept as the project has them.
         performance: choices.and_then(|a| a.performance.clone()),
@@ -461,7 +467,7 @@ pub fn read(
     }
 }
 
-fn small(glyph: &'static str, enabled: bool, on: Message) -> Element<'static, Message> {
+pub(super) fn small(glyph: &'static str, enabled: bool, on: Message) -> Element<'static, Message> {
     button(container(icon(crate::icons::from_web(Some(glyph))).size(14.0)).center_x(Length::Fill))
         .on_press_maybe(enabled.then_some(on))
         .padding([4, 0])
@@ -470,7 +476,7 @@ fn small(glyph: &'static str, enabled: bool, on: Message) -> Element<'static, Me
         .into()
 }
 
-fn field<'a>(
+pub(super) fn field<'a>(
     holder: &str,
     value: &'a str,
     wrong: bool,

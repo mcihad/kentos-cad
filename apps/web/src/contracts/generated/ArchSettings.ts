@@ -13,6 +13,7 @@ import type { OpeningType } from "./OpeningType";
 import type { OptionCombo } from "./OptionCombo";
 import type { OptionSet } from "./OptionSet";
 import type { PhaseView } from "./PhaseView";
+import type { PlanNote } from "./PlanNote";
 import type { SitePlan } from "./SitePlan";
 import type { SpaceMethod } from "./SpaceMethod";
 import type { WallDetail } from "./WallDetail";
@@ -123,4 +124,10 @@ formAnswers?: Array<FormAnswer>,
  * Yağmurlama sistemi (docs/adr/8035; `.kcad` schema 226): the building has an automatic sprinkler system, so the
  * fire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.
  */
-sprinklers?: boolean, };
+sprinklers?: boolean, 
+/**
+ * Plan notları (docs/adr/8084; `.kcad` schema 256): the parcel's plan notes that give a value the regulation's
+ * rules read over the municipality's and the national one (PAİY 69/3), as the architect writes them from the
+ * plan, each with where it stands. Empty: none given.
+ */
+planNotes?: Array<PlanNote>, };

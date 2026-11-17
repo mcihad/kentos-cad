@@ -269,6 +269,11 @@
       katın yüksekliği, yatak odaları, kapının net genişliği, yüksekliği ve iki yanı eklendi.
     - Gün yoksa her kat ve kapı ayrı denenir (`yururluk.parcalarla`): güne bağlı tek kapı öbürlerinin bulgusunu saklamaz.
     - Bölümün dış kapısı bölüm girişidir (1,00 m), ortak alanınki bina girişi (1,50 m); bölge türü sıradaki madde.
+  - **Plan notu katmanı (17 Kasım 2026; [ADR 8084](../adr/8084-plan-note-layer.md), K87–K92):**
+    - Sıra parsel → belediye → ulusal (PAİY 69/3; 69/2'nin saydıkları planla değişmez). Parselin plan notları projenin
+      verisidir: Proje ayarları › Mimari › Plan notları (konu, değer, kaynak); `.kcad`'da mimari verisi 11.
+    - KentOS notun metnini sayıya çevirmez; değeri planı okuyan mimar yazar. İlk konular zemin kat ve kat yüksekliği:
+      not bağladığı katta 28/1-c ve Sivas'ın önüne geçer, onların değeri yanında yazılır; büro binasında da okunur.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

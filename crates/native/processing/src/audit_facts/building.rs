@@ -32,13 +32,14 @@
 //!   else up to the storey over it) and its bedrooms (`kind_of`); the program's common areas; each door's net clear
 //!   width (`OpeningSizes::clear`) and height (its head over its sill), what stands on its two sides (a room by its
 //!   program group, a void, nothing) and whether one of them is a toilet (`kind_of`) or a balcony (Balkon).
+//! - **The parcel's plan notes** (docs/adr/8084): the project's `planNotes` as written, the measure by its name.
 
 use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
 use kentos_extensions::audit_facts::building::{
-    BuildingFacts, DoorFacts, ElementFacts, EmsalLimit, RoomPeople, SeparatingElement, SeparationFacts, SpaceFacts,
-    StoreyHolds, UnderStairFacts, UnderStairRoom,
+    BuildingFacts, DoorFacts, ElementFacts, EmsalLimit, PlanNoteFacts, RoomPeople, SeparatingElement, SeparationFacts,
+    SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom,
 };
 
 /// The drawing's building facts; empty (no storey) for a project without Mimari's storeys.
@@ -165,6 +166,11 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         local: arch.local_rules.map(|l| match l {
             LocalRules::Sivas => "sivas".to_owned(),
         }),
+        plan_notes: arch
+            .plan_notes
+            .iter()
+            .map(|n| PlanNoteFacts { key: n.key.name().to_owned(), value: n.value, source: n.source.clone() })
+            .collect(),
         rooms,
         doors,
         limits,

@@ -33,7 +33,7 @@ fn run(app: &mut App, name: &str, input: Value) -> Value {
 }
 
 /// The house; its WC's door and its entrance by their persistent ids.
-fn house() -> (App, String, String) {
+pub(crate) fn house() -> (App, String, String) {
     kentos_postgis::connections::keep_in_memory();
     let (mut app, _) = App::start_in(Some(Module::Architecture), None, Settings::memory(), Recovery::off());
     app.db_store = Box::leak(Box::new(kentos_postgis::connections::ConnectionStore::open(None)));

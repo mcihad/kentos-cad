@@ -290,6 +290,9 @@ pub enum Event {
     ArchLocalRules(Option<kentos_commands::LocalRules>),
     /// Yangın güvenliği's sprinkler system switched (docs/adr/8035).
     ArchSprinklers(bool),
+    /// Plan notları: a row changed or taken away, Plan notu ekle (docs/adr/8084).
+    ArchPlanNote(usize, super::plan_notes::Edit),
+    AddPlanNote,
     /// Araç katmanları (UR-003): the layer a tool's objects go to; none: the active layer.
     ToolLayer(kentos_commands::AnnotationTool, Option<String>),
     RoomChoices(super::arch::ChoiceEvent),
@@ -648,6 +651,11 @@ impl App {
             Event::ArchLines(lines) => s.arch_lines = lines,
             Event::ArchLocalRules(rules) => s.arch_zoning.local = rules,
             Event::ArchSprinklers(on) => s.arch_zoning.sprinklers = on,
+            Event::ArchPlanNote(i, edit) => super::plan_notes::edit(&mut s.arch_zoning.plan_notes, i, edit),
+            Event::AddPlanNote => {
+                let row = super::plan_notes::new_row(&s.arch_zoning.plan_notes);
+                s.arch_zoning.plan_notes.push(row);
+            }
             Event::RoomChoices(edit) => {
                 super::arch::edit_choices(d.arch.get_or_insert_with(Default::default), edit);
             }
@@ -1146,6 +1154,11 @@ impl App {
                     |r| event(Event::ArchLocalRules(r)),
                     crate::zoning_badge::summary(&doc.model),
                     crate::zoning_badge::plan_lines(&doc.model),
+                ),
+                super::plan_notes::view(
+                    &s.arch_zoning.plan_notes,
+                    |i, e| event(Event::ArchPlanNote(i, e)),
+                    event(Event::AddPlanNote),
                 ),
                 super::arch::fire_view(&s.arch_zoning, |on| event(Event::ArchSprinklers(on))),
                 super::arch::in_use_view(in_use.as_ref(), event(Event::SelectLevelUsers)),

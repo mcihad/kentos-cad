@@ -1,7 +1,7 @@
 {
  "format": "kentos.regulationCases",
  "version": 1,
- "about": "Kat yüksekliğinin bağımsız durumları (docs/adr/8083): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 28/1-c'nin 1.10.2017 (RG 3.7.2017/30113) ve 12.8.2023 (RG 32277 ek ibare) hâllerinden ve Sivas İmar Yönetmeliği 28/1-c'den (RG 10.11.2022/32009) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.storeys: kot, kattan kata yükseklik, yatak odaları).",
+ "about": "Kat yüksekliğinin bağımsız durumları (docs/adr/8083): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 28/1-c'nin 1.10.2017 (RG 3.7.2017/30113) ve 12.8.2023 (RG 32277 ek ibare) hâllerinden ve Sivas İmar Yönetmeliği 28/1-c'den (RG 10.11.2022/32009) elle çıkarıldı; kuralın kodundan üretilmedi. Plan notlu durumlar (docs/adr/8084) PAİY 28/1'in kat yüksekliklerini plana bırakmasından ve 69/3'ten elle. Olgular KentOS'un ölçüsüdür (building.storeys: kot, kattan kata yükseklik, yatak odaları; building.planNotes: projenin yazdığı plan notları).",
  "cases": [
   {
    "id": "iki-kat-380-2026",
@@ -1176,6 +1176,522 @@
      "PAİY 28/1-c": [
       "expertReview",
       null
+     ]
+    }
+   }
+  },
+  {
+   "id": "plan-zemin-450",
+   "neden": "Konut, zemin kat 4,40 m, 1. kat 3,00 m; plan notu zemin katta en çok 4,50 m; 2026: zemin katı plan notu bağlar (28/1 plana bırakır) → 4,40 geçer, PAİY'nin 4,00'ı okunmaz; 1. kat 4,00'ın içinde.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 4.4
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 4.4,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 3.0
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "planNotes": [
+     {
+      "key": "groundStoreyHeight",
+      "value": 4.5,
+      "source": "UİP 12.3.2019, plan notu 7"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "Plan notu: zemin kat": [
+      "passed",
+      null
+     ],
+     "PAİY 28/1-c": [
+      "passed",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "plan-zemin-470",
+   "neden": "Aynı bina, zemin kat 4,70 m: plan notunun 4,50'sini aşar → kalır; PAİY'nin 4,00'ı yanında yazılır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 4.7
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 4.7,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 3.0
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "planNotes": [
+     {
+      "key": "groundStoreyHeight",
+      "value": 4.5,
+      "source": "UİP 12.3.2019, plan notu 7"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "“Zemin kat” kat yüksekliği 4.70 m > 4.50 m — Plan notu (UİP 12.3.2019, plan notu 7); PAİY 28/1-c (12.8.2023): 4.00 m"
+      ]
+     }
+    ],
+    "rules": {
+     "Plan notu: zemin kat": [
+      "failed",
+      null
+     ],
+     "PAİY 28/1-c": [
+      "passed",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "plan-kat-300",
+   "neden": "Konut, iki kat 3,20 m; plan notu bütün katlarda en çok 3,00 m (PAİY'den sıkı): ikisi de plan notunu aşar → kalır; 28/1-c kapsam dışı (katlar plan notunda).",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 3.2
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.2,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 3.2
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "planNotes": [
+     {
+      "key": "storeyHeight",
+      "value": 3.0,
+      "source": "UİP 12.3.2019, plan notu 8"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.20 m > 3.00 m — Plan notu (UİP 12.3.2019, plan notu 8); PAİY 28/1-c (12.8.2023): 4.00 m"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.20 m > 3.00 m — Plan notu (UİP 12.3.2019, plan notu 8); PAİY 28/1-c (12.8.2023): 4.00 m"
+      ]
+     }
+    ],
+    "rules": {
+     "Plan notu: kat yüksekliği": [
+      "failed",
+      null
+     ],
+     "PAİY 28/1-c": [
+      "outOfScope",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "plan-sivas-380",
+   "neden": "Sivas, konut, iki kat 3,80 m; plan notu katlarda en çok 3,80 m: plan Sivas'ın 3,60'ının da önüne geçer (69/3) → geçer; iki yönetmelik kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 3.8
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.8,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 3.8
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "planNotes": [
+     {
+      "key": "storeyHeight",
+      "value": 3.8,
+      "source": "UİP 12.3.2019, plan notu 8"
+     }
+    ],
+    "local": "sivas"
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "Plan notu: kat yüksekliği": [
+      "passed",
+      null
+     ],
+     "PAİY 28/1-c": [
+      "outOfScope",
+      "12.8.2023"
+     ],
+     "Sivas 28/1-c": [
+      "outOfScope",
+      "10.11.2022"
+     ]
+    }
+   }
+  },
+  {
+   "id": "plan-buro-450",
+   "neden": "Büro (konut projesi değil), iki kat 4,50 m; plan notu katlarda en çok 4,00 m: plan notu bölgeden bağımsız okunur → iki kat kalır; konut bölgesinin değeri yazılmaz.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 4.5
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 4.5,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 4.5
+     }
+    ],
+    "units": 1,
+    "dwellings": 0,
+    "commons": 0,
+    "planNotes": [
+     {
+      "key": "storeyHeight",
+      "value": 4.0,
+      "source": "UİP 12.3.2019, plan notu 8"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "“Zemin kat” kat yüksekliği 4.50 m > 4.00 m — Plan notu (UİP 12.3.2019, plan notu 8)"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "“1. kat” kat yüksekliği 4.50 m > 4.00 m — Plan notu (UİP 12.3.2019, plan notu 8)"
+      ]
+     }
+    ],
+    "rules": {
+     "Plan notu: kat yüksekliği": [
+      "failed",
+      null
+     ],
+     "PAİY 28/1-c": [
+      "outOfScope",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "plan-buro-yalniz-zemin",
+   "neden": "Büro, zemin kat 5,50 m ve 1. kat 4,50 m; plan notu yalnız zemin katta en çok 4,50 m: yalnız zemin kat okunur ve kalır; 1. kat ne konut ne plan notu.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 5.5
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 5.5,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 4.5
+     }
+    ],
+    "units": 1,
+    "dwellings": 0,
+    "commons": 0,
+    "planNotes": [
+     {
+      "key": "groundStoreyHeight",
+      "value": 4.5,
+      "source": "UİP 12.3.2019, plan notu 7"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "“Zemin kat” kat yüksekliği 5.50 m > 4.50 m — Plan notu (UİP 12.3.2019, plan notu 7)"
+      ]
+     }
+    ],
+    "rules": {
+     "Plan notu: zemin kat": [
+      "failed",
+      null
+     ],
+     "PAİY 28/1-c": [
+      "outOfScope",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "plan-tarihsiz-420",
+   "neden": "Konut, tek kat 4,20 m, başvuru tarihi yok; plan notu katlarda en çok 4,50 m: plan notu bağladığı için sonuç güne bağlı değil → geçer, eksik veri yok.",
+   "permit": {
+    "particulars": {}
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 4.2
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "planNotes": [
+     {
+      "key": "storeyHeight",
+      "value": 4.5,
+      "source": "UİP 12.3.2019, plan notu 8"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "Plan notu: kat yüksekliği": [
+      "passed",
+      null
+     ],
+     "PAİY 28/1-c": [
+      "outOfScope",
+      "12.8.2023"
      ]
     }
    }

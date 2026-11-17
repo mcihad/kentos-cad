@@ -5934,6 +5934,22 @@ PlanBoxName = Literal["index", "geometry", "local"]
 """The names of :class:`PlanBox`, for a plain string."""
 
 
+class PlanNoteKey(_StrEnum):
+    """What a plan note gives a value for (docs/adr/8084): a measure a rule of the regulation reads, the plan's value
+    coming before the regulations' where PAİY lets a plan say more (69/2–3; 28/1: “uygulama imar planında daha fazla
+    belirlenmemiş ise”).
+
+    - ``groundStoreyHeight``: Zemin kat yüksekliği, en çok (28/1): the ground storey's floor to floor, m.
+    - ``storeyHeight``: Kat yüksekliği, en çok (28/1): every storey's on and over ±0.00 floor to floor (the ground storey's too, unless
+    """
+    GROUND_STOREY_HEIGHT = "groundStoreyHeight"
+    STOREY_HEIGHT = "storeyHeight"
+
+
+PlanNoteKeyName = Literal["groundStoreyHeight", "storeyHeight"]
+"""The names of :class:`PlanNoteKey`, for a plain string."""
+
+
 class PlanRole(_StrEnum):
     """What a layer's line work is read as.
 
@@ -17595,6 +17611,9 @@ class ArchSettings(_Model):
         performance: Yangın ve performans (docs/adr/8068; arch data 1): the building's declared fire protection class (EK-6 Tablo
             6.7 `FireProtectionClass`). Absent: none declared.
         phase_view: The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are.
+        plan_notes: Plan notları (docs/adr/8084; `.kcad` schema 256): the parcel's plan notes that give a value the regulation's
+            rules read over the municipality's and the national one (PAİY 69/3), as the architect writes them from the
+            plan, each with where it stands. Empty: none given.
         program: The building's program (docs/adr/0773, KCAD 140): buildings, wings, units and the design brief.
         site: Vaziyet planı (docs/adr/8032; `.kcad` schema 224): the parcel's boundary, its edges' kinds and setbacks, the
             absolute elevation of ±0.00 and the setback line the document keeps. Absent: none given.
@@ -17623,6 +17642,7 @@ class ArchSettings(_Model):
     options: list[OptionSet] | Unset = UNSET
     performance: BuildingPerformance | None | Unset = UNSET
     phase_view: PhaseView | PhaseViewName | None | Unset = UNSET
+    plan_notes: list[PlanNote] | Unset = UNSET
     program: BuildingProgram | Unset = UNSET
     site: SitePlan | None | Unset = UNSET
     space_method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
@@ -17666,6 +17686,8 @@ class ArchSettings(_Model):
             out["performance"] = None if self.performance is None else self.performance.to_json()
         if self.phase_view is not UNSET:
             out["phaseView"] = None if self.phase_view is None else _enum_out(self.phase_view)
+        if self.plan_notes is not UNSET:
+            out["planNotes"] = [e0.to_json() for e0 in self.plan_notes]
         if self.program is not UNSET:
             out["program"] = self.program.to_json()
         if self.site is not UNSET:
@@ -17703,6 +17725,7 @@ class ArchSettings(_Model):
             options=[OptionSet.from_json(e0) for e0 in data["options"]] if "options" in data else UNSET,
             performance=UNSET if "performance" not in data else None if data["performance"] is None else BuildingPerformance.from_json(data["performance"]),
             phase_view=UNSET if "phaseView" not in data else None if data["phaseView"] is None else _enum_in(PhaseView, data["phaseView"]),
+            plan_notes=[PlanNote.from_json(e0) for e0 in data["planNotes"]] if "planNotes" in data else UNSET,
             program=BuildingProgram.from_json(data["program"]) if "program" in data else UNSET,
             site=UNSET if "site" not in data else None if data["site"] is None else SitePlan.from_json(data["site"]),
             space_method=UNSET if "spaceMethod" not in data else None if data["spaceMethod"] is None else _enum_in(SpaceMethod, data["spaceMethod"]),
@@ -74717,6 +74740,34 @@ class PlanLayerRole(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PlanNote(_Model):
+    """A plan note's value (docs/adr/8084): what it is for, the value as the note writes it (metres for a height) and where
+    it stands (“UİP 12.3.2019, plan notu 7”), as the architect reads it from the plan: KentOS does not read a note's
+    words into a number.
+    Attributes:
+        value: Unit: length.
+    """
+    key: PlanNoteKey | PlanNoteKeyName
+    value: float
+    source: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = _enum_out(self.key)
+        out["value"] = float(self.value)
+        out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PlanNote:
+        return cls(
+            key=_enum_in(PlanNoteKey, data["key"]),
+            value=float(data["value"]),
+            source=data["source"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PlanNoteText(_Model):
     """A plan note a decision names (or a note of its whole plan): its number, text and scope.
     Attributes:
@@ -95075,7 +95126,10 @@ class SettingsSet(_Model):
       `levelView` (`active`, `below`; `all` is no setting), the level and view the drawing opens with
       (docs/adr/0720 §1); `cutHeight` (metres above each level's floor, 0.3–3; absent 1.10) the height its plans
       are cut at (docs/adr/8012); `lineGroups` (`byScale`: TS 88-23's line group of the plan's scale; `own` or
-      absent: every object its own pen) how its lines are weighted (docs/adr/8013);
+      absent: every object its own pen) how its lines are weighted (docs/adr/8013); `planNotes` the parcel's plan notes
+      the regulation's rules read over the municipality's and the national one (docs/adr/8084: `key`
+      `groundStoreyHeight` or `storeyHeight`, `value` metres over 0 and at most 20, `source` where the note stands, one
+      note a key);
     - `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with
       the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
       file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
@@ -145557,6 +145611,9 @@ __all__ = [
     "PlanDraftChange",
     "PlanLayerRole",
     "PlanNorthDirection",
+    "PlanNote",
+    "PlanNoteKey",
+    "PlanNoteKeyName",
     "PlanNoteText",
     "PlanRoadWork",
     "PlanRole",

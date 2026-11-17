@@ -1521,6 +1521,12 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub sprinklers: bool,
+    /// Plan notları (docs/adr/8084; `.kcad` schema 256): the parcel's plan notes that give a value the regulation's
+    /// rules read over the municipality's and the national one (PAİY 69/3), as the architect writes them from the
+    /// plan, each with where it stands. Empty: none given.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PlanNote>>", optional))]
+    pub plan_notes: Vec<PlanNote>,
 }
 
 /// A municipality's own regulation (docs/adr/8034): its values read over Planlı Alanlar İmar Yönetmeliği's, as PAİY
@@ -1534,6 +1540,101 @@ pub struct ArchSettings {
 pub enum LocalRules {
     /// Sivas Belediyesi İmar Yönetmeliği (RG 10.11.2022, 32009).
     Sivas,
+}
+
+/// What a plan note gives a value for (docs/adr/8084): a measure a rule of the regulation reads, the plan's value
+/// coming before the regulations' where PAİY lets a plan say more (69/2–3; 28/1: “uygulama imar planında daha fazla
+/// belirlenmemiş ise”).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum PlanNoteKey {
+    /// Zemin kat yüksekliği, en çok (28/1): the ground storey's floor to floor, m.
+    GroundStoreyHeight,
+    /// Kat yüksekliği, en çok (28/1): every storey's on and over ±0.00 floor to floor (the ground storey's too, unless
+    /// a note gives its own), m.
+    StoreyHeight,
+}
+
+impl PlanNoteKey {
+    pub const ALL: [PlanNoteKey; 2] = [PlanNoteKey::GroundStoreyHeight, PlanNoteKey::StoreyHeight];
+
+    /// As the form and a finding name it.
+    pub fn label(self) -> &'static str {
+        match self {
+            PlanNoteKey::GroundStoreyHeight => "Zemin kat yüksekliği (en çok)",
+            PlanNoteKey::StoreyHeight => "Kat yüksekliği (en çok)",
+        }
+    }
+
+    /// As the audit facts and the rules write it.
+    pub fn name(self) -> &'static str {
+        match self {
+            PlanNoteKey::GroundStoreyHeight => "groundStoreyHeight",
+            PlanNoteKey::StoreyHeight => "storeyHeight",
+        }
+    }
+}
+
+/// A plan note's value (docs/adr/8084): what it is for, the value as the note writes it (metres for a height) and where
+/// it stands (“UİP 12.3.2019, plan notu 7”), as the architect reads it from the plan: KentOS does not read a note's
+/// words into a number.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PlanNote {
+    pub key: PlanNoteKey,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub value: f64,
+    pub source: String,
+}
+
+/// The most plan notes a project keeps.
+pub const PLAN_NOTES_MAX: usize = 50;
+
+impl PlanNote {
+    /// What is wrong with a project's plan notes: the field and the words. A value finite, over 0 and at most 20 m; its
+    /// source said (at most 200 characters); one note for each measure.
+    pub fn list_problem(notes: &[PlanNote]) -> Option<(String, String)> {
+        if notes.len() > PLAN_NOTES_MAX {
+            return Some(("planNotes".into(), format!("En çok {PLAN_NOTES_MAX} plan notu verilebilir.")));
+        }
+        for (i, n) in notes.iter().enumerate() {
+            if !(n.value.is_finite() && n.value > 0.0 && n.value <= 20.0) {
+                return Some((
+                    format!("planNotes.{i}.value"),
+                    format!("“{}” plan notunun değeri sıfırdan büyük, en çok 20 m olmalı.", n.key.label()),
+                ));
+            }
+            let source = n.source.trim();
+            if source.is_empty() {
+                return Some((
+                    format!("planNotes.{i}.source"),
+                    format!(
+                        "“{}” plan notunun kaynağını yazın: planı ve notun numarası (UİP 12.3.2019, plan notu 7).",
+                        n.key.label()
+                    ),
+                ));
+            }
+            if source.chars().count() > 200 {
+                return Some((
+                    format!("planNotes.{i}.source"),
+                    format!("“{}” plan notunun kaynağı en çok 200 karakter olmalı.", n.key.label()),
+                ));
+            }
+            if notes[..i].iter().any(|m| m.key == n.key) {
+                return Some((
+                    format!("planNotes.{i}.key"),
+                    format!("“{}” için iki plan notu var; birini kaldırın.", n.key.label()),
+                ));
+            }
+        }
+        None
+    }
 }
 
 impl LocalRules {
@@ -1968,6 +2069,11 @@ impl ArchSettings {
         self.sprinklers
     }
 
+    /// Whether it keeps the parcel's plan notes (KCAD 256, docs/adr/8084).
+    pub fn has_plan_notes(&self) -> bool {
+        !self.plan_notes.is_empty()
+    }
+
     /// Whether it keeps building materials (KCAD 150, docs/adr/0785).
     pub fn has_materials(&self) -> bool {
         !self.materials.is_empty()
@@ -2103,6 +2209,9 @@ impl ArchSettings {
     pub fn problem(&self) -> Option<(String, String)> {
         if let Some(p) = crate::FormAnswer::list_problem(&self.form_answers) {
             return Some((format!("formAnswers.{}", p.0), p.1));
+        }
+        if let Some(p) = PlanNote::list_problem(&self.plan_notes) {
+            return Some(p);
         }
         if let Some(z) = &self.zoning
             && let Some(p) = z.problem()
@@ -2608,5 +2717,37 @@ mod plan_cut_tests {
         assert_eq!(at(20.0), (0.7, 0.35));
         let json = serde_json::to_value(&a).unwrap();
         assert_eq!(json, serde_json::json!({ "lineGroups": "byScale" }));
+    }
+
+    /// Plan notları (docs/adr/8084): a value over 0 and at most 20 m, its source said, one note a measure; written as
+    /// `planNotes`, absent when there is none.
+    #[test]
+    fn plan_notes_are_checked_and_written_as_the_parcel_s() {
+        let note = |key, value, source: &str| PlanNote { key, value, source: source.into() };
+        let mut a = ArchSettings {
+            plan_notes: vec![
+                note(PlanNoteKey::GroundStoreyHeight, 4.5, "UİP 12.3.2019, plan notu 7"),
+                note(PlanNoteKey::StoreyHeight, 3.2, "plan notu 8"),
+            ],
+            ..Default::default()
+        };
+        assert_eq!(a.problem(), None);
+        let json = serde_json::to_value(&a).unwrap();
+        assert_eq!(
+            json["planNotes"][0],
+            serde_json::json!({"key": "groundStoreyHeight", "value": 4.5, "source": "UİP 12.3.2019, plan notu 7"})
+        );
+        let back: ArchSettings = serde_json::from_value(json).unwrap();
+        assert_eq!(back, a);
+        assert!(a.has_plan_notes());
+        let path = |a: &ArchSettings| a.problem().map(|(p, _)| p);
+        a.plan_notes[1].value = 0.0;
+        assert_eq!(path(&a).as_deref(), Some("planNotes.1.value"));
+        a.plan_notes[1].value = 3.2;
+        a.plan_notes[1].source = "  ".into();
+        assert_eq!(path(&a).as_deref(), Some("planNotes.1.source"));
+        a.plan_notes[1] = note(PlanNoteKey::GroundStoreyHeight, 4.0, "plan notu 9");
+        assert_eq!(path(&a).as_deref(), Some("planNotes.1.key"));
+        assert!(!serde_json::to_string(&ArchSettings::default()).unwrap().contains("planNotes"));
     }
 }
