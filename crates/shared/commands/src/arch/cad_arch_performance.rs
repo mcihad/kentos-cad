@@ -11,7 +11,7 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
-use crate::{Declared, DeclaredExit};
+use crate::{Declared, DeclaredBearing, DeclaredExit};
 
 /// The command's name.
 pub const CAD_ARCH_PERFORMANCE: &str = "cad.arch.performance";
@@ -26,8 +26,9 @@ pub const CAD_ARCH_PERFORMANCE_VERSION: u32 = 1;
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum PerformanceOperation {
     /// Nesneler: the objects' own fire resistance class (walls, slabs, columns, beams, roofs, railings, stairs, ramps,
-    /// doors, windows) and exit role (doors, stairs). A field absent stays; null takes the object's own away (a wall
-    /// then carries its style's, a door its type's).
+    /// doors, windows), exit role (doors, stairs; a roof as an escape route, BYKHY Ek-3/B 4-a) and load-bearing role
+    /// (walls but curtain walls, Ek-3/B 2; docs/adr/8090). A field absent stays; null takes the object's own away (a wall
+    /// then carries its style's class, a door its type's).
     #[serde(rename_all = "camelCase")]
     Objects {
         #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
@@ -48,6 +49,14 @@ pub enum PerformanceOperation {
         #[cfg_attr(feature = "ts", ts(as = "Option<Option<DeclaredExit>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<DeclaredExit>"))]
         exit: Option<Option<DeclaredExit>>,
+        #[serde(
+            default,
+            with = "crate::cad_properties::nullable",
+            skip_serializing_if = "Option::is_none"
+        )]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Option<DeclaredBearing>>", optional))]
+        #[cfg_attr(feature = "schema", schemars(with = "Option<DeclaredBearing>"))]
+        load_bearing: Option<Option<DeclaredBearing>>,
     },
     /// Duvar stili: a wall style's class (by its id or name); null: none.
     #[serde(rename_all = "camelCase")]
@@ -82,7 +91,8 @@ pub enum PerformanceOperation {
 /// Input of `cad.arch.performance` v1.
 ///
 /// Refusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `field_not_for_kind` (a class on a room,
-/// a grid, a line …; an exit role on anything but a door or a stair), `nothing_to_set`, `style_not_found`,
+/// a grid, a line …; an exit role on anything but a door, a stair or a roof; a load-bearing role on anything but a wall
+/// that is no curtain wall), `nothing_to_set`, `style_not_found`,
 /// `opening_type_not_found`, `material_not_found`, `invalid_declared`, `invalid_strength`, `invalid_revision`,
 /// `revision_conflict`, `layer_locked` (an object named on a locked layer: nothing is written).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

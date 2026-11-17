@@ -1,7 +1,7 @@
 {
   "format": "kentos.regulationCases",
   "version": 1,
-  "about": "Yapı elemanlarının yangına dayanım sürelerinin bağımsız durumları (docs/adr/8082): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik Ek-3/B ve Ek-3/C'nin tablolarından (PDF'in 91. ve 93. sayfaları; Ek-3/C RG 9.9.2009/27344) elle çıkarıldı; kuralın kodundan üretilmedi. Çatı ve teras durumları docs/adr/8087'den (Ek-3/B 4-b, 4-c), asma tavanınkiler docs/adr/8089'dan (Ek-3/B 11). Olgular KentOS'un ölçüsüdür (building.elements, height, basementDepth, separations).",
+  "about": "Yapı elemanlarının yangına dayanım sürelerinin bağımsız durumları (docs/adr/8082): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik Ek-3/B ve Ek-3/C'nin tablolarından (PDF'in 91. ve 93. sayfaları; Ek-3/C RG 9.9.2009/27344) elle çıkarıldı; kuralın kodundan üretilmedi. Çatı ve teras durumları docs/adr/8087'den (Ek-3/B 4-b, 4-c), asma tavanınkiler docs/adr/8089'dan (Ek-3/B 11), beyan edilen taşıyıcılık ve kaçış yolu rolleriyle olanlar docs/adr/8090'dan (Ek-3/B 2, 4-a, 5, 6–7, Ek-3/C not 3). Olgular KentOS'un ölçüsüdür (building.elements, height, basementDepth, separations).",
   "cases": [
     {
       "id": "apartman-tamam",
@@ -1961,6 +1961,681 @@
             "has": [
               "1. kat: 1 asma tavan EI 15",
               "en az EI 30"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "tasiyici-ic-duvar",
+      "neden": "8 daireli apartman, 12 m (Ek-3/C 60): 1. katın iç duvarı taşıyıcı beyan edilmiş, sınıfı EI 60: Ek-3/B 2 yük taşıyıcı duvar R, Ek-3/C kadar ister; EI 60'ta R yok → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000081",
+            "kind": "wall",
+            "level": "k01",
+            "fireRating": "EI 60",
+            "loadBearing": true
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "1. kat: 1 duvar EI 60",
+              "Ek-3/B 2 yük taşıyıcı duvar",
+              "en az R 60"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "tasiyici-ic-duvar-rei",
+      "neden": "Aynı taşıyıcı iç duvar REI 60: R 60'ı tutar → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000082",
+            "kind": "wall",
+            "level": "k01",
+            "fireRating": "REI 60",
+            "loadBearing": true
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY Ek-3": [
+            "passed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bolme-duvar",
+      "neden": "İç duvar taşıyıcı değil (bölme), sınıfı beyan edilmemiş: Ek-3'ün satırlarından hiçbiri onu istemez → kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000083",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY Ek-3": [
+            "outOfScope",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "dis-duvar-tasiyici-degil",
+      "neden": "Yağmurlamalı büro 32 m: dış duvar EI 90 ve taşıyıcı değil beyan edilmiş: not (3) 120'yi 90'a indirir, uzman incelemesi kalmaz → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 10,
+        "dwellings": 0,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000084",
+            "kind": "column",
+            "level": "k01",
+            "fireRating": "R 120",
+            "frame": true
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000085",
+            "kind": "wall",
+            "level": "k01",
+            "fireRating": "EI 90",
+            "exterior": true,
+            "loadBearing": false
+          }
+        ],
+        "height": 32.0,
+        "basementDepth": 3.0,
+        "uses": [
+          "Büro"
+        ],
+        "sprinklers": true
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY Ek-3": [
+            "passed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "dis-duvar-tasiyici",
+      "neden": "Aynı dış duvar taşıyıcı beyan edilmiş: taşıyıcı sistemin parçası, not (3) uygulanmaz; Ek-3/B 5 REI 120 ister, EI 90 → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 10,
+        "dwellings": 0,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000086",
+            "kind": "column",
+            "level": "k01",
+            "fireRating": "R 120",
+            "frame": true
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000087",
+            "kind": "wall",
+            "level": "k01",
+            "fireRating": "EI 90",
+            "exterior": true,
+            "loadBearing": true
+          }
+        ],
+        "height": 32.0,
+        "basementDepth": 3.0,
+        "uses": [
+          "Büro"
+        ],
+        "sprinklers": true
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "1 duvar EI 90",
+              "Ek-3/B 5 taşıyıcı dış duvar",
+              "en az REI 120"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kacis-yolu-cati",
+      "neden": "Apartmanın çatısı kaçış yolu beyan edilmiş, sınıfı EI 60: Ek-3/B 4-a alt yüzeyden REI 30 ister, R yok → kalır (4-c'nin yük taşımayan çatı satırı ona değil).",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000088",
+            "kind": "roof",
+            "level": "k02",
+            "fireRating": "EI 60",
+            "escape": true
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "2. kat: 1 çatı EI 60",
+              "Ek-3/B 4-a kaçış yolu olan çatı",
+              "en az REI 30"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "tasiyici-kompartiman-duvari",
+      "neden": "Büro 24 m (Ek-3/C 90): iki ofis arası EI 90 duvar kompartımanı ayırır (24/7); duvar taşıyıcı beyan edilmiş: Ek-3/B 6–7 REI ister, 2'nin satırı değil → R yok, kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 10,
+        "dwellings": 0,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000060",
+            "kind": "wall",
+            "level": "k01",
+            "fireRating": "EI 90",
+            "loadBearing": true
+          }
+        ],
+        "height": 24.0,
+        "basementDepth": 3.0,
+        "uses": [
+          "Büro"
+        ],
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000010",
+            "level": "k01",
+            "name": "Ofis 1",
+            "area": 50.0
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000011",
+            "level": "k01",
+            "name": "Ofis 2",
+            "area": 50.0
+          }
+        ],
+        "separations": [
+          {
+            "level": "k01",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000010",
+              "00000000-0000-4000-8000-000000000011"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000060",
+                "kind": "wall",
+                "fireRating": "EI 90",
+                "length": 5.0
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "1 duvar EI 90",
+              "kompartıman duvarı en az REI 60",
+              "en az REI 90"
             ]
           }
         ],

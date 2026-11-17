@@ -135,6 +135,46 @@ fn the_fire_compartments_are_zones_of_their_rooms() {
     }
 }
 
+/// A wall declared load-bearing (docs/adr/8090) writes `Pset_WallCommon.LoadBearing` true, one declared not false; a
+/// wall with no declaration writes none (EK-6 Tablo 6.133: optional, never guessed).
+#[test]
+fn a_wall_s_declared_load_bearing_role_is_its_common_set_s() {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    let mut doc = building();
+    let walls: Vec<(u128, String)> = doc
+        .entities_with_uids()
+        .filter(|(_, e)| matches!(e, Entity::Wall(_)))
+        .map(|(u, _)| (u.as_u128(), u.to_string()))
+        .take(2)
+        .collect();
+    for ((_, uid), bearing) in walls.iter().zip([true, false]) {
+        let input = serde_json::json!({"operation": {"kind": "objects", "uids": [uid],
+            "loadBearing": {"bearing": bearing, "basis": {"kind": "author"}}}});
+        let answer = registry::run(&mut ExecutionContext::new(&mut doc), "cad.arch.performance", CallOp::Execute, input).unwrap();
+        assert_eq!(answer["status"], "completed", "{answer}");
+    }
+    let (b, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
+    let bearing = |id: u128| {
+        let e = b.elements.iter().find(|e| e.id == Some(id)).expect("the wall");
+        e.psets
+            .iter()
+            .filter(|p| p.name == "Pset_WallCommon")
+            .flat_map(|p| p.props.iter())
+            .find(|(n, _)| n == "LoadBearing")
+            .map(|(_, v)| v.clone())
+    };
+    assert_eq!(bearing(walls[0].0), Some(Value::Bool(true)));
+    assert_eq!(bearing(walls[1].0), Some(Value::Bool(false)));
+    let undeclared = doc
+        .entities_with_uids()
+        .filter(|(_, e)| matches!(e, Entity::Wall(_)))
+        .map(|(u, _)| u.as_u128())
+        .nth(2)
+        .expect("a third wall");
+    assert_eq!(bearing(undeclared), None);
+}
+
 /// The künye a permit set writes into the drawing's variables (docs/adr/8037), as an office fills it.
 const KUNYE: [(&str, &str); 17] = [
     ("proje_kodu", "260123"),

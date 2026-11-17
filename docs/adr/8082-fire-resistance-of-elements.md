@@ -110,5 +110,6 @@ Tablolar yönetmeliğin PDF'inin 91. (Ek-3/A, Ek-3/B) ve 93. (Ek-3/C) sayfaları
   yapıldı; asma tavan [ADR 8089](8089-suspended-ceiling-fire-resistance.md)'da; korunumlu şaft beyanı ve yangın kesici
   kaldı.
 - **Taşıyıcı duvar** (Ek-3/B 2): duvarın taşıyıcı olduğu beyanı modelde yok; not (3)'ün uzman incelemesini de kapatır.
+  [ADR 8090](8090-declared-load-bearing-and-escape-roof.md)'da yapıldı (4-a'nın kaçış yolu çatısıyla birlikte).
 - **Dükkânla üstündeki kat arası** (3-b): mahallerin kullanımından.
 - **Binaları ayıran duvarlar** (24/3, not 2) birden çok binalı parselde.

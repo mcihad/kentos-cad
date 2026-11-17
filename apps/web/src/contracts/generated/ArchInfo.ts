@@ -3,6 +3,7 @@ import type { ArchDiscipline } from "./ArchDiscipline";
 import type { ArchPhase } from "./ArchPhase";
 import type { ArchStatus } from "./ArchStatus";
 import type { Declared } from "./Declared";
+import type { DeclaredBearing } from "./DeclaredBearing";
 import type { DeclaredExit } from "./DeclaredExit";
 
 /**
@@ -16,6 +17,12 @@ export type ArchInfo = { level?: string, phase?: ArchPhase, status?: ArchStatus,
  */
 fireRating?: Declared, 
 /**
- * A stair's emergency exit role (docs/adr/8068, EK-6 `FireExit`); absent: unknown (missing).
+ * A stair's emergency exit role (docs/adr/8068, EK-6 `FireExit`), or a roof's as an escape route (docs/adr/8090,
+ * BYKHY Ek-3/B 4-a); absent: unknown (missing).
  */
-exit?: DeclaredExit, };
+exit?: DeclaredExit, 
+/**
+ * A wall's load-bearing role (docs/adr/8090, EK-6 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2); absent: unknown
+ * (missing).
+ */
+loadBearing?: DeclaredBearing, };

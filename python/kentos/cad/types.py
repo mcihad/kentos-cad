@@ -17219,14 +17219,18 @@ class ArchInfo(_Model):
     """What every architectural object carries beside its geometry (`CAD-ARCH-03`): its level (by the project level's
     id), phase, construction status and discipline; absent fields are not said.
     Attributes:
-        exit: A stair's emergency exit role (docs/adr/8068, EK-6 `FireExit`); absent: unknown (missing).
+        exit: A stair's emergency exit role (docs/adr/8068, EK-6 `FireExit`), or a roof's as an escape route (docs/adr/8090,
+            BYKHY Ek-3/B 4-a); absent: unknown (missing).
         fire_rating: Its own fire resistance class (docs/adr/8068, EK-6 `FireRating`), over its type's (a wall style's); absent: its
             type's, else none (missing).
+        load_bearing: A wall's load-bearing role (docs/adr/8090, EK-6 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2); absent: unknown
+            (missing).
     """
     discipline: ArchDiscipline | ArchDisciplineName | None | Unset = UNSET
     exit: DeclaredExit | None | Unset = UNSET
     fire_rating: Declared | None | Unset = UNSET
     level: str | None | Unset = UNSET
+    load_bearing: DeclaredBearing | None | Unset = UNSET
     phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
     status: ArchStatus | ArchStatusName | None | Unset = UNSET
 
@@ -17240,6 +17244,8 @@ class ArchInfo(_Model):
             out["fireRating"] = None if self.fire_rating is None else self.fire_rating.to_json()
         if self.level is not UNSET:
             out["level"] = self.level
+        if self.load_bearing is not UNSET:
+            out["loadBearing"] = None if self.load_bearing is None else self.load_bearing.to_json()
         if self.phase is not UNSET:
             out["phase"] = None if self.phase is None else _enum_out(self.phase)
         if self.status is not UNSET:
@@ -17253,6 +17259,7 @@ class ArchInfo(_Model):
             exit=UNSET if "exit" not in data else None if data["exit"] is None else DeclaredExit.from_json(data["exit"]),
             fire_rating=UNSET if "fireRating" not in data else None if data["fireRating"] is None else Declared.from_json(data["fireRating"]),
             level=data.get("level", UNSET),
+            load_bearing=UNSET if "loadBearing" not in data else None if data["loadBearing"] is None else DeclaredBearing.from_json(data["loadBearing"]),
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
             status=UNSET if "status" not in data else None if data["status"] is None else _enum_in(ArchStatus, data["status"]),
         )
@@ -17386,7 +17393,8 @@ class ArchPerformance(_Model):
     """Input of `cad.arch.performance` v1.
 
     Refusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `field_not_for_kind` (a class on a room,
-    a grid, a line …; an exit role on anything but a door or a stair), `nothing_to_set`, `style_not_found`,
+    a grid, a line …; an exit role on anything but a door, a stair or a roof; a load-bearing role on anything but a wall
+    that is no curtain wall), `nothing_to_set`, `style_not_found`,
     `opening_type_not_found`, `material_not_found`, `invalid_declared`, `invalid_strength`, `invalid_revision`,
     `revision_conflict`, `layer_locked` (an object named on a locked layer: nothing is written).
     """
@@ -30740,6 +30748,29 @@ class Declared(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> Declared:
         return cls(
             value=data["value"],
+            basis=DeclaredBasis.from_json(data["basis"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeclaredBearing(_Model):
+    """A declared load-bearing role and its basis (docs/adr/8090; EK-6 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2).
+    Attributes:
+        bearing: Evet: it carries the structure's loads (a load-bearing wall); hayır: it does not (a partition).
+    """
+    bearing: bool
+    basis: DeclaredBasis
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["bearing"] = self.bearing
+        out["basis"] = self.basis.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeclaredBearing:
+        return cls(
+            bearing=data["bearing"],
             basis=DeclaredBasis.from_json(data["basis"]),
         )
 
@@ -136868,13 +136899,15 @@ class SlopePavementEdge(PavementEdge):
 @dataclass(kw_only=True, slots=True)
 class ObjectsPerformanceOperation(PerformanceOperation):
     """Nesneler: the objects' own fire resistance class (walls, slabs, columns, beams, roofs, railings, stairs, ramps,
-    doors, windows) and exit role (doors, stairs). A field absent stays; null takes the object's own away (a wall
-    then carries its style's, a door its type's).
+    doors, windows), exit role (doors, stairs; a roof as an escape route, BYKHY Ek-3/B 4-a) and load-bearing role
+    (walls but curtain walls, Ek-3/B 2; docs/adr/8090). A field absent stays; null takes the object's own away (a wall
+    then carries its style's class, a door its type's).
     """
     TAG_VALUE: ClassVar[str] = "objects"
     uids: list[str]
     exit: DeclaredExit | None | Unset = UNSET
     fire_rating: Declared | None | Unset = UNSET
+    load_bearing: DeclaredBearing | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "objects"}
@@ -136883,6 +136916,8 @@ class ObjectsPerformanceOperation(PerformanceOperation):
             out["exit"] = None if self.exit is None else self.exit.to_json()
         if self.fire_rating is not UNSET:
             out["fireRating"] = None if self.fire_rating is None else self.fire_rating.to_json()
+        if self.load_bearing is not UNSET:
+            out["loadBearing"] = None if self.load_bearing is None else self.load_bearing.to_json()
         return out
 
     @classmethod
@@ -136891,6 +136926,7 @@ class ObjectsPerformanceOperation(PerformanceOperation):
             uids=list(data["uids"]),
             exit=UNSET if "exit" not in data else None if data["exit"] is None else DeclaredExit.from_json(data["exit"]),
             fire_rating=UNSET if "fireRating" not in data else None if data["fireRating"] is None else Declared.from_json(data["fireRating"]),
+            load_bearing=UNSET if "loadBearing" not in data else None if data["loadBearing"] is None else DeclaredBearing.from_json(data["loadBearing"]),
         )
 
 
@@ -143792,6 +143828,7 @@ __all__ = [
     "DaylightWorst",
     "Declared",
     "DeclaredBasis",
+    "DeclaredBearing",
     "DeclaredCrs",
     "DeclaredExit",
     "DeclaredVertical",

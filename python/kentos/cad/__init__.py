@@ -886,6 +886,7 @@ __all__ = [
     "DaylightWorst",
     "Declared",
     "DeclaredBasis",
+    "DeclaredBearing",
     "DeclaredCrs",
     "DeclaredExit",
     "DeclaredVertical",

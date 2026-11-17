@@ -28198,7 +28198,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.arch.performance` v1.\n\nRefusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `field_not_for_kind` (a class on a room,\na grid, a line …; an exit role on anything but a door or a stair), `nothing_to_set`, `style_not_found`,\n`opening_type_not_found`, `material_not_found`, `invalid_declared`, `invalid_strength`, `invalid_revision`,\n`revision_conflict`, `layer_locked` (an object named on a locked layer: nothing is written).",
+        "description": "Input of `cad.arch.performance` v1.\n\nRefusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `field_not_for_kind` (a class on a room,\na grid, a line …; an exit role on anything but a door, a stair or a roof; a load-bearing role on anything but a wall\nthat is no curtain wall), `nothing_to_set`, `style_not_found`,\n`opening_type_not_found`, `material_not_found`, `invalid_declared`, `invalid_strength`, `invalid_revision`,\n`revision_conflict`, `layer_locked` (an object named on a locked layer: nothing is written).",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -122730,7 +122730,7 @@
               "type": "null"
             }
           ],
-          "description": "A stair's emergency exit role (docs/adr/8068, EK-6 `FireExit`); absent: unknown (missing)."
+          "description": "A stair's emergency exit role (docs/adr/8068, EK-6 `FireExit`), or a roof's as an escape route (docs/adr/8090,\nBYKHY Ek-3/B 4-a); absent: unknown (missing)."
         },
         "fireRating": {
           "anyOf": [
@@ -122748,6 +122748,17 @@
             "string",
             "null"
           ]
+        },
+        "loadBearing": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeclaredBearing"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A wall's load-bearing role (docs/adr/8090, EK-6 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2); absent: unknown\n(missing)."
         },
         "phase": {
           "anyOf": [
@@ -139113,6 +139124,24 @@
           "type": "object"
         }
       ]
+    },
+    "DeclaredBearing": {
+      "additionalProperties": false,
+      "description": "A declared load-bearing role and its basis (docs/adr/8090; EK-6 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2).",
+      "properties": {
+        "basis": {
+          "$ref": "#/$defs/DeclaredBasis"
+        },
+        "bearing": {
+          "description": "Evet: it carries the structure's loads (a load-bearing wall); hayır: it does not (a partition).",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "bearing",
+        "basis"
+      ],
+      "type": "object"
     },
     "DeclaredCrs": {
       "description": "The coordinate system a file declares: what the file says, never a\nguess (CLAUDE.md §5). The import window shows it as the answer to its\nquestion, and the user confirms or changes it; nothing is transformed.",
@@ -186587,7 +186616,7 @@
       "description": "What `cad.arch.performance` declares.",
       "oneOf": [
         {
-          "description": "Nesneler: the objects' own fire resistance class (walls, slabs, columns, beams, roofs, railings, stairs, ramps,\ndoors, windows) and exit role (doors, stairs). A field absent stays; null takes the object's own away (a wall\nthen carries its style's, a door its type's).",
+          "description": "Nesneler: the objects' own fire resistance class (walls, slabs, columns, beams, roofs, railings, stairs, ramps,\ndoors, windows), exit role (doors, stairs; a roof as an escape route, BYKHY Ek-3/B 4-a) and load-bearing role\n(walls but curtain walls, Ek-3/B 2; docs/adr/8090). A field absent stays; null takes the object's own away (a wall\nthen carries its style's class, a door its type's).",
           "properties": {
             "exit": {
               "anyOf": [
@@ -186612,6 +186641,16 @@
             "kind": {
               "const": "objects",
               "type": "string"
+            },
+            "loadBearing": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DeclaredBearing"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "uids": {
               "items": {

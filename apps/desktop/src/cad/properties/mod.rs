@@ -132,8 +132,11 @@ pub enum Event {
     /// A grid's, column's, stair's or ramp's own field chosen, a column freed (docs/adr/0343 §5): written through
     /// `cad.arch.edit`.
     Arch(Slot, kentos_commands::ArchOperation),
-    /// A door's or a stair's emergency exit role (docs/adr/8068): yes, no, or unknown (none).
+    /// A door's or a stair's emergency exit role, a roof's as an escape route (docs/adr/8068, 8090): yes, no, or unknown
+    /// (none).
     Exit(Slot, Option<bool>),
+    /// A wall's Taşıyıcı (docs/adr/8090): evet, hayır, or unknown.
+    LoadBearing(Slot, Option<bool>),
     /// A tag's frame or leader (docs/adr/0344 §5), through `cad.tags.edit`.
     Tag(Slot, kentos_commands::TagChange),
     /// A view mark's side or target (docs/adr/0345 §5), through `cad.viewmarks.edit`.

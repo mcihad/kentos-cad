@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 0.14.0 — 17 Kasım 2026
+
+- Beyan edilen roller (`dayanim`): taşıyıcı iç duvar Ek-3/B 2 (R, Ek-3/C kadar); taşıyıcı dış duvar ve kompartıman
+  duvarı R'yi de ister (REI); taşıyıcı olmayan dış duvarda Ek-3/C'nin not (3)'ü 120'yi 90'a indirir, uzman incelemesi
+  kalmaz; kaçış yolu olan çatı Ek-3/B 4-a, alt yüzeyden REI 30. Olgular `elements[].loadBearing` ve `escape`. 7 bağımsız
+  durum.
+
 ## 0.13.0 — 17 Kasım 2026
 
 - Asma tavan (`dayanim`): Ek-3/B 11, alt taraftan EI 30; Ek-3/C'nin sütunundan bağımsız (ev satırının süre vermediği

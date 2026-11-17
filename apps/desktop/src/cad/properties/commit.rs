@@ -745,7 +745,7 @@ pub(super) fn commit(
         Field::Arch(slot, ArchField::FireRating) => {
             let t = kentos_interaction::js_trim(text);
             let fire = (!t.is_empty()).then(|| kentos_commands::Declared::author(t));
-            return properties::edit_performance(model, *slot, Some(fire), None);
+            return properties::edit_performance(model, *slot, Some(fire), None, None);
         }
         Field::Arch(slot, which @ (ArchField::MarkNumber | ArchField::MarkSize)) => {
             use kentos_commands::{ViewMarkChange, ViewMarksOperation};

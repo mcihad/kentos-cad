@@ -38,3 +38,21 @@ fn the_zone_round_trips_under_arch_data_12() {
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
     assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the zone reads back");
 }
+
+/// Architecture data 13 (docs/adr/8090): a wall's load-bearing role and a roof's escape route role are written with
+/// `modules.arch = 13` and read back.
+#[test]
+fn the_declared_roles_round_trip_under_arch_data_13() {
+    use kentos_contracts::{DeclaredBasis, DeclaredBearing, Entity};
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_declared_roles(&doc));
+    let wall = doc.entities.iter_mut().find_map(|e| match e {
+        Entity::Wall(w) => Some(w),
+        _ => None,
+    });
+    wall.expect("a wall").wall.arch.load_bearing = Some(DeclaredBearing { bearing: true, basis: DeclaredBasis::Author });
+    assert!(kentos_kcad::uses_declared_roles(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_DECLARED_ROLES);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the role reads back");
+}

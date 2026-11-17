@@ -770,6 +770,10 @@
     "ElementFacts": {
       "description": "An element BYKHY Ek-3/B reads: its persistent id, its kind (`column`, `beam`, `wall`, `slab`; `roof`, `terrace`,\ndocs/adr/8087; `ceiling`, a suspended ceiling, docs/adr/8089), its storey, its declared fire class (its own, else its\ntype's), whether it is a column or a beam of the frame, whether a wall is on its storey's outline (docs/adr/8082).",
       "properties": {
+        "escape": {
+          "description": "A roof declared an escape route (docs/adr/8090, Ek-3/B 4-a).",
+          "type": "boolean"
+        },
         "exterior": {
           "type": "boolean"
         },
@@ -788,6 +792,13 @@
         "level": {
           "type": [
             "string",
+            "null"
+          ]
+        },
+        "loadBearing": {
+          "description": "A wall's declared load-bearing role (docs/adr/8090, Ek-3/B 2); none: not declared.",
+          "type": [
+            "boolean",
             "null"
           ]
         },

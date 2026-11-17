@@ -278,3 +278,115 @@ fn ceiling_screens() {
         println!("{}", file.display());
     }
 }
+
+/// Zemin kat's inner wall at x = 3 (docs/adr/8090), 20 cm, from wall face to wall face; its slot.
+fn inner_wall(app: &mut App) -> kentos_domain::Slot {
+    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let p = |x: f64, y: f64| json!({"x": x, "y": y});
+    let made = run(
+        app,
+        "cad.walls.create",
+        json!({"layerId": layer, "walls": [{"pts": [p(3.0, 0.25), p(3.0, 4.75)], "width": 0.2, "arch": {"level": "k00"}}]}),
+    );
+    let uid = made["output"]["uids"][0].as_str().expect("the wall").to_owned();
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    doc.slot_of(kentos_domain::Uuid::parse_str(&uid).expect("an id")).expect("its slot")
+}
+
+fn property_rows(app: &App) -> Vec<crate::properties::Row> {
+    let doc = app.document.as_ref().expect("open");
+    app.properties_panel(doc).sections.into_iter().flat_map(|s| s.rows).collect()
+}
+
+/// A wall's Taşıyıcı (docs/adr/8090) chosen in Öznitelikler: Bilinmiyor until said; Evet makes the inner wall Ek-3/B 2's,
+/// R as Ek-3/C asks (the house: 60), its class undeclared eksik veri; declared REI 60 it holds. Hayır: a partition,
+/// nothing asked.
+#[test]
+fn a_load_bearing_wall_is_read_by_ek_3_b_2() {
+    use crate::properties::Event;
+    use kentos_commands::ArchAuditState as S;
+    let mut app = house("R 60");
+    let wall = inner_wall(&mut app);
+    app.selection.set(vec![wall]);
+    assert!(property_rows(&app).iter().any(|r| r.label == "Taşıyıcı" && r.value == "Bilinmiyor"));
+    let _ = app.update(crate::app::Message::Properties(Event::LoadBearing(wall, Some(true))));
+    assert!(property_rows(&app).iter().any(|r| r.label == "Taşıyıcı" && r.value == "Evet"));
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    assert_eq!(doc.undo_labels().first().map(String::as_str), Some("Yangın ve performans"));
+    let wall_said = |app: &App| -> Vec<(Option<S>, String)> {
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        audited
+            .findings
+            .iter()
+            .filter(|f| f.code == "bykhy_element_resistance" && f.message.contains("Ek-3/B 2"))
+            .map(|f| (f.state, f.message.clone()))
+            .collect()
+    };
+    checked(&mut app);
+    let said = wall_said(&app);
+    assert_eq!(said.len(), 1, "{said:#?}");
+    assert_eq!(said[0].0, Some(S::MissingData));
+    assert!(
+        said[0].1.starts_with("Zemin kat: 1 duvarın yangın sınıfı beyan edilmemiş; Ek-3/B 2 yük taşıyıcı duvar; Ek-3/C"),
+        "{said:#?}"
+    );
+    assert!(said[0].1.contains("en az R 60"), "{said:#?}");
+    let _ = app.update(crate::app::Message::Properties(Event::Commit(
+        crate::properties::Field::Arch(wall, crate::properties::ArchField::FireRating),
+        "REI 60".into(),
+    )));
+    checked(&mut app);
+    assert!(wall_said(&app).is_empty());
+    // A partition: nothing asked of it.
+    let _ = app.update(crate::app::Message::Properties(Event::LoadBearing(wall, Some(false))));
+    let _ = app.update(crate::app::Message::Properties(Event::Commit(
+        crate::properties::Field::Arch(wall, crate::properties::ArchField::FireRating),
+        String::new(),
+    )));
+    checked(&mut app);
+    assert!(wall_said(&app).is_empty());
+}
+
+/// The inner wall chosen, Öznitelikler with Taşıyıcı Evet and Denetim's Ek-3/B 2 finding, light and dark;
+/// `.run/gui-evidence/tasiyici-8090/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib resistance_tests::bearing_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn bearing_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/tasiyici-8090");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")] {
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut app = house("R 60");
+        let wall = inner_wall(&mut app);
+        let _ = app.update(Message::Properties(crate::properties::Event::LoadBearing(wall, Some(true))));
+        let _ = app.update(Message::ActiveLevel(Some("k00".into())));
+        let _ = app.update(Message::LevelView(kentos_interaction::level_view::LevelView::Active));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        checked(&mut app);
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        app.arch.arch_audit.selected =
+            audited.findings.iter().position(|f| f.code == "bykhy_element_resistance" && f.message.contains("Ek-3/B 2"));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        snapshot.settle(&mut app, App::view, &mut update);
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        app.selection.set(vec![wall]);
+        snapshot.settle(&mut app, App::view, &mut update);
+        // Öznitelikler scrolled to Yangın dayanımı and Taşıyıcı.
+        let panel = iced::Point::new(size.width - 150.0, size.height - 120.0);
+        snapshot.input(&mut app, App::view, &mut update, kentos_ui::snapshot::Input::Scroll(panel, -4.0));
+        let file = out.join(format!("1-tasiyici-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

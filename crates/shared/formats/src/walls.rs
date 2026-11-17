@@ -418,6 +418,7 @@ mod tests {
                 discipline: Some(kentos_contracts::ArchDiscipline::Architecture),
                 exit: None,
                 fire_rating: None,
+                load_bearing: None,
             },
             joins: WallJoins {
                 start: WallJoin::Butt,

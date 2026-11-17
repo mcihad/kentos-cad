@@ -297,6 +297,11 @@
     - IFC modeli seçili nesnenin gruplarını "Grup" satırında söyler.
   - **Asma tavan (17 Kasım 2026; [ADR 8089](../adr/8089-suspended-ceiling-fire-resistance.md), K114–K115):** IFC türü
     CEILING olan kaplama Ek-3/B 11'in öğesidir: alt taraftan EI 30, Ek-3/C'den bağımsız; 26/4'ün malzeme sınıfı beyanı yok.
+  - **Beyan edilen roller (17 Kasım 2026; [ADR 8090](../adr/8090-declared-load-bearing-and-escape-roof.md), K116–K119):**
+    - Duvarın "Taşıyıcı" ve çatının "Kaçış yolu" beyanı (`cad.arch.performance`, `.kcad` mimari verisi 13); IFC'de
+      `Pset_WallCommon.LoadBearing`.
+    - Ek-3/B 2 taşıyıcı iç duvar R; taşıyıcı dış ve kompartıman duvarı REI; taşıyıcı olmayan dış duvarda not (3) ile 90;
+      kaçış yolu çatısı 4-a REI 30.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

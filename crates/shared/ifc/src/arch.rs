@@ -2012,6 +2012,13 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             {
                 give(&mut elements[i].psets, set, "FireExit", Value::Bool(x));
             }
+            // A wall's declared load-bearing role (docs/adr/8090; EK-6 Tablo 6.133 `Pset_WallCommon.LoadBearing`).
+            if let Entity::Wall(w) = e
+                && class == Class::Wall
+                && let Some(b) = &w.wall.arch.load_bearing
+            {
+                give(&mut elements[i].psets, "Pset_WallCommon", "LoadBearing", Value::Bool(b.bearing));
+            }
         }
         for e in &mut elements {
             if let Some(m) = e.material.take() {

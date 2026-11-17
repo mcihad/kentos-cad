@@ -776,6 +776,17 @@ impl App {
                 slot,
                 None,
                 Some(v.map(|exit| kentos_commands::DeclaredExit { exit, basis: kentos_commands::DeclaredBasis::Author })),
+                None,
+            ),
+            Event::LoadBearing(slot, v) => properties::edit_performance(
+                model,
+                slot,
+                None,
+                None,
+                Some(v.map(|bearing| kentos_commands::DeclaredBearing {
+                    bearing,
+                    basis: kentos_commands::DeclaredBasis::Author,
+                })),
             ),
             Event::Levels(slots, level) => properties::assign_level(model, &slots, &level),
             Event::Tag(slot, change) => properties::edit_tag(model, slot, change),

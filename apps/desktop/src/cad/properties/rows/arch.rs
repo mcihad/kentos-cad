@@ -115,11 +115,14 @@ fn railings_row(
     Row::text("Korkuluk", words).editor(edit(select(words.to_owned(), items)))
 }
 
-/// Yangın dayanımı, and a door's or a stair's Acil çıkış (docs/adr/8068), written by `cad.arch.performance`: the
-/// field holds the object's own class (empty takes it away); a note says the class it carries from its wall style or
-/// its type, or that none is declared (missing in the model), and the basis of its own.
+/// Yangın dayanımı, a door's or a stair's Acil çıkış, a roof's Kaçış yolu and a wall's Taşıyıcı (docs/adr/8068, 8090),
+/// written by `cad.arch.performance`: the field holds the object's own class (empty takes it away); a note says the
+/// class it carries from its wall style or its type, or that none is declared (missing in the model), and the basis of
+/// its own.
 pub(crate) fn performance_rows(doc: &Document, slot: Slot, e: &Entity, locked: bool) -> Vec<Row> {
-    use kentos_native_application::arch_performance::{Carried, exit_of, exit_rated, fire_rating_of, fire_rated};
+    use kentos_native_application::arch_performance::{
+        Carried, exit_of, exit_rated, fire_rating_of, fire_rated, load_bearing_of, load_bearing_rated,
+    };
     if !fire_rated(e) {
         return Vec::new();
     }
@@ -144,7 +147,22 @@ pub(crate) fn performance_rows(doc: &Document, slot: Slot, e: &Entity, locked: b
             .into_iter()
             .map(|(v, label)| pick(label.to_owned(), now == v, Message::Properties(Event::Exit(slot, v)), None))
             .collect();
-        rows.push(Row::text("Acil çıkış", words).editor((!locked).then(|| select(words.to_owned(), items))));
+        // A roof is an escape route (BYKHY Ek-3/B 4-a), a door or a stair an exit.
+        let label = if matches!(e, Entity::Roof(_)) { "Kaçış yolu" } else { "Acil çıkış" };
+        rows.push(Row::text(label, words).editor((!locked).then(|| select(words.to_owned(), items))));
+    }
+    if load_bearing_rated(e) {
+        let now = load_bearing_of(e).map(|x| x.bearing);
+        let words = match now {
+            Some(true) => "Evet",
+            Some(false) => "Hayır",
+            None => "Bilinmiyor",
+        };
+        let items = [(Some(true), "Evet"), (Some(false), "Hayır"), (None, "Bilinmiyor")]
+            .into_iter()
+            .map(|(v, label)| pick(label.to_owned(), now == v, Message::Properties(Event::LoadBearing(slot, v)), None))
+            .collect();
+        rows.push(Row::text("Taşıyıcı", words).editor((!locked).then(|| select(words.to_owned(), items))));
     }
     rows
 }

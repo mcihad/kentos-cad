@@ -988,7 +988,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_ZONE),
+    ("arch", "mimari", ARCH_WITH_DECLARED_ROLES),
     ("gis", "CBS", GIS_WITH_EXTENSION_DERIVATIONS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -1134,14 +1134,29 @@ pub fn uses_zone(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_zone)
 }
 
-/// The architecture data version `doc` needs: 12 for the parcel's area's use, 11 for its plan notes, 10 for the form's
-/// answers, 9 for a
+/// Architecture data version 13 (docs/adr/8090): a wall's declared load-bearing role (`arch.loadBearing`) and a roof's
+/// escape route role (a roof's `arch.exit`). Version 13 holds versions 1–12's data too. The document schema stays as it
+/// is.
+pub const ARCH_WITH_DECLARED_ROLES: u16 = 13;
+
+/// Whether `doc` holds architecture data 13 ([`ARCH_WITH_DECLARED_ROLES`]).
+pub fn uses_declared_roles(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    use kentos_contracts::Entity;
+    doc.entities.iter().any(|e| {
+        e.arch_info().is_some_and(|a| a.load_bearing.is_some() || (matches!(e, Entity::Roof(_)) && a.exit.is_some()))
+    })
+}
+
+/// The architecture data version `doc` needs: 13 for a declared load-bearing or escape route role, 12 for the parcel's
+/// area's use, 11 for its plan notes, 10 for the form's answers, 9 for a
 /// building's code, use or ±0.00 or a shared level, 8 for a roof's
 /// layers, 7 for a sloped slab, 6 for a beams' or coverings'
 /// schedule, 5 for a covering, 4 for a post, a rail or a column's own height, 3 for a curtain wall, 2 for a block's
 /// building element, 1 for the performance declarations, else 0 (not raised).
 pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
-    if uses_zone(doc) {
+    if uses_declared_roles(doc) {
+        ARCH_WITH_DECLARED_ROLES
+    } else if uses_zone(doc) {
         ARCH_WITH_ZONE
     } else if uses_plan_notes(doc) {
         ARCH_WITH_PLAN_NOTES

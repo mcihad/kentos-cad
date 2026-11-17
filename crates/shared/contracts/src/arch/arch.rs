@@ -609,10 +609,16 @@ pub struct ArchInfo {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub fire_rating: Option<crate::Declared>,
-    /// A stair's emergency exit role (docs/adr/8068, EK-6 `FireExit`); absent: unknown (missing).
+    /// A stair's emergency exit role (docs/adr/8068, EK-6 `FireExit`), or a roof's as an escape route (docs/adr/8090,
+    /// BYKHY Ek-3/B 4-a); absent: unknown (missing).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub exit: Option<crate::DeclaredExit>,
+    /// A wall's load-bearing role (docs/adr/8090, EK-6 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2); absent: unknown
+    /// (missing).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub load_bearing: Option<crate::DeclaredBearing>,
 }
 
 impl ArchInfo {

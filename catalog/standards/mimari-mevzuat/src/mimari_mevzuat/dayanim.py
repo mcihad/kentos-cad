@@ -1,5 +1,5 @@
 """Yapı elemanlarının yangına dayanım süreleri: Binaların Yangından Korunması Hakkında Yönetmelik Ek-3/B ve Ek-3/C
-(23, 24/1, 26/1, 29/7; docs/adr/8082, 8087, 8089).
+(23, 24/1, 26/1, 29/7; docs/adr/8082, 8087, 8089, 8090).
 
 Ek-3/C binanın kullanım sınıfına, yağmurlamasına ve elemanın yerine göre dakikayı verir: bodrum katlarda bodrumların
 derinliğine (10 m'den fazla, az), giriş ve üst katlarda bina yüksekliğine (5, 21,50, 30,50 m'den az; 30,50'den fazla).
@@ -18,6 +18,9 @@ Ek-3/B elemanın neyi taşıması gerektiğini söyler. Bu kural müellifin beya
   sütunuyla). Kaçış yolu olan çatı bölümü (4-a) çizimde okunmaz. Asansör kat kapıları (12) şaft kuralındadır (``kuyular``,
   62/7).
 - **Asma tavan** (11): EI 30, alt taraftan; Ek-3/C'den bağımsız (docs/adr/8089).
+- **Beyan edilen roller** (docs/adr/8090): taşıyıcı duvar (2) R, Ek-3/C kadar (dış, kompartıman ve korunumlu merdiven
+  duvarı kendi satırıyla, taşıyıcıysa R'si de); taşıyıcı olmayan dış duvarda not (3) 120'yi 90'a indirir (uzman
+  incelemesi kalmaz); kaçış yolu olan çatı (4-a) alt yüzeyden REI 30.
 - **İzin verilmez:** yağmurlamasız konut dışı bina 30,50 m'yi aşamaz.
 
 Beyan yoksa eksik veri, okunmuyorsa eksik veri; yetmiyorsa kaldı. Bulgular kat, eleman türü ve sorun başına birdir.
@@ -201,6 +204,10 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
             # Ek-3/B 11'in süresi sabittir: Ek-3/C'nin sütununa bakılmaz.
             istekler[e["uid"]] = ("EI", 30, "Ek-3/B 11 asma tavan (alt taraftan)", None)
             continue
+        if e["kind"] == "roof" and e.get("escape"):
+            # Ek-3/B 4-a da sabittir: kaçış yolu olan çatı yük taşır, 4-c'nin (yük taşımayan) satırı ona değil.
+            istekler[e["uid"]] = ("REI", 30, "Ek-3/B 4-a kaçış yolu olan çatı (alt yüzeyden)", None)
+            continue
         h, soz = ek3c(kat)
         if h is None:
             belirsiz.append(e["uid"])
@@ -226,7 +233,19 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
                 gerekce = "Ek-3/B 3-a iki katlı konutun ikinci katı REI 30"
             istekler[e["uid"]] = ("REI", dk, gerekce, None)
         elif e["kind"] == "wall" and e.get("exterior"):
-            istekler[e["uid"]] = ("EI", dk, f"Ek-3/B 5 dış duvar; {gerekce}", 90 if 3 in notlar and dk == 120 else None)
+            # Taşıyıcılığı beyan edilmişse (docs/adr/8090): taşıyıcı dış duvar R de ister, not (3) ona değil; taşıyıcı
+            # olmayanı not (3) 120'den 90'a indirir. Beyan yoksa 90–120 arası uzman incelemesi.
+            yuk = e.get("loadBearing")
+            if yuk is True:
+                istekler[e["uid"]] = ("REI", dk, f"Ek-3/B 5 taşıyıcı dış duvar; {gerekce}", None)
+            elif yuk is False and 3 in notlar and dk == 120:
+                istekler[e["uid"]] = ("EI", 90, f"Ek-3/B 5 taşıyıcı olmayan dış duvar, not (3) 120'yi 90'a indirir; "
+                                               f"{gerekce}", None)
+            else:
+                istekler[e["uid"]] = ("EI", dk, f"Ek-3/B 5 dış duvar; {gerekce}", 90 if 3 in notlar and dk == 120 else None)
+        elif e["kind"] == "wall" and e.get("loadBearing") is True:
+            # Ek-3/B 2: aşağıdaki satırların (dış, kompartıman, korunumlu merdiven duvarı) açıklamadığı taşıyıcı duvar.
+            istekler[e["uid"]] = ("R", dk, f"Ek-3/B 2 yük taşıyıcı duvar; {gerekce}", None)
         elif e["kind"] == "terrace":
             istekler[e["uid"]] = ("REI", dk, f"Ek-3/B 4-b döşeme görevi yapan çatı; {gerekce}", None)
         elif e["kind"] == "roof":
@@ -242,6 +261,7 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
         a = adlar.get(u, "")
         return "GUVENLIK" in a and "HOL" in a
 
+    tasiyici = {e["uid"] for e in elemanlar if e.get("loadBearing") is True}
     for a in bina.get("separations") or []:
         x, z = a["rooms"]
         duvarlar = list(a.get("walls") or [])
@@ -255,9 +275,12 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
             h, soz = ek3c(a.get("level"))
             dk = max(60, (h or {}).get("dakika", 0))
             for w in duvarlar:
-                if w["uid"] not in istekler:
-                    istekler[w["uid"]] = ("EI", dk, f"Ek-3/B 6–7 kompartıman duvarı en az EI 60; Ek-3/C {adi}, {soz}",
-                                          None)
+                onceki = istekler.get(w["uid"])
+                # Kompartıman duvarı 2'nin satırından önce gelir: taşıyıcıysa REI (docs/adr/8090), değilse EI.
+                if onceki is None or onceki[2].startswith("Ek-3/B 2 "):
+                    harf = "REI" if w["uid"] in tasiyici else "EI"
+                    istekler[w["uid"]] = (harf, max(dk, onceki[1] if onceki else 0),
+                                          f"Ek-3/B 6–7 kompartıman duvarı en az {harf} 60; Ek-3/C {adi}, {soz}", None)
     # Karşılaştırma: kat, tür ve sorun başına bir bulgu.
     turu = {e["uid"]: e for e in elemanlar}
     for a in bina.get("separations") or []:

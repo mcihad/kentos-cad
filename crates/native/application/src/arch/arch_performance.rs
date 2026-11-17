@@ -1,6 +1,7 @@
 //! `cad.arch.performance` v1 (“Yangın ve performans”, docs/adr/8068; plan/bim-plan.md BIM-07): the author's
 //! declarations for the fire regulation and the model, as one undo step: objects' own fire resistance classes and exit
-//! roles, a wall style's or a door or window type's class, a material's strength, the building's fire protection class.
+//! roles (a roof's as an escape route) and a wall's load-bearing role (docs/adr/8090), a wall style's or a door or window
+//! type's class, a material's strength, the building's fire protection class.
 //! Its plan is what it would write: the objects that carry the value then. The shared cases are
 //! `fixtures/commands/v1/cad.arch.performance.json` (`scripts/fixtures/arch_performance_cases.py`).
 //!
@@ -37,12 +38,26 @@ pub fn fire_rated(e: &Entity) -> bool {
     )
 }
 
-/// Whether `e` takes an emergency exit role: a door or a stair.
+/// Whether `e` takes an emergency exit role: a door or a stair, or a roof as an escape route (docs/adr/8090, BYKHY
+/// Ek-3/B 4-a).
 pub fn exit_rated(e: &Entity) -> bool {
     match e {
-        Entity::Stair(_) => true,
+        Entity::Stair(_) | Entity::Roof(_) => true,
         Entity::Opening(o) => o.opening.form == OpeningForm::Door,
         _ => false,
+    }
+}
+
+/// Whether `e` takes a load-bearing role (docs/adr/8090, BYKHY Ek-3/B 2): a wall that is no curtain wall.
+pub fn load_bearing_rated(e: &Entity) -> bool {
+    matches!(e, Entity::Wall(w) if w.wall.curtain.is_none())
+}
+
+/// A wall's declared load-bearing role; none: unknown.
+pub fn load_bearing_of(e: &Entity) -> Option<&kentos_commands::DeclaredBearing> {
+    match e {
+        Entity::Wall(w) => w.wall.arch.load_bearing.as_ref(),
+        _ => None,
     }
 }
 
@@ -73,11 +88,12 @@ pub fn fire_rating_of<'a>(settings: &'a ProjectSettings, e: &'a Entity) -> Optio
     }
 }
 
-/// An object's exit role: a door's or a stair's own; none: unknown.
+/// An object's exit role: a door's, a stair's or a roof's own; none: unknown.
 pub fn exit_of(e: &Entity) -> Option<&kentos_commands::DeclaredExit> {
     match e {
         Entity::Opening(o) => o.opening.exit.as_ref(),
         Entity::Stair(s) => s.stair.arch.exit.as_ref(),
+        Entity::Roof(_) => e.arch_info().and_then(|a| a.exit.as_ref()),
         _ => None,
     }
 }
@@ -118,7 +134,7 @@ fn no_class(e: &Entity) -> String {
 fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>), Stop> {
     let settings = doc.settings();
     let work = match &input.operation {
-        PerformanceOperation::Objects { uids, fire_rating, exit } => {
+        PerformanceOperation::Objects { uids, fire_rating, exit, load_bearing } => {
             checks::uids(uids, "Yangın bilgisi verilecek nesne verilmedi.")?;
             let found = checks::named(doc, uids)?;
             for (at, _, e, _) in &found {
@@ -129,17 +145,31 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                     return Err(fail(
                         codes::FIELD_NOT_FOR_KIND,
                         format!(
-                            "“{}” nesnesinin acil çıkış rolü olmaz: acil çıkış kapının ve merdivenin özelliğidir.",
+                            "“{}” nesnesinin acil çıkış rolü olmaz: acil çıkış kapının, merdivenin ve kaçış yolu olan \
+                             çatının özelliğidir.",
+                            e.kind()
+                        ),
+                        &format!("uids[{at}]"),
+                    ));
+                }
+                if load_bearing.is_some() && !load_bearing_rated(e) {
+                    return Err(fail(
+                        codes::FIELD_NOT_FOR_KIND,
+                        format!(
+                            "“{}” nesnesinin taşıyıcılık rolü verilmez: taşıyıcılık duvarın özelliğidir (giydirme cephe \
+                             değil).",
                             e.kind()
                         ),
                         &format!("uids[{at}]"),
                     ));
                 }
             }
-            if fire_rating.is_none() && exit.is_none() {
+            if fire_rating.is_none() && exit.is_none() && load_bearing.is_none() {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    "Ne yangın dayanım sınıfı ne acil çıkış verildi: fireRating ya da exit verin (null kaldırır).".into(),
+                    "Ne yangın dayanım sınıfı ne acil çıkış ne taşıyıcılık verildi: fireRating, exit ya da loadBearing \
+                     verin (null kaldırır)."
+                        .into(),
                     "operation",
                 ));
             }
@@ -150,6 +180,11 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                 && let Some(why) = x.basis.problem()
             {
                 return Err(fail(codes::INVALID_DECLARED, why, "operation.exit.basis"));
+            }
+            if let Some(Some(x)) = load_bearing
+                && let Some(why) = x.basis.problem()
+            {
+                return Err(fail(codes::INVALID_DECLARED, why, "operation.loadBearing.basis"));
             }
             checks::revision(doc, input.expected_revision.as_deref())?;
             let layers = doc.layers();
@@ -181,6 +216,9 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                             }
                             if let Some(v) = exit {
                                 a.exit.clone_from(v);
+                            }
+                            if let Some(v) = load_bearing {
+                                a.load_bearing.clone_from(v);
                             }
                         }
                     }

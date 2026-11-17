@@ -144,6 +144,18 @@ pub struct DeclaredExit {
     pub basis: DeclaredBasis,
 }
 
+/// A declared load-bearing role and its basis (docs/adr/8090; EK-6 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DeclaredBearing {
+    /// Evet: it carries the structure's loads (a load-bearing wall); hayır: it does not (a partition).
+    pub bearing: bool,
+    pub basis: DeclaredBasis,
+}
+
 /// The building's declared particulars for the fire regulation (EK-6 Tablo 6.7): its fire protection class. The
 /// construction action (`ConstructionMethod`: new construction, addition, renovation) is the künye's building kind,
 /// worked out where it is written.

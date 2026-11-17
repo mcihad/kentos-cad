@@ -134,6 +134,12 @@ pub struct ElementFacts {
     pub frame: bool,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub exterior: bool,
+    /// A wall's declared load-bearing role (docs/adr/8090, Ek-3/B 2); none: not declared.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub load_bearing: Option<bool>,
+    /// A roof declared an escape route (docs/adr/8090, Ek-3/B 4-a).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub escape: bool,
 }
 
 /// A room as a fire compartment counts it: its persistent id, its storey, its name (and number), its area as the

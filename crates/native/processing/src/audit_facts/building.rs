@@ -240,7 +240,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
 /// Ek-3's elements with their declared classes, and the building's height as the fire rules measure it (docs/adr/8082).
 #[cfg(feature = "mod-arch")]
 fn elements(doc: &Document) -> (Vec<ElementFacts>, (f64, f64)) {
-    use kentos_native_application::arch_performance::fire_rating_of;
+    use kentos_native_application::arch_performance::{exit_of, fire_rating_of, load_bearing_of};
     let by_uid: std::collections::HashMap<String, &Entity> =
         doc.entities_with_uids().map(|(u, e)| (u.to_string(), e)).collect();
     let elements = doc
@@ -251,6 +251,9 @@ fn elements(doc: &Document) -> (Vec<ElementFacts>, (f64, f64)) {
                 .get(&x.uid)
                 .and_then(|e| fire_rating_of(doc.settings(), e))
                 .map(|(d, _)| d.value.clone()),
+            // The author's roles (docs/adr/8090): a wall's load-bearing, a roof's escape route.
+            load_bearing: by_uid.get(&x.uid).and_then(|e| load_bearing_of(e)).map(|b| b.bearing),
+            escape: x.kind == "roof" && by_uid.get(&x.uid).and_then(|e| exit_of(e)).is_some_and(|d| d.exit),
             uid: x.uid,
             kind: x.kind.to_owned(),
             level: x.level,
