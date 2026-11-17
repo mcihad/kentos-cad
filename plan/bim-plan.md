@@ -590,7 +590,8 @@ aynı çizim 30.6.2026'da geçer, 2.7.2026'da 34/8'den kalır, tarihsiz eksik ve
 (`fire_escape_tests`). İç yükseklik ADR 8040 §3'te Rust'ta yapılmıştı.
 **Kalan:** kompartımanda katlar arası açıklıklar, 24/4 ve IFC grubu (ADR 8081 §6); Ek-3'te çatılar, şaftlar, asma
 tavan, asansör kapıları ve taşıyıcı duvar (ADR 8082 §6);
-erişilebilir yol (TS 9111 metni); 28/1-c ve 39/1'in tarihli hâlleri; plan notu katmanı; bölge türü; konut dışı (B22);
+erişilebilir yol (TS 9111 metni); plan notu katmanı; bölge türü (28/1-a, b, ç ve 28/1-c'nin konut bölgesi varsayımı);
+konut dışı (B22); 39/1-b'nin çift kanadı (ADR 8083 §6);
 emsalde 22/1-j, 22/1-m ve 5/8'in bodrum listesi (ADR 8079 §6).
 **Yapıldı (17 Kasım 2026, ADR 8078 §6, K64):** uzman onayı kayıtlı: paketin bulgusu `cad.arch.exceptions`'a verilerek
 istisna yapılır; uzman incelemesi bulgusunun istisnası "Uzman onayı"dır, notu uzmanın sözü; bulgu değişince düşer, katla
@@ -619,6 +620,13 @@ açıklıklar; 22 bağımsız durum.
 dayanım öbür elemanlarda: taşıyıcı sistemin kolon ve kirişleri, duvarlar (dış olup olmadıkları), döşemeler ölçülür
 (`Document::fire_elements`), bina yüksekliği ve bodrum derinliğiyle; paketin `dayanim` kuralı Ek-3/B'nin satırlarını
 Ek-3/C'nin kullanım, yağmurlama ve yükseklik dakikasıyla karşılaştırır (tablolar PDF'ten veri); 18 bağımsız durum.
+**Yapıldı (17 Kasım 2026, [ADR 8083](../docs/adr/8083-dated-storey-height-and-doors.md), K81–K86):** kat yüksekliği ve
+kapılar başvuru gününün hâliyle: PAİY 28/1-c'nin 1.10.2017 (3,60 m) ve 12.8.2023 (bodrum hariç 3 kata kadar 4,00 m)
+hâlleri, 39/1'in 1.10.2017 (balkon ve tuvalet kapısı 0,80 m) ve 13.8.2025 (0,80'i yok) hâlleri, Sivas 28/1-c ve 39/1;
+iki değişiklik de yayımı günü yürürlüğe girdi, geçiş hükmü bu maddeleri saymaz. Kurallar Rust'tan pakete taşındı
+(`kat_yuksekligi`, `kapi_olculeri`); olgulara katın yüksekliği ve yatak odaları, kapının net genişliği, yüksekliği ve
+iki yanı eklendi. Gün yoksa her kat ve kapı ayrı denenir: güne bağlı tek kapı öbürlerinin bulgusunu saklamaz. 41 bağımsız
+durum; aynı ev 1.8.2023'te katlardan, 14.8.2025'te WC kapısından kalır (`dated_sizes_tests`).
 
 **Kullanıcı sonucu:** Denetim, başvuru tarihinde yürürlükte olan kuralları uygular. Her bulgu geçti, kaldı, eksik veri,
 uzman incelemesi ya da kapsam dışıdır. Yorum isteyen konu kendiliğinden "uygun" sayılmaz. Dayanak Z9; Ek A.
@@ -808,7 +816,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B12b ~ | IFC görüntüleyici | IFC-12 | Dosya kendi penceresinde: ağaç, özellikler, kesit; dışa aktarılan tek tıkla görülür (ilk dilim ADR 8073; gerçek pencerede kabul ve kesitin tutamakları kaldı) |
 | B13 ~ | Yazılmış dosyadan doğrulama, IDS ve kontrol formu | IFC-08 | 21 sorunun kanıtı dosyadan (ADR 8074; ikinci okuyucu ve IfcTester KentOS'la aynı; son yazılan dosya, beş sonuç raporu ve bütçe kaldı) |
 | B14 ~ | BIM ruhsat paketi | BIM-14 | Tek komut, tek revizyon, tek paket (ADR 8075; gerçek paket ADR 8076; müellifin cevapları çizimde ve basılan formda ADR 8077; 2+1 de yayımlanıyor, MCP'de uçtan uca, eskiyen cevap durdurur ADR 8077 §7) |
-| B15 ~ | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti (ADR 8078: asansör 34/1 ve 34/8'in hâlleri, eksik veri ve uzman incelemesi, uzman onayı, kaçış yolu kapıları BYKHY 47; ADR 8079: emsalin 22/1-ç, -f, -k, -l sınırları ve koşulları, kat ara toplamı; ADR 8080: merdiven altı 1,80 m; ADR 8081: kompartıman (24/2, 24/6, 24/7); ADR 8082: Ek-3 dayanımları; çatı, şaft ve taşıyıcı duvar kaldı) |
+| B15 ~ | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti (ADR 8078: asansör 34/1 ve 34/8'in hâlleri, eksik veri ve uzman incelemesi, uzman onayı, kaçış yolu kapıları BYKHY 47; ADR 8079: emsalin 22/1-ç, -f, -k, -l sınırları ve koşulları, kat ara toplamı; ADR 8080: merdiven altı 1,80 m; ADR 8081: kompartıman (24/2, 24/6, 24/7); ADR 8082: Ek-3 dayanımları; ADR 8083: kat yüksekliği 28/1-c ve kapılar 39/1 tarihli hâlleriyle; çatı, şaft ve taşıyıcı duvar kaldı) |
 | B16 | Bilgi yönetimi ve teslim kaydı | BIM-15 | Teslim ve iade kayıtlı |
 | B17 | Büro ve belediye pilotu | BIM-16, IFC-11 | İdarenin yazılı cevabı |
 

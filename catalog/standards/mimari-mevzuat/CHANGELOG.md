@@ -1,5 +1,15 @@
 # Değişiklikler
 
+## 0.7.0 — 17 Kasım 2026
+
+- Kat yüksekliği ve kapı ölçüleri (`kat_yuksekligi`, `kapi_olculeri`, docs/adr/8083): Planlı Alanlar İmar Yönetmeliği
+  28/1-c (1.10.2017: konut bölgesinde 3,60 m; 12.8.2023: bodrum hariç 3 katı geçmeyen binada 4,00 m) ve 39/1 (1.10.2017:
+  balkon ve tuvalet kapısı 0,80 m'ye düşürülebilir; 13.8.2025: düşürülemez), Sivas 28/1-c ve 39/1. Mimari denetimin Rust
+  kurallarından taşındı; kodlar aynı. Bölümün dış kapısı bölüm girişi, ortak alanınki bina girişi; programın dış alanı
+  dışarıdır. İki katmanın yargısı `katman.py`'de (sıkı bağlar, gevşeğin tuttuğu çelişki). Gün yoksa her kat ve kapı ayrı
+  denenir (`yururluk.parcalarla`): güne bağlı olmayanın bulgusu kalır. Olgular `building.commons`, katların `height`,
+  `bedrooms`'u, kapıların `clear`, `height`, `sides`, `toilet`, `balcony`'si. 41 bağımsız durum.
+
 ## 0.6.0 — 17 Kasım 2026
 
 - Yangına dayanım süreleri (`dayanim`, docs/adr/8082): BYKHY Ek-3/B ve Ek-3/C. Taşıyıcı sistemin kolonu ve kirişi R,

@@ -1973,12 +1973,14 @@
         "level": "zemin",
         "name": "Zemin kat",
         "elevation": 0.0,
+        "height": 3.0,
         "units": 4,
         "common": 2,
         "annexes": 1,
         "other": 0,
         "technical": 0,
         "inhabited": 2,
+        "bedrooms": 1,
         "elevators": 1,
         "rooms": [
           "01a1dfda-06c5-7278-9486-e3989deaadbb",
@@ -1995,12 +1997,14 @@
         "level": "k1",
         "name": "1. kat",
         "elevation": 3.0,
+        "height": 3.0,
         "units": 4,
         "common": 2,
         "annexes": 0,
         "other": 0,
         "technical": 0,
         "inhabited": 3,
+        "bedrooms": 2,
         "elevators": 0,
         "rooms": [
           "01a1dfda-0704-70dd-a975-499e70342853",
@@ -2015,6 +2019,7 @@
     ],
     "units": 4,
     "dwellings": 2,
+    "commons": 1,
     "rooms": [
       {
         "uid": "01a1dfda-06c5-7278-9486-e39ad272edb3",
@@ -2045,7 +2050,13 @@
         ],
         "opensInto": "01a1dfda-06c5-7278-9486-e3999a1cb813",
         "operation": "swing",
-        "stair": true
+        "stair": true,
+        "clear": 0.86,
+        "height": 2.1,
+        "sides": [
+          "common",
+          "common"
+        ]
       },
       {
         "uid": "01a1dfda-06e1-741c-8eb9-6ca4a1b3fd3c",
@@ -2055,7 +2066,13 @@
           "01a1dfda-06c5-7278-9486-e39ad272edb3"
         ],
         "opensInto": "01a1dfda-06c5-7278-9486-e3999a1cb813",
-        "operation": "swing"
+        "operation": "swing",
+        "clear": 0.76,
+        "height": 2.1,
+        "sides": [
+          "common",
+          "unit"
+        ]
       },
       {
         "uid": "01a1dfda-06e1-741c-8eb9-6ca56b114c83",
@@ -2065,7 +2082,13 @@
           "01a1dfda-06c5-7278-9486-e39bf9dc85ab"
         ],
         "opensInto": "01a1dfda-06c5-7278-9486-e3999a1cb813",
-        "operation": "swing"
+        "operation": "swing",
+        "clear": 0.86,
+        "height": 2.1,
+        "sides": [
+          "common",
+          "unit"
+        ]
       },
       {
         "uid": "01a1dfda-06e1-741c-8eb9-6ca6da25147a",
@@ -2075,7 +2098,13 @@
           "01a1dfda-06c5-7278-9486-e3999a1cb813"
         ],
         "opensInto": "01a1dfda-06c5-7278-9486-e39d25d6d8d6",
-        "operation": "swing"
+        "operation": "swing",
+        "clear": 0.76,
+        "height": 2.1,
+        "sides": [
+          "annex",
+          "common"
+        ]
       },
       {
         "uid": "01a1dfda-06e1-741c-8eb9-6ca7d264ae09",
@@ -2085,7 +2114,13 @@
           "01a1dfda-06c5-7278-9486-e3999a1cb813"
         ],
         "opensInto": "01a1dfda-06c5-7278-9486-e39f8e07d64b",
-        "operation": "swing"
+        "operation": "swing",
+        "clear": 0.76,
+        "height": 2.1,
+        "sides": [
+          "unit",
+          "common"
+        ]
       },
       {
         "uid": "01a1dfda-06e1-741c-8eb9-6ca84ff93522",
@@ -2095,7 +2130,13 @@
           "01a1dfda-06c5-7278-9486-e39cf0fe5491"
         ],
         "opensInto": "01a1dfda-06c5-7278-9486-e39bf9dc85ab",
-        "operation": "swing"
+        "operation": "swing",
+        "clear": 0.76,
+        "height": 2.1,
+        "sides": [
+          "unit",
+          "unit"
+        ]
       },
       {
         "uid": "01a1dfda-06e1-741c-8eb9-6ca9ef8f9b89",
@@ -2105,7 +2146,13 @@
           null
         ],
         "opensInto": "01a1dfda-06c5-7278-9486-e3999a1cb813",
-        "operation": "swing"
+        "operation": "swing",
+        "clear": 1.06,
+        "height": 2.1,
+        "sides": [
+          "common",
+          null
+        ]
       },
       {
         "uid": "01a1dfda-0709-75f9-b155-c59a25e94cf3",
@@ -2116,7 +2163,13 @@
         ],
         "opensInto": "01a1dfda-0704-70dd-a975-499fcf59dea1",
         "operation": "swing",
-        "stair": true
+        "stair": true,
+        "clear": 0.86,
+        "height": 2.1,
+        "sides": [
+          "common",
+          "common"
+        ]
       },
       {
         "uid": "01a1dfda-0709-75f9-b155-c59bd5fb560f",
@@ -2126,7 +2179,13 @@
           "01a1dfda-0704-70dd-a975-49a0e9eca5a0"
         ],
         "opensInto": "01a1dfda-0704-70dd-a975-499fcf59dea1",
-        "operation": "swing"
+        "operation": "swing",
+        "clear": 0.86,
+        "height": 2.1,
+        "sides": [
+          "common",
+          "unit"
+        ]
       },
       {
         "uid": "01a1dfda-0709-75f9-b155-c59ca37f1c9c",
@@ -2136,7 +2195,13 @@
           "01a1dfda-0704-70dd-a975-499fcf59dea1"
         ],
         "opensInto": "01a1dfda-0704-70dd-a975-49a3b97636d7",
-        "operation": "swing"
+        "operation": "swing",
+        "clear": 0.76,
+        "height": 2.1,
+        "sides": [
+          "unit",
+          "common"
+        ]
       },
       {
         "uid": "01a1dfda-0709-75f9-b155-c59de0c23b39",
@@ -2146,7 +2211,13 @@
           "01a1dfda-0704-70dd-a975-49a1c1b85ee4"
         ],
         "opensInto": "01a1dfda-0704-70dd-a975-49a0e9eca5a0",
-        "operation": "swing"
+        "operation": "swing",
+        "clear": 0.76,
+        "height": 2.1,
+        "sides": [
+          "unit",
+          "unit"
+        ]
       },
       {
         "uid": "01a1dfda-0709-75f9-b155-c59e206e0cd6",
@@ -2156,7 +2227,13 @@
           "01a1dfda-0704-70dd-a975-49a2bb4d2324"
         ],
         "opensInto": "01a1dfda-0704-70dd-a975-49a1c1b85ee4",
-        "operation": "swing"
+        "operation": "swing",
+        "clear": 0.76,
+        "height": 2.1,
+        "sides": [
+          "unit",
+          "unit"
+        ]
       }
     ],
     "limits": [

@@ -201,8 +201,8 @@ Okumalar (metin açıkça söylemiyor, kural böyle okuyor; bağımsız durumlar
   110 N) ayrı kural.
 - Maddenin özet satırı uzman onayını bilmiyor (onay ev sahibinde uygulanıyor): onaylanan madde "uzman incelemesi" kalır,
   onay satırda görünür.
-- Öbür tarihli maddeler: 28/1-c (12.8.2023) ve 39/1 (13.8.2025) Rust'ta tek hâlle okunuyor; geçiş hükümleri okunmadan
-  hâlleri ayrılmaz. 5/27'nin 1.7.2026 değişikliği (Geçici 3/11 onu da sayar) okunmadı.
+- Öbür tarihli maddeler: 28/1-c (12.8.2023) ve 39/1 (13.8.2025) Rust'ta tek hâlle okunuyordu; ikisi de pakete
+  taşındı, hâlleri ayrıldı ([ADR 8083](8083-dated-storey-height-and-doors.md)). 5/27'nin 1.7.2026 değişikliği (Geçici 3/11 onu da sayar) okunmadı.
 - Sivas 34/1'in "bina girişi bodrum kattan yapılan yapılarda asansör yapılması zorunlu olan kata göre işlem" cümlesi
   okunmuyor; plan notu katmanı (ulusal → belediye → parsel) ve bölge türü.
 - Birleştirmede: bu paket ile main'in `tr.kentos.mevzuat`'ı birleşir (K63); olgu bölümleri ve ajan paketinin sınırı

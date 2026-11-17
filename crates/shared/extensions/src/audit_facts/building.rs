@@ -6,6 +6,9 @@
 //! article and its version (Planlı Alanlar İmar Yönetmeliği 34/1 before and after 1.7.2026 count a basement apart);
 //! the facts say what is drawn, never what it means.
 //!
+//! Planlı Alanlar İmar Yönetmeliği 28/1-c and 39/1 (docs/adr/8083) read each storey's height floor to floor and its
+//! bedrooms, the program's common areas, and each door's net clear width, height and what stands on its two sides.
+//!
 //! An optional section of version 1, as [`super::architecture`]: absent when the project has no storey, so the facts
 //! of a drawing that never had one stay byte for byte what they were. The storeys lowest first (by elevation, then
 //! id), each elevation to 1 mm.
@@ -25,6 +28,10 @@ pub struct BuildingFacts {
     pub units: u32,
     /// Those of them whose nature is a dwelling's (Daire, Mesken, Konut) or not given.
     pub dwellings: u32,
+    /// The building program's common areas (ortak alan groups): with one, or with more than one unit, a building has an
+    /// entrance of its own apart from its units' (docs/adr/8083).
+    #[serde(default)]
+    pub commons: u32,
     /// The municipality's regulation the project reads over the national one (`sivas`: Sivas Belediyesi İmar
     /// Yönetmeliği, RG 10.11.2022/32009); absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -213,6 +220,25 @@ pub struct DoorFacts {
     /// One of its sides is a fire safety lobby (a room named Yangın güvenlik holü).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub lobby: bool,
+    /// Its net clear width (net temiz geçiş: with its leaves open, from the open leaf's face to the opposite stop,
+    /// docs/adr/0772 §2), m; none where it has none (docs/adr/8083).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clear: Option<f64>,
+    /// Its height, its head over its sill, m; none without a head.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub height: Option<f64>,
+    /// What stands on its two sides, in `between`'s order: `unit`, `common`, `annex` or `outdoor` (a room of one of the
+    /// program's independent units, common areas, annexes or outdoor areas: a garden, a car park), `room` (a room in no
+    /// program group), `void` (a shaft, a gallery); none: nothing drawn there. Planlı Alanlar İmar Yönetmeliği 39/1
+    /// reads a door by what it enters.
+    #[serde(default)]
+    pub sides: [Option<String>; 2],
+    /// One of its sides is a toilet (WC, Tuvalet by its name or use).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub toilet: bool,
+    /// One of its sides is a balcony (Balkon by its name or use).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub balcony: bool,
 }
 
 /// A storey and what stands on it. A room is one that is neither a void (a shaft, a gallery) nor outdoors, counted by
@@ -228,6 +254,10 @@ pub struct StoreyHolds {
     pub name: String,
     /// Its elevation over ±0.00, m.
     pub elevation: f64,
+    /// Its height floor to floor (döşeme üst kotundan döşeme üst kotuna): its own, else up to the storey over it, m; none
+    /// when neither is known (docs/adr/8083).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub height: Option<f64>,
     /// Rooms of an independent unit on it.
     pub units: u32,
     /// Rooms of a common area on it that are not technical rooms.
@@ -242,6 +272,10 @@ pub struct StoreyHolds {
     /// Rooms of a dwelling's living kind on it, whatever their group (a living room, a bedroom, a kitchen, by their name
     /// or use): lived in.
     pub inhabited: u32,
+    /// Bedrooms on it (Yatak, Ebeveyn, Çocuk, Oda N by their name or use), whatever their group: a drawing without a
+    /// program is a dwelling's by them (docs/adr/8083).
+    #[serde(default)]
+    pub bedrooms: u32,
     /// Elevators on it: elevator shafts (a space named Asansör, not its lobby) and Asansör blocks standing on it.
     pub elevators: u32,
     /// The rooms counted on it, by their persistent ids in order: what a finding about the storey names.
@@ -257,6 +291,7 @@ impl BuildingFacts {
     pub fn normalized(mut self) -> BuildingFacts {
         for s in &mut self.storeys {
             s.elevation = round(s.elevation, LENGTH);
+            s.height = s.height.map(|h| round(h, LENGTH));
             s.rooms.sort();
             s.rooms.dedup();
         }
@@ -267,6 +302,10 @@ impl BuildingFacts {
             r.persons = round(r.persons, LENGTH);
         }
         self.rooms.sort_by(|a, b| a.uid.cmp(&b.uid));
+        for d in &mut self.doors {
+            d.clear = d.clear.map(|c| round(c, LENGTH));
+            d.height = d.height.map(|h| round(h, LENGTH));
+        }
         self.doors.sort_by(|a, b| a.uid.cmp(&b.uid));
         for l in &mut self.limits {
             l.rooms.sort();

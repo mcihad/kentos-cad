@@ -1,0 +1,1184 @@
+{
+ "format": "kentos.regulationCases",
+ "version": 1,
+ "about": "Kat yüksekliğinin bağımsız durumları (docs/adr/8083): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 28/1-c'nin 1.10.2017 (RG 3.7.2017/30113) ve 12.8.2023 (RG 32277 ek ibare) hâllerinden ve Sivas İmar Yönetmeliği 28/1-c'den (RG 10.11.2022/32009) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.storeys: kot, kattan kata yükseklik, yatak odaları).",
+ "cases": [
+  {
+   "id": "iki-kat-380-2026",
+   "neden": "İki katlı konut, katlar 3,80 m; başvuru 2.7.2026: 12.8.2023 hâli bodrum hariç 3 katı geçmeyen binada 4,00 m → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 3.8
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.8,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 3.8
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 28/1-c": [
+      "passed",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "iki-kat-380-2022",
+   "neden": "Aynı bina, başvuru 1.6.2022: 1.10.2017 hâli konut bölgesinde 3,60 m, 4,00'ı yok → iki kat da kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "01.06.2022"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 3.8
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.8,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 3.8
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "“Zemin kat” kat yüksekliği 3.80 m > 3.60 m (konut bölgesi, 2 kat)",
+       "PAİY 28/1-c (1.10.2017)"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "“1. kat” kat yüksekliği 3.80 m > 3.60 m",
+       "PAİY 28/1-c (1.10.2017)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-c": [
+      "failed",
+      "1.10.2017"
+     ]
+    }
+   }
+  },
+  {
+   "id": "dort-kat-380-2026",
+   "neden": "Dört katlı konut (bodrumsuz), katlar 3,80 m; 2026: 3 katı geçtiği için 4,00 değil 3,60 m → dört kat kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 3.8
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.8,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 3.8
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 7.6,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000012"
+      ],
+      "height": 3.8
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 11.4,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000013"
+      ],
+      "height": 3.8
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.80 m > 3.60 m (konut bölgesi, 4 kat)",
+       "PAİY 28/1-c (12.8.2023)"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.80 m > 3.60 m (konut bölgesi, 4 kat)",
+       "PAİY 28/1-c (12.8.2023)"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.80 m > 3.60 m (konut bölgesi, 4 kat)",
+       "PAİY 28/1-c (12.8.2023)"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.80 m > 3.60 m (konut bölgesi, 4 kat)",
+       "PAİY 28/1-c (12.8.2023)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-c": [
+      "failed",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "uc-kat-bodrumlu-400",
+   "neden": "Bodrum ve üç kat, katlar 4,00 m; 2026: bodrum hariç 3 kat → en çok 4,00 m; 4,00 sınırın içinde (en fazla) → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b1",
+      "name": "Bodrum kat",
+      "elevation": -3.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "bedrooms": 0,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000009"
+      ],
+      "height": 3.0
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 4.0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 4.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 4.0
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 8.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000012"
+      ],
+      "height": 4.0
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 28/1-c": [
+      "passed",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "bodrum-450",
+   "neden": "Bodrumu 4,50 m (otopark), zemin kat 3,00 m: 28/1-c zemin ve normal katları sayar, bodrum okunmaz → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "b1",
+      "name": "Bodrum kat",
+      "elevation": -4.5,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "bedrooms": 0,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000009"
+      ],
+      "height": 4.5
+     },
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 3.0
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 28/1-c": [
+      "passed",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tek-kat-420-tarihsiz",
+   "neden": "Tek katlı konut 4,20 m, başvuru tarihi yok: 1.10.2017 hâli 3,60, 12.8.2023 hâli 4,00 ister; ikisinde de kalır ama istenen değişiyor → eksik veri.",
+   "permit": {
+    "particulars": {}
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 4.2
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "regulation_date_needed",
+      "state": "missingData",
+      "has": [
+       "Başvuru tarihi künyede yok",
+       "kat yüksekliği kuralı",
+       "1.10.2017–11.8.2023 başvurusunda “Zemin kat” kat yüksekliği 4.20 m > 3.60 m",
+       "12.8.2023 ve sonrası başvurusunda “Zemin kat” kat yüksekliği 4.20 m > 4.00 m"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-c": [
+      "missingData",
+      null
+     ]
+    }
+   }
+  },
+  {
+   "id": "dort-kat-380-tarihsiz",
+   "neden": "Dört katlı konut 3,80 m, tarih yok: her iki hâl de 3,60 ister (3 katı geçiyor) → sonuç güne bağlı değil, en yeni hâlle dört bulgu.",
+   "permit": {
+    "particulars": {}
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 3.8
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.8,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 3.8
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 7.6,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000012"
+      ],
+      "height": 3.8
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 11.4,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000013"
+      ],
+      "height": 3.8
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.80 m > 3.60 m (konut bölgesi, 4 kat)",
+       "PAİY 28/1-c (12.8.2023)"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.80 m > 3.60 m (konut bölgesi, 4 kat)",
+       "PAİY 28/1-c (12.8.2023)"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.80 m > 3.60 m (konut bölgesi, 4 kat)",
+       "PAİY 28/1-c (12.8.2023)"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.80 m > 3.60 m (konut bölgesi, 4 kat)",
+       "PAİY 28/1-c (12.8.2023)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-c": [
+      "failed",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "sivas-iki-kat-380",
+   "neden": "Sivas, iki katlı konut 3,80 m, 2026: PAİY 4,00 ile geçer; Sivas 28/1-c 3,60 (4,00'ı yok) daha sıkı, bağlar → kalır, PAİY yanında.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 3.8
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.8,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 3.8
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "local": "sivas"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.80 m > 3.60 m (konut bölgesi, 2 kat) — Sivas 28/1-c; PAİY 28/1-c (12.8.2023): 4.00 m"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.80 m > 3.60 m (konut bölgesi, 2 kat) — Sivas 28/1-c; PAİY 28/1-c (12.8.2023): 4.00 m"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-c": [
+      "passed",
+      "12.8.2023"
+     ],
+     "Sivas 28/1-c": [
+      "failed",
+      "10.11.2022"
+     ]
+    }
+   }
+  },
+  {
+   "id": "sivas-2021",
+   "neden": "Sivas seçili ama başvuru 1.6.2021: Sivas yönetmeliği 10.11.2022'de yürürlüğe girdi, yalnız PAİY'nin 1.10.2017 hâli → 3,60 kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "01.06.2021"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 3.8
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.8,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 3.8
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "local": "sivas"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.80 m > 3.60 m",
+       "— PAİY 28/1-c (1.10.2017)"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.80 m > 3.60 m",
+       "— PAİY 28/1-c (1.10.2017)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-c": [
+      "failed",
+      "1.10.2017"
+     ]
+    }
+   }
+  },
+  {
+   "id": "sivas-tarihsiz",
+   "neden": "Sivas, iki kat 3,80 m, tarih yok: 2017 (3,60), 2022 (PAİY ve Sivas 3,60), 2023 (Sivas 3,60 bağlar) → istenen hep 3,60, sonuç değişmiyor → en yeni hâlle.",
+   "permit": {
+    "particulars": {}
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 3.8
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.8,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 3.8
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "local": "sivas"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.80 m > 3.60 m (konut bölgesi, 2 kat) — Sivas 28/1-c; PAİY 28/1-c (12.8.2023): 4.00 m"
+      ]
+     },
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "3.80 m > 3.60 m (konut bölgesi, 2 kat) — Sivas 28/1-c; PAİY 28/1-c (12.8.2023): 4.00 m"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-c": [
+      "passed",
+      "12.8.2023"
+     ],
+     "Sivas 28/1-c": [
+      "failed",
+      "10.11.2022"
+     ]
+    }
+   }
+  },
+  {
+   "id": "buro",
+   "neden": "Bina programında tek bölüm, niteliği Büro: konut projesi değil, konut bölgesi varsayılmaz → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 4.5
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 4.5,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 4.5
+     }
+    ],
+    "units": 1,
+    "dwellings": 0,
+    "commons": 0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 28/1-c": [
+      "outOfScope",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "programsiz-yatak-odali",
+   "neden": "Programsız çizim, zemin katta yatak odası; kat 3,70 m, 2026: tek kat → 4,00 → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 3.7
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "commons": 0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 28/1-c": [
+      "passed",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "programsiz-yataksiz",
+   "neden": "Programsız çizim, yatak odası yok: konut olduğu okunmuyor → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "bedrooms": 0,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 5.0
+     }
+    ],
+    "units": 0,
+    "dwellings": 0,
+    "commons": 0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 28/1-c": [
+      "outOfScope",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yukseklik-yazilmamis",
+   "neden": "Zemin kat 3,00 m; üst katın yüksekliği yazılmamış ve üstünde kat yok: yüksekliği okunamıyor → o kat için eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 3.0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "state": "missingData",
+      "has": [
+       "“1. kat” katının yüksekliği yazılmamış",
+       "PAİY 28/1-c (12.8.2023)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-c": [
+      "missingData",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tam-360",
+   "neden": "Dört katlı konut, katlar tam 3,60 m: “en fazla 3.60 metre” → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 3.6
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.6,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 3.6
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 7.2,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000012"
+      ],
+      "height": 3.6
+     },
+     {
+      "level": "k03",
+      "name": "3. kat",
+      "elevation": 10.8,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000013"
+      ],
+      "height": 3.6
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 28/1-c": [
+      "passed",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "2016-basvurusu",
+   "neden": "Başvuru 1.6.2016: PAİY 1.10.2017'de yürürlüğe girdi, o günün metni kural setinde yok → uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "01.06.2016"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000010"
+      ],
+      "height": 3.8
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.8,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000011"
+      ],
+      "height": 3.8
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "regulation_text_unknown",
+      "state": "expertReview",
+      "has": [
+       "1.6.2016",
+       "PAİY 28/1-c",
+       "1.10.2017"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-c": [
+      "expertReview",
+      null
+     ]
+    }
+   }
+  }
+ ]
+}

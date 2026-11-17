@@ -1,7 +1,7 @@
 {
   "format": "kentos.ruleVersions",
   "version": 1,
-  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de, merdiven altınınki 8080 §1'de, kompartımanlarınki 8081 §1'de, dayanımlarınki 8082 §1'de).",
+  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de, merdiven altınınki 8080 §1'de, kompartımanlarınki 8081 §1'de, dayanımlarınki 8082 §1'de, kat yüksekliği ve kapılarınki 8083 §1'de).",
   "regulations": {
     "PAİY": {
       "name": "Planlı Alanlar İmar Yönetmeliği",
@@ -712,6 +712,119 @@
           ],
           "text": "Ek-3/B: taşıyıcı sistem R Ek-3/C; döşemeler: iki katlı konutun ikinci katı REI 30, dükkânla üstü arası REI 60 ya da Ek-3/C, kompartıman döşemeleri dâhil öbürleri REI Ek-3/C, bodrumla zemin kat arası REI 90 ya da Ek-3/C (büyüğü); dış duvarlar REI Ek-3/C; yangın kompartıman duvarları REI 60 ya da Ek-3/C (büyüğü), öbürleri REI Ek-3/C; korunumlu şaftlar REI 120; korunumlu yangın merdiveni yuvasını binanın geri kalanından ayıran duvar REI 120, yuva, acil durum asansör kuyusu ve yangın güvenlik holünü birbirinden ayıran duvar REI 60. Ek-3/C: kullanım sınıfına, yağmurlamaya, bodrum derinliğine (10 m'den fazla, az) ve bina yüksekliğine (5, 21,50, 30,50 m'den az; 30,50 m'den fazla) göre dakikalar; notlar: (1) bir bodrumun üstündeki döşeme, giriş ve üst katlarınki daha fazlaysa onu sağlar; (2) binaları ayıran kompartıman duvarlarında en az 60; (3) taşıyıcı sistemin parçası olmayan elemanlarda 90'a düşürülebilir; (4) acil kaçışı oluşturan elemanlarda 30'a yükseltilir.",
           "source": "RG 19.12.2007/26735, 29/7 ve Ek-3; Ek-3/B ve Ek-3/C'nin tabloları yönetmeliğin PDF'inin 91. ve 93. sayfalarından okundu; docs/adr/8082 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "28/1-c",
+      "title": "Kat yüksekliği (konut bölgesi)",
+      "transition": "Değişiklik yönetmeliği (RG 12.8.2023/32277) yayımı günü yürürlüğe girdi (4 üncü madde); geçici maddesi (Geçici 6) yalnız ofislerin konuta dönüşümü için: 28/1-c'de başvuru gününde yürürlükteki hâl okunur.",
+      "versions": [
+        {
+          "id": "2017",
+          "from": "2017-10-01",
+          "until": "2023-08-11",
+          "label": "1.10.2017",
+          "gazette": "3.7.2017/30113",
+          "most": 3.6,
+          "lowStoreys": null,
+          "lowMost": null,
+          "text": "Kat yükseklikleri uygulama imar planında daha fazla belirlenmemiş ise döşeme üst kotundan döşeme üst kotuna olmak üzere en fazla; … c) Konut bölgelerinde zemin ve normal katlarda 3.60 metre, … kabul edilerek uygulama yapılabilir.",
+          "source": "RG 3.7.2017/30113, 28 inci maddenin birinci fıkrası (Lexpera'nın Resmî Gazete metni); 1.10.2017'de yürürlüğe girdi (71 inci madde); docs/adr/8083 §1."
+        },
+        {
+          "id": "2023",
+          "from": "2023-08-12",
+          "until": null,
+          "label": "12.8.2023",
+          "gazette": "3.7.2017/30113; 12.8.2023/32277 ek ibare",
+          "most": 3.6,
+          "lowStoreys": 3,
+          "lowMost": 4.0,
+          "text": "Kat yükseklikleri uygulama imar planında daha fazla belirlenmemiş ise döşeme üst kotundan döşeme üst kotuna olmak üzere en fazla; … c) Konut bölgelerinde zemin ve normal katlarda 3.60 metre, bodrum hariç 3 katı geçmeyen binalarda ise 4.00 metre, … kabul edilerek uygulama yapılabilir.",
+          "source": "RG 12.8.2023/32277, 2 nci madde (ek ibare; aynı madde 28/1-ç'deki “asma katlı zemin katlarda 5.5 metre,” ibaresini kaldırdı); docs/adr/8083 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "39/1",
+      "title": "Kapı yüksekliği ve net genişliği",
+      "transition": "Değişiklik yönetmeliği (RG 13.8.2025/32985) yayımı günü yürürlüğe girdi (9 uncu madde); geçiş hükmü (8 inci madde, Geçici 3/9) yalnız 19/1-f-5 ve 6 için: 39/1'de başvuru gününde yürürlükteki hâl okunur.",
+      "versions": [
+        {
+          "id": "2017",
+          "from": "2017-10-01",
+          "until": "2025-08-12",
+          "label": "1.10.2017",
+          "gazette": "3.7.2017/30113; 30.9.2017/30196 değişik (b)",
+          "height": 2.1,
+          "building": 1.5,
+          "leaf": 1.0,
+          "unit": 1.0,
+          "other": 0.9,
+          "reduced": 0.8,
+          "text": "Bütün yapılarda; a) Kapı yükseklikleri 2.10 metreden, b) Kapı net (temiz) genişlikleri bina giriş kapılarında 1.50 metreden, kapıların çift kanatlı olması halinde bir kanat 1.00 metreden, c) Bağımsız bölüm giriş kapılarında 1.00 metreden, diğer mahallerin kapılarında 0.90 metreden, az olamaz. Balkon ve tuvalet kapıları 0.80 metreye düşürülebilir. ç) Döner kapılar, belirtilen ölçülerde yapılacak normal kapıların yanında ilave olarak bulunabilir.",
+          "source": "RG 3.7.2017/30113, 39 uncu maddenin birinci fıkrası (Lexpera'nın Resmî Gazete metni); (b) bendi RG 30.9.2017/30196 7 nci maddesiyle değişti (“ve yangın merdivenlerine açılan kapılarda” çıktı; 15 inci madde: 1.10.2017'de yürürlükte); docs/adr/8083 §1."
+        },
+        {
+          "id": "2025",
+          "from": "2025-08-13",
+          "until": null,
+          "label": "13.8.2025",
+          "gazette": "13.8.2025/32985",
+          "height": 2.1,
+          "building": 1.5,
+          "leaf": 1.0,
+          "unit": 1.0,
+          "other": 0.9,
+          "reduced": null,
+          "text": "Bütün yapılarda; a) Kapı yükseklikleri 2.10 metreden az olamaz. b) Kapı net (temiz) genişlikleri bina giriş kapılarında 1.50 metreden, kapıların çift kanatlı olması halinde bir kanat 1.00 metreden az olamaz. c) Kapı net (temiz) genişlikleri bağımsız bölüm giriş kapılarında 1.00 metreden, diğer mahallerin kapılarında 0.90 metreden az olamaz. ç) Döner kapılar, belirtilen ölçülerde yapılacak normal kapıların yanında ilave olarak bulunabilir. d) Yaşlılar için bina giriş kapıları cepheden ayırt edici malzeme, renk veya desen farklılıkları ile belirgin hale getirilir.",
+          "source": "RG 13.8.2025/32985, 6 ncı madde (alomaliye'nin Resmî Gazete metni); docs/adr/8083 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "Sivas",
+      "article": "28/1-c",
+      "title": "Kat yüksekliği (konut bölgesi, Sivas)",
+      "transition": "Sivas İmar Yön. Geçici 3: mevcut yapı ruhsatı başvurularında PAİY'nin geçici 3 üncü maddesine uyulur; yönetmelik yayımı günü (10.11.2022) yürürlüğe girdi.",
+      "versions": [
+        {
+          "id": "2022",
+          "from": "2022-11-10",
+          "until": null,
+          "label": "10.11.2022",
+          "gazette": "10.11.2022/32009",
+          "most": 3.6,
+          "lowStoreys": null,
+          "lowMost": null,
+          "text": "Kat yükseklikleri uygulama imar planında daha fazla belirlenmemiş ise döşeme üst kotundan döşeme üst kotuna olmak üzere en fazla; … c) Konut bölgelerinde zemin ve normal katlarda 3.60 metre, … kabul edilerek uygulama yapılabilir.",
+          "source": "RG 10.11.2022/32009, 28 inci maddenin birinci fıkrası; PAİY'nin 12.8.2023'te eklediği 4,00 m bu metinde yok (docs/adr/8034, 8083 §1)."
+        }
+      ]
+    },
+    {
+      "regulation": "Sivas",
+      "article": "39/1",
+      "title": "Kapı yüksekliği ve net genişliği (Sivas)",
+      "transition": "Sivas İmar Yön. Geçici 3: mevcut yapı ruhsatı başvurularında PAİY'nin geçici 3 üncü maddesine uyulur; yönetmelik yayımı günü (10.11.2022) yürürlüğe girdi.",
+      "versions": [
+        {
+          "id": "2022",
+          "from": "2022-11-10",
+          "until": null,
+          "label": "10.11.2022",
+          "gazette": "10.11.2022/32009",
+          "height": 2.1,
+          "building": 1.5,
+          "leaf": 1.0,
+          "unit": 1.0,
+          "other": 0.9,
+          "reduced": 0.8,
+          "text": "Bütün yapılarda; a) Kapı yükseklikleri 2.10 metreden, b) Kapı net (temiz) genişlikleri bina giriş kapılarında 1.50 metreden, kapıların çift kanatlı olması halinde bir kanat 1.00 metreden, c) Bağımsız bölüm giriş kapılarında 1.00 metreden, diğer mahallerin kapılarında 0.90 metreden, az olamaz. Balkon ve tuvalet kapıları 0.80 metreye düşürülebilir. ç) Döner kapılar, belirtilen ölçülerde yapılacak normal kapıların yanında ilave olarak bulunabilir.",
+          "source": "RG 10.11.2022/32009, 39 uncu maddenin birinci fıkrası (docs/adr/8034, 8083 §1)."
         }
       ]
     }

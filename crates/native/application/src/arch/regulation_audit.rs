@@ -9,18 +9,13 @@
 //!   it lacking one of the five is said (29/1), a bathroom standing for the toilet in one of three rooms or fewer (29/2).
 //!   Without a program the rooms are measured, no dwelling counted.
 //! - **Hol ve koridor (29/3):** net width at least 1.20 m.
-//! - **Kat yüksekliği (28/1-c):** in a dwelling area at most 3.60 m floor to floor, 4.00 m in a building of three
-//!   storeys or fewer above its basements; read only when the project is plainly a dwelling's (a dwelling unit or a
-//!   bedroom).
 //! - **İç yükseklik (28/4–6, docs/adr/8040 §3):** a named room's finished floor to its ceiling (its asma tavan, its
 //!   height typed, the slab over it's plastered underside; without one, floor to floor: a bound over it): an inhabited
 //!   room at least 2.60 m; a wet room, a pantry or store, the room under a stair and a passage 2.20 m (28/5); a garage,
 //!   a boiler room and a technical room 2.20 m (28/6). Not read: outdoor rooms, shelters, shafts, attics, rooms with
 //!   no name and no use, rooms on a mezzanine (28/4: "asma katlar hariç").
-//! - **Kapılar (39/1, 13.8.2025):** at least 2.10 m high; their net clear width at least 1.50 m at a building's entrance,
-//!   1.00 m at an independent unit's, 0.90 m elsewhere. A door with no room on one side is an entrance: the building's
-//!   when it has a common area or more than one unit, else its only unit's; a door between a unit's room and a common
-//!   area is that unit's entrance.
+//! - **Kat yüksekliği (28/1-c) ve kapılar (39/1):** both changed (12.8.2023, 13.8.2025) and are read by the
+//!   application date's version: the standards package's Python (docs/adr/8083), as 34/1 and 34/8 below.
 //! - **Merdivenler (31, docs/adr/8034):** a common stair's flight and landings at least 1.20 m in a dwelling building,
 //!   1.50 m in another; a stair inside a dwelling unit 1.00 m. A stair is a unit's when the room it stands in is; outside
 //!   every room of its level it is the building's outdoor steps, whose flight 31/1-a does not measure. The riser at most
@@ -44,10 +39,10 @@
 //!
 //! **Yerel yönetmelik** (`ArchSettings::local_rules`): the municipality's values are read over these where they differ,
 //! as PAİY 69/3 applies them. Sivas İmar Yönetmeliği (10.11.2022): common stairs 1.30 m and their intermediate landings
-//! 1.30 m (31/1-a); storeys at most 3.60 m in a dwelling area (28/1-c, no 4.00 m); an air shaft's narrow side 0.30 m
-//! and 0.36 m² (32/3); toilet and balcony doors 0.80 m (39/1-c); a light well by the storeys it serves (32/2-a); a roof's
-//! ridge 4.00 m and its slope 40 % (40/5-g), its windows 1.20 × 1.50 m, 1 m from the facade lines and 2 m apart (40/5-e),
-//! its snow guard (42/5). Its elevator articles (34/1, 34/8) are the standards package's too.
+//! 1.30 m (31/1-a); an air shaft's narrow side 0.30 m and 0.36 m² (32/3); a light well by the storeys it serves
+//! (32/2-a); a roof's ridge 4.00 m and its slope 40 % (40/5-g), its windows 1.20 × 1.50 m, 1 m from the facade lines and
+//! 2 m apart (40/5-e), its snow guard (42/5). Its elevator, storey height and door articles (34/1, 34/8, 28/1-c, 39/1)
+//! are the standards package's too.
 //! A stricter value binds and the other layer's is named beside it; a looser one a drawing keeps while missing the
 //! national value is a conflict (`regulation_conflict`) the administration decides.
 //!
@@ -179,14 +174,9 @@ impl Article {
 
 pub const ROOMS_ARTICLE: Article = Article::paiy("29/1", ORIGINAL);
 pub const CORRIDOR_ARTICLE: Article = Article::paiy("29/3", ORIGINAL);
-pub const STOREY_ARTICLE: Article = Article::paiy("28/1-c", "12.8.2023/32277 değişikliğiyle");
 pub const INHABITED_HEIGHT_ARTICLE: Article = Article::paiy("28/4", ORIGINAL);
 pub const SERVICE_HEIGHT_ARTICLE: Article = Article::paiy("28/5", ORIGINAL);
 pub const TECHNICAL_HEIGHT_ARTICLE: Article = Article::paiy("28/6", ORIGINAL);
-pub const DOOR_HEIGHT_ARTICLE: Article = Article::paiy("39/1-a", "13.8.2025/32985 değişikliğiyle");
-pub const DOOR_ENTRANCE_ARTICLE: Article =
-    Article::paiy("39/1-b", "13.8.2025/32985 değişikliğiyle");
-pub const DOOR_WIDTH_ARTICLE: Article = Article::paiy("39/1-c", "13.8.2025/32985 değişikliğiyle");
 pub const RAMP_ARTICLE: Article = Article::paiy("30/12", ORIGINAL);
 pub const STAIR_WIDTH_ARTICLE: Article = Article::paiy("31/1-a", ORIGINAL);
 pub const STAIR_RAILING_ARTICLE: Article = Article::paiy("31/1-ç", ORIGINAL);
@@ -200,24 +190,20 @@ pub const CABIN_ARTICLE: Article = Article::paiy("34/2", ORIGINAL);
 pub const STRETCHER_ARTICLE: Article = Article::paiy("34/5", ORIGINAL);
 pub const RAILING_ARTICLE: Article = Article::paiy("38/1", ORIGINAL);
 pub const SECTIONS_ARTICLE: Article = Article::paiy("57/2-a-6", ORIGINAL);
-pub const SIVAS_STOREY_ARTICLE: Article = Article::sivas("28/1-c");
 pub const SIVAS_STAIR_ARTICLE: Article = Article::sivas("31/1-a");
 pub const SIVAS_LIGHTWELL_ARTICLE: Article = Article::sivas("32/2-a");
 pub const SIVAS_AIR_SHAFT_ARTICLE: Article = Article::sivas("32/3");
-pub const SIVAS_DOOR_ARTICLE: Article = Article::sivas("39/1-c");
 
 /// The codes the group finds, in their order: PAİY's and the local regulation's, then the fire regulation's
 /// (docs/adr/8035). Only the codes this group makes: an exception on a standards package's finding (34/1's and 34/8's,
-/// the rule set's own; catalog/standards/mimari-mevzuat, docs/adr/8078) is never stale to it, nor pruned by it.
-pub const CODES: [&str; 48] = [
+/// 28/1-c's and 39/1's, the rule set's own; catalog/standards/mimari-mevzuat, docs/adr/8078, 8083) is never stale to
+/// it, nor pruned by it.
+pub const CODES: [&str; 45] = [
     codes::PAIY_ROOM_MISSING,
     codes::PAIY_ROOM_AREA_BELOW,
     codes::PAIY_ROOM_WIDTH_BELOW,
     codes::PAIY_CORRIDOR_NARROW,
-    codes::PAIY_STOREY_HEIGHT_OVER,
     codes::PAIY_INSIDE_HEIGHT_BELOW,
-    codes::PAIY_DOOR_HEIGHT_BELOW,
-    codes::PAIY_DOOR_WIDTH_BELOW,
     codes::PAIY_STAIR_WIDTH_NARROW,
     codes::PAIY_STAIR_LANDING_SHORT,
     codes::PAIY_STAIR_RISER_HIGH,
@@ -508,7 +494,6 @@ struct Room {
     /// Its own name (“Yatak odası 1”), else none: the kind's label says it.
     name: Option<String>,
     unit: Option<String>,
-    level: Option<String>,
     number: Option<String>,
     area: Option<f64>,
     width: f64,
@@ -524,8 +509,6 @@ struct Place {
     void: bool,
     outdoor: bool,
     shaft: Option<ShaftKind>,
-    balcony: bool,
-    toilet: bool,
     technical: bool,
     /// A shaft's net narrow side, net area and label point.
     measure: Option<(f64, Option<f64>, V)>,
@@ -627,8 +610,6 @@ pub fn findings(
             void: x.void,
             outdoor,
             shaft,
-            balcony: has(&words(name, usage), "BALKON"),
-            toilet: !x.void && kind == Some(RoomKind::Toilet),
             technical: technical(name, usage),
             measure,
         });
@@ -681,7 +662,6 @@ pub fn findings(
             kind,
             name: x.name.clone().filter(|n| !n.trim().is_empty()),
             unit,
-            level: e.own_level().map(str::to_owned),
             number: x.number.clone().filter(|n| !n.trim().is_empty()),
             area,
             width,
@@ -837,42 +817,7 @@ pub fn findings(
         .map(|a| a.levels.iter().collect())
         .unwrap_or_default();
     levels.sort_by(|a, b| a.elevation.total_cmp(&b.elevation));
-    // Storey heights (28/1-c) in a dwelling area, when the project is plainly a dwelling's; Sivas's 3.60 m without the
-    // national 4.00 m of a low building.
-    let dwelling_project = program.units.iter().any(|u| {
-        u.kind == UnitKind::Unit && u.nature.as_deref().is_some_and(|n| dwelling(Some(n)))
-    }) || rooms.iter().any(|r| r.kind == RoomKind::Bedroom);
-    if dwelling_project {
-        let above = levels.iter().filter(|l| l.elevation >= -1e-6).count();
-        let most = if above <= 3 { 4.00 } else { 3.60 };
-        for (i, l) in levels.iter().enumerate() {
-            let next = levels
-                .get(i + 1)
-                .map(|n| n.elevation - l.elevation)
-                .filter(|h| *h > 0.0);
-            let Some(h) = l.height.or(next) else { continue };
-            if let Some(s) = said(
-                codes::PAIY_STOREY_HEIGHT_OVER,
-                &format!("“{}” kat yüksekliği", l.name),
-                h,
-                Bound::AtMost,
-                Limit {
-                    value: most,
-                    article: STOREY_ARTICLE,
-                },
-                local(3.60, SIVAS_STOREY_ARTICLE),
-                metres,
-                &format!(" (konut bölgesi, {above} kat)"),
-                "Kat yüksekliğini düşürün (Proje ayarları › Mimari › Katlar) ya da planın kendi notuna bakın.",
-            ) {
-                let at = rooms
-                    .iter()
-                    .find(|r| r.level.as_deref() == Some(l.id.as_str()))
-                    .map_or(V::new(0.0, 0.0), |r| r.at);
-                push(s, Vec::new(), at, None);
-            }
-        }
-    }
+    // Storey heights (28/1-c) are the standards package's, by the application date's version (docs/adr/8083).
     // Inside heights (28/4–6, docs/adr/8040 §3): each room by its class, measured from its finished floor.
     for (slot, subject, class, h, at) in &inside {
         let (least, article, repair) = match class {
@@ -942,14 +887,8 @@ pub fn findings(
             _ => Some(u),
         }
     };
-    // Doors (39/1): their height and their net clear width by what they enter; with Sivas a toilet's or a balcony's
-    // door 0.80 m (39/1-c). The landing an elevator's door opens to (34/2).
-    let shared = program.units.iter().any(|u| u.kind == UnitKind::Common) || units.len() > 1;
-    let kind_of_unit = |unit: &Option<String>| {
-        unit.as_deref()
-            .and_then(|u| program.unit(u))
-            .map(|u| (u.kind, u.annex_of.clone()))
-    };
+    // Doors: the landing an elevator's door opens to (34/2). Their height and net clear width (39/1) are the standards
+    // package's, by the application date's version (docs/adr/8083).
     let mut landing_width: HashMap<Slot, f64> = HashMap::new();
     for e in doc.entities() {
         let Entity::Opening(o) = e else { continue };
@@ -990,27 +929,6 @@ pub fn findings(
         }
         if f.form != OpeningForm::Door {
             continue;
-        }
-        // Its height: its head over its sill (none without a head).
-        if let Some(h) = f.head.map(|head| head - f.sill.unwrap_or(0.0))
-            && h + 1e-6 < 2.10
-        {
-            push(
-                Said {
-                    code: codes::PAIY_DOOR_HEIGHT_BELOW,
-                    message: format!(
-                        "Kapı yüksekliği {} m < 2.10 m — {}",
-                        m2(h),
-                        DOOR_HEIGHT_ARTICLE.short()
-                    ),
-                    repair: "Kapının yüksekliğini en az 2,10 m yapın.".into(),
-                    rule: DOOR_HEIGHT_ARTICLE.named(),
-                    binding: None,
-                },
-                vec![slot],
-                c,
-                None,
-            );
         }
         let (l, r) = (
             places.iter().find(|p| p.holds(&level, left)),
@@ -1059,55 +977,6 @@ pub fn findings(
             {
                 push(s, vec![b.slot, slot], c, None);
             }
-        }
-        let Some(clear) = f.sizes().clear else {
-            continue;
-        };
-        // What it enters: the building, a unit or another room.
-        let entrance = |a: &Option<String>, b: &Option<String>| {
-            let (ka, kb) = (kind_of_unit(a), kind_of_unit(b));
-            let unit_side =
-                |k: &Option<(UnitKind, Option<String>)>| matches!(k, Some((UnitKind::Unit, _)));
-            let common_side =
-                |k: &Option<(UnitKind, Option<String>)>| matches!(k, Some((UnitKind::Common, _)));
-            (unit_side(&ka) && common_side(&kb)) || (unit_side(&kb) && common_side(&ka))
-        };
-        let (least, what, article) = match (l, r) {
-            (None, None) => continue,
-            (Some(_), None) | (None, Some(_)) if shared => {
-                (1.50, "Bina giriş kapısının", DOOR_ENTRANCE_ARTICLE)
-            }
-            (Some(_), None) | (None, Some(_)) => {
-                (1.00, "Bağımsız bölüm giriş kapısının", DOOR_WIDTH_ARTICLE)
-            }
-            (Some(a), Some(b)) if entrance(&a.unit, &b.unit) => {
-                (1.00, "Bağımsız bölüm giriş kapısının", DOOR_WIDTH_ARTICLE)
-            }
-            _ => (0.90, "Kapının", DOOR_WIDTH_ARTICLE),
-        };
-        // Sivas 39/1-c: a toilet's or a balcony's door may be 0.80 m.
-        let toilet = [l, r].iter().flatten().any(|p| p.toilet);
-        let balcony = [l, r].iter().flatten().any(|p| p.balcony);
-        let (what, local_door) = match (sivas && least == 0.90, toilet, balcony) {
-            (true, true, _) => ("Tuvalet kapısının", local(0.80, SIVAS_DOOR_ARTICLE)),
-            (true, false, true) => ("Balkon kapısının", local(0.80, SIVAS_DOOR_ARTICLE)),
-            _ => (what, None),
-        };
-        if let Some(s) = said(
-            codes::PAIY_DOOR_WIDTH_BELOW,
-            &format!("{what} net genişliği"),
-            clear,
-            Bound::AtLeast,
-            Limit {
-                value: least,
-                article,
-            },
-            local_door,
-            metres,
-            "",
-            "Kapıyı genişletin ya da daha geniş bir kapı tipi seçin.",
-        ) {
-            push(s, vec![slot], c, None);
         }
     }
     // Stairs (31; 38/1).

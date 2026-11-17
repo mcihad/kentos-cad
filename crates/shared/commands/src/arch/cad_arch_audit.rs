@@ -78,9 +78,9 @@ pub enum ArchAuditCheck {
     /// by name.
     Fixtures,
     /// Mevzuat (docs/adr/8033): Planlı Alanlar İmar Yönetmeliği's rooms (29/1: each dwelling's living room, bedroom,
-    /// kitchen, bathroom and toilet, their narrow side and net area), corridors (29/3), storey heights (28/1-c) and
-    /// doors (39/1: their height and net width by what they enter); each finding names its article (`rule`); checked
-    /// only when asked by name.
+    /// kitchen, bathroom and toilet, their narrow side and net area) and corridors (29/3); storey heights (28/1-c) and
+    /// doors (39/1: their height and net width by what they enter) by the application date's version, the standards
+    /// package's (docs/adr/8083); each finding names its article (`rule`); checked only when asked by name.
     Regulation,
 }
 
@@ -434,8 +434,7 @@ pub struct ArchAuditFinding {
     /// `program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,
     /// `program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1); the fixtures group's
     /// `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/8025); the regulation group's
-    /// `paiy_room_area_below`, `paiy_room_width_below`, `paiy_room_missing`, `paiy_corridor_narrow`,
-    /// `paiy_storey_height_over`, `paiy_door_height_below`, `paiy_door_width_below` (docs/adr/8033),
+    /// `paiy_room_area_below`, `paiy_room_width_below`, `paiy_room_missing`, `paiy_corridor_narrow` (docs/adr/8033),
     /// `paiy_inside_height_below` (docs/adr/8040 §3),
     /// `paiy_stair_width_narrow`, `paiy_stair_landing_short`, `paiy_stair_riser_high`, `paiy_stair_step`,
     /// `paiy_railing_missing`, `paiy_ramp_steep`, `paiy_window_railing`, `paiy_lightwell_small`, `paiy_air_shaft_small`,
@@ -446,7 +445,9 @@ pub struct ArchAuditFinding {
     /// `paiy_library_not_exempt` (docs/adr/8079), a low space under a stair open into a room `paiy_under_stair_open`
     /// (docs/adr/8080), the fire compartments' `bykhy_hazard_room_separation`, `bykhy_compartment_area_over` and
     /// `bykhy_compartment_opening` (docs/adr/8081), the elements' declared classes against Ek-3
-    /// `bykhy_element_resistance` and `bykhy_height_not_permitted` (docs/adr/8082), `regulation_date_needed` (eksik veri) and
+    /// `bykhy_element_resistance` and `bykhy_height_not_permitted` (docs/adr/8082), the storeys' and doors' sizes
+    /// `paiy_storey_height_over`, `paiy_door_height_below` and `paiy_door_width_below` (docs/adr/8083),
+    /// `regulation_date_needed` (eksik veri) and
     /// `regulation_text_unknown` (uzman incelemesi); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
     /// `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/8035); `parking_short`,
     /// `shelter_short`, `shelter_exit_count`, `shelter_height_low` (docs/adr/8036); `paiy_sections_missing`,

@@ -64,3 +64,15 @@ def kompartiman_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
 def dayanim_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Yapı elemanlarının yangına dayanım süreleri (BYKHY Ek-3/B, Ek-3/C): beyan edilen sınıf istenenle."""
     return _bulgular(facts, ("bykhy_element_resistance", "bykhy_height_not_permitted"))
+
+
+@ext.audit("kat-yuksekligi")
+def kat_yuksekligi_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Kat yüksekliği (PAİY 28/1-c; Sivas 28/1-c): konut bölgesinde zemin ve normal katlar, başvuru gününün hâliyle."""
+    return _bulgular(facts, ("paiy_storey_height_",))
+
+
+@ext.audit("kapi-olculeri")
+def kapi_olculeri_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Kapı yüksekliği ve net genişliği (PAİY 39/1; Sivas 39/1): bina ve bölüm girişi, öbür kapılar."""
+    return _bulgular(facts, ("paiy_door_",))

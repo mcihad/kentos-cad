@@ -1,5 +1,6 @@
 //! Mevzuat denetimi (M33, docs/adr/8033): Planlı Alanlar İmar Yönetmeliği's rooms (29/1), corridors (29/3), storey
-//! heights (28/1-c) and doors (39/1) read on the drawing; each finding names its article and says what it measured.
+//! heights (28/1-c) and doors (39/1) read on the drawing; each finding names its article and says what it measured. The
+//! storeys and the doors are the standards package's, by the application date's version (docs/adr/8083).
 
 use kentos_launch::Module;
 use serde_json::{Value, json};
@@ -42,21 +43,48 @@ fn regulation(app: &mut App, checks: Value) -> Vec<(String, String, String)> {
         .collect()
 }
 
-/// The acceptance apartment: its rooms keep 29/1, its doors do not keep 39/1 as amended on 13.8.2025: the four inner
-/// doors of a 90 cm rough opening leave 0.76 m clear (0.90 asked), the entrance 0.86 m (1.00 asked at a unit's door).
-/// A plain call does not read the regulation: it is asked for by name.
+/// The standards package's findings of the articles it reads by the application date (docs/adr/8083): 28/1-c's
+/// storeys, 39/1's doors, and the eksik veri of a door or a storey whose outcome turns on that date.
+fn dated_sizes(app: &mut App) -> Vec<(String, String, String)> {
+    let facts = app.arch_audit_regulation_facts().expect("the building's facts");
+    let python = crate::standards::call("mimari-mevzuat", "mimari_mevzuat.mimari", "denetle", vec![facts])
+        .expect("the national regulation's rule answers");
+    python["findings"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default()
+        .iter()
+        .filter(|f| {
+            let rule = f["rule"].as_str().unwrap_or_default();
+            ["paiy_storey_height_over", "paiy_door_height_below", "paiy_door_width_below"]
+                .contains(&f["code"].as_str().unwrap_or_default())
+                || rule.contains("28/1-c")
+                || rule.contains("39/1")
+        })
+        .map(|f| {
+            (
+                f["code"].as_str().unwrap_or_default().to_owned(),
+                f["message"].as_str().unwrap_or_default().to_owned(),
+                f["rule"].as_str().unwrap_or_default().to_owned(),
+            )
+        })
+        .collect()
+}
+
+/// The acceptance apartment: its rooms keep 29/1, its doors do not keep 39/1: the four inner doors of a 90 cm rough
+/// opening leave 0.76 m clear (0.90 asked by both versions, so the missing application date changes nothing), the
+/// entrance 0.86 m (1.00 asked at a unit's door). A plain call does not read the regulation: it is asked for by name.
 #[cfg(unix)]
 #[test]
 fn the_apartment_s_doors_are_narrower_than_the_regulation_asks() {
     let (mut app, _dir) = crate::acceptance_flat_tests::opened("mevzuat");
     let _ = crate::acceptance_flat_tests::drawn(&mut app);
     let found = regulation(&mut app, json!(["regulation"]));
-    // The flat has no section and no elevation drawn (PAİY 57/2-a-6, docs/adr/8042 §7, 8043 §9): said beside the
-    // doors.
-    let (sections, found): (Vec<_>, Vec<_>) = found
-        .into_iter()
-        .partition(|(c, ..)| c == "paiy_sections_missing" || c == "paiy_elevations_missing");
-    assert_eq!(sections.len(), 2, "{sections:?}");
+    // The flat has no section and no elevation drawn (PAİY 57/2-a-6, docs/adr/8042 §7, 8043 §9); the Mevzuat group
+    // finds nothing else of its own.
+    let codes: Vec<&str> = found.iter().map(|(c, ..)| c.as_str()).collect();
+    assert_eq!(codes, ["paiy_sections_missing", "paiy_elevations_missing"], "{found:?}");
+    let found = dated_sizes(&mut app);
     let messages: Vec<&str> = found.iter().map(|(_, m, _)| m.as_str()).collect();
     assert_eq!(found.len(), 5, "{messages:?}");
     assert!(
@@ -76,9 +104,7 @@ fn the_apartment_s_doors_are_narrower_than_the_regulation_asks() {
         "{messages:?}"
     );
     assert!(
-        found
-            .iter()
-            .all(|(.., r)| r == "PAİY 39/1-c · RG 13.8.2025/32985 değişikliğiyle"),
+        found.iter().all(|(.., r)| r == "PAİY 39/1-c · RG 13.8.2025/32985"),
         "{found:?}"
     );
     // Asked by name only, as the doors and the fixtures: an older call's findings stay as they were; Denetim's panel asks
@@ -91,7 +117,8 @@ fn the_apartment_s_doors_are_narrower_than_the_regulation_asks() {
 
 /// A small dwelling of one 4.20 m storey: its living room 11.11 m² (12 asked), its bedroom 2.35 m wide and 8.23 m²
 /// (2.50 and 9 asked), its corridor 0.85 m (1.20 asked), no kitchen (its bathroom stands for the toilet in two rooms,
-/// 29/2), the storey 4.20 m high (4.00 at most in a building of one storey).
+/// 29/2), the storey 4.20 m high: applied for on 2.7.2026, 4.00 at most in a building of one storey (28/1-c as of
+/// 12.8.2023); without a date 3.60 or 4.00 by the day, eksik veri.
 #[test]
 fn a_small_dwelling_s_rooms_corridor_kitchen_and_storey_are_said() {
     kentos_postgis::connections::keep_in_memory();
@@ -154,12 +181,30 @@ fn a_small_dwelling_s_rooms_corridor_kitchen_and_storey_are_said() {
             "paiy_room_area_below",
             "paiy_room_width_below",
             "paiy_corridor_narrow",
-            "paiy_storey_height_over",
             "paiy_sections_missing",
             "paiy_elevations_missing",
             "parking_short"
         ],
         "{messages:?}"
+    );
+    // The storey by 28/1-c: no application date, and 1.10.2017's 3.60 m and 12.8.2023's 4.00 m ask two things.
+    let storey = dated_sizes(&mut app);
+    assert_eq!(storey.len(), 1, "{storey:?}");
+    assert_eq!(storey[0].0, "regulation_date_needed", "{storey:?}");
+    assert!(
+        storey[0].1.contains("1.10.2017–11.8.2023 başvurusunda “Zemin kat” kat yüksekliği 4.20 m > 3.60 m")
+            && storey[0].1.contains("12.8.2023 ve sonrası başvurusunda “Zemin kat” kat yüksekliği 4.20 m > 4.00 m"),
+        "{storey:?}"
+    );
+    crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
+    let storey = dated_sizes(&mut app);
+    assert_eq!(
+        storey,
+        [(
+            "paiy_storey_height_over".to_owned(),
+            "“Zemin kat” kat yüksekliği 4.20 m > 4.00 m (konut bölgesi, 1 kat) — PAİY 28/1-c (12.8.2023)".to_owned(),
+            "PAİY 28/1-c · RG 3.7.2017/30113; 12.8.2023/32277 ek ibare".to_owned()
+        )]
     );
     // Otopark Yönetmeliği (M36): the flat asks one place and the drawing has no Otopark.
     assert!(
@@ -194,17 +239,9 @@ fn a_small_dwelling_s_rooms_corridor_kitchen_and_storey_are_said() {
             .any(|m| m.starts_with("Koridor net eni 0.8") && m.ends_with("< 1.20 m — PAİY 29/3")),
         "{messages:?}"
     );
-    assert!(
-        messages.contains(&"“Zemin kat” kat yüksekliği 4.20 m > 4.00 m (konut bölgesi, 1 kat) — PAİY 28/1-c (12.8.2023)"),
-        "{messages:?}"
-    );
     let rules: Vec<&str> = found.iter().map(|(.., r)| r.as_str()).collect();
     assert!(
         rules.contains(&"PAİY 29/1 · RG 3.7.2017/30113"),
-        "{rules:?}"
-    );
-    assert!(
-        rules.contains(&"PAİY 28/1-c · RG 12.8.2023/32277 değişikliğiyle"),
         "{rules:?}"
     );
     // The real window's drawing (fixtures/interaction/real/mevzuat-denetimi.txt): the small dwelling.
@@ -213,8 +250,8 @@ fn a_small_dwelling_s_rooms_corridor_kitchen_and_storey_are_said() {
         let bytes = kentos_kcad::encode(&doc.to_snapshot_v2()).expect("encodes");
         std::fs::write(std::path::Path::new(&out).join("konut.kcad"), bytes).expect("written");
     }
-    // Not a dwelling: an office keeps none of 29/1's rooms, nor 28/1-c's storey; its 0.85 m corridor is the fire
-    // regulation's escape route, 1.10 m asked (BYKHY 33/1, M35).
+    // Not a dwelling: an office keeps none of 29/1's rooms, nor 28/1-c's storey (the package's, out of scope); its 0.85 m
+    // corridor is the fire regulation's escape route, 1.10 m asked (BYKHY 33/1, M35).
     run(
         &mut app,
         "cad.program.edit",
@@ -238,6 +275,7 @@ fn a_small_dwelling_s_rooms_corridor_kitchen_and_storey_are_said() {
         messages[1].starts_with("Otopark: gereken 1 yer, çizimde 0"),
         "{found:?}"
     );
+    assert_eq!(dated_sizes(&mut app), Vec::new(), "an office's storey is not 28/1-c's");
 }
 
 /// A blank Mimari drawing.
@@ -302,7 +340,8 @@ fn regulation_findings(app: &mut App) -> Vec<Value> {
 /// its left only), a ramp of 0.40 m over 4 m without railings, an air shaft of 0.40 × 0.90 m, a light well of 1.40 ×
 /// 3.00 m, a window of 0.40 m sill on the first floor, a toilet's door of 0.86 m clear and no elevator, read by PAİY 30,
 /// 31, 32, 34, 38 and 39. Then Sivas's regulation over them: its 1.30 m stair binding with PAİY's 1.20 m beside it, the
-/// air shaft and the toilet's door a conflict, the elevator asked from three storeys. Then an elevator too small, and the
+/// air shaft a conflict, the elevator asked from three storeys; the toilet's door turns on the application date (0.80 m
+/// until 12.8.2025, 0.90 m since; Sivas's 0.80 m against PAİY's 0.90 m a conflict). Then an elevator too small, and the
 /// stair's fix.
 #[test]
 fn a_four_storey_building_s_stairs_ramp_shafts_and_elevator_are_said() {
@@ -404,10 +443,6 @@ fn a_four_storey_building_s_stairs_ramp_shafts_and_elevator_are_said() {
     let found = said(&regulation_findings(&mut app));
     let expected = [
         (
-            "paiy_door_width_below",
-            "Kapının net genişliği 0.86 m < 0.90 m — PAİY 39/1-c (13.8.2025)",
-        ),
-        (
             "paiy_stair_riser_high",
             "Merdivenin rıhtı 0.167 m > 0.16 m (asansörsüz bina) — PAİY 31/2-a",
         ),
@@ -465,6 +500,13 @@ fn a_four_storey_building_s_stairs_ramp_shafts_and_elevator_are_said() {
             "Zemin kat: 4 duvarın yangın sınıfı beyan edilmemiş; Ek-3/B 5 dış duvar; Ek-3/C bir ve iki ailelik ev, bina \
              yüksekliği 12.00 m (21,50 m'den az) en az EI 60 ister — BYKHY Ek-3",
         ),
+        // The standards package's 39/1 (docs/adr/8083): the toilet's door of 0.86 m keeps 1.10.2017's 0.80 m and misses
+        // 13.8.2025's 0.90 m; no application date, so eksik veri, naming the door.
+        (
+            "regulation_date_needed",
+            "Başvuru tarihi künyede yok: kapı kuralı başvuru gününe göre değişiyor — 1.10.2017–12.8.2025 başvurusunda \
+             bulgu yok · 13.8.2025 ve sonrası başvurusunda Tuvalet kapısının net genişliği 0.86 m < 0.90 m",
+        ),
     ];
     assert_eq!(
         found,
@@ -479,8 +521,8 @@ fn a_four_storey_building_s_stairs_ramp_shafts_and_elevator_are_said() {
         let bytes = kentos_kcad::encode(&doc.to_snapshot_v2()).expect("encodes");
         std::fs::write(std::path::Path::new(&out).join("bina.kcad"), bytes).expect("written");
     }
-    // Sivas's regulation over PAİY: its stair and landing bind with PAİY's beside them; the air shaft and the toilet's
-    // door keep Sivas's looser values, not PAİY's: a conflict the administration decides.
+    // Sivas's regulation over PAİY: its stair and landing bind with PAİY's beside them; the air shaft keeps Sivas's
+    // looser value, not PAİY's: a conflict the administration decides. The toilet's door: still the application date's.
     set_arch(&mut app, |a| {
         a.local_rules = Some(kentos_commands::LocalRules::Sivas)
     });
@@ -488,9 +530,11 @@ fn a_four_storey_building_s_stairs_ramp_shafts_and_elevator_are_said() {
     let found = said(&findings);
     for line in [
         (
-            "regulation_conflict",
-            "Tuvalet kapısının net genişliği 0.86 m: Sivas 39/1-c en az 0.80 m ister, uyuyor; PAİY 39/1-c (13.8.2025) en \
-             az 0.90 m ister, uymuyor — çelişkide idare karar verir",
+            "regulation_date_needed",
+            "Başvuru tarihi künyede yok: kapı kuralı başvuru gününe göre değişiyor — 1.10.2017–9.11.2022 başvurusunda \
+             bulgu yok · 10.11.2022–12.8.2025 başvurusunda bulgu yok · 13.8.2025 ve sonrası başvurusunda Tuvalet kapısının \
+             net genişliği 0.86 m: Sivas 39/1-c en az 0.80 m ister, uyuyor; PAİY 39/1-c (13.8.2025) en az 0.90 m ister, \
+             uymuyor",
         ),
         (
             "paiy_stair_width_narrow",
@@ -544,13 +588,24 @@ fn a_four_storey_building_s_stairs_ramp_shafts_and_elevator_are_said() {
     set_arch(&mut app, |a| a.levels.retain(|l| l.id != "k3"));
     let dated: Vec<(String, String)> = regulation_findings(&mut app)
         .into_iter()
-        .filter(|f| f["code"] == "regulation_date_needed")
+        .filter(|f| f["code"] == "regulation_date_needed" && f["message"].as_str().is_some_and(|m| m.contains("asansör")))
         .map(|f| (f["state"].as_str().unwrap_or_default().to_owned(), f["message"].as_str().unwrap_or_default().to_owned()))
         .collect();
     assert_eq!(dated.len(), 1, "{dated:#?}");
     assert_eq!(dated[0].0, "missingData");
     assert!(dated[0].1.contains("10.11.2022–30.6.2026 başvurusunda Binada asansör yok (3 kat)"), "{dated:#?}");
     crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
+    // Applied for on 2.7.2026: the toilet's door is 13.8.2025's 0.90 m against Sivas's 0.80 m.
+    let conflict = said(&regulation_findings(&mut app))
+        .into_iter()
+        .filter(|(c, m)| c == "regulation_conflict" && m.starts_with("Tuvalet"))
+        .map(|(_, m)| m)
+        .collect::<Vec<_>>();
+    assert_eq!(
+        conflict,
+        ["Tuvalet kapısının net genişliği 0.86 m: Sivas 39/1-c en az 0.80 m ister, uyuyor; PAİY 39/1-c (13.8.2025) en az \
+          0.90 m ister, uymuyor — çelişkide idare karar verir"]
+    );
     let elevator = |app: &mut App| {
         said(&regulation_findings(app))
             .into_iter()

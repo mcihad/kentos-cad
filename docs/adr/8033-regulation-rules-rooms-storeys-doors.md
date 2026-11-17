@@ -1,6 +1,8 @@
 # 8033 — Mevzuat denetimi: piyes, kat ve kapı kuralları
 
-Tarih: 2026-11-09. Durum: kabul (M33, ADV-23; plan S23).
+Tarih: 2026-11-09. Durum: kabul (M33, ADV-23; plan S23). Kat yüksekliği (28/1-c) ve kapılar (39/1) 17 Kasım 2026'da
+standart pakete taşındı, başvuru gününün hâliyle okunuyor ([ADR 8083](8083-dated-storey-height-and-doors.md)); 2017
+metni de net (temiz) genişlik diyordu, 13.8.2025 değişikliği balkon ve tuvalet kapısının 0,80'ini kaldırdı.
 
 ## Sorun
 

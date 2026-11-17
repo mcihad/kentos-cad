@@ -28,6 +28,10 @@
 //! - **Ek-3's elements** (docs/adr/8082): the frame's columns and beams, the walls (exterior or not), the floors
 //!   (`Document::fire_elements`) with their declared classes; the building's height as the fire rules measure it and
 //!   its basements' depth.
+//! - **Storeys and doors as 28/1-c and 39/1 read them** (docs/adr/8083): each storey's height floor to floor (its own,
+//!   else up to the storey over it) and its bedrooms (`kind_of`); the program's common areas; each door's net clear
+//!   width (`OpeningSizes::clear`) and height (its head over its sill), what stands on its two sides (a room by its
+//!   program group, a void, nothing) and whether one of them is a toilet (`kind_of`) or a balcony (Balkon).
 
 use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
@@ -43,6 +47,15 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         return BuildingFacts::default();
     };
     let program = doc.program();
+    // Each storey's height floor to floor: its own, else up to the storey over it (28/1-c, docs/adr/8083).
+    let mut by_elevation: Vec<&kentos_commands::ArchLevel> = arch.levels.iter().collect();
+    by_elevation.sort_by(|a, b| a.elevation.total_cmp(&b.elevation));
+    let height_of = |id: &str| {
+        let i = by_elevation.iter().position(|l| l.id == id)?;
+        let l = by_elevation[i];
+        let over = by_elevation.get(i + 1).map(|n| n.elevation - l.elevation).filter(|h| *h > 0.0);
+        l.height.or(over)
+    };
     let mut storeys: Vec<StoreyHolds> = arch
         .levels
         .iter()
@@ -50,6 +63,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             level: l.id.clone(),
             name: l.name.clone(),
             elevation: l.elevation,
+            height: height_of(&l.id),
             ..StoreyHolds::default()
         })
         .collect();
@@ -80,8 +94,12 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         if tech {
             storey.technical += 1;
         }
-        if matches!(kind_of(name, usage), Some(RoomKind::Living | RoomKind::Bedroom | RoomKind::Kitchen)) {
+        let kind = kind_of(name, usage);
+        if matches!(kind, Some(RoomKind::Living | RoomKind::Bedroom | RoomKind::Kitchen)) {
             storey.inhabited += 1;
+        }
+        if kind == Some(RoomKind::Bedroom) {
+            storey.bedrooms += 1;
         }
     }
     let (rooms, doors) = people_and_doors(doc, &mut storeys);
@@ -143,6 +161,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         storeys,
         units: units.len() as u32,
         dwellings: dwellings as u32,
+        commons: program.units.iter().filter(|u| u.kind == UnitKind::Common).count() as u32,
         local: arch.local_rules.map(|l| match l {
             LocalRules::Sivas => "sivas".to_owned(),
         }),
@@ -258,13 +277,27 @@ fn people_and_doors(doc: &Document, storeys: &mut [StoreyHolds]) -> (Vec<RoomPeo
     // The rooms each storey's points are found in: id, storey, outline, an escape stair's, a fire safety lobby.
     let mut rooms: Vec<(String, Option<String>, Vec<kentos_geometry_core::geom::arrangement::Area>, bool, bool)> =
         Vec::new();
+    // What a door's side is as 39/1 reads it (docs/adr/8083): by uid, its program group's kind (or `room`, `void`), a
+    // toilet, a balcony; the voids' outlines apart, found when no room is.
+    let mut what: std::collections::HashMap<String, (&'static str, bool, bool)> = std::collections::HashMap::new();
+    let mut voids: Vec<(Option<String>, Vec<kentos_geometry_core::geom::arrangement::Area>)> = Vec::new();
     for (uid, e) in doc.entities_with_uids() {
         let Entity::Space(s) = e else { continue };
         let x = &s.space;
+        let (name, usage) = (x.name.as_deref(), x.usage.as_deref());
+        let balcony = has(&words(name, usage), "BALKON");
         if x.void {
+            voids.push((e.own_level().map(str::to_owned), kentos_domain::arch_values::core_areas(&x.parts)));
             continue;
         }
-        let (name, usage) = (x.name.as_deref(), x.usage.as_deref());
+        let group = match x.unit.as_deref().and_then(|u| program.unit(u)).map(|u| u.kind) {
+            Some(UnitKind::Unit) => "unit",
+            Some(UnitKind::Common) => "common",
+            Some(UnitKind::Annex) => "annex",
+            Some(UnitKind::Outdoor) => "outdoor",
+            None => "room",
+        };
+        what.insert(uid.to_string(), (group, kind_of(name, usage) == Some(RoomKind::Toilet), balcony));
         let own_dwelling = x
             .unit
             .as_deref()
@@ -292,6 +325,16 @@ fn people_and_doors(doc: &Document, storeys: &mut [StoreyHolds]) -> (Vec<RoomPeo
         let Some((_, left, right)) = kentos_domain::room_openings::opening_sides(f) else { continue };
         let level = doc.wall_of(&f.host).and_then(|w| w.arch.level);
         let (l, r) = (at(&level, left), at(&level, right));
+        // A side's room by its group, else a void there, else nothing.
+        let side = |room: Option<&String>, p: kentos_geometry_core::Vec2| match room {
+            Some(uid) => what.get(uid).map(|w| w.0.to_owned()),
+            None => voids
+                .iter()
+                .any(|(l, areas)| *l == level && areas.iter().any(|a| inside_area(a, p)))
+                .then(|| "void".to_owned()),
+        };
+        let sides = [side(l.map(|x| &x.0), left), side(r.map(|x| &x.0), right)];
+        let sides_what: Vec<&(&str, bool, bool)> = [l, r].iter().flatten().filter_map(|x| what.get(&x.0)).collect();
         let opens_into = match (f.operation, f.side) {
             (OpeningOperation::Swing, OpeningSide::Right) => r.map(|x| x.0.clone()),
             (OpeningOperation::Swing, OpeningSide::Left) => l.map(|x| x.0.clone()),
@@ -319,6 +362,11 @@ fn people_and_doors(doc: &Document, storeys: &mut [StoreyHolds]) -> (Vec<RoomPeo
             fire_rating,
             stair: l.is_some_and(|x| x.3) || r.is_some_and(|x| x.3),
             lobby: l.is_some_and(|x| x.4) || r.is_some_and(|x| x.4),
+            clear: f.sizes().clear,
+            height: f.head.map(|head| head - f.sill.unwrap_or(0.0)),
+            sides,
+            toilet: sides_what.iter().any(|w| w.1),
+            balcony: sides_what.iter().any(|w| w.2),
         });
     }
     (people, doors)

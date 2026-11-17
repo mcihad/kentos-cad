@@ -36,7 +36,11 @@ class BagimsizDurumlar(unittest.TestCase):
         self.assertGreaterEqual(len(durumlar), 20)
         for durum in durumlar:
             cevap = mimari.denetle(olgular(durum))
-            bulgular = cevap["findings"]
+            # The lift rule's findings: the storeys here say no height, which the storey height rule reads as missing,
+            # and a 2017 application is before its text too (its own cases: fixtures/standards/v1/kat-yuksekligi.json,
+            # docs/adr/8083).
+            bulgular = [b for b in cevap["findings"]
+                        if not b["code"].startswith("paiy_storey_") and not (b["rule"] or "").startswith("PAİY 28/1-c")]
             beklenen = durum["expect"]["findings"]
             with self.subTest(durum=durum["id"], ne="bulgular"):
                 self.assertEqual([b["code"] for b in bulgular], [b["code"] for b in beklenen],

@@ -1548,6 +1548,9 @@ mod compartment_tests;
 #[path = "tests/resistance_tests.rs"]
 mod resistance_tests;
 #[cfg(test)]
+#[path = "tests/dated_sizes_tests.rs"]
+mod dated_sizes_tests;
+#[cfg(test)]
 #[path = "tests/fire_escape_tests.rs"]
 mod fire_escape_tests;
 #[cfg(test)]

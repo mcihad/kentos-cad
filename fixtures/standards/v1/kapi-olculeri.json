@@ -1,0 +1,1687 @@
+{
+ "format": "kentos.regulationCases",
+ "version": 1,
+ "about": "Kapı ölçülerinin bağımsız durumları (docs/adr/8083): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 39/1'in 1.10.2017 (RG 3.7.2017/30113, b bendi 30.9.2017/30196) ve 13.8.2025 (RG 32985) hâllerinden ve Sivas İmar Yönetmeliği 39/1'den (RG 10.11.2022/32009) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.doors: net genişlik, yükseklik, iki yanında ne olduğu, tuvalet ve balkon).",
+ "cases": [
+  {
+   "id": "ic-kapi-076-2026",
+   "neden": "Dairenin iki odası arasında net 0,76 m kapı; 2026: diğer mahallerin kapıları 0,90 m → kalır (39/1-c).",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "unit"
+      ],
+      "clear": 0.76,
+      "height": 2.1
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_door_width_below",
+      "has": [
+       "Kapının net genişliği 0.76 m < 0.90 m — PAİY 39/1-c (13.8.2025)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "failed",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ic-kapi-090",
+   "neden": "Net 0,90 m iç kapı: “0.90 metreden az olamaz” → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "unit"
+      ],
+      "clear": 0.9,
+      "height": 2.1
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 39/1": [
+      "passed",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "bina-girisi-140",
+   "neden": "Ortak alanlı binada ortak holün dış kapısı net 1,40 m: bina giriş kapısı 1,50 m (39/1-b) → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       null
+      ],
+      "operation": "swing",
+      "sides": [
+       "common",
+       null
+      ],
+      "clear": 1.4,
+      "height": 2.1
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_door_width_below",
+      "has": [
+       "Bina giriş kapısının net genişliği 1.40 m < 1.50 m — PAİY 39/1-b (13.8.2025)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "failed",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "grupsuz-dis-kapi-150",
+   "neden": "Ortak alanlı binada grupsuz giriş holünün dış kapısı net 1,50 m: bina girişi, 1,50 tutar → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       null
+      ],
+      "operation": "swing",
+      "sides": [
+       "room",
+       null
+      ],
+      "clear": 1.5,
+      "height": 2.1
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 39/1": [
+      "passed",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "bahceye-acilan-bina-girisi-140",
+   "neden": "Ortak holün kapısı çizilmiş bahçeye (programın dış alanı) açılıyor, net 1,40 m: bahçe dışarısıdır, kapı bina girişi 1,50 m → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "common",
+       "outdoor"
+      ],
+      "clear": 1.4,
+      "height": 2.1
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_door_width_below",
+      "has": [
+       "Bina giriş kapısının net genişliği 1.40 m < 1.50 m — PAİY 39/1-b (13.8.2025)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "failed",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "dis-alandaki-balkon-086-2024",
+   "neden": "Dairenin balkonu programın dış alanında çizilmiş; kapısı net 0,86 m, 2024: balkon kapısıdır, giriş değil → 0,80'e düşürülebilir, geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "01.06.2024"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "outdoor"
+      ],
+      "clear": 0.86,
+      "height": 2.1,
+      "balcony": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 39/1": [
+      "passed",
+      "1.10.2017"
+     ]
+    }
+   }
+  },
+  {
+   "id": "bolum-girisi-086",
+   "neden": "Dairenin holü ile ortak merdiven holü arasındaki kapı net 0,86 m: bağımsız bölüm giriş kapısı 1,00 m → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "common"
+      ],
+      "clear": 0.86,
+      "height": 2.1
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_door_width_below",
+      "has": [
+       "Bağımsız bölüm giriş kapısının net genişliği 0.86 m < 1.00 m — PAİY 39/1-c (13.8.2025)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "failed",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mustakil-giris-096",
+   "neden": "Tek bölümlü, ortak alansız müstakil evin dış kapısı net 0,96 m: bina girişi ile bölüm girişi aynı kapı, bölümünki (1,00) okunur → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 1,
+    "dwellings": 1,
+    "commons": 0,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       null
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       null
+      ],
+      "clear": 0.96,
+      "height": 2.1
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_door_width_below",
+      "has": [
+       "Bağımsız bölüm giriş kapısının net genişliği 0.96 m < 1.00 m"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "failed",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "daire-bahce-kapisi-095",
+   "neden": "Ortak alanlı binada zemin kat dairesinin odasından dışarı açılan kapı net 0,95 m: bina girişi değil, dairenin girişi (1,00) → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       null
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       null
+      ],
+      "clear": 0.95,
+      "height": 2.1
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_door_width_below",
+      "has": [
+       "Bağımsız bölüm giriş kapısının net genişliği 0.95 m < 1.00 m"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "failed",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "eklenti-dis-kapisi-085",
+   "neden": "Bodrumdaki eklentinin (depo) dışarı açılan kapısı net 0,85 m: bina ya da bölüm girişi değil, diğer mahal kapısı 0,90 → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       null
+      ],
+      "operation": "swing",
+      "sides": [
+       "annex",
+       null
+      ],
+      "clear": 0.85,
+      "height": 2.1
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_door_width_below",
+      "has": [
+       "Kapının net genişliği 0.85 m < 0.90 m"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "failed",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tuvalet-086-2026",
+   "neden": "Tuvalet kapısı net 0,86 m, 2026: 13.8.2025 hâlinde balkon ve tuvalet kapılarının 0,80'i yok → 0,90 ister, kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "unit"
+      ],
+      "clear": 0.86,
+      "height": 2.1,
+      "toilet": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_door_width_below",
+      "has": [
+       "Tuvalet kapısının net genişliği 0.86 m < 0.90 m — PAİY 39/1-c (13.8.2025)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "failed",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tuvalet-086-2024",
+   "neden": "Aynı tuvalet kapısı, başvuru 1.6.2024: 1.10.2017 hâli “Balkon ve tuvalet kapıları 0.80 metreye düşürülebilir” → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "01.06.2024"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "unit"
+      ],
+      "clear": 0.86,
+      "height": 2.1,
+      "toilet": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 39/1": [
+      "passed",
+      "1.10.2017"
+     ]
+    }
+   }
+  },
+  {
+   "id": "balkon-076-2024",
+   "neden": "Balkon kapısı net 0,76 m, 2024: 0,80'e düşürülebilir ama 0,76 ondan da az → kalır, 0,80 ister.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "01.06.2024"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "room"
+      ],
+      "clear": 0.76,
+      "height": 2.1,
+      "balcony": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_door_width_below",
+      "has": [
+       "Balkon kapısının net genişliği 0.76 m < 0.80 m — PAİY 39/1-c (1.10.2017)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "failed",
+      "1.10.2017"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tuvalet-086-tarihsiz",
+   "neden": "Tuvalet kapısı 0,86 m, tarih yok: 2017 hâliyle geçer, 2025 hâliyle kalır → o kapı için eksik veri, kapıyı seçer.",
+   "permit": {
+    "particulars": {}
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "unit"
+      ],
+      "clear": 0.86,
+      "height": 2.1,
+      "toilet": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "regulation_date_needed",
+      "state": "missingData",
+      "uids": [
+       "00000000-0000-4000-8000-000000000101"
+      ],
+      "has": [
+       "kapı kuralı başvuru gününe göre değişiyor",
+       "1.10.2017–12.8.2025 başvurusunda bulgu yok",
+       "13.8.2025 ve sonrası başvurusunda Tuvalet kapısının net genişliği 0.86 m < 0.90 m"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "missingData",
+      null
+     ]
+    }
+   }
+  },
+  {
+   "id": "ic-kapi-076-tarihsiz",
+   "neden": "İç kapı 0,76 m, tarih yok: iki hâl de 0,90 ister → güne bağlı değil, en yeni hâlle bulgu.",
+   "permit": {
+    "particulars": {}
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "unit"
+      ],
+      "clear": 0.76,
+      "height": 2.1
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_door_width_below",
+      "has": [
+       "Kapının net genişliği 0.76 m < 0.90 m — PAİY 39/1-c (13.8.2025)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "failed",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "karisik-tarihsiz",
+   "neden": "Tarih yok; iç kapı 0,76 m (her hâlde 0,90'a kalır) ve tuvalet kapısı 0,86 m (güne bağlı): iç kapının bulgusu kendi hâliyle kalır, yalnız tuvaletinki eksik veri.",
+   "permit": {
+    "particulars": {}
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "unit"
+      ],
+      "clear": 0.76,
+      "height": 2.1
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000102",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "unit"
+      ],
+      "clear": 0.86,
+      "height": 2.1,
+      "toilet": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_door_width_below",
+      "uids": [
+       "00000000-0000-4000-8000-000000000101"
+      ],
+      "has": [
+       "Kapının net genişliği 0.76 m < 0.90 m — PAİY 39/1-c (13.8.2025)"
+      ]
+     },
+     {
+      "code": "regulation_date_needed",
+      "state": "missingData",
+      "uids": [
+       "00000000-0000-4000-8000-000000000102"
+      ],
+      "has": [
+       "Tuvalet kapısının net genişliği 0.86 m < 0.90 m"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "missingData",
+      null
+     ]
+    }
+   }
+  },
+  {
+   "id": "sivas-tuvalet-086-2026",
+   "neden": "Sivas, tuvalet kapısı 0,86 m, 2026: Sivas 39/1 0,80'e izin verir (uyar), PAİY'nin 13.8.2025 hâli 0,90 ister (uymaz) → çelişki, idare karar verir.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "unit"
+      ],
+      "clear": 0.86,
+      "height": 2.1,
+      "toilet": true
+     }
+    ],
+    "local": "sivas"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "regulation_conflict",
+      "has": [
+       "Tuvalet kapısının net genişliği 0.86 m: Sivas 39/1-c en az 0.80 m ister, uyuyor; PAİY 39/1-c (13.8.2025) en az 0.90 m ister, uymuyor — çelişkide idare karar verir"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "failed",
+      "13.8.2025"
+     ],
+     "Sivas 39/1": [
+      "passed",
+      "10.11.2022"
+     ]
+    }
+   }
+  },
+  {
+   "id": "sivas-tuvalet-086-2024",
+   "neden": "Sivas, aynı kapı, başvuru 1.6.2024: PAİY'nin 2017 hâli ve Sivas ikisi de 0,80 → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "01.06.2024"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "unit"
+      ],
+      "clear": 0.86,
+      "height": 2.1,
+      "toilet": true
+     }
+    ],
+    "local": "sivas"
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 39/1": [
+      "passed",
+      "1.10.2017"
+     ],
+     "Sivas 39/1": [
+      "passed",
+      "10.11.2022"
+     ]
+    }
+   }
+  },
+  {
+   "id": "sivas-ic-kapi-076",
+   "neden": "Sivas, iç kapı 0,76 m, 2026: iki yönetmelik de 0,90 ister (eşit) → kalır, yalnız PAİY yazılır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "unit"
+      ],
+      "clear": 0.76,
+      "height": 2.1
+     }
+    ],
+    "local": "sivas"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_door_width_below",
+      "has": [
+       "Kapının net genişliği 0.76 m < 0.90 m — PAİY 39/1-c (13.8.2025)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "failed",
+      "13.8.2025"
+     ],
+     "Sivas 39/1": [
+      "failed",
+      "10.11.2022"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kapi-yuksekligi-200",
+   "neden": "Net 0,95 m, yüksekliği 2,00 m iç kapı: kapı yüksekliği 2,10 m'den az olamaz (39/1-a) → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "unit"
+      ],
+      "clear": 0.95,
+      "height": 2.0
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_door_height_below",
+      "has": [
+       "Kapı yüksekliği 2.00 m < 2.10 m — PAİY 39/1-a (13.8.2025)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "failed",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ust-kotsuz-kapi",
+   "neden": "Üst kotu olmayan, net 0,95 m iç kapı: yüksekliği okunmaz, genişliği yeter → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "unit"
+      ],
+      "clear": 0.95
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 39/1": [
+      "passed",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mahalsiz-kapi",
+   "neden": "İki yanında da mahal çizilmemiş ve üst kotu olmayan kapı: ne olduğu okunmaz; başka kapı yok → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       null,
+       null
+      ],
+      "operation": "swing",
+      "sides": [
+       null,
+       null
+      ],
+      "clear": 0.7
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 39/1": [
+      "outOfScope",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "bosluga-acilan-080",
+   "neden": "Dairenin odasından boşluğa (şaft) açılan net 0,80 m kapı: giriş değil, diğer mahal kapısı 0,90 → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       null
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "void"
+      ],
+      "clear": 0.8,
+      "height": 2.1
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_door_width_below",
+      "has": [
+       "Kapının net genişliği 0.80 m < 0.90 m"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "failed",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kapisiz",
+   "neden": "Kapısı olmayan bina: okunacak kapı yok → kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": []
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 39/1": [
+      "outOfScope",
+      "13.8.2025"
+     ]
+    }
+   }
+  },
+  {
+   "id": "2016-basvurusu",
+   "neden": "Başvuru 1.6.2016: PAİY 1.10.2017'de yürürlüğe girdi, o günün metni kural setinde yok → uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "01.06.2016"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0,
+      "units": 3,
+      "common": 1,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 2,
+      "bedrooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002",
+       "00000000-0000-4000-8000-000000000003"
+      ]
+     }
+    ],
+    "units": 2,
+    "dwellings": 2,
+    "commons": 1,
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "between": [
+       "00000000-0000-4000-8000-000000000001",
+       "00000000-0000-4000-8000-000000000002"
+      ],
+      "operation": "swing",
+      "sides": [
+       "unit",
+       "unit"
+      ],
+      "clear": 0.76,
+      "height": 2.1
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "regulation_text_unknown",
+      "state": "expertReview",
+      "has": [
+       "1.6.2016",
+       "PAİY 39/1",
+       "1.10.2017"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/1": [
+      "expertReview",
+      null
+     ]
+    }
+   }
+  }
+ ]
+}

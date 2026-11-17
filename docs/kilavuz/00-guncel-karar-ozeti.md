@@ -262,6 +262,13 @@
       bina yüksekliği `fire_audit::heights`'tan.
     - Paketin `dayanim` kuralı beyan edilen sınıfı Ek-3/B ve Ek-3/C ile karşılaştırır (tablolar PDF sayfalarından
       veri). Çatı, şaft, asma tavan, asansör kapısı ve taşıyıcı duvar kaldı.
+  - **Kat yüksekliği ve kapılar tarihli (17 Kasım 2026; [ADR 8083](../adr/8083-dated-storey-height-and-doors.md), K81–K86):**
+    - PAİY 28/1-c (1.10.2017: 3,60 m; 12.8.2023: bodrum hariç 3 kata kadar 4,00 m) ve 39/1 (1.10.2017: balkon ve tuvalet
+      kapısı 0,80 m; 13.8.2025: 0,80'i yok) başvuru gününün hâliyle; geçiş hükmü yok. Sivas 28/1-c ve 39/1 katmanı.
+    - Kurallar Rust'tan pakete taşındı (`kat_yuksekligi`, `kapi_olculeri`, iki katmanın yargısı `katman`); olgulara
+      katın yüksekliği, yatak odaları, kapının net genişliği, yüksekliği ve iki yanı eklendi.
+    - Gün yoksa her kat ve kapı ayrı denenir (`yururluk.parcalarla`): güne bağlı tek kapı öbürlerinin bulgusunu saklamaz.
+    - Bölümün dış kapısı bölüm girişidir (1,00 m), ortak alanınki bina girişi (1,50 m); bölge türü sıradaki madde.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

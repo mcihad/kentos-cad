@@ -20,8 +20,13 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   açıklıklar (24/7).
 - **Yangına dayanım süreleri** (`dayanim`, docs/adr/8082): beyan edilen sınıf Ek-3/B ve Ek-3/C'nin istediğiyle: kolon ve
   kiriş R, döşeme REI, dış ve kompartıman duvarı EI, korunumlu yangın merdiveni REI 120.
+- **Kat yüksekliği** (`kat_yuksekligi`, docs/adr/8083): konut projesinde zemin ve normal katlar 3,60 m; 12.8.2023'ten
+  bodrum hariç 3 kata kadar 4,00 m (PAİY 28/1-c); Sivas 3,60 m.
+- **Kapı ölçüleri** (`kapi_olculeri`, docs/adr/8083): yükseklik 2,10 m; net genişlik bina girişinde 1,50, bölüm girişinde
+  1,00, öbür kapılarda 0,90 m; 13.8.2025'e kadar ve Sivas'ta balkon ve tuvalet kapısı 0,80 m (PAİY 39/1). İki katmanın
+  yargısı `katman`'da; gün yoksa her kat ve kapı ayrı denenir (`yururluk.parcalarla`).
 - **Olgular** KentOS'un ölçtüğüdür (`facts.building`, `facts.permit`); kural çizimi okumaz.
-- **Bağımsız durumlar** `fixtures/standards/v1/asansor.json`, `kapilar.json`, `emsal.json`, `merdiven-alti.json`, `kompartiman.json` ve `dayanim.json`: beklenen sonuçlar mevzuat
+- **Bağımsız durumlar** `fixtures/standards/v1/asansor.json`, `kapilar.json`, `emsal.json`, `merdiven-alti.json`, `kompartiman.json`, `dayanim.json`, `kat-yuksekligi.json` ve `kapi-olculeri.json`: beklenen sonuçlar mevzuat
   metninden elle çıkarıldı.
 
-Sınama: `python3 -I catalog/standards/tests/mimari-mevzuat/test_asansor.py`, `test_kapilar.py`, `test_emsal.py`, `test_merdiven_alti.py`, `test_kompartiman.py` ve `test_dayanim.py`.
+Sınama: `python3 -I catalog/standards/tests/mimari-mevzuat/test_asansor.py`, `test_kapilar.py`, `test_emsal.py`, `test_merdiven_alti.py`, `test_kompartiman.py`, `test_dayanim.py`, `test_kat_yuksekligi.py` ve `test_kapi_olculeri.py`.

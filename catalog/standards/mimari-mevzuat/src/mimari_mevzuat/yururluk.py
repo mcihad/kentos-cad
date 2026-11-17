@@ -51,15 +51,18 @@ class Hal:
         """Bu hâl ``gun``de yürürlükte mi."""
         return self.bas <= gun and (self.bit is None or gun <= self.bit)
 
-    def kisa(self) -> str:
-        """İletinin sonundaki adı: “PAİY 34/1 (1.7.2026)”; yerel yönetmeliğin “Sivas 34/1”."""
+    def kisa(self, bent: str | None = None) -> str:
+        """İletinin sonundaki adı: “PAİY 34/1 (1.7.2026)”; yerel yönetmeliğin “Sivas 34/1”. ``bent`` fıkranın bendi:
+        “PAİY 39/1-c (13.8.2025)”."""
+        madde = f"{self.madde}-{bent}" if bent else self.madde
         if self.yonetmelik == "PAİY":
-            return f"PAİY {self.madde} ({self.etiket})"
-        return f"{self.yonetmelik} {self.madde}"
+            return f"PAİY {madde} ({self.etiket})"
+        return f"{self.yonetmelik} {madde}"
 
-    def kural(self) -> str:
-        """Bulgunun ``rule``'u: “PAİY 34/1 · RG 1.7.2026/33297”."""
-        return f"{_ADLAR.get(self.yonetmelik, self.yonetmelik)} {self.madde} · RG {self.rg}"
+    def kural(self, bent: str | None = None) -> str:
+        """Bulgunun ``rule``'u: “PAİY 34/1 · RG 1.7.2026/33297”; bendiyle “PAİY 39/1-c · RG 13.8.2025/32985”."""
+        madde = f"{self.madde}-{bent}" if bent else self.madde
+        return f"{_ADLAR.get(self.yonetmelik, self.yonetmelik)} {madde} · RG {self.rg}"
 
 
 @lru_cache(maxsize=1)
@@ -192,6 +195,49 @@ def denetle(kural: Callable[[date], Sonuc], maddeler: list[tuple[str, str]], gun
     son = sonuclar[-1][1]
     satirlar = [dict(r, state=EKSIK_VERI, version=None, gazette=None) for r in son.satirlar]
     return Sonuc([_eksik(ileti, [h for h in maddeler])], satirlar)
+
+
+def parcalarla(parcalar: list[Any], kural: Callable[[Any, date], Sonuc], maddeler: list[tuple[str, str]],
+               gun: date | None, neden: str | None, konu: str,
+               nesneler: Callable[[Any], list[str]]) -> list[Sonuc]:
+    """``kural(parca, gun)``'ı her parça (bir kat, bir kapı) için ayrı ``denetle``r: gün yokken sonucu güne göre
+    değişmeyen parçanın bulguları en yeni hâlle kalır, değişeninki o parçanın tek "eksik veri" bulgusudur ve parçanın
+    nesnelerini (``nesneler``) seçer. Bir kapının ölçüsü güne bağlı diye öbür kapıların bulguları saklanmaz
+    (docs/adr/8083). Her parçanın sonucu sırayla; satırlarını ``birlesik`` birleştirir."""
+    out = []
+    for p in parcalar:
+        s = denetle(lambda g, p=p: kural(p, g), maddeler, gun, neden, konu)
+        for b in s.bulgular:
+            if b["code"] == "regulation_date_needed" and not b["uids"]:
+                b["uids"] = list(nesneler(p))
+        out.append(s)
+    return out
+
+
+def birlesik(sonuclar: list[Sonuc]) -> list[dict[str, Any]]:
+    """Parçaların satırları madde madde, ilk görüldükleri sırayla: her durumun kaç parçada çıktığı (``sayilar``);
+    hâli bütün parçalarda aynıysa o, değilse yok. Durum: bir parça güne bağlıysa eksik veri, değilse bir parça kaldıysa
+    kaldı, uzman incelemesi, geçti; hiçbirinde okunmadıysa kapsam dışı. Notu kural yazar (``note`` boş)."""
+    sira: list[str] = []
+    satirlar: dict[str, dict[str, Any]] = {}
+    for s in sonuclar:
+        for r in s.satirlar:
+            k = r["rule"]
+            if k not in satirlar:
+                sira.append(k)
+                satirlar[k] = {"rule": k, "title": r["title"], "version": r["version"], "gazette": r["gazette"],
+                               "sayilar": {}}
+            m = satirlar[k]
+            if (m["version"], m["gazette"]) != (r["version"], r["gazette"]):
+                m["version"] = m["gazette"] = None
+            m["sayilar"][r["state"]] = m["sayilar"].get(r["state"], 0) + 1
+    out = []
+    for k in sira:
+        m = satirlar[k]
+        n = m["sayilar"]
+        durum = next((d for d in (EKSIK_VERI, KALDI, UZMAN, GECTI) if n.get(d)), KAPSAM_DISI)
+        out.append(dict(m, state=durum, note=""))
+    return out
 
 
 def _eksik(ileti: str, maddeler: list[tuple[str, str]]) -> dict[str, Any]:

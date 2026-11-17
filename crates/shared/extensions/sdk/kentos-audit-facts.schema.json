@@ -73,6 +73,13 @@
           "format": "double",
           "type": "number"
         },
+        "commons": {
+          "default": 0,
+          "description": "The building program's common areas (ortak alan groups): with one, or with more than one unit, a building has an\nentrance of its own apart from its units' (docs/adr/8083).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
         "doors": {
           "description": "The doors, by persistent id (docs/adr/8078 §8).",
           "items": {
@@ -623,6 +630,10 @@
     "DoorFacts": {
       "description": "A door: the rooms on its two sides, the one its leaf swings into, how it opens, its declared fire class, and whether\nit opens into an escape stair's room or a fire safety lobby.",
       "properties": {
+        "balcony": {
+          "description": "One of its sides is a balcony (Balkon by its name or use).",
+          "type": "boolean"
+        },
         "between": {
           "description": "The rooms on its two sides by persistent id, the path's left first; none: no room there (outdoors, a wall's\nother face with nothing drawn).",
           "items": {
@@ -635,10 +646,26 @@
           "minItems": 2,
           "type": "array"
         },
+        "clear": {
+          "description": "Its net clear width (net temiz geçiş: with its leaves open, from the open leaf's face to the opposite stop,\ndocs/adr/0772 §2), m; none where it has none (docs/adr/8083).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
         "fireRating": {
           "description": "The fire class the author declares, the door's own else its type's (docs/adr/8068): `EI2 60-S200C5`.",
           "type": [
             "string",
+            "null"
+          ]
+        },
+        "height": {
+          "description": "Its height, its head over its sill, m; none without a head.",
+          "format": "double",
+          "type": [
+            "number",
             "null"
           ]
         },
@@ -663,8 +690,28 @@
           "description": "`swing`, `sliding`, `folding`, `revolving`, `pocket` … as the opening's operation is named.",
           "type": "string"
         },
+        "sides": {
+          "default": [
+            null,
+            null
+          ],
+          "description": "What stands on its two sides, in `between`'s order: `unit`, `common`, `annex` or `outdoor` (a room of one of the\nprogram's independent units, common areas, annexes or outdoor areas: a garden, a car park), `room` (a room in no\nprogram group), `void` (a shaft, a gallery); none: nothing drawn there. Planlı Alanlar İmar Yönetmeliği 39/1\nreads a door by what it enters.",
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
         "stair": {
           "description": "One of its sides is an escape stair's room (a room named or used as Merdiven that is no dwelling unit's own).",
+          "type": "boolean"
+        },
+        "toilet": {
+          "description": "One of its sides is a toilet (WC, Tuvalet by its name or use).",
           "type": "boolean"
         },
         "uid": {
@@ -1547,6 +1594,13 @@
           "minimum": 0,
           "type": "integer"
         },
+        "bedrooms": {
+          "default": 0,
+          "description": "Bedrooms on it (Yatak, Ebeveyn, Çocuk, Oda N by their name or use), whatever their group: a drawing without a\nprogram is a dwelling's by them (docs/adr/8083).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
         "common": {
           "description": "Rooms of a common area on it that are not technical rooms.",
           "format": "uint32",
@@ -1563,6 +1617,14 @@
           "format": "uint32",
           "minimum": 0,
           "type": "integer"
+        },
+        "height": {
+          "description": "Its height floor to floor (döşeme üst kotundan döşeme üst kotuna): its own, else up to the storey over it, m; none\nwhen neither is known (docs/adr/8083).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
         },
         "inhabited": {
           "description": "Rooms of a dwelling's living kind on it, whatever their group (a living room, a bedroom, a kitchen, by their name\nor use): lived in.",
