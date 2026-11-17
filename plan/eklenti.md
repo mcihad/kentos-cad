@@ -1212,8 +1212,10 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   — *kısmen (ADR 8057 §22, §24, §37, §108): Asistan iskelet, panel ve İşlemler aracı üretir (MEBİS), kod ayrı
   denemede çalışır; doğal dilden zincir: ajan yerleşik ve eklenti araçlarını `cad.processing.run`'a yazdığı satır içi
   modelle zincirler (tek plan, tek onay, tek geri alma adımı), araç dizini kısa (274 957 → 35 102 bayt), tanımlar çıktı
-  adlarını verir, modelin adımları gizli alan denetiminden geçer (17 Kasım); kalan: form/domain taslaklarının
-  politikası, ortak keşif kataloğu.*
+  adlarını verir, modelin adımları gizli alan denetiminden geçer (17 Kasım); ortak keşif kataloğu (§109):
+  `catalog.search` komutların yanında İşlemler araçlarını, kurulu eklentileri ve parçalarını, yanıt kodlarını bulur,
+  `catalog.describe` eklentinin yeteneklerini (istenen/verilen), Python gereksinimlerini ve ortamını, parçalarının
+  kullanımını ve kodun anlamını verir; kalan: form/domain taslaklarının politikası [PY-AI-03].*
 - [x] **Güvenlik:** eklenti açıklaması, README, veri öznitelikleri ve form yardım metni güvenilmeyen veridir; içindeki
   talimatlar uç/kullanan/yetki/yayın kapsamını değiştiremez [PY-AI-09, A02]; form alan maskesi, satır ACL'si ve hassas
   izdüşüm AI bağlamında da uygulanır [PY-AI-10]; ajanın kişisel güvenilir Python yürütmesi ile kapsamlı araç çağrısı ayrı

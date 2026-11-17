@@ -8,7 +8,7 @@
 //! The provider is called on the agent's own runtime (`kentos_agent`); the panel hears the turn's events through a task
 //! and answers its tool calls here, on the interface thread, where the drawing is.
 
-mod host;
+pub(crate) mod host;
 #[cfg(test)]
 mod limits_tests;
 #[cfg(test)]
@@ -308,7 +308,9 @@ fn instructions(program: Option<kentos_launch::Module>) -> String {
          Çalışma biçimin:\n\
          - Önce durumu öğren: drawing.summary (birim, etkin katman, revision); gerekirse scene.layers ve scene.entities.\n\
          - Komutu bul: catalog.search (Türkçe sözcüklerle), sonra catalog.describe ile girdisinin şemasını oku. Şemada \
-         olmayan alanı uydurma; zorunlu alanları doldur.\n\
+         olmayan alanı uydurma; zorunlu alanları doldur. Arama komutların yanında others'ta İşlemler araçlarını, \
+         kurulu eklentileri ve parçalarını, yanıt kodlarını da bulur; her birinin next'i sıradaki çağrıyı söyler. Bir \
+         hatanın kodunu catalog.describe (code) açıklar.\n\
          - Komutu kendi kapısından çalıştır: cad.run (çizimin çekirdeği), arch.run (mimari), map.run, gis.run, road.run. \
          Yanlış kapı doğrusunu söyler.\n\
          - Yazan her komut önce mode: \"plan\" ile çalışır: plan ne ekleneceğini, değişeceğini, silineceğini söyler. Plan \

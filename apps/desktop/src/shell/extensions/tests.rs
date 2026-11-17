@@ -15,6 +15,7 @@ mod add_to;
 mod audit_picker;
 mod bom;
 mod builds;
+mod catalog;
 mod demo;
 mod l10n;
 mod python;

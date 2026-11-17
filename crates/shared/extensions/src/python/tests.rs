@@ -460,3 +460,12 @@ fn a_package_without_a_wheel_for_a_named_computer_is_a_warning() {
         "{said:?}"
     );
 }
+
+#[test]
+fn a_project_says_its_requirements_as_written() {
+    let project = "[project]\nname = \"vitrin\"\nrequires-python = \">=3.12\"\n\
+                   dependencies = [\"numpy>=2.0\", \"openpyxl\"]\n";
+    assert_eq!(declared_requirements(project), ["numpy>=2.0", "openpyxl"]);
+    assert!(declared_requirements("[project]\nname = \"bos\"\n").is_empty());
+    assert!(declared_requirements("bu bir toml değil = [").is_empty());
+}

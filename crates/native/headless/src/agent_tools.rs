@@ -32,6 +32,7 @@ use serde_json::{Map, Value, json};
 
 use crate::HeadlessError;
 
+mod discover;
 mod extension_audits;
 mod link_workshop;
 mod long_calls;
@@ -401,6 +402,12 @@ pub fn call_words(name: &str, args: &Value) -> String {
             words.push(title.to_owned());
             words.extend(text(args, "query").ok().map(|q| format!("“{q}”")));
         }
+        // An installed extension or a code by its id (docs/adr/8057 §109).
+        "catalog.describe" if args.get("command").is_none() => {
+            words.push(title.to_owned());
+            let id = text(args, "extension").or_else(|_| text(args, "code"));
+            words.extend(id.ok().map(str::to_owned));
+        }
         "command.batch" => {
             words.push(title.to_owned());
             let steps = args
@@ -576,14 +583,20 @@ pub fn tools() -> Vec<Tool> {
         },
         Tool {
             name: "catalog.search",
-            title: "Komut ara",
-            description: "Sözcüklerle komut arar (kimlik, başlık, açıklama); her sonuç bir satır: kimlik, başlık, \
-                          bölüm, kapı, yazıp yazmadığı. Ardından catalog.describe."
+            title: "Katalogda ara",
+            description: "Sözcüklerle ortak katalogda arar: komutlar (kimlik, başlık, bölüm, kapı, yazıp yazmadığı; \
+                          ardından catalog.describe) ve others'ta İşlemler araçları, kurulu eklentiler ve parçaları \
+                          (denetim, panel, form, ifade işlevi …) ile yanıt kodları; her birinin next'i sıradaki \
+                          çağrıyı söyler. kinds aramayı daraltır; yanıt kodları kod gibi yazılan sözcükle \
+                          (plan_changed) ya da kinds: [\"code\"] ile aranır."
                 .into(),
             input: object(
                 json!({
                     "query": { "type": "string", "description": "Arananlar, ör. \"duvar dikdörtgen\"." },
                     "part": { "type": "string", "enum": ["cad", "arch", "map", "gis", "road"] },
+                    "kinds": { "type": "array", "items": { "type": "string",
+                               "enum": ["command", "tool", "extension", "code"] },
+                               "description": "Yalnız bu türler (verilmezse komut, araç ve eklenti)." },
                     "limit": { "type": "integer", "minimum": 1, "maximum": 50, "default": 20 }
                 }),
                 &["query"],
@@ -593,10 +606,21 @@ pub fn tools() -> Vec<Tool> {
         },
         Tool {
             name: "catalog.describe",
-            title: "Komutun tanımı",
-            description: "Bir komutun başlığı, açıklaması, kapısı, yazıp yazmadığı, tam girdi şeması ve örnekleri."
+            title: "Tanım",
+            description: "Ortak katalogdaki bir şeyin tanımı: command bir komutun başlığını, açıklamasını, kapısını, \
+                          yazıp yazmadığını, tam girdi şemasını ve örneklerini; extension kurulu bir eklentinin \
+                          yeteneklerini (istenen ve verilen), Python gereksinimlerini ve hazır olup olmadığını, \
+                          parçalarını ve nasıl kullanıldıklarını; code bir yanıt kodunun anlamını ve yeniden \
+                          denenip denenmeyeceğini verir. Biri verilir."
                 .into(),
-            input: object(json!({ "command": { "type": "string" } }), &["command"]),
+            input: object(
+                json!({
+                    "command": { "type": "string" },
+                    "extension": { "type": "string", "description": "Eklentinin kimliği (tr.ornek.vitrin)." },
+                    "code": { "type": "string", "description": "Yanıt kodu (plan_changed)." }
+                }),
+                &[],
+            ),
             read_only: true,
             destructive: false,
         },
@@ -1059,10 +1083,17 @@ pub fn call(
         "scene.selection" => host.request("selection", &none),
         "catalog.categories" => Ok(categories(host)),
         "catalog.search" => search(host, args),
+        // A code and an installed extension are the common catalog's too (docs/adr/8057 §109).
+        "catalog.describe" if args.get("code").is_some() => discover::code(text(args, "code")?),
+        "catalog.describe" if args.get("extension").is_some() => discover::extension(host, args),
         "catalog.describe" => match text(args, "command") {
             // An extension's audit rule is the desktop's, not the catalog's (docs/adr/8057 §27).
             Ok(rule) if is_extension_rule(rule) => extension_describe(host, rule),
-            _ => describe(host, args),
+            Ok(_) => describe(host, args),
+            Err(_) => Err(HeadlessError::new(
+                "invalid_input",
+                "command, extension ya da code gerekli (metin).",
+            )),
         },
         "command.batch" => batch(host, guard, args),
         "audit.list_providers" => Ok(providers(host)),
@@ -1275,12 +1306,14 @@ fn categories(host: &dyn Host) -> Value {
 /// The commands whose id, title, aliases or summary hold a word of the query: those holding the most words first,
 /// then those holding them in their id or title (an agent may write a Turkish word where the id is English:
 /// “çokgen alan” finds Kapalı alan oluştur by its “alan”).
-fn search(host: &dyn Host, args: &Value) -> Result<Value, HeadlessError> {
+fn search(host: &mut dyn Host, args: &Value) -> Result<Value, HeadlessError> {
     let query = lower(text(args, "query")?);
     let words: Vec<&str> = query.split_whitespace().collect();
     if words.is_empty() {
         return Err(HeadlessError::new("invalid_input", "query boş olamaz."));
     }
+    let owned: Vec<String> = words.iter().map(|w| (*w).to_owned()).collect();
+    let (with_commands, kinds) = discover::Kinds::of(args, &owned);
     let part = args.get("part").and_then(Value::as_str);
     let limit = args
         .get("limit")
@@ -1289,7 +1322,10 @@ fn search(host: &dyn Host, args: &Value) -> Result<Value, HeadlessError> {
         .clamp(1, 50) as usize;
     let mut found: Vec<(usize, u32, &CommandDescriptor)> = Vec::new();
     for c in catalog() {
-        if part.is_some_and(|p| p != part_id(part_of(&c.id))) || host.not_offered(&c.id).is_some() {
+        if !with_commands
+            || part.is_some_and(|p| p != part_id(part_of(&c.id)))
+            || host.not_offered(&c.id).is_some()
+        {
             continue;
         }
         let id = lower(&c.id);
@@ -1330,7 +1366,13 @@ fn search(host: &dyn Host, args: &Value) -> Result<Value, HeadlessError> {
             })
         })
         .collect();
-    Ok(json!({ "commands": commands, "total": total }))
+    // The common catalog (docs/adr/8057 §109): İşlemler's tools, the installed extensions and their parts, the codes.
+    let (others, others_total, notes) = discover::others(host, &owned, kinds, limit);
+    let mut answer = json!({ "commands": commands, "total": total, "others": others, "othersTotal": others_total });
+    if !notes.is_empty() {
+        answer["notes"] = json!(notes);
+    }
+    Ok(answer)
 }
 
 /// A summary's first sentence, at most 200 characters.

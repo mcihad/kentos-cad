@@ -40,6 +40,7 @@ mod problem;
 pub mod provenance;
 mod python;
 pub use python::builds as python_builds;
+pub use python::declared_requirements;
 pub mod python_names;
 mod python_rules;
 pub mod release;

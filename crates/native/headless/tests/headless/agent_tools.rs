@@ -453,14 +453,14 @@ fn a_tool_call_reads_in_words() {
     );
     assert_eq!(
         words("catalog.search", json!({ "query": "duvar" })),
-        "Komut ara · “duvar”"
+        "Katalogda ara · “duvar”"
     );
     assert_eq!(
         words(
             "catalog.describe",
             json!({ "command": "cad.walls.rectangle" })
         ),
-        "Komutun tanımı · Dikdörtgen duvar"
+        "Tanım · Dikdörtgen duvar"
     );
     assert_eq!(
         words(
@@ -663,6 +663,113 @@ fn the_processing_list_is_an_index_an_agent_can_afford() {
         agent_tools::call_words("processing.list", &json!({ "query": "tampon" })),
         "İşlem araçları · “tampon”"
     );
+}
+
+/// The common catalog (docs/adr/8057 §109, PY-AI-01): a search finds İşlemler's tools and the answers' codes beside
+/// the commands, each saying what to call next; a code is described by what it means; the installed extensions are
+/// the desktop's, which a drawing of the server's own says.
+#[test]
+fn the_common_catalog_finds_tools_and_codes_and_says_what_next() {
+    let mut s = drawing();
+    let mut guard = Guard::new();
+    let found = tool(
+        &mut s,
+        &mut guard,
+        "catalog.search",
+        json!({ "query": "tampon" }),
+    )
+    .expect("found");
+    let buffer = found["others"]
+        .as_array()
+        .expect("others")
+        .iter()
+        .find(|o| o["id"] == "geometry.buffer")
+        .unwrap_or_else(|| panic!("{found:#}"));
+    assert_eq!(
+        (buffer["kind"].as_str(), buffer["next"].as_str()),
+        (Some("tool"), Some("processing.describe"))
+    );
+    assert!(found["othersTotal"].as_u64().is_some_and(|n| n >= 1));
+    // A code written as one is found first, and described.
+    let code = tool(
+        &mut s,
+        &mut guard,
+        "catalog.search",
+        json!({ "query": "plan_changed" }),
+    )
+    .expect("a code");
+    assert_eq!(code["others"][0]["id"], "plan_changed", "{code:#}");
+    assert_eq!(code["others"][0]["kind"], "code");
+    let described = tool(
+        &mut s,
+        &mut guard,
+        "catalog.describe",
+        json!({ "code": "plan_changed" }),
+    )
+    .expect("described");
+    assert_eq!(
+        (described["kind"].as_str(), described["retryable"].as_bool()),
+        (Some("conflict"), Some(true))
+    );
+    assert!(described["meaning"].as_str().is_some_and(|m| !m.is_empty()));
+    let unknown = tool(
+        &mut s,
+        &mut guard,
+        "catalog.describe",
+        json!({ "code": "yok_boyle" }),
+    );
+    assert_eq!(code_of(unknown), "unknown_code");
+    // Only codes: no commands.
+    let codes = tool(
+        &mut s,
+        &mut guard,
+        "catalog.search",
+        json!({ "query": "plan", "kinds": ["code"] }),
+    )
+    .expect("codes");
+    assert_eq!(codes["total"], 0);
+    assert!(
+        codes["others"]
+            .as_array()
+            .expect("others")
+            .iter()
+            .all(|o| o["kind"] == "code")
+    );
+    // The extensions are the desktop's: asked by name here, the answer says so.
+    let asked = tool(
+        &mut s,
+        &mut guard,
+        "catalog.search",
+        json!({ "query": "çekme", "kinds": ["extension"] }),
+    )
+    .expect("asked");
+    assert!(
+        asked["notes"][0]
+            .as_str()
+            .is_some_and(|n| n.contains("masaüstü")),
+        "{asked:#}"
+    );
+    let ext = tool(
+        &mut s,
+        &mut guard,
+        "catalog.describe",
+        json!({ "extension": "tr.ornek.vitrin" }),
+    );
+    assert_eq!(code_of(ext), "not_offered");
+    let nothing = tool(&mut s, &mut guard, "catalog.describe", json!({}));
+    assert_eq!(code_of(nothing), "invalid_input");
+    assert_eq!(
+        agent_tools::call_words("catalog.describe", &json!({ "code": "plan_changed" })),
+        "Tanım · plan_changed"
+    );
+}
+
+/// An error's code, else what the answer was.
+fn code_of(answer: Result<Value, HeadlessError>) -> String {
+    match answer {
+        Ok(v) => format!("ok {v}"),
+        Err(e) => e.code.to_owned(),
+    }
 }
 
 #[test]

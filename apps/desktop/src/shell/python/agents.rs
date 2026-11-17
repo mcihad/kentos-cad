@@ -341,6 +341,8 @@ impl App {
             }
             "trial_report" => return Ok(self.ext_trial_report()),
             "audits" => return Ok(self.ext_audit_rules()),
+            // The installed extensions for the agents' common catalog (extensions/catalog_agents.rs, §109).
+            "extensions" => return Ok(self.ext_catalog()),
             "audit_report" => {
                 let offset = params.get("offset").and_then(Value::as_u64).unwrap_or(0);
                 let report = self.ext_audit_report(usize::try_from(offset).unwrap_or(usize::MAX));

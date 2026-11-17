@@ -445,6 +445,23 @@ fn insert(table: &mut Table, keys: &[String], value: Toml) -> Result<(), String>
     Ok(())
 }
 
+/// The requirements a project file (`pyproject.toml`) declares in `[project] dependencies`, as written (PEP 508:
+/// `numpy>=2`): what an extension says it needs, as the agents' catalog shows it (docs/adr/8057 §109). None read from a
+/// file that does not read.
+pub fn declared_requirements(project: &str) -> Vec<String> {
+    let Ok(root) = parse_toml(project) else {
+        return Vec::new();
+    };
+    root.get(&["project", "dependencies"])
+        .and_then(Toml::array)
+        .map(|list| {
+            list.iter()
+                .filter_map(|x| x.str().map(str::to_owned))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
 /// A Python package's name normalised (PEP 503): lower case, runs of `-`, `_` and `.` one `-`.
 pub fn normalized(name: &str) -> String {
     let mut out = String::with_capacity(name.len());

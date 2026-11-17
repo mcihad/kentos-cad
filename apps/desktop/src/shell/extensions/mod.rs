@@ -13,6 +13,7 @@
 mod audit_agents;
 mod audit_picker;
 mod audits;
+pub(crate) mod catalog_agents;
 mod dialogs;
 mod panel_chart;
 mod panel_session;

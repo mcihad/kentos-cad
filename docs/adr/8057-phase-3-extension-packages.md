@@ -5301,3 +5301,45 @@ incelemesi, panel, form, atölye ön izlemesi).
   model; dizin < 48 000 bayt, `query`, iki sözcüğün araçları, eşleşmeyenin notu; tanım çıktıları); örtü 2 (kimlikler
   alan sayılmaz, süzgeç ve adım değeri sayılır; ifade ve alan parametreleri, satırlar, adımlar); masaüstü 1 (Asistan'ın
   kapısından plan → yürütme); çağrı sözleri.
+
+## §109. Ortak keşif kataloğu: komut, araç, eklenti ve yanıt kodu tek aramada (Üretim, PY-AI-01)
+
+**17 Kasım.** Kod: headless `agent_tools.rs` (`catalog.search`'ün `kinds`'ı ve `others`'ı, `catalog.describe`'ın
+`extension` ve `code`'u, çağrı sözleri), `agent_tools/discover.rs` (yeni); masaüstü `extensions/catalog_agents.rs`
+(yeni: bağlantının `extensions` isteği), `python/agents.rs`, Asistan yönergesi;
+`kentos_extensions::declared_requirements` (`python.rs`); sınamalar `tests/headless/agent_tools.rs`,
+`extensions/tests/catalog.rs` (yeni), `python/tests.rs`.
+
+- **Sorun.** PY-AI-01 "eklenti/araç/form/ortam keşfi, yetenekler, şemalar, bağımlılıklar, örnekler ve hata kodları ortak
+  katalogda" der. Ajanın keşfi dağınıktı: komutlar `catalog.search`'te, İşlemler araçları `processing.list`'te, eklenti
+  denetimleri `audit.list_providers`'ta; kurulu bir eklentinin ne istediği, hangi Python paketlerine dayandığı,
+  izinlerinin verilip verilmediği ve parçalarının nasıl kullanılacağı hiçbir yerde yoktu. Yanıt kodlarının anlamı (1 547
+  kod, `codes::CODES`) ajana açık değildi: `plan_changed` aldığında yeniden denenip denenmeyeceğini iletiden tahmin
+  ediyordu.
+- **Karar: `catalog.search` ortak katalogdur.** Komutların yanında `others`: İşlemler araçları (yerleşik ve
+  eklentilerin, sözcük başına `cad.processing.tools`), kurulu eklentiler ve parçaları (denetim kuralı, panel, form,
+  ifade işlevi, harita aracı, veri kaynağı, eklenti komutu) ve yanıt kodları; her sonucun `kind`'ı, kısa sözü ve
+  `next`'i (sıradaki çağrı: `processing.describe`, `audit.run`, `catalog.describe (extension)` …). En çok sözcüğü tutan
+  önce; bir eklentinin aracı bir kez, araç olarak. `kinds` aramayı daraltır (`command`, `tool`, `extension`, `code`);
+  verilmezse komut, araç ve eklenti; yanıt kodları kod gibi yazılan sözcükle (`plan_changed`) ya da adıyla istenince
+  aranır (bin beş yüz kodun anlamında "plan" geçenler her aramaya karışmasın). Yanıtın eski alanları (`commands`,
+  `total`) aynı.
+- **`catalog.describe`** bir eklentiyi (`extension`) ve bir kodu (`code`) da tanımlar. Eklenti: ad, sürüm, özet,
+  yayımcı, anahtar sözcükler, durum, güven, kaynak; istenen yetenekler kurulum penceresinin Türkçe başlığı, gerekçesi ve
+  verilip verilmediğiyle; Python: projenin bildirdiği gereksinimler (PEP 508, yazıldığı gibi), Python'a izin, ortamın
+  hazır olup olmadığı ve nedeni; parçalar türü, kimliği, adı, Python isteyip istemediği ve ajanın nasıl kullanacağıyla
+  (şeridin sekmesi ve sağ tık öğesi arayüzün kendisidir, listelenmez); son sorunu. Kod: anlamı, nasıl döndüğü (ret,
+  çakışma, uyarı …), yeniden denenebilirliği ve ne yapılacağı.
+- **Eklentiler masaüstündedir:** liste masaüstünün `extensions` isteğinden gelir (Asistan'ın ve masaüstü bağlantısındaki
+  ajanın kapısı aynı). Sunucunun kendi çizimindeki ajan eklentiyi adıyla ararsa yanıt bunu söyler (`notes`);
+  tanımlatırsa `not_offered`.
+- **Gerçek pencere** (DeepSeek, sentetik Vitrin): "Kurulu Vitrin eklentisi neler sunuyor, hangi Python paketlerine
+  ihtiyaç duyuyor ve izinleri verilmiş mi?" iki çağrıyla (`catalog.search` kinds extension, `catalog.describe`
+  extension) doğru yanıtlandı: parçaları türleriyle, `shapely>=2.0,<2.1` ve `numpy>=2.0,<3`, 12 yeteneğin hepsi
+  verilmiş, ortam hazır; sohbet 37 595 token. İlk koşuda ajan yeteneğin kimliğinden `audit.provider`'ı "eğitim" diye
+  çevirdi: yeteneklere kurulum penceresinin başlığı ("Denetim ekler") eklendi, ikinci koşuda doğru yazdı.
+- **Sınamalar:** headless 1 (araç `next`'iyle bulunur; kod kod gibi yazılınca ilk sırada ve tanımı: tür, yeniden
+  denenebilirlik, anlam; bilinmeyen kod; yalnız kodlar; eklentiler bu ortamda yok diye söylenir, tanımı `not_offered`;
+  boş tanım isteği; çağrı sözü); masaüstü 1 (Vitrin kurulu: gereksinimler, yetenekler başlık ve izinle, parçalar ve
+  kullanımları, arayüz parçaları dışarıda; Asistan'ın kapısından arama ve tanım, bilinmeyen eklenti); eklenti paketi 1
+  (gereksinimler yazıldığı gibi, boş ve okunmayan proje).
