@@ -257,3 +257,51 @@ fn block_only_file_update_does_not_claim_the_drawing_was_unchanged() {
     );
     std::fs::remove_dir_all(folder).unwrap();
 }
+
+/// A key a call's input carries (a service address written with its key, a note) is written hidden in the call's
+/// Python, the history's script and its replay: they are copied and shared (docs/adr/8057 §111, ECO-API-13).
+#[test]
+fn a_key_in_a_call_is_hidden_in_its_python_and_replay() {
+    let mut app = drawing();
+    circle_drawn(&mut app);
+    let key = format!("{}{}", "sk-p", "roj-") + &"aB3dE5gH7jK9mN2pQ4sT6vW8yZ0cF1x".repeat(2);
+    for entry in &mut app.history.entries {
+        if let Call::Row(row) = &mut entry.call
+            && let Some(input) = row.input.as_mut()
+        {
+            input["comment"] = json!(format!(
+                "Altlık servisi https://tiles.ornek.bel.tr/{{z}}/{{x}}/{{y}}?k={key}"
+            ));
+        }
+    }
+    let entry = app
+        .history
+        .entries
+        .iter()
+        .find(|e| matches!(e.call, Call::Row(_)))
+        .expect("the call")
+        .clone();
+    let python = app.python_of(&entry).expect("its Python");
+    let script = app.python_script_of_history().expect("the script");
+    for (what, text) in [("Python", &python), ("betik", &script)] {
+        assert!(!text.contains(&key), "{what}:\n{text}");
+        assert!(
+            text.contains("‹OpenAI API anahtarı gizlendi›"),
+            "{what}:\n{text}"
+        );
+    }
+    // The replay's journal row the same way, each text alone: a private key's armour hidden whole inside its text,
+    // the JSON around it as it was.
+    let armour = format!(
+        "-----BEGIN {} KEY-----\nMIIE\n-----END {} KEY-----",
+        "PRIVATE", "PRIVATE"
+    );
+    let row =
+        json!({ "calls": [{ "input": { "comment": format!("{key} ve\n{armour}"), "r": 7.5 } }] });
+    let hidden = super::without_secrets(&row);
+    assert_eq!(
+        hidden,
+        json!({ "calls": [{ "input": {
+            "comment": "‹OpenAI API anahtarı gizlendi› ve\n‹özel anahtar gizlendi›", "r": 7.5 } }] })
+    );
+}

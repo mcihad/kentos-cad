@@ -1254,8 +1254,9 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   — *kısmen: `extension.*` doğrulama, iskelet, SDK ve atölye araçları, katalog uçları (ADR 8059 §10); hata ayıklama
   raporu (ADR 8057 §110, 17 Kasım): ortam (Python, uv, eklentinin ortamı ve gereksinimleri, yetenekler), paket özeti,
   manifest şeması ve protokol, duran hatanın kodu ve anlamı; anahtarlar ve ev klasörü gizli; ajan `extension.report`
-  ile okur [ECO-API-14]; keşif ortak katalogda (§109) [ECO-API-07'nin keşif kısmı]; kalan: adların SDK uyumluluk
-  ADR'sinde kesinleşmesi ve listenin geri kalanı.*
+  ile okur [ECO-API-14]; keşif ortak katalogda (§109) [ECO-API-07'nin keşif kısmı]; anlamsal kaydedici Komut
+  geçmişidir (ADR 0284, 0443): Python'u, betiği ve yeniden oynatması gizli alan ve anahtar taşımaz (§111)
+  [ECO-API-13]; kalan: adların SDK uyumluluk ADR'sinde kesinleşmesi ve listenin geri kalanı.*
 - [ ] **Derslerden (13 Kasım):**
   - **Yazılı SDK kararlılık politikası** (QEP 425 benzeri ADR, ADIM 19'un başında): kararlı yüzey yalnız ana sürümde
     kırılır, kaldırmadan önce en az bir sürüm "eskiyor" uyarısı; deneysel yüzeyler yalnız geliştirici ortamında açılır

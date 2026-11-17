@@ -5378,3 +5378,20 @@ incelemesi, panel, form, atölye ön izlemesi).
   özeti, manifest şeması, gereksinimler, yetenekler, kodun anlamı; anahtar ve ev klasörü raporda yok; Asistan'ın
   kapısından aynı rapor, bilinmeyen eklenti); eklenti paketi 1 (anahtar, adresteki parola, özel anahtar zırhı gizlenir,
   düz metin olduğu gibi kalır).
+
+## §111. Komut geçmişinin Python'u ve yeniden oynatması anahtar taşımaz (API ailesi, ECO-API-13)
+
+**17 Kasım.** Kod: masaüstü `cad/history/mod.rs` (`without_secrets`; `python_of`, `python_script_of_history`,
+`replay_of`), `cad/history/tests.rs`.
+
+- **Durum.** ECO-API-13 "anlamsal eylem kaydedici izinli işlemi düzenlenebilir Python örneğine çevirir, sır ve hassas
+  alan kayda girmez" der. Kaydedici vardı (ADR 0284: Komut geçmişi her komut çağrısını SDK'nın aynı çağrısıyla Python'a
+  yazar, bütün geçmiş tek betik, tek çağrı yeniden oynatma girdisi) ve hassas alan girmiyordu (ADR 0443 §2: formda
+  gizlenen ve katmanda saklanan alanların değerleri `‹gizli›`). Sırlar tasarım gereği komut girdisinde durmaz
+  (bağlantı sırları cihazda, PostGIS adresi parolasız), ama bir çağrının girdisi bir anahtarı yine de taşıyabilir: bir
+  servis adresi sorgusunda anahtarıyla yazılmış (`?k=…`), bir nota yapıştırılmış.
+- **Karar:** üç çıktı da (çağrının Python'u, geçmişin betiği, yeniden oynatma) girdinin her metnini sır tarayıcısından
+  geçirir (`secrets::masked`, §110): sağlayıcı anahtarı, adresteki parola, özel anahtar zırhı `‹… gizlendi›` olur. Her
+  metin kendi başına taranır: gizlenen anahtar etrafındaki tırnağı ve JSON'u almaz, yeniden oynatma JSON olarak okunur.
+- **Sınama:** masaüstü 1 (girdisine anahtarlı bir servis adresi eklenmiş çağrının Python'unda ve betikte anahtar yok,
+  gizlendiği yazılı; iç içe bir girdide anahtar ve zırh kendi metinlerinde gizlenir, yapı aynı).

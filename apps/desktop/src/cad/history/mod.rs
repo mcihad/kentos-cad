@@ -183,7 +183,9 @@ impl App {
             command,
             version,
             Some(text::title_of(command)),
-            &kentos_native_application::python_call::redacted(input, &names),
+            &without_secrets(&kentos_native_application::python_call::redacted(
+                input, &names,
+            )),
             relaxed,
         ))
     }
@@ -202,7 +204,7 @@ impl App {
                     row.command.clone()?,
                     row.version.unwrap_or(1),
                     row.command.as_deref().map(|c| text::title_of(c).to_owned()),
-                    row.input.clone()?,
+                    without_secrets(row.input.as_ref()?),
                     row.relax_constraints,
                 )),
                 _ => None,
@@ -277,7 +279,7 @@ impl App {
         let names = doc
             .map(kentos_native_application::python_call::redacted_names)
             .unwrap_or_default();
-        let value = serde_json::to_value(&journal).ok()?;
+        let value = without_secrets(&serde_json::to_value(&journal).ok()?);
         serde_json::to_string_pretty(&kentos_native_application::python_call::redacted(
             &value, &names,
         ))
@@ -356,6 +358,24 @@ impl App {
             }
         }
         Task::none()
+    }
+}
+
+/// `value` with every key its texts hold written as hidden (‹API anahtarı gizlendi›): the history's Python and replay
+/// are copied and shared, and a call's input may carry a key a service address was written with (plan/eklenti.md
+/// ADIM 21 › API ailesi, ECO-API-13: "sır ve hassas alan kayda girmez"; docs/adr/8057 §111). Each text alone, so a
+/// hidden key never takes the quotes around it.
+fn without_secrets(value: &serde_json::Value) -> serde_json::Value {
+    use serde_json::Value;
+    match value {
+        Value::String(text) => Value::String(kentos_extensions::secrets::masked(text)),
+        Value::Array(items) => Value::Array(items.iter().map(without_secrets).collect()),
+        Value::Object(map) => Value::Object(
+            map.iter()
+                .map(|(k, v)| (k.clone(), without_secrets(v)))
+                .collect(),
+        ),
+        other => other.clone(),
     }
 }
 
