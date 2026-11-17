@@ -130,8 +130,8 @@ impl Cloud {
         self.get(self.inner.dossier_url(id, ""))
     }
 
-    /// A step on the dossier with the status the person saw (`POST …/actions`): the dossier as it is after it. Another's
-    /// step in between is the server's conflict (409), never an overwrite.
+    /// A step on the dossier with the status the person saw (`POST …/actions`): the dossier as it is after it.
+    /// Another's step in between is the server's conflict (409), never an overwrite.
     pub fn dossier_step(
         &self,
         id: Uuid,

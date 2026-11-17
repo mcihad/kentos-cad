@@ -265,12 +265,9 @@ async fn file(
     }
     let name = info.name.clone();
     let bytes = got.bytes;
-    let document = tokio::task::spawn_blocking(move || {
-        let doc = kentos_kcad::decode(&bytes).map_err(|e| ApiFailure::drawing(&name, e))?;
-        Document::from_snapshot_v2(doc).map_err(|e| ApiFailure::drawing(&name, e))
-    })
-    .await
-    .map_err(|e| ApiFailure::local(format!("Çizim kurulamadı: {e}")))??;
+    let document = tokio::task::spawn_blocking(move || revision_drawing(&bytes, &name))
+        .await
+        .map_err(|e| ApiFailure::local(format!("Çizim kurulamadı: {e}")))??;
     Ok(Opened {
         tenant,
         project,
@@ -283,6 +280,16 @@ async fn file(
             }),
         },
     })
+}
+
+/// A file project's revision as its drawing, named as the catalog names the project. The name inside the file is the
+/// one it was saved with: a project renamed since, or opened from a portal dossier's file with the dossier's number
+/// added (docs/adr/9000 §7), would otherwise open under its old name (“Yeni proje”), as a renamed one's drawing takes
+/// the new name quietly after (the desktop's actions.rs).
+fn revision_drawing(bytes: &[u8], name: &str) -> Result<Document, ApiFailure> {
+    let mut doc = kentos_kcad::decode(bytes).map_err(|e| ApiFailure::drawing(name, e))?;
+    name.clone_into(&mut doc.name);
+    Document::from_snapshot_v2(doc).map_err(|e| ApiFailure::drawing(name, e))
 }
 
 /// Opens a cloud project (`progress`: objects or bytes so far, and all of
@@ -389,6 +396,25 @@ mod tests {
         let e = objects_of(&info, records).unwrap_err();
         assert_eq!(e.code, "drawing");
         assert!(e.message.contains("Ada 101"), "{}", e.message);
+    }
+
+    /// A revision saved as “Yeni proje” opens as the project the catalog names: a dossier's file opened as a project
+    /// carries the dossier's number in its name (docs/adr/9000 §7, docs/adr/9001 §5).
+    #[test]
+    fn a_file_revision_opens_under_the_catalogs_name() {
+        let sample = DocumentSnapshotV1::from_json(SAMPLE).unwrap();
+        let mut saved = Document::from_snapshot(sample).unwrap().to_snapshot_v2();
+        saved.name = "Yeni proje".into();
+        let bytes = kentos_kcad::encode(&saved).unwrap();
+        let opened = revision_drawing(&bytes, "Konut-412-7 (2026/0001)").unwrap();
+        assert_eq!(opened.name(), "Konut-412-7 (2026/0001)");
+        assert!(!opened.is_dirty(), "the name is the project's, not an edit");
+        assert_eq!(
+            opened.len(),
+            Document::from_snapshot_v2(saved).unwrap().len()
+        );
+        let broken = revision_drawing(b"bir KCAD degil", "Konut").unwrap_err();
+        assert_eq!(broken.code, "drawing");
     }
 
     #[test]
