@@ -18,6 +18,9 @@ Paylaşılacak kişi yalnız arayanın görebildiği kişiler arasında aranır 
 kişisel projede arayanın kurumları); hesabın varlığını sızdıran genel e-posta/giriş adı
 araması yoktur (ADR 0024).
 API, WS, sorgu, dosya/asset, job, Python ve AI aynı erişim modelini kullanır.
+Künyenin kişisel bilgileri (yapı sahibi, müellif, sicil, büro, tapu kaydı, teslim eden) yalnız `feature.write` sahibine
+gider; öbürleri okumada ve anlık görüntüde kesilmiş alır, künye taşıyan saklı kopyayı alamaz (ADR 8100,
+`ProjectAccess::sees_particulars`). Projeye yeni bir okuma yolu eklerken bu kesme de eklenir.
 Kurum dışına yol bağlantıyla davettir (ADR 0035): yalnız davetteki e-postanın doğrulanmış hesabı kabul eder;
 kurum dışından biri yalnız o projeyi gören misafir olur, kurum misafiri kapatabilir (`tenant.allow_guests`).
 Kişisel ve kurumsal sahiplik, davet, paylaşım ve izin iptali TODOS.md §12'dedir.

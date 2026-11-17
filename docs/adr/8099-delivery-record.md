@@ -1,7 +1,8 @@
 # ADR 8099: Teslim kaydı — paketin idareye teslimi, iadenin nesneye bağlı gerekçesi ve öncekiyle karşılaştırma
 
 - **Durum:** uygulandı (17 Kasım 2026), kısmen. Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-15 (uygulama sırasında
-  B16). İlk kabulün dört adımı sağlandı (§4); "yetkisiz kullanıcı künyeyi göremez" bulut dilimine kaldı (§6).
+  B16). İlk kabulün dört adımı sağlandı (§4); "yetkisiz kullanıcı künyeyi göremez" ADR
+  [8100](8100-kunye-personal-particulars-by-role.md)'de.
 - **Bağlam:** ADR [0617](0617-complete-drawing-set-delivery.md) (yayının `yayin.json`'u ve SHA-256'sı),
   [1320](1320-sheet-sources-and-update-publication.md) (yayının kaynakları, `kaynaklar/cizim.kcad`),
   [1000](1000-review-notes-and-taking-revision-differences.md) (inceleme notları, nesneye bağlı, eskime),
@@ -98,8 +99,7 @@ iletim kaydı aşağıdaki kaynaklardan.
 
 ## §6. Sıradaki adımlar
 
-- **Künyenin görünürlüğü** (ilk kabulün son cümlesi; 6698 sayılı Kanun): müellifin kimlik ve sicil bilgileri bulut
-  projesinde role göre; yetkisiz kullanıcı göremez. Proje yetkisi (§16) ile, sunucuda.
+- ~~**Künyenin görünürlüğü**~~ (ilk kabulün son cümlesi): yapıldı, ADR [8100](8100-kunye-personal-particulars-by-role.md).
 - **Ortak veri ortamının durumları:** çalışma, paylaşım, yayın, arşiv; kabul edilen teslimin paketinin arşive geçmesi.
 - **Salt okuyan komut** `cad.delivery.compare`: K150'nin cevabı Python ve MCP için.
 - **e-PYS pilotu:** Bakanlığın arayüzü, imza yöntemi ve deneme ortamı yayımlanınca (e-PYS 4/4, 5/4, 5/6).

@@ -162,6 +162,13 @@ impl ProjectAccess {
         self.permissions.contains(&permission)
     }
 
+    /// Whether it reads the künye's personal particulars (docs/adr/8100; 6698 sayılı Kanun): whoever works on the
+    /// project's objects (`feature.write`: Düzenleyici and above) does; an İzleyici, a Yorumcu and a Veri girişi read
+    /// them cut, and get no stored copy that carries them.
+    pub fn sees_particulars(&self) -> bool {
+        self.allows(ProjectPermission::FeatureWrite)
+    }
+
     pub fn permissions(&self) -> &[ProjectPermission] {
         &self.permissions
     }

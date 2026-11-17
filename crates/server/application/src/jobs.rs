@@ -605,13 +605,27 @@ pub async fn artifact(
     .fetch_one(&mut *tx)
     .await?;
     tx.commit().await?;
+    let kind = row.kind.clone();
     let job = view(row, &access.name);
     let Some(key) = key else {
         return Err(AppError::not_found(
             "İşin indirilecek bir sonucu yok; iş bitmemiş ya da başarısız olmuş.",
         ));
     };
-    let file = blobs.open(&key).await?;
+    // The künye's personal particulars only to whoever works on the objects (docs/adr/8100): a job is started by
+    // such a one, so its file was made for them. An exported copy is read for them; a sheet's atlas prints its
+    // title block, which cannot be read back.
+    if !access.sees_particulars() && kind == kentos_contracts::PROJECT_ATLAS_JOB {
+        return Err(AppError::forbidden(format!(
+            "“{}” projesinin pafta atlası künyenin kişisel bilgilerini (yapı sahibi, müellif, sicil …) basabilir; \
+             yalnız projenin nesnelerini yazabilenlere verilir. Proje sahibinden Düzenleyici rolü isteyin.",
+            access.name
+        )));
+    }
+    let mut file = blobs.open(&key).await?;
+    if kind == kentos_contracts::PROJECT_EXPORT_JOB {
+        crate::projects::require_particulars(access, &mut file).await?;
+    }
     Ok((job, file))
 }
 

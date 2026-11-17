@@ -486,3 +486,12 @@ fn a_tadilat_plan_draws_its_view_s_state_on_its_own_storey() {
     let none = display_list(&book, &book.sheets[0].id, &RenderInputs::default()).unwrap();
     assert!(!none.prims.iter().any(|p| matches!(p, Prim::Map(_))));
 }
+
+/// The künye's personal particulars a cloud project cuts for whoever does not work on its objects (docs/adr/8100) are
+/// the set's own variables: a name not in the künye would cut nothing.
+#[test]
+fn every_personal_particular_is_a_variable_of_the_kunye() {
+    for name in kentos_contracts::PERSONAL_PARTICULARS {
+        assert!(permit::PARTICULARS.iter().any(|(n, _, _)| *n == name), "@{name} is not a künye variable");
+    }
+}

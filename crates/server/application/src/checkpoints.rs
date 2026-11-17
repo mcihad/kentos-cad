@@ -549,6 +549,8 @@ pub async fn download(
         .await?,
     };
     tx.commit().await?;
-    let file = blobs.open(&key).await?;
+    let mut file = blobs.open(&key).await?;
+    // The künye's personal particulars only to whoever works on the objects (docs/adr/8100).
+    crate::projects::require_particulars(access, &mut file).await?;
     Ok((checkpoint_of(&row), file))
 }

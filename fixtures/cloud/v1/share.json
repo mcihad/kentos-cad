@@ -25,10 +25,10 @@
    "editor"
   ],
   "hints": {
-   "viewer": "Projeyi açar, görür, indirir ve geçmişine bakar; değiştiremez.",
+   "viewer": "Projeyi açar, görür, indirir ve geçmişine bakar; değiştiremez. Künyenin kişisel bilgileri ona gizlidir.",
    "commenter": "Görüntüleyicinin yapabildikleri ve yorum.",
-   "entry": "Projeyi açar, görür ve yorum yazar; kayıtların özniteliklerini yalnız yayımlanmış formla, formun gösterdiği alanlarda düzenler; çizimi değiştiremez, indiremez.",
-   "editor": "Nesneleri çizer, değiştirir ve siler.",
+   "entry": "Projeyi açar, görür ve yorum yazar; kayıtların özniteliklerini yalnız yayımlanmış formla, formun gösterdiği alanlarda düzenler; çizimi değiştiremez, indiremez. Künyenin kişisel bilgileri ona gizlidir.",
+   "editor": "Nesneleri çizer, değiştirir ve siler; künyenin kişisel bilgilerini görür.",
    "manager": "Düzenleyicinin yapabildikleri; ad, ayar ve katmanları değiştirir, formları tasarlar ve yayınlar, projeyi paylaşır."
   }
  },

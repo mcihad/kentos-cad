@@ -768,6 +768,16 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
         return Err(gone(&name));
     }
     let bad = |e: serde_json::Error| AppError::invalid(format!("Proje kaydı okunamadı: {e}"));
+    let mut settings: kentos_contracts::ProjectSettings = serde_json::from_value(settings).map_err(bad)?;
+    let mut sheets: Option<kentos_contracts::ProjectSheets> =
+        sheets.map(serde_json::from_value).transpose().map_err(bad)?;
+    // The künye's personal particulars only to whoever works on the objects (docs/adr/8100).
+    if !access.sees_particulars() {
+        settings.cut_particulars();
+        if let Some(sheets) = sheets.as_mut() {
+            sheets.cut_particulars();
+        }
+    }
     Ok(ProjectInfo {
         blocks: crate::blocks::records(blocks),
         id: access.project.to_string(),
@@ -777,16 +787,13 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
         access: access.view(),
         state: access.state(),
         name,
-        settings: serde_json::from_value(settings).map_err(bad)?,
+        settings,
         origin: kentos_contracts::Vec2 { x: ox, y: oy },
         home_view: home.map(serde_json::from_value).transpose().map_err(bad)?,
         layers: serde_json::from_value(layers).map_err(bad)?,
         active_layer,
         styles: serde_json::from_value(styles).map_err(bad)?,
-        sheets: sheets
-            .map(serde_json::from_value)
-            .transpose()
-            .map_err(bad)?,
+        sheets,
         arrays: arrays
             .map(serde_json::from_value)
             .transpose()
@@ -947,6 +954,39 @@ pub(crate) async fn require_whole_copy(
     Err(AppError::forbidden(
         "Bu projede formların “örneklerde gizle” dediği alanlar var; olduğu gibi saklanan bir kopya (dosya revizyonu, kontrol noktası, çoğaltma, geri yükleme, dönüştürme) yalnız form tasarlayanlara verilir. Güncel hâlini .kcad olarak indirin: gizli alanlar kesilmiş gelir.",
     ))
+}
+
+/// A stored copy (a file project's revision, a checkpoint) for `access` (docs/adr/8100): refused when the caller reads
+/// the künye's personal particulars cut and the copy carries any, read from its bytes as they are. A stored copy is not
+/// cut (docs/adr/0550 §3). The file is left at its start.
+pub(crate) async fn require_particulars(access: &ProjectAccess, file: &mut tokio::fs::File) -> AppResult<()> {
+    use tokio::io::{AsyncReadExt as _, AsyncSeekExt as _};
+    if access.sees_particulars() {
+        return Ok(());
+    }
+    let mut bytes = Vec::new();
+    file.read_to_end(&mut bytes).await.map_err(AppError::Storage)?;
+    file.seek(std::io::SeekFrom::Start(0)).await.map_err(AppError::Storage)?;
+    let _turn = crate::files::verifying()
+        .acquire()
+        .await
+        .map_err(|e| AppError::Storage(std::io::Error::other(e)))?;
+    let carries = tokio::task::spawn_blocking(move || {
+        kentos_kcad::decode(&bytes)
+            .map(|doc| doc.settings.has_particulars() || doc.sheets.as_ref().is_some_and(|s| s.has_particulars()))
+    })
+    .await
+    .map_err(|e| AppError::Storage(std::io::Error::other(e)))?
+    .map_err(|e| AppError::invalid(format!("Saklanan kopya okunamadı: {}", e.message)))?;
+    if carries {
+        return Err(AppError::forbidden(format!(
+            "“{}” projesinin saklanan bu kopyası künyenin kişisel bilgilerini (yapı sahibi, müellif, sicil …) taşır; \
+             olduğu gibi saklandığı için kesilemez ve yalnız projenin nesnelerini yazabilenlere verilir; proje sahibinden \
+             Düzenleyici rolü isteyin.",
+            access.name
+        )));
+    }
+    Ok(())
 }
 
 /// How `access` reads the objects when forms narrow it: a Veri girişi's reading; none for anyone else,

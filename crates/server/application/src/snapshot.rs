@@ -152,6 +152,13 @@ pub(crate) async fn take(
             Some(reach.stamp())
         }
     };
+    // The künye's personal particulars only to whoever works on the objects (docs/adr/8100).
+    if matches!(how, Take::Cut) && !access.sees_particulars() {
+        doc.settings.cut_particulars();
+        if let Some(sheets) = doc.sheets.as_mut() {
+            sheets.cut_particulars();
+        }
+    }
     let name = doc.name.clone();
     let objects = doc.entities.len();
     let meta = DrawingMeta::of(&doc);

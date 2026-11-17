@@ -173,12 +173,12 @@ pub(crate) const INVITE_ROLES: [GrantRole; 4] = [
 /// What each role may do, in one line (docs/adr/0015's table).
 pub(crate) fn role_hint(role: GrantRole) -> &'static str {
     match role {
-        GrantRole::Viewer => "Projeyi açar, görür, indirir ve geçmişine bakar; değiştiremez.",
+        GrantRole::Viewer => "Projeyi açar, görür, indirir ve geçmişine bakar; değiştiremez. Künyenin kişisel bilgileri ona gizlidir.",
         GrantRole::Commenter => "Görüntüleyicinin yapabildikleri ve yorum.",
         GrantRole::Entry => {
-            "Projeyi açar, görür ve yorum yazar; kayıtların özniteliklerini yalnız yayımlanmış formla, formun gösterdiği alanlarda düzenler; çizimi değiştiremez, indiremez."
+            "Projeyi açar, görür ve yorum yazar; kayıtların özniteliklerini yalnız yayımlanmış formla, formun gösterdiği alanlarda düzenler; çizimi değiştiremez, indiremez. Künyenin kişisel bilgileri ona gizlidir."
         }
-        GrantRole::Editor => "Nesneleri çizer, değiştirir ve siler.",
+        GrantRole::Editor => "Nesneleri çizer, değiştirir ve siler; künyenin kişisel bilgilerini görür.",
         GrantRole::Manager => {
             "Düzenleyicinin yapabildikleri; ad, ayar ve katmanları değiştirir, formları tasarlar ve yayınlar, projeyi paylaşır."
         }

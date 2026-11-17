@@ -331,7 +331,11 @@
     çizimde (mimari verisi 17): yayının `yayin.json`'unun SHA-256'sı, EK-2 revizyonu, kurum, kanal, gün, makbuz; cevap Kabul
     ya da İade, iadenin gerekçesi inceleme notlarıyla nesnelere bağlı (`cad.delivery.edit`). Öncekiyle karşılaştır aynı
     kuruma önceki paketin klasörünü yeniden okur ve SHA-256'yla denetler; dosyalar paftayla, adla, içerikle, revizyonla
-    değişen model adıyla eşlenir; çizimler kalıcı kimlikle. Künyenin role göre görünürlüğü bulut dilimine kaldı.
+    değişen model adıyla eşlenir; çizimler kalıcı kimlikle.
+  - **Künye role göre (17 Kasım 2026; [ADR 8100](../adr/8100-kunye-personal-particulars-by-role.md), K152–K156):** bulut
+    projesinde künyenin kişisel bilgilerini (13 değişken: yapı sahibi, müellif, sicil, büro, tapu kaydı …; teslim eden)
+    yalnız `feature.write` sahibi görür (`ProjectAccess::sees_particulars`); öbürleri bilgide ve anlık görüntüde "Gizli"
+    okur, künye taşıyan saklı kopyayı (kontrol noktası, dosya revizyonu, dışa aktarma, atlas) alamaz.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

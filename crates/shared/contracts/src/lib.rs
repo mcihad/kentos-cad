@@ -32,6 +32,8 @@
 pub mod address;
 #[path = "core/annotation.rs"]
 pub mod annotation;
+#[path = "core/particulars.rs"]
+pub mod particulars;
 #[path = "core/annotation_scale.rs"]
 pub mod annotation_scale;
 #[path = "core/annotative.rs"]
@@ -483,6 +485,7 @@ pub use temporal::*;
 pub use topology::*;
 pub use ui_catalog::*;
 pub use variables::*;
+pub use particulars::{CUT_PARTICULAR, PERSONAL_PARTICULARS};
 
 /// Version of this set of contracts, reported by the API's health endpoint.
 pub const CONTRACTS_VERSION: u32 = 1;
