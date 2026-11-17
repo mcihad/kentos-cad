@@ -80,6 +80,13 @@
           "minimum": 0,
           "type": "integer"
         },
+        "coverings": {
+          "description": "The coverings (docs/adr/8091; BYKHY 26/2, 26/4): each its IFC type, storey, material and the material's declared\nreaction to fire class.",
+          "items": {
+            "$ref": "#/$defs/CoveringFacts"
+          },
+          "type": "array"
+        },
         "doors": {
           "description": "The doors, by persistent id (docs/adr/8078 §8).",
           "items": {
@@ -607,6 +614,40 @@
         "b",
         "area",
         "at"
+      ],
+      "type": "object"
+    },
+    "CoveringFacts": {
+      "description": "A covering (docs/adr/8091): its persistent id, storey, IFC 4.3 type (`CEILING` a suspended ceiling, `FLOORING` a\nfloor covering …), its material by name and that material's declared reaction to fire class (TS EN 13501-1); none:\nno material, or none declared.",
+      "properties": {
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "material": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "predefined": {
+          "type": "string"
+        },
+        "reaction": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "predefined"
       ],
       "type": "object"
     },

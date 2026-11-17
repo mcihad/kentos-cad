@@ -73,12 +73,27 @@ pub enum PerformanceOperation {
         #[serde(default)]
         fire_rating: Option<Declared>,
     },
-    /// Malzeme: a material's strength class (by its id or name); null: none.
+    /// Malzeme: a material's strength class and reaction to fire class (by its id or name; docs/adr/8091). A field absent
+    /// stays; null takes it away.
     #[serde(rename_all = "camelCase")]
     Material {
         material: String,
-        #[serde(default)]
-        strength: Option<String>,
+        #[serde(
+            default,
+            with = "crate::cad_properties::nullable",
+            skip_serializing_if = "Option::is_none"
+        )]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+        #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+        strength: Option<Option<String>>,
+        #[serde(
+            default,
+            with = "crate::cad_properties::nullable",
+            skip_serializing_if = "Option::is_none"
+        )]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Option<Declared>>", optional))]
+        #[cfg_attr(feature = "schema", schemars(with = "Option<Declared>"))]
+        reaction: Option<Option<Declared>>,
     },
     /// Bina: the building's fire protection class; null: none.
     #[serde(rename_all = "camelCase")]
@@ -92,7 +107,7 @@ pub enum PerformanceOperation {
 ///
 /// Refusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `field_not_for_kind` (a class on a room,
 /// a grid, a line …; an exit role on anything but a door, a stair or a roof; a load-bearing role on anything but a wall
-/// that is no curtain wall), `nothing_to_set`, `style_not_found`,
+/// that is no curtain wall), `nothing_to_set` (an objects' or a material's operation that gives no field), `style_not_found`,
 /// `opening_type_not_found`, `material_not_found`, `invalid_declared`, `invalid_strength`, `invalid_revision`,
 /// `revision_conflict`, `layer_locked` (an object named on a locked layer: nothing is written).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

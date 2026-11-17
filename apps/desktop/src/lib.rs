@@ -1563,6 +1563,9 @@ mod storey_link_tests;
 #[path = "tests/shaft_tests.rs"]
 mod shaft_tests;
 #[cfg(test)]
+#[path = "tests/covering_reaction_tests.rs"]
+mod covering_reaction_tests;
+#[cfg(test)]
 #[path = "tests/fire_escape_tests.rs"]
 mod fire_escape_tests;
 #[cfg(test)]

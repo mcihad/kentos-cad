@@ -12,7 +12,9 @@ The rules (ADR 8068 §2):
   field_not_for_kind at the object (in the input's order, the class asked first, then the exit, then the bearing). None
   given: nothing_to_set. A field absent stays; null takes the object's own away.
 - wallStyle / openingType / material: by id, else by name (case aside); none: style_not_found, opening_type_not_found,
-  material_not_found. A class null: none. A strength: letters, digits and / . , - , at most 16 (invalid_strength).
+  material_not_found. A class null: none. A strength: letters, digits and / . , - , at most 16 (invalid_strength). A
+  material's `strength` and `reaction` (ADR 8091): absent stays, null takes it away, neither given nothing_to_set; a
+  reaction class as TS EN 13501-1 writes it (invalid_declared at operation.reaction.value).
 - building: the fire protection class; null: none (no empty performance is kept).
 - A declared word: not empty, no space at its ends, at most 64 characters, no line break; a document basis with a name
   (at most 128) and, when given, a day YYYY-MM-DD; else invalid_declared.
@@ -145,6 +147,19 @@ def declared_bad(d):
     return basis_bad(d["basis"])
 
 
+def reaction_bad(s):
+    """A TS EN 13501-1 class as Ek-2/Ç writes it (ADR 8091): A1, A2, B … F, `fl` for a floor, smoke -s1…-s3, droplets
+    ,d0…,d2 (or -d2 with no smoke; none on a floor's); A1 and F take neither."""
+    import re
+    m = re.fullmatch(r"(A1|A2|B|C|D|E|F)(fl)?(-s[1-3])?((?:,|-)d[0-2])?", s)
+    if not m:
+        return True
+    cls, fl, smoke, drop = m.groups()
+    if drop and (fl or (drop.startswith("-") and smoke) or (drop.startswith(",") and not smoke)):
+        return True
+    return cls in ("A1", "F") and bool(smoke or drop)
+
+
 def strength_bad(s):
     return not s or len(s) > 16 or not all(c.isalnum() or c in "/.,-" for c in s)
 
@@ -265,16 +280,26 @@ def run(d, inp):
                     and "fireRating" not in e]
         out = [uid_of[e["id"]] for e in mine] if value is not None else []
     elif kind == "material":
+        # A field absent stays, null takes it away (ADR 8091); neither: nothing_to_set.
+        if "strength" not in op and "reaction" not in op:
+            return refusal("nothing_to_set", "operation"), d
         items = settings["arch"]["materials"]
         at = find(items, op["material"])
         if at is None:
             return refusal("material_not_found", "operation.material"), d
+        if op.get("reaction") is not None:
+            if declared_bad(op["reaction"]):
+                return refusal("invalid_declared", "operation.reaction"), d
+            if reaction_bad(op["reaction"]["value"]):
+                return refusal("invalid_declared", "operation.reaction.value"), d
         if op.get("strength") is not None and strength_bad(op["strength"]):
             return refusal("invalid_strength", "operation.strength"), d
         r = revision_refusal(inp)
         if r:
             return r, d
-        put(items[at], "strength", op.get("strength"))
+        for key in ("strength", "reaction"):
+            if key in op:
+                put(items[at], key, op[key])
         out = []
     else:  # building
         value = op.get("fireProtectionClass")
@@ -434,6 +459,23 @@ def cases():
          written({"kind": "material", "material": "betonarme", "strength": None},
                  setup=with_strength(d)), setup=with_strength(d))
     case("Boşluklu dayanım", refused({"kind": "material", "material": "betonarme", "strength": "C 30"}))
+    # Reaction to fire classes (ADR 8091).
+    case("Malzemenin yanıcılık sınıfı A2-s1,d0",
+         written({"kind": "material", "material": "tugla", "reaction": author("A2-s1,d0")}))
+    case("Döşeme malzemesinin sınıfı Bfl-s1, belgesiyle",
+         written({"kind": "material", "material": "betonarme", "reaction": document("Bfl-s1", "Ürün performans beyanı")}))
+    case("Sınıf ve dayanım birlikte", written({"kind": "material", "material": "betonarme", "strength": "C30",
+                                               "reaction": author("A1")}))
+    case("Yalnız sınıf: dayanım kalır",
+         written({"kind": "material", "material": "betonarme", "reaction": author("A1")}, setup=with_strength(d)),
+         setup=with_strength(d))
+    case("Yanıcılık sınıfı kaldırılır",
+         written({"kind": "material", "material": "tugla", "reaction": None}, setup=with_reaction(d)),
+         setup=with_reaction(d))
+    case("Okunmayan sınıf A3", refused({"kind": "material", "material": "tugla", "reaction": author("A3")}))
+    case("Damlası olan döşeme sınıfı", refused({"kind": "material", "material": "tugla", "reaction": author("Bfl-s1,d0")}))
+    case("Boş sınıf", refused({"kind": "material", "material": "tugla", "reaction": author("")}))
+    case("Ne dayanım ne sınıf", refused({"kind": "material", "material": "tugla"}))
     case("Alt çizgili dayanım: ada _ ile eklenir", refused({"kind": "material", "material": "betonarme",
                                                             "strength": "C_30"}))
     case("Olmayan malzeme", refused({"kind": "material", "material": "celik", "strength": "S355"}))
@@ -459,6 +501,12 @@ def bearing_wall(d):
 def with_strength(d):
     d = copy.deepcopy(d)
     d["settings"]["arch"]["materials"][1]["strength"] = "C25"
+    return d
+
+
+def with_reaction(d):
+    d = copy.deepcopy(d)
+    d["settings"]["arch"]["materials"][0]["reaction"] = author("A2-s1,d0")
     return d
 
 

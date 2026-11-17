@@ -1,0 +1,1096 @@
+{
+ "format": "kentos.regulationCases",
+ "version": 1,
+ "about": "Kaplamaların yanıcılığının bağımsız durumları (docs/adr/8091): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik 4/ccc, 26/2, 26/4 ve Ek-2/Ç'nin (PDF'in 89. sayfası resim olarak okundu) metninden elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.coverings).",
+ "cases": [
+  {
+   "id": "doseme-normal-tamam",
+   "neden": "8 daireli apartman (12 m): parke Dfl-s1, Ek-2/Ç'nin döşeme tablosunda normal alevlenici; 26/2 en az normal alevlenici → geçer; asma tavan yok.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k01",
+      "predefined": "FLOORING",
+      "material": "Parke",
+      "reaction": "Dfl-s1"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 26/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "doseme-kolay",
+   "neden": "Halı Ffl: kolay alevlenici → 26/2'den kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "level": "k01",
+      "predefined": "FLOORING",
+      "material": "Halı",
+      "reaction": "Ffl"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_floor_covering_reaction",
+      "has": [
+       "1. kat: döşeme kaplaması: malzemesi “Halı” Ffl, kolay alevlenici",
+       "en az normal alevlenici"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 26/2": [
+      "failed",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "doseme-yuksek-bina-normal",
+   "neden": "Büro, bina yüksekliği 33 m (4/ccc yüksek bina): döşeme kaplaması Dfl-s1 normal alevlenici, yüksek binada en az zor alevlenici → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 10,
+    "dwellings": 0,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "level": "k01",
+      "predefined": "FLOORING",
+      "material": "Vinil",
+      "reaction": "Dfl-s1"
+     }
+    ],
+    "height": 33.0,
+    "structureHeight": 34.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_floor_covering_reaction",
+      "has": [
+       "Dfl-s1, normal alevlenici",
+       "en az zor alevlenici"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 26/2": [
+      "failed",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "doseme-yuksek-bina-zor",
+   "neden": "Aynı yüksek büroda Cfl-s1 (zor alevlenici, tablonun en az satırı) → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 10,
+    "dwellings": 0,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000004",
+      "level": "k01",
+      "predefined": "FLOORING",
+      "material": "Seramik yapıştırıcılı kaplama",
+      "reaction": "Cfl-s1"
+     }
+    ],
+    "height": 33.0,
+    "structureHeight": 34.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 26/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "doseme-bfl-s2",
+   "neden": "Bfl-s2: tam yazımı tabloda normal alevlenicinin satırında (Bfl harfi Bfl-s1'de zor alevlenici olsa da) → apartmanda geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000005",
+      "level": "k01",
+      "predefined": "FLOORING",
+      "material": "Laminat",
+      "reaction": "Bfl-s2"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 26/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "doseme-sinifi-yok",
+   "neden": "Parkenin yanıcılık sınıfı beyan edilmemiş → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000006",
+      "level": "k01",
+      "predefined": "FLOORING",
+      "material": "Parke"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_floor_covering_reaction",
+      "state": "missingData",
+      "has": [
+       "malzemesinin (“Parke”) yanıcılık sınıfı beyan edilmemiş"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 26/2": [
+      "missingData",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "doseme-malzemesi-yok",
+   "neden": "Döşeme kaplamasının malzemesi yok → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000007",
+      "level": "k01",
+      "predefined": "FLOORING"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_floor_covering_reaction",
+      "state": "missingData",
+      "has": [
+       "malzemesi yok"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 26/2": [
+      "missingData",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "doseme-yanlis-tablo",
+   "neden": "Döşeme kaplamasına döşeme dışı sınıf (B-s1,d0) yazılmış: Ek-2/Ç'nin döşeme tablosu gerekir → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000008",
+      "level": "k01",
+      "predefined": "FLOORING",
+      "material": "Mantar",
+      "reaction": "B-s1,d0"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_floor_covering_reaction",
+      "state": "missingData",
+      "has": [
+       "döşeme tablosunun sınıfı gerekir"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 26/2": [
+      "missingData",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tavan-zor-yanici",
+   "neden": "Apartmanın asma tavanı alçıpan A2-s1,d0: zor yanıcı, 26/4'ün en az zor alevlenicisini tutar.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000009",
+      "level": "k01",
+      "predefined": "CEILING",
+      "material": "Alçıpan",
+      "reaction": "A2-s1,d0"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "passed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tavan-normal",
+   "neden": "Apartmanın asma tavanı D-s2,d0: normal alevlenici → 26/4'ten kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000010",
+      "level": "k01",
+      "predefined": "CEILING",
+      "material": "Ahşap lambri",
+      "reaction": "D-s2,d0"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_ceiling_reaction",
+      "has": [
+       "tavan kaplaması: malzemesi “Ahşap lambri” D-s2,d0, normal alevlenici",
+       "en az zor alevlenici"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tavan-a2-harfle",
+   "neden": "Asma tavan yalnız “A2” yazılmış: harfin tablodaki en zayıf satırı zor alevlenici → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000011",
+      "level": "k01",
+      "predefined": "CEILING",
+      "material": "Alçıpan",
+      "reaction": "A2"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "passed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tavan-fl-sinifi",
+   "neden": "Asma tavana döşeme sınıfı (Bfl-s1) yazılmış → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000012",
+      "level": "k01",
+      "predefined": "CEILING",
+      "material": "Alçıpan",
+      "reaction": "Bfl-s1"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_ceiling_reaction",
+      "state": "missingData",
+      "has": [
+       "öbür tablosunun sınıfı gerekir"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "missingData",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tavan-ev-uzman",
+   "neden": "Tek konutlu ev, asma tavan D-s2,d0: ayrık nizamda müstakil konutsa 26/4 uygulanmaz, nizam çizimde yok → uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 1,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000013",
+      "level": "k01",
+      "predefined": "CEILING",
+      "material": "Ahşap lambri",
+      "reaction": "D-s2,d0"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_ceiling_reaction",
+      "state": "expertReview",
+      "has": [
+       "ayrık nizamda müstakil konutsa"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "expertReview",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tavan-ev-tamam",
+   "neden": "Tek konutlu evin asma tavanı B-s1,d0 zor alevlenici: nizam ne olursa olsun tutar → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 1,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000014",
+      "level": "k01",
+      "predefined": "CEILING",
+      "material": "Alçıpan",
+      "reaction": "B-s1,d0"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "passed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "2008-basvuru",
+   "neden": "Başvuru 1.6.2008: Ek-2/Ç'nin 9.9.2009'dan önceki tablosu kural setinde yok, kaplamalar var → iki madde de uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "01.06.2008"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000015",
+      "level": "k01",
+      "predefined": "FLOORING",
+      "material": "Parke",
+      "reaction": "Dfl-s1"
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000016",
+      "level": "k01",
+      "predefined": "CEILING",
+      "material": "Alçıpan",
+      "reaction": "A2-s1,d0"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "regulation_text_unknown",
+      "state": "expertReview",
+      "has": [
+       "BYKHY 26/2"
+      ]
+     },
+     {
+      "code": "regulation_text_unknown",
+      "state": "expertReview",
+      "has": [
+       "BYKHY 26/4"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 26/2": [
+      "expertReview",
+      null
+     ],
+     "BYKHY 26/4": [
+      "expertReview",
+      null
+     ]
+    }
+   }
+  },
+  {
+   "id": "tarihsiz",
+   "neden": "Başvuru tarihi yok: maddelerin bilindiği ilk gün 9.9.2009, aday tek → parke Dfl-s1 geçer.",
+   "permit": {
+    "particulars": {}
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000017",
+      "level": "k01",
+      "predefined": "FLOORING",
+      "material": "Parke",
+      "reaction": "Dfl-s1"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 26/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  }
+ ]
+}

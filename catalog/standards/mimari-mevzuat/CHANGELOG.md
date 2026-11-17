@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 0.15.0 — 17 Kasım 2026
+
+- Kaplamaların yanıcılığı (`kaplamalar`): BYKHY 26/2 (döşeme kaplaması en az normal alevlenici, yüksek binada en az zor
+  alevlenici; `bykhy_floor_covering_reaction`) ve 26/4 (tavan kaplaması ve asma tavan en az zor alevlenici; tek konutlu
+  binada nizam çizimde olmadığı için tutmayan tavan uzman incelemesi; `bykhy_ceiling_reaction`). Malzemenin beyan edilen
+  TS EN 13501-1 sınıfı Ek-2/Ç'nin tablolarıyla (döşeme ve öbürü, kural setinde veri) yanıcılık özelliğine çevrilir. Olgular
+  `building.coverings`. 16 bağımsız durum.
+
 ## 0.14.0 — 17 Kasım 2026
 
 - Beyan edilen roller (`dayanim`): taşıyıcı iç duvar Ek-3/B 2 (R, Ek-3/C kadar); taşıyıcı dış duvar ve kompartıman

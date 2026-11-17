@@ -52,6 +52,6 @@ Metin ADR 8082'nin yönetmelik kopyasından (Ek-3/B tablonun sayfası, 26 ncı m
 ## §6. Sıradaki adımlar
 
 - **26/4:** malzemenin yanıcılık sınıfı beyanı (TS EN 13501-1; Ek-2/A'nın sınıfları) gelince tavan kaplaması ve asma
-  tavan en az zor alevlenici (müstakil konut dışında).
+  tavan en az zor alevlenici (müstakil konut dışında). [ADR 8091](8091-material-reaction-to-fire.md)'de yapıldı.
 - **Ek-3/B 10 yangın kesici:** modelde öğesi yok.
 - **Plenum (87/7):** asma tavan arasından geçen tesisat modelde yok.

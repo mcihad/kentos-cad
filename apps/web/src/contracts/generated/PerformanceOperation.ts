@@ -6,4 +6,4 @@ import type { DeclaredExit } from "./DeclaredExit";
 /**
  * What `cad.arch.performance` declares.
  */
-export type PerformanceOperation = { "kind": "objects", uids: Array<string>, fireRating?: Declared | null, exit?: DeclaredExit | null, loadBearing?: DeclaredBearing | null, } | { "kind": "wallStyle", style: string, fireRating: Declared | null, } | { "kind": "openingType", type: string, fireRating: Declared | null, } | { "kind": "material", material: string, strength: string | null, } | { "kind": "building", fireProtectionClass: Declared | null, };
+export type PerformanceOperation = { "kind": "objects", uids: Array<string>, fireRating?: Declared | null, exit?: DeclaredExit | null, loadBearing?: DeclaredBearing | null, } | { "kind": "wallStyle", style: string, fireRating: Declared | null, } | { "kind": "openingType", type: string, fireRating: Declared | null, } | { "kind": "material", material: string, strength?: string | null, reaction?: Declared | null, } | { "kind": "building", fireProtectionClass: Declared | null, };

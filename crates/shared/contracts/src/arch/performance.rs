@@ -176,6 +176,54 @@ impl BuildingPerformance {
     }
 }
 
+/// What is wrong with a reaction to fire class (docs/adr/8091; TS EN 13501-1 as BYKHY Ek-2/Ç writes it): its words, or
+/// none. A class letter (A1, A2, B, C, D, E, F), `fl` for a floor covering, then its smoke (`-s1` … `-s3`) and its
+/// droplets (`,d0` … `,d2`, or `-d2` with no smoke), as written: “A1”, “A2-s1,d0”, “E-d2”, “Bfl-s1”.
+pub fn reaction_problem(s: &str) -> Option<String> {
+    let bad = || {
+        Some(format!(
+            "“{s}” bir TS EN 13501-1 yanıcılık sınıfı değil: A1, A2-s1,d0, B-s2,d0, E, E-d2, Bfl-s1 gibi yazın (Ek-2/Ç)."
+        ))
+    };
+    let t = s.trim();
+    if t != s || t.is_empty() {
+        return bad();
+    }
+    let (class, rest) = if let Some(r) = t.strip_prefix("A1").or_else(|| t.strip_prefix("A2")) {
+        (&t[..2], r)
+    } else {
+        match t.chars().next() {
+            Some(c @ ('B' | 'C' | 'D' | 'E' | 'F')) => (&t[..c.len_utf8()], &t[c.len_utf8()..]),
+            _ => return bad(),
+        }
+    };
+    let (floor, rest) = match rest.strip_prefix("fl") {
+        Some(r) => (true, r),
+        None => (false, rest),
+    };
+    // Smoke, then droplets: a floor's class has no droplets; A1 and F have neither.
+    let (smoke, rest) = match rest.strip_prefix("-s") {
+        Some(r) if matches!(r.chars().next(), Some('1'..='3')) => (true, &r[1..]),
+        Some(_) => return bad(),
+        None => (false, rest),
+    };
+    // Droplets after the smoke with a comma (“B-s1,d0”), alone with a dash (“E-d2”); a floor's class has none.
+    let droplets = match rest {
+        "" => false,
+        r if !floor
+            && (if smoke { r.strip_prefix(",d") } else { r.strip_prefix("-d") })
+                .is_some_and(|d| matches!(d, "0" | "1" | "2")) =>
+        {
+            true
+        }
+        _ => return bad(),
+    };
+    if matches!(class, "A1" | "F") && (smoke || droplets) {
+        return bad();
+    }
+    None
+}
+
 /// What is wrong with a material's strength (EK-6: `Malzeme İsmi_Dayanım`, “Beton_C25”, “Çelik_S355”): its words, or
 /// none. Letters, digits and `/ . , -`, at most 16 (C25/30, S355, B420C); no `_`, which joins it to the name.
 pub fn strength_problem(s: &str) -> Option<String> {
@@ -230,6 +278,23 @@ mod tests {
         }
         assert_eq!(material_label("Beton", Some("C25")), "Beton_C25");
         assert_eq!(material_label("Tuğla", None), "Tuğla");
+    }
+
+    /// Every class of BYKHY Ek-2/Ç's table reads (docs/adr/8091); others do not.
+    #[test]
+    fn a_reaction_class_is_written_as_ek_2_c_writes_it() {
+        for ok in [
+            "A1", "A2-s1,d0", "B-s1,d0", "C-s1,d0", "A2-s2,d0", "C-s3,d0", "B-s1,d1", "A2-s1,d2", "C-s3,d2", "D-s1,d0",
+            "D-s3,d2", "E", "E-d2", "F", "A1fl", "A2fl-s1", "Bfl-s1", "Cfl-s1", "Cfl-s2", "Dfl-s2", "Efl", "Ffl",
+        ] {
+            assert!(reaction_problem(ok).is_none(), "{ok}");
+        }
+        for bad in [
+            "", " A1", "A3", "G", "B-s4,d0", "B-s1,d3", "A1-s1,d0", "F-d2", "Bfl-s1,d0", "B s1 d0", "b-s1,d0", "Bfl-d2",
+            "B,d0", "B-s1-d0",
+        ] {
+            assert!(reaction_problem(bad).is_some(), "{bad}");
+        }
     }
 
     #[test]

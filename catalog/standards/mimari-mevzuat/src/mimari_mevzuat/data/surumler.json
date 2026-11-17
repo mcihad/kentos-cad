@@ -1,7 +1,7 @@
 {
   "format": "kentos.ruleVersions",
   "version": 1,
-  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de, merdiven altınınki 8080 §1'de, kompartımanlarınki 8081 §1'de, dayanımlarınki 8082 §1'de, kat yüksekliği ve kapılarınki 8083 §1'de, bölgelerin kat yükseklikleri 8085 §1'de, katlar arası açıklıklarınki 8086 §1'de, şaftların, asansörlerin ve çatılarınki 8087 §1'de).",
+  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de, merdiven altınınki 8080 §1'de, kompartımanlarınki 8081 §1'de, dayanımlarınki 8082 §1'de, kat yüksekliği ve kapılarınki 8083 §1'de, bölgelerin kat yükseklikleri 8085 §1'de, katlar arası açıklıklarınki 8086 §1'de, şaftların, asansörlerin ve çatılarınki 8087 §1'de, kaplamaların yanıcılığınınki 8091 §1'de).",
   "regulations": {
     "PAİY": {
       "name": "Planlı Alanlar İmar Yönetmeliği",
@@ -998,6 +998,247 @@
           "curtain": 0.45,
           "text": "(5) Atriumlu bölümlere, sadece düşük ve orta tehlikeli sınıfları içeren kullanımlara sahip binalarda müsaade edilir. Atrium alanının hiçbir noktada 90 m2'den küçük olmaması esastır. Alanı 90 m2'den küçük olan atrium boşluklarının çevresi her katta en az 45 cm yüksekliğinde duman perdesi ile çevrelenir ve yağmurlama sistemi ile korunan binalarda duman perdesinden 15 ila 30 cm uzaklıkta, aralarındaki mesafe en çok 2 m olacak şekilde yağmurlama başlığı yerleştirilir. Atriumlarda doğal veya mekanik olarak duman kontrolü yapılır.",
           "source": "RG 19.12.2007/26735, 24 üncü maddenin beşinci fıkrası (2009/15316 sayılı BKK ile değişik) ve 4/g; docs/adr/8086 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "26/2",
+      "title": "Döşeme kaplamasının yanıcılığı",
+      "transition": "Fıkra yönetmeliğin ilk metnindendir; sınıfların TS EN 13501-1 karşılıkları (Ek-2/Ç) 10.8.2009 tarihli ve 2009/15316 sayılı BKK ile değişti (RG 9.9.2009/27344), önceki tablo kural setinde yok: 9.9.2009'dan önceki başvuru uzman incelemesi.",
+      "versions": [
+        {
+          "id": "2009",
+          "from": "2009-09-09",
+          "until": null,
+          "label": "9.9.2009",
+          "gazette": "19.12.2007/26735; Ek-2/Ç 9.9.2009/27344",
+          "building": 21.5,
+          "structure": 30.5,
+          "least": "normal_alevlenici",
+          "high": "zor_alevlenici",
+          "ek2c": {
+            "categories": [
+              [
+                "hic_yanmaz",
+                "hiç yanmaz"
+              ],
+              [
+                "zor_yanici",
+                "zor yanıcı"
+              ],
+              [
+                "zor_alevlenici",
+                "zor alevlenici"
+              ],
+              [
+                "normal_alevlenici",
+                "normal alevlenici"
+              ],
+              [
+                "kolay_alevlenici",
+                "kolay alevlenici"
+              ]
+            ],
+            "other": [
+              [
+                "A1",
+                "hic_yanmaz"
+              ],
+              [
+                "A2-s1,d0",
+                "zor_yanici"
+              ],
+              [
+                "A2",
+                "zor_alevlenici"
+              ],
+              [
+                "B",
+                "zor_alevlenici"
+              ],
+              [
+                "C",
+                "zor_alevlenici"
+              ],
+              [
+                "D",
+                "normal_alevlenici"
+              ],
+              [
+                "E",
+                "normal_alevlenici"
+              ],
+              [
+                "F",
+                "kolay_alevlenici"
+              ]
+            ],
+            "floor": [
+              [
+                "A1fl",
+                "hic_yanmaz"
+              ],
+              [
+                "A2fl-s1",
+                "zor_yanici"
+              ],
+              [
+                "Bfl-s1",
+                "zor_alevlenici"
+              ],
+              [
+                "Cfl-s1",
+                "zor_alevlenici"
+              ],
+              [
+                "A2fl",
+                "normal_alevlenici"
+              ],
+              [
+                "Bfl",
+                "normal_alevlenici"
+              ],
+              [
+                "Cfl",
+                "normal_alevlenici"
+              ],
+              [
+                "Dfl",
+                "normal_alevlenici"
+              ],
+              [
+                "Efl",
+                "normal_alevlenici"
+              ],
+              [
+                "Ffl",
+                "kolay_alevlenici"
+              ]
+            ],
+            "source": "BYKHY Ek-2/Ç (10.8.2009-2009/15316 ile değişik), PDF'in 89. sayfası resim olarak okundu; docs/adr/8091 §1. Bir sınıf önce tam yazımıyla, yoksa harfiyle (ve fl'siyle) eşlenir: harfin tablodaki en zayıf satırı."
+          },
+          "text": "(2) Döşeme kaplamaları en az normal alevlenici, yüksek binalarda ise en az zor alevlenici malzemeden yapılır.",
+          "source": "RG 19.12.2007/26735, 26 ncı maddenin ikinci fıkrası; Ek-2/Ç 2009/15316 ile değişik; docs/adr/8091 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "26/4",
+      "title": "Tavan kaplaması ve asma tavanın yanıcılığı",
+      "transition": "Fıkra yönetmeliğin ilk metnindendir; sınıfların TS EN 13501-1 karşılıkları (Ek-2/Ç) 10.8.2009 tarihli ve 2009/15316 sayılı BKK ile değişti (RG 9.9.2009/27344), önceki tablo kural setinde yok.",
+      "versions": [
+        {
+          "id": "2009",
+          "from": "2009-09-09",
+          "until": null,
+          "label": "9.9.2009",
+          "gazette": "19.12.2007/26735; Ek-2/Ç 9.9.2009/27344",
+          "least": "zor_alevlenici",
+          "ek2c": {
+            "categories": [
+              [
+                "hic_yanmaz",
+                "hiç yanmaz"
+              ],
+              [
+                "zor_yanici",
+                "zor yanıcı"
+              ],
+              [
+                "zor_alevlenici",
+                "zor alevlenici"
+              ],
+              [
+                "normal_alevlenici",
+                "normal alevlenici"
+              ],
+              [
+                "kolay_alevlenici",
+                "kolay alevlenici"
+              ]
+            ],
+            "other": [
+              [
+                "A1",
+                "hic_yanmaz"
+              ],
+              [
+                "A2-s1,d0",
+                "zor_yanici"
+              ],
+              [
+                "A2",
+                "zor_alevlenici"
+              ],
+              [
+                "B",
+                "zor_alevlenici"
+              ],
+              [
+                "C",
+                "zor_alevlenici"
+              ],
+              [
+                "D",
+                "normal_alevlenici"
+              ],
+              [
+                "E",
+                "normal_alevlenici"
+              ],
+              [
+                "F",
+                "kolay_alevlenici"
+              ]
+            ],
+            "floor": [
+              [
+                "A1fl",
+                "hic_yanmaz"
+              ],
+              [
+                "A2fl-s1",
+                "zor_yanici"
+              ],
+              [
+                "Bfl-s1",
+                "zor_alevlenici"
+              ],
+              [
+                "Cfl-s1",
+                "zor_alevlenici"
+              ],
+              [
+                "A2fl",
+                "normal_alevlenici"
+              ],
+              [
+                "Bfl",
+                "normal_alevlenici"
+              ],
+              [
+                "Cfl",
+                "normal_alevlenici"
+              ],
+              [
+                "Dfl",
+                "normal_alevlenici"
+              ],
+              [
+                "Efl",
+                "normal_alevlenici"
+              ],
+              [
+                "Ffl",
+                "kolay_alevlenici"
+              ]
+            ],
+            "source": "BYKHY Ek-2/Ç (10.8.2009-2009/15316 ile değişik), PDF'in 89. sayfası resim olarak okundu; docs/adr/8091 §1. Bir sınıf önce tam yazımıyla, yoksa harfiyle (ve fl'siyle) eşlenir: harfin tablodaki en zayıf satırı."
+          },
+          "text": "(4) Ayrık nizamda müstakil konutlar dışındaki binaların tavan kaplamaları ve asma tavanlarının malzemesinin en az zor alevlenici olması gerekir.",
+          "source": "RG 19.12.2007/26735, 26 ncı maddenin dördüncü fıkrası; Ek-2/Ç 2009/15316 ile değişik; docs/adr/8091 §1."
         }
       ]
     },

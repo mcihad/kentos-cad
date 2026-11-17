@@ -120,6 +120,11 @@ pub struct ArchMaterial {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub strength: Option<String>,
+    /// Its reaction to fire class (docs/adr/8091; TS EN 13501-1, BYKHY Ek-2/Ç): `A2-s1,d0`, `B-s2,d0`, `E`, a floor
+    /// covering's `Bfl-s1` (`crate::reaction_problem`), with its basis. Absent: not declared (missing).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub reaction: Option<crate::Declared>,
 }
 
 /// An office material library's format (docs/adr/0791): a file outside the drawing, as KentOS's block library (ADR 0318)

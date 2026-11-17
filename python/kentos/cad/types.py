@@ -17304,6 +17304,8 @@ class ArchMaterial(_Model):
         id: Lower-case letters, digits and “-”, at most 64; it never changes.
         cut: Its cut pen; absent: the wall's.
         hatch: Its cut's hatch; absent: drawn without one.
+        reaction: Its reaction to fire class (docs/adr/8091; TS EN 13501-1, BYKHY Ek-2/Ç): `A2-s1,d0`, `B-s2,d0`, `E`, a floor
+            covering's `Bfl-s1` (`crate::reaction_problem`), with its basis. Absent: not declared (missing).
         strength: Its strength class (docs/adr/8068; EK-6: the model's material is named `Ad_Dayanım`, “Beton_C25”, “Çelik_S355”):
             C25, S355 (`crate::strength_problem`). Absent: not given (a load-bearing material without one is missing).
     """
@@ -17313,6 +17315,7 @@ class ArchMaterial(_Model):
     cut: ComponentEdge | None | Unset = UNSET
     hatch: ComponentHatch | None | Unset = UNSET
     quantity: MaterialQuantity | MaterialQuantityName | Unset = UNSET
+    reaction: Declared | None | Unset = UNSET
     strength: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -17327,6 +17330,8 @@ class ArchMaterial(_Model):
             out["hatch"] = None if self.hatch is None else self.hatch.to_json()
         if self.quantity is not UNSET:
             out["quantity"] = _enum_out(self.quantity)
+        if self.reaction is not UNSET:
+            out["reaction"] = None if self.reaction is None else self.reaction.to_json()
         if self.strength is not UNSET:
             out["strength"] = self.strength
         return out
@@ -17340,6 +17345,7 @@ class ArchMaterial(_Model):
             cut=UNSET if "cut" not in data else None if data["cut"] is None else ComponentEdge.from_json(data["cut"]),
             hatch=UNSET if "hatch" not in data else None if data["hatch"] is None else ComponentHatch.from_json(data["hatch"]),
             quantity=_enum_in(MaterialQuantity, data["quantity"]) if "quantity" in data else UNSET,
+            reaction=UNSET if "reaction" not in data else None if data["reaction"] is None else Declared.from_json(data["reaction"]),
             strength=data.get("strength", UNSET),
         )
 
@@ -17394,7 +17400,7 @@ class ArchPerformance(_Model):
 
     Refusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `field_not_for_kind` (a class on a room,
     a grid, a line …; an exit role on anything but a door, a stair or a roof; a load-bearing role on anything but a wall
-    that is no curtain wall), `nothing_to_set`, `style_not_found`,
+    that is no curtain wall), `nothing_to_set` (an objects' or a material's operation that gives no field), `style_not_found`,
     `opening_type_not_found`, `material_not_found`, `invalid_declared`, `invalid_strength`, `invalid_revision`,
     `revision_conflict`, `layer_locked` (an object named on a locked layer: nothing is written).
     """
@@ -136974,22 +136980,29 @@ class OpeningTypePerformanceOperation(PerformanceOperation):
 
 @dataclass(kw_only=True, slots=True)
 class MaterialPerformanceOperation(PerformanceOperation):
-    """Malzeme: a material's strength class (by its id or name); null: none."""
+    """Malzeme: a material's strength class and reaction to fire class (by its id or name; docs/adr/8091). A field absent
+    stays; null takes it away.
+    """
     TAG_VALUE: ClassVar[str] = "material"
     material: str
-    strength: str | None = None
+    reaction: Declared | None | Unset = UNSET
+    strength: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "material"}
         out["material"] = self.material
-        out["strength"] = self.strength
+        if self.reaction is not UNSET:
+            out["reaction"] = None if self.reaction is None else self.reaction.to_json()
+        if self.strength is not UNSET:
+            out["strength"] = self.strength
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> MaterialPerformanceOperation:
         return cls(
             material=data["material"],
-            strength=data["strength"] if "strength" in data else None,
+            reaction=UNSET if "reaction" not in data else None if data["reaction"] is None else Declared.from_json(data["reaction"]),
+            strength=data.get("strength", UNSET),
         )
 
 

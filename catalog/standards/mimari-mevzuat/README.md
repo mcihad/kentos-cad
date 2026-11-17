@@ -24,6 +24,9 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   kolon ve kiriş R, döşeme REI, dış ve kompartıman duvarı EI, korunumlu yangın merdiveni REI 120, teras döşemesi REI,
   çatı EI, asma tavan EI 30 (docs/adr/8089); beyan edilen taşıyıcı duvar R, kaçış yolu olan çatı REI 30
   (docs/adr/8090).
+- **Kaplamaların yanıcılığı** (`kaplamalar`, docs/adr/8091): döşeme kaplaması en az normal alevlenici (yüksek binada
+  zor alevlenici, 26/2), tavan kaplaması ve asma tavan en az zor alevlenici (26/4); malzemenin TS EN 13501-1 sınıfı
+  Ek-2/Ç ile.
 - **Şaftlar ve asansörler** (`kuyular`, docs/adr/8087): yüksek binada tesisat şaftı ve baca duvarı en az 120, kapağı en
   az 90 dakika ve duman sızdırmaz (BYKHY 25/3); kaçış merdivenine ya da yangın güvenlik holüne açılan şaft kapağı (41/9);
   asansör kuyusu en az 60 dakika (62/2); asansör kapısının koridor, hol ve benzerine açılması (62/4), yangın merdiveni

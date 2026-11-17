@@ -3,7 +3,8 @@
 //! before Uygula the plan of `cad.materials.edit` says what follows (how many styles, walls and slabs, and how many stay
 //! on a locked layer). Yeni malzeme, Sil (refused while anything is bound) and Metinlerden al (every text material taken
 //! into the table) write through the same command; Stile bağla binds a wall style's component to the chosen material.
-//! Every write is one undo step “Malzeme”. Kitaplık (docs/adr/0791, `material_library.rs`) shows the material
+//! Every write is one undo step “Malzeme”; its strength and reaction to fire class (docs/adr/8091) are declarations
+//! written by `cad.arch.performance`, their own step “Yangın ve performans”. Kitaplık (docs/adr/0791, `material_library.rs`) shows the material
 //! libraries outside the drawing: KentOS's and the office's folders; Seçilenleri al takes a library's materials in,
 //! Kitaplığa yaz… writes the project's to a `.kmalzeme` file.
 
@@ -53,6 +54,12 @@ pub struct Window {
     pub hatch_color: String,
     pub pen: String,
     pub pen_color: String,
+    /// Its declarations (docs/adr/8068, 8091), written by `cad.arch.performance`: its strength and its reaction to
+    /// fire class (TS EN 13501-1); empty takes it away.
+    pub strength: String,
+    pub reaction: String,
+    /// What the declarations typed would do: their refusal's words when refused.
+    pub declared: Option<String>,
     /// The wall style components Stile bağla offers (style id, component, the words), and the one chosen.
     pub targets: Vec<(String, u32, String)>,
     pub target: Option<usize>,
@@ -117,6 +124,8 @@ pub enum Event {
     HatchColor(String),
     Pen(String),
     PenColor(String),
+    Strength(String),
+    Reaction(String),
     Target(usize),
     Bind,
     New,
@@ -187,7 +196,27 @@ fn fill(w: &mut Window, m: &ArchMaterial) {
     let c = m.cut.as_ref();
     w.pen = c.and_then(|c| c.line_weight).map_or_else(String::new, number);
     w.pen_color = c.and_then(|c| c.color.clone()).unwrap_or_default();
+    w.strength = m.strength.clone().unwrap_or_default();
+    w.reaction = m.reaction.as_ref().map(|d| d.value.clone()).unwrap_or_default();
     w.preview = None;
+    w.declared = None;
+}
+
+/// The declarations the window's fields change on `m` (docs/adr/8091): `cad.arch.performance`'s material operation,
+/// each field given only when it changed (empty takes it away); none when neither changed. A reaction class typed keeps
+/// its basis when the value is the same, else it is the author's.
+fn declared_of(w: &Window, m: &ArchMaterial) -> Option<kentos_commands::PerformanceOperation> {
+    let strength = w.strength.trim();
+    let strength = (strength != m.strength.as_deref().unwrap_or_default())
+        .then(|| (!strength.is_empty()).then(|| strength.to_owned()));
+    let reaction = w.reaction.trim();
+    let reaction = (reaction != m.reaction.as_ref().map_or("", |d| d.value.as_str()))
+        .then(|| (!reaction.is_empty()).then(|| kentos_commands::Declared::author(reaction)));
+    (strength.is_some() || reaction.is_some()).then(|| kentos_commands::PerformanceOperation::Material {
+        material: m.id.clone(),
+        strength,
+        reaction,
+    })
 }
 
 /// A decimal typed with a point or a comma; none for empty.
@@ -372,8 +401,38 @@ impl App {
                 }
             }),
         };
+        // The declarations' refusal, said before Uygula (an unreadable class, a strength with a space).
+        let declared = declared_of(w, &m).and_then(|operation| {
+            let doc = self.document.as_ref()?;
+            let input = kentos_commands::ArchPerformance { operation, expected_revision: None };
+            match kentos_native_application::arch_performance::plan_in(&doc.model, &input) {
+                CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                    Some(error.message)
+                }
+                _ => None,
+            }
+        });
         if let Some(w) = self.arch.materials.as_mut() {
             w.preview = preview;
+            w.declared = declared;
+        }
+    }
+
+    /// `cad.arch.performance` over the drawing (docs/adr/8091): the material's strength and reaction class, one step
+    /// “Yangın ve performans”; whether it was written, the refusal said.
+    fn materials_declare(&mut self, operation: kentos_commands::PerformanceOperation) -> bool {
+        let Some(doc) = self.document.as_mut() else { return false };
+        let input = kentos_commands::ArchPerformance { operation, expected_revision: None };
+        match kentos_native_application::arch_performance::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            input,
+        ) {
+            CommandResult::Completed { .. } => true,
+            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                self.warn(error.message);
+                false
+            }
+            _ => false,
         }
     }
 
@@ -402,11 +461,11 @@ impl App {
     }
 
     /// Whether the chosen material has a change Uygula has not written (docs/adr/8006).
-    fn materials_unapplied(&self) -> bool {
+    pub(crate) fn materials_unapplied(&self) -> bool {
         self.arch.materials.as_ref().is_some_and(|w| {
             w.list
                 .get(w.chosen)
-                .is_some_and(|(m, _)| change_of(w, m).is_some())
+                .is_some_and(|(m, _)| change_of(w, m).is_some() || declared_of(w, m).is_some())
         })
     }
 
@@ -435,6 +494,8 @@ impl App {
             Event::HatchColor(t) => edit(self, &|w| w.hatch_color = t.clone()),
             Event::Pen(t) => edit(self, &|w| w.pen = t.clone()),
             Event::PenColor(t) => edit(self, &|w| w.pen_color = t.clone()),
+            Event::Strength(t) => edit(self, &|w| w.strength = t.clone()),
+            Event::Reaction(t) => edit(self, &|w| w.reaction = t.clone()),
             Event::Target(i) => {
                 if let Some(w) = self.arch.materials.as_mut() {
                     w.target = Some(i);
@@ -477,6 +538,13 @@ impl App {
                         return Task::none();
                     }
                     None => {}
+                }
+                // The strength and the reaction class (docs/adr/8091): their own step, “Yangın ve performans”.
+                let declared = self.arch.materials.as_ref().and_then(|w| declared_of(w, &m));
+                if let Some(op) = declared
+                    && self.materials_declare(op)
+                {
+                    self.say(Level::Success, format!("{}: dayanım ve yanıcılık sınıfı yazıldı.", m.name));
                 }
                 self.materials_read(Some(m.id));
             }
@@ -610,7 +678,8 @@ impl App {
         };
         let body = row![left, container(right).width(Fill)].spacing(16).height(440.0);
         let chosen = !w.list.is_empty();
-        let changed = w.list.get(w.chosen).is_some_and(|(m, _)| change_of(w, m).is_some());
+        let changed =
+            w.list.get(w.chosen).is_some_and(|(m, _)| change_of(w, m).is_some() || declared_of(w, m).is_some());
         let window = Frame::new(TITLE)
             .push(tabs)
             .push(body)
@@ -660,6 +729,12 @@ impl App {
             words::field("Tarama rengi", text("Duvarınki", &w.hatch_color, Event::HatchColor), Some("#RRGGBB".into())),
             words::field("Kesit kalemi (mm)", text("Duvarınki", &w.pen, Event::Pen), None),
             words::field("Kalem rengi", text("Duvarınki", &w.pen_color, Event::PenColor), Some("#RRGGBB".into())),
+            words::field("Dayanım", text("Yok", &w.strength, Event::Strength), Some("C25, S355…".into())),
+            words::field(
+                "Yanıcılık sınıfı",
+                text("Yok", &w.reaction, Event::Reaction),
+                Some("TS EN 13501-1: A2-s1,d0, B-s1,d0, Bfl-s1…".into()),
+            ),
         ];
         let mut grid = Column::new().spacing(10);
         let mut cells = cells.into_iter();
@@ -693,6 +768,9 @@ impl App {
                 Kind::Ok,
                 "Değer yazınca Uygula'dan önce bağlı stiller, duvarlar ve döşemeler sayılır.",
             )),
+        }
+        if let Some(why) = &w.declared {
+            summary.push(words::text_line(Kind::Warn, why.clone()));
         }
         let target = Select::new(
             w.targets.iter().map(|(_, _, t)| Choice::new(t.clone())),

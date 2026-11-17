@@ -1,7 +1,8 @@
 //! `cad.arch.performance` v1 (“Yangın ve performans”, docs/adr/8068; plan/bim-plan.md BIM-07): the author's
 //! declarations for the fire regulation and the model, as one undo step: objects' own fire resistance classes and exit
 //! roles (a roof's as an escape route) and a wall's load-bearing role (docs/adr/8090), a wall style's or a door or window
-//! type's class, a material's strength, the building's fire protection class.
+//! type's class, a material's strength and reaction to fire class (docs/adr/8091), the building's fire protection
+//! class.
 //! Its plan is what it would write: the objects that carry the value then. The shared cases are
 //! `fixtures/commands/v1/cad.arch.performance.json` (`scripts/fixtures/arch_performance_cases.py`).
 //!
@@ -11,7 +12,7 @@
 
 use kentos_commands::{
     ArchPerformance, ArchPerformanceDone, CommandResult, Declared, Entity, OpeningForm, PerformanceOperation,
-    ProjectSettings, strength_problem,
+    ProjectSettings, reaction_problem, strength_problem,
 };
 use kentos_domain::{Document, Slot};
 
@@ -294,7 +295,14 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
             });
             (Work::Settings(Box::new(next)), carried)
         }
-        PerformanceOperation::Material { material, strength } => {
+        PerformanceOperation::Material { material, strength, reaction } => {
+            if strength.is_none() && reaction.is_none() {
+                return Err(fail(
+                    codes::NOTHING_TO_SET,
+                    "Ne dayanım ne yanıcılık sınıfı verildi: strength ya da reaction verin (null kaldırır).".into(),
+                    "operation",
+                ));
+            }
             let list = settings.arch.as_ref().map_or(&[][..], |a| a.materials.as_slice());
             let at = find(list.iter().enumerate().map(|(i, m)| (i, m.id.as_str(), m.name.as_str())), material)
                 .ok_or_else(|| {
@@ -304,13 +312,24 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                         "operation.material",
                     )
                 })?;
-            if let Some(why) = strength.as_deref().and_then(strength_problem) {
+            if let Some(Some(d)) = reaction {
+                declared(Some(d), "yanıcılık sınıfı", "operation.reaction")?;
+                if let Some(why) = reaction_problem(&d.value) {
+                    return Err(fail(codes::INVALID_DECLARED, why, "operation.reaction.value"));
+                }
+            }
+            if let Some(why) = strength.as_ref().and_then(|s| s.as_deref()).and_then(strength_problem) {
                 return Err(fail(codes::INVALID_STRENGTH, why, "operation.strength"));
             }
             checks::revision(doc, input.expected_revision.as_deref())?;
             let mut next = settings.clone();
             if let Some(a) = next.arch.as_mut() {
-                a.materials[at].strength.clone_from(strength);
+                if let Some(v) = strength {
+                    a.materials[at].strength.clone_from(v);
+                }
+                if let Some(v) = reaction {
+                    a.materials[at].reaction.clone_from(v);
+                }
             }
             (Work::Settings(Box::new(next)), Vec::new())
         }

@@ -302,6 +302,9 @@
       `Pset_WallCommon.LoadBearing`.
     - Ek-3/B 2 taşıyıcı iç duvar R; taşıyıcı dış ve kompartıman duvarı REI; taşıyıcı olmayan dış duvarda not (3) ile 90;
       kaçış yolu çatısı 4-a REI 30.
+  - **Malzemenin yanıcılık sınıfı (17 Kasım 2026; [ADR 8091](../adr/8091-material-reaction-to-fire.md), K120–K123):**
+    Malzemeler'de "Yanıcılık sınıfı" (TS EN 13501-1, `cad.arch.performance`, mimari verisi 14); BYKHY 26/2 döşeme
+    kaplaması ve 26/4 tavan kaplaması Ek-2/Ç'nin tablolarıyla; nizam modelde yok, tek konutlu binada uzman incelemesi.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

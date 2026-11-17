@@ -529,6 +529,7 @@ mod tests {
             hatch: None,
             cut: None,
             strength: None,
+            reaction: None,
         }
     }
 

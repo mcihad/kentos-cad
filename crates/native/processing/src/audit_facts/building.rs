@@ -41,13 +41,14 @@
 //!   (`Document::shaft_enclosures`) with its walls' and openings' declared classes; a door's being an elevator's (a side
 //!   in an elevator's shaft) and opening onto a passage (a corridor, a hall, an entrance, a lobby, a landing, a stair's
 //!   room); the structure's height (`fire_audit::heights`); roofs and terraces among Ek-3's elements.
+//! - **Coverings** (docs/adr/8091): each covering's IFC type, material and the material's declared reaction class.
 
 use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
 use kentos_extensions::audit_facts::building::{
-    BuildingFacts, DoorFacts, ElementFacts, EmsalLimit, LinkFacts, PlanNoteFacts, RoomPeople, SeparatingElement,
-    SeparationFacts, ShaftFacts, SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom,
+    BuildingFacts, CoveringFacts, DoorFacts, ElementFacts, EmsalLimit, LinkFacts, PlanNoteFacts, RoomPeople,
+    SeparatingElement, SeparationFacts, ShaftFacts, SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom,
 };
 
 /// The drawing's building facts; empty (no storey) for a project without Mimari's storeys.
@@ -234,6 +235,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         basement_depth,
         structure_height,
         shafts: enclosed,
+        coverings: coverings(doc),
     }
 }
 
@@ -303,6 +305,34 @@ fn separations(doc: &Document) -> Vec<SeparationFacts> {
             level: s.level,
             rooms: s.rooms,
             open: s.open,
+        })
+        .collect()
+}
+
+/// The coverings with their materials' declared reaction to fire classes (docs/adr/8091; BYKHY 26/2, 26/4): a material
+/// named by its id or its name (case aside) in the project's materials.
+fn coverings(doc: &Document) -> Vec<CoveringFacts> {
+    let materials = doc.settings().arch.as_ref().map_or(&[][..], |a| a.materials.as_slice());
+    doc.entities_with_uids()
+        .filter_map(|(uid, e)| {
+            let Entity::Slab(s) = e else { return None };
+            let c = s.slab.covering.as_ref()?;
+            let material = s.slab.material.clone().filter(|m| !m.trim().is_empty());
+            let reaction = material.as_deref().and_then(|name| {
+                let folded = name.to_lowercase();
+                materials
+                    .iter()
+                    .find(|m| m.id == name || m.name.to_lowercase() == folded)
+                    .and_then(|m| m.reaction.as_ref())
+                    .map(|d| d.value.clone())
+            });
+            Some(CoveringFacts {
+                uid: uid.to_string(),
+                level: e.own_level().map(str::to_owned),
+                predefined: c.predefined.clone(),
+                material,
+                reaction,
+            })
         })
         .collect()
 }

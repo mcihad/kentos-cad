@@ -56,3 +56,20 @@ fn the_declared_roles_round_trip_under_arch_data_13() {
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
     assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the role reads back");
 }
+
+/// Architecture data 14 (docs/adr/8091): a material's reaction to fire class is written with `modules.arch = 14` and
+/// read back.
+#[test]
+fn a_material_s_reaction_class_round_trips_under_arch_data_14() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_material_reactions(&doc));
+    let arch = doc.settings.arch.get_or_insert_with(Default::default);
+    let mut m: kentos_contracts::ArchMaterial =
+        serde_json::from_value(serde_json::json!({"id": "alcipan", "name": "Alçıpan"})).expect("a material");
+    m.reaction = Some(kentos_contracts::Declared::author("A2-s1,d0"));
+    arch.materials.push(m);
+    assert!(kentos_kcad::uses_material_reactions(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_MATERIAL_REACTIONS);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the class reads back");
+}

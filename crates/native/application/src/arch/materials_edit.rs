@@ -360,6 +360,7 @@ fn adopt(doc: &Document, list: &mut Vec<ArchMaterial>, styles: &mut [WallStyleDe
             hatch: c.and_then(|c| c.hatch.clone()),
             cut: c.and_then(|c| c.edge.clone()),
             strength: None,
+            reaction: None,
         };
         list.push(m.clone());
         Some(m)
@@ -580,6 +581,7 @@ fn check(doc: &Document, input: &MaterialsEdit) -> Result<Work, Stop> {
                     hatch: None,
                     cut: None,
                     strength: None,
+                    reaction: None,
                 },
                 change,
             );

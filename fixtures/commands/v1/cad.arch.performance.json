@@ -17284,6 +17284,3768 @@
       ]
     },
     {
+      "name": "Malzemenin yanıcılık sınıfı A2-s1,d0",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "material",
+              "material": "tugla",
+              "reaction": {
+                "value": "A2-s1,d0",
+                "basis": {
+                  "kind": "author"
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    },
+                    "reaction": {
+                      "value": "A2-s1,d0",
+                      "basis": {
+                        "kind": "author"
+                      }
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Yangın ve performans",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Yangın ve performans",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    },
+                    "reaction": {
+                      "value": "A2-s1,d0",
+                      "basis": {
+                        "kind": "author"
+                      }
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Döşeme malzemesinin sınıfı Bfl-s1, belgesiyle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "material",
+              "material": "betonarme",
+              "reaction": {
+                "value": "Bfl-s1",
+                "basis": {
+                  "kind": "document",
+                  "name": "Ürün performans beyanı"
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure",
+                    "reaction": {
+                      "value": "Bfl-s1",
+                      "basis": {
+                        "kind": "document",
+                        "name": "Ürün performans beyanı"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Yangın ve performans",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Yangın ve performans",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure",
+                    "reaction": {
+                      "value": "Bfl-s1",
+                      "basis": {
+                        "kind": "document",
+                        "name": "Ürün performans beyanı"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sınıf ve dayanım birlikte",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "material",
+              "material": "betonarme",
+              "strength": "C30",
+              "reaction": {
+                "value": "A1",
+                "basis": {
+                  "kind": "author"
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure",
+                    "strength": "C30",
+                    "reaction": {
+                      "value": "A1",
+                      "basis": {
+                        "kind": "author"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Yangın ve performans",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Yangın ve performans",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure",
+                    "strength": "C30",
+                    "reaction": {
+                      "value": "A1",
+                      "basis": {
+                        "kind": "author"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız sınıf: dayanım kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "material",
+              "material": "betonarme",
+              "reaction": {
+                "value": "A1",
+                "basis": {
+                  "kind": "author"
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure",
+                    "strength": "C25",
+                    "reaction": {
+                      "value": "A1",
+                      "basis": {
+                        "kind": "author"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Yangın ve performans",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure",
+                    "strength": "C25"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Yangın ve performans",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure",
+                    "strength": "C25",
+                    "reaction": {
+                      "value": "A1",
+                      "basis": {
+                        "kind": "author"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Yangın ve performans",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "wallStyles": [
+            {
+              "id": "dis-duvar",
+              "name": "Dış duvar",
+              "components": [
+                {
+                  "name": "İç sıva",
+                  "material": "İç sıva",
+                  "thickness": 0.02,
+                  "detail": "detailed"
+                },
+                {
+                  "name": "Tuğla",
+                  "material": "Tuğla",
+                  "materialId": "tugla",
+                  "edge": {
+                    "lineWeight": 0.5
+                  },
+                  "hatch": {
+                    "pattern": "ANSI31",
+                    "scale": 1.0,
+                    "angle": 0.0
+                  },
+                  "detail": "standard"
+                },
+                {
+                  "name": "Isı yalıtımı",
+                  "material": "Isı yalıtımı",
+                  "thickness": 0.05,
+                  "hatch": {
+                    "pattern": "ANSI37",
+                    "scale": 0.5,
+                    "angle": 0.0
+                  },
+                  "detail": "standard"
+                },
+                {
+                  "name": "Dış sıva",
+                  "material": "Dış sıva",
+                  "thickness": 0.03,
+                  "detail": "detailed"
+                }
+              ],
+              "width": 0.25
+            }
+          ],
+          "arch": {
+            "openingTypes": [
+              {
+                "id": "k01",
+                "name": "K01",
+                "version": 1,
+                "form": "door",
+                "width": 1.02,
+                "frame": 0.05,
+                "head": 2.1,
+                "build": {
+                  "sizeBy": "leaf",
+                  "fit": 0.01,
+                  "leafThickness": 0.04
+                }
+              }
+            ],
+            "materials": [
+              {
+                "id": "tugla",
+                "name": "Tuğla",
+                "category": "structure",
+                "hatch": {
+                  "pattern": "ANSI31",
+                  "scale": 1.0,
+                  "angle": 0.0
+                },
+                "cut": {
+                  "lineWeight": 0.5
+                }
+              },
+              {
+                "id": "betonarme",
+                "name": "Betonarme",
+                "category": "structure",
+                "strength": "C25"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kapi",
+            "name": "Kapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "mimari",
+            "name": "Mimari",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "duvar",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center",
+            "style": "dis-duvar"
+          },
+          {
+            "kind": "opening",
+            "id": 2,
+            "layerId": "kapi",
+            "attrs": {},
+            "host": "0192f5a1-8068-7000-8000-000000000001",
+            "at": 1.5,
+            "width": 1.02,
+            "form": "door",
+            "frame": 0.05,
+            "head": 2.1,
+            "style": "k01",
+            "number": "K1",
+            "typeVersion": 1,
+            "build": {
+              "sizeBy": "leaf",
+              "fit": 0.01,
+              "leafThickness": 0.04
+            },
+            "place": [
+              {
+                "x": 0.99,
+                "y": 0.125
+              },
+              {
+                "x": 0.99,
+                "y": -0.125
+              },
+              {
+                "x": 2.01,
+                "y": 0.125
+              },
+              {
+                "x": 2.01,
+                "y": -0.125
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 3,
+            "layerId": "kapi",
+            "attrs": {},
+            "host": "0192f5a1-8068-7000-8000-000000000001",
+            "at": 5.0,
+            "width": 1.2,
+            "form": "window",
+            "sill": 0.9,
+            "head": 2.1,
+            "number": "P1",
+            "place": [
+              {
+                "x": 4.4,
+                "y": 0.125
+              },
+              {
+                "x": 4.4,
+                "y": -0.125
+              },
+              {
+                "x": 5.6,
+                "y": 0.125
+              },
+              {
+                "x": 5.6,
+                "y": -0.125
+              }
+            ]
+          },
+          {
+            "kind": "column",
+            "id": 4,
+            "layerId": "mimari",
+            "attrs": {},
+            "at": {
+              "x": 20.0,
+              "y": 0.0
+            },
+            "width": 0.4,
+            "depth": 0.4
+          },
+          {
+            "kind": "stair",
+            "id": 5,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 25.0,
+                "y": 0.0
+              },
+              {
+                "x": 28.75,
+                "y": 0.0
+              }
+            ],
+            "width": 1.2,
+            "risers": 16,
+            "riserHeight": 0.175,
+            "tread": 0.25
+          },
+          {
+            "kind": "space",
+            "id": 6,
+            "layerId": "mimari",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 30.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 34.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 34.0,
+                      "y": 3.0
+                    },
+                    {
+                      "x": 30.0,
+                      "y": 3.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "Oda"
+          },
+          {
+            "kind": "grid",
+            "id": 7,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": -2.0,
+                "y": -2.0
+              },
+              {
+                "x": -2.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A"
+          },
+          {
+            "kind": "wall",
+            "id": 8,
+            "layerId": "kilitli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 10.0
+              },
+              {
+                "x": 5.0,
+                "y": 10.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center",
+            "style": "dis-duvar"
+          },
+          {
+            "kind": "wall",
+            "id": 9,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 20.0
+              },
+              {
+                "x": 5.0,
+                "y": 20.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center"
+          },
+          {
+            "kind": "roof",
+            "id": 10,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 40.0,
+                "y": 0.0
+              },
+              {
+                "x": 46.0,
+                "y": 0.0
+              },
+              {
+                "x": 46.0,
+                "y": 4.0
+              },
+              {
+                "x": 40.0,
+                "y": 4.0
+              }
+            ],
+            "slopes": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a1-8068-7000-8000-000000000001",
+          "0192f5a1-8068-7000-8000-000000000002",
+          "0192f5a1-8068-7000-8000-000000000003",
+          "0192f5a1-8068-7000-8000-000000000004",
+          "0192f5a1-8068-7000-8000-000000000005",
+          "0192f5a1-8068-7000-8000-000000000006",
+          "0192f5a1-8068-7000-8000-000000000007",
+          "0192f5a1-8068-7000-8000-000000000008",
+          "0192f5a1-8068-7000-8000-000000000009",
+          "0192f5a1-8068-7000-8000-00000000000a"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Yanıcılık sınıfı kaldırılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "material",
+              "material": "tugla",
+              "reaction": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure"
+                  }
+                ]
+              }
+            },
+            "dirty": true,
+            "canUndo": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Yangın ve performans",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    },
+                    "reaction": {
+                      "value": "A2-s1,d0",
+                      "basis": {
+                        "kind": "author"
+                      }
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Yangın ve performans",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure"
+                  }
+                ]
+              }
+            },
+            "revision": "changed"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Yangın ve performans",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "wallStyles": [
+            {
+              "id": "dis-duvar",
+              "name": "Dış duvar",
+              "components": [
+                {
+                  "name": "İç sıva",
+                  "material": "İç sıva",
+                  "thickness": 0.02,
+                  "detail": "detailed"
+                },
+                {
+                  "name": "Tuğla",
+                  "material": "Tuğla",
+                  "materialId": "tugla",
+                  "edge": {
+                    "lineWeight": 0.5
+                  },
+                  "hatch": {
+                    "pattern": "ANSI31",
+                    "scale": 1.0,
+                    "angle": 0.0
+                  },
+                  "detail": "standard"
+                },
+                {
+                  "name": "Isı yalıtımı",
+                  "material": "Isı yalıtımı",
+                  "thickness": 0.05,
+                  "hatch": {
+                    "pattern": "ANSI37",
+                    "scale": 0.5,
+                    "angle": 0.0
+                  },
+                  "detail": "standard"
+                },
+                {
+                  "name": "Dış sıva",
+                  "material": "Dış sıva",
+                  "thickness": 0.03,
+                  "detail": "detailed"
+                }
+              ],
+              "width": 0.25
+            }
+          ],
+          "arch": {
+            "openingTypes": [
+              {
+                "id": "k01",
+                "name": "K01",
+                "version": 1,
+                "form": "door",
+                "width": 1.02,
+                "frame": 0.05,
+                "head": 2.1,
+                "build": {
+                  "sizeBy": "leaf",
+                  "fit": 0.01,
+                  "leafThickness": 0.04
+                }
+              }
+            ],
+            "materials": [
+              {
+                "id": "tugla",
+                "name": "Tuğla",
+                "category": "structure",
+                "hatch": {
+                  "pattern": "ANSI31",
+                  "scale": 1.0,
+                  "angle": 0.0
+                },
+                "cut": {
+                  "lineWeight": 0.5
+                },
+                "reaction": {
+                  "value": "A2-s1,d0",
+                  "basis": {
+                    "kind": "author"
+                  }
+                }
+              },
+              {
+                "id": "betonarme",
+                "name": "Betonarme",
+                "category": "structure"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kapi",
+            "name": "Kapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "mimari",
+            "name": "Mimari",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "duvar",
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center",
+            "style": "dis-duvar"
+          },
+          {
+            "kind": "opening",
+            "id": 2,
+            "layerId": "kapi",
+            "attrs": {},
+            "host": "0192f5a1-8068-7000-8000-000000000001",
+            "at": 1.5,
+            "width": 1.02,
+            "form": "door",
+            "frame": 0.05,
+            "head": 2.1,
+            "style": "k01",
+            "number": "K1",
+            "typeVersion": 1,
+            "build": {
+              "sizeBy": "leaf",
+              "fit": 0.01,
+              "leafThickness": 0.04
+            },
+            "place": [
+              {
+                "x": 0.99,
+                "y": 0.125
+              },
+              {
+                "x": 0.99,
+                "y": -0.125
+              },
+              {
+                "x": 2.01,
+                "y": 0.125
+              },
+              {
+                "x": 2.01,
+                "y": -0.125
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 3,
+            "layerId": "kapi",
+            "attrs": {},
+            "host": "0192f5a1-8068-7000-8000-000000000001",
+            "at": 5.0,
+            "width": 1.2,
+            "form": "window",
+            "sill": 0.9,
+            "head": 2.1,
+            "number": "P1",
+            "place": [
+              {
+                "x": 4.4,
+                "y": 0.125
+              },
+              {
+                "x": 4.4,
+                "y": -0.125
+              },
+              {
+                "x": 5.6,
+                "y": 0.125
+              },
+              {
+                "x": 5.6,
+                "y": -0.125
+              }
+            ]
+          },
+          {
+            "kind": "column",
+            "id": 4,
+            "layerId": "mimari",
+            "attrs": {},
+            "at": {
+              "x": 20.0,
+              "y": 0.0
+            },
+            "width": 0.4,
+            "depth": 0.4
+          },
+          {
+            "kind": "stair",
+            "id": 5,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 25.0,
+                "y": 0.0
+              },
+              {
+                "x": 28.75,
+                "y": 0.0
+              }
+            ],
+            "width": 1.2,
+            "risers": 16,
+            "riserHeight": 0.175,
+            "tread": 0.25
+          },
+          {
+            "kind": "space",
+            "id": 6,
+            "layerId": "mimari",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 30.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 34.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 34.0,
+                      "y": 3.0
+                    },
+                    {
+                      "x": 30.0,
+                      "y": 3.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "name": "Oda"
+          },
+          {
+            "kind": "grid",
+            "id": 7,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": -2.0,
+                "y": -2.0
+              },
+              {
+                "x": -2.0,
+                "y": 6.0
+              }
+            ],
+            "name": "A"
+          },
+          {
+            "kind": "wall",
+            "id": 8,
+            "layerId": "kilitli",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 10.0
+              },
+              {
+                "x": 5.0,
+                "y": 10.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center",
+            "style": "dis-duvar"
+          },
+          {
+            "kind": "wall",
+            "id": 9,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 20.0
+              },
+              {
+                "x": 5.0,
+                "y": 20.0
+              }
+            ],
+            "width": 0.2,
+            "justify": "center"
+          },
+          {
+            "kind": "roof",
+            "id": 10,
+            "layerId": "mimari",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 40.0,
+                "y": 0.0
+              },
+              {
+                "x": 46.0,
+                "y": 0.0
+              },
+              {
+                "x": 46.0,
+                "y": 4.0
+              },
+              {
+                "x": 40.0,
+                "y": 4.0
+              }
+            ],
+            "slopes": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a1-8068-7000-8000-000000000001",
+          "0192f5a1-8068-7000-8000-000000000002",
+          "0192f5a1-8068-7000-8000-000000000003",
+          "0192f5a1-8068-7000-8000-000000000004",
+          "0192f5a1-8068-7000-8000-000000000005",
+          "0192f5a1-8068-7000-8000-000000000006",
+          "0192f5a1-8068-7000-8000-000000000007",
+          "0192f5a1-8068-7000-8000-000000000008",
+          "0192f5a1-8068-7000-8000-000000000009",
+          "0192f5a1-8068-7000-8000-00000000000a"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "Okunmayan sınıf A3",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "material",
+              "material": "tugla",
+              "reaction": {
+                "value": "A3",
+                "basis": {
+                  "kind": "author"
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_declared",
+              "message": "$any",
+              "path": "operation.reaction.value"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure"
+                  }
+                ]
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Damlası olan döşeme sınıfı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "material",
+              "material": "tugla",
+              "reaction": {
+                "value": "Bfl-s1,d0",
+                "basis": {
+                  "kind": "author"
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_declared",
+              "message": "$any",
+              "path": "operation.reaction.value"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure"
+                  }
+                ]
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş sınıf",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "material",
+              "material": "tugla",
+              "reaction": {
+                "value": "",
+                "basis": {
+                  "kind": "author"
+                }
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_declared",
+              "message": "$any",
+              "path": "operation.reaction"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure"
+                  }
+                ]
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ne dayanım ne sınıf",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "material",
+              "material": "tugla"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_set",
+              "message": "$any",
+              "path": "operation"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "fields": {
+              "1": {
+                "arch": null
+              },
+              "2": {
+                "fireRating": null,
+                "exit": null
+              },
+              "3": {
+                "fireRating": null,
+                "exit": null
+              },
+              "4": {
+                "arch": null
+              },
+              "5": {
+                "arch": null
+              },
+              "6": {
+                "arch": null
+              },
+              "7": {
+                "arch": null
+              },
+              "8": {
+                "arch": null
+              },
+              "9": {
+                "arch": null
+              },
+              "10": {
+                "arch": null
+              }
+            },
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "dis-duvar",
+                  "name": "Dış duvar",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "materialId": "tugla",
+                      "edge": {
+                        "lineWeight": 0.5
+                      },
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "width": 0.25
+                }
+              ],
+              "arch": {
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  }
+                ],
+                "materials": [
+                  {
+                    "id": "tugla",
+                    "name": "Tuğla",
+                    "category": "structure",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "cut": {
+                      "lineWeight": 0.5
+                    }
+                  },
+                  {
+                    "id": "betonarme",
+                    "name": "Betonarme",
+                    "category": "structure"
+                  }
+                ]
+              }
+            },
+            "dirty": false,
+            "canUndo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "Alt çizgili dayanım: ada _ ile eklenir",
       "steps": [
         {

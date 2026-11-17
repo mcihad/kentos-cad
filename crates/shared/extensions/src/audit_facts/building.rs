@@ -73,6 +73,10 @@ pub struct BuildingFacts {
     /// The shafts and what encloses each (docs/adr/8087; BYKHY 25/3, 41/9, 62/2).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub shafts: Vec<ShaftFacts>,
+    /// The coverings (docs/adr/8091; BYKHY 26/2, 26/4): each its IFC type, storey, material and the material's declared
+    /// reaction to fire class.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub coverings: Vec<CoveringFacts>,
     /// The project says the building has sprinklers (`settings.arch.sprinklers`): BYKHY Ek-4's notes read it.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub sprinklers: bool,
@@ -140,6 +144,22 @@ pub struct ElementFacts {
     /// A roof declared an escape route (docs/adr/8090, Ek-3/B 4-a).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub escape: bool,
+}
+
+/// A covering (docs/adr/8091): its persistent id, storey, IFC 4.3 type (`CEILING` a suspended ceiling, `FLOORING` a
+/// floor covering …), its material by name and that material's declared reaction to fire class (TS EN 13501-1); none:
+/// no material, or none declared.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct CoveringFacts {
+    pub uid: String,
+    pub level: Option<String>,
+    pub predefined: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub material: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reaction: Option<String>,
 }
 
 /// A room as a fire compartment counts it: its persistent id, its storey, its name (and number), its area as the
@@ -439,6 +459,7 @@ impl BuildingFacts {
         self.height = round(self.height, LENGTH);
         self.basement_depth = round(self.basement_depth, LENGTH);
         self.structure_height = round(self.structure_height, LENGTH);
+        self.coverings.sort_by(|a, b| a.uid.cmp(&b.uid));
         for x in &mut self.shafts {
             x.open = round(x.open, LENGTH);
             for e in x.walls.iter_mut().chain(x.openings.iter_mut()) {
