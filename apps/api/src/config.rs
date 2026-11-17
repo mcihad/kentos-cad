@@ -22,6 +22,10 @@ pub struct OidcSettings {
 #[derive(Clone, Debug)]
 pub struct Config {
     pub env_file: PathBuf,
+    /// The scan of uploaded files (docs/adr/9000 §14): `KENTOS_AV_ADDRESS` (an antivirus daemon, `tcp://host:port` or
+    /// `unix:///path`), `KENTOS_AV_REQUIRED` (refuse what it cannot scan) and `KENTOS_AV_MAX_BYTES`. Absent: the type
+    /// rules alone.
+    pub scanner: kentos_application::scan::Scanner,
     pub vars: BTreeMap<String, String>,
     pub database_url: Option<String>,
     pub owner_url: Option<String>,
@@ -289,7 +293,9 @@ impl Config {
                 );
             }
         };
+        let scanner = kentos_application::scan::Scanner::configured(|k| get(k))?;
         Ok(Self {
+            scanner,
             database_url: get(DATABASE_URL),
             owner_url: get(OWNER_URL),
             bind: get("KENTOS_API_BIND").unwrap_or_else(|| "127.0.0.1".into()),

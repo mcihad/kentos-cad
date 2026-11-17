@@ -106,7 +106,7 @@ impl SummaryRow {
 
 pub(crate) const FILE_SELECT: &str =
     "select f.id, f.side, f.purpose, f.round, f.message_id, f.state, f.doc_type,
-        f.name, f.media_type, f.size, f.sha256, f.added_by_name, f.added_at, f.source, f.blob_key
+        f.name, f.media_type, f.size, f.sha256, f.added_by_name, f.added_at, f.source, f.blob_key, f.scan, f.scan_note
    from kentos.dossier_file f";
 
 #[derive(sqlx::FromRow)]
@@ -126,6 +126,8 @@ pub(crate) struct FileRow {
     pub added_at: OffsetDateTime,
     pub source: Option<Json<FileSource>>,
     pub blob_key: String,
+    pub scan: String,
+    pub scan_note: Option<String>,
 }
 
 pub(crate) fn side_of(text: &str) -> DossierSide {
@@ -166,6 +168,8 @@ impl FileRow {
             added_at: rfc3339(self.added_at),
             source: self.source.as_ref().map(|s| s.0.clone()),
             is_project: is_project_file(&self.name, &self.doc_type),
+            scan: kentos_contracts::ScanState::of(&self.scan),
+            scan_note: self.scan_note.clone(),
         }
     }
 }

@@ -225,15 +225,110 @@ Sıra ve ayrıntı [plan/bulut.md](../../plan/bulut.md)'dedir.
 
 **Teknik işler:**
 - Kayıtta hız sınırı.
-- Yüklenen dosyanın taranması (CLOUD-06).
 - Büro kurumunda meslektaşların ortak dosyası.
 - Canlı projeyi misafir düzenleyiciyle paylaşma seçeneği (ADR 0035), kopya yerine.
 - Resmî tatilde sürenin uzaması.
 - Gerçek zamanlı bildirim.
 - Kişisel verinin saklama süresi.
-- Masaüstü istemcide portal dosyaları.
+
+Masaüstündeki portal dosyaları penceresi ADR 9001'de; yüklenen dosyanın taranması §14'te.
+
+## §12 Programların girişi: taşıyıcı oturum ve kişisel erişim anahtarı
+
+Sahibin isteği (17 Kasım 2026): “API sistemi düzgün olsun; hem masaüstünden hem de ileride yapacağımız mobil
+uygulamadan bağlanacağız … yapay zekâ ajanları için çok iyi belgelenmiş olmalı.” OIDC şimdilik bekler.
+
+- **Program oturumu:** `POST /v1/auth/token` yerel hesabın kullanıcı adı ve parolasıyla `kentos_s_` + 64 onaltılık
+  rakam verir. Tarayıcının oturumuyla aynı tablodadır (`auth_session`), yalnız türü (`bearer`), programın adı
+  (`client`) ve cihazın etiketi (`label`) eklenir: hesap oturumlarını tek tek görür ve kapatır (`/v1/me/sessions`).
+  7 gün kullanılmayınca, en geç 30 günde biter; tarayıcınınki gibi her kullanımda kayar.
+- **Kişisel erişim anahtarı:** `kentos_pat_` + 64 onaltılık rakam; adlı, `read` ya da `write`, 1–365 gün, hesap başına
+  en çok 20. `read` yalnız `GET`/`HEAD` yapar (sunucu yöntemle denetler, uç uç değil: yeni bir uç kendiliğinden
+  korunur). Bir anahtarla anahtar üretilmez ve parola değiştirilmez: sızan anahtar kendini çoğaltamaz, hesabı ele
+  geçiremez.
+- İkisinde de yalnız SHA-256 saklanır; anahtar bir kez gösterilir. Taşıyıcı istek `x-kentos-client` başlığı
+  istemez: o başlık çerezi siteler arası isteğe karşı korur, taşıyıcı anahtarı tarayıcı kendiliğinden göndermez.
+- `CLIENTS` listesine `mobile` eklendi. Göç 0044.
+
+## §13 Bulut dosyaları: hesabın yüklemesi, indirmesi
+
+Dosya projesinin revizyon yüklemesi (ADR 0031, 0045) projeye bağlıdır ve KCAD ister. Telefondaki fotoğraf, belediyeye
+gidecek PDF, ajanın raporu için tek bir yol gerekiyordu:
+
+- **Yükleme hesabındır** (`kentos.upload`, satır güvenliği: yalnız sahibi). `POST /v1/uploads` adı, boyutu ve
+  SHA-256'yı bildirir; `PUT /v1/uploads/{id}?offset=N` en çok 32 MiB'lık parçaları taşır. Satır kilidi altında
+  `offset` gelen baytlara eşit olmalıdır: iki parça karışmaz, yarıda kesilen parça yazılmaz, `GET` nereden
+  sürdürüleceğini söyler. Dosya en çok 512 MiB, hesap başına aynı anda 20 yükleme, alınmayan yükleme 24 saatte
+  silinir (saatlik temizlikte).
+- **Bir hedef alır:** projenin eki ya da başvuru dosyasının belgesi, yüklemenin kimliğiyle. Ek, yüklemeyi projenin
+  işlemi içinde alır (projenin kapsamı kişiyi de taşır): satır ve nesne birlikte taşınır ya da hiçbiri. Başvuru
+  belgesi kaydedilemezse nesne geri taşınır, yükleme yeniden denemek için yerinde kalır.
+- **İndirme bir yerde** (`apps/api/src/http/download.rs`): `ETag` = SHA-256, `If-None-Match` → 304, `Range`
+  (`a-b`, `a-`, `-n`) → 206, `If-Range`, 416. `?inline=1` yalnız hiçbir şey çalıştırmayan türleri (PDF, resim,
+  metin, video) yerinde gösterir; her yanıt `nosniff` ve `sandbox`'lı bir CSP taşır. Seçim: tus gibi ayrı bir yükleme
+  protokolü yerine projede zaten çalışan `offset` yolu genişletildi; istemcinin öğreneceği tek bir kural kalır.
+
+## §14 Tarama
+
+TODOS.md CLOUD-06 ve plan BUL-13: dışarıdan gelen dosya belediyenin personeline ulaşmadan bakılmalı.
+
+- **Tür listesi, kara liste değil:** uzantıdan tür okunur ve baytlar o türün imzasıyla başlamalıdır (`%PDF-`, PNG,
+  JPEG, KCAD, DWG, SHP, SQLite/GeoPackage, LAS…). Saklanan ortam türü bulunanınkidir, istemcinin söylediği değil.
+  `rapor.pdf.exe` bir `exe`'dir. Uzantısız dosya alınmaz.
+- **Program hiçbir adla girmez:** `MZ`, ELF, Mach-O, `dex`, `#!`. Metin diye gelen HTML, betikli SVG (`<script`,
+  `on…=`, `javascript:`), içinde program/betik adı bulunan ya da parolalı zip, makrolu ofis belgesi
+  (`vbaProject.bin`) reddedilir. Arşivin adları paylaşılan zip okuyucusuyla (bomba sınırlarıyla) okunur; 256 MiB'tan
+  büyük arşiv içi denetlenemediği için alınmaz.
+- **Zararlı yazılım:** EICAR deneme dosyası her sunucuda bulunur (kaynakta iki parça hâlinde durur, depo kendisi
+  virüs sanılmasın). `KENTOS_AV_ADDRESS` verilmişse her dosya clamd'nin INSTREAM protokolüyle (TCP ya da Unix
+  soketi) taranır. `KENTOS_AV_REQUIRED=1` ile kapalı başarısızlık: servis yoksa ya da dosya sınırından
+  (`KENTOS_AV_MAX_BYTES`, varsayılan clamd'nin 25 MiB'ı) büyükse dosya alınmaz, istemci 429 ile bekletilir.
+- **Sonuç dürüst yazılır:** `clean` yalnız bir antivirüs taradığında; yalnız tür kuralları geçtiyse `unscanned` ve
+  nedeni. Reddedilen dosya saklanmaz; gönderen 422 ve nedenini alır, sistem yöneticisinin kayıt defterine
+  “dosya alınmadı” düşer (`kentos.log_refused_file`).
+- Doğrudan gövdeyle gönderilen başvuru belgesi de aynı taramadan geçer. Göç 0045.
+
+## §15 Projenin ekleri ve çiziminin resmi
+
+- **Ekler** (`kentos.project_attachment`, CLOUD-06): rapor, pafta, çizelge, fotoğraf, kaynak dosya. Okuyan listeler
+  (`project.read`), indiren indirir (`project.download`), nesneleri değiştiren ekler ve kaldırır (`feature.write`;
+  arşivde 409, çöpte 410). İstenirse bir revizyona bağlanır. Proje sonsuza dek silinince nesneleri de gider.
+- **Çizimin resmi:** `GET …/preview.svg` çizimi sunucuda tek SVG'ye çevirir (`kentos_application::preview`):
+  telefonun, web sayfasının ve ajanın CAD görünümü yok. Çizgi, yol (yaylar örneklenir), çember, yay, elips, eğri,
+  yazı, blok (yerleştirilerek, en çok 8 kat), tarama, duvar (gövdesinin ortasından, kalınlığıyla; hizası ve kayması
+  uyulur), mekân (adıyla), kolon çizilir; gizli katman atlanır, tema renkleri kâğıdın mürekkebine çevrilir. Ölçü,
+  tablo, resim, nokta bulutu, açıklık çizilmez ve sayılır (`x-kentos-skipped`). Aynı belge aynı baytları verir.
+  Dosya projesinin resmi revizyonu ve genişliğiyle bir kez çizilip saklanır; veritabanı projesininki her istekte,
+  `ETag` veri sürümüyle (değişmemişse 304). Form ile veri giren (Veri girişi) projenin bütün çizimini görmez.
+
+## §16 API'nin açıklaması
+
+- `GET /v1/openapi.json`: OpenAPI 3.1, şemalar paylaşılan sözleşmelerden JSON Schema 2020-12 olarak (schemars).
+  Kaynağı uç kataloğu (`apps/api/src/http/openapi/catalog.rs`); her ucun Türkçe özeti, açıklaması, kimin
+  çağırabileceği, sorgu parametreleri, gövdesi ve yanıtı orada.
+- `GET /v1/llms.txt`: ajanın ilk okuyacağı kısa metin (llmstxt.org biçimi): giriş, kurallar, sık akışlar.
+- `docs/api/README.md`: insan için kılavuz (curl örnekleri, mobil ve masaüstü notları).
+- İki dosya da sunucuya gömülüdür. Testler yönlendiricinin kaynağındaki her `.route(` ile katalogu karşılaştırır
+  (eksik ya da fazla uç kırmızı) ve depodaki açıklamanın üretilenle aynı olduğunu denetler.
+
+**Ölçümler (17 Kasım 2026):**
+
+| Ölçü | Değer |
+|---|---|
+| Açıklanan uç | 120 işlem, 94 yol, 783 şema, 1,38 MB |
+| Örnek çizimlerin resmi | Konut100m2: 110 nesne çizildi, 3 ölçü atlandı; konut-3-1: 320/14; yol-ornegi: 727/0 |
+| Yeni testler | erişim 2, bulut dosyaları (HTTP) 3, tarama 5, resim 3, portal +1, açıklama 3 |
+| Tüm sunucu testleri | API 135 geçti (1 bellek sınırı testi yük altında zamanlamadan kırmızı, tek başına geçiyor); uygulama 239 |
 
 ## Kaynaklar
+
+- OpenAPI 3.1.0 (<https://spec.openapis.org/oas/v3.1.0>), JSON Schema 2020-12, llms.txt önerisi
+  (<https://llmstxt.org>).
+- HTTP koşullu istekler ve aralıklar: RFC 9110 §8.8.3 (ETag), §13 (If-None-Match, If-Range), §14 (Range, 206, 416);
+  taşıyıcı anahtar: RFC 6750.
+- Antivirüs servisinin akış protokolü (INSTREAM) ve 25 MiB'lık varsayılan sınırı: clamd belgesi
+  (<https://docs.clamav.net/manual/Usage/Scanning.html#clamd>); deneme dosyası: EICAR
+  (<https://www.eicar.org/download-anti-malware-testfile/>).
 
 - 3194 sayılı İmar Kanunu, güncel metin: <https://www.mevzuat.gov.tr/mevzuatmetin/1.5.3194.pdf>. Dayanılan maddeler:
   - m.8: planların hazırlanması ve yürürlüğe konulması;

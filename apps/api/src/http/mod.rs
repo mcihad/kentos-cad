@@ -3,8 +3,14 @@
 
 // Programs signing in with bearer tokens; an account's sessions and tokens (docs/adr/9000 §12).
 pub mod access;
+pub mod attachments;
+pub mod download;
+pub mod openapi;
+pub mod uploads;
 #[cfg(test)]
 mod access_tests;
+#[cfg(test)]
+mod cloud_files_tests;
 #[cfg(test)]
 mod addresses_tests;
 pub mod auth;
@@ -145,6 +151,9 @@ pub fn router(state: AppState) -> Router {
         .layer(RequestBodyLimitLayer::new(BODY_LIMIT));
     let api = Router::new()
         .route("/v1/health", get(health))
+        // The API described for programs and AI agents (docs/api).
+        .route("/v1/openapi.json", get(openapi::spec))
+        .route("/v1/llms.txt", get(openapi::llms))
         .route("/v1/auth/config", get(auth::config))
         .route("/v1/auth/login", post(auth::login))
         .route("/v1/auth/logout", post(auth::logout))
@@ -275,6 +284,20 @@ pub fn router(state: AppState) -> Router {
             "/v1/extension-catalogs/{catalog}/revocations",
             get(extension_catalog::list_revocations),
         )
+        // Files in the cloud (docs/adr/9000 §13-§15): attachments, pictures and the account's uploads.
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/attachments",
+            get(attachments::list).post(attachments::add),
+        )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/attachments/{attachment}",
+            get(attachments::download).delete(attachments::remove),
+        )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/preview.svg",
+            get(attachments::project_preview),
+        )
+        .route("/v1/uploads", post(uploads::begin))
         // The cloud portal (docs/adr/9000).
         .merge(portal::routes())
         .layer(middleware);
@@ -362,9 +385,29 @@ pub fn router(state: AppState) -> Router {
             usize::try_from(kentos_application::portal::files::MAX_FILE_BYTES).unwrap_or(usize::MAX),
         ));
     let dossier_files = portal::upload_routes().layer(dossier_layers);
+    // An upload's part (docs/adr/9000 §13): one part at most per request; asking and giving up share its path.
+    let part_layers = ServiceBuilder::new()
+        .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
+        .layer(TraceLayer::new_for_http().make_span_with(|req: &axum::http::Request<_>| {
+            let rid = req.headers().get("x-request-id").and_then(|v| v.to_str().ok()).unwrap_or("-");
+            tracing::info_span!("yükleme parçası", method = %req.method(), path = %req.uri().path(), request_id = %rid)
+        }))
+        .layer(PropagateRequestIdLayer::x_request_id())
+        .layer(CatchPanicLayer::new())
+        .layer(TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, UPLOAD_TIMEOUT))
+        .layer(RequestBodyLimitLayer::new(
+            usize::try_from(kentos_application::uploads::PART_MAX).unwrap_or(usize::MAX),
+        ));
+    let parts = Router::new()
+        .route(
+            "/v1/uploads/{id}",
+            put(uploads::receive).get(uploads::view).delete(uploads::cancel),
+        )
+        .layer(part_layers);
     api.merge(uploads)
         .merge(inputs)
         .merge(packages)
         .merge(dossier_files)
+        .merge(parts)
         .with_state(state)
 }

@@ -197,6 +197,11 @@ pub struct DossierFileView {
     pub source: Option<FileSource>,
     /// A KentOS project file (KCAD): it opens as a project.
     pub is_project: bool,
+    /// How far it was checked when it arrived.
+    #[serde(default)]
+    pub scan: crate::ScanState,
+    #[serde(default)]
+    pub scan_note: Option<String>,
 }
 
 /// One package as it was sent.

@@ -167,6 +167,7 @@ async fn add_file(
         (size, &sha),
         Some(doc_type),
         None,
+        None,
     )
     .await
 }
@@ -826,4 +827,76 @@ async fn administration_is_its_administrators_and_an_organisation_keeps_an_owner
     let record = platform::events(&db.app, &root, 50).await.unwrap();
     assert!(record.iter().any(|e| e.action == "tenant.create"));
     assert!(record.iter().any(|e| e.action == "user.platform_admin"));
+}
+
+/// Sends `bytes` as `name` through the account's own upload, in one part; the upload's id.
+async fn uploaded(db: &TestDb, store: &Blobs, who: &Actor, name: &str, bytes: &[u8]) -> Result<String, AppError> {
+    use sha2::Digest as _;
+    let sha: String = sha2::Sha256::digest(bytes).iter().map(|b| format!("{b:02x}")).collect();
+    let open = kentos_application::uploads::begin(
+        &db.app,
+        who,
+        kentos_contracts::UploadBegin {
+            name: name.into(),
+            size: bytes.len() as u64,
+            sha256: sha,
+        },
+    )
+    .await?;
+    let id = Uuid::parse_str(&open.id).unwrap();
+    let scanner = kentos_application::scan::Scanner::rules_only();
+    let done = kentos_application::uploads::receive(&db.app, store, &scanner, who, id, 0, bytes).await?;
+    assert!(done.received);
+    Ok(done.id)
+}
+
+#[tokio::test]
+async fn a_dossier_takes_a_scanned_upload_and_a_refusal_leaves_it_to_try_again() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let store = blobs();
+    let root = sistem(&db).await;
+    let ornek = municipality(&db, &root, "ornek", "mehmet").await;
+    let ayse = professional(&db, &root, "ayse", Profession::Architect).await;
+    let id = dossiers::create_application(
+        &db.app,
+        &ayse,
+        &ApplicationCreate {
+            tenant_id: ornek.to_string(),
+            kind: "architectural_project".into(),
+            title: "398 ada 12 parsel".into(),
+            description: String::new(),
+            site: site(),
+            owner_name: None,
+        },
+    )
+    .await
+    .unwrap();
+    // A plan sent from a phone in parts becomes the package's file, kept with the type its bytes are.
+    let upload = uploaded(&db, &store, &ayse, "zemin-etudu.pdf", b"%PDF-1.7 zemin etudu").await.unwrap();
+    let take = |purpose: &str, upload: &str| kentos_contracts::DossierFileFromUpload {
+        upload_id: upload.into(),
+        purpose: purpose.into(),
+        doc_type: Some("soil_report".into()),
+    };
+    // A wrong purpose is refused before anything moves: the upload is still there.
+    let e = files::from_upload(&db.app, &store, &ayse, id, &take("hepsi", &upload)).await.unwrap_err();
+    assert!(matches!(e, AppError::Invalid { .. }), "{e:?}");
+    let file = files::from_upload(&db.app, &store, &ayse, id, &take("package", &upload)).await.unwrap();
+    assert_eq!(
+        (file.media_type.as_str(), file.scan, file.name.as_str()),
+        ("application/pdf", kentos_contracts::ScanState::Unscanned, "zemin-etudu.pdf")
+    );
+    let (_, mut opened) = files::download(&db.app, &store, &ayse, id, Uuid::parse_str(&file.id).unwrap()).await.unwrap();
+    let mut back = Vec::new();
+    tokio::io::AsyncReadExt::read_to_end(&mut opened, &mut back).await.unwrap();
+    assert_eq!(back, b"%PDF-1.7 zemin etudu");
+    // Taken once; another account's upload is no one's here.
+    let e = files::from_upload(&db.app, &store, &ayse, id, &take("package", &upload)).await.unwrap_err();
+    assert!(matches!(e, AppError::NotFound(_)), "{e:?}");
+    let mehmet = signed_in(&db, "mehmet").await;
+    let his = uploaded(&db, &store, &mehmet, "kroki.png", b"\x89PNG\r\n\x1a\nkroki").await.unwrap();
+    let e = files::from_upload(&db.app, &store, &ayse, id, &take("package", &his)).await.unwrap_err();
+    assert!(matches!(e, AppError::NotFound(_)), "{e:?}");
 }

@@ -101,6 +101,8 @@ pub fn routes() -> Router<AppState> {
             "/v1/dossiers/{id}/files/{file}/import",
             post(dossiers::import),
         )
+        .route("/v1/dossiers/{id}/files/from-upload", post(dossiers::from_upload))
+        .route("/v1/dossiers/{id}/files/{file}/preview.svg", get(dossiers::preview))
 }
 
 /// A file's bytes coming to a dossier: under the upload limits (`super::router`).

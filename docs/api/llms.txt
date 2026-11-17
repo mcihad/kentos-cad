@@ -1,0 +1,57 @@
+# KentOS Bulut API
+
+> Belediyelerin, büroların ve meslek mensuplarının (mimar, harita mühendisi, inşaat mühendisi…) projelerini,
+> dosyalarını ve başvuru/aktarım yazışmalarını tutan bulut sunucusu. Masaüstü, mobil uygulama, web portalı ve
+> yapay zekâ ajanları aynı JSON API'yi kullanır. Bütün uçlar ve şemalar: /v1/openapi.json (OpenAPI 3.1).
+
+Bu metin bir ajanın ilk okuyacağıdır. Kurallar kısa; ayrıntı OpenAPI açıklamasında ve docs/api/README.md'de.
+
+## Giriş
+
+1. Kişisel erişim anahtarı en iyisidir: kullanıcı web portalında Hesabım → Erişim anahtarları'ndan ya da
+   `POST /v1/me/tokens {"name":"ajan","scope":"read","expiresInDays":30}` ile `kentos_pat_…` üretir ve size verir.
+   `read` anahtarı yalnız okur; değiştirmek gerekiyorsa `write` isteyin.
+2. Ya da kullanıcı adı ve parolayla: `POST /v1/auth/token {"login":"…","password":"…","client":"agent","label":"…"}`
+   → `201 {"token":"kentos_s_…","expiresAt":"…","me":{…}}`.
+3. Her istekte: `Authorization: Bearer <anahtar>`. Anahtarı sınamak için `GET /v1/me`.
+4. 401: anahtar geçersiz ya da süresi doldu → yeniden giriş. 403: hesabın yetkisi yok (ileti hangi yetki). 429:
+   `Retry-After` saniye bekleyin.
+
+## Kurallar
+
+- JSON, alan adları camelCase, kimlikler UUID metni, tarihler RFC 3339. Bayt/revizyon/imleç bazen ondalık metindir.
+- Hata gövdesi hep `ApiError`: `error` (kod), `message` (Türkçe, kullanıcıya gösterilebilir), `path` (alan),
+  `retryable`, `retryAfter`, `requestId`. `retryable: false` ise aynı isteği değiştirmeden tekrarlamayın.
+- 404 "yok" ile "göremezsin"i ayırt etmez.
+- Projeyi değiştiren her şey komuttur: `POST /v1/tenants/{tenant}/projects/{project}/commands` zarfıyla
+  (`commandName`, `version`, `tenantId`, `projectId`, `requestId`, `idempotencyKey`, `expectedVersions`, `input`).
+  Aynı `idempotencyKey` ikinci kez uygulanmaz: yanıtı kaybolan komutu aynı anahtarla tekrarlayın.
+- Silme, gönderme, onaylama gibi geri alınmaz adımlardan önce kullanıcıya sorun.
+
+## Sık akışlar
+
+- Kurumlarım ve rollerim: `GET /v1/me`. Projelerim: `GET /v1/me/projects`.
+- Projeyi aç: `GET /v1/tenants/{tenant}/projects/{project}`; künyesi: `…/details`; nesneleri: `…/features`.
+- Projenin resmi (CAD görünümü olmadan): `GET /v1/tenants/{tenant}/projects/{project}/preview.svg?width=800`.
+- Değişiklikleri izle: `GET …/events?after=<cursor>&wait=25` (uzun yoklama).
+- Dosya yükle (her boyut, kesintiye dayanıklı):
+  1. `POST /v1/uploads {"name":"rapor.pdf","size":<bayt>,"sha256":"<64 hex>"}` → `id`, `partMax`.
+  2. `PUT /v1/uploads/{id}?offset=<gelen bayt>`; gövde en çok `partMax` bayt (`application/octet-stream`).
+     Bağlantı kesilirse `GET /v1/uploads/{id}` → `receivedBytes`'tan sürdürün.
+  3. Son parçada dosya taranır ve `received: true` olur. Program, betik, makrolu belge, uzantısıyla uyuşmayan
+     içerik ve virüs reddedilir (422, neden `message`'da).
+  4. Projeye ekleyin: `POST /v1/tenants/{tenant}/projects/{project}/attachments {"uploadId":"…","note":"…"}`, ya
+     da başvuru dosyasına: `POST /v1/dossiers/{id}/files/from-upload {"uploadId":"…","purpose":"package"}`.
+- Dosya indir: `GET …/attachments/{attachment}`; `If-None-Match` (304), `Range` (206), `?inline=1` (PDF/resim).
+- Portal (belediye ↔ meslek mensubu):
+  - Meslek mensubunun dosyaları `GET /v1/me/dossiers`, kurumunki `GET /v1/tenants/{tenant}/dossiers`.
+  - Ayrıntı `GET /v1/dossiers/{id}`: `actions` o an atılabilecek adımlardır.
+  - Adım: `POST /v1/dossiers/{id}/actions {"action":"…","expectedStatus":"…","note":"…"}`. 409 başkası önce
+    davrandı demektir: ayrıntıyı yeniden okuyun.
+- Bildirimler: `GET /v1/me/notifications?unread=true`.
+
+## Belgeler
+
+- [OpenAPI 3.1 açıklaması](/v1/openapi.json): bütün uçlar, gövdeler, yanıtlar, hatalar.
+- docs/api/README.md: kılavuz, curl örnekleri, mobil ve masaüstü notları.
+- docs/adr/9000-cloud-portal.md: portalın ve bulut dosyalarının kararları.

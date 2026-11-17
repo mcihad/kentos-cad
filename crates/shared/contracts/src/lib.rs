@@ -190,6 +190,8 @@ pub mod document;
 // Programs signing in with bearer tokens (docs/adr/9000 §12).
 #[path = "core/access_keys.rs"]
 pub mod access_keys;
+#[path = "core/cloud_files.rs"]
+pub mod cloud_files;
 // The cloud portal (docs/adr/9000): accounts, catalog, organisations and platform administration; dossiers.
 #[path = "core/dossier.rs"]
 pub mod dossier;
@@ -413,6 +415,7 @@ pub use heights::*;
 pub use road::*;
 pub use document::*;
 pub use access_keys::*;
+pub use cloud_files::*;
 pub use dossier::*;
 pub use portal::*;
 pub use entity::*;

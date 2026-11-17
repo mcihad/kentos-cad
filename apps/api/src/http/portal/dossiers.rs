@@ -7,14 +7,14 @@ use std::pin::Pin;
 use axum::Json;
 use axum::body::{Body as Bytes, HttpBody};
 use axum::extract::{Path, Query, State};
-use axum::http::{HeaderMap, HeaderValue, StatusCode, header};
-use axum::response::{IntoResponse, Response};
+use axum::http::{HeaderMap, StatusCode, header};
+use axum::response::Response;
 use kentos_application::AppError;
 use kentos_application::blobs::WriteError;
 use kentos_application::portal::{detail, dossiers, files, steps};
 use kentos_contracts::{
     ApplicationCreate, DossierActionRequest, DossierDashboard, DossierDetail, DossierEdit,
-    DossierFileImport, DossierFileImported, DossierFileView, DossierList, DossierMessageView,
+    DossierFileFromUpload, DossierFileImport, DossierFileImported, DossierFileView, DossierList, DossierMessageView,
     FromProject, MessagePost,
 };
 use serde::{Deserialize, Serialize};
@@ -23,7 +23,7 @@ use super::{ListQuery, path_id};
 use crate::http::AppState;
 use crate::http::auth::Caller;
 use crate::http::error::{Body, Failure};
-use crate::http::files::{FileBody, attachment};
+use crate::http::download::{Stored, picture, respond};
 
 /// `GET /v1/me/dossiers`.
 pub async fn mine(
@@ -191,19 +191,30 @@ pub async fn upload(
                 "Dosya boş; içinde bir şey olan bir dosya seçin.",
             ));
         }
-        let media = headers
-            .get(header::CONTENT_TYPE)
-            .and_then(|v| v.to_str().ok())
-            .unwrap_or("application/octet-stream");
+        // Scanned before the other side may see it (docs/adr/9000 §14); a refused file is not kept.
+        let scanned = match state.config.scanner.check(&state.blobs, &prepared.key, &q.name).await {
+            Ok(Ok(s)) => s,
+            Ok(Err(refusal)) => {
+                let _ = state.blobs.remove(&prepared.key).await;
+                return Err(
+                    kentos_application::uploads::refused(db, &caller.0, &q.name, &refusal, "dossier").await,
+                );
+            }
+            Err(e) => {
+                let _ = state.blobs.remove(&prepared.key).await;
+                return Err(e);
+            }
+        };
         let recorded = files::record_file(
             db,
             &caller.0,
             &prepared,
             &q.name,
-            media,
+            &scanned.media_type,
             (size, &sha256),
             q.doc_type.as_deref(),
             None,
+            Some(&scanned),
         )
         .await;
         if recorded.is_err() {
@@ -244,6 +255,7 @@ pub async fn download(
     headers: HeaderMap,
     caller: Caller,
     Path((id, file)): Path<(String, String)>,
+    Query(q): Query<InlineQuery>,
 ) -> Result<Response, Failure> {
     let run = async {
         let (view, opened) = files::download(
@@ -254,25 +266,70 @@ pub async fn download(
             path_id(&file, "Dosya")?,
         )
         .await?;
-        let mut response = Bytes::new(FileBody::new(opened)).into_response();
-        let h = response.headers_mut();
-        h.insert(
-            header::CONTENT_TYPE,
-            HeaderValue::from_str(&view.media_type)
-                .unwrap_or(HeaderValue::from_static("application/octet-stream")),
-        );
-        h.insert(header::CONTENT_LENGTH, HeaderValue::from(view.size));
-        if let Ok(tag) = HeaderValue::from_str(&format!("\"{}\"", view.sha256)) {
-            h.insert(header::ETAG, tag);
-        }
-        if let Some(v) = attachment(&view.name) {
-            h.insert(header::CONTENT_DISPOSITION, v);
-        }
-        h.insert(
-            "x-content-type-options",
-            HeaderValue::from_static("nosniff"),
-        );
-        Ok(response)
+        respond(
+            &headers,
+            Stored {
+                file: opened,
+                size: view.size,
+                sha256: &view.sha256,
+                name: &view.name,
+                media_type: &view.media_type,
+                inline: matches!(q.inline.as_deref(), Some("1" | "true" | "yes")),
+            },
+        )
+        .await
+    };
+    run.await.map_err(|e| Failure::with(e, &headers))
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct InlineQuery {
+    inline: Option<String>,
+}
+
+/// `POST /v1/dossiers/{id}/files/from-upload`: a received upload (`/v1/uploads`) as a pending file (201).
+pub async fn from_upload(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    caller: Caller,
+    Path(id): Path<String>,
+    Body(input): Body<DossierFileFromUpload>,
+) -> Result<(StatusCode, Json<DossierFileView>), Failure> {
+    let run = async {
+        files::from_upload(state.db()?, &state.blobs, &caller.0, path_id(&id, "Dosya")?, &input).await
+    };
+    run.await
+        .map(|f| (StatusCode::CREATED, Json(f)))
+        .map_err(|e| Failure::with(e, &headers))
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct PreviewQuery {
+    width: Option<u32>,
+}
+
+/// `GET /v1/dossiers/{id}/files/{file}/preview.svg`: a KentOS project file of the dossier as one SVG.
+pub async fn preview(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    caller: Caller,
+    Path((id, file)): Path<(String, String)>,
+    Query(q): Query<PreviewQuery>,
+) -> Result<Response, Failure> {
+    let run = async {
+        let p = kentos_application::preview::dossier_file(
+            state.db()?,
+            &state.blobs,
+            &caller.0,
+            (path_id(&id, "Dosya")?, path_id(&file, "Dosya")?),
+            q.width.unwrap_or(kentos_application::preview::DEFAULT_WIDTH),
+            headers.get(header::IF_NONE_MATCH).and_then(|v| v.to_str().ok()),
+        )
+        .await?;
+        Ok(match p.picture {
+            Some(pic) => picture(&p.tag, Some(pic.svg), pic.drawn, pic.skipped),
+            None => picture(&p.tag, None, 0, 0),
+        })
     };
     run.await.map_err(|e| Failure::with(e, &headers))
 }

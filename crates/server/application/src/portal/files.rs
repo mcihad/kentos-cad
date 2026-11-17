@@ -142,6 +142,7 @@ pub async fn record_file(
     (size, sha256): (u64, &str),
     doc_type: Option<&str>,
     source: Option<FileSource>,
+    scanned: Option<&crate::scan::Scanned>,
 ) -> AppResult<DossierFileView> {
     let name = file_name(name)?;
     let doc_type = match doc_type.map(str::trim).filter(|d| !d.is_empty()) {
@@ -157,6 +158,8 @@ pub async fn record_file(
     };
     let media_type = if is_project_file(&name, &doc_type) {
         KCAD_MEDIA_TYPE.to_owned()
+    } else if let Some(s) = scanned {
+        s.media_type.clone()
     } else {
         let m = media_type.trim();
         if (3..=120).contains(&m.len()) && m.contains('/') && m.is_ascii() {
@@ -173,8 +176,8 @@ pub async fn record_file(
     let row: FileRow = sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "with added as (
            insert into kentos.dossier_file (id, dossier_id, side, purpose, round, state, doc_type, name, media_type,
-                                            size, sha256, blob_key, source, added_by, added_by_name)
-           values ($1, $2, $3, $4, $5, 'pending', $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                                            size, sha256, blob_key, source, added_by, added_by_name, scan, scan_note)
+           values ($1, $2, $3, $4, $5, 'pending', $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
            returning *)
          {}",
         FILE_SELECT.replace("from kentos.dossier_file f", "from added f")
@@ -193,10 +196,59 @@ pub async fn record_file(
     .bind(source.map(Json))
     .bind(actor.user_id)
     .bind(&actor.display_name)
+    .bind(scanned.map_or("unscanned", |s| s.state.code()))
+    .bind(scanned.and_then(|s| s.note.as_deref()))
     .fetch_one(&mut *tx)
     .await?;
     tx.commit().await?;
     Ok(row.view())
+}
+
+/// `POST /v1/dossiers/{id}/files/from-upload`: the caller's received upload (uploads.rs) as a pending file. The upload
+/// is given up only when the file is recorded; a refusal leaves it to try again.
+pub async fn from_upload(
+    db: &Db,
+    blobs: &Blobs,
+    actor: &Actor,
+    id: Uuid,
+    input: &kentos_contracts::DossierFileFromUpload,
+) -> AppResult<DossierFileView> {
+    let purpose = Purpose::of(&input.purpose)?;
+    let prepared = prepare(db, actor, id, purpose).await?;
+    let mut own = db.scoped(user_scope(actor)).await?;
+    let taken = crate::uploads::take(&mut own, actor, &input.upload_id).await?;
+    if taken.size > MAX_FILE_BYTES {
+        return Err(AppError::invalid_at(
+            "uploadId",
+            format!("Dosyaya eklenen bir belge en çok {} MB olabilir.", MAX_FILE_BYTES / (1024 * 1024)),
+        ));
+    }
+    blobs.promote(&taken.key, &prepared.key).await?;
+    let recorded = record_file(
+        db,
+        actor,
+        &prepared,
+        &taken.name,
+        &taken.scanned.media_type,
+        (taken.size, &taken.sha256),
+        input.doc_type.as_deref(),
+        None,
+        Some(&taken.scanned),
+    )
+    .await;
+    match recorded {
+        Ok(view) => {
+            if let Err(e) = own.commit().await {
+                // The file stands; the upload's row goes with the day's cleanup.
+                eprintln!("⚠ dosyaya eklenen yüklemenin kaydı kapatılamadı: {e}");
+            }
+            Ok(view)
+        }
+        Err(e) => {
+            let _ = blobs.promote(&prepared.key, &taken.key).await;
+            Err(e)
+        }
+    }
 }
 
 /// Removes the objects of `keys`, as far as the store lets it; a leftover object of no row is harmless.
@@ -272,6 +324,7 @@ pub async fn from_project(
         (size, &sha256),
         Some(input.doc_type.as_deref().unwrap_or("kentos_project")),
         Some(source),
+        None,
     )
     .await;
     if recorded.is_err() {

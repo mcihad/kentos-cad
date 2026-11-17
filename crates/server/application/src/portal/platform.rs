@@ -551,6 +551,14 @@ fn event_text(action: &str, actor: &str, label: &str, detail: &serde_json::Value
         "professional.pending" => format!("{actor}, “{label}” kaydını yeniden incelemeye aldı."),
         "setting.signup" if flag("open") => format!("{actor}, meslek mensubu kaydını açtı."),
         "setting.signup" => format!("{actor}, meslek mensubu kaydını kapattı."),
+        "file.refused" => {
+            let why = detail.get("reason").and_then(serde_json::Value::as_str).unwrap_or("türü alınmıyor");
+            if detail.get("verdict").and_then(serde_json::Value::as_str) == Some("infected") {
+                format!("{actor}, zararlı yazılım taşıyan “{label}” dosyasını gönderdi; dosya alınmadı ({why}).")
+            } else {
+                format!("{actor}, “{label}” dosyasını gönderdi; alınmadı: {why}")
+            }
+        }
         other => format!("{actor}: {other} ({label})"),
     }
 }

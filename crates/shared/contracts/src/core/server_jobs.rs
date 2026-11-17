@@ -65,6 +65,7 @@ pub const SERVER_JOB_TIMEOUT_DEFAULT: u32 = 600;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum ServerJobState {
@@ -97,6 +98,7 @@ impl ServerJobState {
 /// the project gets that job, whatever this one says.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ServerJobCreate {
@@ -121,6 +123,7 @@ pub struct ServerJobCreate {
 /// revision when it runs.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectExportInput {
@@ -132,6 +135,7 @@ pub struct ProjectExportInput {
 /// What a `project.processing` job does with the tool's result (docs/adr/0559 §2).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum ProcessingJobMode {
@@ -149,6 +153,7 @@ pub enum ProcessingJobMode {
 /// `expectedRevision`: a job refused (`revision_conflict`) when the project is not at it when the job runs.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ProcessingJobInput {
@@ -189,6 +194,7 @@ pub struct ProcessingJobInput {
 /// What a user says of a file to stage for a job (`POST …/projects/{project}/job-inputs`, docs/adr/0561 §1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct JobInputBegin {
@@ -205,6 +211,7 @@ pub struct JobInputBegin {
 /// `project.import` job's `upload`. It is kept as long as finished jobs are (`KENTOS_JOB_RETENTION_DAYS`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct JobInput {
@@ -221,6 +228,7 @@ pub struct JobInput {
 /// The formats a `project.import` job takes (docs/adr/0561 §1): the ones `file.import.*` commands read.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum ImportFormat {
@@ -305,6 +313,7 @@ impl ImportFormat {
 /// it staged.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectImportInput {
@@ -340,6 +349,7 @@ pub struct ProjectImportInput {
 /// project's state refuses the job (`pin_mismatch`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectAtlasInput {
@@ -377,6 +387,7 @@ pub struct ProjectAtlasInput {
 /// A succeeded `project.import` job's result (docs/adr/0561 §1).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectImportResult {
@@ -417,6 +428,7 @@ pub struct ProjectImportResult {
 /// A succeeded `project.atlas` job's result (docs/adr/0561 §2): the artifact is the PDF.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectAtlasResult {
@@ -449,6 +461,7 @@ pub struct ProjectAtlasResult {
 /// What a `project.processing` job took (docs/adr/0559 §4).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ProcessingUsage {
@@ -461,6 +474,7 @@ pub struct ProcessingUsage {
 /// A note the tool made while it ran.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ProcessingJobNote {
@@ -472,6 +486,7 @@ pub struct ProcessingJobNote {
 /// A succeeded `project.processing` job's result (docs/adr/0559 §2).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ProcessingJobResult {
@@ -524,6 +539,7 @@ pub fn import_memory_estimate(snapshot_bytes: u64, file_bytes: u64) -> u64 {
 /// A succeeded job's artifact in the object store.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ServerJobArtifact {
@@ -537,6 +553,7 @@ pub struct ServerJobArtifact {
 /// Why a job failed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ServerJobError {
@@ -554,6 +571,7 @@ pub struct ServerJobError {
 /// A job as its project's users see it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ServerJob {
@@ -603,6 +621,7 @@ pub struct ServerJob {
 /// A project's jobs, newest first, at most [`SERVER_JOB_LIST_MAX`].
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ServerJobList {

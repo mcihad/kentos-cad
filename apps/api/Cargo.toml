@@ -56,3 +56,6 @@ kentos-domain = { path = "../../crates/native/domain" }
 # The desktop's coordinate engine and registry, which the server's job must agree with to the bit (docs/adr/0631 §6).
 kentos-geometry-core = { path = "../../crates/shared/geometry-core" }
 kentos-project = { path = "../../crates/native/project" }
+# The API's description (docs/api/openapi.json): the contracts' JSON Schemas, generated and checked in a test.
+schemars = { workspace = true }
+kentos-contracts = { path = "../../crates/shared/contracts", default-features = false, features = ["schema"] }
