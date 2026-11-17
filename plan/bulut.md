@@ -76,12 +76,15 @@ sıradakileri tutar. Bir madde ancak sınaması ve gerçek pencerede görüntüs
   - Portalda e-imzala, imza işareti ve Hesabım › E-imza var (ADR 9004).
   - Gerçek kartla tek deneme: `completed 1/1`.
 
+- [x] `BUL-16` **Son gün tatile denk gelirse süre ilk iş gününe uzar** (İYUK m.8):
+  - Hafta sonu ve 2429'un sabit günleri kodda; dinî bayramlar tabloda, yönetici yıl yıl ekler (2026–2027 hazır).
+  - Arife iş günüdür; ayrıntıda `extendedFrom` ve gerekçe yer alır (ADR 9000 §19).
+
 ## Sıradakiler
 
 - [ ] `BUL-10` Portala kurum kimliğiyle giriş (OpenID Connect; sunucu tarafı ADR 0007'de hazır).
 - [ ] `BUL-12` Kayıtta hız sınırı ve otomatik kayıt koruması (girişin sınırıyla birlikte, ADR 0007).
 - [ ] `BUL-15` Aktarımda kopya yerine canlı projede misafir düzenleyici (ADR 0035) seçeneği.
-- [ ] `BUL-16` Son günün resmî tatile denk gelmesinde sürenin uzaması (kaynakla birlikte).
 - [ ] `BUL-17` Gerçek zamanlı bildirim (WebSocket); şimdi dakikada bir sorulur.
 - [ ] `BUL-18` Kişisel verinin saklama süresi ve kapanan dosyaların arşivi (KVKK).
 - [ ] `BUL-20` Belediyenin istatistikleri ve dönem raporları (PDF ve Excel).

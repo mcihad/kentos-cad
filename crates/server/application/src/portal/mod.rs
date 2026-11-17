@@ -21,6 +21,7 @@ pub mod dossiers;
 pub mod fees;
 pub mod files;
 pub mod flow;
+pub mod holidays;
 pub mod lists;
 pub mod notifications;
 pub mod organization;

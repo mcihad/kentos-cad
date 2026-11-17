@@ -198,6 +198,10 @@ async fn serve(config: Config) -> Result<(), String> {
     let proxy = http::proxy::Proxy::new(http::proxy::Reach::parse(config.proxy_allow.as_deref())?)?;
     let catalog = extension_catalog(&config, database.as_ref(), &blobs)?;
     if let Some(db) = &database {
+        // The religious holidays the legal deadlines are counted over (docs/adr/9000 §19); the fixed ones are code.
+        if let Err(e) = kentos_application::portal::holidays::load(db).await {
+            tracing::warn!("Tatil takvimi okunamadı; yalnız sabit tatiller ve hafta sonu sayılır: {e}");
+        }
         tokio::spawn(prune_events(db.clone(), config.event_retention));
         tokio::spawn(purge_trash(db.clone()));
         tokio::spawn(clean_store(db.clone(), blobs.clone(), config.job_retention));

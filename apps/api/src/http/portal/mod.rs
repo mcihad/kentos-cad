@@ -4,6 +4,7 @@
 
 mod dossiers;
 mod fees;
+mod holidays;
 mod me;
 mod organization;
 mod platform;
@@ -128,6 +129,9 @@ pub fn routes() -> Router<AppState> {
         .route("/v1/dossiers/{id}/signatures", get(signing::signatures))
         .route("/v1/signing/{transaction}/result", post(signing::deliver))
         .route("/v1/signing/{transaction}/cancel", post(signing::cancel))
+        .route("/v1/holidays", get(holidays::list))
+        .route("/v1/platform/holidays", post(holidays::add))
+        .route("/v1/platform/holidays/{day}", axum::routing::delete(holidays::remove))
 }
 
 /// A file's bytes coming to a dossier: under the upload limits (`super::router`).

@@ -8351,6 +8351,11 @@
             "description": "The caller is its responsible professional and may share it with an office of theirs or take it back.",
             "type": "boolean"
           },
+          "canSign": {
+            "default": false,
+            "description": "Whether the caller e-signs its files (docs/adr/9004): the professional's side who prepares it (an office's\neditors too), the municipality's editors and above. Whether the server has a signing key is\n`GET /v1/signing/trust`'s answer.",
+            "type": "boolean"
+          },
           "checklist": {
             "anyOf": [
               {
@@ -14984,6 +14989,53 @@
         ],
         "type": "object"
       },
+      "HolidayCreate": {
+        "description": "`POST /v1/platform/holidays`: a religious holiday's day.",
+        "properties": {
+          "day": {
+            "type": "string"
+          },
+          "halfDay": {
+            "default": false,
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "day",
+          "name"
+        ],
+        "type": "object"
+      },
+      "HolidayView": {
+        "description": "A day the offices do not work, as the deadlines count it (docs/adr/9000 §19).",
+        "properties": {
+          "day": {
+            "description": "YYYY-MM-DD.",
+            "type": "string"
+          },
+          "fixed": {
+            "description": "One of 2429 sayılı Kanun's fixed days (not in the table; not removed).",
+            "type": "boolean"
+          },
+          "halfDay": {
+            "description": "Half a day (an arife): a working day for a deadline.",
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "day",
+          "name",
+          "halfDay",
+          "fixed"
+        ],
+        "type": "object"
+      },
       "ImageEntity": {
         "description": "A picture (docs/adr/0192 §1).",
         "properties": {
@@ -18189,7 +18241,7 @@
         "description": "A legal deadline running for the municipality (İmar Kanunu m.22, m.30), counted in calendar days.",
         "properties": {
           "basis": {
-            "description": "The rule, in a sentence.",
+            "description": "The rule, in a sentence (and why the last day moved, when it did).",
             "type": "string"
           },
           "daysLeft": {
@@ -18200,6 +18252,14 @@
           "dueOn": {
             "description": "YYYY-MM-DD.",
             "type": "string"
+          },
+          "extendedFrom": {
+            "default": null,
+            "description": "The day the law's count ended on when it was not a working day (`dueOn` is then the first working day after\nit; docs/adr/9000 §19).",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "label": {
             "description": "What is due: \"Eksiklik bildirimi\", \"Karar\".",
@@ -41090,6 +41150,54 @@
         ]
       }
     },
+    "/v1/holidays": {
+      "get": {
+        "description": "Yılın tatilleri: 2429 sayılı Kanun'un sabit günleri (`fixed`) ve dinî bayramlar. Yasal sürenin son günü hafta sonuna ya da tam günlük bir tatile denk gelirse süre ilk iş gününe uzar (ayrıntıdaki `clock`: `extendedFrom`); arife (`halfDay`) iş günüdür.",
+        "operationId": "getHolidays",
+        "parameters": [
+          {
+            "description": "Yıl; yoksa bu yıl.",
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/HolidayView"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Tatil takvimi",
+        "tags": [
+          "Portal: dosyalar"
+        ]
+      }
+    },
     "/v1/invitations/accept": {
       "post": {
         "description": "Oturumdaki hesap bağlantıdaki davetle projeye katılır.",
@@ -42031,6 +42139,88 @@
           }
         },
         "summary": "Kayıt defteri",
+        "tags": [
+          "Portal: platform yönetimi"
+        ]
+      }
+    },
+    "/v1/platform/holidays": {
+      "post": {
+        "description": "Sistem yöneticisi: bir yılın bayram günleri açıklandığında. Aynı gün yeniden yazılırsa adı ve yarım gün bilgisi değişir. Sabit tatiller eklenmez.",
+        "operationId": "postPlatformHolidays",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HolidayCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HolidayView"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Dinî bayram günü ekle",
+        "tags": [
+          "Portal: platform yönetimi"
+        ]
+      }
+    },
+    "/v1/platform/holidays/{day}": {
+      "delete": {
+        "description": "Sistem yöneticisi; `day` YYYY-AA-GG. Sabit tatiller silinmez.",
+        "operationId": "deletePlatformHolidaysByDay",
+        "parameters": [
+          {
+            "description": "Kaydın kimliği.",
+            "in": "path",
+            "name": "day",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Başarılı; gövde yok."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Dinî bayram gününü sil",
         "tags": [
           "Portal: platform yönetimi"
         ]

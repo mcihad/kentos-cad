@@ -25,6 +25,8 @@ import type {
   FeeScheduleEdit,
   FeeTry,
   FileRevisions,
+  HolidayCreate,
+  HolidayView,
   MemberView,
   MunicipalityCard,
   NotificationSettings,
@@ -199,4 +201,11 @@ export const signing = {
   deliver: (transaction: string, result: unknown) => post<SigningVerdict>(`/v1/signing/${transaction}/result`, result),
   cancel: (transaction: string) => post<void>(`/v1/signing/${transaction}/cancel`),
   signatures: (dossier: string) => get<DossierSignatureView[]>(`/v1/dossiers/${dossier}/signatures`),
+};
+
+/** The holidays the legal deadlines are counted over (docs/adr/9000 §19). */
+export const holidays = {
+  list: (year: number) => get<HolidayView[]>(`/v1/holidays${query({ year })}`),
+  add: (input: HolidayCreate) => post<HolidayView>('/v1/platform/holidays', input),
+  remove: (day: string) => del<void>(`/v1/platform/holidays/${day}`),
 };

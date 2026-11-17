@@ -17,6 +17,11 @@ dueOn: string,
  */
 daysLeft: number, 
 /**
- * The rule, in a sentence.
+ * The rule, in a sentence (and why the last day moved, when it did).
  */
-basis: string, };
+basis: string, 
+/**
+ * The day the law's count ended on when it was not a working day (`dueOn` is then the first working day after
+ * it; docs/adr/9000 §19).
+ */
+extendedFrom: string | null, };

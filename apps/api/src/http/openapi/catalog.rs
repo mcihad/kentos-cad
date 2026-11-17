@@ -486,6 +486,17 @@ pub(super) fn ops() -> Vec<Op> {
             "İki taraf da okur: belge, imzalayan (sertifikadan sunucunun okuduğu), zaman ve belgenin hâlâ imzalanan \
              baytlarda olup olmadığı (`stillMatches`).",
             No, Json(200, of::<Vec<c::DossierSignatureView>>)),
+        op("GET", "/v1/holidays", DOSSIERS, "Tatil takvimi",
+            "Yılın tatilleri: 2429 sayılı Kanun'un sabit günleri (`fixed`) ve dinî bayramlar. Yasal sürenin son günü \
+             hafta sonuna ya da tam günlük bir tatile denk gelirse süre ilk iş gününe uzar (ayrıntıdaki `clock`: \
+             `extendedFrom`); arife (`halfDay`) iş günüdür.",
+            No, Json(200, of::<Vec<c::HolidayView>>)).query(&[P("year", "integer", false, "Yıl; yoksa bu yıl.")]),
+        op("POST", "/v1/platform/holidays", PLATFORM, "Dinî bayram günü ekle",
+            "Sistem yöneticisi: bir yılın bayram günleri açıklandığında. Aynı gün yeniden yazılırsa adı ve yarım gün \
+             bilgisi değişir. Sabit tatiller eklenmez.",
+            Body(of::<c::HolidayCreate>), Json(201, of::<c::HolidayView>)),
+        op("DELETE", "/v1/platform/holidays/{day}", PLATFORM, "Dinî bayram gününü sil",
+            "Sistem yöneticisi; `day` YYYY-AA-GG. Sabit tatiller silinmez.", No, Empty(204)),
         op("GET", "/v1/tenants/{tenant}/fees/schedules", FEES, "Ücret tarifeleri",
             "Kurumun tarifeleri, en yeni yıl önce: taslak, yürürlükte (`active`, en çok bir tane) ve geçmiş.",
             No, Json(200, of::<Vec<c::FeeSchedule>>)),

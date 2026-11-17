@@ -108,8 +108,41 @@ pub struct LegalClock {
     pub due_on: String,
     /// Negative once it has passed.
     pub days_left: i32,
-    /// The rule, in a sentence.
+    /// The rule, in a sentence (and why the last day moved, when it did).
     pub basis: String,
+    /// The day the law's count ended on when it was not a working day (`dueOn` is then the first working day after
+    /// it; docs/adr/9000 §19).
+    #[serde(default)]
+    pub extended_from: Option<String>,
+}
+
+/// A day the offices do not work, as the deadlines count it (docs/adr/9000 §19).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HolidayView {
+    /// YYYY-MM-DD.
+    pub day: String,
+    pub name: String,
+    /// Half a day (an arife): a working day for a deadline.
+    pub half_day: bool,
+    /// One of 2429 sayılı Kanun's fixed days (not in the table; not removed).
+    pub fixed: bool,
+}
+
+/// `POST /v1/platform/holidays`: a religious holiday's day.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct HolidayCreate {
+    pub day: String,
+    pub name: String,
+    #[serde(default)]
+    pub half_day: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

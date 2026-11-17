@@ -195,6 +195,14 @@ async fn act(
     .await
 }
 
+/// The days left of a deadline `days` from today as the law counts it: a last day the offices do not work runs to
+/// the first working day after it (docs/adr/9000 §19), so the figure depends on the calendar.
+fn legal_days(days: i64) -> i32 {
+    let today = time::OffsetDateTime::now_utc().to_offset(time::UtcOffset::from_hms(3, 0, 0).unwrap()).date();
+    let (due, _) = kentos_application::portal::holidays::current().extended(today + time::Duration::days(days));
+    i32::try_from((due - today).whole_days()).unwrap()
+}
+
 async fn notified(db: &TestDb, who: &Actor) -> Vec<String> {
     notifications::list(&db.app, who, false, 50)
         .await
@@ -370,7 +378,7 @@ async fn an_application_goes_round_by_round_under_the_law_s_deadline() {
         .expect("a building permit's deadline");
     assert_eq!(
         (clock.label.as_str(), clock.days_left),
-        ("Eksikliklerin bildirimi", 15)
+        ("Eksikliklerin bildirimi", legal_days(15))
     );
     assert!(
         notified(&db, &zeynep)
@@ -447,7 +455,7 @@ async fn an_application_goes_round_by_round_under_the_law_s_deadline() {
     );
     assert_eq!(
         resent.summary.clock.unwrap().days_left,
-        15,
+        legal_days(15),
         "fifteen days from the corrected round"
     );
     // Every round counts for the documents.
@@ -1257,4 +1265,38 @@ async fn a_dossier_s_files_are_signed_on_the_card_and_checked_against_the_server
     assert!(late.to_string().contains("iptal edildi"), "{late}");
     let wrong = signing::deliver(&db.app, &store, &ayse, Uuid::now_v7(), &result).await.unwrap_err();
     assert!(wrong.to_string().contains("ait değil"), "{wrong}");
+}
+
+#[tokio::test]
+async fn the_platform_keeps_the_religious_holidays_the_deadlines_count_over() {
+    use kentos_application::portal::holidays;
+    use kentos_contracts::HolidayCreate;
+
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let root = sistem(&db).await;
+    let someone = account(&db, "biri").await;
+    // The table comes with 2026's and 2027's bayrams; a year lists them with the law's fixed days.
+    let year = holidays::list(&db.app, &someone, 2026).await.unwrap();
+    assert!(year.iter().any(|h| h.day == "2026-05-27" && h.name.starts_with("Kurban") && !h.fixed && !h.half_day));
+    assert!(year.iter().any(|h| h.day == "2026-05-26" && h.half_day), "the arife is half a day");
+    assert!(year.iter().any(|h| h.day == "2026-10-29" && h.fixed));
+    // Only the platform's administrators write it; a far year keeps the other tests' deadlines as they are.
+    let add = HolidayCreate { day: "2031-01-24".into(), name: "Ramazan Bayramı 1. gün".into(), half_day: false };
+    let refused = holidays::add(&db.app, &someone, &add).await.unwrap_err();
+    assert!(matches!(refused, AppError::Forbidden(_)), "{refused:?}");
+    holidays::add(&db.app, &root, &add).await.unwrap();
+    let day = time::Date::from_calendar_date(2031, time::Month::January, 24).unwrap();
+    assert_eq!(holidays::current().closed(day).as_deref(), Some("Ramazan Bayramı 1. gün"));
+    assert_eq!(holidays::current().extended(day).0, day + time::Duration::days(3), "Friday to Monday");
+    let fixed = HolidayCreate { day: "2031-10-29".into(), name: "Cumhuriyet".into(), half_day: false };
+    let law = holidays::add(&db.app, &root, &fixed).await.unwrap_err();
+    assert!(law.to_string().contains("zaten tatil"), "{law}");
+    holidays::remove(&db.app, &root, "2031-01-24").await.unwrap();
+    assert_eq!(holidays::current().closed(day), None);
+    assert!(matches!(holidays::remove(&db.app, &root, "2031-01-24").await.unwrap_err(), AppError::NotFound(_)));
+    // The platform's record says who changed the calendar.
+    let events = platform::events(&db.app, &root, 20).await.unwrap();
+    assert!(events.iter().any(|e| e.action == "holiday_set") && events.iter().any(|e| e.action == "holiday_removed"));
 }

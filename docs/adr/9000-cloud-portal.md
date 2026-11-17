@@ -369,6 +369,39 @@ Plan BUL-14: başvuruyu yalnız bir kişi değil, büro yürütür. Kararlar:
 | Yeni testler | erişim 2, bulut dosyaları (HTTP) 3, tarama 5, resim 3, portal +1, açıklama 3 |
 | Tüm sunucu testleri | API 135 geçti (1 bellek sınırı testi yük altında zamanlamadan kırmızı, tek başına geçiyor); uygulama 239 |
 
+## §19 Sürenin son günü tatile denk gelirse
+
+Yasal süre (İmar Kanunu m.22 ve m.30) takvim günüyle sayılır. Son gün dairelerin çalışmadığı bir güne denk gelirse
+süre izleyen ilk iş gününe uzar. Bu, sürelerin hesabındaki genel kuraldır; 2577 sayılı İYUK m.8 son günün resmî
+tatile rastlamasını böyle yazar. Uzayan sürede ayrıntıdaki `clock` iki şey taşır:
+
+- `extendedFrom`: kanunun saydığı gün;
+- `basis`: neden uzadığını söyleyen cümle (“Son gün 19 Mayıs 2026 Salı (Atatürk'ü Anma, Gençlik ve Spor Bayramı) iş
+  günü olmadığından süre izleyen ilk iş gününe uzar: 20 Mayıs 2026 Çarşamba …”).
+
+Tatil günleri şöyle belirlenir:
+
+- **Hafta sonu ve sabit tatiller koddadır.** Sabit tatiller 2429 sayılı Kanun'un günleridir: 1 Ocak, 23 Nisan,
+  1 Mayıs, 19 Mayıs, 15 Temmuz, 30 Ağustos, 29 Ekim. Yıldan yıla değişmezler.
+- **Dinî bayramlar tablodadır** (`kentos.holiday`, migration 0050):
+  - Ay takvimiyle kaydıkları için her yıl Diyanet'in açıkladığı günler yazılır. 2026 ve 2027 göçle gelir.
+  - Sistem yöneticisi Platform ayarları › Tatil takvimi'nden ekler ve siler. Yazma, yöneticiyi denetleyen ve
+    platformun kaydına geçen iki işlevden geçer (`holiday_set`, `holiday_remove`).
+  - Sunucu tabloyu açılışta ve her değişiklikte belleğe okur.
+- **Arife yarım gündür ve süre için iş günüdür:** sabahı çalışılır. İhtiyatlı okuma budur: Kanun'un uzatmadığı bir
+  süreyi belediyeye kaçırtmaz.
+- **İdari izin tatil değildir:** süreyi uzatmaz, tabloya yazılmaz.
+
+Ölçülenler:
+
+- `holidays` sınamaları: hafta sonu, 29 Ekim ve bayram uzatır; arife uzatmaz. Kurban Bayramı'nın ilk günü 27 Mayıs
+  2026'dan 1 Haziran Pazartesi'ye; Ramazan Bayramı'nın ikinci günü 21 Mart'tan 23 Mart'a.
+- `clock` sınaması: düzeltilmiş başvurunun on beşinci günü 19 Mayıs 2026'dan 20 Mayıs'a.
+- Gerçek PostgreSQL'de: yalnız yönetici yazar (403); eklenen gün takvime hemen girer; sabit gün eklenmez; silinen gün
+  çıkar; iki değişiklik de platformun kaydında.
+- Portal sınamalarının “15 gün kaldı” beklentisi aynı takvimle hesaplanır. Sabit 15 beklemek, on beşinci günü hafta
+  sonuna denk gelen bir günde sınamayı kırardı.
+
 ## Kaynaklar
 
 - OpenAPI 3.1.0 (<https://spec.openapis.org/oas/v3.1.0>), JSON Schema 2020-12, llms.txt önerisi
@@ -384,6 +417,8 @@ Plan BUL-14: başvuruyu yalnız bir kişi değil, büro yürütür. Kararlar:
   - m.15: ifraz ve tevhid;
   - m.22: ruhsat alma şartları (belgeler, 30 ve 15 gün, eksiklerin bütün olarak yazıyla bildirimi);
   - m.30: yapı kullanma izni (30 gün).
+- Sürenin son günü: 2577 sayılı İdari Yargılama Usulü Kanunu m.8; tatiller: 2429 sayılı Ulusal Bayram ve Genel
+  Tatiller Hakkında Kanun; dinî bayramların günleri: Diyanet İşleri Başkanlığı'nın yıllık takvimi.
 - Aplikasyonun tanımı ve lisanslı büroların işleri: TKGM 2010/4 ve 2023/5 sayılı genelgeler
   (<https://www.tkgm.gov.tr/sites/default/files/2020-11/2010-4_genelge.pdf>,
   <https://www.tkgm.gov.tr/sites/default/files/2025-07/2023_5.pdf>). Röperli krokinin yalnız lisanslı bürolara ait

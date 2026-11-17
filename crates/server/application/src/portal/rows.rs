@@ -101,6 +101,7 @@ impl SummaryRow {
                 self.round(),
                 self.round_sent_at.map(|t| t.to_offset(turkey()).date()),
                 today,
+                &super::holidays::current(),
             ),
             awaiting_me: side.is_some() && flow::waiting_for(direction, status) == side,
             office_id: self.office_id.map(|o| o.to_string()),

@@ -10,6 +10,7 @@ import { icon } from '../../ui/icons';
 import { avatar, button, empty, notice, pageHeader, panel, stat } from '../../ui/kit';
 import { toast } from '../../ui/toast';
 import type { PageFn } from '../page';
+import { holidaysPanel } from './holidays';
 import { reviewProfessional } from './people';
 
 function eventIcon(e: PlatformEventView) {
@@ -123,6 +124,7 @@ export const adminSettings: PageFn = async ({ reload }) => {
     { class: 'page' },
     pageHeader({ title: 'Platform ayarları', lead: 'Bütün kurumlar için geçerli ayarlar. Her değişiklik denetim kaydına geçer.' }),
     h('div', { class: 'cols-2' }, h('div', { class: 'stack' }, panel('Kayıt', f), panel('Bildirim kanalları', notify)), panel('Giriş', h('div', { class: 'stack', style: 'gap: 8px' }, h('div', null, 'Şimdilik yerel hesaplarla giriş yapılıyor (giriş adı ve parola).'), h('div', { class: 'muted' }, 'Kurumun kendi kimlik sunucusuyla giriş (OpenID Connect) sunucuda hazır; portala sonraki adımda eklenecek.')))),
+    h('div', { style: 'margin-top: 16px' }, holidaysPanel()),
   );
   return { crumbs: [{ label: 'Sistem yönetimi', href: '#/sistem' }, { label: 'Platform ayarları' }], body };
 };
