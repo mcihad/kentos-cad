@@ -586,8 +586,40 @@ fn the_processing_list_is_an_index_an_agent_can_afford() {
             && t["id"].is_string()
             && t["label"].is_string())
     );
-    // 157 tools: 35 102 bytes, the whole list 274 957 (17 Nov).
-    assert!(size < 48_000, "{size} bytes for {} tools", tools.len());
+    // 157 tools: 35 102 bytes as one index, the whole list 274 957 (17 Nov); a page of 50 (§114).
+    assert_eq!(tools.len(), 50);
+    assert!(size < 16_000, "{size} bytes for a page");
+    // Paged to its end by next.offset: every tool once.
+    let total = all["total"].as_u64().expect("its total") as usize;
+    let mut seen: Vec<String> = Vec::new();
+    let mut page = all.clone();
+    loop {
+        seen.extend(
+            page.pointer("/output/tools")
+                .and_then(Value::as_array)
+                .expect("tools")
+                .iter()
+                .filter_map(|t| t["id"].as_str().map(str::to_owned)),
+        );
+        let Some(next) = page["next"]["offset"].as_u64() else {
+            break;
+        };
+        page = tool(
+            &mut s,
+            &mut guard,
+            "processing.list",
+            json!({ "offset": next }),
+        )
+        .expect("a page");
+    }
+    assert_eq!(seen.len(), total);
+    seen.sort();
+    seen.dedup();
+    assert_eq!(seen.len(), total, "each tool once");
+    let tools = all
+        .pointer("/output/tools")
+        .and_then(Value::as_array)
+        .expect("tools");
     let narrowed = tool(
         &mut s,
         &mut guard,
@@ -756,6 +788,28 @@ fn the_common_catalog_finds_tools_and_codes_and_says_what_next() {
         json!({ "extension": "tr.ornek.vitrin" }),
     );
     assert_eq!(code_of(ext), "not_offered");
+    // Paged (§114): a window over the commands and the others, the next one by next.offset.
+    let first = tool(
+        &mut s,
+        &mut guard,
+        "catalog.search",
+        json!({ "query": "katman", "limit": 5 }),
+    )
+    .expect("a page");
+    assert_eq!(first["commands"].as_array().map(Vec::len), Some(5));
+    assert_eq!(first["next"]["offset"], 5, "{first:#}");
+    let second = tool(
+        &mut s,
+        &mut guard,
+        "catalog.search",
+        json!({ "query": "katman", "limit": 5, "offset": 5 }),
+    )
+    .expect("the next page");
+    assert_ne!(
+        first["commands"][0]["command"],
+        second["commands"][0]["command"]
+    );
+    assert_eq!(first["total"], second["total"]);
     let nothing = tool(&mut s, &mut guard, "catalog.describe", json!({}));
     assert_eq!(code_of(nothing), "invalid_input");
     assert_eq!(

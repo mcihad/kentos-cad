@@ -597,7 +597,9 @@ pub fn tools() -> Vec<Tool> {
                     "kinds": { "type": "array", "items": { "type": "string",
                                "enum": ["command", "tool", "extension", "code"] },
                                "description": "Yalnız bu türler (verilmezse komut, araç ve eklenti)." },
-                    "limit": { "type": "integer", "minimum": 1, "maximum": 50, "default": 20 }
+                    "limit": { "type": "integer", "minimum": 1, "maximum": 50, "default": 20 },
+                    "offset": { "type": "integer", "minimum": 0, "default": 0,
+                                "description": "Sonraki sayfa: önceki yanıtın next.offset'i." }
                 }),
                 &["query"],
             ),
@@ -899,16 +901,19 @@ pub fn tools() -> Vec<Tool> {
         name: "processing.list",
         title: "İşlem araçları",
         description: "İşlemler'in araçlarının dizini (tampon, kesişim, birleştirme …, kurulu eklentilerinkiler de): \
-                      kimlik, ad, kategori ve ne yaptığı. query Türkçe sözcükle süzer (tampon, birleştir), category \
-                      bir kategoriyi verir, models kayıtlı modelleri de ekler. Bir aracın parametrelerini \
-                      processing.describe verir."
+                      kimlik, ad, kategori ve ne yaptığı; sayfa sayfa (total, next.offset). query Türkçe sözcükle \
+                      süzer (tampon, birleştir), category bir kategoriyi verir, models kayıtlı modelleri de ekler. Bir \
+                      aracın parametrelerini processing.describe verir."
             .into(),
         input: object(
             json!({
                 "query": { "type": "string", "description": "Aracın adında, kimliğinde ya da anahtar sözcüklerinde \
                            geçen sözcük (tampon, kesişim, birleştir …)." },
                 "category": { "type": "string", "description": "Kategorinin kimliği." },
-                "models": { "type": "boolean", "description": "Kayıtlı modeller de listelensin." }
+                "models": { "type": "boolean", "description": "Kayıtlı modeller de listelensin." },
+                "limit": { "type": "integer", "minimum": 1, "maximum": 200, "default": 50 },
+                "offset": { "type": "integer", "minimum": 0, "default": 0,
+                            "description": "Sonraki sayfa: önceki yanıtın next.offset'i." }
             }),
             &[],
         ),
@@ -1339,6 +1344,8 @@ fn search(host: &mut dyn Host, args: &Value) -> Result<Value, HeadlessError> {
         .and_then(Value::as_u64)
         .unwrap_or(20)
         .clamp(1, 50) as usize;
+    // A page of each list (docs/adr/8057 §114, ECO-API-07): the same window over the commands and the others.
+    let offset = args.get("offset").and_then(Value::as_u64).unwrap_or(0) as usize;
     let mut found: Vec<(usize, u32, &CommandDescriptor)> = Vec::new();
     for c in catalog() {
         if !with_commands
@@ -1374,6 +1381,7 @@ fn search(host: &mut dyn Host, args: &Value) -> Result<Value, HeadlessError> {
     let total = found.len();
     let commands: Vec<Value> = found
         .into_iter()
+        .skip(offset)
         .take(limit)
         .map(|(_, _, c)| {
             json!({
@@ -1386,8 +1394,12 @@ fn search(host: &mut dyn Host, args: &Value) -> Result<Value, HeadlessError> {
         })
         .collect();
     // The common catalog (docs/adr/8057 §109): İşlemler's tools, the installed extensions and their parts, the codes.
-    let (others, others_total, notes) = discover::others(host, &owned, kinds, limit);
+    let (others, others_total, notes) = discover::others(host, &owned, kinds, offset, limit);
     let mut answer = json!({ "commands": commands, "total": total, "others": others, "othersTotal": others_total });
+    let end = offset + limit;
+    if end < total.max(others_total) {
+        answer["next"] = json!({ "offset": end });
+    }
     if !notes.is_empty() {
         answer["notes"] = json!(notes);
     }

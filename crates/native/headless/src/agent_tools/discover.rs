@@ -64,11 +64,13 @@ fn held(hay: &str, words: &[String]) -> usize {
     words.iter().filter(|w| hay.contains(w.as_str())).count()
 }
 
-/// What `catalog.search` finds besides the commands, the best first, at most `limit`; and what it could not search.
+/// What `catalog.search` finds besides the commands, the best first, a page of `limit` from `offset`; how many in all;
+/// and what it could not search.
 pub(super) fn others(
     host: &mut dyn Host,
     words: &[String],
     kinds: Kinds,
+    offset: usize,
     limit: usize,
 ) -> (Vec<Value>, usize, Vec<String>) {
     let mut found: Vec<Found> = Vec::new();
@@ -100,7 +102,12 @@ pub(super) fn others(
             .then_with(|| a.value["id"].as_str().cmp(&b.value["id"].as_str()))
     });
     let total = found.len();
-    let list = found.into_iter().take(limit).map(|f| f.value).collect();
+    let list = found
+        .into_iter()
+        .skip(offset)
+        .take(limit)
+        .map(|f| f.value)
+        .collect();
     (list, total, notes)
 }
 

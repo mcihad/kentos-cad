@@ -11,6 +11,11 @@ use crate::HeadlessError;
 /// What an extension's tool tells a model of when to use it, at most this many characters in the index.
 const MODEL_WORDS: usize = 240;
 
+/// A page's tools when the call does not say (docs/adr/8057 §114, ECO-API-07: discovery pages, the whole ecosystem is
+/// not poured into every answer), and the most a page holds.
+const PAGE: u64 = 50;
+const MOST: u64 = 200;
+
 /// `processing.list`: the tools of `cad.processing.tools` (its `query`, `category` and `models` passed on) as an index.
 pub(super) fn list(host: &mut dyn Host, args: &Value) -> Result<Value, HeadlessError> {
     let mut input = Map::new();
@@ -58,16 +63,26 @@ pub(super) fn list(host: &mut dyn Host, args: &Value) -> Result<Value, HeadlessE
         note = "Eşleşen araç yok: başka bir sözcükle (tampon, kesişim, birleştir, alan, nokta …) ya da query'siz \
                 arayın.";
     }
+    let limit = args
+        .get("limit")
+        .and_then(Value::as_u64)
+        .unwrap_or(PAGE)
+        .clamp(1, MOST) as usize;
+    let offset = args.get("offset").and_then(Value::as_u64).unwrap_or(0) as usize;
+    let total = count(&answer);
     if let Some(tools) = answer
         .pointer_mut("/output/tools")
         .and_then(Value::as_array_mut)
     {
-        for tool in tools.iter_mut() {
-            *tool = entry(tool);
-        }
+        let page: Vec<Value> = tools.iter().skip(offset).take(limit).map(entry).collect();
+        *tools = page;
     }
     if let Some(map) = answer.as_object_mut() {
         map.insert("note".to_owned(), json!(note));
+        map.insert("total".to_owned(), json!(total));
+        if offset + limit < total {
+            map.insert("next".to_owned(), json!({ "offset": offset + limit }));
+        }
     }
     Ok(answer)
 }

@@ -5441,3 +5441,19 @@ sınaması (her katkı, tek başına ve hepsi birden), masaüstü `extensions/te
 - **Sınamalar:** eklenti paketi 1 (bölüm protokolü, Python'u ve bilgisayarları `compat.json`'la aynı söyler; işaret
   biçimi; çalışma zamanları; boş eskime listesi; bölüm listede); masaüstü (Vitrin burada çalışır, protokolü, masaüstü
   çalışma zamanı).
+
+## §114. Keşif sayfalanır (API ailesi, ECO-API-07)
+
+**17 Kasım.** Kod: headless `agent_tools.rs` (`catalog.search`'ün `offset`'i ve `next`'i), `agent_tools/discover.rs`
+(`others`'ın penceresi), `agent_tools/processing_list.rs` (`limit`, `offset`, `total`, `next`); sınamalar
+`tests/headless/agent_tools.rs`.
+
+- **Sorun.** ECO-API-07 "keşif sayfalama ve izdüşüm kullanır, bütün ekosistem her isteme doldurulmaz" der. İzdüşüm
+  vardı (§108: araç dizini parametresiz, §109: ortak katalog satır başına kısa söz ve `next`), sayfalama yoktu:
+  `catalog.search` `limit`'ten sonrasını hiç vermiyor (toplamı söyleyip ötesine geçirmiyordu), `processing.list` bütün
+  araçları tek yanıtta döküyordu (157 araç, 35 102 bayt).
+- **Karar:** `catalog.search` `offset` alır; komutlar ve öbürleri (`others`) aynı pencereyle sayfalanır, ikisinden
+  birinde ötesi varsa yanıt `next: {offset}` taşır. `processing.list` sayfa sayfadır: varsayılan 50, en çok 200 araç;
+  `total` ve `next.offset`. Bir sayfa 16 000 baytın altında; sayfalar sonuna dek okunduğunda her araç bir kez gelir.
+- **Sınamalar:** headless (dizin 50 araçlık sayfa, 16 000 baytın altında; `next.offset` ile sonuna dek her araç bir
+  kez, sayısı `total`; aramanın iki sayfası farklı komutlarla, aynı toplamla).

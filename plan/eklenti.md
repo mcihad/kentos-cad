@@ -1258,8 +1258,8 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   geçmişidir (ADR 0284, 0443): Python'u, betiği ve yeniden oynatması gizli alan ve anahtar taşımaz (§111)
   [ECO-API-13]; SDK şablonları: panel (GUI), İşlemler, taşınabilir form (§112) ve hepsi bir arada (birleşik paket)
   `kentos kek new --with`/`extension.blueprint` ile [ECO-API-10]; uyumluluk matrisi SDK'nın `compatibility`
-  bölümünde ve ortak katalogda eklenti başına (§113) [ECO-API-11]; kalan: adların SDK uyumluluk ADR'sinde
-  kesinleşmesi ve listenin geri kalanı.*
+  bölümünde ve ortak katalogda eklenti başına (§113) [ECO-API-11]; keşif izdüşümlü ve sayfalı (§108, §109, §114)
+  [ECO-API-07]; kalan: adların SDK uyumluluk ADR'sinde kesinleşmesi ve listenin geri kalanı.*
 - [ ] **Derslerden (13 Kasım):**
   - **Yazılı SDK kararlılık politikası** (QEP 425 benzeri ADR, ADIM 19'un başında): kararlı yüzey yalnız ana sürümde
     kırılır, kaldırmadan önce en az bir sürüm "eskiyor" uyarısı; deneysel yüzeyler yalnız geliştirici ortamında açılır
