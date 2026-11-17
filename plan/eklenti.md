@@ -1365,6 +1365,9 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   kaydedilmemiş taslak tanımlı; pencere kapanması, kaldırma ve belge değişimi geç geri çağırmayı etkisiz kılar, bir
   taslak başka belgeye uygulanmaz [PY-UI-17, EKL-03]; aynı tanımın masaüstü/web/mobil önizlemesi ve başsız durum testleri
   ortak fikstürlerde [PY-UI-18]. Tablo ve listede büyük veri sayfalama ve sanallaştırmayla.
+  — *17 Kasım notu: panel şemasında ızgara ya da sütun düzeni yok; masaüstü panel dar ve geniş rıhtımda tek sütundur.
+  "Sekme akordeona" ve web/mobil önizlemesi (PY-UI-13, 18) web ve mobil arayüzüne aittir; o işler bekletiliyor
+  (ADR 0228). Özel bileşen (PY-UI-15, 16) bilinçli olarak desteklenmiyor: keyfi çizici ikinci bir tasarım dili açar.*
 - [x] **Panel köprüsü** — *tamamlandı (ADR 8057 §24): `kentos.ui.panel` 1'in yedi bileşeni (metin, metin/sayı
   alanı, seçim, onay, düğme, tablo) dock'un Eklenti sekmesinde; düğme bir komutu panelin değerleriyle (`ctx.params`)
   çalıştırır, satırları tabloya; Kapı 1 denetimi; katman, alan ve nesne seçicileri (alan seçici bağlı katmanın
@@ -1587,7 +1590,19 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
   durum dosyalarıyla, eklenti aracı tek örnek koşucusuyla aynı bağımsız beklentilere bağlı.*
 - [ ] Taşınabilir UI/kural/değer kodlayıcı/doğrulama aynı profilde eşdeğer sonuç [ECO-QA-07]; eklenti UI görsel testleri
   ile durum/odak/değer korunumu, kaldırma, geç geri çağırma ve doğrulama gezinmesi gerçek girdiyle [ECO-QA-08].
-- [ ] ACL testleri ham HTTP/genel komut/Python/eklenti/AI/tablo/arama/dışa aktarma ve olay yollarını kapsar [ECO-QA-09].
+- [x] ACL testleri ham HTTP/genel komut/Python/eklenti/AI/tablo/arama/dışa aktarma ve olay yollarını kapsar [ECO-QA-09].
+  — *17 Kasım'da gözden geçirildi, karşılanmış:
+  - Ham HTTP: uçlar çağıranın erişimini (`project_access`) uygulama katmanına verir; orada Veri girişinin erişimi
+    sınanır (`project_reach.rs`: sayı, kapsam, olay, çakışma, form araması; formları geri çekilen katman; işaretli
+    alanı kesilen kopya; dışa aktarma işi).
+  - Olay: WebSocket gerçek TCP üzerinde, yetkisi alınanın aboneliği hemen kesilir (`ws_tests.rs`).
+  - Genel komut, tablo, arama, dışa aktarma (MCP): okuma komutunun kayıt sayfası, nesne sayfaları, öznitelik haritası,
+    birleştirme, çakışma ve istatistik, ifade/süzgeç/sıralama, yazılan dosya, günlük; gizli alana yazım koşmadan
+    reddedilir (`agent_veil.rs`, `veil/tests.rs`).
+  - Python ve AI: masaüstü bağlantısındaki ajan (`an_agent_reads_no_value_of_a_field_the_drawing_withholds`);
+    Asistan'ın ilke ve ajan ayarı (`values_tests.rs`).
+  - Eklenti: ajanın çalıştırdığı eklenti aracının parametresi ve modeli (§108, `veil/reads.rs`). Eklentinin kendi
+    kodu kullanıcının verdiği `document.read`'le okur; bu kullanıcının kararıdır.*
 - [x] İşlemler değişiklik kümesi, tipli katman/tablo/dosya hedefi, yinelenen deneme ve hazırlanmış eser temizliği hata
   enjeksiyonuyla [ECO-QA-10]. Taslak/sürüm onay özeti, paket kurcalama, kapsam yükseltme ve yayımlanmamış görünürlük
   olumsuz testleri [ECO-QA-11]. Kilitli ortamda çevrimdışı çalışma, eksik tekerlek, geri alınan aracı izni ve değişen
