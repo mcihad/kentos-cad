@@ -229,6 +229,7 @@ bütün panel `ui.panel(başlık, bileşenler)`); panelin şemasından üretilir
 Her bölüm tek başına alınır: `extension.sdk` ile `part`, ya da `kentos kek sdk --part <bölüm>`.
 
 - `auditExamplesSchema`: Kuralın örnekleri (kentos.auditExamples 1): nesneler (features) ya da mimari olgular (architecture) ve beklenen bulgular (count; has: severity, message, feature, fix). kentos kek test çalıştırır.
+- `compatibility`: Protokol, Python, bilgisayarlar, çalışma zamanları, eskiyen adlar: extension.sdk part=compatibility.
 - `example`: Her katkı türünün çalışan örneği (manifest, Python, panel, araç tanımı, form, katman şeması), doğrulamadan geçen bir paket: extension.sdk part=example ya da kentos kek sdk --part example. İskelet için extension.blueprint.
 - `factsSchema`: Denetim kuralının okuduğu ölçülmüş olguların (facts.project, kentos.auditFacts 1) JSON Schema'sı: katman başına geometriye göre nesne sayıları, geçersiz geometriler, alanların çakışmaları ve boşluklar; mimari çizimde katlar, mahaller, PAİY alanları ve kaçış yolları: extension.sdk part=factsSchema ya da kentos kek sdk --part factsSchema.
 - `icons`: Yerleşik ikonlar tire biçiminde yazılır (zoom-extents, space-number, layer-fields). Tamamı: extension.sdk part=icons ya da kentos kek sdk --part icons. Yoksa paketteki 20×20 çizgi .svg.

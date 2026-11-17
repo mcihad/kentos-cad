@@ -25,7 +25,7 @@ use crate::manifest::{Manifest, PythonProject};
 pub const KENTOS_PYTHON: (u64, u64) = (3, 12);
 
 /// The minor versions of the Python 3 KentOS runs (compat.json's `range`, `>=3.10,<3.15`).
-const PYTHON_MINORS: std::ops::RangeInclusive<u64> = 10..=14;
+pub const PYTHON_MINORS: std::ops::RangeInclusive<u64> = 10..=14;
 
 /// A processor KentOS runs on.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -63,7 +63,7 @@ impl Machine {
     }
 
     /// Python's `platform.machine()` on `os`: what markers name it by.
-    fn platform_machine(self, os: Os) -> &'static str {
+    pub fn platform_machine(self, os: Os) -> &'static str {
         match (os, self) {
             (Os::Windows, Machine::X86_64) => "AMD64",
             (Os::Windows, Machine::Aarch64) => "ARM64",

@@ -5414,3 +5414,30 @@ sınaması (her katkı, tek başına ve hepsi birden), masaüstü `extensions/te
 - **Gerçek kullanım:** `kentos kek new … --with form` 11 dosya yazdı; `kentos kek verify` 0 uyarıyla geçti, kuru koşu 3
   katkıyı bağladı (form, sekme, Katmanları kur). Masaüstünde her katkılı iskelet kuruldu; formu ajanların ortak
   kataloğunda `form` olarak görünür (`ext.<eklenti>.alan`).
+
+## §113. Uyumluluk matrisi keşfedilebilir: SDK'da bir bölüm, ortak katalogda eklenti başına (API ailesi, ECO-API-11)
+
+**17 Kasım.** Kod: eklenti paketi `sdk_pack.rs` (`compatibility` bölümü, ana pakette yeri), `python/builds.rs`
+(`PYTHON_MINORS`, `Machine::platform_machine` açıldı); masaüstü `extensions/catalog_agents.rs` (eklentinin
+`compatibility`'si); SDK paketi (`sdk/llms.txt`) yeniden üretildi; sınamalar `sdk_pack.rs`,
+`extensions/tests/catalog.rs`.
+
+- **Sorun.** ECO-API-11 "uyumluluk/ABI/eskime ve çalışma zamanı matrisi keşfedilebilir" der. Bilgi vardı ama dağınıktı
+  ve okunamıyordu: eklenti protokolü `compat.rs`'te, Python aralığı, kurulan Python ve bilgisayarlar
+  `python-env/compat.json`'da ve `python/builds.rs`'in sabitlerinde, eskiyen ve deneysel adlar `sdk_surface.rs`'te,
+  çalışma zamanları manifestte ve araç tanımında. Ajan ya da yazar "bu eklenti hangi KentOS'ta, hangi bilgisayarda,
+  hangi Python'la, nerede çalışır" sorusunu kapıdan geri çevrilerek öğreniyordu.
+- **Karar: SDK'nın `compatibility` bölümü** (`kentos kek sdk --part compatibility`, `extension.sdk part=compatibility`):
+  bu KentOS'un eklenti protokolü, manifestin uyumluluk alanlarının anlamı ve kararlılık kuralı (ADR 8061); Python
+  aralığı (`>=3.10,<3.15`) ve kurulan sürüm (3.12); altı bilgisayar ve kilidin onları andığı işaretler (`sys_platform ==
+  'win32' and platform_machine == 'AMD64'` …, tekerleklerin ABI'si); çalışma zamanları (masaüstü her katkıyı, başsız
+  yalnız `headless-python` bildiren İşlemler araçlarını çalıştırır; bulut bildirilebilir, eklenti kodu orada henüz
+  çalışmaz) ve eskiyen/deneysel adlar (bugün boş). Kapıların kullandığı sabitlerden okunur: kapılardan başka bir şey
+  söyleyemez; sınama Python tarafıyla (`compat.json`) aynı olduğunu da denetler. Ana pakette yalnız yeri yazılı (48 000
+  baytlık bütçe).
+- **Eklenti başına:** ortak katalogdaki tanım (`catalog.describe` extension, §109) `compatibility`'yi bu bilgisayara
+  göre verir: protokol aralığı ve buradaki, KentOS aralığı ve buradaki sürüm, sistemler, çalışma zamanları, burada
+  çalışıp çalışmadığı ve nedeni, eskime notu ve yerine geçen.
+- **Sınamalar:** eklenti paketi 1 (bölüm protokolü, Python'u ve bilgisayarları `compat.json`'la aynı söyler; işaret
+  biçimi; çalışma zamanları; boş eskime listesi; bölüm listede); masaüstü (Vitrin burada çalışır, protokolü, masaüstü
+  çalışma zamanı).

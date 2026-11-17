@@ -27,6 +27,19 @@ fn an_installed_extension_is_in_the_agents_catalog() {
         vitrin["python"]["requirements"],
         json!(["shapely>=2.0,<2.1", "numpy>=2.0,<3"])
     );
+    // What it was written for, judged here (docs/adr/8057 §113): it runs on this KentOS.
+    let compat = &vitrin["compatibility"];
+    assert_eq!(compat["fitsHere"], true, "{compat:#}");
+    assert_eq!(
+        compat["sdkProtocol"]["here"],
+        kentos_extensions::SDK_PROTOCOL
+    );
+    assert!(
+        compat["runtimes"]
+            .as_array()
+            .is_some_and(|r| r.iter().any(|x| x == "desktop")),
+        "{compat:#}"
+    );
     // Its capabilities, as asked and as given (the manager's install gives everything).
     let caps = vitrin["capabilities"].as_array().expect("capabilities");
     assert!(

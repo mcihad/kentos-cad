@@ -222,7 +222,7 @@ pub const FACTS_SCHEMA: &str = include_str!("../sdk/kentos-audit-facts.schema.js
 pub const AUDIT_EXAMPLES_SCHEMA: &str = include_str!("../sdk/kentos-audit-examples.schema.json");
 
 /// The pack's parts an agent may ask for alone (`extension.sdk`'s `part`, `kentos kek sdk --part`).
-pub const PARTS: [&str; 18] = [
+pub const PARTS: [&str; 19] = [
     "guide",
     "api",
     "capabilities",
@@ -241,6 +241,7 @@ pub const PARTS: [&str; 18] = [
     "toolSchema",
     "factsSchema",
     "auditExamplesSchema",
+    "compatibility",
 ];
 
 /// One part of the pack; none for a name the pack has not. `icons` is the whole list, which the pack only counts: its
@@ -278,6 +279,9 @@ pub fn sdk_part(part: &str) -> Option<Value> {
     if part == "verifyCodes" {
         return Some(verify_codes());
     }
+    if part == "compatibility" {
+        return Some(compatibility());
+    }
     // Each panel component's behaviour (docs/adr/8057 §71): the table the panel session refuses by.
     if part == "panelBehaviour" {
         return serde_json::to_value(crate::ui_panel::behaviour::TABLE).ok();
@@ -286,6 +290,70 @@ pub fn sdk_part(part: &str) -> Option<Value> {
         return None;
     }
     sdk_pack().get_mut(part).map(Value::take)
+}
+
+/// What a package can be written for, as one matrix (plan/eklenti.md ADIM 21 › API ailesi, ECO-API-11: "uyumluluk/
+/// ABI/eskime ve çalışma zamanı matrisi keşfedilebilir"; docs/adr/8057 §113): the extension protocol this KentOS speaks
+/// and its stability rule, the Python versions it runs and installs, the computers it runs on with the markers a lock
+/// names them by (the wheels' ABI), the runtimes and what each runs, and the SDK's deprecated and experimental names.
+/// Read from the constants KentOS itself checks with, so it cannot say otherwise than the gates do.
+fn compatibility() -> Value {
+    use crate::compat::{Os, SDK_PROTOCOL};
+    use crate::python_builds::{KENTOS_PYTHON, PLATFORMS, PYTHON_MINORS};
+    let platforms: Vec<Value> = PLATFORMS
+        .iter()
+        .map(|(os, machine)| {
+            json!({
+                "os": os.id(),
+                "machine": machine.id(),
+                "marker": format!(
+                    "sys_platform == '{}' and platform_machine == '{}'",
+                    os.sys_platform(),
+                    machine.platform_machine(*os)
+                ),
+            })
+        })
+        .collect();
+    let deprecated: Vec<Value> = crate::sdk_surface::DEPRECATED
+        .iter()
+        .map(|d| json!({ "name": d.name, "on": d.on, "replacement": d.replacement, "since": d.since, "note": d.note }))
+        .collect();
+    let experimental: Vec<Value> = crate::sdk_surface::EXPERIMENTAL
+        .iter()
+        .map(|e| json!({ "name": e.name, "on": e.on, "note": e.note }))
+        .collect();
+    json!({
+        "protocol": {
+            "current": SDK_PROTOCOL,
+            "manifest": "compatibility.sdkProtocol {min, max} iki ucu dahil; compatibility.kentos {min, \
+                         maxExclusive}; compatibility.operatingSystems verilmezse her sistem. Uymayan paket kurulmaz, \
+                         nedeni söylenir.",
+            "stability": "Kararlı yüzey yalnız protokol artınca kırılır; eskiyen ad en az bir KentOS sürümü kalır ve \
+                          uyarır (sdk_deprecated); deneysel ad atölyede çalışır, katalogda yayımlanamaz \
+                          (sdk_experimental). Düz yeniden adlandırmayı kentos kek upgrade yazar (ADR 8061).",
+        },
+        "python": {
+            "range": format!(">=3.{},<3.{}", PYTHON_MINORS.start(), PYTHON_MINORS.end() + 1),
+            "installs": format!("{}.{}", KENTOS_PYTHON.0, KENTOS_PYTHON.1),
+            "note": "pyproject'in requires-python'u bu aralıkta kalmalı; kilit her sistem için tekerlekle çözülür \
+                     ([tool.uv] required-environments, aşağıdaki işaretler). Tekerleği olmayan paket o bilgisayarda \
+                     kaynağından derlenir ya da kurulamaz (python_source_build, python_no_wheel).",
+        },
+        "systems": Os::ALL
+            .iter()
+            .map(|os| json!({ "id": os.id(), "sysPlatform": os.sys_platform() }))
+            .collect::<Vec<_>>(),
+        "platforms": platforms,
+        "runtimes": [
+            { "id": "desktop", "runs": "Her katkı: komut, panel, form, harita aracı, veri kaynağı, İşlemler aracı, \
+                                         denetim kuralı, ifade işlevi." },
+            { "id": "headless", "runs": "İşlemler araçları, tanımı capabilities.runtimes'ta headless-python \
+                                          bildirdiyse (MCP, Python, kentos kek test); arayüz katkıları yok." },
+            { "id": "cloud", "runs": "Bildirilebilir; bulutta eklenti kodu henüz çalışmaz (ADIM 22A)." }
+        ],
+        "deprecated": deprecated,
+        "experimental": experimental,
+    })
 }
 
 /// What each code `verify` says means, a part of its own since 16 November 2026 (1,3 KB): the pack was at the size the
@@ -468,6 +536,10 @@ pub fn sdk_pack() -> Value {
         "auditExamplesSchema": {
             "how": "Kuralın örnekleri (kentos.auditExamples 1): nesneler (features) ya da mimari olgular (architecture) \
                     ve beklenen bulgular (count; has: severity, message, feature, fix). kentos kek test çalıştırır.",
+        },
+        "compatibility": {
+            "how": "Protokol, Python, bilgisayarlar, çalışma zamanları, eskiyen adlar: extension.sdk \
+                    part=compatibility.",
         },
     })
 }
@@ -1119,5 +1191,58 @@ mod tests {
         ] {
             assert!(GUIDE.contains(decorator), "{decorator}");
         }
+    }
+
+    /// The compatibility matrix (docs/adr/8057 §113, ECO-API-11) says what the gates check with, and what KentOS's
+    /// Python side holds (`crates/native/python-env/compat.json`): its range, the Python it installs, its computers.
+    #[test]
+    fn the_compatibility_matrix_says_what_kentos_checks() {
+        let matrix = sdk_part("compatibility").expect("the part");
+        assert_eq!(matrix["protocol"]["current"], crate::SDK_PROTOCOL);
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../native/python-env/compat.json");
+        let compat: Value =
+            serde_json::from_slice(&std::fs::read(path).expect("compat.json")).expect("reads");
+        assert_eq!(matrix["python"]["range"], compat["python"]["range"]);
+        assert_eq!(matrix["python"]["installs"], compat["python"]["install"]);
+        let platforms: Vec<(String, String)> = matrix["platforms"]
+            .as_array()
+            .expect("platforms")
+            .iter()
+            .map(|p| {
+                (
+                    p["os"].as_str().unwrap().to_owned(),
+                    p["machine"].as_str().unwrap().to_owned(),
+                )
+            })
+            .collect();
+        let python_side: Vec<(String, String)> = compat["platforms"]
+            .as_array()
+            .expect("platforms")
+            .iter()
+            .map(|p| {
+                (
+                    p["os"].as_str().unwrap().to_owned(),
+                    p["arch"].as_str().unwrap().to_owned(),
+                )
+            })
+            .collect();
+        assert_eq!(platforms, python_side);
+        assert!(
+            matrix["platforms"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|p| p["marker"] == "sys_platform == 'win32' and platform_machine == 'AMD64'")
+        );
+        let runtimes: Vec<&str> = matrix["runtimes"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|r| r["id"].as_str())
+            .collect();
+        assert_eq!(runtimes, ["desktop", "headless", "cloud"]);
+        assert_eq!(matrix["deprecated"], json!([]));
+        assert!(PARTS.contains(&"compatibility"));
     }
 }

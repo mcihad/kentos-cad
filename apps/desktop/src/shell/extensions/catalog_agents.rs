@@ -95,6 +95,23 @@ impl App {
                         }))
                     })
                     .collect();
+                // What it was written for, judged on this computer (docs/adr/8057 §113, ECO-API-11).
+                let compatibility = manifest.map(|m| {
+                    let c = &m.compatibility;
+                    let fits = kentos_extensions::compatible(c, &super::host());
+                    json!({
+                        "sdkProtocol": { "min": c.sdk_protocol.min, "max": c.sdk_protocol.max,
+                                         "here": kentos_extensions::SDK_PROTOCOL },
+                        "kentos": c.kentos.as_ref().map(|k| json!({ "min": k.min, "maxExclusive": k.max_exclusive })),
+                        "here": env!("CARGO_PKG_VERSION"),
+                        "systems": c.operating_systems.iter().map(|o| o.id()).collect::<Vec<_>>(),
+                        "runtimes": m.runtimes,
+                        "fitsHere": fits.is_ok(),
+                        "why": fits.err().map(|p| p.message),
+                        "deprecated": m.deprecation.as_ref().map(|d| json!({
+                            "message": d.message, "replacedBy": d.replaced_by })),
+                    })
+                });
                 json!({
                     "id": view.id,
                     "name": view.name,
@@ -108,6 +125,7 @@ impl App {
                     "source": view.source.kind.words(),
                     "capabilities": capabilities,
                     "python": python,
+                    "compatibility": compatibility,
                     "contributions": held,
                     "problem": view.problem.as_ref().map(|r| r.message.clone()),
                 })
