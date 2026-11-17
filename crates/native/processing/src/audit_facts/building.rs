@@ -22,12 +22,16 @@
 //!   22/1 (`Document::zoning_limits`), with or without the parcel's zoning; and the program's buildings' uses.
 //! - **Under the stairs** (docs/adr/8080): each stair's places lower than 1.80 m (`Document::under_stairs`) and the rooms
 //!   its spaces lie in (`Document::under_stair_rooms`), each named by its name and number.
+//! - **Compartments' parts** (docs/adr/8081): every room the storeys count with its regulation gross area, and what
+//!   separates each two rooms of a storey (`Document::separations`): walls and openings with their declared fire classes
+//!   (`arch_performance::fire_rating_of`: its own, else its type's), and the open stretches; the project's sprinklers.
 
 use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
 use kentos_extensions::audit_facts::building::{
-    BuildingFacts, DoorFacts, EmsalLimit, RoomPeople, StoreyHolds, UnderStairFacts, UnderStairRoom,
+    BuildingFacts, DoorFacts, EmsalLimit, RoomPeople, SeparatingElement, SeparationFacts, SpaceFacts, StoreyHolds,
+    UnderStairFacts, UnderStairRoom,
 };
 
 /// The drawing's building facts; empty (no storey) for a project without Mimari's storeys.
@@ -117,6 +121,19 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             }
         })
         .collect();
+    let gross: std::collections::HashMap<String, f64> =
+        doc.zoning_rooms().into_iter().map(|r| (r.uid, r.gross)).collect();
+    let spaces = storeys
+        .iter()
+        .flat_map(|st| st.rooms.iter().map(move |uid| (st.level.clone(), uid.clone())))
+        .map(|(level, uid)| SpaceFacts {
+            name: names.get(&uid).cloned().unwrap_or_default(),
+            area: gross.get(&uid).copied().unwrap_or(0.0),
+            level: Some(level),
+            uid,
+        })
+        .collect();
+    let separations = separations(doc);
     BuildingFacts {
         storeys,
         units: units.len() as u32,
@@ -129,7 +146,53 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         limits,
         uses: program.buildings.iter().filter_map(|b| b.usage.clone()).collect(),
         under_stairs,
+        spaces,
+        separations,
+        sprinklers: arch.has_sprinklers(),
     }
+}
+
+/// What separates each two rooms of a storey, its walls' and openings' declared classes read as the performance command
+/// writes them (docs/adr/8081).
+#[cfg(feature = "mod-arch")]
+fn separations(doc: &Document) -> Vec<SeparationFacts> {
+    use kentos_commands::OpeningForm;
+    use kentos_native_application::arch_performance::fire_rating_of;
+    let by_uid: std::collections::HashMap<String, &Entity> =
+        doc.entities_with_uids().map(|(u, e)| (u.to_string(), e)).collect();
+    let element = |uid: &str, length: f64| {
+        let e = by_uid.get(uid);
+        let kind = match e {
+            Some(Entity::Opening(o)) => match o.opening.form {
+                OpeningForm::Door => "door",
+                OpeningForm::Window => "window",
+                _ => "gap",
+            },
+            _ => "wall",
+        };
+        SeparatingElement {
+            uid: uid.to_owned(),
+            kind: kind.to_owned(),
+            fire_rating: e.and_then(|e| fire_rating_of(doc.settings(), e)).map(|(d, _)| d.value.clone()),
+            length,
+        }
+    };
+    doc.separations()
+        .into_iter()
+        .map(|s| SeparationFacts {
+            walls: s.walls.iter().map(|(u, l)| element(u, *l)).collect(),
+            openings: s.openings.iter().map(|(u, l)| element(u, *l)).collect(),
+            level: s.level,
+            rooms: s.rooms,
+            open: s.open,
+        })
+        .collect()
+}
+
+/// Without Mimari's performance declarations there is nothing to read the separations' classes by.
+#[cfg(not(feature = "mod-arch"))]
+fn separations(_: &Document) -> Vec<SeparationFacts> {
+    Vec::new()
 }
 
 /// A room's name as a finding says it: its name, else its use, else "Mahal"; its number after it.

@@ -252,6 +252,11 @@
       kısım (1,80 m'den alçak basamak ve sahanlıkların altı).
     - 31/6 paketin kuralı (`merdiven_alti`): alçak boşluk bir mahale açıksa kaldı; dolap, depo, merdiven altı mahalinde
       geçti; döşemesiz merdivende eksik veri. Olgular `building.underStairs`.
+  - **Yangın kompartımanları (17 Kasım 2026; [ADR 8081](../adr/8081-fire-compartments.md), K74–K78):**
+    - Her iki mahal arasındaki ayrım ölçülür (`Document::separations`): duvarlar, açıklıklar, beyan edilen sınıfları,
+      açık boy. Kompartımanı paketin kuralı kurar: en az EI 60 ve açık yer yoksa ayrı; döşemeler hep ayırır (26/1).
+    - BYKHY 24/2 tehlikeli alanların ayrımı, 24/6 Ek-4'ün en çok alanı (tablo PDF'ten okundu, yeme içme 4000 m²),
+      24/7 kompartıman duvarındaki açıklıklar. Katlar arası açıklıklar ve 24/4 kaldı.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

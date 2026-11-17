@@ -52,3 +52,9 @@ def emsal_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
 def merdiven_alti_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Merdiven altı (PAİY 31/6): 1,80 m'den alçak merdiven altı kapatılır."""
     return _bulgular(facts, ("paiy_under_stair_",))
+
+
+@ext.audit("kompartiman")
+def kompartiman_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Yangın kompartımanları (BYKHY 24/2 tehlikeli alanlar, 24/6 ve Ek-4 en çok alan, 24/7 açıklıklar)."""
+    return _bulgular(facts, ("bykhy_compartment_", "bykhy_hazard_room"))

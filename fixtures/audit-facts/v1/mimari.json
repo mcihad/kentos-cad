@@ -2179,6 +2179,420 @@
         "open": 0.0,
         "waist": false
       }
+    ],
+    "spaces": [
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e3989deaadbb",
+        "level": "zemin",
+        "name": "Merdiven evi",
+        "area": 16.81
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e3999a1cb813",
+        "level": "zemin",
+        "name": "Koridor",
+        "area": 36.3
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39ad272edb3",
+        "level": "zemin",
+        "name": "Dükkân (Z01)",
+        "area": 32.8
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39bf9dc85ab",
+        "level": "zemin",
+        "name": "Salon (Z02)",
+        "area": 24.6
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39cf0fe5491",
+        "level": "zemin",
+        "name": "Yatak odası (Z03)",
+        "area": 25.01
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39d25d6d8d6",
+        "level": "zemin",
+        "name": "Depo (Z04)",
+        "area": 21.965
+      },
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39f8e07d64b",
+        "level": "zemin",
+        "name": "Ofis (Z05)",
+        "area": 57.965
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-499e70342853",
+        "level": "k1",
+        "name": "Merdiven evi",
+        "area": 16.81
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-499fcf59dea1",
+        "level": "k1",
+        "name": "Koridor",
+        "area": 36.3
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-49a0e9eca5a0",
+        "level": "k1",
+        "name": "Salon (K01)",
+        "area": 32.8
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-49a1c1b85ee4",
+        "level": "k1",
+        "name": "Yatak odası 1 (K02)",
+        "area": 24.6
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-49a2bb4d2324",
+        "level": "k1",
+        "name": "Yatak odası 2 (K03)",
+        "area": 25.01
+      },
+      {
+        "uid": "01a1dfda-0704-70dd-a975-49a3b97636d7",
+        "level": "k1",
+        "name": "Arşiv (K04)",
+        "area": 87.12
+      }
+    ],
+    "separations": [
+      {
+        "level": "zemin",
+        "rooms": [
+          "01a1dfda-06c5-7278-9486-e3989deaadbb",
+          "01a1dfda-06c5-7278-9486-e3999a1cb813"
+        ],
+        "walls": [
+          {
+            "uid": "01a1dfda-069b-7333-8eb1-c34fb2c551eb",
+            "kind": "wall",
+            "length": 2.429
+          }
+        ],
+        "openings": [
+          {
+            "uid": "01a1dfda-06e1-741c-8eb9-6ca333490465",
+            "kind": "door",
+            "length": 0.971
+          }
+        ],
+        "open": 0.0
+      },
+      {
+        "level": "zemin",
+        "rooms": [
+          "01a1dfda-06c5-7278-9486-e3989deaadbb",
+          "01a1dfda-06c5-7278-9486-e39ad272edb3"
+        ],
+        "walls": [
+          {
+            "uid": "01a1dfda-06a7-7435-a23f-d8eabcad9c04",
+            "kind": "wall",
+            "length": 3.4
+          }
+        ],
+        "open": 0.0
+      },
+      {
+        "level": "zemin",
+        "rooms": [
+          "01a1dfda-06c5-7278-9486-e3999a1cb813",
+          "01a1dfda-06c5-7278-9486-e39ad272edb3"
+        ],
+        "walls": [
+          {
+            "uid": "01a1dfda-069b-7333-8eb1-c34fb2c551eb",
+            "kind": "wall",
+            "length": 6.97
+          }
+        ],
+        "openings": [
+          {
+            "uid": "01a1dfda-06e1-741c-8eb9-6ca4a1b3fd3c",
+            "kind": "door",
+            "length": 0.996
+          }
+        ],
+        "open": 0.0
+      },
+      {
+        "level": "zemin",
+        "rooms": [
+          "01a1dfda-06c5-7278-9486-e3999a1cb813",
+          "01a1dfda-06c5-7278-9486-e39bf9dc85ab"
+        ],
+        "walls": [
+          {
+            "uid": "01a1dfda-069b-7333-8eb1-c34fb2c551eb",
+            "kind": "wall",
+            "length": 4.979
+          }
+        ],
+        "openings": [
+          {
+            "uid": "01a1dfda-06e1-741c-8eb9-6ca56b114c83",
+            "kind": "door",
+            "length": 0.996
+          }
+        ],
+        "open": 0.0
+      },
+      {
+        "level": "zemin",
+        "rooms": [
+          "01a1dfda-06c5-7278-9486-e3999a1cb813",
+          "01a1dfda-06c5-7278-9486-e39cf0fe5491"
+        ],
+        "walls": [
+          {
+            "uid": "01a1dfda-069b-7333-8eb1-c34fb2c551eb",
+            "kind": "wall",
+            "length": 5.726
+          }
+        ],
+        "open": 0.0
+      },
+      {
+        "level": "zemin",
+        "rooms": [
+          "01a1dfda-06c5-7278-9486-e3999a1cb813",
+          "01a1dfda-06c5-7278-9486-e39d25d6d8d6"
+        ],
+        "walls": [
+          {
+            "uid": "01a1dfda-069b-7333-8eb1-c3504b9064c9",
+            "kind": "wall",
+            "length": 4.979
+          }
+        ],
+        "openings": [
+          {
+            "uid": "01a1dfda-06e1-741c-8eb9-6ca6da25147a",
+            "kind": "door",
+            "length": 0.747
+          }
+        ],
+        "open": 0.0
+      },
+      {
+        "level": "zemin",
+        "rooms": [
+          "01a1dfda-06c5-7278-9486-e3999a1cb813",
+          "01a1dfda-06c5-7278-9486-e39f8e07d64b"
+        ],
+        "walls": [
+          {
+            "uid": "01a1dfda-069b-7333-8eb1-c3504b9064c9",
+            "kind": "wall",
+            "length": 14.687
+          }
+        ],
+        "openings": [
+          {
+            "uid": "01a1dfda-06e1-741c-8eb9-6ca7d264ae09",
+            "kind": "door",
+            "length": 0.996
+          }
+        ],
+        "open": 0.0
+      },
+      {
+        "level": "zemin",
+        "rooms": [
+          "01a1dfda-06c5-7278-9486-e39ad272edb3",
+          "01a1dfda-06c5-7278-9486-e39bf9dc85ab"
+        ],
+        "walls": [
+          {
+            "uid": "01a1dfda-06a7-7435-a23f-d8ebd7ba45f1",
+            "kind": "wall",
+            "length": 3.4
+          }
+        ],
+        "open": 0.0
+      },
+      {
+        "level": "zemin",
+        "rooms": [
+          "01a1dfda-06c5-7278-9486-e39bf9dc85ab",
+          "01a1dfda-06c5-7278-9486-e39cf0fe5491"
+        ],
+        "walls": [
+          {
+            "uid": "01a1dfda-06a7-7435-a23f-d8ec0fb0adb9",
+            "kind": "wall",
+            "length": 2.429
+          }
+        ],
+        "openings": [
+          {
+            "uid": "01a1dfda-06e1-741c-8eb9-6ca84ff93522",
+            "kind": "door",
+            "length": 0.971
+          }
+        ],
+        "open": 0.0
+      },
+      {
+        "level": "k1",
+        "rooms": [
+          "01a1dfda-0704-70dd-a975-499e70342853",
+          "01a1dfda-0704-70dd-a975-499fcf59dea1"
+        ],
+        "walls": [
+          {
+            "uid": "01a1dfda-06f8-76a1-8694-1552b94befba",
+            "kind": "wall",
+            "length": 2.429
+          }
+        ],
+        "openings": [
+          {
+            "uid": "01a1dfda-0709-75f9-b155-c59a25e94cf3",
+            "kind": "door",
+            "length": 0.971
+          }
+        ],
+        "open": 0.0
+      },
+      {
+        "level": "k1",
+        "rooms": [
+          "01a1dfda-0704-70dd-a975-499e70342853",
+          "01a1dfda-0704-70dd-a975-49a0e9eca5a0"
+        ],
+        "walls": [
+          {
+            "uid": "01a1dfda-06fd-70e4-a3f4-c759aeeb6785",
+            "kind": "wall",
+            "length": 3.4
+          }
+        ],
+        "open": 0.0
+      },
+      {
+        "level": "k1",
+        "rooms": [
+          "01a1dfda-0704-70dd-a975-499fcf59dea1",
+          "01a1dfda-0704-70dd-a975-49a0e9eca5a0"
+        ],
+        "walls": [
+          {
+            "uid": "01a1dfda-06f8-76a1-8694-1552b94befba",
+            "kind": "wall",
+            "length": 6.97
+          }
+        ],
+        "openings": [
+          {
+            "uid": "01a1dfda-0709-75f9-b155-c59bd5fb560f",
+            "kind": "door",
+            "length": 0.996
+          }
+        ],
+        "open": 0.0
+      },
+      {
+        "level": "k1",
+        "rooms": [
+          "01a1dfda-0704-70dd-a975-499fcf59dea1",
+          "01a1dfda-0704-70dd-a975-49a1c1b85ee4"
+        ],
+        "walls": [
+          {
+            "uid": "01a1dfda-06f8-76a1-8694-1552b94befba",
+            "kind": "wall",
+            "length": 5.974
+          }
+        ],
+        "open": 0.0
+      },
+      {
+        "level": "k1",
+        "rooms": [
+          "01a1dfda-0704-70dd-a975-499fcf59dea1",
+          "01a1dfda-0704-70dd-a975-49a2bb4d2324"
+        ],
+        "walls": [
+          {
+            "uid": "01a1dfda-06f8-76a1-8694-1552b94befba",
+            "kind": "wall",
+            "length": 5.726
+          }
+        ],
+        "open": 0.0
+      },
+      {
+        "level": "k1",
+        "rooms": [
+          "01a1dfda-0704-70dd-a975-499fcf59dea1",
+          "01a1dfda-0704-70dd-a975-49a3b97636d7"
+        ],
+        "walls": [
+          {
+            "uid": "01a1dfda-06f8-76a1-8694-15536ba1f48d",
+            "kind": "wall",
+            "length": 22.404
+          }
+        ],
+        "openings": [
+          {
+            "uid": "01a1dfda-0709-75f9-b155-c59ca37f1c9c",
+            "kind": "door",
+            "length": 0.996
+          }
+        ],
+        "open": 0.0
+      },
+      {
+        "level": "k1",
+        "rooms": [
+          "01a1dfda-0704-70dd-a975-49a0e9eca5a0",
+          "01a1dfda-0704-70dd-a975-49a1c1b85ee4"
+        ],
+        "walls": [
+          {
+            "uid": "01a1dfda-06fd-70e4-a3f4-c75adbd765e3",
+            "kind": "wall",
+            "length": 2.429
+          }
+        ],
+        "openings": [
+          {
+            "uid": "01a1dfda-0709-75f9-b155-c59de0c23b39",
+            "kind": "door",
+            "length": 0.971
+          }
+        ],
+        "open": 0.0
+      },
+      {
+        "level": "k1",
+        "rooms": [
+          "01a1dfda-0704-70dd-a975-49a1c1b85ee4",
+          "01a1dfda-0704-70dd-a975-49a2bb4d2324"
+        ],
+        "walls": [
+          {
+            "uid": "01a1dfda-06fd-70e4-a3f4-c75baedb94aa",
+            "kind": "wall",
+            "length": 2.429
+          }
+        ],
+        "openings": [
+          {
+            "uid": "01a1dfda-0709-75f9-b155-c59e206e0cd6",
+            "kind": "door",
+            "length": 0.971
+          }
+        ],
+        "open": 0.0
+      }
     ]
   },
   "cut": false

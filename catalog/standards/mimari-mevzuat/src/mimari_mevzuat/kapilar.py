@@ -16,36 +16,13 @@ sınıfı, kaçış merdiveni ya da yangın güvenlik holüne açılıp açılma
 
 from __future__ import annotations
 
-import re
 from datetime import date
 from typing import Any
 
 from . import yururluk as y
+from .yangin_sinifi import sinif
 
 MADDELER = [("BYKHY", "47/2"), ("BYKHY", "47/3")]
-
-#: TS EN 13501-2'nin yangına dayanım sınıfı: harfler (R, E, I, W, M, S, C …), dakikası, ardından duman ve kapanma.
-_SINIF = re.compile(r"^\s*([REIWM]+[12]?)\s*(\d{1,3})\b(.*)$", re.IGNORECASE)
-
-
-def sinif(metin: str | None) -> dict[str, Any] | None:
-    """Beyan edilen sınıf: harfleri, dakikası, duman sızdırmaz (``S…``) ve kendiliğinden kapanır (``C…``) olup
-    olmadığı; okunamazsa yok."""
-    if not metin:
-        return None
-    m = _SINIF.match(metin.strip())
-    if not m:
-        return None
-    harf, dakika, kalan = m.group(1).upper(), int(m.group(2)), m.group(3).upper()
-    if "E" not in harf:
-        return None
-    return {
-        "harf": harf,
-        "dakika": dakika,
-        "duman": re.search(r"(^|[\s\-/])S(200|A|M)?\b", kalan) is not None or "-S" in kalan,
-        "kapanma": re.search(r"(^|[\s\-/]|\d)C\d?\b", kalan) is not None,
-    }
-
 
 def _bulgu(code: str, ileti: str, onarim: str, kural: str, uids: list[str], iz: str,
            state: str | None = None) -> dict[str, Any]:

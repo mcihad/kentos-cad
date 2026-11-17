@@ -137,13 +137,14 @@ fn the_application_date_chooses_the_version_of_the_elevator_articles() {
         ]
     );
     assert_eq!(regulation(&app), Vec::new());
-    // The line says every article not out of scope: the basement's storage annexes are 22/1-k's too (docs/adr/8079);
-    // the rest (34/8, 47/2, 47/3, 22/1-ç, -f, -l, 31/6) out of it.
+    // The line says every article not out of scope: the basement's storage annexes are 22/1-k's (docs/adr/8079); its
+    // boiler room, drawn with no wall, opens into the stores (BYKHY 24/2, docs/adr/8081); the flats' one compartment
+    // has no limit (24/6); the rest (34/8, 47/2, 47/3, 24/7, 22/1-ç, -f, -l, 31/6) out of it.
     let line = app.arch.arch_audit.rule_set.as_ref().expect("the rule set").line();
     assert_eq!(
         line,
-        "Kural seti — Başvuru tarihi künyeden: 30.6.2026 · PAİY 34/1 (11.7.2021) geçti · PAİY 22/1-k (25.7.2019) geçti \
-         · 7 madde kapsam dışı"
+        "Kural seti — Başvuru tarihi künyeden: 30.6.2026 · PAİY 34/1 (11.7.2021) geçti · BYKHY 24/2 (19.12.2007) kaldı \
+         · BYKHY 24/6 (9.9.2009) geçti · PAİY 22/1-k (25.7.2019) geçti · 8 madde kapsam dışı"
     );
     // Applied for on 2.7.2026: as of 1.7.2026 the basement of annexes counts, four storeys ask for an elevator and
     // 34/8 for it to reach the basement, which it does not.

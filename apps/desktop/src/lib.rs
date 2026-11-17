@@ -1542,6 +1542,9 @@ mod emsal_limits_tests;
 #[path = "tests/under_stair_tests.rs"]
 mod under_stair_tests;
 #[cfg(test)]
+#[path = "tests/compartment_tests.rs"]
+mod compartment_tests;
+#[cfg(test)]
 #[path = "tests/fire_escape_tests.rs"]
 mod fire_escape_tests;
 #[cfg(test)]

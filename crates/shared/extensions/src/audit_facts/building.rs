@@ -45,6 +45,56 @@ pub struct BuildingFacts {
     /// The stairs with places under them lower than 1.80 m (docs/adr/8080; PAİY 4/1-ğ-3, 31/6), by persistent id.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub under_stairs: Vec<UnderStairFacts>,
+    /// Every room the storeys count, with its name and area (docs/adr/8081): what a fire compartment is made of.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub spaces: Vec<SpaceFacts>,
+    /// What separates each two rooms of a storey that share a boundary (docs/adr/8081; BYKHY 4/tt, 24).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub separations: Vec<SeparationFacts>,
+    /// The project says the building has sprinklers (`settings.arch.sprinklers`): BYKHY Ek-4's notes read it.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub sprinklers: bool,
+}
+
+/// A room as a fire compartment counts it: its persistent id, its storey, its name (and number), its area as the
+/// regulation's areas measure it (its outer contour, PAİY 4/1-ğ-1), m².
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct SpaceFacts {
+    pub uid: String,
+    pub level: Option<String>,
+    pub name: String,
+    pub area: f64,
+}
+
+/// What separates two rooms of a storey along their shared boundary (docs/adr/8081): the walls, the openings (a door, a
+/// window, a gap), each with its declared fire class (its own, else its type's; TS EN 13501-2's words as written) and
+/// its length there, and the length with neither (a room separator, a gap), m.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct SeparationFacts {
+    pub level: Option<String>,
+    pub rooms: [String; 2],
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub walls: Vec<SeparatingElement>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub openings: Vec<SeparatingElement>,
+    pub open: f64,
+}
+
+/// A wall or an opening along a separation: its persistent id, its kind (`wall`, `door`, `window`, `gap`), its declared
+/// fire class, its length there, m.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct SeparatingElement {
+    pub uid: String,
+    pub kind: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fire_rating: Option<String>,
+    pub length: f64,
 }
 
 /// A stair's places under it lower than 1.80 m over the floor it starts from (docs/adr/8080), from its body as the
@@ -207,6 +257,19 @@ impl BuildingFacts {
             u.rooms.sort_by(|a, b| a.uid.cmp(&b.uid));
         }
         self.under_stairs.sort_by(|a, b| a.stair.cmp(&b.stair));
+        for x in &mut self.spaces {
+            x.area = round(x.area, AREA);
+        }
+        self.spaces.sort_by(|a, b| a.uid.cmp(&b.uid));
+        for x in &mut self.separations {
+            x.open = round(x.open, LENGTH);
+            for e in x.walls.iter_mut().chain(x.openings.iter_mut()) {
+                e.length = round(e.length, LENGTH);
+            }
+            x.walls.sort_by(|a, b| a.uid.cmp(&b.uid));
+            x.openings.sort_by(|a, b| a.uid.cmp(&b.uid));
+        }
+        self.separations.sort_by(|a, b| a.rooms.cmp(&b.rooms));
         self
     }
 

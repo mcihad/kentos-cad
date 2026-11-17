@@ -15,8 +15,11 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   binada, normal katta ve ortak alan mı (22/1-f).
 - **Merdiven altı** (`merdiven_alti`, docs/adr/8080): 1,80 m'den alçak merdiven altı kapatılır (31/6); alçak boşluk bir
   mahale açıksa kaldı.
+- **Yangın kompartımanları** (`kompartiman`, docs/adr/8081): mahaller arasındaki ayrımlardan kompartımanlar (en az EI 60,
+  açık yer yok); tehlikeli alanların ayrımı (BYKHY 24/2), Ek-4'ün en çok alanı (24/6), kompartıman duvarındaki
+  açıklıklar (24/7).
 - **Olgular** KentOS'un ölçtüğüdür (`facts.building`, `facts.permit`); kural çizimi okumaz.
-- **Bağımsız durumlar** `fixtures/standards/v1/asansor.json`, `kapilar.json`, `emsal.json` ve `merdiven-alti.json`: beklenen sonuçlar mevzuat
+- **Bağımsız durumlar** `fixtures/standards/v1/asansor.json`, `kapilar.json`, `emsal.json`, `merdiven-alti.json` ve `kompartiman.json`: beklenen sonuçlar mevzuat
   metninden elle çıkarıldı.
 
-Sınama: `python3 -I catalog/standards/tests/mimari-mevzuat/test_asansor.py`, `test_kapilar.py`, `test_emsal.py` ve `test_merdiven_alti.py`.
+Sınama: `python3 -I catalog/standards/tests/mimari-mevzuat/test_asansor.py`, `test_kapilar.py`, `test_emsal.py`, `test_merdiven_alti.py` ve `test_kompartiman.py`.

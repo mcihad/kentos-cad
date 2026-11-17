@@ -6,11 +6,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import asansor, emsal, kapilar, merdiven_alti
+from . import asansor, emsal, kapilar, kompartiman, merdiven_alti
 from . import yururluk as y
 
 #: Sırayla çalışan kurallar: her biri ``kontrol(facts, gun, neden) -> yururluk.Sonuc``.
-KURALLAR = (asansor, kapilar, emsal, merdiven_alti)
+KURALLAR = (asansor, kapilar, kompartiman, emsal, merdiven_alti)
 
 
 def denetle(facts: dict[str, Any]) -> dict[str, Any]:

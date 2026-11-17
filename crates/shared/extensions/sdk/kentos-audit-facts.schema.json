@@ -101,6 +101,24 @@
           },
           "type": "array"
         },
+        "separations": {
+          "description": "What separates each two rooms of a storey that share a boundary (docs/adr/8081; BYKHY 4/tt, 24).",
+          "items": {
+            "$ref": "#/$defs/SeparationFacts"
+          },
+          "type": "array"
+        },
+        "spaces": {
+          "description": "Every room the storeys count, with its name and area (docs/adr/8081): what a fire compartment is made of.",
+          "items": {
+            "$ref": "#/$defs/SpaceFacts"
+          },
+          "type": "array"
+        },
+        "sprinklers": {
+          "description": "The project says the building has sprinklers (`settings.arch.sprinklers`): BYKHY Ek-4's notes read it.",
+          "type": "boolean"
+        },
         "storeys": {
           "description": "Every storey of the project, lowest first.",
           "items": {
@@ -1299,6 +1317,100 @@
         "uid",
         "name",
         "persons"
+      ],
+      "type": "object"
+    },
+    "SeparatingElement": {
+      "description": "A wall or an opening along a separation: its persistent id, its kind (`wall`, `door`, `window`, `gap`), its declared\nfire class, its length there, m.",
+      "properties": {
+        "fireRating": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "type": "string"
+        },
+        "length": {
+          "format": "double",
+          "type": "number"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "kind",
+        "length"
+      ],
+      "type": "object"
+    },
+    "SeparationFacts": {
+      "description": "What separates two rooms of a storey along their shared boundary (docs/adr/8081): the walls, the openings (a door, a\nwindow, a gap), each with its declared fire class (its own, else its type's; TS EN 13501-2's words as written) and\nits length there, and the length with neither (a room separator, a gap), m.",
+      "properties": {
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "open": {
+          "format": "double",
+          "type": "number"
+        },
+        "openings": {
+          "items": {
+            "$ref": "#/$defs/SeparatingElement"
+          },
+          "type": "array"
+        },
+        "rooms": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "walls": {
+          "items": {
+            "$ref": "#/$defs/SeparatingElement"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "rooms",
+        "open"
+      ],
+      "type": "object"
+    },
+    "SpaceFacts": {
+      "description": "A room as a fire compartment counts it: its persistent id, its storey, its name (and number), its area as the\nregulation's areas measure it (its outer contour, PAİY 4/1-ğ-1), m².",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "name",
+        "area"
       ],
       "type": "object"
     },

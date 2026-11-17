@@ -1,5 +1,14 @@
 # Değişiklikler
 
+## 0.5.0 — 17 Kasım 2026
+
+- Yangın kompartımanları (`kompartiman`, docs/adr/8081): BYKHY 4/tt, 24/2, 24/6 ve Ek-4, 24/7. İki mahal, aralarındaki
+  her duvar ve açıklık en az EI 60 ve açık yer yoksa ayrı kompartımandadır (döşemeler hep ayırır, 26/1). Kazan dairesi,
+  otopark, elektrik, trafo, orta gerilim, jeneratör odasının ayrımları kompartıman duvarı (24/2); kompartımanın alanı
+  Ek-4'ün kullanım sınıfını aşmaz, yağmurlama notları (24/6); EI 60 duvarda yangına dayanıksız açıklık yok (24/7). Sınıf
+  okuması `yangin_sinifi.py`'de (kapılarınki de). Olgular `building.spaces`, `separations`, `sprinklers`. 22 bağımsız
+  durum.
+
 ## 0.4.0 — 17 Kasım 2026
 
 - Merdiven altı (`merdiven_alti`, docs/adr/8080): Planlı Alanlar İmar Yönetmeliği 31/6. KentOS merdivenin altında,

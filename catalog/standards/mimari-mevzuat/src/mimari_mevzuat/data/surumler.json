@@ -1,7 +1,7 @@
 {
   "format": "kentos.ruleVersions",
   "version": 1,
-  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de, merdiven altınınki 8080 §1'de).",
+  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de, merdiven altınınki 8080 §1'de, kompartımanlarınki 8081 §1'de).",
   "regulations": {
     "PAİY": {
       "name": "Planlı Alanlar İmar Yönetmeliği",
@@ -250,6 +250,201 @@
           "storeys": 4,
           "text": "Kaçış merdiveni ve yangın güvenlik holü kapılarının; duman sızdırmaz ve 4 kattan daha az kata hizmet veriyor ise en az 60 dakika, bodrum katlara ve 4 kattan daha fazla kata hizmet veriyor ise en az 90 dakika yangına karşı dayanıklı olması şarttır. Kapıların, kendiliğinden kapatan düzenekler ile donatılması ve itfaiyecilerin veya görevlilerin gerektiğinde dışarıdan içeriye girmelerine imkân sağlayacak şekilde olması gerekir.",
           "source": "RG 19.12.2007/26735 (BKK 2007/12937), 47 nci madde; madde değişiklik görmedi (mevzuat.gov.tr derlenmiş metni, son değişiklik RG 1.7.2025/32943; docs/adr/8078 §8)."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "24/2",
+      "title": "Yangın tehlikesi olan kapalı alanlar",
+      "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 24 üncü maddenin bu fıkrası değişmedi.",
+      "versions": [
+        {
+          "id": "2007",
+          "from": "2007-12-19",
+          "until": null,
+          "label": "19.12.2007",
+          "gazette": "19.12.2007/26735",
+          "minutes": 60,
+          "text": "İki veya daha çok bina tarafından ortak kullanılan duvarlar, kazan dairesi, otopark, ana elektrik dağıtım odaları, yapı içindeki trafo merkezleri, orta gerilim merkezleri, jeneratör grubu odaları ve benzeri yangın tehlikesi olan kapalı alanların duvarları ve döşemeleri kompartıman duvarı özelliğinde olur. (4/tt) Yangın kompartımanı: Bir bina içerisinde, tavan ve taban döşemesi dâhil olmak üzere, her yanı en az 60 dakika yangına karşı dayanıklı yapı elemanları ile duman ve ısı geçirmez alanlara ayrılmış bölge.",
+          "source": "RG 19.12.2007/26735 (BKK 2007/12937), 24 üncü maddenin ikinci fıkrası ve 4/tt; değişiklik işareti yok; docs/adr/8081 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "24/6",
+      "title": "En fazla kompartıman alanı (Ek-4)",
+      "transition": "Ek-4 10.8.2009 tarihli ve 2009/15316 sayılı Bakanlar Kurulu Kararıyla değişti (RG 9.9.2009/27344); önceki tablosu kural setinde yok.",
+      "versions": [
+        {
+          "id": "2009",
+          "from": "2009-09-09",
+          "until": null,
+          "label": "9.9.2009",
+          "gazette": "19.12.2007/26735; Ek-4 9.9.2009/27344",
+          "minutes": 60,
+          "classes": [
+            {
+              "id": "konut",
+              "name": "konut",
+              "words": [
+                "KONUT",
+                "DAIRE",
+                "MESKEN",
+                "APARTMAN",
+                "VILLA",
+                "EV"
+              ],
+              "unlimited": true
+            },
+            {
+              "id": "konaklama",
+              "name": "konaklama",
+              "words": [
+                "OTEL",
+                "MOTEL",
+                "PANSIYON",
+                "KONAKLAMA",
+                "YURT",
+                "HOSTEL"
+              ],
+              "limit": 4000,
+              "note": 1
+            },
+            {
+              "id": "saglik",
+              "name": "sağlık hizmeti",
+              "words": [
+                "HASTANE",
+                "SAGLIK",
+                "KLINIK",
+                "POLIKLINIK"
+              ],
+              "limit": 1500,
+              "note": 1
+            },
+            {
+              "id": "egitim",
+              "name": "eğitim tesisi",
+              "words": [
+                "OKUL",
+                "EGITIM",
+                "ANAOKUL",
+                "KRES",
+                "LISE",
+                "UNIVERSITE",
+                "DERSHANE"
+              ],
+              "limit": 6000,
+              "note": 2
+            },
+            {
+              "id": "buro",
+              "name": "büro",
+              "words": [
+                "BURO",
+                "OFIS",
+                "IDARI"
+              ],
+              "limit": 8000,
+              "note": 1
+            },
+            {
+              "id": "ticaret",
+              "name": "ticaret",
+              "words": [
+                "TICARET",
+                "MAGAZA",
+                "DUKKAN",
+                "AVM",
+                "ALISVERIS",
+                "MARKET",
+                "CARSI"
+              ],
+              "limit": 2000,
+              "note": 2
+            },
+            {
+              "id": "toplanma-4000",
+              "name": "yeme içme, eğlence, müze ve sergi",
+              "words": [
+                "LOKANTA",
+                "RESTORAN",
+                "KAFE",
+                "YEME",
+                "EGLENCE",
+                "SINEMA",
+                "TIYATRO",
+                "MUZE",
+                "SERGI"
+              ],
+              "limit": 4000,
+              "note": 2
+            },
+            {
+              "id": "toplanma",
+              "name": "toplanma",
+              "words": [
+                "TOPLANMA",
+                "KONFERANS",
+                "KONGRE",
+                "CAMI",
+                "IBADET",
+                "DUGUN"
+              ],
+              "limit": 6000,
+              "note": 2
+            },
+            {
+              "id": "endustri",
+              "name": "endüstriyel yapı",
+              "words": [
+                "SANAYI",
+                "ENDUSTRI",
+                "FABRIKA",
+                "IMALAT",
+                "ATOLYE"
+              ]
+            },
+            {
+              "id": "depo",
+              "name": "depo",
+              "words": [
+                "DEPO",
+                "ANTREPO"
+              ]
+            },
+            {
+              "id": "otopark",
+              "name": "kapalı otopark",
+              "words": [
+                "OTOPARK",
+                "GARAJ"
+              ],
+              "unlimited": true
+            }
+          ],
+          "text": "Binalarda olması gereken en fazla kompartıman alanına Ek-4'de yer verilmiştir. Ek-4: Konutlar sınırsız; Konaklama 4000 (1); Sağlık hizmeti amaçlı binalar 1500 (1); Eğitim tesisleri 6000 (2); Büro binaları 8000 (1); Ticaret amaçlı binalar 2000 (2); Yeme içme, eğlence, müzeler ve sergi yerleri 4000 (2); Diğer toplanma amaçlı binalar 6000 (2); Endüstriyel yapılar Orta Tehlike-3 ve üstü 6000 (2), Orta Tehlike-1 ve -2 15000 (3); Depolar Orta Tehlike-3 ve üstü 1000 (2), Orta Tehlike-1 ve -2 5000 (3); Kapalı otoparklar sınırlama yok. Not: (1) uygun yangın kontrol sistemleri (otomatik algılama, yağmurlama sistemi, duman tahliye sistemi ve benzeri) yapılmış ise kompartıman alanı 2 katına çıkarılabilir; (2) yapılmış ise sınırsızdır; (3) bina tek katlı ise sınırlama yoktur, sistem yapılmış ise sınırsızdır.",
+          "source": "RG 19.12.2007/26735, 24/6; Ek-4'ün tablosu yönetmeliğin PDF'inin 94. sayfasından okundu (yeme içme, eğlence, müze ve sergi tek hücrede 4000); docs/adr/8081 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "24/7",
+      "title": "Kompartıman sınırının sürekliliği",
+      "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 24 üncü maddenin bu fıkrası değişmedi.",
+      "versions": [
+        {
+          "id": "2007",
+          "from": "2007-12-19",
+          "until": null,
+          "label": "19.12.2007",
+          "gazette": "19.12.2007/26735",
+          "minutes": 60,
+          "text": "Yangın kompartımanlarının etkili olabilmesi için, kompartımanı çevreleyen elemanların yangına dayanıklılığı birleşme noktalarında da sürekli olur ve kompartımanlar arasında yangına dayanıksız açıklıklar bulunamaz.",
+          "source": "RG 19.12.2007/26735, 24 üncü maddenin yedinci fıkrası; değişiklik işareti yok; docs/adr/8081 §1."
         }
       ]
     }

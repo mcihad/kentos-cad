@@ -1,0 +1,2000 @@
+{
+  "format": "kentos.regulationCases",
+  "version": 1,
+  "about": "Yangın kompartımanlarının bağımsız durumları (docs/adr/8081): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik 4/tt, 24/2, 24/6, 24/7 ve Ek-4'ün metninden (RG 19.12.2007/26735; Ek-4 RG 9.9.2009/27344, tablo PDF'in 94. sayfasından) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.spaces, separations): durumlar kompartımanları ve koşulları sınar, ayrımların ölçüsünü Rust'ın sınamaları sınar.",
+  "cases": [
+    {
+      "id": "konut-sinirsiz",
+      "neden": "Bölümlerin hepsi konut: Ek-4 konutlar sınırsız → 24/6 geçer; tehlikeli alan ve EI 60 duvar yok.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 4,
+        "dwellings": 4,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "k00",
+            "name": "Ofis 1",
+            "area": 700
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "level": "k00",
+            "name": "Ofis 2",
+            "area": 700
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY 24/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "passed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "buro-asan",
+      "neden": "Büro binasında ayrılmamış iki ofis 4600 + 4600 = 9200 m²: Ek-4 büro 8000 m² → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 0,
+        "dwellings": 0,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "k00",
+            "name": "Ofis 1",
+            "area": 4600
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "level": "k00",
+            "name": "Ofis 2",
+            "area": 4600
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0
+              }
+            ]
+          }
+        ],
+        "uses": [
+          "Büro"
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_compartment_area_over",
+            "has": [
+              "9200.00 m²",
+              "büro",
+              "8000 m²"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY 24/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "failed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "buro-yagmurlama",
+      "neden": "Aynı büro yağmurlamalı: not (1) sınırı 2 katına, 16000 m² → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 0,
+        "dwellings": 0,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "k00",
+            "name": "Ofis 1",
+            "area": 4600
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "level": "k00",
+            "name": "Ofis 2",
+            "area": 4600
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0
+              }
+            ]
+          }
+        ],
+        "uses": [
+          "Büro"
+        ],
+        "sprinklers": true
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY 24/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "passed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "buro-iki-kompartiman",
+      "neden": "İki ofis arası REI 90 duvar ve EI2 60-S200C5 kapı: iki kompartıman 4600 m² → 24/6 geçer, 24/7 geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 0,
+        "dwellings": 0,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "k00",
+            "name": "Ofis 1",
+            "area": 4600
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "level": "k00",
+            "name": "Ofis 2",
+            "area": 4600
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0,
+                "fireRating": "REI 90"
+              }
+            ],
+            "openings": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000010",
+                "kind": "door",
+                "length": 1.0,
+                "fireRating": "EI2 60-S200C5"
+              }
+            ]
+          }
+        ],
+        "uses": [
+          "Büro"
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY 24/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "passed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "passed",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ticaret-asan",
+      "neden": "Mağaza binasında 1300 + 1200 = 2500 m²: Ek-4 ticaret 2000 m² → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 0,
+        "dwellings": 0,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "k00",
+            "name": "Ofis 1",
+            "area": 1300
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "level": "k00",
+            "name": "Ofis 2",
+            "area": 1200
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0
+              }
+            ]
+          }
+        ],
+        "uses": [
+          "Mağaza"
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_compartment_area_over",
+            "has": [
+              "2500.00 m²",
+              "ticaret",
+              "2000 m²"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY 24/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "failed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ticaret-yagmurlama",
+      "neden": "Aynı mağaza yağmurlamalı: not (2) sınırsız → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 0,
+        "dwellings": 0,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "k00",
+            "name": "Ofis 1",
+            "area": 1300
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "level": "k00",
+            "name": "Ofis 2",
+            "area": 1200
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0
+              }
+            ]
+          }
+        ],
+        "uses": [
+          "Mağaza"
+        ],
+        "sprinklers": true
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY 24/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "passed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "otel",
+      "neden": "Otelde 2600 + 2400 = 5000 m²: Ek-4 konaklama 4000 m² → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 0,
+        "dwellings": 0,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "k00",
+            "name": "Ofis 1",
+            "area": 2600
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "level": "k00",
+            "name": "Ofis 2",
+            "area": 2400
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0
+              }
+            ]
+          }
+        ],
+        "uses": [
+          "Otel"
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_compartment_area_over",
+            "has": [
+              "5000.00 m²",
+              "4000 m²"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY 24/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "failed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "otel-yagmurlama",
+      "neden": "Aynı otel yağmurlamalı: not (1) 8000 m² → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 0,
+        "dwellings": 0,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "k00",
+            "name": "Ofis 1",
+            "area": 2600
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "level": "k00",
+            "name": "Ofis 2",
+            "area": 2400
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0
+              }
+            ]
+          }
+        ],
+        "uses": [
+          "Otel"
+        ],
+        "sprinklers": true
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY 24/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "passed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "lokanta-4000",
+      "neden": "Lokantada 2000 + 1500 = 3500 m²: Ek-4'te yeme içme, eğlence, müze ve sergi tek hücrede 4000 m² → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 0,
+        "dwellings": 0,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "k00",
+            "name": "Ofis 1",
+            "area": 2000
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "level": "k00",
+            "name": "Ofis 2",
+            "area": 1500
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0
+              }
+            ]
+          }
+        ],
+        "uses": [
+          "Lokanta"
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY 24/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "passed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "karma",
+      "neden": "Büro ve mağaza bir arada: en sıkı sınır ticaretin 2000 m²'si; 2500 m² → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 0,
+        "dwellings": 0,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "k00",
+            "name": "Ofis 1",
+            "area": 1300
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "level": "k00",
+            "name": "Ofis 2",
+            "area": 1200
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0
+              }
+            ]
+          }
+        ],
+        "uses": [
+          "Büro",
+          "Mağaza"
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_compartment_area_over",
+            "has": [
+              "2000 m²"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY 24/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "failed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kullanim-yok",
+      "neden": "Kullanım yazılmamış, 3 bölümün 1'i konut: sınıf okunmuyor → 24/6 eksik veri.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 3,
+        "dwellings": 1,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "k00",
+            "name": "Ofis 1",
+            "area": 500
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "level": "k00",
+            "name": "Ofis 2",
+            "area": 500
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY 24/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "missingData",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "sanayi",
+      "neden": "Fabrika: sınır Ek-1'in tehlike sınıfına bağlı, çizim söylemez → 24/6 uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 0,
+        "dwellings": 0,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "k00",
+            "name": "Ofis 1",
+            "area": 500
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "level": "k00",
+            "name": "Ofis 2",
+            "area": 500
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0
+              }
+            ]
+          }
+        ],
+        "uses": [
+          "Fabrika"
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY 24/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "expertReview",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kazan-yetmeyen",
+      "neden": "Kazan dairesinin koridorla duvarı EI 30: 24/2 kompartıman duvarı (en az 60) ister → kalır; 60'lık duvar olmadığından 24/7 kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 4,
+        "dwellings": 4,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000003",
+            "level": "k00",
+            "name": "Koridor",
+            "area": 40
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000004",
+            "level": "k00",
+            "name": "Kazan dairesi",
+            "area": 20
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0,
+                "fireRating": "EI 30"
+              }
+            ],
+            "openings": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000010",
+                "kind": "door",
+                "length": 1.0,
+                "fireRating": "EI2 30-C"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_hazard_room_separation",
+            "has": [
+              "Kazan dairesi",
+              "EI 30",
+              "24/2"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY 24/2": [
+            "failed",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "passed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kazan-kapisi-beyansiz",
+      "neden": "Kazan dairesinin duvarı REI 120, kapısının sınıfı beyan edilmemiş: 24/2 eksik veri, 24/7 kapı eksik veri.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 4,
+        "dwellings": 4,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000003",
+            "level": "k00",
+            "name": "Koridor",
+            "area": 40
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000004",
+            "level": "k00",
+            "name": "Kazan dairesi",
+            "area": 20
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0,
+                "fireRating": "REI 120"
+              }
+            ],
+            "openings": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000010",
+                "kind": "door",
+                "length": 1.0
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_hazard_room_separation",
+            "state": "missingData",
+            "has": [
+              "beyan edilmemiş"
+            ]
+          },
+          {
+            "code": "bykhy_compartment_opening",
+            "state": "missingData",
+            "has": [
+              "kapı",
+              "beyan edilmemiş"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY 24/2": [
+            "missingData",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "passed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "missingData",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kazan-tamam",
+      "neden": "Kazan dairesi REI 120 duvar ve EI2 90-C5 kapıyla ayrılmış: 24/2 geçer, 24/7 geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 4,
+        "dwellings": 4,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000003",
+            "level": "k00",
+            "name": "Koridor",
+            "area": 40
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000004",
+            "level": "k00",
+            "name": "Kazan dairesi",
+            "area": 20
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0,
+                "fireRating": "REI 120"
+              }
+            ],
+            "openings": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000010",
+                "kind": "door",
+                "length": 1.0,
+                "fireRating": "EI2 90-C5"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY 24/2": [
+            "passed",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "passed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "passed",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "jenerator-acik",
+      "neden": "Jeneratör odası koridora 2 m mahal ayırıcıyla açık: 24/2 kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 4,
+        "dwellings": 4,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000003",
+            "level": "k00",
+            "name": "Koridor",
+            "area": 40
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000004",
+            "level": "k00",
+            "name": "Jeneratör odası",
+            "area": 15
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ],
+            "open": 2.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0,
+                "fireRating": "REI 120"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_hazard_room_separation",
+            "has": [
+              "Jeneratör odası",
+              "açık"
+            ]
+          },
+          {
+            "code": "bykhy_compartment_opening",
+            "has": [
+              "açık yer"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY 24/2": [
+            "failed",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "passed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "failed",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "orta-gerilim",
+      "neden": "'Orta gerilim merkezi' 24/2'nin sayılanlarından; duvarı sınıfsız → eksik veri.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 4,
+        "dwellings": 4,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000003",
+            "level": "k00",
+            "name": "Koridor",
+            "area": 40
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000004",
+            "level": "k00",
+            "name": "Orta gerilim merkezi",
+            "area": 15
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0
+              }
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_hazard_room_separation",
+            "state": "missingData",
+            "has": [
+              "Orta gerilim merkezi"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY 24/2": [
+            "missingData",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "passed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kompartiman-kapisi-ei30",
+      "neden": "İki ofis arası REI 90 duvarda EI2 30-C kapı: 24/7 yangına dayanıksız açıklık → kalır; ofisler bu yüzden bir kompartıman (büro, 8000 altında).",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 0,
+        "dwellings": 0,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "k00",
+            "name": "Ofis 1",
+            "area": 300
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "level": "k00",
+            "name": "Ofis 2",
+            "area": 300
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0,
+                "fireRating": "REI 90"
+              }
+            ],
+            "openings": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000010",
+                "kind": "door",
+                "length": 1.0,
+                "fireRating": "EI2 30-C"
+              }
+            ]
+          }
+        ],
+        "uses": [
+          "Büro"
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_compartment_opening",
+            "has": [
+              "EI2 30-C",
+              "24/7"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY 24/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "passed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "failed",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kompartiman-penceresi",
+      "neden": "REI 90 duvarda sınıfı beyan edilmemiş iç pencere: 24/7 eksik veri.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 0,
+        "dwellings": 0,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "k00",
+            "name": "Ofis 1",
+            "area": 300
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "level": "k00",
+            "name": "Ofis 2",
+            "area": 300
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0,
+                "fireRating": "REI 90"
+              }
+            ],
+            "openings": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000010",
+                "kind": "window",
+                "length": 1.0
+              }
+            ]
+          }
+        ],
+        "uses": [
+          "Büro"
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_compartment_opening",
+            "state": "missingData",
+            "has": [
+              "pencere"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY 24/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "passed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "missingData",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "e60-yalitimsiz",
+      "neden": "Duvar yalnız E 60 (yalıtım yok): 4/tt ısı geçirmezlik ister, kompartıman duvarı sayılmaz → 24/7 kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 0,
+        "dwellings": 0,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "k00",
+            "name": "Ofis 1",
+            "area": 300
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "level": "k00",
+            "name": "Ofis 2",
+            "area": 300
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0,
+                "fireRating": "E 60"
+              }
+            ]
+          }
+        ],
+        "uses": [
+          "Büro"
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY 24/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "passed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "tarihsiz",
+      "neden": "Başvuru tarihi yok: maddelerin tek hâlleri her aday günde aynı sonucu verir → 9200 m² büro kalır.",
+      "permit": {
+        "particulars": {}
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 0,
+        "dwellings": 0,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "k00",
+            "name": "Ofis 1",
+            "area": 4600
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "level": "k00",
+            "name": "Ofis 2",
+            "area": 4600
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0
+              }
+            ]
+          }
+        ],
+        "uses": [
+          "Büro"
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_compartment_area_over"
+          }
+        ],
+        "rules": {
+          "BYKHY 24/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "failed",
+            "9.9.2009"
+          ],
+          "BYKHY 24/7": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    },
+    {
+      "id": "2008-basvuru",
+      "neden": "Başvuru 1.6.2008: Ek-4'ün 9.9.2009'dan önceki tablosu kural setinde yok → 24/6 uzman incelemesi; 24/2 ve 24/7 2007 hâliyle.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "01.06.2008"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 4,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002",
+              "00000000-0000-4000-8000-000000000003",
+              "00000000-0000-4000-8000-000000000004"
+            ]
+          }
+        ],
+        "units": 0,
+        "dwellings": 0,
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "level": "k00",
+            "name": "Ofis 1",
+            "area": 4600
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "level": "k00",
+            "name": "Ofis 2",
+            "area": 4600
+          }
+        ],
+        "separations": [
+          {
+            "level": "k00",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001",
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "open": 0.0,
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000020",
+                "kind": "wall",
+                "length": 6.0
+              }
+            ]
+          }
+        ],
+        "uses": [
+          "Büro"
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "regulation_text_unknown",
+            "state": "expertReview",
+            "has": [
+              "1.6.2008",
+              "24/6",
+              "9.9.2009"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY 24/2": [
+            "outOfScope",
+            "19.12.2007"
+          ],
+          "BYKHY 24/6": [
+            "expertReview",
+            null
+          ],
+          "BYKHY 24/7": [
+            "outOfScope",
+            "19.12.2007"
+          ]
+        }
+      }
+    }
+  ]
+}
