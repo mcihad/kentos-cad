@@ -10,4 +10,8 @@ export type IfcBuildingExported = { path: string, schema: string, view: IfcView,
 /**
  * Its coverings (docs/adr/8070 §10): the slabs that are one; `slabs` does not count them.
  */
-coverings: number, bytes: bigint, sha256: string, };
+coverings: number, 
+/**
+ * Its fire compartments' zones (docs/adr/8088).
+ */
+compartments: number, bytes: bigint, sha256: string, };

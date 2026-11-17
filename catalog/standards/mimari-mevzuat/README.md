@@ -18,7 +18,8 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
 - **Yangın kompartımanları** (`kompartiman`, docs/adr/8081, 8086): mahaller arasındaki ayrımlardan ve katlar arası
   açıklıklardan kompartımanlar (en az EI 60, açık yer yok; galeri, atrium, merdiven katları birleştirir); tehlikeli
   alanların ayrımı (BYKHY 24/2), yüksek binada en çok üç kat (24/4), atrium (24/5), Ek-4'ün en çok alanı (24/6),
-  kompartıman duvarındaki açıklıklar (24/7).
+  kompartıman duvarındaki açıklıklar (24/7). `mimari.kompartimanlar` kompartımanları IFC dosyasının zon grupları için
+  verir (docs/adr/8088).
 - **Yangına dayanım süreleri** (`dayanim`, docs/adr/8082, 8087): beyan edilen sınıf Ek-3/B ve Ek-3/C'nin istediğiyle:
   kolon ve kiriş R, döşeme REI, dış ve kompartıman duvarı EI, korunumlu yangın merdiveni REI 120, teras döşemesi REI,
   çatı EI.

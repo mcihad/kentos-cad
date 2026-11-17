@@ -34,6 +34,7 @@ from .types import (  # noqa: F401
     ArchRecognized,
     ExportIfcBuilding,
     IfcBuildingExported,
+    IfcCompartment,
     IfcView,
     IfcViewName,
     PerformanceOperation,
@@ -942,8 +943,14 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
     kotu bilinmiyorsa ya da sistem yazılamıyorsa (coğrafi, kaydıran ya da aynalayan
     afin) konum yazılmaz ve sistemi olan projede export_losses ile söylenir; 0 sayılmaz.
     Gövdesi olmayan nesne yazılmaz ve söylenir (export_losses); gövdesi kapalı bir katı
-    olmayan nesne adı ve nedeniyle söylenir (ifc_open_body). Bütün yazılır ya da hiç;
-    çizimi değiştirmez. Retler: invalid_file_path, file_exists, invalid_ifc.
+    olmayan nesne adı ve nedeniyle söylenir (ifc_open_body). compartments: yangın
+    kompartımanları, her biri mahallerinin kalıcı kimlikleriyle; her biri dosyadaki
+    mahallerinin IfcZone'u (MM-ZON-Yangın_kompartımanı_N, nesne türü Yangın
+    kompartımanı); verilmezse Python çalıştıran ev sahibi (masaüstü, MCP, komut satırı)
+    standart paketten (tr.kentos.mimari-mevzuat, BYKHY 24) ister, boş liste hiçbirini
+    yazmaz; çizimin mahali olmayan kimlik invalid_ifc (compartments[i].rooms[j]). Bütün
+    yazılır ya da hiç; çizimi değiştirmez. Retler: invalid_file_path, file_exists,
+    invalid_ifc.
     """
     __slots__ = ()
     id = "cad.arch.ifc"
@@ -961,6 +968,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         *,
         path: str,
         building: str | None | Unset = UNSET,
+        compartments: Sequence[IfcCompartment] | None | Unset = UNSET,
         overwrite: bool | Unset = UNSET,
         stamp: str | None | Unset = UNSET,
         view: IfcView | IfcViewName | Unset = UNSET,
@@ -995,14 +1003,24 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         kotu bilinmiyorsa ya da sistem yazılamıyorsa (coğrafi, kaydıran ya da aynalayan
         afin) konum yazılmaz ve sistemi olan projede export_losses ile söylenir; 0 sayılmaz.
         Gövdesi olmayan nesne yazılmaz ve söylenir (export_losses); gövdesi kapalı bir katı
-        olmayan nesne adı ve nedeniyle söylenir (ifc_open_body). Bütün yazılır ya da hiç;
-        çizimi değiştirmez. Retler: invalid_file_path, file_exists, invalid_ifc.
+        olmayan nesne adı ve nedeniyle söylenir (ifc_open_body). compartments: yangın
+        kompartımanları, her biri mahallerinin kalıcı kimlikleriyle; her biri dosyadaki
+        mahallerinin IfcZone'u (MM-ZON-Yangın_kompartımanı_N, nesne türü Yangın
+        kompartımanı); verilmezse Python çalıştıran ev sahibi (masaüstü, MCP, komut satırı)
+        standart paketten (tr.kentos.mimari-mevzuat, BYKHY 24) ister, boş liste hiçbirini
+        yazmaz; çizimin mahali olmayan kimlik invalid_ifc (compartments[i].rooms[j]). Bütün
+        yazılır ya da hiç; çizimi değiştirmez. Retler: invalid_file_path, file_exists,
+        invalid_ifc.
 
         Args:
             doc: The drawing it works on.
             path:
             building: One of the building program's buildings, by its id (docs/adr/8072 §2): its storeys (a shared level where it
                 counts) and the objects on them, at its ±0.00, its code in the building's id; none: the project as one building.
+            compartments: The fire compartments (docs/adr/8088), each written as a zone of its rooms the file holds (`IfcZone`, “Yangın
+                kompartımanı N” in this order; one none of whose rooms the file holds is not written). The command writes what
+                it is given: the compartments are the standards package's (`tr.kentos.mimari-mevzuat`, BYKHY 24). Absent: a
+                host that runs Python (the desktop, MCP, the command line) asks the package for them; empty: none.
             overwrite:
             stamp:
             view:
@@ -1021,6 +1039,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         return self.execute_input(doc, ExportIfcBuilding(
             path=path,
             building=building,
+            compartments=_opt(compartments, lambda x: list(x)),
             overwrite=overwrite,
             stamp=stamp,
             view=view,
@@ -1033,6 +1052,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         *,
         path: str,
         building: str | None | Unset = UNSET,
+        compartments: Sequence[IfcCompartment] | None | Unset = UNSET,
         overwrite: bool | Unset = UNSET,
         stamp: str | None | Unset = UNSET,
         view: IfcView | IfcViewName | Unset = UNSET,
@@ -1043,6 +1063,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         return self.plan_input(doc, ExportIfcBuilding(
             path=path,
             building=building,
+            compartments=_opt(compartments, lambda x: list(x)),
             overwrite=overwrite,
             stamp=stamp,
             view=view,
@@ -1055,6 +1076,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         *,
         path: str,
         building: str | None | Unset = UNSET,
+        compartments: Sequence[IfcCompartment] | None | Unset = UNSET,
         overwrite: bool | Unset = UNSET,
         stamp: str | None | Unset = UNSET,
         view: IfcView | IfcViewName | Unset = UNSET,
@@ -1065,6 +1087,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         return self.validate_input(doc, ExportIfcBuilding(
             path=path,
             building=building,
+            compartments=_opt(compartments, lambda x: list(x)),
             overwrite=overwrite,
             stamp=stamp,
             view=view,
@@ -1077,6 +1100,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         *,
         path: str,
         building: str | None | Unset = UNSET,
+        compartments: Sequence[IfcCompartment] | None | Unset = UNSET,
         overwrite: bool | Unset = UNSET,
         stamp: str | None | Unset = UNSET,
         view: IfcView | IfcViewName | Unset = UNSET,
@@ -1092,6 +1116,7 @@ class _ArchIfc(LocalCommand[ExportIfcBuilding, IfcBuildingExported, IfcBuildingE
         return self.answer_input(doc, ExportIfcBuilding(
             path=path,
             building=building,
+            compartments=_opt(compartments, lambda x: list(x)),
             overwrite=overwrite,
             stamp=stamp,
             view=view,

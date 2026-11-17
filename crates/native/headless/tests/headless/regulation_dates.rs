@@ -296,3 +296,58 @@ fn a_crowded_room_s_door_and_the_stair_s_door_are_read_by_bykhy_47() {
     assert_eq!(state(&out, "BYKHY 47/2").as_deref(), Some("failed"));
     assert_eq!(state(&out, "BYKHY 47/3").as_deref(), Some("failed"));
 }
+
+/// `cad.arch.ifc` over the protocol with no `compartments` (docs/adr/8088): the package's fire compartments are the
+/// file's zones. Every wall of the office's storey declared EI 60: the meeting room and the corridor stay one
+/// compartment (their door declares nothing), the stair's room, behind EI 60 and its EI2 60 door, another; given an
+/// empty list, the file has none.
+#[test]
+fn a_headless_building_ifc_writes_the_package_s_fire_compartments() {
+    let mut doc = office_storey("left", "EI2 60-S200C5");
+    let walls: Vec<Value> = doc
+        .entities_with_uids()
+        .filter(|(_, e)| matches!(e, kentos_commands::Entity::Wall(_)))
+        .map(|(u, _)| json!(u.to_string()))
+        .collect();
+    run(
+        &mut doc,
+        "cad.arch.performance",
+        json!({"operation": {"kind": "objects", "uids": walls, "fireRating": {"value": "EI 60", "basis": {"kind": "author"}}}}),
+    );
+    let file = std::env::temp_dir().join(format!("kentos-headless-kompartiman-{}.ifc", std::process::id()));
+    let mut export = |doc: &mut Document, compartments: Option<Value>| -> (Value, String) {
+        let mut input = json!({"path": file.display().to_string(), "overwrite": true, "stamp": "2026-11-17T12:00:00"});
+        if let Some(c) = compartments {
+            input["compartments"] = c;
+        }
+        let answer = kentos_headless::call_envelope(
+            doc,
+            None,
+            CallEnvelope {
+                command: "cad.arch.ifc".into(),
+                version: None,
+                op: CallOp::Execute,
+                request_id: None,
+                expected: None,
+                relax_constraints: false,
+                input,
+            },
+        );
+        let output = match answer.result {
+            CommandResult::Completed { output, warnings } => {
+                assert!(warnings.iter().all(|w| w.code != "regulation_rule_unavailable"), "{warnings:?}");
+                output
+            }
+            other => panic!("{other:?}"),
+        };
+        (output, std::fs::read_to_string(&file).expect("the file"))
+    };
+    let (output, text) = export(&mut doc, None);
+    assert_eq!(output["compartments"], 2, "{output}");
+    let zones = text.lines().filter(|l| l.contains("IFCZONE(") && l.contains("'MM-ZON-Yang")).count();
+    assert_eq!(zones, 2);
+    let (output, text) = export(&mut doc, Some(json!([])));
+    assert_eq!(output["compartments"], 0, "{output}");
+    assert!(!text.contains("'MM-ZON-Yang"));
+    let _ = std::fs::remove_file(&file);
+}

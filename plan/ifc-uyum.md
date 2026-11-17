@@ -82,7 +82,7 @@ kimliği; test bağlantısı.
 | IfcBuildingStorey | BNK | Katlar | ✓ taşıyıcı döşeme kotu, brüt/net yükseklik döşemelerden (ADR 8076) | baskın kotu olmayan kat | IFC-02 |
 | IfcSpace | MHL | Mahal | ◐ hep `INTERNAL`, düz prizma | türü, kapalı hacmi, kaplama kalınlıkları | IFC-02, IFC-06 |
 | IfcSpatialZone | MZN | Emsal alanı (BIM-08) | ✓ (ADR 8069) | DIGER | IFC-03 |
-| IfcZone | ZON | Bağımsız bölüm, eklenti, ortak alan | ✓ (ADR 8069) | — | IFC-03 |
+| IfcZone | ZON | Bağımsız bölüm, eklenti, ortak alan; yangın kompartımanı | ✓ (ADR 8069, 8088) | — | IFC-03 |
 | IfcWall | DVR | Duvar | ◐ hep `STANDARD` | türü; yangın; katmanları | IFC-02, IFC-04 |
 | IfcCurtainWall | GDC | Giydirme cephe (BIM-09) | ✓ gövdesi panelleri, USERDEFINED, dikme ve kayıtları parçaları (K45, ADR 8070) | panel yerine kapı ve pencere | IFC-03 |
 | IfcSlab | DSM | Döşeme, balkon, teras | ◐ hep `FLOOR` | türü; yangın | IFC-02 |
@@ -341,7 +341,8 @@ Nesneleri BIM-08 ve BIM-09'dan gelir.
   sınıfı bazında tabloyla doğrulanır. `IfcSpace` net alanı EK-6 Tablo 6.125’te isteğe bağlıdır. EK-9/10 kanıtı,
   uygun miktar kaydı veya IFC geometrisinden doğrulanabilir hesapla sağlanır.
 - **Gruplar:** `IfcZone` (bağımsız bölüm, eklenti, ortak alan), mahallerini gruplar; adı numarası, uzun adı adı, nesne tipi
-  türü.
+  türü. Yangın kompartımanı da bir `IfcZone`: standart paketin bulduğu kompartımanın mahalleri, adı
+  `MM-ZON-Yangın_kompartımanı_N`, nesne tipi "Yangın kompartımanı" ([ADR 8088](../docs/adr/8088-fire-compartments-as-ifc-zones.md)).
 - **Elemanlar:** rampa, giydirme cephe ve dikmeleri, kaplama, baca, aks ızgarası ve eksenleri, asansör, vitrifiye, mobilya.
 - Vekil sınıf hiçbir durumda yazılmaz (EK-6 §6.1.3); karşılığı olmayan nesne kayıp listesindedir.
 

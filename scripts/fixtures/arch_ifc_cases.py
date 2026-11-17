@@ -3,7 +3,8 @@
 code.
 
 The drawing is section_building.py's: two storeys, 16 walls, 14 openings (5 doors, 9 windows), 10 rooms, 3 slabs,
-16 columns, 8 beams and a stair. A case says what the file holds (bytes and digest aside): the schema EK-5 §5.4 asks
+16 columns, 8 beams and a stair. The fire compartments a caller gives (docs/adr/8088) are its storeys' rooms: each one
+zone; a room that is no room of the drawing (an unknown id, a wall's) is refused. A case says what the file holds (bytes and digest aside): the schema EK-5 §5.4 asks
 (IFC 4.3, `IFC4X3_ADD2`) and how many of each class, counted from the definition. A ramp is written (docs/adr/8070
 §1) and nothing is said of it; grids all in one direction are no IfcGrid and are said (§4); a drawing without a
 building writes nothing. The file's content is arch_ifc_check.py's: IfcOpenShell against the same definition.
@@ -23,6 +24,8 @@ import section_building as sb  # noqa: E402
 
 OUT = ROOT / "fixtures/commands/v1/cad.arch.ifc.json"
 STAMP = "2026-11-11T12:00:00"
+# An id no object of the drawing has.
+ABSENT = "0192f5a1-4242-7000-8000-0000000009ff"
 # Writing a file changes nothing in the drawing.
 SAME = {"canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}
 SETUP = copy.deepcopy(sb.d)
@@ -119,13 +122,23 @@ def counts(d):
             + sum(curtain_frames(w) for w in curtains),
             "fixtures": 0,
             "gridAxes": grid_axes(ents),
-            "coverings": sum(1 for e in kind("slab") if e.get("covering"))}
+            "coverings": sum(1 for e in kind("slab") if e.get("covering")),
+            "compartments": 0}
 
 
-def output(path, d=SETUP, view="designTransfer"):
+def output(path, d=SETUP, view="designTransfer", compartments=0):
     """What the export says: its bodies whole (designTransfer) or already cut (reference, docs/adr/8071 §4); the same
-    objects either way."""
-    return {"path": path, "schema": "IFC4X3_ADD2", "view": view, **counts(d), "bytes": "$any", "sha256": "$any"}
+    objects either way; `compartments` the fire compartments' zones written (docs/adr/8088)."""
+    return {"path": path, "schema": "IFC4X3_ADD2", "view": view, **counts(d), "compartments": compartments,
+            "bytes": "$any", "sha256": "$any"}
+
+
+def by_storey(d=SETUP):
+    """The rooms of each storey, the storeys in the definition's order: the fire compartments a caller gives
+    (docs/adr/8088: the floors between the storeys separate them, the walls inside do not)."""
+    levels = [lv["id"] for lv in d["settings"]["arch"]["levels"]]
+    rooms = [(e.get("arch", {}).get("level"), u) for e, u in zip(d["entities"], d["uids"]) if e["kind"] == "space"]
+    return [{"rooms": [u for lv, u in rooms if lv == level]} for level in levels]
 
 
 def with_ramp():
@@ -286,6 +299,28 @@ def cases():
                    completed(output("$tmp:bina-12.ifc")))]),
         case("Saat verilmezse şimdiki zaman yazılır",
              [step("execute", {"path": "$tmp:bina-13.ifc"}, completed(output("$tmp:bina-13.ifc")))]),
+        case("Yangın kompartımanları: her kat bir zon, mahalleri grubun üyesi",
+             [step("execute", {"path": "$tmp:bina-30.ifc", "stamp": STAMP, "compartments": by_storey()},
+                   completed(output("$tmp:bina-30.ifc", compartments=2)))]),
+        case("Planı: yangın kompartımanları",
+             [step("plan", {"path": "$tmp:bina-31.ifc", "compartments": by_storey()},
+                   completed(output("$tmp:bina-31.ifc", compartments=2)))]),
+        case("Boş kompartıman listesi: zon yazılmaz",
+             [step("execute", {"path": "$tmp:bina-32.ifc", "stamp": STAMP, "compartments": []},
+                   completed(output("$tmp:bina-32.ifc")))]),
+        case("Mahalsiz kompartıman yazılmaz, numara almaz",
+             [step("execute", {"path": "$tmp:bina-33.ifc", "stamp": STAMP,
+                               "compartments": [{"rooms": []}] + by_storey()[:1]},
+                   completed(output("$tmp:bina-33.ifc", compartments=1)))]),
+        case("Kompartımanın mahali çizimde yok: reddedilir",
+             [step("execute", {"path": "$tmp:bina-34.ifc",
+                               "compartments": [{"rooms": [by_storey()[0]["rooms"][0], ABSENT]}]},
+                   failed("invalid_ifc", f"“{ABSENT}” çizimin bir mahali değil; kompartımana çizimdeki mahallerin "
+                                         "kimliklerini verin.", "compartments[0].rooms[1]"))]),
+        case("Kompartımana duvar verilemez: reddedilir",
+             [step("plan", {"path": "$tmp:bina-35.ifc", "compartments": [{"rooms": [SETUP["uids"][0]]}]},
+                   failed("invalid_ifc", f"“{SETUP['uids'][0]}” çizimin bir mahali değil; kompartımana çizimdeki "
+                                         "mahallerin kimliklerini verin.", "compartments[0].rooms[0]"))]),
         case("Yalnız zemin katı dolu: boş 1. kat da yazılır",
              [step("execute", {"path": "$tmp:bina-14.ifc", "stamp": STAMP},
                    completed(output("$tmp:bina-14.ifc", ground)))],

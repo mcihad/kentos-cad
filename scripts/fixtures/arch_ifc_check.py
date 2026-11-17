@@ -32,7 +32,10 @@ It checks, in fixtures/arch/v1/ifc/kesit-binasi.ifc:
 - materials (EK-6): walls their core layer's (Tuğla), slabs theirs (Betonarme), columns and beams Betonarme;
 - the grids (docs/adr/8070 §4) are one rectangular IfcGrid of the building, its U and V axes the definition's lines with
   their names and points; the U stair is a HALF_TURN_STAIR of Betonarme (§2);
-- every element and room gives IfcOpenShell a shape."""
+- every element and room gives IfcOpenShell a shape;
+- fixtures/arch/v1/ifc/kesit-binasi-kompartiman.ifc (the fire compartments a caller gives, docs/adr/8088): one
+  IfcZone of object type "Yangın kompartımanı" for each storey, named `MM-ZON-Yangın_kompartımanı_N`, grouping exactly
+  that storey's rooms; the other files have none."""
 import math
 import re
 import sys
@@ -303,6 +306,24 @@ def main() -> int:
             ensure(st.PredefinedType == "HALF_TURN_STAIR", f"{st.Name}: {st.PredefinedType}")
         mats = [m.Name for m in [ue.get_material(st)] if m is not None]
         ensure(mats == ["Betonarme"], f"{st.Name}: material {mats}")
+
+    # Fire compartments (docs/adr/8088): kesit-binasi-kompartiman.ifc is written with each storey's rooms one
+    # compartment; the other files with none.
+    zones = [z for z in f.by_type("IfcZone") if z.ObjectType == "Yangın kompartımanı"]
+    if path.name == "kesit-binasi-kompartiman.ifc":
+        levels = [lv["id"] for lv in sb.d["settings"]["arch"]["levels"]]
+        want = [{u for e, u in zip(ents, sb.uids) if e["kind"] == "space" and e.get("arch", {}).get("level") == lv}
+                for lv in levels]
+        ensure(len(zones) == len(want), f"compartment zones {len(zones)}, storeys {len(want)}")
+        for n, (z, rooms) in enumerate(zip(sorted(zones, key=lambda z: z.Name), want), 1):
+            ensure((z.Name, z.LongName) == (f"MM-ZON-Yangın_kompartımanı_{n}", f"Yangın kompartımanı {n}"),
+                   f"zone {z.Name!r} / {z.LongName!r}")
+            members = [o for r in z.IsGroupedBy for o in r.RelatedObjects]
+            ensure(all(m.is_a("IfcSpace") for m in members), f"{z.Name}: a member not a space")
+            got = {str(uuid.UUID(hex=ifcopenshell.guid.expand(m.GlobalId))) for m in members}
+            ensure(got == rooms, f"{z.Name}: rooms {sorted(got)}, the storey's {sorted(rooms)}")
+    else:
+        ensure(not zones, f"{len(zones)} compartment zones in a file written without them")
 
     # Shapes.
     settings = ifcopenshell.geom.settings()

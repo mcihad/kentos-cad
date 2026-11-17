@@ -2,7 +2,7 @@
 
 - **Durum:** uygulandı (17 Kasım 2026). Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-13; ADR
   [8081](8081-fire-compartments.md) §6 ("Katlar arası açıklıklar: galeri, atrium (24/5) ve açık merdivenle birleşen
-  katlar; 24/4"). Kompartımanın IFC grubu kaldı (§6).
+  katlar; 24/4"). Kompartımanın IFC grubu [ADR 8088](8088-fire-compartments-as-ifc-zones.md)'de yapıldı.
 - **Bağlam:** ADR [8081](8081-fire-compartments.md) (kompartımanlar, ayrımlar), [8082](8082-fire-resistance-of-elements.md)
   (bina yüksekliği), [8045](8045-balanced-stairs-and-special-elements.md) §4 (döşeme boşluğu, merdivenin çıkışı),
   [8035](8035-fire-escape-routes-distances-load-exits.md) (kaçış merdiveni mahali).
@@ -77,7 +77,8 @@
 ## §6. Sıradaki adımlar
 
 - **Kompartımanın IFC grubu** (bim-plan "Gruplar: … yangın kompartımanı"): paketin kompartımanları `IfcZone` olarak;
-  hesap Python'da olduğu için dışa aktarma paketin sonucunu okumalı.
+  hesap Python'da olduğu için dışa aktarma paketin sonucunu okumalı. [ADR 8088](8088-fire-compartments-as-ifc-zones.md)'de
+  yapıldı.
 - **Yürüyen merdiven boşluğu** (modelde yok), **duman kontrolü ve duman perdesi beyanı** (atriumun uzman incelemesini
   kapatır), **atrium alanının "hiçbir noktada"sı** (yığının en dar katı okunuyor; kesitte daralma okunmaz).
 - **24/4 öncesi metin** (2007, 2009) kural setine girerse 9.7.2015'ten önceki başvuru da okunur.

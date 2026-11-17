@@ -8,6 +8,8 @@
 //!   building's finding, naming no object, `code::message`).
 //! - **A rule that does not answer** (no Python, a broken package) leaves the Rust findings as they are and says why in
 //!   a warning (`regulation_rule_unavailable`): an empty list is not taken for a pass.
+//! - **`cad.arch.ifc`** (docs/adr/8088): a call that gives no `compartments` gets the package's fire compartments,
+//!   written as zones of their rooms; one that does not answer writes the file without them and says so.
 
 use kentos_commands::{
     ArchAuditCheck, ArchAuditExceptionView, ArchAuditFinding, ArchAuditState, CommandResult, CommandWarning, Vec2,
@@ -38,6 +40,52 @@ pub fn facts(doc: &Document) -> Value {
         facts = facts.with_permit(permit);
     }
     serde_json::to_value(facts).unwrap_or(Value::Null)
+}
+
+/// `cad.arch.ifc`'s input with the fire compartments the package finds (docs/adr/8088; `kompartimanlar`), when the
+/// caller gave none (`compartments` absent or null): the file's zones. What to say when they are not written: the
+/// package does not answer, or the application's day is one its rules do not know; the file is written without them.
+pub fn compartments(doc: &Document, command: &str, input: &mut Value) -> Option<CommandWarning> {
+    if command != kentos_commands::CAD_ARCH_IFC
+        || !input.is_object()
+        || input.get("compartments").is_some_and(|v| !v.is_null())
+    {
+        return None;
+    }
+    match kentos_standards::call(PACKAGE, MODULE, "kompartimanlar", vec![facts(doc)]) {
+        Ok(answer) => {
+            // Each compartment's rooms: the command's input (its storeys and area are the package's words).
+            let rooms: Vec<Value> = answer
+                .get("compartments")
+                .and_then(Value::as_array)
+                .map(|list| list.iter().map(|c| json!({"rooms": c.get("rooms").cloned().unwrap_or_else(|| json!([]))})).collect())
+                .unwrap_or_default();
+            input["compartments"] = Value::Array(rooms);
+            answer.get("note").and_then(Value::as_str).map(|note| CommandWarning {
+                code: kentos_commands::codes::EXPORT_LOSSES.into(),
+                message: format!("Yangın kompartımanları IFC'ye yazılmadı: {note}"),
+                path: None,
+            })
+        }
+        Err(why) => {
+            input["compartments"] = json!([]);
+            Some(CommandWarning {
+                code: kentos_commands::codes::REGULATION_RULE_UNAVAILABLE.into(),
+                message: format!(
+                    "Yangın kompartımanları IFC'ye yazılmadı: mevzuatın Python kuralları çalışmadı: {why} Ayarlar › \
+                     Python'dan bir Python seçin."
+                ),
+                path: None,
+            })
+        }
+    }
+}
+
+/// A warning added to a completed result.
+pub fn warn(result: &mut CommandResult<Value>, warning: CommandWarning) {
+    if let CommandResult::Completed { warnings, .. } = result {
+        warnings.push(warning);
+    }
 }
 
 /// `cad.arch.audit`'s completed result with the package's findings and rule set added, when it asked for them.

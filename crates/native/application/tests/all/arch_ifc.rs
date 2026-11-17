@@ -80,6 +80,61 @@ fn the_drawing_s_walls_doors_windows_and_rooms_are_the_files() {
     }
 }
 
+/// The fire compartments a caller gives (docs/adr/8088), here the section building's two storeys' rooms each: two
+/// zones, `MM-ZON-Yangın_kompartımanı_1` and `_2`, their object type “Yangın kompartımanı”, each grouping its storey's
+/// five rooms. `KENTOS_WRITE_IFC_BUILDING=1` keeps fixtures/arch/v1/ifc/kesit-binasi-kompartiman.ifc, which
+/// `scripts/fixtures/arch_ifc_check.py` reads with IfcOpenShell.
+#[test]
+fn the_fire_compartments_are_zones_of_their_rooms() {
+    use kentos_commands::{CallOp, IfcCompartment};
+    use kentos_native_application::{ExecutionContext, registry};
+    let mut doc = building();
+    let levels: Vec<String> =
+        doc.settings().arch.as_ref().expect("Mimari").levels.iter().map(|l| l.id.clone()).collect();
+    let compartments: Vec<IfcCompartment> = levels
+        .iter()
+        .map(|level| IfcCompartment {
+            rooms: doc
+                .entities_with_uids()
+                .filter(|(_, e)| matches!(e, Entity::Space(s) if s.space.arch.level.as_deref() == Some(level.as_str())))
+                .map(|(u, _)| u.to_string())
+                .collect(),
+        })
+        .collect();
+    assert_eq!(compartments.iter().map(|c| c.rooms.len()).collect::<Vec<_>>(), [5, 5]);
+    let keep = std::env::var_os("KENTOS_WRITE_IFC_BUILDING").is_some();
+    let path = if keep {
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc/kesit-binasi-kompartiman.ifc")
+    } else {
+        std::env::temp_dir().join(format!("kentos-kompartiman-{}.ifc", std::process::id()))
+    };
+    let input = serde_json::json!({
+        "path": path.display().to_string(), "stamp": "2026-11-11T12:00:00", "overwrite": true,
+        "compartments": compartments,
+    });
+    let answer = registry::run(&mut ExecutionContext::new(&mut doc), "cad.arch.ifc", CallOp::Execute, input).unwrap();
+    assert_eq!(answer["status"], "completed", "{answer}");
+    assert_eq!(answer["output"]["compartments"], 2, "{answer}");
+    let text = std::fs::read_to_string(&path).expect("the file");
+    if !keep {
+        let _ = std::fs::remove_file(&path);
+    }
+    // STEP writes “ı” as \X2\0131\X0\: the names end in their numbers.
+    let zones: Vec<&str> = text.lines().filter(|l| l.contains("IFCZONE(") && l.contains("'MM-ZON-Yang")).collect();
+    assert_eq!(zones.len(), 2, "{zones:#?}");
+    assert!(zones[0].contains("_1'") && zones[1].contains("_2'"), "{zones:#?}");
+    // Each zone groups five spaces.
+    for z in &zones {
+        let id = z.split('=').next().expect("its instance").trim();
+        let rel = text
+            .lines()
+            .find(|l| l.contains("IFCRELASSIGNSTOGROUP(") && l.trim_end().ends_with(&format!(",{id});")))
+            .unwrap_or_else(|| panic!("{id}'s members"));
+        let members = rel.split("),$,").next().and_then(|x| x.rsplit('(').next()).expect("the list");
+        assert_eq!(members.split(',').count(), 5, "{rel}");
+    }
+}
+
 /// The künye a permit set writes into the drawing's variables (docs/adr/8037), as an office fills it.
 const KUNYE: [(&str, &str); 17] = [
     ("proje_kodu", "260123"),

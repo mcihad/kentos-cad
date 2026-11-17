@@ -125,6 +125,27 @@ def kompartimanlar(bina: dict[str, Any], dakika: int) -> list[list[str]]:
     return sorted(gruplar.values())
 
 
+def gruplar(bina: dict[str, Any], gun: date | None) -> tuple[list[dict[str, Any]], str | None]:
+    """Yangın kompartımanları, IFC'nin zon grupları için (docs/adr/8088): her birinin mahalleri (kimlikleri), katları
+    (alttan üste) ve Ek-4'ün saydığı alanı; en alt katı ve ilk mahali öne. Sınır 24/7'nin başvuru günündeki hâlinin
+    süresiyle (gün yoksa en yeni hâl). Gün maddenin bilinen ilk hâlinden önceyse kompartıman yok ve nedeni."""
+    hal = y.hal("BYKHY", "24/7", gun) if gun is not None else y.haller("BYKHY", "24/7")[-1]
+    if hal is None:
+        ilk = y.haller("BYKHY", "24/7")[0]
+        return [], (f"başvuru günü ({y.yaz(gun)}) BYKHY 24/7'nin kural setindeki ilk hâlinden ({ilk.etiket}) önce; o "
+                    f"günün kompartıman kuralı KentOS'ta yok")
+    dakika = int(hal.anahtar.get("minutes", 60))
+    alanlar = {m["uid"]: float(m.get("area") or 0) for m in bina.get("spaces") or []}
+    katlar = {m["uid"]: m.get("level") for m in bina.get("spaces") or []}
+    kotlar = {k["level"]: float(k.get("elevation") or 0) for k in bina.get("storeys") or []}
+    out = []
+    for g in kompartimanlar(bina, dakika):
+        kat_listesi = sorted({katlar[u] for u in g if katlar.get(u)}, key=lambda k: (kotlar.get(k, 0.0), k))
+        out.append({"rooms": sorted(g), "storeys": kat_listesi, "area": round(sum(alanlar.get(u, 0.0) for u in g), 3)})
+    out.sort(key=lambda c: (min((kotlar.get(k, 0.0) for k in c["storeys"]), default=0.0), c["rooms"][0]))
+    return out, None
+
+
 def _sinifi(bina: dict[str, Any], hal: y.Hal) -> tuple[list[dict[str, Any]], str | None]:
     """Binanın Ek-4 kullanım sınıfları (adlarıyla); bilinmiyorsa neden."""
     siniflar = hal.anahtar["classes"]

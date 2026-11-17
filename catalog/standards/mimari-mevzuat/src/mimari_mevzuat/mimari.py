@@ -50,3 +50,15 @@ def denetle(facts: dict[str, Any]) -> dict[str, Any]:
         "rules": satirlar,
         "findings": [{k: v for k, v in b.items() if not k.startswith("_")} for b in bulgular],
     }
+
+
+def kompartimanlar(facts: dict[str, Any]) -> dict[str, Any]:
+    """Yangın kompartımanları (``compartments``: her birinin mahalleri, katları, alanı) ve yazılamıyorsa nedeni
+    (``note``): IFC'nin zon grupları (docs/adr/8088). Başvuru günü künyeden; yoksa en yeni hâller."""
+    gun, _ = y.basvuru(facts.get("permit"))
+    bina = facts.get("building") or {}
+    if not bina.get("spaces"):
+        return {"compartments": [], "note": None}
+    gruplar, neden = kompartiman.gruplar(bina, gun)
+    return {"compartments": gruplar, "note": neden}
+

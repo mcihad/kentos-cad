@@ -33,13 +33,24 @@ impl IfcView {
     }
 }
 
+/// A fire compartment to write as a group of its rooms (docs/adr/8088; BYKHY 4/tt, 24): its rooms by persistent id, as
+/// the standards package finds them.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct IfcCompartment {
+    pub rooms: Vec<String>,
+}
+
 /// Input of `cad.arch.ifc` v1: the file's path (absolute, ending `.ifc`); `stamp` the file's date and time
 /// (`YYYY-MM-DDThh:mm:ss`; absent: now, UTC); `overwrite` writes over a file that is there; `view` what its bodies
 /// are (absent: `designTransfer`).
 ///
 /// Refusals, in this order: `invalid_file_path` (empty, relative, not `.ifc`, its folder not there), `file_exists`
-/// (without `overwrite`), `invalid_ifc` (a stamp that does not read; nothing to write: no wall, slab, column, beam,
-/// roof, railing, stair or room with a body). Warnings: `export_losses` (an object of the building the file does not
+/// (without `overwrite`), `invalid_ifc` (a stamp that does not read; a compartment's room that is no room of the
+/// drawing; nothing to write: no wall, slab, column, beam, roof, railing, stair or room with a body). Warnings: `export_losses` (an object of the building the file does not
 /// hold: one the section model gives no body, an opening without its outline through a written wall, a room without
 /// an area, grid axes all in one direction on their storey; a curved stair written as straight pieces, or a curved
 /// object whose arcs the model could not take back); `ifc_open_body` (a body written that is not a closed, simple
@@ -65,6 +76,13 @@ pub struct ExportIfcBuilding {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub building: Option<String>,
+    /// The fire compartments (docs/adr/8088), each written as a zone of its rooms the file holds (`IfcZone`, “Yangın
+    /// kompartımanı N” in this order; one none of whose rooms the file holds is not written). The command writes what
+    /// it is given: the compartments are the standards package's (`tr.kentos.mimari-mevzuat`, BYKHY 24). Absent: a
+    /// host that runs Python (the desktop, MCP, the command line) asks the package for them; empty: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub compartments: Option<Vec<IfcCompartment>>,
 }
 
 /// Output of `cad.arch.ifc` v1, and its plan: the file, its schema, what its bodies are (`view`), how many of each
@@ -129,6 +147,10 @@ pub struct IfcBuildingExported {
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub coverings: u32,
+    /// Its fire compartments' zones (docs/adr/8088).
+    #[serde(default)]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub compartments: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: u64,
     pub sha256: String,

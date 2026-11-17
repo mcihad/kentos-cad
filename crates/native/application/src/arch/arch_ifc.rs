@@ -665,7 +665,29 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
         })?),
         None => None,
     };
+    // The fire compartments (docs/adr/8088): every room one of the drawing's.
+    let rooms: std::collections::HashSet<u128> = doc
+        .entities_with_uids()
+        .filter(|(_, e)| matches!(e, kentos_commands::Entity::Space(_)))
+        .map(|(u, _)| u.as_u128())
+        .collect();
+    let mut compartments: Vec<Vec<u128>> = Vec::new();
+    for (i, c) in input.compartments.iter().flatten().enumerate() {
+        let mut ids = Vec::new();
+        for (j, r) in c.rooms.iter().enumerate() {
+            let id = kentos_domain::Uuid::parse_str(r.trim()).ok().map(|u| u.as_u128()).filter(|id| rooms.contains(id));
+            let Some(id) = id else {
+                return Err(bad(
+                    &format!("compartments[{i}].rooms[{j}]"),
+                    format!("“{r}” çizimin bir mahali değil; kompartımana çizimdeki mahallerin kimliklerini verin."),
+                ));
+            };
+            ids.push(id);
+        }
+        compartments.push(ids);
+    }
     let (mut b, written, curved, unplaced) = made_for(doc, &stamp, &application, scope.as_ref());
+    let zoned = kentos_ifc::compartment::add(&mut b, &compartments);
     // Its bodies whole, or already cut (docs/adr/8071 §4).
     b.view = match input.view {
         IfcView::DesignTransfer => kentos_ifc::building::View::DesignTransfer,
@@ -768,6 +790,7 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
         fixtures: n(written.fixtures),
         grid_axes: n(written.grid_axes),
         coverings: n(written.coverings),
+        compartments: n(zoned),
         bytes: text.len() as u64,
         sha256,
     };

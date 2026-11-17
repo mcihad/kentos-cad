@@ -9,6 +9,7 @@
 //! - [`naming`]: the regulation's names (EK-5 §5.5) and its classes' category codes (EK-5 Tablo 5.1).
 //! - [`arch`]: KentOS Mimari's model as a [`building::Building`]: classes, names and the properties EK-6 asks.
 //! - [`quality`]: EK-9's model quality control form, answered from the model (Md. 15).
+//! - [`compartment`]: the fire compartments the standards package found, as zones of their spaces (docs/adr/8088).
 //! - [`catalog`]: the base profile's IFC annexes as data (EK-5, EK-6, EK-7, EK-9), every row with its table and page
 //!   (docs/adr/8062), and KentOS's IFC decisions.
 //! - [`catalog_schema`]: the catalog compared with the IFC 4.3 schema and its official templates.
@@ -23,6 +24,7 @@ pub mod building;
 pub mod catalog;
 pub mod catalog_schema;
 pub mod closed;
+pub mod compartment;
 pub mod crs;
 pub mod expected;
 pub mod ids;

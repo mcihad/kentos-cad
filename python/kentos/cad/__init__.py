@@ -1620,6 +1620,7 @@ __all__ = [
     "HydrographPoint",
     "IfcAlignmentWritten",
     "IfcBuildingExported",
+    "IfcCompartment",
     "IfcExported",
     "IfcInspect",
     "IfcInspected",

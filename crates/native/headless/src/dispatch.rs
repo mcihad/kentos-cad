@@ -111,12 +111,24 @@ pub fn run(
     }
     // The audit's regulation group with the standards package's Python rules too (docs/adr/8078).
     let asked = (command == kentos_commands::CAD_ARCH_AUDIT).then(|| input.clone());
+    // The building's IFC with the package's fire compartments when the call gives none (docs/adr/8088).
+    #[cfg_attr(not(feature = "mod-gis"), allow(unused_mut))]
+    let mut input = input;
+    #[cfg(feature = "mod-gis")]
+    let unzoned = crate::regulation::compartments(doc, command, &mut input);
     let mut cx = ExecutionContext::new(doc);
     let answer = registry::run(&mut cx, command, op.call_op(), input).map_err(|unrun| match unrun.code {
         "unknown_command" => refusal(command),
         _ => HeadlessError::new("invalid_input", unrun.message),
     })?;
     drop(cx);
+    #[cfg(feature = "mod-gis")]
+    if let Some(warning) = unzoned
+        && let Ok(mut result) = serde_json::from_value::<kentos_commands::CommandResult<Value>>(answer.clone())
+    {
+        crate::regulation::warn(&mut result, warning);
+        return Ok(serde_json::to_value(result).unwrap_or(answer));
+    }
     #[cfg(feature = "mod-gis")]
     if let Some(input) = asked
         && let Ok(mut result) = serde_json::from_value::<kentos_commands::CommandResult<Value>>(answer.clone())
@@ -152,8 +164,17 @@ pub fn call_envelope(
     }
     let command = envelope.command.clone();
     let asked = (command == kentos_commands::CAD_ARCH_AUDIT).then(|| envelope.input.clone());
+    // The building's IFC with the package's fire compartments when the call gives none (docs/adr/8088).
+    #[cfg_attr(not(feature = "mod-gis"), allow(unused_mut))]
+    let mut envelope = envelope;
+    #[cfg(feature = "mod-gis")]
+    let unzoned = crate::regulation::compartments(doc, &command, &mut envelope.input);
     #[cfg_attr(not(feature = "mod-gis"), allow(unused_mut))]
     let mut answer = call::call(doc, store, envelope);
+    #[cfg(feature = "mod-gis")]
+    if let Some(warning) = unzoned {
+        crate::regulation::warn(&mut answer.result, warning);
+    }
     #[cfg(feature = "mod-gis")]
     if let Some(input) = asked {
         crate::regulation::add(doc, &command, &input, &mut answer.result);

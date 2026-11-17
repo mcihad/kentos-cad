@@ -442,7 +442,8 @@ yerde biter. Dayanak EK-6 6.58, 6.60, 6.68; EK-9/10, 12–14; PAİY 4, 5/8, 20�
   dubleks tek mahaldir.
 - **Çizimde denetim (dışa aktarmadan önce):** aynı katta örtüşen mahal (gerçek çokgenle), kapanmayan mahal, katının kot
   aralığında olmayan mahal, numarası yinelenen mahal.
-- **Gruplar:** bağımsız bölüm, eklenti, ortak alan (bina programı, ADR 0773 ve 8031); yangın kompartımanı (BIM-13).
+- **Gruplar:** bağımsız bölüm, eklenti, ortak alan (bina programı, ADR 0773 ve 8031); yangın kompartımanı (BIM-13; ADR 8088'de
+  yapıldı: paketin kompartımanları `IfcZone`).
 
 **İlk kabul:** iki bağımsız bölümlü örnekte emsale dahil alanların toplamı tablonun emsale esas alanına eşit (bağımsız
 başvuru). Genel toplam eşit kaldığı hâlde iki kat arasında yer değiştiren alan veya yanlış emsal sınıfı denetimden kalır.
@@ -588,7 +589,7 @@ maddenin özet satırında (`ArchAuditFinding.state`, `ArchAudited.ruleSet`, K62
 söyler; başsız `cad.arch.audit` (MCP, Python) aynı bulguyu ve kural setini verir. İlk kabul tuttu: 25 bağımsız durum;
 aynı çizim 30.6.2026'da geçer, 2.7.2026'da 34/8'den kalır, tarihsiz eksik veridir; yağmurlama sınaması ADR 8035'in
 (`fire_escape_tests`). İç yükseklik ADR 8040 §3'te Rust'ta yapılmıştı.
-**Kalan:** kompartımanın IFC grubu (ADR 8086 §6); Ek-3'te 4-a kaçış yolu çatısı, korunumlu şaft beyanı, asma tavan,
+**Kalan:** Ek-3'te 4-a kaçış yolu çatısı, korunumlu şaft beyanı, asma tavan,
 yangın kesici ve taşıyıcı duvar (ADR 8082 §6); 62/4'ün kuyu havalandırması ve bodrum asansörünün holü (ADR 8087 §6);
 erişilebilir yol (TS 9111 metni); plan notlarının öbür konuları (ADR 8084 §6); blok başına bölge ve 28/1-d (ADR 8085
 §6);
@@ -649,6 +650,10 @@ açıldığı okunur; BYKHY 25/3 (yüksek binada tesisat şaftı EI 120, kapak E
 holüne açılan şaft kapağı), 62/2 (kuyu EI 60), 62/4 ve 62/6 (asansör kapısının önü), 62/7 ve Ek-3/B 12 (9.7.2015'ten kat
 kapısı E 60/E 30), Ek-3/B 4 (teras REI, çatı EI). Ayrımların ölçümü düzeldi: açıklığın halkası, geçişin yeri 0,1 mm'ye.
 26 bağımsız durum; masaüstünde 8 katlı büro.
+**Yapıldı (17 Kasım 2026, [ADR 8088](../docs/adr/8088-fire-compartments-as-ifc-zones.md), K110–K113):** kompartımanın IFC
+grubu: paketin `kompartimanlar`ı (0.12.0) kompartımanları verir, `cad.arch.ifc`'nin `compartments` girdisi her birini
+mahallerinin `IfcZone`'u olarak yazar (`MM-ZON-Yangın_kompartımanı_N`); girdi verilmezse masaüstü, MCP ve komut satırı
+paketi sorar. IfcOpenShell 0 bulgu; IFC modeli seçili mahalin zonunu "Grup" satırında söyler.
 
 **Kullanıcı sonucu:** Denetim, başvuru tarihinde yürürlükte olan kuralları uygular. Her bulgu geçti, kaldı, eksik veri,
 uzman incelemesi ya da kapsam dışıdır. Yorum isteyen konu kendiliğinden "uygun" sayılmaz. Dayanak Z9; Ek A.
@@ -838,7 +843,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B12b ~ | IFC görüntüleyici | IFC-12 | Dosya kendi penceresinde: ağaç, özellikler, kesit; dışa aktarılan tek tıkla görülür (ilk dilim ADR 8073; gerçek pencerede kabul ve kesitin tutamakları kaldı) |
 | B13 ~ | Yazılmış dosyadan doğrulama, IDS ve kontrol formu | IFC-08 | 21 sorunun kanıtı dosyadan (ADR 8074; ikinci okuyucu ve IfcTester KentOS'la aynı; son yazılan dosya, beş sonuç raporu ve bütçe kaldı) |
 | B14 ~ | BIM ruhsat paketi | BIM-14 | Tek komut, tek revizyon, tek paket (ADR 8075; gerçek paket ADR 8076; müellifin cevapları çizimde ve basılan formda ADR 8077; 2+1 de yayımlanıyor, MCP'de uçtan uca, eskiyen cevap durdurur ADR 8077 §7) |
-| B15 ~ | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti (ADR 8078: asansör 34/1 ve 34/8'in hâlleri, eksik veri ve uzman incelemesi, uzman onayı, kaçış yolu kapıları BYKHY 47; ADR 8079: emsalin 22/1-ç, -f, -k, -l sınırları ve koşulları, kat ara toplamı; ADR 8080: merdiven altı 1,80 m; ADR 8081: kompartıman (24/2, 24/6, 24/7); ADR 8082: Ek-3 dayanımları; ADR 8083: kat yüksekliği 28/1-c ve kapılar 39/1 tarihli hâlleriyle; ADR 8084: plan notu katmanı; ADR 8085: bölgeye göre kat yükseklikleri; ADR 8086: katlar arası açıklıklar, 24/4, 24/5; ADR 8087: şaftlar, asansörler, çatılar (25/3, 41/9, 62, Ek-3/B 4 ve 12); taşıyıcı duvar, asma tavan ve kompartımanın IFC grubu kaldı) |
+| B15 ~ | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti (ADR 8078: asansör 34/1 ve 34/8'in hâlleri, eksik veri ve uzman incelemesi, uzman onayı, kaçış yolu kapıları BYKHY 47; ADR 8079: emsalin 22/1-ç, -f, -k, -l sınırları ve koşulları, kat ara toplamı; ADR 8080: merdiven altı 1,80 m; ADR 8081: kompartıman (24/2, 24/6, 24/7); ADR 8082: Ek-3 dayanımları; ADR 8083: kat yüksekliği 28/1-c ve kapılar 39/1 tarihli hâlleriyle; ADR 8084: plan notu katmanı; ADR 8085: bölgeye göre kat yükseklikleri; ADR 8086: katlar arası açıklıklar, 24/4, 24/5; ADR 8087: şaftlar, asansörler, çatılar (25/3, 41/9, 62, Ek-3/B 4 ve 12); ADR 8088: kompartıman IFC zonu; taşıyıcı duvar ve asma tavan kaldı) |
 | B16 | Bilgi yönetimi ve teslim kaydı | BIM-15 | Teslim ve iade kayıtlı |
 | B17 | Büro ve belediye pilotu | BIM-16, IFC-11 | İdarenin yazılı cevabı |
 

@@ -291,6 +291,10 @@
       holüne açılmaz), 62/2 (kuyu EI 60), 62/4 ve 62/6 (asansör kapısının önü), 62/7 ve Ek-3/B 12 (9.7.2015'ten kat kapısı
       E 60/E 30, yapı yüksekliği 51,50 m); Ek-3/B 4: teras döşemesi REI, çatı EI. Duvarsız çizilmiş kuyu eksik veri.
     - Açıklığın kasa noktaları halka olarak ters sırayla okunur: ayrımlarda kapının boyu doğru ölçülür.
+  - **Kompartıman IFC'de (17 Kasım 2026; [ADR 8088](../adr/8088-fire-compartments-as-ifc-zones.md), K110–K113):**
+    - Kompartımanı paket bulur (`mimari.kompartimanlar`), `cad.arch.ifc` verilen `compartments`'ı mahallerin `IfcZone`'u
+      olarak yazar (`MM-ZON-Yangın_kompartımanı_N`); girdi verilmezse masaüstü, MCP ve komut satırı paketi sorar.
+    - IFC modeli seçili nesnenin gruplarını "Grup" satırında söyler.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

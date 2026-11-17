@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 0.12.0 — 17 Kasım 2026
+
+- Yangın kompartımanları IFC için (`mimari.kompartimanlar`): her kompartımanın mahalleri, katları (alttan üste) ve Ek-4'ün
+  saydığı alanı; en alt katı ve ilk mahali öne. Sınır 24/7'nin başvuru günündeki hâlinin süresiyle (gün yoksa en yeni
+  hâl); gün maddenin bilinen ilk hâlinden önceyse kompartıman yok ve nedeni (`note`). Masaüstü, MCP ve komut satırı
+  binanın IFC'sini yazarken sorar; her kompartıman dosyada mahallerinin `IfcZone`'udur.
+
 ## 0.11.0 — 17 Kasım 2026
 
 - Şaftlar ve asansörler (`kuyular`): BYKHY 25/3 (yüksek binada, 4/ccc: bina yüksekliği 21,50 m'den ya da

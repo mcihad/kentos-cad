@@ -39551,8 +39551,8 @@ class ExportIfcBuilding(_Model):
     are (absent: `designTransfer`).
 
     Refusals, in this order: `invalid_file_path` (empty, relative, not `.ifc`, its folder not there), `file_exists`
-    (without `overwrite`), `invalid_ifc` (a stamp that does not read; nothing to write: no wall, slab, column, beam,
-    roof, railing, stair or room with a body). Warnings: `export_losses` (an object of the building the file does not
+    (without `overwrite`), `invalid_ifc` (a stamp that does not read; a compartment's room that is no room of the
+    drawing; nothing to write: no wall, slab, column, beam, roof, railing, stair or room with a body). Warnings: `export_losses` (an object of the building the file does not
     hold: one the section model gives no body, an opening without its outline through a written wall, a room without
     an area, grid axes all in one direction on their storey; a curved stair written as straight pieces, or a curved
     object whose arcs the model could not take back); `ifc_open_body` (a body written that is not a closed, simple
@@ -39560,9 +39560,14 @@ class ExportIfcBuilding(_Model):
     Attributes:
         building: One of the building program's buildings, by its id (docs/adr/8072 §2): its storeys (a shared level where it
             counts) and the objects on them, at its ±0.00, its code in the building's id; none: the project as one building.
+        compartments: The fire compartments (docs/adr/8088), each written as a zone of its rooms the file holds (`IfcZone`, “Yangın
+            kompartımanı N” in this order; one none of whose rooms the file holds is not written). The command writes what
+            it is given: the compartments are the standards package's (`tr.kentos.mimari-mevzuat`, BYKHY 24). Absent: a
+            host that runs Python (the desktop, MCP, the command line) asks the package for them; empty: none.
     """
     path: str
     building: str | None | Unset = UNSET
+    compartments: list[IfcCompartment] | None | Unset = UNSET
     overwrite: bool | Unset = UNSET
     stamp: str | None | Unset = UNSET
     view: IfcView | IfcViewName | Unset = UNSET
@@ -39572,6 +39577,8 @@ class ExportIfcBuilding(_Model):
         out["path"] = self.path
         if self.building is not UNSET:
             out["building"] = self.building
+        if self.compartments is not UNSET:
+            out["compartments"] = None if self.compartments is None else [e0.to_json() for e0 in self.compartments]
         if self.overwrite is not UNSET:
             out["overwrite"] = self.overwrite
         if self.stamp is not UNSET:
@@ -39585,6 +39592,7 @@ class ExportIfcBuilding(_Model):
         return cls(
             path=data["path"],
             building=data.get("building", UNSET),
+            compartments=UNSET if "compartments" not in data else None if data["compartments"] is None else [IfcCompartment.from_json(e0) for e0 in data["compartments"]],
             overwrite=data.get("overwrite", UNSET),
             stamp=data.get("stamp", UNSET),
             view=_enum_in(IfcView, data["view"]) if "view" in data else UNSET,
@@ -48568,6 +48576,7 @@ class IfcBuildingExported(_Model):
         stairs: Unit: count.
         bytes: Unit: bytes.
         chimneys: Unit: count.
+        compartments: Its fire compartments' zones (docs/adr/8088). Unit: count.
         coverings: Its coverings (docs/adr/8070 §10): the slabs that are one; `slabs` does not count them. Unit: count.
         curtain_walls: Unit: count.
         fixtures: Unit: count.
@@ -48592,6 +48601,7 @@ class IfcBuildingExported(_Model):
     bytes: int
     sha256: str
     chimneys: int = 0
+    compartments: int = 0
     coverings: int = 0
     curtain_walls: int = 0
     fixtures: int = 0
@@ -48619,6 +48629,7 @@ class IfcBuildingExported(_Model):
         out["bytes"] = self.bytes
         out["sha256"] = self.sha256
         out["chimneys"] = self.chimneys
+        out["compartments"] = self.compartments
         out["coverings"] = self.coverings
         out["curtainWalls"] = self.curtain_walls
         out["fixtures"] = self.fixtures
@@ -48648,6 +48659,7 @@ class IfcBuildingExported(_Model):
             bytes=data["bytes"],
             sha256=data["sha256"],
             chimneys=data["chimneys"] if "chimneys" in data else 0,
+            compartments=data["compartments"] if "compartments" in data else 0,
             coverings=data["coverings"] if "coverings" in data else 0,
             curtain_walls=data["curtainWalls"] if "curtainWalls" in data else 0,
             fixtures=data["fixtures"] if "fixtures" in data else 0,
@@ -48655,6 +48667,25 @@ class IfcBuildingExported(_Model):
             members=data["members"] if "members" in data else 0,
             ramps=data["ramps"] if "ramps" in data else 0,
             view=_enum_in(IfcView, data["view"]) if "view" in data else IfcView.DESIGN_TRANSFER,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IfcCompartment(_Model):
+    """A fire compartment to write as a group of its rooms (docs/adr/8088; BYKHY 4/tt, 24): its rooms by persistent id, as
+    the standards package finds them.
+    """
+    rooms: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rooms"] = list(self.rooms)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcCompartment:
+        return cls(
+            rooms=list(data["rooms"]),
         )
 
 
@@ -144485,6 +144516,7 @@ __all__ = [
     "HydrographPoint",
     "IfcAlignmentWritten",
     "IfcBuildingExported",
+    "IfcCompartment",
     "IfcExported",
     "IfcInspect",
     "IfcInspected",

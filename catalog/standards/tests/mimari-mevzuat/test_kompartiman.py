@@ -47,6 +47,37 @@ class BagimsizDurumlar(unittest.TestCase):
                 self.assertEqual(satirlar, durum["expect"]["rules"], durum["neden"])
 
 
+class Gruplar(unittest.TestCase):
+    """IFC'nin zon grupları için kompartımanlar (docs/adr/8088): beklenenler durumların tanımından elle."""
+
+    def durum(self, kimlik: str) -> dict:
+        d = next(x for x in durumlar() if x["id"] == kimlik)
+        return {"building": d["building"], "permit": d["permit"]}
+
+    def test_galeri_iki_kati_tek_kompartiman_yapar(self):
+        cevap = mimari.kompartimanlar(self.durum("galeri-iki-kat-buro"))
+        self.assertIsNone(cevap["note"])
+        self.assertEqual(cevap["compartments"], [{
+            "rooms": ["00000000-0000-4000-8000-000000000100", "00000000-0000-4000-8000-000000000101"],
+            "storeys": ["k00", "k01"], "area": 9000.0}])
+
+    def test_rei_90_duvar_iki_kompartimana_ayirir(self):
+        cevap = mimari.kompartimanlar(self.durum("buro-iki-kompartiman"))
+        self.assertEqual(cevap["compartments"], [
+            {"rooms": ["00000000-0000-4000-8000-000000000001"], "storeys": ["k00"], "area": 4600.0},
+            {"rooms": ["00000000-0000-4000-8000-000000000002"], "storeys": ["k00"], "area": 4600.0}])
+
+    def test_24_7_nin_ilk_halinden_onceki_gun_kompartiman_vermez(self):
+        olgu = self.durum("buro-iki-kompartiman")
+        olgu["permit"] = {"particulars": {"basvuru_tarihi": "01.06.2007"}}
+        cevap = mimari.kompartimanlar(olgu)
+        self.assertEqual(cevap["compartments"], [])
+        self.assertIn("19.12.2007", cevap["note"])
+
+    def test_mahalsiz_cizim_bos(self):
+        self.assertEqual(mimari.kompartimanlar({"building": {"storeys": []}}), {"compartments": [], "note": None})
+
+
 class Okuma(unittest.TestCase):
     def test_kompartimani_ayiran_sinif(self):
         for metin, beklenen in [("REI 60", True), ("EI 60", True), ("EI2 60-S200C5", True), ("REI 120", True),

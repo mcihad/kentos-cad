@@ -197,3 +197,81 @@ fn screens() {
         println!("{}", file.display());
     }
 }
+
+/// The storey's compartments as the IFC file's zones (docs/adr/8088): with the REI 90 wall's door declared EI2 60-S200C5
+/// and the boiler room's wall EI 60 the package finds three compartments, and IFC dışa aktar (bina) writes each as an
+/// `IfcZone` of its room, “Yangın kompartımanı N”.
+fn exported_with_compartments(app: &mut App, name: &str) -> std::path::PathBuf {
+    let dir = std::env::temp_dir().join(format!("kentos-kompartiman-{}-{name}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let path = dir.join("bina.ifc");
+    let _ = app.ifc_building_chosen(Some(path.clone()), kentos_commands::IfcView::DesignTransfer);
+    path
+}
+
+#[test]
+fn the_building_s_ifc_writes_the_compartments_the_package_finds() {
+    let mut app = storey("EI 60", Some("EI2 60-S200C5"));
+    let path = exported_with_compartments(&mut app, "sinama");
+    let text = std::fs::read_to_string(&path).expect("the file written");
+    let zones: Vec<&str> = text.lines().filter(|l| l.contains("IFCZONE(") && l.contains("'MM-ZON-Yang")).collect();
+    assert_eq!(zones.len(), 3, "{zones:#?}");
+    // Each zone groups one room: the three rooms are three compartments.
+    for z in &zones {
+        let id = z.split('=').next().expect("its instance").trim();
+        let rel = text
+            .lines()
+            .find(|l| l.contains("IFCRELASSIGNSTOGROUP(") && l.trim_end().ends_with(&format!(",{id});")))
+            .unwrap_or_else(|| panic!("{id}'s members"));
+        let members = rel.split("),$,").next().and_then(|x| x.rsplit('(').next()).expect("the list");
+        assert_eq!(members.split(',').count(), 1, "{rel}");
+    }
+    // Undeclared walls between the rooms: one compartment, one zone of three rooms.
+    let mut open = storey("EI 30", None);
+    let path_open = exported_with_compartments(&mut open, "tek");
+    let text = std::fs::read_to_string(&path_open).expect("the file written");
+    assert_eq!(text.lines().filter(|l| l.contains("IFCZONE(") && l.contains("'MM-ZON-Yang")).count(), 1);
+    let _ = std::fs::remove_dir_all(path.parent().expect("its folder"));
+    let _ = std::fs::remove_dir_all(path_open.parent().expect("its folder"));
+}
+
+/// IFC modeli with the exported file, the boiler room chosen: its details say its compartment's zone; light and dark;
+/// `.run/gui-evidence/kompartiman-ifc-8088/`.
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib compartment_tests::zone_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn zone_screens() {
+    use iced::Size;
+    use kentos_model_view_ui::Message as V;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kompartiman-ifc-8088");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut app = storey("EI 60", Some("EI2 60-S200C5"));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(Size::new(1440.0, 900.0)));
+        let path = exported_with_compartments(&mut app, &format!("resim-{name}"));
+        let _ = app.update(Message::IfcViewer(crate::ifc_viewer::Event::Open(path.clone())));
+        app.ifc_viewer_read_now();
+        let boiler = {
+            let v = app.ifc_viewer.as_ref().and_then(|w| w.viewer.view()).expect("the model");
+            v.input().objects.iter().position(|o| o.class == "IfcSpace" && o.label.contains("Kazan")).expect("the room")
+        };
+        let _ = app.update(Message::IfcViewer(crate::ifc_viewer::Event::Viewer(V::Choose(Some(boiler)))));
+        let mut apart = Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
+        apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
+        apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
+        let file = out.join(format!("1-ifc-zon-{name}.png"));
+        apart.render(app.ifc_viewer_shown(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        let _ = std::fs::remove_dir_all(path.parent().expect("its folder"));
+    }
+}

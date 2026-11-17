@@ -29,6 +29,9 @@ impl Model {
         add("Ön tanımlı tür", o.predefined.clone());
         add("Tip", o.type_object.map(|t| &self.objects[t]).map(|t| format!("{} ({})", t.name.as_deref().unwrap_or("adsız"), t.class)));
         add("Kat", self.storey_of(schema, object).map(|s| s.name.clone().unwrap_or_else(|| s.class.clone())));
+        for group in self.groups_of(schema, object) {
+            add("Grup", Some(group));
+        }
         add("Malzeme", self.materials(bytes, object).ok().filter(|m| !m.is_empty()).map(|m| m.join("; ")));
         add("Kayıt", Some(format!("#{}", o.step)));
         let mut groups = vec![own];
@@ -37,6 +40,19 @@ impl Model {
             groups.push(Group { title, lines: set.values.iter().map(|v| line(v, &self.summary.units)).collect() });
         }
         Ok(Details { groups })
+    }
+
+    /// The groups the object is assigned to (`IfcRelAssignsToGroup`: a zone, such as a unit or a fire compartment,
+    /// docs/adr/8088), each by its long name, else its name, else its object type, else its class.
+    fn groups_of(&self, schema: SchemaVersion, object: usize) -> Vec<String> {
+        let Some(o) = self.objects.get(object) else { return Vec::new() };
+        self.relations_of(o.step)
+            .iter()
+            .map(|&r| &self.relations[r])
+            .filter(|r| schema.is_subtype_of(&r.class, "IfcRelAssignsToGroup") && r.related.contains(&o.step))
+            .filter_map(|r| self.object(r.relating?))
+            .map(|g| g.long_name.clone().or_else(|| g.name.clone()).or_else(|| g.object_type.clone()).unwrap_or_else(|| g.class.clone()))
+            .collect()
     }
 
     /// The storey the object stands on: the nearest up its parts and containers.
@@ -182,5 +198,27 @@ mod tests {
         assert_eq!(at("NetVolume").unit.as_deref(), Some("m³"));
         let common = d.groups.iter().find(|g| g.title == "Pset_WallCommon").expect("the common set");
         assert_eq!(common.lines[0].value, "Doğru");
+        assert_eq!(value("Grup"), None, "a wall is in no group");
+    }
+
+    /// A space of the file written with fire compartments (docs/adr/8088) says its compartment's zone.
+    #[test]
+    fn a_space_says_the_zones_it_is_grouped_in() {
+        let bytes: &[u8] = include_bytes!("../../../../../fixtures/arch/v1/ifc/kesit-binasi-kompartiman.ifc");
+        let m = read_ok(bytes);
+        // Each space's groups, one line each: its compartment's long name among them.
+        let zoned: Vec<Vec<String>> = m
+            .objects
+            .iter()
+            .enumerate()
+            .filter(|(_, o)| o.class == "IfcSpace")
+            .map(|(i, _)| {
+                let d = m.details(bytes, i).expect("the details");
+                d.groups[0].lines.iter().filter(|l| l.name == "Grup").map(|l| l.value.clone()).collect()
+            })
+            .collect();
+        assert_eq!(zoned.len(), 10, "{zoned:?}");
+        let count = |n: &str| zoned.iter().filter(|g| g.iter().any(|x| x == n)).count();
+        assert_eq!((count("Yangın kompartımanı 1"), count("Yangın kompartımanı 2")), (5, 5), "{zoned:?}");
     }
 }

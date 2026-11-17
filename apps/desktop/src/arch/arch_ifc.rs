@@ -3,16 +3,21 @@
 //! not hold (an object without a body) and a body that is not closed are said as the command's warnings. IFC dışa aktar
 //! (bina, kesilmiş gövde) (`arch.ifcExportCut`, docs/adr/8071 §4) writes the bodies already cut (Reference View). A
 //! project whose program has several buildings writes one file for each (docs/adr/8072 §2): the first where the user
-//! says, the others beside it, each named by EK-2 with its building code.
+//! says, the others beside it, each named by EK-2 with its building code. The fire compartments the national
+//! regulation's package finds are written as zones of their rooms (docs/adr/8088).
 
 use std::path::PathBuf;
 
 use iced::Task;
-use kentos_commands::{ExportIfcBuilding, IfcView};
+use kentos_commands::{ExportIfcBuilding, IfcCompartment, IfcView};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, arch_ifc};
 
 use crate::app::{App, Message};
+
+/// The national regulation's package and its module (docs/adr/8078).
+const REGULATION: &str = "mimari-mevzuat";
+const MODULE: &str = "mimari_mevzuat.mimari";
 
 impl App {
     /// IFC dışa aktar (bina) from Dosya › Dışa aktar: where to write the file; `view` its bodies whole or cut.
@@ -54,6 +59,8 @@ impl App {
         if path.extension().is_none() {
             path.set_extension("ifc");
         }
+        // The fire compartments the standards package finds, written as zones of their rooms (docs/adr/8088).
+        let compartments = self.fire_compartments();
         // Several buildings: one file each, the first where the user said, the others beside it (docs/adr/8072 §2).
         let plans: Vec<(String, String, PathBuf)> = match self.document.as_ref() {
             Some(doc) => {
@@ -86,6 +93,7 @@ impl App {
                     overwrite: true,
                     view,
                     building: Some(id),
+                    compartments: compartments.clone(),
                 };
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();
@@ -111,11 +119,13 @@ impl App {
             overwrite: true,
             view,
             building: None,
+            compartments,
         };
         let result = arch_ifc::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             // The other classes it holds, those it has (docs/adr/8070 §9).
             let more: String = [
+                (out.compartments, "yangın kompartımanı"),
                 (out.ramps, "rampa"),
                 (out.chimneys, "baca"),
                 (out.curtain_walls, "giydirme cephe"),
@@ -149,6 +159,36 @@ impl App {
             self.offer_ifc_view(path, "IFC 4.3 yazıldı".to_owned());
         }
         Task::none()
+    }
+
+    /// The fire compartments as the national regulation's package finds them (catalog/standards/mimari-mevzuat,
+    /// `kompartimanlar`; docs/adr/8088), for the file's zones. A package that does not answer, or a day its rules do not
+    /// know, writes none and says why in the output.
+    fn fire_compartments(&mut self) -> Option<Vec<IfcCompartment>> {
+        let facts = self.arch_audit_regulation_facts()?;
+        match crate::standards::call(REGULATION, MODULE, "kompartimanlar", vec![facts]) {
+            Ok(answer) => {
+                if let Some(note) = answer.get("note").and_then(|n| n.as_str()) {
+                    self.output(format!("Yangın kompartımanları IFC'ye yazılmadı: {note}"));
+                }
+                // Each compartment's rooms: the command's input (its storeys and area are the package's words).
+                let list = answer.get("compartments").and_then(|v| v.as_array())?;
+                Some(
+                    list.iter()
+                        .map(|c| IfcCompartment {
+                            rooms: c.get("rooms").and_then(|r| serde_json::from_value(r.clone()).ok()).unwrap_or_default(),
+                        })
+                        .collect(),
+                )
+            }
+            Err(why) => {
+                self.output(format!(
+                    "Yangın kompartımanları IFC'ye yazılmadı: mevzuat kuralları çalışmadı ({why}). Ayarlar › Python'dan \
+                     bir Python seçin."
+                ));
+                None
+            }
+        }
     }
 
     /// The file written, with Görüntüle: it opens in IFC modeli (ifc_viewer.rs, plan/ifc-uyum.md IFC-12).
