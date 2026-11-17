@@ -2879,7 +2879,11 @@ codes! {
     PAIY_WINDOW_RAILING = "paiy_window_railing", Warning, false, "Denizliği 0,90 metreden alçak pencere: Planlı Alanlar İmar Yönetmeliği 38/1'e göre 1,10 metre korkuluk gerekir.";
     PAIY_LIGHTWELL_SMALL = "paiy_lightwell_small", Warning, false, "Işıklığın dar kenarı ya da alanı Planlı Alanlar İmar Yönetmeliği 32/2'nin en azından küçük.";
     PAIY_AIR_SHAFT_SMALL = "paiy_air_shaft_small", Warning, false, "Hava bacasının dar kenarı ya da alanı Planlı Alanlar İmar Yönetmeliği 32/3'ün (ya da yerel yönetmeliğin) en azından küçük.";
-    PAIY_ELEVATOR_MISSING = "paiy_elevator_missing", Warning, false, "Kat adedine göre Planlı Alanlar İmar Yönetmeliği 34/1'in (ya da yerel yönetmeliğin) istediği asansör ya da asansör yeri yok.";
+    PAIY_ELEVATOR_MISSING = "paiy_elevator_missing", Warning, false, "Kat adedine göre Planlı Alanlar İmar Yönetmeliği 34/1'in başvuru günündeki hâlinin (ya da yerel yönetmeliğin) istediği asansör ya da asansör yeri yok.";
+    PAIY_ELEVATOR_NOT_SERVING = "paiy_elevator_not_serving", Warning, false, "Asansör zorunlu binada asansör bir kata ulaşmıyor: Planlı Alanlar İmar Yönetmeliği 34/8'in başvuru günündeki hâli (ya da yerel yönetmelik) o kata ulaşmasını ister.";
+    REGULATION_DATE_NEEDED = "regulation_date_needed", Warning, false, "Başvuru tarihi künyede yok ya da okunamıyor ve kuralın sonucu başvuru gününe göre değişiyor: kural seti seçilemedi (eksik veri).";
+    REGULATION_TEXT_UNKNOWN = "regulation_text_unknown", Warning, false, "Başvuru günü maddenin KentOS kural setindeki ilk hâlinden önce: o günün metniyle uzman incelemeli.";
+    REGULATION_RULE_UNAVAILABLE = "regulation_rule_unavailable", Warning, false, "Mevzuatın Python kuralları (standart kural paketi) çalışmadı: denetimde yalnız KentOS'un kendi kuralları var; Ayarlar › Python'dan bir Python seçin.";
     PAIY_ELEVATOR_SMALL = "paiy_elevator_small", Warning, false, "Asansör kuyusu ya da kabini Planlı Alanlar İmar Yönetmeliği 34/2'nin kabininden (dar kenar 1,20 metre, alan 1,80 m²) küçük, ya da kapısı 0,90 metreden dar.";
     PAIY_ELEVATOR_STRETCHER = "paiy_elevator_stretcher", Warning, false, "10 ve daha fazla katlı binada Planlı Alanlar İmar Yönetmeliği 34/5'in sedye asansörü (dar kenar 1,20 metre, alan 2,52 m², kapı 1,10 metre) yok.";
     PAIY_ELEVATOR_LANDING_NARROW = "paiy_elevator_landing_narrow", Warning, false, "Asansör kapısının açıldığı sahanlık Planlı Alanlar İmar Yönetmeliği 34/2'nin en azından dar (sürme kapıda 1,20, dışa açılanda 1,50 metre).";

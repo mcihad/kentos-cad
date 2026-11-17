@@ -1,0 +1,123 @@
+{
+  "format": "kentos.ruleVersions",
+  "version": 1,
+  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de.",
+  "regulations": {
+    "PAİY": {
+      "name": "Planlı Alanlar İmar Yönetmeliği",
+      "gazette": "3.7.2017/30113"
+    },
+    "Sivas": {
+      "name": "Sivas Belediyesi İmar Yönetmeliği",
+      "gazette": "10.11.2022/32009"
+    }
+  },
+  "articles": [
+    {
+      "regulation": "PAİY",
+      "article": "34/1",
+      "title": "Asansör zorunluluğu",
+      "transition": "Geçici 3/11 (RG 1.7.2026/33297): 1.7.2026'dan önce 55 inci maddenin ikinci fıkrasındaki belgeler için idareye başvurusu yapılmış yapılara 34/1'in önceki hâli uygulanır; sayılan gün başvurunun günüdür.",
+      "versions": [
+        {
+          "id": "2018",
+          "from": "2018-07-28",
+          "until": "2021-07-10",
+          "label": "28.7.2018",
+          "gazette": "28.7.2018/30492",
+          "basements": "inhabited-or-common",
+          "planStoreys": true,
+          "text": "Tek bağımsız bölümlü konutlar hariç uygulama imar planına göre kat adedi 3 olan binalarda asansör yeri bırakılması, 4 ve daha fazla olan binalarda ise asansör tesisi zorunludur. İskân edilen ve ortak alan bulunan bodrum katlar dâhil kat adedi 4 ve daha fazla olan binalarda asansör yapılması zorunludur. Daha az katlı yapılarda da asansör yapılabilir.",
+          "source": "RG 28.7.2018/30492 değişikliği; ikinci cümlenin bu hâli RG 11.7.2021/31538'in “ve ortak alan” ibaresini “veya bağımsız bölüm” yapan 3 üncü maddesinden geri okundu (docs/adr/8078 §1)."
+        },
+        {
+          "id": "2021",
+          "from": "2021-07-11",
+          "until": "2026-06-30",
+          "label": "11.7.2021",
+          "gazette": "28.7.2018/30492; 11.7.2021/31538 değişik ibare",
+          "basements": "inhabited-or-unit",
+          "planStoreys": true,
+          "text": "Tek bağımsız bölümlü konutlar hariç uygulama imar planına göre kat adedi 3 olan binalarda asansör yeri bırakılması, 4 ve daha fazla olan binalarda ise asansör tesisi zorunludur. İskân edilen veya bağımsız bölüm bulunan bodrum katlar dâhil kat adedi 4 ve daha fazla olan binalarda asansör yapılması zorunludur. Daha az katlı yapılarda da asansör yapılabilir.",
+          "source": "RG 11.7.2021/31538, 3 üncü madde (docs/adr/8078 §1)."
+        },
+        {
+          "id": "2026",
+          "from": "2026-07-01",
+          "until": null,
+          "label": "1.7.2026",
+          "gazette": "1.7.2026/33297",
+          "basements": "unit-common-annex",
+          "planStoreys": false,
+          "text": "Tek bağımsız bölümlü konutlar hariç, bağımsız bölüm veya ortak alanlar (ısı merkezi, kazan dairesi, elektrik odası, su deposu, iklimlendirme merkezi, jeneratör odası ve benzeri teknik hacimler dışında) veya eklenti bulunan bodrum kat dahil olmak üzere kat adedi 3 olan binalarda asansör yeri bırakılması, 4 ve daha fazla olan binalarda ise asansör tesisi zorunludur. Daha az katlı yapılarda da asansör yapılabilir.",
+          "source": "RG 1.7.2026/33297, 4 üncü madde."
+        }
+      ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "34/8",
+      "title": "Asansörün hizmet verdiği katlar",
+      "transition": "Geçici 3/11 (RG 1.7.2026/33297): 1.7.2026'dan önce başvurusu yapılmış yapılara 34/8'in önceki hâli uygulanır.",
+      "versions": [
+        {
+          "id": "2021",
+          "from": "2021-07-11",
+          "until": "2026-06-30",
+          "label": "11.7.2021",
+          "gazette": "11.7.2021/31538",
+          "served": "unit-or-inhabited",
+          "text": "Asansör zorunluluğu bulunan binalarda asansörlerin, bodrum katlar dâhil tüm katlara hizmet vermesi zorunludur. Ancak bağımsız bölüm ya da iskân edilen alan bulunmayan bodrum katlara asansörün ulaştırılması zorunlu değildir.",
+          "source": "RG 11.7.2021/31538, 3 üncü madde."
+        },
+        {
+          "id": "2026",
+          "from": "2026-07-01",
+          "until": null,
+          "label": "1.7.2026",
+          "gazette": "1.7.2026/33297",
+          "served": "unit-common-annex",
+          "text": "Asansör zorunluluğu bulunan binalarda asansörlerin, bodrum katlar dâhil tüm katlara hizmet vermesi zorunludur. Ancak bağımsız bölüm veya ortak alanlar veya eklenti bulunmayan bodrum katlara asansörün ulaştırılması zorunlu değildir.",
+          "source": "RG 1.7.2026/33297, 4 üncü madde."
+        }
+      ]
+    },
+    {
+      "regulation": "Sivas",
+      "article": "34/1",
+      "title": "Asansör zorunluluğu (Sivas)",
+      "transition": "Sivas İmar Yön. Geçici 3: mevcut yapı ruhsatı başvurularında PAİY'nin geçici 3 üncü maddesine uyulur; yönetmelik yayımı günü (10.11.2022) yürürlüğe girdi.",
+      "versions": [
+        {
+          "id": "2022",
+          "from": "2022-11-10",
+          "until": null,
+          "label": "10.11.2022",
+          "gazette": "10.11.2022/32009",
+          "basements": "inhabited-or-common",
+          "planStoreys": true,
+          "text": "En fazla üç katlı tek bağımsız bölümlü konutlar hariç uygulama imar planına göre kat adedi 3 ve daha fazla olan binalarda ise asansör tesisi zorunludur. Bina girişi bodrum kattan yapılan yapılarda asansör yapılması zorunlu olan kata göre işlem yapılması esastır. İskân edilen ve ortak alan bulunan bodrum katlar dâhil kat adedi 3 ve daha fazla olan binalarda asansör yapılması zorunludur. Daha az katlı yapılarda da asansör yapılabilir.",
+          "source": "RG 10.11.2022/32009, 34 üncü madde."
+        }
+      ]
+    },
+    {
+      "regulation": "Sivas",
+      "article": "34/8",
+      "title": "Asansörün hizmet verdiği katlar (Sivas)",
+      "transition": "Yayımı günü (10.11.2022) yürürlüğe girdi.",
+      "versions": [
+        {
+          "id": "2022",
+          "from": "2022-11-10",
+          "until": null,
+          "label": "10.11.2022",
+          "gazette": "10.11.2022/32009",
+          "served": "unit-or-inhabited",
+          "text": "Asansörlerin, bodrum katları dahil tüm katlara hizmet vermesi zorunludur. Ancak bağımsız bölüm ya da iskân edilen alan bulunmayan bodrum katlara asansörün ulaştırılması zorunlu değildir.",
+          "source": "RG 10.11.2022/32009, 34 üncü madde."
+        }
+      ]
+    }
+  ]
+}

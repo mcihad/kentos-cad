@@ -18,7 +18,9 @@
 //! of the same version, [`architecture`] (docs/adr/8057 §39): absent when the drawing has no room. So is the permit's
 //! (the dated scope decision's particulars and the building's area and storeys), [`permit`] (docs/adr/8063): absent
 //! when none of its particulars has a value. And the CAD drawing's names and styles EK-3 and EK-4 read, [`cad`]
-//! (docs/adr/8064): absent when the drawing has neither a layer holding objects nor a room.
+//! (docs/adr/8064): absent when the drawing has neither a layer holding objects nor a room. And what the regulation's
+//! rules count a building by (each storey's rooms by group, its elevators; the units), [`building`] (docs/adr/8078):
+//! absent when the project has no storey.
 //!
 //! Pure, as the crate: the producer (`kentos_processing::audit_facts`) measures with the geometry core; this module
 //! holds the shape, its rules and its JSON Schema (`sdk/kentos-audit-facts.schema.json`, the SDK's `factsSchema`).
@@ -28,10 +30,12 @@ use std::cmp::Ordering;
 use serde::{Deserialize, Serialize};
 
 pub mod architecture;
+pub mod building;
 pub mod cad;
 pub mod permit;
 
 pub use architecture::ArchitectureFacts;
+pub use building::BuildingFacts;
 pub use cad::CadFacts;
 pub use permit::PermitFacts;
 
@@ -75,6 +79,10 @@ pub struct ProjectAuditFacts {
     /// Absent when the drawing has neither a layer holding objects nor a room (or the producer was not asked for it).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cad: Option<CadFacts>,
+    /// What the regulation's rules count the building by: every storey with the rooms it holds by their group and its
+    /// elevators, the program's units. Absent when the project has no storey (or the producer was not asked for it).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub building: Option<BuildingFacts>,
     /// Whether objects were left out: past the producer's limit, those after it by persistent id (a room or a door
     /// past a list's bound too).
     pub cut: bool,
@@ -227,6 +235,7 @@ impl ProjectAuditFacts {
             architecture: None,
             permit: None,
             cad: None,
+            building: None,
             cut,
         }
     }
@@ -249,6 +258,14 @@ impl ProjectAuditFacts {
         let (cad, cut) = cad.normalized();
         self.cad = Some(cad);
         self.cut |= cut;
+        self
+    }
+
+    /// These facts with the building's, in its section's order and rounding. An empty section is left out.
+    pub fn with_building(mut self, building: BuildingFacts) -> ProjectAuditFacts {
+        if !building.is_empty() {
+            self.building = Some(building.normalized());
+        }
         self
     }
 

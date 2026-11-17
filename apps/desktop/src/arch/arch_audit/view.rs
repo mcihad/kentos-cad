@@ -74,6 +74,13 @@ impl App {
                         (format!("İstisna · {}{note}", f.message), Ink::Quiet)
                     } else if f.lapsed {
                         (format!("İstisna düştü · {}", f.message), Ink::Warning)
+                    } else if let Some(state) = f.state {
+                        // Eksik veri and uzman incelemesi are no failures (docs/adr/8078): said first, never quiet.
+                        let ink = match state {
+                            kentos_commands::ArchAuditState::MissingData => Ink::Warning,
+                            kentos_commands::ArchAuditState::ExpertReview => Ink::Plain,
+                        };
+                        (format!("{} · {}", state.label(), f.message), if stale { Ink::Quiet } else { ink })
                     } else {
                         (
                             f.message.clone(),
@@ -185,6 +192,35 @@ impl App {
                     )),
                     ..container::Style::default()
                 }),
+            );
+        }
+        // The rule set by the application date (docs/adr/8078): which version of each article was read and its outcome.
+        if let Some(set) = self.arch.arch_audit.rule_set.as_ref().filter(|s| !s.rules.is_empty()) {
+            out = out.push(
+                container(
+                    row![
+                        icon(from_web(Some("history"))).size(14.0).tone(Tone::Muted),
+                        Elided::new(set.line()).size(typography::body()),
+                    ]
+                    .spacing(8)
+                    .align_y(Center),
+                )
+                .padding([4, 10])
+                .width(Fill),
+            );
+        }
+        if let Some(why) = &self.arch.arch_audit.regulation_failed {
+            out = out.push(
+                container(
+                    row![
+                        icon(from_web(Some("warning"))).size(14.0).tone(Tone::Warning),
+                        label::body(format!("Mevzuat kuralları denetlenemedi: {why}")),
+                    ]
+                    .spacing(8)
+                    .align_y(Center),
+                )
+                .padding([4, 10])
+                .width(Fill),
             );
         }
         // The EK-3 and EK-4 rule not run (docs/adr/8064): said, with why, so a clean table is not taken for a pass.

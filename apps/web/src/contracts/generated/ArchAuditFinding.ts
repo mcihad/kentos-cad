@@ -2,6 +2,7 @@
 import type { ArchAuditCheck } from "./ArchAuditCheck";
 import type { ArchAuditFix } from "./ArchAuditFix";
 import type { ArchAuditNature } from "./ArchAuditNature";
+import type { ArchAuditState } from "./ArchAuditState";
 import type { Vec2 } from "./Vec2";
 
 /**
@@ -32,8 +33,10 @@ key: string, check: ArchAuditCheck,
  * `paiy_inside_height_below` (docs/adr/8040 §3),
  * `paiy_stair_width_narrow`, `paiy_stair_landing_short`, `paiy_stair_riser_high`, `paiy_stair_step`,
  * `paiy_railing_missing`, `paiy_ramp_steep`, `paiy_window_railing`, `paiy_lightwell_small`, `paiy_air_shaft_small`,
- * `paiy_elevator_missing`, `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict`
- * (docs/adr/8034); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
+ * `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict` (docs/adr/8034); the standards
+ * package's (docs/adr/8078: a host that runs Python lists them) `paiy_elevator_missing` and
+ * `paiy_elevator_not_serving` by the application date's version, `regulation_date_needed` (eksik veri) and
+ * `regulation_text_unknown` (uzman incelemesi); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
  * `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/8035); `parking_short`,
  * `shelter_short`, `shelter_exit_count`, `shelter_height_low` (docs/adr/8036); `paiy_sections_missing`,
  * `paiy_section_stair_missing` (docs/adr/8042 §7); `paiy_elevations_missing` (docs/adr/8043 §9); the roofs'
@@ -87,4 +90,9 @@ nature?: ArchAuditNature,
  * A regulation finding's article and gazette (docs/adr/8033): “PAİY 29/1 · RG 3.7.2017/30113”; a local
  * regulation's (docs/adr/8034) “Sivas İmar Yön. 31/1-a · RG 10.11.2022/32009”; a conflict's both, “… ↔ …”.
  */
-rule?: string, };
+rule?: string, 
+/**
+ * A finding that is no failure (docs/adr/8078): eksik veri or uzman incelemesi. Absent: the drawing does not meet
+ * the rule.
+ */
+state?: ArchAuditState, };

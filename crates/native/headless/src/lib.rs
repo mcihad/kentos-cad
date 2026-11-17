@@ -57,6 +57,8 @@ mod publish_bim;
 mod publish_status;
 mod publish_update;
 pub mod recover;
+#[cfg(feature = "mod-gis")]
+pub mod regulation;
 mod sheet_resources;
 mod sheet_preflight;
 mod delivery_integrity;

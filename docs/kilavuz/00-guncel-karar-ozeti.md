@@ -225,6 +225,15 @@
     - Yayın penceresinin taslağı Denetle ve Yayınla'da çizime yazılır; çağrıda verilen cevap çizimdekinin önüne geçer.
     - Cevap dayandığı KentOS notunu tutar (`basis`); not değişince cevap eskir, soru yeniden açılır, yayın durur (K59).
     - Bağımsız Python `.kcad` okuyucusu mimari verisi ≥1'i bilmiyor (ADR 8068'den beri): TODOS.md'de ayrı iş.
+  - **Mevzuat denetimi başvuru tarihine göre (17 Kasım 2026; [ADR 8078](../adr/8078-regulation-rule-set-by-application-date.md), BIM-13, sıra B15; ilk dilim):**
+    - Maddenin hâlini künyenin `basvuru_tarihi`'si seçer (K60): PAİY 34/1 ve 34/8'in 28.7.2018, 11.7.2021, 1.7.2026
+      hâlleri; Geçici 3/11 1.7.2026'dan önceki başvuruya eski hâli uygular. Hâller veridir (`mimari_mevzuat/data/surumler.json`).
+    - Gün yoksa her hâl denenir: sonuç aynıysa en yenisi, değişiyorsa eksik veri; bilinen metinden önceki gün uzman
+      incelemesi (K61). Bulgu kaldı, eksik veri ya da uzman incelemesi; geçti ve kapsam dışı maddenin özet satırında
+      (`ArchAuditFinding.state`, `ArchAudited.ruleSet`, K62).
+    - Kurallar yeni pakette (`tr.kentos.mimari-mevzuat`, K63); main'in `tr.kentos.mevzuat`'ı bu dalda yok, birleştirmede
+      birleşir. 34/1 Rust'tan taşındı, 34/2 ve 34/5 Rust'ta; olgular `building` bölümünde. Masaüstü Denetim'de ve başsız
+      `cad.arch.audit`'te aynı bulgu ve kural seti.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

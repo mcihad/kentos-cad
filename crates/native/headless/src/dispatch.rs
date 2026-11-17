@@ -109,11 +109,24 @@ pub fn run(
         return file_commands::run(doc, command, op.call_op(), input)
             .map_err(|message| HeadlessError::new("invalid_input", message));
     }
+    // The audit's regulation group with the standards package's Python rules too (docs/adr/8078).
+    let asked = (command == kentos_commands::CAD_ARCH_AUDIT).then(|| input.clone());
     let mut cx = ExecutionContext::new(doc);
-    registry::run(&mut cx, command, op.call_op(), input).map_err(|unrun| match unrun.code {
+    let answer = registry::run(&mut cx, command, op.call_op(), input).map_err(|unrun| match unrun.code {
         "unknown_command" => refusal(command),
         _ => HeadlessError::new("invalid_input", unrun.message),
-    })
+    })?;
+    drop(cx);
+    #[cfg(feature = "mod-gis")]
+    if let Some(input) = asked
+        && let Ok(mut result) = serde_json::from_value::<kentos_commands::CommandResult<Value>>(answer.clone())
+    {
+        crate::regulation::add(doc, command, &input, &mut result);
+        return Ok(serde_json::to_value(result).unwrap_or(answer));
+    }
+    #[cfg(not(feature = "mod-gis"))]
+    let _ = asked;
+    Ok(answer)
 }
 
 /// A call by the protocol (docs/adr/0253 §4): never a host's error, every
@@ -137,7 +150,17 @@ pub fn call_envelope(
             },
         });
     }
-    call::call(doc, store, envelope)
+    let command = envelope.command.clone();
+    let asked = (command == kentos_commands::CAD_ARCH_AUDIT).then(|| envelope.input.clone());
+    #[cfg_attr(not(feature = "mod-gis"), allow(unused_mut))]
+    let mut answer = call::call(doc, store, envelope);
+    #[cfg(feature = "mod-gis")]
+    if let Some(input) = asked {
+        crate::regulation::add(doc, &command, &input, &mut answer.result);
+    }
+    #[cfg(not(feature = "mod-gis"))]
+    let _ = asked;
+    answer
 }
 
 /// An agent's call by the protocol (docs/adr/0743): [`call_envelope`] when the drawing hides no field from

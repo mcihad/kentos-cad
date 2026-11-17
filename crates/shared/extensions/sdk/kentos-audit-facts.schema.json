@@ -48,6 +48,43 @@
       ],
       "type": "object"
     },
+    "BuildingFacts": {
+      "description": "The building as the regulation's rules count it.",
+      "properties": {
+        "dwellings": {
+          "description": "Those of them whose nature is a dwelling's (Daire, Mesken, Konut) or not given.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "local": {
+          "description": "The municipality's regulation the project reads over the national one (`sivas`: Sivas Belediyesi İmar\nYönetmeliği, RG 10.11.2022/32009); absent: none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "storeys": {
+          "description": "Every storey of the project, lowest first.",
+          "items": {
+            "$ref": "#/$defs/StoreyHolds"
+          },
+          "type": "array"
+        },
+        "units": {
+          "description": "The building program's independent units (bağımsız bölüm).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "storeys",
+        "units",
+        "dwellings"
+      ],
+      "type": "object"
+    },
     "CadBlock": {
       "description": "A block and its inserts.",
       "properties": {
@@ -1017,6 +1054,79 @@
       ],
       "type": "object"
     },
+    "StoreyHolds": {
+      "description": "A storey and what stands on it. A room is one that is neither a void (a shaft, a gallery) nor outdoors, counted by\nits program group's kind and, apart, as a technical or a lived-in room; an elevator shaft is a void and counted with\nthe elevators.",
+      "properties": {
+        "annexes": {
+          "description": "Rooms of an annex (eklenti, a place allocated to an independent unit) on it.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "common": {
+          "description": "Rooms of a common area on it that are not technical rooms.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "elevation": {
+          "description": "Its elevation over ±0.00, m.",
+          "format": "double",
+          "type": "number"
+        },
+        "elevators": {
+          "description": "Elevators on it: elevator shafts (a space named Asansör, not its lobby) and Asansör blocks standing on it.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "inhabited": {
+          "description": "Rooms of a dwelling's living kind on it, whatever their group (a living room, a bedroom, a kitchen, by their name\nor use): lived in.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "level": {
+          "description": "The storey's id (`architecture.levels[].id`).",
+          "type": "string"
+        },
+        "name": {
+          "description": "Its name.",
+          "type": "string"
+        },
+        "other": {
+          "description": "Rooms in no program group on it that are not technical rooms.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "technical": {
+          "description": "Technical rooms on it, whatever their group: a heat centre, a boiler room, an electricity room, a water tank, a\nclimate plant, a generator room, a pump or a transformer room, by their name or use.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "units": {
+          "description": "Rooms of an independent unit on it.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "level",
+        "name",
+        "elevation",
+        "units",
+        "common",
+        "annexes",
+        "other",
+        "technical",
+        "inhabited",
+        "elevators"
+      ],
+      "type": "object"
+    },
     "Totals": {
       "description": "How many of each a layer has in all.",
       "properties": {
@@ -1215,6 +1325,17 @@
         }
       ],
       "description": "The drawing's architecture: storeys, rooms, the program's groups, the escape routes. Absent when the drawing has\nno room (or the producer was not asked for it)."
+    },
+    "building": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BuildingFacts"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "What the regulation's rules count the building by: every storey with the rooms it holds by their group and its\nelevators, the program's units. Absent when the project has no storey (or the producer was not asked for it)."
     },
     "cad": {
       "anyOf": [

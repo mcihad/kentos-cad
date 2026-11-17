@@ -441,6 +441,41 @@ ArchAuditNatureName = Literal["physical", "passage", "rule"]
 """The names of :class:`ArchAuditNature`, for a plain string."""
 
 
+class ArchAuditOutcome(_StrEnum):
+    """An article's outcome in the national regulation's rule set (docs/adr/8078): every rule says one.
+
+    - ``passed``: Geçti: the drawing meets the article's version.
+    - ``failed``: Kaldı: it does not; its findings say where.
+    - ``missingData``: Eksik veri: what the article needs is not given (the application date its version turns on).
+    - ``expertReview``: Uzman incelemesi: a reviewer decides.
+    - ``outOfScope``: Kapsam dışı: the article does not ask this building (a single dwelling, fewer storeys).
+    """
+    PASSED = "passed"
+    FAILED = "failed"
+    MISSING_DATA = "missingData"
+    EXPERT_REVIEW = "expertReview"
+    OUT_OF_SCOPE = "outOfScope"
+
+
+ArchAuditOutcomeName = Literal["passed", "failed", "missingData", "expertReview", "outOfScope"]
+"""The names of :class:`ArchAuditOutcome`, for a plain string."""
+
+
+class ArchAuditState(_StrEnum):
+    """A finding that is no failure (docs/adr/8078; plan/bim-plan.md BIM-13): the rule could not decide. A finding without
+    one is a failure (kaldı); a rule that holds or does not apply says it in its summary, never as a finding.
+
+    - ``missingData``: Eksik veri: what the rule needs is not in the project (an application date its result turns on, a value it
+    - ``expertReview``: Uzman incelemesi: the text leaves it to a reviewer, or KentOS does not hold the text of the day.
+    """
+    MISSING_DATA = "missingData"
+    EXPERT_REVIEW = "expertReview"
+
+
+ArchAuditStateName = Literal["missingData", "expertReview"]
+"""The names of :class:`ArchAuditState`, for a plain string."""
+
+
 class ArchDiscipline(_StrEnum):
     """The discipline an architectural object belongs to."""
     ARCHITECTURE = "architecture"
@@ -16696,8 +16731,10 @@ class ArchAuditFinding(_Model):
             `paiy_inside_height_below` (docs/adr/8040 §3),
             `paiy_stair_width_narrow`, `paiy_stair_landing_short`, `paiy_stair_riser_high`, `paiy_stair_step`,
             `paiy_railing_missing`, `paiy_ramp_steep`, `paiy_window_railing`, `paiy_lightwell_small`, `paiy_air_shaft_small`,
-            `paiy_elevator_missing`, `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict`
-            (docs/adr/8034); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
+            `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict` (docs/adr/8034); the standards
+            package's (docs/adr/8078: a host that runs Python lists them) `paiy_elevator_missing` and
+            `paiy_elevator_not_serving` by the application date's version, `regulation_date_needed` (eksik veri) and
+            `regulation_text_unknown` (uzman incelemesi); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
             `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/8035); `parking_short`,
             `shelter_short`, `shelter_exit_count`, `shelter_height_low` (docs/adr/8036); `paiy_sections_missing`,
             `paiy_section_stair_missing` (docs/adr/8042 §7); `paiy_elevations_missing` (docs/adr/8043 §9); the roofs'
@@ -16720,6 +16757,8 @@ class ArchAuditFinding(_Model):
         note: The exception's note.
         rule: A regulation finding's article and gazette (docs/adr/8033): “PAİY 29/1 · RG 3.7.2017/30113”; a local
             regulation's (docs/adr/8034) “Sivas İmar Yön. 31/1-a · RG 10.11.2022/32009”; a conflict's both, “… ↔ …”.
+        state: A finding that is no failure (docs/adr/8078): eksik veri or uzman incelemesi. Absent: the drawing does not meet
+            the rule.
     """
     key: str
     check: ArchAuditCheck | ArchAuditCheckName
@@ -16734,6 +16773,7 @@ class ArchAuditFinding(_Model):
     nature: ArchAuditNature | ArchAuditNatureName | None | Unset = UNSET
     note: str | None | Unset = UNSET
     rule: str | None | Unset = UNSET
+    state: ArchAuditState | ArchAuditStateName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -16756,6 +16796,8 @@ class ArchAuditFinding(_Model):
             out["note"] = self.note
         if self.rule is not UNSET:
             out["rule"] = self.rule
+        if self.state is not UNSET:
+            out["state"] = None if self.state is None else _enum_out(self.state)
         return out
 
     @classmethod
@@ -16774,6 +16816,7 @@ class ArchAuditFinding(_Model):
             nature=UNSET if "nature" not in data else None if data["nature"] is None else _enum_in(ArchAuditNature, data["nature"]),
             note=data.get("note", UNSET),
             rule=data.get("rule", UNSET),
+            state=UNSET if "state" not in data else None if data["state"] is None else _enum_in(ArchAuditState, data["state"]),
         )
 
 
@@ -16798,6 +16841,76 @@ class ArchAuditFix(_Model):
         return cls(
             label=data["label"],
             step=ChangesetStep.from_json(data["step"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchAuditRule(_Model):
+    """An article read by the version in force on the application date (docs/adr/8078).
+    Attributes:
+        rule: “PAİY 34/1”, “Sivas 34/8”.
+        title: What it is about: “Asansör zorunluluğu”.
+        note: What was measured and asked: “bodrum dahil 4 kat: asansör; binada asansör var”.
+        gazette: Its gazette (“1.7.2026/33297”).
+        version: The version's first day as the gazette writes it (“1.7.2026”); absent when KentOS holds no text of the day.
+    """
+    rule: str
+    title: str
+    state: ArchAuditOutcome | ArchAuditOutcomeName
+    note: str
+    gazette: str | None | Unset = UNSET
+    version: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rule"] = self.rule
+        out["title"] = self.title
+        out["state"] = _enum_out(self.state)
+        out["note"] = self.note
+        if self.gazette is not UNSET:
+            out["gazette"] = self.gazette
+        if self.version is not UNSET:
+            out["version"] = self.version
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchAuditRule:
+        return cls(
+            rule=data["rule"],
+            title=data["title"],
+            state=_enum_in(ArchAuditOutcome, data["state"]),
+            note=data["note"],
+            gazette=data.get("gazette", UNSET),
+            version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchAuditRuleSet(_Model):
+    """The national regulation's rule set as the standards package read it (docs/adr/8078): where the application date
+    came from and each article's outcome by its version.
+    Attributes:
+        date_note: Where the date came from, or why there is none: “Başvuru tarihi künyeden: 2.7.2026”.
+        date: The application date as the permit's particulars give it (ISO), absent when they give none that reads.
+    """
+    date_note: str
+    rules: list[ArchAuditRule]
+    date: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["dateNote"] = self.date_note
+        out["rules"] = [e0.to_json() for e0 in self.rules]
+        if self.date is not UNSET:
+            out["date"] = self.date
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchAuditRuleSet:
+        return cls(
+            date_note=data["dateNote"],
+            rules=[ArchAuditRule.from_json(e0) for e0 in data["rules"]],
+            date=data.get("date", UNSET),
         )
 
 
@@ -16836,12 +16949,16 @@ class ArchAudited(_Model):
         findings: By group, then by code within it, then along x and y.
         outside: The findings `within` left out. Unit: count.
         excepted: The findings in the part reported on that are exceptions, listed or not. Unit: count.
+        rule_set: The national regulation's rule set by the application date (docs/adr/8078): given by a host that runs the
+            standards package (MCP, Python, the desktop) when the regulation group is asked of the whole drawing; its
+            findings are listed with the others. Absent: not asked, or the rule did not answer (a warning says why).
         stale: The keys of the project's exceptions whose finding the audit no longer finds (`cad.arch.exceptions`' prune).
     """
     findings: list[ArchAuditFinding]
     outside: int
     excepted: int
     revision: str
+    rule_set: ArchAuditRuleSet | None | Unset = UNSET
     stale: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -16850,6 +16967,8 @@ class ArchAudited(_Model):
         out["outside"] = self.outside
         out["excepted"] = self.excepted
         out["revision"] = self.revision
+        if self.rule_set is not UNSET:
+            out["ruleSet"] = None if self.rule_set is None else self.rule_set.to_json()
         if self.stale is not UNSET:
             out["stale"] = list(self.stale)
         return out
@@ -16861,6 +16980,7 @@ class ArchAudited(_Model):
             outside=data["outside"],
             excepted=data["excepted"],
             revision=data["revision"],
+            rule_set=UNSET if "ruleSet" not in data else None if data["ruleSet"] is None else ArchAuditRuleSet.from_json(data["ruleSet"]),
             stale=list(data["stale"]) if "stale" in data else UNSET,
         )
 
@@ -142851,6 +142971,12 @@ __all__ = [
     "ArchAuditFix",
     "ArchAuditNature",
     "ArchAuditNatureName",
+    "ArchAuditOutcome",
+    "ArchAuditOutcomeName",
+    "ArchAuditRule",
+    "ArchAuditRuleSet",
+    "ArchAuditState",
+    "ArchAuditStateName",
     "ArchAuditWithin",
     "ArchAudited",
     "ArchDiscipline",

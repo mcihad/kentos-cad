@@ -238,6 +238,7 @@ fn finding(
         note: None,
         nature: None,
         rule: None,
+        state: None,
     }
 }
 
@@ -683,8 +684,8 @@ impl Audit<'_> {
         out
     }
 
-    /// Room separators of one level over each other on one line (docs/adr/0732 §4; Revit's “Highlighted Room
-    /// Separation Lines Overlap”): straight edges within a millimetre across, overlapping for more than a millimetre.
+    /// Room separators of one level over each other on one line (docs/adr/0732 §4): straight edges within a millimetre
+    /// across, overlapping for more than a millimetre.
     /// A copy of the other (the same points, either way round) is removed by its fix, the later one.
     fn separators(&self) -> Vec<ArchAuditFinding> {
         let seps: Vec<(&Entity, &kentos_commands::PathEntity)> = self
@@ -2053,6 +2054,8 @@ fn answer(doc: &Document, input: &ArchAudit) -> Result<(ArchAudited, Vec<Command
             excepted,
             stale,
             revision: doc.revision().to_string(),
+            // The standards package's, given by the host that runs Python (docs/adr/8078).
+            rule_set: None,
         },
         warnings,
     ))

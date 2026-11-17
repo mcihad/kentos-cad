@@ -140,6 +140,10 @@ pub fn project_facts(
         Ok(found) => facts.with_cad(found),
         Err(_) => facts,
     };
+    let facts = match std::panic::catch_unwind(AssertUnwindSafe(|| building::measure(doc))) {
+        Ok(found) => facts.with_building(found),
+        Err(_) => facts,
+    };
     match std::panic::catch_unwind(AssertUnwindSafe(|| architecture::measure(doc, stopped))) {
         Ok(Err(architecture::Stopped)) => None,
         Ok(Ok(Some(found))) => Some(facts.with_architecture(found)),
@@ -203,6 +207,7 @@ impl Watch for Asked<'_> {
 }
 
 mod architecture;
+pub mod building;
 pub mod cad;
 pub mod permit;
 

@@ -109,6 +109,117 @@ impl ArchAuditNature {
     }
 }
 
+/// A finding that is no failure (docs/adr/8078; plan/bim-plan.md BIM-13): the rule could not decide. A finding without
+/// one is a failure (kaldı); a rule that holds or does not apply says it in its summary, never as a finding.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ArchAuditState {
+    /// Eksik veri: what the rule needs is not in the project (an application date its result turns on, a value it
+    /// could not read).
+    MissingData,
+    /// Uzman incelemesi: the text leaves it to a reviewer, or KentOS does not hold the text of the day.
+    ExpertReview,
+}
+
+impl ArchAuditState {
+    pub fn label(self) -> &'static str {
+        match self {
+            ArchAuditState::MissingData => "Eksik veri",
+            ArchAuditState::ExpertReview => "Uzman incelemesi",
+        }
+    }
+}
+
+/// An article's outcome in the national regulation's rule set (docs/adr/8078): every rule says one.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ArchAuditOutcome {
+    /// Geçti: the drawing meets the article's version.
+    Passed,
+    /// Kaldı: it does not; its findings say where.
+    Failed,
+    /// Eksik veri: what the article needs is not given (the application date its version turns on).
+    MissingData,
+    /// Uzman incelemesi: a reviewer decides.
+    ExpertReview,
+    /// Kapsam dışı: the article does not ask this building (a single dwelling, fewer storeys).
+    OutOfScope,
+}
+
+impl ArchAuditOutcome {
+    pub fn label(self) -> &'static str {
+        match self {
+            ArchAuditOutcome::Passed => "geçti",
+            ArchAuditOutcome::Failed => "kaldı",
+            ArchAuditOutcome::MissingData => "eksik veri",
+            ArchAuditOutcome::ExpertReview => "uzman incelemesi",
+            ArchAuditOutcome::OutOfScope => "kapsam dışı",
+        }
+    }
+}
+
+/// An article read by the version in force on the application date (docs/adr/8078).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ArchAuditRule {
+    /// “PAİY 34/1”, “Sivas 34/8”.
+    pub rule: String,
+    /// What it is about: “Asansör zorunluluğu”.
+    pub title: String,
+    /// The version's first day as the gazette writes it (“1.7.2026”); absent when KentOS holds no text of the day.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub version: Option<String>,
+    /// Its gazette (“1.7.2026/33297”).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub gazette: Option<String>,
+    pub state: ArchAuditOutcome,
+    /// What was measured and asked: “bodrum dahil 4 kat: asansör; binada asansör var”.
+    pub note: String,
+}
+
+/// The national regulation's rule set as the standards package read it (docs/adr/8078): where the application date
+/// came from and each article's outcome by its version.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ArchAuditRuleSet {
+    /// The application date as the permit's particulars give it (ISO), absent when they give none that reads.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub date: Option<String>,
+    /// Where the date came from, or why there is none: “Başvuru tarihi künyeden: 2.7.2026”.
+    pub date_note: String,
+    pub rules: Vec<ArchAuditRule>,
+}
+
+impl ArchAuditRuleSet {
+    /// In one line: “Kural seti — Başvuru tarihi künyeden: 2.7.2026 · PAİY 34/1 (1.7.2026) geçti · …”.
+    pub fn line(&self) -> String {
+        let rules: Vec<String> = self
+            .rules
+            .iter()
+            .map(|r| match &r.version {
+                Some(v) => format!("{} ({v}) {}", r.rule, r.state.label()),
+                None => format!("{} {}", r.rule, r.state.label()),
+            })
+            .collect();
+        format!("Kural seti — {} · {}", self.date_note, rules.join(" · "))
+    }
+}
+
 impl ArchAuditCheck {
     pub const ALL: [ArchAuditCheck; 18] = [
         ArchAuditCheck::Walls,
@@ -322,8 +433,10 @@ pub struct ArchAuditFinding {
     /// `paiy_inside_height_below` (docs/adr/8040 §3),
     /// `paiy_stair_width_narrow`, `paiy_stair_landing_short`, `paiy_stair_riser_high`, `paiy_stair_step`,
     /// `paiy_railing_missing`, `paiy_ramp_steep`, `paiy_window_railing`, `paiy_lightwell_small`, `paiy_air_shaft_small`,
-    /// `paiy_elevator_missing`, `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict`
-    /// (docs/adr/8034); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
+    /// `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict` (docs/adr/8034); the standards
+    /// package's (docs/adr/8078: a host that runs Python lists them) `paiy_elevator_missing` and
+    /// `paiy_elevator_not_serving` by the application date's version, `regulation_date_needed` (eksik veri) and
+    /// `regulation_text_unknown` (uzman incelemesi); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
     /// `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/8035); `parking_short`,
     /// `shelter_short`, `shelter_exit_count`, `shelter_height_low` (docs/adr/8036); `paiy_sections_missing`,
     /// `paiy_section_stair_missing` (docs/adr/8042 §7); `paiy_elevations_missing` (docs/adr/8043 §9); the roofs'
@@ -371,6 +484,11 @@ pub struct ArchAuditFinding {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub rule: Option<String>,
+    /// A finding that is no failure (docs/adr/8078): eksik veri or uzman incelemesi. Absent: the drawing does not meet
+    /// the rule.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub state: Option<ArchAuditState>,
 }
 
 /// Output of `cad.arch.audit` v1 (its plan's too).
@@ -392,6 +510,12 @@ pub struct ArchAudited {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub stale: Vec<String>,
+    /// The national regulation's rule set by the application date (docs/adr/8078): given by a host that runs the
+    /// standards package (MCP, Python, the desktop) when the regulation group is asked of the whole drawing; its
+    /// findings are listed with the others. Absent: not asked, or the rule did not answer (a warning says why).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rule_set: Option<ArchAuditRuleSet>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

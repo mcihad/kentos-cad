@@ -1154,8 +1154,8 @@ fn objects_by_uid(s: &Session) -> std::collections::BTreeMap<String, Value> {
 
 #[test]
 fn a_geopackage_goes_in_and_out_keeping_ids_values_and_arcs() {
-    // docs/adr/0502: QGIS's file into a drawing, the drawing out as a GeoPackage, that into another drawing: the same
-    // objects with the same lasting ids; plan writes nothing; the refusals.
+    // docs/adr/0502: another GIS program's file into a drawing, the drawing out as a GeoPackage, that into another
+    // drawing: the same objects with the same lasting ids; plan writes nothing; the refusals.
     let dir = scratch("gpkg");
     let src = format!(
         "{}/../../../fixtures/geopackage/v1/qgis.gpkg",
@@ -1237,9 +1237,10 @@ fn a_geopackage_goes_in_and_out_keeping_ids_values_and_arcs() {
 
 #[test]
 fn a_geopackage_carries_its_relations_and_styles_both_ways() {
-    // docs/adr/0627 §6, §7: QGIS's relation and default style into a drawing (a reference field and a relation, the
-    // layer's look), the drawing out as a GeoPackage (the relation KentOS's related table with its document, the look
-    // QGIS's default style), that into another drawing: the same relation, field values and look.
+    // docs/adr/0627 §6, §7: another GIS program's relation and default style into a drawing (a reference field and a
+    // relation, the layer's look), the drawing out as a GeoPackage (the relation KentOS's related table with its
+    // document, the look that program's default style), that into another drawing: the same relation, field values
+    // and look.
     let dir = scratch("gpkg-profile");
     let src = format!(
         "{}/../../../fixtures/geopackage/v1/profil-qgis.gpkg",
@@ -1786,8 +1787,8 @@ fn arch_dxf_goes_round() {
     }
 }
 
-/// The drawing the Shapefile tests write: QGIS's GeoPackage taken in, a polygon on the point layer (it splits into two
-/// Shapefiles), a circle on the road layer, two long Turkish attributes that cut to one name, a text (left out).
+/// The drawing the Shapefile tests write: another GIS program's GeoPackage taken in, a polygon on the point layer (it
+/// splits into two/// Shapefiles), a circle on the road layer, two long Turkish attributes that cut to one name, a text (left out).
 fn shapefile_drawing() -> Session {
     let src = format!(
         "{}/../../../fixtures/geopackage/v1/qgis.gpkg",
@@ -1983,7 +1984,8 @@ fn shapefiles_go_out_whole_with_what_they_cannot_hold_said() {
 fn layer_looks_go_out_as_sld_and_come_back() {
     // docs/adr/0516: a categorized, a graduated and a single look written as SLD 1.1; what SE cannot say is said;
     // each read back by file.import.sld into another layer gives the same classes. With KENTOS_WRITE_SLD=1 the
-    // files go to fixtures/sld/v1/out for scripts/fixtures/sld_cases.py, which opens them in QGIS 4.2.
+    // files go to fixtures/sld/v1/out for scripts/fixtures/sld_cases.py, which opens them in an independent GIS
+    // program.
     let src = format!(
         "{}/../../../fixtures/geopackage/v1/qgis.gpkg",
         env!("CARGO_MANIFEST_DIR")
@@ -2180,9 +2182,10 @@ fn layer_looks_go_out_as_sld_and_come_back() {
 
 #[test]
 fn layer_looks_go_out_as_qml_and_come_back() {
-    // docs/adr/0555: categorized, graduated, rule-based and single looks written as QGIS layer style files; what a QML
+    // docs/adr/0555: categorized, graduated, rule-based and single looks written as QML layer style files; what a QML
     // cannot say is said; each read back by file.import.qml gives the same renderer. With KENTOS_WRITE_QML=1 the
-    // files go to fixtures/qml/v1/out for scripts/fixtures/qml_cases.py, which loads them in QGIS 4.2.
+    // files go to fixtures/qml/v1/out for scripts/fixtures/qml_cases.py, which loads them in an independent GIS
+    // program.
     let src = format!(
         "{}/../../../fixtures/geopackage/v1/qgis.gpkg",
         env!("CARGO_MANIFEST_DIR")
@@ -2449,7 +2452,7 @@ fn layer_looks_go_out_as_qml_and_come_back() {
                 assert_eq!(m["offsetAlong"], 1.0);
                 let p = &m["marker"]["layers"][0];
                 assert_eq!(p["size"], json!({ "expr": "[kat] * 2 + 1", "fallback": 2.0 }));
-                // Turned twice, the angle comes back as written; a zero angle is QGIS's default and not written.
+                // Turned twice, the angle comes back as written; a zero angle is the format's default and not written.
                 assert_eq!(p["rotation"], json!({ "expr": "[yon]" }));
             }
             _ => {}
@@ -3018,6 +3021,9 @@ mod flat_pieces;
 
 #[path = "headless/bim_package.rs"]
 mod bim_package;
+
+#[path = "headless/regulation_dates.rs"]
+mod regulation_dates;
 
 #[path = "headless/ifc_timing.rs"]
 mod ifc_timing;

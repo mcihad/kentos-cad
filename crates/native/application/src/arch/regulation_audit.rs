@@ -32,22 +32,22 @@
 //! - **Pencereler (38/1):** a window above the ground storey whose sill is below 0.90 m asks for a 1.10 m railing.
 //! - **Işıklık ve hava bacası (32/2, 32/3):** a void named Işıklık (Aydınlık) at least 1.50 m and 4.50 m² in a building
 //!   of one to six storeys, 2.00 m and 9.00 m² in a taller one; a void named Hava bacası 0.60 × 0.60 m.
-//! - **Asansör (34, as amended 1.7.2026):** a building of three storeys (its basements holding a unit, a common area or
-//!   an annex counted) leaves an elevator's place, one of four or more has one; a single dwelling unit's is not asked.
-//!   An elevator is a space named Asansör or KentOS's Asansör block (docs/adr/8045 §5): a shaft's net size at least the
-//!   cabin's (narrow side 1.20 m, 1.80 m²), a block's cabin too and its door 0.90 m, a block in a shaft read with it;
-//!   the landing its door opens to at least 1.20 m before a sliding door, 1.50 m before a hinged one. In ten storeys or
-//!   more one of them a stretcher's: 1.20 m, 2.52 m², a 1.10 m door (34/5).
+//! - **Asansör (34/2, 34/5):** an elevator is a space named Asansör or KentOS's Asansör block (docs/adr/8045 §5): a
+//!   shaft's net size at least the cabin's (narrow side 1.20 m, 1.80 m²), a block's cabin too and its door 0.90 m, a block
+//!   in a shaft read with it; the landing its door opens to at least 1.20 m before a sliding door, 1.50 m before a hinged
+//!   one. In ten storeys or more one of them a stretcher's: 1.20 m, 2.52 m², a 1.10 m door (34/5). Whether a building
+//!   needs an elevator or its place (34/1) and which storeys it serves (34/8) changed on 1.7.2026 and are read by the
+//!   application date's version: the standards package's Python (catalog/standards/mimari-mevzuat, docs/adr/8078).
 //!
 //! - **Çatılar (40, 42; docs/adr/8044 §9):** the ridge over the saçak seviyesi 5.00 m (40/4), the eaves 1.00 m (42/1),
 //!   a vent 0.60 m over the roof (40/5), a chimney 0.80 m over the ridge (BYKHY 58/2); see [`crate::roof_audit`].
 //!
 //! **Yerel yönetmelik** (`ArchSettings::local_rules`): the municipality's values are read over these where they differ,
 //! as PAİY 69/3 applies them. Sivas İmar Yönetmeliği (10.11.2022): common stairs 1.30 m and their intermediate landings
-//! 1.30 m (31/1-a); an elevator from three storeys, a single dwelling of three storeys or fewer aside (34/1); storeys at
-//! most 3.60 m in a dwelling area (28/1-c, no 4.00 m); an air shaft's narrow side 0.30 m and 0.36 m² (32/3); toilet and
-//! balcony doors 0.80 m (39/1-c); a light well by the storeys it serves (32/2-a); a roof's ridge 4.00 m and its slope
-//! 40 % (40/5-g), its windows 1.20 × 1.50 m, 1 m from the facade lines and 2 m apart (40/5-e), its snow guard (42/5).
+//! 1.30 m (31/1-a); storeys at most 3.60 m in a dwelling area (28/1-c, no 4.00 m); an air shaft's narrow side 0.30 m
+//! and 0.36 m² (32/3); toilet and balcony doors 0.80 m (39/1-c); a light well by the storeys it serves (32/2-a); a roof's
+//! ridge 4.00 m and its slope 40 % (40/5-g), its windows 1.20 × 1.50 m, 1 m from the facade lines and 2 m apart (40/5-e),
+//! its snow guard (42/5). Its elevator articles (34/1, 34/8) are the standards package's too.
 //! A stricter value binds and the other layer's is named beside it; a looser one a drawing keeps while missing the
 //! national value is a conflict (`regulation_conflict`) the administration decides.
 //!
@@ -196,7 +196,6 @@ pub const WINDER_ARTICLE: Article = Article::paiy("31/2-c", ORIGINAL);
 pub const LIGHTWELL_ARTICLE: Article = Article::paiy("32/2-a", ORIGINAL);
 pub const TALL_LIGHTWELL_ARTICLE: Article = Article::paiy("32/2-b", ORIGINAL);
 pub const AIR_SHAFT_ARTICLE: Article = Article::paiy("32/3", ORIGINAL);
-pub const ELEVATOR_ARTICLE: Article = Article::paiy("34/1", "1.7.2026/33297 değişikliğiyle");
 pub const CABIN_ARTICLE: Article = Article::paiy("34/2", ORIGINAL);
 pub const STRETCHER_ARTICLE: Article = Article::paiy("34/5", ORIGINAL);
 pub const RAILING_ARTICLE: Article = Article::paiy("38/1", ORIGINAL);
@@ -205,12 +204,14 @@ pub const SIVAS_STOREY_ARTICLE: Article = Article::sivas("28/1-c");
 pub const SIVAS_STAIR_ARTICLE: Article = Article::sivas("31/1-a");
 pub const SIVAS_LIGHTWELL_ARTICLE: Article = Article::sivas("32/2-a");
 pub const SIVAS_AIR_SHAFT_ARTICLE: Article = Article::sivas("32/3");
-pub const SIVAS_ELEVATOR_ARTICLE: Article = Article::sivas("34/1");
 pub const SIVAS_DOOR_ARTICLE: Article = Article::sivas("39/1-c");
 
 /// The codes the group finds, in their order: PAİY's and the local regulation's, then the fire regulation's
-/// (docs/adr/8035).
-pub const CODES: [&str; 49] = [
+/// (docs/adr/8035). The rule set's own (`regulation_date_needed`, `regulation_text_unknown`), 34/1's and 34/8's are the
+/// standards package's Python (catalog/standards/mimari-mevzuat, docs/adr/8078), listed for their order beside these.
+pub const CODES: [&str; 52] = [
+    codes::REGULATION_DATE_NEEDED,
+    codes::REGULATION_TEXT_UNKNOWN,
     codes::PAIY_ROOM_MISSING,
     codes::PAIY_ROOM_AREA_BELOW,
     codes::PAIY_ROOM_WIDTH_BELOW,
@@ -231,6 +232,7 @@ pub const CODES: [&str; 49] = [
     codes::PAIY_LIGHTWELL_SMALL,
     codes::PAIY_AIR_SHAFT_SMALL,
     codes::PAIY_ELEVATOR_MISSING,
+    codes::PAIY_ELEVATOR_NOT_SERVING,
     codes::PAIY_ELEVATOR_SMALL,
     codes::PAIY_ELEVATOR_STRETCHER,
     codes::PAIY_ELEVATOR_LANDING_NARROW,
@@ -318,25 +320,9 @@ pub fn shaft_of(name: Option<&str>, usage: Option<&str>) -> Option<ShaftKind> {
     }
 }
 
-/// A technical room 34/1 does not count a basement by: a boiler room, a heat centre, an electricity room, a water tank,
-/// a generator, a climate plant (ısı merkezi, kazan dairesi …).
+/// A technical room 34/1 does not count a basement by (the domain's reading, which the building facts share).
 fn technical(name: Option<&str>, usage: Option<&str>) -> bool {
-    let w = words(name, usage);
-    [
-        "KAZAN",
-        "ELEKTRIK",
-        "JENERATOR",
-        "IKLIMLENDIRME",
-        "TEKNIK",
-        "HIDROFOR",
-        "TRAFO",
-        "MAKINE",
-        "POMPA",
-    ]
-    .iter()
-    .any(|p| has(&w, p))
-        || is(&w, "ISI")
-        || (is(&w, "SU") && has(&w, "DEPO"))
+    kentos_domain::room_names::technical(name, usage)
 }
 
 /// Whether a unit's nature is a dwelling's (or not given): the escape routes' rule (docs/adr/8033, 8035).
@@ -571,9 +557,9 @@ pub(crate) fn net_parts(
     s.parts.clone()
 }
 
-/// The storeys 34/1 counts (as amended 1.7.2026): the levels at or above ±0.00 and each basement holding a room that is
-/// not a technical one; the basements among them apart.
-fn storeys(levels: &[&ArchLevel], places: &[Place]) -> (usize, usize) {
+/// The building's storeys as 31 and 32 read them, counted as 34/1 has since 1.7.2026: the levels at or above ±0.00 and
+/// each basement holding a room that is not a technical one.
+fn storeys(levels: &[&ArchLevel], places: &[Place]) -> usize {
     let above = levels.iter().filter(|l| l.elevation >= -1e-6).count();
     let basements = levels
         .iter()
@@ -587,7 +573,7 @@ fn storeys(levels: &[&ArchLevel], places: &[Place]) -> (usize, usize) {
                 })
         })
         .count();
-    (above + basements, basements)
+    above + basements
 }
 
 /// Where a stair stands (31/1-a): in a common area (or nowhere known), inside a dwelling unit, inside another unit, or
@@ -948,7 +934,7 @@ pub fn findings(
         }
     }
     // The building as 31, 32 and 34 read it.
-    let (storeys, basements) = storeys(&levels, &places);
+    let storeys = storeys(&levels, &places);
     // An elevator is a shaft (a space named Asansör) or an Asansör block (docs/adr/8045 §5).
     let cabins = crate::elevator_cabins::cabins(doc);
     let has_elevator =
@@ -959,7 +945,6 @@ pub fn findings(
         .filter(|u| u.kind == UnitKind::Unit)
         .collect();
     let dwelling_building = units.is_empty() || units.iter().any(|u| dwelling(u.nature.as_deref()));
-    let single_dwelling = units.len() == 1 && dwelling(units[0].nature.as_deref());
     let place_at =
         |level: &Option<String>, p: V| places.iter().find(|x| !x.void && x.holds(level, p));
     // A unit's owner: an annex's unit, else itself.
@@ -1143,7 +1128,6 @@ pub fn findings(
         }
     }
     // Stairs (31; 38/1).
-    let mut first_stair: Option<V> = None;
     // The common stairs (31/1-a's), by id, for the sections (57/2-a-6).
     let mut common_stairs: Vec<(Slot, String, V)> = Vec::new();
     for e in doc.entities() {
@@ -1156,7 +1140,6 @@ pub fn findings(
         };
         let walk = arch::Walk::curved(pts, stair.bulge);
         let at = pts.first().copied().unwrap_or(V::new(0.0, 0.0));
-        first_stair.get_or_insert(at);
         let level = e.own_level().map(str::to_owned);
         let mid = walk.point(walk.length() / 2.0).0;
         let room_on_level = places.iter().any(|p| p.level == level && !p.void);
@@ -1555,62 +1538,6 @@ pub fn findings(
             ShaftKind::Elevator => {}
         }
     }
-    // Elevators (34/1, 34/2).
-    let counted = if basements > 0 {
-        format!("bodrum dahil {storeys} kat")
-    } else {
-        format!("{storeys} kat")
-    };
-    if !has_elevator && storeys >= 3 {
-        let national = match (single_dwelling, storeys >= 4) {
-            (true, _) => None,
-            (false, true) => Some(true),
-            (false, false) => Some(false),
-        };
-        let local_needs = sivas && !(single_dwelling && storeys <= 3);
-        let at = first_stair
-            .or_else(|| rooms.first().map(|r| r.at))
-            .unwrap_or(V::new(0.0, 0.0));
-        let repair = "Asansör kuyusunu çizin (boşluk mahal, adı “Asansör”) ya da kitaplığın Asansör bloğunu yerleştirin. \
-                      Tek bağımsız bölümlü konutsa Bina programında tek bölümü tanımlayın: o zaman aranmaz.";
-        let missing =
-            if local_needs {
-                let paiy = match national {
-                    Some(true) => "4 ve daha fazla katta asansör",
-                    Some(false) => "3 katta asansör yeri",
-                    None => "tek bağımsız bölümlü konutta aranmaz",
-                };
-                Some(Said {
-                    code: codes::PAIY_ELEVATOR_MISSING,
-                    message: format!(
-                        "Binada asansör yok ({counted}) — {}; {}: {paiy}",
-                        SIVAS_ELEVATOR_ARTICLE.short(),
-                        ELEVATOR_ARTICLE.short()
-                    ),
-                    repair: repair.into(),
-                    rule: SIVAS_ELEVATOR_ARTICLE.named(),
-                    binding: None,
-                })
-            } else {
-                national.map(|elevator| Said {
-                code: codes::PAIY_ELEVATOR_MISSING,
-                message: if elevator {
-                    format!("Binada asansör yok ({counted}) — {}", ELEVATOR_ARTICLE.short())
-                } else {
-                    format!(
-                        "Binada asansör yeri yok ({counted}; 3 katta asansör yeri bırakılır) — {}",
-                        ELEVATOR_ARTICLE.short()
-                    )
-                },
-                repair: repair.into(),
-                rule: ELEVATOR_ARTICLE.named(),
-                binding: None,
-            })
-            };
-        if let Some(s) = missing {
-            push(s, Vec::new(), at, None);
-        }
-    }
     // Each level's elevators (34/2): a shaft by its net size and an Asansör block standing in it by its cabin and door
     // (docs/adr/8045 §5): a cabin of the size in a shaft that cannot hold one is no elevator of the size. A block in no
     // shaft is an elevator of its own. One keeps the cabin's size; of several, half (rounded down) do.
@@ -1764,7 +1691,8 @@ pub fn findings(
     }
     // A building of ten storeys or more (34/5), counted from ±0.00 as a plan counts them: one of its elevators a
     // stretcher's — narrow side 1.20 m, 2.52 m², its door 1.10 m (a shaft with no block by its net size). Said on the
-    // largest cabin, its fix a stretcher's, else on the largest shaft; a building with no elevator is 34/1's.
+    // largest cabin, its fix a stretcher's, else on the largest shaft; a building with no elevator is 34/1's (the
+    // standards package's).
     let above = levels.iter().filter(|l| l.elevation >= -1e-6).count();
     let stretcher = |l: &Lift<'_>| match l {
         Lift::Shaft(p, inside) => {

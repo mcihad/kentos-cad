@@ -148,11 +148,15 @@ pub(crate) struct ArchAuditPanel {
     pub preview: RefCell<Option<KeptPreview>>,
     /// The table's columns as dragged wider or narrower (docs/adr/8034), by their place; none: their share.
     pub columns: [Option<f32>; 5],
-    /// The standards package's EK-3 and EK-4 findings (docs/adr/8064, standards.rs): the last answer, put back after
-    /// each check of the whole drawing until the next one comes.
+    /// The standards packages' findings (docs/adr/8064, 8078; standards.rs): the last answer, put back after each check
+    /// of the whole drawing until the next one comes.
     pub standards: Vec<ArchAuditFinding>,
-    /// Why the last ask got no answer; none: it did.
+    /// Why the Dijital proje package gave no answer to the last ask; none: it did.
     pub standards_failed: Option<String>,
+    /// The national regulation's rule set by the application date (docs/adr/8078), the line over the table.
+    pub rule_set: Option<kentos_commands::ArchAuditRuleSet>,
+    /// Why the national regulation's package gave no answer; none: it did.
+    pub regulation_failed: Option<String>,
     /// The ask's generation: an older answer is dropped.
     pub standards_generation: u64,
     /// A check made the ask due; the event's end asks.
@@ -180,6 +184,8 @@ impl Default for ArchAuditPanel {
             columns: [None; 5],
             standards: Vec::new(),
             standards_failed: None,
+            rule_set: None,
+            regulation_failed: None,
             standards_generation: 0,
             standards_due: false,
         }

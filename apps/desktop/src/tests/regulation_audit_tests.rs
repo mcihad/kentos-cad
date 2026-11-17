@@ -281,14 +281,22 @@ fn set_arch(app: &mut App, edit: impl FnOnce(&mut kentos_commands::ArchSettings)
 /// system, and those findings are the standards package's (docs/adr/8074), with their own tests.
 fn regulation_findings(app: &mut App) -> Vec<Value> {
     let answer = run(app, "cad.arch.audit", json!({ "checks": ["regulation"] }));
-    answer["output"]["findings"]
+    let mut found: Vec<Value> = answer["output"]["findings"]
         .as_array()
         .cloned()
         .unwrap_or_default()
         .into_iter()
         .filter(|f| !f["code"].as_str().is_some_and(|c| c.starts_with("digital_")))
-        .collect()
+        .collect();
+    // The articles whose version the application date chooses are the standards package's Python (docs/adr/8078):
+    // listed after the group's own, as the Denetim tab and a headless audit list them.
+    let facts = app.arch_audit_regulation_facts().expect("the building's facts");
+    let python = crate::standards::call("mimari-mevzuat", "mimari_mevzuat.mimari", "denetle", vec![facts])
+        .expect("the national regulation's rule answers");
+    found.extend(python["findings"].as_array().cloned().unwrap_or_default());
+    found
 }
+
 
 /// A four-storey building of two flats (M34, docs/adr/8034): its common stair (1.25 m, 0.1667 m risers, a railing on
 /// its left only), a ramp of 0.40 m over 4 m without railings, an air shaft of 0.40 × 0.90 m, a light well of 1.40 ×
@@ -428,10 +436,6 @@ fn a_four_storey_building_s_stairs_ramp_shafts_and_elevator_are_said() {
             "paiy_air_shaft_small",
             "Hava bacasının dar kenarı 0.40 m < 0.60 m — PAİY 32/3",
         ),
-        (
-            "paiy_elevator_missing",
-            "Binada asansör yok (4 kat) — PAİY 34/1 (1.7.2026)",
-        ),
         // No section drawn (docs/adr/8042 §7); with none, whether one passes through the stair is not asked yet.
         (
             "paiy_sections_missing",
@@ -442,6 +446,12 @@ fn a_four_storey_building_s_stairs_ramp_shafts_and_elevator_are_said() {
             "paiy_elevations_missing",
             "Kuzey, Doğu, Güney ve Batı cephelerinin görünüşü çıkarılmamış (binanın 4 cephesi, 0 görünüşü var) — PAİY \
              57/2-a-6",
+        ),
+        // The standards package's 34/1 (docs/adr/8078): four storeys ask for an elevator in every version, so the
+        // missing application date changes nothing and the newest version is said.
+        (
+            "paiy_elevator_missing",
+            "Binada asansör yok (4 kat) — PAİY 34/1 (1.7.2026)",
         ),
     ];
     assert_eq!(
@@ -517,8 +527,18 @@ fn a_four_storey_building_s_stairs_ramp_shafts_and_elevator_are_said() {
         rule_of("paiy_stair_width_narrow", "Ortak").as_deref(),
         Some("Sivas İmar Yön. 31/1-a · RG 10.11.2022/32009")
     );
-    // Three storeys: Sivas asks for an elevator, PAİY for its place only.
+    // Three storeys: Sivas asks for an elevator, PAİY for its place only. Without an application date that depends on
+    // the day (Sivas's regulation is in force from 10.11.2022): eksik veri, no guess (docs/adr/8078).
     set_arch(&mut app, |a| a.levels.retain(|l| l.id != "k3"));
+    let dated: Vec<(String, String)> = regulation_findings(&mut app)
+        .into_iter()
+        .filter(|f| f["code"] == "regulation_date_needed")
+        .map(|f| (f["state"].as_str().unwrap_or_default().to_owned(), f["message"].as_str().unwrap_or_default().to_owned()))
+        .collect();
+    assert_eq!(dated.len(), 1, "{dated:#?}");
+    assert_eq!(dated[0].0, "missingData");
+    assert!(dated[0].1.contains("10.11.2022–30.6.2026 başvurusunda Binada asansör yok (3 kat)"), "{dated:#?}");
+    crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
     let elevator = |app: &mut App| {
         said(&regulation_findings(app))
             .into_iter()

@@ -124,7 +124,7 @@
             "exits": 2,
             "path": [
               [
-                11.55,
+                4.45,
                 0.5
               ],
               [
@@ -472,7 +472,7 @@
             "exits": 1,
             "path": [
               [
-                11.55,
+                4.45,
                 0.5
               ],
               [
@@ -500,7 +500,7 @@
             "exits": null,
             "path": [
               [
-                11.55,
+                4.45,
                 0.5
               ],
               [
@@ -1363,6 +1363,18 @@
       {
         "class": "IfcBuilding",
         "classTr": "Bina",
+        "path": "Qto_BuildingBaseQuantities.Height",
+        "tr": "Yükseklik",
+        "table": "6.7",
+        "page": 43,
+        "missing": [
+          ""
+        ],
+        "of": 1
+      },
+      {
+        "class": "IfcBuilding",
+        "classTr": "Bina",
         "path": "Qto_BuildingBaseQuantities.EavesHeight",
         "tr": "Saçak Yüksekliği",
         "table": "6.7",
@@ -1465,18 +1477,6 @@
           "01a1dfda-0709-75f9-b155-c59e206e0cd6"
         ],
         "of": 12
-      },
-      {
-        "class": "IfcSite",
-        "classTr": "Saha",
-        "path": "ObjectType",
-        "tr": "Nesne Tipi",
-        "table": "6.55",
-        "page": 94,
-        "missing": [
-          ""
-        ],
-        "of": 1
       },
       {
         "class": "IfcSite",
@@ -1925,6 +1925,36 @@
         "of": 1
       }
     ]
+  },
+  "building": {
+    "storeys": [
+      {
+        "level": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "units": 4,
+        "common": 2,
+        "annexes": 1,
+        "other": 0,
+        "technical": 0,
+        "inhabited": 2,
+        "elevators": 1
+      },
+      {
+        "level": "k1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "units": 4,
+        "common": 2,
+        "annexes": 0,
+        "other": 0,
+        "technical": 0,
+        "inhabited": 3,
+        "elevators": 0
+      }
+    ],
+    "units": 4,
+    "dwellings": 2
   },
   "cut": false
 }

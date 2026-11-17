@@ -1530,6 +1530,9 @@ mod site_plan_tests;
 #[path = "tests/regulation_audit_tests.rs"]
 mod regulation_audit_tests;
 #[cfg(test)]
+#[path = "tests/regulation_dates_tests.rs"]
+mod regulation_dates_tests;
+#[cfg(test)]
 #[path = "tests/fire_escape_tests.rs"]
 mod fire_escape_tests;
 #[cfg(test)]

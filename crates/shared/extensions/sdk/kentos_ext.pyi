@@ -208,6 +208,8 @@ class ProjectAuditFacts:
     permit: PermitFacts
     #: The CAD drawing's layers, blocks, dimension typefaces, grids and rooms' numbers, names, storey codes and centres, as EK-3 and EK-4 read them (docs/adr/8064; the SDK's ``factsSchema`` gives its shape), and the rooms of one storey that share ground with how much (``roomOverlaps``, docs/adr/8067); empty when the drawing has neither a layer holding objects nor a room.
     cad: dict[str, Any]
+    #: Each storey's rooms by group and its elevators, the units (docs/adr/8078; shape in ``factsSchema``).
+    building: dict[str, Any]
     def layers(self) -> list[LayerFacts]:
         """The layers holding objects, in the layer tree's order."""
     def layer(self, layer: str) -> LayerFacts:

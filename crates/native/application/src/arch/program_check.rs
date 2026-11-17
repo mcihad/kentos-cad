@@ -398,6 +398,7 @@ fn finding(code: &str, uids: Vec<String>, at: V, message: String, repair: String
             note: None,
             nature: None,
             rule: None,
+            state: None,
         },
     }
 }

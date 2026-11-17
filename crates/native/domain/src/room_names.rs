@@ -110,6 +110,18 @@ pub fn passage(name: Option<&str>, usage: Option<&str>) -> bool {
         .any(|w| PASSAGES.contains(&w.as_str()))
 }
 
+/// A technical room (docs/adr/8034, 8078): a heat centre, a boiler room, an electricity room, a water tank, a generator,
+/// a climate plant, a pump, a transformer or a machine room (ısı merkezi, kazan dairesi …), which Planlı Alanlar İmar
+/// Yönetmeliği 34/1 does not count a basement by.
+pub fn technical(name: Option<&str>, usage: Option<&str>) -> bool {
+    let w = words(name, usage);
+    ["KAZAN", "ELEKTRIK", "JENERATOR", "IKLIMLENDIRME", "TEKNIK", "HIDROFOR", "TRAFO", "MAKINE", "POMPA"]
+        .iter()
+        .any(|p| has(&w, p))
+        || is(&w, "ISI")
+        || (is(&w, "SU") && has(&w, "DEPO"))
+}
+
 /// Whether a unit's nature is a dwelling's (Daire, Mesken, Konut, Ev) or not given (docs/adr/8033).
 pub fn dwelling_nature(nature: Option<&str>) -> bool {
     nature.is_none_or(|n| {

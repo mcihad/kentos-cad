@@ -575,7 +575,22 @@ yazılıdır.
 
 ### 5.4 Denetim
 
-#### BIM-13 — Mevzuat denetimlerinin tamamlanması [ ]
+#### BIM-13 — Mevzuat denetimlerinin tamamlanması [~]
+
+**Yapıldı (17 Kasım 2026, ilk dilim, [ADR 8078](../docs/adr/8078-regulation-rule-set-by-application-date.md)):** kural seti
+künyenin başvuru tarihine göre (K60): maddelerin hâlleri veridir (metin, Resmî Gazete, yürürlük günleri, geçiş hükmü);
+PAİY 34/1'in 28.7.2018, 11.7.2021 ve 1.7.2026 hâlleri, 34/8'in 11.7.2021 ve 1.7.2026 hâlleri, Sivas 34/1 ve 34/8; Geçici
+3/11 1.7.2026'dan önceki başvuruya eski hâli uygular. Gün yoksa her hâl denenir, sonuç değişiyorsa bulgu eksik veridir;
+bilinen metinden önceki gün uzman incelemesi (K61). Bulgu kaldı, eksik veri ya da uzman incelemesi; geçti ve kapsam dışı
+maddenin özet satırında (`ArchAuditFinding.state`, `ArchAudited.ruleSet`, K62). Kurallar yeni standart pakette
+(`tr.kentos.mimari-mevzuat`, K63; main'in `tr.kentos.mevzuat`'ı dalda yok, birleştirmede birleşir): 34/1 Rust'tan taşındı,
+34/8 yeni; ölçüler olguların `building` bölümünde. Masaüstü Denetim kural setini tablonun üstünde, durumu satırın başında
+söyler; başsız `cad.arch.audit` (MCP, Python) aynı bulguyu ve kural setini verir. İlk kabul tuttu: 25 bağımsız durum;
+aynı çizim 30.6.2026'da geçer, 2.7.2026'da 34/8'den kalır, tarihsiz eksik veridir; yağmurlama sınaması ADR 8035'in
+(`fire_escape_tests`). İç yükseklik ADR 8040 §3'te Rust'ta yapılmıştı.
+**Kalan:** kapı açılış yönü; emsalin 22. madde sınırları ve kat ara toplamları; merdiven altı 1,80 m; yangın kompartımanı;
+beyan edilen dayanımın karşılaştırılması; erişilebilir yol (TS 9111 metni); uzman onayının kaydı (Python bulgusunu
+`cad.arch.exceptions` tanımıyor); 28/1-c ve 39/1'in tarihli hâlleri; plan notu katmanı; bölge türü; konut dışı (B22).
 
 **Kullanıcı sonucu:** Denetim, başvuru tarihinde yürürlükte olan kuralları uygular. Her bulgu geçti, kaldı, eksik veri,
 uzman incelemesi ya da kapsam dışıdır. Yorum isteyen konu kendiliğinden "uygun" sayılmaz. Dayanak Z9; Ek A.
@@ -765,7 +780,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B12b ~ | IFC görüntüleyici | IFC-12 | Dosya kendi penceresinde: ağaç, özellikler, kesit; dışa aktarılan tek tıkla görülür (ilk dilim ADR 8073; gerçek pencerede kabul ve kesitin tutamakları kaldı) |
 | B13 ~ | Yazılmış dosyadan doğrulama, IDS ve kontrol formu | IFC-08 | 21 sorunun kanıtı dosyadan (ADR 8074; ikinci okuyucu ve IfcTester KentOS'la aynı; son yazılan dosya, beş sonuç raporu ve bütçe kaldı) |
 | B14 ~ | BIM ruhsat paketi | BIM-14 | Tek komut, tek revizyon, tek paket (ADR 8075; gerçek paket ADR 8076; müellifin cevapları çizimde ve basılan formda ADR 8077; 2+1 de yayımlanıyor, MCP'de uçtan uca, eskiyen cevap durdurur ADR 8077 §7) |
-| B15 | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti |
+| B15 ~ | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti (ADR 8078: asansör 34/1 ve 34/8'in hâlleri, eksik veri ve uzman incelemesi; kalan kurallar ve uzman onayı kaldı) |
 | B16 | Bilgi yönetimi ve teslim kaydı | BIM-15 | Teslim ve iade kayıtlı |
 | B17 | Büro ve belediye pilotu | BIM-16, IFC-11 | İdarenin yazılı cevabı |
 
