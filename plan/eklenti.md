@@ -1563,6 +1563,11 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
   enjeksiyonuyla [ECO-QA-10]. Taslak/sürüm onay özeti, paket kurcalama, kapsam yükseltme ve yayımlanmamış görünürlük
   olumsuz testleri [ECO-QA-11]. Kilitli ortamda çevrimdışı çalışma, eksik tekerlek, geri alınan aracı izni ve değişen
   kaynak revizyonu [ECO-QA-12].
+  — *ECO-QA-10 17 Kasım'da karşılandı (ADR 8057 §120). Gerçek dosyalarla hata enjeksiyonu: yerine konamayan raster,
+  COG ve COPC sonucu ile bitirilmeden bırakılan yazım parça bırakmaz (`tests/staged.rs`). Salt okunur dosya ve klasör
+  GeoPackage'ı bayt bayt olduğu gibi bırakır, ret kullanıcının dosyasını adlandırır. Aynı `requestId` bir kez yazar,
+  sonradan değişen dosyanın üzerine yazmaz (`processing_sink_faults`). Her noktada durdurma, tablo çakışması, PostGIS'te
+  ikinci yazım ve tek kullanımlık plan önceden sınanmıştı. ECO-QA-11 ve 12 açık.*
 - [ ] Başlangıç/keşif, ortam hazırlama, geri çağırma gidiş-dönüşü, büyük UI/İşlemler yükü, Python toplu işi ve host bellek
   ölçümü [ECO-QA-13]; eşikler gerçek başvuru cihazı ve korpus ölçümünden sonra sabitlenir, ölçülmüş gibi süre/FPS
   icat edilmez [ECO-QA-14]; üreticinin kendi çıktısı tek doğruluk kanıtı sayılmaz, bağımsız beklentiler yazılır

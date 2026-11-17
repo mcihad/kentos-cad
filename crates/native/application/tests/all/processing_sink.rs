@@ -14,14 +14,14 @@ fn fixtures() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures")
 }
 
-fn drawing() -> Document {
+pub(super) fn drawing() -> Document {
     let text =
         std::fs::read_to_string(fixtures().join("processing/v1/geometry.kcad")).expect("reads");
     Document::from_snapshot(DocumentSnapshotV1::from_json(&text).expect("a drawing"))
         .expect("opens")
 }
 
-fn run(doc: &mut Document, input: Value) -> Value {
+pub(super) fn run(doc: &mut Document, input: Value) -> Value {
     kentos_processing::command::register();
     registry::run(
         &mut ExecutionContext::new(doc),
@@ -106,14 +106,14 @@ fn g1_results_go_to_geopackages_and_the_drawing_stays() {
 
 // ── Into a GeoPackage that is there (docs/adr/0549) ─────────────────────────
 
-fn buffer_to(path: &std::path::Path, mode: &str) -> Value {
+pub(super) fn buffer_to(path: &std::path::Path, mode: &str) -> Value {
     json!({ "tool": "geometry.buffer", "parameters": {
         "input": { "scope": "layer", "layerId": "yol" }, "distance": 5 },
         "sink": { "path": path.display().to_string(), "mode": mode } })
 }
 
 /// QGIS's file in a folder of its own.
-fn qgis_copy(name: &str) -> (PathBuf, PathBuf) {
+pub(super) fn qgis_copy(name: &str) -> (PathBuf, PathBuf) {
     let dir = std::env::temp_dir().join(format!("kentos-sink-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).expect("a folder");
@@ -140,7 +140,7 @@ fn contents(path: &std::path::Path) -> Vec<(String, Vec<String>)> {
         .collect()
 }
 
-fn no_stray(dir: &std::path::Path) {
+pub(super) fn no_stray(dir: &std::path::Path) {
     let stray: Vec<_> = std::fs::read_dir(dir)
         .expect("lists")
         .filter_map(|e| e.ok())

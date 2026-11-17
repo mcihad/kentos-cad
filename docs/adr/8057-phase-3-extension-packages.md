@@ -5555,3 +5555,51 @@ sınamalar `catalog.rs`, `extensions/tests/retired.rs` (yeni).
 - **Sınamalar:** eklenti paketi 1 (emekli paketin girdisi yerine geçeni adlandırır, gidiş-dönüşte aynı; emekli
   olmayanda alan yok); masaüstü 1 (sözler: yerine geçen yokken, kuruluyken, adıyla; emekli paket kurulur, manifesti
   emekliliği taşır; Yerine geçeni bul Bulunabilir'i kimlikle açar).
+
+## §120. İşlemler'in sonuç dosyası hata enjeksiyonuyla: parça kalmaz, istek bir kez yazar (ECO-QA-10)
+
+**17 Kasım.** Kod: İşlemler `staged.rs` (yeni: `create`, `put_in_place`, `piece_of`), `files.rs` (`cog_file`),
+`cloud_files.rs` (`copc_file`), `local_files.rs` ve masaüstü `pointclouds/files.rs` (ikisi de ortak yazıcıyı
+kullanır), `command.rs` (`Said`); sınamalar İşlemler `tests/staged.rs` (yeni), uygulama `processing_sink_faults.rs`
+(yeni).
+
+- **Sorun 1: yerine konamayan dosyanın parçası kalıyordu.** Raster ve bulut araçlarının sonucu yanına
+  (`{ad}.yaziliyor`) yazılıp bitince yerine taşınır. Taşıma başarısız olunca (o adda bir klasör var; Windows'ta dosya
+  başka bir programda açık) parça klasörde kalıyordu: başsız sunucunun yazıcısında, masaüstünün kendi kopyasında, COG
+  düzenlemesinde (`.cog-yaziliyor`) ve COPC dizininde. Kod yorumu "yarıda kalan parça silinir" diyordu; yalnız yazarken
+  bırakılan sink için doğruydu.
+- **Karar:** iki ana bilgisayar tek yazıcıyı (`staged::create`) kullanır. Yerine konamayan, sonunda yazılamayan ya da
+  bitirilmeden bırakılan dosyanın parçası silinir; yerindeki klasöre ve içindekine dokunulmaz. Dosya tutamağı
+  silmeden önce kapanır: Windows açık dosyayı silmez. Süreç öldürülürse parça kalır; aynı adın sonraki yazımı onu
+  baştan yazar.
+- **Sorun 2: ret iletisi ara dosyayı adlandırıyordu.** Yazma izni olmayan klasöre yeni GeoPackage yazılınca ileti
+  kullanıcıya `yeni.gpkg.kentos-525807-0` adını gösteriyor, olmayan bir dosya için "Eski dosya olduğu gibi kaldı"
+  diyordu. Var olan dosyanın planı da (kopyası üzerinde yapılır) tablo çakışmasını kopyanın adıyla söylüyordu.
+- **Karar:** ret kullanıcının verdiği yolu adlandırır. Son cümle durumu söyler: yerinde yazımda ya da üzerine yazılacak
+  dosya varken "Eski dosya olduğu gibi kaldı.", yoksa "Dosya yazılmadı."; veritabanı hedefinde "Veritabanına
+  dokunulmadı."
+- **Yinelenen deneme (yeni sınamayla kilitlendi, davranış değişmedi):**
+  - Cevabı yolda kaybolan istek aynı `requestId` ile gelirse önceki cevap döner (`replayed`) ve hiçbir şey yazılmaz:
+    tablo "zaten var" diye reddedilmez, günlüğe ikinci satır düşmez.
+  - Dosya o arada kullanıcıca değiştiyse, `overwrite: true` olsa bile üzerine yazılmaz.
+  - Aynı çalıştırma başka bir istek kimliğiyle gelirse yeni bir yazımdır: tablosu varsa `table_exists`, dosya bayt bayt
+    aynı.
+  - Kimlik başka bir çağrıyla gelirse `request_reused`.
+  - Ajanın planı tek kullanımlıktır (`plan_required`; `a_write_is_planned_first_and_executed_only_as_planned`).
+- **Daha önce sınanmış olanlar (gözden geçirildi):**
+  - Her noktada durdurma, dosyayı ve çizimi olduğu gibi bırakır (`a_run_stopped_at_any_point_…`).
+  - GeoPackage olmayan dosya reddedilir, dokunulmaz.
+  - Modelin ve toplu işin yarıda durması katman bırakmaz.
+  - PostGIS'te ikinci yazım `table_exists` verir.
+- **Sınamalar:** İşlemler 6, gerçek dosyalarla:
+  - bütün dosya yerine konur, parça kalmaz; bitirilmeden bırakılan sink hiçbir şey bırakmaz;
+  - yerinde klasör varken düz dosya, COG ve COPC parça ya da kutu bırakmaz;
+  - yazma izni olmayan klasör nedeniyle söylenir.
+
+  Uygulama 4:
+  - istek yeniden gönderilir; ikinci yazım ve planın reddi kullanıcının dosyasını adlandırır;
+  - yeniden gönderilen istek sonradan değişen dosyanın üzerine yazmaz;
+  - salt okunur dosyada `addTables` ve `replaceTables` reddedilir, dosya bayt bayt aynı kalır;
+  - salt okunur klasöre yeni dosya yazılamaz, ara dosya adı iletide görünmez.
+
+  Düzeltme geri alınınca 6 sınamadan 4'ü kırmızı oldu.

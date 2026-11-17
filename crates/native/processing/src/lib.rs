@@ -57,6 +57,7 @@ pub mod record;
 pub mod registry;
 pub mod runner;
 pub mod source_inputs;
+pub mod staged;
 pub mod text;
 pub mod types;
 pub mod values;

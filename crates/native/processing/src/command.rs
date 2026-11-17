@@ -1754,12 +1754,28 @@ pub(crate) enum Sunk {
     Cancelled,
 }
 
-fn unwritable(why: String) -> Box<CommandError> {
-    refused(
-        codes::FILE_UNWRITABLE,
-        format!("GeoPackage yazılamadı: {why}. Eski dosya olduğu gibi kaldı."),
-        Some("sink.path".to_owned()),
-    )
+/// How a sink's failed write is said (docs/adr/8057 §120): the file the user named, not the passing copy the write was
+/// made in, and what the failure left as it was. A read-only folder's refusal named `yeni.gpkg.kentos-525807-0` and
+/// said an old file was left as it was where there was none.
+struct Said {
+    /// What could not be done.
+    head: &'static str,
+    /// The path the user gave, and the passing copy's, which the causes name.
+    shown: String,
+    work: String,
+    /// What the failure left as it was.
+    ending: &'static str,
+}
+
+impl Said {
+    fn unwritable(&self, why: impl std::fmt::Display) -> Box<CommandError> {
+        let why = why.to_string().replace(&self.work, &self.shown);
+        refused(
+            codes::FILE_UNWRITABLE,
+            format!("{}: {why}. {}", self.head, self.ending),
+            Some("sink.path".to_owned()),
+        )
+    }
 }
 
 /// The passing file a write is made in beside the target.
@@ -1826,13 +1842,32 @@ pub(crate) fn write_sink(
     } else {
         (path.clone(), true)
     };
+    let said = Said {
+        head: "GeoPackage yazılamadı",
+        shown: path.display().to_string(),
+        work: work.display().to_string(),
+        ending: if in_place || path.exists() {
+            "Eski dosya olduğu gibi kaldı."
+        } else {
+            "Dosya yazılmadı."
+        },
+    };
     if !in_place {
         let _ = std::fs::remove_file(&work);
     }
     if !fresh && !write {
-        std::fs::copy(path, &work).map_err(|e| unwritable(e.to_string()))?;
+        std::fs::copy(path, &work).map_err(|e| said.unwritable(e))?;
     }
-    let outcome = write_tables(copy, &layers, texts, &work, target.mode, lineage, flow);
+    let outcome = write_tables(
+        copy,
+        &layers,
+        texts,
+        &work,
+        target.mode,
+        lineage,
+        flow,
+        &said,
+    );
     let finished = match outcome {
         Ok(f) => f,
         Err(e) => {
@@ -1865,13 +1900,13 @@ pub(crate) fn write_sink(
             if !in_place {
                 let _ = std::fs::remove_file(&work);
             }
-            return Err(unwritable(e.to_string()));
+            return Err(said.unwritable(e));
         }
     };
     if fresh && write {
         if let Err(e) = std::fs::rename(&work, path) {
             let _ = std::fs::remove_file(&work);
-            return Err(unwritable(e.to_string()));
+            return Err(said.unwritable(e));
         }
     } else if !in_place {
         let _ = std::fs::remove_file(&work);
@@ -1920,7 +1955,23 @@ fn write_database(
     };
     let work = passing_file(&std::env::temp_dir().join("kentos-sink.gpkg"));
     let _ = std::fs::remove_file(&work);
-    let finished = match write_tables(copy, layers, texts, &work, SinkMode::New, lineage, flow) {
+    // The passing file is where the tables are made, not the user's: said as it is.
+    let said = Said {
+        head: "Sonucun tabloları hazırlanamadı",
+        shown: work.display().to_string(),
+        work: work.display().to_string(),
+        ending: "Veritabanına dokunulmadı.",
+    };
+    let finished = match write_tables(
+        copy,
+        layers,
+        texts,
+        &work,
+        SinkMode::New,
+        lineage,
+        flow,
+        &said,
+    ) {
         Ok(f) => f,
         Err(e) => {
             let _ = std::fs::remove_file(&work);
@@ -2211,7 +2262,8 @@ struct Finished {
 }
 
 /// The tables written in `work` in one transaction: committed when every batch is in, rolled back (the session
-/// dropped) when anything stops it.
+/// dropped) when anything stops it. Its refusals name the file as `said` does.
+#[allow(clippy::too_many_arguments)]
 fn write_tables(
     copy: &Document,
     layers: &[String],
@@ -2220,17 +2272,22 @@ fn write_tables(
     mode: SinkMode,
     lineage: &Lineage<'_>,
     flow: &dyn BatchFlow,
+    said: &Said,
 ) -> Result<Finished, Stop> {
     use kentos_native_application::geopackage::{Clash, Flow, WriteStop, write_with_tables};
-    let path_text = work.display().to_string();
+    let path_text = &said.shown;
     let fresh = mode == SinkMode::New;
+    let unwritable = |why: String| Stop::Refused(said.unwritable(why));
     let mut gp = if fresh {
-        kentos_geopackage::GeoPackage::create(work).map_err(|e| Stop::Refused(unwritable(e.0)))?
+        kentos_geopackage::GeoPackage::create(work).map_err(|e| unwritable(e.0))?
     } else {
         kentos_geopackage::GeoPackage::open(work, true).map_err(|e| {
             Stop::Refused(refused(
                 codes::IMPORT_UNREADABLE,
-                format!("{path_text} GeoPackage olarak açılamadı: {}. Dosyaya dokunulmadı.", e.0),
+                format!(
+                    "{path_text} GeoPackage olarak açılamadı: {}. Dosyaya dokunulmadı.",
+                    e.0.replace(&said.work, path_text)
+                ),
                 Some("sink.path".to_owned()),
             ))
         })?
@@ -2239,14 +2296,12 @@ fn write_tables(
         Vec::new()
     } else {
         gp.layers()
-            .map_err(|e| Stop::Refused(unwritable(e.0)))?
+            .map_err(|e| unwritable(e.0))?
             .into_iter()
             .map(|l| l.name)
             .collect()
     };
-    let session = gp
-        .session()
-        .map_err(|e| Stop::Refused(unwritable(e.0)))?;
+    let session = gp.session().map_err(|e| unwritable(e.0))?;
     let stopped = || flow.stopped();
     let progress = |done: u64, total: u64| flow.progress(done, total);
     let clash = match mode {
@@ -2282,7 +2337,7 @@ fn write_tables(
             Some("sink.path".to_owned()),
         )),
         WriteStop::Srs(why) => Stop::Refused(refused(codes::CRS_MISMATCH, why, Some("sink.path".to_owned()))),
-        WriteStop::Failed(why) => Stop::Refused(unwritable(why)),
+        WriteStop::Failed(why) => unwritable(why),
     })?;
     if written.tables.is_empty() {
         // Dropping the session rolls back what little it did (the spatial reference system).
@@ -2303,15 +2358,13 @@ fn write_tables(
                 &lineage.document(&t.table, t.layer.as_deref(), t.output.as_deref(), &made),
                 &made,
             )
-            .map_err(|e| Stop::Refused(unwritable(e.0)))?;
+            .map_err(|e| unwritable(e.0))?;
     }
     if flow.stopped() {
         return Err(Stop::Cancelled);
     }
-    session
-        .commit()
-        .map_err(|e| Stop::Refused(unwritable(e.0)))?;
-    gp.close().map_err(|e| Stop::Refused(unwritable(e.0)))?;
+    session.commit().map_err(|e| unwritable(e.0))?;
+    gp.close().map_err(|e| unwritable(e.0))?;
     let replaced: Vec<String> = written
         .tables
         .iter()
