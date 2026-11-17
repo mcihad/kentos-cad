@@ -107,6 +107,9 @@ pub enum Settle {
     ProcessingJob(Box<kentos_commands::ProcessingJobInput>),
     /// A file import or an atlas asked for from its window as a job (docs/adr/0561 §4): the window holds the work.
     ServerWork,
+    /// Portal dosyaları' Açık projeyi ekle: the open project's present state into a dossier's package, once its
+    /// edits went (portal/package.rs).
+    Portal,
     /// The open project in the other storage mode, once its edits went (catalog_forms.rs).
     Convert(
         Box<(
@@ -366,6 +369,7 @@ impl App {
             Some(Settle::Job(p)) => self.jobs_send_export(&p),
             Some(Settle::ProcessingJob(input)) => self.processing_job_send(*input),
             Some(Settle::ServerWork) => self.server_work_send(),
+            Some(Settle::Portal) => self.portal_add_settled(sent),
             Some(Settle::Metadata(what)) => self.metadata_renamed(*what, sent),
             Some(Settle::Convert(what)) => {
                 let (p, input) = *what;

@@ -83,6 +83,10 @@
         "size": "large"
        },
        {
+        "command": "cloud.portal",
+        "size": "large"
+       },
+       {
         "command": "cloud.share",
         "size": "small"
        },
@@ -3153,6 +3157,10 @@
        },
        {
         "command": "cloud.upload",
+        "size": "large"
+       },
+       {
+        "command": "cloud.portal",
         "size": "large"
        },
        {

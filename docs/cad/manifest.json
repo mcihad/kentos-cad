@@ -1715,6 +1715,20 @@
    "tests": 1
   },
   {
+   "id": "cloud.portal",
+   "kind": "command",
+   "title": "Portal dosyaları…",
+   "level": "host",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "cloud.rename",
    "kind": "command",
    "title": "Bulut projesini yeniden adlandır…",

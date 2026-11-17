@@ -24,6 +24,8 @@ use crate::document::Source;
 pub enum Next {
     Catalog,
     Upload(kentos_commands::ProjectStorage),
+    /// Portal dosyaları (portal/).
+    Portal,
 }
 
 /// The sign-in window.
@@ -179,6 +181,7 @@ impl App {
                 let next = match next {
                     Some(Next::Catalog) => self.open_catalog(),
                     Some(Next::Upload(storage)) => self.leave(Then::Upload(storage)),
+                    Some(Next::Portal) => self.open_portal(),
                     None => Task::none(),
                 };
                 // The server answered: its cell asks it again, quietly, unless it says so already.
@@ -193,6 +196,9 @@ impl App {
     pub(crate) fn sign_out(&mut self) -> Task<Message> {
         self.detach_cloud();
         self.cloud.me = None;
+        // Portal dosyaları was this account's: the next one starts afresh.
+        self.cloud.portal = None;
+        self.cloud.portal_memory = Default::default();
         let client = self.cloud.client.take();
         self.output("Bulut oturumu kapatıldı.");
         match client {

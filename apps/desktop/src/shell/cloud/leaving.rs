@@ -145,6 +145,10 @@ impl App {
             Then::OpenCloud { .. } if self.cloud.catalog.is_some() => {
                 self.dialog = Some(Dialog::Catalog);
             }
+            // A project a dossier's file became (portal/steps.rs): Portal dosyaları comes back, offering it again.
+            Then::OpenCloud { .. } if self.cloud.portal.is_some() => {
+                self.dialog = Some(Dialog::Portal);
+            }
             Then::Reopen if self.cloud.file_conflict.is_some() => {
                 self.ask_file(crate::cloud::revisions::Via::Conflict);
             }

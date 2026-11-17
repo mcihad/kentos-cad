@@ -560,6 +560,9 @@
     "cloud.history": {
       "level": "host"
     },
+    "cloud.portal": {
+      "level": "host"
+    },
     "cloud.upload": {
       "level": "semantic",
       "via": [

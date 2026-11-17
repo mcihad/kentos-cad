@@ -173,6 +173,8 @@ pub enum Dialog {
     Catalog,
     /// “Buluta yükle” (cloud/upload.rs).
     Upload,
+    /// Portal dosyaları (cloud/portal/, docs/adr/9001); its state is `App::cloud.portal`.
+    Portal,
     /// A database project's save conflicts (cloud/follow.rs).
     Conflicts,
     /// A question about the open file project's revisions (cloud/file_follow.rs):
