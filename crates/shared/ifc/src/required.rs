@@ -45,7 +45,8 @@ pub struct Carrier<'a> {
     pub tag: Option<&'a str>,
     pub material: Option<&'a str>,
     pub props: Vec<(&'a str, &'a str, bool)>,
-    pub quantities: Vec<(&'a str, &'a str)>,
+    /// Its quantities: (set, name, its number when it has one).
+    pub quantities: Vec<(&'a str, &'a str, Option<f64>)>,
     pub elevation: bool,
 }
 
@@ -78,7 +79,7 @@ impl Carrier<'_> {
             }
             Kind::Quantity => {
                 let set = r.set.as_deref()?;
-                self.quantities.iter().any(|(s, n)| *s == set && *n == r.name)
+                self.quantities.iter().any(|(s, n, _)| *s == set && *n == r.name)
             }
             Kind::Material => word(self.material),
             Kind::Attribute => match r.name.trim_start_matches("Attribute:").trim() {
@@ -104,8 +105,42 @@ fn props(psets: &[Pset]) -> Vec<(&str, &str, bool)> {
     psets.iter().flat_map(|p| p.props.iter().map(move |(k, v)| (p.name.as_str(), k.as_str(), valued(v)))).collect()
 }
 
-fn quantities(qtos: &[Qto]) -> Vec<(&str, &str)> {
-    qtos.iter().flat_map(|q| q.quantities.iter().map(move |(k, _)| (q.name.as_str(), k.as_str()))).collect()
+fn quantities(qtos: &[Qto]) -> Vec<(&str, &str, Option<f64>)> {
+    qtos.iter()
+        .flat_map(|q| q.quantities.iter().map(move |(k, v)| (q.name.as_str(), k.as_str(), number(v))))
+        .collect()
+}
+
+/// A measure's number.
+fn number(v: &Value) -> Option<f64> {
+    match v {
+        Value::Length(x)
+        | Value::PositiveLength(x)
+        | Value::Area(x)
+        | Value::Volume(x)
+        | Value::Real(x)
+        | Value::PositiveRatio(x) => Some(*x),
+        Value::Count(n) => Some(*n as f64),
+        _ => None,
+    }
+}
+
+/// The building's heights asked "sadece yüksekliğin sabit olduğu durumda" (EK-6 Tablo 6.7; IFC 4.3 "only provided if
+/// there is a constant height"; docs/adr/8076 §4): `Height` by the storeys' `GrossHeight`, `EavesHeight` by their
+/// `NetHeight`.
+const CONSTANT: [(&str, &str); 2] = [("Height", "GrossHeight"), ("EavesHeight", "NetHeight")];
+
+/// Whether the storeys' own heights of `name` differ: then the building has no constant height, and its row is not
+/// asked. Storeys without one say nothing either way.
+fn not_constant(objects: &[(String, Carrier<'_>)], name: &str) -> bool {
+    let known: Vec<f64> = objects
+        .iter()
+        .filter(|(c, _)| c.eq_ignore_ascii_case("IfcBuildingStorey"))
+        .filter_map(|(_, o)| {
+            o.quantities.iter().find(|(s, n, _)| *s == "Qto_BuildingStoreyBaseQuantities" && *n == name).and_then(|q| q.2)
+        })
+        .collect();
+    known.iter().any(|h| (h - known[0]).abs() > 1e-9)
 }
 
 /// The objects of the model by their class, as EK-6 names it.
@@ -265,6 +300,13 @@ pub fn missing(objects: &[(String, Carrier<'_>)]) -> Vec<Missing> {
         if of.is_empty() {
             continue;
         }
+        if r.kind == Kind::Quantity
+            && r.class.eq_ignore_ascii_case("IfcBuilding")
+            && r.set.as_deref() == Some("Qto_BuildingBaseQuantities")
+            && CONSTANT.iter().any(|(row, storey)| r.name == *row && not_constant(objects, storey))
+        {
+            continue;
+        }
         let mut lacking = Vec::new();
         let mut judged = false;
         for &i in &of {
@@ -358,5 +400,44 @@ mod tests {
         assert!(gaps.iter().any(|g| g.class == "IfcStair" && g.path == "PredefinedType"), "{gaps:?}");
         assert!(gaps.iter().any(|g| g.class == "IfcStair" && g.path == "Pset_StairCommon.FireExit"));
         assert!(!gaps.iter().any(|g| g.class == "IfcWall"), "no wall in the model");
+    }
+
+    /// A storey with its own gross and net heights (docs/adr/8076 §4).
+    fn storey(gross: Option<f64>, net: Option<f64>) -> crate::building::Storey {
+        let quantities: Vec<(String, Value)> = [("GrossHeight", gross), ("NetHeight", net)]
+            .into_iter()
+            .filter_map(|(k, v)| Some((k.to_owned(), Value::Length(v?))))
+            .collect();
+        crate::building::Storey {
+            id: None,
+            name: "MM-BNK-Kat".into(),
+            long_name: None,
+            elevation: 0.0,
+            psets: Vec::new(),
+            qtos: vec![Qto { name: "Qto_BuildingStoreyBaseQuantities".into(), quantities }],
+        }
+    }
+
+    #[test]
+    fn the_building_s_heights_are_asked_only_where_its_storeys_have_one_height() {
+        let asked = |b: &Building, name: &str| {
+            gaps(b).iter().any(|g| g.class == "IfcBuilding" && g.path == format!("Qto_BuildingBaseQuantities.{name}"))
+        };
+        // Storeys 3.06 and 2.90 high, nets 2.91 and 2.75 (a ground slab thicker than the floor over it): no constant
+        // height, so neither row is asked (Tablo 6.7: "sadece yüksekliğin sabit olduğu durumda").
+        let mut b = Building { storeys: vec![storey(Some(3.06), Some(2.91)), storey(Some(2.9), Some(2.75))], ..Building::default() };
+        assert!(!asked(&b, "Height") && !asked(&b, "EavesHeight"));
+        // The same height on both: asked, and missing.
+        b.storeys = vec![storey(Some(3.0), Some(2.85)), storey(Some(3.0), Some(2.85))];
+        assert!(asked(&b, "Height") && asked(&b, "EavesHeight"));
+        // A storey whose height is not known says nothing either way: the one known asks.
+        b.storeys = vec![storey(Some(3.0), None), storey(None, None)];
+        assert!(asked(&b, "Height") && asked(&b, "EavesHeight"));
+        // Written, nothing is missing.
+        b.building.qtos = vec![Qto {
+            name: "Qto_BuildingBaseQuantities".into(),
+            quantities: vec![("Height".into(), Value::Length(3.0)), ("EavesHeight".into(), Value::Length(2.85))],
+        }];
+        assert!(!asked(&b, "Height") && !asked(&b, "EavesHeight"));
     }
 }

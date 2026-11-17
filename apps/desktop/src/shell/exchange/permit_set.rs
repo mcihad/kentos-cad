@@ -112,8 +112,8 @@ pub const GROUPS: [(&str, &[&str]); 5] = [
         ],
     ),
     (
-        "Dijital teslim (EK-1, EK-2, EK-7)",
-        &["proje_kodu", "bina_kodu", "revizyon_no", "proje_no", "proje_aciklama"],
+        "Dijital teslim (EK-1, EK-2, EK-6, EK-7)",
+        &["proje_kodu", "bina_kodu", "revizyon_no", "proje_no", "proje_aciklama", "posta_kutusu"],
     ),
     ("Denetim", &["denetciler", "yapi_denetim"]),
 ];

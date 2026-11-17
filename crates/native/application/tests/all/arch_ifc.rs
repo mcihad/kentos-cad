@@ -102,7 +102,12 @@ const KUNYE: [(&str, &str); 17] = [
     ("yapi_turu", "yeni bina"),
 ];
 
-fn with_kunye() -> Document {
+pub(crate) fn with_kunye() -> Document {
+    Document::from_snapshot_v2(kunye_snapshot()).unwrap()
+}
+
+/// The section building's snapshot with its künye, its system and its ±0.00's elevation.
+pub(crate) fn kunye_snapshot() -> DocumentSnapshotV2 {
     let mut snap: DocumentSnapshotV2 = kentos_kcad::decode(include_bytes!(
         "../../../../../fixtures/arch/v1/section-building.kcad"
     ))
@@ -130,7 +135,7 @@ fn with_kunye() -> Document {
             ..Default::default()
         });
     }
-    Document::from_snapshot_v2(snap).unwrap()
+    snap
 }
 
 #[test]

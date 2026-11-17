@@ -78,7 +78,7 @@ fn the_spaces_are_closed_with_their_footprints_and_none_overlaps() {
 #[test]
 fn the_facts_the_form_is_tried_on_are_current() {
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/ifc/v1/olgular");
-    for name in ["kesit-binasi", "kesit-binasi-kunye", "yerel-sistem", "kesit-binasi-kapi-eksik"] {
+    for name in ["kesit-binasi", "kesit-binasi-kunye", "kesit-binasi-tam", "yerel-sistem", "kesit-binasi-kapi-eksik"] {
         let (mut f, b) = facts_of(name);
         f["bodies"] = b;
         let text = serde_json::to_string_pretty(&f).expect("the facts as text") + "\n";

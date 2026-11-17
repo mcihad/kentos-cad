@@ -25,7 +25,8 @@ It checks, in fixtures/arch/v1/ifc/kesit-binasi.ifc:
 - a wall's Pset_WallCommon.IsExternal is whether it is the definition's outer wall (Dış duvar 25), a door's or window's
   Pset_*Common.IsExternal its wall's;
 - a room's Qto_SpaceBaseQuantities.NetFloorArea is its rectangle's area, a storey's its rooms' together, the
-  building's all of them; the building's Height the storeys' 3.00 (EK-6 Tablo 6.7, 6.8);
+  building's all of them; each storey's structural slab level and heights its slabs', the building's heights only
+  where the storeys' are the same (EK-6 Tablo 6.7, 6.8; docs/adr/8076 §3–4);
 - a column carries (Pset_ColumnCommon.LoadBearing), a terrace slab is outside and a floor slab is not
   (Pset_SlabCommon.IsExternal);
 - materials (EK-6): walls their core layer's (Tuğla), slabs theirs (Betonarme), columns and beams Betonarme;
@@ -160,7 +161,36 @@ def main() -> int:
     bq = ue.get_pset(f.by_type("IfcBuilding")[0], "Qto_BuildingBaseQuantities") or {}
     all_net = sum(area(r["parts"][0]["outer"]["pts"]) for r in kind("space"))
     ensure(math.isclose(bq.get("NetFloorArea", -1), all_net, abs_tol=1e-9), f"building NetFloorArea {bq}")
-    ensure(bq.get("Height") == 3.0, f"building Height {bq}")
+    # Each storey's structural slab level and heights (docs/adr/8076 §3–4; IFC 4.3: from the construction floor's top to
+    # the top, or the underside, of the one over it), from the definition's slabs: a level's floor slab, the next
+    # level's over it, the top level's raised one (the terrace) over the top storey. The building's Height and
+    # EavesHeight only where every storey has the same (EK-6 Tablo 6.7).
+    slabs = kind("slab")
+    def over_t(sl):
+        return sum(x["thickness"] for x in (sl.get("layers") or {}).get("over", []))
+    def top(sl):
+        lv = next(lv for lv in levels if lv["id"] == sl["arch"]["level"])
+        return lv["elevation"] + sl.get("offset", 0.0) - over_t(sl)
+    grosses, nets = [], []
+    for i, lv in enumerate(levels):
+        floor = next(sl for sl in slabs if sl["arch"]["level"] == lv["id"] and not sl.get("offset"))
+        if i + 1 < len(levels):
+            cover = next(sl for sl in slabs if sl["arch"]["level"] == levels[i + 1]["id"] and not sl.get("offset"))
+        else:
+            cover = next(sl for sl in slabs if sl["arch"]["level"] == lv["id"] and sl.get("offset"))
+        ssl, gross = top(floor), top(cover) - top(floor)
+        net = gross - cover["thickness"]
+        st = next(s for s in storeys if s.LongName == lv["name"])
+        got = ue.get_pset(st, "Pset_BuildingStoreyCommon", "ElevationOfSSLRelative")
+        ensure(got is not None and math.isclose(got, ssl, abs_tol=1e-9), f"{st.Name}: ElevationOfSSLRelative {got}, {ssl}")
+        q = ue.get_pset(st, "Qto_BuildingStoreyBaseQuantities") or {}
+        ensure(math.isclose(q.get("GrossHeight", -1), gross, abs_tol=1e-9), f"{st.Name}: GrossHeight {q}, {gross}")
+        ensure(math.isclose(q.get("NetHeight", -1), net, abs_tol=1e-9), f"{st.Name}: NetHeight {q}, {net}")
+        grosses.append(gross)
+        nets.append(net)
+    for name, hs in (("Height", grosses), ("EavesHeight", nets)):
+        same = all(math.isclose(h, hs[0], abs_tol=1e-9) for h in hs)
+        ensure((name in bq) == same, f"building {name} {bq}: storeys {hs}")
 
     # Columns, slabs, materials.
     for c in f.by_type("IfcColumn"):

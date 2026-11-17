@@ -8,9 +8,10 @@
 use super::*;
 
 /// The files KentOS wrote (fixtures/arch/v1/ifc/, fixtures/road/v1/ifc/out/): name and bytes.
-pub(super) const WRITTEN: [(&str, &[u8]); 11] = [
+pub(super) const WRITTEN: [(&str, &[u8]); 12] = [
     ("kesit-binasi", include_bytes!("../../../../../fixtures/arch/v1/ifc/kesit-binasi.ifc")),
     ("kesit-binasi-kunye", include_bytes!("../../../../../fixtures/arch/v1/ifc/kesit-binasi-kunye.ifc")),
+    ("kesit-binasi-tam", include_bytes!("../../../../../fixtures/arch/v1/ifc/kesit-binasi-tam.ifc")),
     ("blok-a", include_bytes!("../../../../../fixtures/arch/v1/ifc/blok-a.ifc")),
     ("blok-b", include_bytes!("../../../../../fixtures/arch/v1/ifc/blok-b.ifc")),
     ("cati-alti-mahal", include_bytes!("../../../../../fixtures/arch/v1/ifc/cati-alti-mahal.ifc")),
@@ -83,7 +84,7 @@ fn every_file_kentos_writes_reads_back_whole() {
 fn turkish_letters_come_back_as_they_were_written() {
     let m = read_ok(WRITTEN[0].1);
     assert_eq!(m.summary.header.name.as_deref(), Some("Kesit binası.ifc"));
-    let road = read_ok(WRITTEN[10].1);
+    let road = read_ok(WRITTEN.iter().find(|(n, _)| *n == "yol").expect("the road").1);
     assert_eq!(road.summary.header.name.as_deref(), Some("Yol alışverişi.ifc"));
     // Every name the writer escaped (\X2\…\X0\) reads as UTF-8, no escape left.
     for (name, bytes) in WRITTEN {
@@ -135,7 +136,7 @@ fn a_wall_s_sets_are_read_when_asked() {
 // ── Broken files: an error or a finding, never a panic (docs/adr/8061 §7 "Bozuk girdi") ─────────────────────────────
 
 fn small() -> &'static [u8] {
-    WRITTEN[3].1
+    WRITTEN.iter().find(|(n, _)| *n == "blok-b").expect("block B").1
 }
 
 fn text() -> String {

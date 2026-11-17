@@ -184,7 +184,7 @@ fn only_the_grid_s_lines_are_not_shown() {
 /// koordinat"). The engine's float32 positions stay about each body's float64 origin.
 #[test]
 fn a_building_on_turef_coordinates_keeps_its_corners() {
-    let (_, bytes) = WRITTEN[3];
+    let (_, bytes) = *WRITTEN.iter().find(|(n, _)| *n == "blok-b").expect("block B");
     let text = String::from_utf8(bytes.to_vec()).expect("UTF-8");
     let shift = [587_312.345, 4_400_612.789, 1_285.4];
     let moved = text

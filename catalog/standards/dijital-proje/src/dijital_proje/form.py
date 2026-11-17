@@ -484,12 +484,18 @@ class _Dosya:
             ek = "EK-7" if str(g["table"]).startswith("7.") else "EK-6"
             n = len(g.get("missing") or [])
             if g.get("records"):
-                # A record's field (the context's): no object of the drawing to name; KentOS does not write it yet.
+                # A record's field (the context's): no object of the drawing to name. True north is written from the
+                # project's system or the drawing's north arrows; the export says why it was not.
+                neden = (self.ifc.get("export") or {}).get("northWhy")
+                if g["path"] == "TrueNorth" and neden:
+                    onarim = _cumle(neden)
+                else:
+                    onarim = (f"KentOS bu alanı ({g['path']}, {ek} Tablo {g['table']}) IFC'ye henüz yazmıyor; yazıldığında "
+                              "bu bulgu kapanır.")
                 bulgular.append(self.bulgu(
                     "digital_required_field",
                     f"{g['class']} {', '.join(g['records'])}: {g['tr']} ({g['path']}) yok",
-                    f"KentOS bu alanı ({g['path']}, {ek} Tablo {g['table']}) IFC'ye henüz yazmıyor; yazıldığında bu bulgu "
-                    "kapanır.", [], f"{ek} Tablo {g['table']} · PDF s. {g['page']}"))
+                    onarim, [], f"{ek} Tablo {g['table']} · PDF s. {g['page']}"))
                 continue
             bulgular.append(self.bulgu(
                 "digital_required_field",

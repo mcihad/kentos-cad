@@ -69,14 +69,17 @@ pub struct Input<'a> {
     pub groups: Vec<UnitGroup>,
     /// The blocks that are building elements (docs/adr/8070 §5): furniture, sanitary fixtures, lifts.
     pub fixtures: Vec<Fixture>,
-    /// A room's floor and ceiling covering thicknesses as the vertical model holds them (docs/adr/8070 §6), by its
-    /// persistent id; a room not here, or a side none, has none.
-    pub coverings: BTreeMap<String, (Option<f64>, Option<f64>)>,
+    /// A room's floor, ceiling and wall covering thicknesses as the vertical model and its walls' faces hold them
+    /// (docs/adr/8070 §6, 8076 §7), by its persistent id; a room not here, or a side none, has none.
+    pub coverings: BTreeMap<String, (Option<f64>, Option<f64>, Option<f64>)>,
     /// A room's floor and ceiling as the vertical model finds them (docs/adr/8040 §3, 8071 §7), by its persistent id;
     /// a room not here stands on its own offset up its own height or its storey's.
     pub rooms: BTreeMap<String, RoomLevels>,
     /// The program's building the file holds (docs/adr/8072 §2); none: the project as one building.
     pub building: Option<BuildingOf>,
+    /// True north, radians counter-clockwise from the model's y axis (EK-7 Tablo 7.8 `TrueNorth`; docs/adr/8076 §6),
+    /// or why the file cannot say it.
+    pub north: Result<f64, String>,
 }
 
 /// The program's building a file holds (docs/adr/8072 §2): its name, code, use and ±0.00 over the project's, and whether
@@ -109,6 +112,34 @@ pub struct RoomLevels {
     /// The faces of the roof over it when no slab, asma tavan or height of its own bounds it (docs/adr/8071 §11): each
     /// face's outline in plan and its underside's plane over ±0.00; empty: none.
     pub roof: Vec<crate::under_roof::UnderFace>,
+    /// Its construction floor (docs/adr/8076 §3; IFC 4.3's "top surface of the construction floor"): the structure's
+    /// top of the level slab under it over ±0.00; none without one.
+    pub structure: Option<f64>,
+    /// The level slab over it: its structure's top and underside over ±0.00; none without one.
+    pub over: Option<(f64, f64)>,
+}
+
+/// One room's say in its storey's levels (docs/adr/8076 §3): its area, and the structural slab level under it and its
+/// gross and net heights to the slab over it, where known.
+struct Vote {
+    weight: f64,
+    ssl: Option<f64>,
+    gross: Option<f64>,
+    net: Option<f64>,
+}
+
+/// The value more than half of `total`'s weight holds (values within a nanometre are one): IFC 4.3's "significantly
+/// more prominent" elevation, as KentOS reads it (docs/adr/8076 §3); none without one.
+fn prominent(values: impl Iterator<Item = (Option<f64>, f64)>, total: f64) -> Option<f64> {
+    let mut held: Vec<(f64, f64)> = Vec::new();
+    for (v, w) in values {
+        let Some(v) = v else { continue };
+        match held.iter_mut().find(|(x, _)| (*x - v).abs() <= 1e-9) {
+            Some(h) => h.1 += w,
+            None => held.push((v, w)),
+        }
+    }
+    held.into_iter().find(|(_, w)| *w > total / 2.0).map(|(v, _)| v)
 }
 
 /// A void's part over a floor slab (docs/adr/8071 §5): the slab's persistent id, the void's (a space, docs/adr/0708),
@@ -258,6 +289,8 @@ pub struct Particulars {
     pub construction: Option<String>,
     /// The project's description (EK-7 Tablo 7.1 `IfcProject.Description`): the künye's words, none when not given.
     pub description: Option<String>,
+    /// The building's mail drop (EK-6 Tablo 6.7 `Pset_Address.PostalBox`): the künye's words, none when not given.
+    pub postal_box: Option<String>,
 }
 
 impl Particulars {
@@ -277,6 +310,7 @@ impl Particulars {
         }
         Some(Address {
             lines: self.neighbourhood.iter().cloned().collect(),
+            postal_box: self.postal_box.clone(),
             town: self.province.clone(),
             region: self.district.clone(),
             postal_code: None,
@@ -346,6 +380,9 @@ fn address_pset(a: &Option<Address>) -> Option<Pset> {
     let mut props = Vec::new();
     if !a.lines.is_empty() {
         props.push(("AddressLines".to_owned(), Value::Labels(a.lines.clone())));
+    }
+    if let Some(b) = &a.postal_box {
+        props.push(("PostalBox".to_owned(), label(b)));
     }
     if let Some(t) = &a.town {
         props.push(("Town".to_owned(), label(t)));
@@ -809,6 +846,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         coverings,
         rooms,
         building: scope,
+        north,
     } = input;
     let (crs, crs_why) = match crs {
         Ok(c) => (Some(c), None),
@@ -828,22 +866,16 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             .and_then(|l| levels.iter().position(|(id, ..)| id == l))
             .unwrap_or(0)
     };
+    // Its heights are its rooms' (docs/adr/8076 §3), written after them; a level's floor-to-floor height is not one.
     let mut storeys: Vec<Storey> = levels
         .iter()
-        .map(|(_, n, floor, height)| Storey {
+        .map(|(_, n, floor, _)| Storey {
             id: None,
             name: name("BNK", n),
             long_name: Some(n.clone()),
             elevation: *floor - zero,
             psets: Vec::new(),
-            qtos: height
-                .map(|h| {
-                    vec![Qto {
-                        name: "Qto_BuildingStoreyBaseQuantities".into(),
-                        quantities: vec![("GrossHeight".into(), Value::Length(h))],
-                    }]
-                })
-                .unwrap_or_default(),
+            qtos: Vec::new(),
         })
         .collect();
     written.storeys = storeys.len();
@@ -1553,6 +1585,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     // The spaces (EK-6 Tablo 6.58): their numbers and names, their finishes as the room list's.
     let mut spaces = Vec::new();
     let mut net_floor: Vec<Option<f64>> = vec![None; storeys.len()];
+    let mut votes: Vec<Vec<Vote>> = (0..storeys.len()).map(|_| Vec::new()).collect();
     for (bits, uid, e) in &entities {
         let Entity::Space(s) = e else { continue };
         let f = &s.space;
@@ -1612,10 +1645,14 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             }
         }
         // Their thicknesses (docs/adr/8070 §6, EK-6 Tablo 6.20's first way): the floor slab's finish and the plaster
-        // under the slab over, as the vertical model holds them; the walls' finish not yet.
-        let (floor_t, ceiling_t) = coverings.get(uid).copied().unwrap_or((None, None));
+        // under the slab over, as the vertical model holds them; the finish of the walls' faces it lies along
+        // (docs/adr/8076 §7).
+        let (floor_t, ceiling_t, wall_t) = coverings.get(uid).copied().unwrap_or((None, None, None));
         if let Some(t) = floor_t {
             props.push(("FloorCoveringThickness".to_owned(), Value::PositiveLength(t)));
+        }
+        if let Some(t) = wall_t {
+            props.push(("WallCoveringThickness".to_owned(), Value::PositiveLength(t)));
         }
         if let Some(t) = ceiling_t {
             props.push(("CeilingCoveringThickness".to_owned(), Value::PositiveLength(t)));
@@ -1647,6 +1684,14 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             }
         }
         let gross = crate::quantities::area(&rings, &bulges);
+        // Its say in its storey's structural slab level and heights, by its area (docs/adr/8076 §3).
+        let structure = rooms.get(uid.as_str());
+        votes[storey].push(Vote {
+            weight: gross,
+            ssl: structure.and_then(|r| r.structure),
+            gross: structure.and_then(|r| Some(r.over?.0 - r.structure?)),
+            net: structure.and_then(|r| Some(r.over?.1 - r.structure?)),
+        });
         let perimeter: f64 = crate::quantities::areas(&rings, &bulges)
             .iter()
             .map(|a| {
@@ -1720,8 +1765,39 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             });
         }
     }
+    // Each storey's structural slab level (EK-6 Tablo 6.8 `ElevationOfSSLRelative`, over the building's ±0.00) and its
+    // heights (IFC 4.3 `GrossHeight`: from the construction floor's top to the top of the one over it; `NetHeight`: to
+    // its underside): what more than half its rooms' area stands on and under (docs/adr/8076 §3). None where the level
+    // varies with none prominent (Tablo 6.8: "bu özellik girilmeyebilir").
+    let mut storey_heights: Vec<(Option<f64>, Option<f64>)> = Vec::new();
+    for (storey, v) in storeys.iter_mut().zip(&votes) {
+        let total: f64 = v.iter().map(|x| x.weight).sum();
+        let ssl = prominent(v.iter().map(|x| (x.ssl, x.weight)), total);
+        let gross = prominent(v.iter().map(|x| (x.gross, x.weight)), total);
+        let net = prominent(v.iter().map(|x| (x.net, x.weight)), total);
+        if let Some(l) = ssl {
+            storey.psets.push(Pset {
+                name: "Pset_BuildingStoreyCommon".into(),
+                props: vec![("ElevationOfSSLRelative".into(), Value::Length(l - zero))],
+            });
+        }
+        let mut q = Vec::new();
+        if let Some(h) = gross {
+            q.push(("GrossHeight".to_owned(), Value::Length(h)));
+        }
+        if let Some(h) = net {
+            q.push(("NetHeight".to_owned(), Value::Length(h)));
+        }
+        if !q.is_empty() {
+            storey.qtos.push(Qto {
+                name: "Qto_BuildingStoreyBaseQuantities".into(),
+                quantities: q,
+            });
+        }
+        storey_heights.push((gross, net));
+    }
     // A storey's and the building's net floor area (EK-6 Tablo 6.8, 6.7): its rooms' net areas summed; the building's
-    // height its storeys', only where it is the same for all (Tablo 6.7: "sadece yüksekliğin sabit olduğu durumda").
+    // heights its storeys', only where they are the same for all (Tablo 6.7: "sadece yüksekliğin sabit olduğu durumda").
     for (storey, net) in storeys.iter_mut().zip(&net_floor) {
         if let Some(a) = net {
             match storey
@@ -1738,13 +1814,17 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         }
     }
     let mut building_quantities = Vec::new();
-    let heights: Vec<Option<f64>> = levels.iter().map(|l| l.3).collect();
-    if let Some(Some(h)) = heights.first()
-        && heights
-            .iter()
-            .all(|x| x.is_some_and(|x| (x - h).abs() < 1e-9))
-    {
-        building_quantities.push(("Height".to_owned(), Value::Length(*h)));
+    // `Height` the storeys' gross height, `EavesHeight` their net height (Tablo 6.7's text and IFC 4.3's: "bu katın
+    // standart net yüksekliği"; docs/adr/8076 §4), each where every storey has the same.
+    let constant = |h: Vec<Option<f64>>| -> Option<f64> {
+        let first = (*h.first()?)?;
+        h.iter().all(|x| x.is_some_and(|x| (x - first).abs() <= 1e-9)).then_some(first)
+    };
+    if let Some(h) = constant(storey_heights.iter().map(|s| s.0).collect()) {
+        building_quantities.push(("Height".to_owned(), Value::Length(h)));
+    }
+    if let Some(h) = constant(storey_heights.iter().map(|s| s.1).collect()) {
+        building_quantities.push(("EavesHeight".to_owned(), Value::Length(h)));
     }
     if net_floor.iter().any(Option::is_some) {
         let total: f64 = net_floor.iter().flatten().sum();
@@ -1762,6 +1842,11 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         }
         if let Some(c) = z.coverage.filter(|v| *v > 0.0) {
             props.push(("SiteCoverageRatio".to_owned(), Value::PositiveRatio(c)));
+        }
+        // The site's planned area (EK-6 Tablo 6.55 `TotalArea`, "arsaya ilişkin toplam planlanan alan"; docs/adr/8076
+        // §2): the parcel's, as İmar durumu gives it.
+        if z.parcel_area > 0.0 {
+            props.push(("TotalArea".to_owned(), Value::Area(z.parcel_area)));
         }
         if !props.is_empty() {
             site_psets.push(Pset {
@@ -2050,6 +2135,9 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             id: scope.as_ref().map(|_| crate::step::fnv(&format!("kentos-saha:{project_seed}"), 0)),
             name: name("SAH", "Parsel"),
             long_name: k.land_id(),
+            // IFC 4.3's IfcSite has no predefined type: its type is its ObjectType (EK-6 Tablo 6.55, case 2). KentOS's
+            // site is the project's parcel (docs/adr/8076 §1), its name and sets the parcel's.
+            object_type: Some("Parsel".into()),
             psets: site_psets,
             qtos: site_qtos,
             address: address.clone(),
@@ -2083,6 +2171,9 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         grids,
         crs,
         crs_why,
+        // The y axis turned by the angle: a unit vector in the model's plane.
+        true_north: north.as_ref().ok().map(|a| [-crate::math::sin(*a), crate::math::cos(*a)]),
+        north_why: north.err(),
         layer_sets,
         zero,
     };

@@ -824,7 +824,7 @@
           11.800000190734863,
           8.800000190734863
         ],
-        "globalId": "3KfZBx37Ok5ahEXNxpHhv5",
+        "globalId": "3YYkojR7OkAq$Jqu81Let9",
         "rounding": 1.0490417707842425e-6,
         "zMax": 2.999999985694885,
         "zMin": -1.4305114870438729e-8
@@ -836,7 +836,7 @@
           11.800000190734863,
           8.800000190734863
         ],
-        "globalId": "3YYkojR7OkAq$Jqu81Let9",
+        "globalId": "3mRwPVp7OkG5JP8OKFPbrD",
         "rounding": 1.0490417707842425e-6,
         "zMax": 5.999999866485595,
         "zMin": 2.999999985694885
@@ -894,7 +894,7 @@
         "closed": true,
         "globalId": "01alMXGa9m08000000000a",
         "rounding": 6.094575155657367e-7,
-        "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+        "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
         "zMax": 5.660000190734863,
         "zMin": 2.999999985694885
       },
@@ -903,7 +903,7 @@
         "closed": true,
         "globalId": "01alMXGa9m08000000000b",
         "rounding": 8.702278364580707e-7,
-        "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+        "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
         "zMax": 5.660000190734863,
         "zMin": 2.999999985694885
       },
@@ -912,7 +912,7 @@
         "closed": true,
         "globalId": "01alMXGa9m08000000000c",
         "rounding": 7.808208692949847e-7,
-        "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+        "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
         "zMax": 5.660000190734863,
         "zMin": 2.999999985694885
       },
@@ -921,7 +921,7 @@
         "closed": true,
         "globalId": "01alMXGa9m08000000000d",
         "rounding": 1.0490417707842425e-6,
-        "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+        "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
         "zMax": 5.660000190734863,
         "zMin": 2.999999985694885
       },
@@ -930,7 +930,7 @@
         "closed": true,
         "globalId": "01alMXGa9m08000000000e",
         "rounding": 1.0490417707842425e-6,
-        "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+        "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
         "zMax": 5.660000190734863,
         "zMin": 2.999999985694885
       }
@@ -957,7 +957,7 @@
     "IfcWindow": "PNC"
   },
   "file": {
-    "bytes": 158922,
+    "bytes": 160639,
     "extension": "ifc",
     "header": {
       "author": [
@@ -976,7 +976,7 @@
       "timeStamp": "2026-11-11T12:00:00"
     },
     "name": "kesit-binasi-kunye.ifc",
-    "records": 2960,
+    "records": 2979,
     "schema": "IFC4X3_ADD2"
   },
   "findings": [],
@@ -1039,18 +1039,6 @@
     },
     {
       "class": "IfcBuilding",
-      "id": "T6.7/Qto_BuildingBaseQuantities.EavesHeight",
-      "missing": [
-        "1m0cUvzNOjFjCIt7Sp$k6f"
-      ],
-      "of": 1,
-      "page": 43,
-      "path": "Qto_BuildingBaseQuantities.EavesHeight",
-      "table": "6.7",
-      "tr": "Saçak Yüksekliği"
-    },
-    {
-      "class": "IfcBuilding",
       "id": "T6.7/Qto_BuildingBaseQuantities.FootPrintArea",
       "missing": [
         "1m0cUvzNOjFjCIt7Sp$k6f"
@@ -1084,19 +1072,6 @@
       "path": "Pset_Address.PostalBox",
       "table": "6.7",
       "tr": "Posta Kutusu"
-    },
-    {
-      "class": "IfcBuildingStorey",
-      "id": "T6.8/Pset_BuildingStoreyCommon.ElevationOfSSLRelative",
-      "missing": [
-        "18Kgoo7NOjOvlS9FoCcepG",
-        "0Wel6gHNOjY6IbRO7bDZVt"
-      ],
-      "of": 2,
-      "page": 45,
-      "path": "Pset_BuildingStoreyCommon.ElevationOfSSLRelative",
-      "table": "6.8",
-      "tr": "Taşıyıcı Döşeme Üst Kotu"
     },
     {
       "class": "IfcColumn",
@@ -1156,18 +1131,6 @@
       "path": "Pset_DoorCommon.FireExit",
       "table": "6.25",
       "tr": "Acil Çıkış"
-    },
-    {
-      "class": "IfcSite",
-      "id": "T6.55/ObjectType",
-      "missing": [
-        "0Uf7_Q$NOj98pCElDYQnv4"
-      ],
-      "of": 1,
-      "page": 94,
-      "path": "ObjectType",
-      "table": "6.55",
-      "tr": "Nesne Tipi"
     },
     {
       "class": "IfcSite",
@@ -1302,18 +1265,6 @@
     },
     {
       "class": "IfcSpace",
-      "id": "T6.58/Pset_SpaceCoveringRequirements.FloorCoveringThickness",
-      "missing": [
-        "01alMXGa9m08000000000c"
-      ],
-      "of": 10,
-      "page": 98,
-      "path": "Pset_SpaceCoveringRequirements.FloorCoveringThickness",
-      "table": "6.58",
-      "tr": "Zemin Kaplama Kalınlığı"
-    },
-    {
-      "class": "IfcSpace",
       "id": "T6.58/Pset_SpaceCoveringRequirements.WallCovering",
       "missing": [
         "01alMXGa9m08000000000G",
@@ -1332,27 +1283,6 @@
       "path": "Pset_SpaceCoveringRequirements.WallCovering",
       "table": "6.58",
       "tr": "Duvar Kaplaması"
-    },
-    {
-      "class": "IfcSpace",
-      "id": "T6.58/Pset_SpaceCoveringRequirements.WallCoveringThickness",
-      "missing": [
-        "01alMXGa9m08000000000G",
-        "01alMXGa9m08000000000H",
-        "01alMXGa9m08000000000I",
-        "01alMXGa9m08000000000J",
-        "01alMXGa9m08000000000K",
-        "01alMXGa9m08000000000a",
-        "01alMXGa9m08000000000b",
-        "01alMXGa9m08000000000c",
-        "01alMXGa9m08000000000d",
-        "01alMXGa9m08000000000e"
-      ],
-      "of": 10,
-      "page": 99,
-      "path": "Pset_SpaceCoveringRequirements.WallCoveringThickness",
-      "table": "6.58",
-      "tr": "Duvar Kaplama Kalınlığı"
     },
     {
       "class": "IfcSpace",
@@ -1461,7 +1391,7 @@
           "ProjectType": "NEWBUILD"
         }
       },
-      "step": 14,
+      "step": 15,
       "storey": null,
       "tag": null,
       "type": null,
@@ -1483,7 +1413,7 @@
       "predefinedType": null,
       "quantities": {},
       "sets": {},
-      "step": 23,
+      "step": 24,
       "storey": null,
       "tag": null,
       "type": null,
@@ -1500,7 +1430,7 @@
       "longName": "1234/5",
       "materials": [],
       "name": "MM-SAH-Parsel",
-      "objectType": null,
+      "objectType": "Parsel",
       "parent": "3RAr4kPNOj7qkAvtAUvofZ",
       "predefinedType": null,
       "quantities": {},
@@ -1517,7 +1447,7 @@
           "LandTitleID": "12/345"
         }
       },
-      "step": 28,
+      "step": 29,
       "storey": null,
       "tag": null,
       "type": null,
@@ -1539,7 +1469,6 @@
       "predefinedType": null,
       "quantities": {
         "Qto_BuildingBaseQuantities": {
-          "Height": 3.0,
           "NetFloorArea": 191.82500000000005
         }
       },
@@ -1559,7 +1488,7 @@
           "NumberOfStoreys": 2
         }
       },
-      "step": 41,
+      "step": 42,
       "storey": null,
       "tag": null,
       "type": null,
@@ -1581,11 +1510,16 @@
       "predefinedType": null,
       "quantities": {
         "Qto_BuildingStoreyBaseQuantities": {
-          "GrossHeight": 3.0,
-          "NetFloorArea": 95.91250000000002
+          "GrossHeight": 3.06,
+          "NetFloorArea": 95.91250000000002,
+          "NetHeight": 2.91
         }
       },
-      "sets": {},
+      "sets": {
+        "Pset_BuildingStoreyCommon": {
+          "ElevationOfSSLRelative": -0.13
+        }
+      },
       "step": 60,
       "storey": null,
       "tag": null,
@@ -1598,7 +1532,7 @@
       "container": null,
       "description": null,
       "elevation": 3.0,
-      "globalId": "0Wel6gHNOjY6IbRO7bDZVt",
+      "globalId": "2Pi9JH5NOjVU8Yne1UBb0r",
       "hasShape": false,
       "longName": "1. kat",
       "materials": [],
@@ -1608,12 +1542,17 @@
       "predefinedType": null,
       "quantities": {
         "Qto_BuildingStoreyBaseQuantities": {
-          "GrossHeight": 3.0,
-          "NetFloorArea": 95.91250000000002
+          "GrossHeight": 2.9,
+          "NetFloorArea": 95.91250000000002,
+          "NetHeight": 2.7499999999999996
         }
       },
-      "sets": {},
-      "step": 68,
+      "sets": {
+        "Pset_BuildingStoreyCommon": {
+          "ElevationOfSSLRelative": 2.93
+        }
+      },
+      "step": 72,
       "storey": null,
       "tag": null,
       "type": null,
@@ -1650,7 +1589,7 @@
           "IsExternal": true
         }
       },
-      "step": 188,
+      "step": 196,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000001",
       "type": null,
@@ -1687,7 +1626,7 @@
           "IsExternal": true
         }
       },
-      "step": 249,
+      "step": 257,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000002",
       "type": null,
@@ -1724,7 +1663,7 @@
           "IsExternal": true
         }
       },
-      "step": 373,
+      "step": 381,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000003",
       "type": null,
@@ -1761,7 +1700,7 @@
           "IsExternal": true
         }
       },
-      "step": 434,
+      "step": 442,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000004",
       "type": null,
@@ -1798,7 +1737,7 @@
           "IsExternal": false
         }
       },
-      "step": 486,
+      "step": 494,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000005",
       "type": null,
@@ -1835,7 +1774,7 @@
           "IsExternal": false
         }
       },
-      "step": 538,
+      "step": 546,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000006",
       "type": null,
@@ -1872,7 +1811,7 @@
           "IsExternal": false
         }
       },
-      "step": 581,
+      "step": 589,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000007",
       "type": null,
@@ -1909,7 +1848,7 @@
           "IsExternal": false
         }
       },
-      "step": 624,
+      "step": 632,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000008",
       "type": null,
@@ -1918,7 +1857,7 @@
     },
     {
       "class": "IfcWall",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000L",
@@ -1946,8 +1885,8 @@
           "IsExternal": true
         }
       },
-      "step": 748,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 756,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-000000000015",
       "type": null,
       "typeQuantities": {},
@@ -1955,7 +1894,7 @@
     },
     {
       "class": "IfcWall",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000M",
@@ -1983,8 +1922,8 @@
           "IsExternal": true
         }
       },
-      "step": 809,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 817,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-000000000016",
       "type": null,
       "typeQuantities": {},
@@ -1992,7 +1931,7 @@
     },
     {
       "class": "IfcWall",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000N",
@@ -2020,8 +1959,8 @@
           "IsExternal": true
         }
       },
-      "step": 933,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 941,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-000000000017",
       "type": null,
       "typeQuantities": {},
@@ -2029,7 +1968,7 @@
     },
     {
       "class": "IfcWall",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000O",
@@ -2057,8 +1996,8 @@
           "IsExternal": true
         }
       },
-      "step": 994,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1002,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-000000000018",
       "type": null,
       "typeQuantities": {},
@@ -2066,7 +2005,7 @@
     },
     {
       "class": "IfcWall",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000P",
@@ -2094,8 +2033,8 @@
           "IsExternal": false
         }
       },
-      "step": 1046,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1054,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-000000000019",
       "type": null,
       "typeQuantities": {},
@@ -2103,7 +2042,7 @@
     },
     {
       "class": "IfcWall",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000Q",
@@ -2131,8 +2070,8 @@
           "IsExternal": false
         }
       },
-      "step": 1098,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1106,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-00000000001a",
       "type": null,
       "typeQuantities": {},
@@ -2140,7 +2079,7 @@
     },
     {
       "class": "IfcWall",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000R",
@@ -2168,8 +2107,8 @@
           "IsExternal": false
         }
       },
-      "step": 1141,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1149,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-00000000001b",
       "type": null,
       "typeQuantities": {},
@@ -2177,7 +2116,7 @@
     },
     {
       "class": "IfcWall",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000S",
@@ -2205,8 +2144,8 @@
           "IsExternal": false
         }
       },
-      "step": 1184,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1192,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-00000000001c",
       "type": null,
       "typeQuantities": {},
@@ -2241,7 +2180,7 @@
           "IsExternal": false
         }
       },
-      "step": 1245,
+      "step": 1253,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000029",
       "type": null,
@@ -2250,7 +2189,7 @@
     },
     {
       "class": "IfcSlab",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000g",
@@ -2277,8 +2216,8 @@
           "IsExternal": false
         }
       },
-      "step": 1296,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1304,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-00000000002a",
       "type": null,
       "typeQuantities": {},
@@ -2286,7 +2225,7 @@
     },
     {
       "class": "IfcSlab",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000h",
@@ -2313,8 +2252,8 @@
           "IsExternal": true
         }
       },
-      "step": 1365,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1373,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-00000000002b",
       "type": null,
       "typeQuantities": {},
@@ -2348,7 +2287,7 @@
           "LoadBearing": true
         }
       },
-      "step": 1389,
+      "step": 1397,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-00000000002c",
       "type": null,
@@ -2383,7 +2322,7 @@
           "LoadBearing": true
         }
       },
-      "step": 1412,
+      "step": 1420,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-00000000002d",
       "type": null,
@@ -2418,7 +2357,7 @@
           "LoadBearing": true
         }
       },
-      "step": 1435,
+      "step": 1443,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-00000000002e",
       "type": null,
@@ -2453,7 +2392,7 @@
           "LoadBearing": true
         }
       },
-      "step": 1458,
+      "step": 1466,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-00000000002f",
       "type": null,
@@ -2488,7 +2427,7 @@
           "LoadBearing": true
         }
       },
-      "step": 1481,
+      "step": 1489,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000030",
       "type": null,
@@ -2523,7 +2462,7 @@
           "LoadBearing": true
         }
       },
-      "step": 1504,
+      "step": 1512,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000031",
       "type": null,
@@ -2558,7 +2497,7 @@
           "LoadBearing": true
         }
       },
-      "step": 1527,
+      "step": 1535,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000032",
       "type": null,
@@ -2593,7 +2532,7 @@
           "LoadBearing": true
         }
       },
-      "step": 1550,
+      "step": 1558,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000033",
       "type": null,
@@ -2624,7 +2563,7 @@
         }
       },
       "sets": {},
-      "step": 1573,
+      "step": 1581,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000034",
       "type": null,
@@ -2655,7 +2594,7 @@
         }
       },
       "sets": {},
-      "step": 1593,
+      "step": 1601,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000035",
       "type": null,
@@ -2686,7 +2625,7 @@
         }
       },
       "sets": {},
-      "step": 1613,
+      "step": 1621,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000036",
       "type": null,
@@ -2717,7 +2656,7 @@
         }
       },
       "sets": {},
-      "step": 1633,
+      "step": 1641,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000037",
       "type": null,
@@ -2726,7 +2665,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000u",
@@ -2752,8 +2691,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1653,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1661,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-000000000038",
       "type": null,
       "typeQuantities": {},
@@ -2761,7 +2700,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000v",
@@ -2787,8 +2726,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1676,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1684,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-000000000039",
       "type": null,
       "typeQuantities": {},
@@ -2796,7 +2735,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000w",
@@ -2822,8 +2761,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1699,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1707,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-00000000003a",
       "type": null,
       "typeQuantities": {},
@@ -2831,7 +2770,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000x",
@@ -2857,8 +2796,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1722,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1730,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-00000000003b",
       "type": null,
       "typeQuantities": {},
@@ -2866,7 +2805,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000y",
@@ -2892,8 +2831,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1745,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1753,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-00000000003c",
       "type": null,
       "typeQuantities": {},
@@ -2901,7 +2840,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000z",
@@ -2927,8 +2866,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1768,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1776,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-00000000003d",
       "type": null,
       "typeQuantities": {},
@@ -2936,7 +2875,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000_",
@@ -2962,8 +2901,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1791,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1799,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-00000000003e",
       "type": null,
       "typeQuantities": {},
@@ -2971,7 +2910,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000$",
@@ -2997,8 +2936,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1814,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1822,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-00000000003f",
       "type": null,
       "typeQuantities": {},
@@ -3006,7 +2945,7 @@
     },
     {
       "class": "IfcBeam",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000010",
@@ -3028,8 +2967,8 @@
         }
       },
       "sets": {},
-      "step": 1837,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1845,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-000000000040",
       "type": null,
       "typeQuantities": {},
@@ -3037,7 +2976,7 @@
     },
     {
       "class": "IfcBeam",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000011",
@@ -3059,8 +2998,8 @@
         }
       },
       "sets": {},
-      "step": 1857,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1865,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-000000000041",
       "type": null,
       "typeQuantities": {},
@@ -3068,7 +3007,7 @@
     },
     {
       "class": "IfcBeam",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000012",
@@ -3090,8 +3029,8 @@
         }
       },
       "sets": {},
-      "step": 1877,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1885,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-000000000042",
       "type": null,
       "typeQuantities": {},
@@ -3099,7 +3038,7 @@
     },
     {
       "class": "IfcBeam",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000013",
@@ -3121,8 +3060,8 @@
         }
       },
       "sets": {},
-      "step": 1897,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 1905,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "0192f5a1-4242-7000-8000-000000000043",
       "type": null,
       "typeQuantities": {},
@@ -3145,7 +3084,7 @@
       "predefinedType": "HALF_TURN_STAIR",
       "quantities": {},
       "sets": {},
-      "step": 2074,
+      "step": 2082,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "0192f5a1-4242-7000-8000-000000000044",
       "type": null,
@@ -3171,7 +3110,7 @@
           "IsExternal": true
         }
       },
-      "step": 2088,
+      "step": 2096,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "P01",
       "type": null,
@@ -3197,7 +3136,7 @@
           "IsExternal": true
         }
       },
-      "step": 2105,
+      "step": 2113,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "P02",
       "type": null,
@@ -3223,7 +3162,7 @@
           "IsExternal": true
         }
       },
-      "step": 2122,
+      "step": 2130,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "P03",
       "type": null,
@@ -3249,7 +3188,7 @@
           "IsExternal": true
         }
       },
-      "step": 2139,
+      "step": 2147,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "P04",
       "type": null,
@@ -3275,7 +3214,7 @@
           "IsExternal": true
         }
       },
-      "step": 2156,
+      "step": 2164,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "GK01",
       "type": null,
@@ -3301,7 +3240,7 @@
           "IsExternal": false
         }
       },
-      "step": 2173,
+      "step": 2181,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "K01",
       "type": null,
@@ -3327,7 +3266,7 @@
           "IsExternal": false
         }
       },
-      "step": 2190,
+      "step": 2198,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": "K02",
       "type": null,
@@ -3336,7 +3275,7 @@
     },
     {
       "class": "IfcWindow",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000T",
@@ -3353,8 +3292,8 @@
           "IsExternal": true
         }
       },
-      "step": 2207,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 2215,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "P11",
       "type": null,
       "typeQuantities": {},
@@ -3362,7 +3301,7 @@
     },
     {
       "class": "IfcWindow",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000U",
@@ -3379,8 +3318,8 @@
           "IsExternal": true
         }
       },
-      "step": 2224,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 2232,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "P12",
       "type": null,
       "typeQuantities": {},
@@ -3388,7 +3327,7 @@
     },
     {
       "class": "IfcWindow",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000V",
@@ -3405,8 +3344,8 @@
           "IsExternal": true
         }
       },
-      "step": 2241,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 2249,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "P13",
       "type": null,
       "typeQuantities": {},
@@ -3414,7 +3353,7 @@
     },
     {
       "class": "IfcWindow",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000W",
@@ -3431,8 +3370,8 @@
           "IsExternal": true
         }
       },
-      "step": 2258,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 2266,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "P14",
       "type": null,
       "typeQuantities": {},
@@ -3440,7 +3379,7 @@
     },
     {
       "class": "IfcWindow",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000Z",
@@ -3457,8 +3396,8 @@
           "IsExternal": true
         }
       },
-      "step": 2275,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 2283,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "P15",
       "type": null,
       "typeQuantities": {},
@@ -3466,7 +3405,7 @@
     },
     {
       "class": "IfcDoor",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000X",
@@ -3483,8 +3422,8 @@
           "IsExternal": false
         }
       },
-      "step": 2292,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 2300,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "K11",
       "type": null,
       "typeQuantities": {},
@@ -3492,7 +3431,7 @@
     },
     {
       "class": "IfcDoor",
-      "container": "0Wel6gHNOjY6IbRO7bDZVt",
+      "container": "2Pi9JH5NOjVU8Yne1UBb0r",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000Y",
@@ -3509,8 +3448,8 @@
           "IsExternal": false
         }
       },
-      "step": 2309,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 2317,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": "K12",
       "type": null,
       "typeQuantities": {},
@@ -3521,7 +3460,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "3mwGcijNOfT_mUr_gj9vVn",
+      "globalId": "3_pSDV5NOfZF4a9UsxDsTr",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3531,7 +3470,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2326,
+      "step": 2334,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3543,7 +3482,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "2xL9JoVNOfXw$YqcptitEK",
+      "globalId": "39EKwatNOfdBJe8705mqCO",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3553,7 +3492,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2342,
+      "step": 2350,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3565,7 +3504,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "2JfDdgfNOfh7Yi6l9GJnwx",
+      "globalId": "2XYPET1NOfmNsnQFLUNku$",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3575,7 +3514,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2358,
+      "step": 2366,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3587,7 +3526,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "1U46KmRNOfl3nm5NIQslfU",
+      "globalId": "1hzHxYpNOfqK5rOtUewidY",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3597,7 +3536,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2374,
+      "step": 2382,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3609,7 +3548,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "0QbpR3rNOfjlikmVFNLmPz",
+      "globalId": "0eU$1sDNOfp00q3$RbPjO1",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3619,7 +3558,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2390,
+      "step": 2398,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3631,7 +3570,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "3b0i89dNOfnhxol7OXuk8W",
+      "globalId": "3ovtkx$NOfsyFu2dalyh6a",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3641,7 +3580,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2406,
+      "step": 2414,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3653,7 +3592,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "2zKmS1nNOfwuUy1FjwVer7",
+      "globalId": "3BDy2q9NOg08p1Klw8ZbpB",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3663,7 +3602,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2422,
+      "step": 2430,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3675,7 +3614,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "27lf97ZNOf_qj$$tt52cZg",
+      "globalId": "2LeqlvxNOg4525JO3J6ZXk",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3685,7 +3624,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2438,
+      "step": 2446,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3697,7 +3636,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "14HMFQzNOfzWe_g$q1XdK9",
+      "globalId": "1IAXsDLNOg2mz3_W0FbaID",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3707,7 +3646,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2454,
+      "step": 2462,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3719,7 +3658,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "0EiEyWlNOg1Su2fdzC4b2i",
+      "globalId": "0SbQZJ7NOg6jC7z89Q8Y0m",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3729,7 +3668,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2470,
+      "step": 2478,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3741,7 +3680,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "3d0JGOvNOgAfRBxmIahVlJ",
+      "globalId": "3qvUtBHNOgFvlHFGUolSjN",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3751,7 +3690,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2486,
+      "step": 2494,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3763,7 +3702,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "2nRBzUhNOgEbgFwORlETTs",
+      "globalId": "2$KNaH3NOgJr_LDudzIQRw",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3773,7 +3712,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2502,
+      "step": 2510,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3785,7 +3724,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "1jyv3o5NOgDHbEbWOhjUEL",
+      "globalId": "1xs4gaTNOgIXvJv0avnRCP",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3795,7 +3734,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2518,
+      "step": 2526,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3807,7 +3746,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "0uNnmttNOgHDqIa8XsGRyu",
+      "globalId": "16GzNgFNOgMU8Ntek4KOwy",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3817,7 +3756,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2534,
+      "step": 2542,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3839,7 +3778,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2550,
+      "step": 2558,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3872,10 +3811,11 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2565,
+      "step": 2573,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": null,
       "type": null,
@@ -3908,10 +3848,11 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2592,
+      "step": 2601,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": null,
       "type": null,
@@ -3941,10 +3882,11 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2619,
+      "step": 2629,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": null,
       "type": null,
@@ -3977,10 +3919,11 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2643,
+      "step": 2654,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": null,
       "type": null,
@@ -4013,10 +3956,11 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2670,
+      "step": 2682,
       "storey": "18Kgoo7NOjOvlS9FoCcepG",
       "tag": null,
       "type": null,
@@ -4034,7 +3978,7 @@
       "materials": [],
       "name": "MM-MHL-101_Yatak_odası",
       "objectType": null,
-      "parent": "0Wel6gHNOjY6IbRO7bDZVt",
+      "parent": "2Pi9JH5NOjVU8Yne1UBb0r",
       "predefinedType": "INTERNAL",
       "quantities": {
         "Qto_SpaceBaseQuantities": {
@@ -4049,11 +3993,12 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2697,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 2710,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": null,
       "type": null,
       "typeQuantities": {},
@@ -4070,7 +4015,7 @@
       "materials": [],
       "name": "MM-MHL-102_Salon",
       "objectType": null,
-      "parent": "0Wel6gHNOjY6IbRO7bDZVt",
+      "parent": "2Pi9JH5NOjVU8Yne1UBb0r",
       "predefinedType": "INTERNAL",
       "quantities": {
         "Qto_SpaceBaseQuantities": {
@@ -4085,11 +4030,12 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2724,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 2738,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": null,
       "type": null,
       "typeQuantities": {},
@@ -4106,7 +4052,7 @@
       "materials": [],
       "name": "MM-MHL-103_Merdiven_holü",
       "objectType": null,
-      "parent": "0Wel6gHNOjY6IbRO7bDZVt",
+      "parent": "2Pi9JH5NOjVU8Yne1UBb0r",
       "predefinedType": "INTERNAL",
       "quantities": {
         "Qto_SpaceBaseQuantities": {
@@ -4120,11 +4066,13 @@
       },
       "sets": {
         "Pset_SpaceCoveringRequirements": {
-          "CeilingCoveringThickness": 0.02
+          "CeilingCoveringThickness": 0.02,
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2751,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 2766,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": null,
       "type": null,
       "typeQuantities": {},
@@ -4141,7 +4089,7 @@
       "materials": [],
       "name": "MM-MHL-104_Banyo",
       "objectType": null,
-      "parent": "0Wel6gHNOjY6IbRO7bDZVt",
+      "parent": "2Pi9JH5NOjVU8Yne1UBb0r",
       "predefinedType": "INTERNAL",
       "quantities": {
         "Qto_SpaceBaseQuantities": {
@@ -4156,11 +4104,12 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2777,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 2794,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": null,
       "type": null,
       "typeQuantities": {},
@@ -4177,7 +4126,7 @@
       "materials": [],
       "name": "MM-MHL-105_Mutfak",
       "objectType": null,
-      "parent": "0Wel6gHNOjY6IbRO7bDZVt",
+      "parent": "2Pi9JH5NOjVU8Yne1UBb0r",
       "predefinedType": "INTERNAL",
       "quantities": {
         "Qto_SpaceBaseQuantities": {
@@ -4192,11 +4141,12 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2804,
-      "storey": "0Wel6gHNOjY6IbRO7bDZVt",
+      "step": 2822,
+      "storey": "2Pi9JH5NOjVU8Yne1UBb0r",
       "tag": null,
       "type": null,
       "typeQuantities": {},
@@ -4207,7 +4157,7 @@
       "container": null,
       "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
       "elevation": null,
-      "globalId": "3KfZBx37Ok5ahEXNxpHhv5",
+      "globalId": "3YYkojR7OkAq$Jqu81Let9",
       "hasShape": true,
       "longName": "Zemin kat emsale dahil alan",
       "materials": [],
@@ -4221,7 +4171,7 @@
           "EmsalDurumu": "DAHIL"
         }
       },
-      "step": 2867,
+      "step": 2886,
       "storey": null,
       "tag": null,
       "type": null,
@@ -4233,7 +4183,7 @@
       "container": null,
       "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
       "elevation": null,
-      "globalId": "3YYkojR7OkAq$Jqu81Let9",
+      "globalId": "3mRwPVp7OkG5JP8OKFPbrD",
       "hasShape": true,
       "longName": "1. kat emsale dahil alan",
       "materials": [],
@@ -4247,7 +4197,7 @@
           "EmsalDurumu": "DAHIL"
         }
       },
-      "step": 2921,
+      "step": 2940,
       "storey": null,
       "tag": null,
       "type": null,
@@ -4269,7 +4219,7 @@
       "predefinedType": "RECTANGULAR",
       "quantities": {},
       "sets": {},
-      "step": 2953,
+      "step": 2972,
       "storey": null,
       "tag": null,
       "type": null,
@@ -4289,7 +4239,7 @@
           "UserDefinedRole": null
         },
         "class": "IfcActorRole",
-        "step": 18
+        "step": 19
       }
     ],
     "IfcGeometricRepresentationContext": [
@@ -4299,11 +4249,11 @@
           "ContextType": "Model",
           "CoordinateSpaceDimension": 3,
           "Precision": 0.00001,
-          "TrueNorth": null,
+          "TrueNorth": "#10",
           "WorldCoordinateSystem": "#9"
         },
         "class": "IfcGeometricRepresentationContext",
-        "step": 10
+        "step": 11
       }
     ],
     "IfcMapConversion": [
@@ -4313,30 +4263,30 @@
           "Northings": 0.0,
           "OrthogonalHeight": 1285.4,
           "Scale": 1.0,
-          "SourceCRS": "#10",
-          "TargetCRS": "#12",
+          "SourceCRS": "#11",
+          "TargetCRS": "#13",
           "XAxisAbscissa": 1.0,
           "XAxisOrdinate": 0.0
         },
         "class": "IfcMapConversion",
-        "step": 13
+        "step": 14
       }
     ],
     "IfcOrganization": [
       {
         "attributes": {
           "Addresses": [
-            "#20"
+            "#21"
           ],
           "Description": null,
           "Identification": "1234567890",
           "Name": "Örnek Mimarlık",
           "Roles": [
-            "#18"
+            "#19"
           ]
         },
         "class": "IfcOrganization",
-        "step": 21
+        "step": 22
       }
     ],
     "IfcPerson": [
@@ -4349,25 +4299,25 @@
           "MiddleNames": null,
           "PrefixTitles": null,
           "Roles": [
-            "#18"
+            "#19"
           ],
           "SuffixTitles": null
         },
         "class": "IfcPerson",
-        "step": 19
+        "step": 20
       }
     ],
     "IfcPersonAndOrganization": [
       {
         "attributes": {
           "Roles": [
-            "#18"
+            "#19"
           ],
-          "TheOrganization": "#21",
-          "ThePerson": "#19"
+          "TheOrganization": "#22",
+          "ThePerson": "#20"
         },
         "class": "IfcPersonAndOrganization",
-        "step": 22
+        "step": 23
       }
     ],
     "IfcPostalAddress": [
@@ -4387,7 +4337,7 @@
           "UserDefinedPurpose": null
         },
         "class": "IfcPostalAddress",
-        "step": 20
+        "step": 21
       },
       {
         "attributes": {
@@ -4405,7 +4355,7 @@
           "UserDefinedPurpose": null
         },
         "class": "IfcPostalAddress",
-        "step": 27
+        "step": 28
       },
       {
         "attributes": {
@@ -4423,7 +4373,7 @@
           "UserDefinedPurpose": null
         },
         "class": "IfcPostalAddress",
-        "step": 40
+        "step": 41
       }
     ],
     "IfcProjectedCRS": [
@@ -4438,7 +4388,7 @@
           "VerticalDatum": "Antalya height (EPSG:5775)"
         },
         "class": "IfcProjectedCRS",
-        "step": 12
+        "step": 13
       }
     ]
   },

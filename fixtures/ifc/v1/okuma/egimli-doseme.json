@@ -1088,7 +1088,7 @@
    ],
    "volume": 1.678446034676484
   },
-  "01eUF239DsSAVtHqjQHWEQ": {
+  "01eURUuZ5tTOWfWLwcaHDy": {
    "area": 26.93366666460399,
    "box": [
     [
@@ -1104,7 +1104,7 @@
    ],
    "volume": 2.4119701490690235
   },
-  "01eUF239Lrzg$JCMg3A1Gh": {
+  "01eURUuZ5tTOWfWM0rM_T0": {
    "area": 26.371620895651688,
    "box": [
     [
@@ -1120,7 +1120,7 @@
    ],
    "volume": 2.359201990062117
   },
-  "1s9ZT6SE0qQU40fNeHxV5q": {
+  "1eGNsK4E0qLDlxLtS3tY7m": {
    "area": 463.325,
    "box": [
     [
@@ -1136,7 +1136,7 @@
    ],
    "volume": 287.73750000000007
   },
-  "2xdTV2KE0qqleRAubOFFy8": {
+  "1s9ZT6SE0qQU40fNeHxV5q": {
    "area": 463.325,
    "box": [
     [
@@ -1164,7 +1164,7 @@
  "objects": {
   "01alMXGa9m08000000000$": {
    "class": "IfcColumn",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1172,7 +1172,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "COLUMN",
-   "step": 1808,
+   "step": 1815,
    "tag": "0192f5a1-4242-7000-8000-00000000003f",
    "type": null
   },
@@ -1186,7 +1186,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 157,
+   "step": 164,
    "tag": "0192f5a1-4242-7000-8000-000000000001",
    "type": null
   },
@@ -1200,7 +1200,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 218,
+   "step": 225,
    "tag": "0192f5a1-4242-7000-8000-000000000002",
    "type": null
   },
@@ -1214,7 +1214,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 342,
+   "step": 349,
    "tag": "0192f5a1-4242-7000-8000-000000000003",
    "type": null
   },
@@ -1228,7 +1228,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 403,
+   "step": 410,
    "tag": "0192f5a1-4242-7000-8000-000000000004",
    "type": null
   },
@@ -1242,7 +1242,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 455,
+   "step": 462,
    "tag": "0192f5a1-4242-7000-8000-000000000005",
    "type": null
   },
@@ -1256,7 +1256,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 507,
+   "step": 514,
    "tag": "0192f5a1-4242-7000-8000-000000000006",
    "type": null
   },
@@ -1270,7 +1270,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 550,
+   "step": 557,
    "tag": "0192f5a1-4242-7000-8000-000000000007",
    "type": null
   },
@@ -1284,7 +1284,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 593,
+   "step": 600,
    "tag": "0192f5a1-4242-7000-8000-000000000008",
    "type": null
   },
@@ -1298,7 +1298,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "WINDOW",
-   "step": 2106,
+   "step": 2113,
    "tag": "P01",
    "type": null
   },
@@ -1312,7 +1312,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "WINDOW",
-   "step": 2123,
+   "step": 2130,
    "tag": "P02",
    "type": null
   },
@@ -1326,7 +1326,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "WINDOW",
-   "step": 2140,
+   "step": 2147,
    "tag": "P03",
    "type": null
   },
@@ -1340,7 +1340,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "WINDOW",
-   "step": 2157,
+   "step": 2164,
    "tag": "P04",
    "type": null
   },
@@ -1354,7 +1354,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "DOOR",
-   "step": 2191,
+   "step": 2198,
    "tag": "K01",
    "type": null
   },
@@ -1368,7 +1368,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "DOOR",
-   "step": 2208,
+   "step": 2215,
    "tag": "K02",
    "type": null
   },
@@ -1382,7 +1382,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "DOOR",
-   "step": 2174,
+   "step": 2181,
    "tag": "GK01",
    "type": null
   },
@@ -1396,7 +1396,7 @@
    "objectType": null,
    "parent": "1ffSBbF_0qDLYugzhTx3Wz",
    "predefined": "INTERNAL",
-   "step": 2583,
+   "step": 2590,
    "tag": null,
    "type": null
   },
@@ -1410,7 +1410,7 @@
    "objectType": null,
    "parent": "1ffSBbF_0qDLYugzhTx3Wz",
    "predefined": "INTERNAL",
-   "step": 2610,
+   "step": 2618,
    "tag": null,
    "type": null
   },
@@ -1424,7 +1424,7 @@
    "objectType": null,
    "parent": "1ffSBbF_0qDLYugzhTx3Wz",
    "predefined": "INTERNAL",
-   "step": 2637,
+   "step": 2646,
    "tag": null,
    "type": null
   },
@@ -1438,7 +1438,7 @@
    "objectType": null,
    "parent": "1ffSBbF_0qDLYugzhTx3Wz",
    "predefined": "INTERNAL",
-   "step": 2661,
+   "step": 2671,
    "tag": null,
    "type": null
   },
@@ -1452,13 +1452,13 @@
    "objectType": null,
    "parent": "1ffSBbF_0qDLYugzhTx3Wz",
    "predefined": "INTERNAL",
-   "step": 2688,
+   "step": 2699,
    "tag": null,
    "type": null
   },
   "01alMXGa9m08000000000L": {
    "class": "IfcWall",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1466,13 +1466,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 717,
+   "step": 724,
    "tag": "0192f5a1-4242-7000-8000-000000000015",
    "type": null
   },
   "01alMXGa9m08000000000M": {
    "class": "IfcWall",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1480,13 +1480,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 778,
+   "step": 785,
    "tag": "0192f5a1-4242-7000-8000-000000000016",
    "type": null
   },
   "01alMXGa9m08000000000N": {
    "class": "IfcWall",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1494,13 +1494,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 902,
+   "step": 909,
    "tag": "0192f5a1-4242-7000-8000-000000000017",
    "type": null
   },
   "01alMXGa9m08000000000O": {
    "class": "IfcWall",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1508,13 +1508,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 963,
+   "step": 970,
    "tag": "0192f5a1-4242-7000-8000-000000000018",
    "type": null
   },
   "01alMXGa9m08000000000P": {
    "class": "IfcWall",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1522,13 +1522,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 1015,
+   "step": 1022,
    "tag": "0192f5a1-4242-7000-8000-000000000019",
    "type": null
   },
   "01alMXGa9m08000000000Q": {
    "class": "IfcWall",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1536,13 +1536,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 1067,
+   "step": 1074,
    "tag": "0192f5a1-4242-7000-8000-00000000001a",
    "type": null
   },
   "01alMXGa9m08000000000R": {
    "class": "IfcWall",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1550,13 +1550,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 1110,
+   "step": 1117,
    "tag": "0192f5a1-4242-7000-8000-00000000001b",
    "type": null
   },
   "01alMXGa9m08000000000S": {
    "class": "IfcWall",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1564,13 +1564,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 1153,
+   "step": 1160,
    "tag": "0192f5a1-4242-7000-8000-00000000001c",
    "type": null
   },
   "01alMXGa9m08000000000T": {
    "class": "IfcWindow",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1578,13 +1578,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "WINDOW",
-   "step": 2225,
+   "step": 2232,
    "tag": "P11",
    "type": null
   },
   "01alMXGa9m08000000000U": {
    "class": "IfcWindow",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1592,13 +1592,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "WINDOW",
-   "step": 2242,
+   "step": 2249,
    "tag": "P12",
    "type": null
   },
   "01alMXGa9m08000000000V": {
    "class": "IfcWindow",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1606,13 +1606,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "WINDOW",
-   "step": 2259,
+   "step": 2266,
    "tag": "P13",
    "type": null
   },
   "01alMXGa9m08000000000W": {
    "class": "IfcWindow",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1620,13 +1620,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "WINDOW",
-   "step": 2276,
+   "step": 2283,
    "tag": "P14",
    "type": null
   },
   "01alMXGa9m08000000000X": {
    "class": "IfcDoor",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1634,13 +1634,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "DOOR",
-   "step": 2310,
+   "step": 2317,
    "tag": "K11",
    "type": null
   },
   "01alMXGa9m08000000000Y": {
    "class": "IfcDoor",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1648,13 +1648,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "DOOR",
-   "step": 2327,
+   "step": 2334,
    "tag": "K12",
    "type": null
   },
   "01alMXGa9m08000000000Z": {
    "class": "IfcWindow",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1662,13 +1662,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "WINDOW",
-   "step": 2293,
+   "step": 2300,
    "tag": "P15",
    "type": null
   },
   "01alMXGa9m08000000000_": {
    "class": "IfcColumn",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1676,7 +1676,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "COLUMN",
-   "step": 1785,
+   "step": 1792,
    "tag": "0192f5a1-4242-7000-8000-00000000003e",
    "type": null
   },
@@ -1688,9 +1688,9 @@
    "longName": "Yatak odası",
    "name": "MM-MHL-101_Yatak_odası",
    "objectType": null,
-   "parent": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "parent": "0OHzh6H_0q6n9o2bSCM7JO",
    "predefined": "INTERNAL",
-   "step": 2715,
+   "step": 2727,
    "tag": null,
    "type": null
   },
@@ -1702,9 +1702,9 @@
    "longName": "Salon",
    "name": "MM-MHL-102_Salon",
    "objectType": null,
-   "parent": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "parent": "0OHzh6H_0q6n9o2bSCM7JO",
    "predefined": "INTERNAL",
-   "step": 2742,
+   "step": 2755,
    "tag": null,
    "type": null
   },
@@ -1716,9 +1716,9 @@
    "longName": "Merdiven holü",
    "name": "MM-MHL-103_Merdiven_holü",
    "objectType": null,
-   "parent": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "parent": "0OHzh6H_0q6n9o2bSCM7JO",
    "predefined": "INTERNAL",
-   "step": 2769,
+   "step": 2783,
    "tag": null,
    "type": null
   },
@@ -1730,9 +1730,9 @@
    "longName": "Banyo",
    "name": "MM-MHL-104_Banyo",
    "objectType": null,
-   "parent": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "parent": "0OHzh6H_0q6n9o2bSCM7JO",
    "predefined": "INTERNAL",
-   "step": 2795,
+   "step": 2811,
    "tag": null,
    "type": null
   },
@@ -1744,9 +1744,9 @@
    "longName": "Mutfak",
    "name": "MM-MHL-105_Mutfak",
    "objectType": null,
-   "parent": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "parent": "0OHzh6H_0q6n9o2bSCM7JO",
    "predefined": "INTERNAL",
-   "step": 2822,
+   "step": 2839,
    "tag": null,
    "type": null
   },
@@ -1760,13 +1760,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "FLOOR",
-   "step": 1239,
+   "step": 1246,
    "tag": "0192f5a1-4242-7000-8000-000000000029",
    "type": null
   },
   "01alMXGa9m08000000000g": {
    "class": "IfcSlab",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1774,13 +1774,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "FLOOR",
-   "step": 1290,
+   "step": 1297,
    "tag": "0192f5a1-4242-7000-8000-00000000002a",
    "type": null
   },
   "01alMXGa9m08000000000h": {
    "class": "IfcSlab",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1788,7 +1788,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "FLOOR",
-   "step": 1359,
+   "step": 1366,
    "tag": "0192f5a1-4242-7000-8000-00000000002b",
    "type": null
   },
@@ -1802,7 +1802,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "COLUMN",
-   "step": 1383,
+   "step": 1390,
    "tag": "0192f5a1-4242-7000-8000-00000000002c",
    "type": null
   },
@@ -1816,7 +1816,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "COLUMN",
-   "step": 1406,
+   "step": 1413,
    "tag": "0192f5a1-4242-7000-8000-00000000002d",
    "type": null
   },
@@ -1830,7 +1830,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "COLUMN",
-   "step": 1429,
+   "step": 1436,
    "tag": "0192f5a1-4242-7000-8000-00000000002e",
    "type": null
   },
@@ -1844,7 +1844,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "COLUMN",
-   "step": 1452,
+   "step": 1459,
    "tag": "0192f5a1-4242-7000-8000-00000000002f",
    "type": null
   },
@@ -1858,7 +1858,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "COLUMN",
-   "step": 1475,
+   "step": 1482,
    "tag": "0192f5a1-4242-7000-8000-000000000030",
    "type": null
   },
@@ -1872,7 +1872,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "COLUMN",
-   "step": 1498,
+   "step": 1505,
    "tag": "0192f5a1-4242-7000-8000-000000000031",
    "type": null
   },
@@ -1886,7 +1886,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "COLUMN",
-   "step": 1521,
+   "step": 1528,
    "tag": "0192f5a1-4242-7000-8000-000000000032",
    "type": null
   },
@@ -1900,7 +1900,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "COLUMN",
-   "step": 1544,
+   "step": 1551,
    "tag": "0192f5a1-4242-7000-8000-000000000033",
    "type": null
   },
@@ -1914,7 +1914,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "BEAM",
-   "step": 1567,
+   "step": 1574,
    "tag": "0192f5a1-4242-7000-8000-000000000034",
    "type": null
   },
@@ -1928,7 +1928,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "BEAM",
-   "step": 1587,
+   "step": 1594,
    "tag": "0192f5a1-4242-7000-8000-000000000035",
    "type": null
   },
@@ -1942,7 +1942,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "BEAM",
-   "step": 1607,
+   "step": 1614,
    "tag": "0192f5a1-4242-7000-8000-000000000036",
    "type": null
   },
@@ -1956,13 +1956,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "BEAM",
-   "step": 1627,
+   "step": 1634,
    "tag": "0192f5a1-4242-7000-8000-000000000037",
    "type": null
   },
   "01alMXGa9m08000000000u": {
    "class": "IfcColumn",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1970,13 +1970,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "COLUMN",
-   "step": 1647,
+   "step": 1654,
    "tag": "0192f5a1-4242-7000-8000-000000000038",
    "type": null
   },
   "01alMXGa9m08000000000v": {
    "class": "IfcColumn",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1984,13 +1984,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "COLUMN",
-   "step": 1670,
+   "step": 1677,
    "tag": "0192f5a1-4242-7000-8000-000000000039",
    "type": null
   },
   "01alMXGa9m08000000000w": {
    "class": "IfcColumn",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -1998,13 +1998,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "COLUMN",
-   "step": 1693,
+   "step": 1700,
    "tag": "0192f5a1-4242-7000-8000-00000000003a",
    "type": null
   },
   "01alMXGa9m08000000000x": {
    "class": "IfcColumn",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -2012,13 +2012,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "COLUMN",
-   "step": 1716,
+   "step": 1723,
    "tag": "0192f5a1-4242-7000-8000-00000000003b",
    "type": null
   },
   "01alMXGa9m08000000000y": {
    "class": "IfcColumn",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -2026,13 +2026,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "COLUMN",
-   "step": 1739,
+   "step": 1746,
    "tag": "0192f5a1-4242-7000-8000-00000000003c",
    "type": null
   },
   "01alMXGa9m08000000000z": {
    "class": "IfcColumn",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -2040,13 +2040,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "COLUMN",
-   "step": 1762,
+   "step": 1769,
    "tag": "0192f5a1-4242-7000-8000-00000000003d",
    "type": null
   },
   "01alMXGa9m080000000010": {
    "class": "IfcBeam",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -2054,13 +2054,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "BEAM",
-   "step": 1831,
+   "step": 1838,
    "tag": "0192f5a1-4242-7000-8000-000000000040",
    "type": null
   },
   "01alMXGa9m080000000011": {
    "class": "IfcBeam",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -2068,13 +2068,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "BEAM",
-   "step": 1851,
+   "step": 1858,
    "tag": "0192f5a1-4242-7000-8000-000000000041",
    "type": null
   },
   "01alMXGa9m080000000012": {
    "class": "IfcBeam",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -2082,13 +2082,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "BEAM",
-   "step": 1871,
+   "step": 1878,
    "tag": "0192f5a1-4242-7000-8000-000000000042",
    "type": null
   },
   "01alMXGa9m080000000013": {
    "class": "IfcBeam",
-   "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+   "container": "0OHzh6H_0q6n9o2bSCM7JO",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -2096,7 +2096,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "BEAM",
-   "step": 1891,
+   "step": 1898,
    "tag": "0192f5a1-4242-7000-8000-000000000043",
    "type": null
   },
@@ -2110,11 +2110,11 @@
    "objectType": null,
    "parent": null,
    "predefined": "HALF_TURN_STAIR",
-   "step": 2068,
+   "step": 2075,
    "tag": "0192f5a1-4242-7000-8000-000000000044",
    "type": null
   },
-  "01eUF239DsSAVtHqjQHWEQ": {
+  "01eURUuZ5tTOWfWLwcaHDy": {
    "class": "IfcSlab",
    "container": "1ffSBbF_0qDLYugzhTx3Wz",
    "description": null,
@@ -2124,11 +2124,11 @@
    "objectType": null,
    "parent": null,
    "predefined": "FLOOR",
-   "step": 2081,
-   "tag": "01a1e3c2-0c93-7670-a7f7-474b5a46039a",
+   "step": 2088,
+   "tag": "01a1e6de-e231-7775-8829-815ea691137c",
    "type": null
   },
-  "01eUF239Lrzg$JCMg3A1Gh": {
+  "01eURUuZ5tTOWfWM0rM_T0": {
    "class": "IfcWall",
    "container": "1ffSBbF_0qDLYugzhTx3Wz",
    "description": null,
@@ -2138,22 +2138,8 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 1178,
-   "tag": "01a1e3c2-0c95-75f6-afd3-316a8328142b",
-   "type": null
-  },
-  "06LTWyl_0mc7lFGrHpD8sD": {
-   "class": "IfcOpeningElement",
-   "container": null,
-   "description": null,
-   "hasShape": true,
-   "longName": null,
-   "name": "MM-ACL-K12",
-   "objectType": null,
-   "parent": null,
-   "predefined": "OPENING",
-   "step": 2552,
-   "tag": null,
+   "step": 1185,
+   "tag": "01a1e6de-e231-7775-8829-8160355be740",
    "type": null
   },
   "0AOo4Jv_0q1Wril5F_IALK": {
@@ -2170,6 +2156,20 @@
    "tag": null,
    "type": null
   },
+  "0GFQtGZ_0lvT4YB3fxhYch": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P04",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2399,
+   "tag": null,
+   "type": null
+  },
   "0IvfYm$dj758w34vRbzllC": {
    "class": "IfcOpeningElement",
    "container": null,
@@ -2180,25 +2180,11 @@
    "objectType": null,
    "parent": null,
    "predefined": "OPENING",
-   "step": 2568,
+   "step": 2575,
    "tag": null,
    "type": null
   },
-  "0U8cU2x_0l_jOdUZs9lVal": {
-   "class": "IfcOpeningElement",
-   "container": null,
-   "description": null,
-   "hasShape": true,
-   "longName": null,
-   "name": "MM-ACL-P04",
-   "objectType": null,
-   "parent": null,
-   "predefined": "OPENING",
-   "step": 2392,
-   "tag": null,
-   "type": null
-  },
-  "0Y7qkXV_0mmeNPtrgFL2oL": {
+  "0KEf7l7_0mhO3KaLU1H5qH": {
    "class": "IfcOpeningElement",
    "container": null,
    "description": null,
@@ -2208,25 +2194,25 @@
    "objectType": null,
    "parent": null,
    "predefined": "OPENING",
-   "step": 2424,
+   "step": 2431,
    "tag": null,
    "type": null
   },
-  "0m10LJt_0mruhVBLsTO$mP": {
-   "class": "IfcOpeningElement",
+  "0OHzh6H_0q6n9o2bSCM7JO": {
+   "class": "IfcBuildingStorey",
    "container": null,
    "description": null,
-   "hasShape": true,
-   "longName": null,
-   "name": "MM-ACL-P13",
+   "hasShape": false,
+   "longName": "1. kat",
+   "name": "MM-BNK-1._kat",
    "objectType": null,
-   "parent": null,
-   "predefined": "OPENING",
-   "step": 2488,
+   "parent": "2HLNtj5_0q48$lOrM5K8qM",
+   "predefined": null,
+   "step": 40,
    "tag": null,
    "type": null
   },
-  "0txMZOP_0lmGXOuxKZ4dw4": {
+  "0g2Ayc1_0lh0DJbR8L0gy0": {
    "class": "IfcOpeningElement",
    "container": null,
    "description": null,
@@ -2236,25 +2222,25 @@
    "objectType": null,
    "parent": null,
    "predefined": "OPENING",
-   "step": 2344,
+   "step": 2351,
    "tag": null,
    "type": null
   },
-  "15qYAAn_0lrWrUCRWn8au8": {
+  "0k1PD4b_0mSxC5_iyQcE9c": {
    "class": "IfcOpeningElement",
    "container": null,
    "description": null,
    "hasShape": true,
    "longName": null,
-   "name": "MM-ACL-GK01",
+   "name": "MM-ACL-P14",
    "objectType": null,
    "parent": null,
    "predefined": "OPENING",
-   "step": 2408,
+   "step": 2511,
    "tag": null,
    "type": null
   },
-  "1bc7eE5_0mnySRCjjIs21s": {
+  "1Niy1Rj_0mii8LvDX4o53o": {
    "class": "IfcOpeningElement",
    "container": null,
    "description": null,
@@ -2264,7 +2250,35 @@
    "objectType": null,
    "parent": null,
    "predefined": "OPENING",
-   "step": 2440,
+   "step": 2447,
+   "tag": null,
+   "type": null
+  },
+  "1ZcWV_p_0mO_z204pG3GR3": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P15",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2527,
+   "tag": null,
+   "type": null
+  },
+  "1eGNsK4E0qLDlxLtS3tY7m": {
+   "class": "IfcSpatialZone",
+   "container": null,
+   "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
+   "hasShape": true,
+   "longName": "1. kat emsale dahil alan",
+   "name": "MM-MZN-Emsal_DAHIL_1._kat",
+   "objectType": "EMSAL",
+   "parent": null,
+   "predefined": "USERDEFINED",
+   "step": 2957,
    "tag": null,
    "type": null
   },
@@ -2278,49 +2292,7 @@
    "objectType": null,
    "parent": "2HLNtj5_0q48$lOrM5K8qM",
    "predefined": null,
-   "step": 29,
-   "tag": null,
-   "type": null
-  },
-  "1jWTsId_0liKIKwJBOXgBX": {
-   "class": "IfcOpeningElement",
-   "container": null,
-   "description": null,
-   "hasShape": true,
-   "longName": null,
-   "name": "MM-ACL-P02",
-   "objectType": null,
-   "parent": null,
-   "predefined": "OPENING",
-   "step": 2360,
-   "tag": null,
-   "type": null
-  },
-  "1nVi6nB_0mUFH7Ja$U7DP7": {
-   "class": "IfcOpeningElement",
-   "container": null,
-   "description": null,
-   "hasShape": true,
-   "longName": null,
-   "name": "MM-ACL-P15",
-   "objectType": null,
-   "parent": null,
-   "predefined": "OPENING",
-   "step": 2520,
-   "tag": null,
-   "type": null
-  },
-  "1pVJF0T_0mtCmWWDvWv_$w": {
-   "class": "IfcOpeningElement",
-   "container": null,
-   "description": null,
-   "hasShape": true,
-   "longName": null,
-   "name": "MM-ACL-P14",
-   "objectType": null,
-   "parent": null,
-   "predefined": "OPENING",
-   "step": 2504,
+   "step": 28,
    "tag": null,
    "type": null
   },
@@ -2329,12 +2301,12 @@
    "container": null,
    "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
    "hasShape": true,
-   "longName": "1. kat emsale dahil alan",
-   "name": "MM-MZN-Emsal_DAHIL_1._kat",
+   "longName": "Zemin kat emsale dahil alan",
+   "name": "MM-MZN-Emsal_DAHIL_Zemin_kat",
    "objectType": "EMSAL",
    "parent": null,
    "predefined": "USERDEFINED",
-   "step": 2939,
+   "step": 2903,
    "tag": null,
    "type": null
   },
@@ -2352,31 +2324,17 @@
    "tag": null,
    "type": null
   },
-  "2PBdov1_0mL2j_1Sg5WIiW": {
+  "2NC0gfl_0ly5Eaqpm2jX5j": {
    "class": "IfcOpeningElement",
    "container": null,
    "description": null,
    "hasShape": true,
    "longName": null,
-   "name": "MM-ACL-K11",
+   "name": "MM-ACL-P02",
    "objectType": null,
    "parent": null,
    "predefined": "OPENING",
-   "step": 2536,
-   "tag": null,
-   "type": null
-  },
-  "2RBEx8J_0mk0DNE5a8J4JJ": {
-   "class": "IfcOpeningElement",
-   "container": null,
-   "description": null,
-   "hasShape": true,
-   "longName": null,
-   "name": "MM-ACL-P11",
-   "objectType": null,
-   "parent": null,
-   "predefined": "OPENING",
-   "step": 2456,
+   "step": 2367,
    "tag": null,
    "type": null
   },
@@ -2390,49 +2348,35 @@
    "objectType": null,
    "parent": null,
    "predefined": "RECTANGULAR",
-   "step": 2971,
+   "step": 2989,
    "tag": null,
    "type": null
   },
-  "2j7l5Hr_0qEfdv$rkXS2mU": {
-   "class": "IfcBuildingStorey",
-   "container": null,
-   "description": null,
-   "hasShape": false,
-   "longName": "1. kat",
-   "name": "MM-BNK-1._kat",
-   "objectType": null,
-   "parent": "2HLNtj5_0q48$lOrM5K8qM",
-   "predefined": null,
-   "step": 37,
-   "tag": null,
-   "type": null
-  },
-  "2m_ml$D_0ljeNMFBES2fR2": {
+  "32tAdG9_0mapgDxzEli9ci": {
    "class": "IfcOpeningElement",
    "container": null,
    "description": null,
    "hasShape": true,
    "longName": null,
-   "name": "MM-ACL-P03",
+   "name": "MM-ACL-K11",
    "objectType": null,
    "parent": null,
    "predefined": "OPENING",
-   "step": 2376,
+   "step": 2543,
    "tag": null,
    "type": null
   },
-  "2xdTV2KE0qqleRAubOFFy8": {
-   "class": "IfcSpatialZone",
+  "34snlVR_0mzn9d8c8oUxDV": {
+   "class": "IfcOpeningElement",
    "container": null,
-   "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
+   "description": null,
    "hasShape": true,
-   "longName": "Zemin kat emsale dahil alan",
-   "name": "MM-MZN-Emsal_DAHIL_Zemin_kat",
-   "objectType": "EMSAL",
+   "longName": null,
+   "name": "MM-ACL-P11",
+   "objectType": null,
    "parent": null,
-   "predefined": "USERDEFINED",
-   "step": 2885,
+   "predefined": "OPENING",
+   "step": 2463,
    "tag": null,
    "type": null
   },
@@ -2443,14 +2387,56 @@
    "hasShape": false,
    "longName": null,
    "name": "MM-SAH-Parsel",
-   "objectType": null,
+   "objectType": "Parsel",
    "parent": "0AOo4Jv_0q1Wril5F_IALK",
    "predefined": null,
    "step": 15,
    "tag": null,
    "type": null
   },
-  "3wRv2Pf_0mvqwZ9z$dxzUy": {
+  "3QgJaML_0lzPJc9hp6EWLE": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P03",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2383,
+   "tag": null,
+   "type": null
+  },
+  "3UfXqqv_0mlKIOYzdBq3Yq": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-GK01",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2415,
+   "tag": null,
+   "type": null
+  },
+  "3gZ6JN$_0mRd74fqvN5Ew5": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P13",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2495,
+   "tag": null,
+   "type": null
+  },
+  "3iYjRdH_0mqacTsTpPu0Wu": {
    "class": "IfcOpeningElement",
    "container": null,
    "description": null,
@@ -2460,14 +2446,28 @@
    "objectType": null,
    "parent": null,
    "predefined": "OPENING",
-   "step": 2472,
+   "step": 2479,
+   "tag": null,
+   "type": null
+  },
+  "3uSHwAN_0mWtR9zL5b9Bu9": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-K12",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 2559,
    "tag": null,
    "type": null
   }
  },
  "precision": 1e-05,
  "reader": "IfcOpenShell 0.9.0.post1",
- "records": 2978,
+ "records": 2996,
  "schema": "IFC4X3_ADD2",
  "sets": {
   "01alMXGa9m08000000000$": {
@@ -2507,7 +2507,8 @@
   "01alMXGa9m08000000000G": {
    "Pset_SpaceCoveringRequirements": {
     "CeilingCoveringThickness": 0.02,
-    "FloorCoveringThickness": 0.02
+    "FloorCoveringThickness": 0.02,
+    "WallCoveringThickness": 0.02
    },
    "Qto_SpaceBaseQuantities": {
     "GrossFloorArea": 17.850624999999997,
@@ -2538,13 +2539,17 @@
     "NetVolume": 1.5
    }
   },
-  "1ffSBbF_0qDLYugzhTx3Wz": {
+  "0OHzh6H_0q6n9o2bSCM7JO": {
+   "Pset_BuildingStoreyCommon": {
+    "ElevationOfSSLRelative": 2.93
+   },
    "Qto_BuildingStoreyBaseQuantities": {
-    "GrossHeight": 3.0,
-    "NetFloorArea": 95.91250000000002
+    "GrossHeight": 2.9,
+    "NetFloorArea": 95.91250000000002,
+    "NetHeight": 2.7499999999999996
    }
   },
-  "1s9ZT6SE0qQU40fNeHxV5q": {
+  "1eGNsK4E0qLDlxLtS3tY7m": {
    "TREpys_EmsalOzellikSeti": {
     "EmsalDurumu": "DAHIL"
    }
@@ -2555,7 +2560,6 @@
     "NumberOfStoreys": 2
    },
    "Qto_BuildingBaseQuantities": {
-    "Height": 3.0,
     "NetFloorArea": 191.82500000000005
    }
   }

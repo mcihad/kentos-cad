@@ -117,6 +117,14 @@ def tasir(o: dict, f: ET.Element) -> bool | None:
 
 def karsilastir(specs: list[dict], ad: str) -> None:
     f = json.loads((OLGULAR / f"{ad}.json").read_text(encoding="utf-8"))
+    # EK-6 Tablo 6.7's building heights, asked only where the height is constant (docs/adr/8076 §4): IDS 1.0 cannot
+    # say so; where the file's storeys carry differing heights the IDS's failure is set apart, as KentOS's rule does.
+    def farkli(ad: str) -> bool:
+        h = [((o.get("quantities") or {}).get("Qto_BuildingStoreyBaseQuantities") or {}).get(ad)
+             for o in f["objects"] if o["class"] == "IfcBuildingStorey"]
+        h = [x for x in h if isinstance(x, (int, float))]
+        return any(abs(x - h[0]) > 1e-9 for x in h)
+    kosullu = {"Height": "GrossHeight", "EavesHeight": "NetHeight"}
     bulunan: dict[tuple, list[str]] = {}
     for s in specs:
         siniflar = {c.lower() for c in s["classes"] or []}
@@ -124,6 +132,10 @@ def karsilastir(specs: list[dict], ad: str) -> None:
         if not nesneler:
             continue
         for r in s["requirements"]:
+            if yerel(r) == "property" and degerler(r.find(f"{N}propertySet"))[0] == "Qto_BuildingBaseQuantities":
+                miktar = degerler(r.find(f"{N}baseName"))[0]
+                if miktar in kosullu and farkli(kosullu[miktar]):
+                    continue
             sonuc = [(o, tasir(o, r)) for o in nesneler]
             if all(x is None for _, x in sonuc):
                 continue
@@ -152,7 +164,7 @@ def main() -> None:
     specs = yapi(kok)
     print(f"✓ {IDS.relative_to(KOK)}: IDS 1.0 yapısı, {len(specs)} tanım, "
           f"{sum(len(s['requirements']) for s in specs)} gereklilik")
-    for ad in ("kesit-binasi", "kesit-binasi-kunye", "yerel-sistem", "kesit-binasi-kapi-eksik"):
+    for ad in ("kesit-binasi", "kesit-binasi-kunye", "kesit-binasi-tam", "yerel-sistem", "kesit-binasi-kapi-eksik"):
         karsilastir(specs, ad)
 
 

@@ -321,22 +321,6 @@
    "volume": 1.1115872099516777
   },
   "0CESgV88kjh95W253AK3e4": {
-   "area": 202.04995829187362,
-   "box": [
-    [
-     0.15,
-     0.15,
-     3.35
-    ],
-    [
-     9.85,
-     5.935315805233081,
-     6.25
-    ]
-   ],
-   "volume": 162.7409336012065
-  },
-  "0Q7eHHW8kjmPPbLbFOO0c8": {
    "area": 211.3411477750135,
    "box": [
     [
@@ -351,6 +335,22 @@
     ]
    ],
    "volume": 179.57620259443485
+  },
+  "3_LH3im8kjbunQkasyG6g0": {
+   "area": 202.04995829187362,
+   "box": [
+    [
+     0.15,
+     0.15,
+     3.35
+    ],
+    [
+     9.85,
+     5.935315805233081,
+     6.25
+    ]
+   ],
+   "volume": 162.7409336012065
   }
  },
  "header": {
@@ -386,7 +386,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 57,
+   "step": 65,
    "tag": "0192f5a1-8071-7000-8000-000000000001",
    "type": null
   },
@@ -400,7 +400,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 82,
+   "step": 90,
    "tag": "0192f5a1-8071-7000-8000-000000000002",
    "type": null
   },
@@ -414,7 +414,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 104,
+   "step": 112,
    "tag": "0192f5a1-8071-7000-8000-000000000003",
    "type": null
   },
@@ -428,7 +428,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 129,
+   "step": 137,
    "tag": "0192f5a1-8071-7000-8000-000000000004",
    "type": null
   },
@@ -442,7 +442,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "WINDOW",
-   "step": 439,
+   "step": 447,
    "tag": "P01",
    "type": null
   },
@@ -456,7 +456,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "DOOR",
-   "step": 456,
+   "step": 464,
    "tag": "K01",
    "type": null
   },
@@ -470,7 +470,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "WINDOW",
-   "step": 473,
+   "step": 481,
    "tag": "P02",
    "type": null
   },
@@ -484,13 +484,13 @@
    "objectType": null,
    "parent": "1PgpDO88klfGdVM9eRowva",
    "predefined": "INTERNAL",
-   "step": 643,
+   "step": 651,
    "tag": null,
    "type": null
   },
   "01alMXW75m080000000009": {
    "class": "IfcWall",
-   "container": "0a5hwTw8kljCsZKnncLue7",
+   "container": "2FFwWIM8klbKORNXVHFzB1",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -498,13 +498,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 154,
+   "step": 162,
    "tag": "0192f5a1-8071-7000-8000-000000000009",
    "type": null
   },
   "01alMXW75m08000000000A": {
    "class": "IfcWall",
-   "container": "0a5hwTw8kljCsZKnncLue7",
+   "container": "2FFwWIM8klbKORNXVHFzB1",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -512,13 +512,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 179,
+   "step": 187,
    "tag": "0192f5a1-8071-7000-8000-00000000000a",
    "type": null
   },
   "01alMXW75m08000000000B": {
    "class": "IfcWall",
-   "container": "0a5hwTw8kljCsZKnncLue7",
+   "container": "2FFwWIM8klbKORNXVHFzB1",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -526,13 +526,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 201,
+   "step": 209,
    "tag": "0192f5a1-8071-7000-8000-00000000000b",
    "type": null
   },
   "01alMXW75m08000000000C": {
    "class": "IfcWall",
-   "container": "0a5hwTw8kljCsZKnncLue7",
+   "container": "2FFwWIM8klbKORNXVHFzB1",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -540,13 +540,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 226,
+   "step": 234,
    "tag": "0192f5a1-8071-7000-8000-00000000000c",
    "type": null
   },
   "01alMXW75m08000000000D": {
    "class": "IfcWindow",
-   "container": "0a5hwTw8kljCsZKnncLue7",
+   "container": "2FFwWIM8klbKORNXVHFzB1",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -554,13 +554,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "WINDOW",
-   "step": 490,
+   "step": 498,
    "tag": "P11",
    "type": null
   },
   "01alMXW75m08000000000E": {
    "class": "IfcDoor",
-   "container": "0a5hwTw8kljCsZKnncLue7",
+   "container": "2FFwWIM8klbKORNXVHFzB1",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -568,13 +568,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "DOOR",
-   "step": 507,
+   "step": 515,
    "tag": "K11",
    "type": null
   },
   "01alMXW75m08000000000F": {
    "class": "IfcWindow",
-   "container": "0a5hwTw8kljCsZKnncLue7",
+   "container": "2FFwWIM8klbKORNXVHFzB1",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -582,7 +582,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "WINDOW",
-   "step": 524,
+   "step": 532,
    "tag": "P12",
    "type": null
   },
@@ -594,9 +594,9 @@
    "longName": "Salon",
    "name": "MM-MHL-101_Salon",
    "objectType": null,
-   "parent": "0a5hwTw8kljCsZKnncLue7",
+   "parent": "2FFwWIM8klbKORNXVHFzB1",
    "predefined": "INTERNAL",
-   "step": 666,
+   "step": 674,
    "tag": null,
    "type": null
   },
@@ -610,13 +610,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "FLOOR",
-   "step": 254,
+   "step": 262,
    "tag": "0192f5a1-8071-7000-8000-000000000011",
    "type": null
   },
   "01alMXW75m08000000000I": {
    "class": "IfcSlab",
-   "container": "0a5hwTw8kljCsZKnncLue7",
+   "container": "2FFwWIM8klbKORNXVHFzB1",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -624,13 +624,13 @@
    "objectType": null,
    "parent": null,
    "predefined": "FLOOR",
-   "step": 275,
+   "step": 283,
    "tag": "0192f5a1-8071-7000-8000-000000000012",
    "type": null
   },
   "01alMXW75m08000000000J": {
    "class": "IfcSlab",
-   "container": "0a5hwTw8kljCsZKnncLue7",
+   "container": "2FFwWIM8klbKORNXVHFzB1",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -638,7 +638,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "FLOOR",
-   "step": 296,
+   "step": 304,
    "tag": "0192f5a1-8071-7000-8000-000000000013",
    "type": null
   },
@@ -652,39 +652,11 @@
    "objectType": null,
    "parent": null,
    "predefined": "SPIRAL_STAIR",
-   "step": 425,
+   "step": 433,
    "tag": "0192f5a1-8071-7000-8000-000000000014",
    "type": null
   },
-  "04K6SQc8kkmnFcKVb4eRUP": {
-   "class": "IfcOpeningElement",
-   "container": null,
-   "description": null,
-   "hasShape": true,
-   "longName": null,
-   "name": "MM-ACL-K11",
-   "objectType": null,
-   "parent": null,
-   "predefined": "OPENING",
-   "step": 602,
-   "tag": null,
-   "type": null
-  },
   "0CESgV88kjh95W253AK3e4": {
-   "class": "IfcSpatialZone",
-   "container": null,
-   "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
-   "hasShape": true,
-   "longName": "1. kat emsale dahil alan",
-   "name": "MM-MZN-Emsal_DAHIL_1._kat",
-   "objectType": "EMSAL",
-   "parent": null,
-   "predefined": "USERDEFINED",
-   "step": 707,
-   "tag": null,
-   "type": null
-  },
-  "0Q7eHHW8kjmPPbLbFOO0c8": {
    "class": "IfcSpatialZone",
    "container": null,
    "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
@@ -694,39 +666,11 @@
    "objectType": "EMSAL",
    "parent": null,
    "predefined": "USERDEFINED",
-   "step": 689,
+   "step": 697,
    "tag": null,
    "type": null
   },
-  "0a5hwTw8kljCsZKnncLue7": {
-   "class": "IfcBuildingStorey",
-   "container": null,
-   "description": null,
-   "hasShape": false,
-   "longName": "1. kat",
-   "name": "MM-BNK-1._kat",
-   "objectType": null,
-   "parent": "0$u382g8kltjUjxoA2ToaF",
-   "predefined": null,
-   "step": 36,
-   "tag": null,
-   "type": null
-  },
-  "0tvcd5Y8kkJtX99EXtIi93": {
-   "class": "IfcOpeningElement",
-   "container": null,
-   "description": null,
-   "hasShape": true,
-   "longName": null,
-   "name": "MM-ACL-P02",
-   "objectType": null,
-   "parent": null,
-   "predefined": "OPENING",
-   "step": 570,
-   "tag": null,
-   "type": null
-  },
-  "1Lhayva8kktLeiytqMDNh_": {
+  "17oPM7C8kko5KdfNe89Qjw": {
    "class": "IfcOpeningElement",
    "container": null,
    "description": null,
@@ -736,7 +680,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "OPENING",
-   "step": 586,
+   "step": 594,
    "tag": null,
    "type": null
   },
@@ -754,35 +698,35 @@
    "tag": null,
    "type": null
   },
-  "1jUjv$m8kkFxI5AcOilkQW": {
+  "2FFwWIM8klbKORNXVHFzB1": {
+   "class": "IfcBuildingStorey",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": "1. kat",
+   "name": "MM-BNK-1._kat",
+   "objectType": null,
+   "parent": "0$u382g8kltjUjxoA2ToaF",
+   "predefined": null,
+   "step": 40,
+   "tag": null,
+   "type": null
+  },
+  "2P9tscA8kkufjkHltPkMxV": {
    "class": "IfcOpeningElement",
    "container": null,
    "description": null,
    "hasShape": true,
    "longName": null,
-   "name": "MM-ACL-K01",
+   "name": "MM-ACL-P02",
    "objectType": null,
    "parent": null,
    "predefined": "OPENING",
-   "step": 557,
+   "step": 578,
    "tag": null,
    "type": null
   },
-  "2_sCQUk8kkMVhBo_d_Kge5": {
-   "class": "IfcOpeningElement",
-   "container": null,
-   "description": null,
-   "hasShape": true,
-   "longName": null,
-   "name": "MM-ACL-P01",
-   "objectType": null,
-   "parent": null,
-   "predefined": "OPENING",
-   "step": 541,
-   "tag": null,
-   "type": null
-  },
-  "2oydxxe8kkgCsVi7Lp3VGq": {
+  "2b3SL9G8kkayYQOd9a$YIm": {
    "class": "IfcOpeningElement",
    "container": null,
    "description": null,
@@ -792,7 +736,21 @@
    "objectType": null,
    "parent": null,
    "predefined": "OPENING",
-   "step": 615,
+   "step": 623,
+   "tag": null,
+   "type": null
+  },
+  "2mz0piM8kkHFN6VURmGjg1": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P01",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 549,
    "tag": null,
    "type": null
   },
@@ -810,6 +768,34 @@
    "tag": null,
    "type": null
   },
+  "3Ek$9WO8kkqjUgJ7kFBPCy": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-K01",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 565,
+   "tag": null,
+   "type": null
+  },
+  "3_LH3im8kjbunQkasyG6g0": {
+   "class": "IfcSpatialZone",
+   "container": null,
+   "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
+   "hasShape": true,
+   "longName": "1. kat emsale dahil alan",
+   "name": "MM-MZN-Emsal_DAHIL_1._kat",
+   "objectType": "EMSAL",
+   "parent": null,
+   "predefined": "USERDEFINED",
+   "step": 715,
+   "tag": null,
+   "type": null
+  },
   "3eQcBfWAUgirVTHpg4EmHE": {
    "class": "IfcOpeningElement",
    "container": null,
@@ -820,7 +806,21 @@
    "objectType": null,
    "parent": null,
    "predefined": "OPENING",
-   "step": 631,
+   "step": 639,
+   "tag": null,
+   "type": null
+  },
+  "3sQwreE8kkhWxX0$OsaUWL": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-K11",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 610,
    "tag": null,
    "type": null
   },
@@ -831,7 +831,7 @@
    "hasShape": false,
    "longName": null,
    "name": "MM-SAH-Parsel",
-   "objectType": null,
+   "objectType": "Parsel",
    "parent": "2uxTKfU8klr5KhI23xRq5D",
    "predefined": null,
    "step": 15,
@@ -841,7 +841,7 @@
  },
  "precision": 1e-05,
  "reader": "IfcOpenShell 0.9.0.post1",
- "records": 715,
+ "records": 723,
  "schema": "IFC4X3_ADD2",
  "sets": {
   "0$u382g8kltjUjxoA2ToaF": {
@@ -906,10 +906,14 @@
     "EmsalDurumu": "DAHIL"
    }
   },
-  "0a5hwTw8kljCsZKnncLue7": {
+  "1PgpDO88klfGdVM9eRowva": {
+   "Pset_BuildingStoreyCommon": {
+    "ElevationOfSSLRelative": -0.05
+   },
    "Qto_BuildingStoreyBaseQuantities": {
-    "GrossHeight": 2.9,
-    "NetFloorArea": 68.87695104772284
+    "GrossHeight": 3.4,
+    "NetFloorArea": 68.87695104772284,
+    "NetHeight": 3.25
    }
   }
  },

@@ -64,7 +64,84 @@ impl RoomHeight {
     }
 }
 
+/// A room's construction floor and the slab over it (docs/adr/8076 §3; IFC 4.3's "top surface of the construction
+/// floor"): the structure's top of the floor slab under it, and the structure's top and underside of the lowest slab
+/// over it, metres over ±0.00; none for a side without a slab, or with a sloped one (its level is not one).
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct RoomStructure {
+    pub floor: Option<f64>,
+    pub over: Option<(f64, f64)>,
+}
+
 impl Document {
+    /// The floor slab the room stands on (docs/adr/8076 §3), with its level's floor: the one under its point; where its
+    /// point is over an opening of it (a stair's), the one under most of a 9 × 9 grid of points inside its rings. The
+    /// slab is a choice; what is read of it is its own.
+    pub(crate) fn room_floor_slab(&self, s: &SpaceFields) -> Option<(&kentos_contracts::SlabFields, f64)> {
+        use kentos_geometry_core::{Vec2 as V, geometry::point_in_polygon};
+        let (storey_floor, _) = self.storey_of(&s.arch);
+        if let Some(found) = room_point(s).and_then(|at| self.floor_slab_under(at, storey_floor)) {
+            return Some(found);
+        }
+        let rings: Vec<(Vec<V>, Vec<Vec<V>>)> = s
+            .parts
+            .iter()
+            .map(|p| {
+                let ring = |r: &kentos_contracts::SpaceRing| r.pts.iter().map(|q| V::new(q.x, q.y)).collect::<Vec<V>>();
+                (ring(&p.outer), p.holes.iter().map(ring).collect())
+            })
+            .collect();
+        let pts = rings.iter().flat_map(|(o, _)| o.iter());
+        let (mut lo, mut hi) = (V::new(f64::MAX, f64::MAX), V::new(f64::MIN, f64::MIN));
+        for p in pts {
+            lo = V::new(lo.x.min(p.x), lo.y.min(p.y));
+            hi = V::new(hi.x.max(p.x), hi.y.max(p.y));
+        }
+        if lo.x > hi.x {
+            return None;
+        }
+        const N: usize = 9;
+        let mut under: Vec<(&kentos_contracts::SlabFields, f64, usize)> = Vec::new();
+        for i in 0..N {
+            for j in 0..N {
+                let p = V::new(
+                    lo.x + (hi.x - lo.x) * (i as f64 + 0.5) / N as f64,
+                    lo.y + (hi.y - lo.y) * (j as f64 + 0.5) / N as f64,
+                );
+                let inside =
+                    rings.iter().any(|(o, holes)| point_in_polygon(p, o) && !holes.iter().any(|h| point_in_polygon(p, h)));
+                if !inside {
+                    continue;
+                }
+                let Some((slab, f)) = self.floor_slab_under(Vec2 { x: p.x, y: p.y }, storey_floor) else { continue };
+                match under.iter_mut().find(|(x, ..)| std::ptr::eq(*x, slab)) {
+                    Some(u) => u.2 += 1,
+                    None => under.push((slab, f, 1)),
+                }
+            }
+        }
+        under.into_iter().max_by_key(|u| u.2).map(|(slab, f, _)| (slab, f))
+    }
+
+    /// The room's construction floor and the slab over it: the slabs its floor and ceiling are found on.
+    pub fn room_structure(&self, s: &SpaceFields) -> RoomStructure {
+        let Some(at) = room_point(s) else {
+            return RoomStructure::default();
+        };
+        let floor = self
+            .room_floor_slab(s)
+            .filter(|(slab, _)| slab.slope.is_none())
+            .map(|(slab, f)| slab.structure_top(f));
+        let (room_floor, _) = self.room_floor(s);
+        let over = self
+            .slabs_holding(at)
+            .filter(|(slab, f)| slab.ceiling(*f) > room_floor + OVER)
+            .min_by(|a, b| a.0.ceiling(a.1).total_cmp(&b.0.ceiling(b.1)))
+            .filter(|(slab, _)| slab.slope.is_none())
+            .map(|(slab, f)| (slab.structure_top(f), slab.structure_underside(f)));
+        RoomStructure { floor, over }
+    }
+
     /// The room's floor, metres over ±0.00, and where it comes from.
     pub fn room_floor(&self, s: &SpaceFields) -> (f64, FloorFrom) {
         let (floor, _) = self.storey_of(&s.arch);
@@ -117,9 +194,8 @@ impl Document {
         let Some(at) = room_point(s) else {
             return (None, None);
         };
-        let (storey_floor, _) = self.storey_of(&s.arch);
         let floor = self
-            .floor_slab_under(at, storey_floor)
+            .room_floor_slab(s)
             .and_then(|(slab, _)| slab.layers.over.first())
             .filter(|l| l.kind == SlabLayerKind::Finish)
             .map(|l| l.thickness);
@@ -299,5 +375,22 @@ mod tests {
             p.x += 20.0;
         }
         doc.room_height(&r)
+    }
+
+    #[test]
+    fn a_room_s_construction_floor_is_its_slab_s_structure_and_the_slab_over_it_bounds_its_heights() {
+        // Ara kat on both floors: the structure's top 0.07 under each finished floor, 0.15 thick.
+        let doc = document(serde_json::json!([layered("zemin", 0.0), layered("k1", 0.0)]));
+        let s = doc.room_structure(&room("zemin", serde_json::json!({})));
+        assert!(near(s.floor.unwrap(), -0.07), "{s:?}");
+        let (top, under) = s.over.unwrap();
+        assert!(near(top, 2.93) && near(under, 2.78), "{s:?}");
+        // The upper floor's room: its own slab under it, none over it.
+        let s = doc.room_structure(&room("k1", serde_json::json!({})));
+        assert!(near(s.floor.unwrap(), 2.93) && s.over.is_none(), "{s:?}");
+        // Without a slab under it: no construction floor known.
+        let doc = document(serde_json::json!([layered("k1", 0.0)]));
+        let s = doc.room_structure(&room("zemin", serde_json::json!({})));
+        assert!(s.floor.is_none() && s.over.is_some(), "{s:?}");
     }
 }

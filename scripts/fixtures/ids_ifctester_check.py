@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """The profile's IDS (crates/shared/ifc/data/temel-2026.ids, docs/adr/8074 §5) opened and run by an independent checker,
-IfcTester (IfcOpenShell's IDS tool; not KentOS code), on KentOS's four files; its failures compared, row by row and object
+IfcTester (IfcOpenShell's IDS tool; not KentOS code), on KentOS's five files; its failures compared, row by row and object
 by object, with what KentOS's own rule finds (the facts' `gaps`, the form's 9th question; EK-7's records the form's 2nd
 and 6th questions read). The IDS is opened with its schema check (IDS 1.0's XSD, IfcTester's own copy).
 
@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 
 import ifcopenshell
+import ifcopenshell.util.element
 import ifctester
 from ifctester import ids
 
@@ -28,6 +29,7 @@ CATALOG = json.loads((ROOT / "crates/shared/ifc/data/temel-2026.json").read_text
 FILES = {
     "kesit-binasi": "fixtures/arch/v1/ifc/kesit-binasi.ifc",
     "kesit-binasi-kunye": "fixtures/arch/v1/ifc/kesit-binasi-kunye.ifc",
+    "kesit-binasi-tam": "fixtures/arch/v1/ifc/kesit-binasi-tam.ifc",
     "yerel-sistem": "fixtures/arch/v1/ifc/yerel-sistem.ifc",
     "kesit-binasi-kapi-eksik": "fixtures/ifc/v1/eksik/kesit-binasi-kapi-eksik.ifc",
 }
@@ -43,7 +45,7 @@ ROWS = {(r["table"], r["row"]): r for r in CATALOG["requirements"] if r["level"]
 def row_of(spec, facet):
     """The catalog row a requirement is: its table from the specification's name, its row from the instructions."""
     table = re.search(r"Tablo (\d+\.\d+)", spec.name)
-    row = re.search(r"satır (\d+)\)", facet.instructions or "")
+    row = re.search(r"satır (\d+)[);]", facet.instructions or "")
     return ROWS.get((table.group(1), int(row.group(1)))) if table and row else None
 
 
@@ -78,11 +80,27 @@ def kentos_records(facts):
     return {k: sorted(v) for k, v in out.items()}
 
 
+# EK-6 Tablo 6.7's building heights, asked "sadece yüksekliğin sabit olduğu durumda" (docs/adr/8076 §4): IDS 1.0 has no
+# such condition, so the profile asks them always. Where the file's storeys carry differing heights, IfcTester's failure
+# is the IDS's want of a condition, not a missing value: kept apart as `conditional`, read from the file here.
+CONDITIONAL = {"T6.7/Qto_BuildingBaseQuantities.Height": "GrossHeight",
+               "T6.7/Qto_BuildingBaseQuantities.EavesHeight": "NetHeight"}
+
+
+def heights_differ(f, name):
+    known = []
+    for st in f.by_type("IfcBuildingStorey"):
+        h = (ifcopenshell.util.element.get_pset(st, "Qto_BuildingStoreyBaseQuantities") or {}).get(name)
+        if isinstance(h, (int, float)):
+            known.append(h)
+    return any(abs(h - known[0]) > 1e-9 for h in known)
+
+
 def run(name, path):
     f = ifcopenshell.open(str(ROOT / path))
     specs = ids.open(str(IDS), validate=True)
     specs.validate(f)
-    tester = {"gaps": {}, "records": {}, "apart": {}, "absent": []}
+    tester = {"gaps": {}, "records": {}, "apart": {}, "conditional": {}, "absent": []}
     for spec in specs.specifications:
         if not spec.applicable_entities:
             # A class every model has (K51) the file does not: the specification fails with nothing to apply to.
@@ -98,6 +116,9 @@ def run(name, path):
                 sys.exit(f"{name}: {spec.name} gerekliliği kataloğun satırı değil: {facet.instructions}")
             where = judged_by_kentos(r) or "apart"
             got = sorted({key(x["element"]) for x in failures})
+            if r["id"] in CONDITIONAL and heights_differ(f, CONDITIONAL[r["id"]]):
+                tester["conditional"][r["id"]] = got
+                continue
             if where == "apart":
                 reasons = sorted({str(x.get("reason", ""))[:120] for x in failures})
                 tester["apart"][r["id"]] = {"objects": got, "reasons": reasons}
@@ -128,6 +149,7 @@ def run(name, path):
         "same": {w: len(tester[w]) for w in ("gaps", "records")},
         "differ": differ,
         "apart": tester["apart"],
+        "conditional": tester["conditional"],
     }
 
 
@@ -147,7 +169,8 @@ def main():
         bad |= bool(got["differ"])
         print(f"{'✗' if got['differ'] else '✓'} {name}: IfcTester'ın {got['same']['gaps']} eksik satırı, "
               f"{got['same']['records']} EK-7 kayıt satırı ve {len(got['absent'])} eksik kayıt sınıfı; ayrışan "
-              f"{len(got['differ'])}; KentOS'un ölçmediği {len(got['apart'])} satır ayrı")
+              f"{len(got['differ'])}; KentOS'un ölçmediği {len(got['apart'])} satır ayrı; katların yüksekliği farklı "
+              f"olduğundan sorulmayan {len(got['conditional'])} satır")
         for rid, d in list(got["differ"].items())[:6]:
             print(f"    {rid}: IfcTester {len(d['ifctester'])}, KentOS {len(d['kentos'])}")
         for rid, d in list(got["apart"].items())[:8]:

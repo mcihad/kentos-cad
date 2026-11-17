@@ -34,9 +34,17 @@ fn evidence(case: &str) -> PathBuf {
 }
 
 pub(crate) fn section_building() -> App {
+    opened(section_snapshot())
+}
+
+/// The section building's drawing as its fixture holds it.
+pub(crate) fn section_snapshot() -> kentos_commands::DocumentSnapshotV2 {
+    kentos_kcad::decode(include_bytes!("../../../../fixtures/arch/v1/section-building.kcad")).expect("decodes")
+}
+
+/// `snapshot` opened, its section B derived (Ruhsat takımı draws it).
+pub(crate) fn opened(snapshot: kentos_commands::DocumentSnapshotV2) -> App {
     let (mut app, _) = App::boot(None);
-    let snapshot = kentos_kcad::decode(include_bytes!("../../../../fixtures/arch/v1/section-building.kcad"))
-        .expect("decodes");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let b = app

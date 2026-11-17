@@ -157,7 +157,13 @@ fn table_row(table: &str) -> u32 {
 
 /// A row's requirement facet, its instructions its table's row and its Turkish name.
 fn facet(r: &Requirement) -> String {
-    let say = esc(&format!("{} (Tablo {} satır {})", r.tr, r.table, r.row));
+    // The building's heights are asked "sadece yüksekliğin sabit olduğu durumda" (Tablo 6.7; docs/adr/8076 §4): IDS 1.0
+    // has no condition, so its words say it to the reader of a failure.
+    let only_constant = r.class == "IfcBuilding"
+        && r.set.as_deref() == Some("Qto_BuildingBaseQuantities")
+        && matches!(r.name.as_str(), "Height" | "EavesHeight");
+    let condition = if only_constant { "; yalnız katların yüksekliği aynıyken sorulur" } else { "" };
+    let say = esc(&format!("{} (Tablo {} satır {}{condition})", r.tr, r.table, r.row));
     match r.kind {
         Kind::Attribute => {
             let name = r.name.trim_start_matches("Attribute:").trim();

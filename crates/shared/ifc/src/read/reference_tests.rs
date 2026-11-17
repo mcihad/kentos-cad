@@ -13,9 +13,10 @@ use super::tests::{read_ok, samples};
 use super::*;
 
 /// IfcOpenShell's reading of each sample, in [`samples`]'s order.
-const REFERENCES: [&str; 20] = [
+const REFERENCES: [&str; 21] = [
     include_str!("../../../../../fixtures/ifc/v1/okuma/kesit-binasi.json"),
     include_str!("../../../../../fixtures/ifc/v1/okuma/kesit-binasi-kunye.json"),
+    include_str!("../../../../../fixtures/ifc/v1/okuma/kesit-binasi-tam.json"),
     include_str!("../../../../../fixtures/ifc/v1/okuma/blok-a.json"),
     include_str!("../../../../../fixtures/ifc/v1/okuma/blok-b.json"),
     include_str!("../../../../../fixtures/ifc/v1/okuma/cati-alti-mahal.json"),

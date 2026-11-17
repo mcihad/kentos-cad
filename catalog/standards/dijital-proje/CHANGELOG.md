@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 0.7.1 — 17 Kasım 2026
+
+- 9. soru: modelin gerçek kuzeyi (EK-7 Tablo 7.8 `TrueNorth`) yoksa onarım, dışa aktarımın nedenini söyler
+  (`export.northWhy`: projenin koordinat sistemi ya da kuzey oku yok, oklar farklı yönde; docs/adr/8076 K58). KentOS
+  gerçek kuzeyi artık yazıyor; "henüz yazmıyor" sözü bağlamın öbür alanlarında kaldı.
+
 ## 0.7.0 — 16 Kasım 2026
 
 - Yeni kural: model kalite kontrol formu yazılmış dosyadan (`form`, docs/adr/8074; Md. 15, EK-9 Tablo 9.1). 21 sorunun

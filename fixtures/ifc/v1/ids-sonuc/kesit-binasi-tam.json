@@ -1,0 +1,23 @@
+{
+ "file": "fixtures/arch/v1/ifc/kesit-binasi-tam.ifc",
+ "absent": [],
+ "rows": {
+  "gaps": {},
+  "records": {}
+ },
+ "checker": "IfcTester 0.9.0, IfcOpenShell 0.9.0.post1",
+ "same": {
+  "gaps": 0,
+  "records": 0
+ },
+ "differ": {},
+ "apart": {},
+ "conditional": {
+  "T6.7/Qto_BuildingBaseQuantities.Height": [
+   "2SWXqDFT6iIsoEG5uDHSlL"
+  ],
+  "T6.7/Qto_BuildingBaseQuantities.EavesHeight": [
+   "2SWXqDFT6iIsoEG5uDHSlL"
+  ]
+ }
+}

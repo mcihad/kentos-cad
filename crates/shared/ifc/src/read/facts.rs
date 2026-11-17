@@ -214,7 +214,16 @@ impl Model {
                 let quantities = sets[i]
                     .iter()
                     .filter(|s| s.kind == SetKind::Quantities)
-                    .flat_map(|s| s.values.iter().map(move |v| (s.name.as_str(), v.name.as_str())))
+                    .flat_map(|s| {
+                        s.values.iter().map(move |v| {
+                            let n = match v.value {
+                                ValueKind::Number { value, .. } => Some(value),
+                                ValueKind::Integer { value, .. } => Some(value as f64),
+                                _ => None,
+                            };
+                            (s.name.as_str(), v.name.as_str(), n)
+                        })
+                    })
                     .collect();
                 let carrier = Carrier {
                     id: None,

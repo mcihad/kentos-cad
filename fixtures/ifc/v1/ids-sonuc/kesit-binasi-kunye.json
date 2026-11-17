@@ -25,18 +25,11 @@
    "T6.7/Pset_Address.PostalBox": [
     "1m0cUvzNOjFjCIt7Sp$k6f"
    ],
-   "T6.7/Qto_BuildingBaseQuantities.EavesHeight": [
-    "1m0cUvzNOjFjCIt7Sp$k6f"
-   ],
    "T6.7/Qto_BuildingBaseQuantities.FootPrintArea": [
     "1m0cUvzNOjFjCIt7Sp$k6f"
    ],
    "T6.7/Qto_BuildingBaseQuantities.GrossFloorArea": [
     "1m0cUvzNOjFjCIt7Sp$k6f"
-   ],
-   "T6.8/Pset_BuildingStoreyCommon.ElevationOfSSLRelative": [
-    "0Wel6gHNOjY6IbRO7bDZVt",
-    "18Kgoo7NOjOvlS9FoCcepG"
    ],
    "T6.16/Pset_ColumnCommon.FireRating": [
     "01alMXGa9m08000000000$",
@@ -69,9 +62,6 @@
     "01alMXGa9m08000000000F",
     "01alMXGa9m08000000000X",
     "01alMXGa9m08000000000Y"
-   ],
-   "T6.55/ObjectType": [
-    "0Uf7_Q$NOj98pCElDYQnv4"
    ],
    "T6.55/Pset_SiteCommon.FloorAreaRatio": [
     "0Uf7_Q$NOj98pCElDYQnv4"
@@ -114,22 +104,7 @@
     "01alMXGa9m08000000000d",
     "01alMXGa9m08000000000e"
    ],
-   "T6.58/Pset_SpaceCoveringRequirements.FloorCoveringThickness": [
-    "01alMXGa9m08000000000c"
-   ],
    "T6.58/Pset_SpaceCoveringRequirements.WallCovering": [
-    "01alMXGa9m08000000000G",
-    "01alMXGa9m08000000000H",
-    "01alMXGa9m08000000000I",
-    "01alMXGa9m08000000000J",
-    "01alMXGa9m08000000000K",
-    "01alMXGa9m08000000000a",
-    "01alMXGa9m08000000000b",
-    "01alMXGa9m08000000000c",
-    "01alMXGa9m08000000000d",
-    "01alMXGa9m08000000000e"
-   ],
-   "T6.58/Pset_SpaceCoveringRequirements.WallCoveringThickness": [
     "01alMXGa9m08000000000G",
     "01alMXGa9m08000000000H",
     "01alMXGa9m08000000000I",
@@ -178,17 +153,21 @@
     "01alMXGa9m08000000000S"
    ]
   },
-  "records": {
-   "T7.8/TrueNorth": [
-    "#10"
-   ]
-  }
+  "records": {}
  },
  "checker": "IfcTester 0.9.0, IfcOpenShell 0.9.0.post1",
  "same": {
-  "gaps": 30,
-  "records": 1
+  "gaps": 25,
+  "records": 0
  },
  "differ": {},
- "apart": {}
+ "apart": {},
+ "conditional": {
+  "T6.7/Qto_BuildingBaseQuantities.Height": [
+   "1m0cUvzNOjFjCIt7Sp$k6f"
+  ],
+  "T6.7/Qto_BuildingBaseQuantities.EavesHeight": [
+   "1m0cUvzNOjFjCIt7Sp$k6f"
+  ]
+ }
 }

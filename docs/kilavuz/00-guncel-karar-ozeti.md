@@ -211,7 +211,14 @@
       paketin `dijital_proje.bim` kuralı paftaları, paketi, formu ve müellifin cevaplarını denetler; kalan bulgu yayını
       durdurur. Beş sonuç ayrı; formun kaydı KentOS'un kaydı (`kalite-kontrol-formu.json`), teslim dosyası değil.
     - Standart paketlerin kuralını çağıran süreç `kentos-standards` crate'inde; masaüstü, yayın ve komut satırı ortak.
-    - Gerçek paket modelin zorunlu alanları (IFC-02) tamamlanınca yayımlanır; bugün bulgularını söyleyerek durur.
+    - Gerçek paket 17 Kasım'da yayımlanıyor: modelin zorunlu alanları tamamlandı (aşağıda, ADR 8076).
+  - **IFC'nin zorunlu alanları (17 Kasım 2026; [ADR 8076](../adr/8076-ifc-mandatory-fields-complete.md), IFC-02 ilk kabul):**
+    - Saha "Parsel" ve toplam alanı parselin (K52, K53); katın taşıyıcı döşeme kotu ve brüt/net yüksekliği döşemelerin
+      taşıyıcısından, mahallerin alanının yarısından çoğuyla (K54, K55); binanın `Height`/`EavesHeight`'ı yalnız katlarınki
+      aynıyken — `EavesHeight` tanımı gereği net kat yüksekliği, saçak kotu değil (K55).
+    - Posta kutusu künyeden, KentOS doldurmaz (K56); duvar kaplamasının kalınlığı mahalin durduğu duvar yüzünün
+      kaplamasından (K57); gerçek kuzey sistemin meridyeninden, yoksa kuzey okundan, bilinmezse yazılmaz (K58).
+    - IDS koşul yazamaz: koşullu iki satır IfcTester karşılaştırmasında ayrı tutulur.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

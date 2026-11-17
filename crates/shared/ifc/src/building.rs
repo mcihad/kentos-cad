@@ -314,6 +314,8 @@ pub struct Storey {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Address {
     pub lines: Vec<String>,
+    /// Its mail drop (EK-6 Tablo 6.7 `PostalBox`, docs/adr/8076 §5).
+    pub postal_box: Option<String>,
     pub town: Option<String>,
     pub region: Option<String>,
     pub postal_code: Option<String>,
@@ -393,6 +395,10 @@ pub struct Building {
     /// Why the model has no system when it has none (docs/adr/8072 §3): the export says it, EK-9's sixth question
     /// answers with it.
     pub crs_why: Option<String>,
+    /// True north in the model's plane (EK-7 Tablo 7.8 `TrueNorth`; docs/adr/8076 §6): a unit vector, x and y; none
+    /// when neither the project's system nor the drawing's north arrows say it, and why (`north_why`).
+    pub true_north: Option<[f64; 2]>,
+    pub north_why: Option<String>,
     /// The building's ±0.00 over the site's (the project's ±0.00), metres (docs/adr/8072 §2): its placement there, its
     /// storeys' elevations over it.
     pub zero: f64,
@@ -801,7 +807,8 @@ impl Writer {
             )
         };
         let n = self.st.add(format!(
-            "IFCPOSTALADDRESS($,$,$,$,{lines},$,{},{},{},{})",
+            "IFCPOSTALADDRESS($,$,$,$,{lines},{},{},{},{},{})",
+            Self::opt(&a.postal_box),
             Self::opt(&a.town),
             Self::opt(&a.region),
             Self::opt(&a.postal_code),
@@ -838,8 +845,14 @@ pub fn write(b: &Building) -> String {
     let world = st.add(format!(
         "IFCAXIS2PLACEMENT3D(#{origin},#{axis_up},#{axis_x})"
     ));
+    // True north as a direction in the model's plane (EK-7 Tablo 7.8); `$`, IFC's default up the y axis, never
+    // written in its place when it is not known.
+    let north = match b.true_north {
+        Some([x, y]) => format!("#{}", st.add(format!("IFCDIRECTION(({},{}))", crate::step::real(x), crate::step::real(y)))),
+        None => "$".to_owned(),
+    };
     let model = st.add(format!(
-        "IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,1.E-05,#{world},$)"
+        "IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,1.E-05,#{world},{north})"
     ));
     let body = st.add(format!(
         "IFCGEOMETRICREPRESENTATIONSUBCONTEXT('Body','Model',*,*,*,*,#{model},$,.MODEL_VIEW.,$)"
@@ -1617,5 +1630,21 @@ mod tests {
         );
         // The KentOS id's bits are the GlobalId.
         assert!(f.contains(&text(&guid(7))));
+    }
+
+    #[test]
+    fn true_north_is_the_model_context_s_direction_and_an_unknown_one_is_not_written() {
+        // Sivas on TUREF / TM36: true north 0.0111 rad (0.64°) counter-clockwise from the grid's.
+        let b = Building { file: "Ev".into(), true_north: Some([-0.0111, 0.99993839]), ..Building::default() };
+        let text = write(&b);
+        let line = text.lines().find(|l| l.contains("IFCGEOMETRICREPRESENTATIONCONTEXT(")).expect("the context");
+        let north = text.lines().find(|l| l.contains("IFCDIRECTION((-0.0111,0.99993839))")).expect("the direction");
+        let id = north.split('=').next().unwrap().trim();
+        assert!(line.ends_with(&format!(",{id});")), "{line}");
+        // Unknown: IFC's default is up the y axis, which would say what is not known; the field stays unset.
+        let b = Building { file: "Ev".into(), ..Building::default() };
+        let text = write(&b);
+        let line = text.lines().find(|l| l.contains("IFCGEOMETRICREPRESENTATIONCONTEXT(")).expect("the context");
+        assert!(line.ends_with(",$);"), "{line}");
     }
 }

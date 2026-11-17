@@ -31,6 +31,7 @@ mod roof_sections;
 mod sections;
 #[cfg(feature = "mod-arch")]
 mod arch_ifc;
+mod ifc_required;
 #[cfg(feature = "mod-arch")]
 mod ifc_place;
 #[cfg(feature = "mod-arch")]

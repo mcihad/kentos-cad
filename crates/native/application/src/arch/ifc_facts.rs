@@ -85,7 +85,7 @@ impl Planned {
             .iter()
             .map(|l| json!({ "uid": l.id, "what": l.what, "why": why(l.why) }))
             .collect();
-        facts["export"] = json!({ "left": left, "crsWhy": b.crs_why, "memory": memory });
+        facts["export"] = json!({ "left": left, "crsWhy": b.crs_why, "northWhy": b.north_why, "memory": memory });
         facts["at"] = json!(self.at);
         Ok(facts)
     }

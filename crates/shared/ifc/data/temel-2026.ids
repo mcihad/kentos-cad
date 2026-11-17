@@ -398,7 +398,7 @@
             <simpleValue>PostalBox</simpleValue>
           </baseName>
         </property>
-        <property cardinality="required" dataType="IFCLENGTHMEASURE" instructions="Yükseklik (Tablo 6.7 satır 14)">
+        <property cardinality="required" dataType="IFCLENGTHMEASURE" instructions="Yükseklik (Tablo 6.7 satır 14; yalnız katların yüksekliği aynıyken sorulur)">
           <propertySet>
             <simpleValue>Qto_BuildingBaseQuantities</simpleValue>
           </propertySet>
@@ -406,7 +406,7 @@
             <simpleValue>Height</simpleValue>
           </baseName>
         </property>
-        <property cardinality="required" dataType="IFCLENGTHMEASURE" instructions="Saçak Yüksekliği (Tablo 6.7 satır 15)">
+        <property cardinality="required" dataType="IFCLENGTHMEASURE" instructions="Saçak Yüksekliği (Tablo 6.7 satır 15; yalnız katların yüksekliği aynıyken sorulur)">
           <propertySet>
             <simpleValue>Qto_BuildingBaseQuantities</simpleValue>
           </propertySet>

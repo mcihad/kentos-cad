@@ -304,7 +304,10 @@ fn made_for(doc: &Document, stamp: &str, application: &str, scope: Option<&Scope
         coverings: doc
             .entities_with_uids()
             .filter_map(|(u, e)| match e {
-                kentos_commands::Entity::Space(s) => Some((u.to_string(), doc.room_coverings(&s.space))),
+                kentos_commands::Entity::Space(s) => {
+                    let (floor, ceiling) = doc.room_coverings(&s.space);
+                    Some((u.to_string(), (floor, ceiling, doc.room_wall_finish(&s.space))))
+                }
                 _ => None,
             })
             .collect(),
@@ -314,9 +317,12 @@ fn made_for(doc: &Document, stamp: &str, application: &str, scope: Option<&Scope
             .entities_with_uids()
             .filter_map(|(u, e)| match e {
                 kentos_commands::Entity::Space(s) => doc.room_height(&s.space).map(|h| {
+                    let structure = doc.room_structure(&s.space);
                     (
                         u.to_string(),
                         kentos_ifc::arch::RoomLevels {
+                            structure: structure.floor,
+                            over: structure.over,
                             floor: h.floor,
                             ceiling: h.ceiling,
                             known: h.ceiling_known(),
@@ -349,6 +355,8 @@ fn made_for(doc: &Document, stamp: &str, application: &str, scope: Option<&Scope
                 footprint: own.map(|o| o.1),
             }
         }),
+        // Its north, the drawing's (docs/adr/8076 §6): the plan's up turned by this angle.
+        north: crate::north::model_north(doc),
     });
     (b, written, curved, unplaced)
 }
@@ -455,7 +463,8 @@ pub fn particulars(doc: &Document) -> Particulars {
         office: get("buro_adi"),
         office_tax_number: get("vergi_no"),
         office_address: get("buro_adres"),
-        occupancy: fact("kullanim_amaci"),
+        // The building program's use, else the künye's typed by hand (a drawing without a program, as its sheets).
+        occupancy: fact("kullanim_amaci").or_else(|| get("kullanim_amaci")),
         gross_area: zoning
             .as_ref()
             .map(|r| r.levels.iter().map(|l| l.all()).sum::<f64>()),
@@ -470,6 +479,7 @@ pub fn particulars(doc: &Document) -> Particulars {
             _ => k,
         }),
         description: get("proje_aciklama"),
+        postal_box: get("posta_kutusu"),
     }
 }
 

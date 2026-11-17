@@ -132,8 +132,8 @@ class IkinciOkuyucu(unittest.TestCase):
     """KentOS'un okuduğu olgulardan form, başka bir okuyucunun (scripts/fixtures/ifc_form_reference.py) aynı dosyalardan
     kurduğu olgulardaki formla satır satır aynı: kanıt, bulguların kodu ve nesneleri."""
 
-    def test_dort_dosyada_ayrisan_satir_yok(self):
-        for ad in ("kesit-binasi", "kesit-binasi-kunye", "yerel-sistem", "kesit-binasi-kapi-eksik"):
+    def test_bes_dosyada_ayrisan_satir_yok(self):
+        for ad in ("kesit-binasi", "kesit-binasi-kunye", "kesit-binasi-tam", "yerel-sistem", "kesit-binasi-kapi-eksik"):
             ref = json.loads((KOK / "fixtures/ifc/v1/form" / f"{ad}.json").read_text(encoding="utf-8"))
             bizim = [{"no": r["no"], "kanit": r["kanit"],
                       "bulgular": sorted([b["code"], sorted(b.get("globalIds") or [])] for b in r["bulgular"])}
@@ -143,11 +143,11 @@ class IkinciOkuyucu(unittest.TestCase):
 
 
 class BagimsizIds(unittest.TestCase):
-    """Profilin IDS'i bağımsız bir denetleyicide (IfcTester; scripts/fixtures/ids_ifctester_check.py) dört dosyada
+    """Profilin IDS'i bağımsız bir denetleyicide (IfcTester; scripts/fixtures/ids_ifctester_check.py) beş dosyada
     koşuldu: bulduğu eksikler KentOS'un okuduğu olgulardaki eksiklerle satır ve nesne düzeyinde aynı."""
 
-    def test_dort_dosyada_ifctester_ile_ayni(self):
-        for ad in ("kesit-binasi", "kesit-binasi-kunye", "yerel-sistem", "kesit-binasi-kapi-eksik"):
+    def test_bes_dosyada_ifctester_ile_ayni(self):
+        for ad in ("kesit-binasi", "kesit-binasi-kunye", "kesit-binasi-tam", "yerel-sistem", "kesit-binasi-kapi-eksik"):
             ref = json.loads((KOK / "fixtures/ifc/v1/ids-sonuc" / f"{ad}.json").read_text(encoding="utf-8"))
             self.assertEqual(ref["differ"], {}, ad)
             f = olgular(ad)

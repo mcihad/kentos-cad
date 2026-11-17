@@ -1,0 +1,118 @@
+{
+ "file": "fixtures/arch/v1/ifc/kesit-binasi-tam.ifc",
+ "reader": "IfcOpenShell 0.9.0.post1",
+ "rows": [
+  {
+   "no": 1,
+   "kanit": "inceleme",
+   "bulgular": []
+  },
+  {
+   "no": 2,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 3,
+   "kanit": "kaldı",
+   "bulgular": [
+    [
+     "digital_project_code_missing",
+     [
+      "1axpP3lT6hzrXv257L1et5"
+     ]
+    ]
+   ]
+  },
+  {
+   "no": 4,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 5,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 6,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 7,
+   "kanit": "inceleme",
+   "bulgular": []
+  },
+  {
+   "no": 8,
+   "kanit": "inceleme",
+   "bulgular": []
+  },
+  {
+   "no": 9,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 10,
+   "kanit": "inceleme",
+   "bulgular": []
+  },
+  {
+   "no": 11,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 12,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 13,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 14,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 15,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 16,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 17,
+   "kanit": "inceleme",
+   "bulgular": []
+  },
+  {
+   "no": 18,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 19,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 20,
+   "kanit": "geçti",
+   "bulgular": []
+  },
+  {
+   "no": 21,
+   "kanit": "inceleme",
+   "bulgular": []
+  }
+ ]
+}

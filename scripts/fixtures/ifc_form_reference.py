@@ -39,6 +39,7 @@ from dijital_proje import form  # noqa: E402
 FILES = {
     "kesit-binasi": "fixtures/arch/v1/ifc/kesit-binasi.ifc",
     "kesit-binasi-kunye": "fixtures/arch/v1/ifc/kesit-binasi-kunye.ifc",
+    "kesit-binasi-tam": "fixtures/arch/v1/ifc/kesit-binasi-tam.ifc",
     "yerel-sistem": "fixtures/arch/v1/ifc/yerel-sistem.ifc",
     "kesit-binasi-kapi-eksik": "fixtures/ifc/v1/eksik/kesit-binasi-kapi-eksik.ifc",
 }
@@ -211,6 +212,19 @@ def carries(o, r):
     return None
 
 
+# EK-6 Tablo 6.7 asks the building's Height and EavesHeight "sadece yüksekliğin sabit olduğu durumda" (IFC 4.3: "only
+# provided if there is a constant height"): read here by the storeys' own GrossHeight and NetHeight in the file.
+CONSTANT = {"Height": "GrossHeight", "EavesHeight": "NetHeight"}
+
+
+def not_constant(objects, name):
+    """Whether the file's storeys carry differing heights of `name`: then the building has no constant height."""
+    known = [((o.get("quantities") or {}).get("Qto_BuildingStoreyBaseQuantities") or {}).get(name)
+             for o in objects if o["class"].lower() == "ifcbuildingstorey"]
+    known = [h for h in known if isinstance(h, (int, float))]
+    return any(abs(h - known[0]) > 1e-9 for h in known)
+
+
 def gaps_of(objects):
     out = []
     for r in CATALOG["requirements"]:
@@ -218,6 +232,10 @@ def gaps_of(objects):
             continue
         of = [o for o in objects if o["class"].lower() == r["class"].lower()]
         if not of:
+            continue
+        if (r["kind"] == "quantity" and r["class"].lower() == "ifcbuilding"
+                and r.get("set") == "Qto_BuildingBaseQuantities" and r["name"] in CONSTANT
+                and not_constant(objects, CONSTANT[r["name"]])):
             continue
         judged = [(o, carries(o, r)) for o in of]
         lacking = [o["globalId"] for o, c in judged if c is False]

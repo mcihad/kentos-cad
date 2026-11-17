@@ -77,9 +77,9 @@ kimliği; test bağlantısı.
 | IFC sınıfı | Kod | KentOS'taki kaynağı | Bugün | Kalan | Paket |
 |---|---|---|---|---|---|
 | IfcProject | — | Künye | ◐ | açıklama, proje tipi | IFC-02 |
-| IfcSite | SAH | Parsel, imar durumu, vaziyet planı | ◐ | nesne tipi, parsel alanının seti | IFC-02 |
+| IfcSite | SAH | Parsel, imar durumu, vaziyet planı | ✓ nesne tipi Parsel, toplam alan (ADR 8076) | — | IFC-02 |
 | IfcBuilding | BNA | Çizim; programın binaları (ADR 8072) | ✓ bina başına dosya, kendi ±0.00'ı ve alanlarıyla | eksik alanlar | IFC-02 |
-| IfcBuildingStorey | BNK | Katlar | ◐ | taşıyıcı döşemenin kotu | IFC-02 |
+| IfcBuildingStorey | BNK | Katlar | ✓ taşıyıcı döşeme kotu, brüt/net yükseklik döşemelerden (ADR 8076) | baskın kotu olmayan kat | IFC-02 |
 | IfcSpace | MHL | Mahal | ◐ hep `INTERNAL`, düz prizma | türü, kapalı hacmi, kaplama kalınlıkları | IFC-02, IFC-06 |
 | IfcSpatialZone | MZN | Emsal alanı (BIM-08) | ✓ (ADR 8069) | DIGER | IFC-03 |
 | IfcZone | ZON | Bağımsız bölüm, eklenti, ortak alan | ✓ (ADR 8069) | — | IFC-03 |
@@ -129,24 +129,24 @@ düzeltildi. Bir alan "verisi çizimde olduğunda" yazılıyorsa örnekte yoksa 
 | Duvar, döşeme, çatı, kapı, pencere | `IsExternal` | ✓ | dış çizgi kuralı; örnekte değiştirilebilir | — |
 | Kolon | `LoadBearing` | ◐ hep doğru | malzemesi ve rolü; mimari dikme ayrımı | IFC-02 |
 | Mahal | zemin, duvar, tavan kaplaması | ✓ | mahal listesi (ADR 8038) | — |
-| | üç kaplamanın kalınlığı | ✗ | mahalin kaplamaları (BIM-07) | IFC-02 |
+| | üç kaplamanın kalınlığı | ✓ döşeme ve tavan döşemelerin katmanından (ADR 8070 §6), duvar yüzün kaplamasından (ADR 8076 K57) | mahalin kaplamaları (BIM-07) | IFC-02 |
 | | türü | ◐ | kullanımı (BIM-08) | IFC-02 |
 | Kat | net alan | ✓ | mahallerinin toplamı | — |
-| | taşıyıcı döşemenin kotu | ✗ | katın kotu ve döşeme katmanları (ADR 8040) | IFC-02 |
+| | taşıyıcı döşemenin kotu | ✓ mahallerin alanının yarısından çoğuyla (ADR 8076 K54) | katın kotu ve döşeme katmanları (ADR 8040) | IFC-02 |
 | Bina | kimlik, kalıcı kimlik değil, kat sayısı, adres, net kat alanı | ✓ | künye | — |
 | | kullanım, planlanan brüt alan, taban alanı, brüt kat alanı | ◐ verisi çizimde olduğunda; künyeli bölüm binasında yazılmadı | program, imar durumu | IFC-02 |
-| | `Pset_Address.PostalBox` | ✗ | künye | IFC-02 |
+| | `Pset_Address.PostalBox` | ✓ künyenin kutusu (ADR 8076 K56) | künye | IFC-02 |
 | | yapım yöntemi, yangın koruma sınıfı, planlanan net alan | ✗ | künye (BIM-07) | IFC-02 |
-| | yükseklik | ◐ yalnız katlar eşitken | bina yüksekliği | IFC-02 |
-| | saçak yüksekliği | ✗ | çatının saçak kotu (ADR 8044) | IFC-02 |
+| | yükseklik | ✓ katların brüt yüksekliği, yalnız eşitken (ADR 8076 K55) | bina yüksekliği | IFC-02 |
+| | saçak yüksekliği (`EavesHeight`) | ✓ tanımı net kat yüksekliği, yalnız eşitken (ADR 8076 K55) | döşeme katmanları | IFC-02 |
 | Saha | uzun ad, ±0.00'ın kotu, emsal, TAKS, adres, ada/parsel, tapu, `TREpys_ParselOzellikSeti` | ✓ | künye, imar durumu, vaziyet planı | — |
-| | nesne tipi | ✗ | katalog (B1) | IFC-02 |
-| | parsel alanı, `Pset_SiteCommon.TotalArea` | ✗ (alan `Qto_SiteBaseQuantities`'te) | imar durumu | IFC-02 |
+| | nesne tipi | ✓ Parsel (ADR 8076 K52) | katalog (B1) | IFC-02 |
+| | parsel alanı, `Pset_SiteCommon.TotalArea` | ✓ (ADR 8076 K53) | imar durumu | IFC-02 |
 | Proje | adı (proje kodu) | ✓ | künye | — |
 | | açıklama; `Pset_ProjectCommon.ProjectType` | ✗ | künye | IFC-02 |
 | Kişi, kuruluş, rol | sicil, ad, soyad, vergi no, adres, rol | ✓ (ADR 8047 §7) | ad ve soyad ayrı alanlardan (bugün son kelimeden ayrılıyor) | IFC-02 |
 | | `IfcPerson.Roles`, `IfcOrganization.Roles`, `IfcActorRole.UserDefinedRole` | ✗ (rol yalnız kişi-kuruluşta) | künye | IFC-02 |
-| Gösterim bağlamı (EK-7 7.8) | `TrueNorth` | ✗ | kuzey oku, projenin kuzeyi | IFC-02 |
+| Gösterim bağlamı (EK-7 7.8) | `TrueNorth` | ✓ sistemin meridyeninden, yoksa kuzey okundan (ADR 8076 K58) | kuzey oku, projenin kuzeyi | IFC-02 |
 | Ölçüm anotasyonu (EK-7 7.9) | `IfcAnnotation`: `Name`, `Description`, `PredefinedType = SURVEY` | ✗ | Ölçüm ve vaziyet bilgisi. Uygulanabilirlik B1’de kaynak ve kurum profiliyle belirlenir | IFC-02 |
 | Koordinat sistemi | TUREF dilimi, datum, projeksiyon, dönüşüm | ✓ (ADR 8047 §8; yerel sistem döndürülüp ölçeklenerek ADR 8072 §3) | `TrueNorth`; kontrol noktalarının projede saklanması | IFC-05 |
 
@@ -297,8 +297,15 @@ katalogdaki EK-6 ve EK-7 zorunlu satırlarını yazılacak modelle karşılaşt�
 EK-9/9 modelden. Yangın sınıfı, acil çıkış, yapım eylemi, yangın koruma sınıfı, net planlanan alan ve `Ad_Dayanım` yazılıyor.
 Projenin açıklaması (künyenin "Proje açıklaması (IFC modelinde)" kutusu), tipi (`Pset_ProjectCommon.ProjectType`, yapı
 türünden, K50) ve aktör rolleri 16 Kasım'da ([ADR 8074](../docs/adr/8074-ek9-from-the-written-file.md) §3).
-**Kalan:** sahanın TAKS/KAKS/çekme/toplam alanı, katların SSL kotu, mahal kaplamaları, merdivenin tipi ve malzemesi,
-TrueNorth, PostalBox, FootPrintArea yazımı.
+**Yapıldı (17 Kasım 2026, [ADR 8076](../docs/adr/8076-ifc-mandatory-fields-complete.md), ilk kabul tuttu):** sahanın
+tipi "Parsel" (K52) ve toplam alanı (K53); katın taşıyıcı döşeme kotu ve brüt/net yüksekliği döşemelerin taşıyıcısından,
+mahallerin alanının yarısından çoğuyla (K54, K55); binanın `Height` ve `EavesHeight`'ı yalnız katlarınki aynıyken, koşul
+zorunlu ölçüde, ikinci okuyucuda ve IDS'in sözünde (K55); künyenin posta kutusu (K56); mahalin duvar kaplamasının kalınlığı
+duvar yüzünün kaplamasından (K57); bağlamın gerçek kuzeyi projenin sisteminden, yoksa kuzey okundan (K58); kullanım türü
+program yoksa künyeden. Yazar gibi doldurulmuş künyeli kesit binasında zorunlu satırlardan eksik yok; IfcOpenShell 0
+bulgu, IfcTester ile ayrışma yok; gerçek BIM paketi gerçek kuralla yayımlanıyor (ADR 8076 §5).
+**Kalan:** `Tag` politikası, kişinin adı ve soyadı ayrı alanlardan, EK-7 Tablo 7.9 ölçüm anotasyonu; baskın kotu olmayan
+katın ve çatı altındaki son katın koşulu; duvardan ayrı çizilmiş mahalin duvar kaplaması (ADR 8076 §7).
 
 **Kullanıcı sonucu:** Yazılan her sınıf, yönetmeliğin o sınıf için istediği bütün alanları taşır; taşıyamadığını nesnesiyle
 söyler. Verisi BIM-07 ve BIM-08'den gelir.

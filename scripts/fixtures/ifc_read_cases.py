@@ -32,6 +32,7 @@ OUT = ROOT / "fixtures" / "ifc" / "v1" / "okuma"
 FILES = {
     "kesit-binasi": "fixtures/arch/v1/ifc/kesit-binasi.ifc",
     "kesit-binasi-kunye": "fixtures/arch/v1/ifc/kesit-binasi-kunye.ifc",
+    "kesit-binasi-tam": "fixtures/arch/v1/ifc/kesit-binasi-tam.ifc",
     "blok-a": "fixtures/arch/v1/ifc/blok-a.ifc",
     "blok-b": "fixtures/arch/v1/ifc/blok-b.ifc",
     "cati-alti-mahal": "fixtures/arch/v1/ifc/cati-alti-mahal.ifc",
