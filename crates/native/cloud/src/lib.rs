@@ -10,6 +10,8 @@
 //!   object with each object's version, a file project from its newest revision.
 //! - [`saving`]: a file project's next revision, and a drawing as a new
 //!   cloud project of either kind.
+//! - The cloud portal's dossiers ([`DossierQuery`], `api/portal.rs`, docs/adr/9001): their lists and pages, a
+//!   step, a message, the open project added to a package, a project file opened as a project.
 //! - [`ProjectSync`]: a database project's changes as `project.changes`
 //!   commands, the web's tracker rules, driven by the desktop; other
 //!   editors' commits taken in from the events ([`follow`]); what is not sent
@@ -46,7 +48,7 @@ pub mod sheet_library;
 pub mod sheet_templates;
 pub mod sync;
 
-pub use api::{CatalogQuery, Cloud, Download, Progress};
+pub use api::{CatalogQuery, Cloud, DossierQuery, Download, Progress};
 pub use bytes::Bytes;
 pub use drafts::{DraftKey, DraftStore, Loaded};
 pub use failure::{ApiFailure, Failure};

@@ -36,6 +36,10 @@ use crate::failure::ApiFailure;
 use crate::runtime::run;
 
 mod extension_catalog;
+// The cloud portal's dossiers (docs/adr/9000 §5–8, docs/adr/9001).
+mod portal;
+
+pub use portal::DossierQuery;
 
 /// How long an ordinary request may take (the web's too).
 const TIMEOUT: Duration = Duration::from_secs(30);
