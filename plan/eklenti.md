@@ -1588,8 +1588,26 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
   — *17 Kasım (ADR 8057 §116): aynı çizimde ürün komutu, ajanın planla-yürüt kapısı, satır içi model ve toplu
   çalıştırma aynı nesneleri ve sayıları verir (`processing_doors`); Python ve MCP aynı yollardan geçer; pencere ortak
   durum dosyalarıyla, eklenti aracı tek örnek koşucusuyla aynı bağımsız beklentilere bağlı.*
-- [ ] Taşınabilir UI/kural/değer kodlayıcı/doğrulama aynı profilde eşdeğer sonuç [ECO-QA-07]; eklenti UI görsel testleri
+- [x] Taşınabilir UI/kural/değer kodlayıcı/doğrulama aynı profilde eşdeğer sonuç [ECO-QA-07]; eklenti UI görsel testleri
   ile durum/odak/değer korunumu, kaldırma, geç geri çağırma ve doğrulama gezinmesi gerçek girdiyle [ECO-QA-08].
+  — *17 Kasım'da gözden geçirildi, karşılanmış.
+  - ECO-QA-07, eşdeğerlik:
+    - Taşınabilir formun kuralları, değerleri ve doğrulaması KentOS kodu kullanılmadan yazılmış bağımsız bir Python
+      başvurusunun ortak durumlarında sınanır (`scripts/fixtures/forms_cases.py` → `fixtures/forms/v1/cases.json`,
+      `crates/shared/forms/tests/all/cases.rs`): ön denetim, seçenek süzgeci, varsayılan, hesap, gizlenen alan, yazım
+      profili, tekil alan.
+    - Panelin `visibleWhen`/`requiredWhen`/`enabledWhen`, `calculate` ve `defaultExpr`'i formun ifade profiliyledir
+      (§33, §35; `a_components_rules_follow_the_panels_values`).
+    - Python'un panel işlevleri şemanın kendisidir (`python_builders_are_the_schemas`).
+    - Web ve mobilin çizicileri bekletiliyor (ADR 0228).
+  - ECO-QA-08, gerçek girdiyle:
+    - Kodun yaması kullanıcının yazdığını, odağı, imleci ve kaydırmayı korur: §32, gerçek pencere `31-oturum`. Klavye
+      sırası ve odak çizilen panelden gelir (`panel_session/behaviour_tests.rs`, ekran dışı çizimle).
+    - Kaldırma: devre dışı eklentinin paneli, sekmesi ve onarımları gider
+      (`a_disabled_extensions_panel_and_audit_fixes_go_with_it`).
+    - Geç geri çağırma: §117 (`extensions/tests/late.rs`).
+    - Doğrulama gezinmesi: yanlış alanın bölümü (§38, `36-bolum`) ve sekmesi (§43) açılır, sözü alanın altında yazar
+      (§41).*
 - [x] ACL testleri ham HTTP/genel komut/Python/eklenti/AI/tablo/arama/dışa aktarma ve olay yollarını kapsar [ECO-QA-09].
   — *17 Kasım'da gözden geçirildi, karşılanmış:
   - Ham HTTP: uçlar çağıranın erişimini (`project_access`) uygulama katmanına verir; orada Veri girişinin erişimi
