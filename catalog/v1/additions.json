@@ -3312,6 +3312,36 @@
       "status": "implemented"
     },
     {
+      "id": "arch.ifcCompare",
+      "title": "IFC revizyonlarını karşılaştır",
+      "short": "Revizyon karşılaştır",
+      "icon": "ifcCompare",
+      "description": "Bir modelin iki revizyonunu (IFC 4.3, IFC4, IFC2x3) nesnelerin GlobalId'leriyle karşılaştırır: yalnız yenide olan eklenen, yalnız eskide olan silinen, ikisinde olup sınıfı, adı ve öbür öznitelikleri, katı, tipi, gövdesi (taşınan, boyu değişen) ya da özellik ve miktar setlerinin bir değeri değişen nesneler; tolerans metreyle. Değişen, Eklenen, Silinen tablolarında satır seçilince değişiklikler okunur; işaretlenen satırlar sorun olarak BCF 3.0 dosyasına yazılır, her sorunun bakışı yeni revizyondaki nesnesini seçer ve ona bakar. cad.ifc.compare ve cad.bcf.write ile.",
+      "aliases": [
+        "IFCKARSILASTIR",
+        "IFCDIFF",
+        "REVIZYONFARKI"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "arch.bcfIssues",
+      "title": "BCF sorunları",
+      "short": "BCF sorunları",
+      "icon": "bcfIssues",
+      "description": "Başka bir programın ya da KentOS'un yazdığı BCF dosyasının (3.0, 2.1) sorunlarını okur: başlık, tür, durum, öncelik, yazan, atanan, etiketler, açıklama, yorumlar ve bakışların seçtiği nesneler. Sorunların andığı IFC dosyası seçilirse nesnelerin modeldeki sınıfı ve adı, KentOS'un yazdığı modelse çizimdeki karşılığı bulunur; Çizimde seç onları seçer ve gösterir. cad.bcf.read ile.",
+      "aliases": [
+        "BCF",
+        "BCFOKU",
+        "SORUNLAR"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "arch.digitalRules",
       "title": "Dijital proje kuralları",
       "short": "Dijital kurallar",
@@ -5785,6 +5815,8 @@
     "archAudit": "<path d=\"M9 16H2.5V3.5H15v5\"/><path d=\"M2.5 9.5h4M9 9.5V3.5\"/><circle cx=\"13.6\" cy=\"13.6\" r=\"3\"/><path d=\"M15.8 15.8 18.2 18.2\"/>",
     "qualityForm": "<rect x=\"3.5\" y=\"2.5\" width=\"13\" height=\"15\" rx=\"0.8\"/><path d=\"M6 6.4l1 1 1.8-2\" stroke-width=\"1\"/><path d=\"M10.5 6.5h4\" stroke-width=\"0.9\"/><path d=\"M6 10.4l1 1 1.8-2\" stroke-width=\"1\"/><path d=\"M10.5 10.5h4\" stroke-width=\"0.9\"/><path d=\"M6 14.5h2.5M10.5 14.5h4\" stroke-width=\"0.9\"/>",
     "delivery": "<path d=\"M3 2.5h7l3 3v10H3z\" stroke-width=\"1.2\"/><path d=\"M10 2.5v3h3\" stroke-width=\"1\"/><path d=\"M5.5 8.5h5M5.5 11h5\" stroke-width=\"1\"/><path d=\"M11 16.5h7M15.5 14l2.5 2.5-2.5 2.5\" stroke-width=\"1.5\"/>",
+    "ifcCompare": "<rect x=\"2.5\" y=\"7.5\" width=\"7\" height=\"7\" rx=\"0.8\" stroke-dasharray=\"1.6 1.3\" stroke-width=\"1.2\"/><rect x=\"10.5\" y=\"2.5\" width=\"7\" height=\"7\" rx=\"0.8\" stroke-width=\"1.4\"/><path d=\"M4 18h10.5\" stroke-width=\"1.2\"/><path d=\"M12.5 16.2l2 1.8-2 1.8\" stroke-width=\"1.2\"/>",
+    "bcfIssues": "<path d=\"M2.5 3.5h15v10h-8l-4 3.5v-3.5h-3z\" stroke-width=\"1.3\"/><path d=\"M10 5.5l3 1.5v3.5l-3 1.5-3-1.5V7z\" stroke-width=\"1.1\"/><path d=\"M7 7l3 1.5 3-1.5M10 8.5V12\" stroke-width=\"0.9\"/>",
     "modelUnderlay": "<rect x=\"3\" y=\"3\" width=\"14\" height=\"14\" rx=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M6.5 6.5h7M6.5 13.5h7M10 6.5v7\" stroke-width=\"1.6\"/>",
     "digitalRules": "<path d=\"M10 5.2C8 3.9 5.4 3.5 2.5 4v11.5c2.9-.5 5.5-.1 7.5 1.2 2-1.3 4.6-1.7 7.5-1.2V4c-2.9-.5-5.5-.1-7.5 1.2z\" stroke-width=\"1.2\"/><path d=\"M10 5.2v11.5\" stroke-width=\"1\"/><path d=\"M4.8 7.8h3M4.8 10.3h3M12.2 7.8h3\" stroke-width=\"0.9\"/><path d=\"M12.4 10.4v4.4l1.3-1 1.3 1v-4.4z\" fill=\"currentColor\" fill-opacity=\".35\" stroke-width=\"0.9\"/>",
     "casework": "<path d=\"M1.5 3h17\"/><path d=\"M2 5v10.5h16V5z\"/><path d=\"M7.5 5v10.5M12.5 5v10.5\"/><rect x=\"8.6\" y=\"7.2\" width=\"2.8\" height=\"6\" rx=\"1\"/><circle cx=\"15.2\" cy=\"8.3\" r=\"1.25\"/><circle cx=\"15.2\" cy=\"12.3\" r=\"1.25\"/>",

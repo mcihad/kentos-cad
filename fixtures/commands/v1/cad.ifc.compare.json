@@ -1,0 +1,1483 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.ifc.compare",
+  "commandVersion": 1,
+  "title": "IFC revizyonlarını karşılaştır: GlobalId ile eşlenen nesnelerin eklenmesi, silinmesi ve değişiklikleri",
+  "note": "ADR 8103. Dosyaları IfcOpenShell yazar; beklenenler scripts/fixtures/ifc_compare_cases.py'nin ADR'den yazılmış kurallarıyla IfcOpenShell'in okumasından, KentOS kodu yok.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "IFC karşılaştırması",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 100,
+      "workspace": "cad"
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizim",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": []
+  },
+  "cases": [
+    {
+      "name": "Aynı model: değişiklik yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/ayni.ifc"
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/ayni.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "added": [],
+              "removed": [],
+              "changed": [],
+              "unchanged": 12,
+              "repeated": [],
+              "tolerance": 0.001
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dosya kendisiyle: değişiklik yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/taban.ifc"
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "added": [],
+              "removed": [],
+              "changed": [],
+              "unchanged": 12,
+              "repeated": [],
+              "tolerance": 0.001
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Taşınan duvar: kutusunun ortası 0,30 m kaydı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/tasinan.ifc"
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/tasinan.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "added": [],
+              "removed": [],
+              "changed": [
+                {
+                  "globalId": "3V1pbFfmXS4gaivXfzL5hn",
+                  "class": "IfcWall",
+                  "changes": [
+                    {
+                      "kind": "moved",
+                      "by": [
+                        0.0,
+                        0.30000000000000004,
+                        0.0
+                      ],
+                      "distance": 0.30000000000000004
+                    }
+                  ],
+                  "name": "D-01"
+                }
+              ],
+              "unchanged": 11,
+              "repeated": [],
+              "tolerance": 0.001
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Toleranstan az kayma değişiklik değildir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/az-tasinan.ifc"
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/az-tasinan.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "added": [],
+              "removed": [],
+              "changed": [],
+              "unchanged": 12,
+              "repeated": [],
+              "tolerance": 0.001
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "0,1 mm toleransta yarım milimetre kayma değişikliktir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/az-tasinan.ifc",
+            "tolerance": 0.0001
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/az-tasinan.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "added": [],
+              "removed": [],
+              "changed": [
+                {
+                  "globalId": "3V1pbFfmXS4gaivXfzL5hn",
+                  "class": "IfcWall",
+                  "changes": [
+                    {
+                      "kind": "moved",
+                      "by": [
+                        0.0,
+                        0.0005000000000000004,
+                        0.0
+                      ],
+                      "distance": 0.0005000000000000004
+                    }
+                  ],
+                  "name": "D-01"
+                }
+              ],
+              "unchanged": 11,
+              "repeated": [],
+              "tolerance": 0.0001
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uzayan duvar: ortası kaydı, boyu değişti",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/uzayan.ifc"
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/uzayan.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "added": [],
+              "removed": [],
+              "changed": [
+                {
+                  "globalId": "3HDicuAM1RoPCtvQftpcfs",
+                  "class": "IfcWall",
+                  "changes": [
+                    {
+                      "kind": "moved",
+                      "by": [
+                        0.5,
+                        0.0,
+                        0.0
+                      ],
+                      "distance": 0.5
+                    },
+                    {
+                      "kind": "resized",
+                      "old": [
+                        4.0,
+                        0.20000000000000018,
+                        3.0
+                      ],
+                      "new": [
+                        5.0,
+                        0.20000000000000018,
+                        3.0
+                      ]
+                    }
+                  ],
+                  "name": "D-02"
+                }
+              ],
+              "unchanged": 11,
+              "repeated": [],
+              "tolerance": 0.001
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "0,5 m toleransta 0,5 m'lik değişiklik görülmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/uzayan.ifc",
+            "tolerance": 0.5
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/uzayan.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "added": [],
+              "removed": [],
+              "changed": [
+                {
+                  "globalId": "3HDicuAM1RoPCtvQftpcfs",
+                  "class": "IfcWall",
+                  "changes": [
+                    {
+                      "kind": "resized",
+                      "old": [
+                        4.0,
+                        0.20000000000000018,
+                        3.0
+                      ],
+                      "new": [
+                        5.0,
+                        0.20000000000000018,
+                        3.0
+                      ]
+                    }
+                  ],
+                  "name": "D-02"
+                }
+              ],
+              "unchanged": 11,
+              "repeated": [],
+              "tolerance": 0.5
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sınıfı değişen kolon",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/sinif.ifc"
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/sinif.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "added": [],
+              "removed": [],
+              "changed": [
+                {
+                  "globalId": "0nJ_kqh91I4hu6TmLzCzTf",
+                  "class": "IfcMember",
+                  "changes": [
+                    {
+                      "kind": "class",
+                      "old": "IfcColumn",
+                      "new": "IfcMember"
+                    },
+                    {
+                      "kind": "attribute",
+                      "name": "PredefinedType",
+                      "old": "COLUMN",
+                      "new": "POST"
+                    }
+                  ],
+                  "name": "K-01"
+                }
+              ],
+              "unchanged": 11,
+              "repeated": [],
+              "tolerance": 0.001
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Adı, açıklaması, etiketi ve mahalin uzun adı değişti",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/oznitelik.ifc"
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/oznitelik.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "added": [],
+              "removed": [],
+              "changed": [
+                {
+                  "globalId": "0s_Oh67SzMoPbUPrAgRTO5",
+                  "class": "IfcSpace",
+                  "changes": [
+                    {
+                      "kind": "attribute",
+                      "name": "LongName",
+                      "old": "Salon",
+                      "new": "Oturma odası"
+                    }
+                  ],
+                  "name": "Z01"
+                },
+                {
+                  "globalId": "3V1pbFfmXS4gaivXfzL5hn",
+                  "class": "IfcWall",
+                  "changes": [
+                    {
+                      "kind": "attribute",
+                      "name": "Name",
+                      "old": "D-01",
+                      "new": "D-01a"
+                    },
+                    {
+                      "kind": "attribute",
+                      "name": "Description",
+                      "new": "Taşıyıcı değil"
+                    },
+                    {
+                      "kind": "attribute",
+                      "name": "Tag",
+                      "old": "W1"
+                    }
+                  ],
+                  "name": "D-01a"
+                }
+              ],
+              "unchanged": 10,
+              "repeated": [],
+              "tolerance": 0.001
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Başka kata alınan duvar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/kat.ifc"
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/kat.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "added": [],
+              "removed": [],
+              "changed": [
+                {
+                  "globalId": "3HDicuAM1RoPCtvQftpcfs",
+                  "class": "IfcWall",
+                  "changes": [
+                    {
+                      "kind": "container",
+                      "old": {
+                        "globalId": "0XqYGl5q5SuxUKwNsyYwY8",
+                        "class": "IfcBuildingStorey",
+                        "name": "Zemin"
+                      },
+                      "new": {
+                        "globalId": "0e$0S_eSPMJe5EoJJaMp86",
+                        "class": "IfcBuildingStorey",
+                        "name": "1. Kat"
+                      }
+                    }
+                  ],
+                  "name": "D-02"
+                }
+              ],
+              "unchanged": 11,
+              "repeated": [],
+              "tolerance": 0.001
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tipi değişen duvarlar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/tip.ifc"
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/tip.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "added": [],
+              "removed": [],
+              "changed": [
+                {
+                  "globalId": "3V1pbFfmXS4gaivXfzL5hn",
+                  "class": "IfcWall",
+                  "changes": [
+                    {
+                      "kind": "type",
+                      "old": {
+                        "globalId": "3POL3e5GHVmx6XrTYI2wd0",
+                        "class": "IfcWallType",
+                        "name": "Duvar tipi A"
+                      }
+                    },
+                    {
+                      "kind": "property",
+                      "set": "Pset_WallCommon",
+                      "fromType": true,
+                      "name": "AcousticRating",
+                      "old": {
+                        "kind": "text",
+                        "text": "45 dB"
+                      }
+                    }
+                  ],
+                  "name": "D-01"
+                },
+                {
+                  "globalId": "3HDicuAM1RoPCtvQftpcfs",
+                  "class": "IfcWall",
+                  "changes": [
+                    {
+                      "kind": "type",
+                      "new": {
+                        "globalId": "3POL3e5GHVmx6XrTYI2wd0",
+                        "class": "IfcWallType",
+                        "name": "Duvar tipi A"
+                      }
+                    },
+                    {
+                      "kind": "property",
+                      "set": "Pset_WallCommon",
+                      "fromType": true,
+                      "name": "AcousticRating",
+                      "new": {
+                        "kind": "text",
+                        "text": "45 dB"
+                      }
+                    }
+                  ],
+                  "name": "D-02"
+                }
+              ],
+              "unchanged": 10,
+              "repeated": [],
+              "tolerance": 0.001
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yangın sınıfı, dış duvar, eklenen ve silinen özellikler; dokuz basamağa eşit miktar aynı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/ozellik.ifc"
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/ozellik.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "added": [],
+              "removed": [],
+              "changed": [
+                {
+                  "globalId": "3V1pbFfmXS4gaivXfzL5hn",
+                  "class": "IfcWall",
+                  "changes": [
+                    {
+                      "kind": "property",
+                      "set": "Pset_WallCommon",
+                      "fromType": false,
+                      "name": "FireRating",
+                      "old": {
+                        "kind": "text",
+                        "text": "REI 60"
+                      },
+                      "new": {
+                        "kind": "text",
+                        "text": "REI 90"
+                      }
+                    },
+                    {
+                      "kind": "property",
+                      "set": "Pset_WallCommon",
+                      "fromType": false,
+                      "name": "IsExternal",
+                      "old": {
+                        "kind": "logical",
+                        "logical": true
+                      },
+                      "new": {
+                        "kind": "logical",
+                        "logical": false
+                      }
+                    },
+                    {
+                      "kind": "property",
+                      "set": "Pset_WallCommon",
+                      "fromType": false,
+                      "name": "LoadBearing",
+                      "new": {
+                        "kind": "logical",
+                        "logical": true
+                      }
+                    }
+                  ],
+                  "name": "D-01"
+                },
+                {
+                  "globalId": "23ibcHzpbJoPmQzuEzEnss",
+                  "class": "IfcDoor",
+                  "changes": [
+                    {
+                      "kind": "property",
+                      "set": "Pset_DoorCommon",
+                      "fromType": false,
+                      "name": "FireRating",
+                      "old": {
+                        "kind": "text",
+                        "text": "EI 30"
+                      }
+                    }
+                  ],
+                  "name": "Kapi 1"
+                }
+              ],
+              "unchanged": 10,
+              "repeated": [],
+              "tolerance": 0.001
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tipin özelliği: tipi ve onu taşıyan duvar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/tip-ozellik.ifc"
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/tip-ozellik.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "added": [],
+              "removed": [],
+              "changed": [
+                {
+                  "globalId": "3POL3e5GHVmx6XrTYI2wd0",
+                  "class": "IfcWallType",
+                  "changes": [
+                    {
+                      "kind": "property",
+                      "set": "Pset_WallCommon",
+                      "fromType": false,
+                      "name": "AcousticRating",
+                      "old": {
+                        "kind": "text",
+                        "text": "45 dB"
+                      },
+                      "new": {
+                        "kind": "text",
+                        "text": "50 dB"
+                      }
+                    }
+                  ],
+                  "name": "Duvar tipi A"
+                },
+                {
+                  "globalId": "3V1pbFfmXS4gaivXfzL5hn",
+                  "class": "IfcWall",
+                  "changes": [
+                    {
+                      "kind": "property",
+                      "set": "Pset_WallCommon",
+                      "fromType": true,
+                      "name": "AcousticRating",
+                      "old": {
+                        "kind": "text",
+                        "text": "45 dB"
+                      },
+                      "new": {
+                        "kind": "text",
+                        "text": "50 dB"
+                      }
+                    }
+                  ],
+                  "name": "D-01"
+                }
+              ],
+              "unchanged": 10,
+              "repeated": [],
+              "tolerance": 0.001
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eklenen duvar, silinen döşeme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/eklenen-silinen.ifc"
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/eklenen-silinen.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "added": [
+                {
+                  "globalId": "2KGCbm9BDHnPWwdJJiKiSk",
+                  "class": "IfcWall",
+                  "name": "D-03"
+                }
+              ],
+              "removed": [
+                {
+                  "globalId": "02vP6p26XQu9DRW2d0ncdC",
+                  "class": "IfcSlab",
+                  "name": "DS-01"
+                }
+              ],
+              "changed": [],
+              "unchanged": 11,
+              "repeated": [],
+              "tolerance": 0.001
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gövdesi olmayan kapıya gövde gelir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/govde.ifc"
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/govde.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "added": [],
+              "removed": [],
+              "changed": [
+                {
+                  "globalId": "23ibcHzpbJoPmQzuEzEnss",
+                  "class": "IfcDoor",
+                  "changes": [
+                    {
+                      "kind": "body",
+                      "old": false,
+                      "new": true
+                    }
+                  ],
+                  "name": "Kapi 1"
+                }
+              ],
+              "unchanged": 11,
+              "repeated": [],
+              "tolerance": 0.001
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ters yönde: eklenen silinen, silinen eklenen olur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/eklenen-silinen.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/taban.ifc"
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/eklenen-silinen.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "added": [
+                {
+                  "globalId": "02vP6p26XQu9DRW2d0ncdC",
+                  "class": "IfcSlab",
+                  "name": "DS-01"
+                }
+              ],
+              "removed": [
+                {
+                  "globalId": "2KGCbm9BDHnPWwdJJiKiSk",
+                  "class": "IfcWall",
+                  "name": "D-03"
+                }
+              ],
+              "changed": [],
+              "unchanged": 11,
+              "repeated": [],
+              "tolerance": 0.001
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Önizleme aynı sonucu verir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/ozellik.ifc"
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/ozellik.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "added": [],
+              "removed": [],
+              "changed": [
+                {
+                  "globalId": "3V1pbFfmXS4gaivXfzL5hn",
+                  "class": "IfcWall",
+                  "changes": [
+                    {
+                      "kind": "property",
+                      "set": "Pset_WallCommon",
+                      "fromType": false,
+                      "name": "FireRating",
+                      "old": {
+                        "kind": "text",
+                        "text": "REI 60"
+                      },
+                      "new": {
+                        "kind": "text",
+                        "text": "REI 90"
+                      }
+                    },
+                    {
+                      "kind": "property",
+                      "set": "Pset_WallCommon",
+                      "fromType": false,
+                      "name": "IsExternal",
+                      "old": {
+                        "kind": "logical",
+                        "logical": true
+                      },
+                      "new": {
+                        "kind": "logical",
+                        "logical": false
+                      }
+                    },
+                    {
+                      "kind": "property",
+                      "set": "Pset_WallCommon",
+                      "fromType": false,
+                      "name": "LoadBearing",
+                      "new": {
+                        "kind": "logical",
+                        "logical": true
+                      }
+                    }
+                  ],
+                  "name": "D-01"
+                },
+                {
+                  "globalId": "23ibcHzpbJoPmQzuEzEnss",
+                  "class": "IfcDoor",
+                  "changes": [
+                    {
+                      "kind": "property",
+                      "set": "Pset_DoorCommon",
+                      "fromType": false,
+                      "name": "FireRating",
+                      "old": {
+                        "kind": "text",
+                        "text": "EI 30"
+                      }
+                    }
+                  ],
+                  "name": "Kapi 1"
+                }
+              ],
+              "unchanged": 10,
+              "repeated": [],
+              "tolerance": 0.001
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bir GlobalId iki nesnede: karşılaştırılmaz, uyarılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/tekrar.ifc"
+          },
+          "within": 1e-06,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "older": {
+                "path": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 12
+              },
+              "newer": {
+                "path": "$fixture:ifc/v1/karsilastirma/tekrar.ifc",
+                "schema": "IFC4X3_ADD2",
+                "objects": 13
+              },
+              "added": [],
+              "removed": [],
+              "changed": [],
+              "unchanged": 11,
+              "repeated": [
+                {
+                  "file": "newer",
+                  "globalId": "3HDicuAM1RoPCtvQftpcfs"
+                }
+              ],
+              "tolerance": 0.001
+            },
+            "warnings": [
+              {
+                "code": "ifc_repeated_global_id",
+                "message": "$any"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eski dosyanın yolu boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "",
+            "newer": "$fixture:ifc/v1/karsilastirma/taban.ifc"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "older"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eski dosyanın yolu göreli",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/taban.ifc"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "older"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eski dosya .ifc değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.txt",
+            "newer": "$fixture:ifc/v1/karsilastirma/taban.ifc"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "older"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeni dosya yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/yok.ifc"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "newer"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Negatif tolerans",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "tolerance": -0.001
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_tolerance",
+              "message": "$any",
+              "path": "tolerance"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "0,1 mm'den küçük tolerans",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "tolerance": 5e-05
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_tolerance",
+              "message": "$any",
+              "path": "tolerance"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "0,5 m'den büyük tolerans",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "tolerance": 0.6
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_tolerance",
+              "message": "$any",
+              "path": "tolerance"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yollar toleranstan önce",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "",
+            "tolerance": 0.6
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "newer"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IFC olmayan eski dosya",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:arch/v1/ifc/var.ifc",
+            "newer": "$fixture:ifc/v1/karsilastirma/taban.ifc"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "ifc_unreadable",
+              "message": "$any",
+              "path": "older"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IFC olmayan yeni dosya",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "older": "$fixture:ifc/v1/karsilastirma/taban.ifc",
+            "newer": "$fixture:arch/v1/ifc/var.ifc"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "ifc_unreadable",
+              "message": "$any",
+              "path": "newer"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

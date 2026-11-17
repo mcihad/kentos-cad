@@ -172,6 +172,18 @@ macro_rules! arch_cases {
                 use kentos_native_application::ifc_inspect;
                 $then!(ifc_inspect, kentos_commands::IfcInspect)
             }
+            kentos_commands::CAD_IFC_COMPARE => {
+                use kentos_native_application::ifc_compare;
+                $then!(ifc_compare, kentos_commands::IfcCompare)
+            }
+            kentos_commands::CAD_BCF_WRITE => {
+                use kentos_native_application::bcf_exchange::write as bcf_write;
+                $then!(bcf_write, kentos_commands::BcfWrite)
+            }
+            kentos_commands::CAD_BCF_READ => {
+                use kentos_native_application::bcf_exchange::read as bcf_read;
+                $then!(bcf_read, kentos_commands::BcfRead)
+            }
             kentos_commands::CAD_VIEWS_EDIT => $then!(views_edit, ViewsEdit),
             _ => $else,
         }

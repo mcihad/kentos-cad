@@ -659,6 +659,34 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &["ifc_read_findings"],
         targets: none,
     },
+    // Two revisions of an IFC model compared (plan/ifc-uyum.md IFC-10, docs/adr/8103).
+    Entry {
+        id: "cad.ifc.compare",
+        refusals: &[&["invalid_file_path", "invalid_tolerance", "ifc_unreadable"]],
+        warnings: &["ifc_repeated_global_id"],
+        targets: none,
+    },
+    // Issues written as BCF (docs/adr/8103).
+    Entry {
+        id: "cad.bcf.write",
+        refusals: &[&[
+            "invalid_file_path",
+            "file_exists",
+            "invalid_bcf_topic",
+            "ifc_unreadable",
+            "ifc_object_not_found",
+            "ifc_no_body",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
+    // Issues read from BCF (docs/adr/8103).
+    Entry {
+        id: "cad.bcf.read",
+        refusals: &[&["invalid_file_path", "bcf_unreadable", "ifc_unreadable"]],
+        warnings: &[],
+        targets: none,
+    },
     // Planı tanı: an exploded plan read as walls and openings (plan/architecture-advanced.md M48, docs/adr/8048).
     Entry {
         id: "cad.arch.recognize",

@@ -58,6 +58,10 @@ pub(crate) struct ArchUiState {
     pub(crate) underlays: crate::underlays::Underlays,
     /// Altlık modeller's window (underlays_window.rs, docs/adr/8101).
     pub(crate) underlays_window: Option<crate::underlays_window::Window>,
+    /// IFC revizyonlarını karşılaştır's window (ifc_compare_window.rs, docs/adr/8103).
+    pub(crate) ifc_compare_window: Option<crate::ifc_compare_window::Window>,
+    /// BCF sorunları's window (bcf_window.rs, docs/adr/8103).
+    pub(crate) bcf_window: Option<crate::bcf_window::Window>,
     /// Planda seç waits for a point on an underlay's plan.
     pub(crate) underlay_picking: bool,
 }
@@ -101,6 +105,10 @@ pub(crate) enum Event {
     ),
     /// Altlık modeller (underlays_window.rs, docs/adr/8101).
     Underlays(crate::underlays_window::Event),
+    /// IFC revizyonlarını karşılaştır (ifc_compare_window.rs, docs/adr/8103).
+    IfcCompare(crate::ifc_compare_window::Event),
+    /// BCF sorunları (bcf_window.rs, docs/adr/8103).
+    Bcf(crate::bcf_window::Event),
 }
 
 /// The architecture (Mimari) module's windows, `Dialog::Arch`.
@@ -146,6 +154,10 @@ pub(crate) enum ArchDialogKind {
     Deliveries,
     /// Altlık modeller (underlays_window.rs, docs/adr/8101); the window is `ArchUiState::underlays_window`.
     Underlays,
+    /// IFC revizyonlarını karşılaştır (ifc_compare_window.rs, docs/adr/8103).
+    IfcCompare,
+    /// BCF sorunları (bcf_window.rs, docs/adr/8103).
+    Bcf,
 }
 
 impl App {
@@ -173,6 +185,8 @@ impl App {
             Event::Deliveries(event) => return self.deliveries_event(event),
             Event::UnderlayRead(id, key, read) => self.underlay_read(id, *key, read),
             Event::Underlays(event) => return self.underlays_event(event),
+            Event::IfcCompare(event) => return self.ifc_compare_event(event),
+            Event::Bcf(event) => return self.bcf_event(event),
             Event::ArchTemplate(event) => self.architecture_template_event(event),
         }
         Task::none()
@@ -200,6 +214,8 @@ impl App {
             ArchDialogKind::DigitalRules => self.digital_rules_view(),
             ArchDialogKind::Deliveries => self.deliveries_view(),
             ArchDialogKind::Underlays => self.underlays_view(),
+            ArchDialogKind::IfcCompare => self.ifc_compare_view(),
+            ArchDialogKind::Bcf => self.bcf_view(),
         }
     }
 }

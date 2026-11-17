@@ -22,6 +22,10 @@ pub mod cad_arch_audit;
 pub mod cad_arch_ifc;
 #[path = "arch/cad_ifc_inspect.rs"]
 pub mod cad_ifc_inspect;
+#[path = "arch/cad_ifc_compare.rs"]
+pub mod cad_ifc_compare;
+#[path = "arch/cad_bcf.rs"]
+pub mod cad_bcf;
 #[path = "arch/cad_arch_recognize.rs"]
 pub mod cad_arch_recognize;
 #[path = "arch/cad_casework.rs"]
@@ -437,6 +441,8 @@ pub use cad_arch::*;
 pub use cad_arch_audit::*;
 pub use cad_arch_ifc::*;
 pub use cad_ifc_inspect::*;
+pub use cad_ifc_compare::*;
+pub use cad_bcf::*;
 pub use cad_arch_recognize::*;
 pub use cad_casework::*;
 pub use cad_levels::*;

@@ -3076,6 +3076,9 @@ mod tests {
                         serde_json::from_value::<crate::ExportIfcBuilding>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_IFC_INSPECT => serde_json::from_value::<crate::IfcInspect>(e.input.clone()).map(|_| ()),
+                    crate::CAD_IFC_COMPARE => serde_json::from_value::<crate::IfcCompare>(e.input.clone()).map(|_| ()),
+                    crate::CAD_BCF_WRITE => serde_json::from_value::<crate::BcfWrite>(e.input.clone()).map(|_| ()),
+                    crate::CAD_BCF_READ => serde_json::from_value::<crate::BcfRead>(e.input.clone()).map(|_| ()),
                     crate::FILE_EXPORT_GLTF => serde_json::from_value::<crate::ExportGltf>(e.input.clone()).map(|_| ()),
                     crate::ROAD_STAKEOUT_SEND => {
                         serde_json::from_value::<crate::StakeoutSend>(e.input.clone()).map(|_| ())
@@ -4078,6 +4081,13 @@ mod tests {
                         }
                         crate::CAD_IFC_INSPECT => {
                             serde_json::from_value::<crate::IfcInspected>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_IFC_COMPARE => {
+                            serde_json::from_value::<crate::IfcCompared>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_BCF_WRITE => serde_json::from_value::<crate::BcfWritten>(output.clone()).map(|_| ()),
+                        crate::CAD_BCF_READ => {
+                            serde_json::from_value::<crate::BcfReadOutput>(output.clone()).map(|_| ())
                         }
                         crate::FILE_EXPORT_GLTF => {
                             serde_json::from_value::<crate::GltfExported>(output.clone()).map(|_| ())

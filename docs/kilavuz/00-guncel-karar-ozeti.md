@@ -343,6 +343,12 @@
     etiketle, uzaklık ve dönme; aynı sınıftan kutusu tolerans içindeki eleman eşleşir, eşleşmeyen dosya elemanı çizimin
     bütün gövdeleriyle (`kentos_ifc::clash`: kutu ön süzgeç, kesişen yüzey ya da 27 tanık noktası; değen yüz çakışma
     değildir). Tolerans 0,0001–0,5 m, varsayılan 1 mm. Altlık modeller penceresinin Denetim bölümü.
+  - **IFC revizyonları ve BCF (17 Kasım 2026; [ADR 8103](../adr/8103-ifc-revisions-and-bcf.md), K169–K174):**
+    `cad.ifc.compare` iki revizyonu yalnız GlobalId ile eşler: eklenen, silinen, değişen (sınıf, öznitelik, kat, tip, gövde:
+    kutunun ortası ve boyu toleransla, setlerin değerleri dokuz basamakla); `cad.bcf.write` BCF 3.0 yazar (bakış nesneleri
+    seçer, kamera kutularına bakar; GUID'ler kurallı türetilir, aynı girdi aynı bayt), `cad.bcf.read` 3.0 ve 2.1 okur,
+    nesneleri modele ve KentOS'un GlobalId'siyle çizime götürür. Mimari › Proje ▾: IFC revizyonlarını karşılaştır, BCF
+    sorunları.
   - **Künye role göre (17 Kasım 2026; [ADR 8100](../adr/8100-kunye-personal-particulars-by-role.md), K152–K156):** bulut
     projesinde künyenin kişisel bilgilerini (13 değişken: yapı sahibi, müellif, sicil, büro, tapu kaydı …; teslim eden)
     yalnız `feature.write` sahibi görür (`ProjectAccess::sees_particulars`); öbürleri bilgide ve anlık görüntüde "Gizli"

@@ -2484,6 +2484,21 @@
       ],
       "note": "Ekle, Başlangıç noktasına yerleştir, Uygula, Yeniden oku ve Kaldır cad.underlay.edit'e, Denetle cad.underlay.check'e gider (okur, yazmaz); planın ve 3B görünümün gövdeleri dosyadan okunur, çizime yazılmaz (ADR 8101, 8102)."
     },
+    "arch.ifcCompare": {
+      "level": "semantic",
+      "via": [
+        "cad.ifc.compare",
+        "cad.bcf.write"
+      ],
+      "note": "Karşılaştır cad.ifc.compare'e gider (okur, yazmaz); İşaretlileri BCF'ye yaz işaretlenen satırları cad.bcf.write ile yeni revizyonun dosyasına bağlı sorunlar olarak yazar (ADR 8103)."
+    },
+    "arch.bcfIssues": {
+      "level": "semantic",
+      "via": [
+        "cad.bcf.read"
+      ],
+      "note": "Oku cad.bcf.read'e gider; Çizimde seç, KentOS'un yazdığı GlobalId'lerin çizimdeki nesnelerini seçer, çizimi değiştirmez (ADR 8103)."
+    },
     "arch.digitalRules": {
       "level": "host",
       "note": "Dijital proje kuralları penceresi yönetmeliğin kural kataloğunu (kentos-digital-project, kentos-ifc) okur; çizime ve projeye dokunmaz. Python ve MCP için salt okuyan sorgu komutu sonraki iştir (ADR 8062 §9)."

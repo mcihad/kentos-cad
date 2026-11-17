@@ -171,7 +171,7 @@ fn object_of(model: &Model, bytes: &[u8], i: usize) -> Result<IfcInspectedObject
     })
 }
 
-fn value_of(v: &ValueKind) -> IfcValue {
+pub(crate) fn value_of(v: &ValueKind) -> IfcValue {
     match v {
         ValueKind::Text(s) => IfcValue::Text { text: s.clone() },
         ValueKind::Number { value, measure } => IfcValue::Number { number: *value, measure: measure.clone() },

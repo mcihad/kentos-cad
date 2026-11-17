@@ -536,8 +536,14 @@ biçimde karşı tarafa gider ve aynı nesneyi gösterir.
 bağımsız bir görüntüleyicide aynı nesneyi gösterir.
 
 **Durum (17 Kasım 2026):** hizalama denetimi yapıldı ([ADR 8102](../docs/adr/8102-underlay-alignment-and-clash.md),
-BIM-17): sistem, dönüşüm ve datum geometriden önce; katlar, akslar, aynı yerde duran ve çakışan elemanlar. **Kalan:**
-revizyon farkı ve BCF; ilk kabul bunlarla.
+BIM-17): sistem, dönüşüm ve datum geometriden önce; katlar, akslar, aynı yerde duran ve çakışan elemanlar. Revizyon farkı
+ve BCF yapıldı ([ADR 8103](../docs/adr/8103-ifc-revisions-and-bcf.md)): `cad.ifc.compare` (yalnız GlobalId; sınıf,
+öznitelik, kat, tip, gövde: taşınan ve boyu değişen, setlerin değerleri), `cad.bcf.write` (BCF 3.0, nesneleri seçen ve onlara
+bakan bakış), `cad.bcf.read` (3.0 ve 2.1; nesneler modelde ve çizimde); 28 + 29 + 20 bağımsız ortak durum; IFC
+revizyonlarını karşılaştır ve BCF sorunları pencereleri. **İlk kabul sağlandı:** kesit binasının iki revizyonunda taşınan iç
+duvar ve doğu duvarının REI 60 → REI 90'ı raporun tamamı; yazılan sorunu IfcOpenShell'in BCF kitaplığı okur, bakışı aynı
+duvarı seçer ve kamerası ona bakar. **Kalan:** bir masaüstü BCF görüntüleyicisinde elle açılış, çakışmanın BCF'si,
+sorunların inceleme notu olarak saklanması, bakışın görüntüsü, kutu içindeki biçim değişikliği.
 
 #### IFC-11 — Pilot, sürümler ve kurum kabulü [ ]
 

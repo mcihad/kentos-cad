@@ -822,7 +822,7 @@ bulgu olur. Farklı düşey datum, geometri denetiminden önce durdurur.
 IfcOpenShell'in yazdığı statik modelle hizalı: iki kat, yedi aks, 27 eleman eşleşir, çakışma yok. 40 cm kaydırılan A-1
 kolonu çakışır; "1. Kat" +0,150 m bulgu; ITRF96 datumlu model geometriye bakılmadan durur. `cad.underlay.check` (Python,
 MCP, 29 bağımsız ortak durum); Altlık modeller › Denetim (Katlar, Akslar, Çakışmalar, Yalnız birinde; çakışma satırı
-nesneyi seçer). **Kalan:** bulgunun BCF ile dışa verilmesi (IFC-10), boşluk çakışması, döşeme boşluğu ile şaft ve perde
+nesneyi seçer). **Kalan:** çakışma satırının sorun olarak BCF'ye yazılması (BCF yazımı ADR 8103'te var), boşluk çakışması, döşeme boşluğu ile şaft ve perde
 kuralları, büyük modelde uzamsal ön süzgeç, bulgunun disiplin ve revizyonla kaydı.
 
 #### BIM-18 — İdare inceleme çalışma alanı [ ]
@@ -910,7 +910,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
 | B18 ~ | Altlık model | IFC-09 | Statik model planda ve 3B'de altlık (ADR 8101: yerleştirme harita dönüşümüyle ya da istenince başlangıç noktasına, katın kesiti, 3B gövdeler, nesnenin ayrıntıları; gösterilemeyen nesnenin işareti ve bulutta dosyanın saklanması kaldı) |
-| B19 ~ | Dış disiplin ve çakışma; karşılaştırma ve sorun değişimi | BIM-17, IFC-10 | Çakışmalar nesnesiyle (ADR 8102: hizalama, kat ve aks, eşleşen ve çakışan elemanlar, datum ret; ilk kabul tamam; revizyon farkı ve BCF kaldı) |
+| B19 ~ | Dış disiplin ve çakışma; karşılaştırma ve sorun değişimi | BIM-17, IFC-10 | Çakışmalar nesnesiyle (ADR 8102: hizalama, kat ve aks, eşleşen ve çakışan elemanlar, datum ret; ADR 8103: revizyon farkı GlobalId ile, BCF 3.0 yazma ve 3.0/2.1 okuma; iki ilk kabul de tamam; çakışmanın BCF'si, sorunların notlarda saklanması, masaüstü BCF görüntüleyicisinde elle açılış kaldı) |
 | B20 | İdare inceleme çalışma alanı | BIM-18 | Gelen paket açılır, denetlenir, iade notu çıkar |
 
 ### Faz 5 — Kalite ve genişleme

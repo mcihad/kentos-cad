@@ -19,6 +19,8 @@ mod underlay_check;
 #[cfg(feature = "mod-arch")]
 mod delivery_limit;
 #[cfg(feature = "mod-arch")]
+mod ifc_revisions;
+#[cfg(feature = "mod-arch")]
 mod railing_audit;
 // Runs shafts and rooms through the registry by name (docs/adr/8054 §11).
 #[cfg(feature = "mod-arch")]

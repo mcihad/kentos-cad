@@ -2523,6 +2523,8 @@
        "arch.qualityForm",
        "arch.deliveries",
        "arch.underlays",
+       "arch.ifcCompare",
+       "arch.bcfIssues",
        "arch.digitalRules",
        "arch.navigator",
        "tool.viewCrop",

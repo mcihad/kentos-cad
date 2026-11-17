@@ -72492,6 +72492,458 @@
       ]
     },
     {
+      "id": "cad.ifc.compare",
+      "version": 1,
+      "title": "IFC revizyonlarını karşılaştır",
+      "summary": "Bir IFC modelinin iki revizyonunu (older eski, newer yeni; mutlak .ifc yolları) karşılaştırır; hiçbir şey yazmaz. Nesneler yalnız GlobalId'leriyle eşlenir: yalnız yenide olan eklenen (added, yeninin sırasıyla), yalnız eskide olan silinen (removed, eskinin sırasıyla), ikisinde olup bir şeyi değişen changed'dir (yeninin sırasıyla; sınıfı ve adı yenininki). Değişiklikler (kind): class; attribute (Name, Description, ObjectType, LongName, Tag, PredefinedType; yazılmamışsa yok); container (onu içeren mekân yapısı) ve type (tip nesnesi), GlobalId'leriyle; body (gövde yalnız bir tarafta); moved (gövde kutusunun ortası toleranstan çok kaydı: by yeni eksi eski, metre; distance); resized (kutunun x, y, z boyu bir eksende toleranstan çok değişti: old, new); property (setin adı, setin tipten gelip gelmediği, değerin adı, eski ve yeni değer dosyada yazıldığı gibi; yalnız bir tarafta olanın öbürü yok; dokuz basamağa eşit gerçel sayı aynıdır). Bir nesnenin değişiklikleri bu sırayla, setlerinki yeninin sırasıyla sonra yalnız eskide olanlar. Kutu içinde kalan biçim değişikliği burada görülmez. unchanged aynı kalan nesne sayısı; bir dosyada birden çok kez geçen GlobalId'nin nesneleri karşılaştırılmaz, repeated'da listelenir (ifc_repeated_global_id uyarısı). tolerance metre, 0,0001 ile 0,5 arası, verilmezse 0,001. Retler: invalid_file_path (older ya da newer), invalid_tolerance, ifc_unreadable.",
+      "aliases": [
+        "ifckarsilastir",
+        "ifcdiff",
+        "ifccompare"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.ifc.compare` v1: the older and the newer file (absolute, ending `.ifc`); a body whose box moves or\nchanges size by no more than `tolerance` metres is the same.\n\nRefusals, in this order: `invalid_file_path` (empty, relative, not `.ifc`, not there; at `older` or `newer`),\n`invalid_tolerance` (0.0001 to 0.5 m), `ifc_unreadable` (at the file's field). Warning: `ifc_repeated_global_id` (a\nGlobalId a file holds more than once: those objects are left out and listed).",
+        "properties": {
+          "newer": {
+            "type": "string"
+          },
+          "older": {
+            "type": "string"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "older",
+          "newer"
+        ],
+        "title": "IfcCompare",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.ifc.compare` v1, and its plan: the two files, what the newer added (in its order), removed (in the\nolder's order) and changed (in its order), how many objects are the same, the GlobalIds left out, the tolerance.",
+        "properties": {
+          "added": {
+            "items": {
+              "$ref": "#/$defs/IfcComparedObject"
+            },
+            "type": "array"
+          },
+          "changed": {
+            "items": {
+              "$ref": "#/$defs/IfcComparedChange"
+            },
+            "type": "array"
+          },
+          "newer": {
+            "$ref": "#/$defs/IfcComparedFile"
+          },
+          "older": {
+            "$ref": "#/$defs/IfcComparedFile"
+          },
+          "removed": {
+            "items": {
+              "$ref": "#/$defs/IfcComparedObject"
+            },
+            "type": "array"
+          },
+          "repeated": {
+            "items": {
+              "$ref": "#/$defs/IfcRepeatedId"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "unchanged": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "older",
+          "newer",
+          "added",
+          "removed",
+          "changed",
+          "unchanged",
+          "repeated",
+          "tolerance"
+        ],
+        "title": "IfcCompared",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.ifc.compare` v1, and its plan: the two files, what the newer added (in its order), removed (in the\nolder's order) and changed (in its order), how many objects are the same, the GlobalIds left out, the tolerance.",
+        "properties": {
+          "added": {
+            "items": {
+              "$ref": "#/$defs/IfcComparedObject"
+            },
+            "type": "array"
+          },
+          "changed": {
+            "items": {
+              "$ref": "#/$defs/IfcComparedChange"
+            },
+            "type": "array"
+          },
+          "newer": {
+            "$ref": "#/$defs/IfcComparedFile"
+          },
+          "older": {
+            "$ref": "#/$defs/IfcComparedFile"
+          },
+          "removed": {
+            "items": {
+              "$ref": "#/$defs/IfcComparedObject"
+            },
+            "type": "array"
+          },
+          "repeated": {
+            "items": {
+              "$ref": "#/$defs/IfcRepeatedId"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "unchanged": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "older",
+          "newer",
+          "added",
+          "removed",
+          "changed",
+          "unchanged",
+          "repeated",
+          "tolerance"
+        ],
+        "title": "IfcCompared",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "invalid_tolerance",
+          "ifc_unreadable"
+        ],
+        "warnings": [
+          "ifc_repeated_global_id"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İki revizyon",
+          "input": {
+            "newer": "/veri/bina-r2.ifc",
+            "older": "/veri/bina-r1.ifc"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.bcf.write",
+      "version": 1,
+      "title": "Sorunları BCF olarak yaz",
+      "summary": "Konuları (sorunları) BCF 3.0 dosyası olarak yazar (path mutlak, .bcf; overwrite üzerine yazar); çizimi değiştirmez. Her konu: guid (küçük harfli, tireli UUID; yoksa dosyanın yolu ve konunun sırasından kurulur), title (en çok 300 karakter), description ve yorumlar en çok 4000 karakter, topicType (yoksa Issue), status (yoksa Open), priority, labels, author, date (YYYY-AA-GGTss:dd:ss, bölgeli ya da UTC; yoksa şimdi, UTC), assignedTo, objects (model dosyasındaki IFC GlobalId'leri, en çok 1000), comments (author, date yoksa konunun, text). Nesneli konunun bir bakışı olur: nesneleri seçer, öbürleri görünür kalır; kamera nesnelerin gövdelerinin kutusuna güneybatıdan ve yukarıdan 60° görüş açısıyla bakar (dosyanın dünya koordinatında, metre). Nesneli konu için model (mutlak .ifc) gerekir; konunun başlığı dosyayı ve projesinin GlobalId'sini anar. Çıktı: yol, konu ve bakış sayısı, konuların GUID'leri. Retler: invalid_file_path (path ya da model), file_exists, invalid_bcf_topic (alanın yoluyla), ifc_unreadable, ifc_object_not_found, ifc_no_body.",
+      "aliases": [
+        "bcfyaz",
+        "bcfexport"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.bcf.write` v1: the BCF file (absolute, ending `.bcf`), whether it may be written over, the IFC file\nthe topics' objects are in (absolute, `.ifc`; needed when a topic has objects: its viewpoint's camera looks at their\nbodies and the topic names the file), the topics in order.\n\nRefusals, in this order: `invalid_file_path` (at `path` or `model`: empty, relative, another extension, a folder or\na model not there), `file_exists` (without `overwrite`), `invalid_bcf_topic` (no topic, more than 10 000; a GUID not\nlowercase hyphenated or given twice; an empty title, author or type; past a length; a date that does not read; more\nthan 1000 objects; objects without `model`; at the topic's field), `ifc_unreadable` (at `model`),\n`ifc_object_not_found` (a GlobalId the model does not hold, at the topic's `objects`), `ifc_no_body` (no object of a\ntopic has a body to look at).",
+        "properties": {
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "overwrite": {
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string"
+          },
+          "topics": {
+            "items": {
+              "$ref": "#/$defs/BcfTopicInput"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "topics"
+        ],
+        "title": "BcfWrite",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.bcf.write` v1, and its plan: the file, how many topics and viewpoints it holds, the topics' GUIDs in\norder.",
+        "properties": {
+          "guids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "topics": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "viewpoints": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "path",
+          "topics",
+          "viewpoints",
+          "guids"
+        ],
+        "title": "BcfWritten",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.bcf.write` v1, and its plan: the file, how many topics and viewpoints it holds, the topics' GUIDs in\norder.",
+        "properties": {
+          "guids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "topics": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "viewpoints": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "path",
+          "topics",
+          "viewpoints",
+          "guids"
+        ],
+        "title": "BcfWritten",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "invalid_bcf_topic",
+          "ifc_unreadable",
+          "ifc_object_not_found",
+          "ifc_no_body"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Taşınan duvar",
+          "input": {
+            "model": "/veri/bina-r2.ifc",
+            "path": "/veri/sorunlar.bcf",
+            "topics": [
+              {
+                "author": "mimar@buro",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ],
+                "title": "Duvar 50 cm taşınmış"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.bcf.read",
+      "version": 1,
+      "title": "BCF sorunlarını oku",
+      "summary": "BCF 3.0 ya da 2.1 dosyasının (path mutlak, .bcf ya da .bcfzip) konularını okur; hiçbir şey yazmaz. Her konu dosyada yazıldığı gibi: guid, tür, durum, başlık, öncelik, etiketler, tarih ve yazar, değiştirilme günü, kime atandığı, açıklama, başlığın andığı dosyalar, yorumlar (guid, gün, yazar, metin, bakış) ve bakışlar (seçilen nesnelerin GlobalId'leri, öbürlerinin görünürlüğü ve istisnaları, kamera: perspective görüş açısıyla ya da orthogonal gösterdiği yükseklikle, göz, yön, yukarı, en boy oranı; 2.1'de kamerasız olabilir; görüntünün adı). Konular klasörlerinin adına göre sıralı. objects: bakışların seçtiği nesneler GlobalId'lerine göre birer kez; model (mutlak .ifc) verilmişse dosyadaki nesnesi (sınıf, ad); GlobalId KentOS'un çizimin bir nesnesi için yazdığıysa ve çizimde varsa o nesnenin kalıcı kimliği (uid). Retler: invalid_file_path, bcf_unreadable, ifc_unreadable.",
+      "aliases": [
+        "bcfoku",
+        "bcfimport"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.bcf.read` v1: the BCF file (absolute, `.bcf` or `.bcfzip`) and, to lead the selected objects to their\nobjects, the IFC file the topics are about (absolute, `.ifc`).\n\nRefusals, in this order: `invalid_file_path` (at `path` or `model`), `bcf_unreadable` (not a zip, no `bcf.version`,\na version other than 3.0, 2.1 or 2.0, an XML that does not read, a viewpoint the topic names and the file lacks;\nthe message says which), `ifc_unreadable` (at `model`).",
+        "properties": {
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "BcfRead",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.bcf.read` v1, and its plan: the file, its BCF version, its topics (by their folders' names), and the\nobjects their viewpoints select, once each, by GlobalId.",
+        "properties": {
+          "objects": {
+            "items": {
+              "$ref": "#/$defs/BcfObject"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "topics": {
+            "items": {
+              "$ref": "#/$defs/BcfTopic"
+            },
+            "type": "array"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "version",
+          "topics",
+          "objects"
+        ],
+        "title": "BcfReadOutput",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.bcf.read` v1, and its plan: the file, its BCF version, its topics (by their folders' names), and the\nobjects their viewpoints select, once each, by GlobalId.",
+        "properties": {
+          "objects": {
+            "items": {
+              "$ref": "#/$defs/BcfObject"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "topics": {
+            "items": {
+              "$ref": "#/$defs/BcfTopic"
+            },
+            "type": "array"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "version",
+          "topics",
+          "objects"
+        ],
+        "title": "BcfReadOutput",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "bcf_unreadable",
+          "ifc_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Gelen sorunlar",
+          "input": {
+            "model": "/veri/bina-r2.ifc",
+            "path": "/veri/sorunlar.bcf"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.alignments.import",
       "version": 1,
       "title": "LandXML'den aks al",
@@ -112532,6 +112984,30 @@
       "meaning": "GlobalId'si verilen nesne dosyada yok."
     },
     {
+      "code": "ifc_repeated_global_id",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bir GlobalId dosyada birden çok nesnede: bu nesneler karşılaştırılmadı, listelendi."
+    },
+    {
+      "code": "ifc_no_body",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Konunun nesnelerinin hiçbirinin gövdesi yok: bakışın kamerası kurulamıyor."
+    },
+    {
+      "code": "invalid_bcf_topic",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "BCF konusu yazılamıyor: alanlardan biri eksik ya da geçersiz; ileti alanı ve nedenini söyler."
+    },
+    {
+      "code": "bcf_unreadable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "BCF dosyası okunamadı: zip değil, sürümü bilinmiyor ya da bir XML'i okunmuyor; ileti nedenini söyler."
+    },
+    {
       "code": "ifc_read_findings",
       "kind": "warning",
       "retryable": false,
@@ -127601,6 +128077,357 @@
         "index",
         "label",
         "ran"
+      ],
+      "type": "object"
+    },
+    "BcfCamera": {
+      "description": "A viewpoint's camera: `perspective` (its vertical field of view, degrees) or `orthogonal` (the height it shows,\nmetres); its eye, the way it looks and its up, in the IFC file's world, metres.",
+      "properties": {
+        "aspect": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "direction": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array",
+          "x-unit": "1"
+        },
+        "eye": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "fieldOfView": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "deg"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "scale": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "up": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "kind",
+        "eye",
+        "direction",
+        "up",
+        "aspect"
+      ],
+      "type": "object"
+    },
+    "BcfComment": {
+      "description": "A comment read.",
+      "properties": {
+        "author": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "guid": {
+          "type": "string"
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "viewpoint": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "guid",
+        "date",
+        "author"
+      ],
+      "type": "object"
+    },
+    "BcfCommentInput": {
+      "additionalProperties": false,
+      "description": "A comment written with a topic: its author, date (`YYYY-MM-DDThh:mm:ss`, with a zone or UTC; absent: the topic's)\nand text.",
+      "properties": {
+        "author": {
+          "type": "string"
+        },
+        "date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "author",
+        "text"
+      ],
+      "type": "object"
+    },
+    "BcfObject": {
+      "description": "An object some viewpoint selects, by its GlobalId: the `model` file's object it is, and the drawing's object (its\npersistent id) when the GlobalId is one KentOS wrote for it.",
+      "properties": {
+        "globalId": {
+          "type": "string"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/IfcComparedObject"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "uid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "globalId"
+      ],
+      "type": "object"
+    },
+    "BcfTopic": {
+      "description": "A topic read, as the file writes it; its files are the header's IFC file names.",
+      "properties": {
+        "assignedTo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "author": {
+          "type": "string"
+        },
+        "comments": {
+          "items": {
+            "$ref": "#/$defs/BcfComment"
+          },
+          "type": "array"
+        },
+        "created": {
+          "type": "string"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "files": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "guid": {
+          "type": "string"
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "modified": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "priority": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "topicType": {
+          "type": "string"
+        },
+        "viewpoints": {
+          "items": {
+            "$ref": "#/$defs/BcfViewpoint"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "guid",
+        "topicType",
+        "status",
+        "title",
+        "labels",
+        "created",
+        "author",
+        "files",
+        "comments",
+        "viewpoints"
+      ],
+      "type": "object"
+    },
+    "BcfTopicInput": {
+      "additionalProperties": false,
+      "description": "A topic to write: its GUID (lowercase, hyphenated; absent: made from the file's place and the topic's order), title,\ndescription, type (absent: `Issue`), status (absent: `Open`), priority, labels, author, date (absent: now, UTC),\nwhom it is assigned to, the objects it is about (IFC GlobalIds of the `model` file) and its comments.",
+      "properties": {
+        "assignedTo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "author": {
+          "type": "string"
+        },
+        "comments": {
+          "items": {
+            "$ref": "#/$defs/BcfCommentInput"
+          },
+          "type": "array"
+        },
+        "date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "guid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "labels": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "objects": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "priority": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "topicType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "title",
+        "author"
+      ],
+      "type": "object"
+    },
+    "BcfViewpoint": {
+      "description": "A viewpoint read: its GUID, the objects it selects, whether the rest shows and the objects excepted, its camera\n(absent only in a 2.1 file), its snapshot's name.",
+      "properties": {
+        "camera": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BcfCamera"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exceptions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "guid": {
+          "type": "string"
+        },
+        "selection": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "snapshot": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "visible": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "guid",
+        "selection",
+        "visible",
+        "exceptions"
       ],
       "type": "object"
     },
@@ -156563,6 +157390,318 @@
       ],
       "type": "object"
     },
+    "IfcChange": {
+      "description": "One change of an object both files have. `class`: its class; `attribute`: one of Name, Description, ObjectType,\nLongName, Tag, PredefinedType (absent where unset); `container`: the spatial structure containing it; `type`: its\ntype object; `body`: a body on one side only; `moved`: its box's middle moved (newer less older, metres) and how\nfar; `resized`: its box's size along x, y, z in each file; `property`: a value of one of its sets (the set's name,\nwhether the set is its type's, the value's name; absent on the side that has none).",
+      "oneOf": [
+        {
+          "properties": {
+            "kind": {
+              "const": "class",
+              "type": "string"
+            },
+            "new": {
+              "type": "string"
+            },
+            "old": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "old",
+            "new"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "attribute",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "new": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "old": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "container",
+              "type": "string"
+            },
+            "new": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/IfcComparedObject"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "old": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/IfcComparedObject"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "type",
+              "type": "string"
+            },
+            "new": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/IfcComparedObject"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "old": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/IfcComparedObject"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "body",
+              "type": "string"
+            },
+            "new": {
+              "type": "boolean"
+            },
+            "old": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "old",
+            "new"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "by": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "type": "array",
+              "x-unit": "length"
+            },
+            "distance": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "length"
+            },
+            "kind": {
+              "const": "moved",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "by",
+            "distance"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "resized",
+              "type": "string"
+            },
+            "new": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "type": "array",
+              "x-unit": "length"
+            },
+            "old": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "type": "array",
+              "x-unit": "length"
+            }
+          },
+          "required": [
+            "kind",
+            "old",
+            "new"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "fromType": {
+              "type": "boolean"
+            },
+            "kind": {
+              "const": "property",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "new": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/IfcValue"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "old": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/IfcValue"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "set": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "set",
+            "fromType",
+            "name"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "IfcComparedChange": {
+      "description": "An object both files have with what changed on it: its GlobalId, its class and name in the newer file, its changes\n(class, attributes, container, type, body, then its sets' values: the newer file's in its order, then the values only\nthe older has).",
+      "properties": {
+        "changes": {
+          "items": {
+            "$ref": "#/$defs/IfcChange"
+          },
+          "type": "array"
+        },
+        "class": {
+          "type": "string"
+        },
+        "globalId": {
+          "type": "string"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "globalId",
+        "class",
+        "changes"
+      ],
+      "type": "object"
+    },
+    "IfcComparedFile": {
+      "description": "A file compared: its path, its schema as the header declares it, how many objects it holds.",
+      "properties": {
+        "objects": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "path": {
+          "type": "string"
+        },
+        "schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "schema",
+        "objects"
+      ],
+      "type": "object"
+    },
+    "IfcComparedObject": {
+      "description": "An object as a list names it: its GlobalId, its class as the schema spells it and its name.",
+      "properties": {
+        "class": {
+          "type": "string"
+        },
+        "globalId": {
+          "type": "string"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "globalId",
+        "class"
+      ],
+      "type": "object"
+    },
     "IfcCompartment": {
       "additionalProperties": false,
       "description": "A fire compartment to write as a group of its rooms (docs/adr/8088; BYKHY 4/tt, 24): its rooms by persistent id, as\nthe standards package finds them.",
@@ -156802,6 +157941,22 @@
         "name",
         "class",
         "value"
+      ],
+      "type": "object"
+    },
+    "IfcRepeatedId": {
+      "description": "A GlobalId a file holds more than once (`older` or `newer`): its objects are left out of the comparison.",
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "globalId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "file",
+        "globalId"
       ],
       "type": "object"
     },

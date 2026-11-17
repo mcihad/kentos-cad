@@ -1163,6 +1163,14 @@ pub mod ifc_facts;
 #[cfg(feature = "mod-arch")]
 #[path = "arch/ifc_inspect.rs"]
 pub mod ifc_inspect;
+// İki IFC revizyonunu GlobalId ile karşılaştırır (plan/ifc-uyum.md IFC-10, docs/adr/8103).
+#[cfg(feature = "mod-arch")]
+#[path = "arch/ifc_compare.rs"]
+pub mod ifc_compare;
+// Sorunları BCF olarak yazar ve okur (docs/adr/8103).
+#[cfg(feature = "mod-arch")]
+#[path = "arch/bcf_exchange.rs"]
+pub mod bcf_exchange;
 // IFC dosyalarının koordinat sistemi ve harita dönüşümü: binanın ve yolun ortak kaynağı (docs/adr/8072 §3).
 pub mod ifc_system;
 #[cfg(feature = "mod-arch")]
@@ -2627,6 +2635,12 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_IFC_INSPECT,
         kentos_commands::CAD_IFC_INSPECT_VERSION,
     ),
+    (
+        kentos_commands::CAD_IFC_COMPARE,
+        kentos_commands::CAD_IFC_COMPARE_VERSION,
+    ),
+    (kentos_commands::CAD_BCF_WRITE, kentos_commands::CAD_BCF_WRITE_VERSION),
+    (kentos_commands::CAD_BCF_READ, kentos_commands::CAD_BCF_READ_VERSION),
     (
         kentos_commands::FILE_EXPORT_GLTF,
         kentos_commands::FILE_EXPORT_GLTF_VERSION,

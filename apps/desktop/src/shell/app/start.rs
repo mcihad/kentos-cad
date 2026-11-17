@@ -418,6 +418,8 @@ impl App {
                 deliveries: None,
                 underlays: Default::default(),
                 underlays_window: None,
+                ifc_compare_window: None,
+                bcf_window: None,
                 underlay_picking: false,
                 quantities: None,
             },

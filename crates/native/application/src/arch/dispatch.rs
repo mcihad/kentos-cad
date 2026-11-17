@@ -16,6 +16,15 @@ macro_rules! arch_commands {
             kentos_commands::CAD_IFC_INSPECT => {
                 crate::arch_dispatch::arch_arm!($command, $then, ifc_inspect, kentos_commands::IfcInspect)
             }
+            kentos_commands::CAD_IFC_COMPARE => {
+                crate::arch_dispatch::arch_arm!($command, $then, ifc_compare, kentos_commands::IfcCompare)
+            }
+            kentos_commands::CAD_BCF_WRITE => {
+                crate::arch_dispatch::arch_arm!($command, $then, bcf_write, kentos_commands::BcfWrite)
+            }
+            kentos_commands::CAD_BCF_READ => {
+                crate::arch_dispatch::arch_arm!($command, $then, bcf_read, kentos_commands::BcfRead)
+            }
             kentos_commands::CAD_WALLS_CREATE => {
                 crate::arch_dispatch::arch_arm!($command, $then, walls_create, WallsCreate)
             }

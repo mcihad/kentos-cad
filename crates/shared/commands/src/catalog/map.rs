@@ -1431,5 +1431,111 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        CommandDescriptor {
+            id: crate::CAD_IFC_COMPARE.into(),
+            version: crate::CAD_IFC_COMPARE_VERSION,
+            title: "IFC revizyonlarını karşılaştır".into(),
+            summary: "Bir IFC modelinin iki revizyonunu (older eski, newer yeni; mutlak .ifc yolları) karşılaştırır; hiçbir \
+                      şey yazmaz. Nesneler yalnız GlobalId'leriyle eşlenir: yalnız yenide olan eklenen (added, yeninin \
+                      sırasıyla), yalnız eskide olan silinen (removed, eskinin sırasıyla), ikisinde olup bir şeyi değişen \
+                      changed'dir (yeninin sırasıyla; sınıfı ve adı yenininki). Değişiklikler (kind): class; attribute \
+                      (Name, Description, ObjectType, LongName, Tag, PredefinedType; yazılmamışsa yok); container (onu \
+                      içeren mekân yapısı) ve type (tip nesnesi), GlobalId'leriyle; body (gövde yalnız bir tarafta); moved \
+                      (gövde kutusunun ortası toleranstan çok kaydı: by yeni eksi eski, metre; distance); resized (kutunun \
+                      x, y, z boyu bir eksende toleranstan çok değişti: old, new); property (setin adı, setin tipten gelip \
+                      gelmediği, değerin adı, eski ve yeni değer dosyada yazıldığı gibi; yalnız bir tarafta olanın öbürü \
+                      yok; dokuz basamağa eşit gerçel sayı aynıdır). Bir nesnenin değişiklikleri bu sırayla, setlerinki \
+                      yeninin sırasıyla sonra yalnız eskide olanlar. Kutu içinde kalan biçim değişikliği burada görülmez. \
+                      unchanged aynı kalan nesne sayısı; bir dosyada birden çok kez geçen GlobalId'nin nesneleri \
+                      karşılaştırılmaz, repeated'da listelenir (ifc_repeated_global_id uyarısı). tolerance metre, 0,0001 \
+                      ile 0,5 arası, verilmezse 0,001. Retler: invalid_file_path (older ya da newer), invalid_tolerance, \
+                      ifc_unreadable."
+                .into(),
+            aliases: vec!["ifckarsilastir".into(), "ifcdiff".into(), "ifccompare".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::IfcCompare>(),
+            output: schema::<crate::IfcCompared>(),
+            plan: Some(schema::<crate::IfcCompared>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İki revizyon".into(),
+                input: json!({ "older": "/veri/bina-r1.ifc", "newer": "/veri/bina-r2.ifc" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_BCF_WRITE.into(),
+            version: crate::CAD_BCF_WRITE_VERSION,
+            title: "Sorunları BCF olarak yaz".into(),
+            summary: "Konuları (sorunları) BCF 3.0 dosyası olarak yazar (path mutlak, .bcf; overwrite üzerine yazar); \
+                      çizimi değiştirmez. Her konu: guid (küçük harfli, tireli UUID; yoksa dosyanın yolu ve konunun \
+                      sırasından kurulur), title (en çok 300 karakter), description ve yorumlar en çok 4000 karakter, \
+                      topicType (yoksa Issue), status (yoksa Open), priority, labels, author, date (YYYY-AA-GGTss:dd:ss, \
+                      bölgeli ya da UTC; yoksa şimdi, UTC), assignedTo, objects (model dosyasındaki IFC GlobalId'leri, en \
+                      çok 1000), comments (author, date yoksa konunun, text). Nesneli konunun bir bakışı olur: nesneleri \
+                      seçer, öbürleri görünür kalır; kamera nesnelerin gövdelerinin kutusuna güneybatıdan ve yukarıdan \
+                      60° görüş açısıyla bakar (dosyanın dünya koordinatında, metre). Nesneli konu için model (mutlak \
+                      .ifc) gerekir; konunun başlığı dosyayı ve projesinin GlobalId'sini anar. Çıktı: yol, konu ve bakış \
+                      sayısı, konuların GUID'leri. Retler: invalid_file_path (path ya da model), file_exists, \
+                      invalid_bcf_topic (alanın yoluyla), ifc_unreadable, ifc_object_not_found, ifc_no_body."
+                .into(),
+            aliases: vec!["bcfyaz".into(), "bcfexport".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::BcfWrite>(),
+            output: schema::<crate::BcfWritten>(),
+            plan: Some(schema::<crate::BcfWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Taşınan duvar".into(),
+                input: json!({ "path": "/veri/sorunlar.bcf", "model": "/veri/bina-r2.ifc", "topics": [
+                    { "title": "Duvar 50 cm taşınmış", "author": "mimar@buro", "objects": ["01alMXGa9m080000000007"] }
+                ] }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_BCF_READ.into(),
+            version: crate::CAD_BCF_READ_VERSION,
+            title: "BCF sorunlarını oku".into(),
+            summary: "BCF 3.0 ya da 2.1 dosyasının (path mutlak, .bcf ya da .bcfzip) konularını okur; hiçbir şey yazmaz. \
+                      Her konu dosyada yazıldığı gibi: guid, tür, durum, başlık, öncelik, etiketler, tarih ve yazar, \
+                      değiştirilme günü, kime atandığı, açıklama, başlığın andığı dosyalar, yorumlar (guid, gün, yazar, \
+                      metin, bakış) ve bakışlar (seçilen nesnelerin GlobalId'leri, öbürlerinin görünürlüğü ve istisnaları, \
+                      kamera: perspective görüş açısıyla ya da orthogonal gösterdiği yükseklikle, göz, yön, yukarı, en \
+                      boy oranı; 2.1'de kamerasız olabilir; görüntünün adı). Konular klasörlerinin adına göre sıralı. \
+                      objects: bakışların seçtiği nesneler GlobalId'lerine göre birer kez; model (mutlak .ifc) verilmişse \
+                      dosyadaki nesnesi (sınıf, ad); GlobalId KentOS'un çizimin bir nesnesi için yazdığıysa ve çizimde \
+                      varsa o nesnenin kalıcı kimliği (uid). Retler: invalid_file_path, bcf_unreadable, ifc_unreadable."
+                .into(),
+            aliases: vec!["bcfoku".into(), "bcfimport".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::BcfRead>(),
+            output: schema::<crate::BcfReadOutput>(),
+            plan: Some(schema::<crate::BcfReadOutput>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Gelen sorunlar".into(),
+                input: json!({ "path": "/veri/sorunlar.bcf", "model": "/veri/bina-r2.ifc" }),
+                output: None,
+            }],
+        },
     ]
 }

@@ -116,6 +116,10 @@ mod underlays;
 mod underlays_window;
 #[path = "arch/underlay_check_view.rs"]
 mod underlay_check_view;
+#[path = "arch/ifc_compare_window.rs"]
+mod ifc_compare_window;
+#[path = "arch/bcf_window.rs"]
+mod bcf_window;
 #[path = "cad/sheet_set.rs"]
 mod sheet_set;
 #[path = "cad/xrefs_window.rs"]
@@ -1070,6 +1074,9 @@ mod underlays_tests;
 #[cfg(test)]
 #[path = "tests/underlay_check_tests.rs"]
 mod underlay_check_tests;
+#[cfg(test)]
+#[path = "tests/ifc_revisions_tests.rs"]
+mod ifc_revisions_tests;
 #[cfg(test)]
 #[path = "tests/arch_ifc_tests.rs"]
 mod arch_ifc_tests;

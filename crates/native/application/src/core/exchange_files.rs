@@ -8,13 +8,18 @@ use crate::checks::{Stop, error};
 
 /// The text written at `path` whole or not at all: beside it, read back whole, then moved over it.
 pub(crate) fn write_file(path: &Path, text: &str) -> Result<(), String> {
+    write_bytes(path, text.as_bytes())
+}
+
+/// [`write_file`] of bytes (a zip: a BCF file, docs/adr/8103).
+pub(crate) fn write_bytes(path: &Path, bytes: &[u8]) -> Result<(), String> {
     let mut tmp = path.as_os_str().to_owned();
     tmp.push(".kentos-yaziliyor");
     let tmp = PathBuf::from(tmp);
     let done = (|| -> Result<(), String> {
-        std::fs::write(&tmp, text.as_bytes()).map_err(|e| format!("{} yazılamadı: {e}", tmp.display()))?;
-        let back = std::fs::read_to_string(&tmp).map_err(|e| format!("{} geri okunamadı: {e}", tmp.display()))?;
-        if back != text {
+        std::fs::write(&tmp, bytes).map_err(|e| format!("{} yazılamadı: {e}", tmp.display()))?;
+        let back = std::fs::read(&tmp).map_err(|e| format!("{} geri okunamadı: {e}", tmp.display()))?;
+        if back != bytes {
             return Err("yazılan dosya geri okununca aynı çıkmadı".into());
         }
         std::fs::rename(&tmp, path).map_err(|e| format!("{} yerine konamadı: {e}", path.display()))

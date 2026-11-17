@@ -10960,6 +10960,37 @@ class HatchRegion(_Union):
         return _variant(_HATCH_REGION, "HatchRegion", "kind", data).from_json(data)
 
 
+class IfcChange(_Union):
+    """One change of an object both files have. `class`: its class; `attribute`: one of Name, Description, ObjectType,
+    LongName, Tag, PredefinedType (absent where unset); `container`: the spatial structure containing it; `type`: its
+    type object; `body`: a body on one side only; `moved`: its box's middle moved (newer less older, metres) and how
+    far; `resized`: its box's size along x, y, z in each file; `property`: a value of one of its sets (the set's name,
+    whether the set is its type's, the value's name; absent on the side that has none).
+
+    One of:
+
+    - :class:`ClassIfcChange` (``kind: class``)
+    - :class:`AttributeIfcChange` (``kind: attribute``)
+    - :class:`ContainerIfcChange` (``kind: container``)
+    - :class:`TypeIfcChange` (``kind: type``)
+    - :class:`BodyIfcChange` (``kind: body``)
+    - :class:`MovedIfcChange` (``kind: moved``)
+    - :class:`ResizedIfcChange` (``kind: resized``)
+    - :class:`PropertyIfcChange` (``kind: property``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcChange:
+        return _variant(_IFC_CHANGE, "IfcChange", "kind", data).from_json(data)
+
+
 class IfcValue(_Union):
     """A value as the file writes it: a text; a real or an integer with the measure it is typed with (upper case as the
     file writes it; a quantity's is its value attribute's, `IFCLENGTHMEASURE`); a logical (`null`: unknown); an
@@ -20544,6 +20575,419 @@ class BatchRowRan(_Model):
             index=data["index"],
             label=data["label"],
             ran=ProcessingRan.from_json(data["ran"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BcfCamera(_Model):
+    """A viewpoint's camera: `perspective` (its vertical field of view, degrees) or `orthogonal` (the height it shows,
+    metres); its eye, the way it looks and its up, in the IFC file's world, metres.
+    Attributes:
+        eye: Unit: length.
+        direction: Unit: 1.
+        up: Unit: 1.
+        aspect: Unit: 1.
+        field_of_view: Unit: deg.
+        scale: Unit: length.
+    """
+    kind: str
+    eye: list[float]
+    direction: list[float]
+    up: list[float]
+    aspect: float
+    field_of_view: float | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["eye"] = [float(e0) for e0 in self.eye]
+        out["direction"] = [float(e0) for e0 in self.direction]
+        out["up"] = [float(e0) for e0 in self.up]
+        out["aspect"] = float(self.aspect)
+        if self.field_of_view is not UNSET:
+            out["fieldOfView"] = None if self.field_of_view is None else float(self.field_of_view)
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BcfCamera:
+        return cls(
+            kind=data["kind"],
+            eye=[float(e0) for e0 in data["eye"]],
+            direction=[float(e0) for e0 in data["direction"]],
+            up=[float(e0) for e0 in data["up"]],
+            aspect=float(data["aspect"]),
+            field_of_view=UNSET if "fieldOfView" not in data else None if data["fieldOfView"] is None else float(data["fieldOfView"]),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BcfComment(_Model):
+    """A comment read."""
+    guid: str
+    date: str
+    author: str
+    text: str | None | Unset = UNSET
+    viewpoint: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["guid"] = self.guid
+        out["date"] = self.date
+        out["author"] = self.author
+        if self.text is not UNSET:
+            out["text"] = self.text
+        if self.viewpoint is not UNSET:
+            out["viewpoint"] = self.viewpoint
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BcfComment:
+        return cls(
+            guid=data["guid"],
+            date=data["date"],
+            author=data["author"],
+            text=data.get("text", UNSET),
+            viewpoint=data.get("viewpoint", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BcfCommentInput(_Model):
+    """A comment written with a topic: its author, date (`YYYY-MM-DDThh:mm:ss`, with a zone or UTC; absent: the topic's)
+    and text.
+    """
+    author: str
+    text: str
+    date: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["author"] = self.author
+        out["text"] = self.text
+        if self.date is not UNSET:
+            out["date"] = self.date
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BcfCommentInput:
+        return cls(
+            author=data["author"],
+            text=data["text"],
+            date=data.get("date", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BcfObject(_Model):
+    """An object some viewpoint selects, by its GlobalId: the `model` file's object it is, and the drawing's object (its
+    persistent id) when the GlobalId is one KentOS wrote for it.
+    """
+    global_id: str
+    model: IfcComparedObject | None | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["globalId"] = self.global_id
+        if self.model is not UNSET:
+            out["model"] = None if self.model is None else self.model.to_json()
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BcfObject:
+        return cls(
+            global_id=data["globalId"],
+            model=UNSET if "model" not in data else None if data["model"] is None else IfcComparedObject.from_json(data["model"]),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BcfRead(_Model):
+    """Input of `cad.bcf.read` v1: the BCF file (absolute, `.bcf` or `.bcfzip`) and, to lead the selected objects to their
+    objects, the IFC file the topics are about (absolute, `.ifc`).
+
+    Refusals, in this order: `invalid_file_path` (at `path` or `model`), `bcf_unreadable` (not a zip, no `bcf.version`,
+    a version other than 3.0, 2.1 or 2.0, an XML that does not read, a viewpoint the topic names and the file lacks;
+    the message says which), `ifc_unreadable` (at `model`).
+    """
+    path: str
+    model: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.model is not UNSET:
+            out["model"] = self.model
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BcfRead:
+        return cls(
+            path=data["path"],
+            model=data.get("model", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BcfReadOutput(_Model):
+    """Output of `cad.bcf.read` v1, and its plan: the file, its BCF version, its topics (by their folders' names), and the
+    objects their viewpoints select, once each, by GlobalId.
+    """
+    path: str
+    version: str
+    topics: list[BcfTopic]
+    objects: list[BcfObject]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["version"] = self.version
+        out["topics"] = [e0.to_json() for e0 in self.topics]
+        out["objects"] = [e0.to_json() for e0 in self.objects]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BcfReadOutput:
+        return cls(
+            path=data["path"],
+            version=data["version"],
+            topics=[BcfTopic.from_json(e0) for e0 in data["topics"]],
+            objects=[BcfObject.from_json(e0) for e0 in data["objects"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BcfTopic(_Model):
+    """A topic read, as the file writes it; its files are the header's IFC file names."""
+    guid: str
+    topic_type: str
+    status: str
+    title: str
+    labels: list[str]
+    created: str
+    author: str
+    files: list[str]
+    comments: list[BcfComment]
+    viewpoints: list[BcfViewpoint]
+    assigned_to: str | None | Unset = UNSET
+    description: str | None | Unset = UNSET
+    modified: str | None | Unset = UNSET
+    priority: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["guid"] = self.guid
+        out["topicType"] = self.topic_type
+        out["status"] = self.status
+        out["title"] = self.title
+        out["labels"] = list(self.labels)
+        out["created"] = self.created
+        out["author"] = self.author
+        out["files"] = list(self.files)
+        out["comments"] = [e0.to_json() for e0 in self.comments]
+        out["viewpoints"] = [e0.to_json() for e0 in self.viewpoints]
+        if self.assigned_to is not UNSET:
+            out["assignedTo"] = self.assigned_to
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.modified is not UNSET:
+            out["modified"] = self.modified
+        if self.priority is not UNSET:
+            out["priority"] = self.priority
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BcfTopic:
+        return cls(
+            guid=data["guid"],
+            topic_type=data["topicType"],
+            status=data["status"],
+            title=data["title"],
+            labels=list(data["labels"]),
+            created=data["created"],
+            author=data["author"],
+            files=list(data["files"]),
+            comments=[BcfComment.from_json(e0) for e0 in data["comments"]],
+            viewpoints=[BcfViewpoint.from_json(e0) for e0 in data["viewpoints"]],
+            assigned_to=data.get("assignedTo", UNSET),
+            description=data.get("description", UNSET),
+            modified=data.get("modified", UNSET),
+            priority=data.get("priority", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BcfTopicInput(_Model):
+    """A topic to write: its GUID (lowercase, hyphenated; absent: made from the file's place and the topic's order), title,
+    description, type (absent: `Issue`), status (absent: `Open`), priority, labels, author, date (absent: now, UTC),
+    whom it is assigned to, the objects it is about (IFC GlobalIds of the `model` file) and its comments.
+    """
+    title: str
+    author: str
+    assigned_to: str | None | Unset = UNSET
+    comments: list[BcfCommentInput] | Unset = UNSET
+    date: str | None | Unset = UNSET
+    description: str | None | Unset = UNSET
+    guid: str | None | Unset = UNSET
+    labels: list[str] | Unset = UNSET
+    objects: list[str] | Unset = UNSET
+    priority: str | None | Unset = UNSET
+    status: str | None | Unset = UNSET
+    topic_type: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["title"] = self.title
+        out["author"] = self.author
+        if self.assigned_to is not UNSET:
+            out["assignedTo"] = self.assigned_to
+        if self.comments is not UNSET:
+            out["comments"] = [e0.to_json() for e0 in self.comments]
+        if self.date is not UNSET:
+            out["date"] = self.date
+        if self.description is not UNSET:
+            out["description"] = self.description
+        if self.guid is not UNSET:
+            out["guid"] = self.guid
+        if self.labels is not UNSET:
+            out["labels"] = list(self.labels)
+        if self.objects is not UNSET:
+            out["objects"] = list(self.objects)
+        if self.priority is not UNSET:
+            out["priority"] = self.priority
+        if self.status is not UNSET:
+            out["status"] = self.status
+        if self.topic_type is not UNSET:
+            out["topicType"] = self.topic_type
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BcfTopicInput:
+        return cls(
+            title=data["title"],
+            author=data["author"],
+            assigned_to=data.get("assignedTo", UNSET),
+            comments=[BcfCommentInput.from_json(e0) for e0 in data["comments"]] if "comments" in data else UNSET,
+            date=data.get("date", UNSET),
+            description=data.get("description", UNSET),
+            guid=data.get("guid", UNSET),
+            labels=list(data["labels"]) if "labels" in data else UNSET,
+            objects=list(data["objects"]) if "objects" in data else UNSET,
+            priority=data.get("priority", UNSET),
+            status=data.get("status", UNSET),
+            topic_type=data.get("topicType", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BcfViewpoint(_Model):
+    """A viewpoint read: its GUID, the objects it selects, whether the rest shows and the objects excepted, its camera
+    (absent only in a 2.1 file), its snapshot's name.
+    """
+    guid: str
+    selection: list[str]
+    visible: bool
+    exceptions: list[str]
+    camera: BcfCamera | None | Unset = UNSET
+    snapshot: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["guid"] = self.guid
+        out["selection"] = list(self.selection)
+        out["visible"] = self.visible
+        out["exceptions"] = list(self.exceptions)
+        if self.camera is not UNSET:
+            out["camera"] = None if self.camera is None else self.camera.to_json()
+        if self.snapshot is not UNSET:
+            out["snapshot"] = self.snapshot
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BcfViewpoint:
+        return cls(
+            guid=data["guid"],
+            selection=list(data["selection"]),
+            visible=data["visible"],
+            exceptions=list(data["exceptions"]),
+            camera=UNSET if "camera" not in data else None if data["camera"] is None else BcfCamera.from_json(data["camera"]),
+            snapshot=data.get("snapshot", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BcfWrite(_Model):
+    """Input of `cad.bcf.write` v1: the BCF file (absolute, ending `.bcf`), whether it may be written over, the IFC file
+    the topics' objects are in (absolute, `.ifc`; needed when a topic has objects: its viewpoint's camera looks at their
+    bodies and the topic names the file), the topics in order.
+
+    Refusals, in this order: `invalid_file_path` (at `path` or `model`: empty, relative, another extension, a folder or
+    a model not there), `file_exists` (without `overwrite`), `invalid_bcf_topic` (no topic, more than 10 000; a GUID not
+    lowercase hyphenated or given twice; an empty title, author or type; past a length; a date that does not read; more
+    than 1000 objects; objects without `model`; at the topic's field), `ifc_unreadable` (at `model`),
+    `ifc_object_not_found` (a GlobalId the model does not hold, at the topic's `objects`), `ifc_no_body` (no object of a
+    topic has a body to look at).
+    """
+    path: str
+    topics: list[BcfTopicInput]
+    model: str | None | Unset = UNSET
+    overwrite: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["topics"] = [e0.to_json() for e0 in self.topics]
+        if self.model is not UNSET:
+            out["model"] = self.model
+        if self.overwrite is not UNSET:
+            out["overwrite"] = self.overwrite
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BcfWrite:
+        return cls(
+            path=data["path"],
+            topics=[BcfTopicInput.from_json(e0) for e0 in data["topics"]],
+            model=data.get("model", UNSET),
+            overwrite=data.get("overwrite", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BcfWritten(_Model):
+    """Output of `cad.bcf.write` v1, and its plan: the file, how many topics and viewpoints it holds, the topics' GUIDs in
+    order.
+    Attributes:
+        topics: Unit: count.
+        viewpoints: Unit: count.
+    """
+    path: str
+    topics: int
+    viewpoints: int
+    guids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["topics"] = self.topics
+        out["viewpoints"] = self.viewpoints
+        out["guids"] = list(self.guids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BcfWritten:
+        return cls(
+            path=data["path"],
+            topics=data["topics"],
+            viewpoints=data["viewpoints"],
+            guids=list(data["guids"]),
         )
 
 
@@ -49062,6 +49506,161 @@ class IfcBuildingExported(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class IfcCompare(_Model):
+    """Input of `cad.ifc.compare` v1: the older and the newer file (absolute, ending `.ifc`); a body whose box moves or
+    changes size by no more than `tolerance` metres is the same.
+
+    Refusals, in this order: `invalid_file_path` (empty, relative, not `.ifc`, not there; at `older` or `newer`),
+    `invalid_tolerance` (0.0001 to 0.5 m), `ifc_unreadable` (at the file's field). Warning: `ifc_repeated_global_id` (a
+    GlobalId a file holds more than once: those objects are left out and listed).
+    Attributes:
+        tolerance: Unit: length.
+    """
+    older: str
+    newer: str
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["older"] = self.older
+        out["newer"] = self.newer
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcCompare:
+        return cls(
+            older=data["older"],
+            newer=data["newer"],
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IfcCompared(_Model):
+    """Output of `cad.ifc.compare` v1, and its plan: the two files, what the newer added (in its order), removed (in the
+    older's order) and changed (in its order), how many objects are the same, the GlobalIds left out, the tolerance.
+    Attributes:
+        unchanged: Unit: count.
+        tolerance: Unit: length.
+    """
+    older: IfcComparedFile
+    newer: IfcComparedFile
+    added: list[IfcComparedObject]
+    removed: list[IfcComparedObject]
+    changed: list[IfcComparedChange]
+    unchanged: int
+    repeated: list[IfcRepeatedId]
+    tolerance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["older"] = self.older.to_json()
+        out["newer"] = self.newer.to_json()
+        out["added"] = [e0.to_json() for e0 in self.added]
+        out["removed"] = [e0.to_json() for e0 in self.removed]
+        out["changed"] = [e0.to_json() for e0 in self.changed]
+        out["unchanged"] = self.unchanged
+        out["repeated"] = [e0.to_json() for e0 in self.repeated]
+        out["tolerance"] = float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcCompared:
+        return cls(
+            older=IfcComparedFile.from_json(data["older"]),
+            newer=IfcComparedFile.from_json(data["newer"]),
+            added=[IfcComparedObject.from_json(e0) for e0 in data["added"]],
+            removed=[IfcComparedObject.from_json(e0) for e0 in data["removed"]],
+            changed=[IfcComparedChange.from_json(e0) for e0 in data["changed"]],
+            unchanged=data["unchanged"],
+            repeated=[IfcRepeatedId.from_json(e0) for e0 in data["repeated"]],
+            tolerance=float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IfcComparedChange(_Model):
+    """An object both files have with what changed on it: its GlobalId, its class and name in the newer file, its changes
+    (class, attributes, container, type, body, then its sets' values: the newer file's in its order, then the values only
+    the older has).
+    """
+    global_id: str
+    class_: str
+    changes: list[IfcChange]
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["globalId"] = self.global_id
+        out["class"] = self.class_
+        out["changes"] = [e0.to_json() for e0 in self.changes]
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcComparedChange:
+        return cls(
+            global_id=data["globalId"],
+            class_=data["class"],
+            changes=[IfcChange.from_json(e0) for e0 in data["changes"]],
+            name=data.get("name", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IfcComparedFile(_Model):
+    """A file compared: its path, its schema as the header declares it, how many objects it holds.
+    Attributes:
+        objects: Unit: count.
+    """
+    path: str
+    schema: str
+    objects: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["schema"] = self.schema
+        out["objects"] = self.objects
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcComparedFile:
+        return cls(
+            path=data["path"],
+            schema=data["schema"],
+            objects=data["objects"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IfcComparedObject(_Model):
+    """An object as a list names it: its GlobalId, its class as the schema spells it and its name."""
+    global_id: str
+    class_: str
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["globalId"] = self.global_id
+        out["class"] = self.class_
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcComparedObject:
+        return cls(
+            global_id=data["globalId"],
+            class_=data["class"],
+            name=data.get("name", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class IfcCompartment(_Model):
     """A fire compartment to write as a group of its rooms (docs/adr/8088; BYKHY 4/tt, 24): its rooms by persistent id, as
     the standards package finds them.
@@ -49408,6 +50007,26 @@ class IfcInspectedValue(_Model):
             class_=data["class"],
             value=IfcValue.from_json(data["value"]),
             unit=data.get("unit", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class IfcRepeatedId(_Model):
+    """A GlobalId a file holds more than once (`older` or `newer`): its objects are left out of the comparison."""
+    file: str
+    global_id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["file"] = self.file
+        out["globalId"] = self.global_id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> IfcRepeatedId:
+        return cls(
+            file=data["file"],
+            global_id=data["globalId"],
         )
 
 
@@ -130493,6 +131112,196 @@ class ObjectsHatchRegion(HatchRegion):
 
 
 @dataclass(kw_only=True, slots=True)
+class ClassIfcChange(IfcChange):
+    TAG_VALUE: ClassVar[str] = "class"
+    old: str
+    new: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "class"}
+        out["old"] = self.old
+        out["new"] = self.new
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ClassIfcChange:
+        return cls(
+            old=data["old"],
+            new=data["new"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AttributeIfcChange(IfcChange):
+    TAG_VALUE: ClassVar[str] = "attribute"
+    name: str
+    new: str | None | Unset = UNSET
+    old: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "attribute"}
+        out["name"] = self.name
+        if self.new is not UNSET:
+            out["new"] = self.new
+        if self.old is not UNSET:
+            out["old"] = self.old
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AttributeIfcChange:
+        return cls(
+            name=data["name"],
+            new=data.get("new", UNSET),
+            old=data.get("old", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ContainerIfcChange(IfcChange):
+    TAG_VALUE: ClassVar[str] = "container"
+    new: IfcComparedObject | None | Unset = UNSET
+    old: IfcComparedObject | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "container"}
+        if self.new is not UNSET:
+            out["new"] = None if self.new is None else self.new.to_json()
+        if self.old is not UNSET:
+            out["old"] = None if self.old is None else self.old.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ContainerIfcChange:
+        return cls(
+            new=UNSET if "new" not in data else None if data["new"] is None else IfcComparedObject.from_json(data["new"]),
+            old=UNSET if "old" not in data else None if data["old"] is None else IfcComparedObject.from_json(data["old"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TypeIfcChange(IfcChange):
+    TAG_VALUE: ClassVar[str] = "type"
+    new: IfcComparedObject | None | Unset = UNSET
+    old: IfcComparedObject | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "type"}
+        if self.new is not UNSET:
+            out["new"] = None if self.new is None else self.new.to_json()
+        if self.old is not UNSET:
+            out["old"] = None if self.old is None else self.old.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TypeIfcChange:
+        return cls(
+            new=UNSET if "new" not in data else None if data["new"] is None else IfcComparedObject.from_json(data["new"]),
+            old=UNSET if "old" not in data else None if data["old"] is None else IfcComparedObject.from_json(data["old"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BodyIfcChange(IfcChange):
+    TAG_VALUE: ClassVar[str] = "body"
+    old: bool
+    new: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "body"}
+        out["old"] = self.old
+        out["new"] = self.new
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BodyIfcChange:
+        return cls(
+            old=data["old"],
+            new=data["new"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MovedIfcChange(IfcChange):
+    """
+    Attributes:
+        by: Unit: length.
+        distance: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "moved"
+    by: list[float]
+    distance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "moved"}
+        out["by"] = [float(e0) for e0 in self.by]
+        out["distance"] = float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MovedIfcChange:
+        return cls(
+            by=[float(e0) for e0 in data["by"]],
+            distance=float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ResizedIfcChange(IfcChange):
+    """
+    Attributes:
+        old: Unit: length.
+        new: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "resized"
+    old: list[float]
+    new: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "resized"}
+        out["old"] = [float(e0) for e0 in self.old]
+        out["new"] = [float(e0) for e0 in self.new]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ResizedIfcChange:
+        return cls(
+            old=[float(e0) for e0 in data["old"]],
+            new=[float(e0) for e0 in data["new"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PropertyIfcChange(IfcChange):
+    TAG_VALUE: ClassVar[str] = "property"
+    set: str
+    from_type: bool
+    name: str
+    new: IfcValue | None | Unset = UNSET
+    old: IfcValue | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "property"}
+        out["set"] = self.set
+        out["fromType"] = self.from_type
+        out["name"] = self.name
+        if self.new is not UNSET:
+            out["new"] = None if self.new is None else self.new.to_json()
+        if self.old is not UNSET:
+            out["old"] = None if self.old is None else self.old.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PropertyIfcChange:
+        return cls(
+            set=data["set"],
+            from_type=data["fromType"],
+            name=data["name"],
+            new=UNSET if "new" not in data else None if data["new"] is None else IfcValue.from_json(data["new"]),
+            old=UNSET if "old" not in data else None if data["old"] is None else IfcValue.from_json(data["old"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TextIfcValue(IfcValue):
     TAG_VALUE: ClassVar[str] = "text"
     text: str
@@ -143634,6 +144443,9 @@ _HATCH_ORIGIN: dict[str, type[HatchOrigin]] = {"world": WorldHatchOrigin, "point
 _HATCH_REGION: dict[str, type[HatchRegion]] = {"point": PointHatchRegion, "objects": ObjectsHatchRegion}
 
 
+_IFC_CHANGE: dict[str, type[IfcChange]] = {"class": ClassIfcChange, "attribute": AttributeIfcChange, "container": ContainerIfcChange, "type": TypeIfcChange, "body": BodyIfcChange, "moved": MovedIfcChange, "resized": ResizedIfcChange, "property": PropertyIfcChange}
+
+
 _IFC_VALUE: dict[str, type[IfcValue]] = {"text": TextIfcValue, "number": NumberIfcValue, "integer": IntegerIfcValue, "logical": LogicalIfcValue, "enumeration": EnumerationIfcValue, "list": ListIfcValue, "bounded": BoundedIfcValue, "reference": ReferenceIfcValue, "empty": EmptyIfcValue}
 
 
@@ -144257,6 +145069,7 @@ __all__ = [
     "AttributeDefinition",
     "AttributeExtractValue",
     "AttributeFilter",
+    "AttributeIfcChange",
     "AttributeOp",
     "AttributeOpName",
     "AttributeSync",
@@ -144295,6 +145108,17 @@ __all__ = [
     "BatchRow",
     "BatchRowFailed",
     "BatchRowRan",
+    "BcfCamera",
+    "BcfComment",
+    "BcfCommentInput",
+    "BcfObject",
+    "BcfRead",
+    "BcfReadOutput",
+    "BcfTopic",
+    "BcfTopicInput",
+    "BcfViewpoint",
+    "BcfWrite",
+    "BcfWritten",
     "BeamEntity",
     "BeamRole",
     "BeamRoleName",
@@ -144370,6 +145194,7 @@ __all__ = [
     "BlocksReplace",
     "BlocksReplaced",
     "BlocksTableSource",
+    "BodyIfcChange",
     "BorderPaperItemKind",
     "BothNetworkDirection",
     "BoundChange",
@@ -144508,6 +145333,7 @@ __all__ = [
     "CircleThreePointsCurveConstruction",
     "CircleTwoPointsCurveConstruction",
     "CircumscribedRegularFrame",
+    "ClassIfcChange",
     "CleanupIgnore",
     "CleanupIgnoreName",
     "CleanupReport",
@@ -144609,6 +145435,7 @@ __all__ = [
     "ConstructionEntity",
     "ConstructionRound",
     "ConstructionsCreate",
+    "ContainerIfcChange",
     "ContainingSelectRegion",
     "ContentLeaderEdit",
     "ContinueDimensionMeasure",
@@ -145499,6 +146326,12 @@ __all__ = [
     "HydrographPoint",
     "IfcAlignmentWritten",
     "IfcBuildingExported",
+    "IfcChange",
+    "IfcCompare",
+    "IfcCompared",
+    "IfcComparedChange",
+    "IfcComparedFile",
+    "IfcComparedObject",
     "IfcCompartment",
     "IfcExported",
     "IfcInspect",
@@ -145509,6 +146342,7 @@ __all__ = [
     "IfcInspectedStorey",
     "IfcInspectedUnits",
     "IfcInspectedValue",
+    "IfcRepeatedId",
     "IfcValue",
     "IfcView",
     "IfcViewName",
@@ -146062,6 +146896,7 @@ __all__ = [
     "MoveSheetPaperOp",
     "MoveTextDimensionEdit",
     "MoveTransform",
+    "MovedIfcChange",
     "NameCase",
     "NameCaseName",
     "NameLetters",
@@ -146912,6 +147747,7 @@ __all__ = [
     "PropertiesOperation",
     "PropertiesOperationName",
     "PropertiesSelectRegion",
+    "PropertyIfcChange",
     "ProposedGrade",
     "ProposedPvi",
     "ProtectedArea",
@@ -147184,6 +148020,7 @@ __all__ = [
     "ResetTextDimensionSetEdit",
     "ReshapeShapeWork",
     "ResizeItemPaperOp",
+    "ResizedIfcChange",
     "ResolveFormsOp",
     "ResourceKind",
     "ResourceKindName",
@@ -148160,6 +148997,7 @@ __all__ = [
     "TurnLayer",
     "TurnTextEdit",
     "TwoPointsUcsTo",
+    "TypeIfcChange",
     "Ucs",
     "UcsChanged",
     "UcsNow",

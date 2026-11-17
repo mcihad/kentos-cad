@@ -14,6 +14,9 @@ kentos-contracts = { path = "../contracts", default-features = false }
 kentos-digital-project = { path = "../digital-project" }
 kentos-geometry-core = { path = "../geometry-core" }
 kentos-road = { path = "../road" }
+# BCF (docs/adr/8103): a zip of XML files, both read and written here without touching the file system.
+kentos-zip = { path = "../zip" }
+roxmltree = { workspace = true }
 libm = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

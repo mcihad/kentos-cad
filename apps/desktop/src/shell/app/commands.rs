@@ -318,6 +318,9 @@ impl App {
             "arch.deliveries" => self.open_deliveries(),
             // Altlık modeller (underlays_window.rs, docs/adr/8101).
             "arch.underlays" => self.open_underlays(),
+            // IFC revizyonlarını karşılaştır and BCF sorunları (docs/adr/8103).
+            "arch.ifcCompare" => self.open_ifc_compare(),
+            "arch.bcfIssues" => self.open_bcf_issues(),
             // Otopark and Sığınak hesabı (docs/adr/8036).
             "arch.parkingTable" => {
                 self.place_provision_table(kentos_commands::TableSource::Parking {})

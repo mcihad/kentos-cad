@@ -1,0 +1,1188 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.bcf.read",
+  "commandVersion": 1,
+  "title": "BCF sorunlarını oku: 3.0 ve 2.1, konular, yorumlar, bakışlar; seçilen nesneler modelde ve çizimde",
+  "note": "ADR 8103. Dosyaları IfcOpenShell'in BCF kitaplığı yazar; beklenenler scripts/fixtures/bcf_cases.py'nin Python'un zip ve XML okuyucularıyla okumasından, KentOS kodu yok.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "BCF",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50.0,
+      "workspace": "cad"
+    },
+    "origin": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "layers": [
+      {
+        "id": "0",
+        "name": "0",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "0",
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.275,
+            "y": 4.5
+          },
+          {
+            "x": 4.275,
+            "y": 4.5
+          }
+        ],
+        "width": 0.15,
+        "justify": "center"
+      }
+    ],
+    "uids": [
+      "0192f5a1-4242-7000-8000-000000000007"
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Başka programın BCF 3.0 dosyası: iki konu, modelde ve çizimde nesneleri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:ifc/v1/bcf/disaridan-v3.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$fixture:ifc/v1/bcf/disaridan-v3.bcf",
+              "version": "3.0",
+              "topics": [
+                {
+                  "guid": "a122f19b-e21c-4dbd-8ac5-15716e0d1bbe",
+                  "topicType": "Clash",
+                  "status": "Open",
+                  "title": "Duvar kuzeye kaymış",
+                  "labels": [
+                    "Statik",
+                    "Mimari"
+                  ],
+                  "created": "2026-11-17T20:44:25.473346",
+                  "author": "statik@buro",
+                  "files": [],
+                  "comments": [
+                    {
+                      "guid": "c8d6c1f9-5446-4dbe-b211-f3f878041843",
+                      "date": "2026-11-17T13:00:00+03:00",
+                      "author": "mimar@buro",
+                      "text": "Bakıyorum.",
+                      "viewpoint": "3638043a-5343-4404-952d-ffc27617452f"
+                    }
+                  ],
+                  "viewpoints": [
+                    {
+                      "guid": "3638043a-5343-4404-952d-ffc27617452f",
+                      "selection": [
+                        "01alMXGa9m080000000007"
+                      ],
+                      "visible": true,
+                      "exceptions": [],
+                      "camera": {
+                        "kind": "perspective",
+                        "eye": [
+                          5.0,
+                          5.5,
+                          5.0
+                        ],
+                        "direction": [
+                          -0.5773502691896257,
+                          -0.5773502691896257,
+                          -0.5773502691896257
+                        ],
+                        "up": [
+                          -0.408248290463863,
+                          -0.408248290463863,
+                          0.816496580927726
+                        ],
+                        "fieldOfView": 60.0,
+                        "aspect": 1.0
+                      }
+                    }
+                  ],
+                  "priority": "High",
+                  "assignedTo": "mimar@buro",
+                  "description": "İç duvar ikinci revizyonda 50 cm kuzeyde."
+                },
+                {
+                  "guid": "b591edf8-5d88-4657-b85a-3b96928fe0cc",
+                  "topicType": "Issue",
+                  "status": "Closed",
+                  "title": "Doğu duvarının yangın sınıfı",
+                  "labels": [],
+                  "created": "2026-11-17T20:44:25.473680",
+                  "author": "statik@buro",
+                  "files": [],
+                  "comments": [],
+                  "viewpoints": [
+                    {
+                      "guid": "ec1a1c0c-c1c5-49ac-9bd7-0c9bd1b77c57",
+                      "selection": [
+                        "01alMXGa9m080000000002"
+                      ],
+                      "visible": true,
+                      "exceptions": [],
+                      "camera": {
+                        "kind": "perspective",
+                        "eye": [
+                          5.0,
+                          5.0,
+                          5.0
+                        ],
+                        "direction": [
+                          -0.5773502691896257,
+                          -0.5773502691896257,
+                          -0.5773502691896257
+                        ],
+                        "up": [
+                          -0.408248290463863,
+                          -0.408248290463863,
+                          0.816496580927726
+                        ],
+                        "fieldOfView": 60.0,
+                        "aspect": 1.0
+                      }
+                    }
+                  ],
+                  "description": "REI 60 yerine REI 90."
+                }
+              ],
+              "objects": [
+                {
+                  "globalId": "01alMXGa9m080000000002",
+                  "model": {
+                    "globalId": "01alMXGa9m080000000002",
+                    "class": "IfcWall",
+                    "name": "MM-DVR-Dış_duvar_25"
+                  }
+                },
+                {
+                  "globalId": "01alMXGa9m080000000007",
+                  "model": {
+                    "globalId": "01alMXGa9m080000000007",
+                    "class": "IfcWall",
+                    "name": "MM-DVR-İç_duvar_15"
+                  },
+                  "uid": "0192f5a1-4242-7000-8000-000000000007"
+                }
+              ]
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Modelsiz: nesneler yalnız GlobalId ve çizimdeki karşılığıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:ifc/v1/bcf/disaridan-v3.bcf"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$fixture:ifc/v1/bcf/disaridan-v3.bcf",
+              "version": "3.0",
+              "topics": [
+                {
+                  "guid": "a122f19b-e21c-4dbd-8ac5-15716e0d1bbe",
+                  "topicType": "Clash",
+                  "status": "Open",
+                  "title": "Duvar kuzeye kaymış",
+                  "labels": [
+                    "Statik",
+                    "Mimari"
+                  ],
+                  "created": "2026-11-17T20:44:25.473346",
+                  "author": "statik@buro",
+                  "files": [],
+                  "comments": [
+                    {
+                      "guid": "c8d6c1f9-5446-4dbe-b211-f3f878041843",
+                      "date": "2026-11-17T13:00:00+03:00",
+                      "author": "mimar@buro",
+                      "text": "Bakıyorum.",
+                      "viewpoint": "3638043a-5343-4404-952d-ffc27617452f"
+                    }
+                  ],
+                  "viewpoints": [
+                    {
+                      "guid": "3638043a-5343-4404-952d-ffc27617452f",
+                      "selection": [
+                        "01alMXGa9m080000000007"
+                      ],
+                      "visible": true,
+                      "exceptions": [],
+                      "camera": {
+                        "kind": "perspective",
+                        "eye": [
+                          5.0,
+                          5.5,
+                          5.0
+                        ],
+                        "direction": [
+                          -0.5773502691896257,
+                          -0.5773502691896257,
+                          -0.5773502691896257
+                        ],
+                        "up": [
+                          -0.408248290463863,
+                          -0.408248290463863,
+                          0.816496580927726
+                        ],
+                        "fieldOfView": 60.0,
+                        "aspect": 1.0
+                      }
+                    }
+                  ],
+                  "priority": "High",
+                  "assignedTo": "mimar@buro",
+                  "description": "İç duvar ikinci revizyonda 50 cm kuzeyde."
+                },
+                {
+                  "guid": "b591edf8-5d88-4657-b85a-3b96928fe0cc",
+                  "topicType": "Issue",
+                  "status": "Closed",
+                  "title": "Doğu duvarının yangın sınıfı",
+                  "labels": [],
+                  "created": "2026-11-17T20:44:25.473680",
+                  "author": "statik@buro",
+                  "files": [],
+                  "comments": [],
+                  "viewpoints": [
+                    {
+                      "guid": "ec1a1c0c-c1c5-49ac-9bd7-0c9bd1b77c57",
+                      "selection": [
+                        "01alMXGa9m080000000002"
+                      ],
+                      "visible": true,
+                      "exceptions": [],
+                      "camera": {
+                        "kind": "perspective",
+                        "eye": [
+                          5.0,
+                          5.0,
+                          5.0
+                        ],
+                        "direction": [
+                          -0.5773502691896257,
+                          -0.5773502691896257,
+                          -0.5773502691896257
+                        ],
+                        "up": [
+                          -0.408248290463863,
+                          -0.408248290463863,
+                          0.816496580927726
+                        ],
+                        "fieldOfView": 60.0,
+                        "aspect": 1.0
+                      }
+                    }
+                  ],
+                  "description": "REI 60 yerine REI 90."
+                }
+              ],
+              "objects": [
+                {
+                  "globalId": "01alMXGa9m080000000002"
+                },
+                {
+                  "globalId": "01alMXGa9m080000000007",
+                  "uid": "0192f5a1-4242-7000-8000-000000000007"
+                }
+              ]
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "BCF 2.1 dosyası: yorum ve bakış konunun yanında",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:ifc/v1/bcf/disaridan-v21.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$fixture:ifc/v1/bcf/disaridan-v21.bcf",
+              "version": "2.1",
+              "topics": [
+                {
+                  "guid": "0ab40391-294c-4dff-9329-a08514fd430f",
+                  "topicType": "Clash",
+                  "status": "Active",
+                  "title": "Kolon kirişi kesiyor",
+                  "labels": [],
+                  "created": "2026-11-17T20:44:25.475612",
+                  "author": "statik@buro",
+                  "files": [],
+                  "comments": [
+                    {
+                      "guid": "68fbcb14-a9cb-4711-8c11-31b0be4d1b34",
+                      "date": "2026-11-17T10:01:00",
+                      "author": "mimar@buro",
+                      "text": "Bakıyorum"
+                    }
+                  ],
+                  "viewpoints": [
+                    {
+                      "guid": "708e7367-408b-4752-90fd-87bd66a26965",
+                      "selection": [
+                        "01alMXGa9m080000000007"
+                      ],
+                      "visible": true,
+                      "exceptions": [],
+                      "camera": {
+                        "kind": "perspective",
+                        "eye": [
+                          5.0,
+                          5.5,
+                          5.0
+                        ],
+                        "direction": [
+                          -0.5773502691896257,
+                          -0.5773502691896257,
+                          -0.5773502691896257
+                        ],
+                        "up": [
+                          -0.408248290463863,
+                          -0.408248290463863,
+                          0.816496580927726
+                        ],
+                        "fieldOfView": 60.0,
+                        "aspect": 1.0
+                      }
+                    }
+                  ],
+                  "description": "Eski sürümün sorunu."
+                }
+              ],
+              "objects": [
+                {
+                  "globalId": "01alMXGa9m080000000007",
+                  "model": {
+                    "globalId": "01alMXGa9m080000000007",
+                    "class": "IfcWall",
+                    "name": "MM-DVR-İç_duvar_15"
+                  },
+                  "uid": "0192f5a1-4242-7000-8000-000000000007"
+                }
+              ]
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "BCF 2.1 dosyası modelsiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:ifc/v1/bcf/disaridan-v21.bcf"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$fixture:ifc/v1/bcf/disaridan-v21.bcf",
+              "version": "2.1",
+              "topics": [
+                {
+                  "guid": "0ab40391-294c-4dff-9329-a08514fd430f",
+                  "topicType": "Clash",
+                  "status": "Active",
+                  "title": "Kolon kirişi kesiyor",
+                  "labels": [],
+                  "created": "2026-11-17T20:44:25.475612",
+                  "author": "statik@buro",
+                  "files": [],
+                  "comments": [
+                    {
+                      "guid": "68fbcb14-a9cb-4711-8c11-31b0be4d1b34",
+                      "date": "2026-11-17T10:01:00",
+                      "author": "mimar@buro",
+                      "text": "Bakıyorum"
+                    }
+                  ],
+                  "viewpoints": [
+                    {
+                      "guid": "708e7367-408b-4752-90fd-87bd66a26965",
+                      "selection": [
+                        "01alMXGa9m080000000007"
+                      ],
+                      "visible": true,
+                      "exceptions": [],
+                      "camera": {
+                        "kind": "perspective",
+                        "eye": [
+                          5.0,
+                          5.5,
+                          5.0
+                        ],
+                        "direction": [
+                          -0.5773502691896257,
+                          -0.5773502691896257,
+                          -0.5773502691896257
+                        ],
+                        "up": [
+                          -0.408248290463863,
+                          -0.408248290463863,
+                          0.816496580927726
+                        ],
+                        "fieldOfView": 60.0,
+                        "aspect": 1.0
+                      }
+                    }
+                  ],
+                  "description": "Eski sürümün sorunu."
+                }
+              ],
+              "objects": [
+                {
+                  "globalId": "01alMXGa9m080000000007",
+                  "uid": "0192f5a1-4242-7000-8000-000000000007"
+                }
+              ]
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "KentOS'un yazdığı sorun",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:ifc/v1/bcf/../revizyon/tasinan-duvar.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$fixture:ifc/v1/bcf/../revizyon/tasinan-duvar.bcf",
+              "version": "3.0",
+              "topics": [
+                {
+                  "guid": "0192f5a1-8103-7000-8000-000000000001",
+                  "topicType": "Issue",
+                  "status": "Open",
+                  "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                  "labels": [
+                    "Mimari"
+                  ],
+                  "created": "2026-11-17T12:00:00Z",
+                  "author": "mimar@buro",
+                  "files": [
+                    "kesit-binasi-r2.ifc"
+                  ],
+                  "comments": [
+                    {
+                      "guid": "421c594e-0d14-8cd5-8010-7b3c09f7b95d",
+                      "date": "2026-11-17T12:00:00Z",
+                      "author": "mimar@buro",
+                      "text": "Statik projeyle birlikte bakılsın."
+                    }
+                  ],
+                  "viewpoints": [
+                    {
+                      "guid": "0a69eb68-2815-804d-8760-bf03cea2502d",
+                      "selection": [
+                        "01alMXGa9m080000000007"
+                      ],
+                      "visible": true,
+                      "exceptions": [],
+                      "camera": {
+                        "kind": "perspective",
+                        "eye": [
+                          -0.8614680402387846,
+                          1.8635318643937837,
+                          4.4614681093801725
+                        ],
+                        "direction": [
+                          0.5773502691896258,
+                          0.5773502691896258,
+                          -0.5773502691896258
+                        ],
+                        "up": [
+                          0.40824829046386313,
+                          0.40824829046386313,
+                          0.8164965809277258
+                        ],
+                        "fieldOfView": 60.0,
+                        "aspect": 1.7777777777777777
+                      }
+                    }
+                  ],
+                  "priority": "High",
+                  "assignedTo": "statik@buro",
+                  "description": "İkinci revizyonda 01alMXGa9m080000000007 duvarı y yönünde 0,50 m kaymış; odaların alanı değişir."
+                }
+              ],
+              "objects": [
+                {
+                  "globalId": "01alMXGa9m080000000007",
+                  "model": {
+                    "globalId": "01alMXGa9m080000000007",
+                    "class": "IfcWall",
+                    "name": "MM-DVR-İç_duvar_15"
+                  },
+                  "uid": "0192f5a1-4242-7000-8000-000000000007"
+                }
+              ]
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "KentOS'un yazdığı sorun modelsiz: duvar çizimde bulunur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:ifc/v1/bcf/../revizyon/tasinan-duvar.bcf"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$fixture:ifc/v1/bcf/../revizyon/tasinan-duvar.bcf",
+              "version": "3.0",
+              "topics": [
+                {
+                  "guid": "0192f5a1-8103-7000-8000-000000000001",
+                  "topicType": "Issue",
+                  "status": "Open",
+                  "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                  "labels": [
+                    "Mimari"
+                  ],
+                  "created": "2026-11-17T12:00:00Z",
+                  "author": "mimar@buro",
+                  "files": [
+                    "kesit-binasi-r2.ifc"
+                  ],
+                  "comments": [
+                    {
+                      "guid": "421c594e-0d14-8cd5-8010-7b3c09f7b95d",
+                      "date": "2026-11-17T12:00:00Z",
+                      "author": "mimar@buro",
+                      "text": "Statik projeyle birlikte bakılsın."
+                    }
+                  ],
+                  "viewpoints": [
+                    {
+                      "guid": "0a69eb68-2815-804d-8760-bf03cea2502d",
+                      "selection": [
+                        "01alMXGa9m080000000007"
+                      ],
+                      "visible": true,
+                      "exceptions": [],
+                      "camera": {
+                        "kind": "perspective",
+                        "eye": [
+                          -0.8614680402387846,
+                          1.8635318643937837,
+                          4.4614681093801725
+                        ],
+                        "direction": [
+                          0.5773502691896258,
+                          0.5773502691896258,
+                          -0.5773502691896258
+                        ],
+                        "up": [
+                          0.40824829046386313,
+                          0.40824829046386313,
+                          0.8164965809277258
+                        ],
+                        "fieldOfView": 60.0,
+                        "aspect": 1.7777777777777777
+                      }
+                    }
+                  ],
+                  "priority": "High",
+                  "assignedTo": "statik@buro",
+                  "description": "İkinci revizyonda 01alMXGa9m080000000007 duvarı y yönünde 0,50 m kaymış; odaların alanı değişir."
+                }
+              ],
+              "objects": [
+                {
+                  "globalId": "01alMXGa9m080000000007",
+                  "uid": "0192f5a1-4242-7000-8000-000000000007"
+                }
+              ]
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yol boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": ""
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "path"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yol göreli",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "sorunlar.bcf"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "path"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BCF uzantısı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "path"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dosya yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:ifc/v1/bcf/yok.bcf"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "path"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Model .ifc değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:ifc/v1/bcf/disaridan-v3.bcf",
+            "model": "$fixture:ifc/v1/bcf/disaridan-v21.bcf"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "model"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Model yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:ifc/v1/bcf/disaridan-v3.bcf",
+            "model": "$fixture:ifc/v1/yok.ifc"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "model"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zip değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:ifc/v1/bcf/zip-degil.bcf"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "bcf_unreadable",
+              "message": "$any",
+              "path": "path"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sürüm dosyası yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:ifc/v1/bcf/surumsuz.bcf"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "bcf_unreadable",
+              "message": "$any",
+              "path": "path"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BCF 1.0 okunmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:ifc/v1/bcf/surum-1.bcf"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "bcf_unreadable",
+              "message": "$any",
+              "path": "path"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Andığı bakış arşivde yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:ifc/v1/bcf/bakissiz.bcf"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "bcf_unreadable",
+              "message": "$any",
+              "path": "path"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IFC olmayan model",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:ifc/v1/bcf/disaridan-v3.bcf",
+            "model": "$fixture:arch/v1/ifc/var.ifc"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "ifc_unreadable",
+              "message": "$any",
+              "path": "model"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "BCF okunmazsa model okunmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$fixture:ifc/v1/bcf/zip-degil.bcf",
+            "model": "$fixture:arch/v1/ifc/var.ifc"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "bcf_unreadable",
+              "message": "$any",
+              "path": "path"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Önizleme aynı sonucu verir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$fixture:ifc/v1/bcf/disaridan-v21.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$fixture:ifc/v1/bcf/disaridan-v21.bcf",
+              "version": "2.1",
+              "topics": [
+                {
+                  "guid": "0ab40391-294c-4dff-9329-a08514fd430f",
+                  "topicType": "Clash",
+                  "status": "Active",
+                  "title": "Kolon kirişi kesiyor",
+                  "labels": [],
+                  "created": "2026-11-17T20:44:25.475612",
+                  "author": "statik@buro",
+                  "files": [],
+                  "comments": [
+                    {
+                      "guid": "68fbcb14-a9cb-4711-8c11-31b0be4d1b34",
+                      "date": "2026-11-17T10:01:00",
+                      "author": "mimar@buro",
+                      "text": "Bakıyorum"
+                    }
+                  ],
+                  "viewpoints": [
+                    {
+                      "guid": "708e7367-408b-4752-90fd-87bd66a26965",
+                      "selection": [
+                        "01alMXGa9m080000000007"
+                      ],
+                      "visible": true,
+                      "exceptions": [],
+                      "camera": {
+                        "kind": "perspective",
+                        "eye": [
+                          5.0,
+                          5.5,
+                          5.0
+                        ],
+                        "direction": [
+                          -0.5773502691896257,
+                          -0.5773502691896257,
+                          -0.5773502691896257
+                        ],
+                        "up": [
+                          -0.408248290463863,
+                          -0.408248290463863,
+                          0.816496580927726
+                        ],
+                        "fieldOfView": 60.0,
+                        "aspect": 1.0
+                      }
+                    }
+                  ],
+                  "description": "Eski sürümün sorunu."
+                }
+              ],
+              "objects": [
+                {
+                  "globalId": "01alMXGa9m080000000007",
+                  "model": {
+                    "globalId": "01alMXGa9m080000000007",
+                    "class": "IfcWall",
+                    "name": "MM-DVR-İç_duvar_15"
+                  },
+                  "uid": "0192f5a1-4242-7000-8000-000000000007"
+                }
+              ]
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eski uzantı .bcfzip",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:ifc/v1/bcf/disaridan-v21.bcf",
+          "to": "$tmp:bcf-eski.bcfzip"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-eski.bcfzip"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$tmp:bcf-eski.bcfzip",
+              "version": "2.1",
+              "topics": [
+                {
+                  "guid": "0ab40391-294c-4dff-9329-a08514fd430f",
+                  "topicType": "Clash",
+                  "status": "Active",
+                  "title": "Kolon kirişi kesiyor",
+                  "labels": [],
+                  "created": "2026-11-17T20:44:25.475612",
+                  "author": "statik@buro",
+                  "files": [],
+                  "comments": [
+                    {
+                      "guid": "68fbcb14-a9cb-4711-8c11-31b0be4d1b34",
+                      "date": "2026-11-17T10:01:00",
+                      "author": "mimar@buro",
+                      "text": "Bakıyorum"
+                    }
+                  ],
+                  "viewpoints": [
+                    {
+                      "guid": "708e7367-408b-4752-90fd-87bd66a26965",
+                      "selection": [
+                        "01alMXGa9m080000000007"
+                      ],
+                      "visible": true,
+                      "exceptions": [],
+                      "camera": {
+                        "kind": "perspective",
+                        "eye": [
+                          5.0,
+                          5.5,
+                          5.0
+                        ],
+                        "direction": [
+                          -0.5773502691896257,
+                          -0.5773502691896257,
+                          -0.5773502691896257
+                        ],
+                        "up": [
+                          -0.408248290463863,
+                          -0.408248290463863,
+                          0.816496580927726
+                        ],
+                        "fieldOfView": 60.0,
+                        "aspect": 1.0
+                      }
+                    }
+                  ],
+                  "description": "Eski sürümün sorunu."
+                }
+              ],
+              "objects": [
+                {
+                  "globalId": "01alMXGa9m080000000007",
+                  "uid": "0192f5a1-4242-7000-8000-000000000007"
+                }
+              ]
+            },
+            "warnings": []
+          }
+        }
+      ]
+    }
+  ]
+}

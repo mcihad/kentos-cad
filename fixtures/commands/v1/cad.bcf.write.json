@@ -1,0 +1,1839 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.bcf.write",
+  "commandVersion": 1,
+  "title": "Sorunları BCF olarak yaz: konular, yorumlar, nesneleri seçen ve onlara bakan bakış",
+  "note": "ADR 8103. Yazılan dosya aynı durumda okunur; beklenenler scripts/fixtures/bcf_cases.py'nin ADR'den yazılmış kurallarından (GUID kuralı, kamera), kutular IfcOpenShell'in geometrisinden.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "BCF",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50.0,
+      "workspace": "cad"
+    },
+    "origin": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "layers": [
+      {
+        "id": "0",
+        "name": "0",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "0",
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.275,
+            "y": 4.5
+          },
+          {
+            "x": 4.275,
+            "y": 4.5
+          }
+        ],
+        "width": 0.15,
+        "justify": "center"
+      }
+    ],
+    "uids": [
+      "0192f5a1-4242-7000-8000-000000000007"
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Taşınan duvar: bakışı duvarı seçer, kamerası ona bakar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-yaz-1.bcf",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ],
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$tmp:bcf-yaz-1.bcf",
+              "topics": 1,
+              "viewpoints": 1,
+              "guids": [
+                "0192f5a1-8103-7000-8000-000000000001"
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.bcf.read",
+          "input": {
+            "path": "$tmp:bcf-yaz-1.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$tmp:bcf-yaz-1.bcf",
+              "version": "3.0",
+              "topics": [
+                {
+                  "guid": "0192f5a1-8103-7000-8000-000000000001",
+                  "topicType": "Issue",
+                  "status": "Open",
+                  "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                  "labels": [],
+                  "created": "2026-11-17T12:00:00Z",
+                  "author": "mimar@buro",
+                  "files": [
+                    "kesit-binasi-r2.ifc"
+                  ],
+                  "comments": [],
+                  "viewpoints": [
+                    {
+                      "guid": "0a69eb68-2815-804d-8760-bf03cea2502d",
+                      "selection": [
+                        "01alMXGa9m080000000007"
+                      ],
+                      "visible": true,
+                      "exceptions": [],
+                      "camera": {
+                        "kind": "perspective",
+                        "eye": [
+                          -0.861468077312443,
+                          1.863531922687557,
+                          4.461468077312443
+                        ],
+                        "direction": [
+                          0.5773502691896258,
+                          0.5773502691896258,
+                          -0.5773502691896258
+                        ],
+                        "up": [
+                          0.40824829046386313,
+                          0.40824829046386313,
+                          0.8164965809277258
+                        ],
+                        "fieldOfView": 60.0,
+                        "aspect": 1.7777777777777777
+                      }
+                    }
+                  ]
+                }
+              ],
+              "objects": [
+                {
+                  "globalId": "01alMXGa9m080000000007",
+                  "model": {
+                    "globalId": "01alMXGa9m080000000007",
+                    "class": "IfcWall",
+                    "name": "MM-DVR-İç_duvar_15"
+                  },
+                  "uid": "0192f5a1-4242-7000-8000-000000000007"
+                }
+              ]
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bütün alanlarıyla: öncelik, etiketler, atanan, açıklama, iki yorum",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-yaz-2.bcf",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ],
+                "topicType": "Clash",
+                "status": "Active",
+                "priority": "High",
+                "labels": [
+                  "Mimari",
+                  "Statik"
+                ],
+                "assignedTo": "statik@buro",
+                "description": "İkinci revizyonda y yönünde 0,50 m.\nOdaların alanı değişir.",
+                "comments": [
+                  {
+                    "author": "mimar@buro",
+                    "text": "Statik projeyle birlikte bakılsın."
+                  },
+                  {
+                    "author": "statik@buro",
+                    "date": "2026-11-18T09:30:00+03:00",
+                    "text": "Kiriş yerinde."
+                  }
+                ]
+              }
+            ],
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$tmp:bcf-yaz-2.bcf",
+              "topics": 1,
+              "viewpoints": 1,
+              "guids": [
+                "0192f5a1-8103-7000-8000-000000000001"
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.bcf.read",
+          "input": {
+            "path": "$tmp:bcf-yaz-2.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$tmp:bcf-yaz-2.bcf",
+              "version": "3.0",
+              "topics": [
+                {
+                  "guid": "0192f5a1-8103-7000-8000-000000000001",
+                  "topicType": "Clash",
+                  "status": "Active",
+                  "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                  "labels": [
+                    "Mimari",
+                    "Statik"
+                  ],
+                  "created": "2026-11-17T12:00:00Z",
+                  "author": "mimar@buro",
+                  "files": [
+                    "kesit-binasi-r2.ifc"
+                  ],
+                  "comments": [
+                    {
+                      "guid": "421c594e-0d14-8cd5-8010-7b3c09f7b95d",
+                      "date": "2026-11-17T12:00:00Z",
+                      "author": "mimar@buro",
+                      "text": "Statik projeyle birlikte bakılsın."
+                    },
+                    {
+                      "guid": "0031608e-2b14-8cda-a7b2-164a3298dbcc",
+                      "date": "2026-11-18T09:30:00+03:00",
+                      "author": "statik@buro",
+                      "text": "Kiriş yerinde."
+                    }
+                  ],
+                  "viewpoints": [
+                    {
+                      "guid": "0a69eb68-2815-804d-8760-bf03cea2502d",
+                      "selection": [
+                        "01alMXGa9m080000000007"
+                      ],
+                      "visible": true,
+                      "exceptions": [],
+                      "camera": {
+                        "kind": "perspective",
+                        "eye": [
+                          -0.861468077312443,
+                          1.863531922687557,
+                          4.461468077312443
+                        ],
+                        "direction": [
+                          0.5773502691896258,
+                          0.5773502691896258,
+                          -0.5773502691896258
+                        ],
+                        "up": [
+                          0.40824829046386313,
+                          0.40824829046386313,
+                          0.8164965809277258
+                        ],
+                        "fieldOfView": 60.0,
+                        "aspect": 1.7777777777777777
+                      }
+                    }
+                  ],
+                  "priority": "High",
+                  "assignedTo": "statik@buro",
+                  "description": "İkinci revizyonda y yönünde 0,50 m.\nOdaların alanı değişir."
+                }
+              ],
+              "objects": [
+                {
+                  "globalId": "01alMXGa9m080000000007",
+                  "model": {
+                    "globalId": "01alMXGa9m080000000007",
+                    "class": "IfcWall",
+                    "name": "MM-DVR-İç_duvar_15"
+                  },
+                  "uid": "0192f5a1-4242-7000-8000-000000000007"
+                }
+              ]
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "İki konu, iki duvar; konular GUID sırasıyla okunur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-yaz-3.bcf",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000003",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              },
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000002",
+                "title": "Doğu duvarı REI 90",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000002"
+                ]
+              }
+            ],
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$tmp:bcf-yaz-3.bcf",
+              "topics": 2,
+              "viewpoints": 2,
+              "guids": [
+                "0192f5a1-8103-7000-8000-000000000003",
+                "0192f5a1-8103-7000-8000-000000000002"
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.bcf.read",
+          "input": {
+            "path": "$tmp:bcf-yaz-3.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$tmp:bcf-yaz-3.bcf",
+              "version": "3.0",
+              "topics": [
+                {
+                  "guid": "0192f5a1-8103-7000-8000-000000000002",
+                  "topicType": "Issue",
+                  "status": "Open",
+                  "title": "Doğu duvarı REI 90",
+                  "labels": [],
+                  "created": "2026-11-17T12:00:00Z",
+                  "author": "mimar@buro",
+                  "files": [
+                    "kesit-binasi-r2.ifc"
+                  ],
+                  "comments": [],
+                  "viewpoints": [
+                    {
+                      "guid": "18167947-b315-83a8-a703-565401b1a9fc",
+                      "selection": [
+                        "01alMXGa9m080000000002"
+                      ],
+                      "visible": true,
+                      "exceptions": [],
+                      "camera": {
+                        "kind": "perspective",
+                        "eye": [
+                          6.55663743628995,
+                          -0.9433625637100498,
+                          6.59336256371005
+                        ],
+                        "direction": [
+                          0.5773502691896258,
+                          0.5773502691896258,
+                          -0.5773502691896258
+                        ],
+                        "up": [
+                          0.40824829046386313,
+                          0.40824829046386313,
+                          0.8164965809277258
+                        ],
+                        "fieldOfView": 60.0,
+                        "aspect": 1.7777777777777777
+                      }
+                    }
+                  ]
+                },
+                {
+                  "guid": "0192f5a1-8103-7000-8000-000000000003",
+                  "topicType": "Issue",
+                  "status": "Open",
+                  "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                  "labels": [],
+                  "created": "2026-11-17T12:00:00Z",
+                  "author": "mimar@buro",
+                  "files": [
+                    "kesit-binasi-r2.ifc"
+                  ],
+                  "comments": [],
+                  "viewpoints": [
+                    {
+                      "guid": "1829328d-fa15-8d3b-9e24-3de4f55c7be3",
+                      "selection": [
+                        "01alMXGa9m080000000007"
+                      ],
+                      "visible": true,
+                      "exceptions": [],
+                      "camera": {
+                        "kind": "perspective",
+                        "eye": [
+                          -0.861468077312443,
+                          1.863531922687557,
+                          4.461468077312443
+                        ],
+                        "direction": [
+                          0.5773502691896258,
+                          0.5773502691896258,
+                          -0.5773502691896258
+                        ],
+                        "up": [
+                          0.40824829046386313,
+                          0.40824829046386313,
+                          0.8164965809277258
+                        ],
+                        "fieldOfView": 60.0,
+                        "aspect": 1.7777777777777777
+                      }
+                    }
+                  ]
+                }
+              ],
+              "objects": [
+                {
+                  "globalId": "01alMXGa9m080000000002",
+                  "model": {
+                    "globalId": "01alMXGa9m080000000002",
+                    "class": "IfcWall",
+                    "name": "MM-DVR-Dış_duvar_25"
+                  }
+                },
+                {
+                  "globalId": "01alMXGa9m080000000007",
+                  "model": {
+                    "globalId": "01alMXGa9m080000000007",
+                    "class": "IfcWall",
+                    "name": "MM-DVR-İç_duvar_15"
+                  },
+                  "uid": "0192f5a1-4242-7000-8000-000000000007"
+                }
+              ]
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "İki duvar bir konuda: kamera ikisinin kutusuna bakar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-yaz-4.bcf",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007",
+                  "01alMXGa9m080000000002"
+                ]
+              }
+            ],
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$tmp:bcf-yaz-4.bcf",
+              "topics": 1,
+              "viewpoints": 1,
+              "guids": [
+                "0192f5a1-8103-7000-8000-000000000001"
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.bcf.read",
+          "input": {
+            "path": "$tmp:bcf-yaz-4.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$tmp:bcf-yaz-4.bcf",
+              "version": "3.0",
+              "topics": [
+                {
+                  "guid": "0192f5a1-8103-7000-8000-000000000001",
+                  "topicType": "Issue",
+                  "status": "Open",
+                  "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                  "labels": [],
+                  "created": "2026-11-17T12:00:00Z",
+                  "author": "mimar@buro",
+                  "files": [
+                    "kesit-binasi-r2.ifc"
+                  ],
+                  "comments": [],
+                  "viewpoints": [
+                    {
+                      "guid": "0a69eb68-2815-804d-8760-bf03cea2502d",
+                      "selection": [
+                        "01alMXGa9m080000000007",
+                        "01alMXGa9m080000000002"
+                      ],
+                      "visible": true,
+                      "exceptions": [],
+                      "camera": {
+                        "kind": "perspective",
+                        "eye": [
+                          -2.957478162001829,
+                          -4.572478162001829,
+                          10.397478162001828
+                        ],
+                        "direction": [
+                          0.5773502691896258,
+                          0.5773502691896258,
+                          -0.5773502691896258
+                        ],
+                        "up": [
+                          0.40824829046386313,
+                          0.40824829046386313,
+                          0.8164965809277258
+                        ],
+                        "fieldOfView": 60.0,
+                        "aspect": 1.7777777777777777
+                      }
+                    }
+                  ]
+                }
+              ],
+              "objects": [
+                {
+                  "globalId": "01alMXGa9m080000000002",
+                  "model": {
+                    "globalId": "01alMXGa9m080000000002",
+                    "class": "IfcWall",
+                    "name": "MM-DVR-Dış_duvar_25"
+                  }
+                },
+                {
+                  "globalId": "01alMXGa9m080000000007",
+                  "model": {
+                    "globalId": "01alMXGa9m080000000007",
+                    "class": "IfcWall",
+                    "name": "MM-DVR-İç_duvar_15"
+                  },
+                  "uid": "0192f5a1-4242-7000-8000-000000000007"
+                }
+              ]
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nesnesiz konu: bakışı yok, model gerekmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-yaz-5.bcf",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000004",
+                "title": "Genel not",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00"
+              }
+            ]
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$tmp:bcf-yaz-5.bcf",
+              "topics": 1,
+              "viewpoints": 0,
+              "guids": [
+                "0192f5a1-8103-7000-8000-000000000004"
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.bcf.read",
+          "input": {
+            "path": "$tmp:bcf-yaz-5.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$tmp:bcf-yaz-5.bcf",
+              "version": "3.0",
+              "topics": [
+                {
+                  "guid": "0192f5a1-8103-7000-8000-000000000004",
+                  "topicType": "Issue",
+                  "status": "Open",
+                  "title": "Genel not",
+                  "labels": [],
+                  "created": "2026-11-17T12:00:00",
+                  "author": "mimar@buro",
+                  "files": [],
+                  "comments": [],
+                  "viewpoints": []
+                }
+              ],
+              "objects": []
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Başlığın uçlarındaki boşluk alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-yaz-6.bcf",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "  Taşınan duvar  ",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ],
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$tmp:bcf-yaz-6.bcf",
+              "topics": 1,
+              "viewpoints": 1,
+              "guids": [
+                "0192f5a1-8103-7000-8000-000000000001"
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.bcf.read",
+          "input": {
+            "path": "$tmp:bcf-yaz-6.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$tmp:bcf-yaz-6.bcf",
+              "version": "3.0",
+              "topics": [
+                {
+                  "guid": "0192f5a1-8103-7000-8000-000000000001",
+                  "topicType": "Issue",
+                  "status": "Open",
+                  "title": "Taşınan duvar",
+                  "labels": [],
+                  "created": "2026-11-17T12:00:00Z",
+                  "author": "mimar@buro",
+                  "files": [
+                    "kesit-binasi-r2.ifc"
+                  ],
+                  "comments": [],
+                  "viewpoints": [
+                    {
+                      "guid": "0a69eb68-2815-804d-8760-bf03cea2502d",
+                      "selection": [
+                        "01alMXGa9m080000000007"
+                      ],
+                      "visible": true,
+                      "exceptions": [],
+                      "camera": {
+                        "kind": "perspective",
+                        "eye": [
+                          -0.861468077312443,
+                          1.863531922687557,
+                          4.461468077312443
+                        ],
+                        "direction": [
+                          0.5773502691896258,
+                          0.5773502691896258,
+                          -0.5773502691896258
+                        ],
+                        "up": [
+                          0.40824829046386313,
+                          0.40824829046386313,
+                          0.8164965809277258
+                        ],
+                        "fieldOfView": 60.0,
+                        "aspect": 1.7777777777777777
+                      }
+                    }
+                  ]
+                }
+              ],
+              "objects": [
+                {
+                  "globalId": "01alMXGa9m080000000007",
+                  "model": {
+                    "globalId": "01alMXGa9m080000000007",
+                    "class": "IfcWall",
+                    "name": "MM-DVR-İç_duvar_15"
+                  },
+                  "uid": "0192f5a1-4242-7000-8000-000000000007"
+                }
+              ]
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Önizleme yazmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "path": "$tmp:bcf-yaz-7.bcf",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ],
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$tmp:bcf-yaz-7.bcf",
+              "topics": 1,
+              "viewpoints": 1,
+              "guids": [
+                "0192f5a1-8103-7000-8000-000000000001"
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.bcf.read",
+          "input": {
+            "path": "$tmp:bcf-yaz-7.bcf"
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "path"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "overwrite ile var olan dosyanın üzerine",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:ifc/v1/bcf/disaridan-v3.bcf",
+          "to": "$tmp:bcf-var-uzerine.bcf"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-var-uzerine.bcf",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ],
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "overwrite": true
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$tmp:bcf-var-uzerine.bcf",
+              "topics": 1,
+              "viewpoints": 1,
+              "guids": [
+                "0192f5a1-8103-7000-8000-000000000001"
+              ]
+            },
+            "warnings": []
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.bcf.read",
+          "input": {
+            "path": "$tmp:bcf-var-uzerine.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc"
+          },
+          "within": 1e-05,
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "path": "$tmp:bcf-var-uzerine.bcf",
+              "version": "3.0",
+              "topics": [
+                {
+                  "guid": "0192f5a1-8103-7000-8000-000000000001",
+                  "topicType": "Issue",
+                  "status": "Open",
+                  "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                  "labels": [],
+                  "created": "2026-11-17T12:00:00Z",
+                  "author": "mimar@buro",
+                  "files": [
+                    "kesit-binasi-r2.ifc"
+                  ],
+                  "comments": [],
+                  "viewpoints": [
+                    {
+                      "guid": "0a69eb68-2815-804d-8760-bf03cea2502d",
+                      "selection": [
+                        "01alMXGa9m080000000007"
+                      ],
+                      "visible": true,
+                      "exceptions": [],
+                      "camera": {
+                        "kind": "perspective",
+                        "eye": [
+                          -0.861468077312443,
+                          1.863531922687557,
+                          4.461468077312443
+                        ],
+                        "direction": [
+                          0.5773502691896258,
+                          0.5773502691896258,
+                          -0.5773502691896258
+                        ],
+                        "up": [
+                          0.40824829046386313,
+                          0.40824829046386313,
+                          0.8164965809277258
+                        ],
+                        "fieldOfView": 60.0,
+                        "aspect": 1.7777777777777777
+                      }
+                    }
+                  ]
+                }
+              ],
+              "objects": [
+                {
+                  "globalId": "01alMXGa9m080000000007",
+                  "model": {
+                    "globalId": "01alMXGa9m080000000007",
+                    "class": "IfcWall",
+                    "name": "MM-DVR-İç_duvar_15"
+                  },
+                  "uid": "0192f5a1-4242-7000-8000-000000000007"
+                }
+              ]
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yol boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "path"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yol göreli",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "sorunlar.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "path"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": ".bcf değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-sorunlar.txt",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "path"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Klasörü yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:yok/klasor/sorunlar.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "path"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Model yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-ret.bcf",
+            "model": "$fixture:ifc/v1/yok.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_file_path",
+              "message": "$any",
+              "path": "model"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dosya var, overwrite yok",
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:ifc/v1/bcf/disaridan-v3.bcf",
+          "to": "$tmp:bcf-var.bcf"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-var.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "file_exists",
+              "message": "$any",
+              "path": "path"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Konu yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-ret.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "topics": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_bcf_topic",
+              "message": "$any",
+              "path": "topics"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "GUID büyük harfli",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-ret.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "topics": [
+              {
+                "guid": "0192F5A1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_bcf_topic",
+              "message": "$any",
+              "path": "topics.0.guid"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı GUID iki konuda",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-ret.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              },
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "İkinci",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_bcf_topic",
+              "message": "$any",
+              "path": "topics.1.guid"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Başlık boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-ret.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "  ",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_bcf_topic",
+              "message": "$any",
+              "path": "topics.0.title"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Başlık iki satır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-ret.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "a\nb",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_bcf_topic",
+              "message": "$any",
+              "path": "topics.0.title"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "301 karakterlik başlık",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-ret.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_bcf_topic",
+              "message": "$any",
+              "path": "topics.0.title"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yazar boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-ret.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_bcf_topic",
+              "message": "$any",
+              "path": "topics.0.author"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gün okunmuyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-ret.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "17.11.2026",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_bcf_topic",
+              "message": "$any",
+              "path": "topics.0.date"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yorumun metni boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-ret.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ],
+                "comments": [
+                  {
+                    "author": "a",
+                    "text": " "
+                  }
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_bcf_topic",
+              "message": "$any",
+              "path": "topics.0.comments.0.text"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "GlobalId değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-ret.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "duvar-7"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_bcf_topic",
+              "message": "$any",
+              "path": "topics.0.objects"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nesneli konu modelsiz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-ret.bcf",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_bcf_topic",
+              "message": "$any",
+              "path": "model"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Modelde olmayan nesne",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-ret.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "0000000000000000000000"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "ifc_object_not_found",
+              "message": "$any",
+              "path": "topics.0.objects"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gövdesi olmayan nesne",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-ret.bcf",
+            "model": "$fixture:ifc/v1/revizyon/kesit-binasi-r2.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "1qqc85PT6iS3LNYEDbuNRy"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "ifc_no_body",
+              "message": "$any",
+              "path": "topics.0.objects"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IFC olmayan model",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-ret.bcf",
+            "model": "$fixture:arch/v1/ifc/var.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "Zemin kattaki iç duvar 50 cm kuzeye taşınmış",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "ifc_unreadable",
+              "message": "$any",
+              "path": "model"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Konu denetimi modelden önce",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "path": "$tmp:bcf-ret.bcf",
+            "model": "$fixture:arch/v1/ifc/var.ifc",
+            "topics": [
+              {
+                "guid": "0192f5a1-8103-7000-8000-000000000001",
+                "title": "",
+                "author": "mimar@buro",
+                "date": "2026-11-17T12:00:00Z",
+                "objects": [
+                  "01alMXGa9m080000000007"
+                ]
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_bcf_topic",
+              "message": "$any",
+              "path": "topics.0.title"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

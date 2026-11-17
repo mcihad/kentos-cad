@@ -20,11 +20,14 @@
 
 pub mod alignment;
 pub mod arch;
+pub mod bcf;
 pub mod building;
 pub mod catalog;
 pub mod catalog_schema;
 pub mod clash;
 pub mod closed;
+#[cfg(feature = "geometry")]
+pub mod compare;
 pub mod compartment;
 pub mod crs;
 pub mod expected;

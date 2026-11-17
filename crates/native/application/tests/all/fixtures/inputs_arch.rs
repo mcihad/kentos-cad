@@ -841,3 +841,22 @@ impl Input for kentos_commands::IfcInspect {
         None
     }
 }
+
+impl Input for kentos_commands::IfcCompare {
+    /// `tolerance` (docs/adr/8103).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        (path == "tolerance").then_some(self.tolerance.as_mut()).flatten()
+    }
+}
+
+impl Input for kentos_commands::BcfWrite {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::BcfRead {
+    fn number(&mut self, _: &str) -> Option<&mut f64> {
+        None
+    }
+}
