@@ -1,0 +1,45 @@
+[package]
+name = "kentos-imza-api"
+description = "KentOS İmza: yalnız geri döngüde dinleyen yerel HTTP ve WebSocket yüzeyi, Origin ve Host kapıları (docs/adr/9002)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+axum = { workspace = true }
+base64 = { workspace = true }
+hex = { workspace = true }
+kentos-imza-audit = { path = "../audit" }
+kentos-imza-core = { path = "../core" }
+kentos-imza-domain = { path = "../domain" }
+kentos-imza-security = { path = "../security" }
+kentos-imza-signature = { path = "../signature" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+# `cors` for the browser's preflight; the workspace's features otherwise.
+tower-http = { workspace = true, features = ["cors"] }
+tracing = { workspace = true }
+uuid = { workspace = true }
+
+[dev-dependencies]
+ed25519-dalek = { workspace = true }
+futures-util = { workspace = true }
+kentos-imza-security = { path = "../security", features = ["issue"] }
+kentos-imza-signature = { path = "../signature", features = ["mock-token"] }
+reqwest = { workspace = true }
+tokio-tungstenite = { workspace = true }
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "deny"
+unimplemented = "deny"

@@ -109,6 +109,15 @@ members = [
     "apps/jobrun",
     # kentos, the command line for authors and agents: `kentos kek inspect|pack` (plan/eklenti.md ADIM 16).
     "apps/cli",
+    # KentOS İmza, the e-signature (docs/adr/9002): error taxonomy, the model and its wire types, signed requests,
+    # the providers and the signing engine, the audit chain, PKCS#11 and the local bridge the web portal calls.
+    "crates/imza/core",
+    "crates/imza/domain",
+    "crates/imza/security",
+    "crates/imza/signature",
+    "crates/imza/audit",
+    "crates/imza/pkcs11",
+    "crates/imza/api",
     # Desktop (docs/adr/0010, 0016): the KentOS UI library and its showcase. Not in
     # default-members, so web and server work never builds Iced and wgpu (TODOS.md UI-04);
     # pnpm rust:test:desktop and make test-desktop build them.
@@ -176,6 +185,13 @@ default-members = [
     "apps/api",
     "apps/jobrun",
     "apps/cli",
+    "crates/imza/core",
+    "crates/imza/domain",
+    "crates/imza/security",
+    "crates/imza/signature",
+    "crates/imza/audit",
+    "crates/imza/pkcs11",
+    "crates/imza/api",
 ]
 # GeographicLib's Rust port with libm's functions (docs/adr/0171): the release's own code, a path
 # dependency of the geometry core but not a member (its tests run by hand, its lints its authors').
@@ -302,6 +318,24 @@ zune-jpeg = { version = "=0.5.15", default-features = false, features = ["std"] 
 # approval for CBS-03, October 2026): pure Rust, image-rs's own WebP codec, already in the lock
 # through resvg; lossy and lossless decoding, lossless encoding.
 image-webp = { version = "=0.2.4", default-features = false }
+# KentOS İmza, the e-signature (docs/adr/9002; the owner's approval of 18 November 2026, docs/deps/README.md).
+# Versions the lockfile already held where the API differs little: RustCrypto's 0.13 curves (the platform's code was
+# written for 0.14), ed25519-dalek 2 and base64 0.22.
+thiserror = "=2.0.21"
+hex = "=0.4.3"
+base64 = "=0.22.1"
+ed25519-dalek = "=2.2.0"
+p256 = { version = "=0.13.2", default-features = false, features = ["ecdsa", "pkcs8", "std"] }
+p384 = { version = "=0.13.1", default-features = false, features = ["ecdsa", "pkcs8", "std"] }
+rsa = { version = "=0.9.10", default-features = false, features = ["std"] }
+# New to the lockfile: X.509 parsing (qualified certificate, the signer's key on the server) and PKCS#11.
+x509-parser = "=0.18.1"
+cryptoki = "=0.12.1"
+# The server's envelope key, generated (feature `issue` of kentos-imza-security only).
+getrandom = "=0.3.4"
+# The PIN window's link to the local bridge's event stream.
+tokio-tungstenite = "=0.29.0"
+futures-util = "=0.3.34"
 # Tests only: the naga wgpu uses validates the shared WGSL (shaders/wgsl, REN-05).
 naga = { version = "=27.0.3", features = ["wgsl-in"] }
 # Tests only: waits on wgpu's futures in the renderer's GPU test (locked through rfd).
