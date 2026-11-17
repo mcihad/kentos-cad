@@ -247,6 +247,29 @@ pub async fn run(config: &Config, args: &Args) -> Result<(), String> {
             .map_err(fail)?;
             println!("parola değişti; hesabın açık oturumları kapatıldı");
         }
+        ["platform-admin", verb @ ("add" | "remove")] => {
+            let on = *verb == "add";
+            let user =
+                admin::set_platform_admin(&owner_pool(config).await?, args.required("user")?, on)
+                    .await
+                    .map_err(fail)?;
+            println!(
+                "{user}: {}",
+                if on {
+                    "sistem yöneticisi"
+                } else {
+                    "artık sistem yöneticisi değil"
+                }
+            );
+        }
+        ["platform-admin", "list"] => {
+            for (login, name) in admin::platform_admins(&owner_pool(config).await?)
+                .await
+                .map_err(fail)?
+            {
+                println!("{login}\t{name}");
+            }
+        }
         ["member", "add"] => {
             let pool = owner_pool(config).await?;
             admin::set_membership(
@@ -573,6 +596,8 @@ pub const USAGE: &str = "kullanım:
   kentosd user password --login GİRİŞ (--password-stdin | --password-env DEĞİŞKEN)
   kentosd member add --tenant KISA --user GİRİŞ|KİMLİK --role owner|admin|project_manager|editor|viewer [--seat]
   kentosd member list --tenant KISA
+  kentosd platform-admin add|remove --user GİRİŞ|KİMLİK   portalın sistem yöneticisi (kurumların ve hesapların yönetimi)
+  kentosd platform-admin list
   kentosd project deleted --tenant KISA       çöp kutusundakiler: kimlik, ad, silinme zamanı, silen, kalıcı silinme
   kentosd project restore --tenant KISA --project KİMLİK
   kentosd jobs                                sunucu işlerinin sayıları: sırada, çalışan, son 24 saatte düşen, en eski bekleyen

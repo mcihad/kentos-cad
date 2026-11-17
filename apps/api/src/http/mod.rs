@@ -37,6 +37,8 @@ mod native_tests;
 mod networks_tests;
 #[cfg(test)]
 mod people_tests;
+// The cloud portal (docs/adr/9000).
+pub mod portal;
 pub mod projects;
 #[cfg(test)]
 mod temporal_tests;
@@ -264,6 +266,8 @@ pub fn router(state: AppState) -> Router {
             "/v1/extension-catalogs/{catalog}/revocations",
             get(extension_catalog::list_revocations),
         )
+        // The cloud portal (docs/adr/9000).
+        .merge(portal::routes())
         .layer(middleware);
     // An upload's bytes are larger and slower than any other request: their
     // route has its own limit (the largest file) and timeout.
@@ -335,8 +339,23 @@ pub fn router(state: AppState) -> Router {
             get(extension_catalog::sbom),
         )
         .layer(package_layers);
+    // A dossier's file (docs/adr/9000 §7): the same, under the largest file a dossier takes.
+    let dossier_layers = ServiceBuilder::new()
+        .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
+        .layer(TraceLayer::new_for_http().make_span_with(|req: &axum::http::Request<_>| {
+            let rid = req.headers().get("x-request-id").and_then(|v| v.to_str().ok()).unwrap_or("-");
+            tracing::info_span!("dosya eki", method = %req.method(), path = %req.uri().path(), request_id = %rid)
+        }))
+        .layer(PropagateRequestIdLayer::x_request_id())
+        .layer(CatchPanicLayer::new())
+        .layer(TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, UPLOAD_TIMEOUT))
+        .layer(RequestBodyLimitLayer::new(
+            usize::try_from(kentos_application::portal::files::MAX_FILE_BYTES).unwrap_or(usize::MAX),
+        ));
+    let dossier_files = portal::upload_routes().layer(dossier_layers);
     api.merge(uploads)
         .merge(inputs)
         .merge(packages)
+        .merge(dossier_files)
         .with_state(state)
 }
