@@ -280,6 +280,7 @@ fn prepare_in(
     let wheels = Wheels {
         folder: folder.is_dir().then(|| folder.clone()),
         index: settings.index_url.clone(),
+        computer: false,
     };
     if wheels.folder.is_none() && wheels.index.is_none() {
         return Err(format!(

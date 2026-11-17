@@ -85,6 +85,12 @@ pub struct Policy {
     /// does not widen it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub allow_extensions_on_server: Option<bool>,
+    /// The organisation's folder of Python wheels (a network share), for computers that reach no package index
+    /// (docs/adr/8057 §123, PY-UV-27): when written, an extension's environment is prepared from it alone, offline,
+    /// each wheel the one the lock names for this computer and checked against its hash, nothing built from a source,
+    /// as the KentOS server prepares one (§66).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wheel_folder: Option<String>,
     /// The policy file is there but cannot be read: everything is refused with this reason (fail closed).
     #[serde(skip)]
     pub broken: Option<String>,

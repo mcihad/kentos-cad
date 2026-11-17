@@ -140,6 +140,7 @@ fn a_server_s_environment_takes_the_lock_s_wheels_only_each_against_its_hash() {
     let offline = Wheels {
         folder: Some(folder.clone()),
         index: None,
+        computer: false,
     };
     let stop = AtomicBool::new(false);
     let mut seen = Vec::new();
@@ -216,6 +217,7 @@ fn a_server_s_environment_takes_the_lock_s_wheels_only_each_against_its_hash() {
     let online = Wheels {
         folder: Some(folder.clone()),
         index: Some("https://paketler.kurum.example/simple".into()),
+        computer: false,
     };
     let args: Vec<String> = install_args(Path::new("/p/bin/python"), Path::new("/l.txt"), &online)
         .iter()
@@ -292,6 +294,7 @@ fn uv_s_words_for_wheels_become_turkish_with_the_package_named() {
     let folder = Wheels {
         folder: Some(PathBuf::from("/srv/tekerlekler")),
         index: None,
+        computer: false,
     };
     let said = |text: &str| wheel_words(text, &folder);
     let source_only = said(
@@ -302,6 +305,21 @@ fn uv_s_words_for_wheels_become_turkish_with_the_package_named() {
     assert!(
         source_only.starts_with("“tasli” 1.0: bu sunucunun sistemi"),
         "{source_only}"
+    );
+    // A desktop's, from the organisation's wheel folder (docs/adr/8057 §123): this computer, nothing built.
+    let desktop = Wheels {
+        computer: true,
+        ..folder.clone()
+    };
+    let on_desktop = wheel_words(
+        "Because tasli==1.0 has no usable wheels and you require tasli==1.0, we can conclude that your requirements \
+         are unsatisfiable.",
+        &desktop,
+    );
+    assert!(
+        on_desktop.starts_with("“tasli” 1.0: bu bilgisayarın sistemi")
+            && on_desktop.contains("tekerlek klasöründen kaynak paketi derlenmez"),
+        "{on_desktop}"
     );
     // A universal lock's requirement, its markers in braces across lines.
     let marked = said(

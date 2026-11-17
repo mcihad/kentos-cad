@@ -5705,3 +5705,49 @@ masaüstü `tests/grants.rs` (yeni, 2) ve `an_updates_new_capability_is_shown_an
     - Python hazır, ortam çevrimdışı hazırlanamadı: düğme ve model adımı "internete ulaşılamadı" der.
   - Barındırıcı: bırakılan katkının nedeni yeteneğin adıyla yazılır; `left_out` etkinleştirmenin bıraktığıyla aynıdır.
   - Masaüstünün bütün sınamaları: 2545.
+
+## §123. Kurumun tekerlek klasörü: internetsiz bilgisayarda eklenti ortamı (`ADIM 22A`, PY-UV-27)
+
+**17 Kasım.** Kod: eklenti paketi `python/builds/locked.rs` (yeni: `locked_wheels`); eklenti barındırıcısı `policy.rs`
+(`wheelFolder`); Python ortamı `extension/wheels.rs` (`Wheels::computer`); masaüstü `extensions/wheel_folder.rs`
+(yeni), `extensions/environment.rs` (önizleme, hazırlama, bölümün sözü). Sınamalar: eklenti paketi
+`the_wheels_a_lock_names_for_a_computer_with_their_hashes`, Python ortamı tekerlek sözleri, masaüstü `wheel_folder` 3.
+
+- **Sorun.** Belediye bilgisayarlarının çoğu paket dizinine ulaşamaz. Masaüstü eklentinin ortamını yalnız internetten
+  hazırlıyordu, bu yüzden internetsiz bilgisayarda Python katkıları hiç çalışmıyordu. Sunucunun tekerlek klasörü yolu
+  (§66) vardı ama masaüstünde yoktu. PY-UV-27 "çevrimdışı önbellek/tekerlek deposu platform etiketi ve özetle
+  doğrulanır" der.
+- **Karar:** kurum ilkesinin `wheelFolder` alanı bilgi işlemin doldurduğu bir klasörü (ağ paylaşımı) gösterir. Yazılıysa
+  eklentinin ortamı yalnız oradan ve internetsiz hazırlanır; yol sunucununkiyle aynıdır (`prepare_wheels`): yalnız
+  tekerlekler kurulur, hiçbir şey derlenmez, her dosya kilidin özetiyle denetlenir (`--require-hashes`).
+- **uv'den önce KentOS denetler:** kilidin bu bilgisayar için istediği tekerlekler çıkarılır (`locked_wheels`: kilidin
+  işaretleri, seçilen isteğe bağlı özellikler, platform etiketleri ve KentOS'un Python'u). Her biri klasörde dosya
+  adıyla aranır ve özeti hesaplanır. Önizleme uv'yi çalıştırmaz ve dizine gitmez: kurulacak paketleri ya da paket paket
+  eksikleri söyler. Üç eksik vardır:
+  - klasörde yok (gereken dosyanın adıyla);
+  - klasördeki dosya kilitteki değil (özeti tutmuyor; kurulmaz);
+  - kilitte bu bilgisayar için hiç tekerlek yok (tekerlek klasöründen kaynak paketi derlenmez).
+
+  Hazırlama da önce aynı denetimi yapar.
+- **Güvenlik:** kilit eklentinindir. Tekerleğin adı yalnız düz bir dosya adıysa okunur (`/`, `\`, başta nokta yok);
+  klasörün dışına ya da yol olarak verilen bir ada bakılmaz.
+- **Sözler:** uv'nin tekerlek sözü masaüstünde "bu bilgisayarın sistemi … tekerlek klasöründen kaynak paketi derlenmez"
+  der (sunucuda eskisi gibi "bu sunucunun"). Bölüm, ilkenin ne dediğini yazar: "Kurum ilkesi: paketler internetten değil
+  kurumun tekerlek klasöründen (…) kurulur; her dosya kilidin özetiyle denetlenir, kaynak paketi derlenmez."
+- **Gerçek pencere (ağ tamamen kapalı):** KentOS'un her vekil sunucusu ölü bir adrese yönlendirildi; uv internete
+  çıksaydı düşerdi. Vitrin'in kilidindeki iki tekerlek (numpy 2.5.4, shapely 2.0.7) klasöre kondu.
+  - Önizleme "Kurulacak paketler (2): numpy 2.5.4, shapely 2.0.7." dedi.
+  - Hazırla "Ortam hazır · Python 3.12.13 · 2 paket · internetsiz çalışır." ile bitti.
+  - numpy kurcalanıp shapely kaldırılınca önizleme ikisini de paket adıyla söyledi ("…kilitteki dosya değil (özeti
+    tutmuyor); kurulmaz. “shapely” 2.0.7: tekerlek klasöründe yok; bu bilgisayar için dosyası shapely-2.0.7-…whl.").
+- **Kalan (PY-UV-25):** kurum aynası ve vekil sunucunun kimlik bilgilerinin kullanıcı/kiracı kapsamında saklanması.
+- **Sınamalar:**
+  - Eklenti paketi 1: Linux'ta ve Windows'ta isteğe bağlı özellikle kilidin tekerlekleri, özetleri; yalnız kaynağı
+    olan paket dosyasız.
+  - Python ortamı: masaüstünün sözü bilgisayarı adlandırır.
+  - Masaüstü 3:
+    - eksik, kilitteki olmayan ve tekerleği hiç olmayan paket söylenir, doğru dosya paketleri verir, ulaşılamayan
+      klasör söylenir;
+    - yol olarak verilen tekerlek adı okunmaz;
+    - klasör ilkeden okunur.
+  - Masaüstünün bütün sınamaları: 2548.

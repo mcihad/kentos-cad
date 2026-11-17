@@ -95,6 +95,11 @@ struct Context {
     /// Installed from a working folder: a development environment, with its project's development group (docs/adr/8057
     /// §97).
     development: bool,
+    /// The organisation's wheel folder, when its policy names one: the packages come from there alone, offline
+    /// (docs/adr/8057 §123).
+    wheels: Option<PathBuf>,
+    /// This computer as the lock reads it: its system, machine and KentOS's Python.
+    target: Option<kentos_extensions::python_builds::Target>,
 }
 
 impl Context {
@@ -187,6 +192,8 @@ impl App {
             lock_file: project.lock_file.clone(),
             version: manifest.version.to_string(),
             development: registry.developed(id),
+            wheels: super::wheel_folder::of_policy(registry.policy()),
+            target: kentos_extensions::python_builds::Target::here(self.python_here()),
         })
     }
 
@@ -301,20 +308,55 @@ impl App {
                     .map_err(InstallError::NotRun)?
                     .for_development(c.development);
                     let wheel = sdk::find(&sdk::dirs(), VERSION).map_err(InstallError::NotRun)?;
-                    let made = extension::prepare(
-                        &c.uv,
-                        &c.root,
-                        &c.python,
-                        &wheel,
-                        &c.package,
-                        (&c.project_file, &c.lock_file),
-                        &key,
-                        &c.not_to_build(),
-                        &stop,
-                        &mut |at| {
-                            let _ = told.unbounded_send(EnvEvent::Progressed(told_id.clone(), at));
-                        },
-                    )?;
+                    let mut said = |at| {
+                        let _ = told.unbounded_send(EnvEvent::Progressed(told_id.clone(), at));
+                    };
+                    let made = match &c.wheels {
+                        // The organisation's wheel folder: checked first, each package said; then wheels only,
+                        // offline, each against its hash (docs/adr/8057 §123).
+                        Some(folder) => {
+                            super::wheel_folder::check(
+                                folder,
+                                &c.package,
+                                (&c.project_file, &c.lock_file),
+                                c.target,
+                                &extras,
+                            )
+                            .map_err(|words| InstallError::Failed {
+                                cause: kentos_python_env::python::Cause::Other,
+                                said: words,
+                            })?;
+                            let from = extension::Wheels {
+                                folder: Some(folder.clone()),
+                                index: None,
+                                computer: true,
+                            };
+                            extension::prepare_wheels(
+                                &c.uv,
+                                &c.root,
+                                &c.python,
+                                &wheel,
+                                &c.package,
+                                (&c.project_file, &c.lock_file),
+                                &key,
+                                &from,
+                                &stop,
+                                &mut said,
+                            )?
+                        }
+                        None => extension::prepare(
+                            &c.uv,
+                            &c.root,
+                            &c.python,
+                            &wheel,
+                            &c.package,
+                            (&c.project_file, &c.lock_file),
+                            &key,
+                            &c.not_to_build(),
+                            &stop,
+                            &mut said,
+                        )?,
+                    };
                     // Another set of features made before: this one takes its place.
                     extension::clean_for(&c.root, &ext, Some(&key));
                     Ok(Box::new(made))
@@ -373,6 +415,17 @@ impl App {
                 let asked = id.clone();
                 return in_background(
                     move || {
+                        // From the organisation's wheel folder: what the lock installs here, each wheel looked for and
+                        // checked; uv is not asked and no index reached (docs/adr/8057 §123).
+                        if let Some(folder) = &c.wheels {
+                            return super::wheel_folder::check(
+                                folder,
+                                &c.package,
+                                (&c.project_file, &c.lock_file),
+                                c.target,
+                                &extras,
+                            );
+                        }
                         let key = extension::key_for(
                             &c.package,
                             &c.lock_file,
@@ -526,6 +579,14 @@ impl App {
             return form.wide(label::caption(
                 "Python işlevleri kurulumda seçilmedi; bu eklenti için ortam hazırlanmaz.",
             ));
+        }
+        // Where the packages come from, when the organisation says (docs/adr/8057 §123).
+        if let Some(folder) = super::wheel_folder::of_policy(registry.policy()) {
+            form = form.wide(label::caption(format!(
+                "Kurum ilkesi: paketler internetten değil kurumun tekerlek klasöründen ({}) kurulur; her dosya kilidin \
+                 özetiyle denetlenir, kaynak paketi derlenmez.",
+                folder.display()
+            )));
         }
         // Being developed (docs/adr/8057 §97): its own kind of environment, said once.
         if registry.developed(id) {

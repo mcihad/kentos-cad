@@ -783,7 +783,10 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
   çözülmez [PY-UV-26]. Çevrimdışı önbellek/tekerlek deposu platform etiketi ve özetle doğrulanır [PY-UV-27].
   — *kısmen (17 Kasım, ADR 8057 §118): kurum ilkesinin `pinnedPackageIndexes`'i kurumun paketlerini adla ya da önekle
   tek depoya sabitler; kilit onları başka yerden alırsa inceleme, kurulum ve çalışma reddeder (bağımlılık karışıklığı)
-  [PY-UV-26]; kalan: kurum aynası/vekil sunucunun kimlik bilgileri ve çevrimdışı tekerlek deposu (ADIM 22A).*
+  [PY-UV-26]. 17 Kasım (§123): ilkenin `wheelFolder`'ı kurumun tekerlek klasörünü gösterir; masaüstü ortamı oradan
+  internetsiz, yalnız tekerleklerle ve kilidin özetleriyle hazırlar; önizleme ve hazırlama önce kilidin bu bilgisayar
+  için istediği dosyaları platform etiketi ve özetle denetler, eksiği paket paket söyler (gerçek pencere: ağ kapalı,
+  Vitrin'in ortamı klasörden) [PY-UV-27]. Kalan: kurum aynası/vekil sunucunun kimlik bilgileri (PY-UV-25).*
 - [x] Ortam denetimi üst veri, SDK içe aktarma, gerekli paket sürüm/içe aktarma, yerel kütüphane ve eklenti uyumunu
   tanılar [PY-UV-28]. Sır içermeyen kilit/ortam/SBOM raporu dışa aktarılır [PY-UV-29]. Önbellek/venv/yorumlayıcı
   temizliğinde sahiplik ve etkin iş başvuruları denetlenir [PY-UV-30]. Aracı (broker) SDK'sı host'un doğrulanmış,

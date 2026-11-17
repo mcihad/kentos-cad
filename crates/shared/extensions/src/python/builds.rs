@@ -373,11 +373,29 @@ fn strings(value: Option<&Toml>) -> Vec<String> {
 /// The packages `root` installs where `env` holds: its dependencies and every optional feature's, followed with their
 /// markers and the extras they ask for, each package once.
 fn installed<'a>(entries: &[&'a Toml], root: &'a Toml, env: &Env) -> Vec<&'a Toml> {
+    installed_with(entries, root, env, None)
+}
+
+/// [`installed`] with only the optional features `extras` names, when it names them (an environment's chosen ones).
+fn installed_with<'a>(
+    entries: &[&'a Toml],
+    root: &'a Toml,
+    env: &Env,
+    extras: Option<&[String]>,
+) -> Vec<&'a Toml> {
     let mut out = Vec::new();
     let mut seen: BTreeSet<(String, String, String)> = BTreeSet::new();
     let mut queue: VecDeque<(&Toml, String)> = VecDeque::from([(root, String::new())]);
     if let Some(groups) = root.get(&["optional-dependencies"]).and_then(Toml::table) {
-        queue.extend(groups.keys().map(|g| (root, g.clone())));
+        queue.extend(
+            groups
+                .keys()
+                .filter(|g| {
+                    extras
+                        .is_none_or(|chosen| chosen.iter().any(|c| normalized(c) == normalized(g)))
+                })
+                .map(|g| (root, g.clone())),
+        );
     }
     while let Some((entry, extra)) = queue.pop_front() {
         if !seen.insert((name_of(entry), version_of(entry), extra.clone())) {
@@ -445,13 +463,20 @@ fn resolve<'a>(entries: &[&'a Toml], dependency: &Toml, env: &Env) -> Option<&'a
 
 /// What `entry` needs on `target` when none of its wheels fits; none when one fits, and for the author's own folder
 /// (the lint refuses that source).
+/// Installed from the package itself (a path, a folder, an editable or a virtual project): no wheel to take.
+fn is_local(entry: &Toml) -> bool {
+    entry
+        .get(&["source"])
+        .and_then(Toml::table)
+        .is_some_and(|s| {
+            s.keys()
+                .any(|k| matches!(k.as_str(), "path" | "directory" | "editable" | "virtual"))
+        })
+}
+
 fn need(entry: &Toml, target: &Target) -> Option<Need> {
     let source = entry.get(&["source"]).and_then(Toml::table);
-    let local = |s: &BTreeMap<String, Toml>| {
-        s.keys()
-            .any(|k| matches!(k.as_str(), "path" | "directory" | "editable" | "virtual"))
-    };
-    if source.is_some_and(local) {
+    if is_local(entry) {
         return None;
     }
     let wheels = entry.get(&["wheels"]).and_then(Toml::array).unwrap_or(&[]);
@@ -789,6 +814,9 @@ fn flip(op: &str) -> Option<&'static str> {
         _ => return None,
     })
 }
+
+mod locked;
+pub use locked::{LockedWheels, locked_wheels};
 
 #[cfg(test)]
 mod tests;

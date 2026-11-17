@@ -435,3 +435,58 @@ fn the_packages_not_to_build_are_the_wheeled_ones() {
         "a lock that is not there"
     );
 }
+
+/// What the organisation's wheel folder must hold for one computer (docs/adr/8057 §123): each package the lock installs
+/// there with the chosen optional features, and the lock's wheels of it that fit with their hashes; a package with only
+/// a source or from a repository has none.
+#[test]
+fn the_wheels_a_lock_names_for_a_computer_with_their_hashes() {
+    let project = crate::manifest::PythonProject {
+        project_file: "pyproject.toml".into(),
+        lock_file: "uv.lock".into(),
+        optional_features: BTreeMap::new(),
+    };
+    let files = BTreeMap::from([
+        (
+            "pyproject.toml".to_owned(),
+            b"[project]\nname = \"ornek\"\n".to_vec(),
+        ),
+        ("uv.lock".to_owned(), LOCK.as_bytes().to_vec()),
+    ]);
+    let said = |target: &Target, extras: &[String]| -> Vec<String> {
+        locked_wheels(&project, &files, target, extras)
+            .expect("reads")
+            .iter()
+            .map(|w| {
+                let files: Vec<String> = w.files.iter().map(|(f, h)| format!("{f} {h}")).collect();
+                format!("{} {}: {}", w.name, w.version, files.join(", "))
+            })
+            .collect()
+    };
+    assert_eq!(
+        said(&LINUX, &[]),
+        [
+            "catal 2.0: catal-2.0-py3-none-any.whl sha256:10",
+            "corap 1.7: ",
+            "depodan 0.1: ",
+            "istekler 2.0: istekler-2.0-py3-none-any.whl sha256:07",
+            "numpy 2.5.4: numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl sha256:01",
+            "saf 1.1: saf-1.1-py3-none-any.whl sha256:06",
+            "tasli 0.3: "
+        ],
+        "the project and Windows' package left out, no optional feature chosen"
+    );
+    let windows = said(&WINDOWS, &["grafik".to_owned()]);
+    assert!(
+        windows
+            .contains(&"pywin32 311: pywin32-311-cp312-cp312-win_amd64.whl sha256:04".to_owned())
+    );
+    assert!(
+        windows.contains(&"cizim 4.0: ".to_owned()),
+        "the feature chosen; no wheel for Windows"
+    );
+    assert!(
+        windows
+            .contains(&"numpy 2.5.4: numpy-2.5.4-cp312-cp312-win_amd64.whl sha256:02".to_owned())
+    );
+}

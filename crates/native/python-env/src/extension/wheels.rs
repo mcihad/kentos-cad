@@ -32,6 +32,9 @@ pub struct Wheels {
     pub folder: Option<PathBuf>,
     /// An index (`--index-url`): the network, where the administrator allows it; none: offline.
     pub index: Option<String>,
+    /// A desktop's, from the organisation's wheel folder (docs/adr/8057 §123): its words name this computer, not a
+    /// server.
+    pub computer: bool,
 }
 
 /// Prepares `key`'s environment from the package's lock as a server does: the lock's packages as wheels from `wheels`,
@@ -238,9 +241,17 @@ pub fn wheel_words(said: &str, wheels: &Wheels) -> String {
         .or_else(|| quoted("Wheels are required for "))
         .or_else(|| quoted("only found wheels for "))
     {
+        let (machine, builds) = if wheels.computer {
+            (
+                "bu bilgisayarın",
+                "tekerlek klasöründen kaynak paketi derlenmez",
+            )
+        } else {
+            ("bu sunucunun", "sunucu kaynak paketinden derlemez")
+        };
         return format!(
-            "{}: bu sunucunun sistemi ({here}) için tekerleği yok ve sunucu kaynak paketinden derlemez. Yayımcı bu \
-             sistemin tekerleği olan bir sürümü kilitlemeli ya da yönetici uygun tekerleği tekerlek klasörüne koymalı.",
+            "{}: {machine} sistemi ({here}) için tekerleği yok ve {builds}. Yayımcı bu sistemin tekerleği olan bir \
+             sürümü kilitlemeli ya da yönetici uygun tekerleği tekerlek klasörüne koymalı.",
             name_of(pinned)
         );
     }

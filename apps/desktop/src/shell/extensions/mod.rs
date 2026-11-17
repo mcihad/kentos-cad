@@ -52,6 +52,7 @@ mod panels;
 mod workshop;
 mod problems;
 mod report;
+mod wheel_folder;
 mod ribbon;
 pub(crate) mod runner;
 mod search;
