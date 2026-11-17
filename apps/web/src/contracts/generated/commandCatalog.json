@@ -110577,6 +110577,13 @@
               "$ref": "#/$defs/ReviewFormRow"
             },
             "type": "array"
+          },
+          "table": {
+            "description": "The model's EK-9 form: `9.1` for the architectural discipline's model, `9.2` for another discipline's (its file\nname's EK-2 discipline; docs/adr/8114); none without a model read.",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -110625,6 +110632,13 @@
               "$ref": "#/$defs/ReviewFormRow"
             },
             "type": "array"
+          },
+          "table": {
+            "description": "The model's EK-9 form: `9.1` for the architectural discipline's model, `9.2` for another discipline's (its file\nname's EK-2 discipline; docs/adr/8114); none without a model read.",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [

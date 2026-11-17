@@ -107,6 +107,25 @@ class Inceleme(unittest.TestCase):
         c = inceleme.denetle(p)
         self.assertIn("review_form_other_model", kodlar(c, "form"))
 
+    def test_another_discipline_s_model_is_answered_by_table_9_2(self):
+        # The section building's structural model by another program (docs/adr/8114): 16 rows, its place question the
+        # fifth; an author's form of Table 9.1 is the wrong form, its rows not compared.
+        statik = json.loads((KOK / "fixtures/ifc/v1/olgular/kesit-binasi-statik.json").read_text(encoding="utf-8"))
+        statik["file"]["name"] = MODEL.replace("_MM_", "_ST_")
+        c = inceleme.denetle(olgular(ifc=statik, form={"table": "9.1", "model": {"name": MODEL, "sha256": "b" * 64},
+                                                       "rows": [{"no": 5, "answer": "Evet"}]}))
+        self.assertEqual(c["tablo"], "9.2")
+        self.assertEqual(len(c["satirlar"]), 16)
+        self.assertIn("review_form_table", kodlar(c, "form"))
+        self.assertNotIn("review_form_disagrees", kodlar(c, "form"))
+        tablo = next(b for b in c["bulgular"] if b["code"] == "review_form_table")
+        self.assertEqual(tablo["message"], "Form Tablo 9.1'in; model mimari dışı bir disiplinin, Tablo 9.2 düzenlenir.")
+        # Its coordinate system's finding (Table 9.2 row 5 = 9.1's sixth) is the place layer's.
+        self.assertIn("digital_system_wrong", kodlar(c, "konum"))
+        self.assertNotIn("digital_system_wrong", kodlar(c, "model"))
+        # The architectural model keeps Table 9.1.
+        self.assertEqual(inceleme.denetle(olgular())["tablo"], "9.1")
+
     def test_the_findings_go_in_the_layers_order(self):
         p = copy.deepcopy(olgular(idare={"system": 5256}))
         p["paftalar"][0]["kaynak"] = {"revision": "8", "sha256": "c" * 64}

@@ -10,8 +10,14 @@ use super::tests::{WRITTEN, never, read_ok};
 const MISSING_DOOR: (&str, &[u8]) =
     ("kesit-binasi-kapi-eksik", include_bytes!("../../../../../fixtures/ifc/v1/eksik/kesit-binasi-kapi-eksik.ifc"));
 
+/// Another program's structural model of the section building (scripts/fixtures, the underlay check's): EK-9 Tablo
+/// 9.2's case, the other disciplines' form (docs/adr/8114).
+const STRUCTURAL: (&str, &[u8]) =
+    ("kesit-binasi-statik", include_bytes!("../../../../../fixtures/ifc/v1/statik/kesit-binasi-statik-datum.ifc"));
+
 fn facts_of(name: &str) -> (Json, Json) {
-    let (_, bytes) = WRITTEN.iter().chain([&MISSING_DOOR]).find(|(n, _)| *n == name).copied().expect("a written file");
+    let (_, bytes) =
+        WRITTEN.iter().chain([&MISSING_DOOR, &STRUCTURAL]).find(|(n, _)| *n == name).copied().expect("a written file");
     let m = read_ok(bytes);
     let facts = m.facts(bytes, &format!("{name}.ifc")).expect("the facts");
     let bodies = m.bodies(bytes, &never).expect("the bodies");
@@ -78,7 +84,14 @@ fn the_spaces_are_closed_with_their_footprints_and_none_overlaps() {
 #[test]
 fn the_facts_the_form_is_tried_on_are_current() {
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/ifc/v1/olgular");
-    for name in ["kesit-binasi", "kesit-binasi-kunye", "kesit-binasi-tam", "yerel-sistem", "kesit-binasi-kapi-eksik"] {
+    for name in [
+        "kesit-binasi",
+        "kesit-binasi-kunye",
+        "kesit-binasi-tam",
+        "yerel-sistem",
+        "kesit-binasi-kapi-eksik",
+        "kesit-binasi-statik",
+    ] {
         let (mut f, b) = facts_of(name);
         f["bodies"] = b;
         let text = serde_json::to_string_pretty(&f).expect("the facts as text") + "\n";

@@ -259,6 +259,61 @@ class TabloVeKaynak(unittest.TestCase):
         self.assertTrue(satir(f, 18)["gerekce"].startswith("Teslim edilen dosyayı denetleyin"))
 
 
+class OburDisiplinler(unittest.TestCase):
+    """EK-9 Tablo 9.2 (docs/adr/8114): mimari dışı disiplinin modeli 16 soruyla; disiplin dosyanın adının EK-2
+    alanından. Başka bir programın kesit binasının statik modeli (fixtures/ifc/v1/statik/, olguları ``facts_tests``)."""
+
+    def statik(self, disiplin="ST"):
+        f = olgular("kesit-binasi-statik")
+        f["file"]["name"] = f"260123_00_{disiplin}_XXXX_MD_XXX_NNN_01_000.ifc"
+        return f
+
+    def test_disiplin_dosyanin_adindan(self):
+        self.assertEqual(form.tablosu(self.statik()), "9.2")
+        self.assertEqual(form.tablosu(self.statik("MK")), "9.2")
+        self.assertEqual(form.tablosu(self.statik("IM")), "9.2")
+        self.assertEqual(form.tablosu(self.statik("MM")), "9.1")
+        # Adı şablonda olmayan dosyanın disiplini bilinmez: mimari sayılır.
+        self.assertEqual(form.tablosu(olgular("kesit-binasi-statik")), "9.1")
+        self.assertEqual(form.tablosu(BINA), "9.1")
+
+    def test_on_alti_satir_ve_karsiliklari(self):
+        c = form.cevapla(self.statik())
+        self.assertEqual(c["tablo"], "9.2")
+        self.assertEqual([s["no"] for s in c["satirlar"]], list(range(1, 17)))
+        self.assertEqual([s["esas"] for s in c["satirlar"]], [1, 2, 3, 5, 6, 7, 8, 9, 10, 15, 16, 17, 18, 19, 20, 21])
+        # Tablo 9.2'nin metni: 12. soru "dönüştürüldü mü", 9.1'inki "oluşturuldu mu".
+        self.assertIn("dönüştürüldü", c["satirlar"][11]["soru"])
+        kanit = {s["no"]: s["kanit"] for s in c["satirlar"]}
+        # Mahal ve zon taşımayan disiplin modelinde emsal sorusu inceleme, kaldı değil.
+        self.assertEqual(kanit[9], form.INCELEME)
+        self.assertEqual(c["satirlar"][8]["bulgular"], [])
+        # Statik modelin eksikleri: proje bilgileri, dosyanın adı, varlık adları, sistem, zorunlu alanlar, katlar.
+        self.assertEqual([n for n, k in kanit.items() if k == form.KALDI], [2, 3, 4, 5, 8, 10])
+        self.assertEqual(kanit[13], form.GECTI)
+
+    def test_onarim_programdan_bagimsiz_kaynak_9_2(self):
+        c = form.cevapla(self.statik())
+        for s in c["satirlar"]:
+            for b in s["bulgular"]:
+                self.assertNotIn("Mimari ›", b["repair"], b)
+                self.assertNotIn("künye", b["repair"], b)
+                self.assertIn(f"EK-9 Tablo 9.2 satır {s['no']} · PDF s. ", b["cite"])
+                self.assertEqual(b["rule"], f"form92_{s['no']}")
+        proje = c["satirlar"][1]
+        self.assertNotIn("Mimar (müellif)", proje["gerekce"])
+        self.assertTrue(proje["gerekce"].startswith("IFC modelinin proje bilgileri eksik"), proje["gerekce"])
+
+    def test_mahalli_disiplin_modelinde_emsal_okunur(self):
+        # Mahali ve zonu olan bir model 9.2'de de 9.1'in 10. sorusunun kanıtını alır.
+        f = copy.deepcopy(BINA)
+        f["file"]["name"] = "260123_00_IM_XXXX_MD_XXX_NNN_01_000.ifc"
+        c = form.cevapla(f)
+        self.assertEqual(c["tablo"], "9.2")
+        on = {s["esas"]: s for s in form.cevapla(BINA)["satirlar"]}[10]
+        self.assertEqual(c["satirlar"][8]["kanit"], on["kanit"])
+
+
 class Sorular(unittest.TestCase):
     """Her soru için kalan bir örnek (geçenler gerçek dosyalarda)."""
 

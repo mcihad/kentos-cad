@@ -69939,6 +69939,9 @@ class PackageResult(_Model):
 class PackageReviewed(_Model):
     """Output of `file.review.package` v1, and its plan: the package, its files, the model's file name, the layers in
     order, the findings (the layers' order, then the rule's), the form's rows.
+    Attributes:
+        table: The model's EK-9 form: `9.1` for the architectural discipline's model, `9.2` for another discipline's (its file
+            name's EK-2 discipline; docs/adr/8114); none without a model read.
     """
     path: str
     files: list[ReviewFile]
@@ -69946,6 +69949,7 @@ class PackageReviewed(_Model):
     findings: list[ReviewFinding]
     rows: list[ReviewFormRow]
     model: str | None | Unset = UNSET
+    table: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -69956,6 +69960,8 @@ class PackageReviewed(_Model):
         out["rows"] = [e0.to_json() for e0 in self.rows]
         if self.model is not UNSET:
             out["model"] = self.model
+        if self.table is not UNSET:
+            out["table"] = self.table
         return out
 
     @classmethod
@@ -69967,6 +69973,7 @@ class PackageReviewed(_Model):
             findings=[ReviewFinding.from_json(e0) for e0 in data["findings"]],
             rows=[ReviewFormRow.from_json(e0) for e0 in data["rows"]],
             model=data.get("model", UNSET),
+            table=data.get("table", UNSET),
         )
 
 

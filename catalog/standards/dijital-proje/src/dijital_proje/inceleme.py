@@ -16,8 +16,9 @@ Olgular (``olgular``):
 - ``idare``: ``system`` — idarenin kendi koordinat sisteminin EPSG kodu (dilimi); yoksa konum yalnız modelin beyanıyla.
 
 Cevap: ``katmanlar`` (paket, pafta, model, konum, form: tutuyor mu ve sözü; ``None`` değerlendirilmedi), ``bulgular``
-(katmanların sırasıyla: katman, kod, hata mı, ileti, onarım, kaynak, dosya, nesneler GlobalId'leriyle) ve ``satirlar``
-(formun 21 satırı: müellifin cevabı, KentOS'un ölçtüğü, uyuşuyor mu).
+(katmanların sırasıyla: katman, kod, hata mı, ileti, onarım, kaynak, dosya, nesneler GlobalId'leriyle), ``tablo`` (modelin
+formu: mimari disiplinde Tablo 9.1'in 21 satırı, öbür disiplinlerde Tablo 9.2'nin 16 satırı; docs/adr/8114) ve
+``satirlar`` (formun satırları: müellifin cevabı, KentOS'un ölçtüğü, uyuşuyor mu).
 """
 
 from __future__ import annotations
@@ -28,7 +29,8 @@ from . import form
 
 RG = "RG 5.8.2026/33331"
 KATMANLAR = ["paket", "pafta", "model", "konum", "form"]
-#: Formun koordinat sistemi sorusu (EK-9 Tablo 9.1 satır 6): bulgusu konum katmanınındır.
+#: Formun koordinat sistemi sorusu (EK-9 Tablo 9.1 satır 6, Tablo 9.2 satır 5; ``esas`` 9.1'in numarası): bulgusu konum
+#: katmanınındır.
 KONUM_SORUSU = 6
 
 
@@ -36,6 +38,11 @@ def _bulgu(katman: str, kod: str, mesaj: str, onarim: str, kaynak: str, dosya: s
            nesneler: list[str] | None = None, hata: bool = True) -> dict[str, Any]:
     return {"katman": katman, "code": kod, "error": hata, "message": mesaj, "repair": onarim, "cite": kaynak,
             "file": dosya, "objects": list(nesneler or [])}
+
+
+def _ek(tablo: str, bir: str, iki: str) -> str:
+    """Tablo numarasının eki: 9.1'in, 9.1'e; 9.2'nin, 9.2'ye."""
+    return "'" + (bir if tablo.endswith("1") else iki)
 
 
 def _sistem_sozu(kod: str | None, dilim: str | None) -> str:
@@ -129,6 +136,7 @@ def denetle(olgular: dict[str, Any]) -> dict[str, Any]:
 
     # --- model ve form satırları -------------------------------------------------------------------------------------
     satirlar: list[dict[str, Any]] = []
+    tablo: str | None = None
     model_adi = paket.get("model")
     if ifc is None:
         if olgular.get("ifcHata"):
@@ -144,10 +152,22 @@ def denetle(olgular: dict[str, Any]) -> dict[str, Any]:
                                    + "; ".join(str(f.get("message")) for f in hatalar[:3]),
                                    "Modeli şemaya uyan bir dışa aktarımla yeniden üretin.",
                                    f"Dijital Proje Yön. 9/1 · {RG}", model_adi))
-        cevaplar = form.cevapla(ifc)["satirlar"]
+        cevap = form.cevapla(ifc)
+        tablo = cevap["tablo"]
+        cevaplar = cevap["satirlar"]
         yazar = {int(r.get("no", 0)): r for r in (kayit or {}).get("rows") or []}
+        kayit_tablosu = str((kayit or {}).get("table") or "")
+        if kayit and kayit_tablosu and kayit_tablosu != tablo:
+            # Müellifin formu başka disiplinin tablosuyla: satır numaraları başka sorulardır, karşılaştırılmaz.
+            yazar = {}
+            bulgular.append(_bulgu("form", "review_form_table",
+                                   f"Form Tablo {kayit_tablosu}{_ek(kayit_tablosu, 'in', 'nin')}; model "
+                                   f"{'mimari' if tablo == '9.1' else 'mimari dışı bir'} disiplinin, Tablo {tablo} "
+                                   "düzenlenir.",
+                                   f"Kontrol formunu Tablo {tablo}{_ek(tablo, 'e', 'ye')} göre yeniden düzenleyin.",
+                                   f"Dijital Proje Yön. 15 · {RG} · EK-9 9.1", (kayit.get("model") or {}).get("name")))
         for s in cevaplar:
-            katman = "konum" if s["no"] == KONUM_SORUSU else "model"
+            katman = "konum" if s.get("esas", s["no"]) == KONUM_SORUSU else "model"
             if s["kanit"] == form.KALDI:
                 for b in s["bulgular"]:
                     bulgular.append(_bulgu(katman, b.get("code", f"form_{s['no']}"), b["message"],
@@ -167,7 +187,7 @@ def denetle(olgular: dict[str, Any]) -> dict[str, Any]:
                                        f"Formun {s['no']}. sorusunu ({s['baslik']}) müellif “{muellif or 'boş'}” "
                                        f"cevaplamış; dosyadan ölçülen “{s['cevap'] or 'inceleme'}”.",
                                        "Formu modelin kendisinden yeniden düzenleyin ya da modeli düzeltin.",
-                                       f"Dijital Proje Yön. 15 · {RG} · EK-9 Tablo 9.1 satır {s['no']}", model_adi,
+                                       f"Dijital Proje Yön. 15 · {RG} · EK-9 Tablo {tablo} satır {s['no']}", model_adi,
                                        nesneler))
         if kayit:
             ozet = ((kayit.get("model") or {}).get("sha256") or "").lower()
@@ -227,4 +247,4 @@ def denetle(olgular: dict[str, Any]) -> dict[str, Any]:
     ]
     sira = {k: i for i, k in enumerate(KATMANLAR)}
     bulgular = [b for _, b in sorted(enumerate(bulgular), key=lambda x: (sira[x[1]["katman"]], x[0]))]
-    return {"katmanlar": katmanlar, "bulgular": bulgular, "satirlar": satirlar}
+    return {"katmanlar": katmanlar, "bulgular": bulgular, "tablo": tablo, "satirlar": satirlar}

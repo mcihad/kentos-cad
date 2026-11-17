@@ -111,6 +111,24 @@ fn another_program_s_open_model_is_opened_alone() {
 }
 
 /// The other broken packages: each code the note says, in its layer, on its file.
+/// Another discipline's model (docs/adr/8114): the section building's structural model by another program, its file named
+/// by EK-2 for the structural discipline (ST), is answered by EK-9 Table 9.2's 16 questions; the architectural one keeps
+/// Table 9.1's 21.
+#[test]
+fn a_structural_model_is_answered_by_table_9_2() {
+    let dir = std::env::temp_dir().join(format!("kentos-review-92-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let file = dir.join("260123_00_ST_XXXX_MD_XXX_NNN_01_000.ifc");
+    std::fs::copy(fixtures().join("ifc/v1/statik/kesit-binasi-statik-datum.ifc"), &file).expect("the model copied");
+    let r = review(file, Some(5256));
+    assert_eq!(r.table.as_deref(), Some("9.2"));
+    assert_eq!(r.rows.len(), 16);
+    assert_eq!(r.rows[11].title, "IFC Sınıfları");
+    let _ = std::fs::remove_dir_all(&dir);
+    let own = review(fixtures().join("bim/v1/paket/kentos"), Some(5256));
+    assert_eq!((own.table.as_deref(), own.rows.len()), (Some("9.1"), 21));
+}
+
 #[test]
 fn every_broken_package_gives_what_it_breaks() {
     let note: Value =

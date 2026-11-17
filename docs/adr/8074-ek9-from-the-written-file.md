@@ -205,8 +205,8 @@ bulgunun duvarları; çizimdeki form iki yarısıyla; Ruhsat takımı'nın yeni 
 
 ## §8. Açık işler
 
-- **Gerçek kuzey** (EK-7 Tablo 7.8 `TrueNorth`): yazıcı yazmıyor; kuzey okundan ve projenin sisteminin meridyen
-  yakınsamasından (IFC-02).
+- **Gerçek kuzey** (EK-7 Tablo 7.8 `TrueNorth`): yapıldı, ADR [8076](8076-ifc-mandatory-fields-complete.md) K58 (projenin sisteminden,
+  yoksa kuzey okundan).
 - **Son yazılan dosya:** Denetim'in bellekteki dosya yerine diske yazılan ya da teslim edilecek dosyayı okuması (K4'ün
   "diske yazılan"ı); bulut işinin aynı betiği çalıştırması.
 - **Beş sonucun ayrı raporu** (ifc-uyum §1: okunuyor, şema, Türkiye profili, model–pafta, idare): ruhsat paketinde (B14).

@@ -91,6 +91,58 @@ fn kentos_s_own_package_holds_on_every_layer() {
     assert!(said.1.contains("iade gerekçesi yazılmaz"), "{said:?}");
 }
 
+/// Another discipline's model (docs/adr/8114): the section building's structural model by another program, named by
+/// EK-2 for the structural discipline, opened alone: its form is EK-9 Table 9.2's 16 questions, said in the summary.
+fn structural(app: &mut App) -> std::sync::Arc<kentos_commands::PackageReviewed> {
+    let file = scratch("statik-92").join("260123_00_ST_XXXX_MD_XXX_NNN_01_000.ifc");
+    std::fs::copy(fixture("ifc/v1/statik/kesit-binasi-statik-datum.ifc"), &file).expect("the model copied");
+    let _ = app.update(Message::Run("arch.reviewPackage"));
+    send(app, Event::Path(file.display().to_string()));
+    send(app, Event::System("5256".into()));
+    send(app, Event::Review);
+    match app.arch.review_window.as_ref().and_then(|w| w.outcome.clone()) {
+        Some(Outcome::Done(r)) => r,
+        other => panic!("{other:?}"),
+    }
+}
+
+#[test]
+fn a_structural_model_is_reviewed_by_table_9_2() {
+    let mut app = opened();
+    let r = structural(&mut app);
+    assert_eq!((r.table.as_deref(), r.rows.len()), (Some("9.2"), 16));
+    assert!(r.findings.iter().any(|f| f.layer == "konum"), "{:?}", r.findings);
+}
+
+/// The structural model's form side (`.run/gui-evidence/tablo-9-2-8114/`), light and dark.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn structural_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/tablo-9-2-8114");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        let size = Size::new(1440.0, 900.0);
+        let mut app = opened();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        fn update(app: &mut App, message: Message) {
+            let _ = app.update(message);
+        }
+        let _ = structural(&mut app);
+        send(&mut app, Event::Tab(Tab::Form));
+        app.toasts.clear();
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-statik-form-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
 /// The window's pictures (`.run/gui-evidence/paket-inceleme-8104/`), light and dark: the broken package's findings,
 /// its form side by side, the wall shown in the IFC viewer, KentOS's own package, the place on the ribbon.
 #[test]

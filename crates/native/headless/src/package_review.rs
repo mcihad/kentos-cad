@@ -255,7 +255,8 @@ fn reviewed(input: &ReviewPackage) -> Result<PackageReviewed, CommandResult<Valu
             agree: r["uyusuyor"].as_bool(),
         })
         .collect();
-    Ok(PackageReviewed { path: input.path.trim().to_owned(), files, model, layers, findings, rows })
+    let table = decided["tablo"].as_str().map(str::to_owned);
+    Ok(PackageReviewed { path: input.path.trim().to_owned(), files, model, layers, findings, table, rows })
 }
 
 /// `file.review.package`: the facts measured and the rule's answer; nothing is written.

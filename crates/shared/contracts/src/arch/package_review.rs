@@ -117,5 +117,10 @@ pub struct PackageReviewed {
     pub model: Option<String>,
     pub layers: Vec<ReviewLayer>,
     pub findings: Vec<ReviewFinding>,
+    /// The model's EK-9 form: `9.1` for the architectural discipline's model, `9.2` for another discipline's (its file
+    /// name's EK-2 discipline; docs/adr/8114); none without a model read.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub table: Option<String>,
     pub rows: Vec<ReviewFormRow>,
 }

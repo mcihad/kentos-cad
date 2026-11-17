@@ -444,7 +444,7 @@ impl App {
                     errors,
                     r.findings.len() - errors,
                     r.model.as_ref().map_or_else(String::new, |m| format!(" · model {m}"))
-                );
+                ) + &r.table.as_ref().map_or_else(String::new, |t| format!(" · form EK-9 Tablo {t}"));
                 body = body
                     .push(layers)
                     .push(label::caption(summary))

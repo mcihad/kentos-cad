@@ -1,4 +1,6 @@
-"""EK-9 Model Kalite Kontrol Formu, yazılmış dosyadan (docs/adr/8074; plan/ifc-uyum.md IFC-08, bim-plan B13).
+"""EK-9 Model Kalite Kontrol Formu, yazılmış dosyadan (docs/adr/8074; plan/ifc-uyum.md IFC-08, bim-plan B13). Mimari
+disiplinin modeli Tablo 9.1'in 21 sorusuyla, öbür disiplinlerinki (statik, mekanik, elektrik …) Tablo 9.2'nin 16 sorusuyla
+cevaplanır (EK-9 9.1; docs/adr/8114): disiplin dosyanın adının EK-2 alanından.
 
 Kural dosyayı okumaz: KentOS'un yazılmış IFC dosyasından ölçtüğü olgulara (``kentos.ifcFacts`` 1) ve ev sahibinin
 eklediklerine bakar: dosyayı yazdığı modelin nesneleri (``expected``: kalıcı kimlik, GlobalId, sınıf) ve dışa aktarımın
@@ -67,6 +69,79 @@ SORULAR = [
      "Teslim edilen PDF paftaları BIM modelinden üretildi mi?", 239),
 ]
 
+#: Tablo 9.2'nin soruları (öbür disiplinler): numara, grup, disiplin, başlık, soru, PDF sayfası ve Tablo 9.1'deki aynı
+#: sorunun numarası (kanıtı onunki; 9.2'de mahal soruları ve "Proje, Saha, Bina, Kat" sorusu yok).
+SORULAR_92 = [
+    (1, "GENEL KONTROL", "Genel", "Dosya Boyutu",
+     "Dosya boyutu, Bakanlıkça belirlenen kısıtlamalara uygun mu?", 240, 1),
+    (2, "GENEL KONTROL", "Genel", "Proje Bilgileri",
+     "Proje bilgileri Yönetmeliğin 13 üncü maddesinde belirtilen esaslara göre dolduruldu mu?", 240, 2),
+    (3, "İSİMLENDİRME", "Genel", "Proje ve Dosya İsimlendirmesi",
+     "Proje ve dosya isimlendirmesi Yönetmeliğin 6 ncı maddesine uygun mu?", 240, 3),
+    (4, "İSİMLENDİRME", "Genel", "Varlıklar",
+     "Varlıkların isimlendirmesi Yönetmeliğin 11 inci maddesine uygun mu?", 240, 5),
+    (5, "MODEL YAPILANMASI", "Genel", "Koordinat Sistemi",
+     "Model doğru koordinat sisteminde konumlandırıldı mı? Bu koordinat verileri Yönetmeliğin 13 üncü maddesinde verilen ilgili proje öznitelikleri ve özellikleri kullanılarak atandı mı?", 240, 6),
+    (6, "MODEL YAPILANMASI", "Genel", "Gelişim seviyesi",
+     "Modelde yer alan varlıklar Yönetmeliğin 14 üncü maddesinde verilen gelişim seviyesine uygun olarak modellendi mi?", 240, 7),
+    (7, "MODEL YAPILANMASI", "Genel", "IFC Sınıfları",
+     "Projede yer alan varlıklar Yönetmeliğin 12 inci maddesinde tanımlanan “Zorunlu IFC Sınıfları” listesindeki doğru sınıflar kullanılarak tanımlandı mı?", 240, 8),
+    (8, "MODEL YAPILANMASI", "Genel", "IFC Sınıflar",
+     "Yönetmeliğin 13 üncü maddesinde belirtilen projedeki mevcut “Zorunlu IFC Sınıfları” için zorunlu öznitelikler ve özellikler tanımlandı mı?", 240, 9),
+    (9, "MODEL YAPILANMASI", "Genel", "IFC Sınıfları",
+     "Mahal (ifcSpace) ve Mekansal Zon (ifcSpatialZone) alanları emsal hesap tablolarıyla uyumlu mu?", 240, 10),
+    (10, "DİSİPLİN KONTROLLERİ", "Genel", "Varlıklar",
+     "Varlıklar doğru katta veya doğru kotta modellendi mi?", 241, 15),
+    (11, "DİSİPLİN KONTROLLERİ", "Genel", "Varlıklar",
+     "Modelden yinelenen varlıklar kaldırıldı mı?", 241, 16),
+    (12, "TESLİM VE FORMAT", "Genel", "IFC Sınıfları",
+     "Model IFC’ye uygun olarak dönüştürüldü mü (IfcWall, IfcSlab, IfcWindow vb. sınıfları doğru atandı mı)?", 241, 17),
+    (13, "TESLİM VE FORMAT", "Genel", "IFC Versiyonu",
+     "Model dosyası, teslimine ilişkin kısıtlamalarda tanımlanan IFC versiyonunda teslim edildi mi? Dosya uzantısı IFC mi?", 241, 18),
+    (14, "TESLİM VE FORMAT", "Genel", "Ön Tanımlı Tip",
+     "Varlıklar IFC’de doğru Ön Tanımlı Tip (Predefined Type) kullanılarak temsil edildi mi?", 241, 19),
+    (15, "TESLİM VE FORMAT", "Genel", "Özellikler",
+     "Özellikler doğru P_set’ler altında listelendi mi?", 241, 20),
+    (16, "TESLİM VE FORMAT", "Genel", "PDF ve IFC uyumu",
+     "Teslim edilen PDF paftaları BIM modelinden üretildi mi?", 241, 21),
+]
+
+#: Tablo 9.2'nin bulgularının onarımı, Tablo 9.1'deki sorunun numarasıyla: öbür disiplinin modeli başka bir programın;
+#: KentOS'un künyesini ve pencerelerini göstermez.
+ONARIM_92 = {
+    2: "Modeli yazan programda EK-7 Tablo 7.1–7.5'in proje, kişi, kuruluş ve rol bilgilerini doldurun; dosyayı yeniden "
+       "dışa aktarın.",
+    3: "Dosyayı EK-2 Tablo 2.1'in şablonuyla adlandırın (proje kodu, bina kodu, disiplin, öge …); başlıktaki ad dosyanın "
+       "adı olsun.",
+    5: "Varlıkları EK-5'in ad kalıbıyla adlandırın; dosyayı yeniden dışa aktarın.",
+    6: "Modeli projenin koordinat sistemiyle (EK-7 Tablo 7.6–7.7: yansıtılmış sistem ve harita dönüşümü) dışa aktarın.",
+    8: "Vekil sınıfla (IfcBuildingElementProxy) yazılan nesneleri EK-5 Tablo 5.1'in sınıflarıyla yazın.",
+    9: "Eksik zorunlu öznitelik ve özellikleri (EK-6) modeli yazan programda doldurun; dosyayı yeniden dışa aktarın.",
+    10: "Mahallerin ve mekânsal zonların emsal durumunu modelde verin.",
+    15: "Nesneleri kendi katlarına (IfcBuildingStorey) bağlayın, kotlarını katın aralığına getirin.",
+    16: "Yinelenen nesneleri modelden kaldırın.",
+    17: "Vekil sınıfla (IfcBuildingElementProxy) yazılan nesneleri EK-5 Tablo 5.1'in sınıflarıyla yazın.",
+    18: "Modeli IFC 4.3 (IFC4X3_ADD2) olarak, .ifc uzantısıyla dışa aktarın.",
+    19: "Nesnelerin ön tanımlı tipini (PredefinedType) IFC'nin listesinden seçin; USERDEFINED'da tip adını yazın.",
+    20: "Özellikleri IFC 4.3'ün standart setlerinde (Pset_…) ya da EK-6'nın ulusal setlerinde verin.",
+}
+
+#: Mimari disiplinin EK-2 kodu (Tablo 2.2): bu disiplinin modeli Tablo 9.1'le, öbürleri Tablo 9.2'yle.
+MIMARI = "MM"
+
+
+def tablosu(ifc: dict[str, Any]) -> str:
+    """Modelin formu: dosyanın adı EK-2 Tablo 2.1'in şablonundaysa ve disiplin alanı Tablo 2.2'de mimariden başkaysa
+    ``9.2``; yoksa ``9.1`` (adı şablonda olmayan dosyanın disiplini bilinmez: mimari sayılır, 3. soru adı söyler)."""
+    ad = str((ifc.get("file") or {}).get("name") or "")
+    alanlar = re.sub(r"\.ifc$", "", ad, flags=re.IGNORECASE).split("_")
+    veri = ek34.veri()
+    if len(alanlar) != len(veri.get("fileTemplate") or []):
+        return "9.1"
+    disiplinler = {d["code"] for d in veri.get("disciplines") or []}
+    return "9.2" if alanlar[2] in disiplinler and alanlar[2] != MIMARI else "9.1"
+
+
 #: Her sorunun maddesi ve kaynak satırları (katalogun kimlikleriyle; metinleri olgulardaki ``sources``): bulgunun iletisi
 #: maddeyle biter, kaynağı maddeyi, Resmî Gazete'yi, satırları ve formun sorusunu sayfalarıyla söyler.
 KAYNAK = {
@@ -114,28 +189,34 @@ KAYIT_YERI = {"IfcPerson": "Mimar (müellif) adı soyadı", "IfcPersonAndOrganiz
 YAPI = ("IfcProject", "IfcSite", "IfcBuilding", "IfcBuildingStorey", "IfcSpace", "IfcSpatialZone", "IfcZone")
 
 
-def cevapla(ifc: dict[str, Any]) -> dict[str, Any]:
-    """Formun 21 satırı: ``{"tablo": "9.1", "dosya": ad, "satirlar": [{no, grup, disiplin, baslik, soru, cevap, kanit,
-    gerekce, bulgular}]}``."""
+def cevapla(ifc: dict[str, Any], tablo: str | None = None) -> dict[str, Any]:
+    """Formun satırları, modelin disiplininin tablosuyla (``tablosu``) ya da ``tablo``: ``{"tablo": "9.1" | "9.2",
+    "dosya": ad, "satirlar": [{no, esas, grup, disiplin, baslik, soru, cevap, kanit, gerekce, bulgular}]}``; ``esas``
+    sorunun Tablo 9.1'deki numarası (kanıtı onunki)."""
+    tablo = tablo or tablosu(ifc)
     d = _Dosya(ifc)
     kaynaklar = ifc.get("sources") or {}
     satirlar = []
-    for no, grup, disiplin, baslik, soru, sayfa in SORULAR:
-        kanit, gerekce, bulgular = getattr(d, f"s{no}")()
-        madde, kimlikler = KAYNAK[no]
+    sorular = ([(no, g, di, b, so, sa, no) for no, g, di, b, so, sa in SORULAR] if tablo == "9.1" else SORULAR_92)
+    for no, grup, disiplin, baslik, soru, sayfa, esas in sorular:
+        kanit, gerekce, bulgular = getattr(d, f"s{esas}")()
+        if tablo == "9.2":
+            kanit, gerekce, bulgular = _disiplin(d, esas, kanit, gerekce, bulgular)
+        madde, kimlikler = KAYNAK[esas]
         for b in bulgular:
             b["message"] = f"{b['message']} — Dijital Proje Yön. {madde}"
-            satir = kaynaklar.get(f"T9.1/{no}") or f"EK-9 Tablo 9.1 satır {no} · PDF s. {sayfa}"
+            satir = kaynaklar.get(f"T{tablo}/{no}") or f"EK-9 Tablo {tablo} satır {no} · PDF s. {sayfa}"
             ek = [b.pop("ek")] if b.get("ek") else []
             b["cite"] = " · ".join([f"Dijital Proje Yön. {madde}", RG, *(kaynaklar[k] for k in kimlikler if k in kaynaklar),
                                     *ek, satir])
-            b.setdefault("rule", f"form_{no}")
+            b.setdefault("rule", f"form_{no}" if tablo == "9.1" else f"form92_{no}")
             b.setdefault("severity", "error")
             # Nesnesi olmayan bulgu çizimde binanın yerini gösterir (ev sahibinin verdiği).
             b.setdefault("at", list(ifc.get("at") or [0.0, 0.0]))
             b.setdefault("fix", None)
         satirlar.append({
             "no": no,
+            "esas": esas,
             "grup": grup,
             "disiplin": disiplin,
             "baslik": baslik,
@@ -145,7 +226,23 @@ def cevapla(ifc: dict[str, Any]) -> dict[str, Any]:
             "gerekce": gerekce,
             "bulgular": bulgular,
         })
-    return {"tablo": "9.1", "dosya": (ifc.get("file") or {}).get("name"), "satirlar": satirlar}
+    return {"tablo": tablo, "dosya": (ifc.get("file") or {}).get("name"), "satirlar": satirlar}
+
+
+def _disiplin(d: "_Dosya", esas: int, kanit: str, gerekce: str,
+              bulgular: list[dict[str, Any]]) -> tuple[str, str, list[dict[str, Any]]]:
+    """Tablo 9.2'de bir sorunun kanıtı: onarım programdan bağımsız (``ONARIM_92``); emsal sorusu mahali ve zonu olmayan
+    disiplin modelinde inceleme (soru tabloda, ama disiplin modeli mahal taşımaz); proje bilgilerinin gerekçesi
+    KentOS'un künyesini değil eksik alanları söyler."""
+    if esas == 10 and not d.of("IfcSpace") and not d.of("IfcSpatialZone"):
+        return INCELEME, ("Disiplin modelinde mahal ve mekânsal zon yok: emsal hesabı mimari modelin formunda (Tablo 9.1 "
+                          "satır 10) okunur."), []
+    for b in bulgular:
+        if esas in ONARIM_92:
+            b["repair"] = ONARIM_92[esas]
+    if esas == 2 and bulgular:
+        gerekce = bulgular[0]["message"]
+    return kanit, gerekce, bulgular
 
 
 #: Çizimdeki formun başlığı: Tablo 9.1'in sütunları ve KentOS'un notu. Bu başlıklı tablo formdur (KentOS onu tanıyıp

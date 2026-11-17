@@ -1,5 +1,14 @@
 # Değişiklikler
 
+## 0.11.0 — 18 Kasım 2026
+
+- EK-9 Tablo 9.2, öbür disiplinlerin formu (docs/adr/8114): `form.tablosu(ifc)` modelin disiplinini dosyanın adının EK-2
+  alanından okur (MM mimari: Tablo 9.1; ST, MK, EE, IM … : Tablo 9.2; adı şablonda olmayan dosya mimari sayılır).
+  `form.cevapla` Tablo 9.2'nin 16 sorusunu Tablo 9.1'deki aynı soruların kanıtıyla cevaplar (`esas`); onarımlar
+  programdan bağımsız, proje bilgilerinin gerekçesi eksik alanları söyler, mahali ve zonu olmayan disiplin modelinde emsal
+  sorusu inceleme. Paket incelemesi modelin tablosunu verir (`tablo`), konum sorusunu `esas`'la bulur, müellifin formu
+  başka tablonunsa `review_form_table` (satırlar karşılaştırılmaz).
+
 ## 0.10.0 — 17 Kasım 2026
 
 - Gelen paketin incelemesi (docs/adr/8104): `inceleme.denetle(olgular)` idarenin inceleyeni için paketi müellifin çizimi

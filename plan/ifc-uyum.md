@@ -481,8 +481,11 @@ başvurularını çıkarır, şema 0 bulgu, EK-9/8 kapıyı kaynak kimliğiyle b
 21 satırını, bulgularını ve nesnelerini aynı verir. Bağımsız IDS denetleyicisi (IfcTester 0.9.0) IDS'i şemasıyla açar, dört
 dosyada eksikleri KentOS'un kuralıyla satır ve nesne düzeyinde aynı bulur; ilk koşuda bulduğu yazıcı hatası (arazi ve tapu
 kimliği `IfcLabel` yazılıyordu) düzeltildi. Bulgu IFC modelinde boyanır. 100 dairede taban (§6 ölçümü). Kararlar K48–K51.
-**Kalan:** son yazılan dosyanın denetimi ve bulut işi; beş sonucun ayrı raporu (B14); model eşlemesinin bütçesi; gerçek
-kuzeyin yazımı (IFC-02); EK-9 Tablo 9.2.
+**Yapıldı (18 Kasım 2026, [ADR 8114](../docs/adr/8114-ek9-table-9-2-other-disciplines.md), K216–K218):** EK-9 Tablo 9.2:
+öbür disiplinlerin (statik, mekanik, elektrik, iç mimari …) modeli dosyanın adının EK-2 disiplin alanından tanınır, 16
+soru 9.1'deki aynı soruların kanıtıyla, onarımlar programdan bağımsız; paket incelemesi modelin tablosunu verir, başka
+tablonun formunu söyler. **Kalan:** son yazılan dosyanın denetimi ve bulut işi; beş sonucun ayrı raporu (B14); model
+eşlemesinin bütçesi; disiplin modelinin formunun yazımı. (Gerçek kuzey ADR 8076 K58 ile yazılıyor.)
 
 **Kullanıcı sonucu:** Model kalite kontrol formunun her cevabı diske yazılmış dosyadan gelir; her "hayır" nesnesini seçer.
 Şeması temiz bir dosyanın Türkiye profilinden kaldığı görülebilir.

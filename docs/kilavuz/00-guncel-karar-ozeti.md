@@ -353,7 +353,9 @@
     `file.review.package` (başsız, dosya okur) paketi müellifin çizimi olmadan beş katmanda denetler: paket (liste, özetler),
     pafta (PDF/A-2, taranmış sayfa, kaynak revizyonu), model (okuma, şema, formun soruları, nesneleriyle), konum (idarenin
     EPSG'si), form (müellifin cevabı ölçülenle). Olgular Rust'ta, karar `dijital_proje.inceleme`'de. İade notu BCF ve yazı;
-    Modelde göster IFC görüntüleyicide nesneyi seçer.
+    Modelde göster IFC görüntüleyicide nesneyi seçer. Öbür disiplinin modeli (dosya adının EK-2 disiplini MM değilse)
+    EK-9 Tablo 9.2'nin 16 sorusuyla cevaplanır, onarımlar programdan bağımsız; komutun `table`'ı formun tablosu
+    ([ADR 8114](../adr/8114-ek9-table-9-2-other-disciplines.md), K216–K218).
   - **Duvar stili IFC'de tip (17 Kasım 2026; [ADR 8105](../adr/8105-wall-style-types-and-layer-sets.md), K179–K181):**
     her duvar stili bir `IfcWallType`, duvarları ona bağlı (`IfcRelDefinesByType`, `IfcRelDeclares`); her duvarın katman
     takımı sol yüzden sağa, aynı takım paylaşılır; `IfcMaterialLayerSetUsage` duvarlar eksen çerçevesinde yazılınca.

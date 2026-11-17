@@ -8,4 +8,9 @@ import type { ReviewLayer } from "./ReviewLayer";
  * Output of `file.review.package` v1, and its plan: the package, its files, the model's file name, the layers in
  * order, the findings (the layers' order, then the rule's), the form's rows.
  */
-export type PackageReviewed = { path: string, files: Array<ReviewFile>, model?: string, layers: Array<ReviewLayer>, findings: Array<ReviewFinding>, rows: Array<ReviewFormRow>, };
+export type PackageReviewed = { path: string, files: Array<ReviewFile>, model?: string, layers: Array<ReviewLayer>, findings: Array<ReviewFinding>, 
+/**
+ * The model's EK-9 form: `9.1` for the architectural discipline's model, `9.2` for another discipline's (its file
+ * name's EK-2 discipline; docs/adr/8114); none without a model read.
+ */
+table?: string, rows: Array<ReviewFormRow>, };

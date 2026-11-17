@@ -1,0 +1,2396 @@
+{
+  "bodies": {
+    "bodies": [
+      {
+        "box": [
+          11.849999904632568,
+          8.849999904632568,
+          12.150000095367432,
+          9.150000095367432
+        ],
+        "globalId": "1oEVU1LrLTRx$FZWXXTQkL",
+        "rounding": 8.851289976519183e-7,
+        "zMax": 5.830000104904174,
+        "zMin": 2.929999994635582
+      },
+      {
+        "box": [
+          11.849999904632568,
+          -0.15000009536743164,
+          12.150000095367432,
+          0.15000009536743164
+        ],
+        "globalId": "3TV0bJ3MzQ3gpW4lpM07b0",
+        "rounding": 8.851289976519183e-7,
+        "zMax": 5.830000104904174,
+        "zMin": 2.929999994635582
+      },
+      {
+        "box": [
+          -0.15000009536743164,
+          -0.15000009536743164,
+          0.15000009536743164,
+          0.15000009536743164
+        ],
+        "globalId": "3uZBEl3_XRGxpPp43eYIpz",
+        "rounding": 9.137392424918289e-7,
+        "zMax": 2.9300001883506774,
+        "zMin": -0.1299999332427979
+      },
+      {
+        "box": [
+          -0.15000009536743164,
+          8.849999904632568,
+          0.15000009536743164,
+          9.150000095367432
+        ],
+        "globalId": "00x4eC8tjHwQ9C9WJQv8$L",
+        "rounding": 9.137392424918289e-7,
+        "zMax": 2.9300001883506774,
+        "zMin": -0.1299999332427979
+      },
+      {
+        "box": [
+          4.350000023841858,
+          -0.15000009536743164,
+          4.649999976158142,
+          0.15000009536743164
+        ],
+        "globalId": "13Whm$pNzQtfsy4MmIgdTR",
+        "rounding": 8.24332275328743e-7,
+        "zMax": 2.9300001883506774,
+        "zMin": -0.1299999332427979
+      },
+      {
+        "box": [
+          4.350000023841858,
+          8.849999904632568,
+          4.649999976158142,
+          9.150000095367432
+        ],
+        "globalId": "0FNoGLeO1P$BAxnlxLkgWR",
+        "rounding": 8.24332275328743e-7,
+        "zMax": 2.9300001883506774,
+        "zMin": -0.1299999332427979
+      },
+      {
+        "box": [
+          7.350000023841858,
+          -0.15000009536743164,
+          7.649999976158142,
+          0.15000009536743164
+        ],
+        "globalId": "2NuhnbeQfLH8diU6Dskuwa",
+        "rounding": 8.24332275328743e-7,
+        "zMax": 2.9300001883506774,
+        "zMin": -0.1299999332427979
+      },
+      {
+        "box": [
+          7.350000023841858,
+          8.849999904632568,
+          7.649999976158142,
+          9.150000095367432
+        ],
+        "globalId": "2VXzE6EzrTNBsyXwGtzBKZ",
+        "rounding": 8.24332275328743e-7,
+        "zMax": 2.9300001883506774,
+        "zMin": -0.1299999332427979
+      },
+      {
+        "box": [
+          11.849999904632568,
+          -0.15000009536743164,
+          12.150000095367432,
+          0.15000009536743164
+        ],
+        "globalId": "3zjrQzjnjSVRkNYYgn__CN",
+        "rounding": 9.137392424918289e-7,
+        "zMax": 2.9300001883506774,
+        "zMin": -0.1299999332427979
+      },
+      {
+        "box": [
+          11.849999904632568,
+          8.849999904632568,
+          12.150000095367432,
+          9.150000095367432
+        ],
+        "globalId": "0J95_x_GfLmQHcUFf_ASV2",
+        "rounding": 9.137392424918289e-7,
+        "zMax": 2.9300001883506774,
+        "zMin": -0.1299999332427979
+      },
+      {
+        "box": [
+          -0.15000009536743164,
+          -0.15000009536743164,
+          0.15000009536743164,
+          0.15000009536743164
+        ],
+        "globalId": "0Kmaq8Mt5Vc9DJjsnOsaU8",
+        "rounding": 8.851289976519183e-7,
+        "zMax": 5.830000104904174,
+        "zMin": 2.929999994635582
+      },
+      {
+        "box": [
+          -0.15000009536743164,
+          8.849999904632568,
+          0.15000009536743164,
+          9.150000095367432
+        ],
+        "globalId": "3vlEuhjJnHmhiECUT$2t8J",
+        "rounding": 8.851289976519183e-7,
+        "zMax": 5.830000104904174,
+        "zMin": 2.929999994635582
+      },
+      {
+        "box": [
+          4.350000023841858,
+          -0.15000009536743164,
+          4.649999976158142,
+          0.15000009536743164
+        ],
+        "globalId": "3P8FLctunVh9h_O5BWTFss",
+        "rounding": 7.957220304888324e-7,
+        "zMax": 5.830000104904174,
+        "zMin": 2.929999994635582
+      },
+      {
+        "box": [
+          4.350000023841858,
+          8.849999904632568,
+          4.649999976158142,
+          9.150000095367432
+        ],
+        "globalId": "3RcsHczm1IE9e2plkMXSD3",
+        "rounding": 7.957220304888324e-7,
+        "zMax": 5.830000104904174,
+        "zMin": 2.929999994635582
+      },
+      {
+        "box": [
+          7.350000023841858,
+          -0.15000009536743164,
+          7.649999976158142,
+          0.15000009536743164
+        ],
+        "globalId": "1FLyhrwoXTXOE2BOJY5Bz9",
+        "rounding": 7.957220304888324e-7,
+        "zMax": 5.830000104904174,
+        "zMin": 2.929999994635582
+      },
+      {
+        "box": [
+          7.350000023841858,
+          8.849999904632568,
+          7.649999976158142,
+          9.150000095367432
+        ],
+        "globalId": "1A86u70M1TFe0nqTDg82sl",
+        "rounding": 7.957220304888324e-7,
+        "zMax": 5.830000104904174,
+        "zMin": 2.929999994635582
+      },
+      {
+        "box": [
+          -4.76837158203125e-7,
+          -0.125,
+          12.000000476837158,
+          0.125
+        ],
+        "globalId": "2$L0a9fUvHVx1cmrBw8sV3",
+        "rounding": 1.4305115882962127e-6,
+        "zMax": 2.929999994635582,
+        "zMin": 2.430000009536743
+      },
+      {
+        "box": [
+          11.875,
+          0.0,
+          12.125,
+          9.0
+        ],
+        "globalId": "288olluMfI4wABl2lUfPyb",
+        "rounding": 1.169741153717041e-6,
+        "zMax": 2.929999994635582,
+        "zMin": 2.430000009536743
+      },
+      {
+        "box": [
+          -4.76837158203125e-7,
+          8.875,
+          12.000000476837158,
+          9.125
+        ],
+        "globalId": "3ipG2Y215GU9C$MOeRIAYv",
+        "rounding": 1.4305115882962127e-6,
+        "zMax": 2.929999994635582,
+        "zMin": 2.430000009536743
+      },
+      {
+        "box": [
+          -0.125,
+          0.0,
+          0.125,
+          9.0
+        ],
+        "globalId": "1aoeEVjBHVXOXts4ou1088",
+        "rounding": 1.169741153717041e-6,
+        "zMax": 2.929999994635582,
+        "zMin": 2.430000009536743
+      },
+      {
+        "box": [
+          -4.76837158203125e-7,
+          -0.125,
+          12.000000476837158,
+          0.125
+        ],
+        "globalId": "03tiMK2DjRd8dwGk8rBSQK",
+        "rounding": 1.4305115882962127e-6,
+        "zMax": 5.830000104904174,
+        "zMin": 5.330000104904174
+      },
+      {
+        "box": [
+          11.875,
+          0.0,
+          12.125,
+          9.0
+        ],
+        "globalId": "39iNlK5U5Kux3rz9ROTerT",
+        "rounding": 1.169741153717041e-6,
+        "zMax": 5.830000104904174,
+        "zMin": 5.330000104904174
+      },
+      {
+        "box": [
+          -4.76837158203125e-7,
+          8.875,
+          12.000000476837158,
+          9.125
+        ],
+        "globalId": "2WfETzv41MS8qHr8ZVTNqP",
+        "rounding": 1.4305115882962127e-6,
+        "zMax": 5.830000104904174,
+        "zMin": 5.330000104904174
+      },
+      {
+        "box": [
+          -0.125,
+          0.0,
+          0.125,
+          9.0
+        ],
+        "globalId": "2ofJbpTuHKAfqXXHEeSDsG",
+        "rounding": 1.169741153717041e-6,
+        "zMax": 5.830000104904174,
+        "zMin": 5.330000104904174
+      },
+      {
+        "box": [
+          -0.1250004768371582,
+          -0.125,
+          12.125000476837158,
+          9.125
+        ],
+        "globalId": "3$J7UxuDrTtgF_ufVgWJQe",
+        "rounding": 1.460313910683908e-6,
+        "zMax": -5.7220459037665705e-8,
+        "zMin": -0.28000002861022955
+      },
+      {
+        "box": [
+          -0.1250004768371582,
+          -0.125,
+          12.125000476837158,
+          9.125
+        ],
+        "globalId": "2sASQ82hbRGOFG_66jETu1",
+        "rounding": 1.460313910683908e-6,
+        "zMax": 3.0000000023841857,
+        "zMin": 2.760000000298023
+      },
+      {
+        "box": [
+          -0.1250004768371582,
+          -0.125,
+          12.125000476837158,
+          9.125
+        ],
+        "globalId": "1d_naoPETOihnHRl1e_YUu",
+        "rounding": 1.460313910683908e-6,
+        "zMax": 5.9999999427795405,
+        "zMin": 5.660000028610229
+      }
+    ],
+    "overlaps": [],
+    "spaces": []
+  },
+  "catalog": {
+    "id": "temel-2026",
+    "version": "2026.1"
+  },
+  "classCodes": {
+    "IfcBeam": "KRS",
+    "IfcBuilding": "BNA",
+    "IfcBuildingStorey": "BNK",
+    "IfcColumn": "KLN",
+    "IfcProject": "-",
+    "IfcSite": "SAH",
+    "IfcSlab": "DSM"
+  },
+  "file": {
+    "bytes": 18724,
+    "extension": "ifc",
+    "header": {
+      "author": [
+        ""
+      ],
+      "description": [
+        "ViewDefinition [CoordinationView]"
+      ],
+      "implementationLevel": "2;1",
+      "name": "kesit-binasi-statik-datum.ifc",
+      "organization": [
+        ""
+      ],
+      "originatingSystem": "IfcOpenShell",
+      "preprocessor": "IfcOpenShell 0.9.0.post1",
+      "timeStamp": "2026-11-17T12:00:00"
+    },
+    "name": "kesit-binasi-statik.ifc",
+    "records": 413,
+    "schema": "IFC4X3_ADD2"
+  },
+  "findings": [],
+  "format": "kentos.ifcFacts",
+  "gaps": [
+    {
+      "class": "IfcBeam",
+      "id": "T6.3/PredefinedType",
+      "missing": [
+        "2$L0a9fUvHVx1cmrBw8sV3",
+        "288olluMfI4wABl2lUfPyb",
+        "3ipG2Y215GU9C$MOeRIAYv",
+        "1aoeEVjBHVXOXts4ou1088",
+        "03tiMK2DjRd8dwGk8rBSQK",
+        "39iNlK5U5Kux3rz9ROTerT",
+        "2WfETzv41MS8qHr8ZVTNqP",
+        "2ofJbpTuHKAfqXXHEeSDsG"
+      ],
+      "of": 8,
+      "page": 38,
+      "path": "PredefinedType",
+      "table": "6.3",
+      "tr": "Ön Tanımlı Tip"
+    },
+    {
+      "class": "IfcBeam",
+      "id": "T6.3/Tag",
+      "missing": [
+        "2$L0a9fUvHVx1cmrBw8sV3",
+        "288olluMfI4wABl2lUfPyb",
+        "3ipG2Y215GU9C$MOeRIAYv",
+        "1aoeEVjBHVXOXts4ou1088",
+        "03tiMK2DjRd8dwGk8rBSQK",
+        "39iNlK5U5Kux3rz9ROTerT",
+        "2WfETzv41MS8qHr8ZVTNqP",
+        "2ofJbpTuHKAfqXXHEeSDsG"
+      ],
+      "of": 8,
+      "page": 38,
+      "path": "Tag",
+      "table": "6.3",
+      "tr": "Etiket"
+    },
+    {
+      "class": "IfcBeam",
+      "id": "T6.3/IfcMaterial.Name",
+      "missing": [
+        "2$L0a9fUvHVx1cmrBw8sV3",
+        "288olluMfI4wABl2lUfPyb",
+        "3ipG2Y215GU9C$MOeRIAYv",
+        "1aoeEVjBHVXOXts4ou1088",
+        "03tiMK2DjRd8dwGk8rBSQK",
+        "39iNlK5U5Kux3rz9ROTerT",
+        "2WfETzv41MS8qHr8ZVTNqP",
+        "2ofJbpTuHKAfqXXHEeSDsG"
+      ],
+      "of": 8,
+      "page": 38,
+      "path": "IfcMaterial.Name",
+      "table": "6.3",
+      "tr": "Malzeme"
+    },
+    {
+      "class": "IfcBeam",
+      "id": "T6.3/Pset_BeamCommon.FireRating",
+      "missing": [
+        "2$L0a9fUvHVx1cmrBw8sV3",
+        "288olluMfI4wABl2lUfPyb",
+        "3ipG2Y215GU9C$MOeRIAYv",
+        "1aoeEVjBHVXOXts4ou1088",
+        "03tiMK2DjRd8dwGk8rBSQK",
+        "39iNlK5U5Kux3rz9ROTerT",
+        "2WfETzv41MS8qHr8ZVTNqP",
+        "2ofJbpTuHKAfqXXHEeSDsG"
+      ],
+      "of": 8,
+      "page": 38,
+      "path": "Pset_BeamCommon.FireRating",
+      "table": "6.3",
+      "tr": "Yangın Dayanım Sınıfı"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/LongName",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 42,
+      "path": "LongName",
+      "table": "6.7",
+      "tr": "Uzun İsim"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/Pset_BuildingCommon.BuildingID",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 42,
+      "path": "Pset_BuildingCommon.BuildingID",
+      "table": "6.7",
+      "tr": "Bina Kimliği"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/Pset_BuildingCommon.IsPermanentID",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 42,
+      "path": "Pset_BuildingCommon.IsPermanentID",
+      "table": "6.7",
+      "tr": "Kalıcı Kimlik"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/Pset_BuildingCommon.ConstructionMethod",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 42,
+      "path": "Pset_BuildingCommon.ConstructionMethod",
+      "table": "6.7",
+      "tr": "Yapım Yöntemi"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/Pset_BuildingCommon.FireProtectionClass",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 42,
+      "path": "Pset_BuildingCommon.FireProtectionClass",
+      "table": "6.7",
+      "tr": "Yangın Koruma Sınıfı"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/Pset_BuildingCommon.OccupancyType",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 42,
+      "path": "Pset_BuildingCommon.OccupancyType",
+      "table": "6.7",
+      "tr": "Kullanım Türü"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/Pset_BuildingCommon.GrossPlannedArea",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 42,
+      "path": "Pset_BuildingCommon.GrossPlannedArea",
+      "table": "6.7",
+      "tr": "Brüt Planlanan Alan"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/Pset_BuildingCommon.NetPlannedArea",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 42,
+      "path": "Pset_BuildingCommon.NetPlannedArea",
+      "table": "6.7",
+      "tr": "Net Planlanan Alan"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/Pset_BuildingCommon.NumberOfStoreys",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 43,
+      "path": "Pset_BuildingCommon.NumberOfStoreys",
+      "table": "6.7",
+      "tr": "Kat Sayısı"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/Pset_Address.AddressLines",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 43,
+      "path": "Pset_Address.AddressLines",
+      "table": "6.7",
+      "tr": "Adres Satırları"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/Pset_Address.Town",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 43,
+      "path": "Pset_Address.Town",
+      "table": "6.7",
+      "tr": "iI / Kasaba"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/Pset_Address.Region",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 43,
+      "path": "Pset_Address.Region",
+      "table": "6.7",
+      "tr": "Bölge / İlçe"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/Qto_BuildingBaseQuantities.Height",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 43,
+      "path": "Qto_BuildingBaseQuantities.Height",
+      "table": "6.7",
+      "tr": "Yükseklik"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/Qto_BuildingBaseQuantities.EavesHeight",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 43,
+      "path": "Qto_BuildingBaseQuantities.EavesHeight",
+      "table": "6.7",
+      "tr": "Saçak Yüksekliği"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/Qto_BuildingBaseQuantities.FootPrintArea",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 43,
+      "path": "Qto_BuildingBaseQuantities.FootPrintArea",
+      "table": "6.7",
+      "tr": "Taban Alanı"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/Qto_BuildingBaseQuantities.GrossFloorArea",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 44,
+      "path": "Qto_BuildingBaseQuantities.GrossFloorArea",
+      "table": "6.7",
+      "tr": "Brüt Kat Alanı"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/Qto_BuildingBaseQuantities.NetFloorArea",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 44,
+      "path": "Qto_BuildingBaseQuantities.NetFloorArea",
+      "table": "6.7",
+      "tr": "Net Kat Alanı"
+    },
+    {
+      "class": "IfcBuilding",
+      "id": "T6.7/Pset_Address.PostalBox",
+      "missing": [
+        "2WS1Vekc5OPAD8BRrnxuhc"
+      ],
+      "of": 1,
+      "page": 44,
+      "path": "Pset_Address.PostalBox",
+      "table": "6.7",
+      "tr": "Posta Kutusu"
+    },
+    {
+      "class": "IfcBuildingStorey",
+      "id": "T6.8/Qto_BuildingStoreyBaseQuantities.NetFloorArea",
+      "missing": [
+        "1bLN8oRHDGwu_HDRciVOFv",
+        "2dVFPvLKPI18o1wjcjUWM5"
+      ],
+      "of": 2,
+      "page": 45,
+      "path": "Qto_BuildingStoreyBaseQuantities.NetFloorArea",
+      "table": "6.8",
+      "tr": "Net Kat Alanı"
+    },
+    {
+      "class": "IfcBuildingStorey",
+      "id": "T6.8/Pset_BuildingStoreyCommon.ElevationOfSSLRelative",
+      "missing": [
+        "1bLN8oRHDGwu_HDRciVOFv",
+        "2dVFPvLKPI18o1wjcjUWM5"
+      ],
+      "of": 2,
+      "page": 45,
+      "path": "Pset_BuildingStoreyCommon.ElevationOfSSLRelative",
+      "table": "6.8",
+      "tr": "Taşıyıcı Döşeme Üst Kotu"
+    },
+    {
+      "class": "IfcColumn",
+      "id": "T6.16/PredefinedType",
+      "missing": [
+        "1oEVU1LrLTRx$FZWXXTQkL",
+        "3TV0bJ3MzQ3gpW4lpM07b0",
+        "3uZBEl3_XRGxpPp43eYIpz",
+        "00x4eC8tjHwQ9C9WJQv8$L",
+        "13Whm$pNzQtfsy4MmIgdTR",
+        "0FNoGLeO1P$BAxnlxLkgWR",
+        "2NuhnbeQfLH8diU6Dskuwa",
+        "2VXzE6EzrTNBsyXwGtzBKZ",
+        "3zjrQzjnjSVRkNYYgn__CN",
+        "0J95_x_GfLmQHcUFf_ASV2",
+        "0Kmaq8Mt5Vc9DJjsnOsaU8",
+        "3vlEuhjJnHmhiECUT$2t8J",
+        "3P8FLctunVh9h_O5BWTFss",
+        "3RcsHczm1IE9e2plkMXSD3",
+        "1FLyhrwoXTXOE2BOJY5Bz9",
+        "1A86u70M1TFe0nqTDg82sl"
+      ],
+      "of": 16,
+      "page": 53,
+      "path": "PredefinedType",
+      "table": "6.16",
+      "tr": "Ön Tanımlı Tip"
+    },
+    {
+      "class": "IfcColumn",
+      "id": "T6.16/Tag",
+      "missing": [
+        "1oEVU1LrLTRx$FZWXXTQkL",
+        "3TV0bJ3MzQ3gpW4lpM07b0",
+        "3uZBEl3_XRGxpPp43eYIpz",
+        "00x4eC8tjHwQ9C9WJQv8$L",
+        "13Whm$pNzQtfsy4MmIgdTR",
+        "0FNoGLeO1P$BAxnlxLkgWR",
+        "2NuhnbeQfLH8diU6Dskuwa",
+        "2VXzE6EzrTNBsyXwGtzBKZ",
+        "3zjrQzjnjSVRkNYYgn__CN",
+        "0J95_x_GfLmQHcUFf_ASV2",
+        "0Kmaq8Mt5Vc9DJjsnOsaU8",
+        "3vlEuhjJnHmhiECUT$2t8J",
+        "3P8FLctunVh9h_O5BWTFss",
+        "3RcsHczm1IE9e2plkMXSD3",
+        "1FLyhrwoXTXOE2BOJY5Bz9",
+        "1A86u70M1TFe0nqTDg82sl"
+      ],
+      "of": 16,
+      "page": 53,
+      "path": "Tag",
+      "table": "6.16",
+      "tr": "Etiket"
+    },
+    {
+      "class": "IfcColumn",
+      "id": "T6.16/IfcMaterial.Name",
+      "missing": [
+        "1oEVU1LrLTRx$FZWXXTQkL",
+        "3TV0bJ3MzQ3gpW4lpM07b0",
+        "3uZBEl3_XRGxpPp43eYIpz",
+        "00x4eC8tjHwQ9C9WJQv8$L",
+        "13Whm$pNzQtfsy4MmIgdTR",
+        "0FNoGLeO1P$BAxnlxLkgWR",
+        "2NuhnbeQfLH8diU6Dskuwa",
+        "2VXzE6EzrTNBsyXwGtzBKZ",
+        "3zjrQzjnjSVRkNYYgn__CN",
+        "0J95_x_GfLmQHcUFf_ASV2",
+        "0Kmaq8Mt5Vc9DJjsnOsaU8",
+        "3vlEuhjJnHmhiECUT$2t8J",
+        "3P8FLctunVh9h_O5BWTFss",
+        "3RcsHczm1IE9e2plkMXSD3",
+        "1FLyhrwoXTXOE2BOJY5Bz9",
+        "1A86u70M1TFe0nqTDg82sl"
+      ],
+      "of": 16,
+      "page": 53,
+      "path": "IfcMaterial.Name",
+      "table": "6.16",
+      "tr": "Malzeme"
+    },
+    {
+      "class": "IfcColumn",
+      "id": "T6.16/Pset_ColumnCommon.FireRating",
+      "missing": [
+        "1oEVU1LrLTRx$FZWXXTQkL",
+        "3TV0bJ3MzQ3gpW4lpM07b0",
+        "3uZBEl3_XRGxpPp43eYIpz",
+        "00x4eC8tjHwQ9C9WJQv8$L",
+        "13Whm$pNzQtfsy4MmIgdTR",
+        "0FNoGLeO1P$BAxnlxLkgWR",
+        "2NuhnbeQfLH8diU6Dskuwa",
+        "2VXzE6EzrTNBsyXwGtzBKZ",
+        "3zjrQzjnjSVRkNYYgn__CN",
+        "0J95_x_GfLmQHcUFf_ASV2",
+        "0Kmaq8Mt5Vc9DJjsnOsaU8",
+        "3vlEuhjJnHmhiECUT$2t8J",
+        "3P8FLctunVh9h_O5BWTFss",
+        "3RcsHczm1IE9e2plkMXSD3",
+        "1FLyhrwoXTXOE2BOJY5Bz9",
+        "1A86u70M1TFe0nqTDg82sl"
+      ],
+      "of": 16,
+      "page": 54,
+      "path": "Pset_ColumnCommon.FireRating",
+      "table": "6.16",
+      "tr": "Yangın Dayanım Sınıfı"
+    },
+    {
+      "class": "IfcColumn",
+      "id": "T6.16/Pset_ColumnCommon.LoadBearing",
+      "missing": [
+        "1oEVU1LrLTRx$FZWXXTQkL",
+        "3TV0bJ3MzQ3gpW4lpM07b0",
+        "3uZBEl3_XRGxpPp43eYIpz",
+        "00x4eC8tjHwQ9C9WJQv8$L",
+        "13Whm$pNzQtfsy4MmIgdTR",
+        "0FNoGLeO1P$BAxnlxLkgWR",
+        "2NuhnbeQfLH8diU6Dskuwa",
+        "2VXzE6EzrTNBsyXwGtzBKZ",
+        "3zjrQzjnjSVRkNYYgn__CN",
+        "0J95_x_GfLmQHcUFf_ASV2",
+        "0Kmaq8Mt5Vc9DJjsnOsaU8",
+        "3vlEuhjJnHmhiECUT$2t8J",
+        "3P8FLctunVh9h_O5BWTFss",
+        "3RcsHczm1IE9e2plkMXSD3",
+        "1FLyhrwoXTXOE2BOJY5Bz9",
+        "1A86u70M1TFe0nqTDg82sl"
+      ],
+      "of": 16,
+      "page": 54,
+      "path": "Pset_ColumnCommon.LoadBearing",
+      "table": "6.16",
+      "tr": "Taşıyıcı"
+    },
+    {
+      "class": "IfcSite",
+      "id": "T6.55/ObjectType",
+      "missing": [
+        "0aPh44FFnIiwRl3mAQzdOu"
+      ],
+      "of": 1,
+      "page": 94,
+      "path": "ObjectType",
+      "table": "6.55",
+      "tr": "Nesne Tipi"
+    },
+    {
+      "class": "IfcSite",
+      "id": "T6.55/LongName",
+      "missing": [
+        "0aPh44FFnIiwRl3mAQzdOu"
+      ],
+      "of": 1,
+      "page": 94,
+      "path": "LongName",
+      "table": "6.55",
+      "tr": "Uzun İsim"
+    },
+    {
+      "class": "IfcSite",
+      "id": "T6.55/RefElevation",
+      "missing": [
+        "0aPh44FFnIiwRl3mAQzdOu"
+      ],
+      "of": 1,
+      "page": 94,
+      "path": "RefElevation",
+      "table": "6.55",
+      "tr": "Referans Kotu"
+    },
+    {
+      "class": "IfcSite",
+      "id": "T6.55/Pset_SiteCommon.FloorAreaRatio",
+      "missing": [
+        "0aPh44FFnIiwRl3mAQzdOu"
+      ],
+      "of": 1,
+      "page": 94,
+      "path": "Pset_SiteCommon.FloorAreaRatio",
+      "table": "6.55",
+      "tr": "Kat Alanı Oranı"
+    },
+    {
+      "class": "IfcSite",
+      "id": "T6.55/Pset_SiteCommon.SiteCoverageRatio",
+      "missing": [
+        "0aPh44FFnIiwRl3mAQzdOu"
+      ],
+      "of": 1,
+      "page": 94,
+      "path": "Pset_SiteCommon.SiteCoverageRatio",
+      "table": "6.55",
+      "tr": "Saha Kapsama Oranı"
+    },
+    {
+      "class": "IfcSite",
+      "id": "T6.55/Pset_SiteCommon.TotalArea",
+      "missing": [
+        "0aPh44FFnIiwRl3mAQzdOu"
+      ],
+      "of": 1,
+      "page": 94,
+      "path": "Pset_SiteCommon.TotalArea",
+      "table": "6.55",
+      "tr": "Toplam Alan"
+    },
+    {
+      "class": "IfcSite",
+      "id": "T6.55/Pset_Address.AddressLines",
+      "missing": [
+        "0aPh44FFnIiwRl3mAQzdOu"
+      ],
+      "of": 1,
+      "page": 94,
+      "path": "Pset_Address.AddressLines",
+      "table": "6.55",
+      "tr": "Adres Satırları"
+    },
+    {
+      "class": "IfcSite",
+      "id": "T6.55/Pset_Address.Town",
+      "missing": [
+        "0aPh44FFnIiwRl3mAQzdOu"
+      ],
+      "of": 1,
+      "page": 95,
+      "path": "Pset_Address.Town",
+      "table": "6.55",
+      "tr": "I1 / Kasaba"
+    },
+    {
+      "class": "IfcSite",
+      "id": "T6.55/Pset_Address.Region",
+      "missing": [
+        "0aPh44FFnIiwRl3mAQzdOu"
+      ],
+      "of": 1,
+      "page": 95,
+      "path": "Pset_Address.Region",
+      "table": "6.55",
+      "tr": "Bölge / İlçe"
+    },
+    {
+      "class": "IfcSite",
+      "id": "T6.55/Pset_LandRegistration.LandID",
+      "missing": [
+        "0aPh44FFnIiwRl3mAQzdOu"
+      ],
+      "of": 1,
+      "page": 95,
+      "path": "Pset_LandRegistration.LandID",
+      "table": "6.55",
+      "tr": "Parsel Numarası"
+    },
+    {
+      "class": "IfcSite",
+      "id": "T6.55/Pset_LandRegistration.LandTitleID",
+      "missing": [
+        "0aPh44FFnIiwRl3mAQzdOu"
+      ],
+      "of": 1,
+      "page": 95,
+      "path": "Pset_LandRegistration.LandTitleID",
+      "table": "6.55",
+      "tr": "Tapu Numarası"
+    },
+    {
+      "class": "IfcSite",
+      "id": "T6.55/TREpys_ParselOzellikSeti.TAKS",
+      "missing": [
+        "0aPh44FFnIiwRl3mAQzdOu"
+      ],
+      "of": 1,
+      "page": 95,
+      "path": "TREpys_ParselOzellikSeti.TAKS",
+      "table": "6.55",
+      "tr": ""
+    },
+    {
+      "class": "IfcSite",
+      "id": "T6.55/TREpys_ParselOzellikSeti.KAKS",
+      "missing": [
+        "0aPh44FFnIiwRl3mAQzdOu"
+      ],
+      "of": 1,
+      "page": 95,
+      "path": "TREpys_ParselOzellikSeti.KAKS",
+      "table": "6.55",
+      "tr": ""
+    },
+    {
+      "class": "IfcSite",
+      "id": "T6.55/TREpys_ParselOzellikSeti.CekmeOn",
+      "missing": [
+        "0aPh44FFnIiwRl3mAQzdOu"
+      ],
+      "of": 1,
+      "page": 95,
+      "path": "TREpys_ParselOzellikSeti.CekmeOn",
+      "table": "6.55",
+      "tr": ""
+    },
+    {
+      "class": "IfcSite",
+      "id": "T6.55/TREpys_ParselOzellikSeti.CekmeYan",
+      "missing": [
+        "0aPh44FFnIiwRl3mAQzdOu"
+      ],
+      "of": 1,
+      "page": 95,
+      "path": "TREpys_ParselOzellikSeti.CekmeYan",
+      "table": "6.55",
+      "tr": ""
+    },
+    {
+      "class": "IfcSite",
+      "id": "T6.55/TREpys_ParselOzellikSeti.CekmeArka",
+      "missing": [
+        "0aPh44FFnIiwRl3mAQzdOu"
+      ],
+      "of": 1,
+      "page": 95,
+      "path": "TREpys_ParselOzellikSeti.CekmeArka",
+      "table": "6.55",
+      "tr": ""
+    },
+    {
+      "class": "IfcSlab",
+      "id": "T6.56/PredefinedType",
+      "missing": [
+        "3$J7UxuDrTtgF_ufVgWJQe",
+        "2sASQ82hbRGOFG_66jETu1",
+        "1d_naoPETOihnHRl1e_YUu"
+      ],
+      "of": 3,
+      "page": 96,
+      "path": "PredefinedType",
+      "table": "6.56",
+      "tr": "Ön Tanımlı Tip"
+    },
+    {
+      "class": "IfcSlab",
+      "id": "T6.56/Tag",
+      "missing": [
+        "3$J7UxuDrTtgF_ufVgWJQe",
+        "2sASQ82hbRGOFG_66jETu1",
+        "1d_naoPETOihnHRl1e_YUu"
+      ],
+      "of": 3,
+      "page": 96,
+      "path": "Tag",
+      "table": "6.56",
+      "tr": "Etiket"
+    },
+    {
+      "class": "IfcSlab",
+      "id": "T6.56/IfcMaterial.Name",
+      "missing": [
+        "3$J7UxuDrTtgF_ufVgWJQe",
+        "2sASQ82hbRGOFG_66jETu1",
+        "1d_naoPETOihnHRl1e_YUu"
+      ],
+      "of": 3,
+      "page": 96,
+      "path": "IfcMaterial.Name",
+      "table": "6.56",
+      "tr": "Malzeme"
+    },
+    {
+      "class": "IfcSlab",
+      "id": "T6.56/Pset_SlabCommon.IsExternal",
+      "missing": [
+        "3$J7UxuDrTtgF_ufVgWJQe",
+        "2sASQ82hbRGOFG_66jETu1",
+        "1d_naoPETOihnHRl1e_YUu"
+      ],
+      "of": 3,
+      "page": 96,
+      "path": "Pset_SlabCommon.IsExternal",
+      "table": "6.56",
+      "tr": "Dışarıda"
+    },
+    {
+      "class": "IfcSlab",
+      "id": "T6.56/Pset_SlabCommon.FireRating",
+      "missing": [
+        "3$J7UxuDrTtgF_ufVgWJQe",
+        "2sASQ82hbRGOFG_66jETu1",
+        "1d_naoPETOihnHRl1e_YUu"
+      ],
+      "of": 3,
+      "page": 96,
+      "path": "Pset_SlabCommon.FireRating",
+      "table": "6.56",
+      "tr": "Yangın Dayanım Sınıfı"
+    },
+    {
+      "class": "IfcProject",
+      "id": "T7.1/Description",
+      "missing": [
+        "1VqeenKSrIHRZ$98iPhI5e"
+      ],
+      "of": 1,
+      "page": 222,
+      "path": "Description",
+      "table": "7.1",
+      "tr": "Açıklama"
+    },
+    {
+      "class": "IfcProject",
+      "id": "T7.1/Pset_ProjectCommon.ProjectType",
+      "missing": [
+        "1VqeenKSrIHRZ$98iPhI5e"
+      ],
+      "of": 1,
+      "page": 222,
+      "path": "Pset_ProjectCommon.ProjectType",
+      "table": "7.1",
+      "tr": "Proje Tipi"
+    }
+  ],
+  "location": {
+    "crs": "EPSG:5255",
+    "crsDescription": "TUREF / TM33 (EPSG:5255)",
+    "eastings": 0.0,
+    "geodeticDatum": "TUREF",
+    "mapProjection": "Transverse Mercator",
+    "mapZone": "33",
+    "northings": 0.0,
+    "orthogonalHeight": 1285.4,
+    "scale": 0.001,
+    "verticalDatum": "ITRF96",
+    "xAxisAbscissa": 1.0,
+    "xAxisOrdinate": 0.0
+  },
+  "objects": [
+    {
+      "class": "IfcProject",
+      "container": null,
+      "description": null,
+      "elevation": null,
+      "globalId": "1VqeenKSrIHRZ$98iPhI5e",
+      "hasShape": false,
+      "longName": null,
+      "materials": [],
+      "name": "Kesit binası — statik",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 1,
+      "storey": null,
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcSite",
+      "container": null,
+      "description": null,
+      "elevation": null,
+      "globalId": "0aPh44FFnIiwRl3mAQzdOu",
+      "hasShape": false,
+      "longName": null,
+      "materials": [],
+      "name": "Arsa",
+      "objectType": null,
+      "parent": "1VqeenKSrIHRZ$98iPhI5e",
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 16,
+      "storey": null,
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcBuilding",
+      "container": null,
+      "description": null,
+      "elevation": null,
+      "globalId": "2WS1Vekc5OPAD8BRrnxuhc",
+      "hasShape": false,
+      "longName": null,
+      "materials": [],
+      "name": "Kesit binası",
+      "objectType": null,
+      "parent": "0aPh44FFnIiwRl3mAQzdOu",
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 17,
+      "storey": null,
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcBuildingStorey",
+      "container": null,
+      "description": null,
+      "elevation": 0.0,
+      "globalId": "1bLN8oRHDGwu_HDRciVOFv",
+      "hasShape": false,
+      "longName": "Zemin Kat",
+      "materials": [],
+      "name": "Zemin Kat",
+      "objectType": null,
+      "parent": "2WS1Vekc5OPAD8BRrnxuhc",
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 23,
+      "storey": null,
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcBuildingStorey",
+      "container": null,
+      "description": null,
+      "elevation": 3000.0,
+      "globalId": "2dVFPvLKPI18o1wjcjUWM5",
+      "hasShape": false,
+      "longName": "1. Kat",
+      "materials": [],
+      "name": "1. Kat",
+      "objectType": null,
+      "parent": "2WS1Vekc5OPAD8BRrnxuhc",
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 27,
+      "storey": null,
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcGrid",
+      "container": "1bLN8oRHDGwu_HDRciVOFv",
+      "description": null,
+      "elevation": null,
+      "globalId": "33q0A5$UzSKRsVCAilLo7p",
+      "hasShape": false,
+      "longName": null,
+      "materials": [],
+      "name": "Akslar",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 60,
+      "storey": "1bLN8oRHDGwu_HDRciVOFv",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcColumn",
+      "container": "2dVFPvLKPI18o1wjcjUWM5",
+      "description": null,
+      "elevation": null,
+      "globalId": "1oEVU1LrLTRx$FZWXXTQkL",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-COLUMN-01",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 73,
+      "storey": "2dVFPvLKPI18o1wjcjUWM5",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcColumn",
+      "container": "2dVFPvLKPI18o1wjcjUWM5",
+      "description": null,
+      "elevation": null,
+      "globalId": "3TV0bJ3MzQ3gpW4lpM07b0",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-COLUMN-02",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 86,
+      "storey": "2dVFPvLKPI18o1wjcjUWM5",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcColumn",
+      "container": "1bLN8oRHDGwu_HDRciVOFv",
+      "description": null,
+      "elevation": null,
+      "globalId": "3uZBEl3_XRGxpPp43eYIpz",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-COLUMN-03",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 99,
+      "storey": "1bLN8oRHDGwu_HDRciVOFv",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcColumn",
+      "container": "1bLN8oRHDGwu_HDRciVOFv",
+      "description": null,
+      "elevation": null,
+      "globalId": "00x4eC8tjHwQ9C9WJQv8$L",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-COLUMN-04",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 112,
+      "storey": "1bLN8oRHDGwu_HDRciVOFv",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcColumn",
+      "container": "1bLN8oRHDGwu_HDRciVOFv",
+      "description": null,
+      "elevation": null,
+      "globalId": "13Whm$pNzQtfsy4MmIgdTR",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-COLUMN-05",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 125,
+      "storey": "1bLN8oRHDGwu_HDRciVOFv",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcColumn",
+      "container": "1bLN8oRHDGwu_HDRciVOFv",
+      "description": null,
+      "elevation": null,
+      "globalId": "0FNoGLeO1P$BAxnlxLkgWR",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-COLUMN-06",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 138,
+      "storey": "1bLN8oRHDGwu_HDRciVOFv",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcColumn",
+      "container": "1bLN8oRHDGwu_HDRciVOFv",
+      "description": null,
+      "elevation": null,
+      "globalId": "2NuhnbeQfLH8diU6Dskuwa",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-COLUMN-07",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 151,
+      "storey": "1bLN8oRHDGwu_HDRciVOFv",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcColumn",
+      "container": "1bLN8oRHDGwu_HDRciVOFv",
+      "description": null,
+      "elevation": null,
+      "globalId": "2VXzE6EzrTNBsyXwGtzBKZ",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-COLUMN-08",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 164,
+      "storey": "1bLN8oRHDGwu_HDRciVOFv",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcColumn",
+      "container": "1bLN8oRHDGwu_HDRciVOFv",
+      "description": null,
+      "elevation": null,
+      "globalId": "3zjrQzjnjSVRkNYYgn__CN",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-COLUMN-09",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 177,
+      "storey": "1bLN8oRHDGwu_HDRciVOFv",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcColumn",
+      "container": "1bLN8oRHDGwu_HDRciVOFv",
+      "description": null,
+      "elevation": null,
+      "globalId": "0J95_x_GfLmQHcUFf_ASV2",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-COLUMN-10",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 190,
+      "storey": "1bLN8oRHDGwu_HDRciVOFv",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcColumn",
+      "container": "2dVFPvLKPI18o1wjcjUWM5",
+      "description": null,
+      "elevation": null,
+      "globalId": "0Kmaq8Mt5Vc9DJjsnOsaU8",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-COLUMN-11",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 203,
+      "storey": "2dVFPvLKPI18o1wjcjUWM5",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcColumn",
+      "container": "2dVFPvLKPI18o1wjcjUWM5",
+      "description": null,
+      "elevation": null,
+      "globalId": "3vlEuhjJnHmhiECUT$2t8J",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-COLUMN-12",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 216,
+      "storey": "2dVFPvLKPI18o1wjcjUWM5",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcColumn",
+      "container": "2dVFPvLKPI18o1wjcjUWM5",
+      "description": null,
+      "elevation": null,
+      "globalId": "3P8FLctunVh9h_O5BWTFss",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-COLUMN-13",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 229,
+      "storey": "2dVFPvLKPI18o1wjcjUWM5",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcColumn",
+      "container": "2dVFPvLKPI18o1wjcjUWM5",
+      "description": null,
+      "elevation": null,
+      "globalId": "3RcsHczm1IE9e2plkMXSD3",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-COLUMN-14",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 242,
+      "storey": "2dVFPvLKPI18o1wjcjUWM5",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcColumn",
+      "container": "2dVFPvLKPI18o1wjcjUWM5",
+      "description": null,
+      "elevation": null,
+      "globalId": "1FLyhrwoXTXOE2BOJY5Bz9",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-COLUMN-15",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 255,
+      "storey": "2dVFPvLKPI18o1wjcjUWM5",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcColumn",
+      "container": "2dVFPvLKPI18o1wjcjUWM5",
+      "description": null,
+      "elevation": null,
+      "globalId": "1A86u70M1TFe0nqTDg82sl",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-COLUMN-16",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 268,
+      "storey": "2dVFPvLKPI18o1wjcjUWM5",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcBeam",
+      "container": "1bLN8oRHDGwu_HDRciVOFv",
+      "description": null,
+      "elevation": null,
+      "globalId": "2$L0a9fUvHVx1cmrBw8sV3",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-BEAM-17",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 281,
+      "storey": "1bLN8oRHDGwu_HDRciVOFv",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcBeam",
+      "container": "1bLN8oRHDGwu_HDRciVOFv",
+      "description": null,
+      "elevation": null,
+      "globalId": "288olluMfI4wABl2lUfPyb",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-BEAM-18",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 294,
+      "storey": "1bLN8oRHDGwu_HDRciVOFv",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcBeam",
+      "container": "1bLN8oRHDGwu_HDRciVOFv",
+      "description": null,
+      "elevation": null,
+      "globalId": "3ipG2Y215GU9C$MOeRIAYv",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-BEAM-19",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 307,
+      "storey": "1bLN8oRHDGwu_HDRciVOFv",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcBeam",
+      "container": "1bLN8oRHDGwu_HDRciVOFv",
+      "description": null,
+      "elevation": null,
+      "globalId": "1aoeEVjBHVXOXts4ou1088",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-BEAM-20",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 320,
+      "storey": "1bLN8oRHDGwu_HDRciVOFv",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcBeam",
+      "container": "2dVFPvLKPI18o1wjcjUWM5",
+      "description": null,
+      "elevation": null,
+      "globalId": "03tiMK2DjRd8dwGk8rBSQK",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-BEAM-21",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 333,
+      "storey": "2dVFPvLKPI18o1wjcjUWM5",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcBeam",
+      "container": "2dVFPvLKPI18o1wjcjUWM5",
+      "description": null,
+      "elevation": null,
+      "globalId": "39iNlK5U5Kux3rz9ROTerT",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-BEAM-22",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 346,
+      "storey": "2dVFPvLKPI18o1wjcjUWM5",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcBeam",
+      "container": "2dVFPvLKPI18o1wjcjUWM5",
+      "description": null,
+      "elevation": null,
+      "globalId": "2WfETzv41MS8qHr8ZVTNqP",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-BEAM-23",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 359,
+      "storey": "2dVFPvLKPI18o1wjcjUWM5",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcBeam",
+      "container": "2dVFPvLKPI18o1wjcjUWM5",
+      "description": null,
+      "elevation": null,
+      "globalId": "2ofJbpTuHKAfqXXHEeSDsG",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-BEAM-24",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 372,
+      "storey": "2dVFPvLKPI18o1wjcjUWM5",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcSlab",
+      "container": "1bLN8oRHDGwu_HDRciVOFv",
+      "description": null,
+      "elevation": null,
+      "globalId": "3$J7UxuDrTtgF_ufVgWJQe",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-SLAB-25",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 385,
+      "storey": "1bLN8oRHDGwu_HDRciVOFv",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcSlab",
+      "container": "2dVFPvLKPI18o1wjcjUWM5",
+      "description": null,
+      "elevation": null,
+      "globalId": "2sASQ82hbRGOFG_66jETu1",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-SLAB-26",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 398,
+      "storey": "2dVFPvLKPI18o1wjcjUWM5",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcSlab",
+      "container": "2dVFPvLKPI18o1wjcjUWM5",
+      "description": null,
+      "elevation": null,
+      "globalId": "1d_naoPETOihnHRl1e_YUu",
+      "hasShape": true,
+      "longName": null,
+      "materials": [],
+      "name": "S-SLAB-27",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": null,
+      "quantities": {},
+      "sets": {},
+      "step": 411,
+      "storey": "2dVFPvLKPI18o1wjcjUWM5",
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    }
+  ],
+  "profile": {
+    "schema": "IFC4X3_ADD2"
+  },
+  "records": {
+    "IfcGeometricRepresentationContext": [
+      {
+        "attributes": {
+          "ContextIdentifier": null,
+          "ContextType": "Model",
+          "CoordinateSpaceDimension": 3,
+          "Precision": 0.00001,
+          "TrueNorth": null,
+          "WorldCoordinateSystem": "#8"
+        },
+        "class": "IfcGeometricRepresentationContext",
+        "step": 9
+      }
+    ],
+    "IfcMapConversion": [
+      {
+        "attributes": {
+          "Eastings": 0.0,
+          "Northings": 0.0,
+          "OrthogonalHeight": 1285.4,
+          "Scale": 0.001,
+          "SourceCRS": "#9",
+          "TargetCRS": "#11",
+          "XAxisAbscissa": 1.0,
+          "XAxisOrdinate": 0.0
+        },
+        "class": "IfcMapConversion",
+        "step": 12
+      }
+    ],
+    "IfcProjectedCRS": [
+      {
+        "attributes": {
+          "Description": "TUREF / TM33 (EPSG:5255)",
+          "GeodeticDatum": "TUREF",
+          "MapProjection": "Transverse Mercator",
+          "MapUnit": null,
+          "MapZone": "33",
+          "Name": "EPSG:5255",
+          "VerticalDatum": "ITRF96"
+        },
+        "class": "IfcProjectedCRS",
+        "step": 11
+      }
+    ]
+  },
+  "rows": [
+    {
+      "attribute": true,
+      "class": "IfcProject",
+      "id": "T7.1/Description",
+      "mandatory": true,
+      "name": "Description",
+      "page": 222,
+      "path": "Description",
+      "table": "7.1",
+      "tr": "Açıklama"
+    },
+    {
+      "attribute": true,
+      "class": "IfcProject",
+      "id": "T7.1/Name",
+      "mandatory": true,
+      "name": "Name",
+      "page": 222,
+      "path": "Name",
+      "table": "7.1",
+      "tr": "İsim"
+    },
+    {
+      "attribute": false,
+      "class": "IfcProject",
+      "id": "T7.1/Pset_ProjectCommon.ProjectType",
+      "mandatory": true,
+      "name": "ProjectType",
+      "page": 222,
+      "path": "Pset_ProjectCommon.ProjectType",
+      "table": "7.1",
+      "tr": "Proje Tipi"
+    },
+    {
+      "attribute": true,
+      "class": "IfcPerson",
+      "id": "T7.2/Identification",
+      "mandatory": true,
+      "name": "Identification",
+      "page": 223,
+      "path": "Identification",
+      "table": "7.2",
+      "tr": "Kimlik No"
+    },
+    {
+      "attribute": true,
+      "class": "IfcPerson",
+      "id": "T7.2/FamilyName",
+      "mandatory": true,
+      "name": "FamilyName",
+      "page": 223,
+      "path": "FamilyName",
+      "table": "7.2",
+      "tr": "Aile Adı"
+    },
+    {
+      "attribute": true,
+      "class": "IfcPerson",
+      "id": "T7.2/GivenName",
+      "mandatory": true,
+      "name": "GivenName",
+      "page": 223,
+      "path": "GivenName",
+      "table": "7.2",
+      "tr": "Ad"
+    },
+    {
+      "attribute": true,
+      "class": "IfcPerson",
+      "id": "T7.2/Roles",
+      "mandatory": true,
+      "name": "Roles",
+      "page": 223,
+      "path": "Roles",
+      "table": "7.2",
+      "tr": "Rol"
+    },
+    {
+      "attribute": true,
+      "class": "IfcPersonAndOrganization",
+      "id": "T7.3/ThePerson",
+      "mandatory": true,
+      "name": "ThePerson",
+      "page": 224,
+      "path": "ThePerson",
+      "table": "7.3",
+      "tr": "Kişi"
+    },
+    {
+      "attribute": true,
+      "class": "IfcPersonAndOrganization",
+      "id": "T7.3/TheOrganization",
+      "mandatory": true,
+      "name": "TheOrganization",
+      "page": 224,
+      "path": "TheOrganization",
+      "table": "7.3",
+      "tr": "Organizasyon"
+    },
+    {
+      "attribute": true,
+      "class": "IfcOrganization",
+      "id": "T7.4/Identification",
+      "mandatory": true,
+      "name": "Identification",
+      "page": 225,
+      "path": "Identification",
+      "table": "7.4",
+      "tr": "Firma Vergi No"
+    },
+    {
+      "attribute": true,
+      "class": "IfcOrganization",
+      "id": "T7.4/Name",
+      "mandatory": true,
+      "name": "Name",
+      "page": 225,
+      "path": "Name",
+      "table": "7.4",
+      "tr": "İsim"
+    },
+    {
+      "attribute": true,
+      "class": "IfcOrganization",
+      "id": "T7.4/Roles",
+      "mandatory": true,
+      "name": "Roles",
+      "page": 225,
+      "path": "Roles",
+      "table": "7.4",
+      "tr": "Rol"
+    },
+    {
+      "attribute": true,
+      "class": "IfcOrganization",
+      "id": "T7.4/Addresses",
+      "mandatory": true,
+      "name": "Addresses",
+      "page": 225,
+      "path": "Addresses",
+      "table": "7.4",
+      "tr": "Adres"
+    },
+    {
+      "attribute": true,
+      "class": "IfcActorRole",
+      "id": "T7.5/Role",
+      "mandatory": true,
+      "name": "Role",
+      "page": 226,
+      "path": "Role",
+      "table": "7.5",
+      "tr": "Rol"
+    },
+    {
+      "attribute": true,
+      "class": "IfcActorRole",
+      "id": "T7.5/UserDefinedRole",
+      "mandatory": true,
+      "name": "UserDefinedRole",
+      "page": 226,
+      "path": "UserDefinedRole",
+      "table": "7.5",
+      "tr": "Kullanıcı Tanımlı Rol"
+    },
+    {
+      "attribute": true,
+      "class": "IfcActorRole",
+      "id": "T7.5/Description",
+      "mandatory": true,
+      "name": "Description",
+      "page": 226,
+      "path": "Description",
+      "table": "7.5",
+      "tr": "Açıklama"
+    },
+    {
+      "attribute": true,
+      "class": "IfcProjectedCRS",
+      "id": "T7.6/Name",
+      "mandatory": true,
+      "name": "Name",
+      "page": 227,
+      "path": "Name",
+      "table": "7.6",
+      "tr": "İsim"
+    },
+    {
+      "attribute": true,
+      "class": "IfcProjectedCRS",
+      "id": "T7.6/Description",
+      "mandatory": true,
+      "name": "Description",
+      "page": 227,
+      "path": "Description",
+      "table": "7.6",
+      "tr": "Açıklama"
+    },
+    {
+      "attribute": true,
+      "class": "IfcProjectedCRS",
+      "id": "T7.6/GeodeticDatum",
+      "mandatory": true,
+      "name": "GeodeticDatum",
+      "page": 227,
+      "path": "GeodeticDatum",
+      "table": "7.6",
+      "tr": "Jeodezik Datum"
+    },
+    {
+      "attribute": true,
+      "class": "IfcProjectedCRS",
+      "id": "T7.6/VerticalDatum",
+      "mandatory": true,
+      "name": "VerticalDatum",
+      "page": 227,
+      "path": "VerticalDatum",
+      "table": "7.6",
+      "tr": "Yansıtılmış Koordinat Referans Sistemi (Düşey Datum)"
+    },
+    {
+      "attribute": true,
+      "class": "IfcProjectedCRS",
+      "id": "T7.6/MapProjection",
+      "mandatory": true,
+      "name": "MapProjection",
+      "page": 227,
+      "path": "MapProjection",
+      "table": "7.6",
+      "tr": "Yansıtılmış Koordinat Referans Sistemi (Harita Projeksiyonu)"
+    },
+    {
+      "attribute": true,
+      "class": "IfcProjectedCRS",
+      "id": "T7.6/MapZone",
+      "mandatory": true,
+      "name": "MapZone",
+      "page": 227,
+      "path": "MapZone",
+      "table": "7.6",
+      "tr": "Yansıtılmış Koordinat Referans Sistemi (Harita Zonu)"
+    },
+    {
+      "attribute": true,
+      "class": "IfcProjectedCRS",
+      "id": "T7.6/MapUnit",
+      "mandatory": true,
+      "name": "MapUnit",
+      "page": 228,
+      "path": "MapUnit",
+      "table": "7.6",
+      "tr": "Yansıtılmış Koordinat Referans Sistemi (Harita Birimi)"
+    },
+    {
+      "attribute": true,
+      "class": "IfcMapConversion",
+      "id": "T7.7/Eastings",
+      "mandatory": true,
+      "name": "Eastings",
+      "page": 229,
+      "path": "Eastings",
+      "table": "7.7",
+      "tr": "Harita Dönüşümü (Doğu)"
+    },
+    {
+      "attribute": true,
+      "class": "IfcMapConversion",
+      "id": "T7.7/Northings",
+      "mandatory": true,
+      "name": "Northings",
+      "page": 229,
+      "path": "Northings",
+      "table": "7.7",
+      "tr": "Harita Dönüşümü (Kuzey)"
+    },
+    {
+      "attribute": true,
+      "class": "IfcMapConversion",
+      "id": "T7.7/OrthogonalHeight",
+      "mandatory": true,
+      "name": "OrthogonalHeight",
+      "page": 229,
+      "path": "OrthogonalHeight",
+      "table": "7.7",
+      "tr": "Harita Dönüşümü (Düşey Yükseklik)"
+    },
+    {
+      "attribute": true,
+      "class": "IfcMapConversion",
+      "id": "T7.7/XAxisAbscissa",
+      "mandatory": true,
+      "name": "XAxisAbscissa",
+      "page": 229,
+      "path": "XAxisAbscissa",
+      "table": "7.7",
+      "tr": "Harita Dönüşümü (Yerel X Ekseninin Doğu Bileşeni)"
+    },
+    {
+      "attribute": true,
+      "class": "IfcMapConversion",
+      "id": "T7.7/XAxisOrdinate",
+      "mandatory": true,
+      "name": "XAxisOrdinate",
+      "page": 229,
+      "path": "XAxisOrdinate",
+      "table": "7.7",
+      "tr": "Harita Dönüşümü (Yerel X Ekseninin Kuzey Bileşeni)"
+    },
+    {
+      "attribute": true,
+      "class": "IfcMapConversion",
+      "id": "T7.7/Scale",
+      "mandatory": true,
+      "name": "Scale",
+      "page": 230,
+      "path": "Scale",
+      "table": "7.7",
+      "tr": "Harita Dönüşümü (Ölçek Değeri)"
+    },
+    {
+      "attribute": true,
+      "class": "IfcGeometricRepresentationContext",
+      "id": "T7.8/CoordinateSpaceDimension",
+      "mandatory": true,
+      "name": "CoordinateSpaceDimension",
+      "page": 231,
+      "path": "CoordinateSpaceDimension",
+      "table": "7.8",
+      "tr": "Geometrik Temsil Bağlamı (Koordinat Uzayı Boyutu)"
+    },
+    {
+      "attribute": true,
+      "class": "IfcGeometricRepresentationContext",
+      "id": "T7.8/Precision",
+      "mandatory": true,
+      "name": "Precision",
+      "page": 231,
+      "path": "Precision",
+      "table": "7.8",
+      "tr": "Geometrik Temsil Bağlamı (Hassasiyet)"
+    },
+    {
+      "attribute": true,
+      "class": "IfcGeometricRepresentationContext",
+      "id": "T7.8/WorldCoordinateSystem",
+      "mandatory": true,
+      "name": "WorldCoordinateSystem",
+      "page": 231,
+      "path": "WorldCoordinateSystem",
+      "table": "7.8",
+      "tr": "Geometrik Temsil Bağlamı (Dünya Koordinat Sistemi)"
+    },
+    {
+      "attribute": true,
+      "class": "IfcGeometricRepresentationContext",
+      "id": "T7.8/TrueNorth",
+      "mandatory": true,
+      "name": "TrueNorth",
+      "page": 231,
+      "path": "TrueNorth",
+      "table": "7.8",
+      "tr": "Geometrik Temsil Bağlamı (Gerçek Kuzey Yönü)"
+    },
+    {
+      "attribute": true,
+      "class": "IfcAnnotation",
+      "id": "T7.9/Name",
+      "mandatory": true,
+      "name": "Name",
+      "page": 233,
+      "path": "Name",
+      "table": "7.9",
+      "tr": "İsim"
+    },
+    {
+      "attribute": true,
+      "class": "IfcAnnotation",
+      "id": "T7.9/Description",
+      "mandatory": true,
+      "name": "Description",
+      "page": 233,
+      "path": "Description",
+      "table": "7.9",
+      "tr": "Açıklama"
+    },
+    {
+      "attribute": true,
+      "class": "IfcAnnotation",
+      "id": "T7.9/PredefinedType",
+      "mandatory": true,
+      "name": "PredefinedType",
+      "page": 233,
+      "path": "PredefinedType",
+      "table": "7.9",
+      "tr": "Ön Tanımlı Tip"
+    },
+    {
+      "attribute": true,
+      "class": "IfcProject",
+      "id": "T7.10/ObjectType",
+      "mandatory": false,
+      "name": "ObjectType",
+      "page": 234,
+      "path": "ObjectType",
+      "table": "7.10",
+      "tr": "Nesne Tipi"
+    },
+    {
+      "attribute": true,
+      "class": "IfcProject",
+      "id": "T7.10/LongName",
+      "mandatory": false,
+      "name": "LongName",
+      "page": 234,
+      "path": "LongName",
+      "table": "7.10",
+      "tr": "Uzun İsim"
+    },
+    {
+      "attribute": true,
+      "class": "IfcProject",
+      "id": "T7.10/Phase",
+      "mandatory": false,
+      "name": "Phase",
+      "page": 234,
+      "path": "Phase",
+      "table": "7.10",
+      "tr": "Aşama"
+    },
+    {
+      "attribute": true,
+      "class": "IfcPerson",
+      "id": "T7.11/MiddleNames",
+      "mandatory": false,
+      "name": "MiddleNames",
+      "page": 235,
+      "path": "MiddleNames",
+      "table": "7.11",
+      "tr": "Orta Ad"
+    },
+    {
+      "attribute": true,
+      "class": "IfcOrganization",
+      "id": "T7.12/Description",
+      "mandatory": false,
+      "name": "Description",
+      "page": 236,
+      "path": "Description",
+      "table": "7.12",
+      "tr": "Açıklama"
+    }
+  ],
+  "setChecks": [],
+  "sources": {
+    "M1.1.1": "EK-1 m. 1.1.1 · PDF s. 1",
+    "M5.1": "EK-5 m. 5.1 · PDF s. 29",
+    "M5.4": "EK-5 m. 5.4 · PDF s. 29",
+    "M5.5": "EK-5 m. 5.5 · PDF s. 29",
+    "T2.1": "EK-2 Tablo 2.1 · PDF s. 3",
+    "T3.1": "EK-3 Tablo 3.1 · PDF s. 14",
+    "T7.1": "EK-7 Tablo 7.1 · PDF s. 222",
+    "T7.6": "EK-7 Tablo 7.6 · PDF s. 227–228",
+    "T7.7": "EK-7 Tablo 7.7 · PDF s. 229–230",
+    "T9.1/1": "EK-9 Tablo 9.1 satır 1 · PDF s. 238",
+    "T9.1/10": "EK-9 Tablo 9.1 satır 10 · PDF s. 239",
+    "T9.1/11": "EK-9 Tablo 9.1 satır 11 · PDF s. 239",
+    "T9.1/12": "EK-9 Tablo 9.1 satır 12 · PDF s. 239",
+    "T9.1/13": "EK-9 Tablo 9.1 satır 13 · PDF s. 239",
+    "T9.1/14": "EK-9 Tablo 9.1 satır 14 · PDF s. 239",
+    "T9.1/15": "EK-9 Tablo 9.1 satır 15 · PDF s. 239",
+    "T9.1/16": "EK-9 Tablo 9.1 satır 16 · PDF s. 239",
+    "T9.1/17": "EK-9 Tablo 9.1 satır 17 · PDF s. 239",
+    "T9.1/18": "EK-9 Tablo 9.1 satır 18 · PDF s. 239",
+    "T9.1/19": "EK-9 Tablo 9.1 satır 19 · PDF s. 239",
+    "T9.1/2": "EK-9 Tablo 9.1 satır 2 · PDF s. 238",
+    "T9.1/20": "EK-9 Tablo 9.1 satır 20 · PDF s. 239",
+    "T9.1/21": "EK-9 Tablo 9.1 satır 21 · PDF s. 239",
+    "T9.1/3": "EK-9 Tablo 9.1 satır 3 · PDF s. 238",
+    "T9.1/4": "EK-9 Tablo 9.1 satır 4 · PDF s. 238",
+    "T9.1/5": "EK-9 Tablo 9.1 satır 5 · PDF s. 238",
+    "T9.1/6": "EK-9 Tablo 9.1 satır 6 · PDF s. 238",
+    "T9.1/7": "EK-9 Tablo 9.1 satır 7 · PDF s. 238",
+    "T9.1/8": "EK-9 Tablo 9.1 satır 8 · PDF s. 238",
+    "T9.1/9": "EK-9 Tablo 9.1 satır 9 · PDF s. 238–239"
+  },
+  "units": {
+    "area": "SQUARE_METRE",
+    "length": "MILLIMETRE",
+    "planeAngle": "RADIAN",
+    "volume": "CUBIC_METRE"
+  },
+  "version": 1
+}
