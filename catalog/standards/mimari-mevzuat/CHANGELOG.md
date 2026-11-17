@@ -1,8 +1,22 @@
 # Değişiklikler
 
+## 0.11.0 — 17 Kasım 2026
+
+- Şaftlar ve asansörler (`kuyular`): BYKHY 25/3 (yüksek binada, 4/ccc: bina yüksekliği 21,50 m'den ya da
+  yapı yüksekliği 30,50 m'den fazla, tesisat şaftı ve bacanın duvarı en az EI 120, kapağı en az E 90 ve duman sızdırmaz,
+  açık yer yok; `bykhy_shaft_resistance`), 41/9 (elektrik ve mekanik tesisat şaftının kapağı kaçış merdiveni yuvasına ya
+  da yangın güvenlik holüne açılmaz; çöp bacası sayılmaz; `bykhy_shaft_cover_stair`), 62/2 (asansör kuyusu en az EI 60;
+  duvarındaki pencere ve boşluk da; `bykhy_elevator_shaft`), 62/4 (asansör kapısı koridor, hol ve benzeri dışında
+  kullanım alanına açılmaz; `bykhy_elevator_door_room`), 62/6 (yangın merdiveni yuvasına açılmaz;
+  `bykhy_elevator_door_stair`), 62/7 ve Ek-3/B 12 (9.7.2015'ten: kat kapısı yapı yüksekliği 51,50 m'den yüksek binada
+  E 60, alçakta E 30, tam 51,50'de uzman incelemesi; `bykhy_elevator_door_resistance`). Olgular `building.shafts`,
+  `structureHeight`, kapıların `elevator` ve `passage`'ı. 23 bağımsız durum.
+- Ek-3/B 4 (`dayanim`): teras döşemesi (döşeme görevi yapan çatı, 4-b) REI, çatı (dıştan yangına maruz, 4-c) EI, Ek-3/C
+  kadar. 2 bağımsız durum.
+
 ## 0.10.0 — 17 Kasım 2026
 
-- Katlar arası açıklıklar (docs/adr/8086): döşeme boşluğu, şaft olmayan boşluk mahal ve merdiven (olgular `links`) iki
+- Katlar arası açıklıklar: döşeme boşluğu, şaft olmayan boşluk mahal ve merdiven (olgular `links`) iki
   katın mahallerini aynı kompartımana koyar; Ek-4 alanı katlar boyunca toplanır. BYKHY 24/4 (9.7.2015): 21,50 m'yi aşan
   konut harici, 30,50 m'yi aşan konut binasında bu yüksekliğin üstündeki katlarda en çok üç kat bir kompartıman
   (`bykhy_compartment_storeys_over`); kaçış merdiveni yuvası sayılmaz. 24/5 (9.9.2009): merdiven yuvası olmayan boşluk
@@ -11,7 +25,7 @@
 
 ## 0.9.0 — 17 Kasım 2026
 
-- Bölge (docs/adr/8085): kat yükseklikleri parselin plandaki kullanımına göre (`building.zone`): ticaret alanı 28/1-a,
+- Bölge: kat yükseklikleri parselin plandaki kullanımına göre (`building.zone`): ticaret alanı 28/1-a,
   karma alan 28/1-b (öbür katlar konutsa 3,60, değilse 4,00), konut alanı 28/1-c, zemin katında ticaret yapılabilen konut
   alanı 28/1-ç (asma katlı zemin katın 5,5'i 12.8.2023'te kalktı); öbür kullanımda 28/1 sınır vermez. Sivas 28/1-a, b, ç
   (zeminde 5,00, asma katlı 6,50). Asma kat (`storeys[].mezzanine`) zemin katın parçası: asma katlı zemin katın
@@ -20,7 +34,7 @@
 
 ## 0.8.0 — 17 Kasım 2026
 
-- Plan notu katmanı (docs/adr/8084): projenin yazdığı parsel plan notları (`building.planNotes`: zemin kat yüksekliği,
+- Plan notu katmanı: projenin yazdığı parsel plan notları (`building.planNotes`: zemin kat yüksekliği,
   kat yüksekliği; değeri ve yeri) kat yüksekliği kuralında yerel yönetmeliğin ve PAİY'nin önüne geçer (69/3; 28/1 kat
   yüksekliklerini plana bırakır). Notun bağladığı katta 28/1-c ve Sivas 28/1-c kapsam dışıdır, değerleri farklıysa
   iletide yanında yazılır; kural setinde notun kendi satırı ("Plan notu: zemin kat"). Plan notu konut projesi olmayan
@@ -28,7 +42,7 @@
 
 ## 0.7.0 — 17 Kasım 2026
 
-- Kat yüksekliği ve kapı ölçüleri (`kat_yuksekligi`, `kapi_olculeri`, docs/adr/8083): Planlı Alanlar İmar Yönetmeliği
+- Kat yüksekliği ve kapı ölçüleri (`kat_yuksekligi`, `kapi_olculeri`): Planlı Alanlar İmar Yönetmeliği
   28/1-c (1.10.2017: konut bölgesinde 3,60 m; 12.8.2023: bodrum hariç 3 katı geçmeyen binada 4,00 m) ve 39/1 (1.10.2017:
   balkon ve tuvalet kapısı 0,80 m'ye düşürülebilir; 13.8.2025: düşürülemez), Sivas 28/1-c ve 39/1. Mimari denetimin Rust
   kurallarından taşındı; kodlar aynı. Bölümün dış kapısı bölüm girişi, ortak alanınki bina girişi; programın dış alanı
@@ -38,7 +52,7 @@
 
 ## 0.6.0 — 17 Kasım 2026
 
-- Yangına dayanım süreleri (`dayanim`, docs/adr/8082): BYKHY Ek-3/B ve Ek-3/C. Taşıyıcı sistemin kolonu ve kirişi R,
+- Yangına dayanım süreleri (`dayanim`): BYKHY Ek-3/B ve Ek-3/C. Taşıyıcı sistemin kolonu ve kirişi R,
   döşemeler REI (bodrumla zemin kat arası en az 90, iki katlı evin ikinci katı 30), dış duvarlar ve kompartıman duvarları
   EI, korunumlu yangın merdiveni yuvası REI 120 (holüne 60); kullanım sınıfına, yağmurlamaya, bina yüksekliğine ve
   bodrum derinliğine göre Ek-3/C'nin dakikası. Tablolar PDF sayfalarından veri olarak. Yağmurlamasız konut dışı bina
@@ -47,7 +61,7 @@
 
 ## 0.5.0 — 17 Kasım 2026
 
-- Yangın kompartımanları (`kompartiman`, docs/adr/8081): BYKHY 4/tt, 24/2, 24/6 ve Ek-4, 24/7. İki mahal, aralarındaki
+- Yangın kompartımanları (`kompartiman`): BYKHY 4/tt, 24/2, 24/6 ve Ek-4, 24/7. İki mahal, aralarındaki
   her duvar ve açıklık en az EI 60 ve açık yer yoksa ayrı kompartımandadır (döşemeler hep ayırır, 26/1). Kazan dairesi,
   otopark, elektrik, trafo, orta gerilim, jeneratör odasının ayrımları kompartıman duvarı (24/2); kompartımanın alanı
   Ek-4'ün kullanım sınıfını aşmaz, yağmurlama notları (24/6); EI 60 duvarda yangına dayanıksız açıklık yok (24/7). Sınıf
@@ -56,14 +70,14 @@
 
 ## 0.4.0 — 17 Kasım 2026
 
-- Merdiven altı (`merdiven_alti`, docs/adr/8080): Planlı Alanlar İmar Yönetmeliği 31/6. KentOS merdivenin altında,
+- Merdiven altı (`merdiven_alti`): Planlı Alanlar İmar Yönetmeliği 31/6. KentOS merdivenin altında,
   başladığı döşemeden 1,80 m'den alçak yerleri ölçer ve bağımsız bölüm net alanından düşer (4/1-ğ-3); kural alçak
   boşluğun bir mahale açık mı (kaldı), dolap, depo ya da merdiven altı mahalinde mi (geçti) olduğuna bakar; döşemesi
   olmayan merdivende eksik veri. Olgular `building.underStairs`.
 
 ## 0.3.0 — 17 Kasım 2026
 
-- Emsal sınırları (`emsal`, docs/adr/8079): Planlı Alanlar İmar Yönetmeliği 22/1-ç (emsal harici sayılan kapıcı
+- Emsal sınırları (`emsal`): Planlı Alanlar İmar Yönetmeliği 22/1-ç (emsal harici sayılan kapıcı
   dairesinin 44/1'e göre zorunluluğu: konut bölümü ve bağımsız bölüm sayısından; ısıtmaya bağlı ara eksik veri), 22/1-f
   (kütüphanenin alışveriş merkezi ya da 40'tan fazla bağımsız bölüm, normal kat, ortak alan koşulları; ortak merdivenle
   bağlantı ve dışarıdan erişim uzman incelemesi), 22/1-k ve 22/1-l'nin tablodaki sayımı özet satırında. Sınırları KentOS
@@ -71,7 +85,7 @@
 
 ## 0.2.0 — 17 Kasım 2026
 
-- Kaçış yolu kapıları (`kapilar`, docs/adr/8078 §8): BYKHY 47/2 (kullanıcı yükü 50'yi aşan mekânın çıkış kapısı kaçış
+- Kaçış yolu kapıları (`kapilar`): BYKHY 47/2 (kullanıcı yükü 50'yi aşan mekânın çıkış kapısı kaçış
   yönüne açılır; döner kanatlı olmayan kapı uzman incelemesi) ve 47/3 (kaçış merdiveni ve yangın güvenlik holü kapısı
   duman sızdırmaz, kendiliğinden kapanır; 4'ten az katta 60, bodrumda ya da 4'ten fazla katta 90 dakika; bodrumsuz tam 4
   kat uzman incelemesi; beyan yoksa eksik veri). Kapının sınıfı TS EN 13501-2 yazımıyla okunur. 20 bağımsız durum.
@@ -80,7 +94,7 @@
 
 ## 0.1.0 — 17 Kasım 2026
 
-- İlk sürüm (docs/adr/8078; plan/bim-plan.md BIM-13): başvuru gününe göre kural seti (`yururluk`, `data/surumler.json`)
+- İlk sürüm: başvuru gününe göre kural seti (`yururluk`, `data/surumler.json`)
   ve asansör kuralı (`asansor`): Planlı Alanlar İmar Yönetmeliği 34/1'in 28.7.2018, 11.7.2021 ve 1.7.2026 hâlleri,
   34/8'in 11.7.2021 ve 1.7.2026 hâlleri; Sivas İmar Yönetmeliği 34/1 ve 34/8. Bulgu durumu: kaldı, eksik veri (başvuru
   tarihi yok ve sonuç ona göre değişiyor; okunamayan tarih), uzman incelemesi (metni kural setinde olmayan gün, yalnız

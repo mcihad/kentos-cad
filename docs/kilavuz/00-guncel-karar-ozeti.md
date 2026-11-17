@@ -284,6 +284,13 @@
       mahallerini aynı kompartımana koyar. Yalnız kaçış merdiveni mahallerinden oluşan kompartıman merdivenin yuvası.
     - BYKHY 24/4: 21,50 m'yi aşan konut harici (karma dahil), 30,50 m'yi aşan konut binasında üstündeki katlarda en çok
       üç kat. 24/5: merdiven yuvası olmayan boşluk atrium; duman kontrolü ve perde modelde yok, uzman incelemesi.
+  - **Şaftlar, asansörler ve çatılar (17 Kasım 2026; [ADR 8087](../adr/8087-shafts-elevators-roofs.md), K102–K109):**
+    - Şaftın çevresi ölçülür (`Document::shaft_enclosures`): duvarlar, açıklıklar, açık yer. Kapının bir yanı asansör
+      kuyusuysa asansör kapısı, bir yanı koridor, hol, lobi, sahanlık ya da merdivense geçide açılır.
+    - BYKHY 25/3 (yüksek binada şaft EI 120, kapak E 90 S), 41/9 (tesisat şaftının kapağı kaçış merdivenine ve güvenlik
+      holüne açılmaz), 62/2 (kuyu EI 60), 62/4 ve 62/6 (asansör kapısının önü), 62/7 ve Ek-3/B 12 (9.7.2015'ten kat kapısı
+      E 60/E 30, yapı yüksekliği 51,50 m); Ek-3/B 4: teras döşemesi REI, çatı EI. Duvarsız çizilmiş kuyu eksik veri.
+    - Açıklığın kasa noktaları halka olarak ters sırayla okunur: ayrımlarda kapının boyu doğru ölçülür.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

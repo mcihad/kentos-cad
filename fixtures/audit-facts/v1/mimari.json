@@ -2058,7 +2058,8 @@
         "sides": [
           "common",
           "common"
-        ]
+        ],
+        "passage": true
       },
       {
         "uid": "01a1dfda-06e1-741c-8eb9-6ca4a1b3fd3c",
@@ -2074,7 +2075,8 @@
         "sides": [
           "common",
           "unit"
-        ]
+        ],
+        "passage": true
       },
       {
         "uid": "01a1dfda-06e1-741c-8eb9-6ca56b114c83",
@@ -2090,7 +2092,8 @@
         "sides": [
           "common",
           "unit"
-        ]
+        ],
+        "passage": true
       },
       {
         "uid": "01a1dfda-06e1-741c-8eb9-6ca6da25147a",
@@ -2106,7 +2109,8 @@
         "sides": [
           "annex",
           "common"
-        ]
+        ],
+        "passage": true
       },
       {
         "uid": "01a1dfda-06e1-741c-8eb9-6ca7d264ae09",
@@ -2122,7 +2126,8 @@
         "sides": [
           "unit",
           "common"
-        ]
+        ],
+        "passage": true
       },
       {
         "uid": "01a1dfda-06e1-741c-8eb9-6ca84ff93522",
@@ -2154,7 +2159,8 @@
         "sides": [
           "common",
           null
-        ]
+        ],
+        "passage": true
       },
       {
         "uid": "01a1dfda-0709-75f9-b155-c59a25e94cf3",
@@ -2171,7 +2177,8 @@
         "sides": [
           "common",
           "common"
-        ]
+        ],
+        "passage": true
       },
       {
         "uid": "01a1dfda-0709-75f9-b155-c59bd5fb560f",
@@ -2187,7 +2194,8 @@
         "sides": [
           "common",
           "unit"
-        ]
+        ],
+        "passage": true
       },
       {
         "uid": "01a1dfda-0709-75f9-b155-c59ca37f1c9c",
@@ -2203,7 +2211,8 @@
         "sides": [
           "unit",
           "common"
-        ]
+        ],
+        "passage": true
       },
       {
         "uid": "01a1dfda-0709-75f9-b155-c59de0c23b39",
@@ -2352,14 +2361,14 @@
           {
             "uid": "01a1dfda-069b-7333-8eb1-c34fb2c551eb",
             "kind": "wall",
-            "length": 2.429
+            "length": 2.4
           }
         ],
         "openings": [
           {
             "uid": "01a1dfda-06e1-741c-8eb9-6ca333490465",
             "kind": "door",
-            "length": 0.971
+            "length": 1.0
           }
         ],
         "open": 0.0
@@ -2389,14 +2398,14 @@
           {
             "uid": "01a1dfda-069b-7333-8eb1-c34fb2c551eb",
             "kind": "wall",
-            "length": 6.97
+            "length": 7.1
           }
         ],
         "openings": [
           {
             "uid": "01a1dfda-06e1-741c-8eb9-6ca4a1b3fd3c",
             "kind": "door",
-            "length": 0.996
+            "length": 0.9
           }
         ],
         "open": 0.0
@@ -2411,14 +2420,14 @@
           {
             "uid": "01a1dfda-069b-7333-8eb1-c34fb2c551eb",
             "kind": "wall",
-            "length": 4.979
+            "length": 5.0
           }
         ],
         "openings": [
           {
             "uid": "01a1dfda-06e1-741c-8eb9-6ca56b114c83",
             "kind": "door",
-            "length": 0.996
+            "length": 1.0
           }
         ],
         "open": 0.0
@@ -2433,7 +2442,7 @@
           {
             "uid": "01a1dfda-069b-7333-8eb1-c34fb2c551eb",
             "kind": "wall",
-            "length": 5.726
+            "length": 5.7
           }
         ],
         "open": 0.0
@@ -2448,14 +2457,14 @@
           {
             "uid": "01a1dfda-069b-7333-8eb1-c3504b9064c9",
             "kind": "wall",
-            "length": 4.979
+            "length": 4.8
           }
         ],
         "openings": [
           {
             "uid": "01a1dfda-06e1-741c-8eb9-6ca6da25147a",
             "kind": "door",
-            "length": 0.747
+            "length": 0.9
           }
         ],
         "open": 0.0
@@ -2470,14 +2479,14 @@
           {
             "uid": "01a1dfda-069b-7333-8eb1-c3504b9064c9",
             "kind": "wall",
-            "length": 14.687
+            "length": 14.8
           }
         ],
         "openings": [
           {
             "uid": "01a1dfda-06e1-741c-8eb9-6ca7d264ae09",
             "kind": "door",
-            "length": 0.996
+            "length": 0.9
           }
         ],
         "open": 0.0
@@ -2507,14 +2516,14 @@
           {
             "uid": "01a1dfda-06a7-7435-a23f-d8ec0fb0adb9",
             "kind": "wall",
-            "length": 2.429
+            "length": 2.5
           }
         ],
         "openings": [
           {
             "uid": "01a1dfda-06e1-741c-8eb9-6ca84ff93522",
             "kind": "door",
-            "length": 0.971
+            "length": 0.9
           }
         ],
         "open": 0.0
@@ -2529,14 +2538,14 @@
           {
             "uid": "01a1dfda-06f8-76a1-8694-1552b94befba",
             "kind": "wall",
-            "length": 2.429
+            "length": 2.4
           }
         ],
         "openings": [
           {
             "uid": "01a1dfda-0709-75f9-b155-c59a25e94cf3",
             "kind": "door",
-            "length": 0.971
+            "length": 1.0
           }
         ],
         "open": 0.0
@@ -2566,14 +2575,14 @@
           {
             "uid": "01a1dfda-06f8-76a1-8694-1552b94befba",
             "kind": "wall",
-            "length": 6.97
+            "length": 7.0
           }
         ],
         "openings": [
           {
             "uid": "01a1dfda-0709-75f9-b155-c59bd5fb560f",
             "kind": "door",
-            "length": 0.996
+            "length": 1.0
           }
         ],
         "open": 0.0
@@ -2588,7 +2597,7 @@
           {
             "uid": "01a1dfda-06f8-76a1-8694-1552b94befba",
             "kind": "wall",
-            "length": 5.974
+            "length": 6.0
           }
         ],
         "open": 0.0
@@ -2603,7 +2612,7 @@
           {
             "uid": "01a1dfda-06f8-76a1-8694-1552b94befba",
             "kind": "wall",
-            "length": 5.726
+            "length": 5.7
           }
         ],
         "open": 0.0
@@ -2618,14 +2627,14 @@
           {
             "uid": "01a1dfda-06f8-76a1-8694-15536ba1f48d",
             "kind": "wall",
-            "length": 22.404
+            "length": 22.5
           }
         ],
         "openings": [
           {
             "uid": "01a1dfda-0709-75f9-b155-c59ca37f1c9c",
             "kind": "door",
-            "length": 0.996
+            "length": 0.9
           }
         ],
         "open": 0.0
@@ -2640,14 +2649,14 @@
           {
             "uid": "01a1dfda-06fd-70e4-a3f4-c75adbd765e3",
             "kind": "wall",
-            "length": 2.429
+            "length": 2.5
           }
         ],
         "openings": [
           {
             "uid": "01a1dfda-0709-75f9-b155-c59de0c23b39",
             "kind": "door",
-            "length": 0.971
+            "length": 0.9
           }
         ],
         "open": 0.0
@@ -2662,14 +2671,14 @@
           {
             "uid": "01a1dfda-06fd-70e4-a3f4-c75baedb94aa",
             "kind": "wall",
-            "length": 2.429
+            "length": 2.5
           }
         ],
         "openings": [
           {
             "uid": "01a1dfda-0709-75f9-b155-c59e206e0cd6",
             "kind": "door",
-            "length": 0.971
+            "length": 0.9
           }
         ],
         "open": 0.0
@@ -2689,6 +2698,38 @@
         ],
         "area": 0.0,
         "stack": "01a1dfda-06f3-72a1-8e0e-a40020218328"
+      }
+    ],
+    "shafts": [
+      {
+        "uid": "01a1dfda-06c5-7278-9486-e39ee6b0ea49",
+        "level": "zemin",
+        "name": "Asansör boşluğu",
+        "kind": "elevator",
+        "walls": [
+          {
+            "uid": "01a1dfda-069b-7333-8eb1-c34d6c2f3cb1",
+            "kind": "wall",
+            "length": 1.7
+          },
+          {
+            "uid": "01a1dfda-069b-7333-8eb1-c3504b9064c9",
+            "kind": "wall",
+            "length": 1.7
+          },
+          {
+            "uid": "01a1dfda-06a7-7435-a23f-d8ed2c7b1e3d",
+            "kind": "wall",
+            "length": 3.15
+          },
+          {
+            "uid": "01a1dfda-06a7-7435-a23f-d8ee6b4072a1",
+            "kind": "wall",
+            "length": 3.15
+          }
+        ],
+        "openings": [],
+        "open": 0.0
       }
     ],
     "elements": [
@@ -2802,7 +2843,8 @@
       }
     ],
     "height": 6.0,
-    "basementDepth": 0.0
+    "basementDepth": 0.0,
+    "structureHeight": 6.0
   },
   "cut": false
 }

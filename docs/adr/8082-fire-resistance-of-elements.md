@@ -103,9 +103,11 @@ Tablolar yönetmeliğin PDF'inin 91. (Ek-3/A, Ek-3/B) ve 93. (Ek-3/C) sayfaları
 
 ## §6. Sıradaki adımlar
 
-- **Çatılar:** 4-a kaçış yolu olan bölüm REI 30, 4-b döşeme görevi yapan REI Ek-3/C, 4-c dıştan yangına maruz EI.
+- **Çatılar:** 4-a kaçış yolu olan bölüm REI 30, 4-b döşeme görevi yapan REI Ek-3/C, 4-c dıştan yangına maruz EI: 4-b
+  ve 4-c [ADR 8087](8087-shafts-elevators-roofs.md)'de yapıldı, 4-a kaldı.
 - **Korunumlu şaftlar** (REI 120), **asma tavan** ve **yangın kesici** (EI 30), **asansör kat kapıları** (E 30/60, yapı
-  yüksekliği 51,50 m).
+  yüksekliği 51,50 m): kat kapıları ve yüksek binanın şaftları (25/3) [ADR 8087](8087-shafts-elevators-roofs.md)'de
+  yapıldı; korunumlu şaft beyanı, asma tavan ve yangın kesici kaldı.
 - **Taşıyıcı duvar** (Ek-3/B 2): duvarın taşıyıcı olduğu beyanı modelde yok; not (3)'ün uzman incelemesini de kapatır.
 - **Dükkânla üstündeki kat arası** (3-b): mahallerin kullanımından.
 - **Binaları ayıran duvarlar** (24/3, not 2) birden çok binalı parselde.

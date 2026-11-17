@@ -70,6 +70,9 @@ pub struct BuildingFacts {
     /// The openings between storeys (docs/adr/8086): galleries, atriums, stair wells, stairs.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub links: Vec<LinkFacts>,
+    /// The shafts and what encloses each (docs/adr/8087; BYKHY 25/3, 41/9, 62/2).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub shafts: Vec<ShaftFacts>,
     /// The project says the building has sprinklers (`settings.arch.sprinklers`): BYKHY Ek-4's notes read it.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub sprinklers: bool,
@@ -82,6 +85,26 @@ pub struct BuildingFacts {
     /// Bodrum katların derinliği (Ek-3/C's footnote): the lowest basement's floor under ±0.00, m; 0 without one.
     #[serde(default)]
     pub basement_depth: f64,
+    /// Yapı yüksekliği (BYKHY 4/bbb): every storey built, basements, mezzanines and attics with them, as the fire rules
+    /// measure it, m (docs/adr/8087: BYKHY 25/3's high building and 62/7's elevator doors read it).
+    #[serde(default)]
+    pub structure_height: f64,
+}
+
+/// A shaft and what encloses it (docs/adr/8087): its persistent id, storey and name, `elevator` (an elevator's shaft) or
+/// `service` (a service shaft, a flue, an air shaft), the walls and openings met round it with their declared classes and
+/// lengths, and the length with neither, m.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct ShaftFacts {
+    pub uid: String,
+    pub level: Option<String>,
+    pub name: String,
+    pub kind: String,
+    pub walls: Vec<SeparatingElement>,
+    pub openings: Vec<SeparatingElement>,
+    pub open: f64,
 }
 
 /// A plan note's value: its measure (`groundStoreyHeight`, `storeyHeight`), the value (m) and where it stands as the
@@ -95,9 +118,9 @@ pub struct PlanNoteFacts {
     pub source: String,
 }
 
-/// An element BYKHY Ek-3/B reads: its persistent id, its kind (`column`, `beam`, `wall`, `slab`), its storey, its
-/// declared fire class (its own, else its type's), whether it is a column or a beam of the frame, whether a wall is on its
-/// storey's outline (docs/adr/8082).
+/// An element BYKHY Ek-3/B reads: its persistent id, its kind (`column`, `beam`, `wall`, `slab`; `roof`, `terrace`,
+/// docs/adr/8087), its storey, its declared fire class (its own, else its type's), whether it is a column or a beam of
+/// the frame, whether a wall is on its storey's outline (docs/adr/8082).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -287,6 +310,13 @@ pub struct DoorFacts {
     /// One of its sides is a balcony (Balkon by its name or use).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub balcony: bool,
+    /// One of its sides is an elevator's shaft: an elevator's landing door (docs/adr/8087; BYKHY 62/4, 62/6, 62/7).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub elevator: bool,
+    /// One of its sides is a passage: a corridor, a hall, an entrance (Koridor, Hol, Antre, Giriş, Geçit), a lobby or a
+    /// landing (Lobi, Sahanlık) or a stair's room (docs/adr/8087: BYKHY 62/4 lets an elevator open onto these alone).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub passage: bool,
 }
 
 /// A storey and what stands on it. A room is one that is neither a void (a shaft, a gallery) nor outdoors, counted by
@@ -402,6 +432,16 @@ impl BuildingFacts {
         self.elements.sort_by(|a, b| a.uid.cmp(&b.uid));
         self.height = round(self.height, LENGTH);
         self.basement_depth = round(self.basement_depth, LENGTH);
+        self.structure_height = round(self.structure_height, LENGTH);
+        for x in &mut self.shafts {
+            x.open = round(x.open, LENGTH);
+            for e in x.walls.iter_mut().chain(x.openings.iter_mut()) {
+                e.length = round(e.length, LENGTH);
+            }
+            x.walls.sort_by(|a, b| a.uid.cmp(&b.uid));
+            x.openings.sort_by(|a, b| a.uid.cmp(&b.uid));
+        }
+        self.shafts.sort_by(|a, b| a.uid.cmp(&b.uid));
         self
     }
 

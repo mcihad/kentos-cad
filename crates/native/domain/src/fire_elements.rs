@@ -9,6 +9,8 @@
 //! - **Exterior wall:** a wall with a corner on the outline of its storey's walls' and columns' bodies together, the rule
 //!   the IFC model's `IsExternal` reads (docs/adr/8047), on the walls' own bodies (their faces' band, unjoined).
 //! - **Floor:** a slab whose role is a floor (not a balcony's or a terrace's), no covering.
+//! - **Roof** (Ek-3/B 4, docs/adr/8087): a roof (`roof`, 4-c: exposed to fire from outside) and a terrace's slab
+//!   (`terrace`, 4-b: a roof serving as a floor), no covering.
 
 use kentos_contracts::{BeamRole, Entity, SlabRole};
 use kentos_geometry_core::vec2::Vec2;
@@ -19,7 +21,7 @@ use crate::Document;
 #[derive(Clone, Debug, PartialEq)]
 pub struct FireElement {
     pub uid: String,
-    /// `column`, `beam`, `wall` or `slab`.
+    /// `column`, `beam`, `wall`, `slab`, `roof` or `terrace`.
     pub kind: &'static str,
     pub level: Option<String>,
     /// A column or a beam of the frame.
@@ -62,6 +64,12 @@ impl Document {
                 }
                 Entity::Slab(s) if s.slab.covering.is_none() && s.slab.role == SlabRole::Floor => {
                     out.push(FireElement { uid: uid.to_string(), kind: "slab", level, frame: false, exterior: false });
+                }
+                Entity::Slab(s) if s.slab.covering.is_none() && s.slab.role == SlabRole::Terrace => {
+                    out.push(FireElement { uid: uid.to_string(), kind: "terrace", level, frame: false, exterior: false });
+                }
+                Entity::Roof(_) => {
+                    out.push(FireElement { uid: uid.to_string(), kind: "roof", level, frame: false, exterior: false });
                 }
                 _ => {}
             }

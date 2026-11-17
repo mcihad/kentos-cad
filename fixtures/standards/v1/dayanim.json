@@ -1,7 +1,7 @@
 {
   "format": "kentos.regulationCases",
   "version": 1,
-  "about": "Yapı elemanlarının yangına dayanım sürelerinin bağımsız durumları (docs/adr/8082): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik Ek-3/B ve Ek-3/C'nin tablolarından (PDF'in 91. ve 93. sayfaları; Ek-3/C RG 9.9.2009/27344) elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.elements, height, basementDepth, separations).",
+  "about": "Yapı elemanlarının yangına dayanım sürelerinin bağımsız durumları (docs/adr/8082): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik Ek-3/B ve Ek-3/C'nin tablolarından (PDF'in 91. ve 93. sayfaları; Ek-3/C RG 9.9.2009/27344) elle çıkarıldı; kuralın kodundan üretilmedi. Çatı ve teras durumları docs/adr/8087'den (Ek-3/B 4-b, 4-c). Olgular KentOS'un ölçüsüdür (building.elements, height, basementDepth, separations).",
   "cases": [
     {
       "id": "apartman-tamam",
@@ -1419,6 +1419,194 @@
         "rules": {
           "BYKHY Ek-3": [
             "expertReview",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "teras-ve-cati",
+      "neden": "8 daireli apartman, bina yüksekliği 12 m (21,50'den az: Ek-3/C 60): 2. katın teras döşemesi REI 30, Ek-3/B 4-b döşeme görevi yapan çatı REI 60 ister → kalır; çatı EI 60, 4-c dıştan yangına maruz çatı EI 60 → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000061",
+            "kind": "terrace",
+            "level": "k02",
+            "fireRating": "REI 30"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000062",
+            "kind": "roof",
+            "level": "k02",
+            "fireRating": "EI 60"
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "teras döşemesi REI 30",
+              "Ek-3/B 4-b",
+              "en az REI 60"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "cati-beyansiz",
+      "neden": "Aynı apartmanın çatısının sınıfı beyan edilmemiş: Ek-3/B 4-c EI 60 → eksik veri.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000063",
+            "kind": "roof",
+            "level": "k02"
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "state": "missingData",
+            "has": [
+              "çatının yangın sınıfı beyan edilmemiş",
+              "Ek-3/B 4-c",
+              "en az EI 60"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "missingData",
             "9.9.2009"
           ]
         }

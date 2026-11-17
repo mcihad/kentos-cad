@@ -1,7 +1,7 @@
 {
   "format": "kentos.ruleVersions",
   "version": 1,
-  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de, merdiven altınınki 8080 §1'de, kompartımanlarınki 8081 §1'de, dayanımlarınki 8082 §1'de, kat yüksekliği ve kapılarınki 8083 §1'de, bölgelerin kat yükseklikleri 8085 §1'de, katlar arası açıklıklarınki 8086 §1'de).",
+  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de, merdiven altınınki 8080 §1'de, kompartımanlarınki 8081 §1'de, dayanımlarınki 8082 §1'de, kat yüksekliği ve kapılarınki 8083 §1'de, bölgelerin kat yükseklikleri 8085 §1'de, katlar arası açıklıklarınki 8086 §1'de, şaftların, asansörlerin ve çatılarınki 8087 §1'de).",
   "regulations": {
     "PAİY": {
       "name": "Planlı Alanlar İmar Yönetmeliği",
@@ -998,6 +998,116 @@
           "curtain": 0.45,
           "text": "(5) Atriumlu bölümlere, sadece düşük ve orta tehlikeli sınıfları içeren kullanımlara sahip binalarda müsaade edilir. Atrium alanının hiçbir noktada 90 m2'den küçük olmaması esastır. Alanı 90 m2'den küçük olan atrium boşluklarının çevresi her katta en az 45 cm yüksekliğinde duman perdesi ile çevrelenir ve yağmurlama sistemi ile korunan binalarda duman perdesinden 15 ila 30 cm uzaklıkta, aralarındaki mesafe en çok 2 m olacak şekilde yağmurlama başlığı yerleştirilir. Atriumlarda doğal veya mekanik olarak duman kontrolü yapılır.",
           "source": "RG 19.12.2007/26735, 24 üncü maddenin beşinci fıkrası (2009/15316 sayılı BKK ile değişik) ve 4/g; docs/adr/8086 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "41/9",
+      "title": "Kaçış merdivenine açılan şaft kapağı",
+      "transition": "Fıkra 10.8.2009 tarihli ve 2009/15316 sayılı Bakanlar Kurulu Kararıyla değişti (RG 9.9.2009/27344); önceki metni kural setinde yok: 9.9.2009'dan önceki başvuru uzman incelemesi.",
+      "versions": [
+        {
+          "id": "2009",
+          "from": "2009-09-09",
+          "until": null,
+          "label": "9.9.2009",
+          "gazette": "19.12.2007/26735; 41/9 9.9.2009/27344 değişik",
+          "text": "(9) Kaçış merdiveni yuvasına ve yangın güvenlik holüne elektrik ve mekanik tesisat şaftı kapakları açılamaz, kombi kazanı, iklimlendirme dış ünitesi, sayaç ve benzeri cihaz konulamaz.",
+          "source": "RG 19.12.2007/26735, 41 inci maddenin dokuzuncu fıkrası (2009/15316 ile değişik); docs/adr/8087 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "25/3",
+      "title": "Yüksek binada tesisat şaftı ve baca",
+      "transition": "25/3 değişmedi; yüksek binanın tanımı (4/ccc: bina yüksekliği 21,50 m'den, yapı yüksekliği 30,50 m'den fazla) 2009/15316 sayılı BKK ile değişti (RG 9.9.2009/27344), önceki tanım kural setinde yok.",
+      "versions": [
+        {
+          "id": "2009",
+          "from": "2009-09-09",
+          "until": null,
+          "label": "9.9.2009",
+          "gazette": "19.12.2007/26735; 4/ccc 9.9.2009/27344",
+          "walls": 120,
+          "covers": 90,
+          "building": 21.5,
+          "structure": 30.5,
+          "text": "(3) Yüksek binalarda, çöp, haberleşme, evrak ve teknik donanım gibi, düşey tesisat şaft ve baca duvarlarının yangına en az 120 dakika ve kapaklarının en az 90 dakika dayanıklı ve duman sızdırmaz olması gerekir.",
+          "source": "RG 19.12.2007/26735, 25 inci maddenin üçüncü fıkrası ve 4/ccc (2009/15316 ile değişik); docs/adr/8087 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "62/2",
+      "title": "Asansör kuyusu",
+      "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 62 nci maddenin bu fıkrası değişmedi.",
+      "versions": [
+        {
+          "id": "2007",
+          "from": "2007-12-19",
+          "until": null,
+          "label": "19.12.2007",
+          "gazette": "19.12.2007/26735",
+          "minutes": 60,
+          "text": "(2) Asansör kuyusu ve makina dairesi, yangına en az 60 dakika dayanıklı ve yanıcı olmayan malzemeden yapılır.",
+          "source": "RG 19.12.2007/26735, 62 nci maddenin ikinci fıkrası; değişiklik işareti yok; docs/adr/8087 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "62/4",
+      "title": "Asansör kapıları",
+      "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); fıkraya 2015/7401 sayılı BKK ile otoparklarla ilgili bir cümle eklendi (bu kural okumaz).",
+      "versions": [
+        {
+          "id": "2007",
+          "from": "2007-12-19",
+          "until": null,
+          "label": "19.12.2007",
+          "gazette": "19.12.2007/26735",
+          "text": "(4) … Asansörlerin kapıları, koridor, hol ve benzeri alanlar dışında doğrudan kullanım alanlarına açılamaz. …",
+          "source": "RG 19.12.2007/26735, 62 nci maddenin dördüncü fıkrası; docs/adr/8087 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "62/6",
+      "title": "Asansör kapısı ve yangın merdiveni",
+      "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 62 nci maddenin bu fıkrası değişmedi.",
+      "versions": [
+        {
+          "id": "2007",
+          "from": "2007-12-19",
+          "until": null,
+          "label": "19.12.2007",
+          "gazette": "19.12.2007/26735",
+          "text": "(6) Asansör kapısı, yangın merdiven yuvasına açılamaz.",
+          "source": "RG 19.12.2007/26735, 62 nci maddenin altıncı fıkrası; değişiklik işareti yok; docs/adr/8087 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "62/7",
+      "title": "Asansör kat kapısının dayanımı",
+      "transition": "Fıkra 16.3.2015 tarihli ve 2015/7401 sayılı Bakanlar Kurulu Kararıyla değişti, Ek-3/B'ye 12 nci satır (asansör kat kapıları) aynı kararın 21 inci maddesiyle eklendi; yayımı günü (9.7.2015) yürürlüğe girdi (23 üncü madde). Geçici 1: yayımından önce yapı ruhsatı verilmiş yapılara önceki hükümler uygulanır. Önceki metin kural setinde yok: 9.7.2015'ten önceki başvuru uzman incelemesi.",
+      "versions": [
+        {
+          "id": "2015",
+          "from": "2015-07-09",
+          "until": null,
+          "label": "9.7.2015",
+          "gazette": "19.12.2007/26735; 62/7 ve Ek-3/B 12 9.7.2015/29411",
+          "height": 51.5,
+          "high": 60,
+          "low": 30,
+          "text": "(7) Asansör kat kapılarının TS EN 81-58 standardında belirtilen özellikleri haiz ve Ek-3/B'de belirtilen yangın dayanım özelliklerine sahip olması gerekir. Ek-3/B 12: a) Yapı yüksekliği 51.50 m'den yüksek binalarda E 60; b) Yapı yüksekliği 51.50 m'den alçak binalarda E 30 (etkilenen yüzeyler).",
+          "source": "RG 9.7.2015/29411, BKK 2015/7401; 62 nci maddenin yedinci fıkrası ve Ek-3/B'nin 12 nci satırı (dipnotu: 21 inci maddeyle eklendi); docs/adr/8087 §1."
         }
       ]
     }

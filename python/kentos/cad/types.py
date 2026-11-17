@@ -16775,7 +16775,10 @@ class ArchAuditFinding(_Model):
             (docs/adr/8080), the fire compartments' (across storeys through galleries and stairs, docs/adr/8086)
             `bykhy_hazard_room_separation`, `bykhy_compartment_storeys_over` (24/4), `bykhy_atrium` (24/5), `bykhy_compartment_area_over` and
             `bykhy_compartment_opening` (docs/adr/8081), the elements' declared classes against Ek-3
-            `bykhy_element_resistance` and `bykhy_height_not_permitted` (docs/adr/8082), the storeys' and doors' sizes
+            `bykhy_element_resistance` and `bykhy_height_not_permitted` (docs/adr/8082; roofs and terraces, docs/adr/8087),
+            the shafts' and elevators' `bykhy_shaft_resistance` (25/3), `bykhy_shaft_cover_stair` (41/9),
+            `bykhy_elevator_shaft` (62/2), `bykhy_elevator_door_room` (62/4), `bykhy_elevator_door_stair` (62/6) and
+            `bykhy_elevator_door_resistance` (62/7, Ek-3/B 12; docs/adr/8087), the storeys' and doors' sizes
             `paiy_storey_height_over`, `paiy_door_height_below` and `paiy_door_width_below` (docs/adr/8083),
             `regulation_date_needed` (eksik veri) and
             `regulation_text_unknown` (uzman incelemesi); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,

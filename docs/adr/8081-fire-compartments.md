@@ -56,7 +56,8 @@ olarak) okundu:
     baca duvarı delmez) ve ikisi de olmayan açık boy (mahal ayırıcı, boşluk).
   - Her mahalin eksen konturunda (çizilmiş mahalde kendi konturunda) 25 cm'de bir nokta alınır, köşelerin 30 cm'si
     dışarıda bırakılır. Noktadan dışarı 2 cm adımlarla en çok 1 m yürünür; ilk girilen başka mahal komşudur. Yürüyüşün
-    ortasındaki eleman ayrımın o parçasıdır.
+    ortasındaki eleman ayrımın o parçasıdır. İki nokta ayrıysa geçiş ikiye bölünerek 0,1 mm'ye bulunur ve açıklığın
+    kasa noktaları halka olarak sıralanır: boylar kesindir ([ADR 8087](8087-shafts-elevators-roofs.md) §3).
   - Duvara kadar çizilen iki mahal birbirine değmez; yürüyüş duvarı geçer.
 - **K75 — Kompartıman paketin kuralı** (`tr.kentos.mimari-mevzuat` 0.5.0, `kompartiman`; K10):
   - Beyanı okuyan `yangin_sinifi.ayirir`: E ve I harfleri, en az 60 dakika (4/tt: duman ve ısı geçirmez). E 60, EW 60,

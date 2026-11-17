@@ -1560,6 +1560,9 @@ mod zone_tests;
 #[path = "tests/storey_link_tests.rs"]
 mod storey_link_tests;
 #[cfg(test)]
+#[path = "tests/shaft_tests.rs"]
+mod shaft_tests;
+#[cfg(test)]
 #[path = "tests/fire_escape_tests.rs"]
 mod fire_escape_tests;
 #[cfg(test)]

@@ -2,7 +2,7 @@
 # kullanmaz; yalnız Python'un kendisi ve KentOS'un verdiği `kentos.ext`. `uv lock` uv.lock'u buradan yazar.
 [project]
 name = "mimari-mevzuat"
-version = "0.10.0"
+version = "0.11.0"
 description = "Türkiye imar ve yangın mevzuatının KentOS mimari denetimi: başvuru gününde yürürlükte olan kural seti"
 requires-python = ">=3.12,<3.16"
 dependencies = []

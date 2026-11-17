@@ -19,8 +19,14 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   açıklıklardan kompartımanlar (en az EI 60, açık yer yok; galeri, atrium, merdiven katları birleştirir); tehlikeli
   alanların ayrımı (BYKHY 24/2), yüksek binada en çok üç kat (24/4), atrium (24/5), Ek-4'ün en çok alanı (24/6),
   kompartıman duvarındaki açıklıklar (24/7).
-- **Yangına dayanım süreleri** (`dayanim`, docs/adr/8082): beyan edilen sınıf Ek-3/B ve Ek-3/C'nin istediğiyle: kolon ve
-  kiriş R, döşeme REI, dış ve kompartıman duvarı EI, korunumlu yangın merdiveni REI 120.
+- **Yangına dayanım süreleri** (`dayanim`, docs/adr/8082, 8087): beyan edilen sınıf Ek-3/B ve Ek-3/C'nin istediğiyle:
+  kolon ve kiriş R, döşeme REI, dış ve kompartıman duvarı EI, korunumlu yangın merdiveni REI 120, teras döşemesi REI,
+  çatı EI.
+- **Şaftlar ve asansörler** (`kuyular`, docs/adr/8087): yüksek binada tesisat şaftı ve baca duvarı en az 120, kapağı en
+  az 90 dakika ve duman sızdırmaz (BYKHY 25/3); kaçış merdivenine ya da yangın güvenlik holüne açılan şaft kapağı (41/9);
+  asansör kuyusu en az 60 dakika (62/2); asansör kapısının koridor, hol ve benzerine açılması (62/4), yangın merdiveni
+  yuvasına açılmaması (62/6); kat kapısının dayanımı, yapı yüksekliği 51,50 m'den yüksekse E 60, alçaksa E 30 (62/7 ve
+  Ek-3/B 12, 9.7.2015'ten).
 - **Kat yüksekliği** (`kat_yuksekligi`, docs/adr/8083, 8084): konut projesinde zemin ve normal katlar 3,60 m;
   12.8.2023'ten bodrum hariç 3 kata kadar 4,00 m (PAİY 28/1-c); Sivas 3,60 m. Parselin bölgesine göre ticaret (28/1-a),
   karma (28/1-b), zemin katı ticaretli konut alanı (28/1-ç) ve asma katlı zemin kat (docs/adr/8085). Projenin plan notu

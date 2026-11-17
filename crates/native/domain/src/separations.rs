@@ -8,11 +8,15 @@
 //!   most 1 m, the first point in another room of the storey makes them neighbours there (two rooms drawn to their
 //!   walls' faces do not touch: the walk crosses the wall).
 //! - **Sampled** every 25 cm along each edge, at least once an edge; never within 30 cm of an outline's corner, where
-//!   walls join and a wall's own body (its faces' band, unjoined) does not reach.
+//!   walls join and a wall's own body (its faces' band, unjoined) does not reach. Where two samples differ the change
+//!   is found by halving to a tenth of a millimetre (docs/adr/8087): a door's length is its width.
 //! - **The element** halfway along that walk: an opening through its wall whose outline holds it (a door, a window, a gap; a niche
 //!   or a flue is not one), else a wall whose body holds it, else nothing (an open stretch). A wall or an opening of
 //!   another storey is not looked at.
 //! - Each shared boundary is counted once, from its room whose persistent id comes first.
+//! - **A shaft's enclosure** (docs/adr/8087; BYKHY 25/3, 41/9, 62/2): the same elements met walking out of an elevator's
+//!   or a service shaft's outline (`Document::shaft_enclosures`); a shaft's sides are short, its corners are kept only
+//!   10 cm clear (a quarter of a shorter side): the walls round it hold its corners.
 
 use std::collections::BTreeMap;
 
@@ -34,6 +38,26 @@ const ACROSS: f64 = 0.02;
 /// How far outwards the room on the other side is looked for, metres: wider walls separate rooms this does not see.
 const REACH: f64 = 1.0;
 
+/// How close a change between two elements along an edge is found, metres.
+const SHARP: f64 = 1e-4;
+/// How far outwards from a shaft's outline its enclosing wall is looked for, metres.
+const SHAFT_REACH: f64 = 0.8;
+/// How far from a shaft's corner no point is taken, metres; a quarter of a shorter side.
+const SHAFT_CORNER: f64 = 0.10;
+
+/// What encloses a shaft (docs/adr/8087): its walls and openings by persistent id, each with its length round it, and
+/// the length with neither, metres.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Enclosure {
+    pub uid: String,
+    pub level: Option<String>,
+    /// `elevator` or `service`.
+    pub kind: &'static str,
+    pub walls: Vec<(String, f64)>,
+    pub openings: Vec<(String, f64)>,
+    pub open: f64,
+}
+
 /// What separates two rooms of a storey, metres along their shared boundary.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Separation {
@@ -54,6 +78,67 @@ enum At {
     Wall(String),
     Opening(String),
     Open,
+}
+
+/// The element at `m` on storey `level`: an opening whose outline holds it, else a wall whose body holds it, else none.
+/// Where two hold it (joined walls overlap at their joint) the smaller persistent id: the drawing's order does not
+/// matter.
+#[allow(clippy::type_complexity)]
+fn element(
+    walls: &[(String, Option<String>, Vec<Vec<Vec2>>)],
+    openings: &[(String, Option<String>, Vec<Vec2>)],
+    level: &Option<String>,
+    m: Vec2,
+) -> At {
+    if let Some((o, ..)) =
+        openings.iter().filter(|(_, l, place)| l == level && holds(place, m)).min_by(|a, b| a.0.cmp(&b.0))
+    {
+        return At::Opening(o.clone());
+    }
+    walls
+        .iter()
+        .filter(|(_, l, rings)| l == level && rings.iter().filter(|r| holds(r, m)).count() % 2 == 1)
+        .min_by(|a, b| a.0.cmp(&b.0))
+        .map_or(At::Open, |(w, ..)| At::Wall(w.clone()))
+}
+
+/// An edge from `s0` to `s1` (metres along it) cut where `read` changes: read every `STEP` (once at least), and between
+/// two readings that differ the change found by halving to a tenth of a millimetre (docs/adr/8087: a door's length is
+/// its width, not a count of steps; the facts round to a millimetre, the same however the outline begins); each reading
+/// with its length, in order.
+fn spans<K: Clone + PartialEq>(s0: f64, s1: f64, read: &mut dyn FnMut(f64) -> K) -> Vec<(K, f64)> {
+    let span = s1 - s0;
+    let k = (span / STEP).ceil().max(1.0) as usize;
+    let piece = span / k as f64;
+    let samples: Vec<(f64, K)> = (0..k)
+        .map(|j| {
+            let s = s0 + piece * (j as f64 + 0.5);
+            (s, read(s))
+        })
+        .collect();
+    let mut out = Vec::new();
+    let mut from = s0;
+    for j in 0..k {
+        let to = if j + 1 == k {
+            s1
+        } else if samples[j].1 == samples[j + 1].1 {
+            continue;
+        } else {
+            let (mut lo, mut hi) = (samples[j].0, samples[j + 1].0);
+            while hi - lo > SHARP {
+                let mid = (lo + hi) / 2.0;
+                if read(mid) == samples[j].1 {
+                    lo = mid;
+                } else {
+                    hi = mid;
+                }
+            }
+            (lo + hi) / 2.0
+        };
+        out.push((samples[j].1.clone(), to - from));
+        from = to;
+    }
+    out
 }
 
 /// Whether `ring` holds `p` (even-odd).
@@ -102,7 +187,79 @@ impl Document {
             };
             rooms.push((uid.to_string(), x.arch.level.clone(), outline));
         }
-        // The walls' bodies and the openings' outlines, each with its storey.
+        let (walls, openings) = self.bodies();
+        let mut found: BTreeMap<(String, String), (Option<String>, BTreeMap<At, f64>)> = BTreeMap::new();
+        for (uid, level, outline) in &rooms {
+            for area in outline {
+                for ring in std::iter::once(&area.outer.pts).chain(area.holes.iter().map(|h| &h.pts)) {
+                    let n = ring.len();
+                    for i in 0..n {
+                        let (a, b) = (ring[i], ring[(i + 1) % n]);
+                        let len = (b.x - a.x).hypot(b.y - a.y);
+                        if len <= 2.0 * CORNER {
+                            continue;
+                        }
+                        let (dx, dy) = ((b.x - a.x) / len, (b.y - a.y) / len);
+                        // Away from the room: its outer ring counter-clockwise, its holes clockwise, the right side.
+                        let out = Vec2::new(dy, -dx);
+                        let mut read = |s: f64| -> Option<(String, At)> {
+                            let p = Vec2::new(a.x + dx * s, a.y + dy * s);
+                            // Outwards until another room of the storey (never its own).
+                            let steps = (REACH / ACROSS).round() as usize;
+                            let (other, t) = (1..=steps)
+                                .find_map(|i| {
+                                    let t = ACROSS * i as f64;
+                                    let q = Vec2::new(p.x + out.x * t, p.y + out.y * t);
+                                    if outline.iter().any(|x| inside_area(x, q)) {
+                                        return Some(None);
+                                    }
+                                    rooms
+                                        .iter()
+                                        .find(|(o, l, areas)| o != uid && l == level && areas.iter().any(|x| inside_area(x, q)))
+                                        .map(|(o, ..)| Some((o, t)))
+                                })
+                                .flatten()?;
+                            if other < uid {
+                                return None;
+                            }
+                            let m = Vec2::new(p.x + out.x * t / 2.0, p.y + out.y * t / 2.0);
+                            Some((other.clone(), element(&walls, &openings, level, m)))
+                        };
+                        for (key, length) in spans(CORNER, len - CORNER, &mut read) {
+                            let Some((other, at)) = key else { continue };
+                            let entry = found
+                                .entry((uid.clone(), other))
+                                .or_insert_with(|| (level.clone(), BTreeMap::new()));
+                            *entry.1.entry(at).or_insert(0.0) += length;
+                        }
+                    }
+                }
+            }
+        }
+        found
+            .into_iter()
+            .map(|((a, b), (level, by))| {
+                let mut s = Separation {
+                    level,
+                    rooms: [a, b],
+                    ..Separation::default()
+                };
+                for (at, length) in by {
+                    match at {
+                        At::Wall(w) => s.walls.push((w, length)),
+                        At::Opening(o) => s.openings.push((o, length)),
+                        At::Open => s.open += length,
+                    }
+                }
+                s
+            })
+            .collect()
+    }
+
+    /// The walls' bodies and the openings' outlines (a niche or a flue is none: it does not pass through its wall), each
+    /// with its persistent id and storey.
+    #[allow(clippy::type_complexity)]
+    fn bodies(&self) -> (Vec<(String, Option<String>, Vec<Vec<Vec2>>)>, Vec<(String, Option<String>, Vec<Vec2>)>) {
         let mut walls: Vec<(String, Option<String>, Vec<Vec<Vec2>>)> = Vec::new();
         let mut openings: Vec<(String, Option<String>, Vec<Vec2>)> = Vec::new();
         for (uid, e) in self.entities_with_uids() {
@@ -127,89 +284,85 @@ impl Document {
                         && !matches!(o.opening.form, kentos_contracts::OpeningForm::Niche | kentos_contracts::OpeningForm::Flue) =>
                 {
                     let level = self.wall_of(&o.opening.host).and_then(|w| w.arch.level);
-                    let place = o.opening.place.iter().map(|q| Vec2::new(q.x, q.y)).collect();
+                    let mut place: Vec<Vec2> = o.opening.place.iter().map(|q| Vec2::new(q.x, q.y)).collect();
+                    // Its jambs are written start-left, start-right, end-left, end-right: as a ring the end jamb's come
+                    // back, else the ring crosses itself and holds only the jambs' corners near the faces.
+                    if place.len() == 4 {
+                        place.swap(2, 3);
+                    }
                     openings.push((uid.to_string(), level, place));
                 }
                 _ => {}
             }
         }
-        let mut found: BTreeMap<(String, String), (Option<String>, BTreeMap<At, f64>)> = BTreeMap::new();
-        for (uid, level, outline) in &rooms {
-            for area in outline {
-                for ring in std::iter::once(&area.outer.pts).chain(area.holes.iter().map(|h| &h.pts)) {
-                    let n = ring.len();
-                    for i in 0..n {
-                        let (a, b) = (ring[i], ring[(i + 1) % n]);
-                        let len = (b.x - a.x).hypot(b.y - a.y);
-                        if len <= 2.0 * CORNER {
-                            continue;
-                        }
-                        let (dx, dy) = ((b.x - a.x) / len, (b.y - a.y) / len);
-                        // Away from the room: its outer ring counter-clockwise, its holes clockwise, the right side.
-                        let out = Vec2::new(dy, -dx);
-                        let span = len - 2.0 * CORNER;
-                        let k = (span / STEP).ceil().max(1.0) as usize;
-                        let piece = span / k as f64;
-                        for j in 0..k {
-                            let s = CORNER + piece * (j as f64 + 0.5);
-                            let p = Vec2::new(a.x + dx * s, a.y + dy * s);
-                            // Outwards until another room of the storey (never its own).
-                            let steps = (REACH / ACROSS).round() as usize;
-                            let Some((other, t)) = (1..=steps).find_map(|i| {
+        (walls, openings)
+    }
+
+    /// What encloses each shaft (docs/adr/8087; BYKHY 25/3, 62/2): an elevator's shaft (a void space named Asansör, not
+    /// its lobby) or a service shaft or flue (Şaft, Tesisat, Baca, an air shaft; a light well is open to the sky and none):
+    /// from its outline's points every 25 cm (never within 10 cm of a corner, a quarter of a shorter side), walking
+    /// outwards in steps of 2 cm for at most 80 cm, the first opening or wall body met, or nothing (an open stretch), each
+    /// with how long it runs.
+    pub fn shaft_enclosures(&self) -> Vec<Enclosure> {
+        let (walls, openings) = self.bodies();
+        let mut out = Vec::new();
+        for (uid, e) in self.entities_with_uids() {
+            let Entity::Space(s) = e else { continue };
+            let x = &s.space;
+            if !x.void {
+                continue;
+            }
+            let (name, usage) = (x.name.as_deref(), x.usage.as_deref());
+            let kind = match crate::room_names::shaft_of(name, usage) {
+                Some(crate::room_names::ShaftKind::Elevator) => "elevator",
+                Some(crate::room_names::ShaftKind::LightWell) => continue,
+                Some(crate::room_names::ShaftKind::AirShaft) => "service",
+                None if crate::room_names::shaft(name, usage) => "service",
+                None => continue,
+            };
+            let level = x.arch.level.clone();
+            let mut by: BTreeMap<At, f64> = BTreeMap::new();
+            for area in core_areas(&x.parts) {
+                let ring = &area.outer.pts;
+                let n = ring.len();
+                let twice: f64 = (0..n).map(|i| ring[i].x * ring[(i + 1) % n].y - ring[(i + 1) % n].x * ring[i].y).sum();
+                for i in 0..n {
+                    let (a, b) = (ring[i], ring[(i + 1) % n]);
+                    let len = (b.x - a.x).hypot(b.y - a.y);
+                    let corner = (len / 4.0).min(SHAFT_CORNER);
+                    if len - 2.0 * corner <= ACROSS {
+                        continue;
+                    }
+                    let (dx, dy) = ((b.x - a.x) / len, (b.y - a.y) / len);
+                    // Away from the shaft: right of a counter-clockwise outline, left of a clockwise one.
+                    let out_n = if twice > 0.0 { Vec2::new(dy, -dx) } else { Vec2::new(-dy, dx) };
+                    let mut read = |s: f64| -> At {
+                        let p = Vec2::new(a.x + dx * s, a.y + dy * s);
+                        let steps = (SHAFT_REACH / ACROSS).round() as usize;
+                        // From the first step: on the outline itself a wall's face and its opening's edge meet.
+                        (1..=steps)
+                            .map(|i| {
                                 let t = ACROSS * i as f64;
-                                let q = Vec2::new(p.x + out.x * t, p.y + out.y * t);
-                                if outline.iter().any(|x| inside_area(x, q)) {
-                                    return Some(None);
-                                }
-                                rooms
-                                    .iter()
-                                    .find(|(o, l, areas)| o != uid && l == level && areas.iter().any(|x| inside_area(x, q)))
-                                    .map(|(o, ..)| Some((o, t)))
+                                element(&walls, &openings, &level, Vec2::new(p.x + out_n.x * t, p.y + out_n.y * t))
                             })
-                            .flatten() else {
-                                continue;
-                            };
-                            if other < uid {
-                                continue;
-                            }
-                            let m = Vec2::new(p.x + out.x * t / 2.0, p.y + out.y * t / 2.0);
-                            let at = if let Some((o, ..)) =
-                                openings.iter().find(|(_, l, place)| l == level && holds(place, m))
-                            {
-                                At::Opening(o.clone())
-                            } else if let Some((w, ..)) =
-                                walls.iter().find(|(_, l, rings)| l == level && rings.iter().filter(|r| holds(r, m)).count() % 2 == 1)
-                            {
-                                At::Wall(w.clone())
-                            } else {
-                                At::Open
-                            };
-                            let entry = found
-                                .entry((uid.clone(), other.clone()))
-                                .or_insert_with(|| (level.clone(), BTreeMap::new()));
-                            *entry.1.entry(at).or_insert(0.0) += piece;
-                        }
+                            .find(|at| *at != At::Open)
+                            .unwrap_or(At::Open)
+                    };
+                    for (at, length) in spans(corner, len - corner, &mut read) {
+                        *by.entry(at).or_insert(0.0) += length;
                     }
                 }
             }
-        }
-        found
-            .into_iter()
-            .map(|((a, b), (level, by))| {
-                let mut s = Separation {
-                    level,
-                    rooms: [a, b],
-                    ..Separation::default()
-                };
-                for (at, length) in by {
-                    match at {
-                        At::Wall(w) => s.walls.push((w, length)),
-                        At::Opening(o) => s.openings.push((o, length)),
-                        At::Open => s.open += length,
-                    }
+            let mut enclosure = Enclosure { uid: uid.to_string(), level, kind, ..Enclosure::default() };
+            for (at, length) in by {
+                match at {
+                    At::Wall(w) => enclosure.walls.push((w, length)),
+                    At::Opening(o) => enclosure.openings.push((o, length)),
+                    At::Open => enclosure.open += length,
                 }
-                s
-            })
-            .collect()
+            }
+            out.push(enclosure);
+        }
+        out
     }
 }

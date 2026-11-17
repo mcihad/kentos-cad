@@ -1,0 +1,350 @@
+"""Şaftlar ve asansörler: Binaların Yangından Korunması Hakkında Yönetmelik 25/3, 41/9, 62/2, 62/4, 62/6, 62/7 ve Ek-3/B
+12 (docs/adr/8087).
+
+- **25/3:** yüksek binada (4/ccc: bina yüksekliği 21,50 m'den ya da yapı yüksekliği 30,50 m'den fazla) çöp, haberleşme,
+  evrak ve teknik donanım gibi düşey tesisat şaftı ve bacanın duvarları en az 120, kapakları en az 90 dakika dayanıklı ve
+  duman sızdırmaz. Duvar E ve I ile en az 120; kapak (şaftın duvarındaki kapı, pencere, boşluk) E ile en az 90 ve S.
+  Açık yer şaftı bozar.
+- **41/9:** kaçış merdiveni yuvasına ve yangın güvenlik holüne elektrik ve mekanik tesisat şaftı kapağı açılamaz: şaftın
+  kapısının öbür yanı kaçış merdiveni mahali ya da yangın güvenlik holü olmamalı. Çöp bacası tesisat şaftı sayılmaz.
+- **62/2:** asansör kuyusu yangına en az 60 dakika dayanıklı: duvarları E ve I ile en az 60, duvarındaki pencere ya da
+  boşluk da öyle; açık yer kuyuyu bozar. Kuyunun kapısı asansörün kat kapısıdır (62/7). "Yanıcı olmayan malzeme" ve
+  makine dairesi çizimde okunmaz.
+- **62/4:** asansör kapıları koridor, hol ve benzeri alanlar dışında doğrudan kullanım alanlarına açılamaz: kapının bir
+  yanı geçit (koridor, hol, antre, giriş, lobi, sahanlık, merdiven mahali) olmalı.
+- **62/6:** asansör kapısı yangın merdiveni yuvasına açılamaz: kapının bir yanı adında Yangın merdiveni ya da Korunumlu
+  merdiven geçen mahal olmamalı.
+- **62/7 (9.7.2015):** asansör kat kapısı Ek-3/B 12'nin dayanımında: yapı yüksekliği 51,50 m'den yüksek binada E 60,
+  alçak binada E 30; tam 51,50 m'de iki satır da tutmaz (uzman incelemesi). Önceki metni kural setinde yok.
+
+Beyan yoksa ya da okunmuyorsa eksik veri, yetmiyorsa kaldı.
+
+**Okunan olgular** (``facts.building``): şaftlar (``shafts``: tür, ad, kat, çevresindeki duvar ve açıklıklar, beyan
+edilen sınıfları ve boyları, açık boy), kapılar (``doors``: asansör kapısı mı, bir yanı geçit mi, kaçış merdiveni ya da
+yangın güvenlik holü mü, iki yanındaki mahaller, beyan edilen sınıfı), mahallerin adları, bina ve yapı yüksekliği.
+"""
+
+from __future__ import annotations
+
+from datetime import date
+from typing import Any
+
+from . import yururluk as y
+from .yangin_sinifi import okuma
+
+MADDELER = [("BYKHY", "25/3"), ("BYKHY", "41/9"), ("BYKHY", "62/2"), ("BYKHY", "62/4"), ("BYKHY", "62/6"),
+            ("BYKHY", "62/7")]
+
+#: Bir açık yer bundan kısaysa sayılmaz (çizimin köşe gürültüsü), m.
+_EN_AZ = 0.05
+
+_TUR = {"wall": "duvar", "door": "kapı", "window": "pencere", "gap": "boşluk"}
+
+
+def _katla(metin: str) -> str:
+    tablo = str.maketrans({"ç": "C", "Ç": "C", "ğ": "G", "Ğ": "G", "ı": "I", "İ": "I", "i": "I", "ö": "O", "Ö": "O",
+                           "ş": "S", "Ş": "S", "ü": "U", "Ü": "U", "â": "A", "Â": "A", "î": "I", "Î": "I"})
+    return metin.translate(tablo).upper()
+
+
+def _satir(hal: y.Hal, durum: str, not_: str) -> dict[str, Any]:
+    return {"rule": f"{hal.yonetmelik} {hal.madde}", "title": hal.baslik, "version": hal.etiket, "gazette": hal.rg,
+            "state": durum, "note": not_}
+
+
+def _bulgu(code: str, ileti: str, onarim: str, hal: y.Hal, uids: list[str], iz: str,
+           state: str | None = None) -> dict[str, Any]:
+    out: dict[str, Any] = {"code": code, "message": f"{ileti} — {hal.kisa()}", "repair": onarim, "uids": uids,
+                           "rule": hal.kural(), "_iz": iz}
+    if state:
+        out["state"] = state
+    return out
+
+
+def _sonuc(hal: y.Hal, bulgular: list[dict[str, Any]], kaldi: str, eksik: str, gecti: str
+           ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Maddenin satırı bulgularından: biri kaldıysa kaldı, yalnız eksik veri ya da uzman incelemesiyse o, yoksa geçti."""
+    if any("state" not in b for b in bulgular):
+        return bulgular, _satir(hal, y.KALDI, kaldi)
+    if any(b.get("state") == y.EKSIK_VERI for b in bulgular):
+        return bulgular, _satir(hal, y.EKSIK_VERI, eksik)
+    if bulgular:
+        return bulgular, _satir(hal, y.UZMAN, eksik)
+    return bulgular, _satir(hal, y.GECTI, gecti)
+
+
+def _tutar(beyan: str | None, harfler: str, dakika: int, duman: bool = False) -> bool | None:
+    """Beyan istenen harflerle en az ``dakika`` (``duman``: S'li) mı; beyan yoksa ya da okunmuyorsa yok."""
+    s = okuma(beyan)
+    if s is None:
+        return None
+    return all(h in s["harf"] for h in harfler) and s["dakika"] >= dakika and (not duman or s["duman"])
+
+
+def saftlar(bina: dict[str, Any], tur: str) -> list[dict[str, Any]]:
+    """Binanın ``tur`` (``service``, ``elevator``) şaftları."""
+    return [s for s in bina.get("shafts") or [] if s.get("kind") == tur]
+
+
+def asansor_kapilari(bina: dict[str, Any]) -> list[dict[str, Any]]:
+    """Bir yanı asansör kuyusu olan kapılar."""
+    return [k for k in bina.get("doors") or [] if k.get("elevator")]
+
+
+def yuksek(bina: dict[str, Any], hal: y.Hal) -> tuple[bool, str]:
+    """Yüksek bina mı (4/ccc) ve sözü."""
+    h, s = float(bina.get("height") or 0), float(bina.get("structureHeight") or 0)
+    soz = f"bina yüksekliği {h:.2f} m, yapı yüksekliği {s:.2f} m"
+    return h > float(hal.anahtar["building"]) + 1e-9 or s > float(hal.anahtar["structure"]) + 1e-9, soz
+
+
+def _sorunlar(saft: dict[str, Any], duvar: tuple[str, int], kapak: tuple[str, int, bool] | None
+              ) -> tuple[list[str], list[str], bool]:
+    """Bir şaftın tutmayanları türüne, sorununa ve beyanına göre toplanmış: sözleri, nesneleri ve yalnız beyansızlıktan
+    mı."""
+    # Çevresinde hiçbir duvar ya da açıklık yoksa çizim eksiktir (yalnız mahal çizilmiş): açık sayılmaz.
+    if not saft.get("walls") and not saft.get("openings"):
+        return ["çevresinde duvar çizilmemiş"], [], True
+    gruplar: dict[tuple[str, str, str, str], list[str]] = {}
+    ogeler = [(w, duvar[0], duvar[1], False) for w in saft.get("walls") or []]
+    if kapak is not None:
+        ogeler += [(o, kapak[0], kapak[1], kapak[2]) for o in saft.get("openings") or []]
+    for o, harf, dk, duman in ogeler:
+        t = _tutar(o.get("fireRating"), harf, dk, duman)
+        if t:
+            continue
+        istek = f"en az {harf} {dk}" + (", duman sızdırmaz" if duman else "")
+        sorun = "az" if t is False else ("okunmadı" if o.get("fireRating") else "yok")
+        anahtar = (_TUR.get(o.get("kind"), "eleman"), sorun, o.get("fireRating") or "", istek)
+        gruplar.setdefault(anahtar, []).append(o["uid"])
+    neler, uids = [], []
+    for (tur, sorun, beyan, istek), u in gruplar.items():
+        uids += u
+        if sorun == "az":
+            neler.append(f"{len(u)} {tur} {beyan} ({istek})")
+        elif sorun == "okunmadı":
+            neler.append(f"{len(u)} {tur} “{beyan}” okunamadı ({istek})")
+        else:
+            neler.append(f"{len(u)} {tur} sınıfı beyan edilmemiş ({istek})")
+    eksik_mi = all(k[1] != "az" for k in gruplar)
+    if float(saft.get("open") or 0) > _EN_AZ:
+        eksik_mi = False
+        neler.append(f"{float(saft['open']):.2f} m açık (duvar yok)")
+    return neler, uids, eksik_mi
+
+
+def tesisat(bina: dict[str, Any], hal: y.Hal) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """25/3: yüksek binada düşey tesisat şaftı ve baca."""
+    hepsi = saftlar(bina, "service")
+    if not hepsi:
+        return [], _satir(hal, y.KAPSAM_DISI, "düşey tesisat şaftı ya da baca yok")
+    evet, soz = yuksek(bina, hal)
+    if not evet:
+        return [], _satir(hal, y.KAPSAM_DISI, f"yüksek bina değil ({soz})")
+    duvar = ("EI", int(hal.anahtar["walls"]))
+    kapak = ("E", int(hal.anahtar["covers"]), True)
+    bulgular = []
+    for s in hepsi:
+        neler, uids, eksik_mi = _sorunlar(s, duvar, kapak)
+        if neler:
+            bulgular.append(_bulgu(
+                "bykhy_shaft_resistance",
+                f"“{s.get('name') or 'Şaft'}”: " + "; ".join(neler) + f"; 25/3 yüksek binada ({soz}) şaft ve baca "
+                f"duvarının en az 120, kapağının en az 90 dakika dayanıklı ve duman sızdırmaz olmasını ister",
+                "Şaftın duvarlarını en az EI 120, kapaklarını en az E 90 ve duman sızdırmaz (S) yapın ve sınıflarını "
+                "beyan edin (Öznitelikler › Yangın dayanımı).", hal, [s["uid"]] + uids, f"{s['uid']}:tesisat",
+                y.EKSIK_VERI if eksik_mi else None))
+    kalan = sum(1 for b in bulgular if "state" not in b)
+    return _sonuc(hal, bulgular, f"{kalan} şaft 25/3'ü tutmuyor ({soz})",
+                  "şaft duvarlarının ya da kapaklarının sınıfı beyan edilmemiş",
+                  f"{len(hepsi)} şaft en az EI 120, kapakları en az E 90 S ({soz})")
+
+
+def kapaklar(bina: dict[str, Any], hal: y.Hal) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """41/9: tesisat şaftının kapağı kaçış merdiveni yuvasına ya da yangın güvenlik holüne açılmaz."""
+    hepsi = [s for s in saftlar(bina, "service") if "COP" not in _katla(s.get("name") or "")]
+    if not hepsi:
+        return [], _satir(hal, y.KAPSAM_DISI, "elektrik ya da mekanik tesisat şaftı yok")
+    kapilar = {k["uid"]: k for k in bina.get("doors") or []}
+    adlar = {m["uid"]: m.get("name") or "Mahal" for m in bina.get("spaces") or []}
+    bulgular = []
+    for s in hepsi:
+        for o in s.get("openings") or []:
+            k = kapilar.get(o["uid"])
+            if k is None or not (k.get("stair") or k.get("lobby")):
+                continue
+            yer = "kaçış merdiveni yuvasına" if k.get("stair") else "yangın güvenlik holüne"
+            odalar = [u for u in k.get("between") or [] if u]
+            ad = ", ".join(f"“{adlar.get(u, 'Mahal')}”" for u in odalar)
+            bulgular.append(_bulgu(
+                "bykhy_shaft_cover_stair",
+                f"Şaft kapısı (“{s.get('name') or 'Şaft'}”) {yer} açılıyor" + (f" ({ad})" if ad else "") +
+                ": 41/9 kaçış merdiveni yuvasına ve yangın güvenlik holüne elektrik ve mekanik tesisat şaftı kapağının "
+                "açılmasına izin vermez",
+                "Şaftın kapağını bir koridora, hole ya da teknik hacme alın.", hal, [k["uid"], s["uid"]] + odalar,
+                f"{k['uid']}:kapak"))
+    return _sonuc(hal, bulgular, f"{len(bulgular)} şaft kapağı kaçış merdivenine ya da yangın güvenlik holüne açılıyor",
+                  "", f"{len(hepsi)} şaftın kapağı kaçış merdivenine ya da yangın güvenlik holüne açılmıyor")
+
+
+def kuyu(bina: dict[str, Any], hal: y.Hal) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """62/2: asansör kuyusu en az 60 dakika."""
+    hepsi = saftlar(bina, "elevator")
+    if not hepsi:
+        return [], _satir(hal, y.KAPSAM_DISI, "asansör kuyusu yok")
+    dk = int(hal.anahtar["minutes"])
+    bulgular = []
+    for s in hepsi:
+        # Kuyunun kapısı asansörün kat kapısıdır (62/7); öbür açıklıklar kuyunun duvarı gibi okunur.
+        delikli = dict(s, openings=[o for o in s.get("openings") or [] if o.get("kind") != "door"])
+        neler, uids, eksik_mi = _sorunlar(delikli, ("EI", dk), ("EI", dk, False))
+        if neler:
+            bulgular.append(_bulgu(
+                "bykhy_elevator_shaft",
+                f"“{s.get('name') or 'Asansör'}”: " + "; ".join(neler) + f"; 62/2 asansör kuyusunun yangına en az {dk} "
+                f"dakika dayanıklı olmasını ister",
+                f"Kuyunun duvarlarını en az EI {dk} yapın ve sınıfını beyan edin; kuyu duvarındaki pencere ya da boşluğu "
+                f"kapatın ya da en az EI {dk} yapın.", hal, [s["uid"]] + uids, f"{s['uid']}:kuyu",
+                y.EKSIK_VERI if eksik_mi else None))
+    kalan = sum(1 for b in bulgular if "state" not in b)
+    return _sonuc(hal, bulgular, f"{kalan} asansör kuyusu {dk} dakikayı tutmuyor",
+                  "kuyu duvarlarının sınıfı beyan edilmemiş", f"{len(hepsi)} asansör kuyusu en az EI {dk}")
+
+
+def onu(bina: dict[str, Any], hal: y.Hal) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """62/4: asansör kapısı kullanım alanına değil, koridor, hol ve benzerine açılır."""
+    hepsi = asansor_kapilari(bina)
+    if not hepsi:
+        return [], _satir(hal, y.KAPSAM_DISI, "asansör kapısı yok")
+    adlar = {m["uid"]: m.get("name") or "Mahal" for m in bina.get("spaces") or []}
+    bulgular = []
+    for k in hepsi:
+        if k.get("passage"):
+            continue
+        odalar = [u for u in k.get("between") or [] if u]
+        if not odalar:
+            bulgular.append(_bulgu(
+                "bykhy_elevator_door_room",
+                "Asansör kapısının önünde mahal çizilmemiş: 62/4 asansör kapısının koridor, hol ve benzeri bir alana "
+                "açılmasını ister", "Asansörün önündeki holü ya da koridoru mahal olarak çizin ve adlandırın.", hal,
+                [k["uid"]], f"{k['uid']}:önü", y.EKSIK_VERI))
+            continue
+        ad = ", ".join(f"“{adlar.get(u, 'Mahal')}”" for u in odalar)
+        bulgular.append(_bulgu(
+            "bykhy_elevator_door_room",
+            f"Asansör kapısı kullanım alanına açılıyor ({ad}): 62/4 asansör kapılarının koridor, hol ve benzeri alanlar "
+            f"dışında doğrudan kullanım alanlarına açılmamasını ister",
+            "Asansörün önüne bir hol ya da koridor çizin (adı Hol, Koridor, Lobi, Sahanlık) ya da kapıyı oraya alın.",
+            hal, [k["uid"]] + odalar, f"{k['uid']}:önü"))
+    kalan = sum(1 for b in bulgular if "state" not in b)
+    return _sonuc(hal, bulgular, f"{kalan} asansör kapısı kullanım alanına açılıyor",
+                  "asansör kapısının önündeki mahal çizilmemiş", f"{len(hepsi)} asansör kapısı koridor ya da hole açılıyor")
+
+
+def _yangin_merdiveni(ad: str) -> bool:
+    a = _katla(ad)
+    return "MERDIVEN" in a and ("YANGIN" in a or "KORUNUMLU" in a)
+
+
+def merdivene(bina: dict[str, Any], hal: y.Hal) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """62/6: asansör kapısı yangın merdiveni yuvasına açılmaz."""
+    hepsi = asansor_kapilari(bina)
+    if not hepsi:
+        return [], _satir(hal, y.KAPSAM_DISI, "asansör kapısı yok")
+    adlar = {m["uid"]: m.get("name") or "" for m in bina.get("spaces") or []}
+    bulgular = []
+    for k in hepsi:
+        yuva = [u for u in k.get("between") or [] if u and _yangin_merdiveni(adlar.get(u, ""))]
+        if yuva:
+            bulgular.append(_bulgu(
+                "bykhy_elevator_door_stair",
+                f"Asansör kapısı yangın merdiveni yuvasına açılıyor (“{adlar[yuva[0]]}”): 62/6 izin vermez",
+                "Asansörü yangın merdiveninin dışındaki bir hole ya da koridora açın.", hal, [k["uid"]] + yuva,
+                f"{k['uid']}:yuva"))
+    return _sonuc(hal, bulgular, f"{len(bulgular)} asansör kapısı yangın merdiveni yuvasına açılıyor", "",
+                  f"{len(hepsi)} asansör kapısı yangın merdiveni yuvasına açılmıyor")
+
+
+def kat_kapilari(bina: dict[str, Any], hal: y.Hal) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """62/7 ve Ek-3/B 12: asansör kat kapısının dayanımı yapı yüksekliğine göre."""
+    hepsi = asansor_kapilari(bina)
+    if not hepsi:
+        return [], _satir(hal, y.KAPSAM_DISI, "asansör kapısı yok")
+    yapi, sinir = float(bina.get("structureHeight") or 0), float(hal.anahtar["height"])
+    if abs(yapi - sinir) < 1e-9:
+        b = _bulgu("bykhy_elevator_door_resistance",
+                   f"Yapı yüksekliği tam {yapi:.2f} m: Ek-3/B 12'nin 51,50 m'den yüksek (E 60) ve alçak (E 30) binaların "
+                   f"satırlarından ikisi de tutmaz", "Asansör kat kapılarının süresine uzman karar versin.", hal,
+                   sorted(k["uid"] for k in hepsi), "sınır", y.UZMAN)
+        return [b], _satir(hal, y.UZMAN, f"yapı yüksekliği tam {yapi:.2f} m")
+    yuksek_ = yapi > sinir
+    dk = int(hal.anahtar["high"] if yuksek_ else hal.anahtar["low"])
+    soz = f"yapı yüksekliği {yapi:.2f} m (51,50 m'den {'yüksek' if yuksek_ else 'alçak'})"
+    gruplar: dict[tuple[str, str], list[str]] = {}
+    for k in hepsi:
+        t = _tutar(k.get("fireRating"), "E", dk)
+        if t:
+            continue
+        sorun = "az" if t is False else ("okunmadı" if k.get("fireRating") else "yok")
+        gruplar.setdefault((sorun, k.get("fireRating") or ""), []).append(k["uid"])
+    bulgular = []
+    for (sorun, beyan), uids in gruplar.items():
+        if sorun == "az":
+            ne = f"{len(uids)} asansör kat kapısı {beyan}"
+        elif sorun == "okunmadı":
+            ne = f"{len(uids)} asansör kat kapısının sınıfı “{beyan}” okunamadı"
+        else:
+            ne = f"{len(uids)} asansör kat kapısının sınıfı beyan edilmemiş"
+        bulgular.append(_bulgu(
+            "bykhy_elevator_door_resistance",
+            f"{ne}: 62/7 kat kapısının Ek-3/B 12'deki dayanımını ister, {soz} en az E {dk}",
+            f"Asansörün kat kapılarını en az E {dk} seçin ve sınıfını beyan edin (Öznitelikler › Yangın dayanımı).", hal,
+            sorted(uids), f"kapı:{sorun}:{beyan}:E{dk}", None if sorun == "az" else y.EKSIK_VERI))
+    kalan = sum(len(b["uids"]) for b in bulgular if "state" not in b)
+    return _sonuc(hal, bulgular, f"{kalan} asansör kat kapısı en az E {dk} değil; {soz}",
+                  "asansör kat kapılarının sınıfı beyan edilmemiş", f"{len(hepsi)} asansör kat kapısı en az E {dk}; {soz}")
+
+
+#: Her maddenin denetimi ve başvuru günü ilk hâlinden önceyse uzman incelemesine gidecek nesneleri.
+_DENETIMLER = (
+    ("25/3", tesisat, lambda b: [s["uid"] for s in saftlar(b, "service")]),
+    ("41/9", kapaklar, lambda b: [s["uid"] for s in saftlar(b, "service")]),
+    ("62/2", kuyu, lambda b: [s["uid"] for s in saftlar(b, "elevator")]),
+    ("62/4", onu, lambda b: [k["uid"] for k in asansor_kapilari(b)]),
+    ("62/6", merdivene, lambda b: [k["uid"] for k in asansor_kapilari(b)]),
+    ("62/7", kat_kapilari, lambda b: [k["uid"] for k in asansor_kapilari(b)]),
+)
+
+
+def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
+    """Başvuru günü ``gun`` olan projenin şaft ve asansör bulguları."""
+    bulgular: list[dict[str, Any]] = []
+    satirlar: list[dict[str, Any]] = []
+    for madde, denetim, nesneler in _DENETIMLER:
+        hal = y.hal("BYKHY", madde, gun)
+        if hal is None:
+            uids = sorted(nesneler(bina))
+            if not uids:
+                continue
+            ilk = y.haller("BYKHY", madde)[0]
+            ileti = (f"Başvuru günü ({y.yaz(gun)}) BYKHY {madde} maddesinin kural setindeki ilk hâlinden ({ilk.etiket}) "
+                     f"önce: o günün metni KentOS'ta yok")
+            bulgular.append({"code": "regulation_text_unknown", "message": ileti,
+                             "repair": "Şaftları ve asansörleri maddenin başvuru günündeki metnine göre uzman incelesin.",
+                             "uids": uids[:20], "rule": f"BYKHY {madde}", "_iz": f"{madde}:bilinmiyor",
+                             "state": y.UZMAN})
+            satirlar.append({"rule": f"BYKHY {madde}", "title": ilk.baslik, "version": None, "gazette": None,
+                             "state": y.UZMAN, "note": ileti})
+            continue
+        b, s = denetim(bina, hal)
+        bulgular += b
+        satirlar.append(s)
+    return y.Sonuc(bulgular, satirlar)
+
+
+def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Sonuc:
+    """Projenin şaft ve asansör bulguları (``yururluk.denetle`` ile)."""
+    bina = facts.get("building") or {}
+    if not bina.get("storeys"):
+        return y.Sonuc([], [])
+    return y.denetle(lambda g: kural(bina, g), MADDELER, gun, neden, "şaft ve asansör kuralı")

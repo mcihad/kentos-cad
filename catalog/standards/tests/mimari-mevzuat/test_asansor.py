@@ -85,7 +85,8 @@ class KuralSeti(unittest.TestCase):
             self.assertTrue(madde["transition"].strip())
             for v in madde["versions"]:
                 with self.subTest(madde=madde["article"], hal=v["id"]):
-                    self.assertGreater(len(v["text"]), 80)
+                    # Fıkranın kendisi: en kısası BYKHY 62/6 (54 harf); kısaltma ya da yer tutucu değil.
+                    self.assertGreater(len(v["text"]), 40)
                     self.assertTrue(v["source"].strip())
 
     def test_gecis_gunu_yeni_hale_aittir(self):

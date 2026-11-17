@@ -66,6 +66,13 @@ def dayanim_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     return _bulgular(facts, ("bykhy_element_resistance", "bykhy_height_not_permitted"))
 
 
+@ext.audit("kuyular")
+def kuyu_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Şaftlar ve asansörler (BYKHY 25/3 yüksek binada şaft ve baca, 41/9 kaçış merdivenine açılan şaft kapağı, 62/2
+    asansör kuyusu, 62/4 ve 62/6 asansör kapısının önü, 62/7 ve Ek-3/B 12 kat kapısının dayanımı)."""
+    return _bulgular(facts, ("bykhy_shaft_", "bykhy_elevator_"))
+
+
 @ext.audit("kat-yuksekligi")
 def kat_yuksekligi_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Kat yüksekliği (PAİY 28/1-c; Sivas 28/1-c): konut bölgesinde zemin ve normal katlar, başvuru gününün hâliyle."""

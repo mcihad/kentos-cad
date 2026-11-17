@@ -148,6 +148,13 @@
           },
           "type": "array"
         },
+        "shafts": {
+          "description": "The shafts and what encloses each (docs/adr/8087; BYKHY 25/3, 41/9, 62/2).",
+          "items": {
+            "$ref": "#/$defs/ShaftFacts"
+          },
+          "type": "array"
+        },
         "spaces": {
           "description": "Every room the storeys count, with its name and area (docs/adr/8081): what a fire compartment is made of.",
           "items": {
@@ -165,6 +172,12 @@
             "$ref": "#/$defs/StoreyHolds"
           },
           "type": "array"
+        },
+        "structureHeight": {
+          "default": 0.0,
+          "description": "Yapı yüksekliği (BYKHY 4/bbb): every storey built, basements, mezzanines and attics with them, as the fire rules\nmeasure it, m (docs/adr/8087: BYKHY 25/3's high building and 62/7's elevator doors read it).",
+          "format": "double",
+          "type": "number"
         },
         "underStairs": {
           "description": "The stairs with places under them lower than 1.80 m (docs/adr/8080; PAİY 4/1-ğ-3, 31/6), by persistent id.",
@@ -675,6 +688,10 @@
             "null"
           ]
         },
+        "elevator": {
+          "description": "One of its sides is an elevator's shaft: an elevator's landing door (docs/adr/8087; BYKHY 62/4, 62/6, 62/7).",
+          "type": "boolean"
+        },
         "fireRating": {
           "description": "The fire class the author declares, the door's own else its type's (docs/adr/8068): `EI2 60-S200C5`.",
           "type": [
@@ -710,6 +727,10 @@
         "operation": {
           "description": "`swing`, `sliding`, `folding`, `revolving`, `pocket` … as the opening's operation is named.",
           "type": "string"
+        },
+        "passage": {
+          "description": "One of its sides is a passage: a corridor, a hall, an entrance (Koridor, Hol, Antre, Giriş, Geçit), a lobby or a\nlanding (Lobi, Sahanlık) or a stair's room (docs/adr/8087: BYKHY 62/4 lets an elevator open onto these alone).",
+          "type": "boolean"
         },
         "sides": {
           "default": [
@@ -747,7 +768,7 @@
       "type": "object"
     },
     "ElementFacts": {
-      "description": "An element BYKHY Ek-3/B reads: its persistent id, its kind (`column`, `beam`, `wall`, `slab`), its storey, its\ndeclared fire class (its own, else its type's), whether it is a column or a beam of the frame, whether a wall is on its\nstorey's outline (docs/adr/8082).",
+      "description": "An element BYKHY Ek-3/B reads: its persistent id, its kind (`column`, `beam`, `wall`, `slab`; `roof`, `terrace`,\ndocs/adr/8087), its storey, its declared fire class (its own, else its type's), whether it is a column or a beam of\nthe frame, whether a wall is on its storey's outline (docs/adr/8082).",
       "properties": {
         "exterior": {
           "type": "boolean"
@@ -1580,6 +1601,51 @@
       },
       "required": [
         "rooms",
+        "open"
+      ],
+      "type": "object"
+    },
+    "ShaftFacts": {
+      "description": "A shaft and what encloses it (docs/adr/8087): its persistent id, storey and name, `elevator` (an elevator's shaft) or\n`service` (a service shaft, a flue, an air shaft), the walls and openings met round it with their declared classes and\nlengths, and the length with neither, m.",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "open": {
+          "format": "double",
+          "type": "number"
+        },
+        "openings": {
+          "items": {
+            "$ref": "#/$defs/SeparatingElement"
+          },
+          "type": "array"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "walls": {
+          "items": {
+            "$ref": "#/$defs/SeparatingElement"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "uid",
+        "name",
+        "kind",
+        "walls",
+        "openings",
         "open"
       ],
       "type": "object"
