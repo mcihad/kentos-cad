@@ -172,10 +172,10 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     odayı aşan katlı konaklama yapısı — odası 100'ü geçmeyende yatak sayısı çizimde
     olmadığından eksik veri —, 21,50 m'yi aşan yataklı tesis, 2000 m²'yi aşan katlı
     mağaza, alışveriş, ticaret ve eğlence yeri, 1000 m²'yi aşan parlayıcı madde yapısı —
-    uzman incelemesi — bykhy_sprinklers_required, BYKHY 96/2): MCP ve Python'da
-    regulation grubu bütün çizim için istenince bulguları listededir
-    (paiy_elevator_missing, paiy_elevator_not_serving, yerel yönetmelikle çelişkide
-    regulation_conflict; başvuru tarihi yok ya da okunamıyor ve sonuç ona göre
+    uzman incelemesi —; alanlar mahallerin dış konturuyla bykhy_sprinklers_required,
+    BYKHY 96/2): MCP ve Python'da regulation grubu bütün çizim için istenince bulguları
+    listededir (paiy_elevator_missing, paiy_elevator_not_serving, yerel yönetmelikle
+    çelişkide regulation_conflict; başvuru tarihi yok ya da okunamıyor ve sonuç ona göre
     değişiyorsa state: missingData ile regulation_date_needed; metni kural setinde
     olmayan gün ya da yalnız teknik hacimli bodrum state: expertReview) ve her maddenin
     hâli ve sonucu ruleSet'tedir (passed, failed, missingData, expertReview,
@@ -413,10 +413,10 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         odayı aşan katlı konaklama yapısı — odası 100'ü geçmeyende yatak sayısı çizimde
         olmadığından eksik veri —, 21,50 m'yi aşan yataklı tesis, 2000 m²'yi aşan katlı
         mağaza, alışveriş, ticaret ve eğlence yeri, 1000 m²'yi aşan parlayıcı madde yapısı —
-        uzman incelemesi — bykhy_sprinklers_required, BYKHY 96/2): MCP ve Python'da
-        regulation grubu bütün çizim için istenince bulguları listededir
-        (paiy_elevator_missing, paiy_elevator_not_serving, yerel yönetmelikle çelişkide
-        regulation_conflict; başvuru tarihi yok ya da okunamıyor ve sonuç ona göre
+        uzman incelemesi —; alanlar mahallerin dış konturuyla bykhy_sprinklers_required,
+        BYKHY 96/2): MCP ve Python'da regulation grubu bütün çizim için istenince bulguları
+        listededir (paiy_elevator_missing, paiy_elevator_not_serving, yerel yönetmelikle
+        çelişkide regulation_conflict; başvuru tarihi yok ya da okunamıyor ve sonuç ona göre
         değişiyorsa state: missingData ile regulation_date_needed; metni kural setinde
         olmayan gün ya da yalnız teknik hacimli bodrum state: expertReview) ve her maddenin
         hâli ve sonucu ruleSet'tedir (passed, failed, missingData, expertReview,

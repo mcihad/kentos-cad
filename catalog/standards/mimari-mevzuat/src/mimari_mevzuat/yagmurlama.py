@@ -6,17 +6,18 @@ geçer. Yoksa bentler sırayla okunur, gerektiren her bent bulgudur (``bykhy_spr
 
 - **a)** yapı yüksekliği 30,50 m'den fazla, konut haricindeki bina (karma bina konut harici sayılır: sıkı olan);
 - **b)** yapı yüksekliği 51,50 m'yi geçen konut (bütün bölümleri konut olan bina);
-- **c)** alanlarının toplamı 600 m²'den büyük kapalı otopark (adı Otopark ya da Garaj olan mahallerin net alanı; araç
+- **c)** alanlarının toplamı 600 m²'den büyük kapalı otopark (adı Otopark ya da Garaj olan mahallerin alanı; araç
   asansörü modelde yok);
 - **ç)** birden fazla katlı binada yatılan oda sayısı 100'ü ya da yatak sayısı 200'ü geçen otel, yurt, pansiyon,
   misafirhane; yapı yüksekliği 21,50 m'den fazla bütün yataklı tesis (konaklama ve sağlık). Yatak sayısı çizimde yok:
   odası 100'ü geçmeyen katlı konaklama yapısı eksik veri;
-- **d)** toplam alanı 2000 m²'nin üzerinde olan katlı mağaza, alışveriş, ticaret ve eğlence yeri (mahallerin net alanının
-  toplamı; duvarlar sayılmaz);
+- **d)** toplam alanı 2000 m²'nin üzerinde olan katlı mağaza, alışveriş, ticaret ve eğlence yeri (mahallerin alanlarının
+  toplamı);
 - **e)** toplam alanı 1000 m²'den fazla, kolay alevlenici ve parlayıcı madde üretilen ya da bulundurulan yapı (17'nin
   saydıkları adından: LPG, akaryakıt, barut, dinamit …); ürettiği maddeyi çizim söylemez: bulgu uzman incelemesi.
 
-Kullanım bina programından, yoksa mahal adlarından okunur (``kullanim.siniflar``'ın kuralıyla).
+Alanlar olguların mahal alanlarıdır: yönetmeliğin alanlarının ölçtüğü dış kontur (PAİY 4/1-ğ-1, brüt). Kullanım bina
+programından, yoksa mahal adlarından okunur (``kullanim.siniflar``'ın kuralıyla).
 """
 
 from __future__ import annotations

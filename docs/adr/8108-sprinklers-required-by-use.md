@@ -17,7 +17,7 @@ resmî metinle birebir denetlendi.
 |---|---|---|
 | a (ilk metin) | Yapı yüksekliği 30,50 m'den fazla olan konut haricindeki bütün binalarda | Bütün bölümleri konut olmayan bina konut haricidir (karma da; sıkı olan, BYKHY 18) |
 | b (2009) | Yapı yüksekliği 51,50 m'yi geçen konutlarda | Bina programı yalnız konut ya da konut sayısı bölüm sayısına eşit |
-| c (2009) | Alanlarının toplamı 600 m²'den büyük kapalı otoparklarda ve 10'dan fazla aracın asansörle alındığı kapalı otoparklarda | Adı Otopark ya da Garaj olan mahallerin net alanlarının toplamı; araç asansörü modelde yok |
+| c (2009) | Alanlarının toplamı 600 m²'den büyük kapalı otoparklarda ve 10'dan fazla aracın asansörle alındığı kapalı otoparklarda | Adı Otopark ya da Garaj olan mahallerin alanlarının toplamı; araç asansörü modelde yok |
 | ç (ilk metin) | Birden fazla katlı binada yatılan oda sayısı 100'ü veya yatak sayısı 200'ü geçen otel, yurt, pansiyon, misafirhanelerde ve yapı yüksekliği 21,50 m'den fazla bütün yataklı tesislerde | Oda sayısı yatak odası adlı mahallerden; yatak sayısı çizimde yok: odası 100'ü geçmeyen katlı konaklama yapısı eksik veri. Yataklı tesis: konaklama ve sağlık |
 | d (2009) | Toplam alanı 2000 m²'nin üzerinde olan katlı mağazalarda, alışveriş, ticaret ve eğlence yerlerinde | Yalnız ticaret ya da eğlence binasında bütün mahaller; karma binada ticaret ve eğlence adlı mahaller ve "katlı" olması onların katlarından |
 | e (ilk metin) | Toplam alanı 1000 m²'den fazla, kolay alevlenici ve parlayıcı madde üretilen veya bulundurulan yapılarda | 17'nin saydıkları adından (LPG, akaryakıt, barut, dinamit, mermi, patlayıcı, parlayıcı); maddeyi çizim söylemez: uzman incelemesi |
@@ -28,9 +28,9 @@ Bentlerin 2009 öncesi metinleri (b, c, d) kural setinde yok: 9.9.2009'dan önce
 
 - **K194 — Beyan:** proje yağmurlamayı beyan etmişse (`settings.arch.sprinklers`) 96/2 geçer; satır hangi bendin istediğini
   söyler. Beyan yoksa isteyen her bent bir bulgudur (`bykhy_sprinklers_required`, kuralı `BYKHY 96/2-<bent>`).
-- **K195 — Alanlar:** c, d ve e'nin alanları mahallerin net alanlarıdır (olguların `spaces`'i); duvarlar sayılmaz, brüt
-  alan daha büyüktür: sınırın hemen altındaki bina gözden kaçabilir, sınırın üstündeki hiçbir bina geçmez. Bu ADR'nin
-  sınırıdır (§6).
+- **K195 — Alanlar:** c, d ve e'nin alanları olguların mahal alanlarıdır (`spaces[].area`): yönetmeliğin alanlarının
+  ölçtüğü dış kontur (PAİY 4/1-ğ-1, brüt), Mimari denetimin ve Metrekare cetvelinin saydığı. Mahali çizilmemiş yer (dolu
+  duvarların arası, şaft) sayılmaz.
 - **K196 — Durum:** gerektiren bentlerden biri kaldıysa satır kaldı; hepsi eksik veriyse eksik veri; yalnız e'yse uzman
   incelemesi.
 
@@ -59,6 +59,5 @@ Yangın güvenliği'ndedir.
 
 ## §6. Sıradaki adımlar
 
-- Brüt alan (duvarlarıyla) olgularda: c, d ve e sınırın hemen altında da kesin.
 - Araç asansörlü otopark (c'nin ikinci yarısı), yatak sayısının beyanı (ç).
 - Yağmurlamanın kat ya da kompartıman bazında beyanı (bugün bina için tek beyan).

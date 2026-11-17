@@ -620,7 +620,8 @@ durum; gerçek çizimde büro ve otel Denetim'de. Olgulara alan eklenmedi.
 **Yapıldı (17 Kasım 2026, [ADR 8108](../docs/adr/8108-sprinklers-required-by-use.md), K194–K196):** yağmurlama zorunluluğu
 (paket 0.23.0, `yagmurlama`): BYKHY 96/2'nin bentleri, beyan yoksa `bykhy_sprinklers_required` (30,50 m konut harici, 51,50 m
 konut, 600 m² otopark, 100 odalı katlı konaklama ve 21,50 m yataklı tesis, 2000 m² katlı mağaza ve eğlence yeri, 1000 m²
-parlayıcı madde yapısı); alanlar mahallerin net alanı. 26 bağımsız durum; 33 m'lik büro Denetim'de.
+parlayıcı madde yapısı); alanlar olguların mahal alanları (dış kontur, PAİY 4/1-ğ-1). 26 bağımsız durum; 33 m'lik büro
+Denetim'de.
 **Yapıldı (17 Kasım 2026, [ADR 8079](../docs/adr/8079-emsal-article-22-limits.md), K66–K69):** emsalin 22. madde
 sınırları alan hesabında: toprak altındaki katta bölümün depo eklentisi bölüm net alanının %50'sine (22/1-k), kapıcı
 daireleri toplam 70 m²'ye (22/1-ç), kütüphane 50 m²'ye (22/1-f) kadar dışarıda, aşan kısım emsale girer ve tablonun
