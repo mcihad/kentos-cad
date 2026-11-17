@@ -366,7 +366,14 @@
     K188–K193; B22'nin ilk dilimi):** mimari-mevzuat 0.22.0 `kullanim`: sınıf bina programından, yoksa mahal adlarından sıkı
     (12/2, 16/2); BYKHY 49/1-a, 50/1-a, 50/1-b, 52; olgulara alan eklenmedi; 52'de (c)–(d) çizimden kanıtlanmaz, uzman
     incelemesi. Yağmurlama zorunluluğu ([ADR 8108](../adr/8108-sprinklers-required-by-use.md), K194–K196): 96/2'nin bentleri,
-    beyan (`settings.arch.sprinklers`) yoksa bulgu; alanlar olguların mahal alanları (dış kontur, PAİY 4/1-ğ-1).
+    beyan (`settings.arch.sprinklers`) yoksa bulgu; alanlar olguların mahal alanları (dış kontur, PAİY 4/1-ğ-1). Sağlık
+    yapıları ([ADR 8110](../adr/8110-health-buildings-sleeping-floors-corridors.md), K200–K203): 0.24.0 `saglik`, 49/1-b
+    (300 m²'yi aşan yatılan kat tek kompartımansa kaldı, birden çoksa uzman incelemesi) ve 49/2 (hastane koridoru 2,00 m).
+  - **Koridorun en dar yeri (18 Kasım 2026; [ADR 8110](../adr/8110-health-buildings-sleeping-floors-corridors.md), K200–K201):**
+    ortak çekirdekte `geom::neck::least_width`: iki yanında kendi genişliğinde daire kalan en kısa kesit, yoksa en büyük
+    daire; bina olgularında hol ve koridorun `least`'i. En büyük daire (dar kenar, ADR 8033) koridorun en geniş yerini
+    ölçer (L'de %17, T'de %25, artıda %41 fazla, holle birleşende holü); odanın dar kenarı için o kalır. Görmediği: çıkmaza
+    daralan koridorun dar ucu, serbest kolonun yanı. Mimari denetimin 29/3 ve 33/1 koridor kuralları henüz geçmedi.
   - **TKGM'nin 3B sayısal yapı modeli (17 Kasım 2026; [ADR 8109](../adr/8109-tkgm-3d-building-model-research.md), K197–K199):**
     ertelendi; genelge 2025/2 modeli yapı aplikasyon projesinin eki sayar (harita modülünün işi), biçim standardı okunmadan
     kod yazılmaz.

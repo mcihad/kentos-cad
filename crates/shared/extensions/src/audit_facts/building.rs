@@ -219,6 +219,12 @@ pub struct SpaceFacts {
     /// no storey's compartment (docs/adr/8086).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub stair: bool,
+    /// A hall's or a corridor's least width, m (docs/adr/8110): the shortest chord across its net outline that leaves,
+    /// on each side, room for a circle as wide as the chord is long (a door's reveal, a niche shallower than its mouth is
+    /// no such chord), else its largest circle; the width a corridor is by (BYKHY 49/2). None for another room or a
+    /// broken one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub least: Option<f64>,
 }
 
 /// An opening between two storeys (docs/adr/8086; BYKHY 4/g, 24/4, 24/5): a floor slab's hole, a void space that is no
@@ -505,6 +511,7 @@ impl BuildingFacts {
         self.under_stairs.sort_by(|a, b| a.stair.cmp(&b.stair));
         for x in &mut self.spaces {
             x.area = round(x.area, AREA);
+            x.least = x.least.map(|w| round(w, LENGTH));
         }
         self.spaces.sort_by(|a, b| a.uid.cmp(&b.uid));
         for x in &mut self.separations {

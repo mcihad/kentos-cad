@@ -35,7 +35,13 @@ key: string, check: ArchAuditCheck,
  * `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict` (docs/adr/8034); the standards
  * package's (docs/adr/8078: a host that runs Python lists them) `paiy_elevator_missing` and
  * `paiy_elevator_not_serving` by the application date's version, the escape route doors' `bykhy_exit_door_swing`
- * and `bykhy_stair_door_rating` (docs/adr/8078 §8), the emsal limits' conditions `paiy_caretaker_not_required`,
+ * and `bykhy_stair_door_rating` (docs/adr/8078 §8), the use classes' own escape articles `bykhy_patient_room_doors`,
+ * `bykhy_hotel_room_wall`, `bykhy_hotel_storey_exits`, `bykhy_hotel_room_door` and `bykhy_single_stair` (BYKHY
+ * 49/1-a, 50/1-a, 50/1-b, 52; docs/adr/8107), the buildings that must have sprinklers `bykhy_sprinklers_required`
+ * (BYKHY 96/2; docs/adr/8108), a hospital's or care home's large sleeping storey in one fire compartment and a
+ * hospital corridor narrower than 2.00 m at its least width `bykhy_patient_floor_compartments`,
+ * `bykhy_hospital_corridor` (BYKHY 49/1-b, 49/2; docs/adr/8110), the emsal limits' conditions
+ * `paiy_caretaker_not_required`,
  * `paiy_library_not_exempt` (docs/adr/8079), `paiy_traditional_not_exempt` (22/1-m, docs/adr/8094),
  * `paiy_masonry_wall_undeclared`, `paiy_masonry_walls_not_exempt` (5/8, 20/8-j, docs/adr/8095) and
  * `local_masonry_walls_over` (Sivas 22/k, docs/adr/8096), the plan's building height and storey count

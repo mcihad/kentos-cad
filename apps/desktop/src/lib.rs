@@ -1091,6 +1091,9 @@ mod element_types_tests;
 #[path = "tests/use_class_tests.rs"]
 mod use_class_tests;
 #[cfg(test)]
+#[path = "tests/hospital_tests.rs"]
+mod hospital_tests;
+#[cfg(test)]
 #[path = "tests/arch_ifc_tests.rs"]
 mod arch_ifc_tests;
 #[cfg(test)]

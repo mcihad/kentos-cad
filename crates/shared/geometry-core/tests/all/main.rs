@@ -43,6 +43,7 @@ mod label_memo;
 mod label_stability;
 mod ghosts;
 mod leader;
+mod least_width;
 mod line_parts;
 mod locks;
 mod lrs;

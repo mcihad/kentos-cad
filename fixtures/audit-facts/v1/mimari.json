@@ -2280,7 +2280,8 @@
         "uid": "01a1dfda-06c5-7278-9486-e3999a1cb813",
         "level": "zemin",
         "name": "Koridor",
-        "area": 36.3
+        "area": 36.3,
+        "least": 1.4
       },
       {
         "uid": "01a1dfda-06c5-7278-9486-e39ad272edb3",
@@ -2323,7 +2324,8 @@
         "uid": "01a1dfda-0704-70dd-a975-499fcf59dea1",
         "level": "k1",
         "name": "Koridor",
-        "area": 36.3
+        "area": 36.3,
+        "least": 1.4
       },
       {
         "uid": "01a1dfda-0704-70dd-a975-49a0e9eca5a0",

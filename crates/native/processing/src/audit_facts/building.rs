@@ -186,6 +186,22 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             _ => None,
         })
         .collect();
+    // A hall's or a corridor's least width (docs/adr/8110): its narrowest neck in its net outline, the width a corridor
+    // is by; the other rooms' narrow side is their largest circle (the architecture facts').
+    let mut search = kentos_domain::space_follow::SpaceSearch::new(doc);
+    let least: std::collections::HashMap<String, f64> = doc
+        .entities_with_uids()
+        .filter_map(|(uid, e)| match e {
+            Entity::Space(s)
+                if s.space.broken.is_none()
+                    && kind_of(s.space.name.as_deref(), s.space.usage.as_deref()) == Some(RoomKind::Corridor) =>
+            {
+                let parts = kentos_domain::room_width::net_parts(&mut search, &s.space);
+                kentos_domain::room_width::least_of(&parts).map(|w| (uid.to_string(), w.width))
+            }
+            _ => None,
+        })
+        .collect();
     let spaces = storeys
         .iter()
         .flat_map(|st| st.rooms.iter().map(move |uid| (st.level.clone(), uid.clone())))
@@ -194,6 +210,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             area: gross.get(&uid).copied().unwrap_or(0.0),
             level: Some(level),
             stair: stair_rooms.contains(&uid),
+            least: least.get(&uid).copied(),
             uid,
         })
         .collect();

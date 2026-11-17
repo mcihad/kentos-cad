@@ -5,6 +5,8 @@
 //! - **Its net outline:** its inner faces found again round its seed ([`net_parts`]), else the rings drawn.
 //! - **To within [`PRECISION`]:** the pole of inaccessibility; its centre is the outline's centroid when that is as
 //!   good (a rectangle's middle, not a point along its long axis), where a finding on the room points.
+//! - **A passage's least width** ([`least_of`], docs/adr/8110): its narrowest neck, the width a corridor is by (its
+//!   largest circle is its widest place: an L, a T or a lobby makes it wider than it is).
 
 use kentos_contracts::{SpaceFields, SpaceMethod, SpacePart, Vec2};
 use kentos_geometry_core::Vec2 as V;
@@ -19,24 +21,38 @@ fn core(p: &Vec2) -> V {
     V::new(p.x, p.y)
 }
 
+/// A part's rings, its arcs as chords: the outline first, then its holes.
+fn rings_of(p: &SpacePart) -> Vec<Vec<V>> {
+    use kentos_geometry_core::tessellate::bulge_path;
+    std::iter::once(&p.outer)
+        .chain(&p.holes)
+        .map(|r| {
+            let pts: Vec<V> = r.pts.iter().map(core).collect();
+            bulge_path(
+                &pts,
+                r.bulges.as_deref(),
+                true,
+                kentos_geometry_core::geom::curve_outline::CURVE_TOL,
+            )
+        })
+        .collect()
+}
+
+/// A passage's least width (docs/adr/8110): the shortest chord across its net outline that leaves, on each side, room
+/// for a circle as wide as the chord is long (else its largest circle); the least of its parts'. None without a ring.
+pub fn least_of(parts: &[SpacePart]) -> Option<kentos_geometry_core::geom::neck::LeastWidth> {
+    parts
+        .iter()
+        .filter_map(|p| kentos_geometry_core::geom::neck::least_width(&rings_of(p), PRECISION))
+        .reduce(|a, b| if b.width < a.width { b } else { a })
+}
+
 /// The net width of `parts`: the largest circle inside, its diameter, and its centre; 0 and none without a ring.
 pub fn width_of(parts: &[SpacePart]) -> (f64, Option<V>) {
-    use kentos_geometry_core::tessellate::bulge_path;
     parts
         .iter()
         .filter_map(|p| {
-            let rings: Vec<Vec<V>> = std::iter::once(&p.outer)
-                .chain(&p.holes)
-                .map(|r| {
-                    let pts: Vec<V> = r.pts.iter().map(core).collect();
-                    bulge_path(
-                        &pts,
-                        r.bulges.as_deref(),
-                        true,
-                        kentos_geometry_core::geom::curve_outline::CURVE_TOL,
-                    )
-                })
-                .collect();
+            let rings = rings_of(p);
             kentos_geometry_core::labels::geom::pole(&rings, PRECISION).map(|(p, d)| {
                 let c = centroid(&rings[0]);
                 let inside = c.is_some_and(|c| rings_hold(&rings, c));

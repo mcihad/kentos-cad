@@ -1806,6 +1806,14 @@
           "format": "double",
           "type": "number"
         },
+        "least": {
+          "description": "A hall's or a corridor's least width, m (docs/adr/8110): the shortest chord across its net outline that leaves,\non each side, room for a circle as wide as the chord is long (a door's reveal, a niche shallower than its mouth is\nno such chord), else its largest circle; the width a corridor is by (BYKHY 49/2). None for another room or a\nbroken one.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
         "level": {
           "type": [
             "string",

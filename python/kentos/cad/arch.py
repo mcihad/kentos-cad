@@ -173,60 +173,64 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     olmadığından eksik veri —, 21,50 m'yi aşan yataklı tesis, 2000 m²'yi aşan katlı
     mağaza, alışveriş, ticaret ve eğlence yeri, 1000 m²'yi aşan parlayıcı madde yapısı —
     uzman incelemesi —; alanlar mahallerin dış konturuyla bykhy_sprinklers_required,
-    BYKHY 96/2): MCP ve Python'da regulation grubu bütün çizim için istenince bulguları
-    listededir (paiy_elevator_missing, paiy_elevator_not_serving, yerel yönetmelikle
-    çelişkide regulation_conflict; başvuru tarihi yok ya da okunamıyor ve sonuç ona göre
-    değişiyorsa state: missingData ile regulation_date_needed; metni kural setinde
-    olmayan gün ya da yalnız teknik hacimli bodrum state: expertReview) ve her maddenin
-    hâli ve sonucu ruleSet'tedir (passed, failed, missingData, expertReview,
-    outOfScope); kural çalışmazsa regulation_rule_unavailable uyarısı. Asansör adlı
-    mahalin net ölçüsü kabinden (1,20 m, 1,80 m²) küçük ya da kitaplığın Asansör
-    bloğunun kabini bundan, kapısı 0,90 m'den küçük paiy_elevator_small (kuyu net
-    ölçüsüyle, içindeki blok kabin ve kapısıyla ölçülür; bloğun düzeltmesi
-    parametreleri, cad.blocks.parameters), asansör kapısının açıldığı sahanlık sürme
-    kapıda 1,20, kanatlıda 1,50 m'den dar paiy_elevator_landing_narrow (34/2); duvarı
-    olan çizimde Kesit çıkar'ın çıkardığı kesit ikiden azsa paiy_sections_missing,
-    çıkarılmış kesitlerin hiçbirinin çizgisi ortak merdivenin kollarını ya da
-    sahanlığını kesmiyorsa paiy_section_stair_missing (57/2-a-6); binanın dış çizgisinin
-    (katıların birleşimi) kuzey okuna göre sekiz yönden en uzunun beşte birinden ve 2
-    m'den uzun her cephesine bakan, Görünüş çıkar'ın çıkardığı bir görünüş yoksa
-    paiy_elevations_missing (57/2-a-6: yeteri sayıda görünüş; Mimarlar Odası: bütün
-    görünüşler çizilir). Çatılar: mahya saçak seviyesinden (son kat tavan döşemesinin
-    üstü, çatının kot farkı dahil) 5,00 m'yi aşarsa paiy_ridge_high (40/4; Sivas 40/5-g
-    4,00 m), binadan çizilen çatının saçağı 1,00 m'den genişse paiy_eaves_wide (42/1),
-    hava bacası çatı örtüsünü 0,60 m'den çok aşarsa paiy_roof_vent_high (40/5;
-    düzeltmesi 0,60 m), duman bacası mahyanın 0,80 m üstüne çıkmazsa bykhy_chimney_low
-    (BYKHY 58/2; düzeltmesi 0,80 m); yerel yönetmelik Sivas ise eğim %40'ı aşarsa
-    local_roof_slope_steep (40/5-g; düzeltmesi dik kenarları %40'a indirir), eğimli
-    çatıda kar siperliği yoksa local_snow_guard_missing (42/5; düzeltmesi saçaktan 30
-    cm), çatı penceresi 1,20 × 1,50 m'den büyükse local_roof_window_large, bina cephe
-    hattına 1 m'den ya da başka bir pencereye çatının üstünde 2 m'den yakınsa
-    local_roof_window_close (40/5-e). Korkuluklar: döşemesinden 1,10 m'den alçak
-    korkuluk paiy_railing_low (38/1; düzeltmesi 1,10 m), dikey çubuklarının arası 0,10
-    m'den geniş korkuluk paiy_railing_gap (38/4; düzeltmesi 0,10 m), döşeme boşluğunun
-    (galeri boşluğu) duvarsız ve alt kattan gelen merdivenin çıkışı dışındaki
-    kenarlarının ya da kenarı olmayan balkonun, terasın serbest kenarlarının 0,10 m ve
-    daha uzunu katının korkuluklarınca tutulmuyorsa paiy_railing_missing (38/1; balkonda
-    ve terasta düzeltmesi döşemeye korkuluk kenarı, cad.slabs.edit; boşlukta Korkuluk
-    aracının Boşluktan'ı). Asansör: kitaplığın Asansör bloğu asansördür (34/1, rıht 0,18
-    m); ±0,00'dan sayılan 10 ve daha fazla katlı binada en az bir asansörün kabini 1,20
-    m dar kenarlı ve 2,52 m², kapısı 1,10 m değilse paiy_elevator_stretcher (34/5;
-    düzeltmesi en büyük kabini sedye ölçüsüne getirir). Otopark yerleri: kitaplığın
-    Otopark yeri blokları çizimin park yerleridir (Otopark hesabı onları sayar; yoksa
-    mahal alanı ÷ 20 m²); kısa kenarı 2,40 m'den (engellide 3,50, kamyonette 3,00) ya da
-    uzun kenarı 4,90 m'den (kamyonette 6,00) küçükse parking_space_small (5/1-h-8, 9;
-    düzeltmesi bloğun En ve Boy'u), Otopark ya da Garaj adlı mahaldeki yer sayısı net
-    alanı ÷ 20 m²'yi aşarsa parking_area_short (4/1-ç), umumi binada (konutsuz, büro ya
-    da dükkân bölümlü) her 20 yerde 1 ve en az 1 engelli yeri yoksa
-    parking_disabled_short (4/1-ı), zorunlu otopark 20 ve üstündeyse %5'i ve en az 1
-    şarjlı yer yoksa parking_charging_short (5/1-j; düzeltmesi bir binek yerini Şarjlı
-    yapar). Dijital Proje Yönetmeliği'nin (RG 5.8.2026/33331) bulguları, EK-9 model
-    kalite kontrol formununkiler de, bu komutun değildir: standart kural paketinin
-    (dijital-proje) Python kuralları onları çizimin ve cad.arch.ifc'nin yazacağı
-    dosyanın olgularından verir. Projenin yerel imar yönetmeliği
-    (settings.arch.localRules: sivas) varsa değerleri PAİY'nin üstüne okunur (PAİY
-    69/3): sıkı olan bağlar ve iletide öbürü de yazılır (Sivas ortak merdiven ve ara
-    sahanlık 1,30 m, 3 katta asansör, konutta kat yüksekliği 3,60 m); ölçü yerel
+    BYKHY 96/2) ve sağlık yapıları da (hastanenin ve bakımevinin 300 m²'yi aşan yatılan
+    katı tek yangın kompartımanıysa kaldı, iki ya da daha çok kompartımanda büyüklükleri
+    uzman incelemesi bykhy_patient_floor_compartments, 49/1-b; hastanede adı Koridor
+    olan mahalin en dar yeri — iki yanında kendi genişliğinde daire kalan en kısa kesit
+    — 2,00 m'den azsa bykhy_hospital_corridor, 49/2): MCP ve Python'da regulation grubu
+    bütün çizim için istenince bulguları listededir (paiy_elevator_missing,
+    paiy_elevator_not_serving, yerel yönetmelikle çelişkide regulation_conflict; başvuru
+    tarihi yok ya da okunamıyor ve sonuç ona göre değişiyorsa state: missingData ile
+    regulation_date_needed; metni kural setinde olmayan gün ya da yalnız teknik hacimli
+    bodrum state: expertReview) ve her maddenin hâli ve sonucu ruleSet'tedir (passed,
+    failed, missingData, expertReview, outOfScope); kural çalışmazsa
+    regulation_rule_unavailable uyarısı. Asansör adlı mahalin net ölçüsü kabinden (1,20
+    m, 1,80 m²) küçük ya da kitaplığın Asansör bloğunun kabini bundan, kapısı 0,90 m'den
+    küçük paiy_elevator_small (kuyu net ölçüsüyle, içindeki blok kabin ve kapısıyla
+    ölçülür; bloğun düzeltmesi parametreleri, cad.blocks.parameters), asansör kapısının
+    açıldığı sahanlık sürme kapıda 1,20, kanatlıda 1,50 m'den dar
+    paiy_elevator_landing_narrow (34/2); duvarı olan çizimde Kesit çıkar'ın çıkardığı
+    kesit ikiden azsa paiy_sections_missing, çıkarılmış kesitlerin hiçbirinin çizgisi
+    ortak merdivenin kollarını ya da sahanlığını kesmiyorsa paiy_section_stair_missing
+    (57/2-a-6); binanın dış çizgisinin (katıların birleşimi) kuzey okuna göre sekiz
+    yönden en uzunun beşte birinden ve 2 m'den uzun her cephesine bakan, Görünüş
+    çıkar'ın çıkardığı bir görünüş yoksa paiy_elevations_missing (57/2-a-6: yeteri
+    sayıda görünüş; Mimarlar Odası: bütün görünüşler çizilir). Çatılar: mahya saçak
+    seviyesinden (son kat tavan döşemesinin üstü, çatının kot farkı dahil) 5,00 m'yi
+    aşarsa paiy_ridge_high (40/4; Sivas 40/5-g 4,00 m), binadan çizilen çatının saçağı
+    1,00 m'den genişse paiy_eaves_wide (42/1), hava bacası çatı örtüsünü 0,60 m'den çok
+    aşarsa paiy_roof_vent_high (40/5; düzeltmesi 0,60 m), duman bacası mahyanın 0,80 m
+    üstüne çıkmazsa bykhy_chimney_low (BYKHY 58/2; düzeltmesi 0,80 m); yerel yönetmelik
+    Sivas ise eğim %40'ı aşarsa local_roof_slope_steep (40/5-g; düzeltmesi dik kenarları
+    %40'a indirir), eğimli çatıda kar siperliği yoksa local_snow_guard_missing (42/5;
+    düzeltmesi saçaktan 30 cm), çatı penceresi 1,20 × 1,50 m'den büyükse
+    local_roof_window_large, bina cephe hattına 1 m'den ya da başka bir pencereye
+    çatının üstünde 2 m'den yakınsa local_roof_window_close (40/5-e). Korkuluklar:
+    döşemesinden 1,10 m'den alçak korkuluk paiy_railing_low (38/1; düzeltmesi 1,10 m),
+    dikey çubuklarının arası 0,10 m'den geniş korkuluk paiy_railing_gap (38/4;
+    düzeltmesi 0,10 m), döşeme boşluğunun (galeri boşluğu) duvarsız ve alt kattan gelen
+    merdivenin çıkışı dışındaki kenarlarının ya da kenarı olmayan balkonun, terasın
+    serbest kenarlarının 0,10 m ve daha uzunu katının korkuluklarınca tutulmuyorsa
+    paiy_railing_missing (38/1; balkonda ve terasta düzeltmesi döşemeye korkuluk kenarı,
+    cad.slabs.edit; boşlukta Korkuluk aracının Boşluktan'ı). Asansör: kitaplığın Asansör
+    bloğu asansördür (34/1, rıht 0,18 m); ±0,00'dan sayılan 10 ve daha fazla katlı
+    binada en az bir asansörün kabini 1,20 m dar kenarlı ve 2,52 m², kapısı 1,10 m
+    değilse paiy_elevator_stretcher (34/5; düzeltmesi en büyük kabini sedye ölçüsüne
+    getirir). Otopark yerleri: kitaplığın Otopark yeri blokları çizimin park yerleridir
+    (Otopark hesabı onları sayar; yoksa mahal alanı ÷ 20 m²); kısa kenarı 2,40 m'den
+    (engellide 3,50, kamyonette 3,00) ya da uzun kenarı 4,90 m'den (kamyonette 6,00)
+    küçükse parking_space_small (5/1-h-8, 9; düzeltmesi bloğun En ve Boy'u), Otopark ya
+    da Garaj adlı mahaldeki yer sayısı net alanı ÷ 20 m²'yi aşarsa parking_area_short
+    (4/1-ç), umumi binada (konutsuz, büro ya da dükkân bölümlü) her 20 yerde 1 ve en az
+    1 engelli yeri yoksa parking_disabled_short (4/1-ı), zorunlu otopark 20 ve
+    üstündeyse %5'i ve en az 1 şarjlı yer yoksa parking_charging_short (5/1-j;
+    düzeltmesi bir binek yerini Şarjlı yapar). Dijital Proje Yönetmeliği'nin (RG
+    5.8.2026/33331) bulguları, EK-9 model kalite kontrol formununkiler de, bu komutun
+    değildir: standart kural paketinin (dijital-proje) Python kuralları onları çizimin
+    ve cad.arch.ifc'nin yazacağı dosyanın olgularından verir. Projenin yerel imar
+    yönetmeliği (settings.arch.localRules: sivas) varsa değerleri PAİY'nin üstüne okunur
+    (PAİY 69/3): sıkı olan bağlar ve iletide öbürü de yazılır (Sivas ortak merdiven ve
+    ara sahanlık 1,30 m, 3 katta asansör, konutta kat yüksekliği 3,60 m); ölçü yerel
     yönetmeliğe uyup PAİY'ye uymuyorsa regulation_conflict (Sivas hava bacası 0,30 m ve
     0,36 m², 13.8.2025'ten sonraki başvuruda tuvalet ve balkon kapısı 0,80 m; rule iki
     maddeyi taşır). Merdiven ve rampa bulgularının düzeltmesi cad.arch.edit (genişlik,
@@ -414,60 +418,64 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         olmadığından eksik veri —, 21,50 m'yi aşan yataklı tesis, 2000 m²'yi aşan katlı
         mağaza, alışveriş, ticaret ve eğlence yeri, 1000 m²'yi aşan parlayıcı madde yapısı —
         uzman incelemesi —; alanlar mahallerin dış konturuyla bykhy_sprinklers_required,
-        BYKHY 96/2): MCP ve Python'da regulation grubu bütün çizim için istenince bulguları
-        listededir (paiy_elevator_missing, paiy_elevator_not_serving, yerel yönetmelikle
-        çelişkide regulation_conflict; başvuru tarihi yok ya da okunamıyor ve sonuç ona göre
-        değişiyorsa state: missingData ile regulation_date_needed; metni kural setinde
-        olmayan gün ya da yalnız teknik hacimli bodrum state: expertReview) ve her maddenin
-        hâli ve sonucu ruleSet'tedir (passed, failed, missingData, expertReview,
-        outOfScope); kural çalışmazsa regulation_rule_unavailable uyarısı. Asansör adlı
-        mahalin net ölçüsü kabinden (1,20 m, 1,80 m²) küçük ya da kitaplığın Asansör
-        bloğunun kabini bundan, kapısı 0,90 m'den küçük paiy_elevator_small (kuyu net
-        ölçüsüyle, içindeki blok kabin ve kapısıyla ölçülür; bloğun düzeltmesi
-        parametreleri, cad.blocks.parameters), asansör kapısının açıldığı sahanlık sürme
-        kapıda 1,20, kanatlıda 1,50 m'den dar paiy_elevator_landing_narrow (34/2); duvarı
-        olan çizimde Kesit çıkar'ın çıkardığı kesit ikiden azsa paiy_sections_missing,
-        çıkarılmış kesitlerin hiçbirinin çizgisi ortak merdivenin kollarını ya da
-        sahanlığını kesmiyorsa paiy_section_stair_missing (57/2-a-6); binanın dış çizgisinin
-        (katıların birleşimi) kuzey okuna göre sekiz yönden en uzunun beşte birinden ve 2
-        m'den uzun her cephesine bakan, Görünüş çıkar'ın çıkardığı bir görünüş yoksa
-        paiy_elevations_missing (57/2-a-6: yeteri sayıda görünüş; Mimarlar Odası: bütün
-        görünüşler çizilir). Çatılar: mahya saçak seviyesinden (son kat tavan döşemesinin
-        üstü, çatının kot farkı dahil) 5,00 m'yi aşarsa paiy_ridge_high (40/4; Sivas 40/5-g
-        4,00 m), binadan çizilen çatının saçağı 1,00 m'den genişse paiy_eaves_wide (42/1),
-        hava bacası çatı örtüsünü 0,60 m'den çok aşarsa paiy_roof_vent_high (40/5;
-        düzeltmesi 0,60 m), duman bacası mahyanın 0,80 m üstüne çıkmazsa bykhy_chimney_low
-        (BYKHY 58/2; düzeltmesi 0,80 m); yerel yönetmelik Sivas ise eğim %40'ı aşarsa
-        local_roof_slope_steep (40/5-g; düzeltmesi dik kenarları %40'a indirir), eğimli
-        çatıda kar siperliği yoksa local_snow_guard_missing (42/5; düzeltmesi saçaktan 30
-        cm), çatı penceresi 1,20 × 1,50 m'den büyükse local_roof_window_large, bina cephe
-        hattına 1 m'den ya da başka bir pencereye çatının üstünde 2 m'den yakınsa
-        local_roof_window_close (40/5-e). Korkuluklar: döşemesinden 1,10 m'den alçak
-        korkuluk paiy_railing_low (38/1; düzeltmesi 1,10 m), dikey çubuklarının arası 0,10
-        m'den geniş korkuluk paiy_railing_gap (38/4; düzeltmesi 0,10 m), döşeme boşluğunun
-        (galeri boşluğu) duvarsız ve alt kattan gelen merdivenin çıkışı dışındaki
-        kenarlarının ya da kenarı olmayan balkonun, terasın serbest kenarlarının 0,10 m ve
-        daha uzunu katının korkuluklarınca tutulmuyorsa paiy_railing_missing (38/1; balkonda
-        ve terasta düzeltmesi döşemeye korkuluk kenarı, cad.slabs.edit; boşlukta Korkuluk
-        aracının Boşluktan'ı). Asansör: kitaplığın Asansör bloğu asansördür (34/1, rıht 0,18
-        m); ±0,00'dan sayılan 10 ve daha fazla katlı binada en az bir asansörün kabini 1,20
-        m dar kenarlı ve 2,52 m², kapısı 1,10 m değilse paiy_elevator_stretcher (34/5;
-        düzeltmesi en büyük kabini sedye ölçüsüne getirir). Otopark yerleri: kitaplığın
-        Otopark yeri blokları çizimin park yerleridir (Otopark hesabı onları sayar; yoksa
-        mahal alanı ÷ 20 m²); kısa kenarı 2,40 m'den (engellide 3,50, kamyonette 3,00) ya da
-        uzun kenarı 4,90 m'den (kamyonette 6,00) küçükse parking_space_small (5/1-h-8, 9;
-        düzeltmesi bloğun En ve Boy'u), Otopark ya da Garaj adlı mahaldeki yer sayısı net
-        alanı ÷ 20 m²'yi aşarsa parking_area_short (4/1-ç), umumi binada (konutsuz, büro ya
-        da dükkân bölümlü) her 20 yerde 1 ve en az 1 engelli yeri yoksa
-        parking_disabled_short (4/1-ı), zorunlu otopark 20 ve üstündeyse %5'i ve en az 1
-        şarjlı yer yoksa parking_charging_short (5/1-j; düzeltmesi bir binek yerini Şarjlı
-        yapar). Dijital Proje Yönetmeliği'nin (RG 5.8.2026/33331) bulguları, EK-9 model
-        kalite kontrol formununkiler de, bu komutun değildir: standart kural paketinin
-        (dijital-proje) Python kuralları onları çizimin ve cad.arch.ifc'nin yazacağı
-        dosyanın olgularından verir. Projenin yerel imar yönetmeliği
-        (settings.arch.localRules: sivas) varsa değerleri PAİY'nin üstüne okunur (PAİY
-        69/3): sıkı olan bağlar ve iletide öbürü de yazılır (Sivas ortak merdiven ve ara
-        sahanlık 1,30 m, 3 katta asansör, konutta kat yüksekliği 3,60 m); ölçü yerel
+        BYKHY 96/2) ve sağlık yapıları da (hastanenin ve bakımevinin 300 m²'yi aşan yatılan
+        katı tek yangın kompartımanıysa kaldı, iki ya da daha çok kompartımanda büyüklükleri
+        uzman incelemesi bykhy_patient_floor_compartments, 49/1-b; hastanede adı Koridor
+        olan mahalin en dar yeri — iki yanında kendi genişliğinde daire kalan en kısa kesit
+        — 2,00 m'den azsa bykhy_hospital_corridor, 49/2): MCP ve Python'da regulation grubu
+        bütün çizim için istenince bulguları listededir (paiy_elevator_missing,
+        paiy_elevator_not_serving, yerel yönetmelikle çelişkide regulation_conflict; başvuru
+        tarihi yok ya da okunamıyor ve sonuç ona göre değişiyorsa state: missingData ile
+        regulation_date_needed; metni kural setinde olmayan gün ya da yalnız teknik hacimli
+        bodrum state: expertReview) ve her maddenin hâli ve sonucu ruleSet'tedir (passed,
+        failed, missingData, expertReview, outOfScope); kural çalışmazsa
+        regulation_rule_unavailable uyarısı. Asansör adlı mahalin net ölçüsü kabinden (1,20
+        m, 1,80 m²) küçük ya da kitaplığın Asansör bloğunun kabini bundan, kapısı 0,90 m'den
+        küçük paiy_elevator_small (kuyu net ölçüsüyle, içindeki blok kabin ve kapısıyla
+        ölçülür; bloğun düzeltmesi parametreleri, cad.blocks.parameters), asansör kapısının
+        açıldığı sahanlık sürme kapıda 1,20, kanatlıda 1,50 m'den dar
+        paiy_elevator_landing_narrow (34/2); duvarı olan çizimde Kesit çıkar'ın çıkardığı
+        kesit ikiden azsa paiy_sections_missing, çıkarılmış kesitlerin hiçbirinin çizgisi
+        ortak merdivenin kollarını ya da sahanlığını kesmiyorsa paiy_section_stair_missing
+        (57/2-a-6); binanın dış çizgisinin (katıların birleşimi) kuzey okuna göre sekiz
+        yönden en uzunun beşte birinden ve 2 m'den uzun her cephesine bakan, Görünüş
+        çıkar'ın çıkardığı bir görünüş yoksa paiy_elevations_missing (57/2-a-6: yeteri
+        sayıda görünüş; Mimarlar Odası: bütün görünüşler çizilir). Çatılar: mahya saçak
+        seviyesinden (son kat tavan döşemesinin üstü, çatının kot farkı dahil) 5,00 m'yi
+        aşarsa paiy_ridge_high (40/4; Sivas 40/5-g 4,00 m), binadan çizilen çatının saçağı
+        1,00 m'den genişse paiy_eaves_wide (42/1), hava bacası çatı örtüsünü 0,60 m'den çok
+        aşarsa paiy_roof_vent_high (40/5; düzeltmesi 0,60 m), duman bacası mahyanın 0,80 m
+        üstüne çıkmazsa bykhy_chimney_low (BYKHY 58/2; düzeltmesi 0,80 m); yerel yönetmelik
+        Sivas ise eğim %40'ı aşarsa local_roof_slope_steep (40/5-g; düzeltmesi dik kenarları
+        %40'a indirir), eğimli çatıda kar siperliği yoksa local_snow_guard_missing (42/5;
+        düzeltmesi saçaktan 30 cm), çatı penceresi 1,20 × 1,50 m'den büyükse
+        local_roof_window_large, bina cephe hattına 1 m'den ya da başka bir pencereye
+        çatının üstünde 2 m'den yakınsa local_roof_window_close (40/5-e). Korkuluklar:
+        döşemesinden 1,10 m'den alçak korkuluk paiy_railing_low (38/1; düzeltmesi 1,10 m),
+        dikey çubuklarının arası 0,10 m'den geniş korkuluk paiy_railing_gap (38/4;
+        düzeltmesi 0,10 m), döşeme boşluğunun (galeri boşluğu) duvarsız ve alt kattan gelen
+        merdivenin çıkışı dışındaki kenarlarının ya da kenarı olmayan balkonun, terasın
+        serbest kenarlarının 0,10 m ve daha uzunu katının korkuluklarınca tutulmuyorsa
+        paiy_railing_missing (38/1; balkonda ve terasta düzeltmesi döşemeye korkuluk kenarı,
+        cad.slabs.edit; boşlukta Korkuluk aracının Boşluktan'ı). Asansör: kitaplığın Asansör
+        bloğu asansördür (34/1, rıht 0,18 m); ±0,00'dan sayılan 10 ve daha fazla katlı
+        binada en az bir asansörün kabini 1,20 m dar kenarlı ve 2,52 m², kapısı 1,10 m
+        değilse paiy_elevator_stretcher (34/5; düzeltmesi en büyük kabini sedye ölçüsüne
+        getirir). Otopark yerleri: kitaplığın Otopark yeri blokları çizimin park yerleridir
+        (Otopark hesabı onları sayar; yoksa mahal alanı ÷ 20 m²); kısa kenarı 2,40 m'den
+        (engellide 3,50, kamyonette 3,00) ya da uzun kenarı 4,90 m'den (kamyonette 6,00)
+        küçükse parking_space_small (5/1-h-8, 9; düzeltmesi bloğun En ve Boy'u), Otopark ya
+        da Garaj adlı mahaldeki yer sayısı net alanı ÷ 20 m²'yi aşarsa parking_area_short
+        (4/1-ç), umumi binada (konutsuz, büro ya da dükkân bölümlü) her 20 yerde 1 ve en az
+        1 engelli yeri yoksa parking_disabled_short (4/1-ı), zorunlu otopark 20 ve
+        üstündeyse %5'i ve en az 1 şarjlı yer yoksa parking_charging_short (5/1-j;
+        düzeltmesi bir binek yerini Şarjlı yapar). Dijital Proje Yönetmeliği'nin (RG
+        5.8.2026/33331) bulguları, EK-9 model kalite kontrol formununkiler de, bu komutun
+        değildir: standart kural paketinin (dijital-proje) Python kuralları onları çizimin
+        ve cad.arch.ifc'nin yazacağı dosyanın olgularından verir. Projenin yerel imar
+        yönetmeliği (settings.arch.localRules: sivas) varsa değerleri PAİY'nin üstüne okunur
+        (PAİY 69/3): sıkı olan bağlar ve iletide öbürü de yazılır (Sivas ortak merdiven ve
+        ara sahanlık 1,30 m, 3 katta asansör, konutta kat yüksekliği 3,60 m); ölçü yerel
         yönetmeliğe uyup PAİY'ye uymuyorsa regulation_conflict (Sivas hava bacası 0,30 m ve
         0,36 m², 13.8.2025'ten sonraki başvuruda tuvalet ve balkon kapısı 0,80 m; rule iki
         maddeyi taşır). Merdiven ve rampa bulgularının düzeltmesi cad.arch.edit (genişlik,

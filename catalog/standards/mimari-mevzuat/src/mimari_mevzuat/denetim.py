@@ -102,7 +102,14 @@ def kapi_olculeri_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
 def kullanim_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Kullanım sınıfına özel kaçış hükümleri (BYKHY 49/1-a hasta odası, 50/1-a ve 50/1-b otel, 52 fabrika, mağaza,
     depo, büro ve ayakta tedavi merkezinin kaçış merdivenleri)."""
-    return _bulgular(facts, ("bykhy_patient_", "bykhy_hotel_", "bykhy_single_stair"))
+    return _bulgular(facts, ("bykhy_patient_room_", "bykhy_hotel_", "bykhy_single_stair"))
+
+
+@ext.audit("saglik")
+def saglik_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Sağlık yapılarının yatılan katları ve hastane koridorları (BYKHY 49/1-b kompartımanlar, 49/2 koridor
+    genişliği)."""
+    return _bulgular(facts, ("bykhy_patient_floor_", "bykhy_hospital_"))
 
 
 @ext.audit("yagmurlama")

@@ -20,6 +20,7 @@ pub mod hatch_pattern;
 pub mod image;
 pub mod intersect;
 pub mod leader;
+pub mod neck;
 pub mod nurbs;
 pub mod nurbs_build;
 pub mod offset;

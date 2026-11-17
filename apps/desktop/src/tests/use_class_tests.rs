@@ -21,7 +21,7 @@ use crate::files_testing::drive;
 use crate::recovery::Recovery;
 use crate::settings::Settings;
 
-fn run(app: &mut App, name: &str, input: Value) -> Value {
+pub(crate) fn run(app: &mut App, name: &str, input: Value) -> Value {
     let doc = app.document.as_mut().expect("a drawing");
     let answer = kentos_native_application::registry::run(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
@@ -34,16 +34,16 @@ fn run(app: &mut App, name: &str, input: Value) -> Value {
     answer
 }
 
-fn p(x: f64, y: f64) -> Value {
+pub(crate) fn p(x: f64, y: f64) -> Value {
     json!({"x": x, "y": y})
 }
 
-fn rect(x0: f64, y0: f64, x1: f64, y1: f64) -> Value {
+pub(crate) fn rect(x0: f64, y0: f64, x1: f64, y1: f64) -> Value {
     json!([{"outer": {"pts": [p(x0, y0), p(x1, y0), p(x1, y1), p(x0, y1)]}}])
 }
 
 /// A new drawing with `n` storeys of 3.00 m and one building used as `usage`; applied for on 2.7.2026.
-fn building(n: usize, usage: &str) -> App {
+pub(crate) fn building(n: usize, usage: &str) -> App {
     kentos_postgis::connections::keep_in_memory();
     let (mut app, _) = App::start_in(Some(Module::Architecture), None, Settings::memory(), Recovery::off());
     app.db_store = Box::leak(Box::new(kentos_postgis::connections::ConnectionStore::open(None)));
@@ -74,7 +74,7 @@ fn layer(app: &App) -> String {
     app.document.as_ref().expect("a drawing").model.layers().active().to_owned()
 }
 
-fn spaces(app: &mut App, list: Vec<Value>) {
+pub(crate) fn spaces(app: &mut App, list: Vec<Value>) {
     let layer = layer(app);
     run(app, "cad.spaces.create", json!({"layerId": layer, "spaces": list}));
 }
@@ -140,7 +140,7 @@ fn declare(app: &mut App, uids: &[&String], value: &str) {
 }
 
 /// The whole drawing checked in Denetim, the standards packages asked and answered.
-fn checked(app: &mut App) {
+pub(crate) fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
     assert_eq!(app.arch.arch_audit.regulation_failed, None, "the national regulation's rule answers");

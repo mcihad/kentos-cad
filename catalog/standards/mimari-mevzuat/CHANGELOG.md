@@ -1,5 +1,15 @@
 # Değişiklikler
 
+## 0.24.0 — 18 Kasım 2026
+
+- Sağlık yapıları (`saglik`, yeni katkı `saglik`; docs/adr/8110): BYKHY 49/1-b (9.9.2009) hastanenin ve bakımevinin
+  300 m²'yi aşan yatılan katı tek yangın kompartımanıysa kaldı (`bykhy_patient_floor_compartments`); iki ya da daha çok
+  kompartımanda "en az yarısı büyüklüğünde" şartı ve yatay tahliye alanının 2,8 m²/kişi hesabı uzman incelemesi
+  (kompartımanların alanlarıyla). 49/2: hastanede adı Koridor olan mahalin en dar yeri 2,00 m'den azsa kaldı
+  (`bykhy_hospital_corridor`); en dar yer olguların yeni `spaces[].least` ölçüsü: iki yanında kendi genişliğinde daire
+  kalan en kısa kesit (L, T, artı ya da holle birleşen koridorun en büyük dairesi değil). Metinler resmî metinle birebir.
+  Kullanım sınıfı katkısı artık yalnız hasta odası kapısı bulgularını alır.
+
 ## 0.23.0 — 17 Kasım 2026
 
 - Yağmurlama zorunluluğu (`yagmurlama`, yeni katkı `yagmurlama`; docs/adr/8108): BYKHY 96/2'nin bentleri, proje
