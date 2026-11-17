@@ -192,6 +192,12 @@ macro_rules! arch_commands {
                 underlay_edit,
                 kentos_commands::UnderlayEdit
             ),
+            kentos_commands::CAD_UNDERLAY_CHECK => crate::arch_dispatch::arch_arm!(
+                $command,
+                $then,
+                underlay_check,
+                kentos_commands::UnderlayCheck
+            ),
             kentos_commands::CAD_ZONING_PARCEL => crate::arch_dispatch::arch_arm!(
                 $command,
                 $then,

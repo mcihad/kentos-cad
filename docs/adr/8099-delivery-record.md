@@ -81,7 +81,9 @@ iletim kaydı aşağıdaki kaynaklardan.
   `the_delivery_record_round_trips_under_arch_data_17`.
 - **Komut durumları** (`fixtures/commands/v1/cad.delivery.edit.json`, 40; bağımsız başvuru
   `scripts/fixtures/delivery_cases.py`, KentOS kodu yok): ekleme, numara, kırpma, cevap, iade gerekçesi, notların varlığı
-  ve tekliği, gün sırası, silme, sınırlar, revizyon.
+  ve tekliği, gün sırası, silme, sınırlar, revizyon. 1000 kayıt sınırı (`too_many_deliveries`) ortak durumun çiziminde bin
+  kayıtla `delivery_limit` testinde sınanır (17 Kasım 2026, ADR 8102'nin işinde eklendi): bin birincisi `change`'te reddedilir,
+  çizime bir şey yazılmaz.
 - **Karşılaştırma:** dosyaların eşlenmesi (pafta, ad, içerik, tek uzantı; iki adayda tahmin yok), klasörün okunması.
 - **Masaüstü** (`deliveries_tests`, ilk kabul elle): `dated_sizes_tests`'in evi; ilk paket 2.11.2026'da e-PYS ile gider,
   9.11.2026'da iade gelir; gerekçesiz iade reddedilir; gerekçe WC kapısına ve girişe bağlanan bir notla yazılır; WC kapısı

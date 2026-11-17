@@ -323,6 +323,7 @@ COMMANDS: dict[str, Any] = {
     "cad.topology.exceptions": topology.exceptions,
     "cad.topology.repair": topology.repair,
     "cad.ucs.set": ucs.set,
+    "cad.underlay.check": underlay.check,
     "cad.underlay.edit": underlay.edit,
     "cad.units.change": units.change,
     "cad.viewmarks.create": viewmarks.create,

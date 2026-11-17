@@ -337,6 +337,12 @@
     projenin IFC sistemine; uyuşmazlık nedenli ret, başlangıç noktasına yalnız istenince. Plan etkin katın kesme
     yüksekliğinde kesit ve altındaki kenarlar (`kentos_ifc::underlay::plan`), görünümün ızgara ile çizim arasındaki
     parçasında; 3B'de mor gövdeler; `cad.underlay.edit`.
+  - **Altlık modeli denetle (17 Kasım 2026; [ADR 8102](../adr/8102-underlay-alignment-and-clash.md), K163–K168):**
+    `cad.underlay.check` (okur, yazmaz): önce revizyon ve yerleşim (başka sistem ya da datum geometriden önce durdurur;
+    söylenmeyen datum `underlay_datum_unsaid` uyarısıyla); katlar kota göre eşlenir, fark eşiksiz yazılır; akslar
+    etiketle, uzaklık ve dönme; aynı sınıftan kutusu tolerans içindeki eleman eşleşir, eşleşmeyen dosya elemanı çizimin
+    bütün gövdeleriyle (`kentos_ifc::clash`: kutu ön süzgeç, kesişen yüzey ya da 27 tanık noktası; değen yüz çakışma
+    değildir). Tolerans 0,0001–0,5 m, varsayılan 1 mm. Altlık modeller penceresinin Denetim bölümü.
   - **Künye role göre (17 Kasım 2026; [ADR 8100](../adr/8100-kunye-personal-particulars-by-role.md), K152–K156):** bulut
     projesinde künyenin kişisel bilgilerini (13 değişken: yapı sahibi, müellif, sicil, büro, tapu kaydı …; teslim eden)
     yalnız `feature.write` sahibi görür (`ProjectAccess::sees_particulars`); öbürleri bilgide ve anlık görüntüde "Gizli"

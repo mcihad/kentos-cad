@@ -2616,6 +2616,9 @@ mod tests {
                     crate::CAD_UNDERLAY_EDIT => {
                         serde_json::from_value::<crate::UnderlayEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_UNDERLAY_CHECK => {
+                        serde_json::from_value::<crate::UnderlayCheck>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_DELIVERY_EDIT => {
                         serde_json::from_value::<crate::DeliveryEdit>(e.input.clone()).map(|_| ())
                     }
@@ -4473,6 +4476,9 @@ mod tests {
                         }
                         crate::CAD_UNDERLAY_EDIT => {
                             serde_json::from_value::<crate::UnderlayEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_UNDERLAY_CHECK => {
+                            serde_json::from_value::<crate::UnderlayChecked>(output.clone()).map(|_| ())
                         }
                         crate::CAD_DELIVERY_EDIT => {
                             serde_json::from_value::<crate::DeliveryEdited>(output.clone()).map(|_| ())

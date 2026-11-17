@@ -103,6 +103,7 @@ const UNREACHED: &[(&str, &str, &str)] = &[
     ("cad.drawing.take", "block_definition_differs", "Tanımı değişmiş bloğun yerleştirmesini alma review_take::a_changed_definition_makes_the_insert_note_stale_and_the_take_warns testinde sınanır."),
     ("cad.review.notes.edit", "too_many_review_replies", "200 yanıt sınırı review_take::replies_and_notes_stop_at_their_limits testinde sınanır."),
     ("cad.review.notes.edit", "too_many_review_notes", "10 000 not sınırı review_take::replies_and_notes_stop_at_their_limits testinde sınanır."),
+    ("cad.delivery.edit", "too_many_deliveries", "1000 kayıt sınırı delivery_limit::the_thousand_and_first_delivery_is_refused_and_nothing_is_written testinde sınanır."),
     // Baskı stili tablosu (docs/adr/1130).
     ("cad.plotstyles.import", "plot_style_file_too_large", "4 MiB'tan büyük bir tablo ortak durum olarak repoya konmaz; sınır plot_style_files_beyond_the_limit_and_unreadable_files_are_refused testinde sınanır."),
     ("cad.plotstyles.import", "book_unreadable", "Ortak kurulum geçersiz kitap vermez; kitap cad.sheets.details'in aynı read_project_sheets yolundan okunur ve orada korunur (ADR 1090)."),

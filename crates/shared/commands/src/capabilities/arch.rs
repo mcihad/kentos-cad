@@ -802,6 +802,21 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: Vec::new,
     },
+    // Altlık modeli denetle (docs/adr/8102): reads the file and the drawing's model, writes nothing.
+    Entry {
+        id: "cad.underlay.check",
+        refusals: &[&[
+            "invalid_uid",
+            "model_underlay_not_found",
+            "invalid_tolerance",
+            "file_not_found",
+            "model_underlay_changed",
+            "model_underlay_unreadable",
+            "model_underlay_not_placed",
+        ]],
+        warnings: &["underlay_datum_unsaid"],
+        targets: Vec::new,
+    },
     // Altlık model (docs/adr/8101): the drawing's settings and the file read, no object.
     Entry {
         id: "cad.underlay.edit",

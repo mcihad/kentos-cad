@@ -114,6 +114,8 @@ mod deliveries_window;
 mod underlays;
 #[path = "arch/underlays_window.rs"]
 mod underlays_window;
+#[path = "arch/underlay_check_view.rs"]
+mod underlay_check_view;
 #[path = "cad/sheet_set.rs"]
 mod sheet_set;
 #[path = "cad/xrefs_window.rs"]
@@ -1065,6 +1067,9 @@ mod deliveries_tests;
 #[cfg(test)]
 #[path = "tests/underlays_tests.rs"]
 mod underlays_tests;
+#[cfg(test)]
+#[path = "tests/underlay_check_tests.rs"]
+mod underlay_check_tests;
 #[cfg(test)]
 #[path = "tests/arch_ifc_tests.rs"]
 mod arch_ifc_tests;

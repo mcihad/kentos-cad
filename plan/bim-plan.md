@@ -804,7 +804,7 @@ idarenin yazılı kabul ya da iade cevabını alır.
 
 ### 5.6 Disiplinler ve idare
 
-#### BIM-17 — Dış disiplin modeli ve çakışma [ ]
+#### BIM-17 — Dış disiplin modeli ve çakışma [~]
 
 **Kullanıcı sonucu:** Statik ve tesisat modeli KentOS'ta altlık olarak açılır. Aks, kot ve koordinat uyuşmazlığı ile
 çakışmalar nesnesiyle listelenir. Dayanak Md. 9/1 ("disiplinler tarafından ayrı ayrı"); EK-7; Z10.
@@ -817,6 +817,13 @@ idarenin yazılı kabul ya da iade cevabını alır.
 
 **İlk kabul:** bölüm binasının bağımsız üretilmiş statik modeliyle hizalama. Bilerek kaydırılan bir kolon ve bir kat kotu
 bulgu olur. Farklı düşey datum, geometri denetiminden önce durdurur.
+
+**Durum (17 Kasım 2026, [ADR 8102](../docs/adr/8102-underlay-alignment-and-clash.md)):** ilk kabul sağlandı. Bölüm binası
+IfcOpenShell'in yazdığı statik modelle hizalı: iki kat, yedi aks, 27 eleman eşleşir, çakışma yok. 40 cm kaydırılan A-1
+kolonu çakışır; "1. Kat" +0,150 m bulgu; ITRF96 datumlu model geometriye bakılmadan durur. `cad.underlay.check` (Python,
+MCP, 29 bağımsız ortak durum); Altlık modeller › Denetim (Katlar, Akslar, Çakışmalar, Yalnız birinde; çakışma satırı
+nesneyi seçer). **Kalan:** bulgunun BCF ile dışa verilmesi (IFC-10), boşluk çakışması, döşeme boşluğu ile şaft ve perde
+kuralları, büyük modelde uzamsal ön süzgeç, bulgunun disiplin ve revizyonla kaydı.
 
 #### BIM-18 — İdare inceleme çalışma alanı [ ]
 
@@ -903,7 +910,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
 | B18 ~ | Altlık model | IFC-09 | Statik model planda ve 3B'de altlık (ADR 8101: yerleştirme harita dönüşümüyle ya da istenince başlangıç noktasına, katın kesiti, 3B gövdeler, nesnenin ayrıntıları; gösterilemeyen nesnenin işareti ve bulutta dosyanın saklanması kaldı) |
-| B19 | Dış disiplin ve çakışma; karşılaştırma ve sorun değişimi | BIM-17, IFC-10 | Çakışmalar nesnesiyle |
+| B19 ~ | Dış disiplin ve çakışma; karşılaştırma ve sorun değişimi | BIM-17, IFC-10 | Çakışmalar nesnesiyle (ADR 8102: hizalama, kat ve aks, eşleşen ve çakışan elemanlar, datum ret; ilk kabul tamam; revizyon farkı ve BCF kaldı) |
 | B20 | İdare inceleme çalışma alanı | BIM-18 | Gelen paket açılır, denetlenir, iade notu çıkar |
 
 ### Faz 5 — Kalite ve genişleme

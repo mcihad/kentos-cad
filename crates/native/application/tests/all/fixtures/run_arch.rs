@@ -95,6 +95,9 @@ macro_rules! arch_cases {
             kentos_commands::CAD_UNDERLAY_EDIT => {
                 $then!(underlay_edit, kentos_commands::UnderlayEdit)
             }
+            kentos_commands::CAD_UNDERLAY_CHECK => {
+                $then!(underlay_check, kentos_commands::UnderlayCheck)
+            }
             kentos_commands::CAD_DELIVERY_EDIT => {
                 $then!(delivery_edit, kentos_commands::DeliveryEdit)
             }

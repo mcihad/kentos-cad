@@ -23,6 +23,7 @@ pub mod arch;
 pub mod building;
 pub mod catalog;
 pub mod catalog_schema;
+pub mod clash;
 pub mod closed;
 pub mod compartment;
 pub mod crs;

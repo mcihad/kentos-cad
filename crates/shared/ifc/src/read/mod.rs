@@ -21,6 +21,8 @@ mod bodies_tests;
 #[cfg(all(test, feature = "geometry"))]
 mod outside_tests;
 mod checks;
+#[cfg(feature = "geometry")]
+pub mod coordination;
 #[cfg(feature = "view")]
 mod details;
 mod facts;

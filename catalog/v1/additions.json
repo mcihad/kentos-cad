@@ -3298,12 +3298,14 @@
       "title": "Altlık modeller",
       "short": "Altlık modeller",
       "icon": "modelUnderlay",
-      "description": "Statik, mekanik ya da elektrik modelinin IFC dosyasını (IFC 4.3, IFC4, IFC2x3) çizimin altında salt okunur altlık olarak gösterir: planda etkin katın kesme yüksekliğinde kesilmiş ve altındaki kenarlarıyla, 3B görünümde gövdesiyle. Model çizime kopyalanmaz; dosyası SHA-256'sıyla anılır, değişirse söylenir. Dosyanın harita dönüşümü projenin sistemindeyse yerine oturur; başka sistem, harita dönüşümü olmayan dosya ya da farklı yükseklik datumu nedeniyle söylenir ve dosya yalnız istenince başlangıç noktasına yerleştirilir. Planda ya da 3B görünümde tıklanan nesnenin sınıfı, adı ve özellikleri görünür; gösterilemeyen nesneler nedenleriyle listelenir. cad.underlay.edit ile.",
+      "description": "Statik, mekanik ya da elektrik modelinin IFC dosyasını (IFC 4.3, IFC4, IFC2x3) çizimin altında salt okunur altlık olarak gösterir: planda etkin katın kesme yüksekliğinde kesilmiş ve altındaki kenarlarıyla, 3B görünümde gövdesiyle. Model çizime kopyalanmaz; dosyası SHA-256'sıyla anılır, değişirse söylenir. Dosyanın harita dönüşümü projenin sistemindeyse yerine oturur; başka sistem, harita dönüşümü olmayan dosya ya da farklı yükseklik datumu nedeniyle söylenir ve dosya yalnız istenince başlangıç noktasına yerleştirilir. Planda ya da 3B görünümde tıklanan nesnenin sınıfı, adı ve özellikleri görünür; gösterilemeyen nesneler nedenleriyle listelenir. Denetle katları kotlarıyla, aksları etiketleriyle karşılaştırır, aynı yerde duran elemanları sayar, çakışanları ve yalnız bir modelde olanları listeler; çakışma satırı çizimdeki nesneyi seçer. cad.underlay.edit ve cad.underlay.check ile.",
       "aliases": [
         "ALTLIK",
         "ALTLIKMODEL",
         "IFCALTLIK",
-        "XREFIFC"
+        "XREFIFC",
+        "ALTLIKDENETIM",
+        "IFCCAKISMA"
       ],
       "shortcuts": [],
       "category": "Mimari",

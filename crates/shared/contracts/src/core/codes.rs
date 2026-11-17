@@ -187,6 +187,8 @@ codes! {
     MODEL_UNDERLAY_UNREADABLE = "model_underlay_unreadable", Failed, false, "Altlık modelin dosyası bir IFC dosyası olarak okunamadı.";
     MODEL_UNDERLAY_NOT_PLACED = "model_underlay_not_placed", Failed, false, "Altlık model projeye yerleştirilemedi: koordinat sistemi, harita dönüşümü ya da yükseklik datumu uyuşmuyor.";
     TOO_MANY_MODEL_UNDERLAYS = "too_many_model_underlays", Failed, false, "Bir çizim en çok 50 altlık model gösterir.";
+    MODEL_UNDERLAY_CHANGED = "model_underlay_changed", Failed, false, "Altlık modelin dosyası çizimin andığı revizyon değil; önce yeniden okuyun.";
+    UNDERLAY_DATUM_UNSAID = "underlay_datum_unsaid", Warning, false, "Proje ya da altlık modelin dosyası yükseklik datumunu söylemiyor: kotlar aynı datumda sayıldı.";
     TAKE_CONFLICT = "take_conflict", Failed, false, "Nesne ortak tabandan sonra iki tarafta da farklı değişmiş; üzerine yazmak açıkça seçilmeli.";
     BLOCK_DEFINITION_DIFFERS = "block_definition_differs", Warning, false, "Alınan blok yerleştirmesinin tanımı iki sürümde farklı; tanım açık çizimdeki olarak kaldı.";
     INVALID_ANGLE_TOLERANCE = "invalid_angle_tolerance", Failed, false, "Açı sapması eşiği 0 ile 10 derece arasında olmalı.";

@@ -28457,6 +28457,187 @@
       ]
     },
     {
+      "id": "cad.underlay.check",
+      "version": 1,
+      "title": "Altlık modeli denetle",
+      "summary": "Bir altlık modeli (statik, tesisat) çizimin kendi modeliyle karşılaştırır; okur, yazmaz. Önce dosyanın çizimin andığı revizyon olduğu (SHA-256'sı) ve yerleştirildiği denetlenir: başka koordinat sistemi ya da yükseklik datumu geometriye bakılmadan model_underlay_not_placed ile durdurur. levels: projenin katları ve dosyanın katları (Elevation, çizimin kotlarında) kota göre en yakını önce eşlenir; fark dosyanınki eksi projeninki, eşsizler ayrı. axes: akslar etiketleriyle; dosyanınkinin projeninkine uzaklığı (m) ve aralarındaki dönme (°), yalnız birinde olan. matched: aynı sınıftan, kutuları tolerans içinde aynı yerde duran eleman sayısı. clashes: dosyanın eşleşmeyen elemanları çizimin bütün elemanlarıyla: kutuları her eksende toleranstan çok örtüşen, yüzeyleri kesişen ya da bir noktası ikisinin de içinde olan çiftler (değen yüzler çakışma değildir); çizimin nesnesi (uid, IFC sınıfı, ad), dosyanınki (GlobalId, sınıf, ad), kutuların örtüşmesi ve biri ötekini bütünüyle içine alıyor mu. unmatched: dosyanın sınıflarından yalnız bir modelde olanlar. Sıralar: kat çiftleri projenin kat sırasıyla, sonra projenin eşsiz katları, sonra dosyanın eşsiz katları (kotu yazılmamış kat kotsuz listelenir); akslar etikete göre; çakışmalar dosyanın sırasıyla, her dosya nesnesininkiler çizimin uid'sine göre; eşleşmeyenler önce çizimin (uid'ye göre), sonra dosyanın (sırasıyla). Harita dönüşümüyle yerleştirilmiş dosyada proje ya da dosya yükseklik datumunu söylemiyorsa kotlar aynı datumda sayılır ve underlay_datum_unsaid uyarısı bunu söyler. tolerance metre, 0,0001 ile 0,5 arası, verilmezse 0,001. Kimlik UUID değilse invalid_uid, altlık yoksa model_underlay_not_found, tolerans aralık dışındaysa invalid_tolerance, dosya yoksa file_not_found, dosya değişmişse model_underlay_changed (önce cad.underlay.edit reload), IFC olarak okunmazsa model_underlay_unreadable.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.underlay.check` v1: the underlay checked against the drawing's model; two bodies whose boxes overlap by\nno more than `tolerance` metres on an axis are not looked at, and two elements of one class whose boxes stand within\nit are the same element.\n\nRefusals, in this order: `invalid_uid`, `model_underlay_not_found`, `invalid_tolerance` (0.0001 to 0.5 m),\n`file_not_found`, `model_underlay_changed` (the file is not the revision the drawing names: read it again first),\n`model_underlay_unreadable`, `model_underlay_not_placed` (another system or height datum stops it before any geometry\nis looked at).",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "UnderlayCheck",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.underlay.check` v1: the levels and axes set beside each other, how many elements both models have\nwhere they stand, the clashes, what only one model has, the tolerance used, the drawing's revision.\n\nOrders: the levels' pairs in the project's level order, then the project's unpaired levels, then the file's unpaired\nstoreys (in the file's order); the axes by label; the clashes in the file's order, each file object's by the\ndrawing's persistent id; the unmatched the drawing's first (by persistent id), then the file's (in its order).",
+        "properties": {
+          "axes": {
+            "items": {
+              "$ref": "#/$defs/UnderlayAxisCheck"
+            },
+            "type": "array"
+          },
+          "clashes": {
+            "items": {
+              "$ref": "#/$defs/UnderlayClash"
+            },
+            "type": "array"
+          },
+          "id": {
+            "type": "string"
+          },
+          "levels": {
+            "items": {
+              "$ref": "#/$defs/UnderlayLevelCheck"
+            },
+            "type": "array"
+          },
+          "matched": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "unmatched": {
+            "items": {
+              "$ref": "#/$defs/UnderlayUnmatched"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "levels",
+          "axes",
+          "matched",
+          "clashes",
+          "unmatched",
+          "tolerance",
+          "revision"
+        ],
+        "title": "UnderlayChecked",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.underlay.check` v1: the levels and axes set beside each other, how many elements both models have\nwhere they stand, the clashes, what only one model has, the tolerance used, the drawing's revision.\n\nOrders: the levels' pairs in the project's level order, then the project's unpaired levels, then the file's unpaired\nstoreys (in the file's order); the axes by label; the clashes in the file's order, each file object's by the\ndrawing's persistent id; the unmatched the drawing's first (by persistent id), then the file's (in its order).",
+        "properties": {
+          "axes": {
+            "items": {
+              "$ref": "#/$defs/UnderlayAxisCheck"
+            },
+            "type": "array"
+          },
+          "clashes": {
+            "items": {
+              "$ref": "#/$defs/UnderlayClash"
+            },
+            "type": "array"
+          },
+          "id": {
+            "type": "string"
+          },
+          "levels": {
+            "items": {
+              "$ref": "#/$defs/UnderlayLevelCheck"
+            },
+            "type": "array"
+          },
+          "matched": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "unmatched": {
+            "items": {
+              "$ref": "#/$defs/UnderlayUnmatched"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "levels",
+          "axes",
+          "matched",
+          "clashes",
+          "unmatched",
+          "tolerance",
+          "revision"
+        ],
+        "title": "UnderlayChecked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "model_underlay_not_found",
+          "invalid_tolerance",
+          "file_not_found",
+          "model_underlay_changed",
+          "model_underlay_unreadable",
+          "model_underlay_not_placed"
+        ],
+        "warnings": [
+          "underlay_datum_unsaid"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Statik modeli denetle",
+          "input": {
+            "id": "00000000-0000-4000-8000-000000000001"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.arch.performance",
       "version": 1,
       "title": "Yangın ve performans",
@@ -110081,6 +110262,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Bir çizim en çok 50 altlık model gösterir."
+    },
+    {
+      "code": "model_underlay_changed",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Altlık modelin dosyası çizimin andığı revizyon değil; önce yeniden okuyun."
+    },
+    {
+      "code": "underlay_datum_unsaid",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Proje ya da altlık modelin dosyası yükseklik datumunu söylemiyor: kotlar aynı datumda sayıldı."
     },
     {
       "code": "take_conflict",
@@ -224593,6 +224786,42 @@
         }
       ]
     },
+    "UnderlayAxisCheck": {
+      "description": "A grid axis by its label: how far the file's stands from the project's (metres) and the turn between them\n(degrees), when both have it; else which has it.",
+      "properties": {
+        "inFile": {
+          "type": "boolean"
+        },
+        "inProject": {
+          "type": "boolean"
+        },
+        "label": {
+          "type": "string"
+        },
+        "offset": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "turn": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "deg"
+        }
+      },
+      "required": [
+        "label",
+        "inProject",
+        "inFile"
+      ],
+      "type": "object"
+    },
     "UnderlayChange": {
       "description": "One change of the underlays.",
       "oneOf": [
@@ -224744,6 +224973,95 @@
         }
       ]
     },
+    "UnderlayClash": {
+      "description": "A clash: the drawing's object (its persistent id, IFC class and name) and the file's (its GlobalId, class and name),\ntheir boxes' overlap in the drawing (x, y, z from, x, y, z to) and whether one holds the other whole.",
+      "properties": {
+        "class": {
+          "type": "string"
+        },
+        "inside": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "object": {
+          "type": "string"
+        },
+        "objectClass": {
+          "type": "string"
+        },
+        "objectName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "overlap": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "class",
+        "name",
+        "object",
+        "objectClass",
+        "overlap",
+        "inside"
+      ],
+      "type": "object"
+    },
+    "UnderlayLevelCheck": {
+      "description": "A project level and the file's storey paired with it by elevation (the drawing's heights, metres): either may be\nmissing; the difference is the storey's less the level's. A storey whose file says no elevation is listed alone,\nwithout one.",
+      "properties": {
+        "difference": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "file": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "project": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "storey": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
     "UnderlayLook": {
       "additionalProperties": false,
       "description": "How a PDF underlay looks (docs/adr/0351 §2).",
@@ -224781,6 +225099,34 @@
           "type": "string"
         }
       ]
+    },
+    "UnderlayUnmatched": {
+      "description": "An element of a class both models have that only one of them has where it stands: the drawing's (its persistent\nid) or the file's (its GlobalId), its class and name.",
+      "properties": {
+        "class": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "object": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "class",
+        "name"
+      ],
+      "type": "object"
     },
     "UnitDecision": {
       "description": "How a file's lengths were read (docs/adr/0257 §1): what the file\ndeclares, the unit the values were taken in and why, and the blocks\nwhose unit is another.",

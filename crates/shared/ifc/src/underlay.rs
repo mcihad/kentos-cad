@@ -290,6 +290,45 @@ pub fn plan(meshes: &[Mesh<'_>], cut: f64, bottom: f64) -> Vec<PlanLine> {
     out
 }
 
+/// The project's levels and the file's storeys paired by elevation (metres, the drawing's heights): the nearest pair
+/// first, each taken once. Each pair, then each level no storey took, then each storey no level took: (level, storey).
+pub fn pair_levels(levels: &[f64], storeys: &[f64]) -> Vec<(Option<usize>, Option<usize>)> {
+    let mut pairs: Vec<(f64, usize, usize)> = levels
+        .iter()
+        .enumerate()
+        .flat_map(|(i, l)| storeys.iter().enumerate().map(move |(j, s)| ((s - l).abs(), i, j)))
+        .collect();
+    pairs.sort_by(|x, y| x.0.total_cmp(&y.0).then(x.1.cmp(&y.1)).then(x.2.cmp(&y.2)));
+    let (mut level_taken, mut storey_taken) = (vec![false; levels.len()], vec![false; storeys.len()]);
+    let mut out = Vec::new();
+    for (_, i, j) in pairs {
+        if !level_taken[i] && !storey_taken[j] {
+            level_taken[i] = true;
+            storey_taken[j] = true;
+            out.push((Some(i), Some(j)));
+        }
+    }
+    out.sort_by_key(|p| p.0);
+    out.extend(level_taken.iter().enumerate().filter(|(_, t)| !**t).map(|(i, _)| (Some(i), None)));
+    out.extend(storey_taken.iter().enumerate().filter(|(_, t)| !**t).map(|(j, _)| (None, Some(j))));
+    out
+}
+
+/// How far the file's axis `b` stands from the project's axis `a`, both as two points on the plane: the distance of
+/// `b`'s middle from `a`'s line (metres) and the turn between them (degrees, 0 to 90).
+pub fn axis_offset(a: [[f64; 2]; 2], b: [[f64; 2]; 2]) -> (f64, f64) {
+    let da = [a[1][0] - a[0][0], a[1][1] - a[0][1]];
+    let db = [b[1][0] - b[0][0], b[1][1] - b[0][1]];
+    let (la, lb) = (hypot(da[0], da[1]), hypot(db[0], db[1]));
+    if la == 0.0 || lb == 0.0 {
+        return (f64::NAN, f64::NAN);
+    }
+    let mid = [(b[0][0] + b[1][0]) / 2.0, (b[0][1] + b[1][1]) / 2.0];
+    let offset = ((mid[0] - a[0][0]) * da[1] - (mid[1] - a[0][1]) * da[0]).abs() / la;
+    let sin = ((da[0] * db[1] - da[1] * db[0]) / (la * lb)).abs().min(1.0);
+    (offset, crate::math::atan(sin / (1.0 - sin * sin).max(0.0).sqrt().max(f64::MIN_POSITIVE)) * (180.0 / std::f64::consts::PI))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -408,6 +447,23 @@ mod tests {
         assert!(near(m.apply([587_312.345, 4_400_612.789, 0.0]), t.apply([587_312.345, 4_400_612.789, 0.0])));
         let why = place(Some(&file), 0.001, Ok(&project), Placement::Map).expect_err("a scale its unit does not explain");
         assert!(why.contains("uzunluk biriminin"), "{why}");
+    }
+
+    #[test]
+    fn levels_pair_by_the_nearest_elevation_and_axes_say_their_offset_and_turn() {
+        // Zemin 0, 1. kat 3.00; the file's storeys 0 and 3.15, and a roof storey 6.00 the project has no level for.
+        assert_eq!(
+            pair_levels(&[0.0, 3.0], &[3.15, 0.0, 6.0]),
+            vec![(Some(0), Some(1)), (Some(1), Some(0)), (None, Some(2))]
+        );
+        assert_eq!(pair_levels(&[0.0, 3.0, 6.0], &[0.0]), vec![(Some(0), Some(0)), (Some(1), None), (Some(2), None)]);
+        // Axis A on x = 0; the file's on x = 0.02, turned 1° about its middle.
+        let (off, turn) = axis_offset([[0.0, -2.0], [0.0, 11.0]], [[0.02, -2.0], [0.02, 11.0]]);
+        assert!((off - 0.02).abs() < 1e-12 && turn.abs() < 1e-9, "{off} {turn}");
+        let th = 1.0 * (std::f64::consts::PI / 180.0);
+        let (s, c) = (sin(th), cos(th));
+        let (off, turn) = axis_offset([[0.0, -2.0], [0.0, 11.0]], [[-6.5 * s, 4.5 - 6.5 * c], [6.5 * s, 4.5 + 6.5 * c]]);
+        assert!(off.abs() < 1e-12 && (turn - 1.0).abs() < 1e-9, "{off} {turn}");
     }
 
     #[test]

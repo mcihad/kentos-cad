@@ -807,6 +807,31 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
                 },
             ],
         },
+        // Altlık modeli denetle (docs/adr/8102), held together by fixtures/commands/v1/cad.underlay.check.json.
+        CommandDescriptor {
+            id: crate::CAD_UNDERLAY_CHECK.into(),
+            version: crate::CAD_UNDERLAY_CHECK_VERSION,
+            title: "Altlık modeli denetle".into(),
+            summary: "Bir altlık modeli (statik, tesisat) çizimin kendi modeliyle karşılaştırır; okur, yazmaz. Önce dosyanın çizimin andığı revizyon olduğu (SHA-256'sı) ve yerleştirildiği denetlenir: başka koordinat sistemi ya da yükseklik datumu geometriye bakılmadan model_underlay_not_placed ile durdurur. levels: projenin katları ve dosyanın katları (Elevation, çizimin kotlarında) kota göre en yakını önce eşlenir; fark dosyanınki eksi projeninki, eşsizler ayrı. axes: akslar etiketleriyle; dosyanınkinin projeninkine uzaklığı (m) ve aralarındaki dönme (°), yalnız birinde olan. matched: aynı sınıftan, kutuları tolerans içinde aynı yerde duran eleman sayısı. clashes: dosyanın eşleşmeyen elemanları çizimin bütün elemanlarıyla: kutuları her eksende toleranstan çok örtüşen, yüzeyleri kesişen ya da bir noktası ikisinin de içinde olan çiftler (değen yüzler çakışma değildir); çizimin nesnesi (uid, IFC sınıfı, ad), dosyanınki (GlobalId, sınıf, ad), kutuların örtüşmesi ve biri ötekini bütünüyle içine alıyor mu. unmatched: dosyanın sınıflarından yalnız bir modelde olanlar. Sıralar: kat çiftleri projenin kat sırasıyla, sonra projenin eşsiz katları, sonra dosyanın eşsiz katları (kotu yazılmamış kat kotsuz listelenir); akslar etikete göre; çakışmalar dosyanın sırasıyla, her dosya nesnesininkiler çizimin uid'sine göre; eşleşmeyenler önce çizimin (uid'ye göre), sonra dosyanın (sırasıyla). Harita dönüşümüyle yerleştirilmiş dosyada proje ya da dosya yükseklik datumunu söylemiyorsa kotlar aynı datumda sayılır ve underlay_datum_unsaid uyarısı bunu söyler. tolerance metre, 0,0001 ile 0,5 arası, verilmezse 0,001. Kimlik UUID değilse invalid_uid, altlık yoksa model_underlay_not_found, tolerans aralık dışındaysa invalid_tolerance, dosya yoksa file_not_found, dosya değişmişse model_underlay_changed (önce cad.underlay.edit reload), IFC olarak okunmazsa model_underlay_unreadable."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::UnderlayCheck>(),
+            output: schema::<crate::UnderlayChecked>(),
+            plan: Some(schema::<crate::UnderlayChecked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Statik modeli denetle".into(),
+                input: json!({ "id": "00000000-0000-4000-8000-000000000001" }),
+                output: None,
+            }],
+        },
         // Yangın ve performans (docs/adr/8068), held together by fixtures/commands/v1/cad.arch.performance.json.
         CommandDescriptor {
             id: crate::CAD_ARCH_PERFORMANCE.into(),

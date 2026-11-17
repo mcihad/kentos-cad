@@ -2,9 +2,10 @@
 //! read-only under the drawing. The underlays on the left (DESIGN.md §7.9 Liste ve ayrıntı); on the right the chosen
 //! one: its file (digest, size, schema, placement), what its read gave (the objects shown and the ones that have no
 //! body, with why; how long it took and the memory it holds), its name, discipline and revision, whether it shows, and
-//! the object chosen in the plan or in 3B görünüm with its properties as the file writes them. Every change is
-//! `cad.underlay.edit` (one undo step “Altlık model”); a file whose map conversion cannot place it is said with its
-//! reason and placed at the origin only when asked.
+//! the object chosen in the plan or in 3B görünüm with its properties as the file writes them, and Denetim: the
+//! underlay set beside the drawing's own model (`cad.underlay.check`, underlay_check_view.rs, docs/adr/8102). Every
+//! change is `cad.underlay.edit` (one undo step “Altlık model”); a file whose map conversion cannot place it is said
+//! with its reason and placed at the origin only when asked.
 //!
 //! ```text
 //! ┌ Altlık modeller ──────────────────────────────────────────────────────────────────────────────┐
@@ -48,7 +49,7 @@ pub const RELOAD: &str = "Yeniden oku";
 pub const REMOVE: &str = "Kaldır";
 pub const PICK: &str = "Planda seç";
 const CLOSE: &str = "Kapat";
-const BODY: f32 = 470.0;
+const BODY: f32 = 560.0;
 const LIST: f32 = 380.0;
 const LABELS: f32 = 110.0;
 
@@ -69,6 +70,8 @@ pub(crate) struct Window {
     /// The object chosen in the plan or in 3B görünüm: the underlay's id and the object's index.
     pub object: Option<(String, usize)>,
     pub said: Option<(Kind, String)>,
+    /// Denetim: its tolerance and its last answer.
+    pub check: crate::underlay_check_view::Check,
 }
 
 #[derive(Clone, Debug)]
@@ -86,6 +89,11 @@ pub enum Event {
     Reload,
     Remove,
     Pick,
+    Tolerance(String),
+    Check,
+    Checked(String, Box<crate::underlay_check_view::Outcome>),
+    Tab(crate::underlay_check_view::Tab),
+    Clash(usize),
     Close,
 }
 
@@ -128,11 +136,12 @@ impl App {
         }
         let list = self.underlay_list();
         let first = list.first();
-        let keep = self.arch.underlays_window.take().and_then(|w| w.object);
+        let (keep, check) = self.arch.underlays_window.take().map(|w| (w.object, w.check)).unwrap_or_default();
         self.arch.underlays_window = Some(Window {
             chosen: first.map(|u| u.id.clone()),
             typed: Typed::of(first),
             object: keep,
+            check,
             ..Window::default()
         });
         self.dialog = Some(Dialog::Arch(arch::ArchDialogKind::Underlays));
@@ -287,6 +296,11 @@ impl App {
                 self.dialog = None;
                 self.session.run(Box::new(PickPoint::new("Altlık nesnesi", "Altlığın plandaki çizgisine tıklayın")));
             }
+            Event::Tolerance(t) => w.check.tolerance = t,
+            Event::Check => return self.underlay_check_start(),
+            Event::Checked(id, outcome) => self.underlay_checked(id, *outcome),
+            Event::Tab(t) => w.check.tab = t,
+            Event::Clash(k) => self.underlay_clash_chosen(k),
         }
         Task::none()
     }
@@ -465,7 +479,7 @@ impl App {
                 .spacing(8),
             );
         // What the file holds first (the object chosen, what has no body), then the underlay's own boxes.
-        let mut out = Column::new().spacing(14).push(head).push(facts);
+        let mut out = Column::new().spacing(14).push(head).push(facts).push(self.underlay_check_section(w, &u));
         if let Some(State::Ready(l)) = &state {
             out = out.push(self.underlay_object(w, &u, l));
             if !l.not_shown.is_empty() {
@@ -530,6 +544,9 @@ impl App {
             Control::Press(RELOAD) => Some(msg(Event::Reload)),
             Control::Press(REMOVE) => Some(msg(Event::Remove)),
             Control::Press(PICK) => Some(msg(Event::Pick)),
+            Control::Press(crate::underlay_check_view::CHECK) => Some(msg(Event::Check)),
+            Control::Fill("Tolerans", t) => Some(msg(Event::Tolerance(t.to_owned()))),
+            Control::Row(n) if n >= 1 => Some(msg(Event::Clash(n - 1))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

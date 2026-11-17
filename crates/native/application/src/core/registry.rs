@@ -214,6 +214,7 @@ use crate::{
     arch_audit, arch_edit, arch_exceptions, arch_form_answers, arch_ifc, arch_performance, arch_recognize, beams_create,
     delivery_edit,
     underlay_edit,
+    underlay_check,
     casework_edit,
     ifc_inspect, zoning_parcel,
     casework_query, casework_run, columns_create, columns_distances, elevations_edit,

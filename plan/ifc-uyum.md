@@ -522,7 +522,7 @@ Altlık modeller. İlk kabulün dört adımı masaüstünde elle sınandı (kend
 IFC2X3 örnekleri 14/14; süre ve bellek ölçüldü). **Kalan:** gösterilemeyen nesnenin planda ve 3B'de işareti ve kutusu;
 bulut projesinde dosyanın proje varlığı olarak saklanması; büyük modelde planın arka planda hesaplanması.
 
-#### IFC-10 — Federasyon, karşılaştırma ve sorun değişimi [ ]
+#### IFC-10 — Federasyon, karşılaştırma ve sorun değişimi [~]
 
 **Kullanıcı sonucu:** İki revizyon ya da iki disiplin karşılaştırılır; fark ve çakışma nesnesiyle listelenir; sorun, açık bir
 biçimde karşı tarafa gider ve aynı nesneyi gösterir.
@@ -534,6 +534,10 @@ biçimde karşı tarafa gider ve aynı nesneyi gösterir.
 
 **İlk kabul:** bölüm binasının iki revizyonunda taşınan bir duvar ve değişen bir yangın sınıfı raporda; yazılan sorun
 bağımsız bir görüntüleyicide aynı nesneyi gösterir.
+
+**Durum (17 Kasım 2026):** hizalama denetimi yapıldı ([ADR 8102](../docs/adr/8102-underlay-alignment-and-clash.md),
+BIM-17): sistem, dönüşüm ve datum geometriden önce; katlar, akslar, aynı yerde duran ve çakışan elemanlar. **Kalan:**
+revizyon farkı ve BCF; ilk kabul bunlarla.
 
 #### IFC-11 — Pilot, sürümler ve kurum kabulü [ ]
 

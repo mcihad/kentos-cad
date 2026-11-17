@@ -2479,9 +2479,10 @@
     "arch.underlays": {
       "level": "semantic",
       "via": [
-        "cad.underlay.edit"
+        "cad.underlay.edit",
+        "cad.underlay.check"
       ],
-      "note": "Ekle, Başlangıç noktasına yerleştir, Uygula, Yeniden oku ve Kaldır cad.underlay.edit'e gider; planın ve 3B görünümün gövdeleri dosyadan okunur, çizime yazılmaz (ADR 8101)."
+      "note": "Ekle, Başlangıç noktasına yerleştir, Uygula, Yeniden oku ve Kaldır cad.underlay.edit'e, Denetle cad.underlay.check'e gider (okur, yazmaz); planın ve 3B görünümün gövdeleri dosyadan okunur, çizime yazılmaz (ADR 8101, 8102)."
     },
     "arch.digitalRules": {
       "level": "host",

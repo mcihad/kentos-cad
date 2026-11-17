@@ -115628,6 +115628,163 @@ class UcsSet(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class UnderlayAxisCheck(_Model):
+    """A grid axis by its label: how far the file's stands from the project's (metres) and the turn between them
+    (degrees), when both have it; else which has it.
+    Attributes:
+        offset: Unit: length.
+        turn: Unit: deg.
+    """
+    label: str
+    in_project: bool
+    in_file: bool
+    offset: float | None | Unset = UNSET
+    turn: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["label"] = self.label
+        out["inProject"] = self.in_project
+        out["inFile"] = self.in_file
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.turn is not UNSET:
+            out["turn"] = None if self.turn is None else float(self.turn)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnderlayAxisCheck:
+        return cls(
+            label=data["label"],
+            in_project=data["inProject"],
+            in_file=data["inFile"],
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            turn=UNSET if "turn" not in data else None if data["turn"] is None else float(data["turn"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnderlayCheck(_Model):
+    """Input of `cad.underlay.check` v1: the underlay checked against the drawing's model; two bodies whose boxes overlap by
+    no more than `tolerance` metres on an axis are not looked at, and two elements of one class whose boxes stand within
+    it are the same element.
+
+    Refusals, in this order: `invalid_uid`, `model_underlay_not_found`, `invalid_tolerance` (0.0001 to 0.5 m),
+    `file_not_found`, `model_underlay_changed` (the file is not the revision the drawing names: read it again first),
+    `model_underlay_unreadable`, `model_underlay_not_placed` (another system or height datum stops it before any geometry
+    is looked at).
+    Attributes:
+        tolerance: Unit: length.
+    """
+    id: str
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnderlayCheck:
+        return cls(
+            id=data["id"],
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnderlayChecked(_Model):
+    """Output of `cad.underlay.check` v1: the levels and axes set beside each other, how many elements both models have
+    where they stand, the clashes, what only one model has, the tolerance used, the drawing's revision.
+
+    Orders: the levels' pairs in the project's level order, then the project's unpaired levels, then the file's unpaired
+    storeys (in the file's order); the axes by label; the clashes in the file's order, each file object's by the
+    drawing's persistent id; the unmatched the drawing's first (by persistent id), then the file's (in its order).
+    Attributes:
+        matched: Unit: count.
+        tolerance: Unit: length.
+    """
+    id: str
+    levels: list[UnderlayLevelCheck]
+    axes: list[UnderlayAxisCheck]
+    matched: int
+    clashes: list[UnderlayClash]
+    unmatched: list[UnderlayUnmatched]
+    tolerance: float
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["levels"] = [e0.to_json() for e0 in self.levels]
+        out["axes"] = [e0.to_json() for e0 in self.axes]
+        out["matched"] = self.matched
+        out["clashes"] = [e0.to_json() for e0 in self.clashes]
+        out["unmatched"] = [e0.to_json() for e0 in self.unmatched]
+        out["tolerance"] = float(self.tolerance)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnderlayChecked:
+        return cls(
+            id=data["id"],
+            levels=[UnderlayLevelCheck.from_json(e0) for e0 in data["levels"]],
+            axes=[UnderlayAxisCheck.from_json(e0) for e0 in data["axes"]],
+            matched=data["matched"],
+            clashes=[UnderlayClash.from_json(e0) for e0 in data["clashes"]],
+            unmatched=[UnderlayUnmatched.from_json(e0) for e0 in data["unmatched"]],
+            tolerance=float(data["tolerance"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnderlayClash(_Model):
+    """A clash: the drawing's object (its persistent id, IFC class and name) and the file's (its GlobalId, class and name),
+    their boxes' overlap in the drawing (x, y, z from, x, y, z to) and whether one holds the other whole.
+    Attributes:
+        overlap: Unit: length.
+    """
+    uid: str
+    class_: str
+    name: str
+    object: str
+    object_class: str
+    overlap: list[float]
+    inside: bool
+    object_name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["class"] = self.class_
+        out["name"] = self.name
+        out["object"] = self.object
+        out["objectClass"] = self.object_class
+        out["overlap"] = [float(e0) for e0 in self.overlap]
+        out["inside"] = self.inside
+        if self.object_name is not UNSET:
+            out["objectName"] = self.object_name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnderlayClash:
+        return cls(
+            uid=data["uid"],
+            class_=data["class"],
+            name=data["name"],
+            object=data["object"],
+            object_class=data["objectClass"],
+            overlap=[float(e0) for e0 in data["overlap"]],
+            inside=data["inside"],
+            object_name=data.get("objectName", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class UnderlayEdit(_Model):
     """Input of `cad.underlay.edit` v1.
 
@@ -115681,6 +115838,47 @@ class UnderlayEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class UnderlayLevelCheck(_Model):
+    """A project level and the file's storey paired with it by elevation (the drawing's heights, metres): either may be
+    missing; the difference is the storey's less the level's. A storey whose file says no elevation is listed alone,
+    without one.
+    Attributes:
+        difference: Unit: length.
+        file: Unit: elevation.
+        project: Unit: elevation.
+    """
+    difference: float | None | Unset = UNSET
+    file: float | None | Unset = UNSET
+    level: str | None | Unset = UNSET
+    project: float | None | Unset = UNSET
+    storey: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.difference is not UNSET:
+            out["difference"] = None if self.difference is None else float(self.difference)
+        if self.file is not UNSET:
+            out["file"] = None if self.file is None else float(self.file)
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.project is not UNSET:
+            out["project"] = None if self.project is None else float(self.project)
+        if self.storey is not UNSET:
+            out["storey"] = self.storey
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnderlayLevelCheck:
+        return cls(
+            difference=UNSET if "difference" not in data else None if data["difference"] is None else float(data["difference"]),
+            file=UNSET if "file" not in data else None if data["file"] is None else float(data["file"]),
+            level=data.get("level", UNSET),
+            project=UNSET if "project" not in data else None if data["project"] is None else float(data["project"]),
+            storey=data.get("storey", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class UnderlayLook(_Model):
     """How a PDF underlay looks (docs/adr/0351 §2).
     Attributes:
@@ -115708,6 +115906,36 @@ class UnderlayLook(_Model):
             fade=data.get("fade", UNSET),
             monochrome=data.get("monochrome", UNSET),
             plot=data.get("plot", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnderlayUnmatched(_Model):
+    """An element of a class both models have that only one of them has where it stands: the drawing's (its persistent
+    id) or the file's (its GlobalId), its class and name.
+    """
+    class_: str
+    name: str
+    object: str | None | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["class"] = self.class_
+        out["name"] = self.name
+        if self.object is not UNSET:
+            out["object"] = self.object
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnderlayUnmatched:
+        return cls(
+            class_=data["class"],
+            name=data["name"],
+            object=data.get("object", UNSET),
+            uid=data.get("uid", UNSET),
         )
 
 
@@ -147938,12 +148166,18 @@ __all__ = [
     "UcsSet",
     "UcsTo",
     "UnbreakDimensionEdit",
+    "UnderlayAxisCheck",
     "UnderlayChange",
+    "UnderlayCheck",
+    "UnderlayChecked",
+    "UnderlayClash",
     "UnderlayEdit",
     "UnderlayEdited",
+    "UnderlayLevelCheck",
     "UnderlayLook",
     "UnderlayPlacement",
     "UnderlayPlacementName",
+    "UnderlayUnmatched",
     "UnderlayXrefsOperation",
     "UnfieldTableEdit",
     "UngroupPaperOp",

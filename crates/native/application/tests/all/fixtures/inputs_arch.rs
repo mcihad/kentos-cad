@@ -543,6 +543,13 @@ impl Input for kentos_commands::UnderlayEdit {
     }
 }
 
+impl Input for kentos_commands::UnderlayCheck {
+    /// `tolerance` (docs/adr/8102).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        (path == "tolerance").then_some(self.tolerance.as_mut()).flatten()
+    }
+}
+
 impl Input for kentos_commands::ZoningParcel {
     /// `tolerance` (docs/adr/8072 §5).
     fn number(&mut self, path: &str) -> Option<&mut f64> {

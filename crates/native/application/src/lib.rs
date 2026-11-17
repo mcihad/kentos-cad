@@ -1259,6 +1259,9 @@ pub mod delivery_edit;
 #[cfg(feature = "mod-arch")]
 #[path = "arch/underlay_edit.rs"]
 pub mod underlay_edit;
+#[cfg(feature = "mod-arch")]
+#[path = "arch/underlay_check.rs"]
+pub mod underlay_check;
 #[path = "arch/delivery_compare.rs"]
 pub mod delivery_compare;
 // Parselin plan kararları (docs/adr/8072 §5): the zoning plan read for the building's parcel, Mimari's.
@@ -2188,6 +2191,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_UNDERLAY_EDIT,
         kentos_commands::CAD_UNDERLAY_EDIT_VERSION,
+    ),
+    // Altlık modeli denetle ([`underlay_check`], docs/adr/8102).
+    (
+        kentos_commands::CAD_UNDERLAY_CHECK,
+        kentos_commands::CAD_UNDERLAY_CHECK_VERSION,
     ),
     // Parselin plan kararları ([`zoning_parcel`], docs/adr/8072 §5).
     (
