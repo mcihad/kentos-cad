@@ -350,7 +350,7 @@ Nesneleri BIM-08 ve BIM-09'dan gelir.
 zonların alanı kat ve sınıf bazında Emsal ve TAKS tablosuyla uyumlu. İki katta birbirini dengeleyen alan farkı genel
 toplam eşit kalsa da bulgu verir. Bağımsız okuyucu 0 bulgu verir ve kayıp listesi boştur.
 
-#### IFC-04 — Tipler, katmanlı malzeme ve ilişkiler [ ]
+#### IFC-04 — Tipler, katmanlı malzeme ve ilişkiler [~]
 
 **Kullanıcı sonucu:** Karşı programda duvar stili bir tip, katmanları sırası ve kalınlığıyla görünür. Verisi BIM-12'den gelir;
 uyum için şart değildir.
@@ -361,6 +361,12 @@ uyum için şart değildir.
 
 **İlk kabul:** bir duvar stili tek tip olarak yazılır ve bütün duvarları ona bağlıdır; katmanlar sırasıyla ve kalınlığıyla
 bağımsız okuyucuda okunur.
+
+**Durum (17 Kasım 2026, [ADR 8105](../docs/adr/8105-wall-style-types-and-layer-sets.md)):** ilk kabul sağlandı: her duvar
+stili bir `IfcWallType`, duvarları `IfcRelDefinesByType` ile ona bağlı, tipler `IfcRelDeclares` ile projede; her duvarın
+katman takımı (sol yüzden sağa, adı, malzemesi, kalınlığı), aynı takım paylaşılır. IfcOpenShell kesit binasında iki tipi,
+8'er duvarı ve katmanları sırasıyla okur. **Kalan:** kolon, döşeme, kiriş, çatı tipleri (BIM-12), katman takımının
+kullanımı (duvarlar kendi eksen çerçevesinde yazılınca), çok kata uzanan elemanın başvuruları.
 
 #### IFC-05 — Konum, kot, çok bina ve projenin ortak alanları [x]
 

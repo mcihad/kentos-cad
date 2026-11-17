@@ -2137,6 +2137,69 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             _ => None,
         })
         .collect();
+    // The walls' layers and their styles' types (docs/adr/8105, IFC-04): each wall its own components as a material
+    // layer set, from its left face towards its right, each layer its name, its material (as the model names materials:
+    // Ad_Dayanım) and its thickness at the wall's width; each wall style its `IfcWallType`, its set the style's
+    // components at the style's own width, the style's walls typed by it. A wall whose set is the style's shares it.
+    let mut layer_sets = layer_sets;
+    let mut types: Vec<crate::building::TypeObject> = Vec::new();
+    // The style each type is of, beside it.
+    let mut type_styles: Vec<String> = Vec::new();
+    let layers_of = |components: &[WallComponent], width: f64| -> Option<Vec<crate::building::Layer>> {
+        let thick = kentos_contracts::component_thicknesses(width, components)?;
+        let layers: Vec<crate::building::Layer> = components
+            .iter()
+            .zip(thick)
+            .map(|(c, t)| crate::building::Layer {
+                name: c.name.clone(),
+                material: c.material.clone().map(|m| material_named(m, arch)),
+                thickness: t,
+                category: None,
+            })
+            .collect();
+        (!layers.is_empty()).then_some(layers)
+    };
+    for (owner, &k) in &index {
+        let Some(&(_, Entity::Wall(w))) = by_uid.get(owner) else { continue };
+        if elements.get(k).is_none_or(|e| e.class != Class::Wall) || layer_sets.iter().any(|(i, ..)| *i == k) {
+            continue;
+        }
+        let Some(layers) = layers_of(&w.wall.components, w.wall.width) else { continue };
+        let style = w.wall.style.as_deref();
+        let set_name = Some(wall_style_name(style)).filter(|n| !n.trim().is_empty()).unwrap_or_else(|| "Duvar katmanları".into());
+        layer_sets.push((k, set_name, layers));
+        let Some(id) = style else { continue };
+        match type_styles.iter().position(|s| s == id) {
+            Some(at) => types[at].members.push(k),
+            None => {
+                type_styles.push(id.to_owned());
+                let def = wall_styles
+                    .iter()
+                    .find(|d| d.id == id)
+                    .cloned()
+                    .or_else(|| kentos_contracts::builtin_wall_styles().into_iter().find(|d| d.id == id));
+                let layer_set = def
+                    .as_ref()
+                    .and_then(|d| layers_of(&d.components, d.new_width()))
+                    .map(|l| (wall_style_name(Some(id)), l));
+                let seed = match &scope {
+                    Some(b) => format!("kentos-duvar-tipi:{}:{id}", b.id),
+                    None => format!("kentos-duvar-tipi:{id}"),
+                };
+                types.push(crate::building::TypeObject {
+                    entity: "IFCWALLTYPE",
+                    id: crate::step::fnv(&seed, 0),
+                    name: wall_style_name(Some(id)),
+                    predefined: "STANDARD",
+                    layer_set,
+                    members: vec![k],
+                });
+            }
+        }
+    }
+    for t in &mut types {
+        t.members.sort_unstable();
+    }
     let building = Building {
         view: Default::default(),
         // One building's file (docs/adr/8072 §2): its stem its own (EK-2: its code), so its own GlobalIds; the project's
@@ -2217,6 +2280,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         true_north: north.as_ref().ok().map(|a| [-crate::math::sin(*a), crate::math::cos(*a)]),
         north_why: north.err(),
         layer_sets,
+        types,
         zero,
     };
     (building, written)

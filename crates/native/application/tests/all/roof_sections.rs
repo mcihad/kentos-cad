@@ -888,8 +888,13 @@ fn a_layered_roof_is_its_layers_plates_cut_in_the_section_and_one_ifc_layer_set(
     );
     assert_eq!(kentos_ifc::closed::open_bodies(&bld), Vec::<(String, String)>::new());
     let f = kentos_ifc::building::write(&bld);
-    assert_eq!(f.matches("IFCMATERIALLAYER(").count(), 5);
-    assert_eq!(f.matches("IFCMATERIALLAYERSET(").count(), 1);
+    // The roof's own set (its name “Çatı katmanları”, STEP's \X2\ for its Ç and ı): one, of its five layers. The
+    // walls' layer sets (docs/adr/8105) are theirs.
+    let roof_sets: Vec<&str> =
+        f.lines().filter(|l| l.contains("IFCMATERIALLAYERSET(") && l.contains("'\\X2\\00C7\\X0\\at")).collect();
+    assert_eq!(roof_sets.len(), 1, "{roof_sets:?}");
+    let refs = roof_sets[0].split("((").nth(1).and_then(|r| r.split(')').next()).unwrap_or_default();
+    assert_eq!(refs.split(',').count(), 5, "{}", roof_sets[0]);
     if std::env::var_os("KENTOS_WRITE_IFC_ROOF_LAYERS").is_some() {
         let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc/katmanli-cati.ifc");
         std::fs::write(out, f).expect("the file kept");

@@ -391,6 +391,9 @@ pub struct Building {
     /// The layered elements' material layer sets (docs/adr/8071 §8): an element (by its index), its set's name and its
     /// layers top down, in place of a single material.
     pub layer_sets: Vec<(usize, String, Vec<Layer>)>,
+    /// The element types (docs/adr/8105; IFC 4.3 `IfcTypeObject`): each a wall style's `IfcWallType`, its layer set and
+    /// the elements it types.
+    pub types: Vec<TypeObject>,
     pub crs: Option<Crs>,
     /// Why the model has no system when it has none (docs/adr/8072 §3): the export says it, EK-9's sixth question
     /// answers with it.
@@ -402,6 +405,20 @@ pub struct Building {
     /// The building's ±0.00 over the site's (the project's ±0.00), metres (docs/adr/8072 §2): its placement there, its
     /// storeys' elevations over it.
     pub zero: f64,
+}
+
+/// An element type (docs/adr/8105; IFC 4.3 `IfcTypeObject`, `IfcRelDefinesByType`): its STEP entity (`IFCWALLTYPE`),
+/// its KentOS id (its GlobalId's 128 bits), its name and predefined type, its material layer set (its name and layers;
+/// a member whose own set is the same shares it) and its occurrences by index into [`Building::elements`]. It is
+/// declared in the project (`IfcRelDeclares`).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct TypeObject {
+    pub entity: &'static str,
+    pub id: u128,
+    pub name: String,
+    pub predefined: &'static str,
+    pub layer_set: Option<(String, Vec<Layer>)>,
+    pub members: Vec<usize>,
 }
 
 /// A layer of an element's material layer set (docs/adr/8071 §8; IFC 4.3 `IfcMaterialLayer`).
@@ -1257,11 +1274,13 @@ pub fn write(b: &Building) -> String {
         ));
     }
     // The layered elements' sets (docs/adr/8071 §8): a material for each name once, a layer for each with its thickness,
-    // its name and its role; a layer's material not given stays unsaid.
-    for (i, n) in sets {
-        let Some((_, name, layers)) = b.layer_sets.iter().find(|(k, ..)| *k == i) else {
-            continue;
-        };
+    // its name and its role; a layer's material not given stays unsaid. A set the same as another (its name and layers)
+    // is written once and shared (docs/adr/8105: a wall style's type and its walls).
+    let mut written_sets: Vec<((String, Vec<Layer>), usize)> = Vec::new();
+    let mut set_of = |w: &mut Writer, name: &str, layers: &[Layer], material_ids: &mut Vec<(String, usize)>| -> usize {
+        if let Some((_, id)) = written_sets.iter().find(|((n, l), _)| n == name && l.as_slice() == layers) {
+            return *id;
+        }
         let refs: Vec<usize> = layers
             .iter()
             .map(|l| {
@@ -1285,8 +1304,50 @@ pub fn write(b: &Building) -> String {
             })
             .collect();
         let set = w.st.add(format!("IFCMATERIALLAYERSET(({}),{},$)", Step::refs(&refs), text(name)));
+        written_sets.push(((name.to_owned(), layers.to_vec()), set));
+        set
+    };
+    let mut by_set: Vec<(usize, Vec<usize>)> = Vec::new();
+    for (i, n) in sets {
+        let Some((_, name, layers)) = b.layer_sets.iter().find(|(k, ..)| *k == i) else {
+            continue;
+        };
+        let set = set_of(&mut w, name, layers, &mut material_ids);
+        match by_set.iter_mut().find(|(s, _)| *s == set) {
+            Some((_, list)) => list.push(n),
+            None => by_set.push((set, vec![n])),
+        }
+    }
+    for (set, list) in &by_set {
         let g = w.st.gid();
-        w.st.add(format!("IFCRELASSOCIATESMATERIAL({g},$,$,$,(#{n}),#{set})"));
+        w.st.add(format!("IFCRELASSOCIATESMATERIAL({g},$,$,$,({}),#{set})", Step::refs(list)));
+    }
+    // The element types (docs/adr/8105): each its own GlobalId, its layer set associated, its occurrences typed by it
+    // (`IfcRelDefinesByType`), all declared in the project (`IfcRelDeclares`).
+    let mut declared: Vec<usize> = Vec::new();
+    for t in &b.types {
+        let g = crate::step::guid(t.id);
+        let n = w.st.add(format!(
+            "{}('{g}',$,{},$,$,$,$,$,$,.{}.)",
+            t.entity,
+            text(&t.name),
+            t.predefined
+        ));
+        declared.push(n);
+        if let Some((name, layers)) = &t.layer_set {
+            let set = set_of(&mut w, name, layers, &mut material_ids);
+            let g = w.st.gid();
+            w.st.add(format!("IFCRELASSOCIATESMATERIAL({g},$,$,$,(#{n}),#{set})"));
+        }
+        let members: Vec<usize> = t.members.iter().filter_map(|&i| products.get(i).copied()).filter(|&n| n != 0).collect();
+        if !members.is_empty() {
+            let g = w.st.gid();
+            w.st.add(format!("IFCRELDEFINESBYTYPE({g},$,$,$,({}),#{n})", Step::refs(&members)));
+        }
+    }
+    if !declared.is_empty() {
+        let g = w.st.gid();
+        w.st.add(format!("IFCRELDECLARES({g},$,$,$,#{project},({}))", Step::refs(&declared)));
     }
     // The header says what the bodies are (docs/adr/8047, 8071 §4): Design Transfer, an opening's body subtracted from
     // its wall's by the reader (IFC 4.3, IfcRelVoidsElement: a 'Body' opening is a Boolean difference); a Reference View

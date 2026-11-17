@@ -354,6 +354,9 @@
     pafta (PDF/A-2, taranmış sayfa, kaynak revizyonu), model (okuma, şema, formun soruları, nesneleriyle), konum (idarenin
     EPSG'si), form (müellifin cevabı ölçülenle). Olgular Rust'ta, karar `dijital_proje.inceleme`'de. İade notu BCF ve yazı;
     Modelde göster IFC görüntüleyicide nesneyi seçer.
+  - **Duvar stili IFC'de tip (17 Kasım 2026; [ADR 8105](../adr/8105-wall-style-types-and-layer-sets.md), K179–K181):**
+    her duvar stili bir `IfcWallType`, duvarları ona bağlı (`IfcRelDefinesByType`, `IfcRelDeclares`); her duvarın katman
+    takımı sol yüzden sağa, aynı takım paylaşılır; `IfcMaterialLayerSetUsage` duvarlar eksen çerçevesinde yazılınca.
   - **Künye role göre (17 Kasım 2026; [ADR 8100](../adr/8100-kunye-personal-particulars-by-role.md), K152–K156):** bulut
     projesinde künyenin kişisel bilgilerini (13 değişken: yapı sahibi, müellif, sicil, büro, tapu kaydı …; teslim eden)
     yalnız `feature.write` sahibi görür (`ProjectAccess::sees_particulars`); öbürleri bilgide ve anlık görüntüde "Gizli"
