@@ -51,6 +51,7 @@ mod panel_view;
 mod panels;
 mod workshop;
 mod problems;
+mod report;
 mod ribbon;
 pub(crate) mod runner;
 mod search;

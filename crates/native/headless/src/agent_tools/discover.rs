@@ -284,3 +284,20 @@ pub(super) fn extension(host: &mut dyn Host, args: &Value) -> Result<Value, Head
     );
     Ok(out)
 }
+
+/// `extension.report`: an installed extension's debugging report as its manager copies it (docs/adr/8057 §110), the
+/// desktop's; a drawing of the server's own says where the extensions are.
+pub(super) fn report(host: &mut dyn Host, id: &str) -> Result<Value, HeadlessError> {
+    host.request("extension_report", &json!({ "id": id }))
+        .map_err(|e| {
+            if e.code == "unknown_method" {
+                HeadlessError::new(
+                    "not_offered",
+                    "Kurulu eklentiler KentOS masaüstündedir: rapor Asistan'da ya da masaüstüne bağlı ajanda (MCP'de \
+                     desktop.attach) okunur.",
+                )
+            } else {
+                e
+            }
+        })
+}

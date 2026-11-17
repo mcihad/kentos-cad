@@ -343,6 +343,29 @@ impl App {
             "audits" => return Ok(self.ext_audit_rules()),
             // The installed extensions for the agents' common catalog (extensions/catalog_agents.rs, §109).
             "extensions" => return Ok(self.ext_catalog()),
+            // An extension's debugging report (extensions/report.rs, §110): its keys hidden; its words through the
+            // agent's veil, as an extension's findings go (§103).
+            "extension_report" => {
+                let id = params
+                    .get("id")
+                    .and_then(Value::as_str)
+                    .ok_or_else(|| refused("invalid_request", "id gerekli: eklentinin kimliği."))?;
+                let report = self.extension_report(id).ok_or_else(|| {
+                    refused(
+                        "unknown_extension",
+                        &format!("“{id}” kurulu bir eklenti değil: catalog.search kurulu eklentileri bulur."),
+                    )
+                })?;
+                let answer = json!({ "id": id, "report": report });
+                let veil = self
+                    .document
+                    .as_ref()
+                    .and_then(|d| kentos_headless::Veil::for_agent(&d.model, everything));
+                return Ok(match veil {
+                    Some(veil) => veil.cut(answer),
+                    None => answer,
+                });
+            }
             "audit_report" => {
                 let offset = params.get("offset").and_then(Value::as_u64).unwrap_or(0);
                 let report = self.ext_audit_report(usize::try_from(offset).unwrap_or(usize::MAX));

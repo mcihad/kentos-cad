@@ -5343,3 +5343,38 @@ incelemesi, panel, form, atölye ön izlemesi).
   boş tanım isteği; çağrı sözü); masaüstü 1 (Vitrin kurulu: gereksinimler, yetenekler başlık ve izinle, parçalar ve
   kullanımları, arayüz parçaları dışarıda; Asistan'ın kapısından arama ve tanım, bilinmeyen eklenti); eklenti paketi 1
   (gereksinimler yazıldığı gibi, boş ve okunmayan proje).
+
+## §110. Hata ayıklama raporu: ortam, kaynak sürümleri, şemalar, kodun anlamı; anahtarsız (API ailesi, ECO-API-14)
+
+**17 Kasım.** Kod: masaüstü `extensions/report.rs` (yeni: rapor `problems.rs`'ten taşındı ve genişledi),
+`python/agents.rs` (bağlantının `extension_report` isteği); headless `agent_tools.rs` (`extension.report`),
+`agent_tools/discover.rs` (`report`); eklenti paketi `secrets.rs` (`masked`, sırların yerleri); sınamalar
+`extensions/tests/report.rs` (yeni), `secrets.rs`'in sınaması.
+
+- **Sorun.** ECO-API-14 "hata ayıklama raporu sır içermeden ortam özeti, kaynak sürümleri, şemalar ve hata kodunu
+  toplar" der. Eklentiler'in Raporu kopyala'sı kimliği, durumu, kaynağı, programın sürümünü ve son kayıtları veriyordu
+  ama Python'u, uv'yi, eklentinin ortamını ve gereksinimlerini, paket özetini, yazıldığı şemayı ve protokolü, kodun
+  anlamını vermiyordu; eklentinin iletisi ya da Python'un izi bir anahtar ve kullanıcının ev klasörü taşıyabiliyordu ve
+  rapor bunları olduğu gibi kopyalıyordu. Ajan raporu okuyamıyordu: kullanıcının kopyalayıp yapıştırması gerekiyordu.
+- **Karar: rapor dört bölüm.** Kimlik: ad, durum, yayımcı, kaynak, güven, bu bilgisayardaki sürümler, **paket özeti**
+  (`sha256:…`), **manifest** (`kentos.extension` şeması, eklenti protokolü aralığı ve bu KentOS'unki, KentOS sürüm
+  aralığı), katman şeması dosyası, günlük dosyası. **Ortam:** program ve sürümü, sistem ve mimari, KentOS'un Python'u
+  (sürümü ya da neden hazır olmadığı), uv (sürümü, KentOS'la gelip gelmediği ya da neden yok), eklentinin Python
+  gereksinimleri (projesinin yazdığı gibi) ve ortamının hazır olup olmadığı, yetenekler (kaç istendi, kaç verildi,
+  verilmeyenler kurulum penceresinin sözleriyle). **Sorun:** duran hata, kodu ve kodun anlamı (yanıt kodları
+  tablosundan), Python'un izi. **Son kayıtlar.**
+- **Sır yok:** raporun tamamı sır tarayıcısından geçer (`secrets::masked`, paketlemenin ve kataloğun aynı biçim
+  kuralları): sağlayıcı anahtarı, adresteki parola, özel anahtar zırhı bütün hâlinde `‹… gizlendi›` olur; ev klasörü `~`
+  yazılır. Tarayıcı artık yalnız satırı değil gizlenecek aralığı da bilir (adreste yalnız parola, zırhta END satırına
+  dek).
+- **Ajan:** `extension.report` (yalnız okur) aynı raporu verir; Asistan'ın ve masaüstü bağlantısındaki ajanın kapısı
+  aynı (`extension_report`). Rapordaki sözler eklentinindir: ajanın örtüsünden geçer (eklentinin denetim bulguları gibi,
+  §103). Sunucunun kendi çiziminde `not_offered`.
+- **Gerçek pencere** (DeepSeek, sentetik Vitrin): "Vitrin eklentisinin raporunu oku, ortamı hazır mı ve duran bir hatası
+  var mı?" `catalog.search` ve `extension.report` ile doğru yanıtlandı (Python 3.12.13, ortam hazır, gereksinimler, 12
+  yeteneğin 12'si verilmiş, duran hata yok; 37 133 token). Sınama sürücüsü `:` karakterini sohbete yazamıyor (tuş olayı
+  yazılmadan genel kısayola düşüyor, Birleşim penceresi açıldı); istekler `:` içermeden yazıldı.
+- **Sınamalar:** masaüstü 1 (Vitrin kurulu, iletisinde anahtar ve izinde ev klasörü olan bir hata: bölümler, paket
+  özeti, manifest şeması, gereksinimler, yetenekler, kodun anlamı; anahtar ve ev klasörü raporda yok; Asistan'ın
+  kapısından aynı rapor, bilinmeyen eklenti); eklenti paketi 1 (anahtar, adresteki parola, özel anahtar zırhı gizlenir,
+  düz metin olduğu gibi kalır).

@@ -19,6 +19,7 @@ mod catalog;
 mod demo;
 mod l10n;
 mod python;
+mod report;
 mod submit;
 
 fn temp(name: &str) -> PathBuf {

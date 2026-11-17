@@ -156,7 +156,7 @@ fn stands_in(password: &str) -> bool {
 }
 
 /// The places of a password written into an address (`postgresql://cbs:…@10.0.0.5/kent`), with the address's start.
-fn passwords_in_addresses(text: &str) -> Vec<usize> {
+fn passwords_in_addresses(text: &str) -> Vec<(usize, std::ops::Range<usize>)> {
     let bytes = text.as_bytes();
     let mut out = Vec::new();
     let mut from = 0;
@@ -176,11 +176,13 @@ fn passwords_in_addresses(text: &str) -> Vec<usize> {
         let Some((user_info, _)) = rest[..end].rsplit_once('@') else {
             continue;
         };
-        let Some((_, password)) = user_info.split_once(':') else {
+        let Some((user, password)) = user_info.split_once(':') else {
             continue;
         };
         if !password.is_empty() && !stands_in(password) && start < bytes.len() {
-            out.push(start);
+            // The address's place (its line) and the password's own (what is hidden).
+            let begins = from + user.len() + 1;
+            out.push((start, begins..begins + password.len()));
         }
     }
     out
@@ -218,8 +220,36 @@ fn placeholder(body: &str) -> bool {
 
 /// The keys in `text`, in their order; each place once.
 pub fn found(text: &str) -> Vec<Found> {
+    spans(text)
+        .into_iter()
+        .map(|(i, _, words)| Found {
+            words,
+            line: text[..i].bytes().filter(|b| *b == b'\n').count() + 1,
+        })
+        .collect()
+}
+
+/// `text` with every key in it written as hidden (‹API anahtarı gizlendi›): a report sent to a publisher or to an
+/// agent carries no key the extension or its error wrote (plan/eklenti.md ADIM 21, ECO-API-14; docs/adr/8057 §110).
+pub fn masked(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut at = 0;
+    for (_, hidden, words) in spans(text) {
+        if hidden.start < at {
+            continue;
+        }
+        out.push_str(&text[at..hidden.start]);
+        out.push_str(&format!("‹{words} gizlendi›"));
+        at = hidden.end;
+    }
+    out.push_str(&text[at..]);
+    out
+}
+
+/// Each key in `text`: where it stands (its line's place), what of it is hidden and its kind in words; in order.
+fn spans(text: &str) -> Vec<(usize, std::ops::Range<usize>, &'static str)> {
     let bytes = text.as_bytes();
-    let mut out: Vec<(usize, &'static str)> = Vec::new();
+    let mut out: Vec<(usize, std::ops::Range<usize>, &'static str)> = Vec::new();
     let mut taken: Vec<(usize, usize)> = Vec::new();
     for f in FORMS {
         let mut from = 0;
@@ -241,13 +271,13 @@ pub fn found(text: &str) -> Vec<Found> {
                 continue;
             }
             taken.push((i, start + run));
-            out.push((i, f.words));
+            out.push((i, i..start + run, f.words));
         }
     }
     // A password written into an address: a database's, a package index's (docs/adr/8057 §100).
-    for at in passwords_in_addresses(text) {
+    for (at, hidden) in passwords_in_addresses(text) {
         if !taken.iter().any(|(a, b)| at >= *a && at < *b) {
-            out.push((at, "bağlantı adresindeki parola"));
+            out.push((at, hidden, "bağlantı adresindeki parola"));
         }
     }
     // A private key's armour: “-----BEGIN … PRIVATE KEY-----” (RSA, EC, OPENSSH, ENCRYPTED, PKCS#8).
@@ -256,16 +286,18 @@ pub fn found(text: &str) -> Vec<Found> {
         from = i + 11;
         let line_end = text[i..].find('\n').map_or(text.len(), |n| i + n);
         if text[i..line_end].contains("PRIVATE KEY-----") {
-            out.push((i, "özel anahtar"));
+            // The whole armour to its END line, or to the text's end when it has none.
+            let end = text[line_end..]
+                .find("-----END ")
+                .map(|n| line_end + n)
+                .map_or(text.len(), |e| {
+                    text[e..].find('\n').map_or(text.len(), |n| e + n)
+                });
+            out.push((i, i..end, "özel anahtar"));
         }
     }
-    out.sort_by_key(|(i, _)| *i);
-    out.into_iter()
-        .map(|(i, words)| Found {
-            words,
-            line: text[..i].bytes().filter(|b| *b == b'\n').count() + 1,
-        })
-        .collect()
+    out.sort_by_key(|(i, ..)| *i);
+    out
 }
 
 /// Findings shown for one file at most; the rest are counted in the last.
@@ -544,5 +576,40 @@ mod tests {
         assert_eq!(gate.len(), 1);
         assert_eq!((gate[0].0.as_str(), gate[0].1), ("README.md", 1));
         assert!(gate[0].2.contains("Anthropic API anahtarı") && !gate[0].2.contains(&key));
+    }
+
+    /// A report's text with its keys written as hidden, the rest as it was (docs/adr/8057 §110): a provider's key, a
+    /// password in an address, a private key's armour whole.
+    #[test]
+    fn a_key_is_hidden_in_a_report() {
+        let key = format!("{}{}", "sk-p", "roj-") + &body(48, ALNUM);
+        let armour = format!(
+            "-----BEGIN {} KEY-----\n{}\n-----END {} KEY-----",
+            "PRIVATE",
+            body(40, ALNUM),
+            "PRIVATE"
+        );
+        let text = format!(
+            "Hata: istek reddedildi ({key}).\nAdres: postgres://ayse:{}@db.ornek.bel.tr/cbs\n{armour}\nson satır",
+            body(12, ALNUM)
+        );
+        let hidden = masked(&text);
+        assert!(!hidden.contains(&key), "{hidden}");
+        assert!(
+            hidden.contains("‹OpenAI API anahtarı gizlendi›"),
+            "{hidden}"
+        );
+        assert!(
+            hidden.contains(
+                "postgres://ayse:‹bağlantı adresindeki parola gizlendi›@db.ornek.bel.tr/cbs"
+            ),
+            "{hidden}"
+        );
+        assert!(
+            hidden.contains("‹özel anahtar gizlendi›\nson satır"),
+            "{hidden}"
+        );
+        assert!(!hidden.contains("PRIVATE KEY"));
+        assert_eq!(masked("Anahtar yok, düz metin."), "Anahtar yok, düz metin.");
     }
 }

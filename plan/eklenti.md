@@ -1251,8 +1251,11 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   girmez [ECO-API-13]; hata ayıklama raporu sır içermeden ortam özeti, kaynak sürümleri, şemalar ve hata kodunu toplar
   [ECO-API-14]; kapsam manifesti UI/komut/Python/AI/web/masaüstü/mobil/başsız ve seçenek düzeyinde tamlığı ölçer
   [ECO-API-06].
-  — *kısmen: `extension.*` doğrulama, iskelet, SDK ve atölye araçları, katalog uçları (ADR 8059 §10); kalan: adların
-  SDK uyumluluk ADR'sinde kesinleşmesi ve listenin geri kalanı.*
+  — *kısmen: `extension.*` doğrulama, iskelet, SDK ve atölye araçları, katalog uçları (ADR 8059 §10); hata ayıklama
+  raporu (ADR 8057 §110, 17 Kasım): ortam (Python, uv, eklentinin ortamı ve gereksinimleri, yetenekler), paket özeti,
+  manifest şeması ve protokol, duran hatanın kodu ve anlamı; anahtarlar ve ev klasörü gizli; ajan `extension.report`
+  ile okur [ECO-API-14]; keşif ortak katalogda (§109) [ECO-API-07'nin keşif kısmı]; kalan: adların SDK uyumluluk
+  ADR'sinde kesinleşmesi ve listenin geri kalanı.*
 - [ ] **Derslerden (13 Kasım):**
   - **Yazılı SDK kararlılık politikası** (QEP 425 benzeri ADR, ADIM 19'un başında): kararlı yüzey yalnız ana sürümde
     kırılır, kaldırmadan önce en az bir sürüm "eskiyor" uyarısı; deneysel yüzeyler yalnız geliştirici ortamında açılır
