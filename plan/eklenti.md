@@ -1548,6 +1548,26 @@ yetkileri yönetici `kentosd extension-catalog` ile verir, yayımlanan sürümü
   yapay zekâ yapılandırması/ikili; 150 noktada kesme, bit çevirme ve sıfırlamayla paniksiz.*
 - [ ] İsteğe bağlılık/uv/Python/paket kurulumu sahte taşıma ve temiz profille [ECO-QA-03]; Windows/macOS/Linux, ABI,
   mimari/yerel tekerlek ve çevrimdışı önbellek matrisiyle kurma/çalıştırma duman testi [ECO-QA-04].
+  — *ECO-QA-03 17 Kasım'da gözden geçirildi, karşılanmış:
+  - İsteğe bağlılık: Python kullanıcı açana dek kapalı kalır (`the_choice_is_off_until_the_user_turns_it_on_and_is_kept`).
+    Python katkıları seçimi bekler, Python'suz katkılar kaydolur
+    (`python_contributions_wait_for_the_choice_and_a_working_folder_reloads_cleanly`). Python'u hazır olmayan
+    eklentinin düğmesi "bekliyor" der (§12, §122).
+  - uv ve Python sahte uv ile sınanır (`python-env`):
+    - kurulur ve durdurulur, hatası nedeniyle söylenir, kaldırılır;
+    - uv kabuksuz ve süreli çalışır, sürümü denetlenir;
+    - kişisel ortamın değişikliği önce yanda önizlenir;
+    - eklenti ortamı kendine özgüdür, internetsiz kullanılır;
+    - sunucu ortamı yalnız tekerlek ve özetle kurulur;
+    - kurumun tekerlek klasörü kullanılır (§123), gerçek pencerede ağ kapalıyken de.
+  - Paket kurulumu iki taşımayla sınanır: katalog klasörü
+    (`a_catalog_folder_lists_its_packages_and_installs_the_verified_one`) ve katalog sunucusunun HTTP'si
+    (`a_release_goes_from_upload_to_installation_through_the_api`).
+  - Temiz profil: her sınama kayıt defterini ve Python klasörünü kendi geçici klasöründe açar; gerçek pencere oturumu
+    kendi ev dizininde çalışır (`scripts/usage/real/session.sh`).
+
+  ECO-QA-04 (Windows/macOS/Linux ve ABI matrisi) açık: o işletim sistemlerinin koşucuları ister, CI şablonu sahibin
+  kararını bekliyor.*
 - [x] Süreç çökme/durdurma/yeniden başlatma, geç geri çağırma, kaldırma ve çoklu örnek fikstürleri [ECO-QA-05].
   — *17 Kasım'da gözden geçirildi, karşılanmış: çökme `a_crash_is_said_with_its_last_errors` (süreç, son hatalarıyla)
   ve `a_crashing_extension_fails_for_good_and_is_not_tried_at_the_next_start` (art arda çökmede kalıcı durur, geç
