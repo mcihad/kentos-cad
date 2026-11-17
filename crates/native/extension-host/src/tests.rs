@@ -717,6 +717,21 @@ fn the_policy_judges_the_python_packages_a_package_brings() {
             "Kurum ilkesi “importlib-metadata” paketinin geldiği yere (registry https://pypi.org/simple) izin \
              vermiyor; izinli paket depoları: https://pypi.ornek.bel.tr/simple.",
         ),
+        // The organisation's own names from its own index only (docs/adr/8057 §118): by name, by prefix.
+        (
+            json!({"pinnedPackageIndexes": {"Shapely": "https://pypi.ornek.bel.tr/simple/"}}),
+            "Kurum ilkesi “shapely” paketini yalnız kurumun deposundan (https://pypi.ornek.bel.tr/simple/) \
+             kurduruyor; kilit onu başka bir yerden alıyor (registry https://pypi.org/simple): aynı adla genel bir \
+             depoya konmuş başka bir paket olabilir (bağımlılık karışıklığı). Eklentinin yazarı paketi o depoya \
+             bağlamalı ([tool.uv.sources]).",
+        ),
+        (
+            json!({"pinnedPackageIndexes": {"lazy-*": "https://pypi.ornek.bel.tr/simple"}}),
+            "Kurum ilkesi “lazy-importer” paketini yalnız kurumun deposundan (https://pypi.ornek.bel.tr/simple) \
+             kurduruyor; kilit onu başka bir yerden alıyor (registry https://pypi.org/simple): aynı adla genel bir \
+             depoya konmuş başka bir paket olabilir (bağımlılık karışıklığı). Eklentinin yazarı paketi o depoya \
+             bağlamalı ([tool.uv.sources]).",
+        ),
     ] {
         let mut r = open_with(&root, policy(rule));
         let review = r.review(&bytes, &file_source());
@@ -742,6 +757,16 @@ fn the_policy_judges_the_python_packages_a_package_brings() {
     );
     assert!(r.install(&bytes, &file_source(), &all_granted()).is_err());
     let r = open_with(&root, policy(json!({"minimumPackageAgeDays": 0})));
+    assert_eq!(r.review(&bytes, &file_source()).policy, None);
+    drop(r);
+    // Pinned to where it comes from, or a prefix whose separator another name does not take (`num-*` is not
+    // `numpy`): nothing refused.
+    let r = open_with(
+        &root,
+        policy(
+            json!({"pinnedPackageIndexes": {"shapely": "https://pypi.org/simple", "num-*": "https://x.test/simple"}}),
+        ),
+    );
     assert_eq!(r.review(&bytes, &file_source()).policy, None);
     drop(r);
     // Allowed: the index written with a slash, the names as the lock has them.

@@ -5514,3 +5514,23 @@ olan panel sınamalarının çalışma kökenleri.
 - **Sınamalar:** masaüstü 2 (kapanıp yeniden açılan panel eski çalıştırmanın satırlarını almaz, açık kalan alır;
   çalışan kodun kendi paneline çağrısı açıkken uygulanır, kapanıp yeniden açılınca "kapandı" cevabını alır ve yeni
   panelin değerleri değişmez).
+
+## §118. Kurumun kendi paketleri yalnız kendi deposundan: bağımlılık karışıklığı (`ADIM 18A`, PY-UV-26)
+
+**17 Kasım.** Kod: kayıt defteri `policy.rs` (`pinnedPackageIndexes`, `package_refusal`); sınama `tests.rs`
+(`the_policy_judges_the_python_packages_a_package_brings`).
+
+- **Sorun.** PY-UV-26 "dizin önceliği ve paket kaynağı sabitlenir; özel paket adı başka genel dizinden sessizce
+  çözülmez" der. Kurum ilkesinin izinli depoları (`allowedPackageIndexes`, §84) kurumun deposunu ve genel depoyu
+  birlikte izinli yazınca kurumun kendi paketinin adı (`belediye-cbs`) genel depoda da varsa kilidin onu hangisinden
+  aldığını ayırt etmiyordu: aynı adla genel depoya konan paket, bağımlılık karışıklığı saldırısının yoludur.
+- **Karar:** ilkenin `pinnedPackageIndexes`'i kurumun paketlerini ve her birinin tek deposunu yazar: ad ya da `*` ile
+  biten önek (`"belediye-*"`) → depo. Kilit böyle bir adı başka bir yerden alıyorsa paket reddedilir; nedeni ve yazarın
+  yapacağı söylenir ("paketi o depoya bağlamalı ([tool.uv.sources])"). Ad PEP 503'e göre karşılaştırılır (`Shapely` =
+  `shapely`), önekin ayracı ayraç kalır (`num-*` `numpy`'yi tutmaz), deponun sonundaki `/` önemsizdir.
+- **Aynı kural her yerde:** inceleme, kurulum, ortam hazırlama ve kurulu eklentinin çalışması `package_refusal`'a bakar
+  (§84): sonradan yazılan bir sabitleme kurulu eklentiyi nedeniyle durdurur, kaldırmaz.
+- **Kalan (ADIM 22A):** kurum aynası ve vekil sunucunun kimlik bilgilerinin kullanıcı/kiracı kapsamı (PY-UV-25),
+  çevrimdışı tekerlek deposunun platform etiketi ve özetle doğrulanması (PY-UV-27).
+- **Sınama:** eklenti paketi kayıt defteri 2 durum (adla ve önekle sabitlenen paketin genel depodan gelişi reddedilir,
+  inceleme ve kurulum aynı sözle) ve 1 izin (gerçek deposuna sabitlenen ve ayracı tutmayan önek: ret yok).

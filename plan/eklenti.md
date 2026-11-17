@@ -781,7 +781,9 @@ boyutu ölçümü. Ham görüntüler depoya girmez. Yalnız plan teslim edilen i
 - [ ] Kurum aynası, vekil sunucu ve kimlik bilgileri kullanıcı/kiracı kapsamında; sırlar `.kek`'e, kilide ya da betik
   çıktısına yazılmaz [PY-UV-25]. Dizin önceliği ve paket kaynağı sabitlenir; özel paket adı başka genel dizinden sessizce
   çözülmez [PY-UV-26]. Çevrimdışı önbellek/tekerlek deposu platform etiketi ve özetle doğrulanır [PY-UV-27].
-  — *açık: kurum dizini/aynası ve çevrimdışı tekerlek deposu sonraya kaldı (ADIM 22A).*
+  — *kısmen (17 Kasım, ADR 8057 §118): kurum ilkesinin `pinnedPackageIndexes`'i kurumun paketlerini adla ya da önekle
+  tek depoya sabitler; kilit onları başka yerden alırsa inceleme, kurulum ve çalışma reddeder (bağımlılık karışıklığı)
+  [PY-UV-26]; kalan: kurum aynası/vekil sunucunun kimlik bilgileri ve çevrimdışı tekerlek deposu (ADIM 22A).*
 - [x] Ortam denetimi üst veri, SDK içe aktarma, gerekli paket sürüm/içe aktarma, yerel kütüphane ve eklenti uyumunu
   tanılar [PY-UV-28]. Sır içermeyen kilit/ortam/SBOM raporu dışa aktarılır [PY-UV-29]. Önbellek/venv/yorumlayıcı
   temizliğinde sahiplik ve etkin iş başvuruları denetlenir [PY-UV-30]. Aracı (broker) SDK'sı host'un doğrulanmış,

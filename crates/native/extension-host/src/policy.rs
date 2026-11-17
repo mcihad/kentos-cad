@@ -70,6 +70,12 @@ pub struct Policy {
     /// organisation's mirror); a package from a repository or an address is then refused too.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub allowed_package_indexes: Option<Vec<String>>,
+    /// The organisation's own Python packages and the one index each may come from: a name, or a prefix ending in `*`
+    /// (`belediye-*`), → the index (plan/eklenti.md PY-UV-26: "özel paket adı başka genel dizinden sessizce
+    /// çözülmez"; docs/adr/8057 §118). A lock taking such a name from anywhere else is refused: the same name published
+    /// on a public index is how a dependency confusion attack gets in, and an index list allowing both cannot tell.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub pinned_package_indexes: std::collections::BTreeMap<String, String>,
     /// When written, the least days a Python package must have been on its index when it is installed (its newest
     /// file's `upload-time` in the lock): a malicious release is usually found and taken down within days (D18).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -329,6 +335,34 @@ impl Policy {
                         ));
                     }
                     Some(_) => {}
+                }
+            }
+            // The organisation's own names, from their own index only (§118).
+            let pinned = self.pinned_package_indexes.iter().find(|(pattern, _)| {
+                match pattern.strip_suffix('*') {
+                    // `belediye-*` holds `belediye-cbs`, not `belediyeci`: the separator stays a separator.
+                    Some(prefix) => {
+                        let mut head = normalized(prefix);
+                        if prefix.ends_with(['-', '_', '.']) {
+                            head.push('-');
+                        }
+                        name.starts_with(&head)
+                    }
+                    None => normalized(pattern) == *name,
+                }
+            });
+            if let Some((_, index)) = pinned {
+                let from = p
+                    .source
+                    .strip_prefix("registry ")
+                    .map(|url| url.trim_end_matches('/'));
+                if from != Some(index.trim_end_matches('/')) {
+                    return Some(format!(
+                        "Kurum ilkesi “{name}” paketini yalnız kurumun deposundan ({index}) kurduruyor; kilit onu \
+                         başka bir yerden alıyor ({}): aynı adla genel bir depoya konmuş başka bir paket olabilir \
+                         (bağımlılık karışıklığı). Eklentinin yazarı paketi o depoya bağlamalı ([tool.uv.sources]).",
+                        p.source
+                    ));
                 }
             }
             if let Some(indexes) = &self.allowed_package_indexes {
