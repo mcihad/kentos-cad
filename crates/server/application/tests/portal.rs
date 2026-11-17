@@ -1396,3 +1396,65 @@ async fn personal_data_past_its_period_is_archived_or_destroyed_and_each_run_is_
     let longer = RetentionSettings { archive_after_days: 730, ..page.settings };
     assert_eq!(retention::set(&db.app, &root, &longer).await.unwrap().settings.archive_after_days, 730);
 }
+
+#[tokio::test]
+async fn a_municipality_s_figures_for_a_period_and_its_workbook() {
+    use kentos_application::portal::statistics;
+    use kentos_contracts::WorkbookFormat;
+
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let store = blobs();
+    let root = sistem(&db).await;
+    let tenant = municipality(&db, &root, "sayan", "mehmet").await;
+    let mehmet = signed_in(&db, "mehmet").await;
+    let (zeynep, zeynep_in) = staff(&db, &mehmet, tenant, "zeynep", TenantRole::Viewer).await;
+    let _ = zeynep;
+    let ayse = professional(&db, &root, "ayse", Profession::Architect).await;
+    let mut ids = Vec::new();
+    for (title, kind) in [("Onaylanacak", "architectural_project"), ("Reddedilecek", "architectural_project"), ("Bekleyen", "building_permit")] {
+        let id = dossiers::create_application(
+            &db.app,
+            &ayse,
+            &ApplicationCreate {
+                tenant_id: tenant.to_string(),
+                kind: kind.into(),
+                title: title.into(),
+                description: String::new(),
+                site: site(),
+                owner_name: None,
+                office_id: None,
+            },
+        )
+        .await
+        .unwrap();
+        add_file(&db, &store, &ayse, id, ("p.pdf", b"%PDF-1.4 p", "architectural"), Purpose::Package).await.unwrap();
+        act(&db, &ayse, id, DossierAction::Send, None).await.unwrap();
+        ids.push(id);
+    }
+    act(&db, &mehmet, ids[0], DossierAction::Approve, None).await.unwrap();
+    act(&db, &mehmet, ids[1], DossierAction::Reject, Some("Plana aykırı.")).await.unwrap();
+
+    // Any member reads them, a viewer too.
+    let (from, to) = statistics::period(None, None).unwrap();
+    let s = statistics::statistics(&db.app, &zeynep_in, from, to).await.unwrap();
+    assert_eq!((s.received, s.decided, s.approved, s.rejected, s.open_now), (3, 2, 1, 1, 1));
+    assert_eq!(s.overdue_now, 0);
+    assert!(s.average_decision_days.is_some_and(|d| d < 1.0) && s.average_rounds == Some(1.0), "{s:?}");
+    let architectural = s.by_kind.iter().find(|k| k.kind == "architectural_project").unwrap();
+    assert_eq!((architectural.received, architectural.approved, architectural.rejected), (2, 1, 1));
+    let this_month = s.by_month.last().unwrap();
+    assert_eq!((this_month.received, this_month.decided), (3, 2));
+    assert_eq!(s.by_month.first().unwrap().month, format!("{}-01", from.year()));
+    assert!(s.by_assignee.iter().any(|p| p.name == "Atanmamış" && p.open == 1));
+
+    // The workbook: five sheets in an XLSX; the period's dossiers alone in the CSV.
+    let (xlsx, name, media) = statistics::export(&db.app, &zeynep_in, from, to, WorkbookFormat::Xlsx).await.unwrap();
+    assert!(xlsx.starts_with(b"PK") && name.ends_with(".xlsx") && media.contains("spreadsheetml"));
+    let (csv, _, _) = statistics::export(&db.app, &zeynep_in, from, to, WorkbookFormat::Csv).await.unwrap();
+    let csv = String::from_utf8(csv).unwrap();
+    assert!(csv.trim_start_matches('\u{feff}').starts_with("Dosya no;Yön;Tür;Başlık"), "{csv}");
+    assert_eq!(csv.lines().count(), 4, "a header and three dossiers: {csv}");
+    assert!(csv.contains("Reddedildi") && csv.contains("ayse kişi"), "{csv}");
+}

@@ -10,6 +10,7 @@ mod organization;
 mod platform;
 mod retention;
 mod signing;
+mod statistics;
 
 use axum::Router;
 use axum::routing::{get, patch, post, put};
@@ -135,6 +136,8 @@ pub fn routes() -> Router<AppState> {
         .route("/v1/platform/holidays/{day}", axum::routing::delete(holidays::remove))
         .route("/v1/platform/retention", get(retention::page).put(retention::set))
         .route("/v1/platform/retention/run", post(retention::run_now))
+        .route("/v1/tenants/{tenant}/portal/statistics", get(statistics::page))
+        .route("/v1/tenants/{tenant}/portal/statistics/export", get(statistics::export))
 }
 
 /// A file's bytes coming to a dossier: under the upload limits (`super::router`).

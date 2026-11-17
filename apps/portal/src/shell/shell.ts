@@ -43,6 +43,7 @@ function navOf(c: Context): NavItem[] {
           { label: 'Proje aktarımları', href: `${base}/aktarimlar`, icon: 'send', match: new RegExp(`^${base}/aktarimlar`) },
           { label: 'Meslek mensupları', href: `${base}/meslek-mensuplari`, icon: 'badge', match: new RegExp(`^${base}/meslek-mensuplari`) },
           { label: 'Harç ve ücretler', href: `${base}/harclar`, icon: 'receipt', match: new RegExp(`^${base}/harclar`) },
+          { label: 'İstatistikler', href: `${base}/istatistik`, icon: 'chart', match: new RegExp(`^${base}/istatistik`) },
         );
       }
       items.push({ label: 'Projeler', href: `${base}/projeler`, icon: 'folder', match: new RegExp(`^${base}/projeler|^#/proje/${c.org.tenantId}`) });

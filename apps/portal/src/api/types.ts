@@ -60,6 +60,10 @@ export type { HolidayView } from '../../../web/src/contracts/generated/HolidayVi
 export type { RetentionPage } from '../../../web/src/contracts/generated/RetentionPage';
 export type { RetentionRunView } from '../../../web/src/contracts/generated/RetentionRunView';
 export type { RetentionSettings } from '../../../web/src/contracts/generated/RetentionSettings';
+export type { PortalStatistics } from '../../../web/src/contracts/generated/PortalStatistics';
+export type { StatisticsAssigneeRow } from '../../../web/src/contracts/generated/StatisticsAssigneeRow';
+export type { StatisticsKindRow } from '../../../web/src/contracts/generated/StatisticsKindRow';
+export type { StatisticsMonthRow } from '../../../web/src/contracts/generated/StatisticsMonthRow';
 export type { FileRevision } from '../../../web/src/contracts/generated/FileRevision';
 export type { FileRevisions } from '../../../web/src/contracts/generated/FileRevisions';
 export type { KindOption } from '../../../web/src/contracts/generated/KindOption';

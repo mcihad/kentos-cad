@@ -46,6 +46,7 @@ import type {
   ProfessionalStatus,
   ProfessionalView,
   ProjectDetails,
+  PortalStatistics,
   ProjectPage,
   RetentionPage,
   RetentionRunView,
@@ -216,4 +217,9 @@ export const holidays = {
   list: (year: number) => get<HolidayView[]>(`/v1/holidays${query({ year })}`),
   add: (input: HolidayCreate) => post<HolidayView>('/v1/platform/holidays', input),
   remove: (day: string) => del<void>(`/v1/platform/holidays/${day}`),
+};
+
+/** A municipality's figures for a period (docs/adr/9000 §22); the workbook is a link (`…/statistics/export`). */
+export const statistics = {
+  page: (tenant: string, from: string, to: string) => get<PortalStatistics>(`/v1/tenants/${tenant}/portal/statistics${query({ from, to })}`),
 };

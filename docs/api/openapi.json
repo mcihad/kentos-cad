@@ -23967,6 +23967,136 @@
         ],
         "type": "object"
       },
+      "PortalStatistics": {
+        "description": "`GET /v1/tenants/{tenant}/portal/statistics?from=&to=`.",
+        "properties": {
+          "approved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "averageDecisionDays": {
+            "description": "Days from the first sending to the decision, of the ones decided in the period.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "averageRounds": {
+            "description": "Rounds (packages sent) per decided application.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "byAssignee": {
+            "items": {
+              "$ref": "#/components/schemas/StatisticsAssigneeRow"
+            },
+            "type": "array"
+          },
+          "byKind": {
+            "items": {
+              "$ref": "#/components/schemas/StatisticsKindRow"
+            },
+            "type": "array"
+          },
+          "byMonth": {
+            "items": {
+              "$ref": "#/components/schemas/StatisticsMonthRow"
+            },
+            "type": "array"
+          },
+          "decided": {
+            "description": "Applications approved or rejected in the period.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "feesAssessed": {
+            "description": "Kuruş assessed in the period (not cancelled), and paid in it.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "feesPaid": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "from": {
+            "description": "The period, both days in it (YYYY-MM-DD, Turkey's calendar).",
+            "type": "string"
+          },
+          "medianDecisionDays": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "openNow": {
+            "description": "Applications open now (sent, in review, waiting for corrections).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "overdueNow": {
+            "description": "Of those waiting for the municipality, the ones past their legal deadline now.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "received": {
+            "description": "Applications sent for the first time in the period.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "rejected": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "to": {
+            "type": "string"
+          },
+          "transfersCompleted": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "transfersSent": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "withdrawn": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "received",
+          "decided",
+          "approved",
+          "rejected",
+          "withdrawn",
+          "openNow",
+          "overdueNow",
+          "transfersSent",
+          "transfersCompleted",
+          "feesAssessed",
+          "feesPaid",
+          "byKind",
+          "byMonth",
+          "byAssignee"
+        ],
+        "type": "object"
+      },
       "Profession": {
         "description": "A professional's profession; their chamber follows from it.",
         "enum": [
@@ -32334,6 +32464,94 @@
         "required": [
           "back",
           "ahead"
+        ],
+        "type": "object"
+      },
+      "StatisticsAssigneeRow": {
+        "properties": {
+          "decided": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "name": {
+            "description": "The person in charge; \"Atanmamış\" for none.",
+            "type": "string"
+          },
+          "open": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "open",
+          "decided"
+        ],
+        "type": "object"
+      },
+      "StatisticsKindRow": {
+        "properties": {
+          "approved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "averageDecisionDays": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "received": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "rejected": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "label",
+          "received",
+          "approved",
+          "rejected"
+        ],
+        "type": "object"
+      },
+      "StatisticsMonthRow": {
+        "properties": {
+          "decided": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "month": {
+            "description": "YYYY-MM.",
+            "type": "string"
+          },
+          "received": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "month",
+          "received",
+          "decided"
         ],
         "type": "object"
       },
@@ -44690,6 +44908,160 @@
           }
         },
         "summary": "Portal ayarlarını değiştir",
+        "tags": [
+          "Portal: kurum"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant}/portal/statistics": {
+      "get": {
+        "description": "Kurumun üyeleri: dönemde gelen, karara bağlanan (onay, ret), geri çekilen başvurular; karar süresi (ortalama, ortanca, gün), tur sayısı; şimdi açık ve yasal süresi geçmiş olanlar; aktarımlar; harç tahakkuku ve tahsili (kuruş); türlere, aylara ve sorumlulara göre. Dönem Türkiye takvimiyle iki ucu dahil günlerdir; verilmezse bu yılın başından bugüne, en çok üç yıl.",
+        "operationId": "getTenantsByTenantPortalStatistics",
+        "parameters": [
+          {
+            "description": "Kurumun kimliği (UUID); `GET /v1/me` üyeliklerinde.",
+            "in": "path",
+            "name": "tenant",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "YYYY-AA-GG.",
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "YYYY-AA-GG.",
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalStatistics"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Belediyenin istatistikleri",
+        "tags": [
+          "Portal: kurum"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant}/portal/statistics/export": {
+      "get": {
+        "description": "XLSX ya da ODS: özet, türlere, aylara ve sorumlulara göre ve dönemin dosyaları (beş sayfa). CSV: dönemin dosyaları (UTF-8, noktalı virgül). Yazdırılacak rapor portalın istatistik sayfasındadır.",
+        "operationId": "getTenantsByTenantPortalStatisticsExport",
+        "parameters": [
+          {
+            "description": "Kurumun kimliği (UUID); `GET /v1/me` üyeliklerinde.",
+            "in": "path",
+            "name": "tenant",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "`xlsx` (varsayılan), `ods` ya da `csv`.",
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "YYYY-AA-GG.",
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "YYYY-AA-GG.",
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "contentMediaType": "application/octet-stream",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Çalışma kitabı ya da CSV. `ETag`, `Range` (206) ve `If-None-Match` (304) desteklenir.",
+            "headers": {
+              "Content-Range": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "İstenen parça (`Range`)."
+          },
+          "304": {
+            "description": "Değişmedi (`If-None-Match`)."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "İstatistiklerin dosyası",
         "tags": [
           "Portal: kurum"
         ]

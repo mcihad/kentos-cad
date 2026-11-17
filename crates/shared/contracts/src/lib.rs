@@ -200,6 +200,8 @@ pub mod fees;
 pub mod signing;
 #[path = "core/retention.rs"]
 pub mod retention;
+#[path = "core/statistics.rs"]
+pub mod statistics;
 // The cloud portal (docs/adr/9000): accounts, catalog, organisations and platform administration; dossiers.
 #[path = "core/dossier.rs"]
 pub mod dossier;
@@ -428,6 +430,7 @@ pub use notification_settings::*;
 pub use fees::*;
 pub use signing::*;
 pub use retention::*;
+pub use statistics::*;
 pub use dossier::*;
 pub use portal::*;
 pub use entity::*;

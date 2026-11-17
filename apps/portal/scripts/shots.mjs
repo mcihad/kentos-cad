@@ -404,4 +404,35 @@ if (block('imza')) {
   b.close();
 }
 
+// ── Figures, the calendar, the retention and the archive (docs/adr/9000 §19, §21, §22) ──
+if (block('istatistik') || block('grafik')) {
+  let b = await signIn('mehmet.kaya', PASSWORD, { width: 1560, height: 1150 });
+  await open(b, `${ORG}/istatistik?donem=12ay`);
+  await b.waitFor(`!!document.querySelector('.viz-svg')`, 10000);
+  await shot(b, '101-belediye-istatistikler');
+  await b.eval(`(() => { const hits = [...document.querySelectorAll('.viz-hit')]; hits[hits.length - 1].dispatchEvent(new PointerEvent('pointerenter')); return true; })()`);
+  await sleep(250);
+  await b.eval(`document.querySelector('.viz').scrollIntoView({ block: 'center' }); true`);
+  await sleep(250);
+  await shot(b, '102-istatistik-ipucu');
+  b.close();
+}
+if (block('istatistik')) {
+  let b = await signIn('sistem', ADMIN_PASSWORD, { width: 1560, height: 1150 });
+  await open(b, '#/sistem/ayarlar');
+  await b.eval(`[...document.querySelectorAll('.panel')].find((p) => p.querySelector('h2')?.textContent === 'Tatil takvimi')?.scrollIntoView({ block: 'start' }); true`);
+  await sleep(600);
+  await shot(b, '103-sistem-tatil-takvimi-ve-saklama');
+  await click(b, 'button', 'Şimdi çalıştır');
+  await sleep(1200);
+  await b.eval(`[...document.querySelectorAll('.panel')].find((p) => p.querySelector('h2')?.textContent === 'Kişisel verilerin saklanması')?.scrollIntoView({ block: 'start' }); true`);
+  await sleep(300);
+  await shot(b, '104-sistem-periyodik-imha');
+  b.close();
+  b = await signIn('mehmet.kaya', PASSWORD, { width: 1560, height: 900 });
+  await open(b, `${ORG}/basvurular?liste=arsiv`);
+  await shot(b, '105-belediye-arsiv');
+  b.close();
+}
+
 console.log(shots.join('\n'));

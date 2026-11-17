@@ -2453,3 +2453,184 @@ select.fee-cell {
   height: 1px;
   overflow: hidden;
 }
+
+/* Charts (docs/adr/9000 §22): the validated categorical slots 1 and 2 (data-viz reference palette, checked against the
+   portal's panel surfaces #ffffff and #212932: lightness, chroma, CVD and contrast pass in both themes). Text never
+   wears them. */
+:root[data-theme='light'] {
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
+}
+
+:root:not([data-theme='light']) {
+  --viz-1: #3987e5;
+  --viz-2: #d95926;
+}
+
+.viz {
+  position: relative;
+}
+
+.viz-box {
+  width: 100%;
+  min-width: 0;
+}
+
+.viz-svg {
+  display: block;
+  overflow: visible;
+}
+
+.viz-grid {
+  stroke: var(--c-border);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+.viz-baseline {
+  stroke: var(--c-text-2, var(--c-border));
+  stroke-width: 1;
+}
+
+.viz-tick {
+  fill: var(--c-text-2, currentColor);
+  font-size: 11px;
+}
+
+.viz-value {
+  fill: var(--c-text, currentColor);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.viz-col {
+  transition: filter 120ms;
+}
+
+.viz-col.is-on {
+  filter: brightness(1.12);
+}
+
+.viz-hit {
+  fill: transparent;
+  outline: none;
+}
+
+.viz-hit:focus-visible {
+  stroke: var(--c-accent);
+  stroke-width: 1.5;
+}
+
+.viz-tooltip {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  min-width: 180px;
+  white-space: nowrap;
+  padding: 8px 10px;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: var(--portal-surface);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.12);
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.viz-tooltip-title {
+  color: var(--c-text-2, inherit);
+  margin-bottom: 4px;
+}
+
+.viz-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.viz-tooltip-row strong {
+  min-width: 2.5em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.viz-key {
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.viz-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--c-text-2, inherit);
+}
+
+.viz-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.viz-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.stats-page .stats {
+  margin-bottom: 16px;
+}
+
+.print-only {
+  display: none;
+}
+
+/* The figures printed (or saved as PDF from the print dialog): the page alone, without the portal's frame. */
+@media print {
+  .sidebar,
+  .topbar,
+  .no-print,
+  .page-actions {
+    display: none !important;
+  }
+
+  .shell,
+  .content {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  .print-title {
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  .panel {
+    break-inside: avoid;
+  }
+}
+
+.table-toggle > summary {
+  cursor: pointer;
+  color: var(--c-text-2, inherit);
+  font-size: 13px;
+  margin: 4px 0 8px;
+}
+
+@media print {
+  .table-toggle:not([open]) > summary {
+    display: none;
+  }
+}
+
+.nowrap {
+  white-space: nowrap;
+}

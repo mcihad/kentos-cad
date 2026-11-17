@@ -472,6 +472,58 @@ Bu yüzden ayrım şöyledir:
 - Elle çalıştırmak yalnız yöneticinin işi (403), 5 günlük süre reddedildi.
 - Günlük çalışma ardından bir şey bulmadı. İki çalışma da kayıtta, yenisi önce.
 
+## §22 Belediyenin istatistikleri ve dönem raporu
+
+Belediye, gelen ve karara bağlanan başvuruları, sürelerini ve açık işleri bir dönem için görmek ve dönem raporu
+almak istiyor (“bu yıl kaç ruhsat, ortalama kaç günde?”). `GET /v1/tenants/{t}/portal/statistics?from&to` kurumun
+üyelerine (görüntüleyici dahil) şunları verir:
+
+- dönemde ilk kez gönderilen başvurular;
+- karara bağlananlar (onay, ret), geri çekilenler;
+- karar süresi: ilk gönderimden karara kadar gün olarak, ortalama ve ortanca;
+- ortalama tur sayısı;
+- şimdi açık olanlar, ve bunlardan yasal süresi geçenler: dosyanın sayfasındaki saatle aynı hesap, tatil takvimi dahil;
+- gönderilen ve tamamlanan aktarımlar;
+- dönemin harç tahakkuku ve tahsili;
+- türlere, aylara ve sorumlulara göre dağılım.
+
+Dönem Türkiye takvimiyle iki ucu dahil günlerdir. Varsayılan bu yılın başından bugünedir, en çok üç yıldır.
+
+- **Çalışma kitabı sunucudadır:** `…/statistics/export?format=xlsx|ods|csv`.
+  - XLSX ve ODS beş sayfadır: Özet, Türlere göre, Aylara göre, Sorumlulara göre, Dosyalar. Dosyalar sayfası dönemin
+    dosyalarını sürelerle birlikte verir.
+  - CSV dönemin dosyalarıdır (UTF-8 BOM, noktalı virgül).
+  - Yazıcı ortaktır: masaüstünün tablo dışa aktarımıyla aynı `kentos_formats::workbook::write`.
+- **PDF tarayıcının yazdırmasıdır.** Sayfanın yazdırma görünümü portalın çerçevesini ve düğmeleri gizler, başa
+  kurum ve dönem satırını koyar. “Yazdır / PDF” tarayıcının “PDF olarak kaydet”ine gider. Sunucuda PDF üretmek
+  Türkçe harfler için yazı tipi gömmeyi gerektirirdi. Paftanın PDF yazıcısı yazı tipini ana programdan alıyor, sunucuda
+  böyle bir kaynak yok. Rapor insanın okuyacağı bir kâğıttır; makinenin okuyacağı biçim zaten XLSX ve CSV'dir.
+- **Grafik veri görselleştirme kurallarıyla çizilir:**
+  - aylara göre gelen ve karara bağlanan başvurular, tek eksen, 24 px'i geçmeyen sütunlar;
+  - doğrulanmış kategorik renkler (`--viz-1`, `--viz-2`): açık ve koyu yüzeyde parlaklık, doygunluk, renk körlüğü
+    ayrımı ve karşıtlık sınamaları geçti;
+  - göstergede seriler, her serinin en büyük değeri sütunun üstünde yazılı;
+  - her ay için fareyle ve klavyeyle açılan ipucu;
+  - aynı sayılar “Tablo olarak” bölümünde de var.
+  - Grafik kutusunun kendi genişliğinde çizilir: geniş ekranda yazı büyümez, telefonda küçülmez.
+
+Ölçülenler:
+
+- Gerçek PostgreSQL'de (`tests/portal.rs` `a_municipality_s_figures_for_a_period_and_its_workbook`):
+  - görüntüleyici okur;
+  - 3 gelen, 2 karar (1 onay, 1 ret), 1 açık;
+  - mimari proje satırı 2/1/1;
+  - bu ayın sütunu 3/2, ilk ay Ocak;
+  - XLSX `PK` ile başlar;
+  - CSV bir başlık ve üç dosya satırıdır.
+- Ekran görüntüleri (`.run/gui-evidence/portal/101–105`, demo verisi):
+  - istatistik sayfası ve ipucu;
+  - tatil takvimi ve saklama ayarları;
+  - elle çalıştırılan imha ve kaydı;
+  - arşiv sekmesi.
+
+  Arşiv görüntüsü için demo veritabanında bir onaylı başvurunun tarihi 400 gün geriye alındı.
+
 ## Kaynaklar
 
 - OpenAPI 3.1.0 (<https://spec.openapis.org/oas/v3.1.0>), JSON Schema 2020-12, llms.txt önerisi

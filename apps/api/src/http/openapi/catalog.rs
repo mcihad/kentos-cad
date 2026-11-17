@@ -460,6 +460,23 @@ pub(super) fn ops() -> Vec<Op> {
             "Kurum yöneticisi.", Body(of::<c::OrganizationPortalEdit>), Json(200, of::<c::OrganizationPortal>)),
         op("GET", "/v1/tenants/{tenant}/portal/summary", ORGANIZATION, "Kurumun özeti",
             "Sayılar, süresi yaklaşan ve sırası gelen dosyalar.", No, Json(200, of::<c::DossierDashboard>)),
+        op("GET", "/v1/tenants/{tenant}/portal/statistics", ORGANIZATION, "Belediyenin istatistikleri",
+            "Kurumun üyeleri: dönemde gelen, karara bağlanan (onay, ret), geri çekilen başvurular; karar süresi \
+             (ortalama, ortanca, gün), tur sayısı; şimdi açık ve yasal süresi geçmiş olanlar; aktarımlar; harç \
+             tahakkuku ve tahsili (kuruş); türlere, aylara ve sorumlulara göre. Dönem Türkiye takvimiyle iki ucu dahil \
+             günlerdir; verilmezse bu yılın başından bugüne, en çok üç yıl.",
+            No, Json(200, of::<c::PortalStatistics>)).query(&[
+                P("from", "string", false, "YYYY-AA-GG."),
+                P("to", "string", false, "YYYY-AA-GG."),
+            ]),
+        op("GET", "/v1/tenants/{tenant}/portal/statistics/export", ORGANIZATION, "İstatistiklerin dosyası",
+            "XLSX ya da ODS: özet, türlere, aylara ve sorumlulara göre ve dönemin dosyaları (beş sayfa). CSV: dönemin \
+             dosyaları (UTF-8, noktalı virgül). Yazdırılacak rapor portalın istatistik sayfasındadır.",
+            No, File("Çalışma kitabı ya da CSV.")).query(&[
+                P("format", "string", false, "`xlsx` (varsayılan), `ods` ya da `csv`."),
+                P("from", "string", false, "YYYY-AA-GG."),
+                P("to", "string", false, "YYYY-AA-GG."),
+            ]),
         op("GET", "/v1/tenants/{tenant}/members", ORGANIZATION, "Üyeler",
             "Kurumun üyeleri ve rolleri.", No, Json(200, of::<Vec<c::MemberView>>)),
         op("POST", "/v1/tenants/{tenant}/members", ORGANIZATION, "Üye ekle",

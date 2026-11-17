@@ -29,6 +29,7 @@ pub mod platform;
 pub mod retention;
 mod rows;
 pub mod signing;
+pub mod statistics;
 pub mod steps;
 
 use time::OffsetDateTime;

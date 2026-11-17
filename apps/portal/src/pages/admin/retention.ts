@@ -47,12 +47,13 @@ export function retentionPanel(): HTMLElement {
       f,
       table(
         [
-          { label: 'Zaman', cell: (r: RetentionRunView) => moment(r.at) },
+          { label: 'Zaman', cell: (r: RetentionRunView) => h('span', { class: 'nowrap' }, moment(r.at)) },
           { label: 'Çalıştıran', cell: (r: RetentionRunView) => (r.trigger === 'schedule' ? badge('neutral', 'Günlük') : badge('info', r.actorName ?? 'Elle')) },
-          { label: 'Arşive', cell: (r: RetentionRunView) => h('span', { class: 'num' }, String(r.archived)), class: 'narrow right' },
-          { label: 'Taslak / belge', cell: (r: RetentionRunView) => h('span', { class: 'num' }, `${r.draftsDeleted} / ${r.filesDeleted}`), class: 'narrow right' },
-          { label: 'Bildirim', cell: (r: RetentionRunView) => h('span', { class: 'num' }, String(r.notificationsDeleted)), class: 'narrow right' },
-          { label: 'Teknik', cell: (r: RetentionRunView) => h('span', { class: 'num' }, String(r.deliveriesDeleted + r.signingRequestsDeleted)), class: 'narrow right' },
+          {
+            label: 'Yapılan',
+            cell: (r: RetentionRunView) =>
+              `${r.archived} arşiv · ${r.draftsDeleted} taslak (${r.filesDeleted} belge) · ${r.notificationsDeleted} bildirim · ${r.deliveriesDeleted + r.signingRequestsDeleted} teknik`,
+          },
         ],
         p.runs,
         { empty: h('div', { class: 'muted' }, 'Henüz çalışmadı; sunucu açıldıktan bir saat sonra ilk kez çalışır.') },
