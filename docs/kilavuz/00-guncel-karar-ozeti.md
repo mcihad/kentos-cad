@@ -279,6 +279,11 @@
       mimari verisi 12); CBS kararı gösterilir, yazılmaz.
     - Kat yükseklikleri bölgenin bendiyle (PAİY ve Sivas 28/1-a, b, c, ç); asma kat zemin katın parçası; karma alanda
       konut mahali olan kat konut katı. Bölgesiz konut projesi konut alanı sayılır, konut dışı bina eksik veri.
+  - **Katlar arası açıklıklar (17 Kasım 2026; [ADR 8086](../adr/8086-compartments-across-storeys.md), K98–K101):**
+    - Döşeme deliği, şaft olmayan boşluk mahal ve merdiven ölçülür (`Document::vertical_links`, alan katında); iki katın
+      mahallerini aynı kompartımana koyar. Yalnız kaçış merdiveni mahallerinden oluşan kompartıman merdivenin yuvası.
+    - BYKHY 24/4: 21,50 m'yi aşan konut harici (karma dahil), 30,50 m'yi aşan konut binasında üstündeki katlarda en çok
+      üç kat. 24/5: merdiven yuvası olmayan boşluk atrium; duman kontrolü ve perde modelde yok, uzman incelemesi.
 
 - **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
   - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.

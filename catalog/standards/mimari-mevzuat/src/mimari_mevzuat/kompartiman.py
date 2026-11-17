@@ -1,10 +1,19 @@
-"""Yangın kompartımanları: Binaların Yangından Korunması Hakkında Yönetmelik 4/tt, 24/2, 24/6 ve Ek-4, 24/7
-(docs/adr/8081).
+"""Yangın kompartımanları: Binaların Yangından Korunması Hakkında Yönetmelik 4/tt, 24/2, 24/4, 24/5, 24/6 ve Ek-4, 24/7
+(docs/adr/8081, 8086).
 
 - **Kompartıman** (4/tt): her yanı en az 60 dakika yangına dayanıklı elemanlarla duman ve ısı geçirmez ayrılmış bölge.
-  Bütün döşemeler yangın duvarı niteliğindedir (26/1): bir katın kompartımanları o katın içindedir. İki mahal, aralarında
-  açık bir yer (mahal ayırıcı, boşluk) ya da en az EI 60 beyan edilmemiş bir duvar ya da açıklık varsa aynı
-  kompartımandadır. Katlar arası açıklıklar (galeri, atrium, açık merdiven) okunmaz.
+  Bütün döşemeler yangın duvarı niteliğindedir (26/1): iki katın mahalleri yalnız aralarındaki bir açıklıkla (döşeme
+  boşluğu, şaft olmayan boşluk mahal, merdiven; olgular ``links``) aynı kompartımana girer. Bir katta iki mahal,
+  aralarında açık bir yer (mahal ayırıcı, boşluk) ya da en az EI 60 beyan edilmemiş bir duvar ya da açıklık varsa aynı
+  kompartımandadır. Yalnız kaçış merdiveni mahallerinden oluşan kompartıman merdivenin yuvasıdır.
+- **24/4** (9.7.2015): bina yüksekliği 21,50 m'yi aşan konut harici binada ve 30,50 m'yi aşan konut binasında bu
+  yüksekliklerin üstündeki katlarda en çok üç kat bir kompartıman. Konut binası bütün bölümleri konut olandır; karma
+  bina konut harici sayılır (sıkı olan). Merdiven yuvası sayılmaz.
+- **24/5** (9.9.2009): atrium (4/g: iki ya da daha çok katın içine açılan, merdiven yuvası, asansör kuyusu, yürüyen
+  merdiven boşluğu ve şaftlar dışındaki üstü kapalı hacim) yalnız düşük ve orta tehlikeli kullanımlarda; doğal ya da
+  mekanik duman kontrolü; 90 m²'den küçükse her katta en az 45 cm duman perdesi (yağmurlamalı binada başlıklar perdeden
+  15–30 cm, en çok 2 m arayla). Duman kontrolü ve perde çizimde yok, boşluğun "geniş ve yüksek hacim" olup olmadığı yoruma
+  bağlı: her atrium uzman incelemesi; kullanımın tehlike sınıfı Ek-1'e bağlıysa iletide söylenir.
 - **24/2:** kazan dairesi, otopark, ana elektrik dağıtım odası, trafo, orta gerilim, jeneratör odasının duvarları
   kompartıman duvarı niteliğindedir: başka bir mahalle arasındaki her şey en az EI 60.
 - **24/6, Ek-4:** kompartımanın alanı binanın kullanım sınıfının en çoğunu aşmaz; konut sınırsız. Yağmurlama varsa
@@ -26,7 +35,7 @@ from typing import Any
 from . import yururluk as y
 from .yangin_sinifi import ayirir
 
-MADDELER = [("BYKHY", "24/2"), ("BYKHY", "24/6"), ("BYKHY", "24/7")]
+MADDELER = [("BYKHY", "24/2"), ("BYKHY", "24/4"), ("BYKHY", "24/5"), ("BYKHY", "24/6"), ("BYKHY", "24/7")]
 
 #: 24/2'nin yangın tehlikesi olan kapalı alanlarının adlarındaki sözcükler.
 _TEHLIKELI = ("KAZAN", "OTOPARK", "GARAJ", "ELEKTRIK", "TRAFO", "JENERATOR")
@@ -102,6 +111,14 @@ def kompartimanlar(bina: dict[str, Any], dakika: int) -> list[list[str]]:
             x, z = kok(a["rooms"][0]), kok(a["rooms"][1])
             if x != z:
                 ata[max(x, z)] = min(x, z)
+    # Katlar arası açıklıklar (docs/adr/8086): birleştirdiği mahaller aynı kompartımanda.
+    bilinen = set(mahaller)
+    for link in bina.get("links") or []:
+        odalar = [u for u in list(link.get("roomsBelow") or []) + list(link.get("roomsAbove") or []) if u in bilinen]
+        for a_, b_ in zip(odalar, odalar[1:]):
+            x, z = kok(a_), kok(b_)
+            if x != z:
+                ata[max(x, z)] = min(x, z)
     gruplar: dict[str, list[str]] = {}
     for m in mahaller:
         gruplar.setdefault(kok(m), []).append(m)
@@ -170,6 +187,82 @@ def alan(bina: dict[str, Any], hal: y.Hal, dakika: int) -> tuple[list[dict[str, 
         return bulgular, _satir(hal, y.KALDI, f"{len(bulgular)} kompartıman {s['name']} sınırını ({en_az:.0f} m²) aşıyor")
     return [], _satir(hal, y.GECTI, f"{len(gruplar)} kompartıman, en büyüğü {_m2(en_buyuk)} m² (sınır {en_az:.0f} m², "
                                     f"{s['name']})")
+
+
+def _virgul(x: float) -> str:
+    return f"{x:.2f}".replace(".", ",")
+
+
+def konut_binasi(bina: dict[str, Any]) -> bool:
+    """Bütün bağımsız bölümleri konut olan bina (24/4'ün konut binası)."""
+    bolum, konut = int(bina.get("units") or 0), int(bina.get("dwellings") or 0)
+    return bolum > 0 and konut == bolum
+
+
+def katlar_arasi(bina: dict[str, Any], hal: y.Hal, dakika: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """24/4: yüksek binada bir kompartıman, eşiğin üstündeki katlarda en çok üç kat."""
+    konut = konut_binasi(bina)
+    esik = float(hal.anahtar["dwelling"] if konut else hal.anahtar["other"])
+    en_cok = int(hal.anahtar["storeys"])
+    tur = "konut binasında" if konut else "konut harici binada"
+    h = float(bina.get("height") or 0)
+    if h <= esik + 1e-9:
+        return [], _satir(hal, y.KAPSAM_DISI, f"bina yüksekliği {_virgul(h)} m, {tur} {_virgul(esik)} m'yi aşmıyor")
+    kotlar = {k["level"]: float(k["elevation"]) for k in bina.get("storeys") or []}
+    katadi = {k["level"]: k.get("name") or k["level"] for k in bina.get("storeys") or []}
+    katta = {m["uid"]: m.get("level") for m in bina.get("spaces") or []}
+    merdiven = {m["uid"] for m in bina.get("spaces") or [] if m.get("stair")}
+    bulgular = []
+    sayilan = 0
+    for g in kompartimanlar(bina, dakika):
+        if all(u in merdiven for u in g):
+            continue
+        ust = sorted({katta[u] for u in g if kotlar.get(katta.get(u), -1e9) > esik + 1e-9}, key=lambda k: kotlar[k])
+        if not ust:
+            continue
+        sayilan += 1
+        if len(ust) > en_cok:
+            bulgular.append(_bulgu(
+                "bykhy_compartment_storeys_over",
+                f"Kompartıman {len(ust)} katı birleştiriyor ({', '.join(katadi[k] for k in ust)}): {tur} "
+                f"{_virgul(esik)} m'nin üstündeki katlarda en çok {en_cok} kat bir yangın kompartımanı",
+                "Katlar arasındaki açıklığı (galeri, atrium, açık merdiven) en az EI 60 elemanlarla kapatın ya da "
+                "kompartımanı en çok üç kata bölün.", hal, sorted(g)[:20], "katlar:" + ",".join(sorted(g))))
+    if bulgular:
+        return bulgular, _satir(hal, y.KALDI, f"{len(bulgular)} kompartıman {_virgul(esik)} m'nin üstünde {en_cok} katı aşıyor")
+    return [], _satir(hal, y.GECTI, f"{sayilan} kompartıman {_virgul(esik)} m'nin üstünde en çok {en_cok} kat "
+                                    f"(bina yüksekliği {_virgul(h)} m)")
+
+
+def atrium(bina: dict[str, Any], hal: y.Hal, tehlikeli_kullanim: list[str]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """24/5: atriumlar (4/g); duman kontrolü ve perde çizimde okunmadığı için uzman incelemesi."""
+    bosluklar = [l for l in bina.get("links") or [] if l.get("kind") in ("hole", "void") and not l.get("stairWell")]
+    if not bosluklar:
+        return [], _satir(hal, y.KAPSAM_DISI, "katlar arası galeri ya da atrium boşluğu yok")
+    yigin: dict[str, list[dict[str, Any]]] = {}
+    for l in bosluklar:
+        yigin.setdefault(l.get("stack") or l["uid"], []).append(l)
+    sinir, perde = float(hal.anahtar["area"]), float(hal.anahtar["curtain"])
+    yagmurlama = bool(bina.get("sprinklers"))
+    bulgular = []
+    for kimlik, ls in sorted(yigin.items()):
+        katlar = {k for l in ls for k in (l.get("below"), l.get("above")) if k}
+        en_dar = min(float(l.get("area") or 0) for l in ls)
+        parca = [f"Katlar arası boşluk ({len(katlar)} kat, en dar yerinde {_m2(en_dar)} m²) BYKHY 4/g'nin atriumu sayılır: "
+                 "24/5 doğal ya da mekanik duman kontrolü ister"]
+        if en_dar < sinir - 1e-9:
+            parca.append(f"{sinir:.0f} m²'den küçük olduğu için çevresi her katta en az {perde * 100:.0f} cm duman "
+                         "perdesiyle çevrilir" + ("; yağmurlama başlıkları perdeden 15–30 cm, en çok 2 m arayla"
+                                                  if yagmurlama else ""))
+        if tehlikeli_kullanim:
+            parca.append("atriuma yalnız düşük ve orta tehlikeli kullanımlarda izin verilir; binanın kullanımının ("
+                         + ", ".join(tehlikeli_kullanim) + ") tehlike sınıfı Ek-1'e bağlı")
+        uids = sorted({l["uid"] for l in ls} | {u for l in ls for u in (l.get("roomsBelow") or []) + (l.get("roomsAbove") or [])})
+        bulgular.append(_bulgu("bykhy_atrium", "; ".join(parca) + "; çizimde okunmaz",
+                               "Atriumun duman kontrolünü (doğal ya da mekanik) ve gerekiyorsa duman perdesini idareyle "
+                               "netleştirin; boşluk atrium değilse (galeri) gerekçesini not edin.", hal, uids[:20],
+                               f"atrium:{kimlik}", y.UZMAN))
+    return bulgular, _satir(hal, y.UZMAN, f"{len(bulgular)} atrium: duman kontrolü ve perde çizimde okunmaz")
 
 
 def tehlike(bina: dict[str, Any], hal: y.Hal, dakika: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
@@ -260,19 +353,39 @@ def _bilinmiyor(madde: str, gun: date, uids: list[str]) -> tuple[dict[str, Any],
                    "note": ileti}
 
 
+def _tehlikeli_kullanim(bina: dict[str, Any], gun: date) -> list[str]:
+    """Binanın sınırı tehlike sınıfına bağlı Ek-4 kullanımları (sanayi, depo …), 24/6'nın hâlinin sınıflarıyla."""
+    hal = y.hal("BYKHY", "24/6", gun)
+    if hal is None:
+        return []
+    siniflar, _ = _sinifi(bina, hal)
+    return [s["name"] for s in siniflar if s.get("limit") is None and not s.get("unlimited")]
+
+
 def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
     """Başvuru günü ``gun`` olan projenin kompartıman bulguları."""
     bulgular: list[dict[str, Any]] = []
     satirlar: list[dict[str, Any]] = []
-    for madde, denetim in (("24/2", tehlike), ("24/6", alan), ("24/7", aciklik)):
+    for madde, denetim in (("24/2", tehlike), ("24/4", katlar_arasi), ("24/5", None), ("24/6", alan),
+                           ("24/7", aciklik)):
         hal = y.hal("BYKHY", madde, gun)
+        if madde in ("24/4", "24/5") and not bina.get("links") and hal is not None:
+            # Katlar arası açıklık yoksa 24/5 kapsam dışı; 24/4 yine yüksekliği okur.
+            if madde == "24/5":
+                satirlar.append(_satir(hal, y.KAPSAM_DISI, "katlar arası galeri ya da atrium boşluğu yok"))
+                continue
         if hal is None:
+            if madde in ("24/4", "24/5") and not bina.get("links"):
+                continue
             b, s = _bilinmiyor(madde, gun, sorted(m["uid"] for m in bina.get("spaces") or [])[:20])
             bulgular.append(b)
             satirlar.append(s)
             continue
         dakika = int(hal.anahtar.get("minutes", 60))
-        b, s = denetim(bina, hal, dakika)
+        if madde == "24/5":
+            b, s = atrium(bina, hal, _tehlikeli_kullanim(bina, gun))
+        else:
+            b, s = denetim(bina, hal, dakika)
         bulgular += b
         satirlar.append(s)
     return y.Sonuc(bulgular, satirlar)

@@ -2264,7 +2264,8 @@
         "uid": "01a1dfda-06c5-7278-9486-e3989deaadbb",
         "level": "zemin",
         "name": "Merdiven evi",
-        "area": 16.81
+        "area": 16.81,
+        "stair": true
       },
       {
         "uid": "01a1dfda-06c5-7278-9486-e3999a1cb813",
@@ -2306,7 +2307,8 @@
         "uid": "01a1dfda-0704-70dd-a975-499e70342853",
         "level": "k1",
         "name": "Merdiven evi",
-        "area": 16.81
+        "area": 16.81,
+        "stair": true
       },
       {
         "uid": "01a1dfda-0704-70dd-a975-499fcf59dea1",
@@ -2671,6 +2673,22 @@
           }
         ],
         "open": 0.0
+      }
+    ],
+    "links": [
+      {
+        "uid": "01a1dfda-06f3-72a1-8e0e-a40020218328",
+        "kind": "stair",
+        "below": "zemin",
+        "above": "k1",
+        "roomsBelow": [
+          "01a1dfda-06c5-7278-9486-e3989deaadbb"
+        ],
+        "roomsAbove": [
+          "01a1dfda-0704-70dd-a975-499e70342853"
+        ],
+        "area": 0.0,
+        "stack": "01a1dfda-06f3-72a1-8e0e-a40020218328"
       }
     ],
     "elements": [

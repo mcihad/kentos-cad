@@ -67,6 +67,9 @@ pub struct BuildingFacts {
     /// What separates each two rooms of a storey that share a boundary (docs/adr/8081; BYKHY 4/tt, 24).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub separations: Vec<SeparationFacts>,
+    /// The openings between storeys (docs/adr/8086): galleries, atriums, stair wells, stairs.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub links: Vec<LinkFacts>,
     /// The project says the building has sprinklers (`settings.arch.sprinklers`): BYKHY Ek-4's notes read it.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub sprinklers: bool,
@@ -120,6 +123,31 @@ pub struct SpaceFacts {
     pub level: Option<String>,
     pub name: String,
     pub area: f64,
+    /// An escape stair's room (named or used as Merdiven, no dwelling unit's own): its enclosure across the storeys is
+    /// no storey's compartment (docs/adr/8086).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub stair: bool,
+}
+
+/// An opening between two storeys (docs/adr/8086; BYKHY 4/g, 24/4, 24/5): a floor slab's hole, a void space that is no
+/// shaft, a stair; the rooms it joins on the storey under it and on the storey it opens into, by persistent id; its area
+/// (m², 0 for a stair); whether a stair arrives through it (a stair well); the stack it belongs to (openings over one
+/// another on consecutive storeys, by the lowest one's id).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct LinkFacts {
+    pub uid: String,
+    /// `hole`, `void` or `stair`.
+    pub kind: String,
+    pub below: Option<String>,
+    pub above: Option<String>,
+    pub rooms_below: Vec<String>,
+    pub rooms_above: Vec<String>,
+    pub area: f64,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub stair_well: bool,
+    pub stack: String,
 }
 
 /// What separates two rooms of a storey along their shared boundary (docs/adr/8081): the walls, the openings (a door, a
@@ -367,6 +395,10 @@ impl BuildingFacts {
             x.openings.sort_by(|a, b| a.uid.cmp(&b.uid));
         }
         self.separations.sort_by(|a, b| a.rooms.cmp(&b.rooms));
+        for l in &mut self.links {
+            l.area = round(l.area, AREA);
+        }
+        self.links.sort_by(|a, b| (&a.below, &a.uid, &a.kind).cmp(&(&b.below, &b.uid, &b.kind)));
         self.elements.sort_by(|a, b| a.uid.cmp(&b.uid));
         self.height = round(self.height, LENGTH);
         self.basement_depth = round(self.basement_depth, LENGTH);

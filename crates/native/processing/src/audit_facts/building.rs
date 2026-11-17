@@ -35,13 +35,15 @@
 //! - **The parcel's plan notes** (docs/adr/8084): the project's `planNotes` as written, the measure by its name.
 //! - **The zone** (docs/adr/8085): the project's `zone` by its name; each storey's rooms of a dwelling unit and whether
 //!   its name says Asma kat (a mezzanine, part of the ground storey).
+//! - **Openings between storeys** (docs/adr/8086): `Document::vertical_links` (floor slabs' holes, void spaces that are
+//!   no shaft, stairs) and each room's being an escape stair's.
 
 use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
 use kentos_extensions::audit_facts::building::{
-    BuildingFacts, DoorFacts, ElementFacts, EmsalLimit, PlanNoteFacts, RoomPeople, SeparatingElement, SeparationFacts,
-    SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom,
+    BuildingFacts, DoorFacts, ElementFacts, EmsalLimit, LinkFacts, PlanNoteFacts, RoomPeople, SeparatingElement,
+    SeparationFacts, SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom,
 };
 
 /// The drawing's building facts; empty (no storey) for a project without Mimari's storeys.
@@ -153,6 +155,23 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         .collect();
     let gross: std::collections::HashMap<String, f64> =
         doc.zoning_rooms().into_iter().map(|r| (r.uid, r.gross)).collect();
+    // An escape stair's room: named or used as Merdiven, no dwelling unit's own (the escape routes' reading).
+    let stair_rooms: std::collections::HashSet<String> = doc
+        .entities_with_uids()
+        .filter_map(|(uid, e)| match e {
+            Entity::Space(s) => {
+                let x = &s.space;
+                let own_dwelling = x
+                    .unit
+                    .as_deref()
+                    .and_then(|u| program.unit(u))
+                    .is_some_and(|u| u.kind == UnitKind::Unit && dwelling_nature(u.nature.as_deref()));
+                (kentos_domain::escape::stair_name(x.name.as_deref(), x.usage.as_deref()) && !own_dwelling)
+                    .then(|| uid.to_string())
+            }
+            _ => None,
+        })
+        .collect();
     let spaces = storeys
         .iter()
         .flat_map(|st| st.rooms.iter().map(move |uid| (st.level.clone(), uid.clone())))
@@ -160,7 +179,23 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             name: names.get(&uid).cloned().unwrap_or_default(),
             area: gross.get(&uid).copied().unwrap_or(0.0),
             level: Some(level),
+            stair: stair_rooms.contains(&uid),
             uid,
+        })
+        .collect();
+    let links = doc
+        .vertical_links()
+        .into_iter()
+        .map(|l| LinkFacts {
+            uid: l.uid,
+            kind: l.kind.to_owned(),
+            below: l.below,
+            above: l.above,
+            rooms_below: l.rooms_below,
+            rooms_above: l.rooms_above,
+            area: l.area,
+            stair_well: l.stair_well,
+            stack: l.stack,
         })
         .collect();
     let separations = separations(doc);
@@ -187,6 +222,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         under_stairs,
         spaces,
         separations,
+        links,
         sprinklers: arch.has_sprinklers(),
         elements,
         height,

@@ -588,7 +588,7 @@ maddenin özet satırında (`ArchAuditFinding.state`, `ArchAudited.ruleSet`, K62
 söyler; başsız `cad.arch.audit` (MCP, Python) aynı bulguyu ve kural setini verir. İlk kabul tuttu: 25 bağımsız durum;
 aynı çizim 30.6.2026'da geçer, 2.7.2026'da 34/8'den kalır, tarihsiz eksik veridir; yağmurlama sınaması ADR 8035'in
 (`fire_escape_tests`). İç yükseklik ADR 8040 §3'te Rust'ta yapılmıştı.
-**Kalan:** kompartımanda katlar arası açıklıklar, 24/4 ve IFC grubu (ADR 8081 §6); Ek-3'te çatılar, şaftlar, asma
+**Kalan:** kompartımanın IFC grubu (ADR 8086 §6); Ek-3'te çatılar, şaftlar, asma
 tavan, asansör kapıları ve taşıyıcı duvar (ADR 8082 §6);
 erişilebilir yol (TS 9111 metni); plan notlarının öbür konuları (ADR 8084 §6); blok başına bölge ve 28/1-d (ADR 8085
 §6);
@@ -638,6 +638,11 @@ kullanımı İmar durumu'nda seçilir (konut, zemin katı ticaretli konut, karma
 yükseklikleri bölgenin bendiyle (PAİY 28/1-a, b, c, ç; Sivas'ınkiler), asma kat zemin katın parçası (asma katlı zemin
 kat), karma alanda konut katı ayrı; bölge yazılmamışsa konut projesinde konut alanı, öbüründe eksik veri. 12 bağımsız
 durum; masaüstünde Ticaret alanı seçilince zemin kat 4,50'ye kalır, Sivas'la çelişki.
+**Yapıldı (17 Kasım 2026, [ADR 8086](../docs/adr/8086-compartments-across-storeys.md), K98–K101):** katlar arası
+açıklıklar: döşeme deliği, şaft olmayan boşluk mahal ve merdiven ölçülür (`Document::vertical_links`) ve iki katın
+mahallerini aynı kompartımana koyar (Ek-4 alanı katlar boyunca); BYKHY 24/4 (21,50/30,50 m'nin üstünde en çok üç kat;
+merdiven yuvası sayılmaz) ve 24/5 (merdiven yuvası olmayan boşluk atrium: duman kontrolü ve perde çizimde okunmaz,
+uzman incelemesi). 7 bağımsız durum; masaüstünde delikli döşeme iki katı birleştirir, delikten çıkan merdiven yuvadır.
 
 **Kullanıcı sonucu:** Denetim, başvuru tarihinde yürürlükte olan kuralları uygular. Her bulgu geçti, kaldı, eksik veri,
 uzman incelemesi ya da kapsam dışıdır. Yorum isteyen konu kendiliğinden "uygun" sayılmaz. Dayanak Z9; Ek A.
@@ -827,7 +832,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B12b ~ | IFC görüntüleyici | IFC-12 | Dosya kendi penceresinde: ağaç, özellikler, kesit; dışa aktarılan tek tıkla görülür (ilk dilim ADR 8073; gerçek pencerede kabul ve kesitin tutamakları kaldı) |
 | B13 ~ | Yazılmış dosyadan doğrulama, IDS ve kontrol formu | IFC-08 | 21 sorunun kanıtı dosyadan (ADR 8074; ikinci okuyucu ve IfcTester KentOS'la aynı; son yazılan dosya, beş sonuç raporu ve bütçe kaldı) |
 | B14 ~ | BIM ruhsat paketi | BIM-14 | Tek komut, tek revizyon, tek paket (ADR 8075; gerçek paket ADR 8076; müellifin cevapları çizimde ve basılan formda ADR 8077; 2+1 de yayımlanıyor, MCP'de uçtan uca, eskiyen cevap durdurur ADR 8077 §7) |
-| B15 ~ | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti (ADR 8078: asansör 34/1 ve 34/8'in hâlleri, eksik veri ve uzman incelemesi, uzman onayı, kaçış yolu kapıları BYKHY 47; ADR 8079: emsalin 22/1-ç, -f, -k, -l sınırları ve koşulları, kat ara toplamı; ADR 8080: merdiven altı 1,80 m; ADR 8081: kompartıman (24/2, 24/6, 24/7); ADR 8082: Ek-3 dayanımları; ADR 8083: kat yüksekliği 28/1-c ve kapılar 39/1 tarihli hâlleriyle; ADR 8084: plan notu katmanı; ADR 8085: bölgeye göre kat yükseklikleri; çatı, şaft ve taşıyıcı duvar kaldı) |
+| B15 ~ | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti (ADR 8078: asansör 34/1 ve 34/8'in hâlleri, eksik veri ve uzman incelemesi, uzman onayı, kaçış yolu kapıları BYKHY 47; ADR 8079: emsalin 22/1-ç, -f, -k, -l sınırları ve koşulları, kat ara toplamı; ADR 8080: merdiven altı 1,80 m; ADR 8081: kompartıman (24/2, 24/6, 24/7); ADR 8082: Ek-3 dayanımları; ADR 8083: kat yüksekliği 28/1-c ve kapılar 39/1 tarihli hâlleriyle; ADR 8084: plan notu katmanı; ADR 8085: bölgeye göre kat yükseklikleri; ADR 8086: katlar arası açıklıklar, 24/4, 24/5; çatı, şaft ve taşıyıcı duvar kaldı) |
 | B16 | Bilgi yönetimi ve teslim kaydı | BIM-15 | Teslim ve iade kayıtlı |
 | B17 | Büro ve belediye pilotu | BIM-16, IFC-11 | İdarenin yazılı cevabı |
 

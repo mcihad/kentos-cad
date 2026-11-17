@@ -274,33 +274,8 @@ pub fn limits(kind: RoomKind) -> (f64, Option<f64>) {
     }
 }
 
-/// A void's or a shaft's kind by its name or use (docs/adr/8034).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ShaftKind {
-    /// Işıklık, aydınlık (32/2).
-    LightWell,
-    /// Hava bacası, havalandırma bacası (32/3).
-    AirShaft,
-    /// Asansör kuyusu (34/2); its lobby (Asansör holü, önü) is not.
-    Elevator,
-}
-
-/// A shaft's kind by its name or use: an elevator's shaft (not its lobby), a light well, an air shaft.
-pub fn shaft_of(name: Option<&str>, usage: Option<&str>) -> Option<ShaftKind> {
-    let w = words(name, usage);
-    let has = |p: &str| has(&w, p);
-    if has("ASANSOR")
-        && !(has("HOL") || has("ONU") || has("LOBI") || has("SAHANLIK") || has("BEKLEME"))
-    {
-        Some(ShaftKind::Elevator)
-    } else if has("ISIKLIK") || has("AYDINLIK") {
-        Some(ShaftKind::LightWell)
-    } else if (has("HAVA") && has("BACA")) || has("HAVALANDIRMA") {
-        Some(ShaftKind::AirShaft)
-    } else {
-        None
-    }
-}
+/// A void's or a shaft's kind by its name or use (docs/adr/8034): the domain's reading, which the building facts share.
+pub use kentos_domain::room_names::{ShaftKind, shaft_of};
 
 /// A technical room 34/1 does not count a basement by (the domain's reading, which the building facts share).
 fn technical(name: Option<&str>, usage: Option<&str>) -> bool {

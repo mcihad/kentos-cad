@@ -212,3 +212,38 @@ pub fn height_class(name: Option<&str>, usage: Option<&str>) -> Option<HeightCla
     }
     Some(HeightClass::Inhabited)
 }
+
+/// A void's or a shaft's kind by its name or use (docs/adr/8034).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ShaftKind {
+    /// Işıklık, aydınlık (32/2).
+    LightWell,
+    /// Hava bacası, havalandırma bacası (32/3).
+    AirShaft,
+    /// Asansör kuyusu (34/2); its lobby (Asansör holü, önü) is not.
+    Elevator,
+}
+
+/// A shaft's kind by its name or use: an elevator's shaft (not its lobby), a light well, an air shaft.
+pub fn shaft_of(name: Option<&str>, usage: Option<&str>) -> Option<ShaftKind> {
+    let w = words(name, usage);
+    let has = |p: &str| has(&w, p);
+    if has("ASANSOR")
+        && !(has("HOL") || has("ONU") || has("LOBI") || has("SAHANLIK") || has("BEKLEME"))
+    {
+        Some(ShaftKind::Elevator)
+    } else if has("ISIKLIK") || has("AYDINLIK") {
+        Some(ShaftKind::LightWell)
+    } else if (has("HAVA") && has("BACA")) || has("HAVALANDIRMA") {
+        Some(ShaftKind::AirShaft)
+    } else {
+        None
+    }
+}
+
+/// Whether a void's name or use is a shaft's (docs/adr/8086): an elevator's, a light well, an air shaft, a service shaft
+/// or a flue (Şaft, Baca, Tesisat). BYKHY 4/g leaves them out of the atriums and the openings between storeys.
+pub fn shaft(name: Option<&str>, usage: Option<&str>) -> bool {
+    let w = words(name, usage);
+    shaft_of(name, usage).is_some() || has(&w, "SAFT") || has(&w, "BACA") || has(&w, "TESISAT")
+}

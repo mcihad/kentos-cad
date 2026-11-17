@@ -1,7 +1,7 @@
 {
   "format": "kentos.ruleVersions",
   "version": 1,
-  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de, merdiven altınınki 8080 §1'de, kompartımanlarınki 8081 §1'de, dayanımlarınki 8082 §1'de, kat yüksekliği ve kapılarınki 8083 §1'de, bölgelerin kat yükseklikleri 8085 §1'de).",
+  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de, merdiven altınınki 8080 §1'de, kompartımanlarınki 8081 §1'de, dayanımlarınki 8082 §1'de, kat yüksekliği ve kapılarınki 8083 §1'de, bölgelerin kat yükseklikleri 8085 §1'de, katlar arası açıklıklarınki 8086 §1'de).",
   "regulations": {
     "PAİY": {
       "name": "Planlı Alanlar İmar Yönetmeliği",
@@ -959,6 +959,45 @@
           "other": 3.6,
           "text": "Kat yükseklikleri uygulama imar planında daha fazla belirlenmemiş ise döşeme üst kotundan döşeme üst kotuna olmak üzere en fazla; ç) Zemin katında ticaret yapılabilen konut bölgelerinde ise zemin katlarda 4.50 metre, asma katlı zemin katlarda 5.50 metre, diğer katlarda 3.60 metre, … kabul edilerek uygulama yapılabilir.",
           "source": "RG 10.11.2022/32009, 28 inci maddenin birinci fıkrası (ç); docs/adr/8085 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "24/4",
+      "title": "Yüksek binada kompartımanın katları",
+      "transition": "BKK 2015/7401 (RG 9.7.2015/29411) yayımı günü yürürlüğe girdi (23 üncü madde); Geçici 1: yayımından önce yapı ruhsatı verilmiş yapılara ve ilanı yapılmış kamu ihalelerine önceki hükümler uygulanır. Önceki metin kural setinde yok: 9.7.2015'ten önceki başvuru uzman incelemesi.",
+      "versions": [
+        {
+          "id": "2015",
+          "from": "2015-07-09",
+          "until": null,
+          "label": "9.7.2015",
+          "gazette": "19.12.2007/26735; 24/4 9.7.2015/29411 değişik",
+          "other": 21.5,
+          "dwelling": 30.5,
+          "storeys": 3,
+          "text": "(4) Bina yüksekliği 21.50 m'den fazla olan konut harici binalarda ve bina yüksekliği 30.50 m'den fazla olan konut binalarında belirtilen yüksekliklerden daha yukarıda olan katlarında en çok üç kat bir yangın kompartımanı olarak düzenlenir.",
+          "source": "RG 9.7.2015/29411, BKK 2015/7401'in eki 4 üncü madde (taranmış metin sayfa sayfa okundu); docs/adr/8086 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "24/5",
+      "title": "Atrium",
+      "transition": "24/5 10.8.2009 tarihli ve 2009/15316 sayılı Bakanlar Kurulu Kararıyla değişti (RG 9.9.2009/27344; 4/g'nin atrium tanımı da); önceki metni kural setinde yok.",
+      "versions": [
+        {
+          "id": "2009",
+          "from": "2009-09-09",
+          "until": null,
+          "label": "9.9.2009",
+          "gazette": "19.12.2007/26735; 24/5 9.9.2009/27344 değişik",
+          "area": 90,
+          "curtain": 0.45,
+          "text": "(5) Atriumlu bölümlere, sadece düşük ve orta tehlikeli sınıfları içeren kullanımlara sahip binalarda müsaade edilir. Atrium alanının hiçbir noktada 90 m2'den küçük olmaması esastır. Alanı 90 m2'den küçük olan atrium boşluklarının çevresi her katta en az 45 cm yüksekliğinde duman perdesi ile çevrelenir ve yağmurlama sistemi ile korunan binalarda duman perdesinden 15 ila 30 cm uzaklıkta, aralarındaki mesafe en çok 2 m olacak şekilde yağmurlama başlığı yerleştirilir. Atriumlarda doğal veya mekanik olarak duman kontrolü yapılır.",
+          "source": "RG 19.12.2007/26735, 24 üncü maddenin beşinci fıkrası (2009/15316 sayılı BKK ile değişik) ve 4/g; docs/adr/8086 §1."
         }
       ]
     }

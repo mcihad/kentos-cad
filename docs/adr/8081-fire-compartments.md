@@ -111,6 +111,6 @@ olarak) okundu:
 ## §6. Sıradaki adımlar
 
 - **Katlar arası açıklıklar:** galeri, atrium (24/5) ve açık merdivenle birleşen katlar; 24/4 (yüksek binada en çok
-  üç kat bir kompartıman).
+  üç kat bir kompartıman): [ADR 8086](8086-compartments-across-storeys.md)'da yapıldı.
 - **Kompartımanın IFC grubu** (bim-plan "Gruplar: … yangın kompartımanı"): `IfcZone`, EK-6'nın satırıyla.
 - **Döşemelerin sınıfı** ve Ek-3/B, Ek-3/C'nin yüksekliğe ve kullanıma göre süreleri: sıradaki madde.

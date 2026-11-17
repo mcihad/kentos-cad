@@ -1,5 +1,14 @@
 # Değişiklikler
 
+## 0.10.0 — 17 Kasım 2026
+
+- Katlar arası açıklıklar (docs/adr/8086): döşeme boşluğu, şaft olmayan boşluk mahal ve merdiven (olgular `links`) iki
+  katın mahallerini aynı kompartımana koyar; Ek-4 alanı katlar boyunca toplanır. BYKHY 24/4 (9.7.2015): 21,50 m'yi aşan
+  konut harici, 30,50 m'yi aşan konut binasında bu yüksekliğin üstündeki katlarda en çok üç kat bir kompartıman
+  (`bykhy_compartment_storeys_over`); kaçış merdiveni yuvası sayılmaz. 24/5 (9.9.2009): merdiven yuvası olmayan boşluk
+  4/g'nin atriumu, duman kontrolü ve 90 m²'den küçükse 45 cm duman perdesi çizimde okunmaz (`bykhy_atrium`, uzman
+  incelemesi). 7 bağımsız durum; eski 22 durum tek katlı: 24/4 ve 24/5 kapsam dışı.
+
 ## 0.9.0 — 17 Kasım 2026
 
 - Bölge (docs/adr/8085): kat yükseklikleri parselin plandaki kullanımına göre (`building.zone`): ticaret alanı 28/1-a,

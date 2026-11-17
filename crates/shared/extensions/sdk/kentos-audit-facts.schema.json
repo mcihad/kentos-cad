@@ -113,6 +113,13 @@
           },
           "type": "array"
         },
+        "links": {
+          "description": "The openings between storeys (docs/adr/8086): galleries, atriums, stair wells, stairs.",
+          "items": {
+            "$ref": "#/$defs/LinkFacts"
+          },
+          "type": "array"
+        },
         "local": {
           "description": "The municipality's regulation the project reads over the national one (`sivas`: Sivas Belediyesi İmar\nYönetmeliği, RG 10.11.2022/32009); absent: none.",
           "type": [
@@ -1037,6 +1044,61 @@
       ],
       "type": "object"
     },
+    "LinkFacts": {
+      "description": "An opening between two storeys (docs/adr/8086; BYKHY 4/g, 24/4, 24/5): a floor slab's hole, a void space that is no\nshaft, a stair; the rooms it joins on the storey under it and on the storey it opens into, by persistent id; its area\n(m², 0 for a stair); whether a stair arrives through it (a stair well); the stack it belongs to (openings over one\nanother on consecutive storeys, by the lowest one's id).",
+      "properties": {
+        "above": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "area": {
+          "format": "double",
+          "type": "number"
+        },
+        "below": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "`hole`, `void` or `stair`.",
+          "type": "string"
+        },
+        "roomsAbove": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "roomsBelow": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "stack": {
+          "type": "string"
+        },
+        "stairWell": {
+          "type": "boolean"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "kind",
+        "roomsBelow",
+        "roomsAbove",
+        "area",
+        "stack"
+      ],
+      "type": "object"
+    },
     "ObjectCounts": {
       "description": "A layer's objects by their geometry.",
       "properties": {
@@ -1537,6 +1599,10 @@
         },
         "name": {
           "type": "string"
+        },
+        "stair": {
+          "description": "An escape stair's room (named or used as Merdiven, no dwelling unit's own): its enclosure across the storeys is\nno storey's compartment (docs/adr/8086).",
+          "type": "boolean"
         },
         "uid": {
           "type": "string"

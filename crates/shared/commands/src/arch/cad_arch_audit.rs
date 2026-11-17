@@ -443,7 +443,8 @@ pub struct ArchAuditFinding {
     /// `paiy_elevator_not_serving` by the application date's version, the escape route doors' `bykhy_exit_door_swing`
     /// and `bykhy_stair_door_rating` (docs/adr/8078 §8), the emsal limits' conditions `paiy_caretaker_not_required` and
     /// `paiy_library_not_exempt` (docs/adr/8079), a low space under a stair open into a room `paiy_under_stair_open`
-    /// (docs/adr/8080), the fire compartments' `bykhy_hazard_room_separation`, `bykhy_compartment_area_over` and
+    /// (docs/adr/8080), the fire compartments' (across storeys through galleries and stairs, docs/adr/8086)
+    /// `bykhy_hazard_room_separation`, `bykhy_compartment_storeys_over` (24/4), `bykhy_atrium` (24/5), `bykhy_compartment_area_over` and
     /// `bykhy_compartment_opening` (docs/adr/8081), the elements' declared classes against Ek-3
     /// `bykhy_element_resistance` and `bykhy_height_not_permitted` (docs/adr/8082), the storeys' and doors' sizes
     /// `paiy_storey_height_over`, `paiy_door_height_below` and `paiy_door_width_below` (docs/adr/8083),
