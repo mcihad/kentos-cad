@@ -1256,7 +1256,9 @@ kuralları sonda yeniden çalıştırır; komut ayrı bir deneme sürecinde (ken
   manifest şeması ve protokol, duran hatanın kodu ve anlamı; anahtarlar ve ev klasörü gizli; ajan `extension.report`
   ile okur [ECO-API-14]; keşif ortak katalogda (§109) [ECO-API-07'nin keşif kısmı]; anlamsal kaydedici Komut
   geçmişidir (ADR 0284, 0443): Python'u, betiği ve yeniden oynatması gizli alan ve anahtar taşımaz (§111)
-  [ECO-API-13]; kalan: adların SDK uyumluluk ADR'sinde kesinleşmesi ve listenin geri kalanı.*
+  [ECO-API-13]; SDK şablonları: panel (GUI), İşlemler, taşınabilir form (§112) ve hepsi bir arada (birleşik paket)
+  `kentos kek new --with`/`extension.blueprint` ile [ECO-API-10]; kalan: adların SDK uyumluluk ADR'sinde
+  kesinleşmesi ve listenin geri kalanı.*
 - [ ] **Derslerden (13 Kasım):**
   - **Yazılı SDK kararlılık politikası** (QEP 425 benzeri ADR, ADIM 19'un başında): kararlı yüzey yalnız ana sürümde
     kırılır, kaldırmadan önce en az bir sürüm "eskiyor" uyarısı; deneysel yüzeyler yalnız geliştirici ortamında açılır

@@ -1,8 +1,8 @@
 //! `extension.blueprint` (plan/eklenti.md ADIM 21; docs/adr/8057 §19): a new extension's working folder, valid by
 //! construction (`verify` passes it without a problem or a warning), with one small example of each contribution
 //! asked for: a command that reads the layers, an İşlemler tool with its descriptor and an example, an audit rule with
-//! a fix and its examples (`kentos kek test` runs both, §48, §75), an expression function and a map tool. An agent or
-//! a person grows it from there.
+//! a fix and its examples (`kentos kek test` runs both, §48, §75), an expression function, a map tool, a layer schema,
+//! a panel and a portable form bound to the schema's layer (§112). An agent or a person grows it from there.
 //!
 //! KentOS gives the files; the caller writes them (an agent's read-only tool writes nothing). The Python project has
 //! no dependency and its lock is uv's own for that (uv 0.11): adding a library is `uv add` in the folder, which writes
@@ -42,10 +42,14 @@ pub enum Contribution {
     Schema,
     /// A panel (`ui/nesne-ara.panel.json`, docs/adr/8057 §24) whose button runs a search command.
     Panel,
+    /// A portable form (`forms/alan.kform`, docs/adr/8057 §112) the schema's layer opens its objects with: the layer's
+    /// fields, its list of values from the schema's domain. Asked alone, it brings the schema.
+    Form,
 }
 
 impl Contribution {
-    /// Its name in an agent's call (`command`, `processing`, `audit`, `expression`, `mapTool`, `schema`, `panel`).
+    /// Its name in an agent's call (`command`, `processing`, `audit`, `expression`, `mapTool`, `schema`, `panel`,
+    /// `form`).
     pub fn parse(name: &str) -> Option<Contribution> {
         match name {
             "command" => Some(Contribution::Command),
@@ -55,11 +59,12 @@ impl Contribution {
             "mapTool" => Some(Contribution::MapTool),
             "schema" => Some(Contribution::Schema),
             "panel" => Some(Contribution::Panel),
+            "form" => Some(Contribution::Form),
             _ => None,
         }
     }
 
-    pub const ALL: [Contribution; 7] = [
+    pub const ALL: [Contribution; 8] = [
         Contribution::Command,
         Contribution::Processing,
         Contribution::Audit,
@@ -67,6 +72,7 @@ impl Contribution {
         Contribution::MapTool,
         Contribution::Schema,
         Contribution::Panel,
+        Contribution::Form,
     ];
 }
 
@@ -87,11 +93,15 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
         return Err("Özet boş olamaz ve en çok 200 karakterdir (tek cümle).".to_owned());
     }
     let mut asked = ask.contributions.clone();
+    // A form opens the schema's layer's objects: it brings the schema.
+    if asked.contains(&Contribution::Form) {
+        asked.push(Contribution::Schema);
+    }
     asked.sort();
     asked.dedup();
     if asked.is_empty() {
         return Err(
-            "En az bir katkı seçin: command, processing, audit, expression, mapTool.".to_owned(),
+            "En az bir katkı seçin: command, processing, audit, expression, mapTool, schema, panel, form.".to_owned(),
         );
     }
     let last = ask.id.rsplit('.').next().unwrap_or("eklenti");
@@ -244,6 +254,16 @@ pub fn blueprint(ask: &Ask) -> Result<BTreeMap<String, String>, String> {
                 ]
             }]
         });
+        let mut layer_schema = layer_schema;
+        if has(Contribution::Form) {
+            // The layer opens its objects with the form; installing binds it to the layer by its name.
+            layer_schema["layers"][0]["form"] = json!(FORM_FILE);
+            entrypoints.insert(
+                "forms".into(),
+                json!([{ "id": "alan", "definition": FORM_FILE }]),
+            );
+            files.insert(FORM_FILE.to_owned(), pretty(&form_package(name, &package)));
+        }
         files.insert("schema.json".to_owned(), pretty(&layer_schema));
         python.push(SCHEMA.to_owned());
     }
@@ -598,6 +618,34 @@ def isaret_koy(ctx: ext.MapToolContext, sekil: ext.Shape) -> ext.CommandResult:
     yerleştirir)."""
     return ctx.add_feature("taslak", sekil, {"ad": "işaret"})
 "#;
+
+/// The blueprint's form in the package.
+const FORM_FILE: &str = "forms/alan.kform";
+
+/// The portable form of the schema's layer (`kentos.form-package` 1): its two fields, the name required, the state
+/// from the schema's domain, so the form and the layer say the same thing (docs/adr/8057 §112).
+fn form_package(name: &str, package: &str) -> Value {
+    let values =
+        json!([{ "code": "ETKIN", "label": "Etkin" }, { "code": "KAPALI", "label": "Kapalı" }]);
+    let domain = format!("{package}_durum");
+    json!({
+        "format": "kentos.form-package",
+        "version": 1,
+        "name": format!("{name} alanı"),
+        "body": {
+            "revision": 1,
+            "items": [
+                { "type": "field", "id": "ad", "field": "ad", "required": true },
+                { "type": "field", "id": "durum", "field": "durum" }
+            ]
+        },
+        "fields": [
+            { "name": "ad", "kind": "text" },
+            { "name": "durum", "kind": "text", "values": values, "domain": domain }
+        ],
+        "domains": [{ "id": domain, "name": "Durum", "kind": "text", "values": values }]
+    })
+}
 
 #[cfg(test)]
 mod tests {

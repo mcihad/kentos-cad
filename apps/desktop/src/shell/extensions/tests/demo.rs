@@ -610,6 +610,16 @@ fn a_blueprint_installs_with_every_contribution_and_passes_the_desktops_own_chec
             .is_some(),
         "its İşlemler tool is listed"
     );
+    // Its portable form, bound to the schema's layer (docs/adr/8057 §112): a form among its parts.
+    let catalog = gis.ext_catalog();
+    assert!(
+        catalog["extensions"][0]["contributions"]
+            .as_array()
+            .is_some_and(|parts| parts
+                .iter()
+                .any(|p| p["kind"] == "form" && p["id"] == "ext.tr.belediye.mezarlik-bilgi.alan")),
+        "{catalog:#}"
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }
 

@@ -5395,3 +5395,22 @@ incelemesi, panel, form, atölye ön izlemesi).
   metin kendi başına taranır: gizlenen anahtar etrafındaki tırnağı ve JSON'u almaz, yeniden oynatma JSON olarak okunur.
 - **Sınama:** masaüstü 1 (girdisine anahtarlı bir servis adresi eklenmiş çağrının Python'unda ve betikte anahtar yok,
   gizlendiği yazılı; iç içe bir girdide anahtar ve zırh kendi metinlerinde gizlenir, yapı aynı).
+
+## §112. İskeletin taşınabilir form şablonu (API ailesi, ECO-API-10)
+
+**17 Kasım.** Kod: eklenti paketi `blueprint.rs` (`Contribution::Form`, `form_package`, `FORM_FILE`); headless
+`agent_tools.rs` (`extension.blueprint`'in katkıları), CLI `kentos kek new --with … form`; sınamalar `blueprint.rs`'in
+sınaması (her katkı, tek başına ve hepsi birden), masaüstü `extensions/tests/demo.rs`.
+
+- **Sorun.** ECO-API-10 "SDK şablonları (GUI, İşlemler, taşınabilir form, birleşik paket)" der. İskelet panel (GUI),
+  İşlemler aracı, denetim, ifade işlevi, harita aracı, katman şeması ve komut veriyordu, hepsi bir arada da (birleşik
+  paket); taşınabilir formun şablonu yoktu: formlu bir eklenti yazan ajan `.kform`'u, şemanın katmanına bağlanmasını ve
+  manifestteki bildirimini sıfırdan kurmak zorundaydı.
+- **Karar:** `form` katkısı `forms/alan.kform` yazar (`kentos.form-package` 1): şemanın katmanının iki alanı, ad
+  zorunlu, durum şemanın değer listesinden; şemanın katmanı formu `form` ile anar, manifest `entrypoints.forms`'ta
+  bildirir; kurulum formu katmana adıyla bağlar. Form, nesnelerini açacağı katmanı olmadan anlamsızdır: tek başına
+  istenince şemayı da getirir. İskeletin sözü değişmedi: her katkı tek başına ve hepsi birden doğrulamadan sorunsuz ve
+  uyarısız geçer (formun ön denetimi dahil).
+- **Gerçek kullanım:** `kentos kek new … --with form` 11 dosya yazdı; `kentos kek verify` 0 uyarıyla geçti, kuru koşu 3
+  katkıyı bağladı (form, sekme, Katmanları kur). Masaüstünde her katkılı iskelet kuruldu; formu ajanların ortak
+  kataloğunda `form` olarak görünür (`ext.<eklenti>.alan`).

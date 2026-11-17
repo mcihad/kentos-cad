@@ -53,7 +53,7 @@ const USAGE: &str = "Kullanım:
                                                     (unittest) pencere açmadan çalıştırır (sürekli tümleştirmenin
                                                     komutu; çıkış 0 geçti, 1 kaldı, 2 sınanamadı)
   kentos kek new <klasör> --id <kimlik> --name <ad> [--summary <cümle>] [--module cbs|harita|mimari|yol]
-                 [--utility] [--with command,processing,audit,expression,mapTool,schema,panel]
+                 [--utility] [--with command,processing,audit,expression,mapTool,schema,panel,form]
                                                     doğrulamadan geçen bir eklenti iskeleti yazar
   kentos kek sdk [--part <bölüm>] [--json] [--text] eklenti yazma rehberi ve kentos.ext imzaları (--json: paketin
                                                     tamamı, ajanların kentos://sdk/ai-kek-pack'i; --text: tamamı tek
@@ -306,7 +306,7 @@ fn new_folder(folder: &Path, args: &[&str]) -> ExitCode {
             Some(c) => contributions.push(c),
             None => {
                 return fail(format!(
-                    "“{word}” bir katkı değil: command, processing, audit, expression, mapTool, schema, panel."
+                    "“{word}” bir katkı değil: command, processing, audit, expression, mapTool, schema, panel, form."
                 ));
             }
         }
