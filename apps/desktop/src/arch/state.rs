@@ -62,6 +62,8 @@ pub(crate) struct ArchUiState {
     pub(crate) ifc_compare_window: Option<crate::ifc_compare_window::Window>,
     /// BCF sorunları's window (bcf_window.rs, docs/adr/8103).
     pub(crate) bcf_window: Option<crate::bcf_window::Window>,
+    /// Gelen paketi incele's window (package_review_window.rs, docs/adr/8104).
+    pub(crate) review_window: Option<crate::package_review_window::Window>,
     /// Planda seç waits for a point on an underlay's plan.
     pub(crate) underlay_picking: bool,
 }
@@ -109,6 +111,8 @@ pub(crate) enum Event {
     IfcCompare(crate::ifc_compare_window::Event),
     /// BCF sorunları (bcf_window.rs, docs/adr/8103).
     Bcf(crate::bcf_window::Event),
+    /// Gelen paketi incele (package_review_window.rs, docs/adr/8104).
+    ReviewPackage(crate::package_review_window::Event),
 }
 
 /// The architecture (Mimari) module's windows, `Dialog::Arch`.
@@ -158,6 +162,8 @@ pub(crate) enum ArchDialogKind {
     IfcCompare,
     /// BCF sorunları (bcf_window.rs, docs/adr/8103).
     Bcf,
+    /// Gelen paketi incele (package_review_window.rs, docs/adr/8104).
+    ReviewPackage,
 }
 
 impl App {
@@ -187,6 +193,7 @@ impl App {
             Event::Underlays(event) => return self.underlays_event(event),
             Event::IfcCompare(event) => return self.ifc_compare_event(event),
             Event::Bcf(event) => return self.bcf_event(event),
+            Event::ReviewPackage(event) => return self.review_event(event),
             Event::ArchTemplate(event) => self.architecture_template_event(event),
         }
         Task::none()
@@ -216,6 +223,7 @@ impl App {
             ArchDialogKind::Underlays => self.underlays_view(),
             ArchDialogKind::IfcCompare => self.ifc_compare_view(),
             ArchDialogKind::Bcf => self.bcf_view(),
+            ArchDialogKind::ReviewPackage => self.review_view(),
         }
     }
 }

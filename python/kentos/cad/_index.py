@@ -389,6 +389,7 @@ COMMANDS: dict[str, Any] = {
     "file.publish.sheets": file.publish.sheets,
     "file.publish.status": file.publish.status,
     "file.recover": file.recover,
+    "file.review.package": file.review.package,
     "map.features.code": map.features.code,
     "map.features.reconcile": map.features.reconcile,
     "map.survey.edit": map.survey.edit,

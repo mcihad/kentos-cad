@@ -1375,6 +1375,12 @@ fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input:Value,prog
         let typed:kentos_commands::PublishStatus=serde_json::from_value(input).map_err(|e|e.to_string())?;
         return Ok((crate::publish_status::run(doc,&typed,op,progress),None));
     }
+    #[cfg(feature = "mod-arch")]
+    if command == kentos_commands::FILE_REVIEW_PACKAGE {
+        // Gelen paketi incele (docs/adr/8104): files read, the drawing neither read nor written.
+        let typed: kentos_commands::ReviewPackage = serde_json::from_value(input).map_err(|e| e.to_string())?;
+        return Ok((crate::package_review::run(&typed, op), None));
+    }
     macro_rules! go {
         ($input:ty, $make:ident) => {{
             let typed: $input = serde_json::from_value(input).map_err(|e| {
@@ -1996,6 +2002,7 @@ fn version_of(command: &str) -> u32 {
         kentos_commands::FILE_PUBLISH_SHEETS=>kentos_commands::FILE_PUBLISH_SHEETS_VERSION,
         kentos_commands::FILE_PREFLIGHT_SHEETS=>kentos_commands::FILE_PREFLIGHT_SHEETS_VERSION,
         kentos_commands::FILE_PUBLISH_STATUS=>kentos_commands::FILE_PUBLISH_STATUS_VERSION,
+        kentos_commands::FILE_REVIEW_PACKAGE => kentos_commands::FILE_REVIEW_PACKAGE_VERSION,
         FILE_EXPORT_PDF => FILE_EXPORT_PDF_VERSION,
         FILE_EXPORT_BLOCK => FILE_EXPORT_BLOCK_VERSION,
         FILE_EXPORT_GPKG => FILE_EXPORT_GPKG_VERSION,
@@ -2090,6 +2097,9 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
         kentos_commands::FILE_PREFLIGHT_SHEETS=>serde_json::from_value::<kentos_commands::PreflightSheets>(input.clone()).map_err(text).and_then(|t|serde_json::to_value(t).map_err(|e|e.to_string())),
         kentos_commands::FILE_PUBLISH_SHEETS=>serde_json::from_value::<kentos_commands::PublishSheets>(input.clone()).map_err(text).and_then(|t|serde_json::to_value(t).map_err(|e|e.to_string())),
         kentos_commands::FILE_PUBLISH_STATUS=>serde_json::from_value::<kentos_commands::PublishStatus>(input.clone()).map_err(text).and_then(|t|serde_json::to_value(t).map_err(|e|e.to_string())),
+        kentos_commands::FILE_REVIEW_PACKAGE => serde_json::from_value::<kentos_commands::ReviewPackage>(input.clone())
+            .map_err(text)
+            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         FILE_PACKAGE => serde_json::from_value::<PackageProject>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),

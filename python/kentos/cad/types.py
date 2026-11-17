@@ -69668,6 +69668,41 @@ class PackageResult(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PackageReviewed(_Model):
+    """Output of `file.review.package` v1, and its plan: the package, its files, the model's file name, the layers in
+    order, the findings (the layers' order, then the rule's), the form's rows.
+    """
+    path: str
+    files: list[ReviewFile]
+    layers: list[ReviewLayer]
+    findings: list[ReviewFinding]
+    rows: list[ReviewFormRow]
+    model: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["files"] = [e0.to_json() for e0 in self.files]
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        if self.model is not UNSET:
+            out["model"] = self.model
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PackageReviewed:
+        return cls(
+            path=data["path"],
+            files=[ReviewFile.from_json(e0) for e0 in data["files"]],
+            layers=[ReviewLayer.from_json(e0) for e0 in data["layers"]],
+            findings=[ReviewFinding.from_json(e0) for e0 in data["findings"]],
+            rows=[ReviewFormRow.from_json(e0) for e0 in data["rows"]],
+            model=data.get("model", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PackageSurface(_Model):
     """The surface a package names: its id, name and the digest of what it is made of; and (docs/adr/3220) the surface
     itself as the package carries it: the file (`yuzey.xml`, a LandXML 1.2 TIN of the built surface), its corners' and
@@ -90201,6 +90236,133 @@ class ReviewDecision(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ReviewFile(_Model):
+    """A file of the package as the review read it: its name, its kind (`pdf`, `ifc`, `form`, `list`, `other`) and whether
+    the package's list names it.
+    """
+    name: str
+    kind: str
+    listed: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["kind"] = self.kind
+        out["listed"] = self.listed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewFile:
+        return cls(
+            name=data["name"],
+            kind=data["kind"],
+            listed=data["listed"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewFinding(_Model):
+    """A finding: its layer, its code, whether it is an error (else a warning), what it says (the measured and the asked),
+    how to put it right, the article it rests on, the file it is in, and the objects it is about by their GlobalIds.
+    """
+    layer: str
+    code: str
+    error: bool
+    message: str
+    repair: str
+    cite: str
+    objects: list[str]
+    file: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["code"] = self.code
+        out["error"] = self.error
+        out["message"] = self.message
+        out["repair"] = self.repair
+        out["cite"] = self.cite
+        out["objects"] = list(self.objects)
+        if self.file is not UNSET:
+            out["file"] = self.file
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewFinding:
+        return cls(
+            layer=data["layer"],
+            code=data["code"],
+            error=data["error"],
+            message=data["message"],
+            repair=data["repair"],
+            cite=data["cite"],
+            objects=list(data["objects"]),
+            file=data.get("file", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewFormRow(_Model):
+    """A row of the model quality form (EK-9 Tablo 9.1): its number and title, the author's answer (absent: the package
+    has no form) and KentOS's measured one, and whether they agree.
+    Attributes:
+        no: Unit: index.
+    """
+    no: int
+    title: str
+    kentos: str
+    agree: bool | None | Unset = UNSET
+    author: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["no"] = self.no
+        out["title"] = self.title
+        out["kentos"] = self.kentos
+        if self.agree is not UNSET:
+            out["agree"] = self.agree
+        if self.author is not UNSET:
+            out["author"] = self.author
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewFormRow:
+        return cls(
+            no=data["no"],
+            title=data["title"],
+            kentos=data["kentos"],
+            agree=data.get("agree", UNSET),
+            author=data.get("author", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewLayer(_Model):
+    """A layer of the review: `paket`, `pafta`, `model`, `konum` or `form`; whether it holds (absent: not judged, the
+    words say why) and its words.
+    """
+    key: str
+    words: str
+    holds: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["words"] = self.words
+        if self.holds is not UNSET:
+            out["holds"] = self.holds
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewLayer:
+        return cls(
+            key=data["key"],
+            words=data["words"],
+            holds=data.get("holds", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ReviewNote(_Model):
     """A review note.
     Attributes:
@@ -90428,6 +90590,36 @@ class ReviewNotesListed(_Model):
             resolved=data["resolved"],
             stale=data["stale"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReviewPackage(_Model):
+    """Input of `file.review.package` v1: the package (absolute: a publication's folder, or a lone `.ifc` file) and the
+    administration's own system, by its EPSG code (`5255`: TUREF / TM33), the model's place is held to; absent: the
+    place layer is not judged.
+
+    Refusals: `invalid_file_path` (empty, relative, not there, a file that is not `.ifc`), `review_rule_unavailable` (the
+    standards package's rule does not answer: no Python; the message says how to give one). The facts are read whatever
+    the files hold: a file that does not read is a finding, not a refusal.
+    Attributes:
+        system: Unit: epsg.
+    """
+    path: str
+    system: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.system is not UNSET:
+            out["system"] = self.system
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewPackage:
+        return cls(
+            path=data["path"],
+            system=data.get("system", UNSET),
         )
 
 
@@ -147156,6 +147348,7 @@ __all__ = [
     "PackageResourceKind",
     "PackageResourceKindName",
     "PackageResult",
+    "PackageReviewed",
     "PackageSurface",
     "PackageWay",
     "PackageWayName",
@@ -148046,6 +148239,10 @@ __all__ = [
     "ReviewAnchorState",
     "ReviewAnchorStateName",
     "ReviewDecision",
+    "ReviewFile",
+    "ReviewFinding",
+    "ReviewFormRow",
+    "ReviewLayer",
     "ReviewNote",
     "ReviewNoteOp",
     "ReviewNoteState",
@@ -148055,6 +148252,7 @@ __all__ = [
     "ReviewNotesListed",
     "ReviewOrigin",
     "ReviewOriginName",
+    "ReviewPackage",
     "ReviewPhrase",
     "ReviewPhraseName",
     "ReviewReply",

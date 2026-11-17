@@ -420,6 +420,7 @@ impl App {
                 underlays_window: None,
                 ifc_compare_window: None,
                 bcf_window: None,
+                review_window: None,
                 underlay_picking: false,
                 quantities: None,
             },

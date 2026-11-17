@@ -1,0 +1,73 @@
+{
+  "source": "fixtures/bim/v1/paket/kentos",
+  "writer": "IfcOpenShell 0.9.0.post1",
+  "system": 5256,
+  "packages": {
+    "bozuk": {
+      "konum": [
+        "review_place_zone"
+      ],
+      "pafta": [
+        [
+          "review_sheet_revision",
+          "260123_00_MM_XXXX_PL_MMC_K00_01_000.pdf"
+        ]
+      ],
+      "model": [
+        "01alMXGa9m080000000002"
+      ],
+      "form": [
+        "review_form_disagrees"
+      ]
+    },
+    "dosyalar": {
+      "paket": [
+        [
+          "review_file_missing",
+          "260123_00_MM_XXXX_PL_MMC_K01_01_000.pdf"
+        ],
+        [
+          "review_file_changed",
+          "260123_00_MM_XXXX_PL_VAZ_NNN_01_000.pdf"
+        ],
+        [
+          "review_file_unlisted",
+          "notlar.txt"
+        ]
+      ],
+      "pafta": [
+        [
+          "review_sheet_not_pdfa",
+          "260123_00_MM_XXXX_GN_MMC_NNN_01_000.pdf"
+        ]
+      ]
+    },
+    "taranmis": {
+      "pafta": [
+        [
+          "review_sheet_not_pdfa",
+          "260123_00_MM_XXXX_GN_MMC_NNN_01_000.pdf"
+        ],
+        [
+          "review_sheet_scanned",
+          "260123_00_MM_XXXX_GN_MMC_NNN_01_000.pdf"
+        ]
+      ]
+    },
+    "okunmayan": {
+      "model": [
+        "review_model_unreadable"
+      ]
+    },
+    "listesiz": {
+      "paket": [
+        "review_no_list"
+      ]
+    },
+    "formsuz": {
+      "paket": [
+        "review_no_form"
+      ]
+    }
+  }
+}

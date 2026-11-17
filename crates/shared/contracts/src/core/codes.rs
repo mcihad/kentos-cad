@@ -977,6 +977,7 @@ codes! {
     IFC_REPEATED_GLOBAL_ID = "ifc_repeated_global_id", Warning, false, "Bir GlobalId dosyada birden çok nesnede: bu nesneler karşılaştırılmadı, listelendi.";
     IFC_NO_BODY = "ifc_no_body", Failed, false, "Konunun nesnelerinin hiçbirinin gövdesi yok: bakışın kamerası kurulamıyor.";
     INVALID_BCF_TOPIC = "invalid_bcf_topic", Failed, false, "BCF konusu yazılamıyor: alanlardan biri eksik ya da geçersiz; ileti alanı ve nedenini söyler.";
+    REVIEW_RULE_UNAVAILABLE = "review_rule_unavailable", Failed, false, "Paketin inceleme kuralı (dijital-proje) çalışmadı: Python yok ya da paket bozuk; ileti nasıl verileceğini söyler.";
     BCF_UNREADABLE = "bcf_unreadable", Failed, false, "BCF dosyası okunamadı: zip değil, sürümü bilinmiyor ya da bir XML'i okunmuyor; ileti nedenini söyler.";
     /// Damage in an IFC file that did not stop its reading: a record that does not decode, a reference to nothing, a
     /// cycle, a GlobalId missing or said twice.

@@ -42,6 +42,9 @@ pub(crate) struct IfcWindow {
     file: Option<(Arc<Vec<u8>>, Arc<Model>)>,
     taken: u64,
     found: Option<u64>,
+    /// The objects asked for when the file was opened (a review's finding, docs/adr/8104): chosen and painted once it
+    /// is read, by their GlobalIds.
+    want: Vec<String>,
 }
 
 impl std::fmt::Debug for IfcWindow {
@@ -140,6 +143,7 @@ impl App {
             file: None,
             taken: self.selection.version(),
             found: None,
+            want: Vec::new(),
         }));
         self.show_surface(SURFACE);
         iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
@@ -152,6 +156,37 @@ impl App {
             let done = msg(Event::Done { id, result: result.map(Arc::new) });
             let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(&mut out, done));
         })
+    }
+
+    /// The model at `path` opened with `keys` (GlobalIds) chosen and painted once it is read: a review's finding shown on
+    /// its objects (docs/adr/8104). A file already open is not read again.
+    pub(crate) fn open_ifc_model_showing(&mut self, path: PathBuf, keys: Vec<String>) -> Task<Message> {
+        if let Some(w) = self.ifc_viewer.as_mut().filter(|w| w.path == path && w.file.is_some()) {
+            w.want = keys;
+            Self::show_wanted(w);
+            self.show_surface(SURFACE);
+            return Task::none();
+        }
+        let task = self.open_ifc_model(path);
+        if let Some(w) = self.ifc_viewer.as_mut() {
+            w.want = keys;
+        }
+        task
+    }
+
+    /// The objects asked for chosen (the first) and painted, the chosen one's details read.
+    fn show_wanted(w: &mut IfcWindow) {
+        if w.want.is_empty() {
+            return;
+        }
+        w.viewer.set_found(w.want.iter().map(String::as_str));
+        if w.viewer.choose_key(&w.want[0])
+            && let Some(object) = w.viewer.view().and_then(|v| v.selected())
+            && let Some((bytes, model)) = &w.file
+            && let Ok(d) = model.details(bytes, object)
+        {
+            w.viewer.set_details(object, d);
+        }
     }
 
     /// The viewer closes: its read stops, its model and scene go (the GPU's copy with its window), and the main
@@ -192,7 +227,11 @@ impl App {
                         }
                         w.viewer.load(read.input, facts);
                         w.file = Some((read.bytes, read.model));
-                        self.follow_ifc_viewer();
+                        if w.want.is_empty() {
+                            self.follow_ifc_viewer();
+                        } else if let Some(w) = self.ifc_viewer.as_mut() {
+                            Self::show_wanted(w);
+                        }
                     }
                     Err(why) => w.viewer.failed(why),
                 }
@@ -257,7 +296,8 @@ impl App {
     /// Denetim's findings painted, when they changed since the viewer last took them.
     fn follow_ifc_viewer_found(&mut self) {
         let key = self.building3d_found_key();
-        if self.ifc_viewer.as_ref().is_none_or(|w| w.found == Some(key) || w.viewer.stage != Stage::Shown) {
+        // A review's finding shown keeps its objects painted (docs/adr/8104).
+        if self.ifc_viewer.as_ref().is_none_or(|w| w.found == Some(key) || w.viewer.stage != Stage::Shown || !w.want.is_empty()) {
             return;
         }
         let keys: Vec<String> = self

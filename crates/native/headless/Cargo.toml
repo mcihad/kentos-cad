@@ -30,6 +30,8 @@ kentos-sheet = { path = "../../shared/sheet", default-features = false }
 kentos-processing = { path = "../processing", optional = true }
 # The standards packages' Python rules (docs/adr/8075 §2.6): the BIM permit package's decision.
 kentos-standards = { path = "../standards" }
+# A package as it came (docs/adr/8104): its IFC model's facts read from the file.
+kentos-ifc = { path = "../../shared/ifc", optional = true }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
 # A MapLibre style's sprite (docs/adr/0635 §9): its icons drawn with the drawing's own marker shapes.
 kentos-maplibre = { path = "../../shared/maplibre" }
@@ -43,7 +45,7 @@ serde_json = { workspace = true }
 # or agent host built for one module compiles the core and that discipline; another's command answers that it is not
 # in this build. The contracts, the command types and KCAD stay whole, so a file's other data is kept as it is.
 default = ["mod-arch", "mod-map", "mod-gis", "mod-road"]
-mod-arch = ["kentos-native-application/mod-arch", "kentos-plot/mod-arch"]
+mod-arch = ["kentos-native-application/mod-arch", "kentos-plot/mod-arch", "dep:kentos-ifc", "kentos-ifc/geometry"]
 mod-map = ["kentos-native-application/mod-map", "kentos-plot/mod-map"]
 mod-gis = ["kentos-native-application/mod-gis", "kentos-plot/mod-gis", "dep:kentos-processing"]
 mod-road = ["kentos-native-application/mod-road", "kentos-plot/mod-road"]

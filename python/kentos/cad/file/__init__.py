@@ -28,6 +28,7 @@ from . import export
 from . import import_
 from . import preflight
 from . import publish
+from . import review
 
 
 class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged]):
@@ -392,4 +393,4 @@ recover = _FileRecover()
 """Bozuk çizimi kurtar (``file.recover``)."""
 
 
-__all__ = ["exchange", "export", "import_", "package", "preflight", "publish", "recover"]
+__all__ = ["exchange", "export", "import_", "package", "preflight", "publish", "recover", "review"]

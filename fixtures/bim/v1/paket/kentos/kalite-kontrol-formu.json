@@ -1,0 +1,230 @@
+{
+  "answers": [
+    {
+      "no": 1,
+      "note": "Sınır yayımlanmadı",
+      "yes": true
+    },
+    {
+      "no": 7,
+      "yes": true
+    },
+    {
+      "no": 10,
+      "yes": true
+    }
+  ],
+  "format": "kentos.ek9Form",
+  "model": {
+    "bytes": 171907,
+    "name": "260123_00_MM_XXXX_MD_XXX_NNN_01_000.ifc",
+    "sha256": "91a7ce7eab0420e2ed96b9ff504a56fce4cbc3b9cf0077dbd4d4a1201bf9ca01"
+  },
+  "results": [
+    {
+      "holds": true,
+      "key": "okunuyor",
+      "words": "IFC dosyası STEP olarak okunuyor: 3122 kayıt, 94 nesne."
+    },
+    {
+      "holds": true,
+      "key": "sema",
+      "words": "Okuyucu şemaya aykırı kayıt bulmadı."
+    },
+    {
+      "holds": true,
+      "key": "profil",
+      "words": "Formun bütün soruları Evet."
+    },
+    {
+      "holds": true,
+      "key": "model_pafta",
+      "words": "Paftalar ve model aynı çizimden, güncel."
+    },
+    {
+      "key": "idare",
+      "words": "İdarenin incelemesi bekleniyor (e-PYS Md. 5/3); kabulü KentOS söylemez."
+    }
+  ],
+  "rows": [
+    {
+      "answer": "Evet",
+      "basis": "Dosya 0.2 MB. Bakanlığın dosya boyutu sınırı yayımlanmadı; sınırı müellif ve idare bilir.",
+      "evidence": "inceleme",
+      "no": 1,
+      "note": "Sınır yayımlanmadı (müellif)",
+      "title": "Dosya Boyutu"
+    },
+    {
+      "answer": "Evet",
+      "basis": "EK-7'nin proje, kişi, kuruluş ve rol bilgileri dosyada dolu.",
+      "evidence": "geçti",
+      "no": 2,
+      "note": "EK-7'nin proje, kişi, kuruluş ve rol bilgileri dosyada dolu.",
+      "title": "Proje Bilgileri"
+    },
+    {
+      "answer": "Evet",
+      "basis": "Dosyanın adı EK-2 Tablo 2.1'e göre: 260123_00_MM_XXXX_MD_XXX_NNN_01_000.ifc.",
+      "evidence": "geçti",
+      "no": 3,
+      "note": "Dosyanın adı EK-2 Tablo 2.1'e göre: 260123_00_MM_XXXX_MD_XXX_NNN_01_000.ifc.",
+      "title": "Proje ve Dosya İsimlendirmesi"
+    },
+    {
+      "answer": "Evet",
+      "basis": "10 mahalin numarası ve adı var, adları tekil.",
+      "evidence": "geçti",
+      "no": 4,
+      "note": "10 mahalin numarası ve adı var, adları tekil.",
+      "title": "Mahal No ve Mahal İsmi"
+    },
+    {
+      "answer": "Evet",
+      "basis": "Adlar EK-5 m. 5.5'in kalıbında: MM-<kategori kodu>-<açıklama>.",
+      "evidence": "geçti",
+      "no": 5,
+      "note": "Adlar EK-5 m. 5.5'in kalıbında: MM-<kategori kodu>-<açıklama>.",
+      "title": "Varlıklar"
+    },
+    {
+      "answer": "Evet",
+      "basis": "EPSG:5256 (EK-7 Tablo 7.6), ±0.00 1285.40 m.",
+      "evidence": "geçti",
+      "no": 6,
+      "note": "EPSG:5256 (EK-7 Tablo 7.6), ±0.00 1285.40 m.",
+      "title": "Koordinat Sistemi"
+    },
+    {
+      "answer": "Evet",
+      "basis": "EK-8'in gelişim seviyesi müellifin 3B incelemesiyle değerlendirilir; KentOS kaydını tutar.",
+      "evidence": "inceleme",
+      "no": 7,
+      "note": "EK-8'in gelişim seviyesi müellifin 3B incelemesiyle değerlendirilir; KentOS kaydını tutar.",
+      "title": "Gelişim seviyesi"
+    },
+    {
+      "answer": "Evet",
+      "basis": "Kaynaktaki 70 nesnenin hepsi dosyada, vekil sınıf yok.",
+      "evidence": "geçti",
+      "no": 8,
+      "note": "Kaynaktaki 70 nesnenin hepsi dosyada, vekil sınıf yok.",
+      "title": "IFC Sınıfları"
+    },
+    {
+      "answer": "Evet",
+      "basis": "EK-6 ve EK-7'nin zorunlu alanları dosyanın her nesnesinde dolu.",
+      "evidence": "geçti",
+      "no": 9,
+      "note": "EK-6 ve EK-7'nin zorunlu alanları dosyanın her nesnesinde dolu.",
+      "title": "IFC Sınıfları"
+    },
+    {
+      "answer": "Evet",
+      "basis": "4 zon (2 DAHIL, 2 HARIC); alanların emsal hesap tablosuyla karşılaştırılması müellifin.",
+      "evidence": "inceleme",
+      "no": 10,
+      "note": "4 zon (2 DAHIL, 2 HARIC); alanların emsal hesap tablosuyla karşılaştırılması müellifin.",
+      "title": "Emsal hesabı"
+    },
+    {
+      "answer": "Evet",
+      "basis": "Proje, 1 saha, 1 bina, 2 kat.",
+      "evidence": "geçti",
+      "no": 11,
+      "note": "Proje, 1 saha, 1 bina, 2 kat.",
+      "title": "IFC Sınıfları"
+    },
+    {
+      "answer": "Evet",
+      "basis": "10 mahal.",
+      "evidence": "geçti",
+      "no": 12,
+      "note": "10 mahal.",
+      "title": "Mahal"
+    },
+    {
+      "answer": "Evet",
+      "basis": "Mahaller örtüşmüyor, her biri kendi katında.",
+      "evidence": "geçti",
+      "no": 13,
+      "note": "Mahaller örtüşmüyor, her biri kendi katında.",
+      "title": "Mahal"
+    },
+    {
+      "answer": "Evet",
+      "basis": "10 mahalin gövdesi kapalı, üstü katının içinde.",
+      "evidence": "geçti",
+      "no": 14,
+      "note": "10 mahalin gövdesi kapalı, üstü katının içinde.",
+      "title": "Mahal"
+    },
+    {
+      "answer": "Evet",
+      "basis": "Her nesnenin katı var, gövdesi katının aralığında.",
+      "evidence": "geçti",
+      "no": 15,
+      "note": "Her nesnenin katı var, gövdesi katının aralığında.",
+      "title": "Varlıklar"
+    },
+    {
+      "answer": "Evet",
+      "basis": "Yinelenen kimlik ya da üst üste aynı nesne yok.",
+      "evidence": "geçti",
+      "no": 16,
+      "note": "Yinelenen kimlik ya da üst üste aynı nesne yok.",
+      "title": "Varlıklar"
+    },
+    {
+      "answer": "Evet",
+      "basis": "Sınıflar kaynağın eşlemesiyle aynı, vekil yok.",
+      "evidence": "geçti",
+      "no": 17,
+      "note": "Sınıflar kaynağın eşlemesiyle aynı, vekil yok.",
+      "title": "IFC Sınıfları"
+    },
+    {
+      "answer": "Evet",
+      "basis": "IFC4X3_ADD2, .ifc.",
+      "evidence": "geçti",
+      "no": 18,
+      "note": "IFC4X3_ADD2, .ifc.",
+      "title": "IFC Versiyonu"
+    },
+    {
+      "answer": "Evet",
+      "basis": "Ön tanımlı tipler belirli; USERDEFINED olanların tip adı var.",
+      "evidence": "geçti",
+      "no": 19,
+      "note": "Ön tanımlı tipler belirli; USERDEFINED olanların tip adı var.",
+      "title": "Ön Tanımlı Tip"
+    },
+    {
+      "answer": "Evet",
+      "basis": "Standart setler IFC 4.3'ün sözlüğünde, sınıflarına uygun; özellikler setlerinin.",
+      "evidence": "geçti",
+      "no": 20,
+      "note": "Standart setler IFC 4.3'ün sözlüğünde, sınıflarına uygun; özellikler setlerinin.",
+      "title": "Özellikler"
+    },
+    {
+      "answer": "Evet",
+      "basis": "Çizimin her nesnesi modelde; paftalar aynı modelden.",
+      "evidence": "geçti",
+      "no": 21,
+      "note": "Çizimin her nesnesi modelde; paftalar aynı modelden.",
+      "title": "PDF ve IFC uyumu"
+    }
+  ],
+  "table": "9.1",
+  "version": 1,
+  "versions": {
+    "catalog": {
+      "id": "temel-2026",
+      "version": "2026.1"
+    },
+    "kentos": "0.1.0",
+    "schema": "IFC4X3_ADD2",
+    "standards": "dijital-proje 0.9.0"
+  }
+}

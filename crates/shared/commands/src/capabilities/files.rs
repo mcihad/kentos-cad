@@ -902,6 +902,13 @@ pub(super) const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Gelen paketi incele (docs/adr/8104): files read; findings are the answer, not refusals.
+    Entry {
+        id: "file.review.package",
+        refusals: &[&["invalid_file_path", "review_rule_unavailable"]],
+        warnings: &[],
+        targets: none,
+    },
     Entry {
         id: "file.publish.status",
         refusals: &[&["invalid_file_path", "book_unreadable", "cancelled"]],

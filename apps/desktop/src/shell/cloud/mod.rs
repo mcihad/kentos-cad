@@ -1163,6 +1163,7 @@ impl App {
             Some(Dialog::Arch(arch::ArchDialogKind::Underlays)) => self.arch.underlays_window = None,
             Some(Dialog::Arch(arch::ArchDialogKind::IfcCompare)) => self.arch.ifc_compare_window = None,
             Some(Dialog::Arch(arch::ArchDialogKind::Bcf)) => self.arch.bcf_window = None,
+            Some(Dialog::Arch(arch::ArchDialogKind::ReviewPackage)) => self.arch.review_window = None,
             Some(Dialog::SheetSet) => self.sheet_set = None,
             Some(Dialog::Xrefs | Dialog::XrefAttach) => self.xrefs = Default::default(),
             Some(Dialog::Arch(arch::ArchDialogKind::Quantities)) => self.arch.quantities = None,

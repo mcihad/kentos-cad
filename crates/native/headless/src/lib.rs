@@ -55,6 +55,8 @@ pub mod publish;
 #[cfg(all(feature = "mod-arch", feature = "mod-gis"))]
 mod publish_bim;
 mod publish_status;
+#[cfg(feature = "mod-arch")]
+mod package_review;
 mod publish_update;
 pub mod recover;
 #[cfg(feature = "mod-gis")]

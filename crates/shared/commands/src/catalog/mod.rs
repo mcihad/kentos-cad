@@ -1984,6 +1984,43 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             input:schema::<crate::PublishStatus>(),output:schema::<crate::PublishStatusReport>(),plan:Some(schema::<crate::PublishStatusReport>()),capabilities:None,
             examples:vec![CommandExample{title:"Teslim klasörünün güncelliği".into(),input:json!({"path":"/tmp/pafta-teslimi"}),output:None}],
         },
+        // Gelen paketi incele (docs/adr/8104): the administration's review of a package as it came.
+        CommandDescriptor {
+            id: crate::FILE_REVIEW_PACKAGE.into(),
+            version: crate::FILE_REVIEW_PACKAGE_VERSION,
+            title: "Gelen paketi incele".into(),
+            summary: "İdarenin inceleyeni için: gelen paketi (yayın klasörü: yayin.json, PDF/A paftalar, IFC modeli, model \
+                      kalite kontrol formu; ya da başka bir programın yazdığı tek bir .ifc) müellifin çizimi olmadan okur \
+                      ve katman katman denetler; hiçbir şey yazmaz. Olgular dosyaların kendisinden ölçülür, kararı \
+                      dijital-proje paketinin kuralı (dijital_proje.inceleme) verir. Katmanlar: paket (listedeki her dosya \
+                      var mı, baytı ve SHA-256'sı listedeki mi, listede olmayan dosya, model, pafta ve form var mı), pafta \
+                      (PDF/A-2 kimliği ve ISO 19005-2 kuralları, yalnız görüntüden oluşan taranmış sayfa, paftanın içindeki \
+                      kaynağın çizim revizyonu paketinkiyle aynı mı), model (okunuyor mu, şema, EK-9 formunun dosyadan \
+                      cevapladığı sorular ve zorunlu alanlar; bulgu nesneleri GlobalId'leriyle), konum (modelin koordinat \
+                      sistemi system ile verilen idarenin sistemi ve dilimi mi; system verilmezse değerlendirilmez), form \
+                      (müellifin cevabı dosyadan ölçülenle aynı mı, form teslim edilen modelin mi). Çıktı: dosyalar (ad, \
+                      tür, listede mi), modelin adı, katmanlar (tutuyor mu, söz), bulgular (katman, kod, hata mı, ileti, \
+                      onarım, dayanak, dosya, nesneler) ve formun 21 satırı (müellifin cevabı, KentOS'un, uyuşuyor mu). \
+                      Retler: invalid_file_path, review_rule_unavailable (Python yok)."
+                .into(),
+            aliases: vec!["PAKETINCELE".into(), "GELENPAKET".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Job,
+            input: schema::<crate::ReviewPackage>(),
+            output: schema::<crate::PackageReviewed>(),
+            plan: Some(schema::<crate::PackageReviewed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Gelen ruhsat paketi, idarenin sistemi TUREF / TM33".into(),
+                input: json!({"path": "/gelen/260123", "system": 5255}),
+                output: None,
+            }],
+        },
     ]
 }
 
@@ -3506,6 +3543,9 @@ mod tests {
                     }
                     crate::FILE_PUBLISH_STATUS => {
                         serde_json::from_value::<crate::PublishStatus>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_REVIEW_PACKAGE => {
+                        serde_json::from_value::<crate::ReviewPackage>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SNAP_FIND => {
                         serde_json::from_value::<crate::SnapFind>(e.input.clone()).map(|_| ())

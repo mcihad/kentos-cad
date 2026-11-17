@@ -825,7 +825,7 @@ MCP, 29 bağımsız ortak durum); Altlık modeller › Denetim (Katlar, Akslar, 
 nesneyi seçer). **Kalan:** çakışma satırının sorun olarak BCF'ye yazılması (BCF yazımı ADR 8103'te var), boşluk çakışması, döşeme boşluğu ile şaft ve perde
 kuralları, büyük modelde uzamsal ön süzgeç, bulgunun disiplin ve revizyonla kaydı.
 
-#### BIM-18 — İdare inceleme çalışma alanı [ ]
+#### BIM-18 — İdare inceleme çalışma alanı [~]
 
 **Kullanıcı sonucu:** Belediyenin proje inceleyeni gelen paketi (model + PDF/A + kontrol formu) KentOS'ta açar. Biçim
 denetimi kendiliğinden koşar. İmar durumuyla karşılaştırma belediyenin kendi plan ve parsel verisiyle yapılır. Eksikler
@@ -842,6 +842,14 @@ gerekçesiyle ve nesnesiyle iade notuna dönüşür. Dayanak e-PYS Md. 4/3, 4/5,
 
 **İlk kabul:** başka bir yazılımın ürettiği açık örnek model ve KentOS'un kendi paketi açılır. Bilerek bozulan paket (yanlış
 dilim, eksik yangın alanı, farklı revizyonlu pafta) doğru katmanda bulgu verir. İade notu nesneyi seçer.
+
+**Durum (17 Kasım 2026, [ADR 8104](../docs/adr/8104-administration-package-review.md)):** ilk kabul sağlandı.
+`file.review.package` paketi müellifin çizimi olmadan okur; olguları Rust ölçer, kararı `dijital_proje.inceleme` verir
+(paket, pafta, model, konum, form). KentOS'un paketi EPSG:5256'da her katmanda tutar; buildingSMART'ın IFC 4.3 örneği tek
+başına açılır; bozuk paketin TM33 modeli konumda, 8. revizyondan paftası paftada, yangın sınıfsız duvarı modelde
+(GlobalId'siyle) bulgu verir. İade notu BCF'ye ve yazıya; Modelde göster duvarı IFC görüntüleyicide seçer. **Kalan:** imar
+denetimi (belediyenin plan ve parsel verisi), e-PYS aktarımı, erişim kaydı, kat kat görüntüleme ve süzgeçler, paylaşılan
+komut durumları.
 
 ### 5.7 Genişleme ve borç
 
@@ -911,7 +919,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 |---|---|---|---|
 | B18 ~ | Altlık model | IFC-09 | Statik model planda ve 3B'de altlık (ADR 8101: yerleştirme harita dönüşümüyle ya da istenince başlangıç noktasına, katın kesiti, 3B gövdeler, nesnenin ayrıntıları; gösterilemeyen nesnenin işareti ve bulutta dosyanın saklanması kaldı) |
 | B19 ~ | Dış disiplin ve çakışma; karşılaştırma ve sorun değişimi | BIM-17, IFC-10 | Çakışmalar nesnesiyle (ADR 8102: hizalama, kat ve aks, eşleşen ve çakışan elemanlar, datum ret; ADR 8103: revizyon farkı GlobalId ile, BCF 3.0 yazma ve 3.0/2.1 okuma; iki ilk kabul de tamam; çakışmanın BCF'si, sorunların notlarda saklanması, masaüstü BCF görüntüleyicisinde elle açılış kaldı) |
-| B20 | İdare inceleme çalışma alanı | BIM-18 | Gelen paket açılır, denetlenir, iade notu çıkar |
+| B20 ~ | İdare inceleme çalışma alanı | BIM-18 | Gelen paket açılır, denetlenir, iade notu çıkar (ADR 8104: beş katman, bozuk paketin bulguları kendi katmanında, iade notu BCF ve yazı, nesne görüntüleyicide; imar denetimi, e-PYS aktarımı, erişim kaydı kaldı) |
 
 ### Faz 5 — Kalite ve genişleme
 

@@ -321,6 +321,8 @@ impl App {
             // IFC revizyonlarını karşılaştır and BCF sorunları (docs/adr/8103).
             "arch.ifcCompare" => self.open_ifc_compare(),
             "arch.bcfIssues" => self.open_bcf_issues(),
+            // Gelen paketi incele (docs/adr/8104).
+            "arch.reviewPackage" => self.open_review_package(),
             // Otopark and Sığınak hesabı (docs/adr/8036).
             "arch.parkingTable" => {
                 self.place_provision_table(kentos_commands::TableSource::Parking {})

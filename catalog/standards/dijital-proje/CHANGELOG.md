@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 0.10.0 — 17 Kasım 2026
+
+- Gelen paketin incelemesi (docs/adr/8104): `inceleme.denetle(olgular)` idarenin inceleyeni için paketi müellifin çizimi
+  olmadan, KentOS'un dosyalardan ölçtüğü olgularla katman katman denetler: paket (liste, dosyaların baytı ve özeti,
+  listede olmayan dosya, model, pafta ve form), pafta (PDF/A-2, taranmış sayfa, paftanın kaynak revizyonu), model
+  (okunuyor, şema, formun dosyadan cevapladığı sorular; bulgular nesneleriyle), konum (modelin sistemi idarenin
+  dilimi mi), form (müellifin cevabı ölçülenle aynı mı, form bu modelin mi). Formun 21 satırı yan yana.
+
 ## 0.9.0 — 17 Kasım 2026
 
 - Cevabın eskimesi (docs/adr/8077 §7): müellifin cevabı dayandığı kanıtı (`basis`, o zamanki KentOS notu) söylüyorsa ve

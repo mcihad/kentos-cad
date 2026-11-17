@@ -1,0 +1,798 @@
+{
+  "bim": {
+    "form": {
+      "bytes": 6821,
+      "name": "kalite-kontrol-formu.json",
+      "sha256": "66d6d90b8416552133bb00d1eab1f2244071ec42a198213da81fcc48fde5ea6d"
+    },
+    "model": "260123_00_MM_XXXX_MD_XXX_NNN_01_000.ifc",
+    "results": [
+      {
+        "holds": true,
+        "key": "okunuyor",
+        "words": "IFC dosyası STEP olarak okunuyor: 3122 kayıt, 94 nesne."
+      },
+      {
+        "holds": true,
+        "key": "sema",
+        "words": "Okuyucu şemaya aykırı kayıt bulmadı."
+      },
+      {
+        "holds": true,
+        "key": "profil",
+        "words": "Formun bütün soruları Evet."
+      },
+      {
+        "holds": true,
+        "key": "model_pafta",
+        "words": "Paftalar ve model aynı çizimden, güncel."
+      },
+      {
+        "key": "idare",
+        "words": "İdarenin incelemesi bekleniyor (e-PYS Md. 5/3); kabulü KentOS söylemez."
+      }
+    ],
+    "versions": {
+      "catalog": {
+        "id": "temel-2026",
+        "version": "2026.1"
+      },
+      "kentos": "0.1.0",
+      "schema": "IFC4X3_ADD2",
+      "standards": "dijital-proje 0.9.0"
+    }
+  },
+  "carried": [],
+  "date": "2026-11-17",
+  "deliveryList": "teslim-listesi.csv",
+  "drawingSet": [
+    {
+      "id": "ruhsat-up-01",
+      "info": {
+        "number": "UP-01",
+        "revision": "",
+        "status": "",
+        "subset": [
+          "Mimari",
+          "Ruhsat takımı"
+        ],
+        "title": "Proje bilgileri"
+      },
+      "name": "UP-01 Proje bilgileri"
+    },
+    {
+      "id": "ruhsat-up-02",
+      "info": {
+        "number": "UP-02",
+        "revision": "",
+        "status": "",
+        "subset": [
+          "Mimari",
+          "Ruhsat takımı"
+        ],
+        "title": "Vaziyet planı"
+      },
+      "name": "UP-02 Vaziyet planı"
+    },
+    {
+      "id": "ruhsat-up-03",
+      "info": {
+        "number": "UP-03",
+        "revision": "",
+        "status": "",
+        "subset": [
+          "Mimari",
+          "Ruhsat takımı"
+        ],
+        "title": "Zemin kat planı"
+      },
+      "name": "UP-03 Zemin kat planı"
+    },
+    {
+      "id": "ruhsat-up-04",
+      "info": {
+        "number": "UP-04",
+        "revision": "",
+        "status": "",
+        "subset": [
+          "Mimari",
+          "Ruhsat takımı"
+        ],
+        "title": "1. kat planı"
+      },
+      "name": "UP-04 1. kat planı"
+    }
+  ],
+  "files": [
+    {
+      "bytes": 56879,
+      "name": "260123_00_MM_XXXX_PL_MMC_K00_01_000.pdf",
+      "sha256": "76bc904d791b40a56171baeb33714e5c96faea0ebb6b8a5439d9333a9f681fc3",
+      "sheets": [
+        "ruhsat-up-03"
+      ]
+    },
+    {
+      "bytes": 171907,
+      "name": "260123_00_MM_XXXX_MD_XXX_NNN_01_000.ifc",
+      "sha256": "91a7ce7eab0420e2ed96b9ff504a56fce4cbc3b9cf0077dbd4d4a1201bf9ca01",
+      "sheets": []
+    }
+  ],
+  "format": "kentos.publish/1",
+  "issues": [
+    {
+      "code": "no_kerning",
+      "error": false,
+      "fix": "Türkçe ve Latin yazıda fark göze görünmez; yazı tipi değişince satırlar yeniden kırılır.",
+      "message": "Yazılar çekirdeğin ölçüleriyle yerleşir; harf çifti aralığı (kerning) bu sürümde uygulanmaz.",
+      "sheet": "ruhsat-up-01"
+    },
+    {
+      "code": "no_kerning",
+      "error": false,
+      "fix": "Türkçe ve Latin yazıda fark göze görünmez; yazı tipi değişince satırlar yeniden kırılır.",
+      "message": "Yazılar çekirdeğin ölçüleriyle yerleşir; harf çifti aralığı (kerning) bu sürümde uygulanmaz.",
+      "sheet": "ruhsat-up-02"
+    },
+    {
+      "code": "no_kerning",
+      "error": false,
+      "fix": "Türkçe ve Latin yazıda fark göze görünmez; yazı tipi değişince satırlar yeniden kırılır.",
+      "message": "Yazılar çekirdeğin ölçüleriyle yerleşir; harf çifti aralığı (kerning) bu sürümde uygulanmaz.",
+      "sheet": "ruhsat-up-03"
+    },
+    {
+      "code": "no_kerning",
+      "error": false,
+      "fix": "Türkçe ve Latin yazıda fark göze görünmez; yazı tipi değişince satırlar yeniden kırılır.",
+      "message": "Yazılar çekirdeğin ölçüleriyle yerleşir; harf çifti aralığı (kerning) bu sürümde uygulanmaz.",
+      "sheet": "ruhsat-up-04"
+    }
+  ],
+  "options": {
+    "dpi": null,
+    "geo": true,
+    "layers": true,
+    "mode": "separate",
+    "naming": "{@proje_kodu}_{@bina_kodu}_MM_XXXX_{@dosya_turu}_{@dosya_tipi}_{@kat_konum}_{@sira_no}_{@revizyon_no}",
+    "pdfa": true
+  },
+  "pages": [
+    {
+      "clips": 0,
+      "date": "2026-11-17",
+      "digest": "dc0829081797d9d07d3f1a70d680591ad3a2da82083434c3b52733688b2345c6",
+      "evenOddFills": 0,
+      "file": "260123_00_MM_XXXX_GN_MMC_NNN_01_000.pdf",
+      "fills": 6,
+      "findings": [],
+      "fonts": [
+        "barlow-400",
+        "barlow-500",
+        "barlow-600"
+      ],
+      "hairlines": 0,
+      "images": 0,
+      "minStrokeMm": 0.18000000000000002,
+      "placeholders": 0,
+      "rasterMaps": 0,
+      "sheet": "ruhsat-up-01",
+      "strokes": 14,
+      "texts": 106,
+      "thinLines": 0,
+      "transparent": 0
+    },
+    {
+      "clips": 2,
+      "date": "2026-11-17",
+      "digest": "4f0aa182bf5f919fea9a76d9f9000cac2800969f4c1aca09b9c75c03def5ab7f",
+      "evenOddFills": 0,
+      "file": "260123_00_MM_XXXX_PL_VAZ_NNN_01_000.pdf",
+      "fills": 30,
+      "findings": [
+        {
+          "code": "pdf_transparency",
+          "error": false,
+          "fix": "Baskı önizlemesiyle denetleyin; gerekirse saydamlığı kaldırın.",
+          "message": "26 boyama saydam; bazı yazıcılar ve RIP'ler saydamlığı düzleştirir.",
+          "sheet": "ruhsat-up-02"
+        },
+        {
+          "code": "viewport_live_layers",
+          "error": false,
+          "fix": "Görünüme bir katman durumu (tema) atayın.",
+          "message": "“Görünüm penceresi” görünümü çizimin anlık katman görünürlüğünü izliyor: aynı projede biri katman açıp kapatırsa baskı değişir.",
+          "sheet": "ruhsat-up-02"
+        }
+      ],
+      "fonts": [
+        "barlow-400",
+        "barlow-400-italic",
+        "barlow-500",
+        "barlow-600"
+      ],
+      "hairlines": 0,
+      "images": 0,
+      "minStrokeMm": 0.125,
+      "placeholders": 0,
+      "rasterMaps": 0,
+      "sheet": "ruhsat-up-02",
+      "strokes": 160,
+      "texts": 87,
+      "thinLines": 0,
+      "transparent": 26
+    },
+    {
+      "clips": 2,
+      "date": "2026-11-17",
+      "digest": "6fdf2077452fd1b63f64ef20f78ceb237daccceca820e050dff656f7e9d4db99",
+      "evenOddFills": 0,
+      "file": "260123_00_MM_XXXX_PL_MMC_K00_01_000.pdf",
+      "fills": 30,
+      "findings": [
+        {
+          "code": "pdf_transparency",
+          "error": false,
+          "fix": "Baskı önizlemesiyle denetleyin; gerekirse saydamlığı kaldırın.",
+          "message": "26 boyama saydam; bazı yazıcılar ve RIP'ler saydamlığı düzleştirir.",
+          "sheet": "ruhsat-up-03"
+        },
+        {
+          "code": "viewport_live_layers",
+          "error": false,
+          "fix": "Görünüme bir katman durumu (tema) atayın.",
+          "message": "“Görünüm penceresi” görünümü çizimin anlık katman görünürlüğünü izliyor: aynı projede biri katman açıp kapatırsa baskı değişir.",
+          "sheet": "ruhsat-up-03"
+        }
+      ],
+      "fonts": [
+        "barlow-400",
+        "barlow-400-italic",
+        "barlow-500",
+        "barlow-600"
+      ],
+      "hairlines": 0,
+      "images": 0,
+      "minStrokeMm": 0.125,
+      "placeholders": 0,
+      "rasterMaps": 0,
+      "sheet": "ruhsat-up-03",
+      "strokes": 171,
+      "texts": 87,
+      "thinLines": 0,
+      "transparent": 26
+    },
+    {
+      "clips": 2,
+      "date": "2026-11-17",
+      "digest": "56ddfbd4484944393edfa48007aea941df840086060c86a99550f650c42d23e1",
+      "evenOddFills": 0,
+      "file": "260123_00_MM_XXXX_PL_MMC_K01_01_000.pdf",
+      "fills": 30,
+      "findings": [
+        {
+          "code": "pdf_transparency",
+          "error": false,
+          "fix": "Baskı önizlemesiyle denetleyin; gerekirse saydamlığı kaldırın.",
+          "message": "26 boyama saydam; bazı yazıcılar ve RIP'ler saydamlığı düzleştirir.",
+          "sheet": "ruhsat-up-04"
+        },
+        {
+          "code": "viewport_live_layers",
+          "error": false,
+          "fix": "Görünüme bir katman durumu (tema) atayın.",
+          "message": "“Görünüm penceresi” görünümü çizimin anlık katman görünürlüğünü izliyor: aynı projede biri katman açıp kapatırsa baskı değişir.",
+          "sheet": "ruhsat-up-04"
+        }
+      ],
+      "fonts": [
+        "barlow-400",
+        "barlow-400-italic",
+        "barlow-500",
+        "barlow-600"
+      ],
+      "hairlines": 0,
+      "images": 0,
+      "minStrokeMm": 0.125,
+      "placeholders": 0,
+      "rasterMaps": 0,
+      "sheet": "ruhsat-up-04",
+      "strokes": 163,
+      "texts": 87,
+      "thinLines": 0,
+      "transparent": 26
+    }
+  ],
+  "previous": null,
+  "resources": null,
+  "scope": [
+    {
+      "frames": [],
+      "name": "UP-01 Proje bilgileri",
+      "number": "UP-01",
+      "paper": [
+        420.0,
+        297.0
+      ],
+      "revision": "",
+      "sheet": "ruhsat-up-01",
+      "tables": 1
+    },
+    {
+      "frames": [
+        {
+          "denominator": 500.0,
+          "item": "ruhsat-up-02-item-1",
+          "layers": "drawing",
+          "locked": true,
+          "name": "Görünüm penceresi"
+        }
+      ],
+      "name": "UP-02 Vaziyet planı",
+      "number": "UP-02",
+      "paper": [
+        420.0,
+        297.0
+      ],
+      "revision": "",
+      "sheet": "ruhsat-up-02",
+      "tables": 0
+    },
+    {
+      "frames": [
+        {
+          "denominator": 100.0,
+          "item": "ruhsat-up-03-item-1",
+          "layers": "drawing",
+          "locked": true,
+          "name": "Görünüm penceresi"
+        }
+      ],
+      "name": "UP-03 Zemin kat planı",
+      "number": "UP-03",
+      "paper": [
+        420.0,
+        297.0
+      ],
+      "revision": "",
+      "sheet": "ruhsat-up-03",
+      "tables": 0
+    },
+    {
+      "frames": [
+        {
+          "denominator": 100.0,
+          "item": "ruhsat-up-04-item-1",
+          "layers": "drawing",
+          "locked": true,
+          "name": "Görünüm penceresi"
+        }
+      ],
+      "name": "UP-04 1. kat planı",
+      "number": "UP-04",
+      "paper": [
+        420.0,
+        297.0
+      ],
+      "revision": "",
+      "sheet": "ruhsat-up-04",
+      "tables": 0
+    }
+  ],
+  "sheets": [
+    "ruhsat-up-01",
+    "ruhsat-up-02",
+    "ruhsat-up-03",
+    "ruhsat-up-04"
+  ],
+  "snapshot": {
+    "context": {
+      "date": "2026-11-17",
+      "user": "cihad"
+    },
+    "dataSources": [],
+    "dpiOverride": null,
+    "fonts": [
+      {
+        "font": "architects-daughter",
+        "italic": false,
+        "sha256": "ddfc8a1e277da101a5d0e17670f0e40e4ba9a198d9438e2d69b6f81596e7bd88",
+        "weight": 400
+      },
+      {
+        "font": "arimo",
+        "italic": false,
+        "sha256": "bff6260ba15d755a1d31c54acadf2da9dfb77109a790ee5d3bdbacd971d37634",
+        "weight": 400
+      },
+      {
+        "font": "arimo",
+        "italic": false,
+        "sha256": "d969ee6b7c51fb6dc627585749ffe8a2355863a043e233d9a29c593bf3fd62f1",
+        "weight": 500
+      },
+      {
+        "font": "arimo",
+        "italic": false,
+        "sha256": "1f048e73c622b8cceee05218cfaf8a646cf670bf26fb6c5ea01b67ddfa38b588",
+        "weight": 600
+      },
+      {
+        "font": "arimo",
+        "italic": false,
+        "sha256": "17feb545abf5082e8da6d4094fd96da5e4adf700a883dfce61a4091c471756b2",
+        "weight": 700
+      },
+      {
+        "font": "barlow",
+        "italic": true,
+        "sha256": "90d48d6daa60853a3317d116c6091a8c7c46d15d394b8d92ff6b44f4dd073cb4",
+        "weight": 400
+      },
+      {
+        "font": "barlow",
+        "italic": false,
+        "sha256": "20db3a61d460f5d41b285065d70e01c206d7ccba944d72e252f2d7ac62bfa7a0",
+        "weight": 400
+      },
+      {
+        "font": "barlow",
+        "italic": false,
+        "sha256": "4351db105f59e72b2d1285f8172adad80aa080018ad8864665aa219ad9cb6743",
+        "weight": 500
+      },
+      {
+        "font": "barlow",
+        "italic": false,
+        "sha256": "0a182becf160ec36cf9507991131dd1054ca9b74e13b99b390395b1a1e250493",
+        "weight": 600
+      },
+      {
+        "font": "courier-prime",
+        "italic": true,
+        "sha256": "bf5eb3b20dbcd343b790ffd0fc6ed0ae17eff42cf6bf553160388cc3739d2a28",
+        "weight": 400
+      },
+      {
+        "font": "courier-prime",
+        "italic": false,
+        "sha256": "043844aa8d4917f03f22d8f63ae26962da0f50ad0aa946738a9c451e17eb9261",
+        "weight": 400
+      },
+      {
+        "font": "courier-prime",
+        "italic": false,
+        "sha256": "54009ab163b12864af5da7ce11096e2a9b37a8bba791421a0f96b05f57cb1280",
+        "weight": 700
+      },
+      {
+        "font": "plex-mono",
+        "italic": false,
+        "sha256": "e9cdfb6a14e810914a03b389a286a21dfcda639825db4519009397adc7390013",
+        "weight": 400
+      },
+      {
+        "font": "plex-mono",
+        "italic": false,
+        "sha256": "8f38a758aff524b88b97347ab371637d66bd4bda62b56bceefaccd303f1dc2c5",
+        "weight": 500
+      },
+      {
+        "font": "overpass",
+        "italic": false,
+        "sha256": "6eec04bd145977e0e69bb8d29fddd4d42b370fae3dbe59aedb7d73340d4818ed",
+        "weight": 400
+      },
+      {
+        "font": "overpass",
+        "italic": false,
+        "sha256": "4b1951a08757c0da0e9b85296cee7c2a0e370f6dd96edbf9a461b437581a4018",
+        "weight": 500
+      },
+      {
+        "font": "overpass",
+        "italic": false,
+        "sha256": "4ca3a8a72a1c4416cbb477026ca8a4d520d7fd351587e0ec0fef58a13564fed6",
+        "weight": 600
+      },
+      {
+        "font": "overpass",
+        "italic": false,
+        "sha256": "6cd0f5258d921510d1cdb50d309b573fda42ba85a3c111ce6223646f3c98a7ea",
+        "weight": 700
+      },
+      {
+        "font": "quicksand",
+        "italic": false,
+        "sha256": "d329a632ba789df56a15a41e924baf796102a03774026779d96ab5a918edff7c",
+        "weight": 400
+      },
+      {
+        "font": "quicksand",
+        "italic": false,
+        "sha256": "8aab04db2386589e96a5ec1aaed6421a2512267ce05218a86005ad062c91d1b4",
+        "weight": 500
+      },
+      {
+        "font": "quicksand",
+        "italic": false,
+        "sha256": "cbed9eda6efd44b289963bda317fb13301ace1972d82d9df1e59fcbd4dc238a3",
+        "weight": 600
+      },
+      {
+        "font": "quicksand",
+        "italic": false,
+        "sha256": "be16404abca0366223f6a792eaed4037119d19de812b263f2f64b79307b87208",
+        "weight": 700
+      }
+    ],
+    "format": "kentos.sheet-source/1",
+    "images": [],
+    "laterEditsExcluded": true,
+    "references": [],
+    "renderer": "kentos.plot/1",
+    "source": {
+      "contextSha256": "d7f0113d54f8902d82c9172a000ec50da1e6d6be62b7d2e160e5029e03fbe2ca",
+      "resourcesSha256": "daa0d82f0b1e5bc5ed32cb5531ff77208e3f4766b05d2d8522860c3c59aa5d79",
+      "revision": "9",
+      "sha256": "294ebc79268d4ae43e615eb6b2e86aab0abc81b7168476d5e2df7394a2ae8203"
+    }
+  },
+  "source": {
+    "contextSha256": "d7f0113d54f8902d82c9172a000ec50da1e6d6be62b7d2e160e5029e03fbe2ca",
+    "resourcesSha256": "daa0d82f0b1e5bc5ed32cb5531ff77208e3f4766b05d2d8522860c3c59aa5d79",
+    "revision": "9",
+    "sha256": "294ebc79268d4ae43e615eb6b2e86aab0abc81b7168476d5e2df7394a2ae8203"
+  },
+  "sources": {
+    "digest": "kentos.object-digest/1",
+    "objects": {
+      "0192f5a1-4242-7000-8000-000000000001": "1b9d1af5f4691889c61c419653f2decb17cc002591962869c2631716b704b2fe",
+      "0192f5a1-4242-7000-8000-000000000002": "c781ce3bd843a30ee40e2a547b3b3928e88b8d5c53ea12346111c6dfadcac688",
+      "0192f5a1-4242-7000-8000-000000000003": "86f6084cd8b288ab42a7fedac4e3e2ef4936dcca47941d29e1923590e6ecb6d4",
+      "0192f5a1-4242-7000-8000-000000000004": "8e0fc4833d195de58fdf3a2dd08361352ecffa18c02a2e80a8b15bde5e59cdae",
+      "0192f5a1-4242-7000-8000-000000000005": "d8e33be677c93ce710905ffdb04b13ec7c10ef55f3c34dfe68d43c196183c3f3",
+      "0192f5a1-4242-7000-8000-000000000006": "ba0ce18b82a80f5e9e09ac2fc7cfb4c0282086945f3c7b33e699bfd3d5247f30",
+      "0192f5a1-4242-7000-8000-000000000007": "f2ae73de4f82d1f7fb191aff0657fe90af98f67419ec88a35c485e1d1476d031",
+      "0192f5a1-4242-7000-8000-000000000008": "6f594532df3c2f0aac6fdd4dd307da4730f81d0fa2fbf252cc92a373f73210e2",
+      "0192f5a1-4242-7000-8000-000000000009": "d2e7459fafc1458c80c659fb58c2d8438de6f7471c2fe2b455b68a11e96b992a",
+      "0192f5a1-4242-7000-8000-00000000000a": "335fcf4a4184517d5a30f8c783edd7a213dc16c9dafd6047e0b3e4e10f297451",
+      "0192f5a1-4242-7000-8000-00000000000b": "6c15420a85f96b12729a5576b6f6b26ccfe08c67fdacae896c3e9a5cd5f3b1d1",
+      "0192f5a1-4242-7000-8000-00000000000c": "69448a3c6ba870f2ec94a1a5424995e8df0ead54f0401e6b1591d8186bfe8ee1",
+      "0192f5a1-4242-7000-8000-00000000000d": "f6bb886ad1f65a396207fd66c066ad64ba5fdd2ec05a6388ecad8fb363f5a408",
+      "0192f5a1-4242-7000-8000-00000000000e": "b78895449535eb7b1c69c6792cd462f821524169a39d0ee3539bb4ac5cc5ec73",
+      "0192f5a1-4242-7000-8000-00000000000f": "240b70e6947057ffbbd80c83781c385ce0f06144d30d772b360de01059c4f462",
+      "0192f5a1-4242-7000-8000-000000000010": "6b1a081cf1b0b6cf0f74139ac3169fbf59138198a16e3abd9d95ccf2915cf566",
+      "0192f5a1-4242-7000-8000-000000000011": "37910c2e53f7e1d0e647318ae84d442643f51f3a59bd11a0886f520879715f84",
+      "0192f5a1-4242-7000-8000-000000000012": "368be0254b9ae0f8403eae96ab01fce70d5db32374de4637795cb5b7624a1ee0",
+      "0192f5a1-4242-7000-8000-000000000013": "81a6ed5bd3dd406337d66ee3c2d2ba8cbfcc2d1ac9d4d475364624a98e8db3ea",
+      "0192f5a1-4242-7000-8000-000000000014": "a8063e1cfbb5d2705fd9504c93d24dc211b8f2d8316de1bfb0ca3decfbcb6e27",
+      "0192f5a1-4242-7000-8000-000000000015": "7a0b545b70348486c91d8bfacf320442938bbe4c6d1eccec58d9552d914198fd",
+      "0192f5a1-4242-7000-8000-000000000016": "e7fd3fe32038ffca01c2cfc7db5922553d913d86bc1a11494e985b436a2c49f7",
+      "0192f5a1-4242-7000-8000-000000000017": "d27e46af43d9e231075bd7365645ffa6dcff7f0d8f2cc52cfe8a265a1dd2bcf6",
+      "0192f5a1-4242-7000-8000-000000000018": "a5821cf6f568f17ca60792851c9d4667a1c21db1d874465338affba69b7ef9da",
+      "0192f5a1-4242-7000-8000-000000000019": "97066370575201ab0667df74a0bbb82299ba9f3902a853edccb1e05c6c7dc6fb",
+      "0192f5a1-4242-7000-8000-00000000001a": "9332e85e4c921aa7323fd259714f04493cc9803f599b87dbe32118267436e02e",
+      "0192f5a1-4242-7000-8000-00000000001b": "7ba37c391efd00012448a1e7680a2b1f55e39bc157b903358842fd0f9585ed5a",
+      "0192f5a1-4242-7000-8000-00000000001c": "1ef77d01f0d745048b9ca344c2076dbd6a931c15077628caadce10cf4c8d49f0",
+      "0192f5a1-4242-7000-8000-00000000001d": "10a11d9e452d2b80a6d9e432691a27b987a4ba2a054e6c77a7f5575ad975da7f",
+      "0192f5a1-4242-7000-8000-00000000001e": "297016b1e3a5696179858a6770d0414d295cf5c5b3d51455dd3f388e35d2fa19",
+      "0192f5a1-4242-7000-8000-00000000001f": "3e6ccdcac3671822391d189263b6956f8d972a9f4aaff9768c4080bec6424bd5",
+      "0192f5a1-4242-7000-8000-000000000020": "4178bae67ea1a40aeb59d73251b9af791d82d0b26eaf72c6da7d9a38811c1036",
+      "0192f5a1-4242-7000-8000-000000000021": "188fe2cfa3601f4f5f4d274f4fd7078ff2538c527c2f64f9cf1df5548cddcb6e",
+      "0192f5a1-4242-7000-8000-000000000022": "7d2e031ee88a4fc41692c98cafa9934989649a259d4ca5747eda04cb494e0457",
+      "0192f5a1-4242-7000-8000-000000000023": "ffe38253346cf05963363b77d7981bf41e694177de98bca939198e7019ee0f7b",
+      "0192f5a1-4242-7000-8000-000000000024": "c8220da6fcf7f9234629edc8912f385a33dd159d02375213b188b349f3701f76",
+      "0192f5a1-4242-7000-8000-000000000025": "8a2360ac53b79b00e90d8fd5bf42590e8e487f4c9b9de6a12a00ad96df83649f",
+      "0192f5a1-4242-7000-8000-000000000026": "d4339b5d136024275eacf668333eb9acf97071d736cde5598bdd05c0ad0194a1",
+      "0192f5a1-4242-7000-8000-000000000027": "29c99316e95e41e6286b4360854a78f79e98bcc8b9da2c1c1e41c195901dce40",
+      "0192f5a1-4242-7000-8000-000000000028": "339553a40b69278963f34e6cb03a341a5946fdfffef6b77a00a873bb6b616b89",
+      "0192f5a1-4242-7000-8000-000000000029": "4a2be5ee1db046f83bfc6549d077668e62aae2d50844e9121368358150eddcdf",
+      "0192f5a1-4242-7000-8000-00000000002a": "b9d3f687bf971ddcb202966f24ed3e310fbb3038d2063a463530ea17d3491140",
+      "0192f5a1-4242-7000-8000-00000000002b": "cd721d0192dcd858d52b4c61937db8b9186e68c141886293e61d86fa565fdf3e",
+      "0192f5a1-4242-7000-8000-00000000002c": "d05e0c51a7ba7cd04571bc54b836efe2e32c57758d4a2deb796363e503d0ee2d",
+      "0192f5a1-4242-7000-8000-00000000002d": "1187e4bdee2719e51947b812de1bae3f71f7277cf886b16e37b6a061fd62edc2",
+      "0192f5a1-4242-7000-8000-00000000002e": "d095c6faaf54ab420925e30918c4ff18339f05ee82fef349942ec08e6689c542",
+      "0192f5a1-4242-7000-8000-00000000002f": "1c3b9eed75e5d9a3bea64a7925bba77e5c79e55e2d6404396359f87dcfbc9641",
+      "0192f5a1-4242-7000-8000-000000000030": "0b6ccc0693e5d74235d41aa21edee93527922eb2f5d03730375131c0733efdca",
+      "0192f5a1-4242-7000-8000-000000000031": "6a7692bf2007645b46e012d24c16a2677463440bf2767d7439ef716e04ddd7af",
+      "0192f5a1-4242-7000-8000-000000000032": "6fc528a55823fdb9bcc7207aa59e219dc904e6d02a9058a8c6aec3d1b15de276",
+      "0192f5a1-4242-7000-8000-000000000033": "36f47a709e3359b8a7b650ef1b799f98fa361640b621a8a4e7a591e2197b86a8",
+      "0192f5a1-4242-7000-8000-000000000034": "9cd07736d9d56c4b9aaf25bd78149d3ec336c96b110b953d39442143d7bbede6",
+      "0192f5a1-4242-7000-8000-000000000035": "637cc741265670a2eaf2cf1236e9778602312bda90e73554e996284cf7b65b4d",
+      "0192f5a1-4242-7000-8000-000000000036": "03573f370bf70316dc7fa9316fd367fb194a1f7f49f72838b6c7e352eaa8692d",
+      "0192f5a1-4242-7000-8000-000000000037": "ec496045084a0a1166798419ed4e91f6d567b774b4f173113c54edaf81675ca1",
+      "0192f5a1-4242-7000-8000-000000000038": "0f9fea5e488217856ab8a145932dd9e21ce7364853620bac3b1568a25e13eb04",
+      "0192f5a1-4242-7000-8000-000000000039": "067dbf322d41189ae1d2fb2ccb1c5308f82499804b6b4e64174606c53e246db4",
+      "0192f5a1-4242-7000-8000-00000000003a": "d5863d12bbb02cf8cc23fbc17738c7ab04c76c449d7b92ffdf960a40f2f910c3",
+      "0192f5a1-4242-7000-8000-00000000003b": "68438de158ad2469dbfecb9d8f16fb817f5eab03e9b4128aa0501a27f99917a8",
+      "0192f5a1-4242-7000-8000-00000000003c": "93c588f1abfdd599dfaa93eba1fdfc45b78f07870be0ab4a1f49dcca457b03a7",
+      "0192f5a1-4242-7000-8000-00000000003d": "62ce7dda113fbd9737d4d4452b206aace908bedd34ab07e0e2ed0fa550970026",
+      "0192f5a1-4242-7000-8000-00000000003e": "eec9f13f49ce40533f79726ccee991d55453e083881e4ba397bbbadb161918ed",
+      "0192f5a1-4242-7000-8000-00000000003f": "50b927b12a44d5c79acd0f8a61b24d577a37f31515915c0dadbbde64580bffca",
+      "0192f5a1-4242-7000-8000-000000000040": "12e0be1c1ebcf8cd9a117bf242d4915b27fce24f41539329676f0df93dab980c",
+      "0192f5a1-4242-7000-8000-000000000041": "367085b5d8778f2cc26e6df914e7290a238bd7d81b50f7cde08f0737f6a10030",
+      "0192f5a1-4242-7000-8000-000000000042": "823311b76833d96fa59cf6bb73238c379a03ea4b22006b24c804c5f3463551df",
+      "0192f5a1-4242-7000-8000-000000000043": "5d887393c89c575c37f2b4c8b463e199ce3c69b3f2a50ee1ec78452cd26f249b",
+      "0192f5a1-4242-7000-8000-000000000044": "6a946f993dcd19395c22b2103fbb14da67f376879381afa72e6670bc6480c386",
+      "0192f5a1-4242-7000-8000-000000000045": "70bbab905c4a7325efd13b49747e89d89279e2fd70a7a887494c32fab94e7948",
+      "0192f5a1-4242-7000-8000-000000000046": "5f14e3d4587b11e6abe47232066ac461fcb51f6238f2913b0384d1a646e76375",
+      "0192f5a1-4242-7000-8000-000000000047": "cb86dc34be77782dc5d040303da2b8f9f6b67ee6d42b2a7c631923f69a5aef59",
+      "0192f5a1-4242-7000-8000-000000000048": "b4d35db16c18dc72dc4ed1a663514a24e01607c6d40830cf5badfdaa4a580615",
+      "0192f5a1-4242-7000-8000-000000000049": "da2649d19dd564035df7ca8cc5d3d3b1b6bf1f8a63ee88c88dd1aa186bf13aae",
+      "0192f5a1-4242-7000-8000-00000000004a": "9f31a78d72049de336d5418e735e14c4b3a61651f179a4f7eb57d8d01a2b583b",
+      "0192f5a1-4242-7000-8000-00000000004b": "a8b229ac1bbaa439a0760b85f43af107aa56c216b001ac9b29e622e110716b8a",
+      "0192f5a1-4242-7000-8000-00000000004c": "dd43a3c7047b4c800b48fbf0f569457542ec3a00a97b7dec318a390e075616d9",
+      "0192f5a1-4242-7000-8000-00000000004d": "2a74ddb11bd7449653fbb27bc3c41c0b6650310e033d516b4f1e47f62ed3c338",
+      "01a1eab1-f93e-748a-b759-b239336c97b0": "c38f3a6a6068c8905c23a97caea1c373fb6fb69007c762085f00ec0fd745d927"
+    },
+    "pages": [
+      {
+        "objects": [],
+        "sheet": "ruhsat-up-01"
+      },
+      {
+        "objects": [
+          "0192f5a1-4242-7000-8000-000000000001",
+          "0192f5a1-4242-7000-8000-000000000002",
+          "0192f5a1-4242-7000-8000-000000000003",
+          "0192f5a1-4242-7000-8000-000000000004",
+          "0192f5a1-4242-7000-8000-000000000005",
+          "0192f5a1-4242-7000-8000-000000000006",
+          "0192f5a1-4242-7000-8000-000000000007",
+          "0192f5a1-4242-7000-8000-000000000008",
+          "0192f5a1-4242-7000-8000-000000000009",
+          "0192f5a1-4242-7000-8000-00000000000a",
+          "0192f5a1-4242-7000-8000-00000000000b",
+          "0192f5a1-4242-7000-8000-00000000000c",
+          "0192f5a1-4242-7000-8000-00000000000d",
+          "0192f5a1-4242-7000-8000-00000000000e",
+          "0192f5a1-4242-7000-8000-00000000000f",
+          "0192f5a1-4242-7000-8000-000000000010",
+          "0192f5a1-4242-7000-8000-000000000011",
+          "0192f5a1-4242-7000-8000-000000000012",
+          "0192f5a1-4242-7000-8000-000000000013",
+          "0192f5a1-4242-7000-8000-000000000014",
+          "0192f5a1-4242-7000-8000-000000000029",
+          "0192f5a1-4242-7000-8000-00000000002c",
+          "0192f5a1-4242-7000-8000-00000000002d",
+          "0192f5a1-4242-7000-8000-00000000002e",
+          "0192f5a1-4242-7000-8000-00000000002f",
+          "0192f5a1-4242-7000-8000-000000000030",
+          "0192f5a1-4242-7000-8000-000000000031",
+          "0192f5a1-4242-7000-8000-000000000032",
+          "0192f5a1-4242-7000-8000-000000000033",
+          "0192f5a1-4242-7000-8000-000000000034",
+          "0192f5a1-4242-7000-8000-000000000035",
+          "0192f5a1-4242-7000-8000-000000000036",
+          "0192f5a1-4242-7000-8000-000000000037",
+          "0192f5a1-4242-7000-8000-000000000044",
+          "0192f5a1-4242-7000-8000-000000000045",
+          "0192f5a1-4242-7000-8000-000000000046",
+          "0192f5a1-4242-7000-8000-000000000047",
+          "0192f5a1-4242-7000-8000-000000000048",
+          "0192f5a1-4242-7000-8000-000000000049",
+          "0192f5a1-4242-7000-8000-00000000004a",
+          "0192f5a1-4242-7000-8000-00000000004b",
+          "0192f5a1-4242-7000-8000-00000000004c",
+          "0192f5a1-4242-7000-8000-00000000004d",
+          "01a1eab1-f93e-748a-b759-b239336c97b0"
+        ],
+        "sheet": "ruhsat-up-02"
+      },
+      {
+        "objects": [
+          "0192f5a1-4242-7000-8000-000000000001",
+          "0192f5a1-4242-7000-8000-000000000002",
+          "0192f5a1-4242-7000-8000-000000000003",
+          "0192f5a1-4242-7000-8000-000000000004",
+          "0192f5a1-4242-7000-8000-000000000005",
+          "0192f5a1-4242-7000-8000-000000000006",
+          "0192f5a1-4242-7000-8000-000000000007",
+          "0192f5a1-4242-7000-8000-000000000008",
+          "0192f5a1-4242-7000-8000-000000000009",
+          "0192f5a1-4242-7000-8000-00000000000a",
+          "0192f5a1-4242-7000-8000-00000000000b",
+          "0192f5a1-4242-7000-8000-00000000000c",
+          "0192f5a1-4242-7000-8000-00000000000d",
+          "0192f5a1-4242-7000-8000-00000000000e",
+          "0192f5a1-4242-7000-8000-00000000000f",
+          "0192f5a1-4242-7000-8000-000000000010",
+          "0192f5a1-4242-7000-8000-000000000011",
+          "0192f5a1-4242-7000-8000-000000000012",
+          "0192f5a1-4242-7000-8000-000000000013",
+          "0192f5a1-4242-7000-8000-000000000014",
+          "0192f5a1-4242-7000-8000-000000000029",
+          "0192f5a1-4242-7000-8000-00000000002c",
+          "0192f5a1-4242-7000-8000-00000000002d",
+          "0192f5a1-4242-7000-8000-00000000002e",
+          "0192f5a1-4242-7000-8000-00000000002f",
+          "0192f5a1-4242-7000-8000-000000000030",
+          "0192f5a1-4242-7000-8000-000000000031",
+          "0192f5a1-4242-7000-8000-000000000032",
+          "0192f5a1-4242-7000-8000-000000000033",
+          "0192f5a1-4242-7000-8000-000000000034",
+          "0192f5a1-4242-7000-8000-000000000035",
+          "0192f5a1-4242-7000-8000-000000000036",
+          "0192f5a1-4242-7000-8000-000000000037",
+          "0192f5a1-4242-7000-8000-000000000044",
+          "0192f5a1-4242-7000-8000-000000000045",
+          "0192f5a1-4242-7000-8000-000000000046",
+          "0192f5a1-4242-7000-8000-000000000047",
+          "0192f5a1-4242-7000-8000-000000000048",
+          "0192f5a1-4242-7000-8000-000000000049",
+          "0192f5a1-4242-7000-8000-00000000004a",
+          "0192f5a1-4242-7000-8000-00000000004b",
+          "0192f5a1-4242-7000-8000-00000000004c",
+          "0192f5a1-4242-7000-8000-00000000004d",
+          "01a1eab1-f93e-748a-b759-b239336c97b0"
+        ],
+        "sheet": "ruhsat-up-03"
+      },
+      {
+        "objects": [
+          "0192f5a1-4242-7000-8000-000000000015",
+          "0192f5a1-4242-7000-8000-000000000016",
+          "0192f5a1-4242-7000-8000-000000000017",
+          "0192f5a1-4242-7000-8000-000000000018",
+          "0192f5a1-4242-7000-8000-000000000019",
+          "0192f5a1-4242-7000-8000-00000000001a",
+          "0192f5a1-4242-7000-8000-00000000001b",
+          "0192f5a1-4242-7000-8000-00000000001c",
+          "0192f5a1-4242-7000-8000-00000000001d",
+          "0192f5a1-4242-7000-8000-00000000001e",
+          "0192f5a1-4242-7000-8000-00000000001f",
+          "0192f5a1-4242-7000-8000-000000000020",
+          "0192f5a1-4242-7000-8000-000000000021",
+          "0192f5a1-4242-7000-8000-000000000022",
+          "0192f5a1-4242-7000-8000-000000000023",
+          "0192f5a1-4242-7000-8000-000000000024",
+          "0192f5a1-4242-7000-8000-000000000025",
+          "0192f5a1-4242-7000-8000-000000000026",
+          "0192f5a1-4242-7000-8000-000000000027",
+          "0192f5a1-4242-7000-8000-000000000028",
+          "0192f5a1-4242-7000-8000-00000000002a",
+          "0192f5a1-4242-7000-8000-00000000002b",
+          "0192f5a1-4242-7000-8000-000000000038",
+          "0192f5a1-4242-7000-8000-000000000039",
+          "0192f5a1-4242-7000-8000-00000000003a",
+          "0192f5a1-4242-7000-8000-00000000003b",
+          "0192f5a1-4242-7000-8000-00000000003c",
+          "0192f5a1-4242-7000-8000-00000000003d",
+          "0192f5a1-4242-7000-8000-00000000003e",
+          "0192f5a1-4242-7000-8000-00000000003f",
+          "0192f5a1-4242-7000-8000-000000000040",
+          "0192f5a1-4242-7000-8000-000000000041",
+          "0192f5a1-4242-7000-8000-000000000042",
+          "0192f5a1-4242-7000-8000-000000000043",
+          "0192f5a1-4242-7000-8000-000000000045",
+          "0192f5a1-4242-7000-8000-000000000046",
+          "0192f5a1-4242-7000-8000-000000000047",
+          "0192f5a1-4242-7000-8000-000000000048",
+          "0192f5a1-4242-7000-8000-000000000049",
+          "0192f5a1-4242-7000-8000-00000000004a",
+          "0192f5a1-4242-7000-8000-00000000004b",
+          "0192f5a1-4242-7000-8000-00000000004c",
+          "0192f5a1-4242-7000-8000-00000000004d",
+          "01a1eab1-f93e-748a-b759-b239336c97b0"
+        ],
+        "sheet": "ruhsat-up-04"
+      }
+    ],
+    "parts": {
+      "blocks": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "book": "64c0d4c450a7352119c2f0b880d9e2ffe3598a3346c4144d82faa33ff9086aa8",
+      "layers": "baf552809aa21c07df920863a974315dc659f6ca655c829216e136cbee3e3005",
+      "settings": "dd8a00ddb3f07894675ae72c05bbe7a434d4c07f9743cf4cc22a8028d3ebcb4c",
+      "styles": "eed4859ea5c8b71c461ed0c55f4592ebddd395b409b9437b06bcfc45c2ea7a01"
+    },
+    "sheets": {
+      "ruhsat-up-01": "b08131722593e17061c9cc675927927251976e021b1d79d8c3fc3c41ce1fdbda",
+      "ruhsat-up-02": "eadcb3180d6449ecffcdc1051e30a354686bcaef32ff1ccbc362cf19ed770fca",
+      "ruhsat-up-03": "1dbbedf64aa60a1aa156b9c1d9be4ab589688b55eac9d6ef5ca97d5749a6b0b2",
+      "ruhsat-up-04": "21d2ddd3d2befd68085c1c079e0809eb7d64ddd3b2373fbe0ba34b4575b84860"
+    }
+  },
+  "user": "cihad"
+}

@@ -110310,6 +110310,160 @@
           }
         }
       ]
+    },
+    {
+      "id": "file.review.package",
+      "version": 1,
+      "title": "Gelen paketi incele",
+      "summary": "İdarenin inceleyeni için: gelen paketi (yayın klasörü: yayin.json, PDF/A paftalar, IFC modeli, model kalite kontrol formu; ya da başka bir programın yazdığı tek bir .ifc) müellifin çizimi olmadan okur ve katman katman denetler; hiçbir şey yazmaz. Olgular dosyaların kendisinden ölçülür, kararı dijital-proje paketinin kuralı (dijital_proje.inceleme) verir. Katmanlar: paket (listedeki her dosya var mı, baytı ve SHA-256'sı listedeki mi, listede olmayan dosya, model, pafta ve form var mı), pafta (PDF/A-2 kimliği ve ISO 19005-2 kuralları, yalnız görüntüden oluşan taranmış sayfa, paftanın içindeki kaynağın çizim revizyonu paketinkiyle aynı mı), model (okunuyor mu, şema, EK-9 formunun dosyadan cevapladığı sorular ve zorunlu alanlar; bulgu nesneleri GlobalId'leriyle), konum (modelin koordinat sistemi system ile verilen idarenin sistemi ve dilimi mi; system verilmezse değerlendirilmez), form (müellifin cevabı dosyadan ölçülenle aynı mı, form teslim edilen modelin mi). Çıktı: dosyalar (ad, tür, listede mi), modelin adı, katmanlar (tutuyor mu, söz), bulgular (katman, kod, hata mı, ileti, onarım, dayanak, dosya, nesneler) ve formun 21 satırı (müellifin cevabı, KentOS'un, uyuşuyor mu). Retler: invalid_file_path, review_rule_unavailable (Python yok).",
+      "aliases": [
+        "PAKETINCELE",
+        "GELENPAKET"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [],
+      "permissions": [],
+      "undo": "none",
+      "cost": "job",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `file.review.package` v1: the package (absolute: a publication's folder, or a lone `.ifc` file) and the\nadministration's own system, by its EPSG code (`5255`: TUREF / TM33), the model's place is held to; absent: the\nplace layer is not judged.\n\nRefusals: `invalid_file_path` (empty, relative, not there, a file that is not `.ifc`), `review_rule_unavailable` (the\nstandards package's rule does not answer: no Python; the message says how to give one). The facts are read whatever\nthe files hold: a file that does not read is a finding, not a refusal.",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "system": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ReviewPackage",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `file.review.package` v1, and its plan: the package, its files, the model's file name, the layers in\norder, the findings (the layers' order, then the rule's), the form's rows.",
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/$defs/ReviewFile"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/ReviewFinding"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/$defs/ReviewLayer"
+            },
+            "type": "array"
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/ReviewFormRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "files",
+          "layers",
+          "findings",
+          "rows"
+        ],
+        "title": "PackageReviewed",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `file.review.package` v1, and its plan: the package, its files, the model's file name, the layers in\norder, the findings (the layers' order, then the rule's), the form's rows.",
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/$defs/ReviewFile"
+            },
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/$defs/ReviewFinding"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/$defs/ReviewLayer"
+            },
+            "type": "array"
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/ReviewFormRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "files",
+          "layers",
+          "findings",
+          "rows"
+        ],
+        "title": "PackageReviewed",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "review_rule_unavailable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Gelen ruhsat paketi, idarenin sistemi TUREF / TM33",
+          "input": {
+            "path": "/gelen/260123",
+            "system": 5255
+          }
+        }
+      ]
     }
   ],
   "codes": [
@@ -113000,6 +113154,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "BCF konusu yazılamıyor: alanlardan biri eksik ya da geçersiz; ileti alanı ve nedenini söyler."
+    },
+    {
+      "code": "review_rule_unavailable",
+      "kind": "failed",
+      "retryable": true,
+      "meaning": "Paketin inceleme kuralı (dijital-proje) çalışmadı: Python yok ya da paket bozuk; ileti nasıl verileceğini söyler."
     },
     {
       "code": "bcf_unreadable",
@@ -201035,6 +201195,129 @@
         "command",
         "candidate",
         "source"
+      ],
+      "type": "object"
+    },
+    "ReviewFile": {
+      "description": "A file of the package as the review read it: its name, its kind (`pdf`, `ifc`, `form`, `list`, `other`) and whether\nthe package's list names it.",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "listed": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "listed"
+      ],
+      "type": "object"
+    },
+    "ReviewFinding": {
+      "description": "A finding: its layer, its code, whether it is an error (else a warning), what it says (the measured and the asked),\nhow to put it right, the article it rests on, the file it is in, and the objects it is about by their GlobalIds.",
+      "properties": {
+        "cite": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "error": {
+          "type": "boolean"
+        },
+        "file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "layer": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "objects": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "repair": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer",
+        "code",
+        "error",
+        "message",
+        "repair",
+        "cite",
+        "objects"
+      ],
+      "type": "object"
+    },
+    "ReviewFormRow": {
+      "description": "A row of the model quality form (EK-9 Tablo 9.1): its number and title, the author's answer (absent: the package\nhas no form) and KentOS's measured one, and whether they agree.",
+      "properties": {
+        "agree": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "author": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kentos": {
+          "type": "string"
+        },
+        "no": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "no",
+        "title",
+        "kentos"
+      ],
+      "type": "object"
+    },
+    "ReviewLayer": {
+      "description": "A layer of the review: `paket`, `pafta`, `model`, `konum` or `form`; whether it holds (absent: not judged, the\nwords say why) and its words.",
+      "properties": {
+        "holds": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "key": {
+          "type": "string"
+        },
+        "words": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "words"
       ],
       "type": "object"
     },
