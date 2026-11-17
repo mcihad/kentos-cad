@@ -1,6 +1,10 @@
 //! The HTTP API (CLAUDE.md §14): routes, shared state and the middleware
 //! every request passes (request id, trace, panic guard, timeout, body limit).
 
+// Programs signing in with bearer tokens; an account's sessions and tokens (docs/adr/9000 §12).
+pub mod access;
+#[cfg(test)]
+mod access_tests;
 #[cfg(test)]
 mod addresses_tests;
 pub mod auth;
@@ -60,7 +64,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use axum::http::StatusCode;
-use axum::routing::{get, post, put};
+use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use kentos_application::AppError;
 use kentos_contracts::{CONTRACTS_VERSION, Health};
@@ -144,6 +148,11 @@ pub fn router(state: AppState) -> Router {
         .route("/v1/auth/config", get(auth::config))
         .route("/v1/auth/login", post(auth::login))
         .route("/v1/auth/logout", post(auth::logout))
+        .route("/v1/auth/token", post(access::token))
+        .route("/v1/me/sessions", get(access::sessions))
+        .route("/v1/me/sessions/{id}", delete(access::end_session))
+        .route("/v1/me/tokens", get(access::tokens).post(access::create_token))
+        .route("/v1/me/tokens/{id}", delete(access::revoke_token))
         .route("/v1/auth/oidc/start", get(auth::oidc_start))
         .route("/v1/auth/oidc/callback", get(auth::oidc_callback))
         .route("/v1/me", get(auth::me))

@@ -208,6 +208,11 @@ pub async fn edit_own(db: &Db, actor: &Actor, input: &ProfessionalEdit) -> AppRe
 
 /// `POST /v1/portal/me/password`: every session of the account closes; the caller is given a new one.
 pub async fn change_password(db: &Db, actor: &Actor, input: &PasswordChange) -> AppResult<()> {
+    if actor.method == kentos_contracts::SignInMethod::Token {
+        return Err(crate::AppError::forbidden(
+            "Parola erişim anahtarıyla değiştirilmez; hesabınızla oturum açarak değiştirin.",
+        ));
+    }
     check_password(&input.new).map_err(|e| e.at("new"))?;
     let mut tx = db.scoped(user_scope(actor)).await?;
     let code: Option<String> = sqlx::query_scalar("select kentos.change_own_password($1, $2)")

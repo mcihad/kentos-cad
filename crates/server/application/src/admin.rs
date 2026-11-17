@@ -460,24 +460,6 @@ pub async fn restore_project(
     Ok(name)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn passwords_and_logins_are_checked_before_the_database() {
-        assert!(check_password("kisa").is_err());
-        assert!(check_password("yeterince-uzun").is_ok());
-        assert!(check_password(&"ş".repeat(37)).is_err()); // 74 bytes: bcrypt would cut it
-        assert!(check_login("ayse.yilmaz").is_ok());
-        assert!(
-            check_login("Ayse").is_err()
-                && check_login("a b").is_err()
-                && check_login("ab").is_err()
-        );
-    }
-}
-
 /// Makes the account a platform administrator of the portal (docs/adr/9000 §3), or no longer one; recorded.
 pub async fn set_platform_admin(owner: &PgPool, who: &str, on: bool) -> AppResult<Uuid> {
     let user = user_id(owner, who).await?;
@@ -521,4 +503,22 @@ pub async fn platform_admins(owner: &PgPool) -> AppResult<Vec<(String, String)>>
     )
     .fetch_all(owner)
     .await?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn passwords_and_logins_are_checked_before_the_database() {
+        assert!(check_password("kisa").is_err());
+        assert!(check_password("yeterince-uzun").is_ok());
+        assert!(check_password(&"ş".repeat(37)).is_err()); // 74 bytes: bcrypt would cut it
+        assert!(check_login("ayse.yilmaz").is_ok());
+        assert!(
+            check_login("Ayse").is_err()
+                && check_login("a b").is_err()
+                && check_login("ab").is_err()
+        );
+    }
 }

@@ -3,6 +3,6 @@ import type { DocCheckItem } from "./DocCheckItem";
 
 export type DocChecklist = { basis: string, 
 /**
- * The package it was checked on: the one being prepared, or the last sent.
+ * The newest package it counts: the one being prepared, or the last sent (every package sent counts).
  */
 round: number, items: Array<DocCheckItem>, };
