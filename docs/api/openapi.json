@@ -1079,11 +1079,55 @@
               }
             ]
           },
+          "elementType": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TypeLink"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The project's element type it follows (docs/adr/8106; `.kcad` Mimari data 19): a column's, beam's, slab's,\nroof's, railing's or stair's, the version it took and the fields it keeps its own value of. Absent: none."
+          },
+          "exit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeclaredExit"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A stair's emergency exit role (docs/adr/8068, EK-6 `FireExit`), or a roof's as an escape route (docs/adr/8090,\nBYKHY Ek-3/B 4-a); absent: unknown (missing)."
+          },
+          "fireRating": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Declared"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its own fire resistance class (docs/adr/8068, EK-6 `FireRating`), over its type's (a wall style's); absent: its\ntype's, else none (missing)."
+          },
           "level": {
             "type": [
               "string",
               "null"
             ]
+          },
+          "loadBearing": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeclaredBearing"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A wall's load-bearing role (docs/adr/8090, EK-6 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2); absent: unknown\n(missing)."
           },
           "phase": {
             "anyOf": [
@@ -1179,6 +1223,24 @@
           },
           "quantity": {
             "$ref": "#/components/schemas/MaterialQuantity"
+          },
+          "reaction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Declared"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its reaction to fire class (docs/adr/8091; TS EN 13501-1, BYKHY Ek-2/Ç): `A2-s1,d0`, `B-s2,d0`, `E`, a floor\ncovering's `Bfl-s1` (`crate::reaction_problem`), with its basis. Absent: not declared (missing)."
+          },
+          "strength": {
+            "description": "Its strength class (docs/adr/8068; EK-6: the model's material is named `Ad_Dayanım`, “Beton_C25”, “Çelik_S355”):\nC25, S355 (`crate::strength_problem`). Absent: not given (a load-bearing material without one is missing).",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -1248,7 +1310,7 @@
         "description": "The project's architectural settings: its levels, low to high as made, and the detail walls are drawn at (absent:\nby the drawing's scale, `WallDetail::at_scale`).",
         "properties": {
           "activeLevel": {
-            "description": "Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no\nlevel). Absent: its ground level (the one at elevation 0, else its first). Revit's last viewed view.",
+            "description": "Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no\nlevel). Absent: its ground level (the one at elevation 0, else its first).",
             "type": [
               "string",
               "null"
@@ -1262,13 +1324,20 @@
             "type": "array"
           },
           "cutHeight": {
-            "description": "The plan's cut height above each level's floor, metres (docs/adr/8012, KCAD 217): what crosses it is cut, a\nwindow over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project\nwrites 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50; Revit's metric templates: 1200 mm).",
+            "description": "The plan's cut height above each level's floor, metres (docs/adr/8012, KCAD 217): what crosses it is cut, a\nwindow over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project\nwrites 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50).",
             "format": "double",
             "type": [
               "number",
               "null"
             ],
             "x-unit": "length"
+          },
+          "deliveries": {
+            "description": "Teslim kaydı (docs/adr/8099; `.kcad` Mimari data 17): each package that went to an authority and what came back,\nin the order they went. Empty: none recorded.",
+            "items": {
+              "$ref": "#/components/schemas/Delivery"
+            },
+            "type": "array"
           },
           "detail": {
             "anyOf": [
@@ -1279,6 +1348,20 @@
                 "type": "null"
               }
             ]
+          },
+          "elementTypes": {
+            "description": "Eleman tipleri (docs/adr/8106; `.kcad` Mimari data 19): the project's column, beam, slab, roof, railing and\nstair types, in the order they were made. Empty: none.",
+            "items": {
+              "$ref": "#/components/schemas/ElementType"
+            },
+            "type": "array"
+          },
+          "formAnswers": {
+            "description": "Kontrol formunun cevapları (docs/adr/8077; arch data 1): the author's answers to the model quality control form's\nquestions KentOS leaves to them (EK-9 Tablo 9.1: the file size, the development level, the area tables), each\nwith its note, by question; the printed form and the BIM package read them. Empty: none given.",
+            "items": {
+              "$ref": "#/components/schemas/FormAnswer"
+            },
+            "type": "array"
           },
           "levelView": {
             "anyOf": [
@@ -1354,6 +1437,17 @@
             },
             "type": "array"
           },
+          "performance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BuildingPerformance"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Yangın ve performans (docs/adr/8068; arch data 1): the building's declared fire protection class (EK-6 Tablo\n6.7 `FireProtectionClass`). Absent: none declared."
+          },
           "phaseView": {
             "anyOf": [
               {
@@ -1364,6 +1458,13 @@
               }
             ],
             "description": "The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are."
+          },
+          "planNotes": {
+            "description": "Plan notları (docs/adr/8084; `.kcad` Mimari data 11): the parcel's plan notes that give a value the regulation's\nrules read over the municipality's and the national one (PAİY 69/3), as the architect writes them from the\nplan, each with where it stands. Empty: none given.",
+            "items": {
+              "$ref": "#/components/schemas/PlanNote"
+            },
+            "type": "array"
           },
           "program": {
             "$ref": "#/components/schemas/BuildingProgram",
@@ -1415,6 +1516,35 @@
           "sprinklers": {
             "description": "Yağmurlama sistemi (docs/adr/8035; `.kcad` schema 226): the building has an automatic sprinkler system, so the\nfire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.",
             "type": "boolean"
+          },
+          "structure": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BuildingStructure"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Taşıyıcı sistem (docs/adr/8094; `.kcad` Mimari data 15): the building's structural system as the project\ndeclares it and whether it holds traditional architectural elements; Planlı Alanlar İmar Yönetmeliği 22/1-m and\n28/1-d read a traditional cut stone masonry building of up to three storeys. Absent: not said."
+          },
+          "underlays": {
+            "description": "Altlık modeller (docs/adr/8101; `.kcad` Mimari data 18): other disciplines' IFC models shown read-only under the\ndrawing, by their files. Empty: none.",
+            "items": {
+              "$ref": "#/components/schemas/ModelUnderlay"
+            },
+            "type": "array"
+          },
+          "zone": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Zone"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Bölge (docs/adr/8085; `.kcad` Mimari data 12): what the parcel's plan uses its area for, as PAİY 28/1 reads a\nstorey's height by it (a, b, c, ç). Absent: not said; a dwelling's project is read in a dwelling area."
           },
           "zoning": {
             "anyOf": [
@@ -2395,6 +2525,17 @@
               "null"
             ]
           },
+          "member": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Member"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A rail (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's beam. Only a\nbeam's (not a lintel's or a bond beam's)."
+          },
           "offset": {
             "description": "Its top over where it hangs (the structure's top of the slab over its storey, else its storey's top), metres;\nabsent: 0.",
             "format": "double",
@@ -2696,6 +2837,17 @@
               "null"
             ]
           },
+          "element": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BlockElement"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What it is as a building element (docs/adr/8070 §5): its class, its type and its body. Absent: no building\nelement (a mark, a title block, a symbol), which the building's model does not hold."
+          },
           "publication": {
             "anyOf": [
               {
@@ -2813,6 +2965,64 @@
           "entities"
         ],
         "type": "object"
+      },
+      "BlockElement": {
+        "additionalProperties": false,
+        "description": "A block as a building element (docs/adr/8070 §5; EK-5 Tablo 5.1, EK-6 Tablo 6.35, 6.53, 6.64): its class and type,\nand its body: the block's drawn outline in plan from its underside, `elevation` over its floor, `height` up.",
+        "properties": {
+          "class": {
+            "$ref": "#/components/schemas/BlockElementClass"
+          },
+          "elevation": {
+            "description": "Its underside over its floor, metres (a wall unit's, a wall-hung basin's); absent: 0.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "height": {
+            "description": "Its body's height, metres; absent: no body, its outline in plan only.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "predefined": {
+            "description": "Its type as IFC 4.3 spells it (`TABLE`, `WASHHANDBASIN`, `ELEVATOR`; [`BlockElementClass::types`]);\n`USERDEFINED` takes the block's name as its object type. Absent: none, which EK-6 counts as missing.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "class"
+        ],
+        "type": "object"
+      },
+      "BlockElementClass": {
+        "description": "A block's building element class (EK-5 Tablo 5.1).",
+        "oneOf": [
+          {
+            "const": "furniture",
+            "description": "Mobilya (`IfcFurniture`, MBL): a table, a chair, a bed, a wardrobe, a kitchen unit.",
+            "type": "string"
+          },
+          {
+            "const": "sanitaryTerminal",
+            "description": "Sıhhi tesisat ucu (`IfcSanitaryTerminal`, STT): a basin, a toilet, a shower, a bath, a sink.",
+            "type": "string"
+          },
+          {
+            "const": "transportElement",
+            "description": "Taşıma elemanı (`IfcTransportElement`, TSM): a lift.",
+            "type": "string"
+          }
+        ]
       },
       "BlockId": {
         "format": "uuid",
@@ -3161,6 +3371,23 @@
           }
         ]
       },
+      "BuildingPerformance": {
+        "additionalProperties": false,
+        "description": "The building's declared particulars for the fire regulation (EK-6 Tablo 6.7): its fire protection class. The\nconstruction action (`ConstructionMethod`: new construction, addition, renovation) is the künye's building kind,\nworked out where it is written.",
+        "properties": {
+          "fireProtectionClass": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Declared"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object"
+      },
       "BuildingProgram": {
         "additionalProperties": false,
         "description": "A building's program (docs/adr/0773, `.kcad` schema 138).",
@@ -3205,6 +3432,13 @@
             ],
             "description": "How the common areas are shared out to the independent units (docs/adr/0784 §2); none: they are not."
           },
+          "shared": {
+            "description": "The levels two or more buildings span, each with the building it counts as a storey of (docs/adr/8072 §1).",
+            "items": {
+              "$ref": "#/components/schemas/SharedLevel"
+            },
+            "type": "array"
+          },
           "units": {
             "items": {
               "$ref": "#/components/schemas/ProgramUnit"
@@ -3219,6 +3453,22 @@
             ]
           }
         },
+        "type": "object"
+      },
+      "BuildingStructure": {
+        "additionalProperties": false,
+        "description": "The building's declared structure (docs/adr/8094): its structural system and whether it holds traditional\narchitectural elements (“geleneksel mimari öğeler barındıran”), which only a cut stone masonry building's reading\ntakes.",
+        "properties": {
+          "system": {
+            "$ref": "#/components/schemas/StructuralSystem"
+          },
+          "traditional": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "system"
+        ],
         "type": "object"
       },
       "CadElement": {
@@ -4547,7 +4797,7 @@
         "type": "object"
       },
       "ColumnAnchor": {
-        "description": "Which of a column's nine points its `at` is (docs/adr/0725 §2), Archicad's reference axis of the column core: on its\nbox before its turn, left and right across its width, bottom and top along its depth.",
+        "description": "Which of a column's nine points its `at` is (docs/adr/0725 §2), the reference axis of the column's core: on its\nbox before its turn, left and right across its width, bottom and top along its depth.",
         "enum": [
           "center",
           "left",
@@ -4646,6 +4896,15 @@
               "null"
             ]
           },
+          "height": {
+            "description": "Its own height over its floor, metres (docs/adr/8070 §8: a post's, a pergola's); absent: its storey's, as the\nframe's column.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
           "id": {
             "format": "uint32",
             "minimum": 0,
@@ -4726,6 +4985,17 @@
               "string",
               "null"
             ]
+          },
+          "member": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Member"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A post (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's column."
           },
           "order": {
             "description": "Its place in its layer's drawing order: lower first, equals in the\ndocument's order; absent: 0; a 32-bit integer. Only a drawing's object has it.",
@@ -5817,6 +6087,27 @@
         },
         "type": "object"
       },
+      "Covering": {
+        "additionalProperties": false,
+        "description": "What makes a slab a covering (docs/adr/8070 §10).",
+        "properties": {
+          "name": {
+            "description": "What it is in words (\"Asma tavan\", \"Parke\"): its IFC name's words, and its object type when its type is\n`USERDEFINED`, which needs it; absent: its type's own word ([`Covering::word`]).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "predefined": {
+            "description": "Its IFC 4.3 type ([`Covering::TYPES`]): `CEILING` a ceiling (asma tavan), `FLOORING` a floor covering…;\n`USERDEFINED` takes `name` as its object type.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "predefined"
+        ],
+        "type": "object"
+      },
       "CrossingSide": {
         "description": "Where a crossed structure is against the road (docs/adr/0946).",
         "oneOf": [
@@ -6191,6 +6482,52 @@
           }
         ]
       },
+      "CurtainGrid": {
+        "additionalProperties": false,
+        "description": "A curtain wall's grid (docs/adr/8070 §7): each straight stretch of its line divided into as many equal bays as leave\nnone wider than `spacing`, its height into as many equal rows as leave none taller than `rows` (a largest spacing, so\nthe panels of a stretch are equal); a frame on every line of the grid, its ends and its foot and top among them\n(dikme along, kayıt across); a panel in each cell.",
+        "properties": {
+          "frame": {
+            "description": "A frame's face, metres (a mullion's width along the line, a transom's height); absent: [`CurtainGrid::FRAME`].",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "frames": {
+            "description": "The frames' material (Alüminyum); absent: not said.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "panel": {
+            "description": "The panels' material (Cam); absent: not said.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "rows": {
+            "description": "The largest distance between two transoms, metres.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "spacing": {
+            "description": "The largest distance between two mullions, metres.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "spacing",
+          "rows"
+        ],
+        "type": "object"
+      },
       "CustomDatum": {
         "description": "A datum the project defines: its ellipsoid and, when it has one, its\nseven parameters to WGS 84 (without them it stands alone).",
         "properties": {
@@ -6418,6 +6755,286 @@
           "from",
           "to",
           "name"
+        ],
+        "type": "object"
+      },
+      "Declared": {
+        "additionalProperties": false,
+        "description": "A declared word and its basis.",
+        "properties": {
+          "basis": {
+            "$ref": "#/components/schemas/DeclaredBasis"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "value",
+          "basis"
+        ],
+        "type": "object"
+      },
+      "DeclaredBasis": {
+        "description": "Where a declared value comes from.",
+        "oneOf": [
+          {
+            "additionalProperties": false,
+            "description": "Müellif beyanı: the author's own statement.",
+            "properties": {
+              "kind": {
+                "const": "author",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "description": "A document: its name (a test report, a product's declaration of performance) and, when given, its date.",
+            "properties": {
+              "date": {
+                "description": "`YYYY-MM-DD`.",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "const": "document",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "name"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "DeclaredBearing": {
+        "additionalProperties": false,
+        "description": "A declared load-bearing role and its basis (docs/adr/8090; EK-6 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2).",
+        "properties": {
+          "basis": {
+            "$ref": "#/components/schemas/DeclaredBasis"
+          },
+          "bearing": {
+            "description": "Evet: it carries the structure's loads (a load-bearing wall); hayır: it does not (a partition).",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "bearing",
+          "basis"
+        ],
+        "type": "object"
+      },
+      "DeclaredExit": {
+        "additionalProperties": false,
+        "description": "A declared emergency exit role and its basis.",
+        "properties": {
+          "basis": {
+            "$ref": "#/components/schemas/DeclaredBasis"
+          },
+          "exit": {
+            "description": "Evet: it serves as an exit in a fire; hayır: it does not.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "exit",
+          "basis"
+        ],
+        "type": "object"
+      },
+      "Delivery": {
+        "additionalProperties": false,
+        "description": "One delivery of the project's package to an authority.",
+        "properties": {
+          "at": {
+            "description": "The day it went, YYYY-AA-GG.",
+            "type": "string"
+          },
+          "by": {
+            "description": "Who published it.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "channel": {
+            "$ref": "#/components/schemas/DeliveryChannel",
+            "default": "epys"
+          },
+          "id": {
+            "description": "Lowercase, hyphenated UUID; unique in the drawing.",
+            "type": "string"
+          },
+          "number": {
+            "description": "1, 2, 3 …: one more than the largest a delivery in the drawing has.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "id"
+          },
+          "package": {
+            "$ref": "#/components/schemas/DeliveryPackage"
+          },
+          "receipt": {
+            "description": "The system's receipt for the delivery.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "response": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revision": {
+            "description": "The package's EK-2 revision number: three digits, 000 unrevised.",
+            "type": "string"
+          },
+          "to": {
+            "description": "The authority it went to.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "revision",
+          "package",
+          "to",
+          "at"
+        ],
+        "type": "object"
+      },
+      "DeliveryChannel": {
+        "description": "How a package went to the authority (e-PYS Yönetmeliği 4/3, 6): the ministry's system, the authority's own software\n(whose records go to e-PYS, 7/7), on paper by hand (6: with no e-signature, a printed set besides), another way.",
+        "oneOf": [
+          {
+            "const": "epys",
+            "description": "e-PYS.",
+            "type": "string"
+          },
+          {
+            "const": "authority",
+            "description": "İdarenin yazılımı.",
+            "type": "string"
+          },
+          {
+            "const": "paper",
+            "description": "Basılı (elden).",
+            "type": "string"
+          },
+          {
+            "const": "other",
+            "description": "Öbür.",
+            "type": "string"
+          }
+        ]
+      },
+      "DeliveryOutcome": {
+        "description": "What came back (e-PYS Yönetmeliği 5/2–3): accepted, or returned with its reasons.",
+        "oneOf": [
+          {
+            "const": "accepted",
+            "description": "Kabul.",
+            "type": "string"
+          },
+          {
+            "const": "returned",
+            "description": "İade.",
+            "type": "string"
+          }
+        ]
+      },
+      "DeliveryPackage": {
+        "additionalProperties": false,
+        "description": "The package a delivery took: its publication's manifest's SHA-256, the files it holds, where it was written and the\ndrawing's revision it was published from.",
+        "properties": {
+          "files": {
+            "description": "The files the package holds.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "manifest": {
+            "description": "`yayin.json`'s SHA-256, 64 lowercase hexadecimal digits.",
+            "type": "string"
+          },
+          "path": {
+            "description": "Its folder, as the author's machine names it.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "description": "The drawing's revision it was published from.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "manifest",
+          "files"
+        ],
+        "type": "object"
+      },
+      "DeliveryResponse": {
+        "additionalProperties": false,
+        "description": "The authority's answer: accepted or returned, when, why (a return's reason is said), the review notes the reasons are\nbound to objects by, and the system's receipt.",
+        "properties": {
+          "at": {
+            "description": "The day it came, YYYY-AA-GG.",
+            "type": "string"
+          },
+          "notes": {
+            "description": "The review notes' ids, each a reason bound to the objects it is about.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/DeliveryOutcome"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "receipt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "outcome",
+          "at"
         ],
         "type": "object"
       },
@@ -9357,6 +9974,55 @@
         ],
         "type": "object"
       },
+      "ElementType": {
+        "additionalProperties": false,
+        "description": "A project's element type (docs/adr/8106 §1).",
+        "properties": {
+          "id": {
+            "description": "Its lasting key: lower-case letters, digits and `-`, at most 64, not starting with `kentos-`.",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ElementTypeKind",
+            "description": "The elements it serves."
+          },
+          "name": {
+            "description": "What it is called (S1, Döşeme 15): unique among its kind's types, case aside.",
+            "type": "string"
+          },
+          "values": {
+            "additionalProperties": true,
+            "description": "Its values: its kind's type fields by their names on the wire (`width`, `material` …), each as the element\nwrites it; a field it does not give is that field's absence (a column's rectangle, a slab's lone structure).",
+            "type": "object"
+          },
+          "version": {
+            "description": "Each change gives it the next; an element that took an older one is behind (eski sürüm).",
+            "format": "uint32",
+            "minimum": 1,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "version"
+        ],
+        "type": "object"
+      },
+      "ElementTypeKind": {
+        "description": "What an element type is for.",
+        "enum": [
+          "column",
+          "beam",
+          "slab",
+          "roof",
+          "railing",
+          "stair"
+        ],
+        "type": "string"
+      },
       "EllipseEntity": {
         "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
         "properties": {
@@ -12195,6 +12861,37 @@
           "block",
           "width",
           "depth"
+        ],
+        "type": "object"
+      },
+      "FormAnswer": {
+        "additionalProperties": false,
+        "description": "The author's answer to one of the model quality control form's questions.",
+        "properties": {
+          "basis": {
+            "description": "The form's evidence the author answered (the question's KentOS note then, docs/adr/8077 §7): when the form's\nnote is another now, the answer is stale and the question open again. Empty: not said, never stale.",
+            "type": "string"
+          },
+          "no": {
+            "description": "The question's number in EK-9 Tablo 9.1 (1–21).",
+            "format": "uint8",
+            "maximum": 21,
+            "minimum": 1,
+            "type": "integer",
+            "x-unit": "index"
+          },
+          "note": {
+            "description": "What the author says of it, written on the form.",
+            "type": "string"
+          },
+          "yes": {
+            "description": "Evet (true) or Hayır (false).",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "no",
+          "yes"
         ],
         "type": "object"
       },
@@ -18982,7 +19679,7 @@
         "type": "object"
       },
       "MaterialCategory": {
-        "description": "What a material is for (Revit's material class, the role ADR 0771 §7 named).",
+        "description": "What a material is for (the role ADR 0771 §7 named).",
         "oneOf": [
           {
             "const": "structure",
@@ -19035,6 +19732,27 @@
         "required": [
           "user",
           "memberships"
+        ],
+        "type": "object"
+      },
+      "Member": {
+        "additionalProperties": false,
+        "description": "What makes a column a post or a beam a rail (docs/adr/8070 §8).",
+        "properties": {
+          "name": {
+            "description": "What it is in words (\"Pergola dikmesi\", \"Cephe kaydı\"): its IFC name's words, and its object type when its type is\n`USERDEFINED`, which needs it; absent: its type's own word ([`Member::word`]).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "predefined": {
+            "description": "Its IFC 4.3 type ([`Member::TYPES`]): `POST` a post (dikme), `PURLIN` an aşık, `RAFTER` a mertek…;\n`USERDEFINED` takes `name` as its object type.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "predefined"
         ],
         "type": "object"
       },
@@ -19215,6 +19933,65 @@
         ],
         "type": "object"
       },
+      "ModelUnderlay": {
+        "additionalProperties": false,
+        "description": "One underlay model.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "discipline": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "file": {
+            "description": "The file, as the author's machine names it.",
+            "type": "string"
+          },
+          "id": {
+            "description": "Lowercase, hyphenated UUID; unique in the drawing.",
+            "type": "string"
+          },
+          "name": {
+            "description": "As the list shows it (the file's name, unless the user named it).",
+            "type": "string"
+          },
+          "placement": {
+            "$ref": "#/components/schemas/UnderlayPlacement"
+          },
+          "revision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "schema": {
+            "description": "Its `FILE_SCHEMA` (`IFC4X3_ADD2`, `IFC4`, `IFC2X3`).",
+            "type": "string"
+          },
+          "sha256": {
+            "description": "The file's SHA-256 when it was read in, 64 lowercase hexadecimal digits: the revision shown.",
+            "type": "string"
+          },
+          "shown": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "file",
+          "sha256",
+          "bytes",
+          "schema"
+        ],
+        "type": "object"
+      },
       "ModuleBreak": {
         "description": "Why an instance's link broke: its module's definition was removed; its objects stay as they last were.",
         "enum": [
@@ -19291,7 +20068,7 @@
             "type": "array"
           },
           "storey": {
-            "description": "One storey of a module of several (docs/adr/0811, Archicad's Single Story): the instance holds only the\ndefinition's members on that storey, standing on the instance's `level`. None: every storey, the base on `level`.",
+            "description": "One storey of a module of several (docs/adr/0811): the instance holds only the\ndefinition's members on that storey, standing on the instance's `level`. None: every storey, the base on `level`.",
             "format": "uint32",
             "minimum": 0,
             "type": [
@@ -20994,6 +21771,28 @@
             ],
             "x-unit": "length"
           },
+          "exit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeclaredExit"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A door's emergency exit role (docs/adr/8068, EK-6 `FireExit`); absent: unknown (missing)."
+          },
+          "fireRating": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Declared"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its own fire resistance class (docs/adr/8068, EK-6 `FireRating`), over its type's; absent: its type's, else none."
+          },
           "form": {
             "$ref": "#/components/schemas/OpeningForm",
             "default": "door"
@@ -21374,6 +22173,17 @@
             ],
             "x-unit": "length"
           },
+          "fireRating": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Declared"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its fire resistance class (docs/adr/8068, EK-6 Tablo 6.25 `FireRating`): every opening of the type carries it\nunless it has its own. Absent: none (missing on a door)."
+          },
           "form": {
             "$ref": "#/components/schemas/OpeningForm"
           },
@@ -21536,7 +22346,7 @@
       },
       "OptionCombo": {
         "additionalProperties": false,
-        "description": "A named combination of options (docs/adr/0808; Archicad's Design Option Combination): one option for some of the\nproject's sets; a set it does not name shows its primary. A proposal (“Teklif 1: mutfak B, banyo A”) is one\ncombination; a view's recipe may show it, Bileşimi uygula makes its choices the primaries.",
+        "description": "A named combination of options (docs/adr/0808): one option for some of the\nproject's sets; a set it does not name shows its primary. A proposal (“Teklif 1: mutfak B, banyo A”) is one\ncombination; a view's recipe may show it, Bileşimi uygula makes its choices the primaries.",
         "properties": {
           "choices": {
             "items": {
@@ -22765,6 +23575,54 @@
           "after"
         ],
         "type": "object"
+      },
+      "PlanNote": {
+        "additionalProperties": false,
+        "description": "A plan note's value (docs/adr/8084): what it is for, the value as the note writes it (metres for a height) and where\nit stands (“UİP 12.3.2019, plan notu 7”), as the architect reads it from the plan: KentOS does not read a note's\nwords into a number.",
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/PlanNoteKey"
+          },
+          "source": {
+            "type": "string"
+          },
+          "value": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "key",
+          "value",
+          "source"
+        ],
+        "type": "object"
+      },
+      "PlanNoteKey": {
+        "description": "What a plan note gives a value for (docs/adr/8084): a measure a rule of the regulation reads, the plan's value\ncoming before the regulations' where PAİY lets a plan say more (69/2–3; 28/1: “uygulama imar planında daha fazla\nbelirlenmemiş ise”), or the plan's own limit PAİY points to (5/11: “uygulama imar planında … gösterilen kat adedi veya\nbina yüksekliği aşılamaz”, docs/adr/8098).",
+        "oneOf": [
+          {
+            "const": "groundStoreyHeight",
+            "description": "Zemin kat yüksekliği, en çok (28/1): the ground storey's floor to floor, m.",
+            "type": "string"
+          },
+          {
+            "const": "storeyHeight",
+            "description": "Kat yüksekliği, en çok (28/1): every storey's on and over ±0.00 floor to floor (the ground storey's too, unless\na note gives its own), m.",
+            "type": "string"
+          },
+          {
+            "const": "buildingHeight",
+            "description": "Bina yüksekliği, en çok (5/11, 4/1-n; docs/adr/8098): from the building's ±0.00 to its eaves level (the top of\nits last storey's ceiling slab, 4/1-ppp), m.",
+            "type": "string"
+          },
+          {
+            "const": "storeys",
+            "description": "Kat adedi, en çok (5/11; docs/adr/8098): the ground and normal storeys, a whole number.",
+            "type": "string"
+          }
+        ]
       },
       "PlatformDef": {
         "additionalProperties": false,
@@ -24550,6 +25408,13 @@
         "additionalProperties": false,
         "description": "A building and its wings.",
         "properties": {
+          "code": {
+            "description": "Its building code (docs/adr/8072 §1; EK-2 §2.3, Tablo 2.1): two capital letters or digits, its model files'\nnames carry it; \"00\" only for a project of one building. None: not said.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "id": {
             "type": "string"
           },
@@ -24563,11 +25428,27 @@
           "name": {
             "type": "string"
           },
+          "usage": {
+            "description": "What it is used for (Kullanım türü; EK-6 Tablo 6.7 `OccupancyType`), as the project writes it.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "wings": {
             "items": {
               "$ref": "#/components/schemas/ProgramWing"
             },
             "type": "array"
+          },
+          "zero": {
+            "description": "Its ±0.00 over the project's ±0.00, metres (docs/adr/8072 §1): a block entered higher or lower than another;\nits storeys' levels are read from it. None: not said (the project's when it is the only building).",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
           }
         },
         "required": [
@@ -27977,7 +28858,7 @@
       },
       "ReviewDecision": {
         "additionalProperties": false,
-        "description": "A decision a note records (docs/adr/4140), as ArcGIS's Reviewer table keeps a result apart from the feature: the\ncommand whose decision it is, the candidate (its persistent id) and its source's name, what was decided as the\ncommand was given it (a single source's candidate accepted, its class corrected to a class's id, its missing fields\ngiven, or it rejected with a reason), and the asset the candidate's group was written as or tied to (none for a\nrejection). The note's anchors stamp the candidate and the asset as the decision left them; its author is the\nreviewer.",
+        "description": "A decision a note records (docs/adr/4140), kept apart from the feature it is about: the\ncommand whose decision it is, the candidate (its persistent id) and its source's name, what was decided as the\ncommand was given it (a single source's candidate accepted, its class corrected to a class's id, its missing fields\ngiven, or it rejected with a reason), and the asset the candidate's group was written as or tied to (none for a\nrejection). The note's anchors stamp the candidate and the asset as the decision left them; its author is the\nreviewer.",
         "properties": {
           "accept": {
             "type": "boolean"
@@ -28977,6 +29858,13 @@
           "layerId": {
             "type": "string"
           },
+          "layers": {
+            "description": "Its layers top down (docs/adr/8071 §8), each kind once in [`RoofLayerKind`]'s order, each thick across the\nroof's face; its thickness is theirs together. Absent: one build-up of its thickness, upright.",
+            "items": {
+              "$ref": "#/components/schemas/RoofLayer"
+            },
+            "type": "array"
+          },
           "linePattern": {
             "description": "Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:\n`line_type`.",
             "type": [
@@ -29129,6 +30017,43 @@
           "slopes"
         ],
         "type": "object"
+      },
+      "RoofLayer": {
+        "additionalProperties": false,
+        "description": "A roof's layer (docs/adr/8071 §8): what it is, how thick across the roof's face (metres: a board's, a rafter's own\ndepth; upright on a face sloping g it is × √(1 + g²)), what of.",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/RoofLayerKind"
+          },
+          "material": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "thickness": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "kind",
+          "thickness"
+        ],
+        "type": "object"
+      },
+      "RoofLayerKind": {
+        "description": "What a roof's layer is (docs/adr/8071 §8; Mimarlık Hizmetleri Şartnamesi 14.5.4 q), top down in this order, each its\nEK-2 Tablo 2.3 element: its covering (Çatı Kaplama), its battens (lata: the covering's), its waterproofing (Su\nYalıtımı), its boarding (Çatı Kaplama Tahtası), its insulation (Isı Yalıtımı), its rafters (Çatı Taşıyıcı).",
+        "enum": [
+          "covering",
+          "battens",
+          "waterproofing",
+          "boarding",
+          "insulation",
+          "rafters"
+        ],
+        "type": "string"
       },
       "RoofPart": {
         "description": "A part of a roof (docs/adr/8044 §6): a chimney, a vent or a roof window.",
@@ -29509,6 +30434,16 @@
           {
             "const": "units",
             "description": "The building program's groups (docs/adr/0795): independent units, common and outdoor areas, a row each.",
+            "type": "string"
+          },
+          {
+            "const": "beams",
+            "description": "The beams, lintels, bond beams and rails (docs/adr/8070 §11).",
+            "type": "string"
+          },
+          {
+            "const": "coverings",
+            "description": "The coverings: the slabs that are one (docs/adr/8070 §11).",
             "type": "string"
           }
         ]
@@ -30354,6 +31289,23 @@
           }
         ]
       },
+      "SharedLevel": {
+        "additionalProperties": false,
+        "description": "A level two or more buildings span (a common basement, docs/adr/8072 §1): the building it counts as a storey of, its\narea once.",
+        "properties": {
+          "building": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "level",
+          "building"
+        ],
+        "type": "object"
+      },
       "SheetPicture": {
         "description": "A picture's bytes under the SHA-256 the book names it by.",
         "properties": {
@@ -30982,6 +31934,17 @@
               "null"
             ]
           },
+          "covering": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Covering"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A covering (docs/adr/8070 §10): a plate covering another element (a suspended ceiling, a floor covering drawn by\nhand), written as an `IfcCovering` of its type; no floor of the building. Absent: a slab."
+          },
           "edge": {
             "anyOf": [
               {
@@ -31098,6 +32061,17 @@
           },
           "role": {
             "$ref": "#/components/schemas/SlabRole"
+          },
+          "slope": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SlabSlope"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its slope (docs/adr/8071 §6): a sloped slab rises along its arrow; absent: level."
           },
           "symbol": {
             "description": "Library symbol overriding the layer's style.",
@@ -31280,6 +32254,31 @@
         },
         "required": [
           "pts"
+        ],
+        "type": "object"
+      },
+      "SlabSlope": {
+        "additionalProperties": false,
+        "description": "A sloped slab's slope arrow (docs/adr/8071 §6): its top rises evenly along the arrow, from its tail `from` (where\nthe top is the slab's `offset` over its level) to its head `to`, by `rise` metres there (negative: down); the same\nplane runs on past both ends. Its thicknesses are measured square to its top; its sides stand upright on its outline.",
+        "properties": {
+          "from": {
+            "$ref": "#/components/schemas/Vec2",
+            "x-unit": "length"
+          },
+          "rise": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "to": {
+            "$ref": "#/components/schemas/Vec2",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "rise"
         ],
         "type": "object"
       },
@@ -32679,6 +33678,41 @@
           "name"
         ],
         "type": "object"
+      },
+      "StructuralSystem": {
+        "description": "The building's structural system as the project declares it (docs/adr/8094): Dijital Proje Yönetmeliği EK-2 Tablo\n2.5's static sub-disciplines (Betonarme, Çelik, Yığma, Ahşap, Kompozit), cut stone masonry apart from the other\nmasonry as Planlı Alanlar İmar Yönetmeliği 20/8-j, 22/1-m and 28/1-d name it.",
+        "oneOf": [
+          {
+            "const": "reinforcedConcrete",
+            "description": "Betonarme.",
+            "type": "string"
+          },
+          {
+            "const": "steel",
+            "description": "Çelik.",
+            "type": "string"
+          },
+          {
+            "const": "masonry",
+            "description": "Yığma: masonry of any unit but cut stone.",
+            "type": "string"
+          },
+          {
+            "const": "cutStoneMasonry",
+            "description": "Kesme taş yığma.",
+            "type": "string"
+          },
+          {
+            "const": "timber",
+            "description": "Ahşap.",
+            "type": "string"
+          },
+          {
+            "const": "composite",
+            "description": "Kompozit.",
+            "type": "string"
+          }
+        ]
       },
       "SubPlace": {
         "description": "A place on an object.",
@@ -37439,6 +38473,32 @@
         ],
         "type": "object"
       },
+      "TypeLink": {
+        "additionalProperties": false,
+        "description": "The type an element follows (docs/adr/8106 §1): its id, the version it took and the fields it keeps its own value\nof (its exceptions), in its kind's order.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "overrides": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "version": {
+            "format": "uint32",
+            "minimum": 1,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "id",
+          "version"
+        ],
+        "type": "object"
+      },
       "Ucs": {
         "additionalProperties": false,
         "description": "A user coordinate system: its origin in the world and the angle of its x\naxis from the world's x (east), counter-clockwise, in radians, in\n[0, 2π). Its y axis is square to x, counter-clockwise; it neither scales\nnor mirrors. The world's is origin (0, 0), angle 0, kept as no setting.",
@@ -37483,6 +38543,21 @@
           }
         },
         "type": "object"
+      },
+      "UnderlayPlacement": {
+        "description": "How an underlay is placed.",
+        "oneOf": [
+          {
+            "const": "map",
+            "description": "By its map conversion onto the project's system (Harita dönüşümüyle).",
+            "type": "string"
+          },
+          {
+            "const": "origin",
+            "description": "Its metres as the drawing's, by the user's choice (Başlangıç noktasına).",
+            "type": "string"
+          }
+        ]
       },
       "UnitKind": {
         "description": "A group of spaces' kind.",
@@ -38005,7 +39080,7 @@
       },
       "ViewRecipe": {
         "additionalProperties": false,
-        "description": "A named view's architectural recipe (docs/adr/0774 §1; Revit's view properties, Archicad's view settings): what a\nsheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the\nscreen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.",
+        "description": "A named view's architectural recipe (docs/adr/0774 §1): what a\nsheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the\nscreen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.",
         "properties": {
           "combo": {
             "description": "The combination of design options it shows by its id (docs/adr/0808): its choices, under the recipe's own.",
@@ -38015,7 +39090,7 @@
             ]
           },
           "crop": {
-            "description": "The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2; Revit's Crop Region).",
+            "description": "The map draws only the view's area, its frame's paper outside it empty (docs/adr/0781 §2).",
             "type": "boolean"
           },
           "detail": {
@@ -38027,7 +39102,7 @@
                 "type": "null"
               }
             ],
-            "description": "The walls' detail the map draws (docs/adr/0781 §1; Revit's Detail Level, Archicad's Partial Structure Display);\nnone: its scale's, or the project's when it fixes one."
+            "description": "The walls' detail the map draws (docs/adr/0781 §1);\nnone: its scale's, or the project's when it fixes one."
           },
           "hidden": {
             "description": "The categories left out, in their order.",
@@ -38066,7 +39141,7 @@
             "type": "array"
           },
           "pens": {
-            "description": "The pens the map draws its categories with (docs/adr/0783 §1; Archicad's pen sets, Revit's object styles in a\nview), each category once, in their order.",
+            "description": "The pens the map draws its categories with (docs/adr/0783 §1; pen sets, the categories' styles in a\nview), each category once, in their order.",
             "items": {
               "$ref": "#/components/schemas/RecipePen"
             },
@@ -38094,7 +39169,7 @@
             "x-unit": "scale"
           },
           "template": {
-            "description": "The view template it follows by its id (docs/adr/0783 §2; Revit's assigned View Template): the template gives\neverything but the level and the crop, which stay the view's. An input may name it.",
+            "description": "The view template it follows by its id (docs/adr/0783 §2): the template gives\neverything but the level and the crop, which stay the view's. An input may name it.",
             "type": [
               "string",
               "null"
@@ -38795,6 +39870,17 @@
             },
             "type": "array"
           },
+          "curtain": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CurtainGrid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Giydirme cephe (docs/adr/8070 §7): its grid of frames and panels; absent: a wall of its components. A curtain\nwall has no components and no arcs; its width is its frames' depth."
+          },
           "fill": {
             "description": "The body's solid fill when drawn schematically (`#RRGGBB`); absent: none.",
             "type": [
@@ -39005,7 +40091,7 @@
         "type": "object"
       },
       "WallJustify": {
-        "description": "Where the wall's body lies across its path (AutoCAD Architecture's justification): `Left`, the path is the wall's\nleft face and the body to its right; `Center`, the path is its middle; `Right`, the path is its right face.",
+        "description": "Where the wall's body lies across its path (its justification): `Left`, the path is the wall's\nleft face and the body to its right; `Center`, the path is its middle; `Right`, the path is its right face.",
         "enum": [
           "left",
           "center",
@@ -39109,6 +40195,17 @@
               "string",
               "null"
             ]
+          },
+          "fireRating": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Declared"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its fire resistance class (docs/adr/8068, EK-6 Tablo 6.66 `FireRating`): every wall of the style carries it\nunless the wall has its own. Absent: none (missing)."
           },
           "id": {
             "description": "One of its kind among the project's wall styles; KentOS's own are named (`kentos-…`), the user's UUIDv7.",
@@ -39520,6 +40617,36 @@
           "digest"
         ],
         "type": "object"
+      },
+      "Zone": {
+        "description": "The parcel's area's use in the plan, as Planlı Alanlar İmar Yönetmeliği 28/1 reads the storeys' heights by it\n(docs/adr/8085): its a, b, c and ç, and a use 28/1 says nothing of (a school's, a hospital's …).",
+        "oneOf": [
+          {
+            "const": "residential",
+            "description": "Konut alanı (28/1-c).",
+            "type": "string"
+          },
+          {
+            "const": "residentialShops",
+            "description": "Zemin katında ticaret yapılabilen konut alanı (28/1-ç).",
+            "type": "string"
+          },
+          {
+            "const": "mixed",
+            "description": "Ticaretin de yapılabildiği karma alan: ticaret + konut (28/1-b).",
+            "type": "string"
+          },
+          {
+            "const": "commercial",
+            "description": "Ticaret alanı (28/1-a).",
+            "type": "string"
+          },
+          {
+            "const": "other",
+            "description": "Another use, of which 28/1 gives no storey height (eğitim, sağlık, sanayi …).",
+            "type": "string"
+          }
+        ]
       },
       "Zoning": {
         "additionalProperties": false,
