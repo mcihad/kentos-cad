@@ -147,8 +147,9 @@ Bir belediye ile bir meslek mensubu arasındaki her iş bir **dosyadır** (`kent
 - **Okuma:** Okunan her dosyanın baytları kayıttaki özetle karşılaştırılır; tutmazsa dosya bozuk sayılıp verilmez.
 - **Görünürlük:** Gönderilmemiş dosyayı yalnız ekleyen taraf görür; gönderilen dosya değiştirilmez, kaldırılamaz.
 - **Projeden ekleme:** Bulut projesinin şimdiki hâli pakete şöyle girer (`project.download` ister):
-  - dosya projesinin en yeni revizyonu nesne deposunda ortak edilir, kopyalanmaz;
-  - veritabanı projesinin KCAD görüntüsü o an yazılır.
+  - dosya projesinin en yeni revizyonu nesne deposunda ortak edilir, kopyalanmaz; künyenin kişisel bilgilerini taşıyan
+    revizyon, indirilmesi gibi yalnız projenin nesnelerini yazabilenden girer (ADR 8100 K155);
+  - veritabanı projesinin KCAD görüntüsü o an yazılır (künye ADR 8100'e göre kesilmiş).
 - **Proje olarak açma:** Dosyadaki bir KCAD, okuyanın çalışma alanında revizyonu 1 olan yeni bir dosya projesi olur
   (`project.create` ister). Projenin adına dosyanın numarası eklenir, bir kez.
   - Meslek mensubu için kişisel alanı;

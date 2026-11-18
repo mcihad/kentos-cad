@@ -295,6 +295,11 @@ pub async fn from_project(
                 ),
             )
         })?;
+        // The revision goes in as it was stored, not cut: one that carries the künye's personal particulars only from
+        // whoever works on the objects, as its download (docs/adr/8100).
+        let mut stored = blobs.open(&row.7).await?;
+        crate::projects::require_particulars(&access, &mut stored).await?;
+        drop(stored);
         blobs.share(&row.7, &prepared.key).await?;
         (u64::try_from(row.1).unwrap_or(0), row.2, row.0)
     } else {

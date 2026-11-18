@@ -51,7 +51,8 @@
 
 - **Sözleşme:** `crates/shared/contracts/src/core/particulars.rs`.
 - **Sunucu:** `access::ProjectAccess::sees_particulars`; `projects::{info, require_particulars}`; `snapshot::take`;
-  `files::download`, `checkpoints::download`, `jobs::artifact`.
+  `files::download`, `checkpoints::download`, `jobs::artifact`; bulut portalında dosya projesinin pakete eklenmesi
+  (`portal::files::from_project`, ADR 9000 §7; bu ADR'den sonra birleşti, 18 Kasım 2026).
 - **Masaüstü:** `shell/cloud/share_plan.rs` (`role_hint`).
 
 ## §4. Sınamalar
@@ -61,7 +62,8 @@
   `every_personal_particular_is_a_variable_of_the_kunye`.
 - **Sunucu, gerçek PostGIS** (`tests/project_particulars.rs`): veritabanı projesinde Düzenleyici künyeyi tam, İzleyici
   kesilmiş okur (bilgi ve anlık görüntü); kontrol noktası ve sahibin dışa aktarması Düzenleyicinin, İzleyicinin değil;
-  dosya projesinde künyesiz ilk revizyon İzleyicinin, künyeli ikincisi değil, sahibe olduğu gibi (SHA-256 aynı).
+  dosya projesinde künyesiz ilk revizyon İzleyicinin, künyeli ikincisi değil, sahibe olduğu gibi (SHA-256 aynı); portal
+  dosyasına projeden eklemede de aynısı (İzleyici künyesizi ekler, künyeliyi ekleyemez, Düzenleyici olunca ekler).
   `kentos-application`'ın bütün sınamaları (215) geçti; `kentos-api`'de üç denetim işi sınaması macOS'ta Landlock ve seccomp
   olmadığı için düşüyor (değişiklikten önce de; Linux'ta koşar).
 

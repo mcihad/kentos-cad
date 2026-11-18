@@ -1,23 +1,25 @@
 //! Künyenin kişisel bilgileri (docs/adr/8100; plan/bim-plan.md BIM-15, "yetkisiz kullanıcı künyeyi göremez"): the
 //! permit set's künye variables that name people — and who delivered a package — go to whoever works on the project's
 //! objects. An İzleyici reads them cut in the project's metadata and its snapshot, and gets no stored copy that carries
-//! them (a checkpoint, a file project's revision, an exported copy); a stored copy without them is still hers. Real
-//! database (`KENTOS_TEST_DB=required` makes a missing one a failure).
+//! them (a checkpoint, a file project's revision, an exported copy, a file project added to a cloud portal dossier); a
+//! stored copy without them is still hers. Real database (`KENTOS_TEST_DB=required` makes a missing one a failure).
 
 mod common;
 
 use std::time::Duration;
 
-use common::{blobs, envelope, member, new_project, open, share};
+use common::{PASSWORD, account, blobs, envelope, member, new_project, open, share};
 use kentos_application::access::ProjectAccess;
 use kentos_application::blobs::Blobs;
 use kentos_application::commands::{CatalogPolicy, run};
 use kentos_application::jobs::{self, JobLimits};
-use kentos_application::{AppError, admin, changes, checkpoints, files, projects, snapshot};
+use kentos_application::portal::{accounts, dossiers, files as dossier_files, platform};
+use kentos_application::{AppError, admin, changes, checkpoints, files, identity, projects, snapshot};
 use kentos_contracts::{
-    CUT_PARTICULAR, CommandEnvelope, DocumentSnapshotV1, FileUploadBegin, GrantRole, PROJECT_FILE_COMMIT,
-    ProjectChanges, ProjectCreate, ProjectPatch, ProjectSettings, ProjectStorage, ServerJobCreate, ServerJobState,
-    TenantRole, VariableValue,
+    ApplicationCreate, CUT_PARTICULAR, CommandEnvelope, DocumentSnapshotV1, DossierSite, FileUploadBegin, FromProject,
+    GrantRole, NewOwner, OrganizationCategory, PROJECT_FILE_COMMIT, PlatformTenantCreate, Profession, ProfessionalReview,
+    ProfessionalStatus, ProjectChanges, ProjectCreate, ProjectPatch, ProjectSettings, ProjectStorage, ServerJobCreate,
+    ServerJobState, SignInMethod, Signup, TenantRole, VariableValue,
 };
 use kentos_postgres::testing::TestDb;
 use serde_json::json;
@@ -229,5 +231,90 @@ async fn a_file_project_s_revision_that_carries_the_kunye_is_not_the_viewer_s() 
     let mut bytes = Vec::new();
     tokio::io::AsyncReadExt::read_to_end(&mut file, &mut bytes).await.unwrap();
     assert_eq!(sha(&bytes), sha(&given), "the owner takes it as it was saved");
+    db.close().await;
+}
+
+/// A file project's newest revision goes into a cloud portal dossier as it was stored (docs/adr/9000 §7): Ayşe, a
+/// verified architect, adds an office's project she is an İzleyici of to her application. The revision without the
+/// künye goes in; the one with it does not until she is a Düzenleyici, and then as it was saved.
+#[tokio::test]
+async fn a_file_project_s_revision_that_carries_the_kunye_goes_into_a_dossier_only_from_its_editors() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let store = blobs();
+    let root = account(&db, "sistem").await;
+    admin::set_platform_admin(&db.owner, "sistem", true).await.unwrap();
+    let municipality = PlatformTenantCreate {
+        slug: "ornek".into(),
+        name: "Örnek Belediyesi".into(),
+        category: OrganizationCategory::Municipality,
+        province: Some("Örnek".into()),
+        district: Some("Merkez".into()),
+        seats: 3,
+        owner: Some(NewOwner {
+            user_id: None,
+            login: Some("mehmet".into()),
+            password: Some(PASSWORD.into()),
+            display_name: Some("Mehmet Demir".into()),
+            email: Some("mehmet@ornek.test".into()),
+        }),
+    };
+    let ornek = platform::create_tenant(&db.app, &root, &municipality).await.unwrap();
+    let signup = Signup {
+        login: "ayse".into(),
+        password: PASSWORD.into(),
+        display_name: OWNER.into(),
+        email: "ayse@posta.test".into(),
+        profession: Profession::Architect,
+        chamber_no: "41187".into(),
+        office_name: None,
+        phone: None,
+        province: None,
+        ticket: None,
+        website: None,
+    };
+    let id = accounts::sign_up(&db.app, &signup, Some(&root)).await.unwrap();
+    let verified = ProfessionalReview { status: ProfessionalStatus::Verified, note: String::new() };
+    platform::review(&db.app, &root, id, &verified).await.unwrap();
+    let user = identity::check_local_login(&db.app, "ayse", PASSWORD).await.unwrap().expect("signs in");
+    let ayse = identity::actor_of(&db.app, user, SignInMethod::Local).await.unwrap().unwrap();
+    let application = ApplicationCreate {
+        tenant_id: ornek.to_string(),
+        kind: "architectural_project".into(),
+        title: "412 ada 7 parsel konut".into(),
+        description: String::new(),
+        site: DossierSite {
+            neighbourhood: Some("Cumhuriyet Mahallesi".into()),
+            block: Some("412".into()),
+            parcel: Some("7".into()),
+            ..DossierSite::default()
+        },
+        owner_name: None,
+        office_id: None,
+    };
+    let dossier = dossiers::create_application(&db.app, &ayse, &application).await.unwrap();
+    // An office's file project, shared with her as an İzleyici.
+    admin::create_tenant(&db.owner, "buro", "Mimarlık Bürosu", 3).await.unwrap();
+    let mert = member(&db, "buro", "mert", TenantRole::ProjectManager).await;
+    admin::set_membership(&db.owner, "buro", "ayse", TenantRole::Viewer, true).await.unwrap();
+    let project = file_project(&db, &mert).await;
+    let by = open(&db, &mert, project).await;
+    share(&db, &by, &ayse, GrantRole::Viewer).await;
+    let mut doc = kentos_kcad::decode(DRAWING).unwrap();
+    doc.entities.truncate(13);
+    doc.uids.truncate(13);
+    let plain = kentos_kcad::encode(&doc).unwrap();
+    doc.settings = with_kunye(&doc.settings);
+    let given = kentos_kcad::encode(&doc).unwrap();
+    let from = FromProject { tenant_id: by.tenant.to_string(), project_id: project.to_string(), doc_type: None };
+    save(&db, &store, &by, &plain, 0).await;
+    let added = dossier_files::from_project(&db.app, &store, &ayse, dossier, &from).await.unwrap();
+    assert_eq!(added.sha256, sha(&plain), "no künye: hers to add");
+    save(&db, &store, &by, &given, 1).await;
+    refused_for_the_kunye(dossier_files::from_project(&db.app, &store, &ayse, dossier, &from).await);
+    share(&db, &by, &ayse, GrantRole::Editor).await;
+    let added = dossier_files::from_project(&db.app, &store, &ayse, dossier, &from).await.unwrap();
+    assert_eq!(added.sha256, sha(&given), "a Düzenleyici adds it as it was saved");
     db.close().await;
 }
