@@ -3,6 +3,7 @@ import type { Declared } from "./Declared";
 import type { DeclaredBearing } from "./DeclaredBearing";
 import type { DeclaredExit } from "./DeclaredExit";
 import type { DeclaredExternal } from "./DeclaredExternal";
+import type { DeclaredShaftVent } from "./DeclaredShaftVent";
 
 /**
  * What `cad.arch.performance` declares.
@@ -12,4 +13,9 @@ export type PerformanceOperation = { "kind": "objects", uids: Array<string>, fir
  * A wall's or a slab's exterior role (docs/adr/8124, EK-6 `IsExternal`): over what the drawing says; null: the
  * drawing's again.
  */
-external?: DeclaredExternal | null, } | { "kind": "exits", yes: Array<string>, no: Array<string>, } | { "kind": "wallStyle", style: string, fireRating: Declared | null, } | { "kind": "openingType", type: string, fireRating: Declared | null, } | { "kind": "material", material: string, strength?: string | null, reaction?: Declared | null, roofClass?: Declared | null, } | { "kind": "building", fireProtectionClass: Declared | null, };
+external?: DeclaredExternal | null, 
+/**
+ * A lift shaft room's ventilation and smoke vent or pressurisation (docs/adr/8135, BYKHY 62/4), said for the
+ * whole shaft; null: unknown again.
+ */
+shaftVent?: DeclaredShaftVent | null, } | { "kind": "exits", yes: Array<string>, no: Array<string>, } | { "kind": "wallStyle", style: string, fireRating: Declared | null, } | { "kind": "openingType", type: string, fireRating: Declared | null, } | { "kind": "material", material: string, strength?: string | null, reaction?: Declared | null, roofClass?: Declared | null, } | { "kind": "building", fireProtectionClass: Declared | null, };

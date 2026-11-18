@@ -140,6 +140,8 @@ pub enum Event {
     LoadBearing(Slot, Option<bool>),
     /// A wall's or a slab's Dışarıda (docs/adr/8124): evet, hayır, or the drawing's reading (none).
     External(Slot, Option<bool>),
+    /// A lift shaft room's Basınçlandırılır (docs/adr/8135): its vent's area stays.
+    ShaftPressurized(Slot, bool),
     /// A tag's frame or leader (docs/adr/0344 §5), through `cad.tags.edit`.
     Tag(Slot, kentos_commands::TagChange),
     /// A view mark's side or target (docs/adr/0345 §5), through `cad.viewmarks.edit`.
@@ -207,6 +209,8 @@ pub enum ArchField {
     FireRating,
     /// Its own class's basis (docs/adr/8124): a document's name and day in brackets; empty, the author's statement.
     FireBasis,
+    /// A lift shaft room's Baca alanı (docs/adr/8135): its vent's free area, m²; empty takes the vent away.
+    ShaftVent,
     Label,
     Tag,
     Type,

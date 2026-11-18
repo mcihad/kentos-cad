@@ -823,6 +823,15 @@ impl App {
                     basis: kentos_commands::DeclaredBasis::Author,
                 })),
             ),
+            Event::ShaftPressurized(slot, on) => {
+                // The vent's area stays; neither left takes the declaration away (docs/adr/8135).
+                let own = model.get(slot).and_then(kentos_native_application::arch_performance::shaft_vent_of).cloned();
+                let area = own.as_ref().and_then(|v| v.area);
+                let basis = own.map_or(kentos_commands::DeclaredBasis::Author, |v| v.basis);
+                let vent = (area.is_some() || on)
+                    .then_some(kentos_commands::DeclaredShaftVent { area, pressurized: on, basis });
+                properties::edit_shaft_vent(model, slot, vent)
+            }
             Event::Levels(slots, level) => properties::assign_level(model, &slots, &level),
             Event::Tag(slot, change) => properties::edit_tag(model, slot, change),
             Event::ViewMark(slot, op) => properties::edit_viewmark(model, slot, op),

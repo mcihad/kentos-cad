@@ -372,6 +372,12 @@
   - **Bodruma inen asansör (17 Kasım 2026; [ADR 8092](../adr/8092-basement-lift-protected-corridor.md), K124–K126):**
     bodrumdaki asansör kapısının önü yangın güvenlik holü ya da korunmuş koridor (ayrımları Ek-3/C'nin bodrum süresince
     EI, açık yersiz; 4/dd, 36/1-a).
+  - **Asansör kuyusunun havalandırması (18 Kasım 2026; [ADR 8135](../adr/8135-lift-shaft-vent.md), K327–K331):** asansör
+    kuyusu mahalinin Öznitelikler'inde "Baca alanı" (m²) ve "Basınçlandırılır" (`cad.arch.performance`'ın
+    `shaftVent`'i, mimari verisi 24); kuyunun bir katında beyan bütün kuyuya geçer (ardışık katlarda ortası öbürünün
+    içinde kalan şaftlar tek kuyu, olgularda `stack`). Paketin `kuyular`'ı 62/4'ün ilk cümlesini okur: en az 0,1 m² ve
+    kuyu alanının (katlarındaki en büyüğü) 0,025 katı ya da basınçlandırma; beyansız eksik veri, katlarda farklı beyan uzman
+    incelemesi. Kapısız kuyu da 62/4'ün kapsamında.
   - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
     PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
     39/1-ç döner kapının yanında normal bina girişi.

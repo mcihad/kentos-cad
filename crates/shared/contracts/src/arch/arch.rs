@@ -624,6 +624,11 @@ pub struct ArchInfo {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub external: Option<crate::DeclaredExternal>,
+    /// A lift shaft room's declared ventilation and smoke vent or pressurisation (docs/adr/8135, BYKHY 62/4), said for
+    /// the whole shaft; absent: unknown (missing).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub shaft_vent: Option<crate::DeclaredShaftVent>,
     /// The project's element type it follows (docs/adr/8106; `.kcad` Mimari data 19): a column's, beam's, slab's,
     /// roof's, railing's or stair's, the version it took and the fields it keeps its own value of. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -1,5 +1,15 @@
 # Değişiklikler
 
+## 0.28.0 — 18 Kasım 2026
+
+- Asansör kuyusunun havalandırması (`kuyular`; docs/adr/8135): BYKHY 62/4'ün ilk cümlesi (19.12.2007), asansör
+  kuyusunda en az 0,1 m² olmak üzere kuyu alanının 0,025 katı kadar havalandırma ve dumandan arındırma bacası ya da
+  basınçlandırma. Katlarca tek kuyu (olguların yeni `shafts[].stack`'i) bir kez okunur: alanı katlarındaki en büyük
+  alanı (`shafts[].area`), beyanı katlarından birinin (`shafts[].vent`: bacanın alanı ya da basınçlandırma). Baca
+  istenenden küçükse kaldı, beyansız ya da alanı ölçülemeyen kuyu eksik veri, katlarında farklı beyan uzman incelemesi
+  (`bykhy_elevator_shaft_vent`). Kapısı olmayan kuyu da 62/4'ün kapsamındadır; maddenin başlığı "Asansör kuyusunun
+  havalandırması ve kapıları", metni derlenmiş resmî metinle birebir.
+
 ## 0.27.0 — 18 Kasım 2026
 
 - Çatıların yanıcılığı (`catilar`, yeni katkı `catilar`; docs/adr/8134): BYKHY 28/2 (9.9.2009) çatı kaplamasının

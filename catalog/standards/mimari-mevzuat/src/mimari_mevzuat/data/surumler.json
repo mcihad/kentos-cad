@@ -1704,7 +1704,7 @@
     {
       "regulation": "BYKHY",
       "article": "62/4",
-      "title": "Asansör kapıları",
+      "title": "Asansör kuyusunun havalandırması ve kapıları",
       "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); fıkraya 2015/7401 sayılı BKK ile otoparklarla ilgili bir cümle eklendi (bu kural okumaz).",
       "versions": [
         {
@@ -1713,8 +1713,10 @@
           "until": null,
           "label": "19.12.2007",
           "gazette": "19.12.2007/26735",
-          "text": "(4) … Asansörlerin kapıları, koridor, hol ve benzeri alanlar dışında doğrudan kullanım alanlarına açılamaz. …",
-          "source": "RG 19.12.2007/26735, 62 nci maddenin dördüncü fıkrası; docs/adr/8087 §1."
+          "ventLeast": 0.1,
+          "ventShare": 0.025,
+          "text": "(4) Asansör kuyusunda en az 0.1 m2 olmak üzere kuyu alanının 0.025 katı kadar bir havalandırma ve dumandan arındırma bacası bulundurulur veya kuyular basınçlandırılır. Aynı anda bodrum katlara da hizmet veren asansörlere, bodrum katlarda korunmuş bir koridordan veya bir yangın güvenlik holünden ulaşılması gerekir. Asansörlerin kapıları, koridor, hol ve benzeri alanlar dışında doğrudan kullanım alanlarına açılamaz. …",
+          "source": "RG 19.12.2007/26735, 62 nci maddenin dördüncü fıkrası; docs/adr/8087 §1, 8092, 8135."
         }
       ]
     },

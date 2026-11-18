@@ -1,9 +1,11 @@
-//! Şaftlar ve asansörler (docs/adr/8087; Binaların Yangından Korunması Hakkında Yönetmelik 4/ccc, 25/3, 41/9, 62/2, 62/4,
-//! 62/6, 62/7 ve Ek-3/B 12) on an eight-storey office worked by hand: storeys of 3.00 m (bina ve yapı yüksekliği 24.00 m,
+//! Şaftlar ve asansörler (docs/adr/8087, 8135; Binaların Yangından Korunması Hakkında Yönetmelik 4/ccc, 25/3, 41/9, 62/2,
+//! 62/4, 62/6, 62/7 ve Ek-3/B 12) on an eight-storey office worked by hand: storeys of 3.00 m (bina ve yapı yüksekliği 24.00 m,
 //! 21,50 m'den fazla: a high building). On Zemin kat a 20 × 10 m plan inside 20 cm walls: Ofis (x 0–12), Hol (12–17)
 //! and east of the wall at x = 17 the elevator's shaft Asansör (y 6–10), the service shaft Tesisat şaftı (y 4.5–6) and
 //! Merdiven evi (y 0–4.5), each drawn to its walls' faces. The elevator's landing door, sliding, 1.00 m in the wall at
 //! x = 17, opens onto Hol; the shaft's 60 cm door, in the wall at y = 4.5, swings out into Merdiven evi (41/9 forbids it).
+//! The lift shaft is 2.80 × 3.80 = 10.64 m²: 62/4 asks a vent of 0.025 × 10.64 = 0.266 m² (more than 0.1 m²) or a
+//! pressurised shaft.
 //!
 //! ```text
 //! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib shaft_tests::screens -- --ignored --nocapture
@@ -101,6 +103,39 @@ fn office() -> (App, Vec<String>, Vec<String>) {
     (app, walls, doors)
 }
 
+/// Asansör's room on `level` (the same outline as Zemin kat's) and its persistent id.
+fn lift_room(app: &mut App, level: &str) -> String {
+    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let pts = [p(17.1, 6.1), p(19.9, 6.1), p(19.9, 9.9), p(17.1, 9.9)];
+    let made = run(
+        app,
+        "cad.spaces.create",
+        json!({"layerId": layer, "spaces": [
+            {"parts": [{"outer": {"pts": pts}}], "name": "Asansör", "void": true, "arch": {"level": level}}
+        ]}),
+    );
+    made["output"]["uids"][0].as_str().expect("the room").to_owned()
+}
+
+/// The persistent id of the room named `name` on `level`.
+fn room(app: &App, name: &str, level: &str) -> String {
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    doc.entities_with_uids()
+        .find_map(|(u, e)| match e {
+            kentos_commands::Entity::Space(s)
+                if s.space.name.as_deref() == Some(name) && s.space.arch.level.as_deref() == Some(level) =>
+            {
+                Some(u.to_string())
+            }
+            _ => None,
+        })
+        .unwrap_or_else(|| panic!("{name} on {level}"))
+}
+
+fn vent(app: &mut App, uid: &str, vent: Value) {
+    run(app, "cad.arch.performance", json!({"operation": {"kind": "objects", "uids": [uid], "shaftVent": vent}}));
+}
+
 fn declare(app: &mut App, uids: &[&String], value: &str) {
     run(
         app,
@@ -163,6 +198,10 @@ fn the_facts_carry_the_shafts_and_the_elevator_s_door() {
     };
     let lift = shaft("elevator");
     assert_eq!(lift.name, "Asansör");
+    // Its outline's area, the shaft itself through the storeys (one storey here) and no vent declared (docs/adr/8135).
+    assert!((lift.area - 10.64).abs() < 1e-9, "{}", lift.area);
+    assert_eq!(lift.stack, lift.uid);
+    assert_eq!(lift.vent, None);
     assert_eq!(set(&lift.walls), sorted(vec![walls[1].clone(), walls[2].clone(), walls[5].clone(), walls[6].clone()]));
     assert_eq!(set(&lift.openings), vec![doors[0].clone()]);
     assert!(lift.open < 1e-9, "{lift:#?}");
@@ -178,10 +217,10 @@ fn the_facts_carry_the_shafts_and_the_elevator_s_door() {
     assert!(!door(&doors[2]).elevator, "Ofis–Hol");
 }
 
-/// Nothing declared: the high building's shaft and the elevator's shaft are missing data, so is the landing door's
-/// class; the shaft's door onto Merdiven evi breaks 41/9; the landing door onto Hol keeps 62/4 and 62/6. Declared EI 120
-/// round both shafts, the shaft's door EI2 90-S200C5 and the landing door E 30 (51,50 m'den alçak), every article holds
-/// but 41/9.
+/// Nothing declared: the high building's shaft and the elevator's shaft are missing data, so are the landing door's
+/// class and the lift shaft's vent (62/4, docs/adr/8135); the shaft's door onto Merdiven evi breaks 41/9; the landing
+/// door onto Hol keeps 62/6. Declared EI 120 round both shafts, the shaft's door EI2 90-S200C5, the landing door E 30
+/// (51,50 m'den alçak) and a 0.27 m² vent, every article holds but 41/9.
 #[test]
 fn the_shafts_and_the_elevator_are_read_by_25_3_41_9_and_62() {
     let (mut app, walls, doors) = office();
@@ -193,7 +232,7 @@ fn the_shafts_and_the_elevator_are_read_by_25_3_41_9_and_62() {
             ("BYKHY 25/3".to_owned(), O::MissingData, v("9.9.2009")),
             ("BYKHY 41/9".to_owned(), O::Failed, v("9.9.2009")),
             ("BYKHY 62/2".to_owned(), O::MissingData, v("19.12.2007")),
-            ("BYKHY 62/4".to_owned(), O::Passed, v("19.12.2007")),
+            ("BYKHY 62/4".to_owned(), O::MissingData, v("19.12.2007")),
             ("BYKHY 62/6".to_owned(), O::Passed, v("19.12.2007")),
             ("BYKHY 62/7".to_owned(), O::MissingData, v("9.7.2015")),
         ]
@@ -203,6 +242,7 @@ fn the_shafts_and_the_elevator_are_read_by_25_3_41_9_and_62() {
         [
             "bykhy_elevator_door_resistance",
             "bykhy_elevator_shaft",
+            "bykhy_elevator_shaft_vent",
             "bykhy_shaft_cover_stair",
             "bykhy_shaft_resistance"
         ]
@@ -210,6 +250,8 @@ fn the_shafts_and_the_elevator_are_read_by_25_3_41_9_and_62() {
     declare(&mut app, &[&walls[1], &walls[2], &walls[5], &walls[6], &walls[7]], "EI 120");
     declare(&mut app, &[&doors[1]], "EI2 90-S200C5");
     declare(&mut app, &[&doors[0]], "E 30");
+    let lift = room(&app, "Asansör", "k00");
+    vent(&mut app, &lift, json!({"area": 0.27, "basis": {"kind": "author"}}));
     checked(&mut app);
     let states: Vec<O> = rows(&app).into_iter().map(|r| r.1).collect();
     assert_eq!(states, [O::Passed, O::Failed, O::Passed, O::Passed, O::Passed, O::Passed]);
@@ -221,6 +263,141 @@ fn the_shafts_and_the_elevator_are_read_by_25_3_41_9_and_62() {
         "{}",
         cover.message
     );
+}
+
+/// 62/4's first sentence (docs/adr/8135): the lift shaft through Zemin kat, 1. kat and 2. kat is one shaft; its vent,
+/// typed in Öznitelikler on 1. kat's room, is read for the whole shaft. 0.2 m² is less than 0.266 m²; pressurised it
+/// holds; the area taken away it stays pressurised; not pressurised either, the declaration is gone.
+#[test]
+fn a_lift_shaft_s_vent_is_declared_once_for_the_shaft_in_oznitelikler() {
+    use crate::properties::{ArchField, Event, Field};
+    let (mut app, _, _) = office();
+    let (one, two) = (lift_room(&mut app, "k01"), lift_room(&mut app, "k02"));
+    let ground = room(&app, "Asansör", "k00");
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let facts = kentos_processing::audit_facts::building::measure(doc).normalized();
+    let lifts: Vec<_> = facts.shafts.iter().filter(|s| s.kind == "elevator").collect();
+    assert_eq!(lifts.len(), 3, "{lifts:#?}");
+    assert!(lifts.iter().all(|s| s.stack == ground), "{lifts:#?}");
+    let slot = doc.slot_of(one.parse().expect("a uid")).expect("1. kat's room");
+    app.selection.set(vec![slot]);
+    let panel = |app: &App| -> Vec<(String, String)> {
+        let doc = app.document.as_ref().expect("open");
+        app.properties_panel(doc).sections.into_iter().flat_map(|s| s.rows).map(|r| (r.label.to_string(), r.value)).collect()
+    };
+    let row = |app: &App, label: &str| {
+        let rows = panel(app);
+        let at = rows.iter().position(|r| r.0 == label).unwrap_or_else(|| panic!("no {label} row: {rows:#?}"));
+        (rows[at].1.clone(), rows.get(at + 1).map(|r| r.1.clone()).unwrap_or_default())
+    };
+    assert_eq!(row(&app, "Baca alanı").0, "");
+    let (said, note) = row(&app, "Basınçlandırılır");
+    assert_eq!(said, "Hayır");
+    assert_eq!(note, "Kuyu bu katta 10.64 m²; bir katta beyan yeter.");
+    let commit = |app: &mut App, text: &str| {
+        let _ = app.update(Message::Properties(Event::Commit(Field::Arch(slot, ArchField::ShaftVent), text.into())));
+    };
+    let own = |app: &App| {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        doc.get(slot).and_then(|e| e.arch_info()).and_then(|a| a.shaft_vent.clone())
+    };
+    let row_62_4 = |app: &App| rows(app).into_iter().find(|r| r.0 == "BYKHY 62/4").map(|r| r.1);
+    // A word is no area: nothing written, said why.
+    commit(&mut app, "yok");
+    assert_eq!(own(&app), None);
+    commit(&mut app, "0.2");
+    assert_eq!(own(&app).and_then(|v| v.area), Some(0.2));
+    assert_eq!(row(&app, "Baca alanı").0, "0.2");
+    checked(&mut app);
+    assert_eq!(row_62_4(&app), Some(O::Failed));
+    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let found: Vec<&kentos_commands::ArchAuditFinding> =
+        audited.findings.iter().filter(|f| f.code == "bykhy_elevator_shaft_vent").collect();
+    assert_eq!(found.len(), 1, "one finding for the shaft through three storeys: {found:#?}");
+    assert!(
+        found[0].message.starts_with(
+            "“Asansör”: havalandırma bacası 0.2 m² (kuyu alanı 10.64 m², en az 0.266 m² baca); 62/4 asansör kuyusunda"
+        ),
+        "{}",
+        found[0].message
+    );
+    let mut uids = found[0].uids.clone();
+    uids.sort();
+    let mut three = vec![ground.clone(), one.clone(), two.clone()];
+    three.sort();
+    assert_eq!(uids, three);
+    // Pressurised: the area stays, 62/4 holds.
+    let _ = app.update(Message::Properties(Event::ShaftPressurized(slot, true)));
+    let v = own(&app).expect("declared");
+    assert!(v.pressurized && v.area == Some(0.2), "{v:?}");
+    checked(&mut app);
+    assert_eq!(row_62_4(&app), Some(O::Passed));
+    // The area taken away: still pressurised; then not pressurised either: no declaration, 62/4 lacks it.
+    commit(&mut app, "");
+    assert_eq!(own(&app).map(|v| (v.area, v.pressurized)), Some((None, true)));
+    let _ = app.update(Message::Properties(Event::ShaftPressurized(slot, false)));
+    assert_eq!(own(&app), None);
+    checked(&mut app);
+    assert_eq!(row_62_4(&app), Some(O::MissingData));
+    // Hol is no lift shaft: no row.
+    let hol = room(&app, "Hol", "k00");
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    app.selection.set(vec![doc.slot_of(hol.parse().expect("a uid")).expect("Hol")]);
+    assert!(panel(&app).iter().all(|r| r.0 != "Baca alanı"));
+}
+
+/// Öznitelikler of 1. kat's lift shaft room with its vent typed, and Denetim with 62/4's finding chosen, light and dark;
+/// `.run/gui-evidence/kuyu-havalandirmasi-8135/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib shaft_tests::vent_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn vent_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    use crate::properties::{ArchField, Event, Field};
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kuyu-havalandirmasi-8135");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 1180.0), "acik"), ("dark", Size::new(1280.0, 1100.0), "koyu")] {
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let (mut app, walls, doors) = office();
+        declare(&mut app, &[&walls[1], &walls[2], &walls[5], &walls[6], &walls[7]], "EI 120");
+        declare(&mut app, &[&doors[1]], "EI2 90-S200C5");
+        declare(&mut app, &[&doors[0]], "E 30");
+        let one = lift_room(&mut app, "k01");
+        let _ = app.update(Message::ActiveLevel(Some("k01".into())));
+        let _ = app.update(Message::LevelView(kentos_interaction::level_view::LevelView::Active));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::RibbonTab("arch"));
+        let slot = {
+            let doc = &app.document.as_ref().expect("a drawing").model;
+            doc.slot_of(one.parse().expect("a uid")).expect("1. kat's room")
+        };
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        app.selection.set(vec![slot]);
+        let _ = app.update(Message::Properties(Event::Commit(Field::Arch(slot, ArchField::ShaftVent), "0.2".into())));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-oznitelikler-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        checked(&mut app);
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_elevator_shaft_vent");
+        app.selection.set(Vec::new());
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("2-denetim-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
 }
 
 /// Zemin kat with its shafts and Denetim with 41/9's finding chosen, light and dark; `.run/gui-evidence/saft-8087/`.
@@ -319,6 +496,9 @@ fn basement(between: &str) -> (App, String) {
             {"parts": [{"outer": {"pts": rect(8.1, 9.9)}}], "name": "Asansör", "void": true, "arch": {"level": "b01"}}
         ]}),
     );
+    // The lift's shaft pressurised (62/4's first sentence, docs/adr/8135): these pictures and checks are its second's.
+    let lift = room(&app, "Asansör", "b01");
+    vent(&mut app, &lift, json!({"pressurized": true, "basis": {"kind": "author"}}));
     crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
     (app, host(4))
 }

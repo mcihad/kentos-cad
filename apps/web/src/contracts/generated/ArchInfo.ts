@@ -6,6 +6,7 @@ import type { Declared } from "./Declared";
 import type { DeclaredBearing } from "./DeclaredBearing";
 import type { DeclaredExit } from "./DeclaredExit";
 import type { DeclaredExternal } from "./DeclaredExternal";
+import type { DeclaredShaftVent } from "./DeclaredShaftVent";
 import type { TypeLink } from "./TypeLink";
 
 /**
@@ -33,6 +34,11 @@ loadBearing?: DeclaredBearing,
  * on its storey's outline, a balcony's or a terrace's slab); absent: the drawing's.
  */
 external?: DeclaredExternal, 
+/**
+ * A lift shaft room's declared ventilation and smoke vent or pressurisation (docs/adr/8135, BYKHY 62/4), said for
+ * the whole shaft; absent: unknown (missing).
+ */
+shaftVent?: DeclaredShaftVent, 
 /**
  * The project's element type it follows (docs/adr/8106; `.kcad` Mimari data 19): a column's, beam's, slab's,
  * roof's, railing's or stair's, the version it took and the fields it keeps its own value of. Absent: none.

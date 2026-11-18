@@ -74,6 +74,31 @@ fn a_material_s_reaction_class_round_trips_under_arch_data_14() {
     assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the class reads back");
 }
 
+/// Architecture data 24 (docs/adr/8135): a lift shaft room's vent is written with `modules.arch = 24` and read back.
+#[test]
+fn a_lift_shaft_s_vent_round_trips_under_arch_data_24() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_shaft_vents(&doc));
+    let space = doc
+        .entities
+        .iter_mut()
+        .find_map(|e| match e {
+            kentos_contracts::Entity::Space(s) => Some(s),
+            _ => None,
+        })
+        .expect("a room");
+    space.space.name = Some("Asansör".into());
+    space.space.arch.shaft_vent = Some(kentos_contracts::DeclaredShaftVent {
+        area: Some(0.12),
+        pressurized: false,
+        basis: kentos_contracts::DeclaredBasis::Author,
+    });
+    assert!(kentos_kcad::uses_shaft_vents(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_SHAFT_VENTS);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the vent reads back");
+}
+
 /// Architecture data 23 (docs/adr/8134): a material's roof covering class is written with `modules.arch = 23` and read
 /// back.
 #[test]

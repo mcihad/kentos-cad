@@ -78,6 +78,26 @@ pub fn external_rated(e: &Entity) -> bool {
     }
 }
 
+/// Whether `e` takes a lift shaft's vent declaration (docs/adr/8135, BYKHY 62/4): a room that is a lift shaft (an
+/// Asansör, not its lobby; `room_names::shaft_of`).
+pub fn shaft_vent_rated(e: &Entity) -> bool {
+    match e {
+        Entity::Space(s) => matches!(
+            kentos_domain::room_names::shaft_of(s.space.name.as_deref(), s.space.usage.as_deref()),
+            Some(kentos_domain::room_names::ShaftKind::Elevator)
+        ),
+        _ => false,
+    }
+}
+
+/// A lift shaft room's declared vent or pressurisation (docs/adr/8135); none: not declared on this room.
+pub fn shaft_vent_of(e: &Entity) -> Option<&kentos_commands::DeclaredShaftVent> {
+    if !shaft_vent_rated(e) {
+        return None;
+    }
+    e.arch_info()?.shaft_vent.as_ref()
+}
+
 /// A wall's or a slab's declared exterior role; none: the drawing's.
 pub fn external_of(e: &Entity) -> Option<&kentos_commands::DeclaredExternal> {
     if !external_rated(e) {
@@ -159,7 +179,7 @@ fn no_class(e: &Entity) -> String {
 fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>), Stop> {
     let settings = doc.settings();
     let work = match &input.operation {
-        PerformanceOperation::Objects { uids, fire_rating, exit, load_bearing, external } => {
+        PerformanceOperation::Objects { uids, fire_rating, exit, load_bearing, external, shaft_vent } => {
             checks::uids(uids, "Yangın bilgisi verilecek nesne verilmedi.")?;
             let found = checks::named(doc, uids)?;
             for (at, _, e, _) in &found {
@@ -199,12 +219,23 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                         &format!("uids[{at}]"),
                     ));
                 }
+                if shaft_vent.is_some() && !shaft_vent_rated(e) {
+                    return Err(fail(
+                        codes::FIELD_NOT_FOR_KIND,
+                        format!(
+                            "“{}” nesnesinin kuyu havalandırması beyan edilmez: bu beyan asansör kuyusu olan mahalin \
+                             (adı Asansör, holü değil) özelliğidir.",
+                            e.kind()
+                        ),
+                        &format!("uids[{at}]"),
+                    ));
+                }
             }
-            if fire_rating.is_none() && exit.is_none() && load_bearing.is_none() && external.is_none() {
+            if fire_rating.is_none() && exit.is_none() && load_bearing.is_none() && external.is_none() && shaft_vent.is_none() {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    "Ne yangın dayanım sınıfı ne acil çıkış ne taşıyıcılık ne dışarıda verildi: fireRating, exit, \
-                     loadBearing ya da external verin (null kaldırır)."
+                    "Ne yangın dayanım sınıfı ne acil çıkış ne taşıyıcılık ne dışarıda ne kuyu havalandırması verildi: \
+                     fireRating, exit, loadBearing, external ya da shaftVent verin (null kaldırır)."
                         .into(),
                     "operation",
                 ));
@@ -226,6 +257,11 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                 && let Some(why) = x.basis.problem()
             {
                 return Err(fail(codes::INVALID_DECLARED, why, "operation.external.basis"));
+            }
+            if let Some(Some(x)) = shaft_vent
+                && let Some((why, field)) = x.problem()
+            {
+                return Err(fail(codes::INVALID_DECLARED, why, &format!("operation.shaftVent.{field}")));
             }
             checks::revision(doc, input.expected_revision.as_deref())?;
             let layers = doc.layers();
@@ -263,6 +299,9 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                             }
                             if let Some(v) = external {
                                 a.external.clone_from(v);
+                            }
+                            if let Some(v) = shaft_vent {
+                                a.shaft_vent.clone_from(v);
                             }
                         }
                     }

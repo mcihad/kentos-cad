@@ -909,6 +909,7 @@ __all__ = [
     "DeclaredCrs",
     "DeclaredExit",
     "DeclaredExternal",
+    "DeclaredShaftVent",
     "DeclaredVertical",
     "DecodeError",
     "DecurveCurveEdit",

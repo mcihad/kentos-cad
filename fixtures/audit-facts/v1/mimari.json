@@ -2872,7 +2872,9 @@
           }
         ],
         "openings": [],
-        "open": 0.0
+        "open": 0.0,
+        "area": 6.365,
+        "stack": "01a1dfda-06c5-7278-9486-e39ee6b0ea49"
       }
     ],
     "elements": [

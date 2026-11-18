@@ -1,7 +1,7 @@
 {
  "format": "kentos.regulationCases",
  "version": 1,
- "about": "Şaftların ve asansörlerin bağımsız durumları (docs/adr/8087, 8092): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik 4/ccc, 4/dd, 25/3, 36/1-a, 41/9, 62/2, 62/4, 62/6, 62/7, Ek-3/B 12 ve Ek-3/C'nin metninden elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.shafts, doors, separations, height, structureHeight).",
+ "about": "Şaftların ve asansörlerin bağımsız durumları (docs/adr/8087, 8092, 8135): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik 4/ccc, 4/dd, 25/3, 36/1-a, 41/9, 62/2, 62/4, 62/6, 62/7, Ek-3/B 12 ve Ek-3/C'nin metninden elle çıkarıldı; kuralın kodundan üretilmedi. 62/4'ün ilk cümlesi (kuyu alanının 0,025 katı, en az 0,1 m² baca ya da basınçlandırma) metinden elle hesaplandı. Olgular KentOS'un ölçüsüdür (building.shafts: alan, katlarca kuyu, beyan edilen baca; doors, separations, height, structureHeight).",
  "cases": [
   {
    "id": "yuksek-saft-tamam",
@@ -1734,7 +1734,7 @@
   },
   {
    "id": "asansor-tamam",
-   "neden": "Apartman, bina yüksekliği 15 m, yapı yüksekliği 16 m: kuyunun üç duvarı EI 60 (62/2), kat kapısı Asansör holü'ne açılır (62/4), yangın merdiveni değil (62/6), E 30 (Ek-3/B 12-b, 51,50 m'den alçak) → hepsi geçer.",
+   "neden": "Apartman, bina yüksekliği 15 m, yapı yüksekliği 16 m: kuyunun üç duvarı EI 60 (62/2), kat kapısı Asansör holü'ne açılır (62/4), yangın merdiveni değil (62/6), E 30 (Ek-3/B 12-b, 51,50 m'den alçak) → hepsi geçer. Kuyu 4 m², 0,12 m² havalandırma bacası beyanlı (62/4: 0,025 × 4 = 0,1 m², en az 0,1 m²) → bacası yeter.",
    "permit": {
     "particulars": {
      "basvuru_tarihi": "02.07.2026"
@@ -1840,7 +1840,12 @@
         "length": 1.0
        }
       ],
-      "open": 0.0
+      "open": 0.0,
+      "area": 4.0,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.12
+      }
      }
     ],
     "doors": [
@@ -1897,7 +1902,7 @@
   },
   {
    "id": "asansor-kuyusu-az",
-   "neden": "Kuyunun üç duvarı EI 30: 62/2 en az 60 dakika ister → kalır.",
+   "neden": "Kuyunun üç duvarı EI 30: 62/2 en az 60 dakika ister → kalır. Kuyu 4 m², 0,12 m² havalandırma bacası beyanlı (62/4: 0,025 × 4 = 0,1 m², en az 0,1 m²) → bacası yeter.",
    "permit": {
     "particulars": {
      "basvuru_tarihi": "02.07.2026"
@@ -2003,7 +2008,12 @@
         "length": 1.0
        }
       ],
-      "open": 0.0
+      "open": 0.0,
+      "area": 4.0,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.12
+      }
      }
     ],
     "doors": [
@@ -2067,7 +2077,7 @@
   },
   {
    "id": "asansor-kuyusu-pencere",
-   "neden": "Kuyunun duvarında sınıfı beyan edilmemiş bir pencere: kuyunun 60 dakikası okunmuyor → eksik veri.",
+   "neden": "Kuyunun duvarında sınıfı beyan edilmemiş bir pencere: kuyunun 60 dakikası okunmuyor → eksik veri. Kuyu 4 m², 0,12 m² havalandırma bacası beyanlı (62/4: 0,025 × 4 = 0,1 m², en az 0,1 m²) → bacası yeter.",
    "permit": {
     "particulars": {
      "basvuru_tarihi": "02.07.2026"
@@ -2178,7 +2188,12 @@
         "length": 0.8
        }
       ],
-      "open": 0.0
+      "open": 0.0,
+      "area": 4.0,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.12
+      }
      }
     ],
     "doors": [
@@ -2243,7 +2258,7 @@
   },
   {
    "id": "asansor-duvarsiz",
-   "neden": "Kuyu yalnız mahal olarak çizilmiş, çevresinde hiçbir duvar yok (bütün çevresi açık): duvarlar çizilmemiş, kuyunun 60 dakikası okunmuyor → eksik veri (açık yer değil).",
+   "neden": "Kuyu yalnız mahal olarak çizilmiş, çevresinde hiçbir duvar yok (bütün çevresi açık): duvarlar çizilmemiş, kuyunun 60 dakikası okunmuyor → eksik veri (açık yer değil). Kuyu 4 m², 0,12 m² havalandırma bacası beyanlı (62/4: 0,025 × 4 = 0,1 m², en az 0,1 m²) → bacası yeter. Asansör kapısı yok ama kuyu var: 62/4'ün ilk cümlesi okunur, geçer.",
    "permit": {
     "particulars": {
      "basvuru_tarihi": "02.07.2026"
@@ -2324,7 +2339,12 @@
       "kind": "elevator",
       "walls": [],
       "openings": [],
-      "open": 15.2
+      "open": 15.2,
+      "area": 4.0,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.12
+      }
      }
     ],
     "doors": [],
@@ -2355,7 +2375,7 @@
       "19.12.2007"
      ],
      "BYKHY 62/4": [
-      "outOfScope",
+      "passed",
       "19.12.2007"
      ],
      "BYKHY 62/6": [
@@ -2371,7 +2391,7 @@
   },
   {
    "id": "asansor-ofise-aciliyor",
-   "neden": "Asansör kapısı Ofis'e (kullanım alanı) açılıyor: 62/4 izin vermez → kalır.",
+   "neden": "Asansör kapısı Ofis'e (kullanım alanı) açılıyor: 62/4 izin vermez → kalır. Kuyu 4 m², 0,12 m² havalandırma bacası beyanlı (62/4: 0,025 × 4 = 0,1 m², en az 0,1 m²) → bacası yeter.",
    "permit": {
     "particulars": {
      "basvuru_tarihi": "02.07.2026"
@@ -2477,7 +2497,12 @@
         "length": 1.0
        }
       ],
-      "open": 0.0
+      "open": 0.0,
+      "area": 4.0,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.12
+      }
      }
     ],
     "doors": [
@@ -2540,7 +2565,7 @@
   },
   {
    "id": "asansor-onu-cizilmemis",
-   "neden": "Asansör kapısının önünde mahal yok: neye açıldığı okunmuyor → eksik veri.",
+   "neden": "Asansör kapısının önünde mahal yok: neye açıldığı okunmuyor → eksik veri. Kuyu 4 m², 0,12 m² havalandırma bacası beyanlı (62/4: 0,025 × 4 = 0,1 m², en az 0,1 m²) → bacası yeter.",
    "permit": {
     "particulars": {
      "basvuru_tarihi": "02.07.2026"
@@ -2646,7 +2671,12 @@
         "length": 1.0
        }
       ],
-      "open": 0.0
+      "open": 0.0,
+      "area": 4.0,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.12
+      }
      }
     ],
     "doors": [
@@ -2710,7 +2740,7 @@
   },
   {
    "id": "asansor-yangin-merdiveninde",
-   "neden": "Asansör kapısı Yangın merdiveni'ne açılıyor: merdiven bir geçit (62/4 geçer) ama 62/6 yangın merdiveni yuvasına açılmaya izin vermez → kalır.",
+   "neden": "Asansör kapısı Yangın merdiveni'ne açılıyor: merdiven bir geçit (62/4 geçer) ama 62/6 yangın merdiveni yuvasına açılmaya izin vermez → kalır. Kuyu 4 m², 0,12 m² havalandırma bacası beyanlı (62/4: 0,025 × 4 = 0,1 m², en az 0,1 m²) → bacası yeter.",
    "permit": {
     "particulars": {
      "basvuru_tarihi": "02.07.2026"
@@ -2816,7 +2846,12 @@
         "length": 1.0
        }
       ],
-      "open": 0.0
+      "open": 0.0,
+      "area": 4.0,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.12
+      }
      }
     ],
     "doors": [
@@ -2880,7 +2915,7 @@
   },
   {
    "id": "asansor-merdiven-evinde",
-   "neden": "Asansör kapısı Merdiven evi'nin sahanlığına açılıyor: adı yangın merdiveni değil → 62/4 ve 62/6 geçer.",
+   "neden": "Asansör kapısı Merdiven evi'nin sahanlığına açılıyor: adı yangın merdiveni değil → 62/4 ve 62/6 geçer. Kuyu 4 m², 0,12 m² havalandırma bacası beyanlı (62/4: 0,025 × 4 = 0,1 m², en az 0,1 m²) → bacası yeter.",
    "permit": {
     "particulars": {
      "basvuru_tarihi": "02.07.2026"
@@ -2986,7 +3021,12 @@
         "length": 1.0
        }
       ],
-      "open": 0.0
+      "open": 0.0,
+      "area": 4.0,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.12
+      }
      }
     ],
     "doors": [
@@ -3043,7 +3083,7 @@
   },
   {
    "id": "asansor-kapisi-yuksek-bina",
-   "neden": "Yapı yüksekliği 54 m (51,50'den yüksek): Ek-3/B 12-a E 60 ister; iki kat kapısı E 30 → kalır.",
+   "neden": "Yapı yüksekliği 54 m (51,50'den yüksek): Ek-3/B 12-a E 60 ister; iki kat kapısı E 30 → kalır. Kuyu 4 m², 0,12 m² havalandırma bacası beyanlı (62/4: 0,025 × 4 = 0,1 m², en az 0,1 m²) → bacası yeter.",
    "permit": {
     "particulars": {
      "basvuru_tarihi": "02.07.2026"
@@ -3149,7 +3189,12 @@
         "length": 1.0
        }
       ],
-      "open": 0.0
+      "open": 0.0,
+      "area": 4.0,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.12
+      }
      }
     ],
     "doors": [
@@ -3232,7 +3277,7 @@
   },
   {
    "id": "asansor-kapisi-51-50",
-   "neden": "Yapı yüksekliği tam 51,50 m: Ek-3/B 12'nin 'yüksek' ve 'alçak' satırlarının ikisi de tutmaz → uzman incelemesi.",
+   "neden": "Yapı yüksekliği tam 51,50 m: Ek-3/B 12'nin 'yüksek' ve 'alçak' satırlarının ikisi de tutmaz → uzman incelemesi. Kuyu 4 m², 0,12 m² havalandırma bacası beyanlı (62/4: 0,025 × 4 = 0,1 m², en az 0,1 m²) → bacası yeter.",
    "permit": {
     "particulars": {
      "basvuru_tarihi": "02.07.2026"
@@ -3338,7 +3383,12 @@
         "length": 1.0
        }
       ],
-      "open": 0.0
+      "open": 0.0,
+      "area": 4.0,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.12
+      }
      }
     ],
     "doors": [
@@ -3403,7 +3453,7 @@
   },
   {
    "id": "asansor-kapisi-beyansiz",
-   "neden": "Kat kapısının sınıfı beyan edilmemiş → eksik veri.",
+   "neden": "Kat kapısının sınıfı beyan edilmemiş → eksik veri. Kuyu 4 m², 0,12 m² havalandırma bacası beyanlı (62/4: 0,025 × 4 = 0,1 m², en az 0,1 m²) → bacası yeter.",
    "permit": {
     "particulars": {
      "basvuru_tarihi": "02.07.2026"
@@ -3509,7 +3559,12 @@
         "length": 1.0
        }
       ],
-      "open": 0.0
+      "open": 0.0,
+      "area": 4.0,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.12
+      }
      }
     ],
     "doors": [
@@ -3574,7 +3629,7 @@
   },
   {
    "id": "asansor-2014",
-   "neden": "Başvuru 1.5.2014: 62/7'nin ve Ek-3/B 12'nin 9.7.2015'ten önceki metni kural setinde yok → uzman incelemesi; 62/2, 62/4, 62/6 (2007) okunur.",
+   "neden": "Başvuru 1.5.2014: 62/7'nin ve Ek-3/B 12'nin 9.7.2015'ten önceki metni kural setinde yok → uzman incelemesi; 62/2, 62/4, 62/6 (2007) okunur. Kuyu 4 m², 0,12 m² havalandırma bacası beyanlı (62/4: 0,025 × 4 = 0,1 m², en az 0,1 m²) → bacası yeter.",
    "permit": {
     "particulars": {
      "basvuru_tarihi": "01.05.2014"
@@ -3680,7 +3735,12 @@
         "length": 1.0
        }
       ],
-      "open": 0.0
+      "open": 0.0,
+      "area": 4.0,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.12
+      }
      }
     ],
     "doors": [
@@ -3924,7 +3984,7 @@
   },
   {
    "id": "tarihsiz",
-   "neden": "Başvuru tarihi yok: maddelerin hepsinin bilindiği ilk gün 9.7.2015, aday tek → en yeni hâller; kat kapısı E 30, kuyu EI 60 → geçer.",
+   "neden": "Başvuru tarihi yok: maddelerin hepsinin bilindiği ilk gün 9.7.2015, aday tek → en yeni hâller; kat kapısı E 30, kuyu EI 60 → geçer. Kuyu 4 m², 0,12 m² havalandırma bacası beyanlı (62/4: 0,025 × 4 = 0,1 m², en az 0,1 m²) → bacası yeter.",
    "permit": {
     "particulars": {}
    },
@@ -4028,7 +4088,12 @@
         "length": 1.0
        }
       ],
-      "open": 0.0
+      "open": 0.0,
+      "area": 4.0,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.12
+      }
      }
     ],
     "doors": [
@@ -5324,6 +5389,2162 @@
      ],
      "BYKHY 62/4": [
       "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/6": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/7": [
+      "passed",
+      "9.7.2015"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kuyu-bacasi-yeter",
+   "neden": "Kuyu 2 × 2,2 = 4,4 m²: 62/4 kuyu alanının 0,025 katı = 0,11 m² (0,1'den büyük) baca ister; 0,11 m² beyanlı → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "name": "Koridor",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000102",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000103",
+      "level": "k00",
+      "name": "Asansör holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000104",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000105",
+      "level": "k00",
+      "name": "Yangın güvenlik holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000106",
+      "level": "k00",
+      "name": "Yangın merdiveni",
+      "area": 20.0
+     }
+    ],
+    "shafts": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "level": "k00",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000030",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000031",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000032",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000040",
+        "kind": "door",
+        "length": 1.0
+       }
+      ],
+      "open": 0.0,
+      "area": 4.4,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.11
+      }
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000040",
+      "level": "k00",
+      "between": [
+       null,
+       "00000000-0000-4000-8000-000000000103"
+      ],
+      "opensInto": null,
+      "operation": "swing",
+      "sides": [
+       null,
+       null
+      ],
+      "fireRating": "E 30",
+      "elevator": true,
+      "passage": true
+     }
+    ],
+    "height": 15.0,
+    "structureHeight": 16.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 25/3": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 41/9": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 62/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/4": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/6": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/7": [
+      "passed",
+      "9.7.2015"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kuyu-bacasi-az",
+   "neden": "Kuyu 2,5 × 2,4 = 6 m²: 0,025 × 6 = 0,15 m² ister; beyan 0,12 m² → kaldı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "name": "Koridor",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000102",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000103",
+      "level": "k00",
+      "name": "Asansör holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000104",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000105",
+      "level": "k00",
+      "name": "Yangın güvenlik holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000106",
+      "level": "k00",
+      "name": "Yangın merdiveni",
+      "area": 20.0
+     }
+    ],
+    "shafts": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "level": "k00",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000030",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000031",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000032",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000040",
+        "kind": "door",
+        "length": 1.0
+       }
+      ],
+      "open": 0.0,
+      "area": 6.0,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.12
+      }
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000040",
+      "level": "k00",
+      "between": [
+       null,
+       "00000000-0000-4000-8000-000000000103"
+      ],
+      "opensInto": null,
+      "operation": "swing",
+      "sides": [
+       null,
+       null
+      ],
+      "fireRating": "E 30",
+      "elevator": true,
+      "passage": true
+     }
+    ],
+    "height": 15.0,
+    "structureHeight": 16.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_elevator_shaft_vent",
+      "has": [
+       "havalandırma bacası 0.12 m²",
+       "kuyu alanı 6 m²",
+       "en az 0.15 m² baca"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 25/3": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 41/9": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 62/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/4": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/6": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/7": [
+      "passed",
+      "9.7.2015"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kuyu-en-az-0-1-kaldi",
+   "neden": "Kuyu 1,6 × 1,5 = 2,4 m²: 0,025 × 2,4 = 0,06 m², ama en az 0,1 m²; beyan 0,08 m² → kaldı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "name": "Koridor",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000102",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000103",
+      "level": "k00",
+      "name": "Asansör holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000104",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000105",
+      "level": "k00",
+      "name": "Yangın güvenlik holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000106",
+      "level": "k00",
+      "name": "Yangın merdiveni",
+      "area": 20.0
+     }
+    ],
+    "shafts": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "level": "k00",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000030",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000031",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000032",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000040",
+        "kind": "door",
+        "length": 1.0
+       }
+      ],
+      "open": 0.0,
+      "area": 2.4,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.08
+      }
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000040",
+      "level": "k00",
+      "between": [
+       null,
+       "00000000-0000-4000-8000-000000000103"
+      ],
+      "opensInto": null,
+      "operation": "swing",
+      "sides": [
+       null,
+       null
+      ],
+      "fireRating": "E 30",
+      "elevator": true,
+      "passage": true
+     }
+    ],
+    "height": 15.0,
+    "structureHeight": 16.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_elevator_shaft_vent",
+      "has": [
+       "havalandırma bacası 0.08 m²",
+       "en az 0.1 m² baca"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 25/3": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 41/9": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 62/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/4": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/6": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/7": [
+      "passed",
+      "9.7.2015"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kuyu-en-az-0-1-tutar",
+   "neden": "Kuyu 2,4 m²: 0,06 m² yetmez, 62/4'ün en azı 0,1 m²; beyan tam 0,1 m² → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "name": "Koridor",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000102",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000103",
+      "level": "k00",
+      "name": "Asansör holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000104",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000105",
+      "level": "k00",
+      "name": "Yangın güvenlik holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000106",
+      "level": "k00",
+      "name": "Yangın merdiveni",
+      "area": 20.0
+     }
+    ],
+    "shafts": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "level": "k00",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000030",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000031",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000032",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000040",
+        "kind": "door",
+        "length": 1.0
+       }
+      ],
+      "open": 0.0,
+      "area": 2.4,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.1
+      }
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000040",
+      "level": "k00",
+      "between": [
+       null,
+       "00000000-0000-4000-8000-000000000103"
+      ],
+      "opensInto": null,
+      "operation": "swing",
+      "sides": [
+       null,
+       null
+      ],
+      "fireRating": "E 30",
+      "elevator": true,
+      "passage": true
+     }
+    ],
+    "height": 15.0,
+    "structureHeight": 16.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 25/3": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 41/9": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 62/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/4": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/6": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/7": [
+      "passed",
+      "9.7.2015"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kuyu-basinclandirilir",
+   "neden": "Kuyu 6 m², bacası yok, basınçlandırılır (62/4: 'veya kuyular basınçlandırılır') → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "name": "Koridor",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000102",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000103",
+      "level": "k00",
+      "name": "Asansör holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000104",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000105",
+      "level": "k00",
+      "name": "Yangın güvenlik holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000106",
+      "level": "k00",
+      "name": "Yangın merdiveni",
+      "area": 20.0
+     }
+    ],
+    "shafts": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "level": "k00",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000030",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000031",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000032",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000040",
+        "kind": "door",
+        "length": 1.0
+       }
+      ],
+      "open": 0.0,
+      "area": 6.0,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "pressurized": true
+      }
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000040",
+      "level": "k00",
+      "between": [
+       null,
+       "00000000-0000-4000-8000-000000000103"
+      ],
+      "opensInto": null,
+      "operation": "swing",
+      "sides": [
+       null,
+       null
+      ],
+      "fireRating": "E 30",
+      "elevator": true,
+      "passage": true
+     }
+    ],
+    "height": 15.0,
+    "structureHeight": 16.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 25/3": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 41/9": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 62/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/4": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/6": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/7": [
+      "passed",
+      "9.7.2015"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kuyu-beyansiz",
+   "neden": "Kuyu 4,4 m², ne baca ne basınçlandırma beyan edilmiş: 0,11 m² isteneni karşılayıp karşılamadığı okunmaz → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "name": "Koridor",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000102",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000103",
+      "level": "k00",
+      "name": "Asansör holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000104",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000105",
+      "level": "k00",
+      "name": "Yangın güvenlik holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000106",
+      "level": "k00",
+      "name": "Yangın merdiveni",
+      "area": 20.0
+     }
+    ],
+    "shafts": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "level": "k00",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000030",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000031",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000032",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000040",
+        "kind": "door",
+        "length": 1.0
+       }
+      ],
+      "open": 0.0,
+      "area": 4.4,
+      "stack": "00000000-0000-4000-8000-000000000002"
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000040",
+      "level": "k00",
+      "between": [
+       null,
+       "00000000-0000-4000-8000-000000000103"
+      ],
+      "opensInto": null,
+      "operation": "swing",
+      "sides": [
+       null,
+       null
+      ],
+      "fireRating": "E 30",
+      "elevator": true,
+      "passage": true
+     }
+    ],
+    "height": 15.0,
+    "structureHeight": 16.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_elevator_shaft_vent",
+      "state": "missingData",
+      "has": [
+       "beyan edilmemiş",
+       "kuyu alanı 4.4 m²",
+       "en az 0.11 m² baca"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 25/3": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 41/9": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 62/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/4": [
+      "missingData",
+      "19.12.2007"
+     ],
+     "BYKHY 62/6": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/7": [
+      "passed",
+      "9.7.2015"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kuyu-katlarca-tek-beyan",
+   "neden": "Üç katlık tek kuyu (4,4, 4,8 ve 4,4 m²): beyan yalnız 1. katın kuyusunda, 0,12 m²; kuyunun alanı katlarındaki en büyük 4,8 m², 0,025 × 4,8 = 0,12 m² → bütün kuyu için geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "name": "Koridor",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000102",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000103",
+      "level": "k00",
+      "name": "Asansör holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000104",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000105",
+      "level": "k00",
+      "name": "Yangın güvenlik holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000106",
+      "level": "k00",
+      "name": "Yangın merdiveni",
+      "area": 20.0
+     }
+    ],
+    "shafts": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "level": "k00",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000030",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000031",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000032",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000040",
+        "kind": "door",
+        "length": 1.0
+       }
+      ],
+      "open": 0.0,
+      "area": 4.4,
+      "stack": "00000000-0000-4000-8000-000000000002"
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "level": "k01",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000040",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000041",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000042",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0,
+      "area": 4.8,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.12
+      }
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000004",
+      "level": "k02",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000050",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000051",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000052",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0,
+      "area": 4.4,
+      "stack": "00000000-0000-4000-8000-000000000002"
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000040",
+      "level": "k00",
+      "between": [
+       null,
+       "00000000-0000-4000-8000-000000000103"
+      ],
+      "opensInto": null,
+      "operation": "swing",
+      "sides": [
+       null,
+       null
+      ],
+      "fireRating": "E 30",
+      "elevator": true,
+      "passage": true
+     }
+    ],
+    "height": 15.0,
+    "structureHeight": 16.0
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 25/3": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 41/9": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 62/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/4": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/6": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/7": [
+      "passed",
+      "9.7.2015"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kuyu-katlarca-buyuk-alan",
+   "neden": "Aynı üç katlık kuyu, beyan zeminde 0,11 m²: zeminin 4,4 m²'sine yeter ama kuyunun en büyük alanı 4,8 m², 0,12 m² ister → kaldı, bulgu kuyunun üç mahaliyle.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "name": "Koridor",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000102",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000103",
+      "level": "k00",
+      "name": "Asansör holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000104",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000105",
+      "level": "k00",
+      "name": "Yangın güvenlik holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000106",
+      "level": "k00",
+      "name": "Yangın merdiveni",
+      "area": 20.0
+     }
+    ],
+    "shafts": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "level": "k00",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000030",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000031",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000032",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000040",
+        "kind": "door",
+        "length": 1.0
+       }
+      ],
+      "open": 0.0,
+      "area": 4.4,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.11
+      }
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "level": "k01",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000040",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000041",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000042",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0,
+      "area": 4.8,
+      "stack": "00000000-0000-4000-8000-000000000002"
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000004",
+      "level": "k02",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000050",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000051",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000052",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0,
+      "area": 4.4,
+      "stack": "00000000-0000-4000-8000-000000000002"
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000040",
+      "level": "k00",
+      "between": [
+       null,
+       "00000000-0000-4000-8000-000000000103"
+      ],
+      "opensInto": null,
+      "operation": "swing",
+      "sides": [
+       null,
+       null
+      ],
+      "fireRating": "E 30",
+      "elevator": true,
+      "passage": true
+     }
+    ],
+    "height": 15.0,
+    "structureHeight": 16.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_elevator_shaft_vent",
+      "has": [
+       "havalandırma bacası 0.11 m²",
+       "kuyu alanı 4.8 m²",
+       "en az 0.12 m² baca"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 25/3": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 41/9": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 62/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/4": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/6": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/7": [
+      "passed",
+      "9.7.2015"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kuyu-katlarda-farkli-beyan",
+   "neden": "Üç katlık kuyunun zemininde 0,12 m² baca, 2. katında basınçlandırma beyanı: kuyu tektir, iki beyan çelişir → uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k02",
+      "name": "2. kat",
+      "elevation": 6.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "name": "Koridor",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000102",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000103",
+      "level": "k00",
+      "name": "Asansör holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000104",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000105",
+      "level": "k00",
+      "name": "Yangın güvenlik holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000106",
+      "level": "k00",
+      "name": "Yangın merdiveni",
+      "area": 20.0
+     }
+    ],
+    "shafts": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "level": "k00",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000030",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000031",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000032",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000040",
+        "kind": "door",
+        "length": 1.0
+       }
+      ],
+      "open": 0.0,
+      "area": 4.4,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.12
+      }
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "level": "k01",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000040",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000041",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000042",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0,
+      "area": 4.4,
+      "stack": "00000000-0000-4000-8000-000000000002"
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000004",
+      "level": "k02",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000050",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000051",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000052",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0,
+      "area": 4.4,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "pressurized": true
+      }
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000040",
+      "level": "k00",
+      "between": [
+       null,
+       "00000000-0000-4000-8000-000000000103"
+      ],
+      "opensInto": null,
+      "operation": "swing",
+      "sides": [
+       null,
+       null
+      ],
+      "fireRating": "E 30",
+      "elevator": true,
+      "passage": true
+     }
+    ],
+    "height": 15.0,
+    "structureHeight": 16.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_elevator_shaft_vent",
+      "state": "expertReview",
+      "has": [
+       "farklı havalandırma beyanları"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 25/3": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 41/9": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 62/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/4": [
+      "expertReview",
+      "19.12.2007"
+     ],
+     "BYKHY 62/6": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/7": [
+      "passed",
+      "9.7.2015"
+     ]
+    }
+   }
+  },
+  {
+   "id": "iki-kuyu-biri-beyansiz",
+   "neden": "İki ayrı kuyu: zemindeki 4,4 m², 0,11 m² bacalı geçer; yanındaki 4 m² kuyunun (başka yığın) beyanı yok → eksik veri, tek bulgu.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "name": "Koridor",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000102",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000103",
+      "level": "k00",
+      "name": "Asansör holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000104",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000105",
+      "level": "k00",
+      "name": "Yangın güvenlik holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000106",
+      "level": "k00",
+      "name": "Yangın merdiveni",
+      "area": 20.0
+     }
+    ],
+    "shafts": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "level": "k00",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000030",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000031",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000032",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000040",
+        "kind": "door",
+        "length": 1.0
+       }
+      ],
+      "open": 0.0,
+      "area": 4.4,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.11
+      }
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000005",
+      "level": "k00",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000060",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000061",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000062",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [],
+      "open": 0.0,
+      "area": 4.0,
+      "stack": "00000000-0000-4000-8000-000000000005"
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000040",
+      "level": "k00",
+      "between": [
+       null,
+       "00000000-0000-4000-8000-000000000103"
+      ],
+      "opensInto": null,
+      "operation": "swing",
+      "sides": [
+       null,
+       null
+      ],
+      "fireRating": "E 30",
+      "elevator": true,
+      "passage": true
+     }
+    ],
+    "height": 15.0,
+    "structureHeight": 16.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_elevator_shaft_vent",
+      "state": "missingData",
+      "has": [
+       "beyan edilmemiş",
+       "kuyu alanı 4 m²",
+       "en az 0.1 m² baca"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 25/3": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 41/9": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 62/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/4": [
+      "missingData",
+      "19.12.2007"
+     ],
+     "BYKHY 62/6": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/7": [
+      "passed",
+      "9.7.2015"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kuyu-alani-olculemedi",
+   "neden": "Kuyunun alanı 0 (dış çizgisi kapalı değil, ölçülemedi), beyan 0,12 m²: istenen hesaplanamaz → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k00",
+      "name": "Koridor",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000102",
+      "level": "k00",
+      "name": "Merdiven evi",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000103",
+      "level": "k00",
+      "name": "Asansör holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000104",
+      "level": "k00",
+      "name": "Ofis",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000105",
+      "level": "k00",
+      "name": "Yangın güvenlik holü",
+      "area": 20.0
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000106",
+      "level": "k00",
+      "name": "Yangın merdiveni",
+      "area": 20.0
+     }
+    ],
+    "shafts": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "level": "k00",
+      "name": "Asansör",
+      "kind": "elevator",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000030",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000031",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000032",
+        "kind": "wall",
+        "length": 2.0,
+        "fireRating": "EI 60"
+       }
+      ],
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000040",
+        "kind": "door",
+        "length": 1.0
+       }
+      ],
+      "open": 0.0,
+      "area": 0.0,
+      "stack": "00000000-0000-4000-8000-000000000002",
+      "vent": {
+       "area": 0.12
+      }
+     }
+    ],
+    "doors": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000040",
+      "level": "k00",
+      "between": [
+       null,
+       "00000000-0000-4000-8000-000000000103"
+      ],
+      "opensInto": null,
+      "operation": "swing",
+      "sides": [
+       null,
+       null
+      ],
+      "fireRating": "E 30",
+      "elevator": true,
+      "passage": true
+     }
+    ],
+    "height": 15.0,
+    "structureHeight": 16.0
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_elevator_shaft_vent",
+      "state": "missingData",
+      "has": [
+       "kuyunun alanı ölçülemedi"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 25/3": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 41/9": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 62/2": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 62/4": [
+      "missingData",
       "19.12.2007"
      ],
      "BYKHY 62/6": [

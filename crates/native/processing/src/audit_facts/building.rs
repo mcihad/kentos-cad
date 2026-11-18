@@ -38,7 +38,8 @@
 //! - **Openings between storeys** (docs/adr/8086): `Document::vertical_links` (floor slabs' holes, void spaces that are
 //!   no shaft, stairs) and each room's being an escape stair's.
 //! - **Shafts, elevators' doors, roofs** (docs/adr/8087): each elevator's or service shaft's enclosure
-//!   (`Document::shaft_enclosures`) with its walls' and openings' declared classes; a door's being an elevator's (a side
+//!   (`Document::shaft_enclosures`) with its walls' and openings' declared classes, its area, the shaft through the
+//!   storeys it belongs to and a lift shaft's declared vent (docs/adr/8135); a door's being an elevator's (a side
 //!   in an elevator's shaft) and opening onto a passage (a corridor, a hall, an entrance, a lobby, a landing, a stair's
 //!   room); the structure's height (`fire_audit::heights`); roofs and terraces among Ek-3's elements.
 //! - **Coverings** (docs/adr/8091): each covering's IFC type, material and the material's declared reaction class.
@@ -53,8 +54,8 @@ use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
 use kentos_extensions::audit_facts::building::{
     BuildingFacts, CoveringFacts, DoorFacts, ElementFacts, EmsalLimit, ExemptCap, LinkFacts, MasonryFacts, PlanNoteFacts,
-    RoofFacts, RoofLayerFacts, RoomPeople,
-    SeparatingElement, SeparationFacts, ShaftFacts, SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom,
+    RoofFacts, RoofLayerFacts, RoomPeople, SeparatingElement, SeparationFacts, ShaftFacts, ShaftVentFacts, SpaceFacts,
+    StoreyHolds, UnderStairFacts, UnderStairRoom,
 };
 
 /// The drawing's building facts; empty (no storey) for a project without Mimari's storeys.
@@ -454,6 +455,11 @@ fn shaft_facts(doc: &Document, names: &std::collections::HashMap<String, String>
             length,
         }
     };
+    // A lift shaft's declared vent (docs/adr/8135), as its room holds it.
+    let vent = |uid: &str| {
+        let v = by_uid.get(uid)?.arch_info()?.shaft_vent.as_ref()?;
+        Some(ShaftVentFacts { area: v.area, pressurized: v.pressurized })
+    };
     doc.shaft_enclosures()
         .into_iter()
         .map(|x| ShaftFacts {
@@ -463,6 +469,9 @@ fn shaft_facts(doc: &Document, names: &std::collections::HashMap<String, String>
             kind: x.kind.to_owned(),
             level: x.level,
             open: x.open,
+            area: x.area,
+            vent: if x.kind == "elevator" { vent(&x.uid) } else { None },
+            stack: x.stack,
             uid: x.uid,
         })
         .collect()

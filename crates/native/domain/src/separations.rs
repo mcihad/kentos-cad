@@ -17,6 +17,9 @@
 //! - **A shaft's enclosure** (docs/adr/8087; BYKHY 25/3, 41/9, 62/2): the same elements met walking out of an elevator's
 //!   or a service shaft's outline (`Document::shaft_enclosures`); a shaft's sides are short, its corners are kept only
 //!   10 cm clear (a quarter of a shorter side): the walls round it hold its corners.
+//! - **A shaft through the storeys** (docs/adr/8135; BYKHY 62/4 asks a lift shaft's vent once for the whole shaft): shafts
+//!   of one kind on consecutive storeys, the middle of one inside the other, are one shaft, named by its lowest room's
+//!   persistent id (the storeys' order; a shaft on no storey is its own). Its area is its outline's.
 
 use std::collections::BTreeMap;
 
@@ -53,6 +56,10 @@ pub struct Enclosure {
     pub level: Option<String>,
     /// `elevator` or `service`.
     pub kind: &'static str,
+    /// Its outline's area, m².
+    pub area: f64,
+    /// The shaft through the storeys it belongs to: its lowest room's persistent id.
+    pub stack: String,
     pub walls: Vec<(String, f64)>,
     pub openings: Vec<(String, f64)>,
     pub open: f64,
@@ -302,10 +309,12 @@ impl Document {
     /// its lobby) or a service shaft or flue (Şaft, Tesisat, Baca, an air shaft; a light well is open to the sky and none):
     /// from its outline's points every 25 cm (never within 10 cm of a corner, a quarter of a shorter side), walking
     /// outwards in steps of 2 cm for at most 80 cm, the first opening or wall body met, or nothing (an open stretch), each
-    /// with how long it runs.
+    /// with how long it runs. Each with its area and the shaft through the storeys it belongs to (docs/adr/8135).
     pub fn shaft_enclosures(&self) -> Vec<Enclosure> {
         let (walls, openings) = self.bodies();
         let mut out = Vec::new();
+        // Each shaft's outline and middle, for the shafts through the storeys.
+        let mut shapes: Vec<(Vec<Area>, Option<Vec2>)> = Vec::new();
         for (uid, e) in self.entities_with_uids() {
             let Entity::Space(s) = e else { continue };
             let x = &s.space;
@@ -353,7 +362,12 @@ impl Document {
                     }
                 }
             }
-            let mut enclosure = Enclosure { uid: uid.to_string(), level, kind, ..Enclosure::default() };
+            let areas = core_areas(&x.parts);
+            let area = kentos_geometry_core::geom::space::area(&areas);
+            let middle = kentos_geometry_core::geom::space::label_at(&areas);
+            shapes.push((areas, middle));
+            let mut enclosure =
+                Enclosure { uid: uid.to_string(), level, kind, area, stack: uid.to_string(), ..Enclosure::default() };
             for (at, length) in by {
                 match at {
                     At::Wall(w) => enclosure.walls.push((w, length)),
@@ -363,6 +377,58 @@ impl Document {
             }
             out.push(enclosure);
         }
+        self.stack_shafts(&mut out, &shapes);
         out
+    }
+
+    /// Names each shaft's stack (docs/adr/8135): shafts of one kind on consecutive storeys, the middle of one inside the
+    /// other's outline, are one shaft through the storeys, named by its lowest room's persistent id.
+    fn stack_shafts(&self, out: &mut [Enclosure], shapes: &[(Vec<Area>, Option<Vec2>)]) {
+        let mut levels: Vec<(String, f64)> = self
+            .settings()
+            .arch
+            .as_ref()
+            .map(|a| a.levels.iter().map(|l| (l.id.clone(), l.elevation)).collect())
+            .unwrap_or_default();
+        levels.sort_by(|a, b| a.1.total_cmp(&b.1).then_with(|| a.0.cmp(&b.0)));
+        let index = |l: &Option<String>| l.as_deref().and_then(|id| levels.iter().position(|(x, _)| x == id));
+        let n = out.len();
+        let mut root: Vec<usize> = (0..n).collect();
+        fn find(root: &mut [usize], mut i: usize) -> usize {
+            while root[i] != i {
+                root[i] = root[root[i]];
+                i = root[i];
+            }
+            i
+        }
+        let holds = |i: usize, j: usize| {
+            shapes[j].1.is_some_and(|m| shapes[i].0.iter().any(|a| inside_area(a, m)))
+        };
+        for i in 0..n {
+            let Some(at) = index(&out[i].level) else { continue };
+            for j in 0..n {
+                if out[j].kind != out[i].kind || index(&out[j].level) != Some(at + 1) {
+                    continue;
+                }
+                if holds(i, j) || holds(j, i) {
+                    let (a, b) = (find(&mut root, i), find(&mut root, j));
+                    if a != b {
+                        root[a.max(b)] = a.min(b);
+                    }
+                }
+            }
+        }
+        let rep: Vec<usize> = (0..n).map(|i| find(&mut root, i)).collect();
+        let lowest: Vec<String> = (0..n)
+            .map(|i| {
+                (0..n)
+                    .filter(|&j| rep[j] == rep[i])
+                    .min_by(|&a, &b| index(&out[a].level).cmp(&index(&out[b].level)).then_with(|| out[a].uid.cmp(&out[b].uid)))
+                    .map_or_else(|| out[i].uid.clone(), |j| out[j].uid.clone())
+            })
+            .collect();
+        for (x, s) in out.iter_mut().zip(lowest) {
+            x.stack = s;
+        }
     }
 }

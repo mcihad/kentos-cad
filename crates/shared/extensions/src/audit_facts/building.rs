@@ -144,7 +144,8 @@ pub struct ExemptCap {
 
 /// A shaft and what encloses it (docs/adr/8087): its persistent id, storey and name, `elevator` (an elevator's shaft) or
 /// `service` (a service shaft, a flue, an air shaft), the walls and openings met round it with their declared classes and
-/// lengths, and the length with neither, m.
+/// lengths, and the length with neither, m. Its outline's area (m²), the shaft through the storeys it belongs to (its
+/// lowest room's persistent id) and a lift shaft's declared vent (docs/adr/8135; BYKHY 62/4).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -156,6 +157,23 @@ pub struct ShaftFacts {
     pub walls: Vec<SeparatingElement>,
     pub openings: Vec<SeparatingElement>,
     pub open: f64,
+    #[serde(default)]
+    pub area: f64,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub stack: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vent: Option<ShaftVentFacts>,
+}
+
+/// A lift shaft's declared ventilation and smoke vent (its free area, m²) or its pressurisation (docs/adr/8135).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct ShaftVentFacts {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub area: Option<f64>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub pressurized: bool,
 }
 
 /// A plan note's value: its measure (`groundStoreyHeight`, `storeyHeight`), the value (m) and where it stands as the
@@ -575,6 +593,7 @@ impl BuildingFacts {
         self.coverings.sort_by(|a, b| a.uid.cmp(&b.uid));
         for x in &mut self.shafts {
             x.open = round(x.open, LENGTH);
+            x.area = round(x.area, AREA);
             for e in x.walls.iter_mut().chain(x.openings.iter_mut()) {
                 e.length = round(e.length, LENGTH);
             }

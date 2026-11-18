@@ -164,6 +164,25 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
         .map(|(v, label)| pick(label.into(), v == x.void, set(SpaceChange { void: Some(v), ..Default::default() }), None))
         .collect();
     geo.push(Row::text("Döşeme boşluğu", void_words).editor(select(void_words.into(), voids)));
+    // Kuyu havalandırması (docs/adr/8135, BYKHY 62/4): a lift shaft's ventilation and smoke vent or its pressurisation,
+    // declared on one of its storeys for the whole shaft.
+    if kentos_native_application::arch_performance::shaft_vent_rated(e) {
+        let own = kentos_native_application::arch_performance::shaft_vent_of(e);
+        let m2 = |a: f64| fixed(a, 3).trim_end_matches('0').trim_end_matches('.').to_owned();
+        let vent = own.and_then(|v| v.area).map_or_else(String::new, m2);
+        geo.push(Row::figure("Baca alanı", vent).unit("m²").editor(number(Field::Arch(slot, ArchField::ShaftVent))));
+        let on = own.is_some_and(|v| v.pressurized);
+        let said = if on { "Evet" } else { "Hayır" };
+        let items = [(true, "Evet"), (false, "Hayır")]
+            .into_iter()
+            .map(|(v, label)| pick(label.into(), v == on, Message::Properties(Event::ShaftPressurized(slot, v)), None))
+            .collect();
+        geo.push(Row::text("Basınçlandırılır", said).editor(select(said.into(), items)));
+        // A panel's note is two lines: the shaft's area here, then the regulation's words; the rule computes.
+        let here = kentos_geometry_core::geom::space::area(&kentos_domain::arch_values::core_areas(&x.parts));
+        geo.push(Row::note(&format!("Kuyu bu katta {} m²; bir katta beyan yeter.", m2(here))));
+        geo.push(Row::note("62/4: alanın 0,025 katı, en az 0,1 m²."));
+    }
     let methods = SpaceMethod::ALL
         .iter()
         .map(|&m| {

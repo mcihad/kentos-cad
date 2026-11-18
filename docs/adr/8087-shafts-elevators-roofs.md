@@ -123,9 +123,9 @@ satırları tablonun sayfasından, 2015 değişikliğinin yürürlüğü BKK 201
 ## §6. Sıradaki adımlar
 
 - **Ek-3/B 8 korunumlu şaft:** şaftın korunumlu olduğu beyanı (ya da 4/… tanımı) gelirse REI 120.
-- **62/4'ün öbür cümleleri:** kuyunun havalandırma bacası (en az 0,1 m², kuyu alanının 0,025'i) ya da basınçlandırma;
-  bodruma inen asansörün korunmuş koridor ya da yangın güvenlik holünden ulaşılması ([ADR
-  8092](8092-basement-lift-protected-corridor.md)'de yapıldı). **62/3:** bir kuyuda en çok üç
+- **62/4'ün öbür cümleleri:** kuyunun havalandırma bacası (en az 0,1 m², kuyu alanının 0,025'i) ya da basınçlandırma
+  ([ADR 8135](8135-lift-shaft-vent.md)'te yapıldı); bodruma inen asansörün korunmuş koridor ya da yangın güvenlik
+  holünden ulaşılması ([ADR 8092](8092-basement-lift-protected-corridor.md)'de yapıldı). **62/3:** bir kuyuda en çok üç
   kabin. **63:** acil durum asansörü ve güvenlik holüne açılması.
 - **41/9'un cihazları** (kombi, iklimlendirme dış ünitesi, sayaç) ve **makine dairesi** (62/2) modelde yok.
 - **Ek-3/B 4-a** (kaçış yolu olan çatı bölümü), **10, 11** (yangın kesici, asma tavan), **2** (taşıyıcı duvar): sınıf ve

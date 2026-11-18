@@ -1889,8 +1889,13 @@
       "type": "object"
     },
     "ShaftFacts": {
-      "description": "A shaft and what encloses it (docs/adr/8087): its persistent id, storey and name, `elevator` (an elevator's shaft) or\n`service` (a service shaft, a flue, an air shaft), the walls and openings met round it with their declared classes and\nlengths, and the length with neither, m.",
+      "description": "A shaft and what encloses it (docs/adr/8087): its persistent id, storey and name, `elevator` (an elevator's shaft) or\n`service` (a service shaft, a flue, an air shaft), the walls and openings met round it with their declared classes and\nlengths, and the length with neither, m. Its outline's area (m²), the shaft through the storeys it belongs to (its\nlowest room's persistent id) and a lift shaft's declared vent (docs/adr/8135; BYKHY 62/4).",
       "properties": {
+        "area": {
+          "default": 0.0,
+          "format": "double",
+          "type": "number"
+        },
         "kind": {
           "type": "string"
         },
@@ -1913,8 +1918,21 @@
           },
           "type": "array"
         },
+        "stack": {
+          "type": "string"
+        },
         "uid": {
           "type": "string"
+        },
+        "vent": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ShaftVentFacts"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "walls": {
           "items": {
@@ -1931,6 +1949,22 @@
         "openings",
         "open"
       ],
+      "type": "object"
+    },
+    "ShaftVentFacts": {
+      "description": "A lift shaft's declared ventilation and smoke vent (its free area, m²) or its pressurisation (docs/adr/8135).",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "pressurized": {
+          "type": "boolean"
+        }
+      },
       "type": "object"
     },
     "SpaceFacts": {

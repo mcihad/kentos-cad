@@ -208,6 +208,31 @@ pub fn edit_performance(
             exit,
             load_bearing,
             external,
+            shaft_vent: None,
+        },
+        expected_revision: None,
+    };
+    said(kentos_native_application::arch_performance::execute(&mut ExecutionContext::new(doc), input))
+}
+
+/// Baca alanı and Basınçlandırılır of a lift shaft room (docs/adr/8135, BYKHY 62/4): through
+/// `cad.arch.performance`, one step “Yangın ve performans”; none takes the room's declaration away. What to say.
+pub fn edit_shaft_vent(
+    doc: &mut Document,
+    slot: Slot,
+    vent: Option<kentos_commands::DeclaredShaftVent>,
+) -> Vec<String> {
+    let Some(uid) = doc.uid(slot) else {
+        return Vec::new();
+    };
+    let input = kentos_commands::ArchPerformance {
+        operation: kentos_commands::PerformanceOperation::Objects {
+            uids: vec![uid.to_string()],
+            fire_rating: None,
+            exit: None,
+            load_bearing: None,
+            external: None,
+            shaft_vent: Some(vent),
         },
         expected_revision: None,
     };

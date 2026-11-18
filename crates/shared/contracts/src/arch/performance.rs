@@ -177,6 +177,55 @@ pub struct DeclaredExit {
     pub basis: DeclaredBasis,
 }
 
+/// The largest area a lift shaft's vent is declared with, m².
+pub const MAX_SHAFT_VENT: f64 = 100.0;
+
+/// A lift shaft's declared ventilation and smoke vent, or its pressurisation, and its basis (docs/adr/8135; BYKHY 62/4:
+/// "kuyu alanının 0.025 katı kadar bir havalandırma ve dumandan arındırma bacası bulundurulur veya kuyular
+/// basınçlandırılır"): one of the shaft's rooms says it for the whole shaft.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DeclaredShaftVent {
+    /// The vent's free area, m²; absent when the shaft is pressurised instead.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: Option<f64>,
+    /// The shaft is pressurised (62/4's other way).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub pressurized: bool,
+    pub basis: DeclaredBasis,
+}
+
+impl DeclaredShaftVent {
+    /// What is wrong with it, its words and the field: neither an area nor pressurised; an area not finite, not over 0
+    /// or over [`MAX_SHAFT_VENT`]; its basis.
+    pub fn problem(&self) -> Option<(String, &'static str)> {
+        match self.area {
+            None if !self.pressurized => {
+                return Some((
+                    "Kuyunun havalandırma bacasının alanı ya da basınçlandırıldığı verilmedi: area (m²) ya da \
+                     pressurized: true verin."
+                        .into(),
+                    "area",
+                ));
+            }
+            Some(a) if !(a.is_finite() && a > 0.0 && a <= MAX_SHAFT_VENT) => {
+                return Some((
+                    format!("Havalandırma bacasının alanı 0'dan büyük ve en çok {MAX_SHAFT_VENT} m² olur."),
+                    "area",
+                ));
+            }
+            _ => {}
+        }
+        self.basis.problem().map(|why| (why, "basis"))
+    }
+}
+
 /// A declared load-bearing role and its basis (docs/adr/8090; EK-6 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

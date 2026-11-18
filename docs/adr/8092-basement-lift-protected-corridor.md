@@ -50,6 +50,6 @@
 ## §6. Sıradaki adımlar
 
 - **62/4'ün ilk cümlesi:** kuyunun havalandırma bacası (en az 0,1 m², kuyu alanının 0,025'i) ya da basınçlandırma
-  modelde yok.
+  ([ADR 8135](8135-lift-shaft-vent.md)'te yapıldı: kuyunun mahalindeki beyandan).
 - **Korunmuş koridorun kapıları (36/1-b-1):** kaçış merdiveni kapısına eşdeğer dayanım ve kendiliğinden kapanma (47/3'ün
   okuması) koridorun çıkış kapılarına da.

@@ -770,6 +770,28 @@ pub(super) fn commit(
             let fire = Some(kentos_commands::Declared { value: own.value, basis });
             return properties::edit_performance(model, *slot, Some(fire), None, None, None);
         }
+        Field::Arch(slot, ArchField::ShaftVent) => {
+            // Its free area, m²; empty takes the vent away, a pressurised shaft staying pressurised (docs/adr/8135).
+            let t = kentos_interaction::js_trim(text);
+            let own = model.get(*slot).and_then(kentos_native_application::arch_performance::shaft_vent_of).cloned();
+            let area = if t.is_empty() {
+                None
+            } else {
+                let n = web_number(text);
+                if !(n.is_finite() && n > 0.0) {
+                    return vec!["Bacanın alanını m² olarak yazın; örneğin 0.12. Boş: baca yok.".into()];
+                }
+                Some(n)
+            };
+            if area == own.as_ref().and_then(|v| v.area) {
+                return Vec::new();
+            }
+            let pressurized = own.as_ref().is_some_and(|v| v.pressurized);
+            let basis = own.map_or(kentos_commands::DeclaredBasis::Author, |v| v.basis);
+            let vent = (area.is_some() || pressurized)
+                .then_some(kentos_commands::DeclaredShaftVent { area, pressurized, basis });
+            return properties::edit_shaft_vent(model, *slot, vent);
+        }
         Field::Arch(slot, which @ (ArchField::MarkNumber | ArchField::MarkSize)) => {
             use kentos_commands::{ViewMarkChange, ViewMarksOperation};
             let t = kentos_interaction::js_trim(text);
@@ -1164,6 +1186,7 @@ pub(super) fn commit(
                 | ArchField::RoofSlope
                 | ArchField::FireRating
                 | ArchField::FireBasis
+                | ArchField::ShaftVent
                 | ArchField::RoofPart(_)
                 | ArchField::RoofThickness
                 | ArchField::RoofLayer(_)

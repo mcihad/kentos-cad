@@ -13,7 +13,7 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
-use crate::{Declared, DeclaredBearing, DeclaredExit, DeclaredExternal};
+use crate::{Declared, DeclaredBearing, DeclaredExit, DeclaredExternal, DeclaredShaftVent};
 
 /// The command's name.
 pub const CAD_ARCH_PERFORMANCE: &str = "cad.arch.performance";
@@ -69,6 +69,16 @@ pub enum PerformanceOperation {
         #[cfg_attr(feature = "ts", ts(as = "Option<Option<DeclaredExternal>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<DeclaredExternal>"))]
         external: Option<Option<DeclaredExternal>>,
+        /// A lift shaft room's ventilation and smoke vent or pressurisation (docs/adr/8135, BYKHY 62/4), said for the
+        /// whole shaft; null: unknown again.
+        #[serde(
+            default,
+            with = "crate::cad_properties::nullable",
+            skip_serializing_if = "Option::is_none"
+        )]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Option<DeclaredShaftVent>>", optional))]
+        #[cfg_attr(feature = "schema", schemars(with = "Option<DeclaredShaftVent>"))]
+        shaft_vent: Option<Option<DeclaredShaftVent>>,
     },
     /// Acil çıkışlar (docs/adr/8124): the doors and stairs whose emergency exit role is written at once, the escape
     /// routes' suggestion the author confirmed: those in `yes` are exits, those in `no` are not; each the author's

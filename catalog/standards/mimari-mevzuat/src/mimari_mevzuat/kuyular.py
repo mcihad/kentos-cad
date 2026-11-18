@@ -1,5 +1,5 @@
 """Şaftlar ve asansörler: Binaların Yangından Korunması Hakkında Yönetmelik 25/3, 41/9, 62/2, 62/4, 62/6, 62/7 ve Ek-3/B
-12 (docs/adr/8087).
+12 (docs/adr/8087, 8092, 8135).
 
 - **25/3:** yüksek binada (4/ccc: bina yüksekliği 21,50 m'den ya da yapı yüksekliği 30,50 m'den fazla) çöp, haberleşme,
   evrak ve teknik donanım gibi düşey tesisat şaftı ve bacanın duvarları en az 120, kapakları en az 90 dakika dayanıklı ve
@@ -10,10 +10,13 @@
 - **62/2:** asansör kuyusu yangına en az 60 dakika dayanıklı: duvarları E ve I ile en az 60, duvarındaki pencere ya da
   boşluk da öyle; açık yer kuyuyu bozar. Kuyunun kapısı asansörün kat kapısıdır (62/7). "Yanıcı olmayan malzeme" ve
   makine dairesi çizimde okunmaz.
-- **62/4:** asansör kapıları koridor, hol ve benzeri alanlar dışında doğrudan kullanım alanlarına açılamaz: kapının bir
-  yanı geçit (koridor, hol, antre, giriş, lobi, sahanlık, merdiven mahali) olmalı. Bodruma da inen asansöre bodrum
-  katta korunmuş koridordan (4/dd, 36/1-a: bitişik mahallerden Ek-3/C'nin bodrum süresince EI ile ayrılmış) ya da yangın
-  güvenlik holünden ulaşılır (docs/adr/8092).
+- **62/4:** asansör kuyusunda en az 0,1 m² olmak üzere kuyu alanının 0,025 katı kadar havalandırma ve dumandan
+  arındırma bacası bulunur ya da kuyu basınçlandırılır (docs/adr/8135): bir kuyu katlarca tek kuyudur (``stack``), alanı
+  katlarındaki en büyük alanı, beyanı katlarından birinin; katlarında farklı beyan uzman incelemesidir. Asansör
+  kapıları koridor, hol ve benzeri alanlar dışında doğrudan kullanım alanlarına açılamaz: kapının bir yanı geçit
+  (koridor, hol, antre, giriş, lobi, sahanlık, merdiven mahali) olmalı. Bodruma da inen asansöre bodrum katta korunmuş
+  koridordan (4/dd, 36/1-a: bitişik mahallerden Ek-3/C'nin bodrum süresince EI ile ayrılmış) ya da yangın güvenlik
+  holünden ulaşılır (docs/adr/8092).
 - **62/6:** asansör kapısı yangın merdiveni yuvasına açılamaz: kapının bir yanı adında Yangın merdiveni ya da Korunumlu
   merdiven geçen mahal olmamalı.
 - **62/7 (9.7.2015):** asansör kat kapısı Ek-3/B 12'nin dayanımında: yapı yüksekliği 51,50 m'den yüksek binada E 60,
@@ -22,7 +25,8 @@
 Beyan yoksa ya da okunmuyorsa eksik veri, yetmiyorsa kaldı.
 
 **Okunan olgular** (``facts.building``): şaftlar (``shafts``: tür, ad, kat, çevresindeki duvar ve açıklıklar, beyan
-edilen sınıfları ve boyları, açık boy), kapılar (``doors``: asansör kapısı mı, bir yanı geçit mi, kaçış merdiveni ya da
+edilen sınıfları ve boyları, açık boy; alanı, katlarca hangi kuyu olduğu, asansör kuyusunun beyan edilen bacası ya da
+basınçlandırılması), kapılar (``doors``: asansör kapısı mı, bir yanı geçit mi, kaçış merdiveni ya da
 yangın güvenlik holü mü, iki yanındaki mahaller, beyan edilen sınıfı), mahallerin adları, bina ve yapı yüksekliği.
 """
 
@@ -224,6 +228,64 @@ def _bodrum_katlari(bina: dict[str, Any]) -> set[str]:
     return {k["level"] for k in katlar if float(k.get("elevation") or 0) < float(zemin.get("elevation") or 0) - 1e-9}
 
 
+def _m2(x: float) -> str:
+    """Bir alanın sözü, m²: en çok üç ondalık, sondaki sıfırlar atılmış (0.11, 0.105, 4.4)."""
+    return f"{x:.3f}".rstrip("0").rstrip(".")
+
+
+def havalandirma(bina: dict[str, Any], hal: y.Hal) -> list[dict[str, Any]]:
+    """62/4'ün ilk cümlesi (docs/adr/8135): asansör kuyusunda en az 0,1 m² olmak üzere kuyu alanının 0,025 katı kadar
+    havalandırma ve dumandan arındırma bacası bulunur ya da kuyu basınçlandırılır. Katlarca tek kuyu (``stack``) bir
+    kez okunur: alanı katlarındaki en büyük alanı, beyanı katlarından birinin. Beyan ya da alan yoksa eksik veri,
+    katlarında farklı beyan varsa uzman incelemesi, baca istenenden küçükse kaldı."""
+    en_az, pay = float(hal.anahtar["ventLeast"]), float(hal.anahtar["ventShare"])
+    kuyular_: dict[str, list[dict[str, Any]]] = {}
+    for s in saftlar(bina, "elevator"):
+        kuyular_.setdefault(s.get("stack") or s["uid"], []).append(s)
+    soz = (f"62/4 asansör kuyusunda en az {_m2(en_az)} m² olmak üzere kuyu alanının {pay} katı kadar havalandırma ve "
+           f"dumandan arındırma bacası bulunmasını ya da kuyunun basınçlandırılmasını ister")
+    bulgular = []
+    for yigin, uyeler in kuyular_.items():
+        ad = uyeler[0].get("name") or "Asansör"
+        uids = [s["uid"] for s in uyeler]
+        beyanlar: list[dict[str, Any]] = []
+        for s in uyeler:
+            v = s.get("vent")
+            if v and v not in beyanlar:
+                beyanlar.append(v)
+        alan = max(float(s.get("area") or 0) for s in uyeler)
+        istek = max(en_az, pay * alan)
+        olcu = f"kuyu alanı {_m2(alan)} m², en az {_m2(istek)} m² baca" if alan > 0 else "kuyunun alanı ölçülemedi"
+        onarim = (f"Kuyunun havalandırma ve dumandan arındırma bacasını en az {_m2(istek)} m² yapın ya da kuyuyu "
+                  f"basınçlandırın ve beyan edin (asansör kuyusu mahalinin Öznitelikler'inde Baca alanı, "
+                  f"Basınçlandırılır).")
+        iz = f"{yigin}:baca"
+        if len(beyanlar) > 1:
+            bulgular.append(_bulgu(
+                "bykhy_elevator_shaft_vent", f"“{ad}”: kuyunun katlarında farklı havalandırma beyanları var ({olcu}); {soz}",
+                "Kuyunun havalandırma beyanını bir katında bırakın ya da bütün katlarında aynı yapın.", hal, uids, iz,
+                y.UZMAN))
+            continue
+        v = beyanlar[0] if beyanlar else None
+        if v is not None and v.get("pressurized"):
+            continue
+        baca = v.get("area") if v is not None else None
+        if baca is None:
+            bulgular.append(_bulgu("bykhy_elevator_shaft_vent",
+                                   f"“{ad}”: kuyunun havalandırma bacası ya da basınçlandırılması beyan edilmemiş "
+                                   f"({olcu}); {soz}", onarim, hal, uids, iz, y.EKSIK_VERI))
+        elif alan <= 0:
+            bulgular.append(_bulgu("bykhy_elevator_shaft_vent",
+                                   f"“{ad}”: havalandırma bacası {_m2(float(baca))} m², ama kuyunun alanı ölçülemedi; "
+                                   f"{soz}", "Kuyuyu mahal olarak kapalı bir dış çizgiyle çizin.", hal, uids, iz,
+                                   y.EKSIK_VERI))
+        elif float(baca) + 1e-9 < istek:
+            bulgular.append(_bulgu("bykhy_elevator_shaft_vent",
+                                   f"“{ad}”: havalandırma bacası {_m2(float(baca))} m² ({olcu}); {soz}", onarim, hal,
+                                   uids, iz))
+    return bulgular
+
+
 def bodrum_holu(bina: dict[str, Any], hal: y.Hal, gun: date) -> list[dict[str, Any]]:
     """62/4'ün ikinci cümlesi (docs/adr/8092): bodruma da inen asansöre bodrum katta korunmuş koridordan ya da yangın
     güvenlik holünden ulaşılır. Korunmuş koridor (4/dd, 36/1-a): bitişik mahallerden Ek-3/C'nin bodrum süresince EI ile
@@ -268,13 +330,15 @@ def bodrum_holu(bina: dict[str, Any], hal: y.Hal, gun: date) -> list[dict[str, A
 
 
 def onu(bina: dict[str, Any], hal: y.Hal, gun: date) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """62/4: asansör kapısı kullanım alanına değil, koridor, hol ve benzerine açılır; bodruma inen asansöre bodrumda
-    korunmuş koridordan ya da yangın güvenlik holünden ulaşılır."""
+    """62/4: asansör kuyusunun havalandırma bacası ya da basınçlandırılması; asansör kapısı kullanım alanına değil,
+    koridor, hol ve benzerine açılır; bodruma inen asansöre bodrumda korunmuş koridordan ya da yangın güvenlik holünden
+    ulaşılır."""
     hepsi = asansor_kapilari(bina)
-    if not hepsi:
-        return [], _satir(hal, y.KAPSAM_DISI, "asansör kapısı yok")
+    kuyular_ = {s.get("stack") or s["uid"] for s in saftlar(bina, "elevator")}
+    if not hepsi and not kuyular_:
+        return [], _satir(hal, y.KAPSAM_DISI, "asansör kuyusu ve kapısı yok")
     adlar = {m["uid"]: m.get("name") or "Mahal" for m in bina.get("spaces") or []}
-    bulgular = []
+    bulgular = havalandirma(bina, hal)
     for k in hepsi:
         if k.get("passage"):
             continue
@@ -294,9 +358,26 @@ def onu(bina: dict[str, Any], hal: y.Hal, gun: date) -> tuple[list[dict[str, Any
             "Asansörün önüne bir hol ya da koridor çizin (adı Hol, Koridor, Lobi, Sahanlık) ya da kapıyı oraya alın.",
             hal, [k["uid"]] + odalar, f"{k['uid']}:önü"))
     bulgular += bodrum_holu(bina, hal, gun)
-    kalan = sum(1 for b in bulgular if "state" not in b)
-    return _sonuc(hal, bulgular, f"{kalan} asansör kapısı kullanım alanına ya da bodrumda korunmamış koridora açılıyor",
-                  "asansör kapısının önü okunmuyor", f"{len(hepsi)} asansör kapısı koridor ya da hole açılıyor")
+    baca = [b for b in bulgular if b["code"] == "bykhy_elevator_shaft_vent"]
+    kapi = [b for b in bulgular if b["code"] != "bykhy_elevator_shaft_vent"]
+    kaldi = []
+    if n := sum("state" not in b for b in baca):
+        kaldi.append(f"{n} asansör kuyusunun havalandırma bacası yetmiyor")
+    if n := sum("state" not in b for b in kapi):
+        kaldi.append(f"{n} asansör kapısı kullanım alanına ya da bodrumda korunmamış koridora açılıyor")
+    eksik = []
+    if any(b.get("state") == y.EKSIK_VERI for b in baca):
+        eksik.append("asansör kuyusunun havalandırması beyan edilmemiş")
+    if any(b.get("state") == y.UZMAN for b in baca):
+        eksik.append("asansör kuyusunun katlarında farklı havalandırma beyanları")
+    if any("state" in b for b in kapi):
+        eksik.append("asansör kapısının önü okunmuyor")
+    gecti = []
+    if kuyular_:
+        gecti.append(f"{len(kuyular_)} asansör kuyusu havalandırılıyor ya da basınçlandırılıyor")
+    if hepsi:
+        gecti.append(f"{len(hepsi)} asansör kapısı koridor ya da hole açılıyor")
+    return _sonuc(hal, bulgular, "; ".join(kaldi), "; ".join(eksik), "; ".join(gecti))
 
 
 def _yangin_merdiveni(ad: str) -> bool:
@@ -368,7 +449,7 @@ _DENETIMLER = (
     ("25/3", tesisat, lambda b: [s["uid"] for s in saftlar(b, "service")]),
     ("41/9", kapaklar, lambda b: [s["uid"] for s in saftlar(b, "service")]),
     ("62/2", kuyu, lambda b: [s["uid"] for s in saftlar(b, "elevator")]),
-    ("62/4", onu, lambda b: [k["uid"] for k in asansor_kapilari(b)]),
+    ("62/4", onu, lambda b: [s["uid"] for s in saftlar(b, "elevator")] + [k["uid"] for k in asansor_kapilari(b)]),
     ("62/6", merdivene, lambda b: [k["uid"] for k in asansor_kapilari(b)]),
     ("62/7", kat_kapilari, lambda b: [k["uid"] for k in asansor_kapilari(b)]),
 )

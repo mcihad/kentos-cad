@@ -17016,9 +17016,11 @@ class ArchAuditFinding(_Model):
             `bykhy_compartment_opening` (docs/adr/8081), the elements' declared classes against Ek-3
             `bykhy_element_resistance` and `bykhy_height_not_permitted` (docs/adr/8082; roofs and terraces, docs/adr/8087),
             the shafts' and elevators' `bykhy_shaft_resistance` (25/3), `bykhy_shaft_cover_stair` (41/9),
-            `bykhy_elevator_shaft` (62/2), `bykhy_elevator_door_room` (62/4), `bykhy_elevator_door_stair` (62/6) and
-            `bykhy_elevator_door_resistance` (62/7, Ek-3/B 12; docs/adr/8087), the storeys' and doors' sizes
-            `paiy_storey_height_over`, `paiy_door_height_below` and `paiy_door_width_below` (docs/adr/8083),
+            `bykhy_elevator_shaft` (62/2), a lift shaft's vent or pressurisation `bykhy_elevator_shaft_vent` (62/4;
+            docs/adr/8135), `bykhy_elevator_door_room` (62/4), `bykhy_elevator_door_stair` (62/6) and
+            `bykhy_elevator_door_resistance` (62/7, Ek-3/B 12; docs/adr/8087), the roofs' covering class, underlay and rafters
+            `bykhy_roof_covering_class`, `bykhy_roof_underlay_reaction`, `bykhy_roof_noncombustible` (28/2, 28/3;
+            docs/adr/8134), the storeys' and doors' sizes `paiy_storey_height_over`, `paiy_door_height_below` and `paiy_door_width_below` (docs/adr/8083),
             `regulation_date_needed` (eksik veri) and
             `regulation_text_unknown` (uzman incelemesi); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
             `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/8035); `parking_short`,
@@ -17468,6 +17470,8 @@ class ArchInfo(_Model):
             type's, else none (missing).
         load_bearing: A wall's load-bearing role (docs/adr/8090, EK-6 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2); absent: unknown
             (missing).
+        shaft_vent: A lift shaft room's declared ventilation and smoke vent or pressurisation (docs/adr/8135, BYKHY 62/4), said for
+            the whole shaft; absent: unknown (missing).
     """
     discipline: ArchDiscipline | ArchDisciplineName | None | Unset = UNSET
     element_type: TypeLink | None | Unset = UNSET
@@ -17477,6 +17481,7 @@ class ArchInfo(_Model):
     level: str | None | Unset = UNSET
     load_bearing: DeclaredBearing | None | Unset = UNSET
     phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
+    shaft_vent: DeclaredShaftVent | None | Unset = UNSET
     status: ArchStatus | ArchStatusName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -17497,6 +17502,8 @@ class ArchInfo(_Model):
             out["loadBearing"] = None if self.load_bearing is None else self.load_bearing.to_json()
         if self.phase is not UNSET:
             out["phase"] = None if self.phase is None else _enum_out(self.phase)
+        if self.shaft_vent is not UNSET:
+            out["shaftVent"] = None if self.shaft_vent is None else self.shaft_vent.to_json()
         if self.status is not UNSET:
             out["status"] = None if self.status is None else _enum_out(self.status)
         return out
@@ -17512,6 +17519,7 @@ class ArchInfo(_Model):
             level=data.get("level", UNSET),
             load_bearing=UNSET if "loadBearing" not in data else None if data["loadBearing"] is None else DeclaredBearing.from_json(data["loadBearing"]),
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
+            shaft_vent=UNSET if "shaftVent" not in data else None if data["shaftVent"] is None else DeclaredShaftVent.from_json(data["shaftVent"]),
             status=UNSET if "status" not in data else None if data["status"] is None else _enum_in(ArchStatus, data["status"]),
         )
 
@@ -31587,6 +31595,37 @@ class DeclaredExternal(_Model):
         return cls(
             external=data["external"],
             basis=DeclaredBasis.from_json(data["basis"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeclaredShaftVent(_Model):
+    """A lift shaft's declared ventilation and smoke vent, or its pressurisation, and its basis (docs/adr/8135; BYKHY 62/4:
+    "kuyu alanının 0.025 katı kadar bir havalandırma ve dumandan arındırma bacası bulundurulur veya kuyular
+    basınçlandırılır"): one of the shaft's rooms says it for the whole shaft.
+    Attributes:
+        area: The vent's free area, m²; absent when the shaft is pressurised instead. Unit: area.
+        pressurized: The shaft is pressurised (62/4's other way).
+    """
+    basis: DeclaredBasis
+    area: float | None | Unset = UNSET
+    pressurized: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["basis"] = self.basis.to_json()
+        if self.area is not UNSET:
+            out["area"] = None if self.area is None else float(self.area)
+        if self.pressurized is not UNSET:
+            out["pressurized"] = self.pressurized
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeclaredShaftVent:
+        return cls(
+            basis=DeclaredBasis.from_json(data["basis"]),
+            area=UNSET if "area" not in data else None if data["area"] is None else float(data["area"]),
+            pressurized=data.get("pressurized", UNSET),
         )
 
 
@@ -139313,6 +139352,8 @@ class ObjectsPerformanceOperation(PerformanceOperation):
     Attributes:
         external: A wall's or a slab's exterior role (docs/adr/8124, EK-6 `IsExternal`): over what the drawing says; null: the
             drawing's again.
+        shaft_vent: A lift shaft room's ventilation and smoke vent or pressurisation (docs/adr/8135, BYKHY 62/4), said for the
+            whole shaft; null: unknown again.
     """
     TAG_VALUE: ClassVar[str] = "objects"
     uids: list[str]
@@ -139320,6 +139361,7 @@ class ObjectsPerformanceOperation(PerformanceOperation):
     external: DeclaredExternal | None | Unset = UNSET
     fire_rating: Declared | None | Unset = UNSET
     load_bearing: DeclaredBearing | None | Unset = UNSET
+    shaft_vent: DeclaredShaftVent | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "objects"}
@@ -139332,6 +139374,8 @@ class ObjectsPerformanceOperation(PerformanceOperation):
             out["fireRating"] = None if self.fire_rating is None else self.fire_rating.to_json()
         if self.load_bearing is not UNSET:
             out["loadBearing"] = None if self.load_bearing is None else self.load_bearing.to_json()
+        if self.shaft_vent is not UNSET:
+            out["shaftVent"] = None if self.shaft_vent is None else self.shaft_vent.to_json()
         return out
 
     @classmethod
@@ -139342,6 +139386,7 @@ class ObjectsPerformanceOperation(PerformanceOperation):
             external=UNSET if "external" not in data else None if data["external"] is None else DeclaredExternal.from_json(data["external"]),
             fire_rating=UNSET if "fireRating" not in data else None if data["fireRating"] is None else Declared.from_json(data["fireRating"]),
             load_bearing=UNSET if "loadBearing" not in data else None if data["loadBearing"] is None else DeclaredBearing.from_json(data["loadBearing"]),
+            shaft_vent=UNSET if "shaftVent" not in data else None if data["shaftVent"] is None else DeclaredShaftVent.from_json(data["shaftVent"]),
         )
 
 
@@ -146441,6 +146486,7 @@ __all__ = [
     "DeclaredCrs",
     "DeclaredExit",
     "DeclaredExternal",
+    "DeclaredShaftVent",
     "DeclaredVertical",
     "DecurveCurveEdit",
     "DefineElementTypesOperation",
