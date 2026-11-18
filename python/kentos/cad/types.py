@@ -7662,14 +7662,16 @@ class SiteEdgeKind(_StrEnum):
     - ``front``: Ön bahçe, a road's edge: at least 5.00 m (23/1-a).
     - ``back``: Arka bahçe: at least 3.00 m, half a metre more for each storey past four (23/1-c, ç).
     - ``public``: A public area's edge (a park, a square): at least 5.00 m, no storey's increase (23/1-a, ç).
+    - ``party``: Bitişik (docs/adr/8142): the building stands against the neighbouring parcel's building on this edge (bitişik
     """
     SIDE = "side"
     FRONT = "front"
     BACK = "back"
     PUBLIC = "public"
+    PARTY = "party"
 
 
-SiteEdgeKindName = Literal["side", "front", "back", "public"]
+SiteEdgeKindName = Literal["side", "front", "back", "public", "party"]
 """The names of :class:`SiteEdgeKind`, for a plain string."""
 
 

@@ -1,0 +1,1770 @@
+{
+ "format": "kentos.regulationCases",
+ "version": 1,
+ "about": "Komşu binaya bitişik duvarın bağımsız durumları (docs/adr/8142): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 39/4 ile Binaların Yangından Korunması Hakkında Yönetmelik 25/1 ve 25/2'nin derlenmiş resmî metinlerinden elle çıkarıldı (scripts/fixtures/party_wall_cases.py); kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.party: vaziyet planının bitişik kenarı boyunca duvarlar ve açıklıklar).",
+ "cases": [
+  {
+   "id": "yok",
+   "neden": "Vaziyet planında bitişik kenar yok → üç madde de kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 6.5,
+    "layout": "attached"
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 39/4": [
+      "outOfScope",
+      "1.10.2017"
+     ],
+     "BYKHY 25/1": [
+      "outOfScope",
+      "19.12.2007"
+     ],
+     "BYKHY 25/2": [
+      "outOfScope",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tam",
+   "neden": "2. kenar bitişik; iki katta EI 90 duvar, açıklık yok → üç madde geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 6.5,
+    "layout": "attached",
+    "party": [
+     {
+      "edge": 2,
+      "level": "k00",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000001",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0
+     },
+     {
+      "edge": 2,
+      "level": "k01",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000002",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 39/4": [
+      "passed",
+      "1.10.2017"
+     ],
+     "BYKHY 25/1": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 25/2": [
+      "passed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "pencere-sinifsiz",
+   "neden": "1. kattaki bitişik duvarda sınıfsız pencere → 39/4 kalır, 25/2 eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 6.5,
+    "layout": "attached",
+    "party": [
+     {
+      "edge": 2,
+      "level": "k00",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000001",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0
+     },
+     {
+      "edge": 2,
+      "level": "k01",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000002",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0,
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000011",
+        "kind": "window",
+        "length": 1.0
+       }
+      ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_party_wall_opening",
+      "has": [
+       "2. kenar (bitişik), 1. kat",
+       "1 pencere"
+      ]
+     },
+     {
+      "code": "bykhy_party_wall_opening",
+      "state": "missingData",
+      "has": [
+       "pencere",
+       "beyan edilmemiş"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/4": [
+      "failed",
+      "1.10.2017"
+     ],
+     "BYKHY 25/1": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 25/2": [
+      "missingData",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kapi-yangin",
+   "neden": "Bitişik duvarda EI2 60-S200C5 kapı: 39/4 kalır; 25/2'nin istisnası (E 45, C, S) tutar, kaçınılmazlığı uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 6.5,
+    "layout": "attached",
+    "party": [
+     {
+      "edge": 2,
+      "level": "k00",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000001",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0
+     },
+     {
+      "edge": 2,
+      "level": "k01",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000002",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0,
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000011",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI2 60-S200C5"
+       }
+      ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_party_wall_opening",
+      "has": [
+       "1 kapı"
+      ]
+     },
+     {
+      "code": "bykhy_party_wall_opening",
+      "state": "expertReview",
+      "has": [
+       "kaçınılamadığı"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/4": [
+      "failed",
+      "1.10.2017"
+     ],
+     "BYKHY 25/1": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 25/2": [
+      "expertReview",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kapi-cs-yok",
+   "neden": "Bitişik duvarda EI 60 kapı (C ve S yok): 25/2 kendiliğinden kapanma ve duman sızdırmazlık ister → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 6.5,
+    "layout": "attached",
+    "party": [
+     {
+      "edge": 2,
+      "level": "k00",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000001",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0
+     },
+     {
+      "edge": 2,
+      "level": "k01",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000002",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0,
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000011",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "EI 60"
+       }
+      ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_party_wall_opening"
+     },
+     {
+      "code": "bykhy_party_wall_opening",
+      "state": "missingData",
+      "has": [
+       "kendiliğinden kapanma (C) ve duman sızdırmazlık (S)"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/4": [
+      "failed",
+      "1.10.2017"
+     ],
+     "BYKHY 25/1": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 25/2": [
+      "missingData",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kapi-az",
+   "neden": "Bitişik duvarda E 30 kapı: yarı süre (E 45) değil → 25/2 kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 6.5,
+    "layout": "attached",
+    "party": [
+     {
+      "edge": 2,
+      "level": "k00",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000001",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0
+     },
+     {
+      "edge": 2,
+      "level": "k01",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000002",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0,
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000011",
+        "kind": "door",
+        "length": 1.0,
+        "fireRating": "E 30-S200C5"
+       }
+      ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_party_wall_opening"
+     },
+     {
+      "code": "bykhy_party_wall_opening",
+      "has": [
+       "en az E 45 değil"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/4": [
+      "failed",
+      "1.10.2017"
+     ],
+     "BYKHY 25/1": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 25/2": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "bosluk",
+   "neden": "Bitişik duvarda kapısız, penceresiz boşluk: pencere ya da kapı değil (39/4 geçer); 25/2 yangın duvarında boşluk istemez → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 6.5,
+    "layout": "attached",
+    "party": [
+     {
+      "edge": 2,
+      "level": "k00",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000001",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0
+     },
+     {
+      "edge": 2,
+      "level": "k01",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000002",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0,
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000011",
+        "kind": "gap",
+        "length": 1.0
+       }
+      ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_party_wall_opening",
+      "has": [
+       "boşluk"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/4": [
+      "passed",
+      "1.10.2017"
+     ],
+     "BYKHY 25/1": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 25/2": [
+      "failed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "pencere-e60",
+   "neden": "Bitişik duvarda E 60 pencere: 39/4 kalır; 25/2'de süre yeter, sabit ışık penceresi olduğu ve kaçınılmazlığı uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 6.5,
+    "layout": "attached",
+    "party": [
+     {
+      "edge": 2,
+      "level": "k00",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000001",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0
+     },
+     {
+      "edge": 2,
+      "level": "k01",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000002",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0,
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000011",
+        "kind": "window",
+        "length": 1.0,
+        "fireRating": "E 60"
+       }
+      ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_party_wall_opening",
+      "has": [
+       "1 pencere"
+      ]
+     },
+     {
+      "code": "bykhy_party_wall_opening",
+      "state": "expertReview",
+      "has": [
+       "sabit olduğu"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/4": [
+      "failed",
+      "1.10.2017"
+     ],
+     "BYKHY 25/1": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 25/2": [
+      "expertReview",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "iki-pencere-kapi",
+   "neden": "Bitişik duvarda iki pencere ve bir kapı: tek 39/4 bulgusu, üç 25/2 bulgusu.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 6.5,
+    "layout": "attached",
+    "party": [
+     {
+      "edge": 2,
+      "level": "k00",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000001",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0
+     },
+     {
+      "edge": 2,
+      "level": "k01",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000002",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0,
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000011",
+        "kind": "window",
+        "length": 1.0
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000012",
+        "kind": "window",
+        "length": 1.0
+       },
+       {
+        "uid": "00000000-0000-4000-8000-000000000013",
+        "kind": "door",
+        "length": 1.0
+       }
+      ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_party_wall_opening",
+      "has": [
+       "2 pencere ve 1 kapı"
+      ]
+     },
+     {
+      "code": "bykhy_party_wall_opening",
+      "state": "missingData"
+     },
+     {
+      "code": "bykhy_party_wall_opening",
+      "state": "missingData"
+     },
+     {
+      "code": "bykhy_party_wall_opening",
+      "state": "missingData"
+     }
+    ],
+    "rules": {
+     "PAİY 39/4": [
+      "failed",
+      "1.10.2017"
+     ],
+     "BYKHY 25/1": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 25/2": [
+      "missingData",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "duvar-sinifsiz",
+   "neden": "Bitişik duvarın sınıfı beyan edilmemiş → 25/1 eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 6.5,
+    "layout": "attached",
+    "party": [
+     {
+      "edge": 2,
+      "level": "k00",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000001",
+        "kind": "wall",
+        "length": 9.4
+       }
+      ],
+      "open": 0.0
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_party_fire_wall",
+      "state": "missingData",
+      "has": [
+       "beyan edilmemiş"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/4": [
+      "passed",
+      "1.10.2017"
+     ],
+     "BYKHY 25/1": [
+      "missingData",
+      "19.12.2007"
+     ],
+     "BYKHY 25/2": [
+      "passed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "duvar-ei60",
+   "neden": "Bitişik duvar EI 60: 25/1 en az 90 dakika ister → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 6.5,
+    "layout": "attached",
+    "party": [
+     {
+      "edge": 2,
+      "level": "k00",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000001",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 60"
+       }
+      ],
+      "open": 0.0
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_party_fire_wall",
+      "has": [
+       "EI 60",
+       "en az EI 90 değil"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/4": [
+      "passed",
+      "1.10.2017"
+     ],
+     "BYKHY 25/1": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 25/2": [
+      "passed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tasiyici-ei90",
+   "neden": "Taşıyıcı beyan edilmiş bitişik duvar EI 90 (R yok) → en az REI 90 değil, kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 6.5,
+    "layout": "attached",
+    "party": [
+     {
+      "edge": 2,
+      "level": "k00",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000001",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false,
+      "loadBearing": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_party_fire_wall",
+      "has": [
+       "en az REI 90 değil"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/4": [
+      "passed",
+      "1.10.2017"
+     ],
+     "BYKHY 25/1": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 25/2": [
+      "passed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tasiyici-rei90",
+   "neden": "Taşıyıcı bitişik duvar REI 120 → 25/1 geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 6.5,
+    "layout": "attached",
+    "party": [
+     {
+      "edge": 2,
+      "level": "k00",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000001",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "REI 120"
+       }
+      ],
+      "open": 0.0
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false,
+      "loadBearing": true
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "PAİY 39/4": [
+      "passed",
+      "1.10.2017"
+     ],
+     "BYKHY 25/1": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 25/2": [
+      "passed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "iki-kenar",
+   "neden": "2. ve 4. kenar bitişik: her kenarın duvarı ayrı okunur; 4. kenarınki EI 30 kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 6.5,
+    "layout": "attached",
+    "party": [
+     {
+      "edge": 2,
+      "level": "k00",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000001",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0
+     },
+     {
+      "edge": 4,
+      "level": "k00",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000003",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 30"
+       }
+      ],
+      "open": 0.0
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_party_fire_wall",
+      "has": [
+       "4. kenar (bitişik), Zemin kat",
+       "EI 30"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 39/4": [
+      "passed",
+      "1.10.2017"
+     ],
+     "BYKHY 25/1": [
+      "failed",
+      "19.12.2007"
+     ],
+     "BYKHY 25/2": [
+      "passed",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "2017-basvuru",
+   "neden": "Başvuru 1.6.2017: 39/4'ün kural setindeki ilk hâli (1.10.2017) sonra → uzman incelemesi; 25/1 ve 25/2 okunur.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "01.06.2017"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 6.5,
+    "layout": "attached",
+    "party": [
+     {
+      "edge": 2,
+      "level": "k00",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000001",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0
+     },
+     {
+      "edge": 2,
+      "level": "k01",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000002",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0,
+      "openings": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000011",
+        "kind": "window",
+        "length": 1.0,
+        "fireRating": "E 60"
+       }
+      ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "regulation_text_unknown",
+      "state": "expertReview",
+      "has": [
+       "1.10.2017"
+      ]
+     },
+     {
+      "code": "bykhy_party_wall_opening",
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "PAİY 39/4": [
+      "expertReview",
+      null
+     ],
+     "BYKHY 25/1": [
+      "passed",
+      "19.12.2007"
+     ],
+     "BYKHY 25/2": [
+      "expertReview",
+      "19.12.2007"
+     ]
+    }
+   }
+  },
+  {
+   "id": "2006-basvuru",
+   "neden": "Başvuru 1.6.2006: üç maddenin de ilk hâli sonra → üçü de uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "01.06.2006"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 6.5,
+    "layout": "attached",
+    "party": [
+     {
+      "edge": 2,
+      "level": "k00",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000001",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0
+     },
+     {
+      "edge": 2,
+      "level": "k01",
+      "walls": [
+       {
+        "uid": "00000000-0000-4000-8000-000000000002",
+        "kind": "wall",
+        "length": 9.4,
+        "fireRating": "EI 90"
+       }
+      ],
+      "open": 0.0
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "kind": "wall",
+      "level": null,
+      "frame": false,
+      "exterior": true,
+      "escape": false,
+      "fireStop": false
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "regulation_text_unknown",
+      "state": "expertReview"
+     },
+     {
+      "code": "regulation_text_unknown",
+      "state": "expertReview"
+     },
+     {
+      "code": "regulation_text_unknown",
+      "state": "expertReview"
+     }
+    ],
+    "rules": {
+     "PAİY 39/4": [
+      "expertReview",
+      null
+     ],
+     "BYKHY 25/1": [
+      "expertReview",
+      null
+     ],
+     "BYKHY 25/2": [
+      "expertReview",
+      null
+     ]
+    }
+   }
+  }
+ ]
+}

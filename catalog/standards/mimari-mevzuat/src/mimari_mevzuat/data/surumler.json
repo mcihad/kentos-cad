@@ -2127,6 +2127,60 @@
           "source": "RG 9.9.2009/27344 (10.8.2009-2009/15316 sayılı BKK ile değişik 28 inci madde); derlenmiş metnin 28 inci maddesi; docs/adr/8134 §1, 8139 §2 (a: Ek-3/B 10'un yangın kesicisi EI 30)."
         }
       ]
+    },
+    {
+      "regulation": "PAİY",
+      "article": "39/4",
+      "title": "Bitişik ve blok nizamda komşu sınırındaki duvarda pencere ve kapı",
+      "transition": "Yönetmelik 1.10.2017'de yürürlüğe girdi (71 inci madde); 39/4 değişmedi (13.8.2025 değişikliği yalnız 39/1'i yeniden yazdı).",
+      "versions": [
+        {
+          "id": "2017",
+          "from": "2017-10-01",
+          "until": null,
+          "label": "1.10.2017",
+          "gazette": "3.7.2017/30113",
+          "text": "(4) Bitişik ve blok nizama tabi binalarda komşu parsel sınırı üzerindeki bitişik duvarlarda pencere ve kapı açılamaz.",
+          "source": "Derlenmiş PAİY (mevzuat.gov.tr PDF'i, 1.7.2026 derlemesi, pdftotext): 39/4'te değişiklik işareti yok; docs/adr/8142 §2."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "25/1",
+      "title": "Bitişik nizam yapılarını ayıran yangın duvarı",
+      "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 25/1 değişmedi.",
+      "versions": [
+        {
+          "id": "2007",
+          "from": "2007-12-19",
+          "until": null,
+          "label": "19.12.2007",
+          "gazette": "19.12.2007/26735",
+          "minutes": 90,
+          "text": "(1) Bitişik nizam yapıları birbirinden ayıran yangın duvarları, yangına en az 90 dakika dayanıklı olarak projelendirilir. Yangın duvarlarının cephe ve çatılarda göstermeleri gereken özellikler ilgili maddelerde belirtilmiştir.",
+          "source": "Derlenmiş BYKHY (mevzuat.gov.tr PDF'i, pdftotext; docs/adr/8081'in kopyası): 25 inci maddede değişiklik işareti yok; docs/adr/8142 §2."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "25/2",
+      "title": "Yangın duvarında delik ve boşluk",
+      "transition": "Yönetmelik yayımı günü yürürlüğe girdi (170 inci madde); 25/2 değişmedi.",
+      "versions": [
+        {
+          "id": "2007",
+          "from": "2007-12-19",
+          "until": null,
+          "label": "19.12.2007",
+          "gazette": "19.12.2007/26735",
+          "minutes": 90,
+          "fraction": 0.5,
+          "text": "(2) Yangın duvarlarında delik ve boşluk bulunamaz. Duvarlarda kapı ve sabit ışık penceresi gibi boşluklardan kaçınmak mümkün değil ise, bunların en az yangın duvarının direncinin yarı süresi kadar yangına karşı dayanıklı olması gerekir. Kapıların kendiliğinden kapanması ve duman sızdırmaz özellikte olması mecburidir. Bu tür yarı mukavemetli boşlukların çevresi her türlü yanıcı maddeden arındırılır. Su, elektrik, ısıtma, havalandırma tesisatının ve benzeri tesisatın yangın duvarından geçmesi hâlinde, tesisat çevresi, açıklık kalmayacak şekilde en az yangın duvarı yangın dayanım süresi kadar, yangın ve duman geçişine karşı yalıtılır.",
+          "source": "Derlenmiş BYKHY (mevzuat.gov.tr PDF'i, pdftotext): 25 inci maddede değişiklik işareti yok; süre 25/1'in 90 dakikası, yarısı 45; docs/adr/8142 §2."
+        }
+      ]
     }
   ]
 }

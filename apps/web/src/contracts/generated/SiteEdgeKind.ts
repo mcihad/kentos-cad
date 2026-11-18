@@ -3,4 +3,4 @@
 /**
  * A parcel edge's kind (docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23/1): what its garden distance is measured by.
  */
-export type SiteEdgeKind = "side" | "front" | "back" | "public";
+export type SiteEdgeKind = "side" | "front" | "back" | "public" | "party";

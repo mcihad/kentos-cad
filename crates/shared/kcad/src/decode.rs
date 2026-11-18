@@ -464,6 +464,13 @@ fn body(r: &mut Reader<'_>, schema: u32, gis: u16, arch: u16) -> Result<Document
             "yangın dayanım sınıfı, acil çıkış, malzeme dayanımı ve binanın yangın koruma sınıfı mimari verisi sürüm 1'den önce yok",
         ));
     }
+    if arch < crate::ARCH_WITH_PARTY_EDGES && crate::uses_party_edges(&doc) {
+        return Err(r.fail_at(
+            Code::UnknownField,
+            body_at,
+            "vaziyet planının bitişik kenarı mimari verisi sürüm 29'dan önce yok",
+        ));
+    }
     if arch < crate::ARCH_WITH_LAYOUT && crate::uses_layout(&doc) {
         return Err(r.fail_at(
             Code::UnknownField,

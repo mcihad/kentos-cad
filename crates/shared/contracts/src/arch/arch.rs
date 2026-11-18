@@ -2005,14 +2005,20 @@ pub enum SiteEdgeKind {
     Back,
     /// A public area's edge (a park, a square): at least 5.00 m, no storey's increase (23/1-a, ç).
     Public,
+    /// Bitişik (docs/adr/8142): the building stands against the neighbouring parcel's building on this edge (bitişik
+    /// nizam, or a blok or ikiz nizam's attached side; PAİY 4/1-pppp): no garden, its wall a fire wall (BYKHY 25) with no
+    /// window or door (PAİY 39/4). In ayrık nizam, attached to no neighbour (4/1-pppp-1), a side garden. `.kcad`
+    /// architecture data 29.
+    Party,
 }
 
 impl SiteEdgeKind {
-    pub const ALL: [SiteEdgeKind; 4] = [
+    pub const ALL: [SiteEdgeKind; 5] = [
         SiteEdgeKind::Side,
         SiteEdgeKind::Front,
         SiteEdgeKind::Back,
         SiteEdgeKind::Public,
+        SiteEdgeKind::Party,
     ];
 
     pub fn label(self) -> &'static str {
@@ -2021,6 +2027,7 @@ impl SiteEdgeKind {
             SiteEdgeKind::Front => "Ön bahçe",
             SiteEdgeKind::Back => "Arka bahçe",
             SiteEdgeKind::Public => "Kamusal alan",
+            SiteEdgeKind::Party => "Bitişik (komşu bina)",
         }
     }
 
@@ -2030,16 +2037,19 @@ impl SiteEdgeKind {
             SiteEdgeKind::Front => "front",
             SiteEdgeKind::Back => "back",
             SiteEdgeKind::Public => "public",
+            SiteEdgeKind::Party => "party",
         }
     }
 
     /// Its garden distance with `floors` storeys (23/1, d's count), m: 5 on a road or a public area, 3 at the side and
-    /// the back with half a metre for each storey past four.
+    /// the back with half a metre for each storey past four; none against the neighbour's building (in ayrık nizam the
+    /// site plan reads a party edge as a side garden, docs/adr/8142).
     pub fn setback(self, floors: u32) -> f64 {
         let more = 0.5 * f64::from(floors.saturating_sub(4));
         match self {
             SiteEdgeKind::Front | SiteEdgeKind::Public => 5.0,
             SiteEdgeKind::Side | SiteEdgeKind::Back => 3.0 + more,
+            SiteEdgeKind::Party => 0.0,
         }
     }
 }
@@ -2128,6 +2138,16 @@ impl SitePlan {
             ));
         }
         for (i, e) in self.edges.iter().enumerate() {
+            if e.kind == SiteEdgeKind::Party && e.setback.is_some() {
+                return Some((
+                    format!("site.edges[{i}].setback"),
+                    format!(
+                        "{}. kenar bitişik (komşu bina): bahçe mesafesi olmaz. Mesafeyi kaldırın ya da kenarın türünü \
+                         değiştirin.",
+                        i + 1
+                    ),
+                ));
+            }
             if let Some(d) = e.setback
                 && !(d.is_finite() && d > 0.0 && d <= 100.0)
             {
@@ -2492,6 +2512,11 @@ impl ArchSettings {
     /// Whether it gives a site plan (KCAD 224, docs/adr/8032).
     pub fn has_site(&self) -> bool {
         self.site.is_some()
+    }
+
+    /// Whether its site plan has an edge against the neighbour's building (Mimari data 29, docs/adr/8142).
+    pub fn has_party_edges(&self) -> bool {
+        self.site.as_ref().is_some_and(|s| s.edges.iter().any(|e| e.kind == SiteEdgeKind::Party))
     }
 
     /// Whether it names a municipality's regulation (KCAD 225, docs/adr/8034).

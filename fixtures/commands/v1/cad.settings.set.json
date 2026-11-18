@@ -10556,6 +10556,160 @@
       ]
     },
     {
+      "name": "Mimari: vaziyet planının bitişik kenarı (ADR 8142)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "site": {
+                "edges": [
+                  {
+                    "kind": "front"
+                  },
+                  {},
+                  {
+                    "kind": "back"
+                  },
+                  {
+                    "kind": "party"
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "arch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ],
+                "site": {
+                  "edges": [
+                    {
+                      "kind": "front"
+                    },
+                    {},
+                    {
+                      "kind": "back"
+                    },
+                    {
+                      "kind": "party"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "bitişik kenarın bahçe mesafesi",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "site": {
+                "edges": [
+                  {
+                    "kind": "front"
+                  },
+                  {
+                    "kind": "party",
+                    "setback": 2
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch",
+              "message": "2. kenar bitişik (komşu bina): bahçe mesafesi olmaz. Mesafeyi kaldırın ya da kenarın türünü değiştirin.",
+              "path": "arch.site.edges[1].setback"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "emsalin kaynağı var, emsal yok",
       "steps": [
         {

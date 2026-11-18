@@ -87,6 +87,10 @@ pub struct BuildingFacts {
     /// What separates each two rooms of a storey that share a boundary (docs/adr/8081; BYKHY 4/tt, 24).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub separations: Vec<SeparationFacts>,
+    /// What stands against the neighbour's building along each party edge of the site plan's parcel, storey by storey
+    /// (docs/adr/8142; PAİY 39/4, BYKHY 25); none in ayrık nizam.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub party: Vec<PartyFacts>,
     /// The openings between storeys (docs/adr/8086): galleries, atriums, stair wells, stairs.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub links: Vec<LinkFacts>,
@@ -355,6 +359,22 @@ pub struct SeparationFacts {
     pub open: f64,
 }
 
+/// What stands along a party edge of the site plan's parcel on a storey (docs/adr/8142): the edge's place in the
+/// parcel's boundary (from 1, as the site plan says it), the walls and the openings with their declared fire classes and
+/// lengths there, and the length with neither, m.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct PartyFacts {
+    pub edge: usize,
+    pub level: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub walls: Vec<SeparatingElement>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub openings: Vec<SeparatingElement>,
+    pub open: f64,
+}
+
 /// A wall or an opening along a separation: its persistent id, its kind (`wall`, `door`, `window`, `gap`), its declared
 /// fire class, its length there, m.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -616,6 +636,15 @@ impl BuildingFacts {
             x.openings.sort_by(|a, b| a.uid.cmp(&b.uid));
         }
         self.separations.sort_by(|a, b| a.rooms.cmp(&b.rooms));
+        for x in &mut self.party {
+            x.open = round(x.open, LENGTH);
+            for e in x.walls.iter_mut().chain(x.openings.iter_mut()) {
+                e.length = round(e.length, LENGTH);
+            }
+            x.walls.sort_by(|a, b| a.uid.cmp(&b.uid));
+            x.openings.sort_by(|a, b| a.uid.cmp(&b.uid));
+        }
+        self.party.sort_by(|a, b| (a.edge, &a.level).cmp(&(b.edge, &b.level)));
         for l in &mut self.links {
             l.area = round(l.area, AREA);
         }

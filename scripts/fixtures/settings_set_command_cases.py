@@ -285,6 +285,14 @@ def cases():
         laid = {"levels": levels, "layout": layout}
         out.append({"name": f"Mimari: yapı nizamı {layout} (ADR 8141)",
                     "steps": [step("execute", {"arch": laid}, done(["arch"]), {**FLAGS, "settings": {"arch": laid}})]})
+    # A site plan's edge against the neighbour's building (docs/adr/8142): written by its name; no garden distance on it.
+    party = {"levels": levels, "site": {"edges": [{"kind": "front"}, {}, {"kind": "back"}, {"kind": "party"}]}}
+    out.append({"name": "Mimari: vaziyet planının bitişik kenarı (ADR 8142)",
+                "steps": [step("execute", {"arch": party}, done(["arch"]), {**FLAGS, "settings": {"arch": party}})]})
+    out.append(refused("bitişik kenarın bahçe mesafesi",
+                       {"arch": {"levels": levels, "site": {"edges": [{"kind": "front"}, {"kind": "party", "setback": 2}]}}},
+                       "invalid_arch", "2. kenar bitişik (komşu bina): bahçe mesafesi olmaz. Mesafeyi kaldırın ya da "
+                       "kenarın türünü değiştirin.", "arch.site.edges[1].setback"))
     out.append(refused("emsalin kaynağı var, emsal yok",
                        {"arch": {"levels": levels, "zoning": {"parcelArea": 900, "coverage": 0.4,
                                                              "farSource": "UIP-1, karar K1"}}},

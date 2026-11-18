@@ -1,5 +1,15 @@
 # Değişiklikler
 
+## 0.33.0 — 18 Kasım 2026
+
+- Komşu binaya bitişik duvar (`bitisik`, yeni denetim; docs/adr/8142): vaziyet planının yeni "Bitişik (komşu bina)"
+  kenarı boyunca, her katta, olguların yeni `building.party`'si (duvarlar ve açıklıklar, beyan edilen sınıfları ve
+  uzunluklarıyla; ayrık nizamda okunmaz). PAİY 39/4 (1.10.2017): bitişik duvarda pencere ve kapı kaldı
+  (`paiy_party_wall_opening`). BYKHY 25/1 (19.12.2007): bitişik duvar en az EI 90, taşıyıcı beyanlıysa REI 90; sınıfsız
+  eksik veri, azsa kaldı (`bykhy_party_fire_wall`). BYKHY 25/2: yangın duvarında boşluk kaldı; kapı ve pencere en az
+  E 45 değilse kaldı, sınıfsızsa eksik veri; kapının sınıfında C ya da S yoksa eksik veri; yeten kapının ve pencerenin
+  kaçınılmazlığı (pencerenin sabitliği) uzman incelemesi (`bykhy_party_wall_opening`). 16 bağımsız durum.
+
 ## 0.32.0 — 18 Kasım 2026
 
 - Yapı nizamı (docs/adr/8141): olguların yeni `building.layout`'u (projenin İmar durumu'ndaki Yapı nizamı: `detached`,

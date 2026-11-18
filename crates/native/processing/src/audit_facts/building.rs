@@ -56,7 +56,8 @@ use kentos_commands::{Entity, LocalRules, UnitKind};
 use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
 use kentos_extensions::audit_facts::building::{
-    BuildingFacts, CoveringFacts, DoorFacts, ElementFacts, EmsalLimit, ExemptCap, LinkFacts, MasonryFacts, PlanNoteFacts,
+    BuildingFacts, CoveringFacts, DoorFacts, ElementFacts, EmsalLimit, ExemptCap, LinkFacts, MasonryFacts, PartyFacts,
+    PlanNoteFacts,
     FinishFacts, RoofFacts, RoofLayerFacts, RoomPeople, SeparatingElement, SeparationFacts, ShaftFacts, ShaftVentFacts,
     SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom,
 };
@@ -258,7 +259,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             stack: l.stack,
         })
         .collect();
-    let separations = separations(doc);
+    let (separations, party) = separations(doc);
     let (elements, (height, structure_height)) = elements(doc);
     let enclosed = shaft_facts(doc, &names);
     let basement_depth = arch.levels.iter().map(|l| -l.elevation).fold(0.0_f64, f64::max);
@@ -293,6 +294,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         under_stairs,
         spaces,
         separations,
+        party,
         links,
         sprinklers: arch.has_sprinklers(),
         elements,
@@ -346,9 +348,10 @@ fn elements(_: &Document) -> (Vec<ElementFacts>, (f64, f64)) {
 }
 
 /// What separates each two rooms of a storey, its walls' and openings' declared classes read as the performance command
-/// writes them (docs/adr/8081).
+/// writes them (docs/adr/8081); and what stands against the neighbour's building along the site plan's party edges, read
+/// the same way (docs/adr/8142).
 #[cfg(feature = "mod-arch")]
-fn separations(doc: &Document) -> Vec<SeparationFacts> {
+fn separations(doc: &Document) -> (Vec<SeparationFacts>, Vec<PartyFacts>) {
     use kentos_commands::OpeningForm;
     use kentos_native_application::arch_performance::fire_rating_of;
     let by_uid: std::collections::HashMap<String, &Entity> =
@@ -370,7 +373,8 @@ fn separations(doc: &Document) -> Vec<SeparationFacts> {
             length,
         }
     };
-    doc.separations()
+    let separations = doc
+        .separations()
         .into_iter()
         .map(|s| SeparationFacts {
             walls: s.walls.iter().map(|(u, l)| element(u, *l)).collect(),
@@ -379,7 +383,19 @@ fn separations(doc: &Document) -> Vec<SeparationFacts> {
             rooms: s.rooms,
             open: s.open,
         })
-        .collect()
+        .collect();
+    let party = doc
+        .party_walls()
+        .into_iter()
+        .map(|p| PartyFacts {
+            walls: p.walls.iter().map(|(u, l)| element(u, *l)).collect(),
+            openings: p.openings.iter().map(|(u, l)| element(u, *l)).collect(),
+            edge: p.edge,
+            level: p.level,
+            open: p.open,
+        })
+        .collect();
+    (separations, party)
 }
 
 /// The coverings with their materials' declared reaction to fire classes (docs/adr/8091; BYKHY 26/2, 26/4): a material
@@ -577,8 +593,8 @@ fn shaft_facts(_: &Document, _: &std::collections::HashMap<String, String>) -> V
 
 /// Without Mimari's performance declarations there is nothing to read the separations' classes by.
 #[cfg(not(feature = "mod-arch"))]
-fn separations(_: &Document) -> Vec<SeparationFacts> {
-    Vec::new()
+fn separations(_: &Document) -> (Vec<SeparationFacts>, Vec<PartyFacts>) {
+    (Vec::new(), Vec::new())
 }
 
 /// A room's name as a finding says it: its name, else its use, else "Mahal"; its number after it.

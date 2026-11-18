@@ -87,6 +87,13 @@ def kuyu_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     return _bulgular(facts, ("bykhy_shaft_", "bykhy_elevator_"))
 
 
+@ext.audit("bitisik")
+def bitisik_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Komşu binaya bitişik duvar (PAİY 39/4 pencere ve kapı yok; BYKHY 25/1 en az 90 dakikalık yangın duvarı, 25/2
+    yangın duvarında boşluk yok): vaziyet planının bitişik kenarları boyunca."""
+    return _bulgular(facts, ("paiy_party_wall_opening", "bykhy_party_"))
+
+
 @ext.audit("kat-yuksekligi")
 def kat_yuksekligi_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Kat yüksekliği (PAİY 28/1-c; Sivas 28/1-c): konut bölgesinde zemin ve normal katlar, başvuru gününün hâliyle."""

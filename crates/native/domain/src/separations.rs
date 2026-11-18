@@ -35,7 +35,7 @@ use crate::space_follow::SpaceSearch;
 /// The step along a shared boundary, metres.
 const STEP: f64 = 0.25;
 /// How far from an outline's corner no point is taken, metres.
-const CORNER: f64 = 0.30;
+pub(crate) const CORNER: f64 = 0.30;
 /// The step outwards to find the room on the other side, metres.
 const ACROSS: f64 = 0.02;
 /// How far outwards the room on the other side is looked for, metres: wider walls separate rooms this does not see.
@@ -81,7 +81,7 @@ pub struct Separation {
 
 /// The element at a point of a shared boundary.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-enum At {
+pub(crate) enum At {
     Wall(String),
     Opening(String),
     Open,
@@ -91,7 +91,7 @@ enum At {
 /// Where two hold it (joined walls overlap at their joint) the smaller persistent id: the drawing's order does not
 /// matter.
 #[allow(clippy::type_complexity)]
-fn element(
+pub(crate) fn element(
     walls: &[(String, Option<String>, Vec<Vec<Vec2>>)],
     openings: &[(String, Option<String>, Vec<Vec2>)],
     level: &Option<String>,
@@ -113,7 +113,7 @@ fn element(
 /// two readings that differ the change found by halving to a tenth of a millimetre (docs/adr/8087: a door's length is
 /// its width, not a count of steps; the facts round to a millimetre, the same however the outline begins); each reading
 /// with its length, in order.
-fn spans<K: Clone + PartialEq>(s0: f64, s1: f64, read: &mut dyn FnMut(f64) -> K) -> Vec<(K, f64)> {
+pub(crate) fn spans<K: Clone + PartialEq>(s0: f64, s1: f64, read: &mut dyn FnMut(f64) -> K) -> Vec<(K, f64)> {
     let span = s1 - s0;
     let k = (span / STEP).ceil().max(1.0) as usize;
     let piece = span / k as f64;
@@ -266,7 +266,7 @@ impl Document {
     /// The walls' bodies and the openings' outlines (a niche or a flue is none: it does not pass through its wall), each
     /// with its persistent id and storey.
     #[allow(clippy::type_complexity)]
-    fn bodies(&self) -> (Vec<(String, Option<String>, Vec<Vec<Vec2>>)>, Vec<(String, Option<String>, Vec<Vec2>)>) {
+    pub(crate) fn bodies(&self) -> (Vec<(String, Option<String>, Vec<Vec<Vec2>>)>, Vec<(String, Option<String>, Vec<Vec2>)>) {
         let mut walls: Vec<(String, Option<String>, Vec<Vec<Vec2>>)> = Vec::new();
         let mut openings: Vec<(String, Option<String>, Vec<Vec2>)> = Vec::new();
         for (uid, e) in self.entities_with_uids() {

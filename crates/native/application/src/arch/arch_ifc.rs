@@ -521,6 +521,8 @@ pub fn particulars(doc: &Document) -> Particulars {
                 SiteEdgeKind::Front | SiteEdgeKind::Public => 0,
                 SiteEdgeKind::Side => 1,
                 SiteEdgeKind::Back => 2,
+                // Against the neighbour's building: no garden distance to say (docs/adr/8142).
+                SiteEdgeKind::Party => continue,
             };
             setbacks[k] = Some(setbacks[k].map_or(e.required, |v: f64| v.min(e.required)));
         }

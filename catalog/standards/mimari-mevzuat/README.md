@@ -37,6 +37,10 @@ mevzuatının mimari çizimdeki kuralları, projenin başvuru gününde yürürl
   koridor ya da yangın güvenlik holü (62/4, docs/adr/8092), yangın merdiveni
   yuvasına açılmaması (62/6); kat kapısının dayanımı, yapı yüksekliği 51,50 m'den yüksekse E 60, alçaksa E 30 (62/7 ve
   Ek-3/B 12, 9.7.2015'ten).
+- **Komşu binaya bitişik duvar** (`bitisik`, docs/adr/8142): vaziyet planının bitişik kenarı boyunca (ayrık nizamda
+  değil) duvarda pencere ve kapı yok (PAİY 39/4); duvar en az 90 dakika, taşıyıcıysa REI 90 (BYKHY 25/1); yangın
+  duvarında boşluk yok, kaçınılamayan kapı ve sabit ışık penceresi en az yarı süre, kapı kendiliğinden kapanan ve duman
+  sızdırmaz (25/2).
 - **Kat yüksekliği** (`kat_yuksekligi`, docs/adr/8083, 8084): konut projesinde zemin ve normal katlar 3,60 m;
   12.8.2023'ten bodrum hariç 3 kata kadar 4,00 m (PAİY 28/1-c); Sivas 3,60 m. Parselin bölgesine göre ticaret (28/1-a),
   karma (28/1-b), zemin katı ticaretli konut alanı (28/1-ç) ve asma katlı zemin kat (docs/adr/8085); konut bölgesinde

@@ -157,6 +157,29 @@ fn the_layout_round_trips_under_arch_data_28() {
     assert!(e.message.contains("sürüm 28'den önce yok"), "{e}");
 }
 
+/// Architecture data 29 (docs/adr/8142): a site plan's party edge is written with `modules.arch = 29` and read back; the
+/// same file saying 28 is refused.
+#[test]
+fn a_party_edge_round_trips_under_arch_data_29() {
+    use kentos_contracts::{SiteEdge, SiteEdgeKind, SitePlan};
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_party_edges(&doc));
+    doc.settings.arch.get_or_insert_with(Default::default).site = Some(SitePlan {
+        edges: vec![
+            SiteEdge { kind: SiteEdgeKind::Front, setback: None },
+            SiteEdge { kind: SiteEdgeKind::Party, setback: None },
+        ],
+        ..Default::default()
+    });
+    assert!(kentos_kcad::uses_party_edges(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_PARTY_EDGES);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the party edge reads back");
+    let e = kentos_kcad::decode(&saying_arch(&bytes, 29, 28)).expect_err("refused");
+    assert_eq!(e.code, kentos_kcad::Code::UnknownField, "{e}");
+    assert!(e.message.contains("sürüm 29'dan önce yok"), "{e}");
+}
+
 /// `bytes` with `modules.arch` saying `to` instead of `from` (CBOR: the text "arch", then 0x18 and the version), the
 /// SHA-256 trailer made again: a file an older KentOS would have written, holding newer data.
 fn saying_arch(bytes: &[u8], from: u8, to: u8) -> Vec<u8> {

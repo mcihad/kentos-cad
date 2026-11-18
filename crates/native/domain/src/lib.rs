@@ -79,6 +79,7 @@ pub mod arch_values;
 pub mod paiy_areas;
 pub mod zoning;
 pub mod under_stair;
+pub mod party_walls;
 pub mod separations;
 pub mod fire_elements;
 pub mod derived_roles;

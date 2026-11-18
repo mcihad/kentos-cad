@@ -409,6 +409,12 @@
     0.8.0); BYKHY 26/4 ayrık nizamdaki müstakil konutta kapsam dışı, 28/3 yüksek olmayan binada bitişik nizamda
     uygulanır, öbür nizamlarda kapsam dışı (`tr.kentos.mimari-mevzuat` 0.32.0). Nizamsız proje eskisi gibi uzman
     incelemesi ya da uyarı.
+  - **Bitişik kenar (18 Kasım 2026; [ADR 8142](../adr/8142-party-edge-and-fire-wall.md), K361–K366):** vaziyet planında
+    "Bitişik (komşu bina)" kenarı (Parsel aracında Kamusal'dan sonra): bahçe istemez, mesafe yazılmaz; ayrık nizamda yan
+    bahçe okunur (çelişki "dar" görünür). Kenar boyunca her katta, parselin 5 cm içinde, ayrımlar gibi okunan duvarlar
+    ve açıklıklar olgularda (`building.party`). Yeni `bitisik` denetimi: PAİY 39/4 pencere ve kapı yok (nizam yazılmamış
+    olsa da), BYKHY 25/1 en az EI 90 (taşıyıcıysa REI 90), 25/2 boşluk yok; kapı ve pencere E 45, kapıda C ve S;
+    tutanın kaçınılmazlığı uzman incelemesi. Mimari verisi 29.
   - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
     PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
     39/1-ç döner kapının yanında normal bina girişi.

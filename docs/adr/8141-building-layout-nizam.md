@@ -98,7 +98,8 @@ PAİY'nin metni derlenmiş resmî metinden (pdftotext; 8098'in kopyası) okundu.
 ## §6. Kalanlar
 
 - **PAİY 39/4:** bitişik ve blok nizamda komşu parsel sınırındaki bitişik duvarda pencere ve kapı açılamaz: vaziyet
-  planının kenarları (ADR 8032) ve duvarların açıklıkları çizimde; bir sonraki dilim.
+  planının kenarları (ADR 8032) ve duvarların açıklıkları çizimde; bir sonraki dilim — yapıldı: ADR
+  [8142](8142-party-edge-and-fire-wall.md) (vaziyet planının bitişik kenarı, BYKHY 25/1 ve 25/2 ile).
 - **PAİY 41:** bitişik nizamda çıkma bitişik olduğu komşu sınırına 2,00 m'den fazla yaklaşamaz (çıkmalar plan notunun
   da konusu, ADR 8084 §6).
 - **PAİY 6:** parselin cephesi nizama ve kat adedine göre (parsel düzeyinde; harita modülünün işi olabilir).

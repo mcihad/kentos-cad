@@ -214,12 +214,19 @@ impl Document {
         // The edges as the boundary runs; anticlockwise for the areas, the kinds kept on their edges.
         let floors = self.site_floors();
         let (footprint, shape) = self.footprint();
+        // Ayrık nizam attaches to no neighbour (PAİY 4/1-pppp-1): a party edge there is a side garden (docs/adr/8142).
+        let detached = self.settings().arch.as_ref().and_then(|a| a.layout)
+            == Some(kentos_contracts::BuildingLayout::Detached);
         let n = corners.len();
         let mut edges = Vec::with_capacity(n);
         for i in 0..n {
             let (a, b) = (corners[i], corners[(i + 1) % n]);
             let e = site.edge(i);
-            let required = e.setback.unwrap_or_else(|| e.kind.setback(floors));
+            let kind = match e.kind {
+                kentos_contracts::SiteEdgeKind::Party if detached => kentos_contracts::SiteEdgeKind::Side,
+                k => k,
+            };
+            let required = e.setback.unwrap_or_else(|| kind.setback(floors));
             // The footprint's nearest segment pair: the distance, the edge's point and the footprint's; where facing
             // pieces of the footprint stand at that distance (a facade in several pieces), the middle of all of them,
             // where a site plan dimensions it.

@@ -163,6 +163,13 @@
           ],
           "description": "A traditional cut stone masonry building's stone walls as Emsal ve TAKS tablosu counts them (docs/adr/8095; PAİY\n5/8, 20/8-j); absent for any other building."
         },
+        "party": {
+          "description": "What stands against the neighbour's building along each party edge of the site plan's parcel, storey by storey\n(docs/adr/8142; PAİY 39/4, BYKHY 25); none in ayrık nizam.",
+          "items": {
+            "$ref": "#/$defs/PartyFacts"
+          },
+          "type": "array"
+        },
         "planNotes": {
           "description": "The parcel's plan notes the project writes (docs/adr/8084), a rule reads over the municipality's and the national\nregulation (PAİY 69/3), in the project's order.",
           "items": {
@@ -1515,6 +1522,43 @@
         "b",
         "area",
         "at"
+      ],
+      "type": "object"
+    },
+    "PartyFacts": {
+      "description": "What stands along a party edge of the site plan's parcel on a storey (docs/adr/8142): the edge's place in the\nparcel's boundary (from 1, as the site plan says it), the walls and the openings with their declared fire classes and\nlengths there, and the length with neither, m.",
+      "properties": {
+        "edge": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "open": {
+          "format": "double",
+          "type": "number"
+        },
+        "openings": {
+          "items": {
+            "$ref": "#/$defs/SeparatingElement"
+          },
+          "type": "array"
+        },
+        "walls": {
+          "items": {
+            "$ref": "#/$defs/SeparatingElement"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "edge",
+        "open"
       ],
       "type": "object"
     },

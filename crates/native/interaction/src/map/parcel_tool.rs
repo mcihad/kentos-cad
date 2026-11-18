@@ -1,8 +1,9 @@
 //! Parsel (docs/adr/8032; ADV-22, M32): a closed line or a polygon of the drawing made the site plan's parcel, each of
-//! its edges given its kind (Yan bahçe, Ön bahçe, Arka bahçe, Kamusal alan), and the setback line (yapı yaklaşma
-//! sınırı) the document keeps drawn as a dashed closed line.
+//! its edges given its kind (Yan bahçe, Ön bahçe, Arka bahçe, Kamusal alan, Bitişik: against the neighbour's building,
+//! docs/adr/8142), and the setback line (yapı yaklaşma sınırı) the document keeps drawn as a dashed closed line.
 //!
-//! The parcel is clicked on its edge; then a click on an edge turns its kind over (Yan → Ön → Arka → Kamusal → Yan),
+//! The parcel is clicked on its edge; then a click on an edge turns its kind over (Yan → Ön → Arka → Kamusal → Bitişik →
+//! Yan),
 //! each edge saying its garden distance (PAİY 23: 5 m on a road or a public area, 3 m at the side and the back with
 //! half a metre for each storey past four) and the footprint's distance to it, the setback line shown as it will be;
 //! Enter writes them. Started on a project with a parcel, it takes it up with its kinds.
@@ -34,7 +35,8 @@ fn next(kind: SiteEdgeKind) -> SiteEdgeKind {
         SiteEdgeKind::Side => SiteEdgeKind::Front,
         SiteEdgeKind::Front => SiteEdgeKind::Back,
         SiteEdgeKind::Back => SiteEdgeKind::Public,
-        SiteEdgeKind::Public => SiteEdgeKind::Side,
+        SiteEdgeKind::Public => SiteEdgeKind::Party,
+        SiteEdgeKind::Party => SiteEdgeKind::Side,
     }
 }
 
