@@ -39,19 +39,22 @@ fn exported(app: &mut App, name: &str) -> PathBuf {
 }
 
 /// How many products the file holds with a shape (a representation given), read from its text: its building
-/// elements, spaces and spatial zones. An opening is a cut, not a body.
-fn shaped(path: &std::path::Path) -> usize {
-    const CLASSES: [&str; 18] = [
+/// elements and spaces, then its spatial zones (an area's volume, not a body: docs/adr/8123). An opening is a cut, not a
+/// body.
+fn shaped(path: &std::path::Path) -> (usize, usize) {
+    const CLASSES: [&str; 17] = [
         "IFCWALL", "IFCSLAB", "IFCCOLUMN", "IFCBEAM", "IFCROOF", "IFCRAILING", "IFCSTAIR", "IFCCOVERING", "IFCDOOR",
         "IFCWINDOW", "IFCTRANSPORTELEMENT", "IFCFURNITURE", "IFCSANITARYTERMINAL", "IFCMEMBER", "IFCCHIMNEY", "IFCRAMP",
-        "IFCSPACE", "IFCSPATIALZONE",
+        "IFCSPACE",
     ];
     let text = std::fs::read_to_string(path).expect("reads the file");
-    text.lines()
+    let with_body: Vec<&str> = text
+        .lines()
         .filter_map(|l| l.split_once('=').map(|(_, r)| r.trim()))
-        .filter(|r| CLASSES.iter().any(|c| r.starts_with(&format!("{c}("))))
         .filter(|r| arguments(r).get(6).is_some_and(|a| a.trim() != "$"))
-        .count()
+        .collect();
+    let of = |classes: &[&str]| with_body.iter().filter(|r| classes.iter().any(|c| r.starts_with(&format!("{c}(")))).count();
+    (of(&CLASSES), of(&["IFCSPATIALZONE"]))
 }
 
 fn opened(app: &mut App, path: PathBuf) {
@@ -83,7 +86,7 @@ fn click_a_wall(app: &mut App) -> usize {
 fn the_section_building_s_file_opens_whole_and_chooses_with_the_plan() {
     let mut app = open(building());
     let path = exported(&mut app, "bina");
-    let expected = shaped(&path);
+    let (expected, zones) = shaped(&path);
     let _ = app.update(Message::Run("ifc.view"));
     opened(&mut app, path.clone());
     // Beside the plan, in a window of its own: nothing over the drawing.
@@ -91,6 +94,10 @@ fn the_section_building_s_file_opens_whole_and_chooses_with_the_plan() {
     let w = app.ifc_viewer.as_ref().expect("the viewer");
     let v = w.viewer.view().expect("the model read");
     assert_eq!(v.counts(), (expected, expected), "every body the file holds, as many as it holds");
+    // Its spatial zones read too, an area's volume, not a body: hidden until Zonlar (docs/adr/8123).
+    let zone_bodies = v.input().bodies.iter().filter(|b| v.input().objects[b.object].category == Category::Zone).count();
+    assert_eq!(zone_bodies, zones, "the file's zones");
+    assert!(zones > 0 && !v.zones, "zones hidden until asked for");
     assert!(v.input().not_shown.iter().all(|(o, _)| v.input().objects[*o].class == "IfcGrid"), "{:?}", v.input().not_shown);
     let storeys: Vec<&str> =
         w.viewer.rows().iter().filter(|r| r.object.is_some_and(|o| v.input().objects[o].category == Category::Storey)).map(|r| r.label.as_str()).collect();

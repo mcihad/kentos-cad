@@ -959,7 +959,8 @@ fn an_l_roof_turns_in_with_a_valley_through_the_section_and_the_ifc() {
 /// the 1. kat (eaves 50 cm out of the walls at +6.00, 33 %, 25 cm upright). The 1. kat's rooms have no slab over them:
 /// each rises to the roof's underside. Worked out here another way than the IFC's pieces: the roof's lower envelope less
 /// its build-up integrated over each room on a fine grid. Each such room's GrossVolume is that (10⁻⁵), its NetVolume the
-/// same, no Height (it is not constant), its body closed pieces of that volume; the ground floor's rooms stay prisms. `KENTOS_WRITE_IFC_UNDER_ROOF=1` writes fixtures/arch/v1/ifc/cati-alti-mahal.ifc for
+/// same, no Height (it is not constant), its body closed pieces of that volume; the ground floor's rooms stay prisms. The
+/// 1. kat's emsal zones follow the same underside (docs/adr/8123). `KENTOS_WRITE_IFC_UNDER_ROOF=1` writes fixtures/arch/v1/ifc/cati-alti-mahal.ifc for
 /// scripts/fixtures/curved_ifc_check.py's part.
 #[test]
 fn a_room_with_no_slab_over_it_rises_to_the_roof() {
@@ -1026,6 +1027,65 @@ fn a_room_with_no_slab_over_it_rises_to_the_roof() {
     }
     assert_eq!(roofed_rooms, 5, "the 1. kat's five rooms");
     assert_eq!(kentos_ifc::closed::open_bodies(&b), Vec::<(String, String)>::new());
+    // The 1. kat's emsal zones follow the same underside (docs/adr/8123): their volume is the envelope's over their
+    // ground, on the same grid (even-odd over their rings), not a box as tall as the tallest room; their pieces closed.
+    // The ground floor's zones, with the 1. kat's floor over them, stay prisms.
+    let inside = |rings: &[Vec<[f64; 2]>], x: f64, y: f64| {
+        let mut odd = false;
+        for r in rings {
+            for k in 0..r.len() {
+                let (a, c) = (r[k], r[(k + 1) % r.len()]);
+                if (a[1] > y) != (c[1] > y) && x < a[0] + (y - a[1]) / (c[1] - a[1]) * (c[0] - a[0]) {
+                    odd = !odd;
+                }
+            }
+        }
+        odd
+    };
+    let mut roofed_zones = 0;
+    for z in &b.zones {
+        let elevation = b.storeys[z.storey].elevation;
+        if elevation < 1.0 {
+            assert!(z.body.is_empty(), "{}: a prism", z.name);
+            continue;
+        }
+        roofed_zones += 1;
+        assert!(!z.body.is_empty(), "{}: cut by the roof", z.name);
+        let (mut lo, mut hi) = ([f64::MAX; 2], [f64::MIN; 2]);
+        for p in z.rings.iter().flatten() {
+            for k in 0..2 {
+                lo[k] = lo[k].min(p[k]);
+                hi[k] = hi[k].max(p[k]);
+            }
+        }
+        let n = 1200;
+        let (dx, dy) = ((hi[0] - lo[0]) / n as f64, (hi[1] - lo[1]) / n as f64);
+        let mut want = 0.0;
+        for i in 0..n {
+            for j in 0..n {
+                let (x, y) = (lo[0] + (i as f64 + 0.5) * dx, lo[1] + (j as f64 + 0.5) * dy);
+                if inside(&z.rings, x, y) {
+                    want += (under(x, y) - elevation) * dx * dy;
+                }
+            }
+        }
+        let v: f64 = z.body.iter().map(kentos_ifc::quantities::volume).sum();
+        // The grid's cells (about a centimetre) cross the ring's inner corners: half a percent.
+        assert!((v - want).abs() <= 5e-3 * want, "{}: {v}, the grid's {want}", z.name);
+        let box_volume = z.rings.iter().map(|r| {
+            let mut a = 0.0;
+            for k in 0..r.len() {
+                let (p, q) = (r[k], r[(k + 1) % r.len()]);
+                a += p[0] * q[1] - q[0] * p[1];
+            }
+            a / 2.0
+        }).sum::<f64>().abs() * z.top;
+        assert!(v < box_volume, "{}: {v} under the roof, the box would be {box_volume}", z.name);
+        for shape in &z.body {
+            assert_eq!(kentos_ifc::closed::faults(shape), Vec::<String>::new(), "{}", z.name);
+        }
+    }
+    assert!(roofed_zones >= 1, "the 1. kat's zones");
     if std::env::var_os("KENTOS_WRITE_IFC_UNDER_ROOF").is_some() {
         let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc/cati-alti-mahal.ifc");
         std::fs::write(out, kentos_ifc::building::write(&b)).expect("the file kept");

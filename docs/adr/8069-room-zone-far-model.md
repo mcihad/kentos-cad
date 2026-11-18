@@ -37,7 +37,8 @@ tarihli derlemesinden (alomaliye.com, `planli-alanlar-01-07-2026.pdf`, pdftotext
 5. Bir bölüme bağlanmamış ya da ortak alana ait balkon bu sınıra bakılmadan dışarıda sayılmaya devam eder (§4).
 6. **Emsal zonları** (EK-6 Tablo 6.60, `mevzuat/bim/ek-6-2-zorunlu-f-z.md`, PDF s. 102): her kat ve her sayılış biçimi
    için bir `IfcSpatialZone`; zemini o kattaki mahallerin konturlarının birleşimi (raporun 4/ğ-1 konturu), yüksekliği katın
-   mahallerinin en yükseği. Ad EK-5'e göre `MZN` kodlu, uzun adı "Zemin kat emsale dahil alan"; `PredefinedType`
+   mahallerinin en yükseği; mahalleri çatının alt yüzüne yükselen katta aynı yüzlerle kesilir
+   ([ADR 8123](8123-far-zone-under-the-roof.md)). Ad EK-5'e göre `MZN` kodlu, uzun adı "Zemin kat emsale dahil alan"; `PredefinedType`
    USERDEFINED, `ObjectType` EMSAL; `TREpys_EmsalOzellikSeti.EmsalDurumu` DAHIL ya da HARIC; dayanağı Description'da
    (4/1-şş ve 21; 22/1 ve 5/8; 5/8'in kendi mahalleri ayrı HARIC zonu). Zon katına
    `IfcRelReferencedInSpatialStructure` ile bağlanır (mekânsal yapının parçası değildir). DIGER (idarenin özel

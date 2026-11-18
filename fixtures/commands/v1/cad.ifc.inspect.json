@@ -308,7 +308,7 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/cati-alti-mahal.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2969,
+       "records": 2996,
        "objects": 95,
        "classes": {
         "IfcBeam": 8,

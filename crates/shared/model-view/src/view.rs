@@ -34,12 +34,14 @@ pub struct View {
     pub spaces: bool,
     /// Whether the openings show (see-through volumes where they cut their hosts).
     pub openings: bool,
+    /// Whether the spatial zones show (docs/adr/8123): an area's or a compartment's volume over its rooms'.
+    pub zones: bool,
     selected: Option<usize>,
     found: BTreeSet<usize>,
 }
 
 impl View {
-    /// A view of `input`, everything showing but the openings, the spaces too, nothing chosen.
+    /// A view of `input`, everything showing but the openings and the zones, the spaces too, nothing chosen.
     pub fn new(input: Input) -> View {
         let mut children = vec![Vec::new(); input.objects.len()];
         for (i, o) in input.objects.iter().enumerate() {
@@ -54,6 +56,7 @@ impl View {
             isolated: None,
             spaces: true,
             openings: false,
+            zones: false,
             selected: None,
             found: BTreeSet::new(),
         }
@@ -82,6 +85,7 @@ impl View {
         next.selected = selected;
         next.spaces = self.spaces;
         next.openings = self.openings;
+        next.zones = self.zones;
         next
     }
 
@@ -140,7 +144,10 @@ impl View {
     /// isolated, a space only while the spaces show and an opening only while the openings do.
     pub fn shows(&self, object: usize) -> bool {
         let Some(o) = self.input.objects.get(object) else { return false };
-        if (o.category == Category::Space && !self.spaces) || (o.category == Category::Opening && !self.openings) {
+        if (o.category == Category::Space && !self.spaces)
+            || (o.category == Category::Opening && !self.openings)
+            || (o.category == Category::Zone && !self.zones)
+        {
             return false;
         }
         if self.line(object).any(|i| self.hidden.contains(&i)) {
@@ -246,9 +253,11 @@ impl View {
     }
 
     /// The bodies that show, and all of them; the openings' volumes are not counted (they are the holes in the
-    /// bodies, not bodies of their own).
+    /// bodies, not bodies of their own), nor the zones' (an area's volume over its rooms', docs/adr/8123).
     pub fn counts(&self) -> (usize, usize) {
-        let bodies = || self.input.bodies.iter().filter(|b| self.input.objects[b.object].category != Category::Opening);
+        let bodies = || {
+            self.input.bodies.iter().filter(|b| !matches!(self.input.objects[b.object].category, Category::Opening | Category::Zone))
+        };
         (bodies().filter(|b| self.shows(b.object)).count(), bodies().count())
     }
 

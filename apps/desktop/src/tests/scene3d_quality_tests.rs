@@ -128,3 +128,108 @@ fn measured_roof(app: &mut App) {
     m.done.push(Measured::Distance { a, b: c });
     m.done.push(Measured::Angle { a, at: c, b: d });
 }
+
+/// A drawing's 3D bodies by size (a probe run by hand: `KENTOS_PROBE_KCAD=<file>`), with the IFC written beside it.
+#[test]
+#[ignore = "a probe of a drawing given by hand"]
+fn probe_bodies() {
+    let Ok(path) = std::env::var("KENTOS_PROBE_KCAD") else { return };
+    let snapshot = kentos_kcad::decode(&std::fs::read(&path).expect("the file")).expect("decodes");
+    let mut app = open(snapshot);
+    let doc = &app.document.as_ref().expect("the drawing").model;
+    let (building, _) = kentos_native_application::arch_ifc::building(doc, "", "KentOS Mimari");
+    let out = std::env::temp_dir().join("kentos-probe.ifc");
+    std::fs::write(&out, kentos_ifc::building::write(&building)).expect("writes");
+    println!("IFC: {}", out.display());
+    let _ = app.update(Message::Run("scene3d.view"));
+    let b = app.scene3d_window.as_ref().and_then(|w| w.building.as_ref()).expect("a building");
+    let v = b.viewer.view().expect("the model");
+    let input = v.input();
+    let mut rows: Vec<(f64, String)> = input
+        .bodies
+        .iter()
+        .map(|body| {
+            let (mut lo, mut hi) = ([f64::MAX; 3], [f64::MIN; 3]);
+            for p in body.positions.iter() {
+                for k in 0..3 {
+                    lo[k] = lo[k].min(p[k]);
+                    hi[k] = hi[k].max(p[k]);
+                }
+            }
+            let size = [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]];
+            let o = &input.objects[body.object];
+            let storey = o.storey.map_or(String::new(), |s| input.objects[s].label.clone());
+            (
+                size[0] * size[1] * size[2],
+                format!(
+                    "{:>10.2} m³  {:?} {} “{}” [{}] z {:.2}–{:.2}  {:.2} × {:.2} × {:.2}  {} üçgen",
+                    size[0] * size[1] * size[2],
+                    o.category,
+                    o.class,
+                    o.label,
+                    storey,
+                    lo[2],
+                    hi[2],
+                    size[0],
+                    size[1],
+                    size[2],
+                    body.triangles.len()
+                ),
+            )
+        })
+        .collect();
+    rows.sort_by(|a, b| b.0.total_cmp(&a.0));
+    for (_, r) in rows.iter().take(12) {
+        println!("{r}");
+    }
+    // The see-through volumes' flat faces: the sum of their triangles' areas against the face's own (shoelace of its
+    // outline, the outline from the edges only one triangle has): more means triangles over each other.
+    for body in &input.bodies {
+        let o = &input.objects[body.object];
+        if o.category != kentos_model_view::Category::Space {
+            continue;
+        }
+        let p = &body.positions;
+        let (mut top, mut zmax, mut zmin) = (0.0f64, f64::MIN, f64::MAX);
+        for v in p.iter() {
+            zmax = zmax.max(v[2]);
+            zmin = zmin.min(v[2]);
+        }
+        let mut bottom = 0.0f64;
+        for t in &body.triangles {
+            let [a, b, c] = t.map(|k| p[k as usize]);
+            let area = 0.5 * ((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])).abs();
+            if [a, b, c].iter().all(|v| (v[2] - zmax).abs() < 1e-6) {
+                top += area;
+            }
+            if [a, b, c].iter().all(|v| (v[2] - zmin).abs() < 1e-6) {
+                bottom += area;
+            }
+        }
+        println!("{} “{}”: alt yüz üçgenleri {bottom:.3} m², üst yüz üçgenleri {top:.3} m², {} üçgen", o.class, o.label, body.triangles.len());
+    }
+    // Pictures: the north-east view, a level cut at 2 m and at 3.6 m.
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    use kentos_model_view_ui::Message as V;
+    let out = std::path::PathBuf::from(std::env::var("KENTOS_PROBE_OUT").unwrap_or_else(|_| std::env::temp_dir().display().to_string()));
+    let size = Size::new(1440.0, 900.0);
+    let _ = app.update(Message::WindowResized(size));
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    let mut snapshot = Snapshot::new(size).expect("a renderer");
+    let mut shot = |app: &mut App, name: &str| {
+        snapshot.settle(app, App::scene3d_shown, &mut update);
+        snapshot.settle(app, App::scene3d_shown, &mut update);
+        let file = out.join(format!("{name}.png"));
+        snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    };
+    shot(&mut app, "probe-kuzeydogu");
+    for (at, name) in [(2.0, "probe-kesit-2m"), (3.6, "probe-kesit-3-6m")] {
+        let _ = app.update(Message::Scene3d(crate::scene3d_window::Event::Viewer(V::Cut(kentos_model_view::Cut::Level))));
+        let _ = app.update(Message::Scene3d(crate::scene3d_window::Event::Viewer(V::At(at))));
+        shot(&mut app, name);
+    }
+}

@@ -207,6 +207,9 @@
       (kılavuz §23.3). Bölmeler `Message::Pane(Side)` ile kenar şeridine katlanır.
     - Hep ayrı pencere ([ADR 8122](../adr/8122-3d-windows-always-apart.md), 18 Kasım 2026): `OwnWindow::always_apart`;
       3B görünüm ve IFC modeli çizimin üstüne alınmaz, saklı seçim izlenmez; işlemler aracı eskisi gibi.
+    - Zon çatının altında ([ADR 8123](../adr/8123-far-zone-under-the-roof.md), 18 Kasım 2026): mahalleri çatıya
+      yükselen katın emsal zonu `under_roof::pieces` ile kesilir (`Zone::body`); görüntüleyicide `Category::Zone`,
+      kendiliğinden gizli (`View::zones`, “Zonlar”), gövde sayılmaz.
     - Araştırma: [not](../research/2026-11-15-ifc-goruntuleyici.md). Ölçümler:
       [docs/perf/ifc-okuma-denemesi-2026-11-16.md](../perf/ifc-okuma-denemesi-2026-11-16.md).
   - **EK-9 yazılmış dosyadan (16 Kasım 2026; [ADR 8074](../adr/8074-ek9-from-the-written-file.md), IFC-08, sıra B13; ilk

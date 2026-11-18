@@ -75,6 +75,8 @@ pub enum Message {
     ShowAll,
     Spaces,
     Openings,
+    /// The spatial zones on or off (docs/adr/8123).
+    Zones,
     SeeThrough,
     Cut(Cut),
     /// A section box about the chosen object.
@@ -377,9 +379,13 @@ impl Viewer {
                 self.view.as_mut()?.show_all();
                 self.changed();
             }
-            Message::Spaces | Message::Openings => {
+            Message::Spaces | Message::Openings | Message::Zones => {
                 let v = self.view.as_mut()?;
-                if matches!(message, Message::Spaces) { v.spaces = !v.spaces } else { v.openings = !v.openings }
+                match message {
+                    Message::Spaces => v.spaces = !v.spaces,
+                    Message::Openings => v.openings = !v.openings,
+                    _ => v.zones = !v.zones,
+                }
                 self.changed();
             }
             Message::SeeThrough => self.see_through = !self.see_through,

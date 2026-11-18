@@ -705,6 +705,8 @@ Bir IFC dosyasının görüntüleyicisi ([ADR 8073](docs/adr/8073-ifc-viewer-fir
   üçüncüsü sönük), altında arama (“Ad, sınıf ya da GlobalId ara”, × temizler), altında kitin ağacı, sanal satırlarla.
   Satırın sağında öğe sayısı ve göz; sayısı olmayan satırda da sayı sütunu durur ki gözler tek sütunda kalsın. Gizli satır
   sönük, seçili satır vurgu zemininde. Katın içermeden başvurduğu zon (emsal zonu) katın altında durur, katla gizlenir.
+  Zonların hacmi kendiliğinden gizlidir; şeritteki “Zonlar” (modelde zon varken) gösterir
+  ([ADR 8123](docs/adr/8123-far-zone-under-the-roof.md)).
   Açılışta proje, saha ve bina açık, katlar kapalı. Modelde tıklanan nesnenin dalları
   açılır. Arama doluyken ağacın yerinde bulunanlar durur: her sözcük adda, sınıfta ya da GlobalId'de (büyük küçük harf ve
   noktalı noktasız i ayrılmaz: “iç” “İç_duvar”ı bulur); satırda adı ve sönük katı (katı yoksa sınıfı); basılan seçilir;

@@ -1,7 +1,7 @@
 //! A file read as the model viewer's input (feature `view`; docs/adr/8061 §3.2, docs/adr/8073 §2): the IFC code that
 //! turns the reading face's objects and the engine's bodies into the viewer core's plain input, so the core knows no
 //! IFC name. Each object's category comes from its class by the file's own schema's inheritance (an `IfcWallStandardCase`
-//! is a wall; a spatial zone a see-through volume like a space); its tree parent is what it is a part of, else the
+//! is a wall; a spatial zone its own see-through volume, docs/adr/8123); its tree parent is what it is a part of, else the
 //! structure that contains it, an opening's the body it cuts, a zone's the structure that references it; its storey the
 //! nearest storey above it; its label its name (a storey's and a space's long name beside it), else its class.
 
@@ -16,7 +16,7 @@ use super::{Model, header};
 const CATEGORIES: [(&str, Category); 26] = [
     ("IfcProject", Category::Project),
     ("IfcFeatureElementSubtraction", Category::Opening),
-    ("IfcSpatialZone", Category::Space),
+    ("IfcSpatialZone", Category::Zone),
     ("IfcSite", Category::Site),
     ("IfcBuilding", Category::Building),
     ("IfcFacility", Category::Building),

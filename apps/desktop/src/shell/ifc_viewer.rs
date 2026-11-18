@@ -399,6 +399,7 @@ pub(crate) fn viewer_control(
         Control::Press("Hepsini göster") => V::ShowAll,
         Control::Press("Mahaller") => V::Spaces,
         Control::Press("Açıklıklar") => V::Openings,
+        Control::Press("Zonlar") => V::Zones,
         Control::Press("Saydam") => V::SeeThrough,
         Control::Press("Kuzeye bak") => V::North,
         Control::Press("Lejant") => V::Legend,

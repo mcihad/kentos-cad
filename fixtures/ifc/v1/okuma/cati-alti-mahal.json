@@ -1072,7 +1072,7 @@
    ],
    "volume": 1.678446034676484
   },
-  "01eUrYNcvrJOawSR0mBcnj": {
+  "01eUtdy3HnFxcl2I8JiDLL": {
    "area": 313.7785506562385,
    "box": [
     [
@@ -1121,7 +1121,7 @@
    "volume": 214.20750000000004
   },
   "186KbboPo8JwcEjcsdPcdo": {
-   "area": 150.724625,
+   "area": 157.0481390523454,
    "box": [
     [
      4.575,
@@ -1134,10 +1134,10 @@
      7.44125
     ]
    ],
-   "volume": 108.85503749999998
+   "volume": 91.4651925
   },
   "2SCjl18iU4R8Q7xqwUZ8F9": {
-   "area": 443.0335000000001,
+   "area": 552.2470239469483,
    "box": [
     [
      0.2,
@@ -1147,10 +1147,10 @@
     [
      11.8,
      8.8,
-     7.44125
+     7.4165
     ]
    ],
-   "volume": 317.11635312499993
+   "volume": 248.98051750000008
   }
  },
  "header": {
@@ -2114,7 +2114,7 @@
    "tag": "0192f5a1-4242-7000-8000-000000000044",
    "type": null
   },
-  "01eUrYNcvrJOawSR0mBcnj": {
+  "01eUtdy3HnFxcl2I8JiDLL": {
    "class": "IfcRoof",
    "container": "10W_smdZA4W8WQhK9YjuVJ",
    "description": null,
@@ -2125,7 +2125,7 @@
    "parent": null,
    "predefined": "NOTDEFINED",
    "step": 2014,
-   "tag": "01a1ed62-5e6e-754d-893a-71b0302e6c6d",
+   "tag": "01a1ede7-f034-713f-b9af-092213b0d555",
    "type": null
   },
   "09s89f7Oc2G9CbwqJ4sRVQ": {
@@ -2194,7 +2194,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 2966,
+   "step": 2993,
    "tag": null,
    "type": null
   },
@@ -2250,7 +2250,7 @@
    "objectType": "EMSAL",
    "parent": null,
    "predefined": "USERDEFINED",
-   "step": 2909,
+   "step": 2936,
    "tag": null,
    "type": null
   },
@@ -2348,7 +2348,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "STANDARD",
-   "step": 2963,
+   "step": 2990,
    "tag": null,
    "type": null
   },
@@ -2376,7 +2376,7 @@
    "objectType": "EMSAL",
    "parent": null,
    "predefined": "USERDEFINED",
-   "step": 2891,
+   "step": 2911,
    "tag": null,
    "type": null
   },
@@ -2390,7 +2390,7 @@
    "objectType": null,
    "parent": null,
    "predefined": "RECTANGULAR",
-   "step": 2941,
+   "step": 2968,
    "tag": null,
    "type": null
   },
@@ -2495,7 +2495,7 @@
  },
  "precision": 1e-05,
  "reader": "IfcOpenShell 0.9.0.post1",
- "records": 2969,
+ "records": 2996,
  "schema": "IFC4X3_ADD2",
  "sets": {
   "01alMXGa9m08000000000$": {
@@ -2567,7 +2567,7 @@
     "NetVolume": 1.5
    }
   },
-  "01eUrYNcvrJOawSR0mBcnj": {
+  "01eUtdy3HnFxcl2I8JiDLL": {
    "Pset_RoofCommon": {
     "IsExternal": true
    }

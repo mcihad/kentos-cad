@@ -381,6 +381,51 @@ def check_under_roof(path: Path) -> int:
             bad.append(f"{space.Name}: IfcOpenShell's volume {vol}, its GrossVolume {q.get('GrossVolume')}")
     if rooms != 5:
         bad.append(f"{rooms} rooms on the 1. kat, not 5")
+    # The 1. kat's emsal zones (docs/adr/8123): cut by the same underside, not a box as tall as the tallest room.
+    # IfcOpenShell's surface of each closed, no point of it over the underside, its volume the underside over its ground
+    # (the faces IfcOpenShell meshes at its floor) on the grid.
+    storey_of = {}
+    for rel in f.by_type("IfcRelReferencedInSpatialStructure"):
+        for e in rel.RelatedElements:
+            storey_of[e.id()] = rel.RelatingStructure
+    zones = 0
+    for zone in f.by_type("IfcSpatialZone"):
+        storey = storey_of.get(zone.id())
+        if storey is None or round(storey.Elevation, 6) != 3.0:
+            continue
+        zones += 1
+        pts, place, tris = surface(f, zone)
+        closed, vol = closed_volume(place, tris)
+        if not closed:
+            bad.append(f"{zone.Name}: IfcOpenShell's surface of it is not closed")
+        over = [p for p in place.values() if p[2] > under(p[0], p[1]) + 1e-6]
+        if over:
+            bad.append(f"{zone.Name}: {len(over)} points over the roof's underside, the highest {max(p[2] for p in over)}")
+        floor = min(p[2] for p in place.values())
+        ground = [tuple(place[k] for k in t) for t in tris if all(abs(place[k][2] - floor) < 1e-9 for k in t)]
+
+        def inside(x, y):
+            for a, b, c in ground:
+                d = (b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1])
+                if d == 0:
+                    continue
+                u = ((b[1] - c[1]) * (x - c[0]) + (c[0] - b[0]) * (y - c[1])) / d
+                v = ((c[1] - a[1]) * (x - c[0]) + (a[0] - c[0]) * (y - c[1])) / d
+                if u >= 0 and v >= 0 and u + v <= 1:
+                    return True
+            return False
+
+        xs, ys = [p[0] for p in place.values()], [p[1] for p in place.values()]
+        n = 300
+        dx, dy = (max(xs) - min(xs)) / n, (max(ys) - min(ys)) / n
+        want = sum((under(x, y) - floor) * dx * dy
+                   for i in range(n) for j in range(n)
+                   for x, y in [(min(xs) + (i + 0.5) * dx, min(ys) + (j + 0.5) * dy)] if inside(x, y))
+        # The grid's cells (a few centimetres) cross the ground's inner corners: a percent.
+        if not near(vol, want, 1e-2):
+            bad.append(f"{zone.Name}: IfcOpenShell's volume {vol}, the grid's {want}")
+    if zones < 1:
+        bad.append("no emsal zone on the 1. kat")
     bad += chain_faults(f)
     if bad:
         for b in bad:
@@ -388,7 +433,7 @@ def check_under_roof(path: Path) -> int:
         return 1
     shown = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path.name
     print(f"✓ {shown}: IFC4X3_ADD2, 0 validator findings; the 1. kat's 5 rooms up to the roof, their volumes the grid's "
-          "and IfcOpenShell's, no Height.")
+          f"and IfcOpenShell's, no Height; its {zones} emsal zone(s) under the roof too, closed, their volumes the grid's.")
     return 0
 
 

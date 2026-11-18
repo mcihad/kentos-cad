@@ -182,6 +182,16 @@ impl Viewer {
             v.is_some_and(|v| v.openings),
             Message::Openings,
         ));
+        // Only when the model has zones (an emsal area, a compartment's shape): off until asked (docs/adr/8123).
+        if v.is_some_and(|v| v.input().objects.iter().any(|o| o.category == kentos_model_view::Category::Zone)) {
+            out.push(strip::toggle(
+                Some(Icon::Layout),
+                "Zonlar",
+                "Zonlar: emsal alanları ve kompartımanlar gibi mekânsal zonların saydam hacimlerini gösterir. Zon bir alanın hacmidir, mahallerinin üstüne biner.",
+                v.is_some_and(|v| v.zones),
+                Message::Zones,
+            ));
+        }
         out.push(strip::toggle(
             Some(Icon::Contrast),
             "Saydam",

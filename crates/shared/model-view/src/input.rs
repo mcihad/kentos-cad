@@ -11,6 +11,9 @@ pub enum Category {
     Building,
     Storey,
     Space,
+    /// A spatial zone (an emsal area, a fire compartment's shape; docs/adr/8123): a see-through volume like a space's,
+    /// hidden until asked for.
+    Zone,
     Wall,
     Slab,
     Column,
@@ -32,9 +35,9 @@ impl Category {
         matches!(self, Category::Project | Category::Site | Category::Building | Category::Storey)
     }
 
-    /// Whether it is a see-through volume a click goes through (a space, an opening).
+    /// Whether it is a see-through volume a click goes through (a space, a zone, an opening).
     pub fn is_volume(self) -> bool {
-        matches!(self, Category::Space | Category::Opening)
+        matches!(self, Category::Space | Category::Zone | Category::Opening)
     }
 }
 

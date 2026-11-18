@@ -485,6 +485,20 @@ pub struct Zone {
     pub bottom: f64,
     pub top: f64,
     pub psets: Vec<Pset>,
+    /// Its body under a roof (docs/adr/8123), as its rooms' (docs/adr/8071 §11): its pieces up to the roof's underside;
+    /// empty: its prism from its bottom to its top.
+    pub body: Vec<Shape>,
+}
+
+impl Zone {
+    /// Its body as written: its pieces under a roof, else its prism.
+    pub fn shapes(&self) -> Vec<Shape> {
+        if self.body.is_empty() {
+            vec![Shape::Prism { rings: self.rings.clone(), bulges: Vec::new(), bottom: self.bottom, top: self.top }]
+        } else {
+            self.body.clone()
+        }
+    }
 }
 
 /// A group of spaces (`IfcZone`): its words and its spaces, by index into [`Building::spaces`].
@@ -1150,14 +1164,7 @@ pub fn write(b: &Building) -> String {
             continue;
         };
         let place = w.placement(Some(parent), 0.0);
-        let shape = w
-            .body(&[Shape::Prism {
-                rings: z.rings.clone(),
-                bulges: Vec::new(),
-                bottom: z.bottom,
-                top: z.top,
-            }])
-            .map_or("$".into(), |x| format!("#{x}"));
+        let shape = w.body(&z.shapes()).map_or("$".into(), |x| format!("#{x}"));
         let g = w.id(z.id);
         let n = w.st.add(format!(
             "IFCSPATIALZONE({g},$,{},{},{},#{place},{shape},{},.{}.)",
@@ -1442,6 +1449,7 @@ mod tests {
                     name: "TREpys_EmsalOzellikSeti".into(),
                     props: vec![("EmsalDurumu".into(), Value::Label("DAHIL".into()))],
                 }],
+                body: Vec::new(),
             }],
             groups: vec![Group {
                 id: None,

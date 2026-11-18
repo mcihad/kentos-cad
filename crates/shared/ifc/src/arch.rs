@@ -1624,6 +1624,9 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     }
     // The spaces (EK-6 Tablo 6.58): their numbers and names, their finishes as the room list's.
     let mut spaces = Vec::new();
+    // Each storey's roof faces its rooms rise to (docs/adr/8071 §11), about the storey: the emsal zones of that storey
+    // follow them too (docs/adr/8123).
+    let mut storey_roofs: BTreeMap<usize, Vec<crate::under_roof::UnderFace>> = BTreeMap::new();
     let mut net_floor: Vec<Option<f64>> = vec![None; storeys.len()];
     let mut votes: Vec<Vec<Vote>> = (0..storeys.len()).map(|_| Vec::new()).collect();
     for (bits, uid, e) in &entities {
@@ -1663,7 +1666,11 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         let under = found.filter(|r| !r.known && !r.roof.is_empty()).and_then(|r| {
             let faces: Vec<crate::under_roof::UnderFace> =
                 r.roof.iter().map(|(ring, (c, dx, dy))| (ring.clone(), (c - elevation, *dx, *dy))).collect();
-            crate::under_roof::pieces(&rings, &bulges, &faces)
+            let p = crate::under_roof::pieces(&rings, &bulges, &faces);
+            if p.is_some() {
+                storey_roofs.entry(storey).or_insert(faces);
+            }
+            p
         });
         let blank = |v: &Option<String>| v.as_deref().is_none_or(|t| t.trim().is_empty());
         if blank(&f.number) || blank(&f.name) {
@@ -2041,7 +2048,9 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             }
         }
     }
-    // The emsal zones (docs/adr/8069): each storey's rooms by how they count, between its floor and its rooms' tops.
+    // The emsal zones (docs/adr/8069): each storey's rooms by how they count, between its floor and its rooms' tops; on a
+    // storey whose rooms rise to a roof's underside, cut by the same faces (docs/adr/8123): its tallest room's top would
+    // stand out of the roof's slopes as a box.
     let mut zone_keys: Vec<String> = Vec::new();
     let zones: Vec<Zone> = emsal
         .iter()
@@ -2061,6 +2070,11 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 .filter(|s| s.storey == storey)
                 .map(|s| s.top)
                 .fold(levels.get(storey).and_then(|l| l.3).unwrap_or(0.0), f64::max);
+            let under = storey_roofs.get(&storey).and_then(|faces| crate::under_roof::pieces(&a.rings, &[], faces));
+            let (top, body) = match &under {
+                Some(p) => (crate::under_roof::top(p), crate::under_roof::shapes(p, 0.0)),
+                None => (top, Vec::new()),
+            };
             Zone {
                 id: Some(crate::step::derived_id("emsal", &key)),
                 name: name("MZN", &format!("Emsal {state} {storey_name}")),
@@ -2076,6 +2090,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                     name: "TREpys_EmsalOzellikSeti".into(),
                     props: vec![("EmsalDurumu".into(), Value::Label(state.into()))],
                 }],
+                body,
             }
         })
         .collect();
