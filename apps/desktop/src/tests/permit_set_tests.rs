@@ -357,3 +357,32 @@ fn every_particular_has_its_field_in_the_window() {
         assert_eq!(n, 1, "{name} ({label})");
     }
 }
+
+/// The künye's Taşıyıcı sistem from the declaration (docs/adr/8146): the project declares reinforced concrete; a drawing
+/// that never had a Taşıyıcı sistem does not miss it, Ruhsat takımı opens with “Betonarme” in it, and the set writes it.
+#[test]
+fn the_kunye_s_structural_system_is_the_declaration_s() {
+    use crate::exchange::Window;
+    use crate::exchange::permit_set::Event as Permit;
+    let mut app = building();
+    let mut arch = app.document.as_ref().expect("a drawing").model.settings().arch.clone().expect("Mimari");
+    arch.structure = Some(kentos_commands::BuildingStructure {
+        system: kentos_commands::StructuralSystem::ReinforcedConcrete,
+        traditional: false,
+    });
+    run(&mut app, "cad.settings.set", json!({ "arch": arch }));
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let missing: Vec<&str> =
+        kentos_native_application::permit_set::missing_particulars(doc).iter().map(|(n, _)| *n).collect();
+    assert!(!missing.contains(&"tasiyici_sistem"), "{missing:?}");
+    let _ = app.update(Message::Run("arch.permitSet"));
+    let value = match &app.exchange {
+        Some(Window::PermitSet(s)) => s.fields.iter().find(|f| f.name == "tasiyici_sistem").expect("the field").value.clone(),
+        _ => panic!("Ruhsat takımı is open"),
+    };
+    assert_eq!(value, "Betonarme");
+    let _ = app.permit_set_event(Permit::Make);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let written = doc.settings().variables.iter().find(|v| v.name == "tasiyici_sistem").map(|v| v.value.clone());
+    assert_eq!(written, Some(kentos_commands::VariableValue::Text("Betonarme".into())));
+}

@@ -211,6 +211,42 @@ pub struct ListSheet {
     pub scaled: bool,
 }
 
+/// The structural system the künye says when the drawing has no Taşıyıcı sistem of its own (docs/adr/8146): the
+/// project's declaration (docs/adr/8094), else the one every program building that declares one shares (docs/adr/8145);
+/// "Kesme taş yığma (geleneksel mimari öğeli)" for a traditional one. None: nothing declared, or buildings that differ.
+pub fn structure_words(doc: &Document) -> Option<String> {
+    let arch = doc.settings().arch.as_ref()?;
+    let words = |s: &kentos_commands::BuildingStructure| {
+        if s.traditional_cut_stone() {
+            format!("{} (geleneksel mimari öğeli)", s.system.label())
+        } else {
+            s.system.label().to_owned()
+        }
+    };
+    if let Some(s) = &arch.structure {
+        return Some(words(s));
+    }
+    let mut own = arch.program.buildings.iter().filter_map(|b| b.structure.as_ref()).map(words);
+    let first = own.next()?;
+    own.all(|w| w == first).then_some(first)
+}
+
+/// [`with_particulars`] of `doc`'s variables, the work's name its name; a Taşıyıcı sistem the drawing never had, its
+/// declaration's words ([`structure_words`], docs/adr/8146) unless `values` gives one.
+pub fn with_particulars_of(doc: &Document, values: &[(String, String)]) -> Vec<ProjectVariable> {
+    let fold = |s: &str| kentos_sheet::expr::fold(s);
+    let had = doc.settings().variables.iter().any(|v| fold(&v.name) == fold("tasiyici_sistem"));
+    let mut out = with_particulars(&doc.settings().variables, doc.name(), values);
+    if !had
+        && let Some(words) = structure_words(doc)
+        && let Some(v) = out.iter_mut().find(|v| fold(&v.name) == fold("tasiyici_sistem"))
+        && matches!(v.value, VariableValue::Null)
+    {
+        v.value = VariableValue::Text(words);
+    }
+    out
+}
+
 /// `variables` with the particulars it lacks added (their defaults; the work's name the drawing's) and `values`
 /// written over them. The dated scope decision's particulars (`kentos_digital_project::scope`, docs/adr/8063) are
 /// added only when given: a drawing that never asked keeps its list.
@@ -282,6 +318,10 @@ pub fn missing_particulars(doc: &Document) -> Vec<(&'static str, &'static str)> 
                 .iter()
                 .any(|v| fold(&v.name) == fold(name) && !matches!(v.value, VariableValue::Null))
                 && !(*name == "proje_adi" && !doc.name().trim().is_empty())
+                // A Taşıyıcı sistem the drawing never had is its declaration's (docs/adr/8146).
+                && !(*name == "tasiyici_sistem"
+                    && !vars.iter().any(|v| fold(&v.name) == fold(name))
+                    && structure_words(doc).is_some())
         })
         .map(|(n, l, _)| (*n, *l))
         .collect()
@@ -754,7 +794,7 @@ pub fn execute(
     input: &PermitSet,
 ) -> Result<(SheetsEdited, Vec<permit::Made>, Vec<String>), String> {
     let mut settings = cx.doc.settings().clone();
-    settings.variables = with_particulars(&settings.variables, cx.doc.name(), &input.values);
+    settings.variables = with_particulars_of(cx.doc, &input.values);
     cx.doc.set_settings(settings);
     let planned = pages(
         cx.doc,
@@ -859,6 +899,51 @@ mod tests {
         assert_eq!(get("mimar"), Some(VariableValue::Null), "must be given");
         assert!(matches!(get("notlar"), Some(VariableValue::Text(_))));
         assert_eq!(out.len(), permit::PARTICULARS.len() + 1);
+    }
+
+    /// The künye's Taşıyıcı sistem from the declaration (docs/adr/8146): the project's, else the one every declaring
+    /// building shares; written only when the drawing never had one, and not missing then.
+    #[test]
+    fn the_kunye_s_structure_is_the_declaration_s() {
+        use kentos_commands::{BuildingStructure, ProgramBuilding, StructuralSystem};
+        let raw: serde_json::Value =
+            serde_json::from_str(include_str!("../../../../../fixtures/kcad/v2/dynamic-blocks.json")).unwrap();
+        let mut doc = Document::from_snapshot_v2(serde_json::from_value(raw).unwrap()).unwrap();
+        assert_eq!(structure_words(&doc), None);
+        let mut settings = doc.settings().clone();
+        let arch = settings.arch.get_or_insert_with(Default::default);
+        let building = |id: &str, system, traditional| ProgramBuilding {
+            id: id.into(),
+            name: id.to_uppercase(),
+            structure: Some(BuildingStructure { system, traditional }),
+            ..Default::default()
+        };
+        arch.program.buildings = vec![
+            building("a", StructuralSystem::CutStoneMasonry, true),
+            building("b", StructuralSystem::CutStoneMasonry, true),
+        ];
+        doc.set_settings(settings.clone());
+        assert_eq!(structure_words(&doc).as_deref(), Some("Kesme taş yığma (geleneksel mimari öğeli)"));
+        // Buildings that differ say none; the project's own declaration says it.
+        let arch = settings.arch.as_mut().unwrap();
+        arch.program.buildings[1] = building("b", StructuralSystem::Steel, false);
+        doc.set_settings(settings.clone());
+        assert_eq!(structure_words(&doc), None);
+        assert!(missing_particulars(&doc).iter().any(|(n, _)| *n == "tasiyici_sistem"));
+        settings.arch.as_mut().unwrap().structure =
+            Some(BuildingStructure { system: StructuralSystem::ReinforcedConcrete, traditional: false });
+        doc.set_settings(settings.clone());
+        assert!(!missing_particulars(&doc).iter().any(|(n, _)| *n == "tasiyici_sistem"));
+        let get = |out: &[ProjectVariable]| {
+            out.iter().find(|v| v.name == "tasiyici_sistem").map(|v| v.value.clone())
+        };
+        assert_eq!(get(&with_particulars_of(&doc, &[])), Some(VariableValue::Text("Betonarme".into())));
+        // Typed in the window, the typed words; a drawing that has its own keeps it.
+        let typed = [("tasiyici_sistem".to_owned(), "Betonarme karkas".to_owned())];
+        assert_eq!(get(&with_particulars_of(&doc, &typed)), Some(VariableValue::Text("Betonarme karkas".into())));
+        settings.variables = with_particulars_of(&doc, &typed);
+        doc.set_settings(settings.clone());
+        assert_eq!(get(&with_particulars_of(&doc, &[])), Some(VariableValue::Text("Betonarme karkas".into())));
     }
 
     /// The scope decision's particulars (docs/adr/8063) join the variables only when given; a given one is written,

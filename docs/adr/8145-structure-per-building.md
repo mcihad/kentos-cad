@@ -75,4 +75,5 @@ sayılıyordu.
 ## §6. Kalanlar
 
 - Kalın taş duvarların bina bina toplamı (olgularda binaya göre): birden çok geleneksel bina uzman incelemesinden çıkar.
-- Künye: ruhsat takımının `tasiyici_sistem` metni boşsa binanın beyanıyla dolabilir (8094 §6).
+- Künye: ruhsat takımının `tasiyici_sistem` metni boşsa binanın beyanıyla dolabilir (8094 §6) — yapıldı: ADR
+  [8146](8146-kunye-structural-system.md).

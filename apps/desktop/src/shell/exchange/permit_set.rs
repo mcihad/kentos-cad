@@ -139,6 +139,10 @@ impl App {
                         });
                 let value = have.unwrap_or_else(|| match *name {
                     "proje_adi" => doc.model.name().to_owned(),
+                    // The declared structural system (docs/adr/8146): the user may write otherwise.
+                    "tasiyici_sistem" => {
+                        kentos_native_application::permit_set::structure_words(&doc.model).unwrap_or_default()
+                    }
                     _ => default.unwrap_or_default().to_owned(),
                 });
                 Field {
@@ -239,11 +243,8 @@ impl App {
                 let group = doc.model.begin_group("Ruhsat takımı");
                 // The künye first: the model control form's answers read it (EK-9, docs/adr/8047 §10).
                 let mut settings = doc.model.settings().clone();
-                settings.variables = kentos_native_application::permit_set::with_particulars(
-                    &settings.variables,
-                    doc.model.name(),
-                    &input.values,
-                );
+                settings.variables =
+                    kentos_native_application::permit_set::with_particulars_of(&doc.model, &input.values);
                 doc.model.set_settings(settings);
                 let tables = kentos_interaction::calc_tables::ensure(&mut doc.model, &crate::ifc_facts::form_rows);
                 if let Ok(t) = &tables {
