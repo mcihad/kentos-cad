@@ -78,3 +78,37 @@ fn the_rail_tool_writes_a_rail_at_its_base() {
     assert_eq!(b.last_text(), Some("Kayıt çizildi: 5/10."));
     assert_eq!(b.session.tool_id(), "rail");
 }
+
+/// Kayıt's Yükselme (docs/adr/8130): 1.5 typed, two clicks 4 m apart and Enter write a sloped member whose end is 1.50 m
+/// over its start; three points with a rise are refused with the rule's words and nothing is written; 0 draws a level one
+/// again.
+#[test]
+fn the_rail_tool_writes_a_sloped_member_on_two_points() {
+    let mut b = bench("rail");
+    let chips: Vec<String> = b.session.prompt().options.iter().map(|o| o.label.to_string()).collect();
+    assert!(chips.iter().any(|c| c == "Yükselme"), "{chips:?}");
+    assert!(b.run(|s, cx| s.configure("U", "1.5", cx)));
+    b.click(0.0, 0.0);
+    b.click(4.0, 0.0);
+    b.confirm();
+    let Entity::Beam(k) = b.newest().clone() else {
+        panic!("a beam")
+    };
+    assert_eq!((k.beam.rise, k.beam.pts.len()), (Some(1.5), 2));
+    let count = |b: &Bench| b.doc.entities().filter(|e| matches!(e, Entity::Beam(_))).count();
+    let before = count(&b);
+    b.click(0.0, 2.0);
+    b.click(4.0, 2.0);
+    b.click(4.0, 5.0);
+    b.confirm();
+    assert_eq!(count(&b), before, "a bent sloped member is not written");
+    assert!(b.last_text().is_some_and(|t| t.contains("iki noktası olur")), "{:?}", b.last_text());
+    assert!(b.run(|s, cx| s.configure("U", "0", cx)));
+    b.click(0.0, 8.0);
+    b.click(4.0, 8.0);
+    b.confirm();
+    let Entity::Beam(k) = b.newest().clone() else {
+        panic!("a beam")
+    };
+    assert_eq!(k.beam.rise, None);
+}

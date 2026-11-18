@@ -1510,6 +1510,9 @@ def beam_fields(n):
     for k in ("tag", "material", "member"):
         if n.get(k) is not None:
             f[k] = n[k]
+    # A sloped member's rise (ADR 8130); 0 is level, not kept.
+    if n.get("rise") is not None and n["rise"] != 0.0:
+        f["rise"] = n["rise"]
     if n.get("arch"):
         f["arch"] = n["arch"]
     return f
@@ -1542,6 +1545,17 @@ def beam_problem(f, path):
             return r
         if f.get("role", "beam") != "beam":
             return refusal("invalid_beam", "Lento ve hatıl eleman (kayıt) olamaz; türü Kiriş olmalı.", f"{path}.member")
+    # A sloped member (ADR 8130): a member's alone, on a straight axis; never 0, at most ±10 m.
+    r = f.get("rise")
+    if r is not None:
+        if not (math.isfinite(r) and r != 0.0 and abs(r) <= 10.0):
+            return refusal("invalid_beam", f"Elemanın yükselmesi {num(r)}; sıfırdan farklı, en çok ±10 m olmalı (düz eleman "
+                                           "yükselmesizdir).", f"{path}.rise")
+        if f.get("member") is None:
+            return refusal("invalid_beam", "Yalnız eleman eğimli olur (kayıt, mertek, payanda); çerçevenin kirişi, lento ve hatıl "
+                                           "düzdür. Önce türünü Kayıt yapın.", f"{path}.rise")
+        if len(pts) != 2:
+            return refusal("invalid_beam", f"Eğimli eleman düz bir eksendir: iki noktası olur; {len(pts)} noktası var.", f"{path}.rise")
     for k in ("tag", "material"):
         v = f.get(k)
         if v is not None and (not v.strip() or v.strip() != v or any(ord(ch) < 32 or 127 <= ord(ch) < 160 for ch in v) or len(v) > 120):
@@ -1557,7 +1571,7 @@ def beams_create(d, inp, conflict=False):
         at = f"beams[{i}]"
         r = points_not_finite(n["pts"], at) or finite_each(
             [(n["width"], "width", "Genişlik"), (n["height"], "height", "Yükseklik"), (n.get("offset"), "offset", "Kot farkı"),
-             (n.get("baseOffset"), "baseOffset", "Kattan yükseklik")], at)
+             (n.get("baseOffset"), "baseOffset", "Kattan yükseklik"), (n.get("rise"), "rise", "Yükselme")], at)
         if r:
             return r, None
         f = beam_fields(n)
@@ -2636,6 +2650,11 @@ def beam_cases():
                                                                     member={"predefined": "USERDEFINED", "name": "Kayıt"})),
         ("aşık: PURLIN tipiyle", beam(width=0.08, height=0.16, member={"predefined": "PURLIN"})),
         ("asılı kayıt, kot farkıyla", beam(width=0.05, height=0.1, offset=-0.2, member={"predefined": "USERDEFINED", "name": "Cephe kaydı"})),
+        # Eğimli eleman (ADR 8130): a member's rise along its straight axis; 0 is level.
+        ("eğimli mertek: 5 m boyunca 3 m yükselir", beam(width=0.05, height=0.1, baseOffset=2.5, material="Ahşap",
+                                                      member={"predefined": "RAFTER"}, rise=3.0)),
+        ("aşağı inen payanda", beam(width=0.08, height=0.08, baseOffset=2.0, member={"predefined": "BRACE"}, rise=-1.5)),
+        ("sıfır yükselme düz yazılır", beam(width=0.05, height=0.1, member={"predefined": "PURLIN"}, rise=0.0)),
     ]:
         c.add(name, [create_step(Drawing(), BEAMS, "execute", inp)])
     refusals(c, BEAMS, [
@@ -2659,6 +2678,11 @@ def beam_cases():
         ("hatıl kayıt olamaz", beam(width=0.2, height=0.2, role="bondBeam", baseOffset=1.0, member={"predefined": "PURLIN"}), {}),
         ("listede olmayan kayıt tipi reddedilir", beam(member={"predefined": "RAIL"}), {}),
         ("adsız kullanıcı tanımlı kayıt reddedilir", beam(member={"predefined": "USERDEFINED"}), {}),
+        # ADR 8130.
+        ("çerçevenin kirişi eğimli olmaz", beam(rise=1.0), {}),
+        ("eğimli elemanın üç noktası olmaz", beam(pts=[P(0, 50), P(5, 50), P(5, 54)], member={"predefined": "BRACE"}, rise=1.0), {}),
+        ("12 m yükselme reddedilir", beam(member={"predefined": "RAFTER"}, rise=12.0), {}),
+        ("sonsuz yükselme reddedilir", beam(member={"predefined": "RAFTER"}, rise=1.0), {"non_finite": {"beams[0].rise": "NaN"}}),
     ])
     common_refusals(c, BEAMS, beam())
     return c.cases
@@ -3020,7 +3044,8 @@ FIELDS = [  # wire name, kinds, nullable
     ("landing", ("stair", "ramp"), True), ("cut", ("stair",), True), ("winders", ("stair",), True),
     ("numbering", ("stair",), False),
     ("railings", ("stair", "ramp"), True),
-    ("rise", ("ramp",), False), ("slope", ("ramp",), True), ("base", ("ramp",), True), ("baseOffset", ("ramp", "beam"), True),
+    # A ramp's; a sloped member's (ADR 8130), 0 level.
+    ("rise", ("ramp", "beam"), False), ("slope", ("ramp",), True), ("base", ("ramp",), True), ("baseOffset", ("ramp", "beam"), True),
     # A beam's (docs/adr/8041 §1).
     # A beam's (docs/adr/8041 §1); a roof's offset its eaves over its storey's top (docs/adr/8044 §1).
     # A railing's height its top over its floor, its offset its floor over its storey's (docs/adr/8045 §3).
@@ -3156,6 +3181,9 @@ def edit(d, inp, conflict=False):
                         f.pop("layers", None)
                     continue
                 set_field(f, n, op[n])
+            # A sloped member's rise 0 levels it; one made the frame's beam again is level (ADR 8130).
+            if kind == "beam" and (f.get("rise") == 0.0 or ("member" in op and op["member"] is None)):
+                f.pop("rise", None)
             path = f"uids[{i}]"
             r = problem_of(kind, f, path)
             if r:
@@ -3346,6 +3374,14 @@ def edit_cases():
            one(d, [uid_of(k)], {"kind": "set", "member": None})])
     d, made, k = with_beam(member={"predefined": "USERDEFINED", "name": "Kayıt"})
     c.add("Değiştir: kayıt lentoya çevrilemez", [made, one(d, [uid_of(k)], {"kind": "set", "role": "lintel", "baseOffset": 2.1})])
+    # Eğimli eleman (ADR 8130): a member's rise; 0 levels it; the frame's beam is level.
+    d, made, k = with_beam(width=0.05, height=0.1, baseOffset=2.5, member={"predefined": "RAFTER"})
+    c.add("Değiştir: merteğe yükselme verilir, 0 düzler",
+          [made, one(d, [uid_of(k)], {"kind": "set", "rise": 2.0}), one(d, [uid_of(k)], {"kind": "set", "rise": 0.0})])
+    d, made, k = with_beam(width=0.05, height=0.1, member={"predefined": "BRACE"}, rise=1.0)
+    c.add("Değiştir: eğimli payanda çerçevenin kirişine dönünce düzleşir", [made, one(d, [uid_of(k)], {"kind": "set", "member": None})])
+    d, made, k = with_beam()
+    c.add("Değiştir: çerçevenin kirişine yükselme verilmez", [made, one(d, [uid_of(k)], {"kind": "set", "rise": 1.0})])
     d = Drawing()
     c.add("Değiştir: merdivene eleman reddedilir", [one(d, [uid_of(8)], {"kind": "set", "member": {"predefined": "POST"}})])
     d, made, k = with_beam()

@@ -1447,6 +1447,7 @@ fn beams_check(doc: &Document, input: &kentos_commands::BeamsCreate) -> Result<C
                 (Some(n.height), "height", "Yükseklik"),
                 (n.offset, "offset", "Kot farkı"),
                 (n.base_offset, "baseOffset", "Kattan yükseklik"),
+                (n.rise, "rise", "Yükselme"),
             ],
             &at,
         )?;
@@ -1461,6 +1462,8 @@ fn beams_check(doc: &Document, input: &kentos_commands::BeamsCreate) -> Result<C
             tag: n.tag.clone(),
             material: n.material.clone(),
             member: n.member.clone(),
+            // A sloped member (docs/adr/8130); 0 is level.
+            rise: n.rise.filter(|r| *r != 0.0),
             arch: n.arch.clone().unwrap_or_default(),
         };
         if let Some((field, words)) = b.problem() {

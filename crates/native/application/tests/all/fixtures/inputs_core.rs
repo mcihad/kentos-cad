@@ -338,8 +338,8 @@ impl Input for kentos_commands::RampsCreate {
 }
 
 impl Input for kentos_commands::BeamsCreate {
-    /// `beams[0].width`, `.height`, `.offset`, `.baseOffset` (docs/adr/8041 §3), `.pts[k].x` and `.y`, `lineWeight`
-    /// (docs/adr/8041 §1).
+    /// `beams[0].width`, `.height`, `.offset`, `.baseOffset` (docs/adr/8041 §3), `.rise` (docs/adr/8130), `.pts[k].x`
+    /// and `.y`, `lineWeight` (docs/adr/8041 §1).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
             return self.line_weight.as_mut();
@@ -351,6 +351,7 @@ impl Input for kentos_commands::BeamsCreate {
             "height" => Some(&mut b.height),
             "offset" => b.offset.as_mut(),
             "baseOffset" => b.base_offset.as_mut(),
+            "rise" => b.rise.as_mut(),
             _ => named_point(&mut b.pts, "pts", rest),
         }
     }

@@ -21128,6 +21128,9 @@ class BeamEntity(Entity):
             absent: 0. Unit: elevation.
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        rise: How much higher its axis's end is than its start, metres (docs/adr/8130): a sloped member (a rafter, a brace)
+            rising evenly along its straight axis, its start where a level one's is, its depth across its axis as a level
+            one's; absent: level. Only a member's, on two points; never 0. Unit: elevation.
         role: What it is (docs/adr/8041 §3): a beam (absent), a lintel or a bond beam.
         symbol: Library symbol overriding the layer's style.
         tag: Its number ("K101").
@@ -21158,6 +21161,7 @@ class BeamEntity(Entity):
     member: Member | None | Unset = UNSET
     offset: float | Unset = UNSET
     order: int | None | Unset = UNSET
+    rise: float | None | Unset = UNSET
     role: BeamRole | BeamRoleName | Unset = UNSET
     symbol: str | None | Unset = UNSET
     tag: str | None | Unset = UNSET
@@ -21204,6 +21208,8 @@ class BeamEntity(Entity):
             out["offset"] = float(self.offset)
         if self.order is not UNSET:
             out["order"] = self.order
+        if self.rise is not UNSET:
+            out["rise"] = None if self.rise is None else float(self.rise)
         if self.role is not UNSET:
             out["role"] = _enum_out(self.role)
         if self.symbol is not UNSET:
@@ -21241,6 +21247,7 @@ class BeamEntity(Entity):
             member=UNSET if "member" not in data else None if data["member"] is None else Member.from_json(data["member"]),
             offset=float(data["offset"]) if "offset" in data else UNSET,
             order=data.get("order", UNSET),
+            rise=UNSET if "rise" not in data else None if data["rise"] is None else float(data["rise"]),
             role=_enum_in(BeamRole, data["role"]) if "role" in data else UNSET,
             symbol=data.get("symbol", UNSET),
             tag=data.get("tag", UNSET),
@@ -64493,6 +64500,8 @@ class NewBeam(_Model):
         member: A rail (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's beam. Only a
             beam's.
         offset: Its top over where it hangs (the structure's top of the slab over its storey, else its storey's top); absent: 0. Unit: elevation.
+        rise: A sloped member's rise (docs/adr/8130): its axis's end over its start, metres; absent or 0: level. Only a
+            member's, on two points. Unit: elevation.
         role: What it is (docs/adr/8041 §3): absent a beam; a lintel; a bond beam.
         tag: Its number ("K101").
     """
@@ -64506,6 +64515,7 @@ class NewBeam(_Model):
     material: str | None | Unset = UNSET
     member: Member | None | Unset = UNSET
     offset: float | None | Unset = UNSET
+    rise: float | None | Unset = UNSET
     role: BeamRole | BeamRoleName | None | Unset = UNSET
     tag: str | None | Unset = UNSET
 
@@ -64528,6 +64538,8 @@ class NewBeam(_Model):
             out["member"] = None if self.member is None else self.member.to_json()
         if self.offset is not UNSET:
             out["offset"] = None if self.offset is None else float(self.offset)
+        if self.rise is not UNSET:
+            out["rise"] = None if self.rise is None else float(self.rise)
         if self.role is not UNSET:
             out["role"] = None if self.role is None else _enum_out(self.role)
         if self.tag is not UNSET:
@@ -64547,6 +64559,7 @@ class NewBeam(_Model):
             material=data.get("material", UNSET),
             member=UNSET if "member" not in data else None if data["member"] is None else Member.from_json(data["member"]),
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            rise=UNSET if "rise" not in data else None if data["rise"] is None else float(data["rise"]),
             role=UNSET if "role" not in data else None if data["role"] is None else _enum_in(BeamRole, data["role"]),
             tag=data.get("tag", UNSET),
         )
@@ -123603,7 +123616,7 @@ class SetArchOperation(ArchOperation):
         phase: Any kind's.
         post: A curved stair's centre post, its diameter (docs/adr/0724 §3); null: none. Unit: length.
         railings: A stair's or a ramp's railings (docs/adr/0705 §2); null: none.
-        rise: A ramp's. Unit: elevation.
+        rise: A ramp's; a member's (docs/adr/8130): its axis's end over its start, 0 level. Unit: elevation.
         riser_height: A stair's; a stair whose rise is its level's height is freed from it (docs/adr/0724 §1). Unit: length.
         risers: A stair's. Unit: count.
         role: A beam's role (docs/adr/8041 §3): a beam, a lintel or a bond beam.

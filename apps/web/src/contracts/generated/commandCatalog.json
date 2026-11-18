@@ -124675,7 +124675,7 @@
               "description": "A stair's or a ramp's railings (docs/adr/0705 §2); null: none."
             },
             "rise": {
-              "description": "A ramp's.",
+              "description": "A ramp's; a member's (docs/adr/8130): its axis's end over its start, 0 level.",
               "format": "double",
               "type": [
                 "number",
@@ -129050,6 +129050,15 @@
           },
           "type": "array",
           "x-unit": "length"
+        },
+        "rise": {
+          "description": "How much higher its axis's end is than its start, metres (docs/adr/8130): a sloped member (a rafter, a brace)\nrising evenly along its straight axis, its start where a level one's is, its depth across its axis as a level\none's; absent: level. Only a member's, on two points; never 0.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
         },
         "role": {
           "$ref": "#/$defs/BeamRole",
@@ -173042,6 +173051,15 @@
           },
           "type": "array",
           "x-unit": "length"
+        },
+        "rise": {
+          "description": "A sloped member's rise (docs/adr/8130): its axis's end over its start, metres; absent or 0: level. Only a\nmember's, on two points.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
         },
         "role": {
           "anyOf": [

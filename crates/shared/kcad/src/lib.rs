@@ -988,7 +988,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_ROOM_EMSAL),
+    ("arch", "mimari", ARCH_WITH_SLOPED_MEMBERS),
     ("gis", "CBS", GIS_WITH_EXTENSION_DERIVATIONS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -1226,7 +1226,17 @@ pub fn uses_room_emsal(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     doc.entities.iter().any(|e| matches!(e, kentos_contracts::Entity::Space(s) if s.space.emsal.is_some()))
 }
 
-/// The architecture data version `doc` needs: 21 for a room's own emsal state, 20 for a declared exterior or column load-bearing role, 19 for an element type, 18 for an underlay model, 17 for a delivery record, 16 for a plan note of the building's height or
+/// Architecture data version 22 (docs/adr/8130): a sloped member (a beam's `rise`). Version 22 holds versions 1–21's
+/// data too. The document schema stays as it is.
+pub const ARCH_WITH_SLOPED_MEMBERS: u16 = 22;
+
+/// Whether `doc` holds architecture data 22 ([`ARCH_WITH_SLOPED_MEMBERS`]): a sloped member, in the drawing or a block.
+pub fn uses_sloped_members(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    doc.entities.iter().any(kentos_contracts::is_sloped_member)
+        || doc.blocks.iter().any(|b| b.entities.iter().any(kentos_contracts::is_sloped_member))
+}
+
+/// The architecture data version `doc` needs: 22 for a sloped member, 21 for a room's own emsal state, 20 for a declared exterior or column load-bearing role, 19 for an element type, 18 for an underlay model, 17 for a delivery record, 16 for a plan note of the building's height or
 /// storey count, 15 for the
 /// building's structural system, 14 for a material's reaction class, 13 for a declared load-bearing or escape route
 /// role, 12 for the parcel's
@@ -1236,7 +1246,9 @@ pub fn uses_room_emsal(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
 /// schedule, 5 for a covering, 4 for a post, a rail or a column's own height, 3 for a curtain wall, 2 for a block's
 /// building element, 1 for the performance declarations, else 0 (not raised).
 pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
-    if uses_room_emsal(doc) {
+    if uses_sloped_members(doc) {
+        ARCH_WITH_SLOPED_MEMBERS
+    } else if uses_room_emsal(doc) {
         ARCH_WITH_ROOM_EMSAL
     } else if uses_declared_readings(doc) {
         ARCH_WITH_DECLARED_READINGS

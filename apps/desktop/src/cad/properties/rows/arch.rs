@@ -826,6 +826,21 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                     "Boş: üst döşemeden asılır"
                 }));
             }
+            // A rail's rise (docs/adr/8130): a sloped member's end over its start, with its slope.
+            if x.member.is_some() {
+                out.push(
+                    Row::figure("Yükselme", x.rise.map_or_else(String::new, |v| f.length_bare(v)))
+                        .unit(f.length_unit_label())
+                        .editor(edit(Editor::Number(Field::Arch(slot, ArchField::MemberRise)))),
+                );
+                match x.rise {
+                    Some(_) => out.push(Row::text(
+                        "Eğim",
+                        format!("{} (%{})", f.angle(x.grade().abs().atan()), f.percent(x.grade().abs() * 100.0)),
+                    )),
+                    None => out.push(Row::note("Boş: düz; eğimli eleman iki noktadır")),
+                }
+            }
             if let Some(top) = doc.model.beam_top(x) {
                 out.push(Row::figure("Üst kot", f.length_bare(top)).unit(f.length_unit_label()));
                 out.push(

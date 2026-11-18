@@ -50,4 +50,9 @@ material?: string,
  * A rail (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's beam. Only a
  * beam's.
  */
-member?: Member, arch?: ArchInfo, attrs?: { [key in string]: string }, };
+member?: Member, 
+/**
+ * A sloped member's rise (docs/adr/8130): its axis's end over its start, metres; absent or 0: level. Only a
+ * member's, on two points.
+ */
+rise?: number, arch?: ArchInfo, attrs?: { [key in string]: string }, };

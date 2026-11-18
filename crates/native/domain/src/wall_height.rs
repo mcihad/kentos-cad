@@ -89,9 +89,28 @@ impl Document {
     fn beam_underside_over(&self, at: Vec2, foot: f64) -> Option<f64> {
         self.beams_at(at)
             .filter(|b| b.role == kentos_contracts::BeamRole::Beam)
-            .filter_map(|b| self.beam_underside(b))
+            .filter_map(|b| self.beam_underside_at(b, at))
             .filter(|u| *u > foot + OVER)
             .min_by(f64::total_cmp)
+    }
+
+    /// A beam's underside over plan point `at` (docs/adr/8130): a sloped member's rises along its axis from its start's,
+    /// its depth across its axis measured upright there; a level one's is [`Document::beam_underside`].
+    pub fn beam_underside_at(&self, b: &BeamFields, at: Vec2) -> Option<f64> {
+        let top = self.beam_top(b)?;
+        let bottom = top - b.height;
+        let (Some(rise), [a, e]) = (b.rise, b.pts.as_slice()) else {
+            return Some(bottom);
+        };
+        let length = ((e.x - a.x).powi(2) + (e.y - a.y).powi(2)).sqrt();
+        if length <= 0.0 {
+            return Some(bottom);
+        }
+        let g = rise / length;
+        let along = ((at.x - a.x) * (e.x - a.x) + (at.y - a.y) * (e.y - a.y)) / length;
+        let upright = b.height * (1.0 + g * g).sqrt();
+        let start = if b.base_offset.is_some() { bottom } else { top - upright };
+        Some(start + g * along)
     }
 
     /// A beam's top, metres over ±0.00 (docs/adr/8041 §1): the structure's top of the slab over its storey at the

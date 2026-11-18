@@ -990,6 +990,118 @@ fn with_a_pergola() -> kentos_commands::DocumentSnapshotV2 {
     doc.to_snapshot_v2()
 }
 
+/// The facade building with a lean-to pergola east of it (docs/adr/8130): a ledger along its east wall at 3.00–3.10, two
+/// posts 2.60 m tall at x 14.6 with a rail on them, five Ahşap rafters from the ledger down to the rail and past it
+/// (each from x 12.2 at 3.10 to x 14.9, 0.5625 lower: 2.60 over the rail), and two braces from the posts up to the rail;
+/// then the east elevation and section A derived 20 and 40 m east.
+fn with_a_sloped_pergola() -> kentos_commands::DocumentSnapshotV2 {
+    use kentos_native_application::{ExecutionContext, registry, sections_edit};
+    let snap = kentos_kcad::decode(include_bytes!("../../../../fixtures/arch/v1/facade-building.kcad")).expect("decodes");
+    let mut doc = kentos_domain::Document::from_snapshot_v2(snap).expect("opens");
+    let mut run = |name: &str, input: serde_json::Value| {
+        let answer = registry::run(&mut ExecutionContext::new(&mut doc), name, kentos_commands::CallOp::Execute, input)
+            .expect("runs");
+        assert_eq!(answer["status"], "completed", "{answer}");
+    };
+    let post = |y: f64| {
+        serde_json::json!({"at": {"x": 14.6, "y": y}, "width": 0.1, "depth": 0.1, "height": 2.6, "material": "Çelik",
+                           "member": {"predefined": "POST"}, "arch": {"level": "zemin"}})
+    };
+    run("cad.columns.create", serde_json::json!({"layerId": "0", "columns": [post(1.0), post(4.0)]}));
+    let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
+    let member = |pts: serde_json::Value, w: f64, h: f64, base: f64, predefined: &str, material: &str, rise: Option<f64>| {
+        let mut m = serde_json::json!({"pts": pts, "width": w, "height": h, "baseOffset": base, "material": material,
+                                       "member": {"predefined": predefined}, "arch": {"level": "zemin"}});
+        if let Some(r) = rise {
+            m["rise"] = serde_json::json!(r);
+        }
+        m
+    };
+    let mut beams = vec![
+        member(serde_json::json!([p(12.15, 0.7), p(12.15, 4.3)]), 0.05, 0.1, 3.0, "PURLIN", "Ahşap", None),
+        member(serde_json::json!([p(14.6, 0.7), p(14.6, 4.3)]), 0.05, 0.1, 2.5, "PURLIN", "Ahşap", None),
+        member(serde_json::json!([p(14.6, 1.05), p(14.6, 1.5)]), 0.05, 0.05, 2.0, "BRACE", "Çelik", Some(0.45)),
+        member(serde_json::json!([p(14.6, 3.95), p(14.6, 3.5)]), 0.05, 0.05, 2.0, "BRACE", "Çelik", Some(0.45)),
+    ];
+    for y in [1.0, 1.75, 2.5, 3.25, 4.0] {
+        beams.push(member(serde_json::json!([p(12.2, y), p(14.9, y)]), 0.04, 0.08, 3.1, "RAFTER", "Ahşap", Some(-0.5625)));
+    }
+    run("cad.beams.create", serde_json::json!({"layerId": "0", "beams": beams}));
+    for (form, letter, x) in [
+        (kentos_commands::ViewMarkForm::Elevation, "3", 20.0),
+        (kentos_commands::ViewMarkForm::Section, "A", 40.0),
+    ] {
+        let Some(mark) = doc.entities_with_uids().find_map(|(u, e)| match e {
+            Entity::ViewMark(v) if v.mark.form == form && v.mark.mark == letter => Some(u),
+            _ => None,
+        }) else {
+            continue;
+        };
+        let derived = sections_edit::execute(
+            &mut ExecutionContext::new(&mut doc),
+            kentos_commands::BuildingSectionsEdit {
+                operation: kentos_commands::BuildingSectionsOperation::Derive {
+                    mark: mark.to_string(),
+                    at: Some(kentos_commands::Vec2 { x, y: 0.0 }),
+                },
+                expected_revision: None,
+            },
+        );
+        assert!(matches!(derived, kentos_commands::CommandResult::Completed { .. }), "{derived:?}");
+    }
+    doc.to_snapshot_v2()
+}
+
+/// Eğimli eleman (docs/adr/8130): the lean-to pergola in plan, in the east elevation and section A, and in 3D from the
+/// north-east. `.run/gui-evidence/egimli-eleman-8130/`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib scene3d_building_tests::sloped_member_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn sloped_member_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/egimli-eleman-8130");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 700.0), "koyu")] {
+        let mut app = open(with_a_sloped_pergola());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::scene3d_shown, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let fit = |app: &mut App, min: [f64; 2], max: [f64; 2]| {
+            app.viewport.camera.fit(
+                &kentos_render_wgpu::Bounds { min_x: min[0], min_y: min[1], max_x: max[0], max_y: max[1] },
+                24.0,
+            );
+        };
+        fit(&mut app, [-2.0, -3.0], [62.0, 12.0]);
+        shot(&mut app, "0-hepsi");
+        fit(&mut app, [10.0, 0.0], [16.0, 5.0]);
+        shot(&mut app, "1-plan");
+        fit(&mut app, [18.0, -2.0], [36.0, 9.0]);
+        shot(&mut app, "2-dogu-gorunusu");
+        fit(&mut app, [38.0, -2.0], [62.0, 9.0]);
+        shot(&mut app, "3-kesit-a");
+        let _ = app.update(Message::Run("scene3d.view"));
+        shot(&mut app, "4-3b-kuzeydogu");
+        send(&mut app, W::Close);
+    }
+}
+
 /// Dikme ve kayıt in plan, in the east elevation and in 3D (docs/adr/8070 §8): the pergola's posts and rails in plan, the
 /// same over the east facade in its elevation, and the building from the north-east. `.run/gui-evidence/dikme-kayit-8070/`:
 ///

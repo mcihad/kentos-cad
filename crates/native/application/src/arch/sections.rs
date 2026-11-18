@@ -1164,9 +1164,29 @@ fn beam(doc: &Document, b: &kentos_commands::BeamFields, owner: Option<String>, 
         BeamRole::BondBeam => "HATL",
     };
     let made_of = b.member.as_ref().and(b.material.as_deref());
+    // A sloped member (docs/adr/8130): its start where a level one's is (its underside over its floor, else its top
+    // where it hangs), rising evenly to its end; its depth across its axis a level one's, so upright it is deeper.
+    let height = match (b.rise, b.pts.as_slice()) {
+        (Some(rise), [a, e]) => {
+            let length = kentos_geometry_core::jsmath::js_hypot(e.x - a.x, e.y - a.y);
+            let g = rise / length;
+            let (dx, dy) = (g * (e.x - a.x) / length, g * (e.y - a.y) / length);
+            let upright = (top - bottom) * (1.0 + g * g).sqrt();
+            let start_top = if b.base_offset.is_some() { bottom + upright } else { top };
+            Height::Sloped(sec::Sloped {
+                top: start_top - dx * a.x - dy * a.y,
+                dx,
+                dy,
+                thickness: upright,
+                eaves: ring.clone(),
+                roof: RAMP_FACES + m.solids.len(),
+            })
+        }
+        _ => Height::Prism { bottom, top },
+    };
     let solid = Solid {
         rings: vec![ring],
-        height: Height::Prism { bottom, top },
+        height,
         voids: Vec::new(),
         marks: Vec::new(),
         finish: None,

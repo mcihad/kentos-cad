@@ -245,6 +245,8 @@ pub enum ArchField {
     BeamHeight,
     BeamOffset,
     BeamBase,
+    /// A sloped member's rise (docs/adr/8130); empty: level.
+    MemberRise,
     /// A railing's balusters' clear gap (docs/adr/8045 §3); empty: PAİY 38/4's 0.10 m.
     RailingGap,
     /// A column's or a beam's material (empty: Betonarme; docs/adr/8041 §2); a roof's covering (empty: Kiremit).

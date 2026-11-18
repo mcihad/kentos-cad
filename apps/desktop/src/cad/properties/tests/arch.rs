@@ -885,6 +885,16 @@ fn a_column_becomes_a_post_and_a_beam_a_rail() {
     assert_eq!(b.beam.member, Some(Member::rail()));
     assert_eq!(noted(&app, "Tür").0, "Kayıt");
     assert_eq!(noted(&app, "Eleman tipi").0, "Kullanıcı tanımlı (USERDEFINED)");
+    // A sloped member (docs/adr/8130): Yükselme typed, its slope said; empty levels it.
+    assert_eq!(noted(&app, "Yükselme"), (String::new(), Some("Boş: düz; eğimli eleman iki noktadır".into())));
+    event(&mut app, Event::Commit(Field::Arch(Slot(beam), A::MemberRise), "1.25".into()));
+    let Entity::Beam(b) = entity(&app, beam) else { panic!("a beam") };
+    assert_eq!(b.beam.rise, Some(1.25));
+    // atan 1.25/5 in the project's angle unit (grads here) and per cent.
+    assert_eq!(noted(&app, "Eğim").0, "15.5958 g (%25.00)");
+    event(&mut app, Event::Commit(Field::Arch(Slot(beam), A::MemberRise), "".into()));
+    let Entity::Beam(b) = entity(&app, beam) else { panic!("a beam") };
+    assert_eq!(b.beam.rise, None, "level again");
     set(&mut app, beam, ArchChange { member: Some(None), ..Default::default() });
     let Entity::Beam(b) = entity(&app, beam) else { panic!("a beam") };
     assert_eq!(b.beam.member, None);

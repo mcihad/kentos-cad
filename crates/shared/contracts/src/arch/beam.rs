@@ -115,6 +115,13 @@ pub struct BeamFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub member: Option<crate::Member>,
+    /// How much higher its axis's end is than its start, metres (docs/adr/8130): a sloped member (a rafter, a brace)
+    /// rising evenly along its straight axis, its start where a level one's is, its depth across its axis as a level
+    /// one's; absent: level. Only a member's, on two points; never 0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub rise: Option<f64>,
     #[serde(default, skip_serializing_if = "ArchInfo::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<ArchInfo>", optional))]
     pub arch: ArchInfo,
@@ -140,12 +147,30 @@ impl BeamFields {
         format!("{}/{}", cm(self.width), cm(self.height))
     }
 
-    /// The length of its axis, metres.
+    /// The length of its axis, metres: a sloped member's along its slope (docs/adr/8130).
     pub fn length(&self) -> f64 {
+        let plan = self.plan_length();
+        match self.rise {
+            Some(r) => (plan * plan + r * r).sqrt(),
+            None => plan,
+        }
+    }
+
+    /// The length of its axis in plan, metres.
+    pub fn plan_length(&self) -> f64 {
         self.pts
             .windows(2)
             .map(|p| ((p[1].x - p[0].x).powi(2) + (p[1].y - p[0].y).powi(2)).sqrt())
             .sum()
+    }
+
+    /// A sloped member's rise per metre in plan (docs/adr/8130); 0 for a level one.
+    pub fn grade(&self) -> f64 {
+        let plan = self.plan_length();
+        match self.rise {
+            Some(r) if plan > 0.0 => r / plan,
+            _ => 0.0,
+        }
     }
 
     /// What is wrong with the beam, said so a reader can fix it: the field and the words; none: it holds.
@@ -227,6 +252,33 @@ impl BeamFields {
                 ));
             }
         }
+        // A sloped member (docs/adr/8130): a member's alone, on a straight axis.
+        if let Some(r) = self.rise {
+            if !(r.is_finite() && r != 0.0 && r.abs() <= MAX_BEAM_OFFSET) {
+                return Some((
+                    "rise".into(),
+                    format!(
+                        "Elemanın yükselmesi {r}; sıfırdan farklı, en çok ±{MAX_BEAM_OFFSET} m olmalı (düz eleman yükselmesizdir)."
+                    ),
+                ));
+            }
+            if self.member.is_none() {
+                return Some((
+                    "rise".into(),
+                    "Yalnız eleman eğimli olur (kayıt, mertek, payanda); çerçevenin kirişi, lento ve hatıl düzdür. Önce türünü Kayıt yapın."
+                        .into(),
+                ));
+            }
+            if self.pts.len() != 2 {
+                return Some((
+                    "rise".into(),
+                    format!(
+                        "Eğimli eleman düz bir eksendir: iki noktası olur; {} noktası var.",
+                        self.pts.len()
+                    ),
+                ));
+            }
+        }
         for (name, v) in [("tag", &self.tag), ("material", &self.material)] {
             if let Some(t) = v
                 && (t.trim().is_empty()
@@ -266,9 +318,38 @@ pub struct BeamEntity {
     pub beam: BeamFields,
 }
 
+/// Whether `e` is a sloped member (docs/adr/8130): what `.kcad` architecture data 22 adds.
+pub fn is_sloped_member(e: &crate::Entity) -> bool {
+    matches!(e, crate::Entity::Beam(b) if b.beam.rise.is_some())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A sloped member (docs/adr/8130): a 4 m rafter rising 3 m is 5 m long, its grade 0.75; a frame beam, three points,
+    /// 0 and more than 10 m are refused.
+    #[test]
+    fn a_sloped_member_is_a_straight_member_s() {
+        let rafter = BeamFields {
+            pts: vec![Vec2 { x: 0.0, y: 0.0 }, Vec2 { x: 4.0, y: 0.0 }],
+            width: 0.05,
+            height: 0.1,
+            member: Some(crate::Member { predefined: "RAFTER".into(), name: None }),
+            rise: Some(3.0),
+            ..Default::default()
+        };
+        assert_eq!(rafter.problem(), None);
+        assert_eq!((rafter.length(), rafter.plan_length(), rafter.grade()), (5.0, 4.0, 0.75));
+        let refused = |b: BeamFields| b.problem().map(|p| p.0);
+        assert_eq!(refused(BeamFields { member: None, ..rafter.clone() }), Some("rise".into()));
+        assert_eq!(refused(BeamFields { rise: Some(0.0), ..rafter.clone() }), Some("rise".into()));
+        assert_eq!(refused(BeamFields { rise: Some(10.5), ..rafter.clone() }), Some("rise".into()));
+        assert_eq!(refused(BeamFields { rise: Some(f64::NAN), ..rafter.clone() }), Some("rise".into()));
+        let mut bent = rafter.clone();
+        bent.pts.push(Vec2 { x: 4.0, y: 3.0 });
+        assert_eq!(refused(bent), Some("rise".into()));
+    }
 
     fn beam() -> BeamFields {
         BeamFields {

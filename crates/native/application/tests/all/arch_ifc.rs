@@ -646,6 +646,71 @@ fn a_post_and_a_rail_are_ifc_members_of_their_types() {
     }
 }
 
+/// Eğimli eleman (docs/adr/8130): a 5/10 Ahşap rafter east of the building, from x 20 to 24 along y 0, its underside
+/// 2.50 m over the ground storey's floor at its start, rising 3 m to its end: a 3–4–5 triangle, its grade 3/4, its
+/// length 5 m. Its depth across its axis is a level one's, so upright it is 0.10 × 5/4 = 0.125 deep: its top 2.625 at
+/// x 20 and 5.625 at x 24. A section across it at x 22 cuts it 5 cm wide from 4.00 to 4.125. In the IFC model it is an
+/// IfcMember RAFTER whose Pset_MemberCommon says its slope, atan 3/4 (36.87°), its body the sloped solid. Worked by
+/// hand. A frame beam takes no rise, a bent member neither; 0 levels the rafter again.
+#[test]
+fn a_sloped_rafter_rises_along_its_axis_and_says_its_slope() {
+    use kentos_commands::CallOp;
+    use kentos_geometry_core::Vec2 as P;
+    use kentos_geometry_core::geom::section::{self as sec, Frame, Height};
+    use kentos_native_application::{ExecutionContext, registry, sections};
+    let mut doc = building();
+    let run = |doc: &mut Document, name: &str, input: serde_json::Value| {
+        registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).unwrap()
+    };
+    let answer = run(&mut doc, "cad.beams.create", serde_json::json!({"layerId": "0", "beams": [{
+        "pts": [{"x": 20.0, "y": 0.0}, {"x": 24.0, "y": 0.0}], "width": 0.05, "height": 0.1, "baseOffset": 2.5,
+        "material": "Ahşap", "member": {"predefined": "RAFTER"}, "rise": 3.0, "arch": {"level": "zemin"}
+    }]}));
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let uid = answer["output"]["uids"][0].as_str().unwrap().to_owned();
+    let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
+    let m = sections::model(&doc);
+    let i = (0..m.solids.len()).find(|&i| m.owners[i].as_deref() == Some(uid.as_str())).expect("its solid");
+    let Height::Sloped(s) = &m.solids[i].height else { panic!("{:?}", m.solids[i].height) };
+    assert!(near(s.dx, 0.75) && near(s.dy, 0.0) && near(s.thickness, 0.125), "{s:?}");
+    assert!(near(s.z(P::new(20.0, 0.0)), 2.625) && near(s.z(P::new(24.0, 0.0)), 5.625), "{s:?}");
+    let frame = Frame::new(P::new(22.0, -1.0), P::new(22.0, 1.0), true, None).unwrap();
+    let cut = sec::section(&frame, &m.solids);
+    let piece = cut.cut.iter().find(|c| c.solid == i).expect("cut across");
+    let zs: Vec<f64> = piece.ring.iter().map(|q| q.y).collect();
+    let (z0, z1) = (zs.iter().copied().fold(f64::INFINITY, f64::min), zs.iter().copied().fold(f64::NEG_INFINITY, f64::max));
+    assert!(near(z0, 4.0) && near(z1, 4.125), "{zs:?}");
+    // The IFC model.
+    let (b, written) = arch_ifc::building(&doc, "2026-11-18T12:00:00", "KentOS Mimari");
+    assert_eq!(written.left, Vec::new(), "every object written");
+    let id = kentos_domain::Uuid::parse_str(&uid).unwrap().as_u128();
+    let e = b.elements.iter().find(|e| e.id == Some(id)).expect("its element");
+    assert_eq!((e.class, e.predefined), (Class::Member, "RAFTER"));
+    let slope = e
+        .psets
+        .iter()
+        .find(|p| p.name == "Pset_MemberCommon")
+        .and_then(|p| p.props.iter().find(|(k, _)| k == "Slope"))
+        .map(|(_, v)| v.clone());
+    assert_eq!(slope, Some(Value::PlaneAngle(0.75f64.atan())));
+    assert!(matches!(e.shapes.as_slice(), [kentos_ifc::building::Shape::Faces { .. }]), "{:?}", e.shapes);
+    // A frame beam takes no rise; nor does a bent member; 0 levels it.
+    let frame_beam = run(&mut doc, "cad.beams.create", serde_json::json!({"layerId": "0", "beams": [{
+        "pts": [{"x": 20.0, "y": 3.0}, {"x": 24.0, "y": 3.0}], "width": 0.25, "height": 0.5, "rise": 1.0
+    }]}));
+    assert_eq!((frame_beam["error"]["code"].as_str(), frame_beam["error"]["path"].as_str()), (Some("invalid_beam"), Some("beams[0].rise")));
+    let bent = run(&mut doc, "cad.beams.create", serde_json::json!({"layerId": "0", "beams": [{
+        "pts": [{"x": 20.0, "y": 3.0}, {"x": 24.0, "y": 3.0}, {"x": 24.0, "y": 5.0}], "width": 0.05, "height": 0.1,
+        "member": {"predefined": "BRACE"}, "rise": 1.0
+    }]}));
+    assert_eq!(bent["error"]["code"], "invalid_beam", "{bent}");
+    let level = run(&mut doc, "cad.arch.edit", serde_json::json!({"uids": [uid], "operation": {"kind": "set", "rise": 0.0}}));
+    assert_eq!(level["status"], "completed", "{level}");
+    let slot = doc.slot_of(kentos_domain::Uuid::parse_str(&uid).unwrap()).unwrap();
+    let Some(kentos_commands::Entity::Beam(beam)) = doc.get(slot) else { panic!("a beam") };
+    assert_eq!(beam.beam.rise, None);
+}
+
 /// B9's first acceptance (plan/bim-plan.md BIM-09; docs/adr/8070 §9, §11): the section building with a ramp, a curtain
 /// wall, the library's lift, a post, a rail and an asma tavan. Its IFC model leaves nothing out; each new element has its
 /// body in the section model (so the section, the elevation and the 3D view draw it) and its object in the file; the

@@ -90,7 +90,8 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.winders.is_some(), "winders", STAIR);
     add(c.numbering.is_some(), "numbering", STAIR);
     add(c.railings.is_some(), "railings", FLIGHT);
-    add(c.rise.is_some(), "rise", RAMP);
+    // A sloped member's too (docs/adr/8130).
+    add(c.rise.is_some(), "rise", RAMP_BEAM);
     add(c.slope.is_some(), "slope", RAMP);
     add(c.base.is_some(), "base", RAMP);
     // A ramp's base over its level (docs/adr/0723 §2), a beam's underside over its storey's floor (docs/adr/8041 §3).
@@ -346,9 +347,16 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
             if let Some(v) = &c.material {
                 f.material.clone_from(v);
             }
-            // A rail or the frame's beam (docs/adr/8070 §8).
+            // A rail or the frame's beam (docs/adr/8070 §8); the frame's beam is level (docs/adr/8130).
             if let Some(v) = &c.member {
                 f.member.clone_from(v);
+                if f.member.is_none() {
+                    f.rise = None;
+                }
+            }
+            // A sloped member's rise (docs/adr/8130); 0 levels it.
+            if let Some(v) = c.rise {
+                f.rise = (v != 0.0).then_some(v);
             }
         }
         // A roof's (docs/adr/8044 §1); its parts all of them, as the tools write them (§6).

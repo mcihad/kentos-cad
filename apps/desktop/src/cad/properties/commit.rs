@@ -899,6 +899,7 @@ pub(super) fn commit(
                     | ArchField::BeamHeight
                     | ArchField::BeamOffset
                     | ArchField::BeamBase
+                    | ArchField::MemberRise
                     | ArchField::OwnHeight
                     | ArchField::RailingGap
                     | ArchField::Overhang
@@ -1010,6 +1011,11 @@ pub(super) fn commit(
                 },
                 ArchField::BeamBase => ArchChange {
                     base_offset: Some(words.map(|_| n)),
+                    ..Default::default()
+                },
+                // A sloped member's rise (docs/adr/8130); empty or 0: level.
+                ArchField::MemberRise => ArchChange {
+                    rise: Some(words.map_or(0.0, |_| n)),
                     ..Default::default()
                 },
                 // A column's own height; empty: its storey's (docs/adr/8070 §8).

@@ -2207,6 +2207,14 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             if let (Some(set), Some(f)) = (common_set(class), fire) {
                 give(&mut elements[i].psets, set, "FireRating", Value::Label(f));
             }
+            // A sloped member's slope to the horizontal (docs/adr/8130; EK-6 Tablo 6.40's optional
+            // `Pset_MemberCommon.Slope`), as a sloped slab's pitch is written.
+            if let Entity::Beam(b) = e
+                && b.beam.rise.is_some()
+                && class == Class::Member
+            {
+                give(&mut elements[i].psets, "Pset_MemberCommon", "Slope", Value::PlaneAngle(b.beam.grade().abs().atan()));
+            }
             if let (Some(set), Some(x)) = (common_set(class), exit)
                 && matches!(class, Class::Door | Class::Stair)
             {

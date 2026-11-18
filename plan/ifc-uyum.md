@@ -81,7 +81,7 @@ kimliği; test bağlantısı.
 | IfcBuilding | BNA | Çizim; programın binaları (ADR 8072) | ✓ bina başına dosya, kendi ±0.00'ı ve alanlarıyla | eksik alanlar | IFC-02 |
 | IfcBuildingStorey | BNK | Katlar | ✓ taşıyıcı döşeme kotu, brüt/net yükseklik döşemelerden (ADR 8076) | baskın kotu olmayan kat | IFC-02 |
 | IfcSpace | MHL | Mahal | ◐ hep `INTERNAL`, düz prizma | türü, kapalı hacmi, kaplama kalınlıkları | IFC-02, IFC-06 |
-| IfcSpatialZone | MZN | Emsal alanı (BIM-08) | ✓ (ADR 8069) | DIGER | IFC-03 |
+| IfcSpatialZone | MZN | Emsal alanı (BIM-08) | ✓ (ADR 8069); DIGER (ADR 8125) | — | IFC-03 |
 | IfcZone | ZON | Bağımsız bölüm, eklenti, ortak alan; yangın kompartımanı | ✓ (ADR 8069, 8088) | — | IFC-03 |
 | IfcWall | DVR | Duvar | ◐ hep `STANDARD` | türü; yangın; katmanları | IFC-02, IFC-04 |
 | IfcCurtainWall | GDC | Giydirme cephe (BIM-09) | ✓ gövdesi panelleri, USERDEFINED, dikme ve kayıtları parçaları (K45, ADR 8070); panel yerine kapı ve pencere parçaları (ADR 8129) | — | IFC-03 |
@@ -89,7 +89,7 @@ kimliği; test bağlantısı.
 | IfcRoof | CAT | Çatı | ◐ tipi `NOTDEFINED` | türü; yangın | IFC-02 |
 | IfcColumn | KLN | Kolon | ◐ | yangın; dayanım | IFC-02 |
 | IfcBeam | KRS | Kiriş, lento, hatıl | ◐ | yangın; dayanım | IFC-02 |
-| IfcMember | ELM | Dikme, cephe kaydı (BIM-09) | ✓ dikme (POST) ve kayıt (USERDEFINED "Kayıt") kolonun ve kirişin eleman rolüyle; giydirme cephenin çerçeveleri MULLION (K46, ADR 8070) | eğimli eleman | IFC-03 |
+| IfcMember | ELM | Dikme, cephe kaydı (BIM-09) | ✓ dikme (POST) ve kayıt (USERDEFINED "Kayıt") kolonun ve kirişin eleman rolüyle; giydirme cephenin çerçeveleri MULLION (K46, ADR 8070); eğimli eleman Slope'uyla (ADR 8130) | — | IFC-03 |
 | IfcDoor | KAP | Kapı | ◐ | yangın; acil çıkış | IFC-02 |
 | IfcWindow | PNC | Pencere | ✓ | — | — |
 | IfcOpeningElement | ACL | Açıklık, niş, döşeme deliği ve boşluk mahalinin parçası (ADR 8071 §5) | ✓ | — | IFC-06 |
@@ -342,7 +342,12 @@ K45) ve dikme ile kayıtları (`IfcMember` MULLION, `IfcRelAggregates`), doğrul
 POST ve USERDEFINED, K46), doğrulayıcıda 0 bulgu; rampalı, giydirme cepheli, asansörlü örnek binada kayıp listesi boş,
 `cad.arch.ifc` yeni sınıfları da sayar (ADR 8070 §9). DIGER durumu 18 Kasım'da: mahalin kendi emsal artışı, dayanağı
 zonun açıklaması ([ADR 8125](../docs/adr/8125-room-emsal-state-type-and-storey.md) K285). Zonlar dosyada kat kat ve
-durum durum emsal tablosuyla ([ADR 8126](../docs/adr/8126-far-zones-storey-by-storey.md)).
+durum durum emsal tablosuyla ([ADR 8126](../docs/adr/8126-far-zones-storey-by-storey.md)). Kaplamanın mahali
+(`IfcRelCoversSpaces`, [ADR 8127](../docs/adr/8127-covering-covers-its-room.md)), merdivenin ve rampanın korkulukları
+parçaları (`IfcRailing`, [ADR 8128](../docs/adr/8128-stair-and-ramp-railings-in-section-and-ifc.md)), giydirme cephede
+kapı ve pencere parçaları ([ADR 8129](../docs/adr/8129-doors-and-windows-in-curtain-walls.md)), eğimli eleman
+(`Pset_MemberCommon.Slope`, [ADR 8130](../docs/adr/8130-sloped-members.md)) 18 Kasım'da. **Kalan:** kaplamanın katman
+takımı; RADIAL aks; mobilya ve vitrifiyenin gerçek biçimi; `IfcGroup`'un katalogdaki yeri.
 
 **Kullanıcı sonucu:** Modeldeki her yapı nesnesi kendi sınıfıyla dışa gider; emsal alanları ve bağımsız bölümler dosyadadır.
 Nesneleri BIM-08 ve BIM-09'dan gelir.

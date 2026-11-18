@@ -168,6 +168,36 @@ fn a_post_and_a_rail_round_trip_under_arch_data_4() {
     assert!(refused.message.contains("USERDEFINED"), "{}", refused.message);
 }
 
+/// Architecture data 22 (docs/adr/8130): a sloped member (a beam's `rise`) is written with `modules.arch = 22` and read
+/// back as it was; a frame beam with a rise is refused when written.
+#[test]
+fn a_sloped_member_round_trips_under_arch_data_22() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_sloped_members(&doc));
+    let beam = doc
+        .entities
+        .iter_mut()
+        .find_map(|e| match e {
+            kentos_contracts::Entity::Beam(b) => Some(b),
+            _ => None,
+        })
+        .expect("a beam");
+    beam.beam.pts.truncate(2);
+    beam.beam.member = Some(kentos_contracts::Member::rail());
+    beam.beam.rise = Some(1.2);
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_SLOPED_MEMBERS);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the sloped member reads back");
+    let mut frame = doc.clone();
+    if let Some(kentos_contracts::Entity::Beam(b)) =
+        frame.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Beam(b) if b.beam.rise.is_some()))
+    {
+        b.beam.member = None;
+    }
+    let refused = kentos_kcad::encode(&frame).expect_err("a frame beam is level");
+    assert!(refused.message.contains("eğimli"), "{}", refused.message);
+}
+
 /// Architecture data 5 (docs/adr/8070 §10): a covering (a slab's `covering`) is written with `modules.arch = 5` and read
 /// back as it was; one with layers is refused when written.
 #[test]

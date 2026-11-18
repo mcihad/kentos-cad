@@ -879,6 +879,12 @@ pub struct NewBeam {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub member: Option<crate::Member>,
+    /// A sloped member's rise (docs/adr/8130): its axis's end over its start, metres; absent or 0: level. Only a
+    /// member's, on two points.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub rise: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
@@ -1319,7 +1325,7 @@ pub struct ArchChange {
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<Railings>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<Railings>"))]
     pub railings: Option<Option<Railings>>,
-    /// A ramp's.
+    /// A ramp's; a member's (docs/adr/8130): its axis's end over its start, 0 level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]

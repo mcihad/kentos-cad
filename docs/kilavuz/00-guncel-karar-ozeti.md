@@ -95,7 +95,7 @@
     - ADR 8125 (18 Kasım 2026): mahalin kendi emsal durumu (`space.emsal`, mimari verisi 21) ve emsal artışı DİĞER
       (dayanaksız yok; kendi toplamı; DIGER zonu açıklamasıyla); mahalin türü (PARKING, EXTERNAL, INTERNAL); EK-9/13'ün "doğru katta"sı (`quality_room_storey`). ADR 8126: EK-9/10 zonları dosyada kat kat ve
       durum durum tabloyla (zonun katı başvurusundan, alanı gövde izinden); yer değiştiren alan kalır. B8 tamam.
-  - **B9 kısmen yapıldı (16 Kasım 2026; [ADR 8070](../adr/8070-missing-building-elements.md); BIM-09 ve IFC-03 `[~]`):**
+  - **B9 bitti (16–18 Kasım 2026; [ADR 8070](../adr/8070-missing-building-elements.md), 8127–8130; BIM-09 `[x]`, IFC-03 `[~]`):**
     - Rampa kesit modelinde eğik plak ve sahanlık; merdiven ve rampanın IFC tipi kollarından (listede yoksa USERDEFINED);
       ikisi de kesitin çizdiği gibi Betonarme (K42).
     - Duvar bacası ile üstündeki çatı bacası tek `IfcChimney` (K43 malzemesi); niş RECESS; aks ızgarası `IfcGrid`.
@@ -120,8 +120,10 @@
     - Giydirme cephede panel yerine kapı ve pencere (ADR 8129): açıklık kapsadığı hücreleri doldurur (kapı döşemeye
       iner, üstü istenenden alçak olmaz; pencere ortalarını kapsadığı hücrelere), komutlar ve her adımın yerleşmesi
       oturtur; niş ve baca konmaz; IFC'de kapı ve pencere giydirme cephenin parçası, açıklık elemanı yok.
-      Kalan: eğimli eleman, dönen basamaklı ve eğri merdivenin korkuluğu, kapı başı için ayrı kayıt (duvar
-      kaplamasının kalınlığı ADR 8076 ve 8124'te yapıldı).
+    - Eğimli eleman (ADR 8130): elemanın `rise`'ı (ucu başından yüksek, iki noktalı eksen; `.kcad` mimari verisi 22),
+      derinliği eksenine dik eğik gövde, duvar onun altında o noktadaki alt yüzünde durur; IFC'de
+      `Pset_MemberCommon.Slope`; Kayıt aracında ve Öznitelikler'de Yükselme. **B9 bitti (BIM-09 `[x]`).**
+      Sonraya: dönen basamaklı ve eğri merdivenin korkuluğu, kapı başı için ayrı kayıt, kırık eksenli eğimli eleman.
   - **B11 bitti (16 Kasım 2026; [ADR 8072](../adr/8072-buildings-shared-basement-location.md); BIM-11 `[x]`, IFC-05 `[x]`):**
     - Programın binası kod (EK-2 §2.3), kullanım türü ve projenin ±0.00'ına göre ±0.00 taşır; birden çok binanın
       kapladığı kat seçilen binada sayılır (`BuildingProgram::shared`), nesnenin binası katından okunur

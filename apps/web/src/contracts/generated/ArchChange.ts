@@ -112,7 +112,7 @@ numbering?: boolean,
  */
 railings?: Railings | null, 
 /**
- * A ramp's.
+ * A ramp's; a member's (docs/adr/8130): its axis's end over its start, 0 level.
  */
 rise?: number, 
 /**

@@ -118,4 +118,10 @@ material?: string,
  * A rail (docs/adr/8070 §8): a member of its type, written as an `IfcMember`; absent: the frame's beam. Only a
  * beam's (not a lintel's or a bond beam's).
  */
-member?: Member, arch?: ArchInfo, };
+member?: Member, 
+/**
+ * How much higher its axis's end is than its start, metres (docs/adr/8130): a sloped member (a rafter, a brace)
+ * rising evenly along its straight axis, its start where a level one's is, its depth across its axis as a level
+ * one's; absent: level. Only a member's, on two points; never 0.
+ */
+rise?: number, arch?: ArchInfo, };

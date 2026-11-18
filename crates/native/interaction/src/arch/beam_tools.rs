@@ -43,6 +43,8 @@ enum Ask {
     Tag,
     /// A rail's material (docs/adr/8070 §8).
     Material,
+    /// A sloped member's rise (docs/adr/8130).
+    Rise,
 }
 
 /// Kiriş.
@@ -69,6 +71,8 @@ pub struct BeamTool {
     rail: bool,
     /// A rail's material; none: Betonarme, as a beam's.
     material: Option<String>,
+    /// A rail's rise (docs/adr/8130): its end over its start; 0 level.
+    rise: f64,
 }
 
 impl Default for BeamTool {
@@ -90,6 +94,7 @@ impl Default for BeamTool {
             why: None,
             rail: false,
             material: None,
+            rise: 0.0,
         }
     }
 }
@@ -171,9 +176,10 @@ impl BeamTool {
             offset: (!sits && self.offset != 0.0).then_some(self.offset),
             role: bond.then_some(BeamRole::BondBeam),
             base_offset: sits.then_some(self.base),
-            // A rail's type and material (docs/adr/8070 §8).
+            // A rail's type and material (docs/adr/8070 §8), its rise a sloped one's (docs/adr/8130).
             member: self.rail.then(kentos_commands::Member::rail),
             material: self.material.clone().filter(|_| self.rail),
+            rise: (self.rail && self.rise != 0.0).then_some(self.rise),
             tag: self.tag.clone(),
             // Etkin kat (docs/adr/0713).
             arch: cx.new_arch(),
@@ -343,6 +349,12 @@ impl BeamTool {
             },
             "E" => length(cx).map(|v| self.width = v).is_some(),
             "Y" => length(cx).map(|v| self.height = v).is_some(),
+            // A rail's rise (docs/adr/8130): any length, empty 0.
+            "U" if self.rail => {
+                let t = js_trim(value);
+                let v = if t.is_empty() { Some(0.0) } else { cx.typed_length(t).filter(|v| v.is_finite()) };
+                v.map(|v| self.rise = v).is_some()
+            }
             "O" => length(cx).map(|v| self.bearing = v).is_some(),
             "A" => cx
                 .typed_length(js_trim(value))
@@ -431,6 +443,7 @@ impl Tool for BeamTool {
                 Ask::Bearing => "lentonun her iki yanda duvara oturma boyunu yazın (en az 20 cm)",
                 Ask::Tag => "numarasını yazın (K101, L101, H101 gibi; boş: yok)",
                 Ask::Material => "malzemesini yazın (Çelik, Alüminyum, Ahşap gibi; boş: Betonarme)",
+                Ask::Rise => "ucunun başından ne kadar yüksek olduğunu yazın (0: düz; eğimli kayıt iki noktadır)",
             };
             return Prompt::new(name, words).option("Geri", "G");
         }
@@ -463,6 +476,7 @@ impl Tool for BeamTool {
         };
         let p = if self.rail {
             p.option_with("Malzeme", "M", self.material.clone().unwrap_or_else(|| "Betonarme".into()))
+                .option_with("Yükselme", "U", n(self.rise))
         } else {
             p
         };
@@ -529,6 +543,7 @@ impl Tool for BeamTool {
                 Ask::Bearing => "O",
                 Ask::Tag => "N",
                 Ask::Material => "M",
+                Ask::Rise => "U",
             };
             if !self.apply(field, text, cx) {
                 cx.say(
@@ -558,6 +573,7 @@ impl Tool for BeamTool {
             "F" if self.role == BeamRole::Beam && !self.rail => Some(Ask::Offset),
             "A" if self.role == BeamRole::BondBeam || self.rail => Some(Ask::Base),
             "M" if self.rail => Some(Ask::Material),
+            "U" if self.rail => Some(Ask::Rise),
             "O" if lintel => Some(Ask::Bearing),
             "N" => Some(Ask::Tag),
             "H" if !lintel => {
@@ -627,11 +643,12 @@ impl Tool for BeamTool {
             out.extend([
                 Setting::text("A", "Kattan yükseklik", f.length(self.base)),
                 Setting::text("M", "Malzeme", self.material.clone().unwrap_or_else(|| "Betonarme".into())),
+                Setting::text("U", "Yükselme", f.length(self.rise)),
                 tag,
                 Setting::hint(
                     "P",
                     "Kayıt",
-                    "Cephe, pergola ya da saçak kaydı: çerçevenin kirişi değildir, IFC'de eleman (kayıt) olarak yazılır. Alt yüzü katın döşemesinden kattan yükseklik kadar yukarıdadır.",
+                    "Cephe, pergola ya da saçak kaydı: çerçevenin kirişi değildir, IFC'de eleman (kayıt) olarak yazılır. Alt yüzü katın döşemesinden kattan yükseklik kadar yukarıdadır. Yükselme verilince ucu başından o kadar yüksektir: mertek ya da payanda gibi eğimli eleman, iki noktası olur.",
                 ),
             ]);
         } else if self.role == BeamRole::BondBeam {
