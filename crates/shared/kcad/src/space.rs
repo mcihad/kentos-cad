@@ -45,6 +45,9 @@ pub(crate) struct SpaceRest {
     /// Schema 140 (docs/adr/0773).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unit: Option<String>,
+    /// Architecture data 21 (docs/adr/8125): its own emsal state.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub emsal: Option<kentos_contracts::SpaceEmsal>,
 }
 
 fn is_net(m: &SpaceMethod) -> bool {
@@ -70,6 +73,7 @@ impl SpaceRest {
             void: f.void,
             broken: f.broken,
             unit: f.unit.clone(),
+            emsal: f.emsal.clone(),
         }
     }
 
@@ -92,6 +96,7 @@ impl SpaceRest {
             void: self.void,
             broken: self.broken,
             unit: self.unit,
+            emsal: self.emsal,
         }
     }
 }

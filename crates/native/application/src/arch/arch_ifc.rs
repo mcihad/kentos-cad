@@ -68,6 +68,7 @@ fn emsal_areas(doc: &Document) -> Vec<kentos_ifc::arch::EmsalArea> {
         EmsalCount::Included => 0u8,
         EmsalCount::Exempt => 1,
         EmsalCount::Outside => 2,
+        EmsalCount::Bonus => 3,
     };
     for r in &rooms {
         let k = (r.level.clone(), rank(r.count));
@@ -102,7 +103,17 @@ fn emsal_areas(doc: &Document) -> Vec<kentos_ifc::arch::EmsalArea> {
             } else {
                 rooms.iter().filter(|r| r.level == level && r.count == count).map(|r| r.walls).sum()
             };
+            // An emsal increase's bases, each once (docs/adr/8125): the zone's description.
+            let mut bases: Vec<String> = Vec::new();
+            for r in rooms.iter().filter(|r| r.level == level && r.count == count) {
+                if let Some(b) = &r.basis
+                    && !bases.contains(b)
+                {
+                    bases.push(b.clone());
+                }
+            }
             kentos_ifc::arch::EmsalArea {
+                bases,
                 moved: part(ZoningLimit::Balcony),
                 storage: part(ZoningLimit::Storage),
                 caretaker: part(ZoningLimit::Caretaker),

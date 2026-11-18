@@ -75,6 +75,9 @@ pub struct ZoningReport {
     pub exempt: f64,
     /// Emsal harici apart from the 30 % (5/8's own).
     pub outside: f64,
+    /// Emsal artışı (docs/adr/8125, EK-6 `DIGER`): the rooms the author says the administration's rules add to the
+    /// emsal base; neither in katlar alanı nor in the 30 %.
+    pub bonus: f64,
     /// 30 % of the parcel's emsal area; none without an emsal.
     pub cap: Option<f64>,
     /// The exempt rooms' area past the cap, counted in.
@@ -129,6 +132,8 @@ pub struct ZoningRoom {
     pub shape: Vec<Area>,
     /// The stone walls' part within its contour, out of katlar alanı apart from the 30 % (docs/adr/8095).
     pub walls: f64,
+    /// Its own emsal state's basis, when it gives one (docs/adr/8125).
+    pub basis: Option<String>,
 }
 
 
@@ -140,12 +145,14 @@ pub struct ZoningLevel {
     pub included: f64,
     pub exempt: f64,
     pub outside: f64,
+    /// Emsal artışı (docs/adr/8125).
+    pub bonus: f64,
 }
 
 impl ZoningLevel {
     /// The storey's construction area: every room's.
     pub fn all(&self) -> f64 {
-        self.included + self.exempt + self.outside
+        self.included + self.exempt + self.outside + self.bonus
     }
 }
 
@@ -213,6 +220,8 @@ struct Room {
     level: Option<String>,
     void: bool,
     count: EmsalCount,
+    /// Its own emsal state's basis (docs/adr/8125).
+    basis: Option<String>,
     outdoor: bool,
     gross: Vec<Area>,
     axis: Vec<Area>,
@@ -335,7 +344,8 @@ impl Document {
             let stair_hall = indoor
                 && room_names::stair_name(name, usage)
                 && group.is_none_or(|g| g.kind != kentos_contracts::UnitKind::Unit);
-            let count = match brief.and_then(|b| b.emsal) {
+            // Its own state wins (docs/adr/8125), then its brief's, then its words'.
+            let count = match x.emsal.as_ref().map(|e| e.count).or_else(|| brief.and_then(|b| b.emsal)) {
                 Some(c) => c,
                 None if outdoor => EmsalCount::Exempt,
                 None => match by_use {
@@ -357,6 +367,7 @@ impl Document {
                 level: x.arch.level.clone(),
                 void: x.void,
                 count,
+                basis: x.emsal.as_ref().and_then(|e| e.basis.clone()),
                 outdoor,
                 gross: if x.void {
                     Vec::new()
@@ -526,6 +537,10 @@ impl Document {
                     }
                 }
                 EmsalCount::Outside => {}
+                EmsalCount::Bonus => {
+                    out.bonus += g;
+                    level.bonus += g;
+                }
             }
             // A room out apart from the 30 % (5/8's own) keeps its whole contour there, its walls' part with it.
             let out_apart = if r.count == EmsalCount::Outside { gross[i] } else { walls_of[i] };
@@ -548,6 +563,7 @@ impl Document {
                 limit: limit_of[i],
                 shape: shapes[i].clone(),
                 walls: walls_of[i],
+                basis: r.basis.clone(),
             })
             .collect();
         out.limits = used;
@@ -768,6 +784,15 @@ impl Document {
                 named("Emsal harici, %30 dışında"),
                 String::new(),
                 area(r.outside),
+                String::new(),
+            ]);
+        }
+        // The rooms the administration's own rules add to the emsal base (docs/adr/8125, EK-6 DIGER): apart, said.
+        if r.bonus > 0.0 {
+            rows.push(vec![
+                named("Emsal artışı (DİĞER), idarenin düzenlemesiyle"),
+                String::new(),
+                area(r.bonus),
                 String::new(),
             ]);
         }

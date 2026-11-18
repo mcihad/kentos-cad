@@ -325,7 +325,8 @@ class Sorular(unittest.TestCase):
         f["records"]["IfcPerson"][0]["attributes"]["FamilyName"] = None
         b = satir(f, 2)["bulgular"][0]
         self.assertIn("IfcPerson", b["message"])
-        self.assertIn("Mimar (müellif) adı soyadı", b["repair"])
+        # The family name has its own künye field (docs/adr/8124).
+        self.assertIn("Mimarın soyadı (IFC modelinde)", b["repair"])
         # KentOS'un kendi yazdığı alan (rol) eksikse dosya sonradan değişmiştir.
         f = copy.deepcopy(KUNYE)
         f["records"]["IfcActorRole"][0]["attributes"]["Role"] = None

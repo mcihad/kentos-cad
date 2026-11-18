@@ -12,7 +12,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::{AREA, MOST_ITEMS, place, round};
+use super::{AREA, LENGTH, MOST_ITEMS, place, round};
 
 /// The most objects a layer names (`first`, `firstHatches`).
 pub const MOST_SHOWN: usize = 100;
@@ -211,6 +211,16 @@ pub struct CadRoom {
     pub level_code: Option<String>,
     /// Its outline's centre, m.
     pub at: [f64; 2],
+    /// Its floor's elevation over ±0.00 as the model reads it (docs/adr/8125; the slab under it, its floor offset), m;
+    /// none on no storey.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub floor: Option<f64>,
+    /// Its storey's elevation range over ±0.00, m: from the storey's level to the next storey's (EK-9 Tablo 9.1
+    /// satır 13: "doğru katta"); the top storey's to its level plus its height, none when neither is known.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub storey_from: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub storey_to: Option<f64>,
 }
 
 impl CadFacts {
@@ -238,6 +248,10 @@ impl CadFacts {
         self.grids.sort_by(|a, b| a.uid.cmp(&b.uid));
         for r in &mut self.rooms {
             r.at = place(r.at);
+            // Elevations to the millimetre, as the other lengths.
+            for v in [&mut r.floor, &mut r.storey_from, &mut r.storey_to].into_iter().flatten() {
+                *v = round(*v, LENGTH);
+            }
         }
         self.rooms.sort_by(|a, b| a.uid.cmp(&b.uid));
         self.derived.sort_by(|a, b| a.name.cmp(&b.name).then_with(|| a.mark.cmp(&b.mark)));
@@ -305,6 +319,9 @@ mod tests {
                 level: Some("l0".into()),
                 level_code: Some("K00".into()),
                 at: [1.000_49, -0.0001],
+                floor: None,
+                storey_from: None,
+                storey_to: None,
             }],
             derived: vec![],
             broken: vec![],

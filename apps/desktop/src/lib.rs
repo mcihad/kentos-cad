@@ -717,6 +717,9 @@ mod performance_tests;
 #[path = "tests/declared_readings_tests.rs"]
 mod declared_readings_tests;
 #[cfg(test)]
+#[path = "tests/room_emsal_tests.rs"]
+mod room_emsal_tests;
+#[cfg(test)]
 #[path = "tests/zones_tests.rs"]
 mod zones_tests;
 #[cfg(test)]

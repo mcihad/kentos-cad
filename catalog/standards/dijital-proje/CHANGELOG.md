@@ -1,5 +1,11 @@
 # Değişiklikler
 
+## 0.13.0 — 18 Kasım 2026
+
+- Doğru katta mahal (docs/adr/8125; EK-9 Tablo 9.1 satır 13): `kalite.denetle` mahalin döşemesini (`cad.rooms[].floor`)
+  katının kot aralığıyla (`storeyFrom`, `storeyTo`) karşılaştırır; dışındaysa `quality_room_storey` hatası. Eşik yoktur.
+- Zorunlu alanların ve formun künye kutuları: mimarın soyadı künyede ayrı alandır (docs/adr/8124 K279).
+
 ## 0.12.0 — 18 Kasım 2026
 
 - Acil çıkış beyanı ve kaçış yolları (docs/adr/8124): `cikis.denetle(olgular)` her kapı ve merdivenin acil çıkış

@@ -196,6 +196,8 @@ pub struct EmsalArea {
     pub caretaker: f64,
     pub library: f64,
     pub walls: f64,
+    /// Its rooms' own emsal states' bases, each once (docs/adr/8125): an emsal increase's description.
+    pub bases: Vec<String>,
 }
 
 /// A unit of the building program (docs/adr/8069; EK-6 Tablo 6.68): its id's bits, its number and name, its kind and its
@@ -262,6 +264,8 @@ fn emsal_state(a: &EmsalArea) -> (&'static str, &'static str, String) {
             "emsal harici alan (%30 dışında)",
             "Planlı Alanlar İmar Yönetmeliği 5/8: yangın merdiveni, korunumlu koridor, yangın güvenlik holü; %30 sınırının dışında".to_owned(),
         ),
+        // EK-6 Tablo 6.60: "DIGER olması durumunda açıklama Description bölümüne girilir" (docs/adr/8125).
+        C::Bonus => ("DIGER", "emsal artışı alanı", format!("Emsal artışı: {}", a.bases.join("; "))),
     }
 }
 
@@ -1819,6 +1823,23 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             }
         }
         let qtos = vec![Qto { name: "Qto_SpaceBaseQuantities".into(), quantities: q }];
+        // Its kind (docs/adr/8125; EK-6 Tablo 6.58): a car park PARKING, an outdoor room (its brief's: a balcony, a
+        // terrace, an open area) EXTERNAL, else INTERNAL; and, as IFC 4.3 asks in place of those two,
+        // `Pset_SpaceCommon.IsExternal`.
+        let outdoor = f
+            .usage
+            .as_deref()
+            .and_then(|u| arch.and_then(|a| a.program.brief(u)))
+            .is_some_and(|b| b.outdoor);
+        let predefined = if kentos_contracts::is_parking(f.name.as_deref(), f.usage.as_deref()) {
+            "PARKING"
+        } else if outdoor {
+            "EXTERNAL"
+        } else {
+            "INTERNAL"
+        };
+        let mut psets = psets;
+        give(&mut psets, "Pset_SpaceCommon", "IsExternal", Value::Bool(outdoor));
         let (top, body) = match &under {
             Some(p) => (crate::under_roof::top(p), crate::under_roof::shapes(p, bottom)),
             None => (top, Vec::new()),
@@ -1832,7 +1853,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             bulges,
             bottom,
             top,
-            predefined: "INTERNAL",
+            predefined,
             psets,
             qtos,
             body,

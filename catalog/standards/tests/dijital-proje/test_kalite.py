@@ -52,5 +52,27 @@ class Kalite(unittest.TestCase):
         self.assertIn("quality_room_overlap", [x["rule"] for x in b])
 
 
+class DogruKat(unittest.TestCase):
+    """EK-9/13'ün "doğru katta"sı (docs/adr/8125): mahalin döşemesi katının kot aralığında."""
+
+    def mahal(self, doseme, alt=0.0, ust=3.0):
+        return {"uid": "m1", "number": "001", "name": "Salon", "levelCode": "K00", "at": [1.0, 2.0],
+                "floor": doseme, "storeyFrom": alt, "storeyTo": ust}
+
+    def test_katinda_olan_mahal_bulgu_degil(self):
+        for doseme in (0.0, 0.15, 2.999):
+            self.assertEqual(kalite.denetle({"cad": {"rooms": [self.mahal(doseme)]}}), [], doseme)
+
+    def test_katinin_altinda_ya_da_ustunde_olan_mahal_bulgu(self):
+        for doseme in (-0.30, 3.0, 3.20):
+            b = kalite.denetle({"cad": {"rooms": [self.mahal(doseme)]}})
+            self.assertEqual([x["code"] for x in b], ["digital_quality_room_storey"], doseme)
+            self.assertIn("kot aralığında değil (0.00–3.00 m)", b[0]["message"])
+
+    def test_en_ust_katin_ustu_sinirsiz_kat_bilinmiyorsa_sorulmaz(self):
+        self.assertEqual(kalite.denetle({"cad": {"rooms": [self.mahal(7.0, 6.0, None)]}}), [])
+        self.assertEqual(kalite.denetle({"cad": {"rooms": [{"uid": "m1", "floor": 2.0}]}}), [])
+
+
 if __name__ == "__main__":
     unittest.main()

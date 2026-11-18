@@ -2668,13 +2668,15 @@ class EmsalCount(_StrEnum):
     - ``included``: Emsale dahil: the floors' area (katlar alanı).
     - ``exempt``: Emsal harici (22/1): out of it, but together at most 30 % of the parcel's emsal area (5/8); what passes goes in.
     - ``outside``: Emsal harici, %30'a sayılmaz (5/8's own list: fire stairs and their halls, a shelter or plant room in the
+    - ``bonus``: Emsal artışı (docs/adr/8125; EK-4 4.14.2, EK-6 Tablo 6.60 `DIGER`): an area the administration's own zoning rules
     """
     INCLUDED = "included"
     EXEMPT = "exempt"
     OUTSIDE = "outside"
+    BONUS = "bonus"
 
 
-EmsalCountName = Literal["included", "exempt", "outside"]
+EmsalCountName = Literal["included", "exempt", "outside", "bonus"]
 """The names of :class:`EmsalCount`, for a plain string."""
 
 
@@ -100957,6 +100959,30 @@ class SpaceDecision(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SpaceEmsal(_Model):
+    """A room's own emsal state (docs/adr/8125; plan/bim-plan.md BIM-08 "elle düzeltilir"): over what its brief and its
+    words say, with the basis it rests on (an article, a plan note, the administration's decision). An emsal increase
+    (`bonus`, EK-6's `DIGER`) needs its basis: the model writes it as the zone's description.
+    """
+    count: EmsalCount | EmsalCountName
+    basis: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["count"] = _enum_out(self.count)
+        if self.basis is not UNSET:
+            out["basis"] = self.basis
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceEmsal:
+        return cls(
+            count=_enum_in(EmsalCount, data["count"]),
+            basis=data.get("basis", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SpaceEntity(Entity):
     """A space (docs/adr/0342).
     Attributes:
@@ -100970,6 +100996,7 @@ class SpaceEntity(Entity):
             never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         columns: Physical columns to deduct, within the same semantic level (no level: all).
+        emsal: Its own emsal state (docs/adr/8125, `.kcad` architecture data 21) over its brief's and its words'; absent: those.
         floor_offset: Döşeme kot farkı (docs/adr/8040 §3, `.kcad` schema 233): its finished floor over its storey's elevation, metres;
             a wet room 2 cm lower. Absent: the top of the floor slab under it, else its storey's floor. Unit: elevation.
         height: Its inside height typed, metres: from its finished floor to its ceiling (PAİY 4(1)(ıı)); an asma tavan comes
@@ -101012,6 +101039,7 @@ class SpaceEntity(Entity):
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     columns: SpaceColumns | SpaceColumnsName | Unset = UNSET
+    emsal: SpaceEmsal | None | Unset = UNSET
     finishes: SpaceFinishes | Unset = UNSET
     floor_offset: float | None | Unset = UNSET
     height: float | None | Unset = UNSET
@@ -101054,6 +101082,8 @@ class SpaceEntity(Entity):
             out["color"] = self.color
         if self.columns is not UNSET:
             out["columns"] = _enum_out(self.columns)
+        if self.emsal is not UNSET:
+            out["emsal"] = None if self.emsal is None else self.emsal.to_json()
         if self.finishes is not UNSET:
             out["finishes"] = self.finishes.to_json()
         if self.floor_offset is not UNSET:
@@ -101115,6 +101145,7 @@ class SpaceEntity(Entity):
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             columns=_enum_in(SpaceColumns, data["columns"]) if "columns" in data else UNSET,
+            emsal=UNSET if "emsal" not in data else None if data["emsal"] is None else SpaceEmsal.from_json(data["emsal"]),
             finishes=SpaceFinishes.from_json(data["finishes"]) if "finishes" in data else UNSET,
             floor_offset=UNSET if "floorOffset" not in data else None if data["floorOffset"] is None else float(data["floorOffset"]),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
@@ -101147,6 +101178,7 @@ class SpaceFields(_Model):
     Attributes:
         parts: Its boundary: one part or more, each an outer ring and its holes.
         columns: Physical columns to deduct, within the same semantic level (no level: all).
+        emsal: Its own emsal state (docs/adr/8125, `.kcad` architecture data 21) over its brief's and its words'; absent: those.
         floor_offset: Döşeme kot farkı (docs/adr/8040 §3, `.kcad` schema 233): its finished floor over its storey's elevation, metres;
             a wet room 2 cm lower. Absent: the top of the floor slab under it, else its storey's floor. Unit: elevation.
         height: Its inside height typed, metres: from its finished floor to its ceiling (PAİY 4(1)(ıı)); an asma tavan comes
@@ -101166,6 +101198,7 @@ class SpaceFields(_Model):
     arch: ArchInfo | Unset = UNSET
     broken: SpaceBreak | SpaceBreakName | None | Unset = UNSET
     columns: SpaceColumns | SpaceColumnsName | Unset = UNSET
+    emsal: SpaceEmsal | None | Unset = UNSET
     finishes: SpaceFinishes | Unset = UNSET
     floor_offset: float | None | Unset = UNSET
     height: float | None | Unset = UNSET
@@ -101189,6 +101222,8 @@ class SpaceFields(_Model):
             out["broken"] = None if self.broken is None else _enum_out(self.broken)
         if self.columns is not UNSET:
             out["columns"] = _enum_out(self.columns)
+        if self.emsal is not UNSET:
+            out["emsal"] = None if self.emsal is None else self.emsal.to_json()
         if self.finishes is not UNSET:
             out["finishes"] = self.finishes.to_json()
         if self.floor_offset is not UNSET:
@@ -101224,6 +101259,7 @@ class SpaceFields(_Model):
             arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
             broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(SpaceBreak, data["broken"]),
             columns=_enum_in(SpaceColumns, data["columns"]) if "columns" in data else UNSET,
+            emsal=UNSET if "emsal" not in data else None if data["emsal"] is None else SpaceEmsal.from_json(data["emsal"]),
             finishes=SpaceFinishes.from_json(data["finishes"]) if "finishes" in data else UNSET,
             floor_offset=UNSET if "floorOffset" not in data else None if data["floorOffset"] is None else float(data["floorOffset"]),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
@@ -141609,6 +141645,7 @@ class SetSpacesOperation(SpacesOperation):
     Attributes:
         base: The skirting's finish (Süpürgelik, docs/adr/0733 §3).
         columns: Physical column deduction; absent keeps legacy wall-only areas.
+        emsal: Its own emsal state and basis (docs/adr/8125); null: its brief's and its words' again.
         floor_offset: Döşeme kot farkı (docs/adr/8040 §3); null: the floor slab under it, else its storey's floor. Unit: elevation.
         height: Unit: elevation.
         method: The method its boundary is found again with (a space from the walls) or its rings stand for (a drawn one).
@@ -141623,6 +141660,7 @@ class SetSpacesOperation(SpacesOperation):
     base: str | None | Unset = UNSET
     ceiling: str | None | Unset = UNSET
     columns: SpaceColumns | SpaceColumnsName | None | Unset = UNSET
+    emsal: SpaceEmsal | None | Unset = UNSET
     floor: str | None | Unset = UNSET
     floor_offset: float | None | Unset = UNSET
     height: float | None | Unset = UNSET
@@ -141650,6 +141688,8 @@ class SetSpacesOperation(SpacesOperation):
             out["ceiling"] = self.ceiling
         if self.columns is not UNSET:
             out["columns"] = None if self.columns is None else _enum_out(self.columns)
+        if self.emsal is not UNSET:
+            out["emsal"] = None if self.emsal is None else self.emsal.to_json()
         if self.floor is not UNSET:
             out["floor"] = self.floor
         if self.floor_offset is not UNSET:
@@ -141694,6 +141734,7 @@ class SetSpacesOperation(SpacesOperation):
             base=data.get("base", UNSET),
             ceiling=data.get("ceiling", UNSET),
             columns=UNSET if "columns" not in data else None if data["columns"] is None else _enum_in(SpaceColumns, data["columns"]),
+            emsal=UNSET if "emsal" not in data else None if data["emsal"] is None else SpaceEmsal.from_json(data["emsal"]),
             floor=data.get("floor", UNSET),
             floor_offset=UNSET if "floorOffset" not in data else None if data["floorOffset"] is None else float(data["floorOffset"]),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
@@ -149281,6 +149322,7 @@ __all__ = [
     "SpaceColumnsName",
     "SpaceDecision",
     "SpaceDimensionEdit",
+    "SpaceEmsal",
     "SpaceEntity",
     "SpaceFields",
     "SpaceFinishes",

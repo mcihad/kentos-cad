@@ -268,6 +268,9 @@ def stored(s, exact):
     for k in ("floorOffset", "suspendedCeiling"):
         if s.get(k) is not None:
             out[k] = s[k]
+    # Its own emsal state (ADR 8125): written when given.
+    if s.get("emsal") is not None:
+        out["emsal"] = s["emsal"]
     fin = {k: v for k, v in s.get("finishes", {}).items() if v is not None}
     if fin:
         out["finishes"] = fin
@@ -834,10 +837,18 @@ def edit(d, inp, conflict=False):
         for key, name in (("floorOffset", "Döşeme kot farkı"), ("suspendedCeiling", "Asma tavan")):
             if ch.get(key) is not None and not math.isfinite(ch[key]):
                 return not_finite(name, f"operation.{key}"), None
+        # A room's own emsal state (ADR 8125): an increase (bonus) needs its basis; a basis is not empty, at most 200
+        # letters, no line break.
+        em = ch.get("emsal")
+        if em is not None:
+            basis = em.get("basis")
+            if (em["count"] == "bonus" and basis is None) or (basis is not None and (
+                    not basis.strip() or len(basis) > 200 or any(ord(x) < 32 for x in basis))):
+                return refusal("invalid_space", "$any", "operation.emsal"), None
         for at, i in found:
             layer_id, s, extra = d.spaces[i]
             s = copy.deepcopy(s)
-            for k in ("number", "name", "usage", "height", "floorOffset", "suspendedCeiling"):
+            for k in ("number", "name", "usage", "height", "floorOffset", "suspendedCeiling", "emsal"):
                 if k in ch:
                     s[k] = ch[k]
             if "method" in ch:
@@ -1090,9 +1101,20 @@ def edit_cases():
         ("Değiştir: döşeme kot farkı ve asma tavan", {"kind": "set", "floorOffset": -0.05, "suspendedCeiling": 2.6}),
         ("Değiştir: yöntem duvar ekseni, sınır duvarlardan yeniden", {"kind": "set", "method": "centerline"}),
         ("Değiştir: yöntem brüt", {"kind": "set", "method": "gross"}),
+        # A room's own emsal state (ADR 8125).
+        ("Değiştir: emsal durumu harici (%30 içinde), dayanağıyla",
+         {"kind": "set", "emsal": {"count": "exempt", "basis": "Planlı Alanlar İmar Yönetmeliği 22/1-a"}}),
+        ("Değiştir: emsal artışı (DİĞER), idarenin düzenlemesiyle",
+         {"kind": "set", "emsal": {"count": "bonus", "basis": "Sivas İmar Yönetmeliği 22/k"}}),
+        ("Ret: emsal artışı dayanaksız yazılmaz", {"kind": "set", "emsal": {"count": "bonus"}}),
     ]:
         d, made = fresh({"seed": LEFT, "name": "Oda"})
         c.add(name, [made, edit_step(d, "execute", {"uids": [uid_of(first)], "operation": op}), quant_step(d, command=QUANT)])
+    # A room's own emsal state given, then taken away by null (ADR 8125).
+    d, made = fresh({"seed": LEFT, "name": "Oda"})
+    c.add("Değiştir: emsal durumu verilir, null ile kendiliğinden olur",
+          [made, edit_step(d, "execute", {"uids": [uid_of(first)], "operation": {"kind": "set", "emsal": {"count": "outside", "basis": "Planlı Alanlar İmar Yönetmeliği 5/8"}}}),
+           edit_step(d, "execute", {"uids": [uid_of(first)], "operation": {"kind": "set", "emsal": None}}), quant_step(d, command=QUANT)])
     # A room made a void and a room again (docs/adr/0708).
     d, made = fresh({"seed": LEFT, "name": "Oda"}, {"seed": RIGHT, "name": "Şaft"})
     c.add("Değiştir: oda boşluk olur, metraj boşluğu ayrı toplar; sonra yine oda",

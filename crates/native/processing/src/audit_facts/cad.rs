@@ -105,6 +105,8 @@ pub fn measure(doc: &Document) -> CadFacts {
             Entity::Space(s) => {
                 let level = e.own_level().map(str::to_owned);
                 let areas = core_areas(&s.space.parts);
+                // Its floor and its storey's range (docs/adr/8125; EK-9/13 "doğru katta").
+                let range = level.as_deref().and_then(|l| storey_range(doc, l));
                 rooms.push(CadRoom {
                     uid: uid.to_string(),
                     number: s.space.number.clone(),
@@ -112,6 +114,9 @@ pub fn measure(doc: &Document) -> CadFacts {
                     level_code: level.as_ref().and_then(|l| codes.get(l).cloned()),
                     level: level.clone(),
                     at: centre(&areas),
+                    floor: range.and(doc.room_height(&s.space)).map(|h| h.floor),
+                    storey_from: range.map(|r| r.0),
+                    storey_to: range.and_then(|r| r.1),
                 });
                 grounds.push((uid.to_string(), level, areas));
             }
@@ -150,6 +155,17 @@ pub fn measure(doc: &Document) -> CadFacts {
         model_gaps: model_gaps(doc),
         exits: exits(doc),
     }
+}
+
+/// A storey's elevation range over ±0.00 (docs/adr/8125): its level to the next storey's, else to its level plus its
+/// height; none for a level the project lacks.
+fn storey_range(doc: &Document, level: &str) -> Option<(f64, Option<f64>)> {
+    let mut levels: Vec<&kentos_commands::ArchLevel> = doc.settings().arch.as_ref()?.levels.iter().collect();
+    levels.sort_by(|a, b| a.elevation.total_cmp(&b.elevation));
+    let i = levels.iter().position(|l| l.id == level)?;
+    let l = levels[i];
+    let to = levels.get(i + 1).map(|n| n.elevation).or_else(|| l.height.map(|h| l.elevation + h));
+    Some((l.elevation, to))
 }
 
 /// Every door and stair, its declared exit role and what the escape routes take it as (docs/adr/8124).

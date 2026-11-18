@@ -5,7 +5,11 @@ okumaz: KentOS'un ölçtüğü olgulara (``facts.cad``) bakar.
   mi?" Aynı kattaki iki mahal (ya da ikisi de katsız) aynı zemini kaplıyorsa hata. Ortak alan KentOS'un ölçtüğüdür
   (``cad.roomOverlaps``: iki mahalin çizilen alanlarının kesişimi, 0,0001 m²'ye); bir eşiğin altındaki ortak alan
   çizimin yuvarlamasıdır, örtüşme sayılmaz.
+- ``quality_room_storey`` — aynı satırın "doğru katta" sorusu (docs/adr/8125): mahalin döşemesi katının kot aralığında
+  değilse (katın kotundan bir sonraki katın kotuna; en üst katta kotuna yüksekliği eklenerek) hata. Döşeme, modelin
+  okuduğudur (altındaki döşeme, kot farkı); aralığın sınırları milimetreye yuvarlanmış olgulardır, eşik yoktur.
 """
+
 
 from __future__ import annotations
 
@@ -19,7 +23,8 @@ ESIK = 0.01
 
 
 def denetle(facts: dict[str, Any], data: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-    """``facts``: ``{"cad": {"rooms": [{uid, number, name, levelCode}], "roomOverlaps": [{a, b, area, at}]}}``."""
+    """``facts``: ``{"cad": {"rooms": [{uid, number, name, levelCode, at, floor, storeyFrom, storeyTo}],
+    "roomOverlaps": [{a, b, area, at}]}}``."""
     cad = facts.get("cad") or {}
     mahaller = {r["uid"]: r for r in cad.get("rooms") or []}
     out: list[dict[str, Any]] = []
@@ -39,6 +44,27 @@ def denetle(facts: dict[str, Any], data: dict[str, Any] | None = None) -> list[d
                       "Toplu mahal bul sınırları duvarlardan yeniden bulur.",
             "uids": [o["a"], o["b"]],
             "at": list(o.get("at") or [0.0, 0.0]),
+            "cite": " · ".join([SATIR_13, RG]),
+            "fix": None,
+        })
+    for r in mahaller.values():
+        doseme, alt, ust = r.get("floor"), r.get("storeyFrom"), r.get("storeyTo")
+        if doseme is None or alt is None:
+            continue
+        if alt <= doseme and (ust is None or doseme < ust):
+            continue
+        kat = f" ({r['levelCode']})" if r.get("levelCode") else ""
+        aralik = f"{alt:.2f}–{ust:.2f} m" if ust is not None else f"{alt:.2f} m ve üstü"
+        out.append({
+            "rule": "quality_room_storey",
+            "code": "digital_quality_room_storey",
+            "severity": "error",
+            "message": f"{_ad(r, r['uid'])}: döşemesi {doseme:.2f} m, katının{kat} kot aralığında değil ({aralik}) — "
+                       "Dijital Proje Yön. EK-9/13",
+            "repair": "Mahali döşemesinin bulunduğu kata taşıyın (Öznitelikler › Kat) ya da döşeme kot farkını düzeltin; "
+                      "kademeli kat bilerek böyleyse istisna yapın.",
+            "uids": [r["uid"]],
+            "at": list(r.get("at") or [0.0, 0.0]),
             "cite": " · ".join([SATIR_13, RG]),
             "fix": None,
         })

@@ -282,6 +282,10 @@ pub struct SpaceFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub unit: Option<String>,
+    /// Its own emsal state (docs/adr/8125, `.kcad` architecture data 21) over its brief's and its words'; absent: those.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub emsal: Option<crate::SpaceEmsal>,
 }
 
 /// A space (docs/adr/0342).

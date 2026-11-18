@@ -631,6 +631,14 @@
           "minItems": 2,
           "type": "array"
         },
+        "floor": {
+          "description": "Its floor's elevation over ±0.00 as the model reads it (docs/adr/8125; the slab under it, its floor offset), m;\nnone on no storey.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
         "level": {
           "description": "Its storey's id.",
           "type": [
@@ -654,6 +662,21 @@
         "number": {
           "type": [
             "string",
+            "null"
+          ]
+        },
+        "storeyFrom": {
+          "description": "Its storey's elevation range over ±0.00, m: from the storey's level to the next storey's (EK-9 Tablo 9.1\nsatır 13: \"doğru katta\"); the top storey's to its level plus its height, none when neither is known.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "storeyTo": {
+          "format": "double",
+          "type": [
+            "number",
             "null"
           ]
         },

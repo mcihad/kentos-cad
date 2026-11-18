@@ -2,6 +2,7 @@
 import type { ArchInfo } from "./ArchInfo";
 import type { SpaceBreak } from "./SpaceBreak";
 import type { SpaceColumns } from "./SpaceColumns";
+import type { SpaceEmsal } from "./SpaceEmsal";
 import type { SpaceFinishes } from "./SpaceFinishes";
 import type { SpaceMethod } from "./SpaceMethod";
 import type { SpacePart } from "./SpacePart";
@@ -60,4 +61,8 @@ void?: boolean, broken?: SpaceBreak,
  * The group it belongs to (docs/adr/0773, `.kcad` schema 138): an independent unit, a common area or an outdoor
  * area of the building's program, by its id. Absent: none.
  */
-unit?: string, };
+unit?: string, 
+/**
+ * Its own emsal state (docs/adr/8125, `.kcad` architecture data 21) over its brief's and its words'; absent: those.
+ */
+emsal?: SpaceEmsal, };

@@ -3,4 +3,4 @@
 /**
  * How a room counts for the floor area ratio (docs/adr/8030; Planlı Alanlar İmar Yönetmeliği 5/8, 21, 22).
  */
-export type EmsalCount = "included" | "exempt" | "outside";
+export type EmsalCount = "included" | "exempt" | "outside" | "bonus";

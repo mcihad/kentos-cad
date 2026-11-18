@@ -2107,13 +2107,24 @@ pub enum EmsalCount {
     /// Emsal harici, %30'a sayılmaz (5/8's own list: fire stairs and their halls, a shelter or plant room in the
     /// basement …).
     Outside,
+    /// Emsal artışı (docs/adr/8125; EK-4 4.14.2, EK-6 Tablo 6.60 `DIGER`): an area the administration's own zoning rules
+    /// let the emsal base grow by. Neither in nor out: its own sum, its basis said. Only a room's own state.
+    Bonus,
 }
 
 impl EmsalCount {
+    /// A program brief's choices.
     pub const ALL: [EmsalCount; 3] = [
         EmsalCount::Included,
         EmsalCount::Exempt,
         EmsalCount::Outside,
+    ];
+    /// A room's own choices (docs/adr/8125): the brief's and the emsal increase.
+    pub const ROOM: [EmsalCount; 4] = [
+        EmsalCount::Included,
+        EmsalCount::Exempt,
+        EmsalCount::Outside,
+        EmsalCount::Bonus,
     ];
 
     pub fn label(self) -> &'static str {
@@ -2121,6 +2132,7 @@ impl EmsalCount {
             EmsalCount::Included => "Emsale dahil",
             EmsalCount::Exempt => "Emsal harici (%30 içinde)",
             EmsalCount::Outside => "Emsal harici (%30'a sayılmaz)",
+            EmsalCount::Bonus => "Emsal artışı (DİĞER)",
         }
     }
 
@@ -2129,14 +2141,49 @@ impl EmsalCount {
             EmsalCount::Included => "included",
             EmsalCount::Exempt => "exempt",
             EmsalCount::Outside => "outside",
+            EmsalCount::Bonus => "bonus",
         }
     }
 }
 
-/// How a room counts for the floor area ratio by its name and use when its brief does not say (docs/adr/8030): the
-/// words of Planlı Alanlar İmar Yönetmeliği 22/1's rooms (otopark, sığınak, mescit, galeri, kapıcı, tesisat, kazan,
-/// depo …) exempt; 5/8's fire stairs and halls outside the 30 %; every other room in.
-pub fn emsal_by_use(name: Option<&str>, usage: Option<&str>) -> EmsalCount {
+/// The longest basis a room's emsal state gives, in letters.
+pub const MAX_EMSAL_BASIS: usize = 200;
+
+/// A room's own emsal state (docs/adr/8125; plan/bim-plan.md BIM-08 "elle düzeltilir"): over what its brief and its
+/// words say, with the basis it rests on (an article, a plan note, the administration's decision). An emsal increase
+/// (`bonus`, EK-6's `DIGER`) needs its basis: the model writes it as the zone's description.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpaceEmsal {
+    pub count: EmsalCount,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub basis: Option<String>,
+}
+
+impl SpaceEmsal {
+    /// What is wrong with it: an increase without its basis, a basis empty, too long or with a line break.
+    pub fn problem(&self) -> Option<String> {
+        match self.basis.as_deref() {
+            None if self.count == EmsalCount::Bonus => Some(
+                "Emsal artışının (DİĞER) dayanağı yazılmalı: idarenin düzenlemesi, plan notu ya da kararı (Sivas İmar \
+                 Yönetmeliği 22/k gibi)."
+                    .into(),
+            ),
+            Some(b) if b.trim().is_empty() => Some("Emsal durumunun dayanağı boş olamaz: bilinmiyorsa yazmayın.".into()),
+            Some(b) if b.chars().count() > MAX_EMSAL_BASIS || b.chars().any(char::is_control) => Some(format!(
+                "Emsal durumunun dayanağı en çok {MAX_EMSAL_BASIS} harf olur ve satır sonu içermez."
+            )),
+            _ => None,
+        }
+    }
+}
+
+/// A room's name and use folded as the words are read (Turkish letters to their bare capitals: “Otopark” → OTOPARK).
+fn folded_words(name: Option<&str>, usage: Option<&str>) -> Vec<String> {
     let fold = |t: &str| {
         t.chars()
             .map(|c| match c {
@@ -2150,7 +2197,20 @@ pub fn emsal_by_use(name: Option<&str>, usage: Option<&str>) -> EmsalCount {
             })
             .collect::<String>()
     };
-    let words: Vec<String> = [name, usage].into_iter().flatten().map(fold).collect();
+    [name, usage].into_iter().flatten().map(fold).collect()
+}
+
+/// Whether a room is a car park by its name or use (docs/adr/8125; IFC 4.3 `IfcSpaceTypeEnum.PARKING`: "a parking spot
+/// for vehicles, including access, such as a parking aisle"): Otopark, Kapalı otopark, Garaj.
+pub fn is_parking(name: Option<&str>, usage: Option<&str>) -> bool {
+    folded_words(name, usage).iter().any(|t| t.contains("OTOPARK") || t.contains("GARAJ"))
+}
+
+/// How a room counts for the floor area ratio by its name and use when its brief does not say (docs/adr/8030): the
+/// words of Planlı Alanlar İmar Yönetmeliği 22/1's rooms (otopark, sığınak, mescit, galeri, kapıcı, tesisat, kazan,
+/// depo …) exempt; 5/8's fire stairs and halls outside the 30 %; every other room in.
+pub fn emsal_by_use(name: Option<&str>, usage: Option<&str>) -> EmsalCount {
+    let words = folded_words(name, usage);
     let has = |w: &str| words.iter().any(|t| t.contains(w));
     if has("YANGIN MERDIVEN") || has("YANGIN GUVENLIK") || has("KORUNUMLU") {
         return EmsalCount::Outside;

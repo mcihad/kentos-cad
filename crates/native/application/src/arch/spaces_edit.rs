@@ -84,6 +84,9 @@ fn changed(s: &SpaceFields, c: &SpaceChange) -> SpaceFields {
     if let Some(v) = &c.usage {
         f.usage.clone_from(v);
     }
+    if let Some(v) = &c.emsal {
+        f.emsal.clone_from(v);
+    }
     if let Some(v) = c.columns { f.columns = v; }
     if let Some(v) = c.method {
         f.method = v;
@@ -181,6 +184,12 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
             }
             if let Some(u) = &c.unit {
                 unit_known(doc, u.as_deref(), "operation.unit")?;
+            }
+            // Its own emsal state (docs/adr/8125): an increase needs its basis.
+            if let Some(Some(x)) = &c.emsal
+                && let Some(why) = x.problem()
+            {
+                return Err(fail(codes::INVALID_SPACE, why, "operation.emsal"));
             }
             for (at, slot, s) in &list {
                 let mut f = changed(&s.space, c);

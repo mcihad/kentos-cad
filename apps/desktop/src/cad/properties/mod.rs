@@ -372,6 +372,8 @@ pub enum Field {
     SpaceNumber(Slot),
     SpaceName(Slot),
     SpaceUsage(Slot),
+    /// Its own emsal state's basis (docs/adr/8125): typed, it makes the state now its own.
+    SpaceEmsalBasis(Slot),
     SpaceHeight(Slot),
     /// Its Döşeme kot farkı (empty: the floor slab under it, else its storey's) and Asma tavan (empty or Yok: none;
     /// docs/adr/8040 §3).

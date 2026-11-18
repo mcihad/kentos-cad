@@ -1770,6 +1770,1022 @@
       ]
     },
     {
+      "name": "Değiştir: emsal durumu harici (%30 içinde), dayanağıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "emsal": {
+                "count": "exempt",
+                "basis": "Planlı Alanlar İmar Yönetmeliği 22/1-a"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 8,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "name": "Oda",
+                  "emsal": {
+                    "count": "exempt",
+                    "basis": "Planlı Alanlar İmar Yönetmeliği 22/1-a"
+                  }
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda",
+                "emsal": {
+                  "count": "exempt",
+                  "basis": "Planlı Alanlar İmar Yönetmeliği 22/1-a"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "name": "Oda",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 19.25
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 23.16,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "baseboardLength": 19.25
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: emsal artışı (DİĞER), idarenin düzenlemesiyle",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "emsal": {
+                "count": "bonus",
+                "basis": "Sivas İmar Yönetmeliği 22/k"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 8,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "name": "Oda",
+                  "emsal": {
+                    "count": "bonus",
+                    "basis": "Sivas İmar Yönetmeliği 22/k"
+                  }
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda",
+                "emsal": {
+                  "count": "bonus",
+                  "basis": "Sivas İmar Yönetmeliği 22/k"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "name": "Oda",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 19.25
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 23.16,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "baseboardLength": 19.25
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: emsal artışı dayanaksız yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "emsal": {
+                "count": "bonus"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_space",
+              "message": "$any",
+              "path": "operation.emsal"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "name": "Oda",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 19.25
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 23.16,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "baseboardLength": 19.25
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: emsal durumu verilir, null ile kendiliğinden olur",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.spaces.create",
+          "input": {
+            "layerId": "mahal",
+            "spaces": [
+              {
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "emsal": {
+                "count": "outside",
+                "basis": "Planlı Alanlar İmar Yönetmeliği 5/8"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 8,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "name": "Oda",
+                  "emsal": {
+                    "count": "outside",
+                    "basis": "Planlı Alanlar İmar Yönetmeliği 5/8"
+                  }
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda",
+                "emsal": {
+                  "count": "outside",
+                  "basis": "Planlı Alanlar İmar Yönetmeliği 5/8"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "emsal": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "kind": "space",
+                  "id": 8,
+                  "layerId": "mahal",
+                  "attrs": {},
+                  "parts": "$any",
+                  "seed": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "name": "Oda"
+                }
+              ],
+              "kept": [
+                "$any"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "space",
+                "id": 8,
+                "layerId": "mahal",
+                "attrs": {},
+                "parts": "$any",
+                "seed": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "name": "Oda"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [
+                {
+                  "uid": "$uidOf:8",
+                  "name": "Oda",
+                  "method": "net",
+                  "area": 23.16,
+                  "perimeter": 19.25,
+                  "byMethod": {
+                    "net": 23.16,
+                    "centerline": 25.0,
+                    "gross": 26.91
+                  },
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "baseboard": 19.25
+                }
+              ],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 23.16,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "baseboardLength": 19.25
+              }
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "Değiştir: oda boşluk olur, metraj boşluğu ayrı toplar; sonra yine oda",
       "steps": [
         {

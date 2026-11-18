@@ -92,6 +92,9 @@
       %20'si" okuması düzeltildi); tabloda kendi satırı.
     - Kat ve sayılış biçimi başına emsal zonu (`IfcSpatialZone`, DAHIL/HARIC, dayanağı açıklamada), bölümler `IfcZone`.
       Kalan: katlar arasında yer değiştiren alan (olgusu eklenti sistemiyle birlikte), çatı altı mahal hacmi.
+    - ADR 8125 (18 Kasım 2026): mahalin kendi emsal durumu (`space.emsal`, mimari verisi 21) ve emsal artışı DİĞER
+      (dayanaksız yok; kendi toplamı; DIGER zonu açıklamasıyla); mahalin türü (PARKING, EXTERNAL, INTERNAL) ve
+      `IsExternal`; EK-9/13'ün "doğru katta"sı (`quality_room_storey`). Kalan: teslim edilen dosyada kat × sınıf.
   - **B9 kısmen yapıldı (16 Kasım 2026; [ADR 8070](../adr/8070-missing-building-elements.md); BIM-09 ve IFC-03 `[~]`):**
     - Rampa kesit modelinde eğik plak ve sahanlık; merdiven ve rampanın IFC tipi kollarından (listede yoksa USERDEFINED);
       ikisi de kesitin çizdiği gibi Betonarme (K42).

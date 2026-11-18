@@ -207,3 +207,22 @@ fn the_declared_readings_round_trip_under_arch_data_20() {
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
     assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the roles read back");
 }
+
+/// Architecture data 21 (docs/adr/8125): a room's own emsal state, an emsal increase with its basis, is written with
+/// `modules.arch = 21` and read back.
+#[test]
+fn a_room_s_own_emsal_state_round_trips_under_arch_data_21() {
+    use kentos_contracts::{EmsalCount, Entity, SpaceEmsal};
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_room_emsal(&doc));
+    let room = doc.entities.iter_mut().find_map(|e| match e {
+        Entity::Space(s) => Some(s),
+        _ => None,
+    });
+    room.expect("a room").space.emsal =
+        Some(SpaceEmsal { count: EmsalCount::Bonus, basis: Some("Sivas İmar Yönetmeliği 22/k".into()) });
+    assert!(kentos_kcad::uses_room_emsal(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_ROOM_EMSAL);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the state reads back");
+}

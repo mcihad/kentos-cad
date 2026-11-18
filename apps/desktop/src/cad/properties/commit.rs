@@ -1167,6 +1167,24 @@ pub(super) fn commit(
             };
             return properties::edit_arch(model, *slot, ArchOperation::Set(Box::new(c)));
         }
+        Field::SpaceEmsalBasis(slot) => {
+            use kentos_commands::{SpaceChange, SpaceEmsal, SpacesOperation};
+            let t = kentos_interaction::js_trim(text);
+            let Some(Entity::Space(s)) = model.get(*slot) else { return Vec::new() };
+            // The state it counts as now, made its own with the basis; empty takes the basis away (an increase keeps
+            // needing one: the command says so).
+            let uid = model.uid(*slot).map(|u| u.to_string()).unwrap_or_default();
+            let now = s.space.emsal.as_ref().map(|e| e.count).or_else(|| {
+                model.zoning_rooms().into_iter().find(|r| r.uid == uid).map(|r| r.count)
+            });
+            let Some(count) = now else { return Vec::new() };
+            let emsal = SpaceEmsal { count, basis: (!t.is_empty()).then(|| t.to_owned()) };
+            if s.space.emsal.as_ref() == Some(&emsal) {
+                return Vec::new();
+            }
+            let change = SpaceChange { emsal: Some(Some(emsal)), ..Default::default() };
+            return properties::edit_space(model, *slot, SpacesOperation::Set(change));
+        }
         Field::SpaceNumber(slot)
         | Field::SpaceName(slot)
         | Field::SpaceUsage(slot)
@@ -1596,6 +1614,7 @@ pub(super) fn commit(
         | Field::SpaceNumber(_)
         | Field::SpaceName(_)
         | Field::SpaceUsage(_)
+        | Field::SpaceEmsalBasis(_)
         | Field::SpaceHeight(_)
         | Field::SpaceFloorOffset(_)
         | Field::SpaceSuspended(_)

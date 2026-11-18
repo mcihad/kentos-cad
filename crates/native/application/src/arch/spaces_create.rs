@@ -169,6 +169,7 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
             void: n.void.unwrap_or(false),
             broken: None,
             unit: n.unit.clone(),
+            emsal: None,
         };
         spaces::level_known(doc, &s.arch, &format!("{at}.arch.level"))?;
         spaces::scope_valid(&s,&at)?;

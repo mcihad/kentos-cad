@@ -1542,3 +1542,58 @@ fn an_accepted_survey_point_is_a_survey_annotation_of_the_site() {
     assert!(text.contains(".SURVEY.)"));
     assert!(text.contains("'Annotation','Point'"));
 }
+
+/// A room's own emsal state (docs/adr/8125) wins over its words: one room counted out with its article, one an emsal
+/// increase (DİĞER) with the administration's rule; the report sums the increase apart, the model writes its zone
+/// DIGER with the basis as its description. Every room has its kind and `IsExternal`.
+#[test]
+fn a_room_s_own_emsal_state_counts_and_an_increase_is_a_diger_zone() {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    // The section building with a parcel's zoning: its report sums the rooms.
+    let mut snap: DocumentSnapshotV2 = kentos_kcad::decode(include_bytes!(
+        "../../../../../fixtures/arch/v1/section-building.kcad"
+    ))
+    .unwrap();
+    snap.settings.arch.get_or_insert_with(Default::default).zoning =
+        Some(kentos_commands::Zoning { parcel_area: 450.0, far: Some(1.5), coverage: Some(0.4) });
+    let mut doc = Document::from_snapshot_v2(snap).unwrap();
+    let rooms: Vec<String> = doc
+        .entities_with_uids()
+        .filter(|(_, e)| matches!(e, Entity::Space(s) if !s.space.void))
+        .map(|(u, _)| u.to_string())
+        .take(2)
+        .collect();
+    let before = doc.zoning_report().expect("a zoning");
+    let gross = |doc: &Document, uid: &str| doc.zoning_rooms().into_iter().find(|r| r.uid == uid).map(|r| r.gross).unwrap();
+    let (g0, g1) = (gross(&doc, &rooms[0]), gross(&doc, &rooms[1]));
+    for (uid, emsal) in rooms.iter().zip([
+        serde_json::json!({"count": "exempt", "basis": "Planlı Alanlar İmar Yönetmeliği 22/1-a"}),
+        serde_json::json!({"count": "bonus", "basis": "Sivas İmar Yönetmeliği 22/k"}),
+    ]) {
+        let input = serde_json::json!({"uids": [uid], "operation": {"kind": "set", "emsal": emsal}});
+        let answer = registry::run(&mut ExecutionContext::new(&mut doc), "cad.spaces.edit", CallOp::Execute, input).unwrap();
+        assert_eq!(answer["status"], "completed", "{answer}");
+    }
+    let after = doc.zoning_report().expect("a zoning");
+    assert!((after.bonus - g1).abs() < 1e-9, "the increase apart: {} vs {g1}", after.bonus);
+    assert!((after.included - (before.included - g0 - g1)).abs() < 1e-6, "both out of katlar alanı");
+    assert!((after.exempt - (before.exempt + g0)).abs() < 1e-6);
+    let table = doc.zoning_table();
+    assert!(table.rows.iter().any(|r| r[0].contains("Emsal artışı (DİĞER)")), "{:?}", table.rows);
+    // The model: a DIGER zone on its storey, its basis the description.
+    let (b, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
+    let diger: Vec<_> = b
+        .zones
+        .iter()
+        .filter(|z| z.psets.iter().flat_map(|p| p.props.iter()).any(|(k, v)| k == "EmsalDurumu" && *v == Value::Label("DIGER".into())))
+        .collect();
+    assert_eq!(diger.len(), 1);
+    assert!(diger[0].description.as_deref().is_some_and(|d| d.contains("Sivas İmar Yönetmeliği 22/k")), "{:?}", diger[0].description);
+    // Every room says whether it is outside, its kind by it.
+    for s in &b.spaces {
+        let outside = s.psets.iter().flat_map(|p| p.props.iter()).find(|(k, _)| k == "IsExternal").map(|(_, v)| v.clone());
+        assert!(matches!(outside, Some(Value::Bool(_))), "{}", s.name);
+        assert!(matches!(s.predefined, "INTERNAL" | "EXTERNAL" | "PARKING"), "{}", s.predefined);
+    }
+}

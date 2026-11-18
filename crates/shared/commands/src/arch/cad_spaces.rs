@@ -384,6 +384,15 @@ pub struct SpaceChange {
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub unit: Option<Option<String>>,
+    /// Its own emsal state and basis (docs/adr/8125); null: its brief's and its words' again.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::SpaceEmsal>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<crate::SpaceEmsal>"))]
+    pub emsal: Option<Option<crate::SpaceEmsal>>,
 }
 
 /// What `cad.spaces.edit` does to the spaces (docs/adr/0342 §4).

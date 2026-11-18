@@ -41,6 +41,45 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
     geo.push(words("Numara", &x.number, Field::SpaceNumber(slot)));
     geo.push(words("Ad", &x.name, Field::SpaceName(slot)));
     geo.push(words("Kullanım", &x.usage, Field::SpaceUsage(slot)));
+    // Emsal durumu (docs/adr/8125): how it counts now and why; its own state over its brief's and its words'.
+    if !x.void {
+        use kentos_commands::{EmsalCount, SpaceEmsal};
+        let uid = doc.model.uid(slot).map(|u| u.to_string()).unwrap_or_default();
+        let counted = doc.model.zoning_rooms().into_iter().find(|r| r.uid == uid).map(|r| r.count);
+        let own = x.emsal.as_ref();
+        let shown = match (own, counted) {
+            (Some(o), _) => o.count.label().to_owned(),
+            (None, Some(c)) => format!("Kendiliğinden ({})", c.label()),
+            (None, None) => "Kendiliğinden".to_owned(),
+        };
+        let basis = own.and_then(|o| o.basis.clone());
+        let mut items = vec![pick(
+            "Kendiliğinden".to_owned(),
+            own.is_none(),
+            set(SpaceChange { emsal: Some(None), ..Default::default() }),
+            None,
+        )];
+        items.extend(EmsalCount::ROOM.iter().map(|c| {
+            pick(
+                c.label().to_owned(),
+                own.is_some_and(|o| o.count == *c),
+                set(SpaceChange {
+                    emsal: Some(Some(SpaceEmsal { count: *c, basis: basis.clone() })),
+                    ..Default::default()
+                }),
+                None,
+            )
+        }));
+        geo.push(Row::text("Emsal durumu", shown.clone()).editor(select(shown, items)));
+        geo.push(Row::note(if own.is_some() {
+            "Kendi durumu: kullanımının ve adının okumasını geçer."
+        } else {
+            "Kendiliğinden: kullanımından ve adından (Planlı Alanlar İmar Yönetmeliği 22)."
+        }));
+        geo.push(
+            Row::text("Emsal dayanağı", basis.unwrap_or_default()).editor(edit(Editor::Text(Field::SpaceEmsalBasis(slot)))),
+        );
+    }
     if let Some(arch) = &doc.settings().arch {
         for (label, values, current, is_name) in [
             ("Ad listesi", &arch.space_names, &x.name, true),
