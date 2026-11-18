@@ -222,6 +222,10 @@ impl App {
             exaggeration: w.exaggeration(),
             styles: w.styles(),
             light: w.light(),
+            // The road's light as it was: the sun alone (docs/adr/8120 leaves its look to its own work).
+            sky: 0.0,
+            fill: 0.0,
+            quality: self.scene3d_quality(),
             planes: Vec::new(),
             marked: w.picked.as_ref().map(|p| w.exaggeration().shown(p.point)),
             seen: w.seen.clone(),

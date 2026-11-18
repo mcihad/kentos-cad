@@ -110,6 +110,7 @@ impl App {
             to: Msg::Viewer,
             end: Vec::new(),
             sky: look::sky(t.window, Some(t.accent)),
+            quality: kentos_model_view_ui::scene::Quality::High,
             coordinate: Box::new(|v| format!("{v:.3}")),
             measure: Box::new(|v, unit| match look::digits(unit, 3, 2) {
                 Some(d) => format!("{v:.d$}"),

@@ -644,6 +644,10 @@ klavyeyle kabul; resimler.
   mimari çizimin 3B görünümü görüntüleyicinin kendisidir; girdisi dışa aktarımın bellekte yazılıp okunan modeli, altlık
   modeller yanında (`Input::append`, menekşe). Yeniden okunan modelde görünüm anahtarlarla kalır (`Viewer::reload`).
   Başvurulan emsal zonu katının altında (`read::view`); sahne boyutunu bildirir, sığdırma dar sahnede kırpmaz.
+- **Çizim kalitesi (18 Kasım 2026, [ADR 8120](../docs/adr/8120-3d-render-quality.md), K252–K257):** Uygulama
+  ayarları › Çizim motoru › 3B görünüm kalitesi (Hızlı, Dengeli, Kaliteli; bu cihaz, varsayılan Kaliteli): 4× kenar
+  yumuşatma, gövdelerin kenar çizgileri (25° kıvrım), ortam gölgesi (SAO, camın altında kalkar); binada gök ve dolgu
+  ışığı. Sahne kendi hedefine çizilip bindirilir; gerçek GPU denetimi üç düzeyi ölçer.
 - Kalanlar (ADR 8073 §9, 8118 §6): gerçek pencerede kabul; kesit düzlemini yüze tıklayarak kurmak ve sürüklemek, kutunun
   tutamakları, kesilen yüzün kapağı; gösterilemeyen nesnenin kutusu; ilk gövdelerle sahne; seçimde yeniden kurmadan boyama;
   denetim bulgusundan “Modelde göster” (B13 ile); bir değerden “benzerini göster”; bölme genişliklerinin saklanması.

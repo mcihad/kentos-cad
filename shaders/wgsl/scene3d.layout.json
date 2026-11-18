@@ -1,38 +1,94 @@
 {
   "format": "kentos.wgsl-layout",
-  "version": 2,
+  "version": 3,
   "module": "scene3d",
-  "description": "KentOS's 3D scene (docs/adr/0910 §4–§5, plan/3d.md D1): triangle meshes in tiles with a depth32float buffer, reversed (cleared to 0, compare greater); one draw per tile and per part range, the tile's origin minus the eye (float64 on the host, float32 here) at a dynamic offset; the parts' colours in a storage buffer, premultiplied on output. Version 2: each vertex carries its normal, signed 8-bit (zero: flat, the face's normal from derivatives). The opaque pipeline writes depth; the see-through one tests it without writing and blends premultiplied alpha.",
-  "sources": ["scene3d/mesh.wgsl"],
+  "description": "KentOS's 3D scene (docs/adr/0910 §4–§5, plan/3d.md D1): triangle meshes in tiles with a depth32float buffer, reversed (cleared to 0, compare greater); one draw per tile and per part range, the tile's origin minus the eye (float64 on the host, float32 here) at a dynamic offset; the parts' colours in a storage buffer, premultiplied on output. Version 2: each vertex carries its normal, signed 8-bit (zero: flat, the face's normal from derivatives). The opaque pipeline writes depth; the see-through one tests it without writing and blends premultiplied alpha. Version 3 (docs/adr/8120): the View's `edge` block and the bodies' edges, lines over the faces drawn a hair nearer, testing depth without writing it; a view drawn at the quality's samples into its own target, then laid over the window by the composite, darkened by the ambient light's occlusion when asked. At the highest quality the faces also write their veil (meshVeiledFs: a see-through face's alpha, the most over a pixel) to a second target, which lifts the occlusion under glass.",
+  "sources": [
+    "scene3d/mesh.wgsl"
+  ],
   "bindGroups": [
     {
       "group": 0,
       "bindings": [
-        { "binding": 0, "name": "view", "type": "uniform", "struct": "View", "dynamicOffset": false, "visibility": ["vertex", "fragment"] },
-        { "binding": 1, "name": "styles", "type": "read-only-storage", "visibility": ["fragment"] }
+        {
+          "binding": 0,
+          "name": "view",
+          "type": "uniform",
+          "struct": "View",
+          "dynamicOffset": false,
+          "visibility": [
+            "vertex",
+            "fragment"
+          ]
+        },
+        {
+          "binding": 1,
+          "name": "styles",
+          "type": "read-only-storage",
+          "visibility": [
+            "fragment"
+          ]
+        }
       ]
     },
     {
       "group": 1,
       "bindings": [
-        { "binding": 0, "name": "tile", "type": "uniform", "struct": "Tile", "dynamicOffset": true, "visibility": ["vertex"] }
+        {
+          "binding": 0,
+          "name": "tile",
+          "type": "uniform",
+          "struct": "Tile",
+          "dynamicOffset": true,
+          "visibility": [
+            "vertex"
+          ]
+        }
       ]
     }
   ],
   "structs": {
     "View": {
-      "size": 96,
+      "size": 208,
       "align": 16,
       "fields": [
-        { "name": "clip", "type": "mat4x4<f32>", "offset": 0 },
-        { "name": "light", "type": "vec4<f32>", "offset": 64 },
-        { "name": "look", "type": "vec4<f32>", "offset": 80 }
+        {
+          "name": "clip",
+          "type": "mat4x4<f32>",
+          "offset": 0
+        },
+        {
+          "name": "light",
+          "type": "vec4<f32>",
+          "offset": 64
+        },
+        {
+          "name": "look",
+          "type": "vec4<f32>",
+          "offset": 80
+        },
+        {
+          "name": "edge",
+          "type": "vec4<f32>",
+          "offset": 96
+        },
+        {
+          "name": "planes",
+          "type": "array<vec4<f32>, 6>",
+          "offset": 112
+        }
       ]
     },
     "Tile": {
       "size": 16,
       "align": 16,
-      "fields": [{ "name": "offset", "type": "vec4<f32>", "offset": 0 }]
+      "fields": [
+        {
+          "name": "offset",
+          "type": "vec4<f32>",
+          "offset": 0
+        }
+      ]
     }
   },
   "pipelines": [
@@ -43,13 +99,36 @@
       "topology": "triangle-list",
       "cull": "none",
       "blend": "none",
-      "depth": { "format": "depth32float", "compare": "greater", "write": true },
+      "depth": {
+        "format": "depth32float",
+        "compare": "greater",
+        "write": true
+      },
       "buffers": [
-        { "stepMode": "vertex", "arrayStride": 20, "attributes": [
-          { "location": 0, "name": "p", "format": "float32x3", "offset": 0 },
-          { "location": 1, "name": "part", "format": "uint32", "offset": 12 },
-          { "location": 2, "name": "n", "format": "snorm8x4", "offset": 16 }
-        ] }
+        {
+          "stepMode": "vertex",
+          "arrayStride": 20,
+          "attributes": [
+            {
+              "location": 0,
+              "name": "p",
+              "format": "float32x3",
+              "offset": 0
+            },
+            {
+              "location": 1,
+              "name": "part",
+              "format": "uint32",
+              "offset": 12
+            },
+            {
+              "location": 2,
+              "name": "n",
+              "format": "snorm8x4",
+              "offset": 16
+            }
+          ]
+        }
       ]
     },
     {
@@ -59,13 +138,130 @@
       "topology": "triangle-list",
       "cull": "none",
       "blend": "premultiplied",
-      "depth": { "format": "depth32float", "compare": "greater", "write": false },
+      "depth": {
+        "format": "depth32float",
+        "compare": "greater",
+        "write": false
+      },
       "buffers": [
-        { "stepMode": "vertex", "arrayStride": 20, "attributes": [
-          { "location": 0, "name": "p", "format": "float32x3", "offset": 0 },
-          { "location": 1, "name": "part", "format": "uint32", "offset": 12 },
-          { "location": 2, "name": "n", "format": "snorm8x4", "offset": 16 }
-        ] }
+        {
+          "stepMode": "vertex",
+          "arrayStride": 20,
+          "attributes": [
+            {
+              "location": 0,
+              "name": "p",
+              "format": "float32x3",
+              "offset": 0
+            },
+            {
+              "location": 1,
+              "name": "part",
+              "format": "uint32",
+              "offset": 12
+            },
+            {
+              "location": 2,
+              "name": "n",
+              "format": "snorm8x4",
+              "offset": 16
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "edges",
+      "vertex": "edgeVs",
+      "fragment": "edgeFs",
+      "topology": "line-list",
+      "cull": "none",
+      "blend": "none",
+      "depth": {
+        "format": "depth32float",
+        "compare": "greater-equal",
+        "write": false
+      },
+      "buffers": [
+        {
+          "stepMode": "vertex",
+          "arrayStride": 20,
+          "attributes": [
+            {
+              "location": 0,
+              "name": "p",
+              "format": "float32x3",
+              "offset": 0
+            },
+            {
+              "location": 1,
+              "name": "part",
+              "format": "uint32",
+              "offset": 12
+            },
+            {
+              "location": 2,
+              "name": "n",
+              "format": "snorm8x4",
+              "offset": 16
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "passes": [
+    {
+      "name": "composite",
+      "source": "scene3d/composite.wgsl",
+      "vertex": "compositeVs",
+      "fragment": "compositeFs",
+      "topology": "triangle-list",
+      "blend": "premultiplied",
+      "bindings": [
+        {
+          "binding": 0,
+          "name": "colour",
+          "type": "texture-2d-float"
+        },
+        {
+          "binding": 1,
+          "name": "occlusion",
+          "type": "texture-2d-float"
+        },
+        {
+          "binding": 2,
+          "name": "place",
+          "type": "uniform",
+          "size": 32
+        },
+        {
+          "binding": 3,
+          "name": "veil",
+          "type": "texture-2d-float"
+        }
+      ]
+    },
+    {
+      "name": "occlusion",
+      "source": "scene3d/occlusion.wgsl",
+      "vertex": "occlusionVs",
+      "fragment": "occlusionFs",
+      "topology": "triangle-list",
+      "blend": "none",
+      "target": "r8unorm",
+      "bindings": [
+        {
+          "binding": 0,
+          "name": "depth",
+          "type": "texture-depth-multisampled-2d"
+        },
+        {
+          "binding": 1,
+          "name": "o",
+          "type": "uniform",
+          "size": 32
+        }
       ]
     }
   ]

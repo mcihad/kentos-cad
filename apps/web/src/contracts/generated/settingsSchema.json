@@ -1319,6 +1319,35 @@
       "apply": "live"
     },
     {
+      "key": "graphics.scene3dQuality",
+      "type": "enum",
+      "default": "high",
+      "choices": [
+        {
+          "value": "fast",
+          "label": "Hızlı"
+        },
+        {
+          "value": "balanced",
+          "label": "Dengeli"
+        },
+        {
+          "value": "high",
+          "label": "Kaliteli"
+        }
+      ],
+      "scope": "device",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "3B görünüm kalitesi",
+      "description": "3B görünümün ve IFC modelinin çizimi. Hızlı: yüzeyler, pikselde tek örnek. Dengeli: kenarları yumuşatılmış yüzeyler (4×) ve gövdelerin kenar çizgileri. Kaliteli: bunlara ek olarak köşelerde ve birleşimlerde ortam gölgesi. Yavaş bir aygıtta bir alt düzey seçin; modelin kendisi değişmez.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "graphics.symbolSize",
       "type": "enum",
       "default": "plot",

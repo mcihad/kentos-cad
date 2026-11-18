@@ -13,7 +13,7 @@ use std::path::{Path, PathBuf};
 use iced::{Element, Size, Theme};
 use kentos_ifc::read::{self as ifc, Limits, Model};
 use kentos_model_view::Cut;
-use kentos_model_view_ui::scene::Gesture;
+use kentos_model_view_ui::scene::{Gesture, Quality};
 use kentos_model_view_ui::{Host, Message, Out, Panel, Viewer, look};
 use kentos_ui::theme::{self, Accent, Mode, Tokens};
 
@@ -21,6 +21,7 @@ struct Window {
     viewer: Viewer,
     file: Option<(Vec<u8>, Model)>,
     mode: Mode,
+    quality: Quality,
 }
 
 impl Window {
@@ -34,6 +35,7 @@ impl Window {
             to: |m| m,
             end: Vec::new(),
             sky: look::sky(t.window, Some(t.accent)),
+            quality: self.quality,
             coordinate: Box::new(|v| format!("{v:.3}")),
             measure: Box::new(|v, unit| match look::digits(unit, 3, 2) {
                 Some(d) => format!("{v:.d$}"),
@@ -69,7 +71,7 @@ fn opened(path: &str, mode: Mode) -> Window {
     let name = Path::new(path).file_name().map_or_else(String::new, |n| n.to_string_lossy().into_owned());
     let mut viewer = Viewer::new(name.clone());
     viewer.load(ifc::view::input(&name, &model, &bodies), vec![(model.summary.schema.clone(), "Dosyanın şeması.".to_owned())]);
-    Window { viewer, file: Some((bytes, model)), mode }
+    Window { viewer, file: Some((bytes, model)), mode, quality: Quality::High }
 }
 
 fn shot(w: &mut Window, name: &str) {
@@ -140,7 +142,7 @@ fn screens() {
     w.update(Message::Spaces);
     shot(&mut w, "disaridan-ifc4x3-bina");
 
-    let mut w = Window { viewer: Viewer::new("buyuk-model.ifc"), file: None, mode: Mode::Light };
+    let mut w = Window { viewer: Viewer::new("buyuk-model.ifc"), file: None, mode: Mode::Light, quality: Quality::High };
     w.viewer.progress("Gövdeler üçgenleniyor", 1200, 49000);
     shot(&mut w, "okunuyor");
     w.viewer.failed("Dosya bir IFC dosyası değil: başında ISO-10303-21 satırı yok. Dosyanın uzantısı .ifc olsa da içeriği başka bir biçimde; dosyayı yazan programdan IFC olarak yeniden alın.");

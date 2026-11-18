@@ -174,6 +174,7 @@ impl Section {
                 "graphics.msaa",
                 "graphics.hiDpi",
                 "graphics.wheelZoomScaled",
+                "graphics.scene3dQuality",
                 "graphics.symbolSize",
                 "graphics.lineWeights",
                 "graphics.colorMode",
@@ -593,6 +594,13 @@ impl App {
         // The scaled picture while the wheel turns (docs/adr/1068): off unless asked.
         let form = f
             .switch_field(form, "graphics.wheelZoomScaled", None)
+            // The 3D views (docs/adr/8120): 3B görünüm and IFC modeli.
+            .section("3B görünüm")
+            .field(
+                Fields::title("graphics.scene3dQuality"),
+                choices("graphics.scene3dQuality", &f.value("graphics.scene3dQuality")),
+            )
+            .help(Fields::help("graphics.scene3dQuality"))
             // The styled drawing (docs/adr/0090), as the web's Çizim motoru → Semboller ve çizgiler.
             .section("Semboller ve çizgiler")
             .field(

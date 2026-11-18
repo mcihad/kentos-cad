@@ -381,6 +381,8 @@ değişince yeniden kurulur, görünüm yerinde kalır. Planla seçim, Denetim b
 “(altlık model)”) sürer. Kesit binası bugün 58 eleman, 10 mahal ve 4 emsal zonu: dosyadaki 72 gövdeli nesne. Emsal zonu
 katının altında; sahne dar olunca sığdırma sahnenin biçimine göre. **Kalan:** gerçek pencerede (işletim sisteminin
 faresiyle) kabul, tadilat durumuna göre renk, katlar arası örtüşme, büyük modelde yalnız değişeni yeniden okumak.
+Çizim kalitesi ([ADR 8120](../docs/adr/8120-3d-render-quality.md)): kenar yumuşatma, kenar çizgileri ve ortam gölgesi;
+Uygulama ayarlarından Hızlı, Dengeli, Kaliteli.
 
 **Kullanıcı sonucu:** Mimar, modelin gövdelerini (dışa aktarılacak olanların aynısını) 3B'de görür. Bir nesneye tıklayınca
 planda seçilir. Katları ayırır, kesit kutusuyla içine bakar. Denetim bulguları 3B'de boyanır. Dayanak Md. 14; EK-9/13–15; Z1.

@@ -705,6 +705,9 @@ mod scene3d_window_tests;
 #[path = "tests/scene3d_building_tests.rs"]
 mod scene3d_building_tests;
 #[cfg(test)]
+#[path = "tests/scene3d_quality_tests.rs"]
+mod scene3d_quality_tests;
+#[cfg(test)]
 #[path = "tests/ifc_viewer_tests.rs"]
 mod ifc_viewer_tests;
 #[cfg(test)]

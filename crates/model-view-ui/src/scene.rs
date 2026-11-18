@@ -2,7 +2,9 @@
 //! origins (`kentos_scene3d::chunk`), selected each frame by the screen-space error and drawn by the shared renderer
 //! (`kentos_render_scene3d`) through Iced's shader widget, a clicked point ringed over it. Every 3D view draws with it:
 //! the building's and the road's (the application's 3B görünüm) and the IFC viewer's. It knows no host: a drag, a right
-//! drag (or Shift), the wheel and a click come back as [`Gesture`]s through the host's function.
+//! drag (or Shift), the wheel and a click come back as [`Gesture`]s through the host's function. Each view draws at the
+//! quality the host asks (docs/adr/8120): into its own targets, four samples a pixel, its bodies' edges and, at the
+//! highest, the ambient light's occlusion, then laid over the window.
 
 use std::collections::HashMap;
 use std::fmt;
@@ -11,7 +13,8 @@ use std::sync::{Arc, Mutex};
 
 use iced::widget::{canvas, shader, stack};
 use iced::{Color, Element, Fill, Rectangle, Theme, mouse, wgpu};
-use kentos_render_scene3d::{DEPTH_CLEAR, DepthTarget, Frame as Scene3dFrame, Scene3dRenderer, Style};
+pub use kentos_render_scene3d::Quality;
+use kentos_render_scene3d::{Frame as Scene3dFrame, Scene3dRenderer, Style};
 use kentos_scene3d::{Aabb, Camera, Chunked, Content, Exaggeration, Limits, Settings, SourceMesh, Viewport, chunk, select};
 use kentos_ui::theme::Tokens;
 
@@ -171,15 +174,19 @@ pub enum Gesture {
     Size(f32, f32),
 }
 
-/// One view of a scene: the scene, the camera, the exaggeration, the parts' styles, towards the light, the half-spaces
-/// a section keeps (in the shown space; none: nothing cut), the point ringed, and the frame's shared notes (what it
-/// drew; whether contents are still waiting for the GPU).
+/// One view of a scene: the scene, the camera, the exaggeration, the parts' styles, towards the light, the sky's and
+/// the fill's shares of the light (0: the light alone; docs/adr/8120), the quality it is drawn at, the half-spaces a
+/// section keeps (in the shown space; none: nothing cut), the point ringed, and the frame's shared notes (what it drew;
+/// whether contents are still waiting for the GPU).
 pub struct SceneView {
     pub scene: Arc<Scene>,
     pub camera: Camera,
     pub exaggeration: Exaggeration,
     pub styles: Arc<Vec<Style>>,
     pub light: [f64; 3],
+    pub sky: f32,
+    pub fill: f32,
+    pub quality: Quality,
     pub planes: Vec<[f64; 4]>,
     pub marked: Option<[f64; 3]>,
     pub seen: Arc<Mutex<Seen>>,
@@ -195,6 +202,9 @@ pub fn view<'a, M: Clone + 'a>(v: SceneView, on: impl Fn(Gesture) -> M + 'a) -> 
         exaggeration: v.exaggeration,
         styles: v.styles,
         light: v.light,
+        sky: v.sky,
+        fill: v.fill,
+        quality: v.quality,
         planes: Arc::new(v.planes),
         seen: v.seen,
         pending: v.pending,
@@ -211,6 +221,9 @@ struct Program<'a, M> {
     exaggeration: Exaggeration,
     styles: Arc<Vec<Style>>,
     light: [f64; 3],
+    sky: f32,
+    fill: f32,
+    quality: Quality,
     planes: Arc<Vec<[f64; 4]>>,
     seen: Arc<Mutex<Seen>>,
     pending: Arc<AtomicBool>,
@@ -322,6 +335,9 @@ impl<M> shader::Program<M> for Program<'_, M> {
             exaggeration: self.exaggeration,
             styles: self.styles.clone(),
             light: self.light,
+            sky: self.sky,
+            fill: self.fill,
+            quality: self.quality,
             planes: self.planes.clone(),
             seen: self.seen.clone(),
             pending: self.pending.clone(),
@@ -345,6 +361,9 @@ pub struct Frame3d {
     exaggeration: Exaggeration,
     styles: Arc<Vec<Style>>,
     light: [f64; 3],
+    sky: f32,
+    fill: f32,
+    quality: Quality,
     planes: Arc<Vec<[f64; 4]>>,
     seen: Arc<Mutex<Seen>>,
     pending: Arc<AtomicBool>,
@@ -356,23 +375,22 @@ impl fmt::Debug for Frame3d {
     }
 }
 
-/// Where a view draws: its viewport and scissor in the target's pixels.
+/// Where a view is laid over the window: its viewport and scissor in the window's pixels.
 struct Placed {
     viewport: [f32; 4],
     scissor: [u32; 4],
 }
 
-/// The views' renderers (one each: a renderer keeps one frame's draws) and the depth buffer they share.
+/// The views' renderers (one each, at its quality: a renderer keeps one frame's draws and the view's own targets).
 pub struct Pipeline {
     format: wgpu::TextureFormat,
     renderers: HashMap<u64, Scene3dRenderer>,
-    depth: Option<DepthTarget>,
     placed: HashMap<u64, Placed>,
 }
 
 impl shader::Pipeline for Pipeline {
     fn new(_device: &wgpu::Device, _queue: &wgpu::Queue, format: wgpu::TextureFormat) -> Self {
-        Pipeline { format, renderers: HashMap::new(), depth: None, placed: HashMap::new() }
+        Pipeline { format, renderers: HashMap::new(), placed: HashMap::new() }
     }
 }
 
@@ -387,11 +405,15 @@ impl shader::Primitive for Frame3d {
             }
         }
         let size = viewport.physical_size();
-        let _ = DepthTarget::ensure(&mut pipeline.depth, device, size.width, size.height);
         let format = pipeline.format;
-        let r = pipeline.renderers.entry(self.view).or_insert_with(|| Scene3dRenderer::new(device, format));
+        // A quality changed in the settings: the view's renderer made again at it (its contents uploaded again).
+        if pipeline.renderers.get(&self.view).is_some_and(|r| r.quality() != self.quality) {
+            pipeline.renderers.remove(&self.view);
+        }
+        let r = pipeline.renderers.entry(self.view).or_insert_with(|| Scene3dRenderer::with_quality(device, format, self.quality));
         let s = viewport.scale_factor();
         let (bx, by, bw, bh) = (bounds.x * s, bounds.y * s, bounds.width * s, bounds.height * s);
+        r.ensure_targets(device, bw.round().max(1.0) as u32, bh.round().max(1.0) as u32);
         let vp = Viewport { width: f64::from(bw.max(1.0)), height: f64::from(bh.max(1.0)) };
         let h = &self.scene.chunked.hierarchy;
         let settings = Settings { max_screen_error: MAX_SCREEN_ERROR };
@@ -419,6 +441,8 @@ impl shader::Primitive for Frame3d {
                 styles: &self.styles,
                 light: self.light,
                 ambient: 0.38,
+                sky: self.sky,
+                fill: self.fill,
                 clip: &self.planes,
             },
         );
@@ -432,11 +456,12 @@ impl shader::Primitive for Frame3d {
             pipeline.placed.remove(&self.view);
             return;
         }
-        // The viewport is the whole box (the projection is the box's); wgpu keeps a viewport inside the target, so a
-        // box partly off it is drawn into the part on it.
-        let whole = bx >= 0.0 && by >= 0.0 && bx + bw <= size.width as f32 && by + bh <= size.height as f32;
-        let viewport = if whole { [bx, by, bw, bh] } else { [vx, vy, x1 - vx, y1 - vy] };
-        pipeline.placed.insert(self.view, Placed { viewport, scissor: [vx as u32, vy as u32, x1 as u32, y1 as u32] });
+        // The view's own targets are the whole box (the projection is the box's); wgpu keeps a viewport inside the
+        // window, so a box partly off it lays the part of its targets on it.
+        let (bw, bh) = (bw.max(1.0), bh.max(1.0));
+        let uv = [(vx - bx) / bw, (vy - by) / bh, (x1 - bx) / bw, (y1 - by) / bh];
+        r.place(queue, uv);
+        pipeline.placed.insert(self.view, Placed { viewport: [vx, vy, x1 - vx, y1 - vy], scissor: [vx as u32, vy as u32, x1 as u32, y1 as u32] });
     }
 
     fn draw(&self, _pipeline: &Pipeline, _render_pass: &mut wgpu::RenderPass<'_>) -> bool {
@@ -445,7 +470,6 @@ impl shader::Primitive for Frame3d {
 
     fn render(&self, pipeline: &Pipeline, encoder: &mut wgpu::CommandEncoder, target: &wgpu::TextureView, clip: &Rectangle<u32>) {
         let (Some(p), Some(r)) = (pipeline.placed.get(&self.view), pipeline.renderers.get(&self.view)) else { return };
-        let Some(depth) = pipeline.depth.as_ref().map(DepthTarget::view) else { return };
         let x0 = p.scissor[0].max(clip.x);
         let y0 = p.scissor[1].max(clip.y);
         let x1 = p.scissor[2].min(clip.x + clip.width);
@@ -453,26 +477,7 @@ impl shader::Primitive for Frame3d {
         if x1 <= x0 || y1 <= y0 {
             return;
         }
-        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some("kentos.scene3d"),
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view: target,
-                depth_slice: None,
-                resolve_target: None,
-                ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store },
-            })],
-            depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                view: depth,
-                depth_ops: Some(wgpu::Operations { load: wgpu::LoadOp::Clear(DEPTH_CLEAR), store: wgpu::StoreOp::Discard }),
-                stencil_ops: None,
-            }),
-            timestamp_writes: None,
-            occlusion_query_set: None,
-        });
-        let [vx, vy, vw, vh] = p.viewport;
-        pass.set_viewport(vx, vy, vw, vh, 0.0, 1.0);
-        pass.set_scissor_rect(x0, y0, x1 - x0, y1 - y0);
-        r.render(&mut pass);
+        r.render_offscreen(encoder, target, p.viewport, [x0, y0, x1, y1]);
     }
 }
 

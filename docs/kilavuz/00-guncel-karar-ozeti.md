@@ -197,6 +197,10 @@
       anahtarlarla kalır (`Viewer::reload`, `View::carried`). Altlıklar `Input::append` ile yanında (`altlik:` öneki,
       `parts::UNDERLAY`). Başvurulan zon başvuranın altında (`read::view`); sığdırma sahnenin biçimine göre
       (`Gesture::Size`, `OrbitCamera::fit_in`). Yolun 3B görünümü değişmedi.
+    - Çizim kalitesi ([ADR 8120](../adr/8120-3d-render-quality.md), 18 Kasım 2026): `graphics.scene3dQuality` (Hızlı,
+      Dengeli, Kaliteli; bu cihaz). Çizici `Quality`: örnek sayısı, kenar çizgileri (`edges::feature_edges`, içerik
+      yüklenirken), ortam gölgesi (`occlusion.wgsl`, örtü hedefiyle camın altında kalkar); görünüm kendi hedefine
+      (`render_offscreen`) çizilir ve `composite.wgsl` ile bindirilir. Gölgelendirici sözleşmesi sürüm 3.
     - Araştırma: [not](../research/2026-11-15-ifc-goruntuleyici.md). Ölçümler:
       [docs/perf/ifc-okuma-denemesi-2026-11-16.md](../perf/ifc-okuma-denemesi-2026-11-16.md).
   - **EK-9 yazılmış dosyadan (16 Kasım 2026; [ADR 8074](../adr/8074-ek9-from-the-written-file.md), IFC-08, sıra B13; ilk

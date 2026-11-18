@@ -342,6 +342,7 @@ impl App {
             to,
             end,
             sky: crate::scene3d_window::sky(self.canvas()),
+            quality: self.scene3d_quality(),
             coordinate: Box::new(move |v| f.coord(v)),
             measure: Box::new(move |v, unit| match kentos_model_view_ui::look::digits(unit, length, area) {
                 Some(d) => kentos_interaction::fixed(v, d),

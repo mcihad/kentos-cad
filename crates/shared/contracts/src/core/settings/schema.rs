@@ -619,6 +619,19 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Tekerlek durunca yeniden çiz",
                 "Açıkken tekerlek dönerken son keskin resim büyütülüp küçültülerek gösterilir, tekerlek bırakılınca çizim baştan, keskin çizilir: çok büyük çizimlerde akıcı yakınlaştırma için. Kapalıyken her tekerlek adımında çizim gerçek zamanlı çizilir.",
             ),
+        // The 3D views' quality (docs/adr/8120): the owner's ask of 18 November, the best by default; a slower device
+        // chooses less here.
+        choice(
+            "graphics.scene3dQuality",
+            "high",
+            &[("fast", "Hızlı"), ("balanced", "Dengeli"), ("high", "Kaliteli")],
+        )
+        .scope(SettingScope::Device)
+        .hosts(&[Desktop])
+        .text(
+            "3B görünüm kalitesi",
+            "3B görünümün ve IFC modelinin çizimi. Hızlı: yüzeyler, pikselde tek örnek. Dengeli: kenarları yumuşatılmış yüzeyler (4×) ve gövdelerin kenar çizgileri. Kaliteli: bunlara ek olarak köşelerde ve birleşimlerde ortam gölgesi. Yavaş bir aygıtta bir alt düzey seçin; modelin kendisi değişmez.",
+        ),
         choice(
             "graphics.symbolSize",
             "plot",

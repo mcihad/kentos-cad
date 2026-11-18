@@ -13,7 +13,7 @@
 //!
 //! Also `scene3d_timing`: a 4 million triangle terrain at TM coordinates drawn through the selection, every frame.
 
-use kentos_render_wgpu::scene3d::{Budgets, DEPTH_CLEAR, DepthTarget, Frame, Scene3dRenderer, Stats, Style};
+use kentos_render_wgpu::scene3d::{Budgets, DEPTH_CLEAR, DepthTarget, Frame, Quality, Scene3dRenderer, Stats, Style};
 use kentos_scene3d::{Camera, Content, Exaggeration, Limits, Projection, SourceMesh, Viewport, chunk};
 
 use super::{FORMAT, Gpu};
@@ -92,6 +92,8 @@ fn draw_lit(
         styles: look.0,
         light: look.1,
         ambient: look.2,
+        sky: 0.0,
+        fill: 0.0,
         clip: &clip,
     };
     let stats = r.prepare(&gpu.device, &gpu.queue, &frame);
@@ -264,6 +266,156 @@ pub(crate) fn the_3d_scene_draws_precisely(gpu: &mut Gpu) {
     ];
     let boxed = covered(&draw_cut(gpu, &mut r, &above, &draws, size, &quarter), 256).expect("drawn");
     within_a_pixel(boxed, projected(&above, &vp, &[[E - 50.0, N - 50.0, 1234.5], [E, N, 1234.5]]), "inside the box");
+}
+
+/// A box of `side` from `at` (each face two triangles with vertices of its own, as a flat body's are).
+fn block(at: [f64; 3], side: [f64; 3]) -> Mesh {
+    let c = |i: usize| [0, 1, 2].map(|k| at[k] + if (i >> k) & 1 == 0 { 0.0 } else { side[k] });
+    let faces = [[0, 1, 3, 2], [4, 6, 7, 5], [0, 4, 5, 1], [2, 3, 7, 6], [0, 2, 6, 4], [1, 5, 7, 3]];
+    let (mut v, mut t) = (Vec::new(), Vec::new());
+    for f in faces {
+        let k = v.len() as u32;
+        v.extend(f.map(c));
+        t.extend([[k, k + 1, k + 2], [k, k + 2, k + 3]]);
+    }
+    (v, t)
+}
+
+/// Draws `draws` at the renderer's quality into its own targets laid over a width × height target cleared white,
+/// read back as RGBA; every face its style's colour (the light's ambient share whole).
+fn draw_offscreen(gpu: &Gpu, r: &mut Scene3dRenderer, camera: &Camera, draws: &[&Content], styles: &[Style], size: (u32, u32)) -> Vec<u8> {
+    let (width, height) = size;
+    let texture = gpu.device.create_texture(&wgpu::TextureDescriptor {
+        label: Some("scene3d output"),
+        size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        mip_level_count: 1,
+        sample_count: 1,
+        dimension: wgpu::TextureDimension::D2,
+        format: FORMAT,
+        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+        view_formats: &[],
+    });
+    let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+    r.ensure_targets(&gpu.device, width, height);
+    let frame = Frame {
+        camera,
+        exaggeration: Exaggeration::NONE,
+        viewport: Viewport { width: f64::from(width), height: f64::from(height) },
+        draws,
+        styles,
+        light: [0.0, 0.0, 1.0],
+        ambient: 1.0,
+        sky: 0.0,
+        fill: 0.0,
+        clip: &[],
+    };
+    r.prepare(&gpu.device, &gpu.queue, &frame);
+    r.place(&gpu.queue, [0.0, 0.0, 1.0, 1.0]);
+    let mut encoder = gpu.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+    {
+        let _clear = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: None,
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view: &view,
+                depth_slice: None,
+                resolve_target: None,
+                ops: wgpu::Operations { load: wgpu::LoadOp::Clear(wgpu::Color::WHITE), store: wgpu::StoreOp::Store },
+            })],
+            depth_stencil_attachment: None,
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+    }
+    r.render_offscreen(&mut encoder, &view, [0.0, 0.0, width as f32, height as f32], [0, 0, width, height]);
+    let row = (width * 4).div_ceil(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT) * wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
+    let buffer = gpu.device.create_buffer(&wgpu::BufferDescriptor {
+        label: None,
+        size: u64::from(row * height),
+        usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
+        mapped_at_creation: false,
+    });
+    encoder.copy_texture_to_buffer(
+        texture.as_image_copy(),
+        wgpu::TexelCopyBufferInfo {
+            buffer: &buffer,
+            layout: wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(row), rows_per_image: None },
+        },
+        wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+    );
+    let index = gpu.queue.submit([encoder.finish()]);
+    let slice = buffer.slice(..);
+    slice.map_async(wgpu::MapMode::Read, |_| {});
+    gpu.device.poll(wgpu::PollType::Wait { submission_index: Some(index), timeout: None }).expect("the frame finishes");
+    let data = slice.get_mapped_range();
+    let mut out = Vec::with_capacity((width * height * 4) as usize);
+    for y in 0..height {
+        let start = (y * row) as usize;
+        out.extend_from_slice(&data[start..start + (width * 4) as usize]);
+    }
+    out
+}
+
+/// A picture for the owner: `.run/gui-evidence/3b-kalite-8120/gpu-<name>.png`.
+fn keep(px: &[u8], size: (u32, u32), name: &str) {
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(format!("../../../.run/gui-evidence/3b-kalite-8120/gpu-{name}.png"));
+    let _ = std::fs::create_dir_all(out.parent().expect("a folder"));
+    let file = std::io::BufWriter::new(std::fs::File::create(&out).expect("a file"));
+    let mut png = png::Encoder::new(file, size.0, size.1);
+    png.set_color(png::ColorType::Rgba);
+    png.set_depth(png::BitDepth::Eight);
+    png.write_header().expect("a header").write_image_data(px).expect("writes the picture");
+}
+
+/// The qualities (docs/adr/8120) on a 1 m box standing on a 4 m slab, seen from the north-east, every face its style's
+/// grey: Hızlı draws only the two greys and the white (no edge, no pixel between them); Dengeli draws the box's edges
+/// dark and its outline smooth (pixels between the greys, four samples a pixel); Kaliteli darkens the slab beside the
+/// box's foot, not the slab away from it, by the ambient light's occlusion.
+pub(crate) fn the_qualities_draw_edges_smooth_outlines_and_occlusion(gpu: &mut Gpu) {
+    let size = (256u32, 256u32);
+    let vp = Viewport { width: 256.0, height: 256.0 };
+    let styles = [Style { color: [0.9, 0.9, 0.9, 1.0] }, Style { color: [0.7, 0.7, 0.7, 1.0] }];
+    let c = contents(&[(0, block([0.0, 0.0, 0.0], [1.0, 1.0, 1.0])), (1, block([-1.5, -1.5, -0.1], [4.0, 4.0, 0.1]))], 60);
+    let draws: Vec<&Content> = c.iter().collect();
+    let camera = Camera::orbit([0.5, 0.5, 0.3], 30.0, 32.0, 4.2, Projection::Perspective { fov_y: 40f64.to_radians(), near: 0.05 });
+    let at = |p: [f64; 3]| {
+        let (x, y, _) = camera.project(p, &vp).expect("in front");
+        (x as usize, y as usize)
+    };
+    let value = |px: &[u8], (x, y): (usize, usize)| px[(y * 256 + x) * 4];
+    let (box_grey, slab_grey) = ((0.9f64 * 255.0).round() as u8, (0.7f64 * 255.0).round() as u8);
+    // How many pixels are darker than either grey (an edge), and how many lie between the greys and the white.
+    let count = |px: &[u8]| {
+        let (mut dark, mut between) = (0, 0);
+        for p in px.chunks_exact(4) {
+            let v = p[0];
+            if v < slab_grey.saturating_sub(25) {
+                dark += 1;
+            } else if v.abs_diff(box_grey) > 2 && v.abs_diff(slab_grey) > 2 && v < 253 {
+                between += 1;
+            }
+        }
+        (dark, between)
+    };
+    let mut fast = Scene3dRenderer::with_quality(&gpu.device, FORMAT, Quality::Fast);
+    let px = draw_offscreen(gpu, &mut fast, &camera, &draws, &styles, size);
+    keep(&px, size, "hizli");
+    assert_eq!(count(&px), (0, 0), "Hızlı: the faces alone, one sample a pixel");
+    let mut balanced = Scene3dRenderer::with_quality(&gpu.device, FORMAT, Quality::Balanced);
+    let px = draw_offscreen(gpu, &mut balanced, &camera, &draws, &styles, size);
+    keep(&px, size, "dengeli");
+    let (dark, between) = count(&px);
+    assert!(dark > 150, "Dengeli: the box's edges drawn ({dark} dark pixels)");
+    assert!(between > 100, "Dengeli: the outlines smooth ({between} pixels between)");
+    // The slab beside the box's east foot and away from it.
+    let (near, far) = (at([1.08, 0.5, 0.0]), at([2.2, -0.9, 0.0]));
+    // The GPU writes 178.5 as either of its neighbours.
+    let grey = |v: u8| v.abs_diff(slab_grey) <= 1;
+    assert!(grey(value(&px, near)) && grey(value(&px, far)), "Dengeli: no occlusion ({}, {})", value(&px, near), value(&px, far));
+    let mut high = Scene3dRenderer::with_quality(&gpu.device, FORMAT, Quality::High);
+    let px = draw_offscreen(gpu, &mut high, &camera, &draws, &styles, size);
+    keep(&px, size, "kaliteli");
+    let (near, far) = (value(&px, near), value(&px, far));
+    assert!(grey(far) && near + 12 < far, "Kaliteli: the foot occluded ({near}), the slab away not ({far})");
 }
 
 /// A 4 million triangle terrain at TM coordinates through the selection: the frames' CPU and GPU time.

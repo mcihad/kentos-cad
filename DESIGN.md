@@ -679,6 +679,11 @@ diliyle çizilir.
   koridor”, binada görüntüleyicinin “72/72 gövde”'si; üçgen ve karo sayısı ipucunda), binada şema ve bulgulu nesne varken
   “2 nesnede bulgu” (ipucunda kırmızının ne olduğu), en sağda “Fare” (gezinme ipucu). “A · B · C” satırı yoktur (§13).
 - **Tuşlar:** ayrı pencerede Esc kapatır, Tab alanlar arasında döner. Pencere kapanınca ya da çizim kapanınca sahne gider.
+- **Çizim kalitesi** ([ADR 8120](docs/adr/8120-3d-render-quality.md)): Uygulama ayarları › Çizim motoru › 3B görünüm ›
+  “3B görünüm kalitesi”: Hızlı, Dengeli, Kaliteli (varsayılan). Dengeli ve üstünde kenarlar yumuşatılır (4×), gövdelerin
+  kenar çizgileri parçanın renginin koyusuyla çizilir; Kaliteli'de köşelerde ve birleşimlerde ortam gölgesi vardır (camın
+  altında saydamlığı oranında kalkar). Binada ışığa gök (yukarı bakan açık) ve dolgu (gölgedeki iki yüz ayrı) katılır;
+  yolun ışığı değişmez. Sahne kendi hedefine çizilip göğün üstüne bindirilir.
 - **Ortak parçalar:** sahne, kuzey oku, lejant, gök ve bakışlar menüsü görüntüleyici bileşeninindir
   (`kentos_model_view_ui::{scene, look}`, [ADR 8073](docs/adr/8073-ifc-viewer-first-slice.md) §2); binanın 3B görünümü
   bileşenin bütünüdür, IFC modeli de (§7.21). Birinde değişen öbüründe de değişir.

@@ -429,12 +429,13 @@ fn the_composition_module_validates_and_is_the_contract_s() {
     );
 }
 
-/// The 3D scene's module (`shaders/wgsl/scene3d`, `scene3d.layout.json`, docs/adr/0910 §5): naga validates it within
-/// core WebGPU, its entry points are the contract's, its View block is the 96 bytes and its Tile block the 16 the
-/// desktop writes, its bindings are the contract's, and its version is the contract's.
+/// The 3D scene's module (`shaders/wgsl/scene3d`, `scene3d.layout.json`, docs/adr/0910 §5, 8120): naga validates it
+/// within core WebGPU, its entry points are the contract's, its View block is the 208 bytes and its Tile block the 16
+/// the renderer writes, its bindings are the contract's, and its version is the contract's; the composite's and the
+/// occlusion's modules validate and have their passes' entry points.
 #[test]
 fn the_scene3d_module_validates_and_is_the_contract_s() {
-    use kentos_render_wgpu::scene3d::{SCENE3D_LAYOUT_JSON, SCENE3D_WGSL};
+    use kentos_render_wgpu::scene3d::{COMPOSITE_WGSL, OCCLUSION_WGSL, SCENE3D_LAYOUT_JSON, SCENE3D_WGSL};
     let module = validate(SCENE3D_WGSL);
     let layout: serde_json::Value = serde_json::from_str(SCENE3D_LAYOUT_JSON).expect("scene3d.layout.json reads");
     assert_eq!(layout["module"], "scene3d");
@@ -444,7 +445,7 @@ fn the_scene3d_module_validates_and_is_the_contract_s() {
             assert!(module.entry_points.iter().any(|e| e.name == name && e.stage == stage), "{name} ({stage:?})");
         }
     }
-    for (name, size) in [("View", 96u64), ("Tile", 16)] {
+    for (name, size) in [("View", 208u64), ("Tile", 16)] {
         let got = module
             .types
             .iter()
@@ -469,4 +470,21 @@ fn the_scene3d_module_validates_and_is_the_contract_s() {
         .map(|(_, c)| &module.global_expressions[c.init])
         .expect("LAYOUT_VERSION");
     assert!(matches!(version, naga::Expression::Literal(naga::Literal::U32(v)) if u64::from(*v) == layout["version"].as_u64().expect("version")));
+    for p in layout["passes"].as_array().expect("passes") {
+        let source = match p["name"].as_str() {
+            Some("composite") => COMPOSITE_WGSL,
+            Some("occlusion") => OCCLUSION_WGSL,
+            other => panic!("a pass the renderer has not: {other:?}"),
+        };
+        let module = validate(source);
+        for (key, stage) in [("vertex", naga::ShaderStage::Vertex), ("fragment", naga::ShaderStage::Fragment)] {
+            let name = p[key].as_str().expect("entry point");
+            assert!(module.entry_points.iter().any(|e| e.name == name && e.stage == stage), "{name} ({stage:?})");
+        }
+        for b in p["bindings"].as_array().expect("bindings") {
+            let name = b["name"].as_str().expect("name");
+            let at = binding(&module, name).unwrap_or_else(|| panic!("{name} is bound"));
+            assert_eq!((u64::from(at.group), u64::from(at.binding)), (0, b["binding"].as_u64().expect("binding")), "{name}");
+        }
+    }
 }

@@ -483,6 +483,7 @@ fn the_3d_scene_on_a_real_gpu() {
     }
     let mut gpu = Gpu::open();
     scene3d::the_3d_scene_draws_precisely(&mut gpu);
+    scene3d::the_qualities_draw_edges_smooth_outlines_and_occlusion(&mut gpu);
 }
 
 #[test]

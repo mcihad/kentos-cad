@@ -44,6 +44,8 @@ pub struct Host<'a, M> {
     pub to: fn(Message) -> M,
     pub end: Vec<Element<'a, M>>,
     pub sky: Background,
+    /// The quality the scene is drawn at (the application's setting, docs/adr/8120).
+    pub quality: scene::Quality,
     pub coordinate: Box<dyn Fn(f64) -> String + 'a>,
     pub measure: Box<dyn Fn(f64, Option<&str>) -> String + 'a>,
     pub east: &'a str,
@@ -57,6 +59,9 @@ const TREE_RANGE: std::ops::RangeInclusive<f32> = 200.0..=560.0;
 const DETAILS_RANGE: std::ops::RangeInclusive<f32> = 240.0..=600.0;
 /// The section card's width at 12 px text.
 const CARD_WIDTH: f32 = 330.0;
+/// The sky's and the fill's shares of a building's light (docs/adr/8120).
+const SKY: f32 = 0.16;
+const FILL: f32 = 0.22;
 /// Where a measured value of the file is said to come from, in its tip.
 const IN_FILE: &str = "Dosyadaki değer";
 
@@ -225,6 +230,11 @@ impl Viewer {
             exaggeration: kentos_scene3d::Exaggeration::NONE,
             styles: self.styles(),
             light: self.orbit.light(),
+            // A building's faces under a sky and with a fill (docs/adr/8120): a roof lighter than the wall under it,
+            // two walls seen at a corner never the same.
+            sky: SKY,
+            fill: FILL,
+            quality: host.quality,
             planes: self.planes(),
             marked: self.picked.as_ref().map(|p| p.point),
             seen: self.seen.clone(),
