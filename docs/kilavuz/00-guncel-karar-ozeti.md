@@ -113,7 +113,12 @@
     - Kaplama döşemenin rolüdür (K47): asma tavan, zemin, çatı kaplaması; mahale bağlı türer ya da elle çizilir; yapı
       değildir (duvar, kolon, mahal yüksekliği ve metraj onu görmez); `IfcCovering`; `.kcad` mimari verisi 5.
     - Kiriş çizelgesi (kiriş, lento, hatıl, kayıt) ve Kaplama çizelgesi (yalnız kaplamalar); `.kcad` mimari verisi 6.
-      Kalan: eğimli eleman, duvar kaplamasının kalınlığı, giydirme cephenin kapısı.
+    - 18 Kasım: kaplama mahalini örter (`IfcRelCoversSpaces`, ADR 8127); merdiven ve rampa korkuluğu kesitte, görünüşte,
+      3B'de ve IFC'de (ADR 8128: kolda burun çizgisinden, rampada yüzeyden, sahanlıkta döşemeden 1,10 m; çubuklar
+      basamakta; her yan merdivenin ya da rampanın parçası `IfcRailing` BALUSTRADE; dikey çubuklu korkuluğun çubukları
+      IFC gövdesinde; çubuk eni `kentos_contracts::BALUSTER_WIDTH`).
+      Kalan: eğimli eleman, giydirme cephenin kapısı ve penceresi, dönen basamaklı ve eğri merdivenin korkuluğu
+      (duvar kaplamasının kalınlığı ADR 8076 ve 8124'te yapıldı).
   - **B11 bitti (16 Kasım 2026; [ADR 8072](../adr/8072-buildings-shared-basement-location.md); BIM-11 `[x]`, IFC-05 `[x]`):**
     - Programın binası kod (EK-2 §2.3), kullanım türü ve projenin ±0.00'ına göre ±0.00 taşır; birden çok binanın
       kapladığı kat seçilen binada sayılır (`BuildingProgram::shared`), nesnenin binası katından okunur

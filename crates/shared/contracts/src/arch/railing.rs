@@ -29,6 +29,9 @@ pub const MAX_RAILING_OFFSET: f64 = 10.0;
 pub const RAILING_HEIGHT: f64 = 1.1;
 /// A balustered railing's clear gap when none is given, metres: PAİY 38/4's most.
 pub const RAILING_GAP: f64 = 0.1;
+/// How wide a balustered railing's baluster is taken, metres: a 20 mm bar (docs/adr/8045 §3); its balusters stand its
+/// gap and this apart.
+pub const BALUSTER_WIDTH: f64 = 0.02;
 
 /// What fills a railing under its top rail (docs/adr/8045 §3).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]

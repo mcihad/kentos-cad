@@ -163,6 +163,9 @@ pub enum Part {
     Transom(usize),
     /// A curtain wall's panel.
     Panel,
+    /// A stair's or a ramp's railing (docs/adr/8128), its side's (0 left, 1 right as one walks up): not its body but
+    /// an `IfcRailing` of its parts.
+    Rail(usize),
 }
 
 /// A block placed in the drawing that is a building element (docs/adr/8070 §5): its insert's id bits and persistent id,
@@ -757,6 +760,27 @@ fn shapes(solid: &Solid, exact: Option<&Option<Vec<(Vec<P>, Vec<f64>)>>>, floor:
     }
 }
 
+/// A balustered railing's balusters as bodies (docs/adr/8128): each upright line of its lines' solid (one without a
+/// footprint: the section draws them as lines, ADR 8045 §3) a square bar [`kentos_contracts::BALUSTER_WIDTH`] wide
+/// round it, from its foot to its top, over its storey's floor.
+fn balusters(solid: &Solid, floor: f64) -> Vec<Shape> {
+    if !solid.rings.is_empty() {
+        return Vec::new();
+    }
+    let w = kentos_contracts::BALUSTER_WIDTH / 2.0;
+    solid
+        .marks
+        .iter()
+        .filter(|[(a, z0), (b, z1)]| a == b && z1 > z0)
+        .map(|[(q, z0), (_, z1)]| Shape::Prism {
+            rings: vec![vec![[q.x - w, q.y - w], [q.x + w, q.y - w], [q.x + w, q.y + w], [q.x - w, q.y + w]]],
+            bulges: Vec::new(),
+            bottom: z0 - floor,
+            top: z1 - floor,
+        })
+        .collect()
+}
+
 /// The level an architectural object stands on: its own `arch.level`; none for one without, or another kind.
 pub fn level_of(e: &Entity) -> Option<&str> {
     match e {
@@ -966,9 +990,18 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     let mut owned: Vec<(String, Vec<usize>)> = Vec::new();
     let mut stacks: Vec<(String, usize, Vec<usize>)> = Vec::new();
     let mut curtains: Vec<(String, Vec<(usize, Part)>)> = Vec::new();
+    let mut rails: Vec<(String, usize, Vec<usize>)> = Vec::new();
     for (i, owner) in owners.iter().enumerate() {
         let Some(o) = owner else { continue };
         match parts.get(i).copied().flatten() {
+            // A stair's or a ramp's railing is not its body but a part of it, one each side (docs/adr/8128).
+            Some(Part::Rail(side)) => {
+                match rails.iter_mut().find(|(r, k, _)| r == o && *k == side) {
+                    Some((_, _, list)) => list.push(i),
+                    None => rails.push((o.clone(), side, vec![i])),
+                }
+                continue;
+            }
             Some(Part::Roof(k)) => {
                 match stacks.iter_mut().find(|(r, p, _)| r == o && *p == k) {
                     Some((_, _, list)) => list.push(i),
@@ -999,8 +1032,14 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         let storey = storey_of(level_of(e));
         let floor = levels[storey].2;
         let mut shapes_of: Vec<Shape> = Vec::new();
+        // A balustered railing's balusters are bodies too (docs/adr/8128).
+        let barred =
+            matches!(e, Entity::Railing(r) if r.railing.infill == kentos_contracts::RailingInfill::Balusters);
         for &i in indices {
             shapes_of.extend(shapes(&solids[i], exact.get(i), floor));
+            if barred {
+                shapes_of.extend(balusters(&solids[i], floor));
+            }
         }
         if shapes_of.is_empty() {
             continue;
@@ -1222,6 +1261,40 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             });
             written.members += 1;
         }
+    }
+    // A stair's and a ramp's railings (docs/adr/8128; IFC 4.3 IfcStair, IfcRamp: their railings may be in their
+    // aggregation): each side's an IfcRailing BALUSTRADE as a drawn balustered railing is, its body its top rail's
+    // pieces and its balusters, a part of its stair or its ramp.
+    for (owner, side, pieces) in &rails {
+        let (Some(&whole), Some(&(id, _))) = (index.get(owner), by_uid.get(owner)) else {
+            continue;
+        };
+        let (storey, floor) = (elements[whole].storey, levels[elements[whole].storey].2);
+        let body: Vec<Shape> = pieces
+            .iter()
+            .flat_map(|&i| shapes(&solids[i], exact.get(i), floor).into_iter().chain(balusters(&solids[i], floor)))
+            .collect();
+        if body.is_empty() {
+            continue;
+        }
+        elements.push(Element {
+            class: Class::Railing,
+            id: Some(crate::step::fnv(owner, 2_000_000 + *side as u64)),
+            object: Some(id),
+            name: name(Class::Railing.code(), "Korkuluk"),
+            description: None,
+            tag: Some(owner.clone()),
+            predefined: "BALUSTRADE",
+            object_type: None,
+            part_of: Some(whole),
+            storey,
+            shapes: body,
+            overall: None,
+            material: None,
+            psets: Vec::new(),
+            qtos: Vec::new(),
+        });
+        written.railings += 1;
     }
     // Pset_WallCommon's IsExternal (EK-6 Tablo 6.66): a wall with a corner on the outline of its storey's walls and
     // columns together. The columns close it: the section model stops the walls at them, and the walls of a framed

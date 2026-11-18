@@ -182,6 +182,9 @@ pub enum Part {
     Transom(usize),
     /// A curtain wall's panel.
     Panel,
+    /// A stair's or a ramp's railing (docs/adr/8128), its side's (0 left, 1 right as one walks up): its top rail and
+    /// its balusters, drawn, not the stair's or the ramp's body.
+    Rail(usize),
 }
 
 /// A roof's gutter and downpipes waiting for the walls they run down (docs/adr/8044 §8).
@@ -1102,8 +1105,7 @@ fn railing_look(r: &kentos_commands::RailingFields) -> Look {
 
 /// How deep a railing's top rail is drawn in a section's or an elevation's view, metres.
 pub const TOP_RAIL_DEPTH: f64 = 0.05;
-/// How wide a railing's baluster is taken, metres: a 20 mm bar; its balusters stand its gap and this apart.
-pub const BALUSTER_WIDTH: f64 = 0.02;
+pub use kentos_commands::BALUSTER_WIDTH;
 
 /// A railing (docs/adr/8045 §3), from its floor (its storey's, moved by its offset) to its height. A solid panel is a
 /// wall-like band, its top rail's underside marked on both faces. A balustered or glass railing hides nothing behind it:
@@ -1676,6 +1678,66 @@ fn stair(doc: &Document, s: &kentos_commands::StairFields, owner: Option<String>
             ),
         }
     }
+    // Its railings over it (docs/adr/8128): a straight stair's; a curved stair's and a balanced stair's winders' none.
+    let step = kentos_commands::RAILING_GAP + BALUSTER_WIDTH;
+    let runs = kentos_geometry_core::geom::stair_rails::stair_rails(&pts, &spec, base, step);
+    push_rails(m, runs, owner);
+}
+
+/// A stair's or a ramp's railings (docs/adr/8128) drawn as a balustered railing is (ADR 8045 §3), on its layer: each
+/// piece's top rail a solid `TOP_RAIL_DEPTH` deep across and down, its top [`kentos_commands::RAILING_HEIGHT`] over the
+/// piece's walking plane (sloped with it over a flight or a ramp's run); its balusters lines of a solid without a
+/// footprint, each from its foot to the top rail's underside. Parts of their side's railing, not the stair's or the
+/// ramp's body.
+fn push_rails(m: &mut Model, runs: Vec<kentos_geometry_core::geom::stair_rails::RailRun>, owner: Option<String>) {
+    use kentos_commands::RailingInfill;
+    let (h, d) = (kentos_commands::RAILING_HEIGHT, TOP_RAIL_DEPTH);
+    let look = Look {
+        key: format!("KORK:{}", RailingInfill::Balusters.name()),
+        layer: kentos_commands::ek4_layer("KORK", RailingInfill::Balusters.layer_word()),
+        heavy: false,
+        fill: None,
+    };
+    for run in runs {
+        let part = Some(Part::Rail(usize::from(!run.left)));
+        let (ex, ey) = (run.b.x - run.a.x, run.b.y - run.a.y);
+        let l = ex.hypot(ey);
+        if l <= 1e-9 {
+            continue;
+        }
+        // Across it, half the rail's depth either side of its line.
+        let (nx, ny) = (-ey / l * d / 2.0, ex / l * d / 2.0);
+        let band = vec![
+            P::new(run.a.x - nx, run.a.y - ny),
+            P::new(run.b.x - nx, run.b.y - ny),
+            P::new(run.b.x + nx, run.b.y + ny),
+            P::new(run.a.x + nx, run.a.y + ny),
+        ];
+        let height = if run.plane.is_flat() {
+            Height::Prism { bottom: run.plane.top + h - d, top: run.plane.top + h }
+        } else {
+            Height::Sloped(sec::Sloped {
+                top: run.plane.top + h,
+                dx: run.plane.dx,
+                dy: run.plane.dy,
+                thickness: d,
+                // Every edge of it has its face; no roof's hip or ridge is taken from it.
+                eaves: band.clone(),
+                roof: RAMP_FACES + m.solids.len(),
+            })
+        };
+        let rail = Solid { rings: vec![band], height, voids: Vec::new(), marks: Vec::new(), finish: None };
+        push_part(m, rail, look.clone(), owner.clone(), part);
+        if run.balusters.is_empty() {
+            continue;
+        }
+        let head = |q: P| run.plane.z(q) + h - d;
+        let marks: Vec<[(P, f64); 2]> = run.balusters.iter().map(|&(q, foot)| [(q, foot), (q, head(q))]).collect();
+        let bottom = run.balusters.iter().map(|b| b.1).fold(f64::INFINITY, f64::min);
+        let top = run.balusters.iter().map(|b| head(b.0)).fold(f64::NEG_INFINITY, f64::max);
+        let lines = Solid { rings: Vec::new(), height: Height::Prism { bottom, top }, voids: Vec::new(), marks, finish: None };
+        push_part(m, lines, look.clone(), owner.clone(), part);
+    }
 }
 
 /// A placed block's outline in plan (docs/adr/8070 §5): the box of what its block draws with the insert's values,
@@ -1755,6 +1817,7 @@ const RAMP_FACES: usize = usize::MAX / 4;
 fn ramp(r: &kentos_commands::RampFields, slabs: &[SlabAt], owner: Option<String>, m: &mut Model) {
     use kentos_geometry_core::entity::Shape;
     use kentos_geometry_core::geom::arch::{Walk, band, ramp_landings};
+    use kentos_geometry_core::geom::stair_rails::{Plane, Stretch, rail_runs};
     let Shape::Ramp { pts, ramp: spec } = kentos_formats::arch_elements::core_ramp(r) else {
         return;
     };
@@ -1792,6 +1855,8 @@ fn ramp(r: &kentos_commands::RampFields, slabs: &[SlabAt], owner: Option<String>
         .map_or(kentos_commands::SLAB_THICKNESS, |sl| sl.thickness);
     let look = concrete_look();
     let half = spec.width / 2.0;
+    // Its stretches for its railings (docs/adr/8128): each run's surface, each landing's floor.
+    let mut stretches: Vec<Stretch> = Vec::new();
     for k in 0..pts.len() - 1 {
         let (a, b) = (pts[k], pts[k + 1]);
         let (sa, sb) = (walk.at[k], walk.at[k + 1]);
@@ -1835,6 +1900,13 @@ fn ramp(r: &kentos_commands::RampFields, slabs: &[SlabAt], owner: Option<String>
             eaves: ring.clone(),
             roof: RAMP_FACES + m.solids.len(),
         };
+        stretches.push(Stretch {
+            from: lo,
+            to: hi,
+            segment: Some(k),
+            plane: Plane { top: sloped.top, dx, dy },
+            steps: Vec::new(),
+        });
         push(
             m,
             Solid {
@@ -1851,6 +1923,7 @@ fn ramp(r: &kentos_commands::RampFields, slabs: &[SlabAt], owner: Option<String>
     let outline = band(&pts, half);
     for (x, y) in &landings {
         let top = height(*x);
+        stretches.push(Stretch { from: *x, to: *y, segment: None, plane: Plane::flat(top), steps: Vec::new() });
         let Some(ring) = kentos_geometry_core::geom::stair_body::band_cut(&walk, &outline, *x, *y) else {
             continue;
         };
@@ -1870,6 +1943,9 @@ fn ramp(r: &kentos_commands::RampFields, slabs: &[SlabAt], owner: Option<String>
             owner.clone(),
         );
     }
+    // Its railings over it (docs/adr/8128): over each run its surface, over each landing its floor.
+    let step = kentos_commands::RAILING_GAP + BALUSTER_WIDTH;
+    push_rails(m, rail_runs(&walk, spec.railings, half, &stretches, step), owner);
 }
 
 /// The block a section mark's section is drawn into: its id from the mark's (a section is its mark's), the same in

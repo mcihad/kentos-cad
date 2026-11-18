@@ -285,6 +285,7 @@ fn made_for(doc: &Document, stamp: &str, application: &str, scope: Option<&Scope
                 sections::Part::Mullion(k) => kentos_ifc::arch::Part::Mullion(k),
                 sections::Part::Transom(k) => kentos_ifc::arch::Part::Transom(k),
                 sections::Part::Panel => kentos_ifc::arch::Part::Panel,
+                sections::Part::Rail(k) => kentos_ifc::arch::Part::Rail(k),
             })
         })
         .collect();

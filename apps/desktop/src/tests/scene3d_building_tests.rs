@@ -1035,6 +1035,111 @@ fn covering_screens() {
     }
 }
 
+/// The section building with railings both sides of its stair and of a ramp east of it (B9's ramp, rising 0.45 m to the
+/// ground storey), then sections A and B derived 20 and 45 m east (docs/adr/8128).
+fn with_railings() -> kentos_commands::DocumentSnapshotV2 {
+    use kentos_native_application::{ExecutionContext, registry, sections_edit};
+    let mut doc = kentos_domain::Document::from_snapshot_v2(building()).expect("opens");
+    let run = |doc: &mut kentos_domain::Document, name: &str, input: serde_json::Value| {
+        let answer = registry::run(&mut ExecutionContext::new(doc), name, kentos_commands::CallOp::Execute, input)
+            .expect("runs");
+        assert_eq!(answer["status"], "completed", "{name}: {answer}");
+    };
+    let stair = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| matches!(e, Entity::Stair(_)).then(|| u.to_string()))
+        .expect("its stair");
+    run(&mut doc, "cad.arch.edit", serde_json::json!({"uids": [stair], "operation": {"kind": "set", "railings": "both"}}));
+    let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
+    run(
+        &mut doc,
+        "cad.ramps.create",
+        serde_json::json!({"layerId": "0", "ramps": [{"pts": [p(13.8, 7.0), p(13.8, 1.5), p(16.0, 1.5)],
+            "width": 1.2, "rise": 0.45, "base": -0.45, "railings": "both", "arch": {"level": "zemin"}}]}),
+    );
+    for (letter, x) in [("A", 20.0), ("B", 45.0)] {
+        let mark = doc
+            .entities_with_uids()
+            .find_map(|(u, e)| match e {
+                Entity::ViewMark(v) if v.mark.form == kentos_commands::ViewMarkForm::Section && v.mark.mark == letter => {
+                    Some(u)
+                }
+                _ => None,
+            })
+            .expect("the section");
+        let derived = sections_edit::execute(
+            &mut ExecutionContext::new(&mut doc),
+            kentos_commands::BuildingSectionsEdit {
+                operation: kentos_commands::BuildingSectionsOperation::Derive {
+                    mark: mark.to_string(),
+                    at: Some(kentos_commands::Vec2 { x, y: 0.0 }),
+                },
+                expected_revision: None,
+            },
+        );
+        assert!(matches!(derived, kentos_commands::CommandResult::Completed { .. }), "{derived:?}");
+    }
+    doc.to_snapshot_v2()
+}
+
+/// Merdiven ve rampa korkuluğu in section and in 3D (docs/adr/8128): the plan, sections A and B with the stair's and the
+/// ramp's top rails and balusters, the building from the north-east with the ramp's railings, and the ground storey
+/// alone with the stair's. `.run/gui-evidence/korkuluk-8128/`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib scene3d_building_tests::railing_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn railing_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/korkuluk-8128");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 700.0), "koyu")] {
+        let mut app = open(with_railings());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::scene3d_shown, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let fit = |app: &mut App, min: [f64; 2], max: [f64; 2]| {
+            app.viewport.camera.fit(
+                &kentos_render_wgpu::Bounds { min_x: min[0], min_y: min[1], max_x: max[0], max_y: max[1] },
+                24.0,
+            );
+        };
+        fit(&mut app, [-1.0, -1.0], [65.0, 10.0]);
+        shot(&mut app, "0-hepsi");
+        fit(&mut app, [-1.0, -1.0], [17.0, 10.0]);
+        shot(&mut app, "1-plan");
+        fit(&mut app, [18.0, -2.0], [40.0, 9.0]);
+        shot(&mut app, "2-kesit-a");
+        fit(&mut app, [43.0, -2.0], [65.0, 9.0]);
+        shot(&mut app, "3-kesit-b");
+        let _ = app.update(Message::Run("scene3d.view"));
+        shot(&mut app, "4-3b-kuzeydogu");
+        send(&mut app, W::Storey(1));
+        send(&mut app, W::Rooms);
+        send(&mut app, W::Dolly(1.5));
+        shot(&mut app, "5-3b-zemin-kat");
+        send(&mut app, W::View(1));
+        send(&mut app, W::Dolly(1.5));
+        shot(&mut app, "6-3b-zemin-kat-guneybati");
+        send(&mut app, W::Close);
+    }
+}
+
 /// The section building with a hip roof over its 1. kat at 33 % (its eaves 50 cm out of the walls) in five layers top
 /// down — kiremit 3 cm, lata 3 cm, çam kaplama tahtası 2.5 cm, ısı yalıtımı 5 cm, çam mertek 12.5 cm (docs/adr/8071 §8)
 /// — and section B derived 20 m east.

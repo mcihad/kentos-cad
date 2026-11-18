@@ -53,23 +53,7 @@ pub fn stair_body(pts: &[Vec2], spec: &StairSpec, base: f64, waist: Option<f64>)
     let walk = Walk::of(pts);
     let (stations, _) = riser_stations(&walk, spec);
     let landings = stair_landings(&walk, spec);
-    // A balanced stair's turns (docs/adr/8045 §2): each winds from its last square riser before its zone to its first
-    // after it (else the stair's last); the flights stop there as at a landing and its treads stand one by one.
-    let winding: Vec<(f64, f64)> = winder_turns(&walk, spec)
-        .iter()
-        .filter_map(|t| {
-            let a = stations
-                .iter()
-                .copied()
-                .rfind(|st| *st <= t.corner - t.reach + 1e-9)?;
-            let b = stations
-                .iter()
-                .copied()
-                .find(|st| *st >= t.corner + t.reach - 1e-9)
-                .or_else(|| stations.last().copied())?;
-            (b > a + 1e-9).then_some((a, b))
-        })
-        .collect();
+    let winding = winding_zones(&walk, spec, &stations);
     let stops: &[(f64, f64)] = if winding.is_empty() {
         &landings
     } else {
@@ -188,6 +172,27 @@ pub fn stair_body(pts: &[Vec2], spec: &StairSpec, base: f64, waist: Option<f64>)
         }
     }
     out
+}
+
+/// A balanced stair's turns (docs/adr/8045 §2) by its risers' stations: each winds from its last square riser before
+/// its zone to its first after it (else the stair's last); its flights stop there as at a landing and its treads stand
+/// one by one.
+pub(crate) fn winding_zones(walk: &Walk, spec: &StairSpec, stations: &[f64]) -> Vec<(f64, f64)> {
+    winder_turns(walk, spec)
+        .iter()
+        .filter_map(|t| {
+            let a = stations
+                .iter()
+                .copied()
+                .rfind(|st| *st <= t.corner - t.reach + 1e-9)?;
+            let b = stations
+                .iter()
+                .copied()
+                .find(|st| *st >= t.corner + t.reach - 1e-9)
+                .or_else(|| stations.last().copied())?;
+            (b > a + 1e-9).then_some((a, b))
+        })
+        .collect()
 }
 
 /// A curved stair's treads and post (docs/adr/0709, 8071 §9).

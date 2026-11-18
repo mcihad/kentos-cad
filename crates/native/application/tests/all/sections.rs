@@ -688,6 +688,19 @@ fn a_railing_stands_on_its_floor_its_balusters_seen_and_its_cut_light() {
     assert_eq!(panel.len(), 1);
     assert!(prism(&panel[0].0, 3.0, 4.1) && panel[0].0.marks.len() == 2);
     assert_eq!(panel[0].1, "MM-KORK-DOLU");
+    // In the IFC model (docs/adr/8128) the balustered one's body is its top rail and its 20 bars, 2 cm square from its
+    // floor to the top rail's underside; the glass one's its top rail alone (its glass is not a body yet), the solid
+    // one's its panel.
+    let (b, _, _) = kentos_native_application::arch_ifc::model(&doc);
+    let body = |uid: &str| {
+        let id = Uuid::parse_str(uid).unwrap().as_u128();
+        b.elements.iter().find(|e| e.id == Some(id)).map(|e| e.shapes.clone()).expect("written")
+    };
+    let barred = body(&uids[0]);
+    assert_eq!(barred.len(), 21);
+    assert!(barred[1..].iter().all(|sh| matches!(sh, kentos_ifc::building::Shape::Prism { rings, bottom, top, .. }
+        if (rings[0][1][0] - rings[0][0][0] - 0.02).abs() < 1e-9 && bottom.abs() < 1e-9 && (top - 1.05).abs() < 1e-9)));
+    assert_eq!((body(&uids[1]).len(), body(&uids[2]).len()), (1, 1));
     // A-A (y 2.40) cuts them: its block draws them on their layers.
     let a = mark(&doc, "A");
     derive(&mut doc, a);
@@ -810,6 +823,217 @@ fn a_ramp_s_runs_slope_its_landing_stands_flat_and_the_model_writes_it() {
     assert_eq!(ramps[0].shapes.len(), 3);
     assert_eq!(ramps[0].tag.as_deref(), Some(uid.as_str()));
     assert_eq!(written.ramps, 1);
+}
+
+/// The ramp, the stair and the IFC element a test builds with railings both sides: the document, the object's id.
+fn with_railings(command: &str, list: &str, fields: serde_json::Value) -> (Document, String) {
+    let mut doc = building();
+    let answer = kentos_native_application::registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        command,
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"layerId": "0", list: [fields]}),
+    )
+    .unwrap();
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let uid = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| match e {
+            Entity::Ramp(r) if r.ramp.railings.is_some() => Some(u),
+            Entity::Stair(s) if s.stair.railings.is_some() => Some(u),
+            _ => None,
+        })
+        .expect("the object with railings")
+        .to_string();
+    (doc, uid)
+}
+
+/// Rampanın korkuluğu kesitte ve modelde (docs/adr/8128): the L ramp above (6 m east, 4 m north, 1.50 m wide, rising
+/// 0.75 m, its landing from 5.25 to 6.75 along its line at 63/136 m, its grade 3/34) with railings both sides. Each
+/// side's line runs 5 cm inside its band, 0.70 m off the centre line, as the plan draws it; its top rail is 5 cm across
+/// and down, its top 1.10 m over the ramp's surface across from it (PAİY 38/1; a ramp's guard is measured from its
+/// surface): over the runs sloped with them, over the landing flat at 63/136 + 1.10. The left side, inside the turn,
+/// crosses the landing's corner in two 5 cm pieces; the right one runs round it: 8 top rails, 4 of them flat. Its
+/// balusters every 0.12 m from 6 cm in stand on the surface: the left line 5.30 + 3.30 m long (72), the right 6.70 +
+/// 4.70 m (95). A section along y = 2 looking north cuts the second run's two rails, 5 cm squares round x = 35.30 and
+/// 36.70, their tops at 39/68 + 1.10. Worked out here in fractions. In the IFC model the ramp keeps its three bodies;
+/// its two railings are IfcRailing BALUSTRADE, its parts, each its four pieces and its balusters (2 cm bars).
+#[test]
+fn a_ramp_s_railings_stand_over_its_surface_and_are_its_parts() {
+    use kentos_geometry_core::Vec2 as P;
+    use kentos_geometry_core::geom::section::{self as sec, Frame, Height};
+    use kentos_native_application::sections::Part;
+    let p = |x: f64, y: f64| serde_json::json!({"x": 30.0 + x, "y": y});
+    let (doc, uid) = with_railings(
+        "cad.ramps.create",
+        "ramps",
+        serde_json::json!({
+            "pts": [p(0.0, 0.0), p(6.0, 0.0), p(6.0, 4.0)], "width": 1.5, "rise": 0.75, "railings": "both",
+            "arch": {"level": "zemin"}
+        }),
+    );
+    let m = sections::model(&doc);
+    let mine = |i: usize| m.owners[i].as_deref() == Some(uid.as_str());
+    let body = (0..m.solids.len()).filter(|&i| mine(i) && m.parts[i].is_none()).count();
+    assert_eq!(body, 3, "its runs and its landing");
+    let rails: Vec<usize> = (0..m.solids.len())
+        .filter(|&i| mine(i) && matches!(m.parts[i], Some(Part::Rail(_))))
+        .collect();
+    let (tops, lines): (Vec<usize>, Vec<usize>) = rails.iter().partition(|&&i| !m.solids[i].rings.is_empty());
+    let (grade, landing) = (3.0 / 34.0, 63.0 / 136.0);
+    let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
+    // The ramp's surface across from a plan point: its second run north of the landing, its first west of it.
+    let surface = |q: P| {
+        if q.y > 0.75 + 1e-9 {
+            landing + (q.y - 0.75) * grade
+        } else if q.x < 35.25 - 1e-9 {
+            (q.x - 30.0) * grade
+        } else {
+            landing
+        }
+    };
+    assert_eq!(tops.len(), 8, "{tops:?}");
+    let mut flats = 0;
+    for &i in &tops {
+        let ring = &m.solids[i].rings[0];
+        let c = P::new(ring.iter().map(|q| q.x).sum::<f64>() / 4.0, ring.iter().map(|q| q.y).sum::<f64>() / 4.0);
+        // Its line 0.70 m off the centre line: y = ±0.70 along the first leg, x = 36 ± 0.70 along the second.
+        assert!(near(c.y.abs(), 0.70) || near((c.x - 36.0).abs(), 0.70), "{c:?}");
+        match &m.solids[i].height {
+            Height::Sloped(s) => {
+                assert!(near(s.z(c), surface(c) + 1.10) && near(s.thickness, 0.05), "{c:?} {s:?}");
+            }
+            Height::Prism { bottom, top } => {
+                flats += 1;
+                assert!(near(*top, landing + 1.10) && near(*bottom, landing + 1.05), "{c:?} {top}");
+            }
+            other => panic!("{other:?}"),
+        }
+    }
+    assert_eq!(flats, 4);
+    let left = rails.iter().filter(|&&i| m.parts[i] == Some(Part::Rail(0)) && !m.solids[i].rings.is_empty()).count();
+    assert_eq!(left, 4);
+    // Its balusters: each from the surface under it up to the top rail's underside.
+    let mut count = 0;
+    for &i in &lines {
+        for [(q, foot), (q2, head)] in &m.solids[i].marks {
+            assert!(q == q2 && near(*foot, surface(*q)) && near(*head, surface(*q) + 1.05), "{q:?} {foot} {head}");
+            count += 1;
+        }
+    }
+    assert_eq!(count, 72 + 95);
+    // Cut across its second run: its two top rails.
+    let frame = Frame::new(P::new(34.0, 2.0), P::new(38.0, 2.0), false, None).unwrap();
+    let cut = sec::section(&frame, &m.solids);
+    let mut pieces: Vec<(f64, f64, f64, f64)> = cut
+        .cut
+        .iter()
+        .filter(|c| tops.contains(&c.solid))
+        .map(|c| {
+            let us = c.ring.iter().map(|q| q.x);
+            let zs = c.ring.iter().map(|q| q.y);
+            (
+                us.clone().fold(f64::INFINITY, f64::min),
+                us.fold(f64::NEG_INFINITY, f64::max),
+                zs.clone().fold(f64::INFINITY, f64::min),
+                zs.fold(f64::NEG_INFINITY, f64::max),
+            )
+        })
+        .collect();
+    pieces.sort_by(|a, b| a.0.total_cmp(&b.0));
+    assert_eq!(pieces.len(), 2, "{pieces:?}");
+    let top = 39.0 / 68.0 + 1.10;
+    for ((u0, u1, z0, z1), at) in pieces.iter().zip([1.30, 2.70]) {
+        assert!(near(*u0, at - 0.025) && near(*u1, at + 0.025), "{pieces:?}");
+        assert!(near(*z1, top) && near(*z0, top - 0.05), "{pieces:?}");
+    }
+    // The IFC model: the ramp's body as it was, its railings its parts.
+    let (b, _, _) = kentos_native_application::arch_ifc::model(&doc);
+    let ramp = b
+        .elements
+        .iter()
+        .position(|e| e.class == kentos_ifc::building::Class::Ramp)
+        .expect("the ramp");
+    assert_eq!(b.elements[ramp].shapes.len(), 3);
+    let railings: Vec<&kentos_ifc::building::Element> =
+        b.elements.iter().filter(|e| e.part_of == Some(ramp)).collect();
+    assert_eq!(railings.len(), 2, "{railings:?}");
+    for (r, bars) in railings.iter().zip([72, 95]) {
+        assert_eq!(r.class, kentos_ifc::building::Class::Railing);
+        assert_eq!(r.predefined, "BALUSTRADE");
+        assert_eq!(r.shapes.len(), 4 + bars);
+        // Each bar 2 cm square, from the surface to the top rail's underside (the ramp's storey's floor is ±0.00).
+        let square = |sh: &&kentos_ifc::building::Shape| match sh {
+            kentos_ifc::building::Shape::Prism { rings, bottom, top, .. } => {
+                let xs: Vec<f64> = rings[0].iter().map(|q| q[0]).collect();
+                let w = xs.iter().copied().fold(f64::NEG_INFINITY, f64::max) - xs.iter().copied().fold(f64::INFINITY, f64::min);
+                near(w, 0.02) && near(top - bottom, 1.05)
+            }
+            _ => false,
+        };
+        assert_eq!(r.shapes.iter().filter(square).count(), bars);
+        assert_eq!(r.object, b.elements[ramp].id);
+        assert_eq!(r.storey, b.elements[ramp].storey);
+    }
+    assert_ne!(railings[0].id, railings[1].id);
+}
+
+/// Merdivenin korkuluğu kesitte ve modelde (docs/adr/8128): a straight stair east of the building, 18 risers of 0.17 m
+/// and treads of 0.28 m from ±0.00 along y = 6 (its line 4.76 m), 1.20 m wide, railings both sides. Each side's top rail
+/// runs along y = 6 ± 0.55, sloped with the line through its nosings: its top 0.17·(i + 1) + 1.10 over riser i at
+/// x = 30 + 0.28·i, from 1.27 at its foot to 4.16 at its head (a stair's guard is measured from its nosings' line,
+/// PAİY 38/1's 1.10 m). Its 40 balusters a side stand on its treads: the first at x = 30.06 on the first (0.17), the
+/// last at 34.74 on the 17th (2.89), each up to the top rail's underside. In the IFC model the stair has its two
+/// railings as its parts, each its top rail and its 40 bars.
+#[test]
+fn a_stair_s_railings_follow_its_nosings_and_are_its_parts() {
+    use kentos_geometry_core::Vec2 as P;
+    use kentos_geometry_core::geom::section::Height;
+    use kentos_native_application::sections::Part;
+    let p = |x: f64| serde_json::json!({"x": x, "y": 6.0});
+    let (doc, uid) = with_railings(
+        "cad.stairs.create",
+        "stairs",
+        serde_json::json!({
+            "pts": [p(30.0), p(34.76)], "width": 1.2, "risers": 18, "riserHeight": 0.17, "tread": 0.28,
+            "railings": "both", "arch": {"level": "zemin"}
+        }),
+    );
+    let m = sections::model(&doc);
+    let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
+    let rails: Vec<usize> = (0..m.solids.len())
+        .filter(|&i| m.owners[i].as_deref() == Some(uid.as_str()) && matches!(m.parts[i], Some(Part::Rail(_))))
+        .collect();
+    let (tops, lines): (Vec<usize>, Vec<usize>) = rails.iter().partition(|&&i| !m.solids[i].rings.is_empty());
+    assert_eq!((tops.len(), lines.len()), (2, 2), "{rails:?}");
+    for (&i, y) in tops.iter().zip([6.55, 5.45]) {
+        let Height::Sloped(s) = &m.solids[i].height else {
+            panic!("{:?}", m.solids[i].height)
+        };
+        assert!(m.solids[i].rings[0].iter().all(|q| (q.y - y).abs() <= 0.025 + 1e-9), "{:?}", m.solids[i].rings);
+        for k in 0..18 {
+            let q = P::new(30.0 + 0.28 * k as f64, y);
+            assert!(near(s.z(q), 0.17 * (k + 1) as f64 + 1.10), "riser {k}: {s:?}");
+        }
+        assert!(near(s.z(P::new(30.0, y)), 1.27) && near(s.z(P::new(34.76, y)), 4.16));
+    }
+    for &i in &lines {
+        let marks = &m.solids[i].marks;
+        assert_eq!(marks.len(), 40);
+        let ([(a, foot), (_, head)], [(z, last), _]) = (marks[0], marks[39]);
+        assert!(near(a.x, 30.06) && near(foot, 0.17) && near(head, 0.17 + 0.06 * 0.17 / 0.28 + 1.05), "{:?}", marks[0]);
+        assert!(near(z.x, 34.74) && near(last, 2.89), "{:?}", marks[39]);
+    }
+    let (b, _, _) = kentos_native_application::arch_ifc::model(&doc);
+    let stair = b
+        .elements
+        .iter()
+        .position(|e| e.class == kentos_ifc::building::Class::Stair && e.tag.as_deref() == Some(uid.as_str()))
+        .expect("the stair");
+    let railings: Vec<&kentos_ifc::building::Element> =
+        b.elements.iter().filter(|e| e.part_of == Some(stair)).collect();
+    assert_eq!(railings.len(), 2, "{railings:?}");
+    assert!(railings.iter().all(|r| r.class == kentos_ifc::building::Class::Railing && r.shapes.len() == 1 + 40));
 }
 
 /// Giydirme cephe (docs/adr/8070 §7): a 6 m curtain wall east of the building, 0.15 m deep, 3 m high, at most 1.50 m

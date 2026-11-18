@@ -93,10 +93,10 @@ kimliği; test bağlantısı.
 | IfcDoor | KAP | Kapı | ◐ | yangın; acil çıkış | IFC-02 |
 | IfcWindow | PNC | Pencere | ✓ | — | — |
 | IfcOpeningElement | ACL | Açıklık, niş, döşeme deliği ve boşluk mahalinin parçası (ADR 8071 §5) | ✓ | — | IFC-06 |
-| IfcStair | MRD | Merdiven | ✓ tipi kollarından, Betonarme (ADR 8070) | yangın; acil çıkış beyanla (ADR 8068) | IFC-02 |
-| IfcRamp | RMP | Rampa | ✓ eğik kollar ve sahanlıklar, tipi kollarından (ADR 8070) | korkulukları | IFC-03 |
-| IfcRailing | KRK | Korkuluk | ✓ | — | — |
-| IfcCovering | KPL | Kaplama, asma tavan (BIM-09) | ✓ döşemenin kaplama rolü (mahale bağlı ya da elle, tipi ve gövdesiyle; K47) ve mahalin seti adları ve kalınlıklarıyla (K44, ADR 8070) | duvar kalınlığı; `IfcRelCoversSpaces`; katman takımı | IFC-03 |
+| IfcStair | MRD | Merdiven | ✓ tipi kollarından, Betonarme (ADR 8070); korkulukları parçaları (ADR 8128) | yangın; acil çıkış beyanla (ADR 8068); dönen basamaklı ve eğri merdivenin korkuluğu | IFC-02 |
+| IfcRamp | RMP | Rampa | ✓ eğik kollar ve sahanlıklar, tipi kollarından (ADR 8070); korkulukları parçaları (ADR 8128) | — | IFC-03 |
+| IfcRailing | KRK | Korkuluk | ✓ çizilen korkuluk; merdivenin ve rampanın yan yan korkuluğu onların parçası; dikey çubuklu korkuluğun çubukları gövdede (ADR 8128) | camlı korkuluğun camı | — |
+| IfcCovering | KPL | Kaplama, asma tavan (BIM-09) | ✓ döşemenin kaplama rolü (mahale bağlı ya da elle, tipi ve gövdesiyle; K47) ve mahalin seti adları ve kalınlıklarıyla (K44, ADR 8070) | katman takımı (duvar kalınlığı ADR 8076 ve 8124, `IfcRelCoversSpaces` ADR 8127) | IFC-03 |
 | IfcChimney | BAC | Çatı bacası, duvardaki baca | ✓ tek eleman, duvarın boşluğunu doldurur (ADR 8070) | — | IFC-03 |
 | IfcGridAxis | AKS | Aks | ✓ `IfcGrid` U/V (ADR 8070); tek yönlü takım kayıpta | RADIAL | IFC-03 |
 | IfcGroup | GRP | — | ✗ | kataloğun ne için istediği belli olunca | IFC-03 |
