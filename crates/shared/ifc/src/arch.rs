@@ -1377,6 +1377,14 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         let Some(&host) = index.get(&o.opening.host) else {
             continue;
         };
+        // In a curtain wall a door or a window is one of its parts in place of panels, no opening through it (IFC 4.3
+        // IfcDoor, IfcWindow: a part of an element assembly, typically an IfcCurtainWall; docs/adr/8129); a bare
+        // opening there is an empty cell, nothing of its own.
+        let curtain = elements[host].class == Class::CurtainWall;
+        if curtain && !matches!(gap.form, OpeningForm::Door | OpeningForm::Window) {
+            opened.insert(owner.as_str());
+            continue;
+        }
         let storey = elements[host].storey;
         let floor = levels[storey].2;
         let ring: Vec<[f64; 2]> = gap.ring.iter().map(|p| pt(*p)).collect();
@@ -1411,7 +1419,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                     tag: Some(mark.clone().or_else(|| code.clone()).unwrap_or_else(|| owner.clone())),
                     predefined: if door { "DOOR" } else { "WINDOW" },
                     object_type: None,
-                    part_of: None,
+                    part_of: curtain.then_some(host),
                     storey,
                     shapes: vec![Shape::Prism {
                         rings: vec![filler_ring(
@@ -1439,8 +1447,11 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             }
             _ => None,
         };
-        written.openings += 1;
         opened.insert(owner.as_str());
+        if curtain {
+            continue;
+        }
+        written.openings += 1;
         openings.push(Opening {
             // Derived from the door or window that makes it (docs/adr/8117).
             id: Some(crate::step::derived_id("opening", owner)),

@@ -108,6 +108,7 @@ mod wall_candidates;
 mod structure_index;
 pub mod wall_pieces;
 mod wall_height;
+mod opening_cells;
 mod room_height;
 mod room_walls;
 mod style_overrides;

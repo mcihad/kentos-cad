@@ -1545,6 +1545,12 @@ impl<'a> Solver<'a> {
         }
         let last = lines.len() - 1;
         d.fill = band(&lines[0], &lines[last], 0, last, left, right, &[]);
+        // The intervals its through openings take (docs/adr/8129: a curtain wall's glass and inner mullions stop there).
+        d.openings = holes
+            .iter()
+            .filter(|h| h.lo <= right + eps && h.hi >= left - eps)
+            .map(|h| (h.s0, h.s1))
+            .collect();
         let Some(base) = &base else {
             return Some(d);
         };

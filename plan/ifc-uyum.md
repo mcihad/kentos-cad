@@ -84,7 +84,7 @@ kimliği; test bağlantısı.
 | IfcSpatialZone | MZN | Emsal alanı (BIM-08) | ✓ (ADR 8069) | DIGER | IFC-03 |
 | IfcZone | ZON | Bağımsız bölüm, eklenti, ortak alan; yangın kompartımanı | ✓ (ADR 8069, 8088) | — | IFC-03 |
 | IfcWall | DVR | Duvar | ◐ hep `STANDARD` | türü; yangın; katmanları | IFC-02, IFC-04 |
-| IfcCurtainWall | GDC | Giydirme cephe (BIM-09) | ✓ gövdesi panelleri, USERDEFINED, dikme ve kayıtları parçaları (K45, ADR 8070) | panel yerine kapı ve pencere | IFC-03 |
+| IfcCurtainWall | GDC | Giydirme cephe (BIM-09) | ✓ gövdesi panelleri, USERDEFINED, dikme ve kayıtları parçaları (K45, ADR 8070); panel yerine kapı ve pencere parçaları (ADR 8129) | — | IFC-03 |
 | IfcSlab | DSM | Döşeme, balkon, teras | ◐ hep `FLOOR` | türü; yangın | IFC-02 |
 | IfcRoof | CAT | Çatı | ◐ tipi `NOTDEFINED` | türü; yangın | IFC-02 |
 | IfcColumn | KLN | Kolon | ◐ | yangın; dayanım | IFC-02 |

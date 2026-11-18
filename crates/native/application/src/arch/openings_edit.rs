@@ -665,7 +665,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
                     f.number = None;
                     let path = format!("operation.offsets[{k}]");
                     openings::valid(&f, &path)?;
-                    let f = openings::placed(&f, &line, &path)?;
+                    let f = openings::placed(doc, &f, &line, &path)?;
                     let mut e = (*o).clone();
                     e.base.id = 0;
                     e.base.label = None;
@@ -682,7 +682,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
         let path = format!("uids[{at}]");
         openings::valid(&f, &path)?;
         let f = match doc.wall_line_of(&f.host) {
-            Some(line) => openings::placed(&f, &line, &path)?,
+            Some(line) => openings::placed(doc, &f, &line, &path)?,
             None if must_stand => {
                 return Err(fail(
                     codes::OPENING_HOST_GONE,

@@ -28,6 +28,13 @@ type's), only a flue has an inset (above 0), a form that goes through has neithe
 wall (a niche reaching its other face, a flue either face) is refused (`recess_too_deep`), and one whose wall grew too
 thin since breaks (`tooDeep`). A form changed to a niche or flue takes its form's first type's depth when it has none;
 one changed to a form that goes through drops its depth and inset unless the change names them.
+
+ADR 8129 puts doors, windows and bare openings into curtain walls: a straight stretch is divided into the fewest
+equal bays none longer than the grid's spacing (its height likewise into rows); a frame `frame` wide (none: 0.05) sits
+inside each end and centred on each inner line; an opening fills the bays of the stretch its middle is on whose
+cells' middles (between the frames' faces) it covers, else the bay its middle is in, and so the rows; a door, or one
+without a sill, from the foot row up to the row its head is in, its sill the floor. Its jambs, sill and head are its
+cells'. A niche or a flue goes into none (`not_a_wall`).
 """
 
 import argparse
@@ -176,6 +183,9 @@ class Line:
         self.left = w.get("offset", 0.0) + just
         self.right = self.left - w["width"]
         self.width = w["width"]
+        # A curtain wall's grid and its own height (ADR 8129).
+        self.curtain = w.get("curtain")
+        self.height = w.get("height")
 
     def edge_len(self, i):
         a, b = self.edges[i]
@@ -231,6 +241,63 @@ def overlap(a, b):
 
 
 CUT = 1.1
+
+
+def divisions(length, most):
+    """A stretch's grid lines: the fewest equal bays none longer than `most`, its ends among them (ADR 8070 §7)."""
+    n = max(math.ceil(length / most - 1e-9), 1)
+    return [length * k / n for k in range(n + 1)]
+
+
+def frame_span(lines, k, face):
+    at, last = lines[k], len(lines) - 1
+    return (at, at + face) if k == 0 else (at - face, at) if k == last else (at - face / 2, at + face / 2)
+
+
+def cell_span(lines, k, face):
+    return frame_span(lines, k, face)[1], frame_span(lines, k + 1, face)[0]
+
+
+def cells_of(lines, lo, hi, at, face, from_first):
+    """The cells whose middles lie in [lo, hi], else the one `at` is in; `from_first`: from the first up to the one `hi`
+    is in (the last that begins below it)."""
+    if from_first:
+        below = [k for k in range(len(lines) - 1) if lines[k] < hi - 1e-9]
+        return 0, (below[-1] if below else 0)
+    mids = [sum(cell_span(lines, k, face)) / 2 for k in range(len(lines) - 1)]
+    inside = [k for k, m in enumerate(mids) if lo - 1e-9 <= m <= hi + 1e-9]
+    if inside:
+        return inside[0], inside[-1]
+    k = next(k for k in range(len(lines) - 1) if lines[k] - 1e-9 <= at <= lines[k + 1] + 1e-9)
+    return k, k
+
+
+def curtain_fill(f, line):
+    """`f` fitted to the cells of its curtain wall (ADR 8129); the wall stands on the floor (no level, no slab)."""
+    c = line.curtain
+    face = c.get("frame", 0.05)
+    s0, s1 = span(f)
+    mid = (s0 + s1) / 2
+    on_floor = f["form"] == "door" or f.get("sill") is None or f["sill"] <= 1e-9
+    sill = f.get("sill") or 0.0
+    head = f["head"] if f.get("head") is not None else line.height
+    for i, start in enumerate(line.cum):
+        length = line.edge_len(i)
+        if not (start - 1e-9 <= mid <= start + length + 1e-9 and length > 2 * face):
+            continue
+        bays, ups = divisions(length, c["spacing"]), divisions(line.height, c["rows"])
+        k0, k1 = cells_of(bays, s0 - start, s1 - start, mid - start, face, False)
+        r0, r1 = cells_of(ups, sill, head, (sill + head) / 2, face, on_floor)
+        x0, x1 = start + cell_span(bays, k0, face)[0], start + cell_span(bays, k1, face)[1]
+        out = dict(f, width=x1 - x0)
+        out["at"] = {"start": x0, "center": (x0 + x1) / 2, "end": x1}[f.get("anchor", "center")]
+        if not on_floor:
+            out["sill"] = cell_span(ups, r0, face)[0]
+        elif f.get("sill") is not None:
+            out["sill"] = 0.0
+        out["head"] = cell_span(ups, r1, face)[1]
+        return out
+    return f
 
 
 def heights(f):
@@ -449,11 +516,13 @@ MISSING = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
 class Drawing:
     """The drawing as the cases' steps leave it: its walls by id and its openings by id."""
 
-    def __init__(self):
-        self.walls = {i: e for i, e in BY_ID.items() if e["kind"] == "wall"}
+    def __init__(self, entities=None):
+        self.by_id = {e["id"]: e for e in entities} if entities else BY_ID
+        self.base_ids = [e["id"] for e in entities] if entities else IDS
+        self.walls = {i: e for i, e in self.by_id.items() if e["kind"] == "wall"}
         self.openings = {}
         self.layers = {}
-        self.next = NEW
+        self.next = max(self.base_ids) + 1
         self.locked = set()
 
     def wall_named(self, uid, path):
@@ -592,6 +661,11 @@ def create(d, inp, conflict=False):
         pr = problem(f)
         if pr:
             return refusal("invalid_opening", pr[1], f"{at}.{pr[0]}"), None
+        if line.curtain is not None:
+            if f["form"] in ("niche", "flue"):
+                return refusal("not_a_wall", "Giydirme cepheye niş ve baca konmaz: hücrelerine kapı, pencere ya da boşluk konur. "
+                               "Nişi ya da bacayı bir duvara koyun.", at), None
+            f = curtain_fill(f, line)
         r = placed(f, line, at)
         if "status" in r:
             return r, None
@@ -669,8 +743,8 @@ def create_step(d, op, inp, non_finite=None, conflict=False, command=None):
 
 
 def drawing_ids(d):
-    kept = [i for i in IDS if BY_ID[i]["kind"] != "wall" or i in d.walls]
-    return kept + sorted(i for i in list(d.openings) + [w for w in d.walls if w not in BY_ID])
+    kept = [i for i in d.base_ids if d.by_id[i]["kind"] != "wall" or i in d.walls]
+    return kept + sorted(i for i in list(d.openings) + [w for w in d.walls if w not in d.by_id])
 
 
 Drawing.ids = drawing_ids
@@ -680,9 +754,12 @@ class Cases:
     def __init__(self):
         self.cases = []
 
-    def add(self, name, steps):
+    def add(self, name, steps, setup=None):
         assert len(name) > 10
-        self.cases.append({"name": name, "steps": steps})
+        case = {"name": name, "steps": steps}
+        if setup is not None:
+            case["setup"] = setup
+        self.cases.append(case)
 
 
 def one(host=1, layer="kapi", **kw):
@@ -840,6 +917,21 @@ def create_cases():
     d = Drawing()
     made = create_step(d, "execute", one(at=5.0, type="Pencere 120"))
     c.add("pencereyle aynı kotta niş reddedilir", [made, create_step(d, "execute", one(at=5.0, type="Niş 60"))])
+    # ADR 8129: a 6 m curtain wall, 0.15 m deep, 3 m high, at 1.50 and 1.20 m: bays' cells 0.05–1.475, 1.525–2.975,
+    # 3.025–4.475, 4.525–5.95; rows' 0.05–0.975, 1.025–1.975, 2.025–2.95.
+    curtain = [wall(1, "duvar", [P(0, 0), P(6, 0)], 0.15, height=3.0, curtain={"spacing": 1.5, "rows": 1.2})]
+    setup = {**SETUP, "entities": curtain}
+    for name, inp in [
+        ("giydirme cephede kapı ikinci bölmeyi doldurur: dikmelerin yüzleri arası 1,45 m, üstü 2,10'un düştüğü sıranın üstü 2,95 m",
+         one(at=2.25)),
+        ("giydirme cephede kapının üstü kayıt çizgisindeyse orada durur: 2,00 → 1,975 m", one(at=2.25, head=2.0)),
+        ("giydirme cephede pencere ortalarını kapsadığı iki bölmenin orta sırasını doldurur", one(at=4.5, form="window", width=2.0,
+                                                                                                  sill=0.9, head=2.1)),
+        ("giydirme cephede küçük boşluk ortasının düştüğü hücreyi doldurur", one(at=0.5, form="opening", width=0.6, sill=1.2, head=1.4)),
+        ("giydirme cepheye niş konmaz", one(at=0.75, form="niche")),
+    ]:
+        c.add(name, [create_step(Drawing(curtain), "execute", inp)], setup)
+    c.add("giydirme cephede kapının planı hücrelerine oturur", [create_step(Drawing(curtain), "plan", one(at=2.25))], setup)
     return c.cases
 
 

@@ -794,6 +794,9 @@ pub struct Drawn {
     /// Where its turning layers close across a free end or a jamb (docs/adr/0771 §3): the component each belongs to
     /// (drawn when that component is) and the line.
     pub closures: Vec<(usize, Line)>,
+    /// The intervals along its base line its openings go through in plan (docs/adr/8129: a curtain wall's glass and the
+    /// mullions inside a door or a window stop there).
+    pub openings: Vec<(f64, f64)>,
 }
 
 /// A wall's drawing on its own, or why it cannot be drawn.
@@ -840,6 +843,7 @@ pub fn drawn_of(all: &[Line], spec: &Spec) -> Drawn {
         fill: vec![band(left, right, closed)],
         recesses: Vec::new(),
         closures: Vec::new(),
+        openings: Vec::new(),
     }
 }
 
@@ -950,11 +954,18 @@ fn curtain_pieces(d: &Drawn, pts: &[Vec2], spec: &Spec, (spacing, _, face): (f64
     }
     let left = left_face(spec);
     let right = left - spec.width;
-    if let Ok(glass) = line_at(pts, None, spec.closed, (left + right) / 2.0) {
-        out.push(piece(glass.shape(spec.closed), None, None));
+    let middle = (left + right) / 2.0;
+    let glass = line_at(pts, None, spec.closed, middle).ok();
+    // Its doors and windows (docs/adr/8129): the glass stops at their jambs, the mullions inside them are not there.
+    let inside = |s: f64| d.openings.iter().any(|&(s0, s1)| s > s0 + 1e-9 && s < s1 - 1e-9);
+    if d.openings.is_empty() {
+        if let Some(glass) = &glass {
+            out.push(piece(glass.shape(spec.closed), None, None));
+        }
     }
     let n = pts.len();
     let stretches = if spec.closed { n } else { n.saturating_sub(1) };
+    let mut start = 0.0;
     for i in 0..stretches {
         let (a, b) = (pts[i], pts[(i + 1) % n]);
         let length = js_hypot(b.x - a.x, b.y - a.y);
@@ -964,8 +975,40 @@ fn curtain_pieces(d: &Drawn, pts: &[Vec2], spec: &Spec, (spacing, _, face): (f64
         let u = Vec2::new((b.x - a.x) / length, (b.y - a.y) / length);
         let normal = Vec2::new(-u.y, u.x);
         let at = |s: f64, off: f64| Vec2::new(a.x + u.x * s + normal.x * off, a.y + u.y * s + normal.y * off);
+        // The glass along this stretch, from corner to corner of its line, less the openings on it.
+        if !d.openings.is_empty()
+            && let Some(g) = &glass
+            && let (Some(&g0), Some(&g1)) = (g.pts.get(i), g.pts.get((i + 1) % g.pts.len()))
+        {
+            // Its corners' places along the stretch (a mitre runs past or short of the stretch's end).
+            let (t0, t1) = ((g0.x - a.x) * u.x + (g0.y - a.y) * u.y, (g1.x - a.x) * u.x + (g1.y - a.y) * u.y);
+            let mut cuts: Vec<(f64, f64)> = d
+                .openings
+                .iter()
+                .map(|&(s0, s1)| (s0 - start, s1 - start))
+                .filter(|&(s0, s1)| s1 > t0 && s0 < t1)
+                .collect();
+            cuts.sort_by(|x, y| x.0.total_cmp(&y.0));
+            let mut from = (t0, g0);
+            for (s0, s1) in cuts {
+                if s0 > from.0 + 1e-9 {
+                    out.push(piece(Shape::Line { a: from.1, b: at(s0, middle) }, None, None));
+                }
+                if s1 >= t1 {
+                    from = (t1, g1);
+                    break;
+                }
+                from = (s1, at(s1, middle));
+            }
+            if t1 > from.0 + 1e-9 {
+                out.push(piece(Shape::Line { a: from.1, b: g1 }, None, None));
+            }
+        }
         let lines = crate::geom::curtain::divisions(length, spacing);
         for k in 0..lines.len() {
+            if inside(start + lines[k]) {
+                continue;
+            }
             let (s0, s1) = crate::geom::curtain::frame_span(&lines, k, face.min(length / 2.0));
             out.push(piece(
                 Shape::Polygon {
@@ -978,6 +1021,7 @@ fn curtain_pieces(d: &Drawn, pts: &[Vec2], spec: &Spec, (spacing, _, face): (f64
                 None,
             ));
         }
+        start += length;
     }
     out
 }
@@ -1157,6 +1201,51 @@ mod tests {
             Shape::Line { a, b } => a.y.abs() < 1e-12 && b.y.abs() < 1e-12,
             _ => false,
         }));
+    }
+
+    /// A door through the same curtain wall over its second and third bays (docs/adr/8129: 1.525 to 4.475 along it):
+    /// the glass stops at its jambs (two lines, 0 to 1.525 and 4.475 to 6), the mullion at 3.00 inside it is not
+    /// there (four of five), its faces open there with their jambs.
+    #[test]
+    fn a_curtain_wall_s_door_stops_its_glass_and_takes_its_mullion_out() {
+        let spec = Spec {
+            width: 0.15,
+            curtain: Some(Json::parse(r#"{"spacing": 1.5, "rows": 1.2}"#).unwrap()),
+            ..Spec::default()
+        };
+        let pts = [v(0.0, 0.0), v(6.0, 0.0)];
+        let wall = [crate::geom::wall_join::WallIn { pts: &pts, bulges: None, spec: &spec }];
+        let holes = [vec![crate::geom::opening::Hole::through(1.525, 4.475)]];
+        let d = crate::geom::wall_join::solve_with(&wall, &holes, None).drawn[0].clone().unwrap();
+        assert_eq!(d.openings, vec![(1.525, 4.475)]);
+        let pieces = pieces_of(&d, &pts, &spec, View::new(Detail::Standard, 50.0));
+        let mullions: Vec<f64> = pieces
+            .iter()
+            .filter_map(|p| match &p.shape {
+                Shape::Polygon { pts, .. } => Some(pts.iter().map(|q| q.x).fold(f64::INFINITY, f64::min)),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(mullions.len(), 4, "{mullions:?}");
+        assert!(!mullions.iter().any(|x| (x - 2.975).abs() < 1e-9), "{mullions:?}");
+        let glass: Vec<(f64, f64)> = pieces
+            .iter()
+            .filter_map(|p| match &p.shape {
+                Shape::Line { a, b } if a.y.abs() < 1e-12 && b.y.abs() < 1e-12 => Some((a.x, b.x)),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(glass.len(), 2, "{glass:?}");
+        assert!((glass[0].0 - 0.0).abs() < 1e-9 && (glass[0].1 - 1.525).abs() < 1e-9, "{glass:?}");
+        assert!((glass[1].0 - 4.475).abs() < 1e-9 && (glass[1].1 - 6.0).abs() < 1e-9, "{glass:?}");
+        // Its faces open between the jambs: no face line crosses x 3.
+        let crosses = pieces.iter().any(|p| match &p.shape {
+            Shape::Polyline { pts, .. } => {
+                pts.windows(2).any(|w| (w[0].y - w[1].y).abs() < 1e-12 && w[0].y.abs() > 0.07 && w[0].x.min(w[1].x) < 3.0 && w[0].x.max(w[1].x) > 3.0)
+            }
+            _ => false,
+        });
+        assert!(!crosses);
     }
 
     fn spec(width: f64, justify: Justify) -> Spec {

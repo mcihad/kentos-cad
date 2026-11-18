@@ -498,9 +498,11 @@ mimari verisi 5: K47, §10); Kiriş ve Kaplama çizelgesi (kayıt ve kaplama da 
 Merdiven ve rampa korkuluğu 18 Kasım'da ([ADR 8128](../docs/adr/8128-stair-and-ramp-railings-in-section-and-ifc.md)):
 kesitte, görünüşte ve 3B'de küpeşte ve çubuklar, yükseklik kolda basamak burunlarının çizgisinden, rampada yüzeyden,
 sahanlıkta döşemeden 1,10 m; IFC'de her yanın korkuluğu merdivenin ya da rampanın parçası bir `IfcRailing` BALUSTRADE;
-dikey çubuklu korkuluğun çubukları IFC gövdesinde.
-**Kalan:** giydirme cephenin panel yerine kapısı ve penceresi, eğimli eleman; dönen basamaklı ve eğri merdivenin
-korkuluğu.
+dikey çubuklu korkuluğun çubukları IFC gövdesinde. Giydirme cephede panel yerine kapı ve pencere 18 Kasım'da
+([ADR 8129](../docs/adr/8129-doors-and-windows-in-curtain-walls.md)): açıklık kapsadığı hücreleri doldurur (kapı döşemeye
+iner, üstü istenenden alçak olmaz), ızgara değişince yeniden oturur; planda cam ve iç dikme orada yok; IFC'de kapı ve
+pencere giydirme cephenin parçası.
+**Kalan:** eğimli eleman; dönen basamaklı ve eğri merdivenin korkuluğu; kapı başı için ızgaradan ayrı kayıt.
 
 **Kullanıcı sonucu:** Konut ve karma kullanımlı bir binada karşılaşılan her eleman modelde kendi nesnesidir ve kendi
 sınıfıyla dışa gider. "Modele girmeyen nesne" listesi boşalır. Dayanak EK-5 Tablo 5.1; EK-6 §6.1.3 ve 6.14, 6.20, 6.21,
@@ -978,7 +980,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B6 ◐ | Binanın 3B görünümü | BIM-06 | Bina 3B'de; tıkla, planda seç; örtüşen mahal kırmızı (ADR 8067); ağaç, özellikler ve kesit görüntüleyicide, model çizimden canlı (ADR 8119); gerçek pencere kaldı |
 | B7 ✓ | Yangın, performans ve malzeme; modelin zorunlu alanları | BIM-07, IFC-02 | Beyan dayanağıyla modelde; eksik alanlar nesneleriyle Denetim'de; 9. soru modelden; yazar gibi doldurulmuş binada zorunlu satır eksiği yok (ADR 8068, 8076); pencerelerde beyan, türetilenin gerekçesi, acil çıkış önerisi, Tag, ad ve soyad, ölçüm anotasyonu (ADR 8124) |
 | B8 ✓ | Mahal, zon ve emsal; mekânsal zonlar ve gruplar | BIM-08, IFC-03 | Emsal tablosu ile model aynı alanlardan (ADR 8069); mahalin kendi emsal durumu ve DİĞER, mahalin türü, doğru katta (ADR 8125); çatıyla kesilen hacim (ADR 8071, 8123); dosyada kat × durum (ADR 8126) |
-| B9 ◐ | Eksik yapı elemanları; eksik sınıflar | BIM-09, IFC-03 | Kayıp listesi boş (ADR 8070); kaplamanın mahali (8127); merdiven ve rampa korkuluğu (8128); giydirme cephe kapısı, eğik eleman kaldı |
+| B9 ◐ | Eksik yapı elemanları; eksik sınıflar | BIM-09, IFC-03 | Kayıp listesi boş (ADR 8070); kaplamanın mahali (8127); merdiven ve rampa korkuluğu (8128); giydirme cephede kapı ve pencere (8129); eğik eleman kaldı |
 | B10 ✓ | Geometri doğruluğu; geometri ve görünüm tanımı | BIM-10, IFC-06 | Eğri eğri, açıklık kesik (ADR 8071) |
 | B11 ✓ | Çok bina; konum, kot ve çok bina | BIM-11, IFC-05 | İki blok, iki model dosyası; yerel sistem haritada; plan kararları kaynağıyla (ADR 8072) |
 

@@ -224,7 +224,7 @@ fn check(doc: &Document, input: &OpeningsCreate) -> Result<Checked, Stop> {
         f.side = n.side.or(side).unwrap_or_default();
         f.place = vec![kentos_commands::Vec2 { x: 0.0, y: 0.0 }; 4];
         openings::valid(&f, &at)?;
-        made.push(openings::placed(&f, &line, &at)?);
+        made.push(openings::placed(doc, &f, &line, &at)?);
     }
     let paths: Vec<String> = (0..made.len()).map(|i| format!("openings[{i}]")).collect();
     let new: Vec<(&OpeningFields, String)> = made.iter().zip(paths).collect();

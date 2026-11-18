@@ -55,14 +55,6 @@ pub(crate) fn wall_at<'a>(
             path,
         ));
     };
-    // A curtain wall is its frames and panels (docs/adr/8070 §7): a door in it is a panel of its own, not yet drawn.
-    if w.wall.curtain.is_some() {
-        return Err(fail(
-            codes::NOT_A_WALL,
-            "Giydirme cepheye açıklık konmaz: kapısı ve penceresi paneli olarak gelecek; açıklığı bir duvara koyun.".into(),
-            path,
-        ));
-    }
     let line = opening_follow::wall_line(e).ok_or_else(|| {
         fail(
             codes::NOT_A_WALL,
@@ -154,12 +146,29 @@ fn core(p: Vec2) -> CoreVec2 {
     CoreVec2::new(p.x, p.y)
 }
 
-/// `o` with its jambs written from `line`; `opening_off_wall` when it does not lie on one edge within its ends.
+/// `o` with its jambs written from `line`; `opening_off_wall` when it does not lie on one edge within its ends. In a
+/// curtain wall (docs/adr/8129) a door, a window or a bare opening fills the cells it covers, fitted to them first;
+/// a niche or a flue goes into none (`not_a_wall`).
 pub(crate) fn placed(
+    doc: &Document,
     o: &OpeningFields,
     line: &WallLine,
     path: &str,
 ) -> Result<OpeningFields, Stop> {
+    let fitted;
+    let o = if doc.is_curtain_wall(&o.host) {
+        if matches!(o.form, OpeningForm::Niche | OpeningForm::Flue) {
+            return Err(fail(
+                codes::NOT_A_WALL,
+                "Giydirme cepheye niş ve baca konmaz: hücrelerine kapı, pencere ya da boşluk konur. Nişi ya da bacayı bir duvara koyun.".into(),
+                path,
+            ));
+        }
+        fitted = doc.fitted_to_cells(o).unwrap_or_else(|| o.clone());
+        &fitted
+    } else {
+        o
+    };
     let p = opening_follow::placed_on(o, Some(line), false);
     if opening_follow::is_pocket(o) && let Some(stop) = pocket_refused(o, &p, line, path) {
         return Err(stop);

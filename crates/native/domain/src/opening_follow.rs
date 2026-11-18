@@ -276,7 +276,13 @@ impl Document {
                 continue;
             };
             let wall = self.wall_line_of(&o.opening.host);
-            let fields = placed_on(&o.opening, wall.as_ref(), moved.contains(uid));
+            let mut fields = placed_on(&o.opening, wall.as_ref(), moved.contains(uid));
+            // A door or a window in a curtain wall fills its cells (docs/adr/8129): fitted to them again.
+            if fields.broken.is_none()
+                && let Some(fit) = self.fitted_to_cells(&fields)
+            {
+                fields = placed_on(&fit, wall.as_ref(), false);
+            }
             next.insert(slot, (current, fields));
         }
         let mut by_host: BTreeMap<String, Vec<Spanned>> = BTreeMap::new();

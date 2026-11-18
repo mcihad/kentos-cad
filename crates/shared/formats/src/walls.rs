@@ -419,6 +419,8 @@ mod tests {
                 exit: None,
                 fire_rating: None,
                 load_bearing: None,
+                external: None,
+                element_type: None,
             },
             joins: WallJoins {
                 start: WallJoin::Butt,

@@ -836,6 +836,107 @@ fn curtain_wall_screens() {
     }
 }
 
+/// The facade building with the curtain wall of `with_a_curtain_wall` (east of it, 9 m along y, 6 m high, 1.50 m bays
+/// and rows), a door in its third bay (its head 2.10 rounded up to the transom at 3.00) and a window over its fifth
+/// and sixth bays on the third row (docs/adr/8129); then the east elevation derived 20 m east.
+fn with_curtain_openings() -> kentos_commands::DocumentSnapshotV2 {
+    use kentos_native_application::{ExecutionContext, registry, sections_edit};
+    let snap = kentos_kcad::decode(include_bytes!("../../../../fixtures/arch/v1/facade-building.kcad")).expect("decodes");
+    let mut doc = kentos_domain::Document::from_snapshot_v2(snap).expect("opens");
+    let run = |doc: &mut kentos_domain::Document, name: &str, input: serde_json::Value| {
+        let answer = registry::run(&mut ExecutionContext::new(doc), name, kentos_commands::CallOp::Execute, input)
+            .expect("runs");
+        assert_eq!(answer["status"], "completed", "{name}: {answer}");
+        answer
+    };
+    let answer = run(
+        &mut doc,
+        "cad.walls.create",
+        serde_json::json!({"layerId": "0", "walls": [{
+            "pts": [{"x": 13.5, "y": 0.0}, {"x": 13.5, "y": 9.0}], "width": 0.15, "height": 6.0,
+            "arch": {"level": "zemin"},
+            "curtain": {"spacing": 1.5, "rows": 1.5, "panel": "Cam", "frames": "Alüminyum"}
+        }]}),
+    );
+    let wall = answer["output"]["uids"][0].as_str().expect("its id").to_owned();
+    run(
+        &mut doc,
+        "cad.openings.create",
+        serde_json::json!({"layerId": "0", "openings": [
+            {"host": wall, "at": 3.75, "width": 1.0, "side": "right"},
+            {"host": wall, "form": "window", "at": 7.5, "width": 3.0, "sill": 3.2, "head": 4.4}
+        ]}),
+    );
+    let east = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| match e {
+            Entity::ViewMark(v) if v.mark.form == kentos_commands::ViewMarkForm::Elevation && v.mark.mark == "3" => Some(u),
+            _ => None,
+        })
+        .expect("mark 3");
+    let derived = sections_edit::execute(
+        &mut ExecutionContext::new(&mut doc),
+        kentos_commands::BuildingSectionsEdit {
+            operation: kentos_commands::BuildingSectionsOperation::Derive {
+                mark: east.to_string(),
+                at: Some(kentos_commands::Vec2 { x: 20.0, y: 0.0 }),
+            },
+            expected_revision: None,
+        },
+    );
+    assert!(matches!(derived, kentos_commands::CommandResult::Completed { .. }), "{derived:?}");
+    doc.to_snapshot_v2()
+}
+
+/// Giydirme cephede kapı ve pencere (docs/adr/8129): the plan near the door (its leaf and swing between the mullions'
+/// faces, the glass stopped at its jambs), the east elevation (the door's and the window's lines in their cells, the
+/// mullion between the window's bays gone there), and the building from the north-east and from the east in 3D.
+/// `.run/gui-evidence/giydirme-kapi-8129/`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib scene3d_building_tests::curtain_opening_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn curtain_opening_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/giydirme-kapi-8129");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 700.0), "koyu")] {
+        let mut app = open(with_curtain_openings());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::scene3d_shown, &mut update);
+            snapshot.settle(app, App::scene3d_shown, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let fit = |app: &mut App, min: [f64; 2], max: [f64; 2]| {
+            app.viewport.camera.fit(
+                &kentos_render_wgpu::Bounds { min_x: min[0], min_y: min[1], max_x: max[0], max_y: max[1] },
+                24.0,
+            );
+        };
+        shot(&mut app, "0-acilis");
+        fit(&mut app, [11.0, 1.0], [16.0, 6.0]);
+        shot(&mut app, "1-plan-kapi");
+        fit(&mut app, [18.0, -2.0], [34.0, 9.0]);
+        shot(&mut app, "2-dogu-gorunusu");
+        let _ = app.update(Message::Run("scene3d.view"));
+        shot(&mut app, "3-3b-kuzeydogu");
+        send(&mut app, W::Close);
+    }
+}
+
 /// The facade building with a pergola east of it (docs/adr/8070 §8): four 10/10 Çelik posts 2.60 m tall (their own
 /// height) at x 12.6 and 14.6, y 1 and 4; two 5/10 rails on them (y 1 and 4, their undersides at 2.50) and four 4/8
 /// rafters across (RAFTER, over the rails at 2.60); then the east elevation derived 20 m east.

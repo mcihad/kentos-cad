@@ -815,7 +815,7 @@ fn check(doc: &Document, input: &ArchRecognize) -> Result<Work, Stop> {
                 &path,
             ));
         };
-        let fields = openings::placed(&fields, line, &path)?;
+        let fields = openings::placed(doc, &fields, line, &path)?;
         let wall_layer = wall.base().layer_id.clone();
         let layer = match o.form {
             read::Form::Door => door_layer.clone(),

@@ -4068,6 +4068,7 @@ fn walls_with_a_renovation_state_go_on_their_state_layers() {
                 },
                 joins: Default::default(),
                 cleanup: true,
+                curtain: None,
             },
         })
     };

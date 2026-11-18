@@ -545,7 +545,8 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
             continue;
         };
         if let Some(grid) = &w.curtain {
-            curtain(w, grid, (foot, top), owner, m);
+            let mine = openings.get(&uid.to_string()).map_or(&[][..], |v| &v[..]);
+            curtain(w, grid, (foot, top), floor, mine, owner, m);
             continue;
         }
         // Its core: the layer of the smallest rank (docs/adr/8008), whose material names the wall.
@@ -596,33 +597,7 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
             // opening lines (the joinery list's, docs/adr/8038: from the hinge side's corners to the middle of the
             // handle side; a pair from both jambs to their meeting line). Where nothing nearer hides them the section
             // and the elevation draw them; the face behind the wall is hidden as the wall is.
-            let mut lines: Vec<[(P, f64); 2]> = Vec::new();
-            for (a, b) in [(p(l0), p(l1)), (p(r0), p(r1))] {
-                outline(&mut lines, a, b, sill, head);
-                let (mut a2, mut b2, mut low, mut high) = (a, b, sill, head);
-                if let Some(f) = o.frame.filter(|f| *f > 0.0) {
-                    let len = kentos_geometry_core::jsmath::js_hypot(b.x - a.x, b.y - a.y);
-                    if len > 2.0 * f && head - sill > 2.0 * f {
-                        let t = f / len;
-                        a2 = P::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
-                        b2 = P::new(b.x - (b.x - a.x) * t, b.y - (b.y - a.y) * t);
-                        low = if o.form == OpeningForm::Door {
-                            sill
-                        } else {
-                            sill + f
-                        };
-                        high = head - f;
-                        outline(&mut lines, a2, b2, low, high);
-                    }
-                }
-                if o.operation == kentos_commands::OpeningOperation::Swing {
-                    swing_lines(&mut lines, (a2, b2), (low, high), o.leaves, o.hand);
-                }
-            }
-            let (layer, key) = match o.form {
-                OpeningForm::Door => ("MM-KAPI-GENEL", "kapi"),
-                _ => ("MM-PENC-GENEL", "pencere"),
-            };
+            let lines = opening_lines(o, [(p(l0), p(l1)), (p(r0), p(r1))], (sill, head));
             opening_solids.push((
                 Solid {
                     rings: Vec::new(),
@@ -634,12 +609,7 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
                     marks: lines,
                     finish: None,
                 },
-                Look {
-                    key: key.into(),
-                    layer: layer.into(),
-                    heavy: false,
-                    fill: None,
-                },
+                opening_look(o.form),
                 Some(opening.to_string()),
             ));
             let mid = |x: Vec2, y: Vec2| P::new((x.x + y.x) / 2.0, (x.y + y.y) / 2.0);
@@ -719,17 +689,67 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
     }
 }
 
+/// A door's or a window's lines on its wall's faces (docs/adr/8043 §2), each face `(a, b)` its jambs' points on it,
+/// from `sill` to `head`: its outline, its frame inset by its width when its type gives one, and on a hinged one
+/// Türkiye's opening lines (the joinery list's, docs/adr/8038: from the hinge side's corners to the middle of the
+/// handle side; a pair from both jambs to their meeting line).
+fn opening_lines(
+    o: &kentos_commands::OpeningFields,
+    faces: [(P, P); 2],
+    (sill, head): (f64, f64),
+) -> Vec<[(P, f64); 2]> {
+    let mut lines: Vec<[(P, f64); 2]> = Vec::new();
+    for (a, b) in faces {
+        outline(&mut lines, a, b, sill, head);
+        let (mut a2, mut b2, mut low, mut high) = (a, b, sill, head);
+        if let Some(f) = o.frame.filter(|f| *f > 0.0) {
+            let len = kentos_geometry_core::jsmath::js_hypot(b.x - a.x, b.y - a.y);
+            if len > 2.0 * f && head - sill > 2.0 * f {
+                let t = f / len;
+                a2 = P::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+                b2 = P::new(b.x - (b.x - a.x) * t, b.y - (b.y - a.y) * t);
+                low = if o.form == OpeningForm::Door { sill } else { sill + f };
+                high = head - f;
+                outline(&mut lines, a2, b2, low, high);
+            }
+        }
+        if o.operation == kentos_commands::OpeningOperation::Swing {
+            swing_lines(&mut lines, (a2, b2), (low, high), o.leaves, o.hand);
+        }
+    }
+    lines
+}
+
+/// A door's or a window's lines' look: on its form's layer, light.
+fn opening_look(form: OpeningForm) -> Look {
+    let (layer, key) = match form {
+        OpeningForm::Door => ("MM-KAPI-GENEL", "kapi"),
+        _ => ("MM-PENC-GENEL", "pencere"),
+    };
+    Look {
+        key: key.into(),
+        layer: layer.into(),
+        heavy: false,
+        fill: None,
+    }
+}
+
 /// A curtain wall's panel's thickness, metres: KentOS's own common size (docs/adr/8070 §7), an insulating glass unit's.
 pub const PANEL: f64 = 0.024;
 
 /// A curtain wall in the model (docs/adr/8070 §7): on each straight stretch of its line, its mullions (a frame's face
 /// along it, its whole depth across, from its foot to its top) on the grid's vertical lines, its transoms between them
 /// on the horizontal ones (its foot and top among them), and a panel in each cell, [`PANEL`] thick down the middle of
-/// its depth. Both on EK-2's Giydirme Cephe (GIYC), unhatched: its frames (ÇERÇEVE) and its glass (CAM).
+/// its depth. Both on EK-2's Giydirme Cephe (GIYC), unhatched: its frames (ÇERÇEVE) and its glass (CAM). A door, a
+/// window or a bare opening fills its cells in place of their panels (docs/adr/8129): the transoms across it and the
+/// mullions' part inside it are not there, its lines are drawn on the faces as a wall's door's and its gap is the
+/// model's door or window.
 fn curtain(
     w: &kentos_commands::WallFields,
     grid: &kentos_commands::CurtainGrid,
     (foot, top): (f64, f64),
+    floor: f64,
+    openings: &[(Uuid, &kentos_commands::OpeningFields)],
     owner: Option<String>,
     m: &mut Model,
 ) {
@@ -763,13 +783,30 @@ fn curtain(
         marks: Vec::new(),
         finish: None,
     };
+    // Its doors, windows and bare openings in place of panels (docs/adr/8129): each along its base line and between
+    // its sill and head (over the storey's floor), its jambs on the faces.
+    let filled: Vec<(&Uuid, &kentos_commands::OpeningFields, (f64, f64), (f64, f64), [Vec2; 4])> = openings
+        .iter()
+        .filter(|(_, o)| matches!(o.form, OpeningForm::Door | OpeningForm::Window | OpeningForm::Opening))
+        .filter(|(_, o)| o.broken.is_none())
+        .filter_map(|(u, o)| {
+            let place = <[Vec2; 4]>::try_from(o.place.clone()).ok()?;
+            let (z0, z1) = (floor + o.sill.unwrap_or(0.0), o.head.map_or(top, |h| floor + h));
+            (z1 > z0).then_some((u, *o, kentos_domain::opening_follow::span(o), (z0, z1), place))
+        })
+        .collect();
+    let within = |s: f64, z: f64| {
+        filled.iter().any(|(_, _, (s0, s1), (z0, z1), _)| s > s0 + 1e-9 && s < s1 - 1e-9 && z > z0 + 1e-9 && z < z1 - 1e-9)
+    };
     let n = w.pts.len();
     let stretches = if w.closed { n } else { n.saturating_sub(1) };
     let (mut mullions, mut transoms) = (0usize, 0usize);
+    let mut start = 0.0;
     for i in 0..stretches {
         let (a, b) = (p(w.pts[i]), p(w.pts[(i + 1) % n]));
         let length = kentos_geometry_core::jsmath::js_hypot(b.x - a.x, b.y - a.y);
         if length <= 2.0 * face {
+            start += length;
             continue;
         }
         let u = P::new((b.x - a.x) / length, (b.y - a.y) / length);
@@ -786,16 +823,35 @@ fn curtain(
                 continue;
             }
             let (s0, s1) = frame_span(&bays, k, face);
-            push_part(m, block(band(s0, s1, left, right), foot, top), frames.clone(), owner.clone(), Some(Part::Mullion(mullions)));
-            mullions += 1;
+            // A mullion inside a door or a window stands only under and over it.
+            let mut pieces = vec![(foot, top)];
+            for (_, _, (o0, o1), (z0, z1), _) in &filled {
+                let line = start + bays[k];
+                if line > o0 + 1e-9 && line < o1 - 1e-9 {
+                    pieces = pieces
+                        .into_iter()
+                        .flat_map(|(lo, hi)| [(lo, hi.min(*z0)), (lo.max(*z1), hi)])
+                        .filter(|(lo, hi)| hi - lo > 1e-9)
+                        .collect();
+                }
+            }
+            for (lo, hi) in pieces {
+                push_part(m, block(band(s0, s1, left, right), lo, hi), frames.clone(), owner.clone(), Some(Part::Mullion(mullions)));
+                mullions += 1;
+            }
         }
         for k in 0..bays.len() - 1 {
             let (s0, s1) = cell_span(&bays, k, face);
             if s1 - s0 <= 1e-9 {
                 continue;
             }
+            let across = start + (s0 + s1) / 2.0;
             for r in 0..rows.len() {
                 let (z0, z1) = frame_span(&rows, r, face);
+                // A transom across a door or a window is not there (a door's foot one neither: it stands on the floor).
+                if within(across, foot + (z0 + z1) / 2.0) {
+                    continue;
+                }
                 push_part(
                     m,
                     block(band(s0, s1, left, right), foot + z0, foot + z1),
@@ -807,7 +863,7 @@ fn curtain(
             }
             for r in 0..rows.len() - 1 {
                 let (z0, z1) = cell_span(&rows, r, face);
-                if z1 - z0 <= 1e-9 {
+                if z1 - z0 <= 1e-9 || within(across, foot + (z0 + z1) / 2.0) {
                     continue;
                 }
                 let t = PANEL.min(w.width / 2.0);
@@ -820,6 +876,32 @@ fn curtain(
                 );
             }
         }
+        start += length;
+    }
+    // The doors' and windows' lines on its faces and their gaps (the model's doors and windows), as a wall's.
+    for (opening, o, _, (z0, z1), [l0, r0, l1, r1]) in filled {
+        if o.form != OpeningForm::Opening {
+            let lines = opening_lines(o, [(p(l0), p(l1)), (p(r0), p(r1))], (z0, z1));
+            let solid = Solid {
+                rings: Vec::new(),
+                height: Height::Prism { bottom: z0, top: z1 },
+                voids: Vec::new(),
+                marks: lines,
+                finish: None,
+            };
+            push(m, solid, opening_look(o.form), Some(opening.to_string()));
+        }
+        let mid = |x: Vec2, y: Vec2| P::new((x.x + y.x) / 2.0, (x.y + y.y) / 2.0);
+        m.gaps.push(Gap {
+            ring: vec![p(l0), p(l1), p(r1), p(r0)],
+            bulges: Vec::new(),
+            sill: z0,
+            head: z1,
+            form: o.form,
+            frame: (mid(l0, r0), mid(l1, r1)),
+            depth: o.build.as_ref().and_then(|b| b.frame_depth),
+            owner: Some(opening.to_string()),
+        });
     }
 }
 

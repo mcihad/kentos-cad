@@ -163,7 +163,7 @@ pub(super) fn copies(
         copy.base.label = None;
         copy.base.label_pins.clear();
         copy.base.attachments.clear();
-        copy.opening = openings::placed(&fields, line, &path)?;
+        copy.opening = openings::placed(doc, &fields, line, &path)?;
         added.push((copy, path));
     }
     Ok(added)

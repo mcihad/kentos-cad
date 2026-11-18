@@ -336,7 +336,7 @@ pub(crate) fn follow(
             continue;
         }
         let placed = match doc.wall_line_of(&f.host) {
-            Some(line) => match openings::placed(&f, &line, "") {
+            Some(line) => match openings::placed(doc, &f, &line, "") {
                 Ok(p) => p,
                 Err(stop) => {
                     let e = stop.into_error();

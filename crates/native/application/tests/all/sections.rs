@@ -1131,13 +1131,113 @@ fn a_curtain_wall_is_its_mullions_transoms_and_panels() {
     if let Some(path) = std::env::var_os("KENTOS_WRITE_IFC_CURTAIN") {
         std::fs::write(path, &text).expect("the file kept");
     }
-    // No door goes into a curtain wall.
-    let refused = kentos_native_application::registry::run(
-        &mut ExecutionContext::new(&mut doc),
+}
+
+/// Giydirme cephede kapı ve pencere (docs/adr/8129): the curtain wall above (6 m from x 20, 1.50 / 1.20 m, 3 m high:
+/// its bays' cells 0.05–1.475, 1.525–2.975, 3.025–4.475, 4.525–5.95 along it, its rows' 0.05–0.975, 1.025–1.975,
+/// 2.025–2.95 up) with a 0.90 m door round 2.25 along it (its type's head 2.10) and a 2 m window round 4.50 from 0.90 to
+/// 2.10; worked by hand. The door fills the second bay from the floor up to the row its head is in (2.00–3.00):
+/// 1.525–2.975 (at 2.25, 1.45 wide), its head 2.95, never lower than asked. The window the cells whose middles it
+/// covers, the third and fourth bays' middle row: 3.025–5.95 (at 4.4875, 2.925 wide), 1.025–1.975. In place of their
+/// 3 + 2 panels 7 remain; the door's three transoms (its foot one and the two across it) go, none of the window's (its
+/// sill and head are its cells' frames): 13; the mullion at 4.50 inside the window stands under and over it: 6 pieces.
+/// A niche goes into none. In the IFC model the door and the window are the curtain wall's parts (IfcDoor, IfcWindow)
+/// beside its 19 members, no opening through it.
+#[test]
+fn a_curtain_wall_s_door_and_window_fill_its_cells() {
+    use kentos_native_application::sections::Part;
+    let mut doc = building();
+    let run = |doc: &mut Document, name: &str, input: serde_json::Value| {
+        kentos_native_application::registry::run(&mut ExecutionContext::new(doc), name, kentos_commands::CallOp::Execute, input)
+            .unwrap()
+    };
+    let answer = run(
+        &mut doc,
+        "cad.walls.create",
+        serde_json::json!({"layerId": "0", "walls": [{
+            "pts": [{"x": 20.0, "y": 0.0}, {"x": 26.0, "y": 0.0}], "width": 0.15, "height": 3.0,
+            "arch": {"level": "zemin"},
+            "curtain": {"spacing": 1.5, "rows": 1.2, "panel": "Cam", "frames": "Alüminyum"}
+        }]}),
+    );
+    let uid = answer["output"]["uids"][0].as_str().unwrap().to_owned();
+    let answer = run(
+        &mut doc,
         "cad.openings.create",
-        kentos_commands::CallOp::Execute,
-        serde_json::json!({"layerId": "0", "openings": [{"host": uid, "at": 2.0, "width": 1.0}]}),
-    )
-    .unwrap();
+        serde_json::json!({"layerId": "0", "openings": [
+            {"host": uid, "at": 2.25, "width": 0.9},
+            {"host": uid, "form": "window", "at": 4.5, "width": 2.0, "sill": 0.9, "head": 2.1}
+        ]}),
+    );
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
+    let fields = |doc: &Document, k: usize| {
+        let u = answer["output"]["uids"][k].as_str().unwrap();
+        let slot = doc.slot_of(Uuid::parse_str(u).unwrap()).unwrap();
+        let Some(Entity::Opening(o)) = doc.get(slot) else { panic!("an opening") };
+        (u.to_owned(), o.opening.clone())
+    };
+    let (door_uid, door) = fields(&doc, 0);
+    let (window_uid, window) = fields(&doc, 1);
+    assert!(near(door.at, 2.25) && near(door.width, 1.45), "{door:?}");
+    assert!(door.sill.unwrap_or(0.0) == 0.0 && near(door.head.unwrap(), 2.95), "{door:?}");
+    assert!(near(window.at, 4.4875) && near(window.width, 2.925), "{window:?}");
+    assert!(near(window.sill.unwrap(), 1.025) && near(window.head.unwrap(), 1.975), "{window:?}");
+    assert!(door.broken.is_none() && window.broken.is_none());
+    // Its jambs at the mullions' faces.
+    assert!(near(door.place[0].x, 21.525) && near(door.place[2].x, 22.975), "{:?}", door.place);
+    let m = sections::model(&doc);
+    let mine: Vec<usize> = (0..m.solids.len()).filter(|&i| m.owners[i].as_deref() == Some(uid.as_str())).collect();
+    let count = |f: &dyn Fn(Part) -> bool| mine.iter().filter(|&&i| m.parts[i].is_some_and(f)).count();
+    assert_eq!(count(&|p| p == Part::Panel), 7);
+    assert_eq!(count(&|p| matches!(p, Part::Transom(_))), 13);
+    assert_eq!(count(&|p| matches!(p, Part::Mullion(_))), 6);
+    // The mullion at 24.50 under and over the window.
+    let at_450: Vec<(f64, f64)> = mine
+        .iter()
+        .filter(|&&i| matches!(m.parts[i], Some(Part::Mullion(_))))
+        .filter(|&&i| m.solids[i].rings[0].iter().any(|q| near(q.x, 24.475)))
+        .map(|&i| match m.solids[i].height {
+            kentos_geometry_core::geom::section::Height::Prism { bottom, top } => (bottom, top),
+            _ => panic!("a prism"),
+        })
+        .collect();
+    assert_eq!(at_450, vec![(0.0, 1.025), (1.975, 3.0)]);
+    // The door's lines on the faces, on its layer; its gap and the window's.
+    assert!((0..m.solids.len()).any(|i| m.owners[i].as_deref() == Some(door_uid.as_str()) && m.looks[i].layer == "MM-KAPI-GENEL"));
+    let gaps: Vec<&sections::Gap> = m.gaps.iter().filter(|g| [&door_uid, &window_uid].contains(&g.owner.as_ref().unwrap())).collect();
+    assert_eq!(gaps.len(), 2);
+    // A niche goes into none.
+    let refused = run(
+        &mut doc,
+        "cad.openings.create",
+        serde_json::json!({"layerId": "0", "openings": [{"host": uid, "form": "niche", "at": 0.75, "width": 0.6}]}),
+    );
     assert_eq!(refused["error"]["code"], "not_a_wall", "{refused}");
+    // The IFC model: its door and window are its parts, no opening goes through it.
+    let (b, written, _) = kentos_native_application::arch_ifc::model(&doc);
+    let id = Uuid::parse_str(&uid).unwrap().as_u128();
+    let k = b.elements.iter().position(|e| e.id == Some(id)).expect("the curtain wall");
+    let parts: Vec<&kentos_ifc::building::Element> = b.elements.iter().filter(|e| e.part_of == Some(k)).collect();
+    use kentos_ifc::building::Class;
+    assert_eq!(parts.iter().filter(|e| e.class == Class::Member).count(), 19);
+    let door_el = parts.iter().find(|e| e.class == Class::Door).expect("its door");
+    let window_el = parts.iter().find(|e| e.class == Class::Window).expect("its window");
+    assert_eq!(door_el.overall.map(|(h, w)| (near(h, 2.95), near(w, 1.45))), Some((true, true)));
+    assert!(window_el.overall.is_some_and(|(h, w)| near(h, 0.95) && near(w, 2.925)));
+    assert!(!b.openings.iter().any(|o| o.host == k), "no opening through a curtain wall");
+    assert_eq!(b.elements[k].shapes.len(), 7);
+    assert!(written.doors >= 1 && written.windows >= 1);
+    // Its grid at 1.00 m (six bays: cells 0.05–0.975, 1.025–1.975, 2.025–2.975 …): the door's cells again, those whose
+    // middles its 1.525–2.975 covers, the third bay alone (2.025–2.975); the window's 3.025–5.95 covers three.
+    let edited = run(
+        &mut doc,
+        "cad.walls.edit",
+        serde_json::json!({"uids": [uid], "operation": {"kind": "set", "curtain": {"spacing": 1.0, "rows": 1.2, "panel": "Cam", "frames": "Alüminyum"}}}),
+    );
+    assert_eq!(edited["status"], "completed", "{edited}");
+    let (_, door) = fields(&doc, 0);
+    let (_, window) = fields(&doc, 1);
+    assert!(near(door.at, 2.5) && near(door.width, 0.95) && near(door.head.unwrap(), 2.95), "{door:?}");
+    assert!(near(window.at, 4.4875) && near(window.width, 2.925), "{window:?}");
 }
