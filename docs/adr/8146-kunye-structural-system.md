@@ -3,7 +3,7 @@
 - **Durum:** uygulandı (18 Kasım 2026). Plan: [bim-plan.md](../../plan/bim-plan.md) BIM-13, sıra B15; ADR
   [8094](8094-structural-system-traditional-cut-stone.md) §6 ("Künye: ruhsat takımının `tasiyici_sistem` metni boşsa
   beyanın adıyla dolabilir").
-- **Bağlam:** ADR [8037](8037-permit-set.md) (ruhsat takımı, künye değişkenleri), 8094 (taşıyıcı sistem beyanı),
+- **Bağlam:** ADR [8037](8037-turkish-title-block-sheet-sets-pdfa.md) (ruhsat takımı, künye değişkenleri), 8094 (taşıyıcı sistem beyanı),
   [8145](8145-structure-per-building.md) (binanın kendi sistemi).
 - **Sözleşme:** değişmedi (`cad.permit.set`'in künyesi aynı değişkenler). **`.kcad`:** değişmedi. **Web:** dokunulmadı.
 
