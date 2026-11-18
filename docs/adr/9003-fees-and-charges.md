@@ -134,6 +134,20 @@ düğmeleri bunlardan açar. Masaüstü penceresi aynı alanları okuyabilir.
   - Tahakkuk varken form “Ek tahakkuk” düğmesinin arkasında durur.
   - Meslek mensubu “Ödenecek” tutarı ve tarifenin ödeme notunu (“Nasıl ödenir”) görür.
 
+### Masaüstü
+
+Portal dosyaları penceresinde (ADR 9001) bir başvurunun **Harç** sekmesi vardır. Sekme belediye tarafında her zaman,
+meslek mensubu tarafında bir tahakkuk olunca görünür. Her tahakkuk için şunları gösterir:
+
+- satırları: kalem, yasal dayanak, hesap ve tutar;
+- toplamı, durumu (ödenmedi, ödendi, iptal edildi);
+- tahakkuk eden ve tarihi, son ödeme günü, makbuz ya da iptal gerekçesi;
+- ödenmemişse “Nasıl ödenir” notu.
+
+Sekme salt okunurdur. Tahakkuk ve ödeme kaydı web portalındadır: kurumun vezne işleri tarayıcıda yürüyor ve bu iş
+masaüstünde ikinci bir form gerektirmiyor. Bulut istemcisi `Cloud::dossier_fees` ile okur; okuma dosyanın sayfasından
+sonra gelir. Başka bir dosyanın geç gelen cevabı seçili dosyanın sekmesine yazılmaz.
+
 ## §3 Ölçülenler
 
 - **Motor** (`portal::fees::tests`, 4 sınama):
@@ -157,6 +171,10 @@ düğmeleri bunlardan açar. Masaüstü penceresi aynı alanları okuyabilir.
   - Kopya ×1,5 ile 48 → 72 olur.
   - Yürürlükteki tarife değişmez.
   - Tahakkukun satırı kopyadan sonra da aynıdır.
+- **Masaüstü** (`cloud::portal::fees_tests`):
+  - harç dosyanın sayfasından sonra okunur, sekme açılır ve çizilir;
+  - başka dosyanın geç cevabı sekmeye yazılmaz;
+  - görüntüler `.run/gui-evidence/portal/masaustu-harc-{koyu,acik}.png`.
 - **Portal ekran görüntüleri** (`.run/gui-evidence/portal/87–95`, demo verisi, tutarlar örnektir):
   - tarifeler: geçmiş 2025, yürürlükte 2026, taslak 2027;
   - taslağın künyesi ve girdileri;

@@ -219,6 +219,7 @@ fn the_place_and_the_days_are_said_as_people_say_them() {
         due_on: "2026-12-02".into(),
         days_left: 2,
         basis: "İmar Kanunu m.22".into(),
+        extended_from: None,
     };
     assert_eq!(
         plan::clock_line(&c),

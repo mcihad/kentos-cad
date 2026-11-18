@@ -1,6 +1,7 @@
 //! The chosen dossier's tabs in Portal dosyaları (docs/adr/9001 §3): Paket (the package being prepared with the open
 //! project's place in it, then each package as it was sent), Yazışma (the two sides' messages and the box to write),
-//! Geçmiş (every step in a sentence) and Bilgiler (its facts, its document list, the other side).
+//! Geçmiş (every step in a sentence), Bilgiler (its facts, its document list, the other side) and, on an application,
+//! Harç (its fees and charges, read-only; docs/adr/9003).
 
 use iced::widget::text::Wrapping;
 use iced::widget::{Column, button, column, container, row, space, text_editor};
@@ -28,6 +29,7 @@ impl std::fmt::Display for Shown {
             Tab::Messages => "Yazışma",
             Tab::History => "Geçmiş",
             Tab::Facts => "Bilgiler",
+            Tab::Fees => "Harç",
         };
         match self.1 {
             Some(n) if n > 0 => write!(f, "{name} ({n})"),
@@ -60,12 +62,18 @@ impl App {
         p: &'a Portal,
         d: &'a DossierDetail,
     ) -> Element<'a, Message> {
-        let shown = [
+        let mut shown = vec![
             Shown(Tab::Package, None),
             Shown(Tab::Messages, Some(d.messages.len())),
             Shown(Tab::History, Some(d.events.len())),
             Shown(Tab::Facts, None),
         ];
+        // An application's fees: always on the municipality's side, on the professional's once one is assessed.
+        if d.summary.direction == kentos_commands::DossierDirection::Application
+            && (d.fee_count > 0 || d.side == kentos_commands::DossierSide::Municipality)
+        {
+            shown.push(Shown(Tab::Fees, Some(d.fee_count as usize)));
+        }
         let chosen = shown
             .iter()
             .copied()
@@ -76,6 +84,7 @@ impl App {
             Tab::Messages => self.portal_messages(p, d),
             Tab::History => portal_history(d),
             Tab::Facts => portal_facts(p, d),
+            Tab::Fees => portal_fees(p, d),
         };
         column![
             Segmented::new(shown, chosen, |s| msg(Event::Tab(s.0))),
@@ -405,5 +414,103 @@ fn portal_facts<'a>(p: &'a Portal, d: &'a DossierDetail) -> Element<'a, Message>
         "Belediye"
     };
     out = out.push(column![label::strong(title), label::body(name), pairs(rows)].spacing(4));
+    out.into()
+}
+
+/// A day as the window writes it: `2026-12-02` → `02.12.2026`.
+fn day(iso: &str) -> String {
+    match iso.split('-').collect::<Vec<_>>()[..] {
+        [y, m, d] => format!("{d}.{m}.{y}"),
+        _ => iso.to_owned(),
+    }
+}
+
+/// Kuruş as Turkish lira: `123450` → `1.234,50 TL`.
+fn money(kurus: i64) -> String {
+    let sign = if kurus < 0 { "-" } else { "" };
+    let k = kurus.unsigned_abs();
+    let whole = (k / 100).to_string();
+    let mut grouped = String::new();
+    for (i, c) in whole.chars().enumerate() {
+        if i > 0 && (whole.len() - i).is_multiple_of(3) {
+            grouped.push('.');
+        }
+        grouped.push(c);
+    }
+    format!("{sign}{grouped},{:02} TL", k % 100)
+}
+
+/// The application's fees and charges (docs/adr/9003), read-only: each assessment's lines with what each rests on, its
+/// total and whether it is paid. Assessing one and recording its payment are the web portal's.
+fn portal_fees<'a>(p: &'a Portal, d: &'a DossierDetail) -> Element<'a, Message> {
+    use kentos_commands::{DossierSide, FeeAssessmentState};
+    let Some(list) = p.fees.as_ref().filter(|(id, _)| *id == d.summary.id).map(|(_, l)| l) else {
+        return label::caption("Harç ve ücretler okunuyor…").into();
+    };
+    let zone = crate::cloud::local_time::Zone::system();
+    let mut out = column![].spacing(18);
+    if list.is_empty() {
+        out = out.push(label::body(match d.side {
+            DossierSide::Municipality => "Bu başvuruya harç tahakkuk edilmedi. Tahakkuk web portalında yapılır.",
+            DossierSide::Professional => "Belediye harç ve ücret tahakkuk ettirdiğinde burada görünür.",
+        }));
+    }
+    for f in list.iter().rev() {
+        let (kind, state) = match f.state {
+            FeeAssessmentState::Issued => (words::Kind::Warn, "Ödenmedi"),
+            FeeAssessmentState::Paid => (words::Kind::Ok, "Ödendi"),
+            FeeAssessmentState::Cancelled => (words::Kind::Info, "İptal edildi"),
+        };
+        let mut table = Table::new([
+            Col::new("Kalem").width(Fill),
+            Col::new("Hesap").width(Fill),
+            Col::new("Tutar").width(typography::scaled(116.0)),
+        ]);
+        for l in &f.lines {
+            table = table.push(Row::new([
+                column![
+                    label::body(l.label.clone()).wrapping(Wrapping::WordOrGlyph),
+                    label::caption(l.legal_basis.clone()).style(style::text::muted).wrapping(Wrapping::WordOrGlyph),
+                ]
+                .spacing(2)
+                .into(),
+                label::body(l.basis.clone()).wrapping(Wrapping::WordOrGlyph).into(),
+                label::body(money(l.amount + l.vat)).into(),
+            ]));
+        }
+        let mut rows: Vec<(&'static str, String)> = vec![
+            ("Toplam", money(f.total)),
+            ("Tahakkuk", format!("{}, {}", crate::cloud::local_time::when(&f.issued_at, zone), f.issued_by_name)),
+        ];
+        if let Some(due) = &f.due_on {
+            rows.push(("Son ödeme", day(due)));
+        }
+        if let (Some(on), Some(receipt)) = (&f.paid_at, &f.receipt_no) {
+            rows.push(("Ödeme", format!("{}, makbuz {receipt}", day(on))));
+        }
+        if let Some(why) = &f.cancel_reason {
+            rows.push(("İptal gerekçesi", why.clone()));
+        }
+        let pairs = rows.into_iter().fold(Pairs::new(), |pairs, (name, value)| {
+            pairs.push(
+                label::caption(name).style(style::text::muted),
+                label::body(value).wrapping(Wrapping::WordOrGlyph),
+            )
+        });
+        let mut block = column![
+            row![label::strong(f.schedule_name.clone()), space::horizontal(), words::text_line(kind, state)]
+                .spacing(12)
+                .align_y(Center),
+            table,
+            pairs,
+        ]
+        .spacing(8);
+        if f.state == FeeAssessmentState::Issued
+            && let Some(note) = &f.payment_note
+        {
+            block = block.push(words::text_line(words::Kind::Info, format!("Nasıl ödenir: {note}")));
+        }
+        out = out.push(block);
+    }
     out.into()
 }

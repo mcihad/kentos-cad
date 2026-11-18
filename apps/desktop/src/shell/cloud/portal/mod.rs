@@ -45,6 +45,8 @@ mod view_tabs;
 #[cfg(test)]
 mod esign_tests;
 #[cfg(test)]
+mod fees_tests;
+#[cfg(test)]
 mod fixtures;
 #[cfg(test)]
 mod plan_tests;
@@ -82,6 +84,8 @@ pub enum Tab {
     Messages,
     History,
     Facts,
+    /// Harç: the application's fees and charges, read-only (docs/adr/9003).
+    Fees,
 }
 
 /// What the window keeps once it is closed, so that it opens where it was.
@@ -138,6 +142,8 @@ pub struct Portal {
     pub esign: Option<esign::Esign>,
     /// A dossier's recorded e-signatures, by dossier id: each file's line says who signed it.
     pub signatures: HashMap<String, Vec<kentos_commands::DossierSignatureView>>,
+    /// The chosen application's fees and charges (docs/adr/9003), with the dossier they are of.
+    pub fees: Option<(String, Vec<kentos_commands::FeeAssessment>)>,
     requests: Requests,
 }
 
@@ -173,6 +179,7 @@ impl Portal {
             esign_on: memory.esign,
             esign: None,
             signatures: HashMap::new(),
+            fees: None,
             requests: Requests::default(),
         }
     }
@@ -238,6 +245,11 @@ pub enum Event {
         result: Result<Box<DossierDetail>, ApiFailure>,
     },
     Tab(Tab),
+    /// The chosen application's fees, as the server answered.
+    Fees {
+        dossier: String,
+        result: Result<Vec<kentos_commands::FeeAssessment>, ApiFailure>,
+    },
     /// Yenile: the list and the chosen dossier asked again.
     Refresh,
     // ── A step and its question (steps.rs) ──────────────────────────────
@@ -391,6 +403,16 @@ impl App {
                 p.said = None;
                 self.portal_detail()
             }
+            Event::Fees { dossier, result } => {
+                let Some(p) = self.cloud.portal.as_mut() else {
+                    return Task::none();
+                };
+                if p.chosen.as_deref() == Some(dossier.as_str()) {
+                    // A refusal leaves the tab empty; the page itself was read.
+                    p.fees = Some((dossier, result.unwrap_or_default()));
+                }
+                Task::none()
+            }
             Event::Detail { id, result } => {
                 let Some(p) = self
                     .cloud
@@ -404,10 +426,13 @@ impl App {
                     Ok(d) => {
                         let dossier = d.summary.id.clone();
                         let on = p.esign_on;
+                        let application = d.summary.direction == kentos_commands::DossierDirection::Application;
                         p.detail = Some(*d);
+                        let fees = if application { self.portal_fees(dossier.clone()) } else { Task::none() };
                         if on {
-                            return self.esign_signatures(dossier);
+                            return Task::batch([self.esign_signatures(dossier), fees]);
                         }
+                        return fees;
                     }
                     Err(f) => {
                         p.detail = None;
@@ -469,5 +494,18 @@ impl App {
             Event::EsignStart(then_send) => self.esign_start(then_send),
             Event::Esign(e) => self.esign_event(*e),
         }
+    }
+}
+
+impl App {
+    /// The chosen application's fees and charges (docs/adr/9003), read after its page.
+    fn portal_fees(&mut self, dossier: String) -> Task<Message> {
+        let Some(client) = self.cloud.signed_in().cloned() else {
+            return Task::none();
+        };
+        let Some(id) = crate::cloud::uuid(&dossier) else {
+            return Task::none();
+        };
+        Task::perform(client.dossier_fees(id), move |result| msg(Event::Fees { dossier: dossier.clone(), result }))
     }
 }

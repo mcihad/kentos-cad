@@ -149,6 +149,7 @@ fn screens() {
                             basis: "Eksikler giderildikten sonraki başvurudan itibaren en geç 15 günde karar \
                                     verilir (İmar Kanunu m.22)."
                                 .into(),
+                            extended_from: None,
                         });
                         a.messages = vec![message(
                             "deficiency",

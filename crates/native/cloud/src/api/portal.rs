@@ -15,7 +15,7 @@ use std::future::Future;
 
 use kentos_contracts::{
     DossierActionRequest, DossierDetail, DossierDirection, DossierFileImport, DossierFileImported,
-    DossierFileView, DossierList, DossierMessageView, DossierStatus, FromProject, MessagePost,
+    DossierFileView, DossierList, DossierMessageView, DossierStatus, FeeAssessment, FromProject, MessagePost,
     PortalCatalog, PortalMe,
 };
 use reqwest::{Method, Url};
@@ -128,6 +128,15 @@ impl Cloud {
         id: Uuid,
     ) -> impl Future<Output = Result<DossierDetail, ApiFailure>> + Send + 'static {
         self.get(self.inner.dossier_url(id, ""))
+    }
+
+    /// The dossier's fees and charges as both sides read them (`GET …/fees`, docs/adr/9003): each assessment's lines
+    /// with what they rest on, its total, whether it is paid.
+    pub fn dossier_fees(
+        &self,
+        id: Uuid,
+    ) -> impl Future<Output = Result<Vec<FeeAssessment>, ApiFailure>> + Send + 'static {
+        self.get(self.inner.dossier_url(id, "/fees"))
     }
 
     /// A step on the dossier with the status the person saw (`POST …/actions`): the dossier as it is after it.
