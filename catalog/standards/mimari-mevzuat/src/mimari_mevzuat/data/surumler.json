@@ -1,7 +1,7 @@
 {
   "format": "kentos.ruleVersions",
   "version": 1,
-  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de, merdiven altınınki 8080 §1'de, kompartımanlarınki 8081 §1'de, dayanımlarınki 8082 §1'de, kat yüksekliği ve kapılarınki 8083 §1'de, bölgelerin kat yükseklikleri 8085 §1'de, katlar arası açıklıklarınki 8086 §1'de, şaftların, asansörlerin ve çatılarınki 8087 §1'de, kaplamaların yanıcılığınınki 8091 §1'de, geleneksel kesme taş yığma binanınki 8094 §1'de, kalın taş duvarlarınki 8095 §1'de, Sivas 22/k'ninki 8096 §1'de).",
+  "about": "Maddelerin hâlleri: metni, Resmî Gazete'si, yürürlüğe girdiği ve yerini bıraktığı gün, geçiş hükmü (docs/adr/8078). Metinler Resmî Gazete'deki değişiklik yönetmeliklerinden elle yazıldı; kaynağı her hâlin yanında, okunan yerler docs/adr/8078 §1'de (emsal sınırlarınınki docs/adr/8079 §1'de, merdiven altınınki 8080 §1'de, kompartımanlarınki 8081 §1'de, dayanımlarınki 8082 §1'de, kat yüksekliği ve kapılarınki 8083 §1'de, bölgelerin kat yükseklikleri 8085 §1'de, katlar arası açıklıklarınki 8086 §1'de, şaftların, asansörlerin ve çatılarınki 8087 §1'de, kaplamaların yanıcılığınınki 8091 §1'de, çatılarınki 8134 §1'de, geleneksel kesme taş yığma binanınki 8094 §1'de, kalın taş duvarlarınki 8095 §1'de, Sivas 22/k'ninki 8096 §1'de).",
   "regulations": {
     "PAİY": {
       "name": "Planlı Alanlar İmar Yönetmeliği",
@@ -1752,6 +1752,247 @@
           "low": 30,
           "text": "(7) Asansör kat kapılarının TS EN 81-58 standardında belirtilen özellikleri haiz ve Ek-3/B'de belirtilen yangın dayanım özelliklerine sahip olması gerekir. Ek-3/B 12: a) Yapı yüksekliği 51.50 m'den yüksek binalarda E 60; b) Yapı yüksekliği 51.50 m'den alçak binalarda E 30 (etkilenen yüzeyler).",
           "source": "RG 9.7.2015/29411, BKK 2015/7401; 62 nci maddenin yedinci fıkrası ve Ek-3/B'nin 12 nci satırı (dipnotu: 21 inci maddeyle eklendi); docs/adr/8087 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "28/2",
+      "title": "Çatı kaplamasının dış yangın sınıfı ve altındaki katmanlar",
+      "transition": "Madde 10.8.2009 tarihli ve 2009/15316 sayılı BKK ile değişti (RG 9.9.2009/27344); önceki hâli kural setinde yok: 9.9.2009'dan önceki başvuru uzman incelemesi.",
+      "versions": [
+        {
+          "id": "2009",
+          "from": "2009-09-09",
+          "until": null,
+          "label": "9.9.2009",
+          "gazette": "9.9.2009/27344",
+          "covering": "BROOF",
+          "under": "zor_alevlenici",
+          "underNoncombustible": "normal_alevlenici",
+          "ek2c": {
+            "categories": [
+              [
+                "hic_yanmaz",
+                "hiç yanmaz"
+              ],
+              [
+                "zor_yanici",
+                "zor yanıcı"
+              ],
+              [
+                "zor_alevlenici",
+                "zor alevlenici"
+              ],
+              [
+                "normal_alevlenici",
+                "normal alevlenici"
+              ],
+              [
+                "kolay_alevlenici",
+                "kolay alevlenici"
+              ]
+            ],
+            "other": [
+              [
+                "A1",
+                "hic_yanmaz"
+              ],
+              [
+                "A2-s1,d0",
+                "zor_yanici"
+              ],
+              [
+                "A2",
+                "zor_alevlenici"
+              ],
+              [
+                "B",
+                "zor_alevlenici"
+              ],
+              [
+                "C",
+                "zor_alevlenici"
+              ],
+              [
+                "D",
+                "normal_alevlenici"
+              ],
+              [
+                "E",
+                "normal_alevlenici"
+              ],
+              [
+                "F",
+                "kolay_alevlenici"
+              ]
+            ],
+            "floor": [
+              [
+                "A1fl",
+                "hic_yanmaz"
+              ],
+              [
+                "A2fl-s1",
+                "zor_yanici"
+              ],
+              [
+                "Bfl-s1",
+                "zor_alevlenici"
+              ],
+              [
+                "Cfl-s1",
+                "zor_alevlenici"
+              ],
+              [
+                "A2fl",
+                "normal_alevlenici"
+              ],
+              [
+                "Bfl",
+                "normal_alevlenici"
+              ],
+              [
+                "Cfl",
+                "normal_alevlenici"
+              ],
+              [
+                "Dfl",
+                "normal_alevlenici"
+              ],
+              [
+                "Efl",
+                "normal_alevlenici"
+              ],
+              [
+                "Ffl",
+                "kolay_alevlenici"
+              ]
+            ],
+            "source": "BYKHY Ek-2/Ç (10.8.2009-2009/15316 ile değişik), PDF'in 89. sayfası resim olarak okundu; docs/adr/8091 §1. Bir sınıf önce tam yazımıyla, yoksa harfiyle (ve fl'siyle) eşlenir: harfin tablodaki en zayıf satırı."
+          },
+          "text": "(2) Çatı kaplamalarının BROOF sınıfı malzemelerden, çatı kaplamaları altında yer alan yüzeyin veya yalıtımın en az zor alevlenici malzemelerden olması gerekir. Ancak, çatı kaplaması olarak yanmaz malzemelerin kullanılması durumunda üzerine çatı kaplaması uygulanan yüzeyin en az normal alevlenen malzemelerden olmasına izin verilir.",
+          "source": "RG 9.9.2009/27344 (10.8.2009-2009/15316 sayılı BKK ile değişik 28 inci madde); derlenmiş metnin 28 inci maddesi; docs/adr/8134 §1."
+        }
+      ]
+    },
+    {
+      "regulation": "BYKHY",
+      "article": "28/3",
+      "title": "Yüksek ve bitişik nizam binada yanmaz çatı",
+      "transition": "Madde 10.8.2009 tarihli ve 2009/15316 sayılı BKK ile değişti (RG 9.9.2009/27344); önceki hâli kural setinde yok: 9.9.2009'dan önceki başvuru uzman incelemesi.",
+      "versions": [
+        {
+          "id": "2009",
+          "from": "2009-09-09",
+          "until": null,
+          "label": "9.9.2009",
+          "gazette": "9.9.2009/27344",
+          "building": 21.5,
+          "structure": 30.5,
+          "ek2c": {
+            "categories": [
+              [
+                "hic_yanmaz",
+                "hiç yanmaz"
+              ],
+              [
+                "zor_yanici",
+                "zor yanıcı"
+              ],
+              [
+                "zor_alevlenici",
+                "zor alevlenici"
+              ],
+              [
+                "normal_alevlenici",
+                "normal alevlenici"
+              ],
+              [
+                "kolay_alevlenici",
+                "kolay alevlenici"
+              ]
+            ],
+            "other": [
+              [
+                "A1",
+                "hic_yanmaz"
+              ],
+              [
+                "A2-s1,d0",
+                "zor_yanici"
+              ],
+              [
+                "A2",
+                "zor_alevlenici"
+              ],
+              [
+                "B",
+                "zor_alevlenici"
+              ],
+              [
+                "C",
+                "zor_alevlenici"
+              ],
+              [
+                "D",
+                "normal_alevlenici"
+              ],
+              [
+                "E",
+                "normal_alevlenici"
+              ],
+              [
+                "F",
+                "kolay_alevlenici"
+              ]
+            ],
+            "floor": [
+              [
+                "A1fl",
+                "hic_yanmaz"
+              ],
+              [
+                "A2fl-s1",
+                "zor_yanici"
+              ],
+              [
+                "Bfl-s1",
+                "zor_alevlenici"
+              ],
+              [
+                "Cfl-s1",
+                "zor_alevlenici"
+              ],
+              [
+                "A2fl",
+                "normal_alevlenici"
+              ],
+              [
+                "Bfl",
+                "normal_alevlenici"
+              ],
+              [
+                "Cfl",
+                "normal_alevlenici"
+              ],
+              [
+                "Dfl",
+                "normal_alevlenici"
+              ],
+              [
+                "Efl",
+                "normal_alevlenici"
+              ],
+              [
+                "Ffl",
+                "kolay_alevlenici"
+              ]
+            ],
+            "source": "BYKHY Ek-2/Ç (10.8.2009-2009/15316 ile değişik), PDF'in 89. sayfası resim olarak okundu; docs/adr/8091 §1. Bir sınıf önce tam yazımıyla, yoksa harfiyle (ve fl'siyle) eşlenir: harfin tablodaki en zayıf satırı."
+          },
+          "text": "(3) Yüksek binalarda ve bitişik nizam yapılarda; a) Çatıların oturdukları döşemelerin yatay yangın kesici niteliğinde, b) Çatı taşıyıcı sistemi ve çatı kaplamalarının yanmaz malzemeden, olması gerekir.",
+          "source": "RG 9.9.2009/27344 (10.8.2009-2009/15316 sayılı BKK ile değişik 28 inci madde); derlenmiş metnin 28 inci maddesi; docs/adr/8134 §1."
         }
       ]
     }

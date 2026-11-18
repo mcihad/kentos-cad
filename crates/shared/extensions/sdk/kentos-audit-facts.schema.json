@@ -163,6 +163,13 @@
           },
           "type": "array"
         },
+        "roofs": {
+          "description": "The roofs and their layers (docs/adr/8134; BYKHY 28/2, 28/3): each layer's material and the material's declared\nreaction to fire class and roof class.",
+          "items": {
+            "$ref": "#/$defs/RoofFacts"
+          },
+          "type": "array"
+        },
         "rooms": {
           "description": "The rooms that carry people as the escape rules count them (BYKHY Ek-5/A, docs/adr/8035), by persistent id.",
           "items": {
@@ -1525,6 +1532,61 @@
         "key",
         "value",
         "source"
+      ],
+      "type": "object"
+    },
+    "RoofFacts": {
+      "description": "A roof (docs/adr/8134; BYKHY 28/2, 28/3): its persistent id, its storey and its layers top down. A roof drawn without\nlayers is one covering of its own material (KentOS's Kiremit when it names none).",
+      "properties": {
+        "layers": {
+          "items": {
+            "$ref": "#/$defs/RoofLayerFacts"
+          },
+          "type": "array"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "layers"
+      ],
+      "type": "object"
+    },
+    "RoofLayerFacts": {
+      "description": "A roof's layer: its kind (`covering`, `battens`, `waterproofing`, `boarding`, `insulation`, `rafters`), its material\nby name and that material's declared reaction to fire class (TS EN 13501-1) and external fire performance class as\na roof covering (TS EN 13501-5); none: no material, or none declared.",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "material": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reaction": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "roofClass": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind"
       ],
       "type": "object"
     },

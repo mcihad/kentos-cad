@@ -364,6 +364,11 @@
   - **Malzemenin yanıcılık sınıfı (17 Kasım 2026; [ADR 8091](../adr/8091-material-reaction-to-fire.md), K120–K123):**
     Malzemeler'de "Yanıcılık sınıfı" (TS EN 13501-1, `cad.arch.performance`, mimari verisi 14); BYKHY 26/2 döşeme
     kaplaması ve 26/4 tavan kaplaması Ek-2/Ç'nin tablolarıyla; nizam modelde yok, tek konutlu binada uzman incelemesi.
+  - **Çatının yanıcılığı (18 Kasım 2026; [ADR 8134](../adr/8134-roof-covering-fire-class.md), K321–K326):** Malzemeler'de
+    "Dış yangın sınıfı" (TS EN 13501-5: BROOF, BROOF(t1)…; `cad.arch.performance`'ın `roofClass`'ı, mimari verisi 23);
+    olgulara çatıların katmanları (`roofs`). Paketin `catilar`'ı: 28/2 kaplama BROOF, kaplama tahtası ve yalıtımlar en az
+    zor alevlenici (A1 kaplamanın tahtası normal); 28/3-b yüksek binada mertek ve kaplama yanmaz. "Yanmaz" tanımlı değil:
+    A1 yanmaz, A2-s1,d0 uzman incelemesi; nizam çizimde yok.
   - **Bodruma inen asansör (17 Kasım 2026; [ADR 8092](../adr/8092-basement-lift-protected-corridor.md), K124–K126):**
     bodrumdaki asansör kapısının önü yangın güvenlik holü ya da korunmuş koridor (ayrımları Ek-3/C'nin bodrum süresince
     EI, açık yersiz; 4/dd, 36/1-a).

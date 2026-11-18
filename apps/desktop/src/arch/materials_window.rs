@@ -3,8 +3,9 @@
 //! before Uygula the plan of `cad.materials.edit` says what follows (how many styles, walls and slabs, and how many stay
 //! on a locked layer). Yeni malzeme, Sil (refused while anything is bound) and Metinlerden al (every text material taken
 //! into the table) write through the same command; Stile bağla binds a wall style's component to the chosen material.
-//! Every write is one undo step “Malzeme”; its strength and reaction to fire class (docs/adr/8091) are declarations
-//! written by `cad.arch.performance`, their own step “Yangın ve performans”. Kitaplık (docs/adr/0791, `material_library.rs`) shows the material
+//! Every write is one undo step “Malzeme”; its strength, reaction to fire class (docs/adr/8091) and a roof covering's
+//! external fire class (docs/adr/8134) are declarations written by `cad.arch.performance`, their own step “Yangın ve
+//! performans”. Kitaplık (docs/adr/0791, `material_library.rs`) shows the material
 //! libraries outside the drawing: KentOS's and the office's folders; Seçilenleri al takes a library's materials in,
 //! Kitaplığa yaz… writes the project's to a `.kmalzeme` file.
 
@@ -54,10 +55,11 @@ pub struct Window {
     pub hatch_color: String,
     pub pen: String,
     pub pen_color: String,
-    /// Its declarations (docs/adr/8068, 8091), written by `cad.arch.performance`: its strength and its reaction to
-    /// fire class (TS EN 13501-1); empty takes it away.
+    /// Its declarations (docs/adr/8068, 8091, 8134), written by `cad.arch.performance`: its strength, its reaction to
+    /// fire class (TS EN 13501-1) and its external fire class as a roof covering (TS EN 13501-5); empty takes it away.
     pub strength: String,
     pub reaction: String,
+    pub roof_class: String,
     /// What the declarations typed would do: their refusal's words when refused.
     pub declared: Option<String>,
     /// The wall style components Stile bağla offers (style id, component, the words), and the one chosen.
@@ -126,6 +128,7 @@ pub enum Event {
     PenColor(String),
     Strength(String),
     Reaction(String),
+    RoofClass(String),
     Target(usize),
     Bind,
     New,
@@ -198,6 +201,7 @@ fn fill(w: &mut Window, m: &ArchMaterial) {
     w.pen_color = c.and_then(|c| c.color.clone()).unwrap_or_default();
     w.strength = m.strength.clone().unwrap_or_default();
     w.reaction = m.reaction.as_ref().map(|d| d.value.clone()).unwrap_or_default();
+    w.roof_class = m.roof_class.as_ref().map(|d| d.value.clone()).unwrap_or_default();
     w.preview = None;
     w.declared = None;
 }
@@ -212,10 +216,14 @@ fn declared_of(w: &Window, m: &ArchMaterial) -> Option<kentos_commands::Performa
     let reaction = w.reaction.trim();
     let reaction = (reaction != m.reaction.as_ref().map_or("", |d| d.value.as_str()))
         .then(|| (!reaction.is_empty()).then(|| kentos_commands::Declared::author(reaction)));
-    (strength.is_some() || reaction.is_some()).then(|| kentos_commands::PerformanceOperation::Material {
+    let roof_class = w.roof_class.trim();
+    let roof_class = (roof_class != m.roof_class.as_ref().map_or("", |d| d.value.as_str()))
+        .then(|| (!roof_class.is_empty()).then(|| kentos_commands::Declared::author(roof_class)));
+    (strength.is_some() || reaction.is_some() || roof_class.is_some()).then(|| kentos_commands::PerformanceOperation::Material {
         material: m.id.clone(),
         strength,
         reaction,
+        roof_class,
     })
 }
 
@@ -496,6 +504,7 @@ impl App {
             Event::PenColor(t) => edit(self, &|w| w.pen_color = t.clone()),
             Event::Strength(t) => edit(self, &|w| w.strength = t.clone()),
             Event::Reaction(t) => edit(self, &|w| w.reaction = t.clone()),
+            Event::RoofClass(t) => edit(self, &|w| w.roof_class = t.clone()),
             Event::Target(i) => {
                 if let Some(w) = self.arch.materials.as_mut() {
                     w.target = Some(i);
@@ -544,7 +553,7 @@ impl App {
                 if let Some(op) = declared
                     && self.materials_declare(op)
                 {
-                    self.say(Level::Success, format!("{}: dayanım ve yanıcılık sınıfı yazıldı.", m.name));
+                    self.say(Level::Success, format!("{}: dayanım ve sınıflar yazıldı.", m.name));
                 }
                 self.materials_read(Some(m.id));
             }
@@ -734,6 +743,11 @@ impl App {
                 "Yanıcılık sınıfı",
                 text("Yok", &w.reaction, Event::Reaction),
                 Some("TS EN 13501-1: A2-s1,d0, B-s1,d0, Bfl-s1…".into()),
+            ),
+            words::field(
+                "Dış yangın sınıfı",
+                text("Yok", &w.roof_class, Event::RoofClass),
+                Some("Çatı kaplaması, TS EN 13501-5: BROOF, BROOF(t1)…".into()),
             ),
         ];
         let mut grid = Column::new().spacing(10);

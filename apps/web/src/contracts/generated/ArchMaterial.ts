@@ -31,4 +31,9 @@ strength?: string,
  * Its reaction to fire class (docs/adr/8091; TS EN 13501-1, BYKHY Ek-2/Ç): `A2-s1,d0`, `B-s2,d0`, `E`, a floor
  * covering's `Bfl-s1` (`crate::reaction_problem`), with its basis. Absent: not declared (missing).
  */
-reaction?: Declared, };
+reaction?: Declared, 
+/**
+ * Its external fire performance as a roof covering (docs/adr/8134; TS EN 13501-5, BYKHY 28/2 and Ek-2/Ç):
+ * `BROOF`, `BROOF(t1)` … `FROOF(t4)` (`crate::roof_class_problem`), with its basis. Absent: not declared.
+ */
+roofClass?: Declared, };

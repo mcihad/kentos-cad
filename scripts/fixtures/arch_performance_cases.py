@@ -18,8 +18,10 @@ The rules (ADR 8068 §2):
   the revision, a locked layer (layer_locked at the same place).
 - wallStyle / openingType / material: by id, else by name (case aside); none: style_not_found, opening_type_not_found,
   material_not_found. A class null: none. A strength: letters, digits and / . , - , at most 16 (invalid_strength). A
-  material's `strength` and `reaction` (ADR 8091): absent stays, null takes it away, neither given nothing_to_set; a
-  reaction class as TS EN 13501-1 writes it (invalid_declared at operation.reaction.value).
+  material's `strength`, `reaction` (ADR 8091) and `roofClass` (ADR 8134): absent stays, null takes it away, none given
+  nothing_to_set; a reaction class as TS EN 13501-1 writes it (invalid_declared at operation.reaction.value); a roof
+  class as TS EN 13501-5 and BYKHY 28/2 write it, a letter B–F, ROOF, then (t1)…(t4) or nothing (invalid_declared at
+  operation.roofClass.value; the reaction is checked first).
 - building: the fire protection class; null: none (no empty performance is kept).
 - A declared word: not empty, no space at its ends, at most 64 characters, no line break; a document basis with a name
   (at most 128) and, when given, a day YYYY-MM-DD; else invalid_declared.
@@ -174,6 +176,13 @@ def reaction_bad(s):
     if drop and (fl or (drop.startswith("-") and smoke) or (drop.startswith(",") and not smoke)):
         return True
     return cls in ("A1", "F") and bool(smoke or drop)
+
+
+def roof_class_bad(s):
+    """A TS EN 13501-5 class as BYKHY 28/2 and Ek-2/Ç write it (ADR 8134): B, C, D, E or F, ROOF, the test method in
+    parentheses or none."""
+    import re
+    return re.fullmatch(r"[BCDEF]ROOF(\(t[1-4]\))?", s) is None
 
 
 def strength_bad(s):
@@ -338,7 +347,7 @@ def run(d, inp):
         out = [uid_of[e["id"]] for e in mine] if value is not None else []
     elif kind == "material":
         # A field absent stays, null takes it away (ADR 8091); neither: nothing_to_set.
-        if "strength" not in op and "reaction" not in op:
+        if "strength" not in op and "reaction" not in op and "roofClass" not in op:
             return refusal("nothing_to_set", "operation"), d
         items = settings["arch"]["materials"]
         at = find(items, op["material"])
@@ -349,12 +358,17 @@ def run(d, inp):
                 return refusal("invalid_declared", "operation.reaction"), d
             if reaction_bad(op["reaction"]["value"]):
                 return refusal("invalid_declared", "operation.reaction.value"), d
+        if op.get("roofClass") is not None:
+            if declared_bad(op["roofClass"]):
+                return refusal("invalid_declared", "operation.roofClass"), d
+            if roof_class_bad(op["roofClass"]["value"]):
+                return refusal("invalid_declared", "operation.roofClass.value"), d
         if op.get("strength") is not None and strength_bad(op["strength"]):
             return refusal("invalid_strength", "operation.strength"), d
         r = revision_refusal(inp)
         if r:
             return r, d
-        for key in ("strength", "reaction"):
+        for key in ("strength", "reaction", "roofClass"):
             if key in op:
                 put(items[at], key, op[key])
         out = []
@@ -568,6 +582,22 @@ def cases():
     case("Okunmayan sınıf A3", refused({"kind": "material", "material": "tugla", "reaction": author("A3")}))
     case("Damlası olan döşeme sınıfı", refused({"kind": "material", "material": "tugla", "reaction": author("Bfl-s1,d0")}))
     case("Boş sınıf", refused({"kind": "material", "material": "tugla", "reaction": author("")}))
+    # A roof covering's external fire performance class (ADR 8134).
+    case("Kiremidin dış yangın sınıfı BROOF(t1)",
+         written({"kind": "material", "material": "tugla", "roofClass": author("BROOF(t1)")}))
+    case("Ek-2/Ç'nin yazdığı gibi yalnız BROOF, belgesiyle",
+         written({"kind": "material", "material": "betonarme", "roofClass": document("BROOF", "Ürün performans beyanı")}))
+    case("Yanıcılık ve dış yangın sınıfı birlikte",
+         written({"kind": "material", "material": "tugla", "reaction": author("A1"), "roofClass": author("BROOF(t4)")}))
+    case("Dış yangın sınıfı kaldırılır: yanıcılık sınıfı kalır",
+         written({"kind": "material", "material": "tugla", "roofClass": None}, setup=with_roof_class(d)),
+         setup=with_roof_class(d))
+    case("Okunmayan dış yangın sınıfı Broof", refused({"kind": "material", "material": "tugla",
+                                                       "roofClass": author("Broof")}))
+    case("Deneme yöntemi t5", refused({"kind": "material", "material": "tugla", "roofClass": author("BROOF(t5)")}))
+    case("Boş dış yangın sınıfı", refused({"kind": "material", "material": "tugla", "roofClass": author("")}))
+    case("Önce yanıcılık sınıfı okunur", refused({"kind": "material", "material": "tugla", "reaction": author("A3"),
+                                                   "roofClass": author("GROOF")}))
     case("Ne dayanım ne sınıf", refused({"kind": "material", "material": "tugla"}))
     case("Alt çizgili dayanım: ada _ ile eklenir", refused({"kind": "material", "material": "betonarme",
                                                             "strength": "C_30"}))
@@ -640,6 +670,13 @@ def with_strength(d):
 def with_reaction(d):
     d = copy.deepcopy(d)
     d["settings"]["arch"]["materials"][0]["reaction"] = author("A2-s1,d0")
+    return d
+
+
+def with_roof_class(d):
+    d = copy.deepcopy(d)
+    d["settings"]["arch"]["materials"][0]["reaction"] = author("A1")
+    d["settings"]["arch"]["materials"][0]["roofClass"] = author("BROOF(t1)")
     return d
 
 

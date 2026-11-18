@@ -73,6 +73,13 @@ def kaplama_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     return _bulgular(facts, ("bykhy_floor_covering_reaction", "bykhy_ceiling_reaction"))
 
 
+@ext.audit("catilar")
+def cati_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Çatıların yanıcılığı (BYKHY 28/2 kaplamanın BROOF sınıfı ve altındaki katmanlar, 28/3-b yüksek ve bitişik nizam
+    binada yanmaz çatı; Ek-2/Ç)."""
+    return _bulgular(facts, ("bykhy_roof_",))
+
+
 @ext.audit("kuyular")
 def kuyu_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Şaftlar ve asansörler (BYKHY 25/3 yüksek binada şaft ve baca, 41/9 kaçış merdivenine açılan şaft kapağı, 62/2

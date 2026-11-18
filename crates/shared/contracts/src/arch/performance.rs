@@ -270,6 +270,20 @@ pub fn reaction_problem(s: &str) -> Option<String> {
     None
 }
 
+/// What is wrong with a roof covering's external fire performance class (docs/adr/8134; TS EN 13501-5 as BYKHY 28/2 and
+/// Ek-2/Ç write it): its words, or none. A class letter (B, C, D, E, F), `ROOF`, then the test method in parentheses
+/// (`(t1)` … `(t4)`) or none, as Ek-2/Ç writes BROOF alone: “BROOF”, “BROOF(t4)”, “EROOF(t3)”. Which letters each method
+/// gives is the standard's; it is not checked here.
+pub fn roof_class_problem(s: &str) -> Option<String> {
+    let ok = s.len() >= 5
+        && matches!(s.as_bytes()[0], b'B' | b'C' | b'D' | b'E' | b'F')
+        && s[1..].starts_with("ROOF")
+        && matches!(&s[5..], "" | "(t1)" | "(t2)" | "(t3)" | "(t4)");
+    (!ok).then(|| {
+        format!("“{s}” bir TS EN 13501-5 dış yangın sınıfı değil: BROOF, BROOF(t1) … BROOF(t4), CROOF(t3), FROOF(t4) gibi yazın (Ek-2/Ç).")
+    })
+}
+
 /// What is wrong with a material's strength (EK-6: `Malzeme İsmi_Dayanım`, “Beton_C25”, “Çelik_S355”): its words, or
 /// none. Letters, digits and `/ . , -`, at most 16 (C25/30, S355, B420C); no `_`, which joins it to the name.
 pub fn strength_problem(s: &str) -> Option<String> {
@@ -362,6 +376,17 @@ mod tests {
             "B,d0", "B-s1-d0",
         ] {
             assert!(reaction_problem(bad).is_some(), "{bad}");
+        }
+    }
+
+    /// TS EN 13501-5 as BYKHY 28/2 and Ek-2/Ç write it (docs/adr/8134): a letter B–F, ROOF, the test method or none.
+    #[test]
+    fn a_roof_class_is_a_letter_roof_and_its_test_method() {
+        for ok in ["BROOF", "BROOF(t1)", "BROOF(t2)", "BROOF(t3)", "BROOF(t4)", "CROOF(t3)", "DROOF(t4)", "EROOF(t3)", "FROOF(t4)"] {
+            assert!(roof_class_problem(ok).is_none(), "{ok}");
+        }
+        for bad in ["", "B", "AROOF", "GROOF", "Broof", "BROOF(t5)", "BROOF(T1)", "BROOF (t1)", " BROOF", "BROOF(t1", "B-s1,d0"] {
+            assert!(roof_class_problem(bad).is_some(), "{bad}");
         }
     }
 

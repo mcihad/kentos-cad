@@ -988,7 +988,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_SLOPED_MEMBERS),
+    ("arch", "mimari", ARCH_WITH_ROOF_CLASSES),
     ("gis", "CBS", GIS_WITH_EXTENSION_DERIVATIONS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -1236,7 +1236,17 @@ pub fn uses_sloped_members(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
         || doc.blocks.iter().any(|b| b.entities.iter().any(kentos_contracts::is_sloped_member))
 }
 
-/// The architecture data version `doc` needs: 22 for a sloped member, 21 for a room's own emsal state, 20 for a declared exterior or column load-bearing role, 19 for an element type, 18 for an underlay model, 17 for a delivery record, 16 for a plan note of the building's height or
+/// Architecture data version 23 (docs/adr/8134): a material's external fire performance class as a roof covering
+/// (`settings.arch.materials[].roofClass`, TS EN 13501-5). Version 23 holds versions 1–22's data too. The document
+/// schema stays as it is.
+pub const ARCH_WITH_ROOF_CLASSES: u16 = 23;
+
+/// Whether `doc` holds architecture data 23 ([`ARCH_WITH_ROOF_CLASSES`]).
+pub fn uses_roof_classes(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    doc.settings.arch.as_ref().is_some_and(|a| a.materials.iter().any(|m| m.roof_class.is_some()))
+}
+
+/// The architecture data version `doc` needs: 23 for a material's roof class, 22 for a sloped member, 21 for a room's own emsal state, 20 for a declared exterior or column load-bearing role, 19 for an element type, 18 for an underlay model, 17 for a delivery record, 16 for a plan note of the building's height or
 /// storey count, 15 for the
 /// building's structural system, 14 for a material's reaction class, 13 for a declared load-bearing or escape route
 /// role, 12 for the parcel's
@@ -1246,7 +1256,9 @@ pub fn uses_sloped_members(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
 /// schedule, 5 for a covering, 4 for a post, a rail or a column's own height, 3 for a curtain wall, 2 for a block's
 /// building element, 1 for the performance declarations, else 0 (not raised).
 pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
-    if uses_sloped_members(doc) {
+    if uses_roof_classes(doc) {
+        ARCH_WITH_ROOF_CLASSES
+    } else if uses_sloped_members(doc) {
         ARCH_WITH_SLOPED_MEMBERS
     } else if uses_room_emsal(doc) {
         ARCH_WITH_ROOM_EMSAL

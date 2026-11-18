@@ -97,8 +97,9 @@ pub enum PerformanceOperation {
         #[serde(default)]
         fire_rating: Option<Declared>,
     },
-    /// Malzeme: a material's strength class and reaction to fire class (by its id or name; docs/adr/8091). A field absent
-    /// stays; null takes it away.
+    /// Malzeme: a material's strength class, reaction to fire class (by its id or name; docs/adr/8091) and a roof
+    /// covering's external fire performance class (`roofClass`, TS EN 13501-5; docs/adr/8134). A field absent stays;
+    /// null takes it away.
     #[serde(rename_all = "camelCase")]
     Material {
         material: String,
@@ -118,6 +119,14 @@ pub enum PerformanceOperation {
         #[cfg_attr(feature = "ts", ts(as = "Option<Option<Declared>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<Declared>"))]
         reaction: Option<Option<Declared>>,
+        #[serde(
+            default,
+            with = "crate::cad_properties::nullable",
+            skip_serializing_if = "Option::is_none"
+        )]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Option<Declared>>", optional))]
+        #[cfg_attr(feature = "schema", schemars(with = "Option<Declared>"))]
+        roof_class: Option<Option<Declared>>,
     },
     /// Bina: the building's fire protection class; null: none.
     #[serde(rename_all = "camelCase")]

@@ -125,6 +125,11 @@ pub struct ArchMaterial {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub reaction: Option<crate::Declared>,
+    /// Its external fire performance as a roof covering (docs/adr/8134; TS EN 13501-5, BYKHY 28/2 and Ek-2/Ç):
+    /// `BROOF`, `BROOF(t1)` … `FROOF(t4)` (`crate::roof_class_problem`), with its basis. Absent: not declared.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub roof_class: Option<crate::Declared>,
 }
 
 /// An office material library's format (docs/adr/0791): a file outside the drawing, as KentOS's block library (ADR 0318)

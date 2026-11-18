@@ -124332,6 +124332,17 @@
           ],
           "description": "Its reaction to fire class (docs/adr/8091; TS EN 13501-1, BYKHY Ek-2/Ç): `A2-s1,d0`, `B-s2,d0`, `E`, a floor\ncovering's `Bfl-s1` (`crate::reaction_problem`), with its basis. Absent: not declared (missing)."
         },
+        "roofClass": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Declared"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its external fire performance as a roof covering (docs/adr/8134; TS EN 13501-5, BYKHY 28/2 and Ek-2/Ç):\n`BROOF`, `BROOF(t1)` … `FROOF(t4)` (`crate::roof_class_problem`), with its basis. Absent: not declared."
+        },
         "strength": {
           "description": "Its strength class (docs/adr/8068; EK-6: the model's material is named `Ad_Dayanım`, “Beton_C25”, “Çelik_S355”):\nC25, S355 (`crate::strength_problem`). Absent: not given (a load-bearing material without one is missing).",
           "type": [
@@ -189764,7 +189775,7 @@
           "type": "object"
         },
         {
-          "description": "Malzeme: a material's strength class and reaction to fire class (by its id or name; docs/adr/8091). A field absent\nstays; null takes it away.",
+          "description": "Malzeme: a material's strength class, reaction to fire class (by its id or name; docs/adr/8091) and a roof\ncovering's external fire performance class (`roofClass`, TS EN 13501-5; docs/adr/8134). A field absent stays;\nnull takes it away.",
           "properties": {
             "kind": {
               "const": "material",
@@ -189774,6 +189785,16 @@
               "type": "string"
             },
             "reaction": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Declared"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "roofClass": {
               "anyOf": [
                 {
                   "$ref": "#/$defs/Declared"

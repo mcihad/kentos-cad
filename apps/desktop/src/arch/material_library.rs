@@ -530,6 +530,7 @@ mod tests {
             cut: None,
             strength: None,
             reaction: None,
+            roof_class: None,
         }
     }
 

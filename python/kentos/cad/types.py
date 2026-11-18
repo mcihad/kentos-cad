@@ -17557,6 +17557,8 @@ class ArchMaterial(_Model):
         hatch: Its cut's hatch; absent: drawn without one.
         reaction: Its reaction to fire class (docs/adr/8091; TS EN 13501-1, BYKHY Ek-2/Ç): `A2-s1,d0`, `B-s2,d0`, `E`, a floor
             covering's `Bfl-s1` (`crate::reaction_problem`), with its basis. Absent: not declared (missing).
+        roof_class: Its external fire performance as a roof covering (docs/adr/8134; TS EN 13501-5, BYKHY 28/2 and Ek-2/Ç):
+            `BROOF`, `BROOF(t1)` … `FROOF(t4)` (`crate::roof_class_problem`), with its basis. Absent: not declared.
         strength: Its strength class (docs/adr/8068; EK-6: the model's material is named `Ad_Dayanım`, “Beton_C25”, “Çelik_S355”):
             C25, S355 (`crate::strength_problem`). Absent: not given (a load-bearing material without one is missing).
     """
@@ -17567,6 +17569,7 @@ class ArchMaterial(_Model):
     hatch: ComponentHatch | None | Unset = UNSET
     quantity: MaterialQuantity | MaterialQuantityName | Unset = UNSET
     reaction: Declared | None | Unset = UNSET
+    roof_class: Declared | None | Unset = UNSET
     strength: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -17583,6 +17586,8 @@ class ArchMaterial(_Model):
             out["quantity"] = _enum_out(self.quantity)
         if self.reaction is not UNSET:
             out["reaction"] = None if self.reaction is None else self.reaction.to_json()
+        if self.roof_class is not UNSET:
+            out["roofClass"] = None if self.roof_class is None else self.roof_class.to_json()
         if self.strength is not UNSET:
             out["strength"] = self.strength
         return out
@@ -17597,6 +17602,7 @@ class ArchMaterial(_Model):
             hatch=UNSET if "hatch" not in data else None if data["hatch"] is None else ComponentHatch.from_json(data["hatch"]),
             quantity=_enum_in(MaterialQuantity, data["quantity"]) if "quantity" in data else UNSET,
             reaction=UNSET if "reaction" not in data else None if data["reaction"] is None else Declared.from_json(data["reaction"]),
+            roof_class=UNSET if "roofClass" not in data else None if data["roofClass"] is None else Declared.from_json(data["roofClass"]),
             strength=data.get("strength", UNSET),
         )
 
@@ -139407,12 +139413,14 @@ class OpeningTypePerformanceOperation(PerformanceOperation):
 
 @dataclass(kw_only=True, slots=True)
 class MaterialPerformanceOperation(PerformanceOperation):
-    """Malzeme: a material's strength class and reaction to fire class (by its id or name; docs/adr/8091). A field absent
-    stays; null takes it away.
+    """Malzeme: a material's strength class, reaction to fire class (by its id or name; docs/adr/8091) and a roof
+    covering's external fire performance class (`roofClass`, TS EN 13501-5; docs/adr/8134). A field absent stays;
+    null takes it away.
     """
     TAG_VALUE: ClassVar[str] = "material"
     material: str
     reaction: Declared | None | Unset = UNSET
+    roof_class: Declared | None | Unset = UNSET
     strength: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -139420,6 +139428,8 @@ class MaterialPerformanceOperation(PerformanceOperation):
         out["material"] = self.material
         if self.reaction is not UNSET:
             out["reaction"] = None if self.reaction is None else self.reaction.to_json()
+        if self.roof_class is not UNSET:
+            out["roofClass"] = None if self.roof_class is None else self.roof_class.to_json()
         if self.strength is not UNSET:
             out["strength"] = self.strength
         return out
@@ -139429,6 +139439,7 @@ class MaterialPerformanceOperation(PerformanceOperation):
         return cls(
             material=data["material"],
             reaction=UNSET if "reaction" not in data else None if data["reaction"] is None else Declared.from_json(data["reaction"]),
+            roof_class=UNSET if "roofClass" not in data else None if data["roofClass"] is None else Declared.from_json(data["roofClass"]),
             strength=data.get("strength", UNSET),
         )
 

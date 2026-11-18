@@ -53,7 +53,7 @@ use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
 use kentos_extensions::audit_facts::building::{
     BuildingFacts, CoveringFacts, DoorFacts, ElementFacts, EmsalLimit, ExemptCap, LinkFacts, MasonryFacts, PlanNoteFacts,
-    RoomPeople,
+    RoofFacts, RoofLayerFacts, RoomPeople,
     SeparatingElement, SeparationFacts, ShaftFacts, SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom,
 };
 
@@ -287,6 +287,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         structure_height,
         shafts: enclosed,
         coverings: coverings(doc),
+        roofs: roofs(doc),
     }
 }
 
@@ -387,6 +388,44 @@ fn coverings(doc: &Document) -> Vec<CoveringFacts> {
                 material,
                 reaction,
             })
+        })
+        .collect()
+}
+
+/// The roofs with their layers' materials and those materials' declared classes (docs/adr/8134; BYKHY 28/2, 28/3): a
+/// material named by its id or its name (case aside) in the project's materials; a roof without layers one covering of
+/// its own material.
+fn roofs(doc: &Document) -> Vec<RoofFacts> {
+    let materials = doc.settings().arch.as_ref().map_or(&[][..], |a| a.materials.as_slice());
+    let layer = |kind: &str, material: Option<String>| {
+        let found = material.as_deref().and_then(|name| {
+            let folded = name.to_lowercase();
+            materials.iter().find(|m| m.id == name || m.name.to_lowercase() == folded)
+        });
+        RoofLayerFacts {
+            kind: kind.to_owned(),
+            reaction: found.and_then(|m| m.reaction.as_ref()).map(|d| d.value.clone()),
+            roof_class: found.and_then(|m| m.roof_class.as_ref()).map(|d| d.value.clone()),
+            material,
+        }
+    };
+    doc.entities_with_uids()
+        .filter_map(|(uid, e)| {
+            let Entity::Roof(r) = e else { return None };
+            let f = &r.roof;
+            let layers = if f.layers.is_empty() {
+                vec![layer("covering", Some(f.material_name().to_owned()))]
+            } else {
+                // Each layer's kind as the file spells it (`covering`, `battens` …).
+                f.layers
+                    .iter()
+                    .map(|l| {
+                        let kind = serde_json::to_value(l.kind).ok().and_then(|v| v.as_str().map(str::to_owned)).unwrap_or_default();
+                        layer(&kind, l.material.clone().filter(|m| !m.trim().is_empty()))
+                    })
+                    .collect()
+            };
+            Some(RoofFacts { uid: uid.to_string(), level: e.own_level().map(str::to_owned), layers })
         })
         .collect()
 }

@@ -1,5 +1,16 @@
 # Değişiklikler
 
+## 0.27.0 — 18 Kasım 2026
+
+- Çatıların yanıcılığı (`catilar`, yeni katkı `catilar`; docs/adr/8134): BYKHY 28/2 (9.9.2009) çatı kaplamasının
+  malzemesinin beyan edilen TS EN 13501-5 dış yangın sınıfı BROOF değilse kaldı, beyansız eksik veri
+  `bykhy_roof_covering_class`; kaplamanın altındaki kaplama tahtası, su ve ısı yalıtımı en az zor alevlenici (hiç yanmaz
+  kaplamanın tahtası normal alevlenici yeter; zor yanıcı kaplamada yanmazlık yazılı değil: uzman incelemesi)
+  `bykhy_roof_underlay_reaction`; 28/3-b yüksek binada çatının taşıyıcısı (mertek) ve kaplaması yanmaz (hiç yanmaz),
+  yüksek olmayan binada yanmaz olmayan çatı uzman incelemesi (bitişik nizamda kalır, nizam çizimde yok)
+  `bykhy_roof_noncombustible`. Olgulara çatılar (`roofs`: katmanlar üstten alta, malzemenin yanıcılık ve dış yangın
+  sınıfı). Metinler derlenmiş resmî metinle birebir.
+
 ## 0.26.0 — 18 Kasım 2026
 
 - Kazan dairesi ve yakıt deposu (`kazan`, yeni katkı `kazan`; docs/adr/8113): BYKHY 54/2 kazan dairesinin komşu

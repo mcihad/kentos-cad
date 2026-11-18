@@ -93,6 +93,10 @@ pub struct BuildingFacts {
     /// reaction to fire class.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub coverings: Vec<CoveringFacts>,
+    /// The roofs and their layers (docs/adr/8134; BYKHY 28/2, 28/3): each layer's material and the material's declared
+    /// reaction to fire class and roof class.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub roofs: Vec<RoofFacts>,
     /// The project says the building has sprinklers (`settings.arch.sprinklers`): BYKHY Ek-4's notes read it.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub sprinklers: bool,
@@ -203,6 +207,33 @@ pub struct CoveringFacts {
     pub material: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reaction: Option<String>,
+}
+
+/// A roof (docs/adr/8134; BYKHY 28/2, 28/3): its persistent id, its storey and its layers top down. A roof drawn without
+/// layers is one covering of its own material (KentOS's Kiremit when it names none).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct RoofFacts {
+    pub uid: String,
+    pub level: Option<String>,
+    pub layers: Vec<RoofLayerFacts>,
+}
+
+/// A roof's layer: its kind (`covering`, `battens`, `waterproofing`, `boarding`, `insulation`, `rafters`), its material
+/// by name and that material's declared reaction to fire class (TS EN 13501-1) and external fire performance class as
+/// a roof covering (TS EN 13501-5); none: no material, or none declared.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct RoofLayerFacts {
+    pub kind: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub material: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reaction: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub roof_class: Option<String>,
 }
 
 /// A room as a fire compartment counts it: its persistent id, its storey, its name (and number), its area as the

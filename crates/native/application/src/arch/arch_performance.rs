@@ -12,7 +12,7 @@
 
 use kentos_commands::{
     ArchPerformance, ArchPerformanceDone, CommandResult, Declared, Entity, OpeningForm, PerformanceOperation,
-    ProjectSettings, reaction_problem, strength_problem,
+    ProjectSettings, reaction_problem, roof_class_problem, strength_problem,
 };
 use kentos_domain::{Document, Slot};
 
@@ -338,11 +338,11 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
             });
             (Work::Settings(Box::new(next)), carried)
         }
-        PerformanceOperation::Material { material, strength, reaction } => {
-            if strength.is_none() && reaction.is_none() {
+        PerformanceOperation::Material { material, strength, reaction, roof_class } => {
+            if strength.is_none() && reaction.is_none() && roof_class.is_none() {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    "Ne dayanım ne yanıcılık sınıfı verildi: strength ya da reaction verin (null kaldırır).".into(),
+                    "Ne dayanım ne yanıcılık ne dış yangın sınıfı verildi: strength, reaction ya da roofClass verin (null kaldırır).".into(),
                     "operation",
                 ));
             }
@@ -361,6 +361,12 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                     return Err(fail(codes::INVALID_DECLARED, why, "operation.reaction.value"));
                 }
             }
+            if let Some(Some(d)) = roof_class {
+                declared(Some(d), "dış yangın sınıfı", "operation.roofClass")?;
+                if let Some(why) = roof_class_problem(&d.value) {
+                    return Err(fail(codes::INVALID_DECLARED, why, "operation.roofClass.value"));
+                }
+            }
             if let Some(why) = strength.as_ref().and_then(|s| s.as_deref()).and_then(strength_problem) {
                 return Err(fail(codes::INVALID_STRENGTH, why, "operation.strength"));
             }
@@ -372,6 +378,9 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                 }
                 if let Some(v) = reaction {
                     a.materials[at].reaction.clone_from(v);
+                }
+                if let Some(v) = roof_class {
+                    a.materials[at].roof_class.clone_from(v);
                 }
             }
             (Work::Settings(Box::new(next)), Vec::new())

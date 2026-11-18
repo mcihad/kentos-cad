@@ -1633,6 +1633,9 @@ mod shaft_tests;
 #[path = "tests/covering_reaction_tests.rs"]
 mod covering_reaction_tests;
 #[cfg(test)]
+#[path = "tests/roof_fire_tests.rs"]
+mod roof_fire_tests;
+#[cfg(test)]
 #[path = "tests/double_door_tests.rs"]
 mod double_door_tests;
 #[cfg(test)]
