@@ -1,5 +1,15 @@
 # Değişiklikler
 
+## 0.30.0 — 18 Kasım 2026
+
+- Mahallerin kaplamaları (`kaplamalar`; docs/adr/8138): mahal listesinin yazdığı döşeme, duvar ve tavan kaplaması adı
+  projenin aynı adlı (ya da kimlikli) malzemesidir (olguların yeni `spaces[].finishes`'i); aynı adlı kaplamalar tek
+  bulguda, mahalleriyle. Döşemeninki 26/2'nin, tavanınki 26/4'ün kaplamasıdır; yeni madde BYKHY 20/3 (9.7.2015):
+  duvarlarda iç kaplamalar en az normal alevlenici, yüksek binada ve 100 kişiyi aşan sinema, tiyatro, konferans, düğün
+  salonunda en az zor alevlenici; adı sayılmayan 100 kişiyi aşan mahalde normal alevlenici kaplama uzman incelemesi
+  (`bykhy_wall_lining_reaction`). Malzemeler'de o adla malzeme yoksa eksik veri. İçte uygulanan ısı ve ses yalıtımı
+  okunmaz.
+
 ## 0.29.0 — 18 Kasım 2026
 
 - Korunumlu şaft ve yangın kesici (`dayanim`; docs/adr/8136): BYKHY Ek-3/B 8, korunumlu olduğu beyan edilen şaftın

@@ -61,7 +61,9 @@ key: string, check: ArchAuditCheck,
  * docs/adr/8135), `bykhy_elevator_door_room` (62/4), `bykhy_elevator_door_stair` (62/6) and
  * `bykhy_elevator_door_resistance` (62/7, Ek-3/B 12; docs/adr/8087), the roofs' covering class, underlay and rafters
  * `bykhy_roof_covering_class`, `bykhy_roof_underlay_reaction`, `bykhy_roof_noncombustible` (28/2, 28/3;
- * docs/adr/8134), the storeys' and doors' sizes `paiy_storey_height_over`, `paiy_door_height_below` and `paiy_door_width_below` (docs/adr/8083),
+ * docs/adr/8134), the coverings' and the rooms' finishes' `bykhy_floor_covering_reaction` (26/2),
+ * `bykhy_ceiling_reaction` (26/4) and `bykhy_wall_lining_reaction` (20/3; docs/adr/8091, 8138), the storeys' and
+ * doors' sizes `paiy_storey_height_over`, `paiy_door_height_below` and `paiy_door_width_below` (docs/adr/8083),
  * `regulation_date_needed` (eksik veri) and
  * `regulation_text_unknown` (uzman incelemesi); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
  * `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/8035); `parking_short`,

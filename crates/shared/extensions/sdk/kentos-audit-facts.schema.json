@@ -1098,6 +1098,34 @@
       ],
       "type": "object"
     },
+    "FinishFacts": {
+      "description": "A room's finish (docs/adr/8138): its part (`floor`, `wall`, `ceiling`), its name as the room list writes it, the\nproject material named so (its name; none: no material of that name or id) and that material's declared TS EN\n13501-1 class.",
+      "properties": {
+        "material": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "part": {
+          "type": "string"
+        },
+        "reaction": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "part",
+        "name"
+      ],
+      "type": "object"
+    },
     "FontUse": {
       "description": "A typeface and how many use it.",
       "properties": {
@@ -1983,6 +2011,13 @@
         "area": {
           "format": "double",
           "type": "number"
+        },
+        "finishes": {
+          "description": "Its floor's, walls' and ceiling's finishes as the room list names them, each with the project material of that\nname (or id) and the material's declared reaction to fire class (docs/adr/8138; BYKHY 20/3, 26/2, 26/4).",
+          "items": {
+            "$ref": "#/$defs/FinishFacts"
+          },
+          "type": "array"
         },
         "least": {
           "description": "A hall's or a corridor's least width, m (docs/adr/8110): the shortest chord across its net outline that leaves,\non each side, room for a circle as wide as the chord is long (a door's reveal, a niche shallower than its mouth is\nno such chord), else its largest circle; the width a corridor is by (BYKHY 49/2). None for another room or a\nbroken one.",

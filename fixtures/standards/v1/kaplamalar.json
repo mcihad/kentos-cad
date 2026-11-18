@@ -1,7 +1,7 @@
 {
  "format": "kentos.regulationCases",
  "version": 1,
- "about": "Kaplamaların yanıcılığının bağımsız durumları (docs/adr/8091): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik 4/ccc, 26/2, 26/4 ve Ek-2/Ç'nin (PDF'in 89. sayfası resim olarak okundu) metninden elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.coverings).",
+ "about": "Kaplamaların yanıcılığının bağımsız durumları (docs/adr/8091, 8138): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik 4/ccc, 20/3 (9.7.2015), 26/2, 26/4 ve Ek-2/Ç'nin (PDF'in 89. sayfası resim olarak okundu) metninden elle çıkarıldı; kuralın kodundan üretilmedi. Mahal kaplamalarıyla olanlar docs/adr/8138'den. Olgular KentOS'un ölçüsüdür (building.coverings, spaces[].finishes, rooms).",
  "cases": [
   {
    "id": "doseme-normal-tamam",
@@ -55,6 +55,10 @@
    "expect": {
     "findings": [],
     "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
      "BYKHY 26/2": [
       "passed",
       "9.9.2009"
@@ -126,6 +130,10 @@
      }
     ],
     "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
      "BYKHY 26/2": [
       "failed",
       "9.9.2009"
@@ -197,6 +205,10 @@
      }
     ],
     "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
      "BYKHY 26/2": [
       "failed",
       "9.9.2009"
@@ -260,6 +272,10 @@
    "expect": {
     "findings": [],
     "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
      "BYKHY 26/2": [
       "passed",
       "9.9.2009"
@@ -323,6 +339,10 @@
    "expect": {
     "findings": [],
     "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
      "BYKHY 26/2": [
       "passed",
       "9.9.2009"
@@ -393,6 +413,10 @@
      }
     ],
     "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
      "BYKHY 26/2": [
       "missingData",
       "9.9.2009"
@@ -462,6 +486,10 @@
      }
     ],
     "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
      "BYKHY 26/2": [
       "missingData",
       "9.9.2009"
@@ -533,6 +561,10 @@
      }
     ],
     "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
      "BYKHY 26/2": [
       "missingData",
       "9.9.2009"
@@ -596,6 +628,10 @@
    "expect": {
     "findings": [],
     "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
      "BYKHY 26/2": [
       "outOfScope",
       "9.9.2009"
@@ -667,6 +703,10 @@
      }
     ],
     "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
      "BYKHY 26/2": [
       "outOfScope",
       "9.9.2009"
@@ -730,6 +770,10 @@
    "expect": {
     "findings": [],
     "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
      "BYKHY 26/2": [
       "outOfScope",
       "9.9.2009"
@@ -801,6 +845,10 @@
      }
     ],
     "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
      "BYKHY 26/2": [
       "outOfScope",
       "9.9.2009"
@@ -872,6 +920,10 @@
      }
     ],
     "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
      "BYKHY 26/2": [
       "outOfScope",
       "9.9.2009"
@@ -935,6 +987,10 @@
    "expect": {
     "findings": [],
     "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
      "BYKHY 26/2": [
       "outOfScope",
       "9.9.2009"
@@ -1033,7 +1089,7 @@
   },
   {
    "id": "tarihsiz",
-   "neden": "Başvuru tarihi yok: maddelerin bilindiği ilk gün 9.9.2009, aday tek → parke Dfl-s1 geçer.",
+   "neden": "Başvuru tarihi yok: maddelerin hepsinin bilindiği ilk gün 9.7.2015 (20/3), aday tek → parke Dfl-s1 geçer.",
    "permit": {
     "particulars": {}
    },
@@ -1081,12 +1137,1218 @@
    "expect": {
     "findings": [],
     "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
      "BYKHY 26/2": [
       "passed",
       "9.9.2009"
      ],
      "BYKHY 26/4": [
       "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mahal-doseme-tamam",
+   "neden": "8 daireli apartman (12 m), iki mahalin döşeme kaplaması Seramik: Malzemeler'de Seramik A1fl, hiç yanmaz; 26/2 en az normal alevlenici → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "level": "k01",
+      "name": "Salon",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "floor",
+        "name": "Seramik",
+        "material": "Seramik",
+        "reaction": "A1fl"
+       }
+      ]
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000102",
+      "level": "k01",
+      "name": "Mutfak",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "floor",
+        "name": "Seramik",
+        "material": "Seramik",
+        "reaction": "A1fl"
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mahal-doseme-malzeme-yok",
+   "neden": "Döşeme kaplaması Laminat, Malzemeler'de bu adla malzeme yok: sınıfı okunmaz → eksik veri, iki mahal tek bulguda.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000111",
+      "level": "k01",
+      "name": "Salon",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "floor",
+        "name": "Laminat"
+       }
+      ]
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000112",
+      "level": "k01",
+      "name": "Oda",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "floor",
+        "name": "Laminat"
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_floor_covering_reaction",
+      "state": "missingData",
+      "has": [
+       "“Laminat” döşeme kaplaması (2 mahal)",
+       "Malzemeler'de “Laminat” adlı malzeme yok"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "missingData",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mahal-doseme-yuksek-normal",
+   "neden": "Bina yüksekliği 24 m (21,50'den fazla: yüksek bina), döşeme kaplaması Laminat Dfl-s1, normal alevlenici; 26/2 yüksek binada en az zor alevlenici → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 10,
+    "dwellings": 0,
+    "height": 24.0,
+    "structureHeight": 24.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000121",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "floor",
+        "name": "Laminat",
+        "material": "Laminat",
+        "reaction": "Dfl-s1"
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_floor_covering_reaction",
+      "has": [
+       "“Laminat” döşeme kaplaması (1 mahal)",
+       "Dfl-s1, normal alevlenici",
+       "en az zor alevlenici"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "failed",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mahal-tavan-normal",
+   "neden": "Apartman (8 daire), tavan kaplaması Ahşap lambri D-s2,d0, normal alevlenici; 26/4 en az zor alevlenici → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000131",
+      "level": "k01",
+      "name": "Salon",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "ceiling",
+        "name": "Ahşap lambri",
+        "material": "Ahşap lambri",
+        "reaction": "D-s2,d0"
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_ceiling_reaction",
+      "has": [
+       "“Ahşap lambri” tavan kaplaması (1 mahal)",
+       "D-s2,d0, normal alevlenici",
+       "en az zor alevlenici"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mahal-tavan-tamam",
+   "neden": "Tavan kaplaması Alçı sıva A1, hiç yanmaz; 26/4 en az zor alevlenici → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000141",
+      "level": "k01",
+      "name": "Salon",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "ceiling",
+        "name": "Alçı sıva",
+        "material": "Alçı sıva",
+        "reaction": "A1"
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "passed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mahal-duvar-tamam",
+   "neden": "Duvar kaplaması Saten boya B-s1,d0, zor alevlenici; 20/3 (12 m, yüksek değil) en az normal alevlenici → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000151",
+      "level": "k01",
+      "name": "Salon",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "wall",
+        "name": "Saten boya",
+        "material": "Saten boya",
+        "reaction": "B-s1,d0"
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 20/3": [
+      "passed",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mahal-duvar-kolay",
+   "neden": "Üç mahalin duvar kaplaması Duvar kağıdı F, kolay alevlenici; 20/3 en az normal alevlenici → kalır, tek bulgu.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000161",
+      "level": "k01",
+      "name": "Salon",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "wall",
+        "name": "Duvar kağıdı",
+        "material": "Duvar kağıdı",
+        "reaction": "F"
+       }
+      ]
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000162",
+      "level": "k01",
+      "name": "Oda",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "wall",
+        "name": "Duvar kağıdı",
+        "material": "Duvar kağıdı",
+        "reaction": "F"
+       }
+      ]
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000163",
+      "level": "k01",
+      "name": "Oda",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "wall",
+        "name": "Duvar kağıdı",
+        "material": "Duvar kağıdı",
+        "reaction": "F"
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_wall_lining_reaction",
+      "has": [
+       "“Duvar kağıdı” duvar kaplaması (3 mahal)",
+       "F, kolay alevlenici",
+       "en az normal alevlenici"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 20/3": [
+      "failed",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mahal-duvar-yuksek-normal",
+   "neden": "Bina yüksekliği 24 m: yüksek binada 20/3 en az zor alevlenici; duvar kaplaması Ahşap lambri D-s2,d0, normal alevlenici → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 10,
+    "dwellings": 0,
+    "height": 24.0,
+    "structureHeight": 24.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000171",
+      "level": "k01",
+      "name": "Ofis",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "wall",
+        "name": "Ahşap lambri",
+        "material": "Ahşap lambri",
+        "reaction": "D-s2,d0"
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_wall_lining_reaction",
+      "has": [
+       "(1 mahal, yüksek bina)",
+       "en az zor alevlenici"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 20/3": [
+      "failed",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mahal-duvar-dugun-salonu",
+   "neden": "12 m binada 150 kişilik Düğün salonu: 20/3 kapasitesi 100 kişiden fazla düğün salonunda en az zor alevlenici; duvar kaplaması D-s2,d0 normal alevlenici → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 0,
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000181",
+      "level": "k01",
+      "name": "Düğün salonu",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "wall",
+        "name": "Ahşap lambri",
+        "material": "Ahşap lambri",
+        "reaction": "D-s2,d0"
+       }
+      ]
+     }
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000181",
+      "level": "k01",
+      "name": "Düğün salonu",
+      "persons": 150.0
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_wall_lining_reaction",
+      "has": [
+       "(1 mahal, 100 kişiyi aşan salon)",
+       "en az zor alevlenici"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 20/3": [
+      "failed",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mahal-duvar-kalabalik-uzman",
+   "neden": "150 kişilik Spor salonu: adı 20/3'ün saydıklarından değil, \"gibi yerler\"den mi belli değil; duvar kaplaması normal alevlenici (en azı tutar, zor alevlenici değil) → uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 0,
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000191",
+      "level": "k01",
+      "name": "Spor salonu",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "wall",
+        "name": "Ahşap lambri",
+        "material": "Ahşap lambri",
+        "reaction": "D-s2,d0"
+       }
+      ]
+     }
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000191",
+      "level": "k01",
+      "name": "Spor salonu",
+      "persons": 150.0
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_wall_lining_reaction",
+      "state": "expertReview",
+      "has": [
+       "(1 mahal, 100 kişiyi aşan mahal)",
+       "uzman karar verir"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 20/3": [
+      "expertReview",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mahal-duvar-salon-az-kisi",
+   "neden": "80 kişilik Konferans salonu: 100 kişiyi aşmıyor; duvar kaplaması normal alevlenici, 20/3 en az normal alevlenici → geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 0,
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-0000000001a1",
+      "level": "k01",
+      "name": "Konferans salonu",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "wall",
+        "name": "Ahşap lambri",
+        "material": "Ahşap lambri",
+        "reaction": "D-s2,d0"
+       }
+      ]
+     }
+    ],
+    "rooms": [
+     {
+      "uid": "00000000-0000-4000-8000-0000000001a1",
+      "level": "k01",
+      "name": "Konferans salonu",
+      "persons": 80.0
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 20/3": [
+      "passed",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mahal-duvar-sinifi-yok",
+   "neden": "Duvar kaplaması Saten boya Malzemeler'de var ama yanıcılık sınıfı beyan edilmemiş → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-0000000001b1",
+      "level": "k01",
+      "name": "Salon",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "wall",
+        "name": "Saten boya",
+        "material": "Saten boya"
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_wall_lining_reaction",
+      "state": "missingData",
+      "has": [
+       "yanıcılık sınıfı beyan edilmemiş"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 20/3": [
+      "missingData",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mahal-duvar-2014",
+   "neden": "Başvuru 1.5.2014: 20/3'ün 9.7.2015'ten önceki metni kural setinde yok → duvar kaplaması uzman incelemesi; 26/2 ve 26/4 (9.9.2009) okunur, kaplama yok.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "01.05.2014"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-0000000001c1",
+      "level": "k01",
+      "name": "Salon",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "wall",
+        "name": "Saten boya",
+        "material": "Saten boya",
+        "reaction": "B-s1,d0"
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "regulation_text_unknown",
+      "state": "expertReview",
+      "has": [
+       "1.5.2014",
+       "20/3",
+       "9.7.2015"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 20/3": [
+      "expertReview",
+      null
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mahal-uc-kisim",
+   "neden": "Bir mahalin döşemesi Seramik A1fl, duvarı Saten boya B-s1,d0, tavanı Alçı sıva A1: 26/2, 20/3 ve 26/4 geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "spaces": [
+     {
+      "uid": "00000000-0000-4000-8000-0000000001d1",
+      "level": "k01",
+      "name": "Salon",
+      "area": 20.0,
+      "finishes": [
+       {
+        "part": "floor",
+        "name": "Seramik",
+        "material": "Seramik",
+        "reaction": "A1fl"
+       },
+       {
+        "part": "wall",
+        "name": "Saten boya",
+        "material": "Saten boya",
+        "reaction": "B-s1,d0"
+       },
+       {
+        "part": "ceiling",
+        "name": "Alçı sıva",
+        "material": "Alçı sıva",
+        "reaction": "A1"
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 20/3": [
+      "passed",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "passed",
       "9.9.2009"
      ]
     }

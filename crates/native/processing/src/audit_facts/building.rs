@@ -43,7 +43,9 @@
 //!   (docs/adr/8136); a door's being an elevator's (a side
 //!   in an elevator's shaft) and opening onto a passage (a corridor, a hall, an entrance, a lobby, a landing, a stair's
 //!   room); the structure's height (`fire_audit::heights`); roofs and terraces among Ek-3's elements.
-//! - **Coverings** (docs/adr/8091): each covering's IFC type, material and the material's declared reaction class.
+//! - **Coverings** (docs/adr/8091): each covering's IFC type, material and the material's declared reaction class; each
+//!   room's floor, wall and ceiling finish with the project material of its name and that material's class
+//!   (docs/adr/8138).
 //! - **The structure** (docs/adr/8094): the project's declared structural system by its name and whether the building
 //!   holds traditional architectural elements; the limited uses carry 22/1-m's traditional rooms. A traditional cut
 //!   stone masonry building's stone walls (docs/adr/8095): their parts as Emsal ve TAKS tablosu counts them
@@ -55,8 +57,8 @@ use kentos_domain::Document;
 use kentos_domain::room_names::{RoomKind, dwelling_nature, kind_of, technical};
 use kentos_extensions::audit_facts::building::{
     BuildingFacts, CoveringFacts, DoorFacts, ElementFacts, EmsalLimit, ExemptCap, LinkFacts, MasonryFacts, PlanNoteFacts,
-    RoofFacts, RoofLayerFacts, RoomPeople, SeparatingElement, SeparationFacts, ShaftFacts, ShaftVentFacts, SpaceFacts,
-    StoreyHolds, UnderStairFacts, UnderStairRoom,
+    FinishFacts, RoofFacts, RoofLayerFacts, RoomPeople, SeparatingElement, SeparationFacts, ShaftFacts, ShaftVentFacts,
+    SpaceFacts, StoreyHolds, UnderStairFacts, UnderStairRoom,
 };
 
 /// The drawing's building facts; empty (no storey) for a project without Mimari's storeys.
@@ -212,6 +214,14 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             _ => None,
         })
         .collect();
+    // Each room's floor, wall and ceiling finishes with the project material of their name (docs/adr/8138).
+    let finishes: std::collections::HashMap<String, Vec<FinishFacts>> = doc
+        .entities_with_uids()
+        .filter_map(|(uid, e)| match e {
+            Entity::Space(s) => Some((uid.to_string(), finish_facts(doc, &s.space.finishes))),
+            _ => None,
+        })
+        .collect();
     // Each room's walk from its farthest point to its own nearest door, inside it (docs/adr/8111; 50/3).
     let to_door: std::collections::HashMap<String, f64> = kentos_domain::escape::escape(doc)
         .rooms
@@ -229,6 +239,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             least: least.get(&uid).copied(),
             to_door: to_door.get(&uid).copied(),
             net: net.get(&uid).copied(),
+            finishes: finishes.get(&uid).cloned().unwrap_or_default(),
             uid,
         })
         .collect();
@@ -393,6 +404,26 @@ fn coverings(doc: &Document) -> Vec<CoveringFacts> {
                 predefined: c.predefined.clone(),
                 material,
                 reaction,
+            })
+        })
+        .collect()
+}
+
+/// A room's floor, wall and ceiling finishes (docs/adr/8138): each named one with the project material whose id or name
+/// (case aside) is its name, and that material's declared reaction to fire class; none of that name, no material.
+fn finish_facts(doc: &Document, f: &kentos_commands::SpaceFinishes) -> Vec<FinishFacts> {
+    let materials = doc.settings().arch.as_ref().map_or(&[][..], |a| a.materials.as_slice());
+    [("floor", &f.floor), ("wall", &f.wall), ("ceiling", &f.ceiling)]
+        .into_iter()
+        .filter_map(|(part, name)| {
+            let name = name.as_deref().map(str::trim).filter(|n| !n.is_empty())?;
+            let folded = name.to_lowercase();
+            let found = materials.iter().find(|m| m.id == name || m.name.to_lowercase() == folded);
+            Some(FinishFacts {
+                part: part.to_owned(),
+                name: name.to_owned(),
+                material: found.map(|m| m.name.clone()),
+                reaction: found.and_then(|m| m.reaction.as_ref()).map(|d| d.value.clone()),
             })
         })
         .collect()

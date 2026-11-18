@@ -1636,6 +1636,9 @@ mod covering_reaction_tests;
 #[path = "tests/roof_fire_tests.rs"]
 mod roof_fire_tests;
 #[cfg(test)]
+#[path = "tests/finish_reaction_tests.rs"]
+mod finish_reaction_tests;
+#[cfg(test)]
 #[path = "tests/double_door_tests.rs"]
 mod double_door_tests;
 #[cfg(test)]

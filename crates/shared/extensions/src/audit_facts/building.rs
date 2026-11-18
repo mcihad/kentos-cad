@@ -288,6 +288,25 @@ pub struct SpaceFacts {
     /// 54/5); none for a broken room.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub net: Option<f64>,
+    /// Its floor's, walls' and ceiling's finishes as the room list names them, each with the project material of that
+    /// name (or id) and the material's declared reaction to fire class (docs/adr/8138; BYKHY 20/3, 26/2, 26/4).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub finishes: Vec<FinishFacts>,
+}
+
+/// A room's finish (docs/adr/8138): its part (`floor`, `wall`, `ceiling`), its name as the room list writes it, the
+/// project material named so (its name; none: no material of that name or id) and that material's declared TS EN
+/// 13501-1 class.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct FinishFacts {
+    pub part: String,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub material: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reaction: Option<String>,
 }
 
 /// An opening between two storeys (docs/adr/8086; BYKHY 4/g, 24/4, 24/5): a floor slab's hole, a void space that is no

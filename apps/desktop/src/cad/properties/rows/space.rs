@@ -329,11 +329,25 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
     }
     // The finishes as the room list writes them (docs/adr/8038; PAİY 57(29)): “Döşeme”, the regulation's word
     // and the schedules', not “Zemin” (the ground's).
+    // A floor's, wall's or ceiling's finish is the project material of its name (docs/adr/8138; BYKHY 20/3, 26/2,
+    // 26/4): the note says which class the fire rules read, or that no material is named so.
+    let materials = doc.settings().arch.as_ref().map_or(&[][..], |a| a.materials.as_slice());
+    let read = |name: &Option<String>| -> Option<Row> {
+        let name = name.as_deref().map(str::trim).filter(|n| !n.is_empty())?;
+        let folded = name.to_lowercase();
+        let found = materials.iter().find(|m| m.id == name || m.name.to_lowercase() == folded);
+        Some(Row::note(&match found.map(|m| m.reaction.as_ref()) {
+            Some(Some(d)) => format!("Malzemelerden: {}.", d.value),
+            Some(None) => "Malzemelerde; yanıcılık sınıfı beyan edilmemiş.".to_owned(),
+            None => "Malzemeler'de bu adla malzeme yok.".to_owned(),
+        }))
+    };
     geo.push(words(
         "Döşeme kaplaması",
         &x.finishes.floor,
         Field::SpaceFloor(slot),
     ));
+    geo.extend(read(&x.finishes.floor));
     geo.push(words(
         "Süpürgelik",
         &x.finishes.base,
@@ -344,11 +358,13 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
         &x.finishes.wall,
         Field::SpaceWall(slot),
     ));
+    geo.extend(read(&x.finishes.wall));
     geo.push(words(
         "Tavan kaplaması",
         &x.finishes.ceiling,
         Field::SpaceCeiling(slot),
     ));
+    geo.extend(read(&x.finishes.ceiling));
     geo.push(words(
         "Denizlik ve parapet",
         &x.finishes.sill,

@@ -77,6 +77,7 @@ kuralı).
 
 - **Broof (TS EN 13501-5):** çatı kaplamasının dış alev yayılımı sınıfı ve çatıyla ilgili maddeler.
 - **Duvar ve tavan kaplamaları** (mahalin kaplama kalınlıklarının malzemesi; kaçış yolunun kaplamaları, 41 ve 36): mahal
-  kaplamasının malzemesi modelde yok.
+  kaplamasının malzemesi modelde yok ([ADR 8138](8138-room-finish-coverings.md)'de yapıldı: kaplamanın adı malzemedir,
+  20/3, 26/2, 26/4; 36 ve 41'in bugünkü metninde kaplamanın yanıcılığı yok).
 - **Isı yalıtımı (26/3, 27):** katmanın malzemesinin sınıfı katman katman okunabilir; cephe kuralı ayrı dilim.
 - **Nizam:** projenin nizamı İmar durumu'na yazılırsa 26/4'ün tek konutlu binası kesinleşir.
