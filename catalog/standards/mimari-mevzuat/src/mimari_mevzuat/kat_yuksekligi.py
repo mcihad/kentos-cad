@@ -233,10 +233,32 @@ def parcalar(bina: dict[str, Any], madde: str | None) -> list[dict[str, Any]]:
 
 def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Sonuc:
     """Projenin kat yüksekliği bulguları: her kat bölgenin bendinin başvuru günündeki hâliyle ve kendi plan notuyla; gün
-    yoksa her kat her hâlle denenmiş (``yururluk.parcalarla``)."""
+    yoksa her kat her hâlle denenmiş (``yururluk.parcalarla``). Bir binası kendi bölgesini söylüyorsa (docs/adr/8144;
+    katın ``zone``'u) her binanın katları kendi bölgesiyle ayrı denetlenir (28/1-d'nin kat sayısı da binanınkidir);
+    aynı maddenin satırları birleşir."""
     bina = facts.get("building") or {}
     if not bina.get("storeys"):
         return y.Sonuc([], [])
+    if not any(k.get("zone") for k in bina["storeys"]):
+        return _bina(bina, gun, neden)
+    gruplar: dict[Any, list[dict[str, Any]]] = {}
+    for k in bina["storeys"]:
+        gruplar.setdefault(k.get("building"), []).append(k)
+    sonuclar = []
+    for katlar in gruplar.values():
+        zone = next((k["zone"] for k in katlar if k.get("zone")), None) or bina.get("zone")
+        sonuclar.append(_bina(dict(bina, storeys=katlar, zone=zone), gun, neden))
+    satirlar = []
+    for r in y.birlesik(sonuclar):
+        r.pop("sayilar")
+        notlar = [x["note"] for s in sonuclar for x in s.satirlar if x["rule"] == r["rule"] and x["state"] == r["state"]]
+        r["note"] = " · ".join(dict.fromkeys(n for n in notlar if n))
+        satirlar.append(r)
+    return y.Sonuc([b for s in sonuclar for b in s.bulgular], satirlar)
+
+
+def _bina(bina: dict[str, Any], gun: date | None, neden: str | None) -> y.Sonuc:
+    """Bir binanın (ya da bütün projenin) katlarının bulguları, ``zone``'u bölgesiyle."""
     sivas = bina.get("local") == "sivas"
     zone = bina.get("zone")
     konut_mu = konut(bina)

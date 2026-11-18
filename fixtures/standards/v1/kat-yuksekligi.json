@@ -1815,6 +1815,238 @@
    }
   },
   {
+   "id": "iki-blok-kendi-bolgesi",
+   "neden": "İki blok (docs/adr/8144): A bloğunun kendi bölgesi ticaret alanı (28/1-a: zemin 4,80 > 4,50 kalır, 1. kat 4,00 tutar); B bloğunun yok, projenin konut alanı (28/1-c, 12.8.2023: bodrum hariç iki katlı blok 4,00; 3,80 tutar). Her blok kendi katlarıyla.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "a0",
+      "name": "A Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "bedrooms": 0,
+      "dwellingRooms": 0,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000020"
+      ],
+      "height": 4.8,
+      "building": "a",
+      "zone": "commercial"
+     },
+     {
+      "level": "a1",
+      "name": "A 1. kat",
+      "elevation": 4.8,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "bedrooms": 0,
+      "dwellingRooms": 0,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000021"
+      ],
+      "height": 4.0,
+      "building": "a",
+      "zone": "commercial"
+     },
+     {
+      "level": "b0",
+      "name": "B Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "bedrooms": 0,
+      "dwellingRooms": 0,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000022"
+      ],
+      "height": 3.8,
+      "building": "b"
+     },
+     {
+      "level": "b1",
+      "name": "B 1. kat",
+      "elevation": 3.8,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "bedrooms": 0,
+      "dwellingRooms": 0,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000023"
+      ],
+      "height": 3.8,
+      "building": "b"
+     }
+    ],
+    "units": 2,
+    "dwellings": 0,
+    "commons": 1,
+    "zone": "residential"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "“A Zemin kat” kat yüksekliği 4.80 m > 4.50 m (ticaret alanı, zemin kat) — PAİY 28/1-a"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-a": [
+      "failed",
+      "1.10.2017"
+     ],
+     "PAİY 28/1-c": [
+      "passed",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
+   "id": "iki-blok-oteki-kullanim",
+   "neden": "A bloğu ticaret alanı (zemin 4,80 kalır), B bloğu kendi bölgesi öbür kullanım: 28/1 B'nin katlarına kat yüksekliği vermez → B kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "a0",
+      "name": "A Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "bedrooms": 0,
+      "dwellingRooms": 0,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000020"
+      ],
+      "height": 4.8,
+      "building": "a",
+      "zone": "commercial"
+     },
+     {
+      "level": "a1",
+      "name": "A 1. kat",
+      "elevation": 4.8,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "bedrooms": 0,
+      "dwellingRooms": 0,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000021"
+      ],
+      "height": 4.0,
+      "building": "a",
+      "zone": "commercial"
+     },
+     {
+      "level": "b0",
+      "name": "B Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "bedrooms": 0,
+      "dwellingRooms": 0,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000022"
+      ],
+      "height": 3.8,
+      "building": "b",
+      "zone": "other"
+     },
+     {
+      "level": "b1",
+      "name": "B 1. kat",
+      "elevation": 3.8,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "bedrooms": 0,
+      "dwellingRooms": 0,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000023"
+      ],
+      "height": 3.8,
+      "building": "b",
+      "zone": "other"
+     }
+    ],
+    "units": 2,
+    "dwellings": 0,
+    "commons": 1,
+    "zone": "residential"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "“A Zemin kat” kat yüksekliği 4.80 m > 4.50 m (ticaret alanı, zemin kat) — PAİY 28/1-a"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-a": [
+      "failed",
+      "1.10.2017"
+     ],
+     "PAİY 28/1": [
+      "outOfScope",
+      null
+     ]
+    }
+   }
+  },
+  {
    "id": "ticaret-asma-kat-550",
    "neden": "Ticaret alanı, zemin kat +3,00'te asma katlı, 1. kat +5,50'de: asma katlı zemin kat 5,50 m tutar (5,50); asma kat ayrı kat sayılmaz.",
    "permit": {

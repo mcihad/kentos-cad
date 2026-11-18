@@ -360,6 +360,8 @@ fn blocks(app: &mut App) {
     ev(app, Event::BuildingCode(0, "A1".into()));
     ev(app, Event::BuildingUsage(0, "Konut".into()));
     ev(app, Event::BuildingZero(0, "0".into()));
+    // A Blok stands on a commercial decision (docs/adr/8144): its own Bölge.
+    ev(app, Event::BuildingZone(0, Some(kentos_commands::Zone::Commercial)));
     ev(app, Event::BuildingCode(1, "B1".into()));
     ev(app, Event::BuildingUsage(1, "Ticaret".into()));
     ev(app, Event::BuildingZero(1, "1,20".into()));
@@ -587,6 +589,15 @@ mod tests {
         assert_eq!(program.shared, vec![kentos_commands::SharedLevel { level: "zemin".into(), building: "a".into() }]);
         assert_eq!(program.building_of_level("zemin").map(|b| b.id.as_str()), Some("a"));
         assert_eq!(program.building_of_level("kat-1").map(|b| b.id.as_str()), Some("a"));
+        // A Blok's own Bölge (docs/adr/8144): its storeys are read by it; B Blok's by the project's.
+        assert_eq!((program.buildings[0].zone, program.buildings[1].zone), (Some(kentos_commands::Zone::Commercial), None));
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        let mimari = doc.settings().arch.clone().expect("Mimari");
+        assert_eq!(mimari.zone_on("kat-1"), Some(kentos_commands::Zone::Commercial));
+        let facts = kentos_processing::audit_facts::building::measure(doc).normalized();
+        let storeys: Vec<(&str, Option<&str>, Option<&str>)> =
+            facts.storeys.iter().map(|s| (s.level.as_str(), s.building.as_deref(), s.zone.as_deref())).collect();
+        assert!(storeys.contains(&("kat-1", Some("a"), Some("commercial"))), "{storeys:?}");
         let _ = app.update(Message::Arch(arch::Event::Program(Event::BuildingCode(1, "00".into()))));
         let _ = app.update(Message::Arch(arch::Event::Program(Event::Save)));
         let kept = app.document.as_ref().expect("a drawing").model.program();

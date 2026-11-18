@@ -163,6 +163,8 @@ pub enum Event {
     BuildingCode(usize, String),
     BuildingUsage(usize, String),
     BuildingZero(usize, String),
+    /// A building's own Bölge chosen; none: the project's (docs/adr/8144).
+    BuildingZone(usize, Option<kentos_commands::Zone>),
     SharedBuilding(String, String),
     AddWing(usize),
     RemoveWing(usize, usize),
@@ -440,6 +442,11 @@ impl App {
             Event::BuildingZero(i, t) => {
                 if let Some(z) = w.zeros.get_mut(i) {
                     *z = t;
+                }
+            }
+            Event::BuildingZone(i, zone) => {
+                if let Some(b) = w.buildings.get_mut(i) {
+                    b.zone = zone;
                 }
             }
             Event::SharedBuilding(level, building) => {

@@ -194791,6 +194791,17 @@
             "null"
           ],
           "x-unit": "length"
+        },
+        "zone": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Zone"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its own Bölge (docs/adr/8144; `.kcad` Mimari data 30): where the parcel's blocks stand on decisions of different\nuses, PAİY 28/1 reads its storeys' heights by it. None: the project's (Proje ayarları › Mimari › İmar durumu)."
         }
       },
       "required": [

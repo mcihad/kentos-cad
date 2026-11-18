@@ -552,6 +552,13 @@ pub struct StoreyHolds {
     /// homes, as PAİY 28/1-b reads a mixed area's storeys (docs/adr/8085).
     #[serde(default)]
     pub dwelling_rooms: u32,
+    /// The program's building it is a storey of (docs/adr/8072 §1), by id; none in no building or a shared level with no
+    /// building chosen.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub building: Option<String>,
+    /// Its building's own Bölge (docs/adr/8144), as the facts' `zone`; none: the project's (the building facts' `zone`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zone: Option<String>,
     /// It is a mezzanine (its name says Asma kat): part of the ground storey it stands in (PAİY 4/1-d, 28/1-a, b, ç's
     /// “asma katlı zemin kat”; docs/adr/8085).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]

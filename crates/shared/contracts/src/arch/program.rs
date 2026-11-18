@@ -122,6 +122,11 @@ pub struct ProgramBuilding {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub zero: Option<f64>,
+    /// Its own Bölge (docs/adr/8144; `.kcad` Mimari data 30): where the parcel's blocks stand on decisions of different
+    /// uses, PAİY 28/1 reads its storeys' heights by it. None: the project's (Proje ayarları › Mimari › İmar durumu).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub zone: Option<crate::Zone>,
 }
 
 /// Whether a storey's name says it is the ground storey: “Zemin” in any case (Turkish İ lower-cases to i and a dot; the
@@ -372,6 +377,11 @@ impl BuildingProgram {
     pub fn has_building_places(&self) -> bool {
         !self.shared.is_empty()
             || self.buildings.iter().any(|b| b.code.is_some() || b.usage.is_some() || b.zero.is_some())
+    }
+
+    /// Whether a building says its own Bölge (Mimari data 30, docs/adr/8144).
+    pub fn has_building_zones(&self) -> bool {
+        self.buildings.iter().any(|b| b.zone.is_some())
     }
 
     /// The building a level is a storey of (docs/adr/8072 §1): the one building that spans it, else the one its shared

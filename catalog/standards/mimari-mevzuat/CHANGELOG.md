@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 0.34.0 — 18 Kasım 2026
+
+- Binanın kendi bölgesi (`kat_yuksekligi`; docs/adr/8144): olguların katları binasını (`building`) ve binasının kendi
+  bölgesini (`zone`) taşır. Bir binası kendi bölgesini söylüyorsa katlar binalarına ayrılır, her binanınkiler kendi
+  bölgesinin 28/1 bendiyle denetlenir (28/1-d'nin kat sayısı binanınkidir); aynı maddenin satırları birleşir. Hiçbir
+  bina söylemiyorsa kural eskisi gibi. Kat yüksekliği 46 (2 yeni) bağımsız durum.
+
 ## 0.33.0 — 18 Kasım 2026
 
 - Komşu binaya bitişik duvar (`bitisik`, yeni denetim; docs/adr/8142): vaziyet planının yeni "Bitişik (komşu bina)"

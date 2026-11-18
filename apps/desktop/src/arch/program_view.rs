@@ -257,6 +257,21 @@ impl App {
                     .width(scaled(100.0)),
             )
             .help("Projenin ±0,00'ına göre; boşsa projeninki.")
+            .field("Bölge", {
+                // Its own Bölge (docs/adr/8144): the project's unless the block stands on a decision of another use.
+                let choices: Vec<(Option<kentos_commands::Zone>, &'static str)> = std::iter::once((None, "Projeninki"))
+                    .chain(kentos_commands::Zone::ALL.into_iter().map(|z| (Some(z), z.label())))
+                    .collect();
+                let at = choices.iter().position(|(z, _)| *z == b.zone);
+                let pick = Select::new(choices.iter().map(|(_, l)| Choice::new(*l)), at, move |k| {
+                    let zone = std::iter::once(None).chain(kentos_commands::Zone::ALL.into_iter().map(Some)).nth(k);
+                    msg(Event::BuildingZone(i, zone.flatten()))
+                })
+                .searchable(false);
+                container(pick).width(scaled(330.0))
+            })
+            .help("Bloklar planın farklı kullanımlı kararlarında duruyorsa: binanın katları kendi bölgesiyle okunur \
+                   (Planlı Alanlar İmar Yönetmeliği 28/1). Projeninki: Proje ayarları › Mimari › İmar durumu.")
             .field("Katları", self.level_checks(&b.levels, move |l| msg(Event::BuildingLevel(i, l))))
             .help("Boşsa her katta olabilir.")
             .field(

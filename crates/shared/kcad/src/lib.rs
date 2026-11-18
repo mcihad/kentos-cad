@@ -988,7 +988,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_PARTY_EDGES),
+    ("arch", "mimari", ARCH_WITH_BUILDING_ZONES),
     ("gis", "CBS", GIS_WITH_EXTENSION_DERIVATIONS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -1246,6 +1246,16 @@ pub fn uses_roof_classes(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     doc.settings.arch.as_ref().is_some_and(|a| a.materials.iter().any(|m| m.roof_class.is_some()))
 }
 
+/// Architecture data version 30 (docs/adr/8144): a building of the program saying its own Bölge
+/// (`settings.arch.program.buildings[].zone`). Version 30 holds versions 1–29's data too. The document schema stays as it
+/// is.
+pub const ARCH_WITH_BUILDING_ZONES: u16 = 30;
+
+/// Whether `doc` holds architecture data 30 ([`ARCH_WITH_BUILDING_ZONES`]).
+pub fn uses_building_zones(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    doc.settings.arch.as_ref().is_some_and(|a| a.program.has_building_zones())
+}
+
 /// Architecture data version 29 (docs/adr/8142): a site plan's edge against the neighbour's building
 /// (`settings.arch.site.edges[].kind` `party`). Version 29 holds versions 1–28's data too. The document schema stays as
 /// it is.
@@ -1304,7 +1314,8 @@ pub fn uses_shaft_vents(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     doc.entities.iter().any(|e| e.arch_info().is_some_and(|a| a.shaft_vent.is_some()))
 }
 
-/// The architecture data version `doc` needs: 29 for a party edge, 28 for the building's layout, 27 for İmar durumu's
+/// The architecture data version `doc` needs: 30 for a building's own Bölge, 29 for a party edge, 28 for the building's
+/// layout, 27 for İmar durumu's
 /// sources, 26 for a wall
 /// style's load-bearing role, 25
 /// for a protected shaft or a fire
@@ -1318,7 +1329,9 @@ pub fn uses_shaft_vents(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
 /// schedule, 5 for a covering, 4 for a post, a rail or a column's own height, 3 for a curtain wall, 2 for a block's
 /// building element, 1 for the performance declarations, else 0 (not raised).
 pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
-    if uses_party_edges(doc) {
+    if uses_building_zones(doc) {
+        ARCH_WITH_BUILDING_ZONES
+    } else if uses_party_edges(doc) {
         ARCH_WITH_PARTY_EDGES
     } else if uses_layout(doc) {
         ARCH_WITH_LAYOUT

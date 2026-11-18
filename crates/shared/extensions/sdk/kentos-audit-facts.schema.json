@@ -2212,6 +2212,13 @@
           "minimum": 0,
           "type": "integer"
         },
+        "building": {
+          "description": "The program's building it is a storey of (docs/adr/8072 §1), by id; none in no building or a shared level with no\nbuilding chosen.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "common": {
           "description": "Rooms of a common area on it that are not technical rooms.",
           "format": "uint32",
@@ -2290,6 +2297,13 @@
           "format": "uint32",
           "minimum": 0,
           "type": "integer"
+        },
+        "zone": {
+          "description": "Its building's own Bölge (docs/adr/8144), as the facts' `zone`; none: the project's (the building facts' `zone`).",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [

@@ -2598,6 +2598,11 @@ impl ArchSettings {
         self.layout.is_some()
     }
 
+    /// The Bölge a level's storeys are read by (docs/adr/8144): its building's own, else the project's.
+    pub fn zone_on(&self, level: &str) -> Option<Zone> {
+        self.program.building_of_level(level).and_then(|b| b.zone).or(self.zone)
+    }
+
     /// Whether it keeps a delivery record (Mimari data 17, docs/adr/8099).
     pub fn has_deliveries(&self) -> bool {
         !self.deliveries.is_empty()

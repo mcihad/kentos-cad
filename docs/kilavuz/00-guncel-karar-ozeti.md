@@ -418,6 +418,10 @@
   - **Bölge kararın kullanımından (18 Kasım 2026; [ADR 8143](../adr/8143-zone-from-plan-use.md), K367–K368):**
     Değerlerini al kararın Kullanım'ını Bölge'ye alır (konut → konut alanı, ticaret → ticaret alanı, ticaret-konut →
     karma, profilin öbür kullanımları → öbür kullanım); başka yazım okunmaz; 28/1-ç'nin planda kodu yok.
+  - **Binanın kendi bölgesi (18 Kasım 2026; [ADR 8144](../adr/8144-zone-per-building.md), K369–K370):** Bina programı ›
+    Binalar'da Bölge (yoksa projeninki; mimari verisi 30); katın bölgesi binasınınki (`zone_on`). Olgularda katın
+    `building`'i ve `zone`'u; `kat_yuksekligi` bir binası kendi bölgesini söylüyorsa katları binalarına ayırır, her biri
+    kendi bendiyle (28/1-d'nin kat sayısı binanınki), satırlar birleşir.
   - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
     PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
     39/1-ç döner kapının yanında normal bina girişi.

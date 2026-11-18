@@ -82334,6 +82334,8 @@ class ProgramBuilding(_Model):
         usage: What it is used for (Kullanım türü; EK-6 Tablo 6.7 `OccupancyType`), as the project writes it.
         zero: Its ±0.00 over the project's ±0.00, metres (docs/adr/8072 §1): a block entered higher or lower than another;
             its storeys' levels are read from it. None: not said (the project's when it is the only building). Unit: length.
+        zone: Its own Bölge (docs/adr/8144; `.kcad` Mimari data 30): where the parcel's blocks stand on decisions of different
+            uses, PAİY 28/1 reads its storeys' heights by it. None: the project's (Proje ayarları › Mimari › İmar durumu).
     """
     id: str
     name: str
@@ -82342,6 +82344,7 @@ class ProgramBuilding(_Model):
     usage: str | None | Unset = UNSET
     wings: list[ProgramWing] | Unset = UNSET
     zero: float | None | Unset = UNSET
+    zone: Zone | ZoneName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -82357,6 +82360,8 @@ class ProgramBuilding(_Model):
             out["wings"] = [e0.to_json() for e0 in self.wings]
         if self.zero is not UNSET:
             out["zero"] = None if self.zero is None else float(self.zero)
+        if self.zone is not UNSET:
+            out["zone"] = None if self.zone is None else _enum_out(self.zone)
         return out
 
     @classmethod
@@ -82369,6 +82374,7 @@ class ProgramBuilding(_Model):
             usage=data.get("usage", UNSET),
             wings=[ProgramWing.from_json(e0) for e0 in data["wings"]] if "wings" in data else UNSET,
             zero=UNSET if "zero" not in data else None if data["zero"] is None else float(data["zero"]),
+            zone=UNSET if "zone" not in data else None if data["zone"] is None else _enum_in(Zone, data["zone"]),
         )
 
 

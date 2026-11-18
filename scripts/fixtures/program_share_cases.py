@@ -394,6 +394,9 @@ def building_edit_cases():
     pr = changed(lambda p: (p["buildings"][0].update(name="A Blok (konut)"),
                             p["buildings"][0]["wings"][0].update(name="Doğu")))
     edit("Bina ve kanat yeniden adlandırılır", {"program": pr}, pr)
+    # A building's own Bölge (docs/adr/8144): written by its name.
+    pz = changed(lambda p: p["buildings"][0].update(zone="commercial"))
+    edit("Binanın kendi bölgesi yazılır (ADR 8144)", {"program": pz}, pz)
     edit("Kullanılmayan kanat kaldırılır", {"program": changed(lambda p: p["buildings"][0].update(wings=[
         {"id": "a-dogu", "name": "Doğu kanadı"}]))},
          changed(lambda p: p["buildings"][0].update(wings=[{"id": "a-dogu", "name": "Doğu kanadı"}])),
