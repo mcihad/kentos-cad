@@ -1,7 +1,7 @@
 {
  "format": "kentos.regulationCases",
  "version": 1,
- "about": "Çatıların yanıcılığının bağımsız durumları (docs/adr/8134): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik 4/ccc, 28/2, 28/3 ve Ek-2/Ç'nin derlenmiş resmî metninden elle çıkarıldı (scripts/fixtures/roof_fire_cases.py); kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.roofs).",
+ "about": "Çatıların yanıcılığının bağımsız durumları (docs/adr/8134, 8139): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik 4/ccc, 28/2, 28/3 ve Ek-2/Ç'nin derlenmiş resmî metninden elle çıkarıldı (scripts/fixtures/roof_fire_cases.py); kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.roofs, oturdukları döşemeler ve elements'teki sınıfları).",
  "cases": [
   {
    "id": "tam",
@@ -70,7 +70,18 @@
         "material": "Çelik",
         "reaction": "A1"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -146,7 +157,18 @@
         "material": "Çelik",
         "reaction": "A1"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -229,7 +251,18 @@
         "material": "Çelik",
         "reaction": "A1"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -310,7 +343,18 @@
         "material": "Çelik",
         "reaction": "A1"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -382,7 +426,18 @@
         "kind": "covering",
         "material": "Kiremit"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -463,7 +518,18 @@
         "material": "Çelik",
         "reaction": "A1"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -543,7 +609,18 @@
         "material": "Çam mertek",
         "reaction": "D-s2,d0"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -622,7 +699,18 @@
         "material": "Çam tahta",
         "reaction": "D-s2,d0"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -705,7 +793,18 @@
         "material": "Çam tahta",
         "reaction": "D-s2,d0"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -798,7 +897,18 @@
         "material": "Çelik",
         "reaction": "A1"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -886,7 +996,18 @@
         "material": "Çelik",
         "reaction": "A1"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -973,7 +1094,18 @@
         "material": "Çelik",
         "reaction": "A1"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -1056,7 +1188,18 @@
         "material": "Çelik",
         "reaction": "A1"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -1140,7 +1283,18 @@
         "material": "Çam mertek",
         "reaction": "D-s2,d0"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -1215,7 +1369,18 @@
         "material": "Çelik",
         "reaction": "A1"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -1303,7 +1468,18 @@
         "material": "Çelik",
         "reaction": "A1"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -1379,7 +1555,18 @@
         "material": "Çam mertek",
         "reaction": "D-s2,d0"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -1462,7 +1649,18 @@
         "kind": "rafters",
         "material": "Ahşap mertek"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -1543,7 +1741,18 @@
         "material": "Çelik",
         "reaction": "A1"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -1624,7 +1833,18 @@
         "material": "Çam mertek",
         "reaction": "D-s2,d0"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -1704,6 +1924,9 @@
         "material": "Çelik",
         "reaction": "A1"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
      },
      {
@@ -1726,7 +1949,24 @@
         "material": "Çelik",
         "reaction": "A1"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000102"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000102",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },
@@ -1805,6 +2045,546 @@
    }
   },
   {
+   "id": "yuksek-doseme-yok",
+   "neden": "24 m'lik yüksek binada çatının altında, katının üstünde döşeme çizilmemiş: 28/3-a çatının oturduğu döşemeyi yatay yangın kesici ister → eksik veri; kaplama ve mertek hiç yanmaz.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 24.0,
+    "structureHeight": 27.0,
+    "roofs": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k01",
+      "layers": [
+       {
+        "kind": "covering",
+        "material": "Kil kiremit",
+        "reaction": "A1",
+        "roofClass": "BROOF(t1)"
+       },
+       {
+        "kind": "boarding",
+        "material": "OSB",
+        "reaction": "B-s1,d0"
+       },
+       {
+        "kind": "rafters",
+        "material": "Çelik",
+        "reaction": "A1"
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_roof_seat_fire_stop",
+      "state": "missingData",
+      "has": [
+       "döşeme çizilmemiş",
+       "28/3-a"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 28/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 28/3": [
+      "missingData",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yuksek-doseme-e30",
+   "neden": "Yüksek binada oturduğu döşeme E 30 (I yok): yatay yangın kesici en az EI 30 → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 24.0,
+    "structureHeight": 27.0,
+    "roofs": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k01",
+      "layers": [
+       {
+        "kind": "covering",
+        "material": "Kil kiremit",
+        "reaction": "A1",
+        "roofClass": "BROOF(t1)"
+       },
+       {
+        "kind": "boarding",
+        "material": "OSB",
+        "reaction": "B-s1,d0"
+       },
+       {
+        "kind": "rafters",
+        "material": "Çelik",
+        "reaction": "A1"
+       }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
+      ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "E 30"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_roof_seat_fire_stop",
+      "has": [
+       "E 30",
+       "en az EI 30 değil"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 28/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 28/3": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yuksek-doseme-sinifsiz",
+   "neden": "Yüksek binada oturduğu döşemenin sınıfı beyan edilmemiş → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 24.0,
+    "structureHeight": 27.0,
+    "roofs": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k01",
+      "layers": [
+       {
+        "kind": "covering",
+        "material": "Kil kiremit",
+        "reaction": "A1",
+        "roofClass": "BROOF(t1)"
+       },
+       {
+        "kind": "boarding",
+        "material": "OSB",
+        "reaction": "B-s1,d0"
+       },
+       {
+        "kind": "rafters",
+        "material": "Çelik",
+        "reaction": "A1"
+       }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
+      ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_roof_seat_fire_stop",
+      "state": "missingData",
+      "has": [
+       "sınıfı beyan edilmemiş"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 28/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 28/3": [
+      "missingData",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yuksek-doseme-ei30",
+   "neden": "Yüksek binada oturduğu döşeme tam EI 30, kaplama ve mertek hiç yanmaz → 28/3 geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 24.0,
+    "structureHeight": 27.0,
+    "roofs": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k01",
+      "layers": [
+       {
+        "kind": "covering",
+        "material": "Kil kiremit",
+        "reaction": "A1",
+        "roofClass": "BROOF(t1)"
+       },
+       {
+        "kind": "boarding",
+        "material": "OSB",
+        "reaction": "B-s1,d0"
+       },
+       {
+        "kind": "rafters",
+        "material": "Çelik",
+        "reaction": "A1"
+       }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
+      ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "EI 30"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 28/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 28/3": [
+      "passed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "alcak-doseme-yok",
+   "neden": "6 m'lik binada çatının altında döşeme yok: bitişik nizamdaysa 28/3-a uygulanır, nizam çizimde yok → uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 8.5,
+    "roofs": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k01",
+      "layers": [
+       {
+        "kind": "covering",
+        "material": "Kil kiremit",
+        "reaction": "A1",
+        "roofClass": "BROOF(t1)"
+       },
+       {
+        "kind": "boarding",
+        "material": "OSB",
+        "reaction": "B-s1,d0"
+       },
+       {
+        "kind": "rafters",
+        "material": "Çelik",
+        "reaction": "A1"
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_roof_seat_fire_stop",
+      "state": "expertReview",
+      "has": [
+       "nizam"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 28/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 28/3": [
+      "expertReview",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "alcak-doseme-r60",
+   "neden": "6 m'lik binada oturduğu döşeme R 60 (E ve I yok): bitişik nizamdaysa kalır → uzman incelemesi.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 8.5,
+    "roofs": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k01",
+      "layers": [
+       {
+        "kind": "covering",
+        "material": "Kil kiremit",
+        "reaction": "A1",
+        "roofClass": "BROOF(t1)"
+       },
+       {
+        "kind": "boarding",
+        "material": "OSB",
+        "reaction": "B-s1,d0"
+       },
+       {
+        "kind": "rafters",
+        "material": "Çelik",
+        "reaction": "A1"
+       }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
+      ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "R 60"
+     }
+    ]
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_roof_seat_fire_stop",
+      "state": "expertReview",
+      "has": [
+       "R 60"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 28/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 28/3": [
+      "expertReview",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
    "id": "eski-basvuru",
    "neden": "Başvuru 1.6.2009: 28/2 ve 28/3'ün kural setindeki ilk hâli (9.9.2009) sonra → iki madde de uzman incelemesi.",
    "permit": {
@@ -1862,7 +2642,18 @@
         "material": "Çelik",
         "reaction": "A1"
        }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
       ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
      }
     ]
    },

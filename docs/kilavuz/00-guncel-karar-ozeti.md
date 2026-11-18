@@ -392,6 +392,10 @@
     `spaces[].finishes`. Paketin `kaplamalar`'ı 20/3'ü (duvar iç kaplaması en az normal, yüksek binada ve 100 kişiyi aşan
     salonda zor alevlenici; 9.7.2015) ekler, 26/2 ve 26/4 mahallerin kaplamalarını da okur; aynı adlı kaplama tek
     bulgu. Öznitelikler'de kaplamanın altında malzemesinin sınıfı.
+  - **Çatının oturduğu döşeme (18 Kasım 2026; [ADR 8139](../adr/8139-roof-seat-slab.md), K346–K348):** olgularda
+    `roofs[].seat`: çatının katının üstünde (1 cm içinde), dış çizgisinin ortasını tutan kat ya da teras döşemesi.
+    Paketin `catilar`'ı 28/3-a'yı okur: yüksek binada döşeme yoksa eksik veri, en az EI 30 değilse kaldı; yüksek
+    olmayan binada uzman incelemesi (nizam çizimde yok).
   - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
     PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
     39/1-ç döner kapının yanında normal bina girişi.

@@ -88,7 +88,7 @@ Yönetmeliğin metni derlenmiş resmî metinden (pdftotext; ADR 8081'in kopyası
 ## §5. Kalanlar
 
 - **28/3-a:** çatının oturduğu döşemenin yatay yangın kesici olması (Ek-3/B 10, EI 30): hangi döşemenin çatının altında
-  olduğu olgularda yok.
+  olduğu olgularda yok ([ADR 8139](8139-roof-seat-slab.md)'da yapıldı: olguların `roofs[].seat`'i).
 - **28/4:** binanın orman alanında (21/5) olduğu beyanı gelince.
 - **Bitişik nizam:** projenin nizamı İmar durumu'na yazılırsa 28/3 yüksek olmayan binada da kesinleşir (ADR 8091 §6'nın
   26/4'ü de).

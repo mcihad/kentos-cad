@@ -234,7 +234,7 @@ pub struct CoveringFacts {
 }
 
 /// A roof (docs/adr/8134; BYKHY 28/2, 28/3): its persistent id, its storey and its layers top down. A roof drawn without
-/// layers is one covering of its own material (KentOS's Kiremit when it names none).
+/// layers is one covering of its own material (KentOS's Kiremit when it names none). The slabs it sits on (docs/adr/8139).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -242,6 +242,11 @@ pub struct RoofFacts {
     pub uid: String,
     pub level: Option<String>,
     pub layers: Vec<RoofLayerFacts>,
+    /// The slabs it sits on (docs/adr/8139; BYKHY 28/3-a): a floor's or a terrace's slab, no covering, whose top is at
+    /// its storey's top (within 1 cm) and whose outline holds its outline's middle, by persistent id; none: no slab
+    /// drawn under it.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub seat: Vec<String>,
 }
 
 /// A roof's layer: its kind (`covering`, `battens`, `waterproofing`, `boarding`, `insulation`, `rafters`), its material

@@ -2010,7 +2010,7 @@
     {
       "regulation": "BYKHY",
       "article": "28/3",
-      "title": "Yüksek ve bitişik nizam binada yanmaz çatı",
+      "title": "Yüksek ve bitişik nizam binada çatının döşemesi ve yanmazlığı",
       "transition": "Madde 10.8.2009 tarihli ve 2009/15316 sayılı BKK ile değişti (RG 9.9.2009/27344); önceki hâli kural setinde yok: 9.9.2009'dan önceki başvuru uzman incelemesi.",
       "versions": [
         {
@@ -2021,6 +2021,7 @@
           "gazette": "9.9.2009/27344",
           "building": 21.5,
           "structure": 30.5,
+          "seat": 30,
           "ek2c": {
             "categories": [
               [
@@ -2123,7 +2124,7 @@
             "source": "BYKHY Ek-2/Ç (10.8.2009-2009/15316 ile değişik), PDF'in 89. sayfası resim olarak okundu; docs/adr/8091 §1. Bir sınıf önce tam yazımıyla, yoksa harfiyle (ve fl'siyle) eşlenir: harfin tablodaki en zayıf satırı."
           },
           "text": "(3) Yüksek binalarda ve bitişik nizam yapılarda; a) Çatıların oturdukları döşemelerin yatay yangın kesici niteliğinde, b) Çatı taşıyıcı sistemi ve çatı kaplamalarının yanmaz malzemeden, olması gerekir.",
-          "source": "RG 9.9.2009/27344 (10.8.2009-2009/15316 sayılı BKK ile değişik 28 inci madde); derlenmiş metnin 28 inci maddesi; docs/adr/8134 §1."
+          "source": "RG 9.9.2009/27344 (10.8.2009-2009/15316 sayılı BKK ile değişik 28 inci madde); derlenmiş metnin 28 inci maddesi; docs/adr/8134 §1, 8139 §2 (a: Ek-3/B 10'un yangın kesicisi EI 30)."
         }
       ]
     }

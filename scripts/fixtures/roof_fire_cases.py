@@ -13,6 +13,10 @@ Ek-2/Ç (the compiled official text), never computed by the rule's code:
   (rafters) and covering are yanmaz: hiç yanmaz holds, zor yanıcı is expert review, anything else fails, unknown is
   missing data. In a building that is not high the article holds if it stands in attached order, which the drawing does
   not say: a roof that would fail is expert review, others out of scope.
+- 28/3-a (ADR 8139): in a high building the slab the roof sits on is a horizontal fire stop, at least EI 30 (Ek-3/B 10):
+  none drawn or no class is missing data, less (E 30, R 60) fails; in a building that is not high the article holds in
+  attached order only: a roof that would fail is expert review. Every case's roof sits on a REI 60 slab unless it says
+  otherwise.
 - An application before 9.9.2009: the article's text is not in the rule set, expert review.
 
     python3 scripts/fixtures/roof_fire_cases.py            # writes the cases
@@ -58,23 +62,38 @@ PINE_RAFTERS = layer("rafters", "Çam mertek", "D-s2,d0")
 EMPTY = {"units": 0, "common": 0, "annexes": 0, "other": 0, "technical": 0, "inhabited": 0, "elevators": 0}
 
 
-def building(roofs, height=6.0, structure=8.5):
-    return {
+#: The slab each roof sits on (ADR 8139): its class; none, no slab under the roof; "", a slab of no class.
+SEAT = "REI 60"
+
+
+def building(roofs, height=6.0, structure=8.5, seat=SEAT):
+    out = {
         "storeys": [dict(level=level, name=name, elevation=z, **EMPTY) for level, name, z in
                     (("k00", "Zemin kat", 0.0), ("k01", "1. kat", 3.0))],
         "height": height,
         "structureHeight": structure,
         "roofs": [{"uid": uid(i + 1), "level": "k01", "layers": layers} for i, layers in enumerate(roofs)],
     }
+    if seat is not None:
+        out["elements"] = []
+        for i, r in enumerate(out["roofs"]):
+            slab = {"uid": uid(101 + i), "kind": "slab", "level": "k01"}
+            if seat:
+                slab["fireRating"] = seat
+            out["elements"].append(slab)
+            r["seat"] = [slab["uid"]]
+        if not out["elements"]:
+            del out["elements"]
+    return out
 
 
-def case(id_, why, roofs, findings, r2, r3, height=6.0, structure=8.5, day="02.07.2026"):
+def case(id_, why, roofs, findings, r2, r3, height=6.0, structure=8.5, day="02.07.2026", seat=SEAT):
     version = V
     return {
         "id": id_,
         "neden": why,
         "permit": {"particulars": {"basvuru_tarihi": day}},
-        "building": building(roofs, height, structure),
+        "building": building(roofs, height, structure, seat),
         "expect": {"findings": findings, "rules": {"BYKHY 28/2": [r2, version], "BYKHY 28/3": [r3, version]}},
     }
 
@@ -89,6 +108,7 @@ def f(code, state=None, has=()):
 
 
 COVER, UNDER, NONC = "bykhy_roof_covering_class", "bykhy_roof_underlay_reaction", "bykhy_roof_noncombustible"
+SEATED = "bykhy_roof_seat_fire_stop"
 
 
 def cases():
@@ -153,6 +173,25 @@ def cases():
              [[TILE, OSB_B, STEEL], [layer("covering", "Metal levha", "A1", "CROOF(t4)"), OSB_B, STEEL]],
              [f(COVER, has=["CROOF(t4)"])], FAILED, OUT_OF),
         case("cati-yok", "Çatısı olmayan bina → iki madde de kapsam dışı.", [], [], OUT_OF, OUT_OF),
+        # 28/3-a (ADR 8139).
+        case("yuksek-doseme-yok", "24 m'lik yüksek binada çatının altında, katının üstünde döşeme çizilmemiş: 28/3-a "
+             "çatının oturduğu döşemeyi yatay yangın kesici ister → eksik veri; kaplama ve mertek hiç yanmaz.",
+             [[TILE, OSB_B, STEEL]], [f(SEATED, MISSING, ["döşeme çizilmemiş", "28/3-a"])], PASSED, MISSING,
+             height=24.0, structure=27.0, seat=None),
+        case("yuksek-doseme-e30", "Yüksek binada oturduğu döşeme E 30 (I yok): yatay yangın kesici en az EI 30 → kalır.",
+             [[TILE, OSB_B, STEEL]], [f(SEATED, has=["E 30", "en az EI 30 değil"])], PASSED, FAILED,
+             height=24.0, structure=27.0, seat="E 30"),
+        case("yuksek-doseme-sinifsiz", "Yüksek binada oturduğu döşemenin sınıfı beyan edilmemiş → eksik veri.",
+             [[TILE, OSB_B, STEEL]], [f(SEATED, MISSING, ["sınıfı beyan edilmemiş"])], PASSED, MISSING,
+             height=24.0, structure=27.0, seat=""),
+        case("yuksek-doseme-ei30", "Yüksek binada oturduğu döşeme tam EI 30, kaplama ve mertek hiç yanmaz → 28/3 geçer.",
+             [[TILE, OSB_B, STEEL]], [], PASSED, PASSED, height=24.0, structure=27.0, seat="EI 30"),
+        case("alcak-doseme-yok", "6 m'lik binada çatının altında döşeme yok: bitişik nizamdaysa 28/3-a uygulanır, nizam "
+             "çizimde yok → uzman incelemesi.",
+             [[TILE, OSB_B, STEEL]], [f(SEATED, EXPERT, ["nizam"])], PASSED, EXPERT, seat=None),
+        case("alcak-doseme-r60", "6 m'lik binada oturduğu döşeme R 60 (E ve I yok): bitişik nizamdaysa kalır → uzman "
+             "incelemesi.",
+             [[TILE, OSB_B, STEEL]], [f(SEATED, EXPERT, ["R 60"])], PASSED, EXPERT, seat="R 60"),
     ]
     # An application before 9.9.2009: the articles' text is not in the rule set.
     old = case("eski-basvuru", "Başvuru 1.6.2009: 28/2 ve 28/3'ün kural setindeki ilk hâli (9.9.2009) sonra → iki madde "
@@ -168,10 +207,10 @@ def document():
     return {
         "format": "kentos.regulationCases",
         "version": 1,
-        "about": ("Çatıların yanıcılığının bağımsız durumları (docs/adr/8134): beklenen her sonuç Binaların Yangından "
+        "about": ("Çatıların yanıcılığının bağımsız durumları (docs/adr/8134, 8139): beklenen her sonuç Binaların Yangından "
                   "Korunması Hakkında Yönetmelik 4/ccc, 28/2, 28/3 ve Ek-2/Ç'nin derlenmiş resmî metninden elle "
                   "çıkarıldı (scripts/fixtures/roof_fire_cases.py); kuralın kodundan üretilmedi. Olgular KentOS'un "
-                  "ölçüsüdür (building.roofs)."),
+                  "ölçüsüdür (building.roofs, oturdukları döşemeler ve elements'teki sınıfları)."),
         "cases": cases(),
     }
 

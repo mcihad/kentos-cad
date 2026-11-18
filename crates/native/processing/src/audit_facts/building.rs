@@ -429,11 +429,60 @@ fn finish_facts(doc: &Document, f: &kentos_commands::SpaceFinishes) -> Vec<Finis
         .collect()
 }
 
+/// The slabs a roof may sit on (docs/adr/8139): each floor's or terrace's slab with no covering and no slope, its top
+/// (its storey's floor and its offset) and its outline.
+fn seat_candidates(doc: &Document) -> Vec<(String, f64, Vec<kentos_geometry_core::geom::arrangement::Area>)> {
+    let levels = doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+    doc.entities_with_uids()
+        .filter_map(|(uid, e)| match e {
+            Entity::Slab(s)
+                if s.slab.covering.is_none()
+                    && s.slab.slope.is_none()
+                    && s.slab.role != kentos_commands::SlabRole::Balcony =>
+            {
+                let floor = levels.iter().find(|l| Some(l.id.as_str()) == s.slab.arch.level.as_deref())?.elevation;
+                Some((uid.to_string(), floor + s.slab.offset, kentos_domain::arch_values::core_areas(&s.slab.parts)))
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+/// The slabs a roof sits on (docs/adr/8139; BYKHY 28/3-a: "çatıların oturdukları döşemeler"): those whose top is at its
+/// storey's top, where its eaves stand (within 1 cm), and whose outline holds the middle of its outline.
+fn seat_slabs(
+    doc: &Document,
+    slabs: &[(String, f64, Vec<kentos_geometry_core::geom::arrangement::Area>)],
+    roof: &kentos_commands::RoofFields,
+) -> Vec<String> {
+    use kentos_geometry_core::geom::arrangement::{Area, Ring};
+    use kentos_geometry_core::vec2::Vec2;
+    let Some(seat) = kentos_native_application::geometry::storey_top(doc.settings(), roof.arch.level.as_deref()) else {
+        return Vec::new();
+    };
+    let outline = Area {
+        outer: Ring { pts: roof.pts.iter().map(|p| Vec2::new(p.x, p.y)).collect(), bulges: None },
+        holes: Vec::new(),
+    };
+    let Some(middle) = kentos_geometry_core::geom::space::label_at(std::slice::from_ref(&outline)) else {
+        return Vec::new();
+    };
+    slabs
+        .iter()
+        .filter(|(_, top, areas)| {
+            (top - seat).abs() <= 0.01
+                && areas.iter().any(|a| kentos_geometry_core::geom::region::inside_area(a, middle))
+        })
+        .map(|(uid, _, _)| uid.clone())
+        .collect()
+}
+
 /// The roofs with their layers' materials and those materials' declared classes (docs/adr/8134; BYKHY 28/2, 28/3): a
 /// material named by its id or its name (case aside) in the project's materials; a roof without layers one covering of
 /// its own material.
 fn roofs(doc: &Document) -> Vec<RoofFacts> {
     let materials = doc.settings().arch.as_ref().map_or(&[][..], |a| a.materials.as_slice());
+    let slabs = seat_candidates(doc);
     let layer = |kind: &str, material: Option<String>| {
         let found = material.as_deref().and_then(|name| {
             let folded = name.to_lowercase();
@@ -462,7 +511,8 @@ fn roofs(doc: &Document) -> Vec<RoofFacts> {
                     })
                     .collect()
             };
-            Some(RoofFacts { uid: uid.to_string(), level: e.own_level().map(str::to_owned), layers })
+            let seat = seat_slabs(doc, &slabs, &r.roof);
+            Some(RoofFacts { uid: uid.to_string(), level: e.own_level().map(str::to_owned), layers, seat })
         })
         .collect()
 }

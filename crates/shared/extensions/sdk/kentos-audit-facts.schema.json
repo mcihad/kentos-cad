@@ -1568,7 +1568,7 @@
       "type": "object"
     },
     "RoofFacts": {
-      "description": "A roof (docs/adr/8134; BYKHY 28/2, 28/3): its persistent id, its storey and its layers top down. A roof drawn without\nlayers is one covering of its own material (KentOS's Kiremit when it names none).",
+      "description": "A roof (docs/adr/8134; BYKHY 28/2, 28/3): its persistent id, its storey and its layers top down. A roof drawn without\nlayers is one covering of its own material (KentOS's Kiremit when it names none). The slabs it sits on (docs/adr/8139).",
       "properties": {
         "layers": {
           "items": {
@@ -1581,6 +1581,13 @@
             "string",
             "null"
           ]
+        },
+        "seat": {
+          "description": "The slabs it sits on (docs/adr/8139; BYKHY 28/3-a): a floor's or a terrace's slab, no covering, whose top is at\nits storey's top (within 1 cm) and whose outline holds its outline's middle, by persistent id; none: no slab\ndrawn under it.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "uid": {
           "type": "string"

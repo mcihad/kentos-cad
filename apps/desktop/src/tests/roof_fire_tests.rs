@@ -4,7 +4,8 @@
 //! sınıfı written through `cad.arch.performance`: the tiles A1 and BROOF(t1), the pine D-s2,d0, the stone wool A1. 28/2
 //! holds (a hiç yanmaz covering lets its boarding be normal alevlenici); 28/3 is expert review (pine rafters in a
 //! building that is not high: they fail in attached order, which the drawing does not say). Tiles of CROOF(t3) fail
-//! 28/2.
+//! 28/2. The roof sits on 1. kat's REI 60 slab (28/3-a, docs/adr/8139). An eight-storey tower's roof (24 m: a high
+//! building) without a slab under it is missing data for 28/3-a, on an E 30 slab it fails, on EI 60 it holds.
 //!
 //! ```text
 //! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib roof_fire_tests::screens -- --ignored --nocapture
@@ -38,7 +39,8 @@ fn p(x: f64, y: f64) -> Value {
     json!({"x": x, "y": y})
 }
 
-/// The building: two storeys, the three materials, a hip roof over 1. kat in five layers; applied on 2.7.2026.
+/// The building: two storeys, the three materials, a hip roof over 1. kat in five layers sitting on a REI 60 slab (the
+/// slab's top at 1. kat's top, docs/adr/8139); applied on 2.7.2026.
 fn building() -> App {
     kentos_postgis::connections::keep_in_memory();
     let (mut app, _) = App::start_in(Some(Module::Architecture), None, Settings::memory(), Recovery::off());
@@ -70,6 +72,62 @@ fn building() -> App {
                 {"kind": "rafters", "thickness": 0.125, "material": "Çam"}
             ]}]}),
     );
+    let slab = seat(&mut app, "k01");
+    run(
+        &mut app,
+        "cad.arch.performance",
+        json!({"operation": {"kind": "objects", "uids": [slab], "fireRating": {"value": "REI 60", "basis": {"kind": "author"}}}}),
+    );
+    crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
+    app
+}
+
+/// A 15 cm slab on `level` under the roof's outline, its top at the storey's top (offset 3.00): the slab the roof sits on
+/// (docs/adr/8139). Its persistent id.
+fn seat(app: &mut App, level: &str) -> String {
+    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let made = run(
+        app,
+        "cad.slabs.create",
+        json!({"layerId": layer, "slabs": [{"parts": [{"outer": {"pts": [p(0.0, 0.0), p(8.0, 0.0), p(8.0, 5.0), p(0.0, 5.0)]}}],
+            "thickness": 0.15, "offset": 3.0, "arch": {"level": level}}]}),
+    );
+    made["output"]["uids"][0].as_str().expect("the slab").to_owned()
+}
+
+/// An eight-storey tower (storeys of 3.00 m: bina yüksekliği 24.00 m, a high building), its roof over 7. kat of hiç
+/// yanmaz tiles (BROOF(t1)) and steel rafters, nothing under it; applied on 2.7.2026.
+fn tower() -> App {
+    kentos_postgis::connections::keep_in_memory();
+    let (mut app, _) = App::start_in(Some(Module::Architecture), None, Settings::memory(), Recovery::off());
+    app.db_store = Box::leak(Box::new(kentos_postgis::connections::ConnectionStore::open(None)));
+    app.hand_over = |m, _| Ok(m.program().to_owned());
+    let task = app.update(Message::Run("file.new"));
+    drive(&mut app, task);
+    let levels: Vec<Value> = (0..8)
+        .map(|i| {
+            let name = if i == 0 { "Zemin kat".to_owned() } else { format!("{i}. kat") };
+            json!({"id": format!("k{i:02}"), "name": name, "elevation": 3.0 * i as f64, "height": 3.0})
+        })
+        .collect();
+    run(&mut app, "cad.settings.set", json!({ "arch": { "levels": levels } }));
+    for name in ["Kil kiremit", "Çelik"] {
+        run(&mut app, "cad.materials.edit", json!({"operation": {"kind": "define", "name": name, "change": {}}}));
+    }
+    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    run(
+        &mut app,
+        "cad.roofs.create",
+        json!({"layerId": layer, "roofs": [{"pts": [p(0.0, 0.0), p(8.0, 0.0), p(8.0, 5.0), p(0.0, 5.0)],
+            "slopes": [33.0, 33.0, 33.0, 33.0], "arch": {"level": "k07"}, "layers": [
+                {"kind": "covering", "thickness": 0.03, "material": "Kil kiremit"},
+                {"kind": "rafters", "thickness": 0.125, "material": "Çelik"}
+            ]}]}),
+    );
+    declared(&mut app, "Kil kiremit", Some("A1"), Some("BROOF(t1)"));
+    declared(&mut app, "Çelik", Some("A1"), None);
+    app.dialog = None;
+    app.arch.materials = None;
     crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
     app
 }
@@ -162,6 +220,80 @@ fn a_roof_s_covering_and_layers_are_read_by_28_2_and_28_3() {
             && m.starts_with("1. kat: çatının kaplaması “Kil kiremit” CROOF(t3); 28/2 BROOF ister")),
         "{found:#?}"
     );
+}
+
+/// 28/3-a (docs/adr/8139): the tower's roof has no slab under it (missing data); a slab drawn under it, its top at 7. kat's
+/// top, is its seat in the facts; declared E 30 it fails (no I), EI 60 it holds.
+#[test]
+fn a_high_building_s_roof_sits_on_a_horizontal_fire_stop() {
+    let mut app = tower();
+    checked(&mut app);
+    let (_, third, found) = said(&app);
+    assert_eq!(third, Some(O::MissingData), "{found:#?}");
+    assert_eq!(found.len(), 1, "{found:#?}");
+    assert_eq!((found[0].0.as_str(), found[0].1), ("bykhy_roof_seat_fire_stop", Some(S::MissingData)));
+    assert!(found[0].2.starts_with("7. kat: çatının altında, katının üstünde döşeme çizilmemiş; 28/3-a yüksek binada"), "{found:#?}");
+    let slab = seat(&mut app, "k07");
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let facts = kentos_processing::audit_facts::building::measure(doc).normalized();
+    assert_eq!(facts.roofs.iter().map(|r| r.seat.clone()).collect::<Vec<_>>(), [vec![slab.clone()]]);
+    let rate = |app: &mut App, value: &str| {
+        run(
+            app,
+            "cad.arch.performance",
+            json!({"operation": {"kind": "objects", "uids": [slab], "fireRating": {"value": value, "basis": {"kind": "author"}}}}),
+        );
+    };
+    rate(&mut app, "E 30");
+    checked(&mut app);
+    let (_, third, found) = said(&app);
+    assert_eq!(third, Some(O::Failed), "{found:#?}");
+    assert!(
+        found.iter().any(|(c, s, m)| c == "bykhy_roof_seat_fire_stop" && s.is_none() && m.contains("E 30, en az EI 30 değil")),
+        "{found:#?}"
+    );
+    rate(&mut app, "EI 60");
+    checked(&mut app);
+    let (_, third, found) = said(&app);
+    assert_eq!(third, Some(O::Passed), "{found:#?}");
+    assert!(found.is_empty(), "{found:#?}");
+}
+
+/// The tower without a slab under its roof and Denetim's 28/3-a finding, light and dark;
+/// `.run/gui-evidence/cati-dosemesi-8139/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib roof_fire_tests::seat_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn seat_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/cati-dosemesi-8139");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")] {
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut app = tower();
+        let _ = app.update(Message::ActiveLevel(Some("k07".into())));
+        let _ = app.update(Message::LevelView(kentos_interaction::level_view::LevelView::Active));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        checked(&mut app);
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_roof_seat_fire_stop");
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        snapshot.settle(&mut app, App::view, &mut update);
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-cati-dosemesi-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
 }
 
 /// Malzemeler with the tiles' Dış yangın sınıfı, and Denetim's 28/3 finding, light and dark;

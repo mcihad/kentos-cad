@@ -164,32 +164,33 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     (çatı kaplaması malzemesinin dış yangın sınıfı BROOF değilse
     bykhy_roof_covering_class, kaplama tahtası ve yalıtımı en az zor alevlenici değilse
     bykhy_roof_underlay_reaction, 28/2; yüksek binada mertek ve kaplama yanmaz değilse
-    bykhy_roof_noncombustible, 28/3) ve kaplamalar da (döşeme kaplaması ve mahallerin
-    döşeme kaplaması en az normal, yüksek binada zor alevlenici değilse
-    bykhy_floor_covering_reaction, 26/2; tavan kaplaması, asma tavan ve mahallerin tavan
-    kaplaması en az zor alevlenici değilse bykhy_ceiling_reaction, 26/4; mahallerin
-    duvar kaplaması en az normal, yüksek binada ve 100 kişiyi aşan sinema, tiyatro,
-    konferans ve düğün salonunda zor alevlenici değilse bykhy_wall_lining_reaction,
-    20/3; mahal kaplamasının malzemesi aynı adlı proje malzemesidir) ve kullanım
-    sınıfına özel kaçış hükümleri de (binanın kullanımı bina programından, yoksa mahal
-    adlarından: sağlık yapısında 15 kişiyi aşan hasta yatak odasının 2 kapısı
-    bykhy_patient_room_doors, 49/1-a; otelde yatak odası ile iç koridor arasındaki duvar
-    en az 60 dakika bykhy_hotel_room_wall ve ikiden çok katlı otelde her katta 2 çıkış
-    bykhy_hotel_storey_exits, yatak sayısı çizimde olmadığından yapı yüksekliği 15,50
-    m'nin altındaysa eksik veri, 50/1-a; iç koridora açılan kapı en az 30 dakika ve
-    kendiliğinden kapanır bykhy_hotel_room_door, 50/1-b; otel, motel ve pansiyonda
-    odanın en uzak noktasından kapısına yürüyüş 15 m'yi aşan tek kapılı oda, tamamı
-    yağmurlamalı otelde 20 m'yi aşan oda bykhy_hotel_room_distance, 50/3; fabrika,
-    imalathane, mağaza, dükkân, depo, büro ve ayakta tedavi merkezinde zemin üstü her
-    katta 2 bağımsız kaçış merdiveni, tek merdivende yapı yüksekliği 21,50 m ya da katın
-    kişisi 50 tutmazsa kaldı, tutarsa kaçış uzaklıkları, yanmaz ürünler ve kullanılan
-    maddeler uzman incelemesi bykhy_single_stair, 52) ve yağmurlama zorunluluğu da
-    (proje yağmurlamayı beyan etmemişse settings.arch.sprinklers: 30,50 m'yi aşan konut
-    harici ve karma bina, 51,50 m'yi geçen konut, alanlarının toplamı 600 m²'yi aşan
-    kapalı otopark, 100 odayı aşan katlı konaklama yapısı — odası 100'ü geçmeyende yatak
-    sayısı çizimde olmadığından eksik veri —, 21,50 m'yi aşan yataklı tesis, 2000 m²'yi
-    aşan katlı mağaza, alışveriş, ticaret ve eğlence yeri, 1000 m²'yi aşan parlayıcı
-    madde yapısı — uzman incelemesi —; alanlar mahallerin dış konturuyla
+    bykhy_roof_noncombustible, 28/3-b; yüksek binada çatının oturduğu döşeme yoksa ya da
+    en az EI 30 değilse bykhy_roof_seat_fire_stop, 28/3-a) ve kaplamalar da (döşeme
+    kaplaması ve mahallerin döşeme kaplaması en az normal, yüksek binada zor alevlenici
+    değilse bykhy_floor_covering_reaction, 26/2; tavan kaplaması, asma tavan ve
+    mahallerin tavan kaplaması en az zor alevlenici değilse bykhy_ceiling_reaction,
+    26/4; mahallerin duvar kaplaması en az normal, yüksek binada ve 100 kişiyi aşan
+    sinema, tiyatro, konferans ve düğün salonunda zor alevlenici değilse
+    bykhy_wall_lining_reaction, 20/3; mahal kaplamasının malzemesi aynı adlı proje
+    malzemesidir) ve kullanım sınıfına özel kaçış hükümleri de (binanın kullanımı bina
+    programından, yoksa mahal adlarından: sağlık yapısında 15 kişiyi aşan hasta yatak
+    odasının 2 kapısı bykhy_patient_room_doors, 49/1-a; otelde yatak odası ile iç
+    koridor arasındaki duvar en az 60 dakika bykhy_hotel_room_wall ve ikiden çok katlı
+    otelde her katta 2 çıkış bykhy_hotel_storey_exits, yatak sayısı çizimde olmadığından
+    yapı yüksekliği 15,50 m'nin altındaysa eksik veri, 50/1-a; iç koridora açılan kapı
+    en az 30 dakika ve kendiliğinden kapanır bykhy_hotel_room_door, 50/1-b; otel, motel
+    ve pansiyonda odanın en uzak noktasından kapısına yürüyüş 15 m'yi aşan tek kapılı
+    oda, tamamı yağmurlamalı otelde 20 m'yi aşan oda bykhy_hotel_room_distance, 50/3;
+    fabrika, imalathane, mağaza, dükkân, depo, büro ve ayakta tedavi merkezinde zemin
+    üstü her katta 2 bağımsız kaçış merdiveni, tek merdivende yapı yüksekliği 21,50 m ya
+    da katın kişisi 50 tutmazsa kaldı, tutarsa kaçış uzaklıkları, yanmaz ürünler ve
+    kullanılan maddeler uzman incelemesi bykhy_single_stair, 52) ve yağmurlama
+    zorunluluğu da (proje yağmurlamayı beyan etmemişse settings.arch.sprinklers: 30,50
+    m'yi aşan konut harici ve karma bina, 51,50 m'yi geçen konut, alanlarının toplamı
+    600 m²'yi aşan kapalı otopark, 100 odayı aşan katlı konaklama yapısı — odası 100'ü
+    geçmeyende yatak sayısı çizimde olmadığından eksik veri —, 21,50 m'yi aşan yataklı
+    tesis, 2000 m²'yi aşan katlı mağaza, alışveriş, ticaret ve eğlence yeri, 1000 m²'yi
+    aşan parlayıcı madde yapısı — uzman incelemesi —; alanlar mahallerin dış konturuyla
     bykhy_sprinklers_required, BYKHY 96/2) ve sağlık yapıları da (hastanenin ve
     bakımevinin 300 m²'yi aşan yatılan katı tek yangın kompartımanıysa kaldı, iki ya da
     daha çok kompartımanda büyüklükleri uzman incelemesi
@@ -436,32 +437,33 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         (çatı kaplaması malzemesinin dış yangın sınıfı BROOF değilse
         bykhy_roof_covering_class, kaplama tahtası ve yalıtımı en az zor alevlenici değilse
         bykhy_roof_underlay_reaction, 28/2; yüksek binada mertek ve kaplama yanmaz değilse
-        bykhy_roof_noncombustible, 28/3) ve kaplamalar da (döşeme kaplaması ve mahallerin
-        döşeme kaplaması en az normal, yüksek binada zor alevlenici değilse
-        bykhy_floor_covering_reaction, 26/2; tavan kaplaması, asma tavan ve mahallerin tavan
-        kaplaması en az zor alevlenici değilse bykhy_ceiling_reaction, 26/4; mahallerin
-        duvar kaplaması en az normal, yüksek binada ve 100 kişiyi aşan sinema, tiyatro,
-        konferans ve düğün salonunda zor alevlenici değilse bykhy_wall_lining_reaction,
-        20/3; mahal kaplamasının malzemesi aynı adlı proje malzemesidir) ve kullanım
-        sınıfına özel kaçış hükümleri de (binanın kullanımı bina programından, yoksa mahal
-        adlarından: sağlık yapısında 15 kişiyi aşan hasta yatak odasının 2 kapısı
-        bykhy_patient_room_doors, 49/1-a; otelde yatak odası ile iç koridor arasındaki duvar
-        en az 60 dakika bykhy_hotel_room_wall ve ikiden çok katlı otelde her katta 2 çıkış
-        bykhy_hotel_storey_exits, yatak sayısı çizimde olmadığından yapı yüksekliği 15,50
-        m'nin altındaysa eksik veri, 50/1-a; iç koridora açılan kapı en az 30 dakika ve
-        kendiliğinden kapanır bykhy_hotel_room_door, 50/1-b; otel, motel ve pansiyonda
-        odanın en uzak noktasından kapısına yürüyüş 15 m'yi aşan tek kapılı oda, tamamı
-        yağmurlamalı otelde 20 m'yi aşan oda bykhy_hotel_room_distance, 50/3; fabrika,
-        imalathane, mağaza, dükkân, depo, büro ve ayakta tedavi merkezinde zemin üstü her
-        katta 2 bağımsız kaçış merdiveni, tek merdivende yapı yüksekliği 21,50 m ya da katın
-        kişisi 50 tutmazsa kaldı, tutarsa kaçış uzaklıkları, yanmaz ürünler ve kullanılan
-        maddeler uzman incelemesi bykhy_single_stair, 52) ve yağmurlama zorunluluğu da
-        (proje yağmurlamayı beyan etmemişse settings.arch.sprinklers: 30,50 m'yi aşan konut
-        harici ve karma bina, 51,50 m'yi geçen konut, alanlarının toplamı 600 m²'yi aşan
-        kapalı otopark, 100 odayı aşan katlı konaklama yapısı — odası 100'ü geçmeyende yatak
-        sayısı çizimde olmadığından eksik veri —, 21,50 m'yi aşan yataklı tesis, 2000 m²'yi
-        aşan katlı mağaza, alışveriş, ticaret ve eğlence yeri, 1000 m²'yi aşan parlayıcı
-        madde yapısı — uzman incelemesi —; alanlar mahallerin dış konturuyla
+        bykhy_roof_noncombustible, 28/3-b; yüksek binada çatının oturduğu döşeme yoksa ya da
+        en az EI 30 değilse bykhy_roof_seat_fire_stop, 28/3-a) ve kaplamalar da (döşeme
+        kaplaması ve mahallerin döşeme kaplaması en az normal, yüksek binada zor alevlenici
+        değilse bykhy_floor_covering_reaction, 26/2; tavan kaplaması, asma tavan ve
+        mahallerin tavan kaplaması en az zor alevlenici değilse bykhy_ceiling_reaction,
+        26/4; mahallerin duvar kaplaması en az normal, yüksek binada ve 100 kişiyi aşan
+        sinema, tiyatro, konferans ve düğün salonunda zor alevlenici değilse
+        bykhy_wall_lining_reaction, 20/3; mahal kaplamasının malzemesi aynı adlı proje
+        malzemesidir) ve kullanım sınıfına özel kaçış hükümleri de (binanın kullanımı bina
+        programından, yoksa mahal adlarından: sağlık yapısında 15 kişiyi aşan hasta yatak
+        odasının 2 kapısı bykhy_patient_room_doors, 49/1-a; otelde yatak odası ile iç
+        koridor arasındaki duvar en az 60 dakika bykhy_hotel_room_wall ve ikiden çok katlı
+        otelde her katta 2 çıkış bykhy_hotel_storey_exits, yatak sayısı çizimde olmadığından
+        yapı yüksekliği 15,50 m'nin altındaysa eksik veri, 50/1-a; iç koridora açılan kapı
+        en az 30 dakika ve kendiliğinden kapanır bykhy_hotel_room_door, 50/1-b; otel, motel
+        ve pansiyonda odanın en uzak noktasından kapısına yürüyüş 15 m'yi aşan tek kapılı
+        oda, tamamı yağmurlamalı otelde 20 m'yi aşan oda bykhy_hotel_room_distance, 50/3;
+        fabrika, imalathane, mağaza, dükkân, depo, büro ve ayakta tedavi merkezinde zemin
+        üstü her katta 2 bağımsız kaçış merdiveni, tek merdivende yapı yüksekliği 21,50 m ya
+        da katın kişisi 50 tutmazsa kaldı, tutarsa kaçış uzaklıkları, yanmaz ürünler ve
+        kullanılan maddeler uzman incelemesi bykhy_single_stair, 52) ve yağmurlama
+        zorunluluğu da (proje yağmurlamayı beyan etmemişse settings.arch.sprinklers: 30,50
+        m'yi aşan konut harici ve karma bina, 51,50 m'yi geçen konut, alanlarının toplamı
+        600 m²'yi aşan kapalı otopark, 100 odayı aşan katlı konaklama yapısı — odası 100'ü
+        geçmeyende yatak sayısı çizimde olmadığından eksik veri —, 21,50 m'yi aşan yataklı
+        tesis, 2000 m²'yi aşan katlı mağaza, alışveriş, ticaret ve eğlence yeri, 1000 m²'yi
+        aşan parlayıcı madde yapısı — uzman incelemesi —; alanlar mahallerin dış konturuyla
         bykhy_sprinklers_required, BYKHY 96/2) ve sağlık yapıları da (hastanenin ve
         bakımevinin 300 m²'yi aşan yatılan katı tek yangın kompartımanıysa kaldı, iki ya da
         daha çok kompartımanda büyüklükleri uzman incelemesi

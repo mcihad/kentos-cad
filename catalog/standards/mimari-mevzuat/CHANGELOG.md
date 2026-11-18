@@ -1,5 +1,14 @@
 # Değişiklikler
 
+## 0.31.0 — 18 Kasım 2026
+
+- Çatının oturduğu döşeme (`catilar`; docs/adr/8139): BYKHY 28/3-a, yüksek binada (ve bitişik nizamda) çatının oturduğu
+  döşeme yatay yangın kesici niteliğinde, en az EI 30 (Ek-3/B 10'un yangın kesicisi). Olguların yeni `roofs[].seat`'i:
+  çatının katının üstünde, üstü o kotta (1 cm içinde) ve dış çizgisinin ortasını tutan döşeme ve teras döşemeleri.
+  Yüksek binada döşeme yoksa ya da sınıfı beyan edilmemişse eksik veri, E ve I ile en az 30 değilse kaldı; yüksek
+  olmayan binada tutmayan çatı uzman incelemesi (nizam çizimde yok) (`bykhy_roof_seat_fire_stop`). 28/3'ün başlığı
+  "Yüksek ve bitişik nizam binada çatının döşemesi ve yanmazlığı".
+
 ## 0.30.0 — 18 Kasım 2026
 
 - Mahallerin kaplamaları (`kaplamalar`; docs/adr/8138): mahal listesinin yazdığı döşeme, duvar ve tavan kaplaması adı
