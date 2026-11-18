@@ -1100,6 +1100,9 @@ mod hotel_room_tests;
 #[path = "tests/boiler_room_tests.rs"]
 mod boiler_room_tests;
 #[cfg(test)]
+#[path = "tests/delivered_model_tests.rs"]
+mod delivered_model_tests;
+#[cfg(test)]
 #[path = "tests/arch_ifc_tests.rs"]
 mod arch_ifc_tests;
 #[cfg(test)]

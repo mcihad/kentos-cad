@@ -486,8 +486,13 @@ kimliği `IfcLabel` yazılıyordu) düzeltildi. Bulgu IFC modelinde boyanır. 10
 soru 9.1'deki aynı soruların kanıtıyla, onarımlar programdan bağımsız; paket incelemesi modelin tablosunu verir, başka
 tablonun formunu söyler. **Yapıldı (18 Kasım 2026, [ADR 8115](../docs/adr/8115-model-mapping-off-the-window-thread.md),
 K219–K221):** model eşlemesi Denetim'de ve kalite formunda okuma kopyasından kuralın iş parçacığında; emsal ölçümü mahali
-yalnız komşularıyla keser: 100 dairede 3,1 s → 216 ms; bütçe. **Kalan:** son yazılan dosyanın denetimi ve bulut işi;
-disiplin modelinin formunun yazımı. (Gerçek kuzey ADR 8076 K58 ile yazılıyor; beş sonuç ADR 8075'ten beri ruhsat
+yalnız komşularıyla keser: 100 dairede 3,1 s → 216 ms; bütçe. **Yapıldı (18 Kasım 2026,
+[ADR 8116](../docs/adr/8116-ek9-from-the-delivered-model.md), K222–K227):** Denetim EK-9 formunu son teslim edilen modelden
+okuyabilir: teslim kaydının son modelli paketi klasöründen, teslim edildiği gibi (liste, model, form kaydı ve taşınan çizim
+özetleriyle); tablonun üstündeki satır son teslimi ve çizimin ondan farkını (GlobalId'yle eklenen, silinen, değişen nesne)
+söyler, "Teslim edileni denetle" ile "Şimdiki çizimi denetle" arasında geçilir; 18. soru teslim edilen dosyadan cevaplanır;
+kaynak listesi taşınan çizimden, yoksa aynı modelde şimdiki çizimden, yoksa verilmez (üç soru incelemeye). **Kalan:** bulut
+işi; disiplin modelinin formunun yazımı; çizimdeki formun ve Ruhsat takımının teslim edilen modelden okunması. (Gerçek kuzey ADR 8076 K58 ile yazılıyor; beş sonuç ADR 8075'ten beri ruhsat
 paketinin `results`'ında.)
 
 **Kullanıcı sonucu:** Model kalite kontrol formunun her cevabı diske yazılmış dosyadan gelir; her "hayır" nesnesini seçer.

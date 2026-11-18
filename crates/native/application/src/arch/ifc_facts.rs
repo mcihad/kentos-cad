@@ -55,6 +55,12 @@ impl Planned {
         format!("{}.ifc", self.building.file)
     }
 
+    /// Where the building is in the drawing: its first wall's first point (a finding that names no object is shown
+    /// there).
+    pub fn at(&self) -> [f64; 2] {
+        self.at
+    }
+
     /// The file's text.
     pub fn text(&self) -> String {
         kentos_ifc::building::write(&self.building)

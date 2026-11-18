@@ -207,8 +207,9 @@ bulgunun duvarları; çizimdeki form iki yarısıyla; Ruhsat takımı'nın yeni 
 
 - **Gerçek kuzey** (EK-7 Tablo 7.8 `TrueNorth`): yapıldı, ADR [8076](8076-ifc-mandatory-fields-complete.md) K58 (projenin sisteminden,
   yoksa kuzey okundan).
-- **Son yazılan dosya:** Denetim'in bellekteki dosya yerine diske yazılan ya da teslim edilecek dosyayı okuması (K4'ün
-  "diske yazılan"ı); bulut işinin aynı betiği çalıştırması.
+- **Son yazılan dosya:** Denetim'in diske yazılan ya da teslim edilecek dosyayı okuması: yapıldı, ADR
+  [8116](8116-ek9-from-the-delivered-model.md) (son teslim edilen model, çizimin farkı). Bulut işinin aynı betiği
+  çalıştırması sıradaki iş.
 - **Beş sonucun ayrı raporu** (ifc-uyum §1: okunuyor, şema, Türkiye profili, model–pafta, idare): yapıldı, ruhsat paketinin
   `results`'ı (ADR [8075](8075-bim-permit-package.md)).
 - **Model eşlemesinin bütçesi:** yapıldı, ADR [8115](8115-model-mapping-off-the-window-thread.md): eşleme pencereden çıktı,

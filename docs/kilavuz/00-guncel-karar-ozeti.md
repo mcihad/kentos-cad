@@ -360,6 +360,12 @@
     K219–K221):** Denetim ve kalite formu çizimin okuma kopyasını alır, olgular ve IFC eşlemesi kuralın iş parçacığında.
     Emsal ölçümü (`zoning_measured`) mahali yalnız kutusu değen komşularıyla keser: 100 dairede eşleme 3,1 s → 216 ms,
     alanlar aynı. Bütçe: okuma kopyası ≤ 1 ms, eşleme 100 dairede ≤ 300 ms ([ölçüm](../perf/ifc-model-2026-11-18.md)).
+  - **EK-9 formu son teslim edilen modelden (18 Kasım 2026; [ADR 8116](../adr/8116-ek9-from-the-delivered-model.md),
+    K222–K227):** `kentos_native_application::delivered_model` teslim kaydının son modelli paketini klasöründen, teslim
+    edildiği gibi okur (`yayin.json` kayıttaki özetle; model, form kaydı ve `kaynaklar/cizim.kcad` listedeki özetlerle;
+    klasör dışına çıkan ad reddedilir). Denetim'in satırı son teslimi ve çizimin farkını (GlobalId, 1 mm) söyler; formu
+    istenince dosyadan okur. Kaynak listesi taşınan çizimden, yoksa aynı modelde şimdiki çizimden, yoksa hiç (boş liste
+    21. soruyu yanlışlıkla geçirirdi).
   - **Duvar stili IFC'de tip (17 Kasım 2026; [ADR 8105](../adr/8105-wall-style-types-and-layer-sets.md), K179–K181):**
     her duvar stili bir `IfcWallType`, duvarları ona bağlı (`IfcRelDefinesByType`, `IfcRelDeclares`); her duvarın katman
     takımı sol yüzden sağa, aynı takım paylaşılır; `IfcMaterialLayerSetUsage` duvarlar eksen çerçevesinde yazılınca.

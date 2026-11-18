@@ -16,6 +16,10 @@
 //!   worked out off the window's thread, on a reading copy of the drawing taken when the check is asked; the rules run
 //!   in their own short processes, one after the other; an answer to an older ask (its generation) is dropped, and the
 //!   last answer is put back after each check until the new one comes.
+//! - **The model the form reads** (docs/adr/8116; Dijital Proje Yön. Md. 15, plan/bim-plan.md K4): the drawing's model
+//!   now, written in memory and read back; or, when asked, the last delivered model as it went (its folder's IFC file,
+//!   `kentos_native_application::delivered_model`). Either way the line over the table names the last delivered model
+//!   and how the drawing differs from it, or why it could not be read.
 //! - **The whole drawing only:** layers, blocks, numbering and storeys are the drawing's, so a check of Etkin kat or of
 //!   the objects selected leaves them out.
 
@@ -26,6 +30,7 @@ use kentos_commands::{
     ArchAuditCheck, ArchAuditFinding, ArchAuditFix, ArchAuditRuleSet, ArchAuditState, ChangesetStep, Vec2,
 };
 use kentos_extensions::audit_facts::ProjectAuditFacts;
+use kentos_native_application::delivered_model::{self, Drift, Expected, Last};
 use serde_json::{Value, json};
 
 use super::{AuditScope, Event, msg};
@@ -43,6 +48,96 @@ const CODES: &str = "digital_";
 /// history); its facts and its model are worked out from it on the rules' thread.
 struct Input {
     copy: kentos_domain::Document,
+    /// The form reads the last delivered model.
+    delivered: bool,
+}
+
+/// What the last answer said of the last delivered model (docs/adr/8116): the line over the table.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct DeliveredLine {
+    pub number: u32,
+    /// The model's file name and its delivery's day (YYYY-AA-GG); empty when its package could not be read.
+    pub model: String,
+    pub at: String,
+    /// Why it could not be read as it went; none: it was.
+    pub error: Option<String>,
+    /// The drawing now against it; none: the drawing writes no model now.
+    pub drift: Option<Drift>,
+    /// The form's answer came from it.
+    pub used: bool,
+    /// The source's objects were given to the form (from the drawing the package carries, or the drawing now when its
+    /// model is the delivered one); not: EK-9/8, /17 and /21 are left to review.
+    pub expectations: bool,
+}
+
+impl DeliveredLine {
+    fn of(v: &Value) -> Option<Self> {
+        let number = u32::try_from(v.get("number")?.as_u64()?).ok()?;
+        let text = |k: &str| v.get(k).and_then(Value::as_str).map(str::to_owned);
+        let drift = v.get("drift").filter(|d| d.is_object()).map(|d| {
+            let n = |k: &str| d.get(k).and_then(Value::as_u64).and_then(|n| usize::try_from(n).ok()).unwrap_or(0);
+            Drift { added: n("added"), removed: n("removed"), changed: n("changed") }
+        });
+        Some(Self {
+            number,
+            model: text("model").unwrap_or_default(),
+            at: text("at").unwrap_or_default(),
+            error: text("error"),
+            drift,
+            used: v.get("used").and_then(Value::as_bool).unwrap_or(false),
+            expectations: v.get("expected").and_then(Value::as_bool).unwrap_or(true),
+        })
+    }
+
+    /// The line's words.
+    pub(crate) fn words(&self) -> String {
+        let n = self.number;
+        if let Some(why) = &self.error {
+            return format!("{n}. teslimin modeli okunamadı: {why} EK-9 formu çizimin şimdiki hâlinden.");
+        }
+        let file = format!("{}, {}", self.model, day(&self.at));
+        let drift = match self.drift {
+            None => "Çizimde şimdi bina yok.".to_owned(),
+            Some(d) if d.is_none() => "Çizimin modeli teslim edilenle aynı.".to_owned(),
+            Some(d) => {
+                let parts: Vec<String> = [(d.changed, "değişti"), (d.added, "eklendi"), (d.removed, "silindi")]
+                    .into_iter()
+                    .filter(|(k, _)| *k > 0)
+                    .map(|(k, what)| format!("{k} nesne {what}"))
+                    .collect();
+                format!("Teslimden bu yana çizimde {}.", parts.join(", "))
+            }
+        };
+        if self.used {
+            let mut words = format!("EK-9 formu {n}. teslimin modelinden ({file}). {drift}");
+            if !self.expectations {
+                words.push_str(" Paket kaynak çizimini taşımadığından 8., 17. ve 21. sorular incelemeye kaldı.");
+            }
+            words
+        } else {
+            format!("EK-9 formu çizimin şimdiki hâlinden. {n}. teslimin modeli: {file}. {drift}")
+        }
+    }
+
+    /// The button's words and the model it asks (true: the delivered one); none: no button. `asked`: the panel asks
+    /// for the delivered model now.
+    pub(crate) fn switch(&self, asked: bool) -> Option<(&'static str, bool)> {
+        if self.used || (asked && self.error.is_some()) {
+            Some(("Şimdiki çizimi denetle", false))
+        } else if self.error.is_none() {
+            Some(("Teslim edileni denetle", true))
+        } else {
+            None
+        }
+    }
+}
+
+/// A day (YYYY-AA-GG) as people write it (GG.AA.YYYY); anything else as it is.
+fn day(at: &str) -> String {
+    match at.split('-').collect::<Vec<_>>().as_slice() {
+        [y, m, d] if y.len() == 4 && m.len() == 2 && d.len() == 2 => format!("{d}.{m}.{y}"),
+        _ => at.to_owned(),
+    }
 }
 
 /// The facts the Dijital proje rule reads first: the CAD drawing's section alone.
@@ -76,7 +171,10 @@ impl App {
     }
 
     fn arch_audit_standards_input(&self) -> Option<Input> {
-        Some(Input { copy: self.document.as_ref()?.model.reading_copy() })
+        Some(Input {
+            copy: self.document.as_ref()?.model.reading_copy(),
+            delivered: self.arch.arch_audit.delivered_model,
+        })
     }
 
     /// After a check: the last answer put back, and the rules asked again when the check was the whole drawing's.
@@ -131,6 +229,7 @@ impl App {
             Ok(v) => (part(&v["digital"]), part(&v["regulation"])),
             Err(why) => (Err(why.clone()), Err(why.clone())),
         };
+        panel.delivered = answer.as_ref().ok().and_then(|v| DeliveredLine::of(&v["delivered"]));
         let mut found = Vec::new();
         match digital {
             Ok(d) => {
@@ -199,13 +298,49 @@ fn answer(input: Input) -> Result<Value, String> {
     let doc = &input.copy;
     let cad = standards_facts(doc).ok_or_else(|| "Çizimin olguları yazılamadı.".to_owned())?;
     let building = regulation_facts(doc).ok_or_else(|| "Binanın olguları yazılamadı.".to_owned())?;
-    let digital = crate::ifc_facts::plan(doc)
-        .map(crate::ifc_facts::Planned::facts)
-        .transpose()
-        .and_then(|ifc| crate::standards::call(DIGITAL.0, DIGITAL.1, FUNCTION, vec![cad, ifc.unwrap_or(Value::Null)]));
+    let (ifc, delivered) = model(doc, input.delivered);
+    let digital = ifc.and_then(|ifc| crate::standards::call(DIGITAL.0, DIGITAL.1, FUNCTION, vec![cad, ifc]));
     let regulation = crate::standards::call(REGULATION.0, REGULATION.1, FUNCTION, vec![building]);
     let side = |r: Result<Value, String>| r.map_or_else(|e| json!({ "error": e }), |v| json!({ "answer": v }));
-    Ok(json!({ "digital": side(digital), "regulation": side(regulation) }))
+    Ok(json!({ "digital": side(digital), "regulation": side(regulation), "delivered": delivered }))
+}
+
+/// The facts of the model the form reads — the last delivered one when `asked` and it reads as it went, else the
+/// drawing's now (none for a drawing without walls) — and what the line says of the last delivered model (null: none).
+fn model(doc: &kentos_domain::Document, asked: bool) -> (Result<Value, String>, Value) {
+    let now = || {
+        crate::ifc_facts::plan(doc)
+            .map(crate::ifc_facts::Planned::facts)
+            .transpose()
+            .map(|f| f.unwrap_or(Value::Null))
+    };
+    let drift_of = |d: Option<Drift>| {
+        d.map_or(Value::Null, |d| json!({ "added": d.added, "removed": d.removed, "changed": d.changed }))
+    };
+    match delivered_model::last(doc) {
+        Last::None => (now(), Value::Null),
+        Last::Unreadable { number, why } => (now(), json!({ "number": number, "error": why })),
+        Last::Found(d) => {
+            let mut line = json!({ "number": d.number, "model": d.model, "at": d.at });
+            if asked {
+                match d.read(doc) {
+                    Ok(read) => {
+                        line["drift"] = drift_of(read.drift);
+                        line["used"] = json!(true);
+                        line["expected"] = json!(read.expected != Expected::Missing);
+                        return (Ok(read.facts), line);
+                    }
+                    Err(why) => line["error"] = json!(why),
+                }
+            } else {
+                match d.drift(doc) {
+                    Ok(drift) => line["drift"] = drift_of(drift),
+                    Err(why) => line["error"] = json!(why),
+                }
+            }
+            (now(), line)
+        }
+    }
 }
 
 /// The national regulation's rule set its answer gives (its `rules`, `date`, `dateNote`).

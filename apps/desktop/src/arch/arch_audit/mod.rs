@@ -34,6 +34,7 @@ use crate::icons::from_web;
 
 mod preview;
 mod standards;
+pub(crate) use standards::DeliveredLine;
 mod view;
 mod write;
 
@@ -159,6 +160,10 @@ pub(crate) struct ArchAuditPanel {
     pub rule_set: Option<kentos_commands::ArchAuditRuleSet>,
     /// Why the national regulation's package gave no answer; none: it did.
     pub regulation_failed: Option<String>,
+    /// The EK-9 form reads the last delivered model (docs/adr/8116), not the drawing's model now.
+    pub delivered_model: bool,
+    /// What the last answer said of the last delivered model: the line over the table; none: no delivered model.
+    pub delivered: Option<DeliveredLine>,
     /// The ask's generation: an older answer is dropped.
     pub standards_generation: u64,
     /// A check made the ask due; the event's end asks.
@@ -188,6 +193,8 @@ impl Default for ArchAuditPanel {
             standards_failed: None,
             rule_set: None,
             regulation_failed: None,
+            delivered_model: false,
+            delivered: None,
             standards_generation: 0,
             standards_due: false,
         }
@@ -240,6 +247,8 @@ pub enum Event {
     Column(usize, f32),
     /// The standards package's EK-3 and EK-4 answer to an ask, by its generation (docs/adr/8064).
     Standards(u64, Result<serde_json::Value, String>),
+    /// The model the EK-9 form reads (docs/adr/8116): the last delivered one, else the drawing's now.
+    DeliveredModel(bool),
 }
 
 fn msg(e: Event) -> Message {
@@ -656,6 +665,10 @@ impl App {
                 self.arch_audit_check();
             }
             Event::Standards(generation, answer) => self.arch_audit_standards_answer(generation, answer),
+            Event::DeliveredModel(on) => {
+                self.arch.arch_audit.delivered_model = on;
+                self.arch_audit_check();
+            }
         }
         self.arch_audit_standards_task()
     }

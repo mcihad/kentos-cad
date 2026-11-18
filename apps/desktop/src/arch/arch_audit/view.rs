@@ -215,6 +215,29 @@ impl App {
                 .width(Fill),
             );
         }
+        // The last delivered model (docs/adr/8116): which model the EK-9 form read, how the drawing differs from the
+        // delivered one, and the other model a press away.
+        if let Some(line) = &self.arch.arch_audit.delivered {
+            let tone = if line.error.is_some() { Tone::Warning } else { Tone::Muted };
+            let mut r = row![
+                icon(from_web(Some(if line.error.is_some() { "warning" } else { "ifcView" }))).size(14.0).tone(tone),
+                // Wrapped, not elided: the end says why three questions are left to review.
+                container(label::body(line.words())).width(Fill),
+            ]
+            .spacing(8)
+            .align_y(Center);
+            if let Some((words, on)) = line.switch(self.arch.arch_audit.delivered_model) {
+                let hint = if on {
+                    "EK-9 formunu son teslimin IFC dosyasından, teslim edildiği gibi okur (Dijital Proje Yönetmeliği Md. 15: \
+                     form teslim edilen her modelindir). Bulgular dosyanın nesnelerini gösterir; çizimde artık olmayan \
+                     nesne seçilemez."
+                } else {
+                    "EK-9 formunu çizimin şimdiki hâlinden, bellekte yazılıp geri okunan modelden okur."
+                };
+                r = r.push(bar_button("ifcView", words, hint, Some(msg(Event::DeliveredModel(on)))));
+            }
+            out = out.push(container(r).padding([4, 10]).width(Fill));
+        }
         if let Some(why) = &self.arch.arch_audit.regulation_failed {
             out = out.push(
                 container(

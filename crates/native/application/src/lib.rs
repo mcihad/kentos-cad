@@ -1275,6 +1275,10 @@ pub mod underlay_edit;
 pub mod underlay_check;
 #[path = "arch/delivery_compare.rs"]
 pub mod delivery_compare;
+// Son teslim edilen model (docs/adr/8116): the delivered package's model read as it went, the form's facts from it.
+#[cfg(feature = "mod-arch")]
+#[path = "arch/delivered_model.rs"]
+pub mod delivered_model;
 // Parselin plan kararları (docs/adr/8072 §5): the zoning plan read for the building's parcel, Mimari's.
 #[cfg(feature = "mod-arch")]
 #[path = "arch/zoning_parcel.rs"]
