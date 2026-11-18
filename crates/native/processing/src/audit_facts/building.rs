@@ -296,7 +296,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
 /// Ek-3's elements with their declared classes, and the building's height as the fire rules measure it (docs/adr/8082).
 #[cfg(feature = "mod-arch")]
 fn elements(doc: &Document) -> (Vec<ElementFacts>, (f64, f64)) {
-    use kentos_native_application::arch_performance::{exit_of, fire_rating_of, fire_stop_of, load_bearing_of};
+    use kentos_native_application::arch_performance::{exit_of, fire_rating_of, fire_stop_of, load_bearing_carried};
     let by_uid: std::collections::HashMap<String, &Entity> =
         doc.entities_with_uids().map(|(u, e)| (u.to_string(), e)).collect();
     let elements = doc
@@ -307,10 +307,12 @@ fn elements(doc: &Document) -> (Vec<ElementFacts>, (f64, f64)) {
                 .get(&x.uid)
                 .and_then(|e| fire_rating_of(doc.settings(), e))
                 .map(|(d, _)| d.value.clone()),
-            // The author's roles (docs/adr/8090): a wall's load-bearing, a roof's escape route. A column's declared
-            // role is its `frame` (docs/adr/8124).
+            // The author's roles (docs/adr/8090): a wall's load-bearing, its own or its style's (docs/adr/8137), a
+            // roof's escape route. A column's declared role is its `frame` (docs/adr/8124).
             load_bearing: (x.kind == "wall")
-                .then(|| by_uid.get(&x.uid).and_then(|e| load_bearing_of(e)).map(|b| b.bearing))
+                .then(|| {
+                    by_uid.get(&x.uid).and_then(|e| load_bearing_carried(doc.settings(), e)).map(|(b, _)| b.bearing)
+                })
                 .flatten(),
             escape: x.kind == "roof" && by_uid.get(&x.uid).and_then(|e| exit_of(e)).is_some_and(|d| d.exit),
             // A wall's or a slab's declared fire stop role (docs/adr/8136).

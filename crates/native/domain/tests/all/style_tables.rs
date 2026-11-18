@@ -14,6 +14,7 @@ fn style(id: &str, name: &str, width: f64) -> WallStyleDef {
         fill: None,
         width: Some(width),
         fire_rating: None,
+        load_bearing: None,
     }
 }
 

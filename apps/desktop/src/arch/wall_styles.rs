@@ -92,6 +92,8 @@ pub enum Event {
     Width(String),
     /// Yangın dayanımı typed (docs/adr/8068): a KentOS style is taken into the project's table to keep it.
     FireRating(String),
+    /// Taşıyıcı chosen (docs/adr/8137): evet, hayır or not declared; a KentOS style is taken into the project's table.
+    LoadBearing(Option<bool>),
     OpenCaps(bool),
     Fill(Option<String>),
     Component(usize, Field, String),
@@ -432,6 +434,7 @@ impl App {
                     fill: None,
                     width: Some(kentos_commands::DEFAULT_WALL_WIDTH),
                     fire_rating: None,
+                    load_bearing: None,
                 });
                 // Projeye al keeps KentOS's id, as a wall made with it would (docs/adr/0339 §2).
                 if !take {
@@ -500,6 +503,25 @@ impl App {
                 }
                 if let Some(s) = w.own() {
                     s.fire_rating = (!value.is_empty()).then(|| kentos_commands::Declared::author(&value));
+                }
+            }
+            Event::LoadBearing(v) => {
+                if w.own().is_none()
+                    && let Some(id) = w.chosen.clone()
+                    && let Some(at) = w.builtin.iter().position(|b| b.id == id)
+                {
+                    let taken = w.builtin.remove(at);
+                    w.styles.push(taken);
+                }
+                if let Some(s) = w.own() {
+                    // The same answer keeps its basis (a document's); another is the author's statement.
+                    let kept = s.load_bearing.clone().filter(|b| Some(b.bearing) == v);
+                    s.load_bearing = kept.or_else(|| {
+                        v.map(|bearing| kentos_commands::DeclaredBearing {
+                            bearing,
+                            basis: kentos_commands::DeclaredBasis::Author,
+                        })
+                    });
                 }
             }
             Event::OpenCaps(open) => {
@@ -778,6 +800,15 @@ impl App {
             msg(Event::Fill(values.get(i).cloned().flatten()))
         })
         .searchable(false);
+        // Taşıyıcı (docs/adr/8137): the style's load-bearing role, carried by its walls without their own.
+        let roles = [Some(true), Some(false), None];
+        let now = s.load_bearing.as_ref().map(|b| b.bearing);
+        let bearing = Select::new(
+            ["Evet", "Hayır", "Bilinmiyor"].into_iter().map(Choice::new),
+            roles.iter().position(|r| *r == now),
+            move |i| msg(Event::LoadBearing(roles.get(i).copied().flatten())),
+        )
+        .searchable(false);
         let top = row![
             container(words::field("Ad", name, None)).width(Fill),
             // A wall's width is its Kalınlık, as the tool, its panel and Öznitelikler say (docs/adr/8003).
@@ -789,6 +820,8 @@ impl App {
                 Some("Kendi sınıfı olmayan duvarlar taşır; boş: eksik".to_owned()),
             ))
             .width(Fill),
+            container(words::field("Taşıyıcı", bearing, Some("Kendi rolü olmayan duvarlar taşır".to_owned())))
+                .width(Fill),
         ]
         .spacing(12)
         .align_y(iced::Top);

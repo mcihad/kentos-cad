@@ -2227,10 +2227,14 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             {
                 give(&mut elements[i].psets, set, "FireExit", Value::Bool(x));
             }
-            // A wall's declared load-bearing role (docs/adr/8090; EK-6 Tablo 6.133 `Pset_WallCommon.LoadBearing`).
+            // A wall's declared load-bearing role (docs/adr/8090; EK-6 Tablo 6.133 `Pset_WallCommon.LoadBearing`): its own,
+            // else its wall style's (docs/adr/8137), on the wall as its class is.
             if let Entity::Wall(w) = e
                 && class == Class::Wall
-                && let Some(b) = &w.wall.arch.load_bearing
+                && let Some(b) = w.wall.arch.load_bearing.as_ref().or_else(|| {
+                    let id = w.wall.style.as_deref()?;
+                    wall_styles.iter().find(|s| s.id == id)?.load_bearing.as_ref()
+                })
             {
                 give(&mut elements[i].psets, "Pset_WallCommon", "LoadBearing", Value::Bool(b.bearing));
             }

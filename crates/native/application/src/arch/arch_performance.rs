@@ -68,6 +68,22 @@ pub fn load_bearing_of(e: &Entity) -> Option<&kentos_commands::DeclaredBearing> 
     }
 }
 
+/// A wall's load-bearing role as it stands (docs/adr/8137): its own declaration, else its wall style's; a column's own.
+/// None: not declared (a wall's unknown, a column's the frame's).
+pub fn load_bearing_carried<'a>(
+    settings: &'a ProjectSettings,
+    e: &'a Entity,
+) -> Option<(&'a kentos_commands::DeclaredBearing, Carried)> {
+    match e {
+        Entity::Wall(w) => w.wall.arch.load_bearing.as_ref().map(|b| (b, Carried::Own)).or_else(|| {
+            let id = w.wall.style.as_deref()?;
+            let s = settings.wall_styles.iter().find(|s| s.id == id)?;
+            s.load_bearing.as_ref().map(|b| (b, Carried::Type))
+        }),
+        _ => load_bearing_of(e).map(|b| (b, Carried::Own)),
+    }
+}
+
 /// Whether `e` takes a declared exterior role (docs/adr/8124, EK-6 `IsExternal`): a wall (a curtain wall too) or a slab
 /// that is no covering; a door or a window is as its wall, a roof always outside.
 pub fn external_rated(e: &Entity) -> bool {
@@ -413,7 +429,7 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
             named.sort();
             (Work::Objects(changes), named.into_iter().map(|(_, u)| u).collect())
         }
-        PerformanceOperation::WallStyle { style, fire_rating } => {
+        PerformanceOperation::WallStyle { style, fire_rating, load_bearing } => {
             // The project's style, else KentOS's (a project copy of the same id then keeps the class, as the Duvar
             // stilleri window keeps a changed KentOS style).
             let list = &settings.wall_styles;
@@ -435,7 +451,19 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                     ));
                 }
             };
-            declared(fire_rating.as_ref(), "yangın dayanım sınıfı", "operation.fireRating")?;
+            // Without the load-bearing role the class is as it always was: absent takes it away (docs/adr/8137).
+            let fire_rating = match (fire_rating, load_bearing) {
+                (None, None) => Some(None),
+                (f, _) => f.clone(),
+            };
+            if let Some(f) = &fire_rating {
+                declared(f.as_ref(), "yangın dayanım sınıfı", "operation.fireRating")?;
+            }
+            if let Some(Some(b)) = load_bearing
+                && let Some(why) = b.basis.problem()
+            {
+                return Err(fail(codes::INVALID_DECLARED, why, "operation.loadBearing.basis"));
+            }
             checks::revision(doc, input.expected_revision.as_deref())?;
             let mut next = settings.clone();
             let at = match source {
@@ -445,10 +473,19 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                     next.wall_styles.len() - 1
                 }
             };
-            next.wall_styles[at].fire_rating.clone_from(fire_rating);
+            if let Some(f) = &fire_rating {
+                next.wall_styles[at].fire_rating.clone_from(f);
+            }
+            if let Some(b) = load_bearing {
+                next.wall_styles[at].load_bearing.clone_from(b);
+            }
             let id = next.wall_styles[at].id.clone();
-            let carried = carriers(doc, fire_rating.is_some(), |e| {
-                matches!(e, Entity::Wall(w) if w.wall.style.as_deref() == Some(id.as_str()) && w.wall.arch.fire_rating.is_none())
+            // The style's walls carrying what was given: those without their own class, or their own role.
+            let class = matches!(fire_rating, Some(Some(_)));
+            let role = matches!(load_bearing, Some(Some(_)));
+            let carried = carriers(doc, class || role, |e| {
+                matches!(e, Entity::Wall(w) if w.wall.style.as_deref() == Some(id.as_str())
+                    && ((class && w.wall.arch.fire_rating.is_none()) || (role && w.wall.arch.load_bearing.is_none())))
             });
             (Work::Settings(Box::new(next)), carried)
         }

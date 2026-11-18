@@ -175,6 +175,45 @@ fn a_wall_s_declared_load_bearing_role_is_its_common_set_s() {
     assert_eq!(bearing(undeclared), None);
 }
 
+/// A wall style declared load-bearing (docs/adr/8137) writes `Pset_WallCommon.LoadBearing` true on its walls that
+/// declare nothing of their own; a wall of the style declared not load-bearing keeps its false.
+#[test]
+fn a_wall_style_s_load_bearing_role_is_its_walls_common_set_s() {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    let mut doc = building();
+    let styled: Vec<(u128, String, String)> = doc
+        .entities_with_uids()
+        .filter_map(|(u, e)| match e {
+            Entity::Wall(w) => w.wall.style.clone().map(|s| (u.as_u128(), u.to_string(), s)),
+            _ => None,
+        })
+        .collect();
+    let style = styled.first().map(|x| x.2.clone()).expect("a wall with a style");
+    let mine: Vec<&(u128, String, String)> = styled.iter().filter(|x| x.2 == style).collect();
+    assert!(mine.len() >= 2, "two walls of one style: {mine:?}");
+    let mut run = |input: serde_json::Value| {
+        let answer = registry::run(&mut ExecutionContext::new(&mut doc), "cad.arch.performance", CallOp::Execute, input).unwrap();
+        assert_eq!(answer["status"], "completed", "{answer}");
+    };
+    run(serde_json::json!({"operation": {"kind": "wallStyle", "style": style,
+        "loadBearing": {"bearing": true, "basis": {"kind": "author"}}}}));
+    run(serde_json::json!({"operation": {"kind": "objects", "uids": [mine[1].1],
+        "loadBearing": {"bearing": false, "basis": {"kind": "author"}}}}));
+    let (b, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
+    let bearing = |id: u128| {
+        let e = b.elements.iter().find(|e| e.id == Some(id)).expect("the wall");
+        e.psets
+            .iter()
+            .filter(|p| p.name == "Pset_WallCommon")
+            .flat_map(|p| p.props.iter())
+            .find(|(n, _)| n == "LoadBearing")
+            .map(|(_, v)| v.clone())
+    };
+    assert_eq!(bearing(mine[0].0), Some(Value::Bool(true)), "the style's");
+    assert_eq!(bearing(mine[1].0), Some(Value::Bool(false)), "the wall's own");
+}
+
 /// The künye a permit set writes into the drawing's variables (docs/adr/8037), as an office fills it.
 const KUNYE: [(&str, &str); 18] = [
     ("proje_kodu", "260123"),

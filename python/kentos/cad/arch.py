@@ -1258,13 +1258,18 @@ class _ArchPerformance(LocalCommand[ArchPerformance, ArchPerformanceDone, ArchPe
     ve merdivenden başkası field_not_for_kind. wallStyle duvar stilinin (style: kimlik
     ya da ad, yoksa style_not_found), openingType kapı ve pencere tipinin (type, yoksa
     opening_type_not_found) yangın dayanım sınıfını verir; kendi değeri olmayan duvarlar
-    ve açıklıklar onu taşır. material malzemenin dayanım sınıfını (strength: C25, S355;
-    harf, rakam ve / . , - ile en çok 16, değilse invalid_strength; modelde Ad_Dayanım
-    yazılır) ve TS EN 13501-1 yanıcılık sınıfını (reaction: A1, A2-s1,d0, B-s2,d0, E-d2,
-    Bfl-s1; okunmazsa invalid_declared operation.reaction.value) ve çatı kaplaması
-    olarak TS EN 13501-5 dış yangın sınıfını (roofClass: BROOF, BROOF(t1) … FROOF(t4);
-    okunmazsa invalid_declared operation.roofClass.value) verir, verilmeyen kalır, null
-    kaldırır, ikisi de yoksa nothing_to_set; building binanın yangın koruma sınıfını
+    ve açıklıklar onu taşır. wallStyle duvar stilinin taşıyıcılığını da verir
+    (loadBearing: bearing ve basis; kendi rolü olmayan duvarlar taşır; null kaldırır):
+    loadBearing verilince verilmeyen fireRating kalır, null kaldırır; loadBearing
+    verilmezse fireRating eskisi gibidir, yoksa ya da null ise sınıf kaldırılır; önce
+    sınıf, sonra rolün dayanağı okunur (invalid_declared operation.loadBearing.basis).
+    material malzemenin dayanım sınıfını (strength: C25, S355; harf, rakam ve / . , -
+    ile en çok 16, değilse invalid_strength; modelde Ad_Dayanım yazılır) ve TS EN
+    13501-1 yanıcılık sınıfını (reaction: A1, A2-s1,d0, B-s2,d0, E-d2, Bfl-s1; okunmazsa
+    invalid_declared operation.reaction.value) ve çatı kaplaması olarak TS EN 13501-5
+    dış yangın sınıfını (roofClass: BROOF, BROOF(t1) … FROOF(t4); okunmazsa
+    invalid_declared operation.roofClass.value) verir, verilmeyen kalır, null kaldırır,
+    ikisi de yoksa nothing_to_set; building binanın yangın koruma sınıfını
     (fireProtectionClass). Beyan value ve basis'tir: basis kind author (müellif beyanı)
     ya da document (name, isteğe bağlı date YYYY-AA-GG); boş, 64 karakterden uzun, satır
     sonlu değer ya da adsız belge, gün olmayan tarih invalid_declared. Varsayılan
@@ -1318,13 +1323,18 @@ class _ArchPerformance(LocalCommand[ArchPerformance, ArchPerformanceDone, ArchPe
         başkası field_not_for_kind. wallStyle duvar stilinin (style: kimlik ya da ad, yoksa
         style_not_found), openingType kapı ve pencere tipinin (type, yoksa
         opening_type_not_found) yangın dayanım sınıfını verir; kendi değeri olmayan duvarlar
-        ve açıklıklar onu taşır. material malzemenin dayanım sınıfını (strength: C25, S355;
-        harf, rakam ve / . , - ile en çok 16, değilse invalid_strength; modelde Ad_Dayanım
-        yazılır) ve TS EN 13501-1 yanıcılık sınıfını (reaction: A1, A2-s1,d0, B-s2,d0, E-d2,
-        Bfl-s1; okunmazsa invalid_declared operation.reaction.value) ve çatı kaplaması
-        olarak TS EN 13501-5 dış yangın sınıfını (roofClass: BROOF, BROOF(t1) … FROOF(t4);
-        okunmazsa invalid_declared operation.roofClass.value) verir, verilmeyen kalır, null
-        kaldırır, ikisi de yoksa nothing_to_set; building binanın yangın koruma sınıfını
+        ve açıklıklar onu taşır. wallStyle duvar stilinin taşıyıcılığını da verir
+        (loadBearing: bearing ve basis; kendi rolü olmayan duvarlar taşır; null kaldırır):
+        loadBearing verilince verilmeyen fireRating kalır, null kaldırır; loadBearing
+        verilmezse fireRating eskisi gibidir, yoksa ya da null ise sınıf kaldırılır; önce
+        sınıf, sonra rolün dayanağı okunur (invalid_declared operation.loadBearing.basis).
+        material malzemenin dayanım sınıfını (strength: C25, S355; harf, rakam ve / . , -
+        ile en çok 16, değilse invalid_strength; modelde Ad_Dayanım yazılır) ve TS EN
+        13501-1 yanıcılık sınıfını (reaction: A1, A2-s1,d0, B-s2,d0, E-d2, Bfl-s1; okunmazsa
+        invalid_declared operation.reaction.value) ve çatı kaplaması olarak TS EN 13501-5
+        dış yangın sınıfını (roofClass: BROOF, BROOF(t1) … FROOF(t4); okunmazsa
+        invalid_declared operation.roofClass.value) verir, verilmeyen kalır, null kaldırır,
+        ikisi de yoksa nothing_to_set; building binanın yangın koruma sınıfını
         (fireProtectionClass). Beyan value ve basis'tir: basis kind author (müellif beyanı)
         ya da document (name, isteğe bağlı date YYYY-AA-GG); boş, 64 karakterden uzun, satır
         sonlu değer ya da adsız belge, gün olmayan tarih invalid_declared. Varsayılan

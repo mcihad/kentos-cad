@@ -120750,6 +120750,8 @@ class WallStyleDef(_Model):
         id: One of its kind among the project's wall styles; KentOS's own are named (`kentos-…`), the user's UUIDv7.
         fire_rating: Its fire resistance class (docs/adr/8068, EK-6 Tablo 6.66 `FireRating`): every wall of the style carries it
             unless the wall has its own. Absent: none (missing).
+        load_bearing: Its load-bearing role (docs/adr/8137; EK-6 Tablo 6.133 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2): every wall
+            of the style carries it unless the wall has its own. Absent: none (unknown).
         width: A new wall's width, metres, when one component takes the rest; the components' sum when none does. Unit: length.
     """
     id: str
@@ -120758,6 +120760,7 @@ class WallStyleDef(_Model):
     caps: WallCaps | WallCapsName | Unset = UNSET
     fill: str | None | Unset = UNSET
     fire_rating: Declared | None | Unset = UNSET
+    load_bearing: DeclaredBearing | None | Unset = UNSET
     width: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -120771,6 +120774,8 @@ class WallStyleDef(_Model):
             out["fill"] = self.fill
         if self.fire_rating is not UNSET:
             out["fireRating"] = None if self.fire_rating is None else self.fire_rating.to_json()
+        if self.load_bearing is not UNSET:
+            out["loadBearing"] = None if self.load_bearing is None else self.load_bearing.to_json()
         if self.width is not UNSET:
             out["width"] = None if self.width is None else float(self.width)
         return out
@@ -120784,6 +120789,7 @@ class WallStyleDef(_Model):
             caps=_enum_in(WallCaps, data["caps"]) if "caps" in data else UNSET,
             fill=data.get("fill", UNSET),
             fire_rating=UNSET if "fireRating" not in data else None if data["fireRating"] is None else Declared.from_json(data["fireRating"]),
+            load_bearing=UNSET if "loadBearing" not in data else None if data["loadBearing"] is None else DeclaredBearing.from_json(data["loadBearing"]),
             width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
         )
 
@@ -139489,22 +139495,31 @@ class ExitsPerformanceOperation(PerformanceOperation):
 
 @dataclass(kw_only=True, slots=True)
 class WallStylePerformanceOperation(PerformanceOperation):
-    """Duvar stili: a wall style's class (by its id or name); null: none."""
+    """Duvar stili: a wall style's class and load-bearing role (by its id or name; docs/adr/8068, 8137). Without
+    `loadBearing` the class is as it always was: given, written; absent or null, taken away. With `loadBearing` a
+    class absent stays, null takes it away; the role given is written, null takes it away. The style's walls without
+    their own carry them.
+    """
     TAG_VALUE: ClassVar[str] = "wallStyle"
     style: str
-    fire_rating: Declared | None = None
+    fire_rating: Declared | None | Unset = UNSET
+    load_bearing: DeclaredBearing | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "wallStyle"}
         out["style"] = self.style
-        out["fireRating"] = None if self.fire_rating is None else self.fire_rating.to_json()
+        if self.fire_rating is not UNSET:
+            out["fireRating"] = None if self.fire_rating is None else self.fire_rating.to_json()
+        if self.load_bearing is not UNSET:
+            out["loadBearing"] = None if self.load_bearing is None else self.load_bearing.to_json()
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> WallStylePerformanceOperation:
         return cls(
             style=data["style"],
-            fire_rating=None if data["fireRating"] is None else Declared.from_json(data["fireRating"]) if "fireRating" in data else None,
+            fire_rating=UNSET if "fireRating" not in data else None if data["fireRating"] is None else Declared.from_json(data["fireRating"]),
+            load_bearing=UNSET if "loadBearing" not in data else None if data["loadBearing"] is None else DeclaredBearing.from_json(data["loadBearing"]),
         )
 
 

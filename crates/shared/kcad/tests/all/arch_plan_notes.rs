@@ -99,6 +99,33 @@ fn a_lift_shaft_s_vent_round_trips_under_arch_data_24() {
     assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the vent reads back");
 }
 
+/// Architecture data 26 (docs/adr/8137): a wall style's load-bearing role is written with `modules.arch = 26` and read
+/// back.
+#[test]
+fn a_wall_style_s_load_bearing_role_round_trips_under_arch_data_26() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_style_bearing(&doc));
+    let mut style = plain_style();
+    style.load_bearing = Some(kentos_contracts::DeclaredBearing {
+        bearing: true,
+        basis: kentos_contracts::DeclaredBasis::Author,
+    });
+    doc.settings.wall_styles.push(style);
+    assert!(kentos_kcad::uses_style_bearing(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_STYLE_BEARING);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the role reads back");
+}
+
+/// A plain wall style of its own (one 20 cm brick component).
+fn plain_style() -> kentos_contracts::WallStyleDef {
+    serde_json::from_value(serde_json::json!({
+        "id": "tasiyici-tugla", "name": "Taşıyıcı tuğla",
+        "components": [{"name": "Tuğla", "material": "Tuğla", "thickness": 0.2}]
+    }))
+    .expect("a style")
+}
+
 /// Architecture data 25 (docs/adr/8136): a shaft room's protected role and a wall's fire stop role are written with
 /// `modules.arch = 25` and read back.
 #[test]

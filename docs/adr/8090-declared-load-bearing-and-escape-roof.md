@@ -69,7 +69,8 @@
 ## §6. Sıradaki adımlar
 
 - **Duvar stilinin taşıyıcılığı:** stil işleminin "alan yoksa sil" anlamını "alan yoksa kalır"a çevirmek bir sözleşme
-  kararıdır (sürüm 2); o zaman stil "Taşıyıcı duvar" diye işaretlenir.
+  kararıdır (sürüm 2); o zaman stil "Taşıyıcı duvar" diye işaretlenir ([ADR 8137](8137-wall-style-load-bearing.md)'de
+  sürüm atlatmadan yapıldı: `loadBearing` verilince sınıf verilmezse kalır).
 - **Korunumlu şaft (Ek-3/B 8, REI 120)** ve **yangın kesici (10)**: modelde rolü ve öğesi yok ([ADR
   8136](8136-protected-shafts-and-fire-stops.md)'da yapıldı: şaft mahalinin ve duvarın, döşemenin beyanı).
 - **Döşemenin, kolonun taşıyıcılığı:** Ek-3/B 1 zaten çerçeveyi (kolon, kiriş) taşıyıcı sayar; perde duvar beyanı

@@ -114,12 +114,29 @@ pub enum PerformanceOperation {
         #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
         no: Vec<String>,
     },
-    /// Duvar stili: a wall style's class (by its id or name); null: none.
+    /// Duvar stili: a wall style's class and load-bearing role (by its id or name; docs/adr/8068, 8137). Without
+    /// `loadBearing` the class is as it always was: given, written; absent or null, taken away. With `loadBearing` a
+    /// class absent stays, null takes it away; the role given is written, null takes it away. The style's walls without
+    /// their own carry them.
     #[serde(rename_all = "camelCase")]
     WallStyle {
         style: String,
-        #[serde(default)]
-        fire_rating: Option<Declared>,
+        #[serde(
+            default,
+            with = "crate::cad_properties::nullable",
+            skip_serializing_if = "Option::is_none"
+        )]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Option<Declared>>", optional))]
+        #[cfg_attr(feature = "schema", schemars(with = "Option<Declared>"))]
+        fire_rating: Option<Option<Declared>>,
+        #[serde(
+            default,
+            with = "crate::cad_properties::nullable",
+            skip_serializing_if = "Option::is_none"
+        )]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Option<DeclaredBearing>>", optional))]
+        #[cfg_attr(feature = "schema", schemars(with = "Option<DeclaredBearing>"))]
+        load_bearing: Option<Option<DeclaredBearing>>,
     },
     /// Kapı ve pencere tipi: a type's class (by its id or name); null: none.
     #[serde(rename_all = "camelCase")]

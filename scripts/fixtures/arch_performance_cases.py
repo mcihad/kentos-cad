@@ -22,6 +22,10 @@ The rules (ADR 8068 §2):
   uids[i] of yes then no), anything but a door or a stair field_not_for_kind (at operation.yes[i] or operation.no[i]),
   the revision, a locked layer (layer_locked at the same place).
 - wallStyle / openingType / material: by id, else by name (case aside); none: style_not_found, opening_type_not_found,
+  material_not_found. A wall style's `loadBearing` (ADR 8137): given, the class absent stays and null takes it away, the
+  role null takes it away; not given, the class is as before (absent or null takes it away). The class is read first,
+  then the role's basis (invalid_declared at operation.loadBearing.basis). The answer: the style's walls without their
+  own class (a class given) or their own role (a role given), in the drawing's order. Else for the others:
   material_not_found. A class null: none. A strength: letters, digits and / . , - , at most 16 (invalid_strength). A
   material's `strength`, `reaction` (ADR 8091) and `roofClass` (ADR 8134): absent stays, null takes it away, none given
   nothing_to_set; a reaction class as TS EN 13501-1 writes it (invalid_declared at operation.reaction.value); a roof
@@ -396,6 +400,26 @@ def run(d, inp):
                 e.setdefault("arch", {})["exit"] = role
         order = {e["id"]: k for k, e in enumerate(d["entities"])}
         out = [uid_of[e["id"]] for _, e in sorted(found, key=lambda x: order[x[1]["id"]])]
+    elif kind == "wallStyle" and "loadBearing" in op:
+        items = settings["wallStyles"]
+        at = find(items, op["style"])
+        if at is None:
+            return refusal("style_not_found", "operation.style"), d
+        if op.get("fireRating") is not None and declared_bad(op["fireRating"]):
+            return refusal("invalid_declared", "operation.fireRating"), d
+        if op["loadBearing"] is not None and basis_bad(op["loadBearing"]["basis"]):
+            return refusal("invalid_declared", "operation.loadBearing.basis"), d
+        r = revision_refusal(inp)
+        if r:
+            return r, d
+        if "fireRating" in op:
+            put(items[at], "fireRating", op["fireRating"])
+        put(items[at], "loadBearing", op["loadBearing"])
+        tid = items[at]["id"]
+        cls, role = op.get("fireRating") is not None, op["loadBearing"] is not None
+        out = [uid_of[e["id"]] for e in d["entities"] if e["kind"] == "wall" and e.get("style") == tid
+               and ((cls and "fireRating" not in (e.get("arch") or {}))
+                    or (role and "loadBearing" not in (e.get("arch") or {})))]
     elif kind in ("wallStyle", "openingType"):
         if kind == "wallStyle":
             items, key, path, code = settings["wallStyles"], op["style"], "operation.style", "style_not_found"
@@ -578,6 +602,29 @@ def cases():
     case("Stilin sınıfı kaldırılır: taşıyan yok",
          written({"kind": "wallStyle", "style": "dis-duvar", "fireRating": None}, setup=declared), setup=declared)
     case("Olmayan stil", refused({"kind": "wallStyle", "style": "ic-duvar", "fireRating": author("EI 60")}))
+    # A wall style's load-bearing role (ADR 8137).
+    case("Stil taşıyıcı: sınıfı kalır, kendi rolü olmayan duvarları, kilitlisi de, taşır",
+         written({"kind": "wallStyle", "style": "dis-duvar", "loadBearing": bearing(True)}, setup=declared),
+         setup=declared)
+    case("Stil taşıyıcı değil, belgeyle; sınıfı da yazılır",
+         written({"kind": "wallStyle", "style": "dis-duvar", "fireRating": author("EI 90"),
+                  "loadBearing": bearing(False, {"kind": "document", "name": "Statik proje", "date": "2026-11-18"})}))
+    case("Stilin taşıyıcılığı kaldırılır, sınıfı kalır",
+         written({"kind": "wallStyle", "style": "dis-duvar", "loadBearing": None}, setup=style_bearing(declared)),
+         setup=style_bearing(declared))
+    case("Taşıyıcılıkla null sınıf: sınıf kalkar",
+         written({"kind": "wallStyle", "style": "dis-duvar", "fireRating": None, "loadBearing": bearing(True)},
+                 setup=declared), setup=declared)
+    case("Stil adıyla taşıyıcı", written({"kind": "wallStyle", "style": "Dış Duvar", "loadBearing": bearing(True)}))
+    case("Kendi rolü olan duvar stilinkini taşımaz",
+         written({"kind": "wallStyle", "style": "dis-duvar", "loadBearing": bearing(False)}, setup=bearing_wall(d)),
+         setup=bearing_wall(d))
+    case("Stilin taşıyıcılığının belgesi adsız",
+         refused({"kind": "wallStyle", "style": "dis-duvar", "loadBearing": bearing(True, {"kind": "document",
+                                                                                          "name": ""})}))
+    case("Önce sınıf okunur", refused({"kind": "wallStyle", "style": "dis-duvar", "fireRating": author(" "),
+                                       "loadBearing": bearing(True, {"kind": "document", "name": ""})}))
+    case("Olmayan stile taşıyıcılık", refused({"kind": "wallStyle", "style": "ic-duvar", "loadBearing": bearing(True)}))
     case("Stile boş sınıf", refused({"kind": "wallStyle", "style": "dis-duvar", "fireRating": author("")}))
     case("Kapı tipine sınıf: tipteki kapı taşır",
          written({"kind": "openingType", "type": "k01", "fireRating": author("EI 30")}))
@@ -858,6 +905,13 @@ def bearing_wall(d):
     for e in d["entities"]:
         if e["id"] == WALL:
             e["arch"] = {"loadBearing": bearing(True)}
+    return d
+
+
+def style_bearing(d):
+    """The wall style declared load-bearing (ADR 8137)."""
+    d = copy.deepcopy(d)
+    d["settings"]["wallStyles"][0]["loadBearing"] = bearing(True)
     return d
 
 

@@ -168,15 +168,38 @@ pub(crate) fn performance_rows(doc: &Document, slot: Slot, e: &Entity, locked: b
     let yes_no = |v: bool| if v { "Evet" } else { "Hayır" };
     if load_bearing_rated(e) {
         let now = load_bearing_of(e).map(|x| x.bearing);
-        // A column carries as the frame's unless declared (docs/adr/8124); a wall's is unknown until declared.
+        // A column carries as the frame's unless declared (docs/adr/8124); a wall carries its style's (docs/adr/8137),
+        // else it is unknown until declared.
         let read = kentos_domain::Document::bearing_reading(e);
-        let unset = read.as_ref().map_or_else(|| "Bilinmiyor".to_owned(), |r| format!("Kendiliğinden ({})", yes_no(r.value)));
+        let style = match e {
+            Entity::Wall(w) => w
+                .wall
+                .style
+                .as_deref()
+                .and_then(|id| doc.settings().wall_styles.iter().find(|s| s.id == id))
+                .and_then(|s| s.load_bearing.as_ref())
+                .map(|b| b.bearing),
+            _ => None,
+        };
+        let unset = match (style, read.as_ref()) {
+            (Some(v), _) => format!("Stilinden ({})", yes_no(v)),
+            (None, Some(r)) => format!("Kendiliğinden ({})", yes_no(r.value)),
+            (None, None) => "Bilinmiyor".to_owned(),
+        };
         let words = now.map_or_else(|| unset.clone(), |v| yes_no(v).to_owned());
         let items = [(Some(true), "Evet".to_owned()), (Some(false), "Hayır".to_owned()), (None, unset)]
             .into_iter()
             .map(|(v, label)| pick(label, now == v, Message::Properties(Event::LoadBearing(slot, v)), None))
             .collect();
         rows.push(Row::text("Taşıyıcı", &words).editor((!locked).then(|| select(words.clone(), items))));
+        if let Some(v) = style {
+            rows.push(Row::note(match (now, v) {
+                (None, true) => "Duvar stilinden: taşıyıcı.",
+                (None, false) => "Duvar stilinden: taşıyıcı değil.",
+                (Some(own), _) if own == v => "Beyan edildi; duvar stili de öyle.",
+                (Some(_), _) => "Beyan duvar stilinin rolünü geçer.",
+            }));
+        }
         if let Some(r) = read {
             let read_as = if r.value { "taşıyıcı" } else { "taşıyıcı değil" };
             rows.push(Row::note(&reading_note(r.value, r.why, now, read_as)));

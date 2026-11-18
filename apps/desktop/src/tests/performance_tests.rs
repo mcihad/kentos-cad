@@ -262,3 +262,125 @@ fn screens() {
         shot(&mut app, "4-denetim-zorunlu-alanlar");
     }
 }
+
+/// A wall style's load-bearing role (docs/adr/8137): chosen in Duvar stilleri as Evet and saved, the style's walls
+/// without their own carry it (Öznitelikler's Taşıyıcı says "Stilinden (Evet)" with its note, the audit facts read it
+/// load-bearing); a wall's own Hayır wins and the note says so; Bilinmiyor takes the style's away.
+#[test]
+fn a_wall_style_s_load_bearing_role_reaches_its_walls() {
+    use crate::properties::Event;
+    use crate::wall_styles::Event as Styles;
+    let mut app = app();
+    let (wall, uid) = first(&app, |e| matches!(e, Entity::Wall(w) if w.wall.style.is_some()));
+    let style = match app.document.as_ref().expect("the building").model.get(wall) {
+        Some(Entity::Wall(w)) => w.wall.style.clone().expect("a style"),
+        _ => unreachable!(),
+    };
+    let styles = |app: &mut App, e: Styles| {
+        let _ = app.update(Message::Arch(crate::arch::Event::WallStyles(e)));
+    };
+    let _ = app.update(Message::Run("arch.wallStyles"));
+    styles(&mut app, Styles::Choose(Some(style.clone())));
+    styles(&mut app, Styles::LoadBearing(Some(true)));
+    styles(&mut app, Styles::Save);
+    let held = |app: &App| {
+        let doc = &app.document.as_ref().expect("the building").model;
+        doc.settings().wall_styles.iter().find(|s| s.id == style).and_then(|s| s.load_bearing.clone())
+    };
+    assert_eq!(held(&app).map(|b| (b.bearing, b.basis)), Some((true, kentos_commands::DeclaredBasis::Author)));
+    app.dialog = None;
+    app.arch.wall_styles = None;
+    let row = |app: &App| {
+        let doc = app.document.as_ref().expect("open");
+        let rows: Vec<(String, String)> = app
+            .properties_panel(doc)
+            .sections
+            .into_iter()
+            .flat_map(|s| s.rows)
+            .map(|r| (r.label.to_string(), r.value))
+            .collect();
+        let at = rows.iter().position(|r| r.0 == "Taşıyıcı").expect("a Taşıyıcı row");
+        (rows[at].1.clone(), rows.get(at + 1).map(|r| r.1.clone()).unwrap_or_default())
+    };
+    app.selection.set(vec![wall]);
+    assert_eq!(row(&app), ("Stilinden (Evet)".to_owned(), "Duvar stilinden: taşıyıcı.".to_owned()));
+    let facts = |app: &App| {
+        let doc = &app.document.as_ref().expect("the building").model;
+        let f = kentos_processing::audit_facts::building::measure(doc).normalized();
+        f.elements.iter().find(|e| e.uid == uid).and_then(|e| e.load_bearing)
+    };
+    assert_eq!(facts(&app), Some(true), "the facts read the style's role");
+    // The wall's own Hayır wins over its style's Evet.
+    let _ = app.update(Message::Properties(Event::LoadBearing(wall, Some(false))));
+    assert_eq!(row(&app), ("Hayır".to_owned(), "Beyan duvar stilinin rolünü geçer.".to_owned()));
+    assert_eq!(facts(&app), Some(false));
+    // Back to the style's, then the style's taken away: unknown.
+    let _ = app.update(Message::Properties(Event::LoadBearing(wall, None)));
+    let _ = app.update(Message::Run("arch.wallStyles"));
+    styles(&mut app, Styles::Choose(Some(style.clone())));
+    styles(&mut app, Styles::LoadBearing(None));
+    styles(&mut app, Styles::Save);
+    app.dialog = None;
+    app.arch.wall_styles = None;
+    assert_eq!(held(&app), None);
+    assert_eq!(row(&app).0, "Bilinmiyor");
+    assert_eq!(facts(&app), None);
+}
+
+/// Duvar stilleri with Taşıyıcı Evet and Öznitelikler of a wall carrying it, light and dark;
+/// `.run/gui-evidence/stil-tasiyici-8137/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib performance_tests::style_bearing_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn style_bearing_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::{Input, Snapshot};
+
+    use crate::wall_styles::Event as Styles;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/stil-tasiyici-8137");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 1180.0), "acik"), ("dark", Size::new(1280.0, 1100.0), "koyu")] {
+        let mut app = app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::RibbonTab("arch"));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        // `scroll`: the properties panel scrolled down this many steps.
+        let mut shot = |app: &mut App, file: &str, scroll: Option<f32>| {
+            snapshot.settle(app, App::view, &mut update);
+            if let Some(down) = scroll {
+                let at = iced::Point::new(size.width - 150.0, size.height - 250.0);
+                snapshot.input(app, App::view, &mut update, Input::Scroll(at, -down));
+                snapshot.settle(app, App::view, &mut update);
+            }
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let (wall, _) = first(&app, |e| matches!(e, Entity::Wall(w) if w.wall.style.is_some()));
+        let style = match app.document.as_ref().expect("the building").model.get(wall) {
+            Some(Entity::Wall(w)) => w.wall.style.clone().expect("a style"),
+            _ => unreachable!(),
+        };
+        let styles = |app: &mut App, e: Styles| {
+            let _ = app.update(Message::Arch(crate::arch::Event::WallStyles(e)));
+        };
+        let _ = app.update(Message::Run("arch.wallStyles"));
+        styles(&mut app, Styles::Choose(Some(style.clone())));
+        styles(&mut app, Styles::LoadBearing(Some(true)));
+        shot(&mut app, "1-duvar-stilleri", None);
+        styles(&mut app, Styles::Save);
+        app.dialog = None;
+        app.arch.wall_styles = None;
+        app.selection.set(vec![wall]);
+        shot(&mut app, "2-duvar-oznitelikler", Some(2.0));
+    }
+}

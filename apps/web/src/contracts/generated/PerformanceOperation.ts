@@ -29,4 +29,4 @@ protected?: DeclaredProtected | null,
 /**
  * A wall's or a slab's fire stop role (docs/adr/8136, BYKHY 4/pp, Ek-3/B 10); null: not declared again.
  */
-fireStop?: DeclaredFireStop | null, } | { "kind": "exits", yes: Array<string>, no: Array<string>, } | { "kind": "wallStyle", style: string, fireRating: Declared | null, } | { "kind": "openingType", type: string, fireRating: Declared | null, } | { "kind": "material", material: string, strength?: string | null, reaction?: Declared | null, roofClass?: Declared | null, } | { "kind": "building", fireProtectionClass: Declared | null, };
+fireStop?: DeclaredFireStop | null, } | { "kind": "exits", yes: Array<string>, no: Array<string>, } | { "kind": "wallStyle", style: string, fireRating?: Declared | null, loadBearing?: DeclaredBearing | null, } | { "kind": "openingType", type: string, fireRating: Declared | null, } | { "kind": "material", material: string, strength?: string | null, reaction?: Declared | null, roofClass?: Declared | null, } | { "kind": "building", fireProtectionClass: Declared | null, };

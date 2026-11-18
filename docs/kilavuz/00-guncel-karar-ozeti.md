@@ -383,6 +383,10 @@
     döşemede "Yangın kesici" beyanı (`cad.arch.performance`'ın `protected` ve `fireStop`'u, mimari verisi 25). Paketin
     `dayanim`'ı Ek-3/B 8'i (korunumlu şaftın duvarları REI 120, katlarca bütün şaft) ve 10'u (yangın kesici EI 30; kendi
     satırı E ve I ile en az 30 istemiyorsa ayrıca) okur.
+  - **Duvar stilinin taşıyıcılığı (18 Kasım 2026; [ADR 8137](../adr/8137-wall-style-load-bearing.md), K337–K341):**
+    Duvar stilleri'nde "Taşıyıcı"; kendi beyanı olmayan duvarlar taşır (Öznitelikler "Stilinden (Evet)", olgular, Ek-3,
+    IFC `LoadBearing` örnekte). `cad.arch.performance`'ın `wallStyle`'ına `loadBearing`: verilince verilmeyen sınıf kalır;
+    verilmezse işlem eskisi gibi (sınıf yoksa kalkar). Mimari verisi 26.
   - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
     PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
     39/1-ç döner kapının yanında normal bina girişi.

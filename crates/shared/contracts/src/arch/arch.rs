@@ -1225,6 +1225,11 @@ pub struct WallStyleDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub fire_rating: Option<crate::Declared>,
+    /// Its load-bearing role (docs/adr/8137; EK-6 Tablo 6.133 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2): every wall
+    /// of the style carries it unless the wall has its own. Absent: none (unknown).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub load_bearing: Option<crate::DeclaredBearing>,
 }
 
 impl WallStyleDef {
@@ -1252,6 +1257,9 @@ impl WallStyleDef {
         }
         if let Some(words) = self.fire_rating.as_ref().and_then(|d| d.problem("yangın dayanım sınıfı")) {
             return Some(("fireRating".into(), format!("“{name}” duvar stili: {words}")));
+        }
+        if let Some(words) = self.load_bearing.as_ref().and_then(|b| b.basis.problem()) {
+            return Some(("loadBearing".into(), format!("“{name}” duvar stilinin taşıyıcılık beyanı: {words}")));
         }
         if !colour_holds(&self.fill) {
             return Some((
@@ -2775,6 +2783,7 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             fill: Some("#5A5A5A".into()),
             width: Some(0.25),
             fire_rating: None,
+            load_bearing: None,
         },
         WallStyleDef {
             id: "kentos-ic-duvar-15".into(),
@@ -2788,6 +2797,7 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             fill: Some("#5A5A5A".into()),
             width: Some(0.15),
             fire_rating: None,
+            load_bearing: None,
         },
         WallStyleDef {
             id: "kentos-gazbeton-20".into(),
@@ -2802,6 +2812,7 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             fill: Some("#5A5A5A".into()),
             width: Some(0.20),
             fire_rating: None,
+            load_bearing: None,
         },
         WallStyleDef {
             id: "kentos-betonarme-25".into(),
@@ -2817,6 +2828,7 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             fill: Some("#3C3C3C".into()),
             width: Some(0.25),
             fire_rating: None,
+            load_bearing: None,
         },
         WallStyleDef {
             id: "kentos-bolme-10".into(),
@@ -2830,6 +2842,7 @@ pub fn builtin_wall_styles() -> Vec<WallStyleDef> {
             fill: None,
             width: Some(0.10),
             fire_rating: None,
+            load_bearing: None,
         },
     ]
 }
