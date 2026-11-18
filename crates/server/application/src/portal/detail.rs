@@ -89,6 +89,8 @@ pub(crate) fn event_text(
             text("reason")
         ),
         "fee_cancelled" => format!("{actor} {} tutarındaki tahakkuku iptal etti: {}.", text("total"), text("reason")),
+        "live_project_linked" => format!("{actor} işi kurumun canlı projesine bağladı; üstlenen düzenleyici olarak çalışır."),
+        "live_project_unlinked" => format!("{actor} canlı proje bağlantısını kaldırdı."),
         "signed" => format!(
             "{actor} {} dosyayı e-imzaladı ({}).",
             detail.get("files").and_then(serde_json::Value::as_u64).unwrap_or(0),
@@ -151,6 +153,11 @@ pub(crate) async fn assemble(
     .bind(id)
     .fetch_all(&mut **tx)
     .await?;
+    let live: Option<(Uuid, Uuid, String, bool)> =
+        sqlx::query_as("select tenant_id, project_id, name, granted from kentos.dossier_live_project($1)")
+            .bind(id)
+            .fetch_optional(&mut **tx)
+            .await?;
     let fee_count: i64 =
         sqlx::query_scalar("select count(*) from kentos.dossier_fee where dossier_id = $1 and state <> 'cancelled'")
             .bind(id)
@@ -286,6 +293,15 @@ pub(crate) async fn assemble(
                 Party::Member(r) => r >= kentos_contracts::TenantRole::Editor,
                 p => p.works_for_professional(),
             },
+        live_project: live.map(|(tenant, project, name, granted)| kentos_contracts::LiveProjectView {
+            tenant_id: tenant.to_string(),
+            project_id: project.to_string(),
+            name,
+            granted,
+        }),
+        can_link_live_project: direction == DossierDirection::Transfer
+            && matches!(party, Party::Member(r) if r >= kentos_contracts::TenantRole::ProjectManager)
+            && !flow::closed(status),
         pending_round: held.row.round() + 1,
         rounds: rounds.into_values().collect(),
         pending,

@@ -9,6 +9,7 @@ import type { DossierOrganization } from "./DossierOrganization";
 import type { DossierRound } from "./DossierRound";
 import type { DossierSide } from "./DossierSide";
 import type { DossierSummary } from "./DossierSummary";
+import type { LiveProjectView } from "./LiveProjectView";
 import type { ProfessionalView } from "./ProfessionalView";
 
 /**
@@ -59,6 +60,14 @@ feeCount: number,
  * `GET /v1/signing/trust`'s answer.
  */
 canSign: boolean, 
+/**
+ * The municipality's live project the transfer is worked on in, instead of a copy (docs/adr/9000 §24).
+ */
+liveProject: LiveProjectView | null, 
+/**
+ * Whether the caller links a live project to it: the municipality's project managers, while it is open.
+ */
+canLinkLiveProject: boolean, 
 /**
  * The package being prepared: `round + 1`.
  */

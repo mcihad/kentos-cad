@@ -100,10 +100,14 @@ sıradakileri tutar. Bir madde ancak sınaması ve gerçek pencerede görüntüs
   - Veritabanının sinyali (LISTEN/NOTIFY), sunucunun tek dinleyicisi ve kişinin SSE akışı.
   - Portal sayıyı anında görür; sorma beş dakikada bir yedek olarak kalır (ADR 9000 §23).
 
+- [x] `BUL-15` **Aktarımda canlı proje:**
+  - Belediye işi kendi bulut projesine bağlar.
+  - Üstlenen meslek mensubu misafir düzenleyici olur, iş kapanınca erişim kalkar.
+  - Teslim projenin kendisidir; her paylaşım projenin kaydında (ADR 9000 §24).
+
 ## Sıradakiler
 
 - [ ] `BUL-10` Portala kurum kimliğiyle giriş (OpenID Connect; sunucu tarafı ADR 0007'de hazır).
-- [ ] `BUL-15` Aktarımda kopya yerine canlı projede misafir düzenleyici (ADR 0035) seçeneği.
 - [ ] `BUL-27` Resmî yazı (kararın antetli PDF'i), e-tebligat / KEP bağlantısı (kurumun anlaşması gerekir) ve
   e-imzanın yasal denetimi (Kamu SM zinciri, OCSP / SİL, zaman damgası, CAdES / PAdES çıktısı).
 

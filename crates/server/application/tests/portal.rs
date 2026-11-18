@@ -1458,3 +1458,91 @@ async fn a_municipality_s_figures_for_a_period_and_its_workbook() {
     assert_eq!(csv.lines().count(), 4, "a header and three dossiers: {csv}");
     assert!(csv.contains("Reddedildi") && csv.contains("ayse kişi"), "{csv}");
 }
+
+/// The professional's role on a project of the municipality, as the project's rules count it.
+async fn role_on(db: &TestDb, who: &Actor, tenant: Uuid, project: Uuid) -> Option<String> {
+    let owner: Option<Uuid> =
+        sqlx::query_scalar("select owner_user_id from kentos.project where tenant_id = $1 and id = $2")
+            .bind(tenant)
+            .bind(project)
+            .fetch_one(&db.owner)
+            .await
+            .unwrap();
+    let mut tx = db
+        .app
+        .scoped(kentos_postgres::Scope { tenant: None, user: Some(who.user_id), project: None })
+        .await
+        .unwrap();
+    let role: Option<String> = sqlx::query_scalar("select kentos.project_role($1, $2, $3)")
+        .bind(tenant)
+        .bind(project)
+        .bind(owner)
+        .fetch_one(&mut *tx)
+        .await
+        .unwrap();
+    tx.commit().await.unwrap();
+    role
+}
+
+#[tokio::test]
+async fn a_transfer_in_the_live_project_makes_its_professional_a_guest_editor_until_it_closes() {
+    use kentos_contracts::DossierLiveProjectSet;
+
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let root = sistem(&db).await;
+    let tenant = municipality(&db, &root, "canli", "mehmet").await;
+    let mehmet = signed_in(&db, "mehmet").await;
+    let mehmet_in = tenancy::access(&db.app, &mehmet, tenant).await.unwrap();
+    let (zeynep, _) = staff(&db, &mehmet, tenant, "zeynep", TenantRole::Editor).await;
+    let can = professional(&db, &root, "can", Profession::Surveyor).await;
+    let project = new_project(&db, &mehmet_in, "İmar uygulaması").await;
+    let ask = TransferCreate {
+        professional_id: can.user_id.to_string(),
+        kind: "survey".into(),
+        title: "501 ada aplikasyonu".into(),
+        description: String::new(),
+        site: site(),
+        due_on: None,
+    };
+    let id = dossiers::create_transfer(&db.app, &mehmet_in, &ask).await.unwrap();
+    let link = |p: Option<Uuid>| DossierLiveProjectSet { project_id: p.map(|p| p.to_string()) };
+    // Linking is a project manager's; a project of another organisation is not found.
+    let refused = dossiers::set_live_project(&db.app, &zeynep, id, &link(Some(project))).await.unwrap_err();
+    assert!(matches!(refused, AppError::Forbidden(_)), "{refused:?}");
+    let missing = dossiers::set_live_project(&db.app, &mehmet, id, &link(Some(Uuid::now_v7()))).await.unwrap_err();
+    assert!(matches!(missing, AppError::NotFound(_)), "{missing:?}");
+    dossiers::set_live_project(&db.app, &mehmet, id, &link(Some(project))).await.unwrap();
+    let page = detail::detail(&db.app, &mehmet, id).await.unwrap();
+    let live = page.live_project.clone().unwrap();
+    assert!(page.can_link_live_project && live.name == "İmar uygulaması" && !live.granted);
+
+    // Sent with no copy: nothing on the project yet; taken on: a guest editor (not a member of the municipality).
+    act(&db, &mehmet, id, DossierAction::Send, None).await.unwrap();
+    assert_eq!(role_on(&db, &can, tenant, project).await, None);
+    let theirs = detail::detail(&db.app, &can, id).await.unwrap();
+    assert_eq!(theirs.live_project.as_ref().map(|l| l.name.as_str()), Some("İmar uygulaması"), "the professional reads its name");
+    assert!(!theirs.can_link_live_project);
+    act(&db, &can, id, DossierAction::Accept, None).await.unwrap();
+    assert_eq!(role_on(&db, &can, tenant, project).await.as_deref(), Some("editor"));
+    let (guest, audits): (bool, i64) = sqlx::query_as(
+        "select g.guest, (select count(*) from kentos.audit_event a where a.project_id = g.project_id
+                            and a.action = 'dossier.live_project.grant')
+           from kentos.project_grant g where g.project_id = $1 and g.user_id = $2",
+    )
+    .bind(project)
+    .bind(can.user_id)
+    .fetch_one(&db.owner)
+    .await
+    .unwrap();
+    assert!(guest && audits == 1, "a guest's grant, in the project's record");
+    assert!(detail::detail(&db.app, &can, id).await.unwrap().live_project.unwrap().granted);
+
+    // Delivered and completed: the dossier's grant goes back.
+    act(&db, &can, id, DossierAction::Deliver, None).await.unwrap();
+    act(&db, &mehmet, id, DossierAction::Complete, None).await.unwrap();
+    assert_eq!(role_on(&db, &can, tenant, project).await, None);
+    let closed = dossiers::set_live_project(&db.app, &mehmet, id, &link(None)).await.unwrap_err();
+    assert!(closed.to_string().contains("Kapanmış"), "{closed}");
+}

@@ -1,7 +1,7 @@
 // One dossier's page, the same for both sides (docs/adr/9000 §5): where it stands in its flow, what waits for whom,
 // its legal deadline, its packages, conversation and timeline, its particulars, the documents its kind is usually sent
 // with, and the other side. The steps shown are the ones the server allows the reader now.
-import { dossier as api, signing } from '../../api/portal';
+import { dossier as api, portal, signing } from '../../api/portal';
 import type { DossierDetail, DossierSignatureView } from '../../api/types';
 import { withQuery } from '../../app/router';
 import { chamberOf, myOffices, professionLabel, professionalStatus } from '../../app/state';
@@ -187,6 +187,67 @@ function officePanel(d: DossierDetail, reload: () => void): HTMLElement | null {
   );
 }
 
+/** The transfer's live project (docs/adr/9000 §24): linked by the municipality's managers; edited by the professional
+ *  as a guest once they take the job on, until it closes. */
+function livePanel(d: DossierDetail, reload: () => void): HTMLElement | null {
+  const live = d.liveProject;
+  if (!live && !d.canLinkLiveProject) return null;
+  const say = async (projectId: string | null) => {
+    try {
+      await api.setLiveProject(d.summary.id, projectId);
+      toast(projectId ? 'İş canlı projeye bağlandı.' : 'Canlı proje bağlantısı kaldırıldı.');
+      reload();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : String(e), 'danger');
+    }
+  };
+  const parts: Child[] = [];
+  if (live) {
+    const open = d.side === 'municipality' || live.granted;
+    parts.push(
+      h(
+        'div',
+        { class: 'party' },
+        h('span', { class: 'file-icon is-project' }, icon('project', 18)),
+        h(
+          'div',
+          { class: 'party-text' },
+          h('span', { class: 'party-name' }, live.name),
+          h(
+            'span',
+            { class: 'party-sub' },
+            d.side === 'professional'
+              ? live.granted
+                ? 'Misafir düzenleyicisiniz; iş kapanınca erişim kalkar.'
+                : 'İşi üstlendiğinizde misafir düzenleyici olursunuz.'
+              : live.granted
+                ? 'Meslek mensubu düzenleyici olarak çalışıyor.'
+                : 'Meslek mensubu işi üstlenince düzenleyici olur.',
+          ),
+        ),
+      ),
+      open ? h('div', null, button('Projeyi aç', { kind: 'ghost', icon: 'open', href: `#/proje/${live.tenantId}/${live.projectId}` })) : null,
+    );
+  }
+  if (d.canLinkLiveProject) {
+    const select = h('select', { class: 'input', 'aria-label': 'Canlı proje' }, h('option', { value: '' }, 'Proje seçin…'));
+    void portal.projects('organization', d.organization.tenantId).then((page) => {
+      for (const p of page.projects) select.append(h('option', { value: p.id, selected: p.id === live?.projectId }, p.name));
+    });
+    parts.push(
+      h('div', { class: 'field-hint' }, 'Kopya göndermek yerine meslek mensubu kurumun bulut projesinde misafir düzenleyici olarak çalışsın; teslim projenin kendisidir.'),
+      select,
+      h(
+        'div',
+        { class: 'row-actions', style: 'justify-content: flex-start' },
+        button(live ? 'Değiştir' : 'Bağla', { icon: 'project', onClick: () => void (select.value ? say(select.value) : undefined) }),
+        live ? button('Bağlantıyı kaldır', { kind: 'ghost', icon: 'close', onClick: () => void say(null) }) : null,
+      ),
+    );
+  }
+  return panel('Canlı proje', h('div', { class: 'stack', style: 'gap: 10px' }, ...parts));
+}
+
 function partyPanel(d: DossierDetail): HTMLElement {
   if (d.side === 'municipality' && d.professional) {
     const p = d.professional;
@@ -338,7 +399,7 @@ export function dossierPage(reader: Reader | 'office'): PageFn {
           ),
           body,
         ),
-        h('aside', { class: 'dossier-side' }, statusPanel(d), checklistPanel(d), officePanel(d, reload), factsPanel(d), partyPanel(d)),
+        h('aside', { class: 'dossier-side' }, statusPanel(d), livePanel(d, reload), checklistPanel(d), officePanel(d, reload), factsPanel(d), partyPanel(d)),
       ),
     );
     const crumbs =

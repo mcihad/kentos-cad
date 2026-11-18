@@ -435,4 +435,21 @@ if (block('istatistik')) {
   b.close();
 }
 
+// ── A transfer in the live project (docs/adr/9000 §24) ──
+if (block('canli')) {
+  const T4 = known.byTitle['412 ada imar uygulaması ölçümü'];
+  let b = await signIn('mehmet.kaya', PASSWORD, { width: 1560, height: 1000 });
+  await open(b, `${ORG}/dosya/${T4}`);
+  await shot(b, '106-belediye-canli-proje');
+  b.close();
+  b = await signIn('can.ozturk', PASSWORD, { width: 1560, height: 1000 });
+  await open(b, `#/mesleki/dosya/${T4}`);
+  await shot(b, '107-haritaci-canli-projede-misafir');
+  await click(b, 'a', 'Projeyi aç');
+  await b.waitFor(`location.hash.startsWith('#/proje/') && !!document.querySelector('.content > .page')`, 15000);
+  await sleep(1500);
+  await shot(b, '108-haritaci-belediyenin-projesi');
+  b.close();
+}
+
 console.log(shots.join('\n'));

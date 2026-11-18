@@ -304,6 +304,24 @@ pub async fn set_office(
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
 
+/// `PUT /v1/dossiers/{id}/live-project`: the municipality's live project the transfer is worked on in (docs/adr/9000
+/// §24), or none.
+pub async fn set_live_project(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    caller: Caller,
+    Path(id): Path<String>,
+    Body(input): Body<kentos_contracts::DossierLiveProjectSet>,
+) -> Result<Json<DossierDetail>, Failure> {
+    let run = async {
+        let db = state.db()?;
+        let id = path_id(&id, "Dosya")?;
+        dossiers::set_live_project(db, &caller.0, id, &input).await?;
+        detail::detail(db, &caller.0, id).await
+    };
+    run.await.map(Json).map_err(|e| Failure::with(e, &headers))
+}
+
 /// `POST /v1/dossiers/{id}/files/from-upload`: a received upload (`/v1/uploads`) as a pending file (201).
 pub async fn from_upload(
     State(state): State<AppState>,

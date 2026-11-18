@@ -297,6 +297,52 @@ async fn office_for(tx: &mut Transaction<'static, Postgres>, office: Uuid) -> Ap
 }
 
 /// `PUT /v1/dossiers/{id}/office`: its responsible professional shares the dossier with an office of theirs, or takes it
+/// What the live project's definer functions said (docs/adr/9000 §24), as the person reads it.
+pub(crate) fn live_refused(code: Option<String>) -> AppResult<()> {
+    match code.as_deref() {
+        None => Ok(()),
+        Some("forbidden") => Err(AppError::forbidden("Aktarıma canlı projeyi belediyenin proje yöneticisi bağlar.")),
+        Some("not_found") => Err(AppError::not_found("Proje bulunamadı ya da kurumun değil.")),
+        Some("invalid") => Err(AppError::invalid("Kapanmış aktarıma proje bağlanmaz.")),
+        Some("guests_off") => Err(AppError::invalid(
+            "Belediye kurum dışından misafir kabul etmiyor; canlı projede çalışmak için belediyeyle görüşün.",
+        )),
+        Some("inactive") => Err(AppError::invalid(
+            "Meslek mensubunun bu kurumdaki üyeliği ya da koltuğu etkin değil; canlı proje paylaşılamaz.",
+        )),
+        Some(other) => Err(AppError::invalid(format!("Canlı proje bağlanamadı ({other})."))),
+    }
+}
+
+/// `PUT /v1/dossiers/{id}/live-project`: links one of the municipality's cloud projects to its transfer (none
+/// unlinks); a job already taken on gets its grant at once. The municipality's project managers, while it is open.
+pub async fn set_live_project(db: &Db, actor: &Actor, id: Uuid, input: &kentos_contracts::DossierLiveProjectSet) -> AppResult<()> {
+    let project = match input.project_id.as_deref().map(str::trim).filter(|p| !p.is_empty()) {
+        Some(p) => Some(id_at("projectId", p)?),
+        None => None,
+    };
+    let mut tx = db.scoped(user_scope(actor)).await?;
+    let held = hold(&mut tx, actor, id, true).await?;
+    let code: Option<String> = sqlx::query_scalar("select kentos.dossier_set_live_project($1, $2)")
+        .bind(id)
+        .bind(project)
+        .fetch_one(&mut *tx)
+        .await?;
+    live_refused(code)?;
+    record(
+        &mut tx,
+        id,
+        actor,
+        held.party.side(),
+        if project.is_some() { "live_project_linked" } else { "live_project_unlinked" },
+        held.row.round(),
+        serde_json::json!({}),
+    )
+    .await?;
+    tx.commit().await?;
+    Ok(())
+}
+
 /// back; the timeline says so.
 pub async fn set_office(db: &Db, actor: &Actor, id: Uuid, input: &DossierOfficeSet) -> AppResult<()> {
     let mut tx = db.scoped(user_scope(actor)).await?;

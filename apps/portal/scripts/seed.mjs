@@ -477,4 +477,14 @@ for (const [name, bytes] of [
   }
 }
 
-console.log(JSON.stringify({ ornek: ornek.id, yesilvadi: yesilvadi.id, a1, a2, a3, a4, a5, a6, t1, t2, t3, orgProject: orgProject.id, fees: { y2025: y2025.id, y2026: y2026.id, y2027: y2027.id } }));
+// A transfer worked on in the municipality's live project instead of a copy (docs/adr/9000 §24): linked, sent and taken
+// on; the surveyor edits the project as a guest until the job closes.
+const t4 = (await mehmet.req('POST', `/v1/tenants/${ornek.id}/dossiers`, {
+  professionalId: idOf('Can Öztürk'), kind: 'survey', title: '412 ada imar uygulaması ölçümü',
+  description: 'Ölçümü belediyenin canlı projesine doğrudan işleyin; kopya gönderilmedi.', site: site('Cumhuriyet Mahallesi', '412', null), dueOn: daysFromNow(20),
+})).id;
+await mehmet.req('PUT', `/v1/dossiers/${t4}/live-project`, { projectId: orgProject.id });
+await mehmet.act(t4, 'send', { note: 'Canlı projede çalışabilirsiniz; teslimde projeyi kaydetmeniz yeterli.' });
+await can.act(t4, 'accept');
+
+console.log(JSON.stringify({ ornek: ornek.id, yesilvadi: yesilvadi.id, a1, a2, a3, a4, a5, a6, t1, t2, t3, t4, orgProject: orgProject.id, fees: { y2025: y2025.id, y2026: y2026.id, y2027: y2027.id } }));

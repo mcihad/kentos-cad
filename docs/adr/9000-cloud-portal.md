@@ -550,6 +550,36 @@ geç görüyordu, açık her sekme de sunucuyu dakikada bir yokluyordu. Artık b
 - **Demo, portalın geliştirme sunucusunun arkasından:** ilk olay 49 ms'de geldi. Belediyenin iletisinden sonra yeni
   sayı 18 ms'de ulaştı. Ara katman akışı tamponlamıyor.
 
+## §24 Aktarımda kopya yerine canlı proje
+
+Belediye bir işi (ölçüm, proje düzeltmesi) aktarınca projesinin bugünkü hâli KCAD kopyası olarak gidiyor. Meslek
+mensubu kopyada çalışıp yeni bir kopya teslim ediyordu. Aynı proje iki yerde ilerliyor, belediye teslimi kendi
+projesine elle taşıyordu. Artık belediye işi kendi canlı bulut projesine bağlayabilir:
+
+- **Kim bağlar:** belediyenin proje yöneticisi ve üstü, dosyanın sayfasındaki “Canlı proje” panelinden, aktarım
+  kapanmadan (`PUT /v1/dossiers/{id}/live-project`). Kopya göndermek gerekmez; aktarım dosyasız gönderilebilir.
+- **Erişimin yaşamı:**
+  - Meslek mensubu işi **üstlenince** projede düzenleyici olur. Kurumun üyesi değilse **misafir**dir (ADR 0035), kurum
+    misafir kabul etmiyorsa üstlenme anlaşılır bir hatayla durur.
+  - İş tamamlanınca, iptal edilince ya da üstlenilmeyince bu paylaşım **geri alınır**.
+  - Bağlantı iş üstlenildikten sonra kurulursa paylaşım hemen verilir.
+- **Paylaşım dosyanınsa geri alınır** (`live_granted`). Kişinin projede zaten bir paylaşımı varsa o kendisinindir:
+  dokunulmaz, iş kapanınca da kalır.
+- **Kayıt ve canlı haber:** her verme ve geri alma projenin denetim kaydına geçer (`dossier.live_project.grant` /
+  `.revoke`) ve projenin açık bağlantılarına `project.access` olayı gider, paylaşma penceresinin yaptığı gibi.
+- **Teslim projenin kendisidir:** canlı projeye bağlı aktarımda teslim adımı dosya istemez.
+- **Projenin adı iki tarafa görünür.** Meslek mensubu belediyenin projelerini okuyamaz; ad yetkili bir işlevden gelir.
+  “Projeyi aç” paylaşım verilince görünür.
+
+Ölçülenler (`tests/portal.rs` `a_transfer_in_the_live_project_makes_its_professional_a_guest_editor_until_it_closes`):
+
+- Düzenleyici bağlayamaz (403), başka kurumun projesi bulunamaz (404).
+- Gönderilince meslek mensubunun projede rolü yoktur; üstlenince `editor` olur (`guest`, denetim kaydında bir satır).
+- Teslim dosyasız geçer; tamamlanınca rol kalkar.
+- Kapanmış aktarımın bağlantısı değişmez.
+- Ekran görüntüleri (`.run/gui-evidence/portal/106–108`): belediyenin paneli; haritacının “Misafir
+  düzenleyicisiniz”i; haritacının açtığı belediye projesi.
+
 ## Kaynaklar
 
 - OpenAPI 3.1.0 (<https://spec.openapis.org/oas/v3.1.0>), JSON Schema 2020-12, llms.txt önerisi

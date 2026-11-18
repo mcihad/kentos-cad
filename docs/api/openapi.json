@@ -8343,6 +8343,11 @@
             "description": "Whether the caller may open a KentOS project file of it as a project: a professional in their own space, a\nmember who may create projects in the organisation (project manager and above).",
             "type": "boolean"
           },
+          "canLinkLiveProject": {
+            "default": false,
+            "description": "Whether the caller links a live project to it: the municipality's project managers, while it is open.",
+            "type": "boolean"
+          },
           "canMessage": {
             "type": "boolean"
           },
@@ -8381,6 +8386,18 @@
             "format": "uint32",
             "minimum": 0,
             "type": "integer"
+          },
+          "liveProject": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LiveProjectView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The municipality's live project the transfer is worked on in, instead of a copy (docs/adr/9000 §24)."
           },
           "messages": {
             "items": {
@@ -8711,6 +8728,18 @@
           "items",
           "total"
         ],
+        "type": "object"
+      },
+      "DossierLiveProjectSet": {
+        "description": "`PUT /v1/dossiers/{id}/live-project`: the project to link (one of the municipality's), or none to unlink.",
+        "properties": {
+          "projectId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
         "type": "object"
       },
       "DossierMessageView": {
@@ -18633,6 +18662,31 @@
           "parents",
           "operation",
           "step"
+        ],
+        "type": "object"
+      },
+      "LiveProjectView": {
+        "description": "A transfer's live project (docs/adr/9000 §24): the municipality's cloud project its professional edits as a guest\nonce they take the job on, until it closes.",
+        "properties": {
+          "granted": {
+            "description": "The professional holds the dossier's editor grant on it now.",
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "tenantId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "tenantId",
+          "projectId",
+          "name",
+          "granted"
         ],
         "type": "object"
       },
@@ -40668,6 +40722,61 @@
           }
         },
         "summary": "KCAD belgesinin çizimi (SVG)",
+        "tags": [
+          "Portal: dosyalar"
+        ]
+      }
+    },
+    "/v1/dossiers/{id}/live-project": {
+      "put": {
+        "description": "Belediyenin proje yöneticisi ve üstü, aktarım kapanmadan: kurumun bir bulut projesi (`projectId`; `null` bağlantıyı kaldırır). Meslek mensubu işi üstlenince projede düzenleyici olur (kurumun üyesi değilse misafir, kurum misafir kabul ediyorsa); iş tamamlanınca, iptal edilince ya da üstlenilmeyince bu paylaşım geri alınır. Kopya gerekmez: teslim projenin kendisidir. Her paylaşım projenin denetim kaydına geçer.",
+        "operationId": "putDossiersByIdLiveProject",
+        "parameters": [
+          {
+            "description": "Dosyanın (başvuru ya da aktarım) kimliği.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DossierLiveProjectSet"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DossierDetail"
+                }
+              }
+            },
+            "description": "Başarılı."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/Invalid"
+          }
+        },
+        "summary": "Aktarımı canlı projeye bağla",
         "tags": [
           "Portal: dosyalar"
         ]

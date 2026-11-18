@@ -113,6 +113,7 @@ pub fn routes() -> Router<AppState> {
         )
         .route("/v1/dossiers/{id}/files/from-upload", post(dossiers::from_upload))
         .route("/v1/dossiers/{id}/office", put(dossiers::set_office))
+        .route("/v1/dossiers/{id}/live-project", put(dossiers::set_live_project))
         .route("/v1/dossiers/{id}/files/{file}/preview.svg", get(dossiers::preview))
         .route("/v1/tenants/{tenant}/fees/schedules", get(fees::schedules).post(fees::create))
         .route(

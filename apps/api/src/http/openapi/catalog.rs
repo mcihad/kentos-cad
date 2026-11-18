@@ -424,6 +424,13 @@ pub(super) fn ops() -> Vec<Op> {
              düzenleyici belge hazırlar ve yazışır, proje yöneticisi gönderir ve teslim eder. Başvuru baştan büro \
              adına da açılabilir (`officeId`). Büronun kendi listesi: `GET /v1/tenants/{büro}/dossiers`.",
             Body(of::<c::DossierOfficeSet>), Json(200, of::<c::DossierDetail>)),
+        op("PUT", "/v1/dossiers/{id}/live-project", DOSSIERS, "Aktarımı canlı projeye bağla",
+            "Belediyenin proje yöneticisi ve üstü, aktarım kapanmadan: kurumun bir bulut projesi (`projectId`; `null` \
+             bağlantıyı kaldırır). Meslek mensubu işi üstlenince projede düzenleyici olur (kurumun üyesi değilse \
+             misafir, kurum misafir kabul ediyorsa); iş tamamlanınca, iptal edilince ya da üstlenilmeyince bu \
+             paylaşım geri alınır. Kopya gerekmez: teslim projenin kendisidir. Her paylaşım projenin denetim kaydına \
+             geçer.",
+            Body(of::<c::DossierLiveProjectSet>), Json(200, of::<c::DossierDetail>)),
         op("POST", "/v1/dossiers/{id}/messages", DOSSIERS, "Yazışma ekle",
             "Dosyaya ileti; bekleyen ekler iletiyle gönderilir.",
             Body(of::<c::MessagePost>), Json(201, of::<c::DossierMessageView>)),

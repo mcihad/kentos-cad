@@ -64,6 +64,8 @@ export type { PortalStatistics } from '../../../web/src/contracts/generated/Port
 export type { StatisticsAssigneeRow } from '../../../web/src/contracts/generated/StatisticsAssigneeRow';
 export type { StatisticsKindRow } from '../../../web/src/contracts/generated/StatisticsKindRow';
 export type { StatisticsMonthRow } from '../../../web/src/contracts/generated/StatisticsMonthRow';
+export type { LiveProjectView } from '../../../web/src/contracts/generated/LiveProjectView';
+export type { DossierLiveProjectSet } from '../../../web/src/contracts/generated/DossierLiveProjectSet';
 export type { FileRevision } from '../../../web/src/contracts/generated/FileRevision';
 export type { FileRevisions } from '../../../web/src/contracts/generated/FileRevisions';
 export type { KindOption } from '../../../web/src/contracts/generated/KindOption';

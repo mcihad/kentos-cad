@@ -116,6 +116,32 @@ pub struct LegalClock {
     pub extended_from: Option<String>,
 }
 
+/// A transfer's live project (docs/adr/9000 §24): the municipality's cloud project its professional edits as a guest
+/// once they take the job on, until it closes.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LiveProjectView {
+    pub tenant_id: String,
+    pub project_id: String,
+    pub name: String,
+    /// The professional holds the dossier's editor grant on it now.
+    pub granted: bool,
+}
+
+/// `PUT /v1/dossiers/{id}/live-project`: the project to link (one of the municipality's), or none to unlink.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DossierLiveProjectSet {
+    #[cfg_attr(feature = "ts", ts(optional = nullable))]
+    pub project_id: Option<String>,
+}
+
 /// A day the offices do not work, as the deadlines count it (docs/adr/9000 §19).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -372,6 +398,12 @@ pub struct DossierDetail {
     /// `GET /v1/signing/trust`'s answer.
     #[serde(default)]
     pub can_sign: bool,
+    /// The municipality's live project the transfer is worked on in, instead of a copy (docs/adr/9000 §24).
+    #[serde(default)]
+    pub live_project: Option<LiveProjectView>,
+    /// Whether the caller links a live project to it: the municipality's project managers, while it is open.
+    #[serde(default)]
+    pub can_link_live_project: bool,
     /// The package being prepared: `round + 1`.
     pub pending_round: u32,
     pub rounds: Vec<DossierRound>,
