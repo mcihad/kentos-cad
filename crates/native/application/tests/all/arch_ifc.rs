@@ -1666,7 +1666,7 @@ fn a_room_s_own_emsal_state_counts_and_an_increase_is_a_diger_zone() {
     ))
     .unwrap();
     snap.settings.arch.get_or_insert_with(Default::default).zoning =
-        Some(kentos_commands::Zoning { parcel_area: 450.0, far: Some(1.5), coverage: Some(0.4) });
+        Some(kentos_commands::Zoning { parcel_area: 450.0, far: Some(1.5), coverage: Some(0.4), ..Default::default() });
     let mut doc = Document::from_snapshot_v2(snap).unwrap();
     let rooms: Vec<String> = doc
         .entities_with_uids()

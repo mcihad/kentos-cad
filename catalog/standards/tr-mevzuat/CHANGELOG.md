@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 0.7.0
+
+- **`imar-durumu`**: İmar durumu emsalin ya da TAKS'ın nereden okunduğunu söylüyorsa (imar durum belgesi ya da alındığı
+  plan kararı: plan, onay günü, karar; olguların `zoning.farSource` ve `zoning.coverageSource`'u) aşan emsalin ve
+  TAKS'ın bulgusu maddeyle birlikte onu anar: "— PAİY md. 4/1-tt ve 5/5; imar durumu (UIP-1 …, karar K2)". Kaynak
+  yazılmamışsa bulgu eskisi gibidir. İki yeni örnek.
+
 ## 0.6.0
 
 - **`imar-durumu`** (yeni): projenin İmar durumu varsa emsal (KAKS: katlar alanı / net parsel) ve TAKS (taban alanı /

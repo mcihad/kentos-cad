@@ -172,6 +172,8 @@ fn the_parcels_zoning_is_read_as_the_emsal_and_taks_table_reads_it() {
         parcel_area: 300.0,
         far: Some(1.5),
         coverage: Some(0.4),
+        far_source: Some("İmar durum belgesi 12.3.2025/1234".into()),
+        coverage_source: None,
     });
     let doc = Document::from_snapshot_v2(s.clone()).unwrap();
     let report = doc.zoning_report().expect("a report");
@@ -184,6 +186,11 @@ fn the_parcels_zoning_is_read_as_the_emsal_and_taks_table_reads_it() {
         .as_ref()
         .expect("the zoning");
     assert_eq!((z.parcel, z.far, z.coverage), (300.0, Some(1.5), Some(0.4)));
+    // Where the emsal is read from goes with it (docs/adr/8140); the TAKS says none.
+    assert_eq!(
+        (z.far_source.as_deref(), z.coverage_source.as_deref()),
+        (Some("İmar durum belgesi 12.3.2025/1234"), None)
+    );
     let near = |a: f64, b: f64| (a - b).abs() < 1e-4;
     assert!(
         near(z.floors, report.floors) && near(z.footprint, report.footprint),

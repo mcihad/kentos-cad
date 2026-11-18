@@ -577,7 +577,7 @@ impl App {
                 width += SEPARATOR + if fit < 7 { cell(&words, true) } else { 35.0 };
             }
             // Emsal ve TAKS (docs/adr/8030), its limits while there is room, its icon and a “!” once tight.
-            if let Some((words, _)) = crate::zoning_badge::words(&doc.model, fit < 2) {
+            if let Some((words, _)) = crate::zoning_badge::words(doc, fit < 2) {
                 width += SEPARATOR
                     + if fit < 7 {
                         cell(&words, true)

@@ -988,7 +988,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_STYLE_BEARING),
+    ("arch", "mimari", ARCH_WITH_ZONING_SOURCES),
     ("gis", "CBS", GIS_WITH_EXTENSION_DERIVATIONS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -1246,6 +1246,16 @@ pub fn uses_roof_classes(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     doc.settings.arch.as_ref().is_some_and(|a| a.materials.iter().any(|m| m.roof_class.is_some()))
 }
 
+/// Architecture data version 27 (docs/adr/8140): where İmar durumu's emsal and TAKS are read from
+/// (`settings.arch.zoning.farSource`, `coverageSource`). Version 27 holds versions 1–26's data too. The document schema
+/// stays as it is.
+pub const ARCH_WITH_ZONING_SOURCES: u16 = 27;
+
+/// Whether `doc` holds architecture data 27 ([`ARCH_WITH_ZONING_SOURCES`]).
+pub fn uses_zoning_sources(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    doc.settings.arch.as_ref().and_then(|a| a.zoning.as_ref()).is_some_and(kentos_contracts::Zoning::has_sources)
+}
+
 /// Architecture data version 26 (docs/adr/8137): a wall style's declared load-bearing role
 /// (`settings.wallStyles[].loadBearing`). Version 26 holds versions 1–25's data too. The document schema stays as it is.
 pub const ARCH_WITH_STYLE_BEARING: u16 = 26;
@@ -1275,7 +1285,8 @@ pub fn uses_shaft_vents(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     doc.entities.iter().any(|e| e.arch_info().is_some_and(|a| a.shaft_vent.is_some()))
 }
 
-/// The architecture data version `doc` needs: 26 for a wall style's load-bearing role, 25 for a protected shaft or a fire
+/// The architecture data version `doc` needs: 27 for İmar durumu's sources, 26 for a wall style's load-bearing role, 25
+/// for a protected shaft or a fire
 /// stop, 24 for a lift shaft's vent, 23 for a material's roof class, 22 for a sloped member, 21 for a room's own emsal state, 20 for a declared exterior or column load-bearing role, 19 for an element type, 18 for an underlay model, 17 for a delivery record, 16 for a plan note of the building's height or
 /// storey count, 15 for the
 /// building's structural system, 14 for a material's reaction class, 13 for a declared load-bearing or escape route
@@ -1286,7 +1297,9 @@ pub fn uses_shaft_vents(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
 /// schedule, 5 for a covering, 4 for a post, a rail or a column's own height, 3 for a curtain wall, 2 for a block's
 /// building element, 1 for the performance declarations, else 0 (not raised).
 pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
-    if uses_style_bearing(doc) {
+    if uses_zoning_sources(doc) {
+        ARCH_WITH_ZONING_SOURCES
+    } else if uses_style_bearing(doc) {
         ARCH_WITH_STYLE_BEARING
     } else if uses_fire_stops(doc) {
         ARCH_WITH_FIRE_STOPS

@@ -27,7 +27,7 @@ fn blocks() -> Document {
     }]}));
     let mut settings = doc.settings().clone();
     settings.arch.as_mut().expect("its settings").zoning =
-        Some(kentos_commands::Zoning { parcel_area: 2000.0, far: Some(1.5), coverage: Some(0.4) });
+        Some(kentos_commands::Zoning { parcel_area: 2000.0, far: Some(1.5), coverage: Some(0.4), ..Default::default() });
     doc.set_settings(settings);
     doc
 }

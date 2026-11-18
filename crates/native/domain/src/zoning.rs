@@ -281,7 +281,7 @@ fn bounds(areas: &[Area]) -> Option<[f64; 4]> {
 impl Document {
     /// The drawing's emsal and TAKS against the parcel's zoning (docs/adr/8030); none without a zoning.
     pub fn zoning_report(&self) -> Option<ZoningReport> {
-        let zoning = self.settings().arch.as_ref()?.zoning?;
+        let zoning = self.settings().arch.as_ref()?.zoning.as_ref()?;
         Some(self.zoning_measured(Some(zoning)))
     }
 
@@ -294,7 +294,7 @@ impl Document {
     }
 
     /// The rooms counted against `zoning`; with none, a parcel of 0 (its ratios are not numbers).
-    fn zoning_measured(&self, zoning: Option<Zoning>) -> ZoningReport {
+    fn zoning_measured(&self, zoning: Option<&Zoning>) -> ZoningReport {
         let empty = kentos_contracts::ArchSettings::default();
         let arch = self.settings().arch.as_ref().unwrap_or(&empty);
         let program = &arch.program;
@@ -635,27 +635,27 @@ impl Document {
     /// The ratios' whole count, with or without the parcel's zoning (a parcel of 0 without one): what the audit facts
     /// read at once (docs/adr/8095).
     pub fn zoning_counted(&self) -> ZoningReport {
-        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning);
+        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning.as_ref());
         self.zoning_measured(zoning)
     }
 
     /// Each room as the ratios count it, with or without the parcel's zoning (docs/adr/8069): what the model's emsal zones
     /// are made of.
     pub fn zoning_rooms(&self) -> Vec<ZoningRoom> {
-        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning);
+        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning.as_ref());
         self.zoning_measured(zoning).rooms
     }
 
     /// The uses 22/1 lets out of katlar alanı only up to a limit, with or without the parcel's zoning (docs/adr/8079):
     /// what the regulation's rules read the limits' conditions on.
     pub fn zoning_limits(&self) -> Vec<ZoningLimitUse> {
-        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning);
+        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning.as_ref());
         self.zoning_measured(zoning).limits
     }
 
     /// The building's footprint as the ratios count it (docs/adr/8032): its area and outline, with or without a zoning.
     pub fn footprint(&self) -> (f64, Vec<Area>) {
-        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning);
+        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning.as_ref());
         let r = self.zoning_measured(zoning);
         (r.footprint, r.footprint_shape)
     }
@@ -665,7 +665,7 @@ impl Document {
     /// storey's area counted in and out and their total. Areas in the project's area unit and decimals, ratios with
     /// two; “—” for what the zoning does not give (none at all: the storeys' areas alone are numbers).
     pub fn zoning_table(&self) -> ZoningTable {
-        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning);
+        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning.as_ref());
         let r = self.zoning_measured(zoning);
         let s = self.settings();
         let unit = match s.area_unit {

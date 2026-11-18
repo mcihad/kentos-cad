@@ -259,7 +259,7 @@ fn sivas_counts_the_thick_walls_within_the_30_percent() {
     checked(&mut app);
     assert_eq!(rows(&app), [("PAİY 5/8".to_owned(), O::Passed), ("Sivas 22/k".to_owned(), O::Passed)]);
 
-    arch.zoning = Some(kentos_commands::Zoning { parcel_area: 50.0, far: Some(1.0), coverage: None });
+    arch.zoning = Some(kentos_commands::Zoning { parcel_area: 50.0, far: Some(1.0), coverage: None, ..Default::default() });
     run(&mut app, "cad.settings.set", json!({ "arch": serde_json::to_value(&arch).expect("serialises") }));
     checked(&mut app);
     assert_eq!(rows(&app), [("PAİY 5/8".to_owned(), O::Passed), ("Sivas 22/k".to_owned(), O::Failed)]);

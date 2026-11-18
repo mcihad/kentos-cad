@@ -13,7 +13,8 @@
 
 Ölçü KentOS Mimari'nin Emsal ve TAKS tablosunun okuduğudur (olguların ``zoning``'i): katlar alanı, %30'u aşan emsal
 harici alan eklenmiş olarak; taban alanı, zemin katın sayılan mahalleri. Oranlar projenin İmar durumundaki net parsel
-alanı üzerinden. Planın verdiği değer aşılırsa hata. TAKS verilmemişse 5/6'nın %60'ı aşılınca hata; %40 ile %60
+alanı üzerinden. Planın verdiği değer aşılırsa hata; İmar durumu emsalin ya da TAKS'ın nereden okunduğunu söylüyorsa
+(imar durum belgesi ya da alındığı plan kararı) bulgu onu anar. TAKS verilmemişse 5/6'nın %60'ı aşılınca hata; %40 ile %60
 arasında uyarı: ayrık ya da blok nizamda %40'tır, yapı nizamı olgularda yok. Emsal verilmeyen parselde katlar alanı
 TAKS × kat adedidir (21/4); kat adedi olgularda yok, söylenmez. İmar durumu yazılmamış projede kural bir şey söylemez.
 """
@@ -35,6 +36,11 @@ def oran(v: float) -> str:
     return f"{v:.2f}"
 
 
+def kaynakli(madde: str, kaynak: str | None) -> str:
+    """Maddenin anışı, değer İmar durumu'na bir yerden alınmışsa o yerle: “…; imar durumu (UIP-1 …, karar K1)”."""
+    return f"{madde} ({kaynak})" if kaynak else madde
+
+
 @ext.audit("imar-durumu")
 def imar_durumu(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Projenin İmar durumu varsa emsal (katlar alanı / net parsel) ve TAKS (taban alanı / net parsel) planın verdiği
@@ -52,7 +58,8 @@ def imar_durumu(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
             ext.AuditFinding(
                 message=(
                     f"Emsal {oran(emsal)} > {oran(z.far)}: katlar alanı {metrekare(z.floors)}, imar durumuna göre en "
-                    f"çok {metrekare(z.far * z.parcel)} (net parsel {metrekare(z.parcel)}) — {MADDE_EMSAL}."
+                    f"çok {metrekare(z.far * z.parcel)} (net parsel {metrekare(z.parcel)}) — "
+                    f"{kaynakli(MADDE_EMSAL, getattr(z, 'far_source', None))}."
                 ),
                 severity="error",
             )
@@ -64,7 +71,7 @@ def imar_durumu(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
                     message=(
                         f"TAKS {oran(taks)} > {oran(z.coverage)}: taban alanı {metrekare(z.footprint)}, imar durumuna "
                         f"göre en çok {metrekare(z.coverage * z.parcel)} (net parsel {metrekare(z.parcel)}) — "
-                        f"{MADDE_TAKS}."
+                        f"{kaynakli(MADDE_TAKS, getattr(z, 'coverage_source', None))}."
                     ),
                     severity="error",
                 )

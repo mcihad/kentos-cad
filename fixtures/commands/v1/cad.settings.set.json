@@ -10343,6 +10343,250 @@
       ]
     },
     {
+      "name": "Mimari: imar durumunda emsalin ve TAKS'ın kaynağı (ADR 8140)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "zoning": {
+                "parcelArea": 900,
+                "far": 1.2,
+                "coverage": 0.4,
+                "farSource": "UIP-1 Merkez uygulama imar planı (yururlukte, onay 2024-05-14, Meclis kararı 2024/112), karar K1",
+                "coverageSource": "İmar durum belgesi 12.3.2025/1234"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "arch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ],
+                "zoning": {
+                  "parcelArea": 900,
+                  "far": 1.2,
+                  "coverage": 0.4,
+                  "farSource": "UIP-1 Merkez uygulama imar planı (yururlukte, onay 2024-05-14, Meclis kararı 2024/112), karar K1",
+                  "coverageSource": "İmar durum belgesi 12.3.2025/1234"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "emsalin kaynağı var, emsal yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "zoning": {
+                "parcelArea": 900,
+                "coverage": 0.4,
+                "farSource": "UIP-1, karar K1"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch",
+              "message": "Emsalin kaynağı yazılmış ama kendisi yok: değeri yazın ya da kaynağı kaldırın.",
+              "path": "arch.zoning.farSource"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "TAKS'ın kaynağı boş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "zoning": {
+                "parcelArea": 900,
+                "coverage": 0.4,
+                "coverageSource": "  "
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch",
+              "message": "TAKS'ın kaynağı boş olamaz: bilinmiyorsa yazmayın.",
+              "path": "arch.zoning.coverageSource"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "emsalin kaynağı 200 karakteri aşıyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "zoning": {
+                "parcelArea": 900,
+                "far": 1.2,
+                "farSource": "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch",
+              "message": "Emsalin kaynağı en çok 200 karakter olur ve satır sonu içermez.",
+              "path": "arch.zoning.farSource"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "betonarme binada geleneksel mimari öğeler",
       "steps": [
         {

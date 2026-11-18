@@ -1,7 +1,7 @@
 //! A section's rows (docs/adr/8042 §5): the object is a section's placement (its mark's block) or a section mark. The
 //! rows say which section it is, whether drawing it again would differ (Güncel, Eski, Çıkarılmadı) and offer Yeniden
-//! çiz through `cad.sections.edit`, one undo step. Eski is said in the danger colour, as BricsCAD marks a drawing out of
-//! sync red. An elevation mark and its drawing (docs/adr/8043) the same, named by where it faces.
+//! çiz through `cad.sections.edit`, one undo step. Eski is said in the danger colour. An elevation mark and its drawing
+//! (docs/adr/8043) the same, named by where it faces.
 use kentos_commands::{BuildingSectionState, BuildingSectionsOperation, Entity, ViewMarkForm};
 use kentos_domain::Slot;
 
@@ -28,7 +28,7 @@ pub(super) fn section(doc: &Document, slot: Slot) -> Option<Section> {
     };
     let facade = mark.form == ViewMarkForm::Elevation;
     // The badge's reading, once per revision: drawing the section again to compare is not a frame's work.
-    let state = crate::section_badge::sections(&doc.model)
+    let state = crate::section_badge::sections(doc)
         .into_iter()
         .find(|i| i.mark.as_deref() == Some(mark_uid.to_string().as_str()))
         .map_or(BuildingSectionState::NotDrawn, |i| i.state);

@@ -260,7 +260,7 @@ impl Document {
             .settings()
             .arch
             .as_ref()
-            .and_then(|a| a.zoning)
+            .and_then(|a| a.zoning.as_ref())
             .map(|z| z.parcel_area);
         kentos_contracts::land_shares(&program, &total, parcel)
     }

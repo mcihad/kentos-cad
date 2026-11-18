@@ -3,7 +3,7 @@
 /**
  * İmar durumu (docs/adr/8030; Planlı Alanlar İmar Yönetmeliği 4 tt, cccc): the parcel's area, m², and the plan's
  * emsal (KAKS: the floors' area over the parcel's) and TAKS (the footprint over the parcel's), each when the plan
- * gives it.
+ * gives it, with where each is read from when that is said (docs/adr/8140; `.kcad` architecture data 27).
  */
 export type Zoning = { parcelArea: number, 
 /**
@@ -13,4 +13,13 @@ far?: number,
 /**
  * TAKS.
  */
-coverage?: number, };
+coverage?: number, 
+/**
+ * Where the emsal is read from (docs/adr/8140): the zoning certificate, or the zoning plan's decision it was taken
+ * from (the plan, its approval, the decision); one line, at most [`MAX_ZONING_SOURCE`] characters.
+ */
+farSource?: string, 
+/**
+ * Where the TAKS is read from, as [`Zoning::far_source`].
+ */
+coverageSource?: string, };

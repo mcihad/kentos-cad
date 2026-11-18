@@ -408,8 +408,7 @@ impl ParcelTool {
         if arch.zoning.is_none() {
             arch.zoning = Some(kentos_commands::Zoning {
                 parcel_area: report.area,
-                far: None,
-                coverage: None,
+                ..Default::default()
             });
         }
         arch.site = Some(site.clone());

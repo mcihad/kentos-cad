@@ -67,14 +67,16 @@ impl Item<'_> {
     }
 }
 
-fn number(text: &str) -> Option<f64> {
-    text.replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite())
+/// A decision's value read as a number (docs/adr/8072 §5, 8140): a comma or a point before its decimals; none for
+/// words ("serbest") or a number with something after it ("3+Ç", "12.50 m").
+pub fn plan_number(text: &str) -> Option<f64> {
+    text.trim().replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite())
 }
 
 /// Two values as written the same: numbers as numbers, text as text.
 fn same(field: &str, a: &str, b: &str) -> bool {
     if NUMBERS.contains(&field)
-        && let (Some(x), Some(y)) = (number(a), number(b))
+        && let (Some(x), Some(y)) = (plan_number(a), plan_number(b))
     {
         return x == y;
     }
@@ -293,7 +295,7 @@ fn check(doc: &Document, input: &ZoningParcel) -> Result<ZoningParcelDecided, St
                     plan.push(v.value.clone());
                 }
             }
-            if plan.iter().any(|v| number(v).is_none_or(|x| x != typed)) {
+            if plan.iter().any(|v| plan_number(v).is_none_or(|x| x != typed)) {
                 against.push(PlanAgainst { field: field.to_owned(), typed, plan });
             }
         }

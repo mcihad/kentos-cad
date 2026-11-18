@@ -49,7 +49,7 @@ fn building(basement: [(&str, &str); 3], floor: f64) -> App {
         height: Some(3.0),
     };
     arch.levels = vec![level("b01", "Bodrum kat", floor), level("k00", "Zemin kat", floor + 3.0)];
-    arch.zoning = Some(kentos_commands::Zoning { parcel_area: 400.0, far: Some(1.5), coverage: Some(0.4) });
+    arch.zoning = Some(kentos_commands::Zoning { parcel_area: 400.0, far: Some(1.5), coverage: Some(0.4), ..Default::default() });
     let mut settings = app.document.as_ref().expect("a drawing").model.settings().clone();
     settings.arch = Some(arch);
     app.document.as_mut().expect("a drawing").model.set_settings(settings);

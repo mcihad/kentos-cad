@@ -117,6 +117,39 @@ fn a_wall_style_s_load_bearing_role_round_trips_under_arch_data_26() {
     assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the role reads back");
 }
 
+/// Architecture data 27 (docs/adr/8140): where İmar durumu's emsal and TAKS are read from is written with
+/// `modules.arch = 27` and read back; the same file saying 26 is refused, as an older reader refuses data it has not.
+#[test]
+fn the_zoning_s_sources_round_trip_under_arch_data_27() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_zoning_sources(&doc));
+    doc.settings.arch.get_or_insert_with(Default::default).zoning = Some(kentos_contracts::Zoning {
+        parcel_area: 900.0,
+        far: Some(1.2),
+        coverage: Some(0.4),
+        far_source: Some("UIP-1 Merkez uygulama imar planı (yururlukte, onay 2024-05-14), karar K1".into()),
+        coverage_source: None,
+    });
+    assert!(kentos_kcad::uses_zoning_sources(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_ZONING_SOURCES);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the sources read back");
+
+    // `modules` says `arch` 26 (CBOR: the text "arch", then 0x18 and the version), the trailer made again.
+    let mut older = bytes.clone();
+    let at = older
+        .windows(7)
+        .position(|w| w == [0x64, b'a', b'r', b'c', b'h', 0x18, 27])
+        .expect("modules.arch = 27");
+    older[at + 6] = 26;
+    let body = older.len() - 32;
+    let hash = <sha2::Sha256 as sha2::Digest>::digest(&older[..body]);
+    older[body..].copy_from_slice(&hash);
+    let e = kentos_kcad::decode(&older).expect_err("refused");
+    assert_eq!(e.code, kentos_kcad::Code::UnknownField, "{e}");
+    assert!(e.message.contains("sürüm 27'den önce yok"), "{e}");
+}
+
 /// A plain wall style of its own (one 20 cm brick component).
 fn plain_style() -> kentos_contracts::WallStyleDef {
     serde_json::from_value(serde_json::json!({

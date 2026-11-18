@@ -295,6 +295,300 @@
       }
     },
     {
+      "title": "Emsal aşılmış, kaynağı plan kararı: bulgu kaynağı anar",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "number": "Z01",
+            "name": "Ofis",
+            "kind": null,
+            "level": "zemin",
+            "unit": "of",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 60.0,
+            "axis": 66.0,
+            "narrow": 5.0,
+            "escape": {
+              "exit": {
+                "length": 10.0,
+                "oneWay": 10.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "number": null,
+            "name": "Koridor",
+            "kind": "corridor",
+            "level": "zemin",
+            "unit": "ortak",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 27.0,
+            "axis": 29.7,
+            "narrow": 1.5,
+            "escape": {
+              "exit": {
+                "length": 18.0,
+                "oneWay": 18.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": "of",
+            "number": "1",
+            "name": null,
+            "kind": "unit",
+            "nature": "Büro",
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 70.0,
+            "net": 60.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 70.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 70.0,
+                "net": 60.0
+              }
+            ]
+          },
+          {
+            "id": "ortak",
+            "number": "O",
+            "name": null,
+            "kind": "common",
+            "nature": null,
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 30.0,
+            "net": 27.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 30.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 30.0,
+                "net": 27.0
+              }
+            ]
+          }
+        ],
+        "doors": [],
+        "sprinklers": false,
+        "zoning": {
+          "parcel": 300.0,
+          "floors": 486.0,
+          "included": 486.0,
+          "exempt": 0.0,
+          "outside": 0.0,
+          "over": 0.0,
+          "footprint": 110.0,
+          "far": 1.5,
+          "coverage": 0.4,
+          "cap": 135.0,
+          "farSource": "UIP-1 Merkez uygulama imar planı (yururlukte, onay 2024-05-14, Meclis kararı 2024/112), karar K1"
+        }
+      },
+      "expect": {
+        "count": 1,
+        "has": [
+          {
+            "severity": "error",
+            "message": "PAİY md. 4/1-tt ve 5/5; imar durumu (UIP-1 Merkez uygulama imar planı (yururlukte, onay 2024-05-14, Meclis kararı 2024/112), karar K1)"
+          }
+        ]
+      }
+    },
+    {
+      "title": "TAKS aşılmış, kaynağı imar durum belgesi: bulgu kaynağı anar",
+      "architecture": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ],
+        "exits": [
+          {
+            "level": "zemin",
+            "count": 1
+          }
+        ],
+        "rooms": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000001",
+            "number": "Z01",
+            "name": "Ofis",
+            "kind": null,
+            "level": "zemin",
+            "unit": "of",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 60.0,
+            "axis": 66.0,
+            "narrow": 5.0,
+            "escape": {
+              "exit": {
+                "length": 10.0,
+                "oneWay": 10.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000002",
+            "number": null,
+            "name": "Koridor",
+            "kind": "corridor",
+            "level": "zemin",
+            "unit": "ortak",
+            "void": false,
+            "outdoor": false,
+            "broken": false,
+            "stair": false,
+            "net": 27.0,
+            "axis": 29.7,
+            "narrow": 1.5,
+            "escape": {
+              "exit": {
+                "length": 18.0,
+                "oneWay": 18.0,
+                "exits": 1,
+                "path": []
+              },
+              "storeyExits": true,
+              "entrance": null,
+              "hasEntrance": false,
+              "passages": 1
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": "of",
+            "number": "1",
+            "name": null,
+            "kind": "unit",
+            "nature": "Büro",
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 70.0,
+            "net": 60.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 70.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 70.0,
+                "net": 60.0
+              }
+            ]
+          },
+          {
+            "id": "ortak",
+            "number": "O",
+            "name": null,
+            "kind": "common",
+            "nature": null,
+            "annexOf": null,
+            "dwelling": false,
+            "gross": 30.0,
+            "net": 27.0,
+            "annexGross": 0.0,
+            "annexNet": 0.0,
+            "total": 30.0,
+            "share": null,
+            "general": null,
+            "levels": [
+              {
+                "level": "zemin",
+                "gross": 30.0,
+                "net": 27.0
+              }
+            ]
+          }
+        ],
+        "doors": [],
+        "sprinklers": false,
+        "zoning": {
+          "parcel": 300.0,
+          "floors": 400.0,
+          "included": 400.0,
+          "exempt": 0.0,
+          "outside": 0.0,
+          "over": 0.0,
+          "footprint": 130.0,
+          "far": 1.5,
+          "coverage": 0.4,
+          "cap": 135.0,
+          "coverageSource": "İmar durum belgesi 12.3.2025/1234"
+        }
+      },
+      "expect": {
+        "count": 1,
+        "has": [
+          {
+            "severity": "error",
+            "message": "PAİY md. 4/1-cccc ve 5/5; imar durumu (İmar durum belgesi 12.3.2025/1234)"
+          }
+        ]
+      }
+    },
+    {
       "title": "İkisi de içinde: bulgu yok",
       "architecture": {
         "levels": [

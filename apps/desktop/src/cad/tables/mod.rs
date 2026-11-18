@@ -160,7 +160,7 @@ impl crate::app::App {
             .settings()
             .arch
             .as_ref()
-            .and_then(|a| a.zoning)
+            .and_then(|a| a.zoning.as_ref())
             .is_none()
         {
             self.say(

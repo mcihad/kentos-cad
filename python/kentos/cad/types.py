@@ -122849,23 +122849,32 @@ class XyzExported(_Model):
 class Zoning(_Model):
     """İmar durumu (docs/adr/8030; Planlı Alanlar İmar Yönetmeliği 4 tt, cccc): the parcel's area, m², and the plan's
     emsal (KAKS: the floors' area over the parcel's) and TAKS (the footprint over the parcel's), each when the plan
-    gives it.
+    gives it, with where each is read from when that is said (docs/adr/8140; `.kcad` architecture data 27).
     Attributes:
         parcel_area: Unit: area.
         coverage: TAKS. Unit: 1.
+        coverage_source: Where the TAKS is read from, as [`Zoning::far_source`].
         far: Emsal (KAKS). Unit: 1.
+        far_source: Where the emsal is read from (docs/adr/8140): the zoning certificate, or the zoning plan's decision it was taken
+            from (the plan, its approval, the decision); one line, at most [`MAX_ZONING_SOURCE`] characters.
     """
     parcel_area: float
     coverage: float | None | Unset = UNSET
+    coverage_source: str | None | Unset = UNSET
     far: float | None | Unset = UNSET
+    far_source: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["parcelArea"] = float(self.parcel_area)
         if self.coverage is not UNSET:
             out["coverage"] = None if self.coverage is None else float(self.coverage)
+        if self.coverage_source is not UNSET:
+            out["coverageSource"] = self.coverage_source
         if self.far is not UNSET:
             out["far"] = None if self.far is None else float(self.far)
+        if self.far_source is not UNSET:
+            out["farSource"] = self.far_source
         return out
 
     @classmethod
@@ -122873,7 +122882,9 @@ class Zoning(_Model):
         return cls(
             parcel_area=float(data["parcelArea"]),
             coverage=UNSET if "coverage" not in data else None if data["coverage"] is None else float(data["coverage"]),
+            coverage_source=data.get("coverageSource", UNSET),
             far=UNSET if "far" not in data else None if data["far"] is None else float(data["far"]),
+            far_source=data.get("farSource", UNSET),
         )
 
 

@@ -2528,6 +2528,13 @@
             "null"
           ]
         },
+        "coverageSource": {
+          "description": "Where its TAKS is read from, when it says.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "exempt": {
           "description": "Emsal harici, within the 30 % (22/1).",
           "format": "double",
@@ -2538,6 +2545,13 @@
           "format": "double",
           "type": [
             "number",
+            "null"
+          ]
+        },
+        "farSource": {
+          "description": "Where İmar durumu's emsal is read from, when it says (docs/adr/8140): the zoning certificate, or the zoning\nplan's decision it was taken from.",
+          "type": [
+            "string",
             "null"
           ]
         },

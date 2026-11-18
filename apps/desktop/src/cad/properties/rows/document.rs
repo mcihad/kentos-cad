@@ -49,8 +49,8 @@ pub(super) fn zoning_section(doc: &Document) -> Option<Section> {
                 Row::figure("TAKS", against(r.coverage(), r.coverage_limit)),
             ];
             // The site plan's garden distances (docs/adr/8032).
-            if crate::zoning_badge::site(&doc.model).is_some() {
-                let short = crate::zoning_badge::short_edges(&doc.model);
+            if crate::zoning_badge::site(doc).is_some() {
+                let short = crate::zoning_badge::short_edges(doc);
                 rows.push(Row::text(
                     "Bahçe mesafeleri",
                     if short.is_empty() {

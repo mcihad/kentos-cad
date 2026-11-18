@@ -1,9 +1,10 @@
 //! Eski kesit rozeti (docs/adr/8042 §5): while a section drawn from a section mark is no longer what the model would
-//! draw (a door moved, a storey grew), the status bar says so in the danger colour, as BricsCAD marks a drawing out of
-//! sync red; clicked, the section's placement is selected and Öznitelikler offers Yeniden çiz. An elevation drawn from
-//! an elevation mark (docs/adr/8043) the same: “Kuzey görünüşü eski”.
+//! draw (a door moved, a storey grew), the status bar says so in the danger colour; clicked, the section's placement is
+//! selected and Öznitelikler offers Yeniden çiz. An elevation drawn from an elevation mark (docs/adr/8043) the same:
+//! “Kuzey görünüşü eski”.
 //!
-//! Each section is drawn again to compare: that is worked out once for each revision of the drawing, not every frame.
+//! Each section is drawn again to compare: that is worked out once for each change of the drawing, not every frame,
+//! and kept by the opened drawing (its session) and its generation (docs/adr/8140).
 
 use std::cell::RefCell;
 
@@ -16,6 +17,7 @@ use kentos_ui::widget::Tip;
 use kentos_ui::widget::status_bar::Readout;
 
 use crate::app::{App, Message};
+use crate::document::Document;
 
 /// A section as the badge and Öznitelikler read it.
 #[derive(Clone, Debug, PartialEq)]
@@ -34,18 +36,19 @@ pub struct Info {
 }
 
 thread_local! {
-    /// The last reading: the drawing (its address), its revision, and its sections.
-    static LAST: RefCell<Option<(usize, u64, Vec<Info>)>> = const { RefCell::new(None) };
+    /// The last reading: the opened drawing (its session) and its generation, and its sections.
+    static LAST: RefCell<Option<((u64, u64), Vec<Info>)>> = const { RefCell::new(None) };
 }
 
-/// The drawing's sections and their states, read again only when the drawing changed: drawing a section again to
-/// compare is not a frame's work.
-pub fn sections(doc: &kentos_domain::Document) -> Vec<Info> {
-    let key = (std::ptr::from_ref(doc) as usize, doc.revision());
+/// The drawing's sections and their states, read again only when the drawing is another or changed: drawing a section
+/// again to compare is not a frame's work.
+pub fn sections(opened: &Document) -> Vec<Info> {
+    let key = (opened.session, opened.model.generation());
+    let doc = &opened.model;
     LAST.with(|last| {
         let mut last = last.borrow_mut();
         match &*last {
-            Some((at, rev, r)) if (*at, *rev) == key => r.clone(),
+            Some((at, r)) if *at == key => r.clone(),
             _ => {
                 let rows: Vec<Info> = kentos_native_application::sections_query::rows(doc)
                     .into_iter()
@@ -79,7 +82,7 @@ pub fn sections(doc: &kentos_domain::Document) -> Vec<Info> {
                         }
                     })
                     .collect();
-                *last = Some((key.0, key.1, rows.clone()));
+                *last = Some((key, rows.clone()));
                 rows
             }
         }
@@ -90,7 +93,7 @@ pub fn sections(doc: &kentos_domain::Document) -> Vec<Info> {
 /// ("2 kesit, 1 görünüş eski"); none while every one is current.
 pub fn cell(app: &App) -> Option<Element<'_, Message>> {
     let doc = app.document.as_ref()?;
-    let all = sections(&doc.model);
+    let all = sections(doc);
     let old: Vec<&Info> = all
         .iter()
         .filter(|i| i.state == BuildingSectionState::Stale)

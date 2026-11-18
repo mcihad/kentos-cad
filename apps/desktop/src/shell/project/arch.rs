@@ -87,14 +87,17 @@ const LINES: [(Option<kentos_commands::LineGroups>, &str); 2] = [
     (None, "Nesnenin kendi kalınlığı"),
 ];
 
-/// İmar durumu as typed (docs/adr/8030): the parcel's area, m², the plan's emsal (KAKS) and TAKS; ±0.00's absolute
-/// elevation, m (the site plan's, docs/adr/8032); the municipality's regulation chosen (docs/adr/8034); whether the
-/// building has a sprinkler system (Yangın güvenliği, docs/adr/8035).
+/// İmar durumu as typed (docs/adr/8030): the parcel's area, m², the plan's emsal (KAKS) and TAKS, each with where it is
+/// read from (docs/adr/8140); ±0.00's absolute elevation, m (the site plan's, docs/adr/8032); the municipality's
+/// regulation chosen (docs/adr/8034); whether the building has a sprinkler system (Yangın güvenliği, docs/adr/8035).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ZoningTexts {
     pub parcel: String,
     pub far: String,
     pub coverage: String,
+    /// Where the emsal and the TAKS are read from (docs/adr/8140): the zoning certificate, or the plan decision taken.
+    pub far_source: String,
+    pub coverage_source: String,
     pub datum: String,
     pub local: Option<kentos_commands::LocalRules>,
     pub sprinklers: bool,
@@ -138,6 +141,9 @@ pub enum ZoningField {
     Parcel,
     Far,
     Coverage,
+    /// Where the emsal, the TAKS are read from (docs/adr/8140).
+    FarSource,
+    CoverageSource,
     Datum,
     /// The building's fire protection class, its basis (docs/adr/8124).
     FireClass,
@@ -147,7 +153,7 @@ pub enum ZoningField {
 impl ZoningTexts {
     /// The project's zoning as the form shows it.
     pub fn of(arch: Option<&ArchSettings>) -> Self {
-        let z = arch.and_then(|a| a.zoning);
+        let z = arch.and_then(|a| a.zoning.as_ref());
         let fire = || arch.and_then(|a| a.performance.as_ref()).and_then(|p| p.fire_protection_class.as_ref());
         let t = |v: Option<f64>| {
             v.map(kentos_processing::text::js_number)
@@ -157,6 +163,8 @@ impl ZoningTexts {
             parcel: t(z.map(|z| z.parcel_area)),
             far: t(z.and_then(|z| z.far)),
             coverage: t(z.and_then(|z| z.coverage)),
+            far_source: z.and_then(|z| z.far_source.clone()).unwrap_or_default(),
+            coverage_source: z.and_then(|z| z.coverage_source.clone()).unwrap_or_default(),
             datum: t(arch.and_then(|a| a.site.as_ref()).and_then(|s| s.datum)),
             local: arch.and_then(|a| a.local_rules),
             sprinklers: arch.is_some_and(|a| a.sprinklers),
@@ -173,10 +181,66 @@ impl ZoningTexts {
             ZoningField::Parcel => self.parcel = text,
             ZoningField::Far => self.far = text,
             ZoningField::Coverage => self.coverage = text,
+            ZoningField::FarSource => self.far_source = text,
+            ZoningField::CoverageSource => self.coverage_source = text,
             ZoningField::Datum => self.datum = text,
             ZoningField::FireClass => self.fire_class = text,
             ZoningField::FireBasis => self.fire_basis = text,
         }
+    }
+
+    /// The zoning of these values with the sources as typed, their ends trimmed; an empty one is none (docs/adr/8140).
+    fn sourced(&self, parcel_area: f64, far: Option<f64>, coverage: Option<f64>) -> kentos_commands::Zoning {
+        let source = |s: &str| Some(s.trim().to_owned()).filter(|s| !s.is_empty());
+        kentos_commands::Zoning {
+            parcel_area,
+            far,
+            coverage,
+            far_source: source(&self.far_source),
+            coverage_source: source(&self.coverage_source),
+        }
+    }
+
+    /// A zoning plan decision's values taken (docs/adr/8140): its emsal and TAKS into İmar durumu with their source, the
+    /// plan's building height and storey count into Plan notları, each into its measure's row (a new row when none gives
+    /// it). Nothing is saved: Kaydet writes them, Vazgeç leaves the project as it was.
+    pub fn take(&mut self, t: &crate::zoning_badge::PlanTake) {
+        let text = kentos_processing::text::js_number;
+        if let Some(v) = t.far {
+            self.far = text(v);
+            self.far_source.clone_from(&t.source);
+        }
+        if let Some(v) = t.coverage {
+            self.coverage = text(v);
+            self.coverage_source.clone_from(&t.source);
+        }
+        for (key, v) in [
+            (kentos_commands::PlanNoteKey::BuildingHeight, t.height),
+            (kentos_commands::PlanNoteKey::Storeys, t.storeys),
+        ] {
+            let Some(v) = v else { continue };
+            match self.plan_notes.iter_mut().find(|n| n.key == key) {
+                Some(n) => {
+                    n.value = text(v);
+                    n.source.clone_from(&t.source);
+                }
+                None => self.plan_notes.push(super::plan_notes::Note { key, value: text(v), source: t.source.clone() }),
+            }
+        }
+    }
+
+    /// Whether the form holds a decision's values with its source, as [`ZoningTexts::take`] writes them.
+    pub fn holds(&self, t: &crate::zoning_badge::PlanTake) -> bool {
+        let same = |typed: &str, v: f64| number(typed) == Ok(Some(v));
+        let note = |key, v: Option<f64>| {
+            v.is_none_or(|v| {
+                self.plan_notes.iter().any(|n| n.key == key && same(&n.value, v) && n.source.trim() == t.source)
+            })
+        };
+        t.far.is_none_or(|v| same(&self.far, v) && self.far_source.trim() == t.source)
+            && t.coverage.is_none_or(|v| same(&self.coverage, v) && self.coverage_source.trim() == t.source)
+            && note(kentos_commands::PlanNoteKey::BuildingHeight, t.height)
+            && note(kentos_commands::PlanNoteKey::Storeys, t.storeys)
     }
 
     /// The building's fire protection class typed (docs/adr/8124), its basis one line: none when the class is empty.
@@ -203,19 +267,21 @@ impl ZoningTexts {
         let far = number(&self.far).map_err(|()| "Emsal bir sayı olmalı.".to_owned())?;
         let coverage = number(&self.coverage).map_err(|()| "TAKS bir sayı olmalı.".to_owned())?;
         match parcel {
-            None if far.is_none() && coverage.is_none() => Ok(None),
+            // Nothing typed but a source: the source's own words (docs/adr/8140).
+            None if far.is_none() && coverage.is_none() => match self.sourced(0.0, None, None).sources_problem() {
+                Some((_, why)) => Err(why),
+                None => Ok(None),
+            },
             None => Err("Emsal ya da TAKS için parsel alanı da verilmeli.".into()),
-            Some(parcel_area) => Ok(Some(kentos_commands::Zoning {
-                parcel_area,
-                far,
-                coverage,
-            })),
+            Some(parcel_area) => Ok(Some(self.sourced(parcel_area, far, coverage))),
         }
     }
 }
 
-/// İmar durumu (docs/adr/8030): the three fields and, when the drawing has a zoning, its ratios: each line's words,
-/// value and whether it passes its limit.
+/// İmar durumu (docs/adr/8030): the fields, the emsal's and the TAKS's source under each (docs/adr/8140) and, when the
+/// drawing has a zoning, its ratios: each line's words, value and whether it passes its limit; the zoning plan's
+/// decisions on the parcel, each that gives a value with its Değerlerini al.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn zoning_view<'a>(
     t: &'a ZoningTexts,
     on: impl Fn(ZoningField, String) -> Message + Copy + 'a,
@@ -223,6 +289,8 @@ pub(super) fn zoning_view<'a>(
     on_zone: impl Fn(Option<kentos_commands::Zone>) -> Message + 'a,
     summary: Vec<(String, String, bool)>,
     plan: Vec<(String, bool)>,
+    takes: Vec<(usize, crate::zoning_badge::PlanTake)>,
+    on_take: impl Fn(crate::zoning_badge::PlanTake) -> Message + 'a,
 ) -> Element<'a, Message> {
     let wrong = |s: &str| number(s).is_err();
     let line = |name: &'static str, holder: &'static str, value: &'a str, f: ZoningField| {
@@ -234,11 +302,30 @@ pub(super) fn zoning_view<'a>(
         .spacing(8)
         .align_y(Center)
     };
+    // A source said without its value, too long or broken over lines (docs/adr/8140): an empty one is none.
+    let source_wrong = |source: &str, value: &str| {
+        let s = source.trim();
+        !s.is_empty()
+            && (value.trim().is_empty()
+                || s.chars().count() > kentos_commands::MAX_ZONING_SOURCE
+                || s.chars().any(char::is_control))
+    };
+    let source = |name: &'static str, value: &'a str, of: &'a str, f: ZoningField| {
+        row![
+            container(label::body(name)).width(typography::scaled(140.0)),
+            container(field("İmar durum belgesi 12.3.2025/1234", value, source_wrong(value, of), move |v| on(f, v)))
+                .width(Fill),
+        ]
+        .spacing(8)
+        .align_y(Center)
+    };
     let mut body = Column::new()
         .spacing(6)
         .push(line("Parsel alanı (m²)", "450", &t.parcel, ZoningField::Parcel))
         .push(line("Emsal (KAKS)", "1,50", &t.far, ZoningField::Far))
+        .push(source("Emsalin kaynağı", &t.far_source, &t.far, ZoningField::FarSource))
         .push(line("TAKS", "0,40", &t.coverage, ZoningField::Coverage))
+        .push(source("TAKS'ın kaynağı", &t.coverage_source, &t.coverage, ZoningField::CoverageSource))
         .push(line("±0,00 kotu (m)", "1285,40", &t.datum, ZoningField::Datum))
         .push(
             row![
@@ -276,7 +363,8 @@ pub(super) fn zoning_view<'a>(
             "İmar durumundan. Emsal, emsale dahil mahallerin brüt alanının (katlar alanı) parsel alanına oranıdır; \
              emsal harici mahaller (otopark, sığınak, kazan dairesi, balkon …) parselin emsal alanının %30'unu \
              geçerse fazlası katlar alanına eklenir (Planlı Alanlar İmar Yönetmeliği 5/8, 22). TAKS, zemin katın \
-             brüt alanının parsel alanına oranıdır. ±0,00 kotu, projenin ±0,00'ının röperden okunan mutlak kotudur. \
+             brüt alanının parsel alanına oranıdır. Kaynak, değerin okunduğu yerdir (imar durum belgesi ya da alındığı plan \
+             kararı); Denetim'in bulgusu onu anar. ±0,00 kotu, projenin ±0,00'ının röperden okunan mutlak kotudur. \
              Parsel ve bahçe mesafeleri Mimari › Proje ▾ › Parsel ve bahçe mesafeleri ile verilir. Yerel imar \
              yönetmeliği seçilince Denetim › Mevzuat belediyenin değerlerini de okur: sıkı olan bağlar, ölçünün \
              belediyeye uyup Planlı Alanlar İmar Yönetmeliği'ne uymadığı yer çelişki olarak söylenir (idare karar \
@@ -295,16 +383,33 @@ pub(super) fn zoning_view<'a>(
             .spacing(8),
         );
     }
-    // The zoning plan's decisions on the parcel (docs/adr/8072 §5): with their source, never written into the fields.
+    // The zoning plan's decisions on the parcel (docs/adr/8072 §5): with their source; a decision's values go into the
+    // fields only by its Değerlerini al, and are saved only by Kaydet (docs/adr/8140).
     if !plan.is_empty() {
         body = body.push(label::body("Parselin plan kararları").font(typography::ui_strong()));
-        for (words, warn) in plan {
+        for (i, (words, warn)) in plan.into_iter().enumerate() {
             let line = label::body(words);
             body = body.push(if warn { line.style(kentos_ui::style::text::warning) } else { line });
+            for (_, take) in takes.iter().filter(|(after, _)| *after == i) {
+                let held = t.holds(take);
+                let take_button = button(
+                    row![icon(crate::icons::from_web(Some("import"))).size(13.0), label::body("Değerlerini al")]
+                        .spacing(5)
+                        .align_y(Center),
+                )
+                .on_press_maybe((!held).then(|| on_take(take.clone())))
+                .padding([4, 10])
+                .style(style::button::secondary);
+                body = body.push(
+                    row![take_button, label::caption(take.words(held)).width(Fill)].spacing(8).align_y(Center),
+                );
+            }
         }
         body = body.push(label::caption(
             "Belediyenin CBS'inden gelen imar planı katmanlarından, parselle kesişimiyle okunur. Bir kesişim tek başına \
-             hukuki karar değildir: yukarıdaki değerler imar durum belgesinden yazılır, buradan yazılmaz.",
+             hukuki karar değildir: değerleri imar durum belgesiyle karşılaştırın. Değerlerini al, kararın sayıyla \
+             yazılmış emsalini ve TAKS'ını kaynağıyla (plan, onay günü, karar) yukarıya, bina yüksekliğini (Hmax) ve kat \
+             adedini Plan notları'na yazar; Kaydet onaylar, Vazgeç bırakır. Planı belli olmayan kararın değeri alınmaz.",
         ));
     }
     super::group::<Message>("İmar durumu", body)

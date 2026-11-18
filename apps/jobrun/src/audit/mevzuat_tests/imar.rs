@@ -35,6 +35,22 @@ fn the_emsal_and_taks_are_read_against_the_zoning() {
         found[1].message
     );
     assert!(findings(&python, RULE, zoned(Some(1.5), Some(0.4), 400.0, 110.0)).is_empty());
+    // Where İmar durumu's emsal and TAKS are read from is said with the article (docs/adr/8140); none said, the words
+    // are as above.
+    let mut sourced = zoned(Some(1.5), Some(0.4), 486.0, 130.0);
+    sourced["project"]["architecture"]["zoning"]["farSource"] = json!("UIP-1 Merkez uygulama imar planı, karar K1");
+    sourced["project"]["architecture"]["zoning"]["coverageSource"] = json!("İmar durum belgesi 12.3.2025/1234");
+    let found = findings(&python, RULE, sourced);
+    assert!(
+        says(&found[0], &["PAİY md. 4/1-tt ve 5/5; imar durumu (UIP-1 Merkez uygulama imar planı, karar K1)."]),
+        "{}",
+        found[0].message
+    );
+    assert!(
+        says(&found[1], &["PAİY md. 4/1-cccc ve 5/5; imar durumu (İmar durum belgesi 12.3.2025/1234)."]),
+        "{}",
+        found[1].message
+    );
     // No TAKS given: 5/6's 60 % (an error), 40 % for a detached or block layout (a warning, the layout is not known).
     let found = findings(&python, RULE, zoned(Some(1.5), None, 400.0, 190.0));
     assert_eq!(said(&found), [(Severity::Error, None)]);

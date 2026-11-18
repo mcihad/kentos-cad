@@ -315,7 +315,7 @@ pub fn ensure(
         .settings()
         .arch
         .as_ref()
-        .and_then(|a| a.zoning)
+        .and_then(|a| a.zoning.as_ref())
         .is_some();
     let rooms = doc.entities().any(|e| matches!(e, Entity::Space(_)));
     let joinery = !doc.joinery_rows().is_empty();

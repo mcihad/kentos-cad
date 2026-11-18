@@ -272,6 +272,26 @@ def cases():
                            {"key": "storeys", "value": 2.5, "source": "UİP 12.3.2019, plan notu 3"}]}},
                        "invalid_arch", "“Kat adedi (en çok)” plan notunun değeri 1 ile 200 arasında bir tam sayı olmalı.",
                        "arch.planNotes.0.value"))
+    # Where İmar durumu's emsal and TAKS are read from (docs/adr/8140): kept as given; a source without its value, empty,
+    # or longer than a plan note's (200 characters) is refused at its field.
+    sourced = {"levels": levels, "zoning": {
+        "parcelArea": 900, "far": 1.2, "coverage": 0.4,
+        "farSource": "UIP-1 Merkez uygulama imar planı (yururlukte, onay 2024-05-14, Meclis kararı 2024/112), karar K1",
+        "coverageSource": "İmar durum belgesi 12.3.2025/1234"}}
+    out.append({"name": "Mimari: imar durumunda emsalin ve TAKS'ın kaynağı (ADR 8140)",
+                "steps": [step("execute", {"arch": sourced}, done(["arch"]), {**FLAGS, "settings": {"arch": sourced}})]})
+    out.append(refused("emsalin kaynağı var, emsal yok",
+                       {"arch": {"levels": levels, "zoning": {"parcelArea": 900, "coverage": 0.4,
+                                                             "farSource": "UIP-1, karar K1"}}},
+                       "invalid_arch", "Emsalin kaynağı yazılmış ama kendisi yok: değeri yazın ya da kaynağı kaldırın.",
+                       "arch.zoning.farSource"))
+    out.append(refused("TAKS'ın kaynağı boş",
+                       {"arch": {"levels": levels, "zoning": {"parcelArea": 900, "coverage": 0.4, "coverageSource": "  "}}},
+                       "invalid_arch", "TAKS'ın kaynağı boş olamaz: bilinmiyorsa yazmayın.", "arch.zoning.coverageSource"))
+    out.append(refused("emsalin kaynağı 200 karakteri aşıyor",
+                       {"arch": {"levels": levels, "zoning": {"parcelArea": 900, "far": 1.2, "farSource": "K" * 201}}},
+                       "invalid_arch", "Emsalin kaynağı en çok 200 karakter olur ve satır sonu içermez.",
+                       "arch.zoning.farSource"))
     out.append(refused("betonarme binada geleneksel mimari öğeler",
                        {"arch": {"levels": levels, "structure": {"system": "reinforcedConcrete", "traditional": True}}},
                        "invalid_arch",

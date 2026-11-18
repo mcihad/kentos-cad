@@ -87,6 +87,6 @@
   CBS kararlarının `Hmax`'ı ve `KatAdedi`'yle bağ ve 34/1'in "uygulama imar planına göre kat adedi" orada §6); çatı
   eğimi, mahya ve saçak (40, 42; Rust'taki kurallar taşınınca), bodrumun kullanımı, çıkmalar.
 - **Plan kararlarının değerleri:** ADR 8072 §5'in kararları (KAKS, TAKS, KatAdedi, Hmax) kaynağıyla İmar durumu'na ya da
-  plan notlarına bir onayla alınsın.
+  plan notlarına bir onayla alınsın — yapıldı: ADR [8140](8140-plan-decision-values-into-zoning.md).
 - **Planın onay günü:** notun planının onay günü başvuru gününden sonraysa uyarı; planın değişikliği sürümlensin.
 - **Bölge türü:** 28/1-a, b, ç ve 28/1-c'nin konut bölgesi varsayımı [ADR 8085](8085-zone-storey-heights.md)'te yapıldı.

@@ -158,7 +158,11 @@ pub(super) fn measure(
         .arch
         .as_ref()
         .is_some_and(|a| a.has_sprinklers());
-    // The parcel's zoning and the areas the Emsal ve TAKS table reads (docs/adr/8030, 8057 §92).
+    // The parcel's zoning and the areas the Emsal ve TAKS table reads (docs/adr/8030, 8057 §92), with where its emsal
+    // and TAKS are read from (docs/adr/8140).
+    let typed = doc.settings().arch.as_ref().and_then(|a| a.zoning.as_ref());
+    let far_source = typed.and_then(|z| z.far_source.clone());
+    let coverage_source = typed.and_then(|z| z.coverage_source.clone());
     let zoning = doc.zoning_report().map(|z| ZoningFacts {
         parcel: z.parcel,
         far: z.far_limit,
@@ -170,6 +174,8 @@ pub(super) fn measure(
         cap: z.cap,
         over: z.over,
         footprint: z.footprint,
+        far_source,
+        coverage_source,
     });
     Ok(Some(ArchitectureFacts {
         levels,

@@ -396,6 +396,11 @@
     `roofs[].seat`: çatının katının üstünde (1 cm içinde), dış çizgisinin ortasını tutan kat ya da teras döşemesi.
     Paketin `catilar`'ı 28/3-a'yı okur: yüksek binada döşeme yoksa eksik veri, en az EI 30 değilse kaldı; yüksek
     olmayan binada uzman incelemesi (nizam çizimde yok).
+  - **Plan kararının değerleri (18 Kasım 2026; [ADR 8140](../adr/8140-plan-decision-values-into-zoning.md),
+    K349–K353):** İmar durumu'nda her kararın altında "Değerlerini al": KAKS ve TAKS İmar durumu'na, Hmax ve kat adedi
+    Plan notları'na kaynağıyla (plan, onay, karar); yalnız sayıyla yazılmış, alanın sınırındaki değer, planı belli
+    kararın. Form dolar, Kaydet onaylar (`cad.settings.set`), Vazgeç bırakır. Emsalin ve TAKS'ın kaynağı projede
+    (`zoning.farSource`, `coverageSource`; mimari verisi 27) ve olgularda; `tr.kentos.mevzuat` 0.7.0'ın bulgusu anar.
   - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
     PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
     39/1-ç döner kapının yanında normal bina girişi.

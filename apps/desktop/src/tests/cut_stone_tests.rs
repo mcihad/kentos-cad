@@ -59,7 +59,7 @@ fn stone_house() -> App {
             }
             l.height = Some(4.4);
         }
-        a.zoning = Some(kentos_commands::Zoning { parcel_area: 200.0, far: Some(1.0), coverage: None });
+        a.zoning = Some(kentos_commands::Zoning { parcel_area: 200.0, far: Some(1.0), coverage: None, ..Default::default() });
     });
     crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
     app

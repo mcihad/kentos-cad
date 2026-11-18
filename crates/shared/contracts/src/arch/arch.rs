@@ -2064,8 +2064,8 @@ impl SitePlan {
 
 /// İmar durumu (docs/adr/8030; Planlı Alanlar İmar Yönetmeliği 4 tt, cccc): the parcel's area, m², and the plan's
 /// emsal (KAKS: the floors' area over the parcel's) and TAKS (the footprint over the parcel's), each when the plan
-/// gives it.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+/// gives it, with where each is read from when that is said (docs/adr/8140; `.kcad` architecture data 27).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -2083,9 +2083,26 @@ pub struct Zoning {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub coverage: Option<f64>,
+    /// Where the emsal is read from (docs/adr/8140): the zoning certificate, or the zoning plan's decision it was taken
+    /// from (the plan, its approval, the decision); one line, at most [`MAX_ZONING_SOURCE`] characters.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub far_source: Option<String>,
+    /// Where the TAKS is read from, as [`Zoning::far_source`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub coverage_source: Option<String>,
 }
 
+/// The longest source of İmar durumu's emsal or TAKS, in characters (as a plan note's, docs/adr/8084).
+pub const MAX_ZONING_SOURCE: usize = 200;
+
 impl Zoning {
+    /// Whether it says where its emsal or TAKS is read from (`.kcad` architecture data 27, docs/adr/8140).
+    pub fn has_sources(&self) -> bool {
+        self.far_source.is_some() || self.coverage_source.is_some()
+    }
+
     /// What is wrong with it: the field and the words.
     pub fn problem(&self) -> Option<(String, String)> {
         if !(self.parcel_area.is_finite() && self.parcel_area > 0.0 && self.parcel_area <= 1.0e8) {
@@ -2109,6 +2126,28 @@ impl Zoning {
                 "zoning.coverage".into(),
                 "TAKS sıfırdan büyük, en çok 1 olmalı.".into(),
             ));
+        }
+        self.sources_problem()
+    }
+
+    /// What is wrong with where its emsal and TAKS are read from (docs/adr/8140): a source without its value, empty,
+    /// too long or with a line break.
+    pub fn sources_problem(&self) -> Option<(String, String)> {
+        for (source, value, path, name) in [
+            (&self.far_source, self.far, "zoning.farSource", "Emsalin"),
+            (&self.coverage_source, self.coverage, "zoning.coverageSource", "TAKS'ın"),
+        ] {
+            let Some(source) = source else { continue };
+            let why = if value.is_none() {
+                format!("{name} kaynağı yazılmış ama kendisi yok: değeri yazın ya da kaynağı kaldırın.")
+            } else if source.trim().is_empty() {
+                format!("{name} kaynağı boş olamaz: bilinmiyorsa yazmayın.")
+            } else if source.chars().count() > MAX_ZONING_SOURCE || source.chars().any(char::is_control) {
+                format!("{name} kaynağı en çok {MAX_ZONING_SOURCE} karakter olur ve satır sonu içermez.")
+            } else {
+                continue;
+            };
+            return Some((path.into(), why));
         }
         None
     }

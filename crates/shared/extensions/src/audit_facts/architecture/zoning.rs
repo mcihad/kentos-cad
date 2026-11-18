@@ -36,6 +36,13 @@ pub struct ZoningFacts {
     pub over: f64,
     /// Taban alanı: the ground storey's rooms counted (all rooms in a project without storeys).
     pub footprint: f64,
+    /// Where İmar durumu's emsal is read from, when it says (docs/adr/8140): the zoning certificate, or the zoning
+    /// plan's decision it was taken from.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub far_source: Option<String>,
+    /// Where its TAKS is read from, when it says.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub coverage_source: Option<String>,
 }
 
 impl ZoningFacts {

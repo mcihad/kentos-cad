@@ -275,7 +275,7 @@ fn a_parcel_s_garden_distances_draw_the_setback_line_and_follow_the_storeys() {
         table.styles
     );
     assert!(
-        crate::zoning_badge::words(doc, true).is_some_and(|(_, over)| over),
+        crate::zoning_badge::words(app.document.as_ref().expect("a drawing"), true).is_some_and(|(_, over)| over),
         "the badge red"
     );
     // Run again: the parcel taken up with its kinds, the marks drawn anew, not twice; ±0.00's elevation kept.

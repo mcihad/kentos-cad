@@ -299,6 +299,8 @@ pub enum Event {
     /// Plan notları: a row changed or taken away, Plan notu ekle (docs/adr/8084).
     ArchPlanNote(usize, super::plan_notes::Edit),
     AddPlanNote,
+    /// Parselin plan kararları: a decision's Değerlerini al (docs/adr/8140).
+    TakePlanValues(crate::zoning_badge::PlanTake),
     /// Araç katmanları (UR-003): the layer a tool's objects go to; none: the active layer.
     ToolLayer(kentos_commands::AnnotationTool, Option<String>),
     RoomChoices(super::arch::ChoiceEvent),
@@ -435,6 +437,12 @@ impl State {
     }
 
     /// The draft's system: its SRID, and whether it is the project's own definition.
+    /// İmar durumu as the form holds it now (docs/adr/8140).
+    #[cfg(test)]
+    pub(crate) fn zoning_texts(&self) -> &super::arch::ZoningTexts {
+        &self.arch_zoning
+    }
+
     #[cfg(test)]
     pub(super) fn draft_srid(&self) -> (u32, bool) {
         (self.settings.srid, self.settings.custom_crs.is_some())
@@ -672,6 +680,7 @@ impl App {
                 }
             }
             Event::ArchPlanNote(i, edit) => super::plan_notes::edit(&mut s.arch_zoning.plan_notes, i, edit),
+            Event::TakePlanValues(take) => s.arch_zoning.take(&take),
             Event::AddPlanNote => {
                 let row = super::plan_notes::new_row(&s.arch_zoning.plan_notes);
                 s.arch_zoning.plan_notes.push(row);
@@ -1173,8 +1182,10 @@ impl App {
                     |f, t| event(Event::ArchZoning(f, t)),
                     |r| event(Event::ArchLocalRules(r)),
                     |z| event(Event::ArchZone(z)),
-                    crate::zoning_badge::summary(&doc.model),
-                    crate::zoning_badge::plan_lines(&doc.model),
+                    crate::zoning_badge::summary(doc),
+                    crate::zoning_badge::plan_lines(doc),
+                    crate::zoning_badge::plan_takes(doc),
+                    |take| event(Event::TakePlanValues(take)),
                 ),
                 super::plan_notes::view(
                     &s.arch_zoning.plan_notes,

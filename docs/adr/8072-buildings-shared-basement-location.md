@@ -283,7 +283,9 @@ uyarı rengindeki fark, alanlar değişmez). Resim `.run/gui-evidence/plan-karar
   çizer); bilgi paftasındaki PAİY 57/10 tablosu binanın değil parselin; açığa çıkan bodrumun taban alanına katılması
   (TAKS'ın notu, 20/4) arazi kotunu ister.
 - **Plan kararlarının kalanı:** imar durumuna bir kararın değerlerini kaynağıyla (plan, onay tarihi) almak, kaynağı
-  imar durumunda saklamak; plan notlarının metninden kural çıkarmak yok (müellifin ve idarenin işi).
+  imar durumunda saklamak — yapıldı: ADR [8140](8140-plan-decision-values-into-zoning.md) (kararın altında Değerlerini al,
+  emsalin ve TAKS'ın kaynağı İmar durumu'nda, Kaydet onaylar); plan notlarının metninden kural çıkarmak yok (müellifin ve
+  idarenin işi).
 - Denetim bulguları: seçilmeyen ortak kat, birden çok binada kodsuz ya da ±0.00'ı verilmeyen bina (bugün Bina programı
   "Seçilmedi" der, IFC dışa aktarma binası belli olmayan nesneyi söyler; Mimari denetimin program grubu mahal konumlu
   bulgu verir, bina düzeyinde bulgu yeri ister).

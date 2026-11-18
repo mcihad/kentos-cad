@@ -73,6 +73,7 @@ Metinler derlenmiş PAİY'den (1.7.2026 derlemesi, `pdftotext`).
 
 ## §6. Sıradaki adımlar
 
-- **Planın değerleri CBS'ten:** ADR 8072 §5'in `Hmax`'ı ve `KatAdedi`'si bir onayla plan notuna alınsın.
+- **Planın değerleri CBS'ten:** ADR 8072 §5'in `Hmax`'ı ve `KatAdedi`'si bir onayla plan notuna alınsın — yapıldı: ADR
+  [8140](8140-plan-decision-values-into-zoning.md) (Değerlerini al).
 - **Tahvil (9/1-c):** planın yalnız birini verdiği durumda öbürüne çevirme (subasman +1,20 ve 28/1'in kat yükseklikleri).
 - **Tesisat katı** (28/3) ve **kademeli bina** (9/1, her kademenin kendi kotu) okunmaz.
