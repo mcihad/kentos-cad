@@ -137,7 +137,13 @@ impl Scene {
         let within = |h: &kentos_scene3d::Hit| t0 + h.distance <= t1;
         let hit = meet(false).filter(within).or_else(|| meet(true).filter(within))?;
         let s = &self.meshes[hit.mesh as usize];
-        Some(Picked { point: hit.point, what: s.name.clone(), owner: s.owner.clone() })
+        Some(Picked {
+            point: hit.point,
+            what: s.name.clone(),
+            owner: s.owner.clone(),
+            mesh: hit.mesh as usize,
+            triangle: hit.triangle as usize,
+        })
     }
 
     fn content(&self, id: u64) -> Option<&Content> {
@@ -151,6 +157,9 @@ pub struct Picked {
     pub point: [f64; 3],
     pub what: String,
     pub owner: Option<String>,
+    /// The source mesh met (its index in the scene's) and its triangle: what a measurement snaps on (docs/adr/8121).
+    pub mesh: usize,
+    pub triangle: usize,
 }
 
 /// What the last frame drew: tiles, triangles, contents waiting, bytes on the GPU.
@@ -172,6 +181,21 @@ pub enum Gesture {
     Pick(f32, f32, f32, f32),
     /// The view's size (logical pixels) at its first frame and whenever it changes: a host fits the model by its shape.
     Size(f32, f32),
+    /// Where the pointer is over the view (none: it left it) of a size, while the host asks (measuring, docs/adr/8121).
+    Hover(Option<(f32, f32)>, f32, f32),
+}
+
+/// What the scene draws over itself besides the clicked point (docs/adr/8121): a measurement's lines, points and
+/// values, in the source's coordinates.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Mark {
+    /// A measured line; faint: a component along an axis, an outline, the line to the pointer.
+    Line { a: [f64; 3], b: [f64; 3], faint: bool },
+    /// A point measured; with a snap, the pointer's: its symbol (a square at a corner, a triangle at an edge's middle,
+    /// a diamond on an edge, a ring on a face) and its name beside it.
+    Point { at: [f64; 3], snap: Option<kentos_model_view::measure::Snap> },
+    /// A value on a plate at a point.
+    Value { at: [f64; 3], text: String },
 }
 
 /// One view of a scene: the scene, the camera, the exaggeration, the parts' styles, towards the light, the sky's and
@@ -189,13 +213,16 @@ pub struct SceneView {
     pub quality: Quality,
     pub planes: Vec<[f64; 4]>,
     pub marked: Option<[f64; 3]>,
+    /// The measurements drawn over the scene, and whether the pointer's moves come back as [`Gesture::Hover`].
+    pub marks: Vec<Mark>,
+    pub hover: bool,
     pub seen: Arc<Mutex<Seen>>,
     pub pending: Arc<AtomicBool>,
 }
 
 /// The scene drawn and its gestures sent through `on`.
 pub fn view<'a, M: Clone + 'a>(v: SceneView, on: impl Fn(Gesture) -> M + 'a) -> Element<'a, M> {
-    let marker = canvas(Marker { camera: v.camera, point: v.marked }).width(Fill).height(Fill);
+    let marker = canvas(Marker { camera: v.camera, point: v.marked, marks: v.marks }).width(Fill).height(Fill);
     let program = Program {
         scene: v.scene,
         camera: v.camera,
@@ -208,6 +235,7 @@ pub fn view<'a, M: Clone + 'a>(v: SceneView, on: impl Fn(Gesture) -> M + 'a) -> 
         planes: Arc::new(v.planes),
         seen: v.seen,
         pending: v.pending,
+        hover: v.hover,
         on: Box::new(on),
     };
     stack![shader(program).width(Fill).height(Fill), marker].into()
@@ -227,15 +255,18 @@ struct Program<'a, M> {
     planes: Arc<Vec<[f64; 4]>>,
     seen: Arc<Mutex<Seen>>,
     pending: Arc<AtomicBool>,
+    hover: bool,
     on: Box<dyn Fn(Gesture) -> M + 'a>,
 }
 
-/// A drag in progress (where, whether it pans), the view's key in the pipeline and the size last told.
+/// A drag in progress (where, whether it pans), the view's key in the pipeline, the size last told and the pointer's
+/// place last told (none: outside).
 pub struct State {
     view: u64,
     drag: Option<Press>,
     shift: bool,
     size: (f32, f32),
+    over: Option<(f32, f32)>,
 }
 
 #[derive(Clone, Copy)]
@@ -257,7 +288,7 @@ static RETIRED: Mutex<Vec<u64>> = Mutex::new(Vec::new());
 
 impl Default for State {
     fn default() -> Self {
-        State { view: NEXT_VIEW.fetch_add(1, Ordering::Relaxed), drag: None, shift: false, size: (0.0, 0.0) }
+        State { view: NEXT_VIEW.fetch_add(1, Ordering::Relaxed), drag: None, shift: false, size: (0.0, 0.0), over: None }
     }
 }
 
@@ -301,6 +332,28 @@ impl<M> shader::Program<M> for Program<'_, M> {
                     return Some(shader::Action::capture());
                 }
                 Some(shader::Action::publish((self.on)(Gesture::Pick(p.down.x, p.down.y, bounds.width, bounds.height))).and_capture())
+            }
+            iced::Event::Mouse(mouse::Event::CursorMoved { position }) if state.drag.is_none() => {
+                // While the host measures: the pointer's place when it moved a pixel, and once when it left.
+                if !self.hover {
+                    return None;
+                }
+                let at = cursor.position_in(bounds).map(|p| (p.x, p.y));
+                let moved = match (at, state.over) {
+                    (Some(a), Some(b)) => (a.0 - b.0).abs() >= 1.0 || (a.1 - b.1).abs() >= 1.0,
+                    (None, None) => false,
+                    _ => true,
+                };
+                let _ = position;
+                if !moved {
+                    return None;
+                }
+                state.over = at;
+                Some(shader::Action::publish((self.on)(Gesture::Hover(at, bounds.width, bounds.height))))
+            }
+            iced::Event::Mouse(mouse::Event::CursorLeft) if self.hover && state.over.is_some() => {
+                state.over = None;
+                Some(shader::Action::publish((self.on)(Gesture::Hover(None, bounds.width, bounds.height))))
             }
             iced::Event::Mouse(mouse::Event::CursorMoved { position }) => {
                 let mut p = state.drag?;
@@ -481,26 +534,115 @@ impl shader::Primitive for Frame3d {
     }
 }
 
-/// The point picked, ringed where the camera shows it.
+/// The point picked, ringed where the camera shows it, and the measurements' marks (docs/adr/8121): their lines in the
+/// accent colour (faint ones thinner and dashed), their points white-ringed dots, the pointer's snap its symbol and its
+/// name, their values on plates of the field's colour.
 struct Marker {
     camera: Camera,
     point: Option<[f64; 3]>,
+    marks: Vec<Mark>,
 }
 
 impl<M> canvas::Program<M> for Marker {
     type State = ();
 
     fn draw(&self, _: &(), renderer: &iced::Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
-        use iced::widget::canvas::{Frame, Path, Stroke};
-        let Some(p) = self.point else { return Vec::new() };
+        use iced::widget::canvas::{Frame, LineDash, Path, Stroke, Text};
+        use kentos_model_view::measure::Snap;
+        if self.point.is_none() && self.marks.is_empty() {
+            return Vec::new();
+        }
         let vp = Viewport { width: f64::from(bounds.width), height: f64::from(bounds.height) };
-        let Some((x, y, _)) = self.camera.project(p, &vp) else { return Vec::new() };
+        let on_screen = |p: [f64; 3]| self.camera.project(p, &vp).map(|(x, y, _)| iced::Point::new(x as f32, y as f32));
         let mut frame = Frame::new(renderer, bounds.size());
-        let at = iced::Point::new(x as f32, y as f32);
-        let accent = Tokens::of(theme).accent;
-        frame.stroke(&Path::circle(at, 7.0), Stroke::default().with_color(Color::WHITE).with_width(4.0));
-        frame.stroke(&Path::circle(at, 7.0), Stroke::default().with_color(accent).with_width(2.0));
-        frame.fill(&Path::circle(at, 2.0), accent);
+        let t = Tokens::of(theme);
+        let accent = t.accent;
+        // Lines first, then points, then the values over them.
+        for m in &self.marks {
+            if let Mark::Line { a, b, faint } = m
+                && let (Some(a), Some(b)) = (on_screen(*a), on_screen(*b))
+            {
+                let path = Path::line(a, b);
+                if *faint {
+                    let dash = Stroke { line_dash: LineDash { segments: &[5.0, 4.0], offset: 0 }, ..Stroke::default() };
+                    frame.stroke(&path, dash.with_color(accent.scale_alpha(0.75)).with_width(1.2));
+                } else {
+                    frame.stroke(&path, Stroke::default().with_color(Color::WHITE.scale_alpha(0.85)).with_width(4.0));
+                    frame.stroke(&path, Stroke::default().with_color(accent).with_width(2.0));
+                }
+            }
+        }
+        for m in &self.marks {
+            let Mark::Point { at, snap } = m else { continue };
+            let Some(c) = on_screen(*at) else { continue };
+            match snap {
+                None => {
+                    frame.fill(&Path::circle(c, 4.5), Color::WHITE);
+                    frame.fill(&Path::circle(c, 3.0), accent);
+                }
+                Some(s) => {
+                    let symbol = match s {
+                        Snap::Corner => Path::rectangle(iced::Point::new(c.x - 6.0, c.y - 6.0), iced::Size::new(12.0, 12.0)),
+                        Snap::Middle => Path::new(|p| {
+                            p.move_to(iced::Point::new(c.x, c.y - 7.0));
+                            p.line_to(iced::Point::new(c.x + 7.0, c.y + 5.0));
+                            p.line_to(iced::Point::new(c.x - 7.0, c.y + 5.0));
+                            p.close();
+                        }),
+                        Snap::Edge => Path::new(|p| {
+                            p.move_to(iced::Point::new(c.x, c.y - 7.0));
+                            p.line_to(iced::Point::new(c.x + 7.0, c.y));
+                            p.line_to(iced::Point::new(c.x, c.y + 7.0));
+                            p.line_to(iced::Point::new(c.x - 7.0, c.y));
+                            p.close();
+                        }),
+                        Snap::Face => Path::circle(c, 6.0),
+                    };
+                    frame.stroke(&symbol, Stroke::default().with_color(Color::WHITE.scale_alpha(0.9)).with_width(4.0));
+                    frame.stroke(&symbol, Stroke::default().with_color(accent).with_width(1.8));
+                    frame.fill(&Path::circle(c, 1.8), accent);
+                    plate(&mut frame, s.name(), iced::Point::new(c.x + 12.0, c.y - 14.0), &t, false);
+                }
+            }
+        }
+        for m in &self.marks {
+            if let Mark::Value { at, text } = m
+                && let Some(c) = on_screen(*at)
+            {
+                plate(&mut frame, text, iced::Point::new(c.x, c.y - 14.0), &t, true);
+            }
+        }
+        if let Some(c) = self.point.and_then(on_screen) {
+            frame.stroke(&Path::circle(c, 7.0), Stroke::default().with_color(Color::WHITE).with_width(4.0));
+            frame.stroke(&Path::circle(c, 7.0), Stroke::default().with_color(accent).with_width(2.0));
+            frame.fill(&Path::circle(c, 2.0), accent);
+        }
+        let _ = Text::default;
         vec![frame.into_geometry()]
     }
+}
+
+/// Words on a plate of the field's colour, centred on `at` (a value) or starting at it (a snap's name); kept within the
+/// scene, so a value at its edge is read whole.
+fn plate(frame: &mut iced::widget::canvas::Frame, words: &str, at: iced::Point, t: &Tokens, centred: bool) {
+    use iced::widget::canvas::{Path, Stroke, Text};
+    let size = 12.0;
+    // The UI font's digits and letters are about 0.56 of its size wide.
+    let width = words.chars().count() as f32 * size * 0.56 + 12.0;
+    let left = if centred { at.x - width / 2.0 } else { at.x };
+    let left = left.clamp(4.0, (frame.width() - width - 4.0).max(4.0));
+    let at = iced::Point::new(at.x, at.y.clamp(14.0, (frame.height() - 14.0).max(14.0)));
+    let body = Path::rounded_rectangle(iced::Point::new(left, at.y - 10.0), iced::Size::new(width, 20.0), iced::border::Radius::from(4.0));
+    frame.fill(&body, t.field.scale_alpha(0.94));
+    frame.stroke(&body, Stroke::default().with_color(if centred { t.accent } else { t.border }).with_width(1.0));
+    frame.fill_text(Text {
+        content: words.to_owned(),
+        position: iced::Point::new(left + width / 2.0, at.y),
+        color: t.text,
+        size: iced::Pixels(size),
+        font: kentos_ui::theme::typography::ui(),
+        align_x: iced::advanced::text::Alignment::Center,
+        align_y: iced::alignment::Vertical::Center,
+        ..Text::default()
+    });
 }

@@ -1,11 +1,13 @@
 //! The model viewer's look (DESIGN.md §7.21, docs/adr/8061 §5, docs/adr/8073 §2, docs/adr/8118): one tool strip over
 //! three panes and a status bar, the 3B görünüm's vocabulary. The strip holds the camera (Görünüş ▾, Sığdır, Seçime
 //! yaklaş), then what shows (Gizle, Yalnız bırak, Hepsini göster; Mahaller, Açıklıklar, Saydam), then Kesit ▾, then
-//! whatever the host puts at its end; it keeps its length whatever is cut. The panes: the tree (by structure, by class,
-//! or the objects that could not be shown) with its search over it, the scene with its north arrow, its legend and,
-//! while something cuts it, the section's card, the chosen object's details; the side panes widen by their edges. The
-//! bar: the point clicked and what it is on, how much shows, what could not be shown, the host's facts (the schema), the
-//! mouse's help. While the file is read the panes give way to its progress; a file refused says why.
+//! Ölç, then whatever the host puts at its end; it keeps its length whatever is cut. The panes: the tree (by structure,
+//! by class, or the objects that could not be shown) with its search over it, the scene with its north arrow, its
+//! legend, while something cuts it the section's card and while measuring or measured the measurements' card at its
+//! bottom right (docs/adr/8121), the chosen object's details; the side panes widen by their edges and fold to a rail of
+//! their own (the scene widens). The bar: the point clicked and what it is on, how much shows, what could not be shown,
+//! the host's facts (the schema), the mouse's help. While the file is read the panes give way to its progress; a file
+//! refused says why.
 //!
 //! ```text
 //! ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -34,8 +36,9 @@ use kentos_ui::widget::tree_view::{self, Node, Toggle, TreeView};
 use kentos_ui::widget::{EmptyState, Menu, PropertySheet, StatusBar, Tip, progress, property_grid, segmented::Segmented, strip};
 
 use crate::look;
+use crate::measuring::{Measured, Tool, Value};
 use crate::scene::{self, SceneView};
-use crate::viewer::{Message, Panel, Stage, Viewer};
+use crate::viewer::{Message, Panel, Side, Stage, Viewer};
 
 /// What the host decides of the viewer's look: how its messages reach it, what it puts at the strip's end, the sky
 /// the scene stands on, how a coordinate is written, how a measured value is written by its unit (`m`, `m²`, `m³`,
@@ -59,6 +62,10 @@ const TREE_RANGE: std::ops::RangeInclusive<f32> = 200.0..=560.0;
 const DETAILS_RANGE: std::ops::RangeInclusive<f32> = 240.0..=600.0;
 /// The section card's width at 12 px text.
 const CARD_WIDTH: f32 = 330.0;
+/// A folded pane's rail.
+const RAIL: f32 = 34.0;
+/// The measurements' list's height at most, before it scrolls.
+const LIST_HEIGHT: f32 = 220.0;
 /// The sky's and the fill's shares of a building's light (docs/adr/8120).
 const SKY: f32 = 0.16;
 const FILL: f32 = 0.22;
@@ -88,23 +95,37 @@ impl Viewer {
             .center(Fill)
             .into(),
             Stage::Shown => {
-                // The side panes widen by their edges; a double click gives back their width (DESIGN.md §7.21).
+                // The side panes widen by their edges; a double click gives back their width (DESIGN.md §7.21); folded,
+                // a rail of their own (docs/adr/8121).
                 let tree = self.tree_width.unwrap_or_else(|| typography::scaled(TREE_WIDTH));
                 let details = self.details_width.unwrap_or_else(|| typography::scaled(DETAILS_WIDTH));
-                row![
-                    container(self.tree_panel()).width(tree).height(Fill),
-                    Sash::vertical(tree, |w| Message::TreeWidth(Some(w)))
-                        .range(TREE_RANGE)
-                        .on_double_click(Message::TreeWidth(None)),
-                    self.scene_pane(&host),
-                    Sash::vertical(details, |w| Message::DetailsWidth(Some(w)))
-                        .reverse()
-                        .range(DETAILS_RANGE)
-                        .on_double_click(Message::DetailsWidth(None)),
-                    container(self.details_panel(&host)).width(details).height(Fill),
-                ]
-                .height(Fill)
-                .into()
+                let mut panes: Vec<Element<'a, Message>> = Vec::new();
+                if self.tree_open {
+                    panes.push(container(self.tree_panel()).width(tree).height(Fill).into());
+                    panes.push(
+                        Sash::vertical(tree, |w| Message::TreeWidth(Some(w)))
+                            .range(TREE_RANGE)
+                            .on_double_click(Message::TreeWidth(None))
+                            .into(),
+                    );
+                } else {
+                    panes.push(rail(Side::Tree));
+                }
+                panes.push(self.scene_pane(&host));
+                if self.details_open {
+                    panes.push(
+                        Sash::vertical(details, |w| Message::DetailsWidth(Some(w)))
+                            .reverse()
+                            .range(DETAILS_RANGE)
+                            .on_double_click(Message::DetailsWidth(None))
+                            .into(),
+                    );
+                    panes.push(container(self.details_panel(&host)).width(details).height(Fill).into());
+                } else {
+                    panes.push(rail(Side::Details));
+                }
+                // A vector's row takes no width from its children: the scene's Fill is the row's.
+                Row::from_vec(panes).width(Fill).height(Fill).into()
             }
         };
         column![strip, strip::rule(), body.map(to), status].height(Fill).into()
@@ -176,6 +197,13 @@ impl Viewer {
             "Kesit: bir düzlemle ya da seçimin çevresindeki kutuyla modelin içine bakar. Kesilen yüzler kapatılmaz.",
             move || section_menu(section, chosen),
         ));
+        out.push(strip::toggle(
+            Some(Icon::Ruler),
+            "Ölç",
+            "Ölç: modelde uzaklık, açı ya da düz bir yüzün alanını ölçer. Nokta köşeye, kenar ortasına, kenara ya da yüze yakalanır; ölçerken tıklama nesne seçmez.",
+            self.measuring.on,
+            Message::Measure,
+        ));
         out
     }
 
@@ -236,7 +264,10 @@ impl Viewer {
             fill: FILL,
             quality: host.quality,
             planes: self.planes(),
-            marked: self.picked.as_ref().map(|p| p.point),
+            // While measuring the clicked point's ring gives way to the measurement's points.
+            marked: self.picked.as_ref().filter(|_| !self.measuring.on).map(|p| p.point),
+            marks: self.marks(&|v| written(host, v)),
+            hover: self.measuring.on,
             seen: self.seen.clone(),
             pending: self.pending.clone(),
         };
@@ -246,6 +277,7 @@ impl Viewer {
             look::compass(&self.orbit, Message::North),
             look::legend(&swatches, self.legend, Message::Legend),
             self.section_card(host),
+            self.measure_card(host),
             host.sky,
         )
     }
@@ -289,7 +321,8 @@ impl Viewer {
                     .into()
             }
         };
-        let head = column![tabs, search].spacing(6);
+        let fold = strip::icon_button(Icon::ChevronLeft, "Ağacı daralt: sahne genişler; kenardaki düğme geri açar.", Some(Message::Pane(Side::Tree)));
+        let head = column![row![container(tabs).width(Fill), fold].spacing(4).align_y(Center), search].spacing(6);
         column![container(head).padding(6), list].height(Fill).into()
     }
 
@@ -337,7 +370,9 @@ impl Viewer {
 
     /// The chosen object's details, a group a folding section; else what a choice gives.
     fn details_panel<'a, M>(&'a self, host: &Host<'a, M>) -> Element<'a, Message> {
-        let head = container(label::strong("Özellikler")).padding([8, 10]);
+        let fold = strip::icon_button(Icon::ChevronRight, "Özellikleri daralt: sahne genişler; kenardaki düğme geri açar.", Some(Message::Pane(Side::Details)));
+        let head = container(row![label::strong("Özellikler"), space::horizontal(), fold].align_y(Center))
+            .padding(iced::Padding { top: 4.0, right: 6.0, bottom: 4.0, left: 10.0 });
         let Some(d) = self.details() else {
             let what = if self.view().and_then(|v| v.selected()).is_some() { "Okunuyor…" } else { "Bir nesne seçin" };
             return column![
@@ -443,6 +478,109 @@ fn section_menu(section: Section, chosen: bool) -> Menu<Message> {
         m = m.radio("Seçimin çevresinde kutu", matches!(section, Section::Box(_)), Message::Boxed);
     }
     m.separator().item("Kesiti kaldır", Message::Uncut)
+}
+
+/// A folded pane: a rail with the button that opens it again, the pane's side's border.
+fn rail<'a>(side: Side) -> Element<'a, Message> {
+    let (glyph, help) = match side {
+        Side::Tree => (Icon::ChevronRight, "Yapı ağacını aç"),
+        Side::Details => (Icon::ChevronLeft, "Özellikleri aç"),
+    };
+    container(strip::icon_button(glyph, help, Some(Message::Pane(side))))
+        .padding([6, 3])
+        .width(typography::scaled(RAIL))
+        .height(Fill)
+        .align_x(iced::alignment::Horizontal::Center)
+        .style(|t: &Theme| {
+            let k = Tokens::of(t);
+            container::Style { background: Some(Background::Color(k.surface)), ..container::Style::default() }
+        })
+        .into()
+}
+
+/// A measured value in words, with the host's decimals: a length and an area by their units, an angle in degrees.
+fn written<M>(host: &Host<'_, M>, v: Value) -> String {
+    match v {
+        Value::Length(l) => format!("{} m", (host.measure)(l, Some("m"))),
+        Value::Area(a) => format!("{} m²", (host.measure)(a, Some("m²"))),
+        Value::Angle(d) => format!("{d:.2}°"),
+    }
+}
+
+impl Viewer {
+    /// The measurements' card at the scene's bottom right while measuring or measured (docs/adr/8121): its head (Ölçü
+    /// and how many, the tools, the fold), then what the next click does with Vazgeç, the measurements (each its kind,
+    /// its value, its parts and ×) and Temizle; folded, its head only.
+    fn measure_card<'a, M>(&'a self, host: &Host<'a, M>) -> Option<Element<'a, Message>> {
+        let m = &self.measuring;
+        if !m.on && m.done.is_empty() {
+            return None;
+        }
+        let title = if m.done.is_empty() { "Ölçü".to_owned() } else { format!("Ölçü {}", m.done.len()) };
+        let (fold_glyph, fold_help) =
+            if m.folded { (Icon::ChevronUp, "Ölçüleri aç") } else { (Icon::ChevronDown, "Ölçüleri daralt: yalnız başlık kalır, ölçüler sahnede kalır.") };
+        let head = row![
+            label::strong(title),
+            space::horizontal(),
+            Segmented::new([Tool::Distance, Tool::Angle, Tool::Area], m.tool, Message::Tool).compact(),
+            strip::icon_button(fold_glyph, fold_help, Some(Message::MeasureFold)),
+        ]
+        .spacing(6)
+        .align_y(Center);
+        let mut body = column![head].spacing(8);
+        if !m.folded {
+            if m.on {
+                let mut hint = row![label::caption(m.tool.hint(m.points.len())).style(muted).width(Fill)].spacing(6).align_y(Center);
+                if !m.points.is_empty() {
+                    hint = hint.push(strip::text_button("Vazgeç", "Vazgeç: ölçülmekte olanı bırakır.", Some(Message::MeasureCancel)));
+                }
+                body = body.push(hint);
+            }
+            if !m.done.is_empty() {
+                let rows = m.done.iter().enumerate().map(|(i, d)| self.measured_row(host, i, d));
+                body = body.push(container(scrollable(column(rows).spacing(6))).max_height(typography::scaled(LIST_HEIGHT)));
+                body = body.push(
+                    row![
+                        label::caption("Gösterilen gövdeden; eğri yüzde üçgenlerden.").style(muted).width(Fill),
+                        strip::text_button("Temizle", "Temizle: bütün ölçüleri siler.", Some(Message::MeasureClear)),
+                    ]
+                    .spacing(6)
+                    .align_y(Center),
+                );
+            }
+        }
+        Some(container(kentos_ui::widget::legend::frame(container(body).padding([4, 6]))).width(typography::scaled(CARD_WIDTH)).into())
+    }
+
+    /// A measurement in the card: its kind and value, under them its parts (a distance's horizontal length and
+    /// components along the axes; an area's body), and × to remove it.
+    fn measured_row<'a, M>(&'a self, host: &Host<'a, M>, i: usize, d: &'a Measured) -> Element<'a, Message> {
+        use kentos_model_view::measure::{Distance, angle};
+        let (kind, value, parts): (&str, String, Option<Element<'a, Message>>) = match d {
+            Measured::Distance { a, b } => {
+                let dist = Distance::between(*a, *b);
+                // The components along the axes, in metres; the length on the ground too when it rises or falls.
+                let n = |v: f64| (host.measure)(v, Some("m"));
+                let mut parts = format!("Δ{} {}   Δ{} {}   ΔZ {}", host.east, n(dist.delta[0]), host.north, n(dist.delta[1]), n(dist.delta[2]));
+                if dist.delta[2].abs() > 1e-9 && dist.horizontal > 1e-9 {
+                    parts = format!("Yatay {}   {parts}", n(dist.horizontal));
+                }
+                ("Uzaklık", written(host, Value::Length(dist.length)), Some(label::mono_caption(parts).style(muted).into()))
+            }
+            Measured::Angle { a, at, b } => ("Açı", angle(*a, *at, *b).map_or_else(|| "—".to_owned(), |deg| written(host, Value::Angle(deg))), None),
+            Measured::Area { face, what, .. } => {
+                ("Alan", written(host, Value::Area(face.area)), Some(label::caption(what.as_str()).style(muted).into()))
+            }
+        };
+        let mut left = column![row![label::caption(kind).style(muted).width(Fill), label::mono(value)].spacing(8).align_y(Center)].spacing(2);
+        if let Some(p) = parts {
+            left = left.push(p);
+        }
+        row![left.width(Fill), strip::icon_button(Icon::Close, "Bu ölçüyü siler.", Some(Message::MeasureRemove(i)))]
+            .spacing(6)
+            .align_y(Center)
+            .into()
+    }
 }
 
 fn muted(t: &Theme) -> text::Style {

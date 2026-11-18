@@ -1,6 +1,7 @@
 //! The model viewer (docs/adr/8061 §3–§5, docs/adr/8073 §2): a model's objects in a tree by structure or by class,
 //! its bodies in the 3D scene, the chosen object's details; hide, isolate, show all; the spaces and the openings on and
-//! off, everything see-through; a section plane or a box about the chosen objects; the views of every 3D view.
+//! off, everything see-through; a section plane or a box about the chosen objects; the views of every 3D view; the
+//! measuring (measuring.rs, docs/adr/8121); the side panes folded to their rails for a wider scene.
 //!
 //! It knows its host only through its messages (docs/adr/8061 §4): the host gives it the model ([`Viewer::load`]),
 //! the reading's progress, the chosen object's details and the objects to choose or paint as found; it tells the host
@@ -17,6 +18,7 @@ use kentos_model_view::{Details, Input, OrbitCamera, PARTS, Row, TreeMode, View,
 use kentos_render_scene3d::Style;
 use kentos_scene3d::{Camera, Exaggeration, Viewport};
 
+use crate::measuring::{Measuring, Tool};
 use crate::scene::{Gesture, Picked, Scene, Seen, Source};
 
 /// What the panel at the left shows: the tree by structure, by class, or the objects that could not be shown.
@@ -25,6 +27,13 @@ pub enum Panel {
     Structure,
     Class,
     NotShown,
+}
+
+/// A side pane: the tree at the left, the details at the right.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Side {
+    Tree,
+    Details,
 }
 
 impl fmt::Display for Panel {
@@ -82,6 +91,19 @@ pub enum Message {
     /// A side panel dragged to a width (the tree's, the details'); none: its default width again (a double click).
     TreeWidth(Option<f32>),
     DetailsWidth(Option<f32>),
+    /// A side pane folded to its rail, or opened again.
+    Pane(Side),
+    /// Ölç: clicks measure, or choose again.
+    Measure,
+    /// What a click measures; the measurement under way starts again.
+    Tool(Tool),
+    /// The measurements' card folded to its head, or opened.
+    MeasureFold,
+    /// The measurement under way given up.
+    MeasureCancel,
+    /// A measurement removed, by its place in the list; all of them.
+    MeasureRemove(usize),
+    MeasureClear,
     Cancel,
     Close,
 }
@@ -121,6 +143,11 @@ pub struct Viewer {
     /// The side panels' widths as dragged; none: their default.
     pub tree_width: Option<f32>,
     pub details_width: Option<f32>,
+    /// Whether the side panes are open (folded: a rail, the scene wider).
+    pub tree_open: bool,
+    pub details_open: bool,
+    /// The measuring (measuring.rs).
+    pub measuring: Measuring,
     /// The scene's width to its height as it last drew (0: not drawn yet), and whether the model loaded before it was
     /// is to be fitted again to it (docs/adr/8119): a narrow scene sees less across than up and down.
     aspect: f64,
@@ -157,6 +184,9 @@ impl Viewer {
             query: String::new(),
             tree_width: None,
             details_width: None,
+            tree_open: true,
+            details_open: true,
+            measuring: Measuring::default(),
             aspect: 0.0,
             refit: false,
             seen: Arc::default(),
@@ -192,6 +222,8 @@ impl Viewer {
         self.details = None;
         self.picked = None;
         self.section = Section::None;
+        // Another model: what was measured on the one before means nothing here.
+        self.measuring.start_again();
         self.rebuild();
         self.look(0);
         // Fitted again by the scene's shape once it draws, unless the user moves first.
@@ -381,6 +413,35 @@ impl Viewer {
             Message::Search(words) => self.query = words,
             Message::TreeWidth(w) => self.tree_width = w,
             Message::DetailsWidth(w) => self.details_width = w,
+            Message::Pane(Side::Tree) => self.tree_open = !self.tree_open,
+            Message::Pane(Side::Details) => self.details_open = !self.details_open,
+            Message::Measure => {
+                let m = &mut self.measuring;
+                m.on = !m.on;
+                m.points.clear();
+                m.hover = None;
+                // Measuring shows its card.
+                if m.on {
+                    m.folded = false;
+                }
+            }
+            Message::Tool(tool) => {
+                let m = &mut self.measuring;
+                m.tool = tool;
+                m.points.clear();
+                m.on = true;
+            }
+            Message::MeasureFold => self.measuring.folded = !self.measuring.folded,
+            Message::MeasureCancel => self.measuring.points.clear(),
+            Message::MeasureRemove(i) => {
+                if i < self.measuring.done.len() {
+                    self.measuring.done.remove(i);
+                }
+            }
+            Message::MeasureClear => {
+                self.measuring.done.clear();
+                self.measuring.points.clear();
+            }
             Message::Cancel => return Some(Out::Cancel),
             Message::Close => return Some(Out::Close),
         }
@@ -405,11 +466,18 @@ impl Viewer {
     }
 
     fn gesture(&mut self, g: Gesture) -> Option<Out> {
-        if !matches!(g, Gesture::Size(..)) {
+        if !matches!(g, Gesture::Size(..) | Gesture::Hover(..)) {
             // The user moved: the model stays where they put it.
             self.refit = false;
         }
         match g {
+            Gesture::Hover(at, width, height) => {
+                if self.measuring.on {
+                    self.measure_hover(at, width, height);
+                }
+            }
+            // While measuring a click gives a point; nothing is chosen.
+            Gesture::Pick(x, y, width, height) if self.measuring.on => self.measure_click(x, y, width, height),
             Gesture::Size(width, height) => {
                 if width > 0.0 && height > 0.0 {
                     self.aspect = f64::from(width) / f64::from(height);
@@ -479,6 +547,7 @@ impl Viewer {
             .collect();
         let count = sources.len();
         self.scene = Arc::new(Scene::of(sources, count));
+        self.measuring.forget_edges();
         self.refresh_rows();
     }
 
@@ -562,6 +631,52 @@ mod tests {
         let vp = Viewport { width: 800.0, height: 600.0 };
         let (x, y, _) = v.camera().project(p, &vp).expect("in front");
         v.update(Message::Gesture(Gesture::Pick(x as f32, y as f32, 800.0, 600.0)))
+    }
+
+    /// Ölç (docs/adr/8121): clicks a few centimetres inside the first cube's top face near its west corners snap to the
+    /// corners and measure their exact metre, nothing chosen; the pointer there shows the corner; Alan on the top face
+    /// measures all of it (two triangles, one square metre); Ölç off, a click chooses again.
+    #[test]
+    fn measuring_snaps_to_corners_and_measures_a_face() {
+        use crate::measuring::{Measured, Tool};
+        use kentos_model_view::measure::Snap;
+        let mut v = loaded();
+        v.update(Message::Measure);
+        assert!(v.measuring.on);
+        let vp = Viewport { width: 800.0, height: 600.0 };
+        let (x, y, _) = v.camera().project([0.03, 0.97, 1.0], &vp).expect("in front");
+        v.update(Message::Gesture(Gesture::Hover(Some((x as f32, y as f32)), 800.0, 600.0)));
+        assert_eq!(v.measuring.hover, Some(([0.0, 1.0, 1.0], Snap::Corner)), "the pointer's snap");
+        assert_eq!(click_at(&mut v, [0.03, 0.97, 1.0]), None, "a measuring click chooses nothing");
+        assert_eq!(click_at(&mut v, [0.03, 0.03, 1.0]), None);
+        assert_eq!(v.measuring.done, vec![Measured::Distance { a: [0.0, 1.0, 1.0], b: [0.0, 0.0, 1.0] }]);
+        assert!(v.view().and_then(|w| w.selected()).is_none());
+        // The face: its whole square, its four sides.
+        v.update(Message::Tool(Tool::Area));
+        click_at(&mut v, [0.5, 0.5, 1.0]);
+        match v.measuring.done.last() {
+            Some(Measured::Area { face, .. }) => {
+                assert!((face.area - 1.0).abs() < 1e-12, "{}", face.area);
+                assert_eq!(face.outline.len(), 4);
+            }
+            other => panic!("an area: {other:?}"),
+        }
+        // Written over the scene: each line and its value.
+        let marks = v.marks(&|value| format!("{value:?}"));
+        assert!(marks.iter().any(|m| matches!(m, crate::scene::Mark::Value { text, .. } if text == "Length(1.0)")), "{marks:?}");
+        // Off: a click chooses again; the measurements stay.
+        v.update(Message::Measure);
+        assert!(matches!(click_at(&mut v, [0.5, 0.5, 1.0]), Some(Out::Chosen(Some(_)))));
+        assert_eq!(v.measuring.done.len(), 2);
+        v.update(Message::MeasureRemove(0));
+        v.update(Message::MeasureClear);
+        assert!(v.measuring.done.is_empty());
+        // The panes fold and open.
+        v.update(Message::Pane(Side::Tree));
+        v.update(Message::Pane(Side::Details));
+        assert!(!v.tree_open && !v.details_open);
+        v.update(Message::Pane(Side::Tree));
+        assert!(v.tree_open);
     }
 
     #[test]

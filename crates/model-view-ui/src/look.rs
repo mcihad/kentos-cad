@@ -87,13 +87,14 @@ pub fn view_name(orbit: &OrbitCamera) -> &'static str {
     orbit.preset().map_or("Görünüş", |i| VIEWS[i].0)
 }
 
-/// The scene on its sky, the north arrow at its top right, the legend at its bottom left and a view's card (none: no
-/// card) at its top left.
+/// The scene on its sky, the north arrow at its top right, the legend at its bottom left, a view's card (none: no
+/// card) at its top left and another at its bottom right (the measurements', docs/adr/8121).
 pub fn framed<'a, M: Clone + 'a>(
     scene: Element<'a, M>,
     compass: Element<'a, M>,
     legend: Element<'a, M>,
     card: Option<Element<'a, M>>,
+    corner: Option<Element<'a, M>>,
     sky: Background,
 ) -> Element<'a, M> {
     let mut layers = stack![
@@ -101,10 +102,15 @@ pub fn framed<'a, M: Clone + 'a>(
         container(compass).align_right(Fill).align_top(Fill).padding(10),
         container(legend).align_left(Fill).align_bottom(Fill).padding(10),
     ];
+    // A card takes the pointer over itself: a drag on its slider or its list does not turn the model.
     if let Some(card) = card {
-        // It takes the pointer over itself: a drag on its slider does not turn the model.
         layers = layers.push(
             container(mouse_area(card).interaction(mouse::Interaction::Idle)).align_left(Fill).align_top(Fill).padding(10),
+        );
+    }
+    if let Some(corner) = corner {
+        layers = layers.push(
+            container(mouse_area(corner).interaction(mouse::Interaction::Idle)).align_right(Fill).align_bottom(Fill).padding(10),
         );
     }
     container(layers)

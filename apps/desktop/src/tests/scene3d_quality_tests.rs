@@ -57,6 +57,30 @@ fn screens() {
             println!("{}", file.display());
         }
     }
+    // Ölç in 3B görünüm (docs/adr/8121): the roof's top face, one of its sides and the angle at its end; then both side
+    // panes folded, the card to its head.
+    let size = Size::new(1440.0, 900.0);
+    let mut app = open(building());
+    let _ = app.settings.choose(&[("appearance.theme", Value::from("light"))]);
+    app.apply_settings();
+    let _ = app.update(Message::WindowResized(size));
+    let _ = app.update(Message::Run("scene3d.view"));
+    measured_roof(&mut app);
+    let mut snapshot = Snapshot::new(size).expect("a renderer");
+    snapshot.settle(&mut app, App::scene3d_shown, &mut update);
+    snapshot.settle(&mut app, App::scene3d_shown, &mut update);
+    let file = out.join("bina-olcum-acik.png");
+    snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
+    println!("{}", file.display());
+    use kentos_model_view_ui::{Message as V, Side};
+    for m in [V::Pane(Side::Tree), V::Pane(Side::Details), V::MeasureFold] {
+        let _ = app.update(Message::Scene3d(crate::scene3d_window::Event::Viewer(m)));
+    }
+    snapshot.settle(&mut app, App::scene3d_shown, &mut update);
+    let file = out.join("bina-paneller-kapali-acik.png");
+    snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
+    println!("{}", file.display());
+
     // The setting in Uygulama ayarları › Çizim motoru.
     let size = Size::new(1440.0, 900.0);
     let mut app = open(building());
@@ -70,4 +94,37 @@ fn screens() {
     let file = out.join("ayar-3b-kalite-acik.png");
     snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
     println!("{}", file.display());
+}
+
+/// Ölç on in 3B görünüm's viewer and the roof measured: the highest face that looks up whole, one of its sides and the
+/// angle at that side's end.
+fn measured_roof(app: &mut App) {
+    use kentos_model_view::measure;
+    use kentos_model_view_ui::{Measured, Message as V};
+    let _ = app.update(Message::Scene3d(crate::scene3d_window::Event::Viewer(V::Measure)));
+    let b = app.scene3d_window.as_mut().and_then(|w| w.building.as_mut()).expect("a building");
+    let scene = b.viewer.scene().clone();
+    let mut top: Option<(f64, usize, usize)> = None;
+    for (m, s) in scene.meshes().iter().enumerate() {
+        for (t, tri) in s.triangles.iter().enumerate() {
+            let [p, q, r] = tri.map(|k| s.vertices[k as usize]);
+            let (u, v) = ([q[0] - p[0], q[1] - p[1], q[2] - p[2]], [r[0] - p[0], r[1] - p[1], r[2] - p[2]]);
+            let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+            let len = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
+            if len > 0.0 && (n[2] / len).abs() > 0.999 && top.is_none_or(|(z, _, _)| p[2] > z) {
+                top = Some((p[2], m, t));
+            }
+        }
+    }
+    let (_, mesh, triangle) = top.expect("a face looking up");
+    let s = &scene.meshes()[mesh];
+    let face = measure::face(&s.vertices, &s.triangles, triangle).expect("the roof's face");
+    let [a, c] = face.outline[0];
+    let next = face.outline.iter().find(|[p, q]| (*p == c || *q == c) && !(*p == a || *q == a)).expect("the next side");
+    let d = if next[0] == c { next[1] } else { next[0] };
+    let at = face.outline.iter().flatten().fold([0.0; 3], |acc, p| [acc[0] + p[0], acc[1] + p[1], acc[2] + p[2]]).map(|v| v / (2 * face.outline.len()) as f64);
+    let m = &mut b.viewer.measuring;
+    m.done.push(Measured::Area { face, what: s.name.clone(), at });
+    m.done.push(Measured::Distance { a, b: c });
+    m.done.push(Measured::Angle { a, at: c, b: d });
 }

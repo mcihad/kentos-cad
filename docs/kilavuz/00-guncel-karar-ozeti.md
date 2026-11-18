@@ -201,6 +201,10 @@
       Dengeli, Kaliteli; bu cihaz). Çizici `Quality`: örnek sayısı, kenar çizgileri (`edges::feature_edges`, içerik
       yüklenirken), ortam gölgesi (`occlusion.wgsl`, örtü hedefiyle camın altında kalkar); görünüm kendi hedefine
       (`render_offscreen`) çizilir ve `composite.wgsl` ile bindirilir. Gölgelendirici sözleşmesi sürüm 3.
+    - Ölçme ve katlanan bölmeler ([ADR 8121](../adr/8121-viewer-measuring-and-folding-panes.md), 18 Kasım 2026): saf
+      çekirdek `kentos_model_view::measure` (kenarlar, yakalama, uzaklık, açı, düz yüz); bileşende `measuring.rs`,
+      `Gesture::Hover`, `scene::Mark`; ölçerken tıklama seçmez. Ölçü kaynağın f64 köşelerinden, eğri yüzde üçgenlerden
+      (kılavuz §23.3). Bölmeler `Message::Pane(Side)` ile kenar şeridine katlanır.
     - Araştırma: [not](../research/2026-11-15-ifc-goruntuleyici.md). Ölçümler:
       [docs/perf/ifc-okuma-denemesi-2026-11-16.md](../perf/ifc-okuma-denemesi-2026-11-16.md).
   - **EK-9 yazılmış dosyadan (16 Kasım 2026; [ADR 8074](../adr/8074-ek9-from-the-written-file.md), IFC-08, sıra B13; ilk

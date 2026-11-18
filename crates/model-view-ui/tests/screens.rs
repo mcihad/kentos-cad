@@ -88,6 +88,48 @@ fn shot(w: &mut Window, name: &str) {
     println!("{} ({})", file.display(), snapshot.renderer_name());
 }
 
+/// Ölç on the section building: the highest face that looks up (the roof's top) measured whole, the length of one of
+/// its sides and the angle at that side's end, and the pointer on the roof's farthest corner from it.
+fn measured_roof(w: &mut Window) {
+    use kentos_model_view::measure;
+    use kentos_model_view_ui::Measured;
+    w.update(Message::Measure);
+    let scene = w.viewer.scene().clone();
+    let mut top: Option<(f64, usize, usize)> = None;
+    for (m, s) in scene.meshes().iter().enumerate() {
+        for (t, tri) in s.triangles.iter().enumerate() {
+            let [a, b, c] = tri.map(|k| s.vertices[k as usize]);
+            let n = [(b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]), (b[2] - a[2]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[2] - a[2]), (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])];
+            let len = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
+            if len > 0.0 && (n[2] / len).abs() > 0.999 && top.is_none_or(|(z, _, _)| a[2] > z) {
+                top = Some((a[2], m, t));
+            }
+        }
+    }
+    let (_, mesh, triangle) = top.expect("a face looking up");
+    let s = &scene.meshes()[mesh];
+    let face = measure::face(&s.vertices, &s.triangles, triangle).expect("the roof's face");
+    let [a, b] = face.outline[0];
+    let next = face.outline.iter().find(|[p, q]| (*p == b || *q == b) && !(*p == a || *q == a)).expect("the next side");
+    let c = if next[0] == b { next[1] } else { next[0] };
+    let at = face.outline.iter().flatten().fold([0.0; 3], |acc, p| [acc[0] + p[0], acc[1] + p[1], acc[2] + p[2]]);
+    let at = at.map(|v| v / (2 * face.outline.len()) as f64);
+    let far = *face.outline.iter().flatten().max_by(|p, q| {
+        let d = |r: &[f64; 3]| (r[0] - a[0]).hypot(r[1] - a[1]);
+        d(p).total_cmp(&d(q))
+    }).expect("a corner");
+    let m = &mut w.viewer.measuring;
+    m.done.push(Measured::Area { face, what: s.name.clone(), at });
+    m.done.push(Measured::Distance { a, b });
+    m.done.push(Measured::Angle { a, at: b, b: c });
+    // The pointer on the farthest corner, as the scene sees it.
+    let scene_size = Size::new(1400.0 - 300.0 - 300.0 - 2.0 * kentos_ui::widget::sash::THICKNESS, 860.0 - 62.0);
+    let vp = kentos_scene3d::Viewport { width: f64::from(scene_size.width), height: f64::from(scene_size.height) };
+    if let Some((x, y, _)) = w.viewer.camera().project(far, &vp) {
+        w.update(Message::Gesture(Gesture::Hover(Some((x as f32 + 2.0, y as f32 + 2.0)), scene_size.width, scene_size.height)));
+    }
+}
+
 /// The first object of `class` whose label holds `words`.
 fn find(w: &Window, class: &str, words: &str) -> usize {
     let v = w.viewer.view().expect("loaded");
@@ -137,6 +179,20 @@ fn screens() {
     let mut w = opened(building, Mode::Light);
     w.update(Message::Search("iç duvar".into()));
     assert!(!w.viewer.found().is_empty(), "İç_duvar by “iç duvar”");
+
+    // Ölç (docs/adr/8121): the roof's top face measured (its area), its south edge's length and the angle at its
+    // corner, the pointer on another corner; light and dark. Then the side panes folded to their rails.
+    for (mode, tag) in [(Mode::Light, "acik"), (Mode::Dark, "koyu")] {
+        let mut w = opened(building, mode);
+        measured_roof(&mut w);
+        shot(&mut w, &format!("kesit-binasi-olcum-{tag}"));
+    }
+    let mut w = opened(building, Mode::Light);
+    measured_roof(&mut w);
+    w.update(Message::MeasureFold);
+    w.update(Message::Pane(kentos_model_view_ui::Side::Tree));
+    w.update(Message::Pane(kentos_model_view_ui::Side::Details));
+    shot(&mut w, "kesit-binasi-paneller-kapali");
 
     let mut w = opened("fixtures/ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc", Mode::Light);
     w.update(Message::Spaces);

@@ -226,6 +226,8 @@ impl App {
             sky: 0.0,
             fill: 0.0,
             quality: self.scene3d_quality(),
+            marks: Vec::new(),
+            hover: false,
             planes: Vec::new(),
             marked: w.picked.as_ref().map(|p| w.exaggeration().shown(p.point)),
             seen: w.seen.clone(),
@@ -236,6 +238,7 @@ impl App {
             scene::view(view, gesture),
             look::compass(&w.orbit, msg(Event::North)),
             look::legend(&swatches, w.legend, msg(Event::Legend)),
+            None,
             None,
             sky(self.canvas()),
         )
@@ -305,6 +308,8 @@ fn gesture(g: Gesture) -> Message {
         Gesture::Dolly(steps) => Event::Dolly(steps),
         Gesture::Pick(x, y, width, height) => Event::Pick(x, y, width, height),
         Gesture::Size(width, height) => Event::Sized(width, height),
+        // The road measures nothing yet: its scene never asks for the pointer's moves.
+        Gesture::Hover(_, width, height) => Event::Sized(width, height),
     })
 }
 

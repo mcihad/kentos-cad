@@ -648,6 +648,10 @@ klavyeyle kabul; resimler.
   ayarları › Çizim motoru › 3B görünüm kalitesi (Hızlı, Dengeli, Kaliteli; bu cihaz, varsayılan Kaliteli): 4× kenar
   yumuşatma, gövdelerin kenar çizgileri (25° kıvrım), ortam gölgesi (SAO, camın altında kalkar); binada gök ve dolgu
   ışığı. Sahne kendi hedefine çizilip bindirilir; gerçek GPU denetimi üç düzeyi ölçer.
+- **Ölçme ve katlanan bölmeler (18 Kasım 2026, [ADR 8121](../docs/adr/8121-viewer-measuring-and-folding-panes.md),
+  K258–K265):** şeritte Ölç; Uzaklık (eksen bileşenleriyle), Açı, Alan (düz yüzün bütünü); köşe, kenar ortası, kenar,
+  yüz yakalaması (f64 kaynak köşeleri); sahnenin sağ altında katlanan kart; yan bölmeler kenar şeridine katlanır.
+  Çekirdek `kentos_model_view::measure` (saf, wasm32).
 - Kalanlar (ADR 8073 §9, 8118 §6): gerçek pencerede kabul; kesit düzlemini yüze tıklayarak kurmak ve sürüklemek, kutunun
   tutamakları, kesilen yüzün kapağı; gösterilemeyen nesnenin kutusu; ilk gövdelerle sahne; seçimde yeniden kurmadan boyama;
   denetim bulgusundan “Modelde göster” (B13 ile); bir değerden “benzerini göster”; bölme genişliklerinin saklanması.

@@ -698,7 +698,8 @@ Bir IFC dosyasının görüntüleyicisi ([ADR 8073](docs/adr/8073-ifc-viewer-fir
 - **Araç şeridi:** kamera (“Görünüş ▾”, “Sığdır”, “Seçime yaklaş”), ince ayraç, görünürlük (“Gizle”, “Yalnız bırak”,
   “Hepsini göster”; seçim yokken ilk ikisi sönük), ayraç, simgeli anahtarlar (“Mahaller”, “Açıklıklar”, “Saydam”; açıkken
   tonlu), ayraç, “Kesit ▾” (yatay, kuzey–güney düşey, doğu–batı düşey, seçilen varken “Seçimin çevresinde kutu”, “Kesiti
-  kaldır”). Şerit kesitle uzamaz: düzlemin yeri sahnedeki karttadır. Sağ uçta ev sahibinin işleri (ayrıyken “Ana pencereye
+  kaldır”). Şerit kesitle uzamaz: düzlemin yeri sahnedeki karttadır. Ardından “Ölç” anahtarı (cetvel simgesi,
+  [ADR 8121](docs/adr/8121-viewer-measuring-and-folding-panes.md)). Sağ uçta ev sahibinin işleri (ayrıyken “Ana pencereye
   al”). Okunurken yalnız kamera grubu görünür.
 - **Sol bölme** (300 px, 12 px yazıda): “Yapı | Sınıf | Gösterilemeyen” (kitin bölmeli düğmesi; gösterilemeyen yokken
   üçüncüsü sönük), altında arama (“Ad, sınıf ya da GlobalId ara”, × temizler), altında kitin ağacı, sanal satırlarla.
@@ -709,7 +710,8 @@ Bir IFC dosyasının görüntüleyicisi ([ADR 8073](docs/adr/8073-ifc-viewer-fir
   noktalı noktasız i ayrılmaz: “iç” “İç_duvar”ı bulur); satırda adı ve sönük katı (katı yoksa sınıfı); basılan seçilir;
   bulunamazsa ne yazılacağını söyler.
 - **Bölmeler** kenarlarından sürüklenir (kitin tutamağı; sol 200–560, sağ 240–600 px); çift tık varsayılan genişliği
-  geri getirir.
+  geri getirir. Ağacın sekmelerinin yanındaki “‹” ve Özellikler başlığındaki “›” bölmeyi 34 px'lik bir kenar şeridine
+  katlar, şeritteki düğme geri açar; sahne genişler, kamera yerinde kalır.
 - **Orta:** sahne §7.20'deki gibi (gök, kuzey oku, lejant, seçilen noktanın halkası). Model, eni boyundan kısa sahnede de
   bütünüyle sığar (ilk açılışta, “Sığdır”da ve görünüşlerde sahnenin biçimine göre). Parça renkleri kategorinindir;
   seçilen turuncu, bulgulu kırmızı; mahal, mekân bölgesi ve açıklık saydam hacimdir ve tıklama içlerinden geçer. Bir şey
@@ -717,6 +719,14 @@ Bir IFC dosyasının görüntüleyicisi ([ADR 8073](docs/adr/8073-ifc-viewer-fir
   düşey kesiti”, “Seçimin çevresinde kutu”) ve × (“Kesiti kaldır”); düzlemde altında ekseninin adı (Kot ya da projenin doğu
   ve kuzey adları), kaydırıcı ve değeri birimiyle eş aralıklı yazıda, altında “Öbür yanı”. Kartın üstünde sürüklemek modeli
   döndürmez.
+- **Ölçme** ([ADR 8121](docs/adr/8121-viewer-measuring-and-folding-panes.md)): Ölç açıkken tıklama nokta verir, nesne
+  seçmez. İmleç köşeye, kenar ortasına, kenara ya da yüze yakalanır; simgesi (kare, üçgen, eşkenar dörtgen, halka) ve adı
+  yanında görünür. Ölçü çizgisi vurgu renginde, beyaz kenarlıdır. Bileşenler, dış çizgi ve imlece giden çizgi ince ve
+  kesiklidir. Değerler alanın renginde plakada durur: uzunluk ortada, açı açının içinde, alan yüzün ortasında. Plakalar
+  sahnede tutulur. Kart sahnenin sağ altındadır (330 px, lejantın çerçevesi). Başlıkta “Ölçü” ve sayısı, “Uzaklık | Açı |
+  Alan”, katlama yer alır. Altında sıradaki tıklama ve yarım ölçüde “Vazgeç” bulunur. Ölçülerde türü, değeri eş aralıklı,
+  alt satırda bileşenler (Δ doğu, Δ kuzey, ΔZ; eğikse yatay) ya da alanın gövdesi ve × vardır. En altta “Gösterilen
+  gövdeden; eğri yüzde üçgenlerden.” notu ve “Temizle” durur. Katlanınca yalnız başlık kalır.
 - **Sağ bölme** (300 px): “Özellikler” başlığı, altında kitin özellik tablosu (`PropertySheet`): ilk grup “Nesne” (sınıf,
   GlobalId, ad, açıklama, nesne türü, uzun ad, etiket, ön tanımlı tür, tip, kat, malzeme, kayıt), sonra setler dosyadaki
   sırasıyla, tipten gelenin başlığı “(tipten)” ile; başlık grubu daraltır. Metin değer dosyadaki gibi yazılır. Ölçü
