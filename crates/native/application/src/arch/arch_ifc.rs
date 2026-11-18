@@ -123,7 +123,8 @@ fn unit_groups(doc: &Document) -> Vec<kentos_ifc::arch::UnitGroup> {
         .units
         .iter()
         .map(|u| kentos_ifc::arch::UnitGroup {
-            id: None,
+            // Derived from the unit's id (docs/adr/8117): the export makes the group, the drawing keeps the unit.
+            id: Some(kentos_ifc::step::derived_id("unit", &u.id)),
             number: u.number.clone(),
             name: u.name.clone(),
             kind: u.kind,

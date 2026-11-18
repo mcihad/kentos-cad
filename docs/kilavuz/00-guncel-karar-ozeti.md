@@ -366,6 +366,11 @@
     klasör dışına çıkan ad reddedilir). Denetim'in satırı son teslimi ve çizimin farkını (GlobalId, 1 mm) söyler; formu
     istenince dosyadan okur. Kaynak listesi taşınan çizimden, yoksa aynı modelde şimdiki çizimden, yoksa hiç (boş liste
     21. soruyu yanlışlıkla geçirirdi).
+  - **Kalıcı GlobalId (18 Kasım 2026; [ADR 8117](../adr/8117-persistent-global-ids.md), K228–K233):** KentOS kimliği
+    olmayan parça (kat, açıklık, emsal zonu, bağımsız bölüm, tek dosyalık proje/saha/bina, setler, ilişkiler) GlobalId'sini
+    sahibinden ve rolünden alır (`kentos_ifc::step::derived_id`, sürüm 8 UUID; `is_derived`); dosya adı, zaman ve sıra
+    kullanılmaz. EK-9/8 türetilenleri beklemez. Bu karardan önce yazılmış dosya teslim modeliyle karşılaştırılmaz. Dokuz
+    IFC fixture'ı yazıcının bugünkü çıktısı değil (ADR 8105 öncesi); tazelenmeleri ayrı iştir.
   - **Duvar stili IFC'de tip (17 Kasım 2026; [ADR 8105](../adr/8105-wall-style-types-and-layer-sets.md), K179–K181):**
     her duvar stili bir `IfcWallType`, duvarları ona bağlı (`IfcRelDefinesByType`, `IfcRelDeclares`); her duvarın katman
     takımı sol yüzden sağa, aynı takım paylaşılır; `IfcMaterialLayerSetUsage` duvarlar eksen çerçevesinde yazılınca.

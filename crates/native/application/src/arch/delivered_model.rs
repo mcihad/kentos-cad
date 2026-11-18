@@ -13,9 +13,9 @@
 //! - **The answers** that went with the model: the form's record's (`kalite-kontrol-formu.json`).
 //! - **The drawing now against it** (`kentos_ifc::compare`, docs/adr/8103): objects by GlobalId added, removed or
 //!   changed, against the model the drawing would write now for the same building (the program's building whose EK-2
-//!   name the file bears, else the whole project), written with the delivered file's own time stamp: the writer makes
-//!   the GlobalIds of the parts that have no KentOS id (storeys, openings, zones) from the file's name and time stamp
-//!   (docs/adr/8047), so the same drawing gives the same ones only under the same stamp.
+//!   name the file bears, else the whole project). Every GlobalId the export writes stays the same for the same drawing
+//!   (docs/adr/8117); a file written before that (its storeys' GlobalIds not derived ones) is not compared object by
+//!   object: its parts' GlobalIds were numbered, and every object would look moved.
 //! - **The expectations** EK-9/8, /17 and /21 read (the source's objects and what its export left out): from the drawing
 //!   the package carries, else from the drawing now when its model is the delivered one, else none: the form then leaves
 //!   those questions to review and says the list was not given.
@@ -85,12 +85,30 @@ pub enum Expected {
     Missing,
 }
 
+/// How the drawing now stands against the delivered model.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Counted {
+    /// Objects by GlobalId added, removed and changed.
+    Drift(Drift),
+    /// The drawing writes no model now (no walls).
+    NoModel,
+    /// The delivered file was written before KentOS kept every GlobalId (docs/adr/8117): not compared.
+    Older,
+}
+
+impl Counted {
+    /// Whether the drawing's model is the delivered one.
+    pub fn same(&self) -> bool {
+        matches!(self, Counted::Drift(d) if d.is_none())
+    }
+}
+
 /// The delivered model read for the form.
 pub struct Read {
     /// The facts the form reads (`dijital_proje.form`), from the delivered file.
     pub facts: Value,
-    /// The drawing now against it; none: the drawing now writes no model (no walls).
-    pub drift: Option<Drift>,
+    /// The drawing now against it.
+    pub counted: Counted,
     pub expected: Expected,
 }
 
@@ -112,27 +130,23 @@ pub fn last(doc: &Document) -> Last {
 }
 
 impl Delivered {
-    /// The drawing now (`doc`) against the delivered model; none: the drawing writes no model now.
-    pub fn drift(&self, doc: &Document) -> Result<Option<Drift>, String> {
-        let (older, stamp) = self.opened()?;
-        planned_for(doc, &self.model, &stamp).map(|p| compared(&older, &self.bytes, &p)).transpose()
+    /// The drawing now (`doc`) against the delivered model.
+    pub fn counted(&self, doc: &Document) -> Result<Counted, String> {
+        let older = self.opened()?;
+        let now = planned_for(doc, &self.model);
+        self.count(&older, now.as_ref())
     }
 
     /// The facts the form reads from the delivered file, and the drawing now (`doc`) against it.
     pub fn read(&self, doc: &Document) -> Result<Read, String> {
-        let (older, stamp) = self.opened()?;
-        let now = planned_for(doc, &self.model, &stamp);
-        let drift = match &now {
-            Some(p) => Some(compared(&older, &self.bytes, p)?),
-            None => None,
-        };
-        if let Some(p) = self.source.as_ref().and_then(|s| planned_for(s, &self.model, &stamp)) {
-            return Ok(Read { facts: p.facts_of(&self.bytes, false)?, drift, expected: Expected::Carried });
+        let older = self.opened()?;
+        let now = planned_for(doc, &self.model);
+        let counted = self.count(&older, now.as_ref())?;
+        if let Some(p) = self.source.as_ref().and_then(|s| planned_for(s, &self.model)) {
+            return Ok(Read { facts: p.facts_of(&self.bytes, false)?, counted, expected: Expected::Carried });
         }
-        if let (Some(p), Some(d)) = (&now, drift)
-            && d.is_none()
-        {
-            return Ok(Read { facts: p.facts_of(&self.bytes, false)?, drift, expected: Expected::Now });
+        if let Some(p) = now.as_ref().filter(|_| counted.same()) {
+            return Ok(Read { facts: p.facts_of(&self.bytes, false)?, counted, expected: Expected::Now });
         }
         // Neither: the file's own facts alone. No expectations and no export record, so the form leaves EK-9/8, /17
         // and /21 to review rather than passing them on an empty list.
@@ -142,15 +156,30 @@ impl Delivered {
         if let Some(p) = &now {
             facts["at"] = json!(p.at());
         }
-        Ok(Read { facts, drift, expected: Expected::Missing })
+        Ok(Read { facts, counted, expected: Expected::Missing })
     }
 
-    /// The delivered file read, and the time stamp its header was written with.
-    fn opened(&self) -> Result<(kentos_ifc::read::Model, String), String> {
-        let model = kentos_ifc::read::read(&self.bytes, &kentos_ifc::read::Limits::default(), &|| false)
-            .map_err(|e| format!("{}. teslimin modeli (“{}”) okunamadı: {e}.", self.number, self.model))?;
-        let stamp = model.summary.header.time_stamp.clone().unwrap_or_default();
-        Ok((model, stamp))
+    /// The delivered file read.
+    fn opened(&self) -> Result<kentos_ifc::read::Model, String> {
+        kentos_ifc::read::read(&self.bytes, &kentos_ifc::read::Limits::default(), &|| false)
+            .map_err(|e| format!("{}. teslimin modeli (“{}”) okunamadı: {e}.", self.number, self.model))
+    }
+
+    /// The drawing's model (`now`; none: no walls) against the delivered one (`older`).
+    fn count(&self, older: &kentos_ifc::read::Model, now: Option<&Planned>) -> Result<Counted, String> {
+        let Some(now) = now else {
+            return Ok(Counted::NoModel);
+        };
+        // A storey's GlobalId is a derived one since docs/adr/8117: a file whose storeys have none was numbered.
+        let storeys: Vec<&kentos_ifc::read::Object> =
+            older.objects.iter().filter(|o| o.class.eq_ignore_ascii_case("IfcBuildingStorey")).collect();
+        let derived = |o: &&kentos_ifc::read::Object| {
+            kentos_ifc::step::unguid(&o.global_id).is_some_and(kentos_ifc::step::is_derived)
+        };
+        if !storeys.is_empty() && !storeys.iter().any(derived) {
+            return Ok(Counted::Older);
+        }
+        compared(older, &self.bytes, now).map(Counted::Drift)
     }
 }
 
@@ -238,10 +267,10 @@ fn checked(folder: &Path, name: &str, sha: &str, n: u32) -> Result<Vec<u8>, Stri
     Ok(bytes)
 }
 
-/// The model `doc` would write now for the delivered file `name`, its header's time `stamp` the file's: the program's
-/// building whose EK-2 name the file bears, else the whole project's. None for a drawing without walls.
-fn planned_for(doc: &Document, name: &str, stamp: &str) -> Option<Planned> {
-    let whole = ifc_facts::plan(doc, None, stamp, APPLICATION)?;
+/// The model `doc` would write now for the delivered file `name`: the program's building whose EK-2 name the file
+/// bears, else the whole project's. None for a drawing without walls.
+fn planned_for(doc: &Document, name: &str) -> Option<Planned> {
+    let whole = ifc_facts::plan(doc, None, "", APPLICATION)?;
     if whole.file_name() == name {
         return Some(whole);
     }
@@ -252,7 +281,7 @@ fn planned_for(doc: &Document, name: &str, stamp: &str) -> Option<Planned> {
         .map(|a| a.program.buildings.iter().map(|b| b.id.clone()).collect())
         .unwrap_or_default();
     for id in &buildings {
-        if let Some(p) = ifc_facts::plan(doc, Some(id), stamp, APPLICATION)
+        if let Some(p) = ifc_facts::plan(doc, Some(id), "", APPLICATION)
             && p.file_name() == name
         {
             return Some(p);

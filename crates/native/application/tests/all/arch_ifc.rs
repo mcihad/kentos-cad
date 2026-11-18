@@ -1319,3 +1319,59 @@ fn two_blocks_are_two_models_with_their_own_zero_and_the_basement_once() {
         std::fs::write(dir.join("blok-b.ifc"), fb).expect("the file kept");
     }
 }
+
+/// Every GlobalId of a file written from the drawing: the first attribute of each instance that has one.
+fn global_ids(doc: &Document, stamp: &str) -> Vec<String> {
+    let (b, _) = arch_ifc::building(doc, stamp, "KentOS Mimari");
+    let text = kentos_ifc::building::write(&b);
+    text.lines()
+        .filter_map(|l| {
+            let i = l.find("('")?;
+            let g = l.get(i + 2..i + 24)?;
+            (l.get(i + 24..i + 25) == Some("'") && kentos_ifc::step::unguid(g).is_some()).then(|| g.to_owned())
+        })
+        .collect()
+}
+
+/// The same drawing written on two days keeps every GlobalId (docs/adr/8117; plan/ifc-uyum.md §7 "Kimlik"; IFC 4.3,
+/// Software Identity: the IFC-GUID has to be persistent): the storeys, the openings, the zones, the units' groups, the
+/// property sets and the relationships too, not only the objects with a KentOS id; none twice. A door added elsewhere
+/// leaves every GlobalId the file had.
+#[test]
+fn a_drawing_written_another_day_keeps_every_global_id() {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    let mut doc = building();
+    let run = |doc: &mut Document, name: &str, input: serde_json::Value| -> serde_json::Value {
+        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).unwrap();
+        assert_eq!(answer["status"], "completed", "{name}: {answer}");
+        answer
+    };
+    let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
+    // A curtain wall and a library's lift: parts the export makes of their own (mullions, panels, the lift's fixtures).
+    run(&mut doc, "cad.walls.create", serde_json::json!({"layerId": "0", "walls": [{
+        "pts": [p(20.0, -3.0), p(26.0, -3.0)], "width": 0.15, "height": 3.0, "arch": {"level": "zemin"},
+        "curtain": {"spacing": 1.5, "rows": 1.2, "panel": "Cam", "frames": "Alüminyum"}
+    }]}));
+    let library = include_str!("../../../../../catalog/v1/blocks/kentos-temel.kblok");
+    run(&mut doc, "cad.blocks.edit", serde_json::json!({"operation": "import", "library": library}));
+    run(&mut doc, "cad.blocks.insert", serde_json::json!({
+        "name": "Asansör", "at": p(5.0, 6.0), "layerId": "0", "arch": {"level": "zemin"},
+        "attributes": {"KISI": "8", "YUK": "630"}
+    }));
+    let before = global_ids(&doc, "2026-11-16T12:00:00");
+    assert!(before.len() > 100, "{} GlobalIds", before.len());
+    assert_eq!(global_ids(&doc, "2026-11-18T09:30:00"), before, "another day, the same GlobalIds");
+    let once: std::collections::BTreeSet<&String> = before.iter().collect();
+    assert_eq!(once.len(), before.len(), "no GlobalId twice");
+    // A door in a wall of its own, away from the rest.
+    let wall = run(&mut doc, "cad.walls.create", serde_json::json!({"layerId": "0", "walls": [{
+        "pts": [p(40.0, 0.0), p(46.0, 0.0)], "width": 0.2, "height": 3.0, "arch": {"level": "zemin"}
+    }]}));
+    let wall = wall["output"]["uids"][0].as_str().expect("the wall").to_owned();
+    run(&mut doc, "cad.openings.create", serde_json::json!({"layerId": "0", "openings": [{"host": wall, "at": 3.0, "width": 0.9}]}));
+    let after = global_ids(&doc, "2026-11-19T08:00:00");
+    let lost: Vec<&String> = before.iter().filter(|g| !after.contains(g)).collect();
+    assert!(lost.is_empty(), "GlobalIds the door's change took away: {lost:?}");
+    assert!(after.len() > before.len());
+}

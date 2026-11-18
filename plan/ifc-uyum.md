@@ -184,7 +184,10 @@ karşılaştırılır.
   Eksen sırası, birim, ters dönüşüm ve başka bir disiplinin modeliyle üst üste binme bağımsız okuyucuda ölçülür.
 - **Kimlik.** Gerçek nesnede kalıcı KentOS kimliği `GlobalId` olur (bugün böyle). Türetilen kök nesnelerde (açıklık,
   ilişki, tip, zon, grup) kimlik, sahibinin kimliğinden ve rolünden türeyen kararlı bir değerdir; dosya yolu ve sıra
-  numarası kullanılmaz. Taşıma, yeniden adlandırma ve revizyon kimliği korur; kopya yeni kimlik alır; bölme, birleştirme ve
+  numarası kullanılmaz. **Yapıldı (18 Kasım 2026, [ADR 8117](../docs/adr/8117-persistent-global-ids.md), K228–K233):**
+  binanın dosyasında kat, açıklık, emsal zonu, bağımsız bölüm, tek dosyalık proje, saha ve bina, setler ve bütün ilişkiler;
+  sürüm 8 UUID; aynı çizim her gün aynı kimlikleri verir, uzaktaki bir değişiklik öbürlerini korur. Kalan: yol hizalaması
+  dosyası, kopya, bölme, birleştirme ve geri alma sınamaları. Taşıma, yeniden adlandırma ve revizyon kimliği korur; kopya yeni kimlik alır; bölme, birleştirme ve
   silip geri alma sınanır. Disiplinler arası çakışan kimlik bulgudur.
 
 ## 8. Geometri, görünüm tanımı ve gelişim seviyesi
@@ -566,7 +569,9 @@ bakan bakış), `cad.bcf.read` (3.0 ve 2.1; nesneler modelde ve çizimde); 28 + 
 revizyonlarını karşılaştır ve BCF sorunları pencereleri. **İlk kabul sağlandı:** kesit binasının iki revizyonunda taşınan iç
 duvar ve doğu duvarının REI 60 → REI 90'ı raporun tamamı; yazılan sorunu IfcOpenShell'in BCF kitaplığı okur, bakışı aynı
 duvarı seçer ve kamerası ona bakar. **Kalan:** bir masaüstü BCF görüntüleyicisinde elle açılış, çakışmanın BCF'si,
-sorunların inceleme notu olarak saklanması, bakışın görüntüsü, kutu içindeki biçim değişikliği.
+sorunların inceleme notu olarak saklanması, bakışın görüntüsü, kutu içindeki biçim değişikliği. **Kimlik (18 Kasım 2026,
+[ADR 8117](../docs/adr/8117-persistent-global-ids.md)):** farklı günlerde yazılmış iki teslim artık doğru karşılaştırılır;
+türetilen parçaların GlobalId'si kalıcıdır (önceden katlar, açıklıklar ve ilişkiler eklenmiş ve silinmiş görünürdü).
 
 #### IFC-11 — Pilot, sürümler ve kurum kabulü [ ]
 

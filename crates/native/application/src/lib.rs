@@ -1273,6 +1273,7 @@ pub mod underlay_edit;
 #[cfg(feature = "mod-arch")]
 #[path = "arch/underlay_check.rs"]
 pub mod underlay_check;
+#[cfg(feature = "mod-arch")]
 #[path = "arch/delivery_compare.rs"]
 pub mod delivery_compare;
 // Son teslim edilen model (docs/adr/8116): the delivered package's model read as it went, the form's facts from it.

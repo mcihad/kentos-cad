@@ -4,8 +4,8 @@
 //! an object of this list the file lacks is EK-9/8's finding, one of another class EK-9/17's, whatever the file's other
 //! checks say.
 //!
-//! Only the objects with a KentOS id are listed: a part the export makes without one (its GlobalId made of the file's
-//! seed) has no object of the drawing to name.
+//! Only the objects with a KentOS id are listed: a part the export makes without one (its GlobalId derived from its
+//! owner and role, `crate::step::derived_id`, docs/adr/8117) has no object of the drawing to name.
 
 use crate::building::Building;
 use crate::step::guid;
@@ -27,7 +27,7 @@ pub struct Expected {
 pub fn of(b: &Building) -> Vec<Expected> {
     let mut out = Vec::new();
     let mut put = |id: Option<u128>, object: Option<u128>, class: &'static str| {
-        if let Some(id) = id {
+        if let Some(id) = id.filter(|&id| !crate::step::is_derived(id)) {
             out.push(Expected { global_id: guid(id), object: object.unwrap_or(id), class });
         }
     };

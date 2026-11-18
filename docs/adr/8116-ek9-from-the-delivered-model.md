@@ -38,14 +38,11 @@
 - **K225 — Fark:** çizimin şimdi yazacağı model ile teslim edilen dosya GlobalId'yle karşılaştırılır (ADR 8103, 1 mm):
   eklenen, silinen ve değişen nesne sayısı. Model aynı binanın modelidir: dosyanın EK-2 adını taşıyan program binası, yoksa
   bütün proje. Yayının pini (çizimin tamamının özeti, ADR 1090) bunun için kullanılmaz: teslimi kaydetmek bile onu
-  değiştirir. Çizimin modeli teslim edilen dosyanın başlığındaki zamanla yazılır: yazıcı KentOS kimliği olmayan
-  parçaların (kat, açıklık, zon, bağımsız bölüm grubu) GlobalId'sini dosyanın adı, zamanı ve sırasıyla üretiyor (ADR 8047).
-  Aynı çizim başka bir zamanla yazılınca bu parçaların kimliği değişir. Sınamanın ilk koşusunda değişmemiş kesit binası 23
-  eklenen, 23 silinen, 59 değişen nesne gösterdi (kata bağlı her eleman "taşıyıcısı değişti" diye). Aynı zamanla fark
-  sıfırdır. **Sınır:** açıklık, kat ya da zon ekleyen ya da silen bir değişiklik sonraki parçaların sırasını kaydırır;
-  fark o zaman büyük çıkar. Bu, plan §7'nin kimlik kuralının ("türetilen kök nesnelerde kimlik sahibinin kimliğinden ve
-  rolünden türer; dosya yolu ve sıra numarası kullanılmaz") henüz uygulanmamasıdır. Aynı nedenle iki teslimin modelini
-  karşılaştıran `cad.ifc.compare` (ADR 8103) farklı günlerde yazılmış iki dosyada da bu parçaları yeni ve silinmiş sayar.
+  değiştirir. Sınamanın ilk koşusunda değişmemiş kesit binası başka bir zaman damgasıyla 23 eklenen, 23 silinen ve 59
+  değişen nesne gösterdi. Yazıcı KentOS kimliği olmayan parçaların GlobalId'sini dosyanın adı, zamanı ve sırasıyla
+  üretiyordu. Bu, ADR [8117](8117-persistent-global-ids.md) ile düzeltildi: türetilen parçaların GlobalId'si sahibinden ve
+  rolünden türer, aynı çizim her gün aynı kimlikleri verir. Bu karardan önce yazılmış bir dosya nesne nesne
+  karşılaştırılmaz; satır bunu söyler (ADR 8117 K232).
 - **K226 — Beklenti:** 8., 17. ve 21. sorular kaynağın nesnelerini (beklenen nesneler, dışa aktarımın bıraktıkları) okur.
   Bunlar paketin taşıdığı çizimden alınır. Paket çizim taşımıyorsa ve model şimdiki çizimle aynıysa şimdiki çizimden
   alınır. İkisi de yoksa hiç verilmez: form üç soruyu incelemeye bırakır, satır da nedenini söyler. Boş liste verilmez;
@@ -87,10 +84,8 @@ varken görünür:
 
 ## §6. Sıradaki adımlar
 
-- **Türetilen parçaların kararlı kimliği** (plan §7, IFC-04 ve IFC-10): kat, açıklık, zon, bağımsız bölüm grubu ve
-  ilişkiler sahiplerinin kimliğinden ve rolünden. Bu yapılınca K225'in zaman damgası gereksizleşir ve sınırı kalkar;
-  ADR 8103'ün karşılaştırması da farklı günlerde yazılmış iki teslimde doğru olur. Bütün yazıcı çıktılarını ve
-  başvurularını değiştirdiği için kendi dilimidir.
+- **Türetilen parçaların kararlı kimliği:** yapıldı, ADR [8117](8117-persistent-global-ids.md) (kat, açıklık, zon, bağımsız
+  bölüm grubu, setler ve ilişkiler sahiplerinden ve rolden; K225'in zaman damgası kalktı).
 
 - **Bulut işi:** aynı betiğin sunucuda koşması: IFC olgularının sunucuda çıkarılması, bulut portalındaki bir başvuru
   dosyasının IFC'sinin idarece denetlenmesi (ADR 9000 ile).

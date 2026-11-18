@@ -759,13 +759,13 @@ impl Writer {
                     )),
                 })
                 .collect();
-            let g = self.st.gid();
+            let g = self.st.derived("pset", &[object], &p.name);
             let set = self.st.add(format!(
                 "IFCPROPERTYSET({g},$,{},$,({}))",
                 text(&p.name),
                 Step::refs(&props)
             ));
-            let g = self.st.gid();
+            let g = self.st.derived("pset-of", &[object], &p.name);
             self.st.add(format!(
                 "IFCRELDEFINESBYPROPERTIES({g},$,$,$,(#{object}),#{set})"
             ));
@@ -794,13 +794,13 @@ impl Writer {
                     self.st.add(body)
                 })
                 .collect();
-            let g = self.st.gid();
+            let g = self.st.derived("qto", &[object], &q.name);
             let set = self.st.add(format!(
                 "IFCELEMENTQUANTITY({g},$,{},$,$,({}))",
                 text(&q.name),
                 Step::refs(&items)
             ));
-            let g = self.st.gid();
+            let g = self.st.derived("qto-of", &[object], &q.name);
             self.st.add(format!(
                 "IFCRELDEFINESBYPROPERTIES({g},$,$,$,(#{object}),#{set})"
             ));
@@ -926,9 +926,18 @@ pub fn write(b: &Building) -> String {
             }
             None => person,
         };
-        let g = w.st.gid();
+        let named = |o: &Option<String>| o.clone().unwrap_or_default();
+        let key = format!(
+            "{}|{}|{}|{}|{}",
+            a.role,
+            named(&a.identification),
+            named(&a.family),
+            named(&a.given),
+            a.organization.as_ref().map_or("", |o| o.name.as_str())
+        );
+        let g = w.st.derived("actor", &[project], &key);
         let actor = w.st.add(format!("IFCACTOR({g},$,$,$,$,#{who})"));
-        let g = w.st.gid();
+        let g = w.st.derived("actor-of", &[project], &key);
         w.st.add(format!(
             "IFCRELASSIGNSTOACTOR({g},$,$,$,(#{project}),$,#{actor},#{role})"
         ));
@@ -972,12 +981,12 @@ pub fn write(b: &Building) -> String {
         storeys.push(n);
         storey_places.push(place);
     }
-    let g = w.st.gid();
+    let g = w.st.derived("aggregates", &[project, site], "");
     w.st.add(format!("IFCRELAGGREGATES({g},$,$,$,#{project},(#{site}))"));
-    let g = w.st.gid();
+    let g = w.st.derived("aggregates", &[site, building], "");
     w.st.add(format!("IFCRELAGGREGATES({g},$,$,$,#{site},(#{building}))"));
     if !storeys.is_empty() {
-        let g = w.st.gid();
+        let g = w.st.derived("aggregates", &[building], "storeys");
         w.st.add(format!(
             "IFCRELAGGREGATES({g},$,$,$,#{building},({}))",
             Step::refs(&storeys)
@@ -1060,7 +1069,7 @@ pub fn write(b: &Building) -> String {
         }
     }
     for (parent, parts) in &wholes {
-        let g = w.st.gid();
+        let g = w.st.derived("aggregates", &[*parent], "parts");
         w.st.add(format!("IFCRELAGGREGATES({g},$,$,$,#{parent},({}))", Step::refs(parts)));
     }
     // The openings: each voids its wall, a door or a window fills it.
@@ -1096,14 +1105,14 @@ pub fn write(b: &Building) -> String {
             text(&o.name),
             o.predefined
         ));
-        let g = w.st.gid();
+        let g = w.st.derived("voids", &[opening], "");
         w.st.add(format!("IFCRELVOIDSELEMENT({g},$,$,$,#{host},#{opening})"));
         if let Some(f) = o
             .filler
             .and_then(|f| products.get(f).copied())
             .filter(|f| *f != 0)
         {
-            let g = w.st.gid();
+            let g = w.st.derived("fills", &[opening], "");
             w.st.add(format!("IFCRELFILLSELEMENT({g},$,$,$,#{opening},#{f})"));
         }
     }
@@ -1126,7 +1135,7 @@ pub fn write(b: &Building) -> String {
         w.psets(n, &s.psets, &s.qtos);
         space_ids.push(Some(n));
         // A space is part of its storey (IfcRelAggregates), not contained in it.
-        let g = w.st.gid();
+        let g = w.st.derived("aggregates", &[n], "space");
         w.st.add(format!(
             "IFCRELAGGREGATES({g},$,$,$,#{},(#{n}))",
             storeys[s.storey]
@@ -1157,7 +1166,7 @@ pub fn write(b: &Building) -> String {
             z.predefined
         ));
         w.psets(n, &z.psets, &[]);
-        let g = w.st.gid();
+        let g = w.st.derived("referenced", &[n], "");
         w.st.add(format!(
             "IFCRELREFERENCEDINSPATIALSTRUCTURE({g},$,$,$,(#{n}),#{})",
             storeys[z.storey]
@@ -1177,7 +1186,7 @@ pub fn write(b: &Building) -> String {
             Writer::opt(&gr.long_name)
         ));
         w.psets(z, &gr.psets, &[]);
-        let g = w.st.gid();
+        let g = w.st.derived("assigns", &[z], "");
         w.st.add(format!(
             "IFCRELASSIGNSTOGROUP({g},$,$,$,({}),$,#{z})",
             Step::refs(&members)
@@ -1249,7 +1258,7 @@ pub fn write(b: &Building) -> String {
         }
     }
     for (i, list) in contained.iter().enumerate().filter(|(_, l)| !l.is_empty()) {
-        let g = w.st.gid();
+        let g = w.st.derived("contained", &[storeys[i]], "");
         w.st.add(format!(
             "IFCRELCONTAINEDINSPATIALSTRUCTURE({g},$,$,$,({}),#{})",
             Step::refs(list),
@@ -1257,7 +1266,7 @@ pub fn write(b: &Building) -> String {
         ));
     }
     if !in_building.is_empty() {
-        let g = w.st.gid();
+        let g = w.st.derived("contained", &[building], "");
         w.st.add(format!(
             "IFCRELCONTAINEDINSPATIALSTRUCTURE({g},$,$,$,({}),#{building})",
             Step::refs(&in_building)
@@ -1267,7 +1276,7 @@ pub fn write(b: &Building) -> String {
     for (name, list) in &materials {
         let m = w.st.add(format!("IFCMATERIAL({},$,$)", text(name)));
         material_ids.push((name.clone(), m));
-        let g = w.st.gid();
+        let g = w.st.derived("material", &[building], name);
         w.st.add(format!(
             "IFCRELASSOCIATESMATERIAL({g},$,$,$,({}),#{m})",
             Step::refs(list)
@@ -1307,19 +1316,19 @@ pub fn write(b: &Building) -> String {
         written_sets.push(((name.to_owned(), layers.to_vec()), set));
         set
     };
-    let mut by_set: Vec<(usize, Vec<usize>)> = Vec::new();
+    let mut by_set: Vec<(usize, String, Vec<usize>)> = Vec::new();
     for (i, n) in sets {
         let Some((_, name, layers)) = b.layer_sets.iter().find(|(k, ..)| *k == i) else {
             continue;
         };
         let set = set_of(&mut w, name, layers, &mut material_ids);
-        match by_set.iter_mut().find(|(s, _)| *s == set) {
-            Some((_, list)) => list.push(n),
-            None => by_set.push((set, vec![n])),
+        match by_set.iter_mut().find(|(s, ..)| *s == set) {
+            Some((_, _, list)) => list.push(n),
+            None => by_set.push((set, format!("{name}|{layers:?}"), vec![n])),
         }
     }
-    for (set, list) in &by_set {
-        let g = w.st.gid();
+    for (set, key, list) in &by_set {
+        let g = w.st.derived("layer-set", &[building], key);
         w.st.add(format!("IFCRELASSOCIATESMATERIAL({g},$,$,$,({}),#{set})", Step::refs(list)));
     }
     // The element types (docs/adr/8105): each its own GlobalId, its layer set associated, its occurrences typed by it
@@ -1336,17 +1345,17 @@ pub fn write(b: &Building) -> String {
         declared.push(n);
         if let Some((name, layers)) = &t.layer_set {
             let set = set_of(&mut w, name, layers, &mut material_ids);
-            let g = w.st.gid();
+            let g = w.st.derived("type-material", &[n], "");
             w.st.add(format!("IFCRELASSOCIATESMATERIAL({g},$,$,$,(#{n}),#{set})"));
         }
         let members: Vec<usize> = t.members.iter().filter_map(|&i| products.get(i).copied()).filter(|&n| n != 0).collect();
         if !members.is_empty() {
-            let g = w.st.gid();
+            let g = w.st.derived("types", &[n], "");
             w.st.add(format!("IFCRELDEFINESBYTYPE({g},$,$,$,({}),#{n})", Step::refs(&members)));
         }
     }
     if !declared.is_empty() {
-        let g = w.st.gid();
+        let g = w.st.derived("declares", &[project, building], "");
         w.st.add(format!("IFCRELDECLARES({g},$,$,$,#{project},({}))", Step::refs(&declared)));
     }
     // The header says what the bodies are (docs/adr/8047, 8071 §4): Design Transfer, an opening's body subtracted from

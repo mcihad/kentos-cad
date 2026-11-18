@@ -316,7 +316,8 @@ fn bed_library() -> String {
         .filter(|b| b["name"] == "Çift kişilik yatak")
         .cloned()
         .collect();
-    json!({ "format": "kentos.blocks", "version": 1, "blocks": bed }).to_string()
+    // The library's own version: its blocks carry their building element class (docs/adr/8070), which version 1 cannot.
+    json!({ "format": "kentos.blocks", "version": library["version"], "blocks": bed }).to_string()
 }
 
 /// Kolon, merdiven, rampa ve mobilya ölçeğe göre (docs/adr/8011): a tagged column, a numbered stair with railings, a

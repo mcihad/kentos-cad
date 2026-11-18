@@ -30,7 +30,7 @@ use kentos_commands::{
     ArchAuditCheck, ArchAuditFinding, ArchAuditFix, ArchAuditRuleSet, ArchAuditState, ChangesetStep, Vec2,
 };
 use kentos_extensions::audit_facts::ProjectAuditFacts;
-use kentos_native_application::delivered_model::{self, Drift, Expected, Last};
+use kentos_native_application::delivered_model::{self, Counted, Drift, Expected, Last};
 use serde_json::{Value, json};
 
 use super::{AuditScope, Event, msg};
@@ -61,8 +61,10 @@ pub(crate) struct DeliveredLine {
     pub at: String,
     /// Why it could not be read as it went; none: it was.
     pub error: Option<String>,
-    /// The drawing now against it; none: the drawing writes no model now.
+    /// The drawing now against it; none: the drawing writes no model now, or the file is older (`older`).
     pub drift: Option<Drift>,
+    /// The file was written before KentOS kept every GlobalId: not compared.
+    pub older: bool,
     /// The form's answer came from it.
     pub used: bool,
     /// The source's objects were given to the form (from the drawing the package carries, or the drawing now when its
@@ -84,6 +86,7 @@ impl DeliveredLine {
             at: text("at").unwrap_or_default(),
             error: text("error"),
             drift,
+            older: v.get("older").and_then(Value::as_bool).unwrap_or(false),
             used: v.get("used").and_then(Value::as_bool).unwrap_or(false),
             expectations: v.get("expected").and_then(Value::as_bool).unwrap_or(true),
         })
@@ -97,6 +100,9 @@ impl DeliveredLine {
         }
         let file = format!("{}, {}", self.model, day(&self.at));
         let drift = match self.drift {
+            None if self.older => "Model, KentOS kalıcı kimlikleri yazmadan önce yazılmış; çizimle nesne nesne \
+                                   karşılaştırılamadı."
+                .to_owned(),
             None => "Çizimde şimdi bina yok.".to_owned(),
             Some(d) if d.is_none() => "Çizimin modeli teslim edilenle aynı.".to_owned(),
             Some(d) => {
@@ -314,8 +320,10 @@ fn model(doc: &kentos_domain::Document, asked: bool) -> (Result<Value, String>, 
             .transpose()
             .map(|f| f.unwrap_or(Value::Null))
     };
-    let drift_of = |d: Option<Drift>| {
-        d.map_or(Value::Null, |d| json!({ "added": d.added, "removed": d.removed, "changed": d.changed }))
+    let put = |line: &mut Value, c: Counted| match c {
+        Counted::Drift(d) => line["drift"] = json!({ "added": d.added, "removed": d.removed, "changed": d.changed }),
+        Counted::NoModel => line["drift"] = Value::Null,
+        Counted::Older => line["older"] = json!(true),
     };
     match delivered_model::last(doc) {
         Last::None => (now(), Value::Null),
@@ -325,7 +333,7 @@ fn model(doc: &kentos_domain::Document, asked: bool) -> (Result<Value, String>, 
             if asked {
                 match d.read(doc) {
                     Ok(read) => {
-                        line["drift"] = drift_of(read.drift);
+                        put(&mut line, read.counted);
                         line["used"] = json!(true);
                         line["expected"] = json!(read.expected != Expected::Missing);
                         return (Ok(read.facts), line);
@@ -333,8 +341,8 @@ fn model(doc: &kentos_domain::Document, asked: bool) -> (Result<Value, String>, 
                     Err(why) => line["error"] = json!(why),
                 }
             } else {
-                match d.drift(doc) {
-                    Ok(drift) => line["drift"] = drift_of(drift),
+                match d.counted(doc) {
+                    Ok(c) => put(&mut line, c),
                     Err(why) => line["error"] = json!(why),
                 }
             }

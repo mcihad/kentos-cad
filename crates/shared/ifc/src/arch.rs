@@ -904,8 +904,9 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     // Its heights are its rooms' (docs/adr/8076 §3), written after them; a level's floor-to-floor height is not one.
     let mut storeys: Vec<Storey> = levels
         .iter()
-        .map(|(_, n, floor, _)| Storey {
-            id: None,
+        .map(|(level, n, floor, _)| Storey {
+            // Derived from its level (docs/adr/8117): the same storey keeps its GlobalId whatever else changes.
+            id: Some(crate::step::derived_id("storey", level)),
             name: name("BNK", n),
             long_name: Some(n.clone()),
             elevation: *floor - zero,
@@ -1302,7 +1303,8 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         written.openings += 1;
         opened.insert(owner.as_str());
         openings.push(Opening {
-            id: None,
+            // Derived from the door or window that makes it (docs/adr/8117).
+            id: Some(crate::step::derived_id("opening", owner)),
             name: name("ACL", mark.as_deref().unwrap_or("Açıklık")),
             host,
             ring,
@@ -2037,10 +2039,17 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         }
     }
     // The emsal zones (docs/adr/8069): each storey's rooms by how they count, between its floor and its rooms' tops.
+    let mut zone_keys: Vec<String> = Vec::new();
     let zones: Vec<Zone> = emsal
         .iter()
         .filter(|a| a.rings.iter().any(|r| r.len() >= 3))
         .map(|a| {
+            // Derived from the level and how its rooms count (docs/adr/8117).
+            let mut key = format!("{}|{:?}", a.level.as_deref().unwrap_or(""), a.count);
+            while zone_keys.contains(&key) {
+                key.push('+');
+            }
+            zone_keys.push(key.clone());
             let storey = storey_of(a.level.as_deref());
             let (state, words, description) = emsal_state(a);
             let storey_name = storeys.get(storey).map_or_else(String::new, |s| s.long_name.clone().unwrap_or_else(|| s.name.clone()));
@@ -2050,7 +2059,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 .map(|s| s.top)
                 .fold(levels.get(storey).and_then(|l| l.3).unwrap_or(0.0), f64::max);
             Zone {
-                id: None,
+                id: Some(crate::step::derived_id("emsal", &key)),
                 name: name("MZN", &format!("Emsal {state} {storey_name}")),
                 long_name: Some(format!("{storey_name} {words}")),
                 description: Some(description),
@@ -2284,7 +2293,10 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         application: application.to_owned(),
         phase: None,
         project: Place {
-            id: scope.as_ref().map(|_| crate::step::fnv(&format!("kentos-proje:{project_seed}"), 0)),
+            id: Some(scope.as_ref().map_or_else(
+                || crate::step::derived_id("project", &project_seed),
+                |_| crate::step::fnv(&format!("kentos-proje:{project_seed}"), 0),
+            )),
             name: project_name,
             long_name: Some(work.clone()),
             // EK-7 Tablo 7.1 (docs/adr/8074 §3): the künye's description and the construction action's project type.
@@ -2301,7 +2313,10 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         },
         actors,
         site: Place {
-            id: scope.as_ref().map(|_| crate::step::fnv(&format!("kentos-saha:{project_seed}"), 0)),
+            id: Some(scope.as_ref().map_or_else(
+                || crate::step::derived_id("site", &project_seed),
+                |_| crate::step::fnv(&format!("kentos-saha:{project_seed}"), 0),
+            )),
             name: name("SAH", "Parsel"),
             long_name: k.land_id(),
             // IFC 4.3's IfcSite has no predefined type: its type is its ObjectType (EK-6 Tablo 6.55, case 2). KentOS's
@@ -2316,7 +2331,10 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         building: Place {
             // One of the program's buildings its own GlobalId, the same from file to file (docs/adr/8072 §2); the site and
             // the project the same in every building's file.
-            id: scope.as_ref().map(|b| crate::step::fnv(&format!("kentos-bina:{project_seed}:{}", b.id), 0)),
+            id: Some(scope.as_ref().map_or_else(
+                || crate::step::derived_id("building", &project_seed),
+                |b| crate::step::fnv(&format!("kentos-bina:{project_seed}:{}", b.id), 0),
+            )),
             name: name("BNA", scope.as_ref().map_or(&work, |b| &b.name)),
             long_name: Some(scope.as_ref().map_or(work.clone(), |b| b.name.clone())),
             psets: building_psets,

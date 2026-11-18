@@ -1,7 +1,12 @@
 //! ISO 10303-21 (STEP) writing for IFC files (docs/adr/0908 §8, docs/adr/8047): reals always with a point, strings
 //! with their apostrophes and backslashes doubled and what is not printable ASCII as `\X2\…\X0\`, GlobalIds of
-//! 128-bit numbers (FNV-1a of a seed: the same for the same file), the instances numbered as they are added, and the
-//! file's header and its end.
+//! 128-bit numbers, the instances numbered as they are added, and the file's header and its end.
+//!
+//! **GlobalIds** (docs/adr/8117; plan/ifc-uyum.md §7 "Kimlik"; IFC 4.3, Software Identity: the IFC-GUID "has to be
+//! persistent"): an object with a KentOS id is written with that id ([`guid`]); a part made without one (a storey, an
+//! opening, a zone, a group, a property set, a relationship) with one derived from its role and its owners' GlobalIds
+//! ([`Step::derived`], [`derived_id`]) — never from the file's name, its time stamp or the order of writing, so the
+//! same drawing written another day or after an unrelated change keeps them.
 
 /// A real as STEP writes it: always with a point.
 pub(crate) fn real(v: f64) -> String {
@@ -71,7 +76,14 @@ pub fn unguid(s: &str) -> Option<u128> {
     b[1..].iter().try_fold(first, |n, &c| Some((n << 6) | digit(c)?))
 }
 
-/// FNV-1a over 128 bits: the GlobalIds are the same for the same file.
+/// The GlobalId a root's line starts with (`IFCWALL('…',`): its first attribute, 22 characters in apostrophes.
+fn root_id(body: &str) -> Option<&str> {
+    let rest = &body[body.find('(')? + 1..];
+    let b = rest.as_bytes();
+    (b.len() > 23 && b[0] == b'\'' && b[23] == b'\'').then(|| &rest[1..23])
+}
+
+/// FNV-1a over 128 bits.
 pub(crate) fn fnv(seed: &str, k: u64) -> u128 {
     let mut h: u128 = 0x6c62272e07bb014262b821756295c58d;
     for b in seed.bytes().chain(k.to_le_bytes()) {
@@ -81,11 +93,31 @@ pub(crate) fn fnv(seed: &str, k: u64) -> u128 {
     h
 }
 
-/// The file's instances as they are added (#1, #2, …), and its GlobalIds' seed.
+/// The 128 bits of a part's GlobalId made without a KentOS id: its `role` and the `key` that names it among its kind
+/// (an owner's id, a name). The same for the same role and key in every file and every revision. Shaped as a UUID of
+/// version 8 (RFC 9562's custom UUIDs): KentOS's own ids are version 7 (version 5 for an old file's), so
+/// [`is_derived`] tells a part the export made from an object of the drawing.
+pub fn derived_id(role: &str, key: &str) -> u128 {
+    let h = fnv(&format!("kentos|{role}|{key}"), 0);
+    let h = (h & !(0xF_u128 << 76)) | (0x8_u128 << 76);
+    (h & !(0x3_u128 << 62)) | (0x2_u128 << 62)
+}
+
+/// Whether `id` is one [`derived_id`] made (a UUID of version 8).
+pub fn is_derived(id: u128) -> bool {
+    (id >> 76) & 0xF == 0x8 && (id >> 62) & 0x3 == 0x2
+}
+
+/// The file's instances as they are added (#1, #2, …), and its GlobalIds' seed for a writer that still numbers them
+/// ([`Step::gid`], the road's alignment file).
 pub(crate) struct Step {
     pub(crate) lines: Vec<String>,
     pub(crate) seed: String,
     pub(crate) ids: u64,
+    /// The GlobalIds of the roots added, by their instance numbers: a derived part names its owners by them.
+    roots: std::collections::HashMap<usize, String>,
+    /// The derived keys given: one asked again (two parts of the same role and owners) takes a mark more.
+    keys: std::collections::HashSet<String>,
 }
 
 impl Step {
@@ -94,11 +126,36 @@ impl Step {
             lines: Vec::new(),
             seed,
             ids: 0,
+            roots: std::collections::HashMap::new(),
+            keys: std::collections::HashSet::new(),
         }
     }
     pub(crate) fn add(&mut self, body: impl Into<String>) -> usize {
-        self.lines.push(body.into());
-        self.lines.len()
+        let body = body.into();
+        let n = self.lines.len() + 1;
+        if let Some(g) = root_id(&body) {
+            self.roots.insert(n, g.to_owned());
+        }
+        self.lines.push(body);
+        n
+    }
+
+    /// A derived part's GlobalId (quoted): its `role`, the GlobalIds of its `owners` (by instance number) and `name`.
+    /// An owner without one is named by its number; a key already given takes a `+` more, so no two parts share one.
+    pub(crate) fn derived(&mut self, role: &str, owners: &[usize], name: &str) -> String {
+        let mut key = String::new();
+        for o in owners {
+            match self.roots.get(o) {
+                Some(g) => key.push_str(g),
+                None => key.push_str(&format!("#{o}")),
+            }
+            key.push('|');
+        }
+        key.push_str(name);
+        while !self.keys.insert(format!("{role}|{key}")) {
+            key.push('+');
+        }
+        text(&guid(derived_id(role, &key)))
     }
     pub(crate) fn gid(&mut self) -> String {
         self.ids += 1;
