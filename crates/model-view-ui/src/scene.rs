@@ -167,6 +167,8 @@ pub enum Gesture {
     Pan(f32, f32),
     Dolly(f32),
     Pick(f32, f32, f32, f32),
+    /// The view's size (logical pixels) at its first frame and whenever it changes: a host fits the model by its shape.
+    Size(f32, f32),
 }
 
 /// One view of a scene: the scene, the camera, the exaggeration, the parts' styles, towards the light, the half-spaces
@@ -215,11 +217,12 @@ struct Program<'a, M> {
     on: Box<dyn Fn(Gesture) -> M + 'a>,
 }
 
-/// A drag in progress (where, whether it pans) and the view's key in the pipeline.
+/// A drag in progress (where, whether it pans), the view's key in the pipeline and the size last told.
 pub struct State {
     view: u64,
     drag: Option<Press>,
     shift: bool,
+    size: (f32, f32),
 }
 
 #[derive(Clone, Copy)]
@@ -241,7 +244,7 @@ static RETIRED: Mutex<Vec<u64>> = Mutex::new(Vec::new());
 
 impl Default for State {
     fn default() -> Self {
-        State { view: NEXT_VIEW.fetch_add(1, Ordering::Relaxed), drag: None, shift: false }
+        State { view: NEXT_VIEW.fetch_add(1, Ordering::Relaxed), drag: None, shift: false, size: (0.0, 0.0) }
     }
 }
 
@@ -260,8 +263,14 @@ impl<M> shader::Program<M> for Program<'_, M> {
     fn update(&self, state: &mut State, event: &iced::Event, bounds: Rectangle, cursor: mouse::Cursor) -> Option<shader::Action<M>> {
         use iced::keyboard;
         match event {
-            // Contents still waiting for the GPU: another frame.
+            // The view's size told when it changed (the message draws the next frame); else contents still waiting for
+            // the GPU: another frame.
             iced::Event::Window(iced::window::Event::RedrawRequested(_)) => {
+                let size = (bounds.width, bounds.height);
+                if size != state.size && size.0 >= 1.0 && size.1 >= 1.0 {
+                    state.size = size;
+                    return Some(shader::Action::publish((self.on)(Gesture::Size(size.0, size.1))));
+                }
                 self.pending.load(Ordering::Relaxed).then(shader::Action::request_redraw)
             }
             iced::Event::Keyboard(keyboard::Event::ModifiersChanged(m)) => {

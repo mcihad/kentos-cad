@@ -204,7 +204,10 @@ fn an_object_is_found_in_the_plan_and_in_3d_and_a_changed_file_is_said() {
     assert_eq!(b.underlays.len(), 1);
     assert!(b.count() >= b.bodies() + l.bodies.len());
     let w3 = app.scene3d_window.as_ref().expect("the window");
-    println!("3B: {} kaynak, {} üçgen, kutu {:?}", w3.scene.sources(), w3.scene.triangles(), w3.scene.bounds());
+    assert!(w3.scene_parts().contains(&kentos_model_view::parts::UNDERLAY), "violet beside the building");
+    let v = b.viewer.view().expect("the model shown");
+    assert!(v.input().objects.iter().any(|o| o.label.ends_with("(altlık model)")), "the underlay's project in the tree");
+    println!("3B: {} kaynak, {} üçgen", w3.scene_sources(), w3.scene_triangles());
     app.arch.underlays_window.as_mut().expect("open").object = None;
     app.building3d_select(Some(format!("{}{id}:{object}", crate::scene3d_building::UNDERLAY_OWNER)));
     assert_eq!(app.arch.underlays_window.as_ref().expect("open").object, Some((id.clone(), object)));

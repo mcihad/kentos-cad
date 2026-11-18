@@ -247,9 +247,9 @@ impl App {
             // The windows of their own follow what is open (windows/, docs/adr/8060); 3B görünüm follows the
             // drawing first, so a window it closes goes in the same pass (scene3d_window.rs).
             {
-                self.follow_scene3d();
+                let scene3d = self.follow_scene3d();
                 self.follow_ifc_viewer();
-                self.follow_windows()
+                Task::batch([scene3d, self.follow_windows()])
             },
         ]);
         self.follow_layout(Instant::now());

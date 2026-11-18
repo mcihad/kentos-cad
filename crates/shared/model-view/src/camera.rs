@@ -31,13 +31,22 @@ impl OrbitCamera {
     }
 
     /// The whole of `bounds` in view at the camera's angles: the target its middle in the source's heights, the
-    /// distance the shown box's.
+    /// distance the shown box's. A view as wide as it is tall or wider; [`OrbitCamera::fit_in`] for one of a shape.
     pub fn fit(&mut self, bounds: &Aabb, ex: &Exaggeration, room: f64) {
+        self.fit_in(bounds, ex, room, 0.0);
+    }
+
+    /// [`OrbitCamera::fit`] for a view `aspect` wide to its height (0: not known, taken as wide): a view narrower than
+    /// it is tall sees less across than up and down (docs/adr/8119), so the box's sphere is fitted to the narrower of
+    /// the two angles.
+    pub fn fit_in(&mut self, bounds: &Aabb, ex: &Exaggeration, room: f64, aspect: f64) {
         if bounds.is_empty() {
             return;
         }
         self.target = bounds.center();
-        self.distance = (ex.shown_box(bounds).diagonal() / 2.0).max(1.0) / (FOV.to_radians() / 2.0).sin() * room;
+        let up = FOV.to_radians() / 2.0;
+        let half = if aspect > 0.0 && aspect < 1.0 { (up.tan() * aspect).atan() } else { up };
+        self.distance = (ex.shown_box(bounds).diagonal() / 2.0).max(1.0) / half.sin() * room;
     }
 
     /// A drag of `dx`, `dy` logical pixels: about the target.
@@ -67,10 +76,15 @@ impl OrbitCamera {
 
     /// At the `i`th of [`VIEWS`]' angles, all of `bounds` in view as `ex` shows it.
     pub fn look(&mut self, i: usize, bounds: &Aabb, ex: &Exaggeration, room: f64) {
+        self.look_in(i, bounds, ex, room, 0.0);
+    }
+
+    /// [`OrbitCamera::look`] for a view `aspect` wide to its height ([`OrbitCamera::fit_in`]).
+    pub fn look_in(&mut self, i: usize, bounds: &Aabb, ex: &Exaggeration, room: f64, aspect: f64) {
         let (_, a, e) = VIEWS[i.min(VIEWS.len() - 1)];
         self.azimuth = a;
         self.elevation = e;
-        self.fit(bounds, ex, room);
+        self.fit_in(bounds, ex, room, aspect);
     }
 
     /// The view the camera is at (to half a degree), by its place in [`VIEWS`]; none once it has been turned.
@@ -143,6 +157,33 @@ mod tests {
         assert_eq!((c.preset(), c.target), (Some(1), [5.0, 4.0, 3.0]));
         c.orbit(10.0, 0.0);
         assert_eq!(c.preset(), None, "turned: no view");
+    }
+
+    #[test]
+    fn a_narrow_view_fits_the_box_across_too() {
+        use kentos_scene3d::Viewport;
+        let b = Aabb { min: [0.0, 0.0, 0.0], max: [12.0, 9.0, 6.6] };
+        let ex = Exaggeration::NONE;
+        // Each corner of the box on the screen, for a view of `width` by `height` fitted to its shape.
+        let inside = |width: f64, height: f64, aspect: f64| {
+            let mut c = OrbitCamera { target: [0.0; 3], azimuth: 0.0, elevation: 0.0, distance: 1.0 };
+            c.look_in(0, &b, &ex, 1.0, aspect);
+            let (cam, vp) = (c.camera(&ex), Viewport { width, height });
+            let pick = |k: usize, axis: usize| if (k >> axis) & 1 == 0 { b.min[axis] } else { b.max[axis] };
+            (0..8).map(|k| [pick(k, 0), pick(k, 1), pick(k, 2)]).all(|p| {
+                cam.project(p, &vp).is_some_and(|(x, y, _)| (0.0..=width).contains(&x) && (0.0..=height).contains(&y))
+            })
+        };
+        // A view half as wide as it is tall, fitted as if it were wide, loses the box's sides; fitted to its shape it
+        // keeps them.
+        assert!(!inside(400.0, 800.0, 0.0), "the old fit crops a narrow view");
+        assert!(inside(400.0, 800.0, 0.5), "fitted to its shape, the whole box shows");
+        // A wide view is fitted as before.
+        let (mut wide, mut known) = (OrbitCamera::fitted(&b, &ex, 45.0, 30.0, 1.0), OrbitCamera::fitted(&b, &ex, 45.0, 30.0, 1.0));
+        known.fit_in(&b, &ex, 1.0, 1.6);
+        wide.fit(&b, &ex, 1.0);
+        assert_eq!(wide, known);
+        assert!(inside(1600.0, 1000.0, 1.6));
     }
 
     #[test]

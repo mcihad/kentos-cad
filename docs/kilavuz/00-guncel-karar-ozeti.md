@@ -191,6 +191,12 @@
       (`look::framed`'ın kart yeri; şerit kesitle uzamaz), ağaçta arama (`Viewer::found`, Türkçe i katlaması), yan bölmeler
       kitin tutamağıyla, ölçüler `Host::measure` ile projenin basamaklarında (`look::digits`; dosyadaki değer kitin
       `property_grid::measured` ipucunda).
+    - Binanın 3B görünümü ([ADR 8119](../adr/8119-building-3d-in-the-model-viewer.md), 18 Kasım 2026): yol dışındaki
+      çizimde 3B görünüm görüntüleyicinin kendisidir. Model dışa aktarımın IFC'sidir; bellekte yazılıp okuma yüzüyle
+      (`ifc_viewer::read_bytes`) ayrı iş parçacığında kurulur. Çizim ya da altlıklar değişince yeniden kurulur, görünüm
+      anahtarlarla kalır (`Viewer::reload`, `View::carried`). Altlıklar `Input::append` ile yanında (`altlik:` öneki,
+      `parts::UNDERLAY`). Başvurulan zon başvuranın altında (`read::view`); sığdırma sahnenin biçimine göre
+      (`Gesture::Size`, `OrbitCamera::fit_in`). Yolun 3B görünümü değişmedi.
     - Araştırma: [not](../research/2026-11-15-ifc-goruntuleyici.md). Ölçümler:
       [docs/perf/ifc-okuma-denemesi-2026-11-16.md](../perf/ifc-okuma-denemesi-2026-11-16.md).
   - **EK-9 yazılmış dosyadan (16 Kasım 2026; [ADR 8074](../adr/8074-ek9-from-the-written-file.md), IFC-08, sıra B13; ilk

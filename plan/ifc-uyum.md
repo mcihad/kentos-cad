@@ -640,6 +640,10 @@ klavyeyle kabul; resimler.
 - **Yerleşim (18 Kasım 2026, [ADR 8118](../docs/adr/8118-ifc-viewer-layout-refinement.md), K236–K241):** kesitin kartı
   sahnenin sol üstünde (şerit kesitle uzamaz); ağacın üstünde arama (ad, sınıf, GlobalId; Türkçe i katlaması; bulunanlar
   katıyla); yan bölmeler sürüklenir; ölçüler projenin basamaklarıyla, dosyadaki değer ipucunda; anahtarlar simgeli.
+- **Binanın 3B görünümünde (18 Kasım 2026, [ADR 8119](../docs/adr/8119-building-3d-in-the-model-viewer.md), K242–K251):**
+  mimari çizimin 3B görünümü görüntüleyicinin kendisidir; girdisi dışa aktarımın bellekte yazılıp okunan modeli, altlık
+  modeller yanında (`Input::append`, menekşe). Yeniden okunan modelde görünüm anahtarlarla kalır (`Viewer::reload`).
+  Başvurulan emsal zonu katının altında (`read::view`); sahne boyutunu bildirir, sığdırma dar sahnede kırpmaz.
 - Kalanlar (ADR 8073 §9, 8118 §6): gerçek pencerede kabul; kesit düzlemini yüze tıklayarak kurmak ve sürüklemek, kutunun
   tutamakları, kesilen yüzün kapağı; gösterilemeyen nesnenin kutusu; ilk gövdelerle sahne; seçimde yeniden kurmadan boyama;
   denetim bulgusundan “Modelde göster” (B13 ile); bir değerden “benzerini göster”; bölme genişliklerinin saklanması.

@@ -371,9 +371,16 @@ duvardan oyulur, mahaller hacim), yolun penceresi `Source` girdisiyle genelleşt
 saydam mahal, planda seçili turuncu, Denetim'de seçili bulgunun nesnesi kırmızı; kat süzgeci, mahaller aç ve kapa; tıklama
 mahalin içinden geçer, nesneyi planda seçer; model değişince sahne yenilenir. Örtüşen mahal: Rust `cad.roomOverlaps`'ı
 ölçer, `dijital_proje.kalite` 0,01 m² ve üstünü hata sayar (EK-9/13). Kesit binası: 58 eleman ve 10 mahal, IFC dosyasında
-68 gövde. Şeritte Mimari › Proje › 3B görünüm. **Kalan:** gerçek pencerede (işletim sisteminin faresiyle) kabul, kesit
-kutusu (çizicide kırpma, IFC-12 ile ortak), tadilat durumuna göre renk, gizle ve yalnız bırak, katlar arası örtüşme,
-büyük modelde ölçüm.
+68 gövde. Şeritte Mimari › Proje › 3B görünüm.
+
+**Görüntüleyicide (18 Kasım 2026, [ADR 8119](../docs/adr/8119-building-3d-in-the-model-viewer.md), K242–K251):** 3B görünüm
+görüntüleyici bileşeninin kendisidir: solda ağaç ve arama, sağda özellikler, sahnede kesitin kartı (düzlem ve seçimin
+çevresinde kutu), gizle ve yalnız bırak, sürüklenen bölmeler; şeridin sonunda Katlar ▾. Model dışa aktarımın o an
+yazacağı IFC'dir: bellekte yazılır, okuma yüzüyle gövdeleriyle okunur, ayrı iş parçacığında kurulur. Çizim ya da altlıklar
+değişince yeniden kurulur, görünüm yerinde kalır. Planla seçim, Denetim bulguları ve altlık modeller (menekşe, ağaçta
+“(altlık model)”) sürer. Kesit binası bugün 58 eleman, 10 mahal ve 4 emsal zonu: dosyadaki 72 gövdeli nesne. Emsal zonu
+katının altında; sahne dar olunca sığdırma sahnenin biçimine göre. **Kalan:** gerçek pencerede (işletim sisteminin
+faresiyle) kabul, tadilat durumuna göre renk, katlar arası örtüşme, büyük modelde yalnız değişeni yeniden okumak.
 
 **Kullanıcı sonucu:** Mimar, modelin gövdelerini (dışa aktarılacak olanların aynısını) 3B'de görür. Bir nesneye tıklayınca
 planda seçilir. Katları ayırır, kesit kutusuyla içine bakar. Denetim bulguları 3B'de boyanır. Dayanak Md. 14; EK-9/13–15; Z1.
@@ -940,7 +947,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
-| B6 ◐ | Binanın 3B görünümü | BIM-06 | Bina 3B'de; tıkla, planda seç; örtüşen mahal kırmızı (ADR 8067; gerçek pencere ve kesit kutusu kaldı) |
+| B6 ◐ | Binanın 3B görünümü | BIM-06 | Bina 3B'de; tıkla, planda seç; örtüşen mahal kırmızı (ADR 8067); ağaç, özellikler ve kesit görüntüleyicide, model çizimden canlı (ADR 8119); gerçek pencere kaldı |
 | B7 ◐ | Yangın, performans ve malzeme; modelin zorunlu alanları | BIM-07, IFC-02 | Beyan dayanağıyla modelde; eksik alanlar nesneleriyle Denetim'de; 9. soru modelden; yazar gibi doldurulmuş binada zorunlu satır eksiği yok (ADR 8068, 8076; Tag politikası, ad/soyad, ölçüm anotasyonu kaldı) |
 | B8 ◐ | Mahal, zon ve emsal; mekânsal zonlar ve gruplar | BIM-08, IFC-03 | Emsal tablosu ile model aynı alanlardan (ADR 8069; kat × sınıf denetimi, çatıyla kesilen hacim kaldı) |
 | B9 ◐ | Eksik yapı elemanları; eksik sınıflar | BIM-09, IFC-03 | Kayıp listesi boş (ADR 8070; giydirme cephe kapısı, eğik eleman kaldı) |

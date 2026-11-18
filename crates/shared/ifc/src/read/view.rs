@@ -2,8 +2,8 @@
 //! turns the reading face's objects and the engine's bodies into the viewer core's plain input, so the core knows no
 //! IFC name. Each object's category comes from its class by the file's own schema's inheritance (an `IfcWallStandardCase`
 //! is a wall; a spatial zone a see-through volume like a space); its tree parent is what it is a part of, else the
-//! structure that contains it, an opening's the body it cuts; its storey the nearest storey above it; its label its
-//! name (a storey's and a space's long name beside it), else its class.
+//! structure that contains it, an opening's the body it cuts, a zone's the structure that references it; its storey the
+//! nearest storey above it; its label its name (a storey's and a space's long name beside it), else its class.
 
 use std::sync::Arc;
 
@@ -73,6 +73,17 @@ pub fn input(title: &str, model: &Model, bodies: &Bodies) -> Input {
             }
         }
     }
+    // What a structure references without containing it (`IfcRelReferencedInSpatialStructure`: a storey's far zone,
+    // docs/adr/8069) hangs under the first one when nothing else holds it (docs/adr/8119): the tree shows it there and
+    // hiding the storey hides it. A structure under the object itself is passed over.
+    for r in model.relations.iter().filter(|r| schema.is_subtype_of(&r.class, "IfcRelReferencedInSpatialStructure")) {
+        let Some(structure) = r.relating.and_then(|h| model.index_of(h)) else { continue };
+        for o in r.related.iter().filter_map(|&o| model.index_of(o)) {
+            if objects[o].parent.is_none() && objects[o].category != Category::Project && !reaches(&objects, structure, o) {
+                objects[o].parent = Some(structure);
+            }
+        }
+    }
     let n = objects.len();
     for i in 0..n {
         let mut at = objects[i].parent;
@@ -94,7 +105,21 @@ pub fn input(title: &str, model: &Model, bodies: &Bodies) -> Input {
             .map(|b| BodyIn { object: b.object, positions: Arc::new(b.positions.clone()), triangles: b.triangles.clone() })
             .collect(),
         not_shown: bodies.not_shown.iter().map(|n| (n.object, n.reason.clone())).collect(),
+        apart: None,
     }
+}
+
+/// Whether `to` is `from` or above it in the tree as it stands (a parent out of range ends the walk).
+fn reaches(objects: &[ObjectIn], from: usize, to: usize) -> bool {
+    let mut at = Some(from);
+    for _ in 0..=objects.len() {
+        match at {
+            Some(p) if p == to => return true,
+            Some(p) => at = objects.get(p).and_then(|o| o.parent),
+            None => return false,
+        }
+    }
+    true
 }
 
 /// The blocks that are building elements beside the furniture (a sanitary fixture, a lift): furnishings' colour.
@@ -130,7 +155,9 @@ mod tests {
         let b = m.bodies(bytes, &never).expect("the bodies");
         let input = input(name, &m, &b);
         assert_eq!(input.objects.len(), m.objects.len());
-        assert_eq!(input.bodies.len(), 70, "every body the file holds");
+        // 58 elements, 10 spaces and the 4 far zones (each storey's included and excluded area, docs/adr/8069; two
+        // before the fixture was written again, docs/adr/8117).
+        assert_eq!(input.bodies.len(), 72, "every body the file holds");
         let storeys: Vec<&str> =
             input.objects.iter().filter(|o| o.category == Category::Storey).map(|o| o.label.as_str()).collect();
         assert_eq!(storeys.len(), 2, "{storeys:?}");
@@ -140,5 +167,13 @@ mod tests {
         // Every wall is on a storey and has the wall's category.
         let walls: Vec<&ObjectIn> = input.objects.iter().filter(|o| o.class == "IfcWall").collect();
         assert!(!walls.is_empty() && walls.iter().all(|w| w.category == Category::Wall && w.storey.is_some()));
+        // The far zones each storey references (docs/adr/8069) hang under that storey, not at the root: two a storey.
+        let zones: Vec<&ObjectIn> = input.objects.iter().filter(|o| o.class == "IfcSpatialZone").collect();
+        assert_eq!(zones.len(), 4);
+        for z in &zones {
+            let storey = z.parent.map(|p| &input.objects[p]);
+            assert!(storey.is_some_and(|s| s.category == Category::Storey) && z.storey == z.parent, "{z:?}");
+        }
+        assert!(!roots.contains(&Category::Space), "no zone at the root: {roots:?}");
     }
 }

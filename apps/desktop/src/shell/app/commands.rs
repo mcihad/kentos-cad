@@ -686,7 +686,7 @@ impl App {
             "payItems.editor" => self.open_pay(),
             "route.finder" => self.open_route(),
             "junction.editor" => self.open_junctions(),
-            "scene3d.view" => self.open_scene3d(),
+            "scene3d.view" => return self.open_scene3d(),
             "ifc.view" => return self.pick_ifc_model(),
             // LandXML ver (road_exchange.rs, plan/road.md Y10.2).
             "landxml.export" => return self.export_landxml(),

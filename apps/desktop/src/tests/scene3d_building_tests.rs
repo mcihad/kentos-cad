@@ -1,20 +1,23 @@
-//! 3B görünüm of a building (scene3d_building.rs, docs/adr/8067; plan/bim-plan.md BIM-06): on the section building
-//! (fixtures/arch/v1/section-building.kcad, written without KentOS code) the window shows the bodies the IFC file holds,
-//! as many as it holds; a click on a wall selects it in the plan and the plan's selection shows in 3D; the storeys and
-//! the rooms hide; two rooms of one storey that share ground are the Mimari audit's finding and red in 3D.
+//! 3B görünüm of a building (scene3d_building.rs, docs/adr/8067, 8119; plan/bim-plan.md BIM-06): on the section
+//! building (fixtures/arch/v1/section-building.kcad, written without KentOS code) the window's viewer shows the bodies
+//! the IFC file holds, as many as it holds; a click on a wall selects it in the plan and the plan's selection shows in
+//! 3D; the storeys and the rooms hide; an edit makes the model again and the view stays; two rooms of one storey that
+//! share ground are the Mimari audit's finding and red in 3D.
 
 use kentos_commands::Entity;
+use kentos_model_view::{Category, parts};
 use kentos_scene3d::Viewport;
 
 use crate::app::{App, Message};
 use crate::scene3d_window::Event as W;
 
-/// The parts (scene3d_building::PARTS): a wall, a room, the selected, a room found something about.
+/// The viewer's parts (kentos_model_view::parts): a wall, a room, the selected, a found body, a room found something
+/// about.
 const WALL: u32 = 0;
-const ROOM: u32 = 9;
-const SELECTED: u32 = 11;
-const FOUND: u32 = 12;
-const FOUND_ROOM: u32 = 14;
+const ROOM: u32 = parts::SPACE;
+const SELECTED: u32 = parts::SELECTED;
+const FOUND: u32 = parts::FOUND;
+const FOUND_ROOM: u32 = parts::FOUND_SPACE;
 
 pub(crate) fn open(snapshot: kentos_commands::DocumentSnapshotV2) -> App {
     let (mut app, _) = App::boot(None);
@@ -53,14 +56,14 @@ pub(crate) fn arguments(record: &str) -> Vec<String> {
     out
 }
 
-/// How many building elements and spaces the IFC file `cad.arch.ifc` writes has with a body (an `IfcProduct`'s seventh
-/// argument, its representation, given), read from the file's text: the bodies another reader shows (an opening is a
-/// cut, not a body).
+/// How many building elements, spaces and spatial zones the IFC file `cad.arch.ifc` writes has with a body (an
+/// `IfcProduct`'s seventh argument, its representation, given), read from the file's text: the bodies another reader
+/// shows (an opening is a cut, not a body).
 fn bodies_in_the_file(app: &mut App) -> usize {
-    const CLASSES: [&str; 17] = [
+    const CLASSES: [&str; 18] = [
         "IFCWALL", "IFCSLAB", "IFCCOLUMN", "IFCBEAM", "IFCROOF", "IFCRAILING", "IFCSTAIR", "IFCCOVERING", "IFCDOOR",
         "IFCWINDOW", "IFCTRANSPORTELEMENT", "IFCFURNITURE", "IFCSANITARYTERMINAL", "IFCMEMBER", "IFCCHIMNEY", "IFCRAMP",
-        "IFCSPACE",
+        "IFCSPACE", "IFCSPATIALZONE",
     ];
     let dir = std::env::temp_dir().join(format!("kentos-bina-3b-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("a folder");
@@ -83,24 +86,32 @@ fn bodies_in_the_file(app: &mut App) -> usize {
         .count()
 }
 
-/// A click on the `k`th mesh of `part` seen from the window's camera: the first of its triangles' middles the click
-/// meets it at; the object's id.
+/// A click on the `k`th mesh of `part` seen from the viewer's camera: the first of its triangles' middles the click
+/// meets it at; the object's persistent id.
 fn click_on(app: &mut App, part: u32) -> Option<String> {
     let vp = Viewport { width: 1240.0, height: 560.0 };
     for k in 0..40 {
         for n in 0..24 {
             let w = app.scene3d_window.as_ref().expect("the window");
-            let (cam, ex) = (w.camera(), w.exaggeration());
+            let (cam, ex) = w.drawn_camera();
             let Some((p, owner)) = w.owner_on(part, k, n) else { break };
             let Some((x, y, _)) = cam.project(ex.shown(p), &vp) else { continue };
             send(app, W::Pick(x as f32, y as f32, 1240.0, 560.0));
-            let picked = app.scene3d_window.as_ref().expect("the window").picked.clone();
-            if picked.is_some_and(|q| q.owner.as_deref() == Some(owner.as_str())) {
+            if app.scene3d_window.as_ref().expect("the window").picked_owner().as_deref() == Some(owner.as_str()) {
                 return Some(owner);
             }
         }
     }
     None
+}
+
+/// The viewer's bodies (the openings' volumes are holes, not bodies) and its rooms' and zones' bodies.
+fn shown_bodies(app: &App) -> (usize, usize) {
+    let b = app.scene3d_window.as_ref().and_then(|w| w.building.as_ref()).expect("a building");
+    let v = b.viewer.view().expect("the model shown");
+    let input = v.input();
+    let rooms = input.bodies.iter().filter(|b| input.objects[b.object].category == Category::Space).count();
+    (v.counts().1, rooms)
 }
 
 #[test]
@@ -111,25 +122,32 @@ fn the_section_building_shows_the_bodies_its_ifc_file_holds() {
     assert!(app.dialog.is_none() && app.surface_wanted(crate::windows::Surface::Scene3d));
     let w = app.scene3d_window.as_ref().expect("the window");
     let b = w.building.as_ref().expect("a building");
-    let (bodies, rooms, storeys) = (b.bodies(), b.rooms_count(), b.storeys.len());
-    assert_eq!(w.scene_sources(), bodies + rooms, "every body and room in the scene");
+    let (bodies, rooms, zones, storeys) =
+        (b.bodies(), b.with_body_of("IfcSpace"), b.with_body_of("IfcSpatialZone"), b.storeys_count());
+    let (all, room_bodies) = shown_bodies(&app);
+    assert_eq!(w.scene_sources(), all, "every body and room in the scene");
     assert!(w.scene_parts().contains(&WALL) && w.scene_parts().contains(&ROOM), "{:?}", w.scene_parts());
-    assert_eq!(bodies + rooms, bodies_in_the_file(&mut app), "as many bodies as the IFC file holds");
-    // 16 walls, 5 doors, 9 windows, 3 slabs, 16 columns, 8 beams, a stair and 10 rooms: the 68 bodies an independent
-    // reader shows of the file.
-    assert_eq!((bodies, rooms), (58, 10), "the section building's elements and rooms");
+    assert_eq!(bodies + rooms + zones, bodies_in_the_file(&mut app), "as many objects with a body as the IFC file holds");
+    // 16 walls, 5 doors, 9 windows, 3 slabs, 16 columns, 8 beams, a stair, 10 rooms and the 4 far zones (each storey's
+    // included and excluded area, docs/adr/8069): the 72 bodies an independent reader shows of the file. The zones are
+    // see-through volumes like the rooms.
+    assert_eq!((bodies, rooms, zones), (58, 10, 4), "the section building's elements, rooms and zones");
     assert_eq!(storeys, 2);
+    // The viewer's panes: the tree and the details beside the scene, the model's schema in the status bar.
+    let b = app.scene3d_window.as_ref().and_then(|w| w.building.as_ref()).expect("a building");
+    assert!(!b.viewer.rows().is_empty(), "the tree");
+    assert!(b.viewer.facts.iter().any(|(words, _)| words.starts_with("IFC4")), "{:?}", b.viewer.facts);
     // A storey hidden takes its bodies away; the rooms hidden take the pale volumes away; both come back.
     send(&mut app, W::Storey(storeys - 1));
     let w = app.scene3d_window.as_ref().expect("the window");
-    assert!(w.scene_sources() < bodies + rooms);
+    assert!(w.scene_sources() < all);
     send(&mut app, W::Storey(storeys - 1));
     send(&mut app, W::Rooms);
     let w = app.scene3d_window.as_ref().expect("the window");
-    assert_eq!(w.scene_sources(), bodies);
+    assert_eq!(w.scene_sources(), all - room_bodies);
     assert!(!w.scene_parts().contains(&ROOM));
     send(&mut app, W::Rooms);
-    assert_eq!(app.scene3d_window.as_ref().expect("the window").scene_sources(), bodies + rooms);
+    assert_eq!(app.scene3d_window.as_ref().expect("the window").scene_sources(), all);
     // The building is seen as it is: no vertical exaggeration.
     assert_eq!(app.scene3d_window.as_ref().expect("the window").exaggeration().factor, 1.0);
 }
@@ -145,7 +163,10 @@ fn a_click_on_a_wall_selects_it_in_the_plan_and_the_plan_s_selection_shows_in_3d
     assert_eq!(app.selection.ids().to_vec(), vec![slot], "the wall selected in the plan");
     let w = app.scene3d_window.as_ref().expect("the window");
     assert_eq!(w.parts_of(&wall), vec![SELECTED], "the wall drawn selected");
-    assert!(w.picked.as_ref().is_some_and(|p| p.what.starts_with("Duvar")), "{:?}", w.picked);
+    let v = w.building.as_ref().and_then(|b| b.viewer.view()).expect("the model shown");
+    let chosen = v.selected().expect("chosen in the viewer");
+    assert_eq!(v.input().objects[chosen].class, "IfcWall");
+    assert!(w.building.as_ref().and_then(|b| b.viewer.details()).is_some(), "its details read from the model");
     // The sky empties the selection, as a click on nothing in the plan does.
     send(&mut app, W::Pick(2.0, 2.0, 1240.0, 560.0));
     assert!(app.selection.ids().is_empty());
@@ -177,6 +198,50 @@ fn a_click_on_a_wall_selects_it_in_the_plan_and_the_plan_s_selection_shows_in_3d
     let w = app.scene3d_window.as_ref().expect("the window");
     assert_eq!(w.building.as_ref().expect("a building").bodies(), before - 1);
     assert!(w.parts_of(&wall).is_empty(), "the wall is gone from 3D");
+}
+
+#[test]
+fn an_edit_makes_the_model_again_and_the_view_stays() {
+    let mut app = open(building());
+    let _ = app.update(Message::Run("scene3d.view"));
+    // The view as the user left it: turned, the ground storey hidden, a search typed, a level cut.
+    send(&mut app, W::View(2));
+    send(&mut app, W::Storey(0));
+    send(&mut app, W::Viewer(kentos_model_view_ui::Message::Search("kolon".into())));
+    send(&mut app, W::Viewer(kentos_model_view_ui::Message::Cut(kentos_model_view::Cut::Level)));
+    let before = {
+        let b = app.scene3d_window.as_ref().and_then(|w| w.building.as_ref()).expect("a building");
+        (b.viewer.orbit, b.viewer.query.clone(), b.viewer.section, b.viewer.found().len(), b.bodies())
+    };
+    // A column deleted, as an undo would while the window is open.
+    let column = {
+        let snap = app.document.as_ref().expect("the building").model.to_snapshot_v2();
+        snap.entities.iter().zip(&snap.uids).find(|(e, _)| matches!(e, Entity::Column(_))).map(|(_, u)| u.to_string()).expect("a column")
+    };
+    let doc = &mut app.document.as_mut().expect("the building").model;
+    let answer = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(doc),
+        "cad.entities.delete",
+        kentos_commands::CallOp::Execute,
+        serde_json::json!({"uids": [column]}),
+    )
+    .expect("deletes the column");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    send(&mut app, W::Legend);
+    let b = app.scene3d_window.as_ref().and_then(|w| w.building.as_ref()).expect("a building");
+    assert_eq!(b.bodies(), before.4 - 1, "made again from the drawing");
+    assert_eq!(b.viewer.orbit, before.0, "the camera stays");
+    assert_eq!(b.viewer.query, before.1, "the search stays");
+    assert_eq!(b.viewer.section, before.2, "the section stays");
+    assert_eq!(b.viewer.found().len(), before.3 - 1, "the search finds one column fewer");
+    assert_eq!(b.storeys_count(), 2);
+    let w = app.scene3d_window.as_ref().expect("the window");
+    assert!(w.parts_of(&column).is_empty(), "the column is gone from 3D");
+    // The ground storey still hidden, by its key.
+    let hidden = b.viewer.view().map(|v| {
+        v.input().objects.iter().enumerate().filter(|(i, o)| o.category == Category::Storey && v.is_hidden(*i)).count()
+    });
+    assert_eq!(hidden, Some(1), "the storey hidden stays hidden");
 }
 
 /// The section building with a 1 m square room drawn about the centre of its first rectangular room, on that room's
@@ -249,6 +314,7 @@ fn two_rooms_of_one_storey_that_share_ground_are_found_and_red_in_3d() {
     assert!(b.legend().iter().any(|(name, _)| *name == "Bulgulu mahal"));
     assert!(!w.scene_parts().contains(&FOUND), "only the rooms found: {:?}", w.scene_parts());
     assert_eq!(b.found_shown(), 2, "the status bar's findings");
+    assert!(b.viewer.facts.iter().any(|(words, _)| words == "2 nesnede bulgu"), "{:?}", b.viewer.facts);
 }
 
 /// The overlap's row chosen in Denetim, as a click on it chooses it.
@@ -267,10 +333,10 @@ fn choose_the_overlap(app: &mut App) {
     app.arch.arch_audit.selected = Some(at);
 }
 
-/// The building in 3D, wide and light, narrow and dark: the ribbon's place of 3B görünüm, the bodies from two sides, a
-/// wall clicked and selected in the plan, the ground storey alone, the overlapping rooms red after Denetle and the
-/// finding in Denetim; the pictures are the renderer's own (KENTOS_SNAPSHOT_BACKEND=wgpu);
-/// `.run/gui-evidence/bina-3b-8067/`:
+/// The building in 3D, wide and light, narrow and dark: the ribbon's place of 3B görünüm, the viewer with its tree and
+/// details (docs/adr/8119) beside the plan and over the drawing, Katlar ▾, the bodies from two sides, a wall clicked and
+/// selected in the plan, the ground storey alone, the overlapping rooms red after Denetle and the finding in Denetim;
+/// the pictures are the renderer's own (KENTOS_SNAPSHOT_BACKEND=wgpu); `.run/gui-evidence/bina-3b-8067/`:
 ///
 /// ```text
 /// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib scene3d_building_tests::screens -- --ignored --nocapture
@@ -307,23 +373,28 @@ fn screens() {
         shot(&mut app, "2-kuzeydogu");
         let seen = *app.scene3d_window.as_ref().expect("the window").seen.lock().expect("seen");
         assert!(seen.tiles > 0 && seen.triangles > 0 && seen.waiting == 0, "{seen:?}");
+        // Over the drawing (Ana pencereye al), then beside the plan again: the same viewer in a window of the main one.
+        use crate::windows::{Event as Windows, Surface};
+        let _ = app.update(Message::Windows(Windows::Apart(Surface::Scene3d, false)));
+        shot(&mut app, "2c-cizimin-ustunde");
+        let _ = app.update(Message::Windows(Windows::Apart(Surface::Scene3d, true)));
         if name == "acik" {
-            // Katlar ▾ open on the strip (its button the third, after Görünüş and Sığdır), the 1. kat unticked from it;
-            // a click on the strip's empty middle closes it.
+            // Katlar ▾ open on the strip (its button at the strip's end, before Ana pencereye al), the 1. kat
+            // unticked from it; a click on the strip's empty middle (after Kesit ▾) closes it.
             use kentos_ui::snapshot::Input;
             let mut update = |app: &mut App, message| {
                 let _ = app.update(message);
             };
             let mut menu = Snapshot::new(size).expect("a renderer");
             menu.settle(&mut app, App::scene3d_shown, &mut update);
-            menu.input(&mut app, App::scene3d_shown, &mut update, Input::Click(iced::Point::new(245.0, 15.0)));
+            menu.input(&mut app, App::scene3d_shown, &mut update, Input::Click(iced::Point::new(1355.0, 15.0)));
             send(&mut app, W::Storey(1));
             menu.settle(&mut app, App::scene3d_shown, &mut update);
             menu.settle(&mut app, App::scene3d_shown, &mut update);
             let file = out.join(format!("2b-katlar-menusu-{name}.png"));
             menu.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
             println!("{}", file.display());
-            menu.input(&mut app, App::scene3d_shown, &mut update, Input::Click(iced::Point::new(800.0, 15.0)));
+            menu.input(&mut app, App::scene3d_shown, &mut update, Input::Click(iced::Point::new(1150.0, 15.0)));
             send(&mut app, W::Storey(1));
             send(&mut app, W::View(1));
             shot(&mut app, "3-guneybati");

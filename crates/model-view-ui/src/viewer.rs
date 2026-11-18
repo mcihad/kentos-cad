@@ -121,6 +121,10 @@ pub struct Viewer {
     /// The side panels' widths as dragged; none: their default.
     pub tree_width: Option<f32>,
     pub details_width: Option<f32>,
+    /// The scene's width to its height as it last drew (0: not drawn yet), and whether the model loaded before it was
+    /// is to be fitted again to it (docs/adr/8119): a narrow scene sees less across than up and down.
+    aspect: f64,
+    refit: bool,
     pub seen: Arc<Mutex<Seen>>,
     pub(crate) pending: Arc<AtomicBool>,
 }
@@ -153,6 +157,8 @@ impl Viewer {
             query: String::new(),
             tree_width: None,
             details_width: None,
+            aspect: 0.0,
+            refit: false,
             seen: Arc::default(),
             pending: Arc::default(),
         }
@@ -188,6 +194,35 @@ impl Viewer {
         self.section = Section::None;
         self.rebuild();
         self.look(0);
+        // Fitted again by the scene's shape once it draws, unless the user moves first.
+        self.refit = self.aspect <= 0.0;
+    }
+
+    /// The same source read again (the drawing edited, docs/adr/8119): the camera, the tree's open branches, the panel,
+    /// the search, the section, the toggles and the side panes stay; the hidden, isolated, chosen and found objects stay
+    /// by their keys ([`View::carried`]). The chosen object after it, whose details the host reads again; none before
+    /// the first model, which is loaded as [`Viewer::load`] does.
+    pub fn reload(&mut self, input: Input, facts: Vec<(String, String)>) -> Option<usize> {
+        let Some(old) = self.view.as_ref() else {
+            self.load(input, facts);
+            return None;
+        };
+        let view = old.carried(input);
+        let chosen = view.selected();
+        self.view = Some(view);
+        self.facts = facts;
+        self.stage = Stage::Shown;
+        self.details = None;
+        self.picked = None;
+        // A plane kept inside the model's span as it is now.
+        if let Section::Plane { cut, at, .. } = self.section
+            && let Some((lo, hi)) = self.span(cut)
+            && let Section::Plane { at: now, .. } = &mut self.section
+        {
+            *now = at.clamp(lo, hi);
+        }
+        self.rebuild();
+        chosen
     }
 
     pub fn view(&self) -> Option<&View> {
@@ -273,7 +308,7 @@ impl Viewer {
             Message::Focus => {
                 let b = self.view.as_ref().and_then(|v| v.selected().map(|o| v.bounds_under(o)));
                 if let Some(b) = b.filter(|b| !b.is_empty()) {
-                    self.orbit.fit(&b, &Exaggeration::NONE, 1.0);
+                    self.orbit.fit_in(&b, &Exaggeration::NONE, 1.0, self.aspect);
                 }
             }
             Message::North => self.orbit.north(),
@@ -370,7 +405,19 @@ impl Viewer {
     }
 
     fn gesture(&mut self, g: Gesture) -> Option<Out> {
+        if !matches!(g, Gesture::Size(..)) {
+            // The user moved: the model stays where they put it.
+            self.refit = false;
+        }
         match g {
+            Gesture::Size(width, height) => {
+                if width > 0.0 && height > 0.0 {
+                    self.aspect = f64::from(width) / f64::from(height);
+                }
+                if std::mem::take(&mut self.refit) {
+                    self.look(self.orbit.preset().unwrap_or(0));
+                }
+            }
             Gesture::Orbit(dx, dy) => self.orbit.orbit(f64::from(dx), f64::from(dy)),
             Gesture::Pan(dx, dy) => self.orbit.pan(f64::from(dx), f64::from(dy)),
             Gesture::Dolly(steps) => self.orbit.dolly(f64::from(steps)),
@@ -446,12 +493,12 @@ impl Viewer {
 
     fn look(&mut self, i: usize) {
         let b = self.scene.bounds();
-        self.orbit.look(i, &b, &Exaggeration::NONE, 1.0);
+        self.orbit.look_in(i, &b, &Exaggeration::NONE, 1.0, self.aspect);
     }
 
     fn fit(&mut self) {
         let b = self.scene.bounds();
-        self.orbit.fit(&b, &Exaggeration::NONE, 1.0);
+        self.orbit.fit_in(&b, &Exaggeration::NONE, 1.0, self.aspect);
     }
 }
 
@@ -500,6 +547,7 @@ mod tests {
             ],
             bodies: vec![BodyIn { object: 2, positions: a, triangles: ta }, BodyIn { object: 3, positions: b, triangles: tb }],
             not_shown: Vec::new(),
+            apart: None,
         }
     }
 

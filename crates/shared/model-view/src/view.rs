@@ -59,6 +59,32 @@ impl View {
         }
     }
 
+    /// A view of `input` (the same source read again: the drawing edited) that keeps this one's state by the objects'
+    /// keys: the hidden and isolated objects, the chosen one, the found ones, and whether the spaces and the openings
+    /// show (docs/adr/8119). A key the new input lacks is dropped.
+    pub fn carried(&self, input: Input) -> View {
+        let mut next = View::new(input);
+        let index: std::collections::HashMap<&str, usize> =
+            next.input.objects.iter().enumerate().map(|(i, o)| (o.key.as_str(), i)).collect();
+        let moved = |set: &BTreeSet<usize>| -> BTreeSet<usize> {
+            set.iter()
+                .filter_map(|&i| self.input.objects.get(i))
+                .filter_map(|o| index.get(o.key.as_str()).copied())
+                .collect()
+        };
+        let hidden = moved(&self.hidden);
+        let isolated = self.isolated.as_ref().map(&moved).filter(|s| !s.is_empty());
+        let found = moved(&self.found);
+        let selected = self.selected.and_then(|i| self.input.objects.get(i)).and_then(|o| index.get(o.key.as_str()).copied());
+        next.hidden = hidden;
+        next.isolated = isolated;
+        next.found = found;
+        next.selected = selected;
+        next.spaces = self.spaces;
+        next.openings = self.openings;
+        next
+    }
+
     pub fn input(&self) -> &Input {
         &self.input
     }
@@ -181,6 +207,8 @@ impl View {
             if space { parts::FOUND_SPACE } else { parts::FOUND }
         } else if self.selected == Some(object) {
             if space { parts::SELECTED_SPACE } else { parts::SELECTED }
+        } else if self.input.is_apart(object) {
+            parts::UNDERLAY
         } else {
             parts::of(self.input.objects[object].category)
         }
@@ -269,6 +297,7 @@ pub(crate) mod tests {
                 BodyIn { object: 4, positions: cube(10.0), triangles: tri },
             ],
             not_shown: Vec::new(),
+            apart: None,
         }
     }
 
@@ -310,6 +339,52 @@ pub(crate) mod tests {
         let names: Vec<&str> = v.legend().iter().map(|l| l.0).collect();
         assert_eq!(names, ["Duvar", "Seçili", "Bulgulu mahal"]);
         assert_eq!(v.find("duvar-2"), Some(3));
+    }
+
+    /// The drawing edited: a wall gone, another added; what was hidden, chosen and found stays by its key.
+    #[test]
+    fn a_model_read_again_keeps_the_view_by_its_keys() {
+        let mut v = View::new(small());
+        v.hide([3]);
+        v.select(Some(2));
+        v.set_found([4]);
+        v.spaces = false;
+        let mut again = small();
+        // duvar-1 gone, a new wall at the end: every other object one place earlier.
+        again.objects.remove(2);
+        for o in &mut again.objects {
+            o.parent = o.parent.map(|p| if p > 2 { p - 1 } else { p });
+        }
+        again.bodies.remove(0);
+        for b in &mut again.bodies {
+            b.object -= 1;
+        }
+        again.objects.push(ObjectIn { key: "duvar-3".into(), class: "Wall".into(), label: "duvar-3".into(), category: Category::Wall, parent: Some(1), storey: None });
+        let next = v.carried(again);
+        assert_eq!(next.find("duvar-2"), Some(2));
+        assert!(next.is_hidden(2), "duvar-2 still hidden at its new place");
+        assert_eq!(next.selected(), None, "the chosen wall is gone");
+        assert_eq!(next.found().iter().copied().collect::<Vec<_>>(), [3], "the room found at its new place");
+        assert!(!next.spaces);
+    }
+
+    /// An underlay's model beside the drawing's: its indices after the drawing's, its keys apart, its root a root.
+    #[test]
+    fn a_second_model_is_appended_apart() {
+        let mut input = small();
+        input.append(small(), "altlik:1:");
+        assert_eq!(input.objects.len(), 10);
+        assert_eq!(input.objects[7].key, "altlik:1:duvar-1");
+        assert_eq!(input.objects[7].parent, Some(6));
+        assert_eq!(input.bodies[3].object, 7);
+        assert_eq!(input.apart, Some(5));
+        let v = View::new(input);
+        assert_eq!(v.roots(), [0, 5]);
+        assert_eq!(v.find("duvar-1"), Some(2), "the drawing's own key is the drawing's");
+        let parts: Vec<(usize, Part)> = v.sources().iter().map(|s| (s.object, s.part)).collect();
+        assert_eq!(parts[0], (2, 0), "the drawing's wall its class's colour");
+        assert_eq!(parts[3], (7, parts::UNDERLAY), "the underlay's wall violet");
+        assert!(v.legend().iter().any(|l| l.0 == "Altlık model"));
     }
 
     #[test]

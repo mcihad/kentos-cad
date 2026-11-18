@@ -1,10 +1,11 @@
-//! 3B görünüm's look (DESIGN.md §7.20; docs/adr/8060 §9, docs/adr/8067 §9): the model is what the window is for, so
-//! the scene takes all the room between two thin bands in the main window's own vocabulary. Over it, one tool strip:
-//! the camera (Görünüş ▾ with the four views, Sığdır), then what shows (a building's Katlar ▾ and Mahaller; a road's
-//! exaggeration and terrain switches), then at its end what the window does (glTF ver, Ana pencereye al). In the
-//! scene, the north arrow at the top right turns with the camera and turns it north when pressed (DESIGN.md §8), and
-//! the legend folds at the bottom left. Under it, a status bar: the point clicked and what it is on, how much the
-//! scene shows (its triangles and tiles in the tip), the objects the check found something about, the mouse's help.
+//! 3B görünüm's look (DESIGN.md §7.20; docs/adr/8060 §9, docs/adr/8067 §9, 8119): the model is what the window is
+//! for, so the scene takes all the room between two thin bands in the main window's own vocabulary. A building is the
+//! model viewer's layout (DESIGN.md §7.21: the tree with its search at the left, the details at the right, the section's
+//! card in the scene), Katlar ▾ and Ana pencereye al at its strip's end. A road's: over the scene one tool strip, the
+//! camera (Görünüş ▾ with the four views, Sığdır), then the exaggeration and the terrain switches, then at its end what
+//! the window does (glTF ver, Ana pencereye al). In the scene, the north arrow at the top right turns with the camera
+//! and turns it north when pressed (DESIGN.md §8), and the legend folds at the bottom left. Under it, a status bar: the
+//! point clicked and what it is on, how much the scene shows (its triangles and tiles in the tip), the mouse's help.
 //!
 //! Beside the plan it is the whole of an operating-system window, through the windows' contract ([`View3d`],
 //! shell/windows/surface.rs, docs/adr/8060 §10); over the drawing it is a window like the others, its header carrying
@@ -93,23 +94,26 @@ impl OwnWindow for View3d {
 
 impl App {
     /// Over the drawing: a window like the others, its strip, scene and bar framed as one viewer. The scene takes
-    /// what the application window leaves (between 300 and 640 scaled pixels), all of the window's room when it was
-    /// given a size or made full screen (docs/adr/0746).
+    /// what the application window leaves (between 300 and 640 scaled pixels; a building's panes between 420 and
+    /// 760), all of the window's room when it was given a size or made full screen (docs/adr/0746).
     pub(crate) fn scene3d_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.scene3d_window else {
             return space().into();
         };
         let sized = kentos_ui::widget::sizable::sizes::get(TITLE).is_some();
-        let room =
-            (self.window_size.height - typography::scaled(270.0)).clamp(typography::scaled(300.0), typography::scaled(640.0));
-        let viewer = container(column![self.scene3d_strip(w, false), strip::rule(), self.scene3d_scene(w), self.scene3d_status(w)])
+        let (low, high) = if w.building.is_some() { (420.0, 760.0) } else { (300.0, 640.0) };
+        let room = (self.window_size.height - typography::scaled(270.0))
+            .clamp(typography::scaled(low), typography::scaled(high));
+        let viewer = container(self.scene3d_body(w, false))
             .height(Fill)
             .max_height(if sized { f32::INFINITY } else { room })
             .style(|t: &Theme| container::Style {
                 border: Border { color: Tokens::of(t).border, width: 1.0, radius: 0.0.into() },
                 ..container::Style::default()
             });
-        crate::windows::placed(Frame::new(TITLE).fill(viewer).width(1180.0), SURFACE, false, msg(Event::Close))
+        // A building's tree and details take 600 pixels of it: the scene keeps the road's room beside them.
+        let width = if w.building.is_some() { 1280.0 } else { 1180.0 };
+        crate::windows::placed(Frame::new(TITLE).fill(viewer).width(width), SURFACE, false, msg(Event::Close))
     }
 
     /// Beside the plan: the whole of its own window, the strip at the top, the bar at the bottom, the scene between.
@@ -117,7 +121,7 @@ impl App {
         let Some(w) = &self.scene3d_window else {
             return space().into();
         };
-        container(column![self.scene3d_strip(w, true), strip::rule(), self.scene3d_scene(w), self.scene3d_status(w)])
+        container(self.scene3d_body(w, true))
             .width(Fill)
             .height(Fill)
             .style(|t: &Theme| container::Style {
@@ -127,8 +131,23 @@ impl App {
             .into()
     }
 
-    /// The tool strip: the camera, what shows, then at its end what the window does. A narrow window wraps the first
-    /// two groups; the end stays at the right.
+    /// What the window holds: a building's viewer, else the road's strip, scene and bar.
+    fn scene3d_body<'a>(&'a self, w: &'a Window, apart: bool) -> Element<'a, Message> {
+        match &w.building {
+            Some(b) => {
+                let mut end = vec![b.storeys_menu()];
+                if apart {
+                    end.push(strip::divider());
+                    end.push(crate::windows::return_button(SURFACE));
+                }
+                b.viewer.layout(self.viewer_host(|m| msg(Event::Viewer(m)), end))
+            }
+            None => column![self.scene3d_strip(w, apart), strip::rule(), self.scene3d_scene(w), self.scene3d_status(w)].into(),
+        }
+    }
+
+    /// The road's tool strip: the camera, what shows, then at its end what the window does. A narrow window wraps the
+    /// first two groups; the end stays at the right.
     fn scene3d_strip<'a>(&'a self, w: &'a Window, apart: bool) -> Element<'a, Message> {
         let orbit = w.orbit;
         let mut left: Vec<Element<'a, Message>> = vec![
@@ -146,63 +165,46 @@ impl App {
             ),
             strip::divider(),
         ];
-        match &w.building {
-            Some(b) => {
-                left.push(b.storeys_menu());
-                left.push(b.rooms_toggle());
-            }
-            None => {
-                left.push(container(label::body(EXAGGERATION).style(muted)).padding([0, 6]).into());
-                left.push(
-                    tip(
-                        kentos_ui::widget::text_field("1", &w.exaggeration)
-                            .on_input(|t| msg(Event::Exaggeration(t)))
-                            .width(typography::scaled(46.0)),
-                        Tip::new(EXAGGERATION).body(
-                            "Yükseklikler bu kat büyük gösterilir, sahnenin en alçak noktasından; yüzeylerin kotları değişmez.",
-                        ),
-                        tooltip::Position::Bottom,
-                    ),
-                );
-                left.push(space().width(4).into());
-                left.push(strip::divider());
-                left.push(strip::toggle(
-                    None,
-                    CUT,
-                    "Araziyi kes: koridorların kazdığı ve doldurduğu yerde araziyi çizmez; kapalıyken arazi koridorun üstünden geçer.",
-                    w.cut,
-                    msg(Event::Cut),
-                ));
-                left.push(strip::toggle(
-                    None,
-                    FLAT,
-                    "Düz yüzler: araziyi üçgenleriyle gösterir; kapalıyken arazi yumuşak gölgelenir.",
-                    w.flat,
-                    msg(Event::Flat),
-                ));
-                left.push(strip::toggle(
-                    None,
-                    SEE_THROUGH,
-                    "Arazi saydam: koridorların ve şevlerin altındaki araziyi saydam gösterir.",
-                    w.see_through,
-                    msg(Event::SeeThrough),
-                ));
-            }
-        }
-        let mut end = Row::new().spacing(1).align_y(Center);
-        if w.building.is_none() {
-            end = end.push(strip::labelled(
-                crate::icons::from_web(Some("gltfExport")),
-                EXPORT,
-                "glTF ver: arazi yüzeylerini ve koridorları bir glTF dosyasına yazar.",
-                Some(msg(Event::Export)),
-            ));
-        }
+        left.push(container(label::body(EXAGGERATION).style(muted)).padding([0, 6]).into());
+        left.push(tip(
+            kentos_ui::widget::text_field("1", &w.exaggeration)
+                .on_input(|t| msg(Event::Exaggeration(t)))
+                .width(typography::scaled(46.0)),
+            Tip::new(EXAGGERATION)
+                .body("Yükseklikler bu kat büyük gösterilir, sahnenin en alçak noktasından; yüzeylerin kotları değişmez."),
+            tooltip::Position::Bottom,
+        ));
+        left.push(space().width(4).into());
+        left.push(strip::divider());
+        left.push(strip::toggle(
+            None,
+            CUT,
+            "Araziyi kes: koridorların kazdığı ve doldurduğu yerde araziyi çizmez; kapalıyken arazi koridorun üstünden geçer.",
+            w.cut,
+            msg(Event::Cut),
+        ));
+        left.push(strip::toggle(
+            None,
+            FLAT,
+            "Düz yüzler: araziyi üçgenleriyle gösterir; kapalıyken arazi yumuşak gölgelenir.",
+            w.flat,
+            msg(Event::Flat),
+        ));
+        left.push(strip::toggle(
+            None,
+            SEE_THROUGH,
+            "Arazi saydam: koridorların ve şevlerin altındaki araziyi saydam gösterir.",
+            w.see_through,
+            msg(Event::SeeThrough),
+        ));
+        let mut end = Row::new().spacing(1).align_y(Center).push(strip::labelled(
+            crate::icons::from_web(Some("gltfExport")),
+            EXPORT,
+            "glTF ver: arazi yüzeylerini ve koridorları bir glTF dosyasına yazar.",
+            Some(msg(Event::Export)),
+        ));
         if apart {
-            if w.building.is_none() {
-                end = end.push(strip::divider());
-            }
-            end = end.push(crate::windows::return_button(SURFACE));
+            end = end.push(strip::divider()).push(crate::windows::return_button(SURFACE));
         }
         strip::surface(
             row![Row::with_children(left).spacing(1).align_y(Center).width(Fill).wrap().vertical_spacing(4), end]
@@ -211,8 +213,8 @@ impl App {
         )
     }
 
-    /// The scene on its sky, the picked point ringed, the north arrow at the top right and the legend at the bottom
-    /// left (crates/model-view-ui's look, the IFC viewer's too).
+    /// The road's scene on its sky, the picked point ringed, the north arrow at the top right and the legend at the
+    /// bottom left (crates/model-view-ui's look, the IFC viewer's too).
     fn scene3d_scene<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
         let view = SceneView {
             scene: w.scene.clone(),
@@ -225,10 +227,7 @@ impl App {
             seen: w.seen.clone(),
             pending: w.pending.clone(),
         };
-        let swatches: Vec<(&str, [f32; 4])> = match &w.building {
-            Some(b) => b.legend(),
-            None => PARTS.iter().map(|(name, c)| (*name, [c[0], c[1], c[2], 1.0])).collect(),
-        };
+        let swatches: Vec<(&str, [f32; 4])> = PARTS.iter().map(|(name, c)| (*name, [c[0], c[1], c[2], 1.0])).collect();
         look::framed(
             scene::view(view, gesture),
             look::compass(&w.orbit, msg(Event::North)),
@@ -238,8 +237,8 @@ impl App {
         )
     }
 
-    /// The status bar: the point clicked and what it is on (else what a click does), then at the right how much the
-    /// scene shows, the objects with findings and the mouse's help.
+    /// The road's status bar: the point clicked and what it is on (else what a click does), then at the right how much
+    /// the scene shows and the mouse's help.
     fn scene3d_status<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
         let mut bar = StatusBar::new();
         bar = match &w.picked {
@@ -264,36 +263,17 @@ impl App {
                 )
             }
             None => bar.push(
-                Readout::new(label::body(if w.building.is_some() {
-                    "Bir nesneye tıklayın: planda seçilir, adı ve yeri burada yazar."
-                } else {
-                    "Bir noktaya tıklayın: yeri ve neyin üstünde olduğu burada yazar."
-                })
-                .style(muted))
-                .icon(Icon::Crosshair),
+                Readout::new(label::body("Bir noktaya tıklayın: yeri ve neyin üstünde olduğu burada yazar.").style(muted))
+                    .icon(Icon::Crosshair),
             ),
         };
         bar = bar.spacer();
-        let things = match &w.building {
-            Some(b) => b.counted(),
-            None => format!("{} yüzey ve koridor", w.scene.sources()),
-        };
+        let things = format!("{} yüzey ve koridor", w.scene.sources());
         bar = bar.push(Readout::new(label::body(things.clone())).tip(Tip::new(things).body(format!(
             "Sahne {} üçgen, {} karodur; yalnız ekranda görünen karolar çizilir.",
             w.scene.triangles(),
             w.scene.contents()
         ))));
-        if let Some(found) = w.building.as_ref().map(|b| b.found_shown()).filter(|n| *n > 0) {
-            bar = bar.separator().push(
-                Readout::new(label::body(format!("{found} nesnede bulgu")).style(|t: &Theme| iced::widget::text::Style {
-                    color: Some(Tokens::of(t).danger),
-                }))
-                .icon(Icon::Warning)
-                .tip(Tip::new("Denetim bulguları").body(
-                    "Denetim'de seçilen bulguların nesneleri kırmızıdır; satır seçilmemişse listelenen bütün bulguların. Çizim değişince bulgular Denetle'ye dek gösterilmez.",
-                )),
-            );
-        }
         bar.separator()
             .push(Readout::new(label::body("Fare")).icon(Icon::Help).tip(Tip::new("Fareyle gezinme").body(
                 "Sürükleyin: döndürür. Sağ tuşla ya da Shift ile sürükleyin: kaydırır. Tekerlek: yaklaştırır, uzaklaştırır. Tıklayın: noktayı ve nesneyi seçer.",
@@ -320,6 +300,7 @@ fn gesture(g: Gesture) -> Message {
         Gesture::Pan(dx, dy) => Event::Pan(dx, dy),
         Gesture::Dolly(steps) => Event::Dolly(steps),
         Gesture::Pick(x, y, width, height) => Event::Pick(x, y, width, height),
+        Gesture::Size(width, height) => Event::Sized(width, height),
     })
 }
 

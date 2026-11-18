@@ -189,7 +189,9 @@ mod tests {
             assert!(g.title.starts_with(&s.name));
             assert_eq!(g.lines.len(), s.values.len());
         }
-        assert_eq!(value("Malzeme"), Some("Tuğla"), "its layer set's material");
+        // Its layer set by its name: four layers since the wall types (docs/adr/8105; the fixture written again with
+        // them, docs/adr/8117), one (Tuğla) before.
+        assert_eq!(value("Malzeme"), Some("Dış duvar 25"), "its layer set");
         // A quantity is a number as written with the project's unit for its measure.
         let quantities = d.groups.iter().find(|g| g.title == "Qto_WallBaseQuantities").expect("the wall's quantities");
         let at = |name: &str| quantities.lines.iter().find(|l| l.name == name).expect(name);

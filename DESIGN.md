@@ -650,31 +650,38 @@ pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
 ### 7.20 3B görünüm
 
 Binanın ya da yol projesinin 3B görünümü ([ADR 8067](docs/adr/8067-building-3d-view-and-room-overlaps.md) §9,
-[ADR 8060](docs/adr/8060-secondary-os-windows.md) §9). Pencerenin işi modeli göstermektir: sahne iki ince bandın
-arasındaki bütün yeri alır, bantlar ana pencerenin kendi diliyle çizilir.
+[ADR 8060](docs/adr/8060-secondary-os-windows.md) §9, [ADR 8119](docs/adr/8119-building-3d-in-the-model-viewer.md)).
+Pencerenin işi modeli göstermektir: sahne iki ince bandın arasındaki bütün yeri alır, bantlar ana pencerenin kendi
+diliyle çizilir.
 
 - **Yer:** kendiliğinden işletim sisteminin ayrı penceresinde, planın yanında açılır (başka bir ekrana taşınır, ana pencere
   serbesttir). Araç şeridinin sonundaki “Ana pencereye al” onu çizimin üstüne, başlığında “Ayrı pencerede aç” olan sıradan
   bir pencereye getirir; seçim hatırlanır. Çizimin üstündeyken şerit, sahne ve durum çubuğu tek çerçevede durur.
-- **Araç şeridi** (`style::strip`, §7.14'teki şeritle aynı): solda kamera (“Görünüş ▾”: dört bakış ve Kuzeye bak; yüzü
-  o anki bakışın adı, döndürünce “Görünüş”; “Sığdır”), ince ayraç, sonra görünenler: binada “Katlar ▾” (menü açıkken art
-  arda işaretlenen katlar, gizli kat varken “Bütün katları göster”; yüzü “Katlar 1/2” der) ve “Mahaller” anahtarı; yolda
-  “Düşey abartma” alanı ve “Araziyi kes”, “Düz yüzler”, “Arazi saydam” anahtarları. Sağ uçta pencerenin işleri: “glTF ver”
-  (yol), “Ana pencereye al” (ayrıyken). Her düğmenin adı yazar, ayrıntı ipucundadır; açık anahtar vurgu tonludur.
+- **Bina:** pencere görüntüleyicinin kendisidir (§7.21): solda ağaç ve arama, sağda özellikler, sahnede kesitin kartı,
+  şeridi ve durum çubuğu onunki. Şeridin sağ ucunda “Katlar ▾” (menü açıkken art arda işaretlenen katlar, gizli kat
+  varken “Bütün katları göster”; yüzü “Katlar 1/2” der; ağaçtaki katın gözüyle aynı iştir) ve ayrıyken “Ana pencereye
+  al”. Model çizimden kurulur: dışa aktarımın o an yazacağı IFC bellekte yazılıp okunur. Çizim ya da gösterilen altlıklar
+  değişince yeniden kurulur; bakış, açık dallar, arama, kesit, bölme genişlikleri, gizlenen ve seçilen nesneler yerinde
+  kalır. İlk kurulurken bölmelerin yerinde “Çizimin modeli kuruluyor” yazar. Altlık modeller menekşe rengindedir; ağaçta
+  projeleri adlarıyla “(altlık model)” diye durur. Çizimin üstündeyken pencere 1280 px genişliğindedir.
+- **Yolun araç şeridi** (`style::strip`, §7.14'teki şeritle aynı): solda kamera (“Görünüş ▾”: dört bakış ve Kuzeye bak;
+  yüzü o anki bakışın adı, döndürünce “Görünüş”; “Sığdır”), ince ayraç, “Düşey abartma” alanı ve “Araziyi kes”, “Düz
+  yüzler”, “Arazi saydam” anahtarları. Sağ uçta pencerenin işleri: “glTF ver”, “Ana pencereye al” (ayrıyken). Her düğmenin
+  adı yazar, ayrıntı ipucundadır; açık anahtar vurgu tonludur.
 - **Sahne** kenardan kenara; zemini çizim alanının zeminidir (Görünüm › Çizim zemini), tepeye doğru o zeminin mavisiyle
   biraz koyulaşır; yüksek karşıtlık zemininde düz siyah. Sağ üstte kuzey oku (§8): kamerayla döner, tıklanınca kamera
   kuzeye bakar; ipucu modelin hangi yandan ve kaç derece yukarıdan görüldüğünü yazar. Sol altta lejant (`Legend`, harita
   lejantının kutusu): gösterilen parçalar, sahnedeki renkleriyle yüz biçiminde, kenarı bir ton koyu; saydam parça kendi
   renginde kenarla; başlığı daraltır. Lejant ve kuzey oku imleci üstlerinde tutar: üstlerinde başlayan sürükleme modeli
   döndürmez. Seçilen nokta vurgu renginde halkadır.
-- **Durum çubuğu** (`StatusBar`, §7.7): solda seçilen noktanın nesnesi (“Duvar MM-DVR-Dış_duvar_25, Zemin kat”) ve
-  koordinatları projenin türünün eksen adlarıyla (sayılar eş aralıklı yazıyla), seçim yokken tıklamanın ne yaptığı sönük;
-  sağda gösterilen miktar (“29 yapı elemanı (58 içinden), 6 mahal”; üçgen ve karo sayısı ipucunda), bulgulu nesne varken
-  kırmızı “2 nesnede bulgu”, en sağda “Fare” (gezinme ipucu). “A · B · C” satırı yoktur (§13).
+- **Durum çubuğu** (`StatusBar`, §7.7): solda seçilen noktanın nesnesi ve koordinatları projenin türünün eksen adlarıyla
+  (sayılar eş aralıklı yazıyla), seçim yokken tıklamanın ne yaptığı sönük; sağda gösterilen miktar (yolda “3 yüzey ve
+  koridor”, binada görüntüleyicinin “72/72 gövde”'si; üçgen ve karo sayısı ipucunda), binada şema ve bulgulu nesne varken
+  “2 nesnede bulgu” (ipucunda kırmızının ne olduğu), en sağda “Fare” (gezinme ipucu). “A · B · C” satırı yoktur (§13).
 - **Tuşlar:** ayrı pencerede Esc kapatır, Tab alanlar arasında döner. Pencere kapanınca ya da çizim kapanınca sahne gider.
 - **Ortak parçalar:** sahne, kuzey oku, lejant, gök ve bakışlar menüsü görüntüleyici bileşeninindir
-  (`kentos_model_view_ui::{scene, look}`, [ADR 8073](docs/adr/8073-ifc-viewer-first-slice.md) §2); IFC modeli aynılarını
-  giyer (§7.21). Birinde değişen öbüründe de değişir.
+  (`kentos_model_view_ui::{scene, look}`, [ADR 8073](docs/adr/8073-ifc-viewer-first-slice.md) §2); binanın 3B görünümü
+  bileşenin bütünüdür, IFC modeli de (§7.21). Birinde değişen öbüründe de değişir.
 
 ### 7.21 IFC modeli
 
@@ -691,13 +698,15 @@ Bir IFC dosyasının görüntüleyicisi ([ADR 8073](docs/adr/8073-ifc-viewer-fir
 - **Sol bölme** (300 px, 12 px yazıda): “Yapı | Sınıf | Gösterilemeyen” (kitin bölmeli düğmesi; gösterilemeyen yokken
   üçüncüsü sönük), altında arama (“Ad, sınıf ya da GlobalId ara”, × temizler), altında kitin ağacı, sanal satırlarla.
   Satırın sağında öğe sayısı ve göz; sayısı olmayan satırda da sayı sütunu durur ki gözler tek sütunda kalsın. Gizli satır
-  sönük, seçili satır vurgu zemininde. Açılışta proje, saha ve bina açık, katlar kapalı. Modelde tıklanan nesnenin dalları
+  sönük, seçili satır vurgu zemininde. Katın içermeden başvurduğu zon (emsal zonu) katın altında durur, katla gizlenir.
+  Açılışta proje, saha ve bina açık, katlar kapalı. Modelde tıklanan nesnenin dalları
   açılır. Arama doluyken ağacın yerinde bulunanlar durur: her sözcük adda, sınıfta ya da GlobalId'de (büyük küçük harf ve
   noktalı noktasız i ayrılmaz: “iç” “İç_duvar”ı bulur); satırda adı ve sönük katı (katı yoksa sınıfı); basılan seçilir;
   bulunamazsa ne yazılacağını söyler.
 - **Bölmeler** kenarlarından sürüklenir (kitin tutamağı; sol 200–560, sağ 240–600 px); çift tık varsayılan genişliği
   geri getirir.
-- **Orta:** sahne §7.20'deki gibi (gök, kuzey oku, lejant, seçilen noktanın halkası). Parça renkleri kategorinindir;
+- **Orta:** sahne §7.20'deki gibi (gök, kuzey oku, lejant, seçilen noktanın halkası). Model, eni boyundan kısa sahnede de
+  bütünüyle sığar (ilk açılışta, “Sığdır”da ve görünüşlerde sahnenin biçimine göre). Parça renkleri kategorinindir;
   seçilen turuncu, bulgulu kırmızı; mahal, mekân bölgesi ve açıklık saydam hacimdir ve tıklama içlerinden geçer. Bir şey
   keserken sol üstte kesitin kartı (330 px, lejantın çerçevesi): adı (“Yatay kesit”, “Kuzey–güney düşey kesiti”, “Doğu–batı
   düşey kesiti”, “Seçimin çevresinde kutu”) ve × (“Kesiti kaldır”); düzlemde altında ekseninin adı (Kot ya da projenin doğu

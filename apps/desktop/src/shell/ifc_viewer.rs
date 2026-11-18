@@ -56,9 +56,9 @@ impl std::fmt::Debug for IfcWindow {
 /// A file read: its bytes, the model, the viewer's input and what the status bar says of it.
 #[derive(Debug)]
 pub(crate) struct Read {
-    bytes: Arc<Vec<u8>>,
-    model: Arc<Model>,
-    input: Input,
+    pub(crate) bytes: Arc<Vec<u8>>,
+    pub(crate) model: Arc<Model>,
+    pub(crate) input: Input,
 }
 
 #[derive(Debug, Clone)]
@@ -85,13 +85,20 @@ const BODIES: &str = "Gövdeler üçgenleniyor";
 
 /// Reads the file: the model, its bodies and its openings' volumes, the viewer's input; none when it was stopped.
 fn read(path: &Path, stop: &AtomicBool, tell: &mut dyn FnMut(&'static str)) -> Option<Result<Read, String>> {
-    let cancel = || stop.load(Ordering::Relaxed);
-    let stopped = |e: &ifc::ReadError| matches!(e, ifc::ReadError::Cancelled);
     tell(READING);
     let bytes = match std::fs::read(path) {
         Ok(b) => b,
         Err(e) => return Some(Err(format!("{} okunamadı: {e}. Dosyanın yerini ve okuma iznini denetleyin.", path.display()))),
     };
+    let name = path.file_name().map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned());
+    read_bytes(&name, bytes, stop, tell)
+}
+
+/// Reads a file's `bytes` named `name` (one on disk, or one written in memory: 3B görünüm's drawing, docs/adr/8119):
+/// the model, its bodies and its openings' volumes, the viewer's input; none when it was stopped.
+pub(crate) fn read_bytes(name: &str, bytes: Vec<u8>, stop: &AtomicBool, tell: &mut dyn FnMut(&'static str)) -> Option<Result<Read, String>> {
+    let cancel = || stop.load(Ordering::Relaxed);
+    let stopped = |e: &ifc::ReadError| matches!(e, ifc::ReadError::Cancelled);
     tell(MODEL);
     let model = match ifc::read(&bytes, &Limits::default(), &cancel) {
         Ok(m) => m,
@@ -110,8 +117,7 @@ fn read(path: &Path, stop: &AtomicBool, tell: &mut dyn FnMut(&'static str)) -> O
         Err(e) if stopped(&e) => return None,
         Err(e) => return Some(Err(e.to_string())),
     };
-    let name = path.file_name().map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned());
-    let input = ifc::view::input(&name, &model, &bodies);
+    let input = ifc::view::input(name, &model, &bodies);
     Some(Ok(Read { bytes: Arc::new(bytes), model: Arc::new(model), input }))
 }
 
@@ -315,15 +321,25 @@ impl App {
     /// The viewer, as its host shows it.
     fn ifc_viewer_layout(&self, apart: bool) -> Element<'_, Message> {
         let Some(w) = &self.ifc_viewer else { return space().into() };
-        let f = self.format();
         let end = if apart { vec![crate::windows::return_button(SURFACE)] } else { Vec::new() };
-        // A measured value with the project's decimals by its unit, in the file's unit (not converted).
+        w.viewer.layout(self.viewer_host(|m| msg(Event::Viewer(m)), end))
+    }
+
+    /// What a viewer's host gives it (IFC modeli's, 3B görünüm's building, docs/adr/8119): the drawing area's sky, the
+    /// project's coordinates, and a measured value with the project's decimals by its unit, in the file's unit (not
+    /// converted); `end` at the strip's end.
+    pub(crate) fn viewer_host<'a>(
+        &'a self,
+        to: fn(kentos_model_view_ui::Message) -> Message,
+        end: Vec<Element<'a, Message>>,
+    ) -> Host<'a, Message> {
+        let f = self.format();
         let (length, area) = self.document.as_ref().map_or((3, 2), |d| {
             let s = d.model.settings();
             (s.length_decimals as usize, s.area_decimals as usize)
         });
-        w.viewer.layout(Host {
-            to: |m| msg(Event::Viewer(m)),
+        Host {
+            to,
             end,
             sky: crate::scene3d_window::sky(self.canvas()),
             coordinate: Box::new(move |v| f.coord(v)),
@@ -333,7 +349,7 @@ impl App {
             }),
             east: f.east_label(),
             north: f.north_label(),
-        })
+        }
     }
 
     /// Over the drawing: a window like the others, the viewer framed in it.
@@ -357,46 +373,56 @@ impl App {
     }
 
     pub(crate) fn ifc_viewer_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
-        use kentos_model_view_ui::Message as V;
         let Some(w) = self.ifc_viewer.as_ref() else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
-        let viewer = |m: V| Some(msg(Event::Viewer(m)));
-        Ok(match control {
-            Control::Press("Kapat") => viewer(V::Close),
-            Control::Press("İptal") => viewer(V::Cancel),
-            Control::Press("Sığdır") => viewer(V::Fit),
-            Control::Press("Seçime yaklaş") => viewer(V::Focus),
-            Control::Press("Gizle") => viewer(V::Hide),
-            Control::Press("Yalnız bırak") => viewer(V::Isolate),
-            Control::Press("Hepsini göster") => viewer(V::ShowAll),
-            Control::Press("Mahaller") => viewer(V::Spaces),
-            Control::Press("Açıklıklar") => viewer(V::Openings),
-            Control::Press("Saydam") => viewer(V::SeeThrough),
-            Control::Press("Kuzeye bak") => viewer(V::North),
-            Control::Press("Yatay kesit") => viewer(V::Cut(kentos_model_view::Cut::Level)),
-            Control::Press("Kuzey–güney düşey kesiti") => viewer(V::Cut(kentos_model_view::Cut::NorthSouth)),
-            Control::Press("Doğu–batı düşey kesiti") => viewer(V::Cut(kentos_model_view::Cut::EastWest)),
-            Control::Press("Seçimin çevresinde kutu") => viewer(V::Boxed),
-            Control::Press("Kesiti kaldır") => viewer(V::Uncut),
-            Control::Press("Öbür yanı") => viewer(V::Flip),
-            Control::Press("Yapı") => viewer(V::Panel(kentos_model_view_ui::Panel::Structure)),
-            Control::Press("Sınıf") => viewer(V::Panel(kentos_model_view_ui::Panel::Class)),
-            Control::Press("Gösterilemeyen") => viewer(V::Panel(kentos_model_view_ui::Panel::NotShown)),
-            Control::Press(name) if kentos_model_view::VIEWS.iter().any(|v| v.0 == name) => {
-                viewer(V::View(kentos_model_view::VIEWS.iter().position(|v| v.0 == name).unwrap_or(0)))
-            }
-            Control::Press(name) => {
-                // A tree row by its words: the object chosen.
-                let o = w.viewer.view().and_then(|v| v.input().objects.iter().position(|o| o.label == name));
-                match o {
-                    Some(o) => viewer(V::Choose(Some(o))),
-                    None => return Err(format!("“{TITLE}” penceresinde {name} yok")),
-                }
-            }
-            other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
-        })
+        viewer_control(&w.viewer, control, TITLE).map(|m| Some(msg(Event::Viewer(m))))
     }
+}
+
+/// A trace's control of a viewer in the window titled `title` (IFC modeli's, 3B görünüm's building): the viewer's
+/// message it sends; a tree row by its words chooses its object.
+pub(crate) fn viewer_control(
+    viewer: &Viewer,
+    control: Control<'_>,
+    title: &str,
+) -> Result<kentos_model_view_ui::Message, String> {
+    use kentos_model_view::Cut;
+    use kentos_model_view_ui::{Message as V, Panel};
+    Ok(match control {
+        Control::Press("Kapat") => V::Close,
+        Control::Press("İptal") => V::Cancel,
+        Control::Press("Sığdır") => V::Fit,
+        Control::Press("Seçime yaklaş") => V::Focus,
+        Control::Press("Gizle") => V::Hide,
+        Control::Press("Yalnız bırak") => V::Isolate,
+        Control::Press("Hepsini göster") => V::ShowAll,
+        Control::Press("Mahaller") => V::Spaces,
+        Control::Press("Açıklıklar") => V::Openings,
+        Control::Press("Saydam") => V::SeeThrough,
+        Control::Press("Kuzeye bak") => V::North,
+        Control::Press("Lejant") => V::Legend,
+        Control::Press("Yatay kesit") => V::Cut(Cut::Level),
+        Control::Press("Kuzey–güney düşey kesiti") => V::Cut(Cut::NorthSouth),
+        Control::Press("Doğu–batı düşey kesiti") => V::Cut(Cut::EastWest),
+        Control::Press("Seçimin çevresinde kutu") => V::Boxed,
+        Control::Press("Kesiti kaldır") => V::Uncut,
+        Control::Press("Öbür yanı") => V::Flip,
+        Control::Press("Yapı") => V::Panel(Panel::Structure),
+        Control::Press("Sınıf") => V::Panel(Panel::Class),
+        Control::Press("Gösterilemeyen") => V::Panel(Panel::NotShown),
+        Control::Press(name) if kentos_model_view::VIEWS.iter().any(|v| v.0 == name) => {
+            V::View(kentos_model_view::VIEWS.iter().position(|v| v.0 == name).unwrap_or(0))
+        }
+        Control::Press(name) => {
+            // A tree row by its words: the object chosen.
+            match viewer.view().and_then(|v| v.input().objects.iter().position(|o| o.label == name)) {
+                Some(o) => V::Choose(Some(o)),
+                None => return Err(format!("“{title}” penceresinde {name} yok")),
+            }
+        }
+        other => return Err(format!("“{title}” penceresinde {other} yok")),
+    })
 }
 
 #[cfg(test)]
@@ -433,7 +459,7 @@ impl App {
 }
 
 /// What the schema readout's tip says: the schema, the program that wrote the file, its units.
-fn schema_tip(m: &Model) -> String {
+pub(crate) fn schema_tip(m: &Model) -> String {
     let s = &m.summary;
     let by = s.header.originating_system.as_deref().or(s.header.preprocessor.as_deref()).unwrap_or("bilinmiyor");
     let length = s.units.length.as_ref().map_or_else(|| "yazılmamış".to_owned(), |u| format!("{}{}", u.prefix.as_deref().unwrap_or(""), u.name));

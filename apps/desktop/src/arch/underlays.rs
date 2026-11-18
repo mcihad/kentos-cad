@@ -223,8 +223,8 @@ impl App {
                 Err(why) => State::Failed(why),
             };
         }
+        // 3B görünüm takes the underlays shown when it follows the drawing (scene3d_building.rs).
         self.underlay_plan_follow();
-        self.building3d_underlays();
     }
 
     /// The underlays read and shown, in the drawing's order, with their records.

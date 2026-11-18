@@ -66,4 +66,33 @@ pub struct Input {
     pub objects: Vec<ObjectIn>,
     pub bodies: Vec<BodyIn>,
     pub not_shown: Vec<(usize, String)>,
+    /// The first object of another model appended after the source's own ([`Input::append`]: an underlay beside the
+    /// drawing's model); none: one model.
+    pub apart: Option<usize>,
+}
+
+impl Input {
+    /// `other` after this input: its objects, bodies and objects not shown, their indices moved past this input's and
+    /// their keys under `prefix` (an underlay's model beside the drawing's, docs/adr/8119: two files' GlobalIds stay
+    /// apart). Its roots stay roots of their own; the first appended object is where [`Input::apart`] starts.
+    pub fn append(&mut self, other: Input, prefix: &str) {
+        let base = self.objects.len();
+        self.apart.get_or_insert(base);
+        self.objects.extend(other.objects.into_iter().map(|mut o| {
+            o.key = format!("{prefix}{}", o.key);
+            o.parent = o.parent.map(|p| p + base);
+            o.storey = o.storey.map(|s| s + base);
+            o
+        }));
+        self.bodies.extend(other.bodies.into_iter().map(|mut b| {
+            b.object += base;
+            b
+        }));
+        self.not_shown.extend(other.not_shown.into_iter().map(|(o, why)| (o + base, why)));
+    }
+
+    /// Whether `object` came from a model appended after the source's own.
+    pub fn is_apart(&self, object: usize) -> bool {
+        self.apart.is_some_and(|a| object >= a)
+    }
 }
