@@ -22,6 +22,7 @@ fn element(class: Class, shapes: Vec<Shape>, storey: usize) -> Element {
         material: None,
         psets: Vec::new(),
         qtos: Vec::new(),
+        stand_in: false,
     }
 }
 

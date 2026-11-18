@@ -10,7 +10,10 @@ KentOS code, not KentOS's reading engine) reads KentOS's files and gives the fac
   NOTDEFINED is none, an empty word is none);
 - the standard sets against IFC 4.3's templates, IfcOpenShell's own;
 - the bodies from its own triangulation: heights and plan boxes, a space closed when every edge is two triangles', the
-  ground two spaces of a storey share summed triangle by triangle.
+  ground two spaces of a storey share summed triangle by triangle; a body it cannot make, with why;
+- each product's shape representations as written (identifier, type, a mapped one's the map's, a tessellated one's
+  closure), whether it is a building element (not an opening or a virtual boundary) and what it is a part of: the
+  level of development EK-9/7 reads (docs/adr/8133).
 
 The standards package's form answers them (the rule under test is the same for both readers; the readers are not).
 Writes fixtures/ifc/v1/form/<name>.json: each question's evidence and its findings (code and GlobalIds), which
@@ -140,6 +143,34 @@ def attribute(o, name):
         return None
 
 
+def kind_of(rep, identifier, depth=0):
+    """A shape representation's identifier and type; a mapped one's type that of the representation its first item
+    maps; a tessellated one closed when every face set says so, open when one says not."""
+    t = rep.RepresentationType
+    items = list(rep.Items or [])
+    if t == "MappedRepresentation" and depth < 4 and items and items[0].is_a("IfcMappedItem"):
+        return kind_of(items[0].MappingSource.MappedRepresentation, identifier, depth + 1)
+    closed = None
+    if t == "Tessellation":
+        said = [getattr(i, "Closed", None) for i in items]
+        closed = False if False in said else (None if not said or None in said else True)
+    return {"identifier": identifier, "type": t, "closed": closed}
+
+
+def shapes_of(o):
+    r = getattr(o, "Representation", None)
+    if r is None:
+        return []
+    return [kind_of(x, x.RepresentationIdentifier) for x in r.Representations or []]
+
+
+def parent_of(o):
+    """What it is a part of (IfcRelAggregates, IfcRelNests), by GlobalId."""
+    for rel in list(getattr(o, "Decomposes", None) or []) + list(getattr(o, "Nests", None) or []):
+        return rel.RelatingObject.GlobalId
+    return None
+
+
 def objects_of(f):
     out = []
     for o in f.by_type("IfcRoot"):
@@ -160,6 +191,8 @@ def objects_of(f):
             "predefinedType": predefined, "tag": attribute(o, "Tag"), "storey": storey_of(o),
             "elevation": elevation, "sets": sets, "typeSets": type_sets, "quantities": quantities,
             "typeQuantities": type_quantities, "materials": materials(o),
+            "element": o.is_a("IfcElement") and not o.is_a("IfcFeatureElement") and not o.is_a("IfcVirtualElement"),
+            "shapes": shapes_of(o), "parent": parent_of(o),
         })
     return out
 
@@ -321,13 +354,17 @@ def bodies_of(f, objects):
     settings = ifcopenshell.geom.settings()
     settings.set("use-world-coords", True)
     storeys = {o["globalId"]: o["storey"] for o in objects}
-    bodies, spaces, grounds = [], [], []
+    bodies, spaces, grounds, not_shown = [], [], [], []
     for e in f.by_type("IfcProduct"):
         if e.is_a("IfcOpeningElement") or e.Representation is None:
             continue
         if not any(r.RepresentationIdentifier == "Body" for r in e.Representation.Representations):
             continue
-        shape = ifcopenshell.geom.create_shape(settings, e)
+        try:
+            shape = ifcopenshell.geom.create_shape(settings, e)
+        except RuntimeError as why:
+            not_shown.append({"globalId": e.GlobalId, "reason": str(why)})
+            continue
         v = shape.geometry.verts
         pts = [(v[i], v[i + 1], v[i + 2]) for i in range(0, len(v), 3)]
         tri = shape.geometry.faces
@@ -359,7 +396,7 @@ def bodies_of(f, objects):
             s = sum(shared(t, u) for t in ga for u in gb)
             if s > 0:
                 overlaps.append({"a": a, "b": b, "area": s})
-    return {"bodies": bodies, "spaces": spaces, "overlaps": overlaps}
+    return {"bodies": bodies, "spaces": spaces, "overlaps": overlaps, "notShown": not_shown}
 
 
 def facts(name, path):

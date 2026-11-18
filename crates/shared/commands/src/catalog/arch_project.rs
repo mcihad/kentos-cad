@@ -742,11 +742,11 @@ pub(super) fn descriptors() -> Vec<CommandDescriptor> {
             capabilities: None,
             examples: vec![
                 CommandExample {
-                    title: "Dosya boyutu Evet, notuyla; gelişim seviyesi Evet".into(),
+                    title: "Dosya boyutu Evet, notuyla; emsal hesabı Evet".into(),
                     input: json!({
                         "answers": [
                             { "no": 1, "yes": true, "note": "Bakanlığın sınırı yayımlanmadı" },
-                            { "no": 7, "yes": true }
+                            { "no": 10, "yes": true }
                         ]
                     }),
                     output: None,

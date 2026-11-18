@@ -866,6 +866,12 @@
         "zMin": 2.999999985694885
       }
     ],
+    "notShown": [
+      {
+        "globalId": "2eLiQXeqm7sh029p4imVdf",
+        "reason": "gövdesi boş çıktı"
+      }
+    ],
     "overlaps": [],
     "spaces": [
       {
@@ -1051,6 +1057,7 @@
       "class": "IfcProject",
       "container": null,
       "description": "İki katlı konut, kesit örneği",
+      "element": false,
       "elevation": null,
       "globalId": "3KTQM8C929weaYYtIvLXAW",
       "hasShape": false,
@@ -1066,6 +1073,7 @@
           "ProjectType": "NEWBUILD"
         }
       },
+      "shapes": [],
       "step": 15,
       "storey": null,
       "tag": null,
@@ -1077,6 +1085,7 @@
       "class": "IfcActor",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "3IpFiW8as7XAUB5qHlaeAQ",
       "hasShape": false,
@@ -1088,6 +1097,7 @@
       "predefinedType": null,
       "quantities": {},
       "sets": {},
+      "shapes": [],
       "step": 24,
       "storey": null,
       "tag": null,
@@ -1099,6 +1109,7 @@
       "class": "IfcSite",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": 1285.4,
       "globalId": "0kQKAGaiwENOauEk1Abttm",
       "hasShape": false,
@@ -1139,6 +1150,7 @@
           "TAKS": 0.4
         }
       },
+      "shapes": [],
       "step": 29,
       "storey": null,
       "tag": null,
@@ -1150,6 +1162,7 @@
       "class": "IfcBuilding",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "1MXjPzdl_8MxUcmMpnIVlT",
       "hasShape": false,
@@ -1186,6 +1199,7 @@
           "OccupancyType": "Konut"
         }
       },
+      "shapes": [],
       "step": 58,
       "storey": null,
       "tag": null,
@@ -1197,6 +1211,7 @@
       "class": "IfcBuildingStorey",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": 0.0,
       "globalId": "3cw2ZUyjABGvn5xuvDhrKU",
       "hasShape": false,
@@ -1218,6 +1233,7 @@
           "ElevationOfSSLRelative": -0.13
         }
       },
+      "shapes": [],
       "step": 82,
       "storey": null,
       "tag": null,
@@ -1229,6 +1245,7 @@
       "class": "IfcBuildingStorey",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": 3.0,
       "globalId": "10W_smdZA4W8WQhK9YjuVJ",
       "hasShape": false,
@@ -1250,6 +1267,7 @@
           "ElevationOfSSLRelative": 2.93
         }
       },
+      "shapes": [],
       "step": 94,
       "storey": null,
       "tag": null,
@@ -1261,6 +1279,7 @@
       "class": "IfcWall",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m080000000001",
       "hasShape": true,
@@ -1288,6 +1307,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 218,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000001",
@@ -1299,6 +1325,7 @@
       "class": "IfcWall",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m080000000002",
       "hasShape": true,
@@ -1326,6 +1353,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 280,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000002",
@@ -1337,6 +1371,7 @@
       "class": "IfcWall",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m080000000003",
       "hasShape": true,
@@ -1364,6 +1399,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 405,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000003",
@@ -1375,6 +1417,7 @@
       "class": "IfcWall",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m080000000004",
       "hasShape": true,
@@ -1402,6 +1445,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 467,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000004",
@@ -1413,6 +1463,7 @@
       "class": "IfcWall",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m080000000005",
       "hasShape": true,
@@ -1440,6 +1491,13 @@
           "IsExternal": false
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 520,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000005",
@@ -1451,6 +1509,7 @@
       "class": "IfcWall",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m080000000006",
       "hasShape": true,
@@ -1478,6 +1537,13 @@
           "IsExternal": false
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 573,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000006",
@@ -1489,6 +1555,7 @@
       "class": "IfcWall",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m080000000007",
       "hasShape": true,
@@ -1516,6 +1583,13 @@
           "IsExternal": false
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 617,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000007",
@@ -1527,6 +1601,7 @@
       "class": "IfcWall",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m080000000008",
       "hasShape": true,
@@ -1554,6 +1629,13 @@
           "IsExternal": false
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 661,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000008",
@@ -1565,6 +1647,7 @@
       "class": "IfcWall",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000L",
       "hasShape": true,
@@ -1592,6 +1675,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 786,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000015",
@@ -1603,6 +1693,7 @@
       "class": "IfcWall",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000M",
       "hasShape": true,
@@ -1630,6 +1721,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 848,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000016",
@@ -1641,6 +1739,7 @@
       "class": "IfcWall",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000N",
       "hasShape": true,
@@ -1668,6 +1767,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 973,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000017",
@@ -1679,6 +1785,7 @@
       "class": "IfcWall",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000O",
       "hasShape": true,
@@ -1706,6 +1813,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1035,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000018",
@@ -1717,6 +1831,7 @@
       "class": "IfcWall",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000P",
       "hasShape": true,
@@ -1744,6 +1859,13 @@
           "IsExternal": false
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1088,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000019",
@@ -1755,6 +1877,7 @@
       "class": "IfcWall",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000Q",
       "hasShape": true,
@@ -1782,6 +1905,13 @@
           "IsExternal": false
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1141,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000001a",
@@ -1793,6 +1923,7 @@
       "class": "IfcWall",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000R",
       "hasShape": true,
@@ -1820,6 +1951,13 @@
           "IsExternal": false
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1185,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000001b",
@@ -1831,6 +1969,7 @@
       "class": "IfcWall",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000S",
       "hasShape": true,
@@ -1858,6 +1997,13 @@
           "IsExternal": false
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1229,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000001c",
@@ -1869,6 +2015,7 @@
       "class": "IfcSlab",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000f",
       "hasShape": true,
@@ -1895,6 +2042,13 @@
           "IsExternal": false
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1291,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000029",
@@ -1906,6 +2060,7 @@
       "class": "IfcSlab",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000g",
       "hasShape": true,
@@ -1932,6 +2087,13 @@
           "IsExternal": false
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1343,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000002a",
@@ -1943,6 +2105,7 @@
       "class": "IfcSlab",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000h",
       "hasShape": true,
@@ -1969,6 +2132,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1413,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000002b",
@@ -1980,6 +2150,7 @@
       "class": "IfcColumn",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000i",
       "hasShape": true,
@@ -2005,6 +2176,13 @@
           "LoadBearing": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1438,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-00000000002c",
@@ -2016,6 +2194,7 @@
       "class": "IfcColumn",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000j",
       "hasShape": true,
@@ -2041,6 +2220,13 @@
           "LoadBearing": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1462,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-00000000002d",
@@ -2052,6 +2238,7 @@
       "class": "IfcColumn",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000k",
       "hasShape": true,
@@ -2077,6 +2264,13 @@
           "LoadBearing": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1486,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-00000000002e",
@@ -2088,6 +2282,7 @@
       "class": "IfcColumn",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000l",
       "hasShape": true,
@@ -2113,6 +2308,13 @@
           "LoadBearing": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1510,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-00000000002f",
@@ -2124,6 +2326,7 @@
       "class": "IfcColumn",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000m",
       "hasShape": true,
@@ -2149,6 +2352,13 @@
           "LoadBearing": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1534,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000030",
@@ -2160,6 +2370,7 @@
       "class": "IfcColumn",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000n",
       "hasShape": true,
@@ -2185,6 +2396,13 @@
           "LoadBearing": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1558,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000031",
@@ -2196,6 +2414,7 @@
       "class": "IfcColumn",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000o",
       "hasShape": true,
@@ -2221,6 +2440,13 @@
           "LoadBearing": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1582,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000032",
@@ -2232,6 +2458,7 @@
       "class": "IfcColumn",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000p",
       "hasShape": true,
@@ -2257,6 +2484,13 @@
           "LoadBearing": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1606,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000033",
@@ -2268,6 +2502,7 @@
       "class": "IfcBeam",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000q",
       "hasShape": true,
@@ -2292,6 +2527,13 @@
           "FireRating": "REI 60"
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1630,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000034",
@@ -2303,6 +2545,7 @@
       "class": "IfcBeam",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000r",
       "hasShape": true,
@@ -2327,6 +2570,13 @@
           "FireRating": "REI 60"
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1653,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000035",
@@ -2338,6 +2588,7 @@
       "class": "IfcBeam",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000s",
       "hasShape": true,
@@ -2362,6 +2613,13 @@
           "FireRating": "REI 60"
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1676,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000036",
@@ -2373,6 +2631,7 @@
       "class": "IfcBeam",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000t",
       "hasShape": true,
@@ -2397,6 +2656,13 @@
           "FireRating": "REI 60"
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1699,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000037",
@@ -2408,6 +2674,7 @@
       "class": "IfcColumn",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000u",
       "hasShape": true,
@@ -2433,6 +2700,13 @@
           "LoadBearing": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1722,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000038",
@@ -2444,6 +2718,7 @@
       "class": "IfcColumn",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000v",
       "hasShape": true,
@@ -2469,6 +2744,13 @@
           "LoadBearing": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1746,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000039",
@@ -2480,6 +2762,7 @@
       "class": "IfcColumn",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000w",
       "hasShape": true,
@@ -2505,6 +2788,13 @@
           "LoadBearing": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1770,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000003a",
@@ -2516,6 +2806,7 @@
       "class": "IfcColumn",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000x",
       "hasShape": true,
@@ -2541,6 +2832,13 @@
           "LoadBearing": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1794,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000003b",
@@ -2552,6 +2850,7 @@
       "class": "IfcColumn",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000y",
       "hasShape": true,
@@ -2577,6 +2876,13 @@
           "LoadBearing": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1818,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000003c",
@@ -2588,6 +2894,7 @@
       "class": "IfcColumn",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000z",
       "hasShape": true,
@@ -2613,6 +2920,13 @@
           "LoadBearing": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1842,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000003d",
@@ -2624,6 +2938,7 @@
       "class": "IfcColumn",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000_",
       "hasShape": true,
@@ -2649,6 +2964,13 @@
           "LoadBearing": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1866,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000003e",
@@ -2660,6 +2982,7 @@
       "class": "IfcColumn",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000$",
       "hasShape": true,
@@ -2685,6 +3008,13 @@
           "LoadBearing": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1890,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000003f",
@@ -2696,6 +3026,7 @@
       "class": "IfcBeam",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m080000000010",
       "hasShape": true,
@@ -2720,6 +3051,13 @@
           "FireRating": "REI 60"
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1914,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000040",
@@ -2731,6 +3069,7 @@
       "class": "IfcBeam",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m080000000011",
       "hasShape": true,
@@ -2755,6 +3094,13 @@
           "FireRating": "REI 60"
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1937,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000041",
@@ -2766,6 +3112,7 @@
       "class": "IfcBeam",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m080000000012",
       "hasShape": true,
@@ -2790,6 +3137,13 @@
           "FireRating": "REI 60"
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1960,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000042",
@@ -2801,6 +3155,7 @@
       "class": "IfcBeam",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m080000000013",
       "hasShape": true,
@@ -2825,6 +3180,13 @@
           "FireRating": "REI 60"
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 1983,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000043",
@@ -2836,6 +3198,7 @@
       "class": "IfcStair",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m080000000014",
       "hasShape": true,
@@ -2854,6 +3217,13 @@
           "FireRating": "REI 60"
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2163,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000044",
@@ -2865,6 +3235,7 @@
       "class": "IfcWindow",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m080000000009",
       "hasShape": true,
@@ -2880,6 +3251,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2181,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "P01",
@@ -2891,6 +3269,7 @@
       "class": "IfcWindow",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000A",
       "hasShape": true,
@@ -2906,6 +3285,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2198,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "P02",
@@ -2917,6 +3303,7 @@
       "class": "IfcWindow",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000B",
       "hasShape": true,
@@ -2932,6 +3319,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2215,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "P03",
@@ -2943,6 +3337,7 @@
       "class": "IfcWindow",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000C",
       "hasShape": true,
@@ -2958,6 +3353,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2232,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "P04",
@@ -2969,6 +3371,7 @@
       "class": "IfcDoor",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000F",
       "hasShape": true,
@@ -2986,6 +3389,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2249,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "GK01",
@@ -2997,6 +3407,7 @@
       "class": "IfcDoor",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000D",
       "hasShape": true,
@@ -3014,6 +3425,13 @@
           "IsExternal": false
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2268,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "K01",
@@ -3025,6 +3443,7 @@
       "class": "IfcDoor",
       "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000E",
       "hasShape": true,
@@ -3042,6 +3461,13 @@
           "IsExternal": false
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2287,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "K02",
@@ -3053,6 +3479,7 @@
       "class": "IfcWindow",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000T",
       "hasShape": true,
@@ -3068,6 +3495,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2306,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "P11",
@@ -3079,6 +3513,7 @@
       "class": "IfcWindow",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000U",
       "hasShape": true,
@@ -3094,6 +3529,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2323,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "P12",
@@ -3105,6 +3547,7 @@
       "class": "IfcWindow",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000V",
       "hasShape": true,
@@ -3120,6 +3563,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2340,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "P13",
@@ -3131,6 +3581,7 @@
       "class": "IfcWindow",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000W",
       "hasShape": true,
@@ -3146,6 +3597,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2357,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "P14",
@@ -3157,6 +3615,7 @@
       "class": "IfcWindow",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000Z",
       "hasShape": true,
@@ -3172,6 +3631,13 @@
           "IsExternal": true
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2374,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "P15",
@@ -3183,6 +3649,7 @@
       "class": "IfcDoor",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000X",
       "hasShape": true,
@@ -3200,6 +3667,13 @@
           "IsExternal": false
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2391,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "K11",
@@ -3211,6 +3685,7 @@
       "class": "IfcDoor",
       "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
+      "element": true,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000Y",
       "hasShape": true,
@@ -3228,6 +3703,13 @@
           "IsExternal": false
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2410,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "K12",
@@ -3239,6 +3721,7 @@
       "class": "IfcOpeningElement",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "3g$poKqug6tg$WH0qGJR6y",
       "hasShape": true,
@@ -3250,6 +3733,13 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2429,
       "storey": null,
       "tag": null,
@@ -3261,6 +3751,7 @@
       "class": "IfcOpeningElement",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "3y6Jj3IuY5KRnYR6EU7uma",
       "hasShape": true,
@@ -3272,6 +3763,13 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2445,
       "storey": null,
       "tag": null,
@@ -3283,6 +3781,7 @@
       "class": "IfcOpeningElement",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "2Gk2Ny1ec8jvw7ghLODisr",
       "hasShape": true,
@@ -3294,6 +3793,13 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2461,
       "storey": null,
       "tag": null,
@@ -3305,6 +3811,7 @@
       "class": "IfcOpeningElement",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "09s89f7Oc2G9CbwqJ4sRVQ",
       "hasShape": true,
@@ -3316,6 +3823,13 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2477,
       "storey": null,
       "tag": null,
@@ -3327,6 +3841,7 @@
       "class": "IfcOpeningElement",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "1rEPUmOeYEsh40hFCAmdP9",
       "hasShape": true,
@@ -3338,6 +3853,13 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2493,
       "storey": null,
       "tag": null,
@@ -3349,6 +3871,7 @@
       "class": "IfcOpeningElement",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "1dUb2Aa8Y1wvezBX7a24gJ",
       "hasShape": true,
@@ -3360,6 +3883,13 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2509,
       "storey": null,
       "tag": null,
@@ -3371,6 +3901,7 @@
       "class": "IfcOpeningElement",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "3WcgptfuYBT8xRRg5GgpIu",
       "hasShape": true,
@@ -3382,6 +3913,13 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2525,
       "storey": null,
       "tag": null,
@@ -3393,6 +3931,7 @@
       "class": "IfcOpeningElement",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "2eXvExoeICWQJaKbhPyW9o",
       "hasShape": true,
@@ -3404,6 +3943,13 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2541,
       "storey": null,
       "tag": null,
@@ -3415,6 +3961,7 @@
       "class": "IfcOpeningElement",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "0lPpTEiuI2_R164SjjJnXD",
       "hasShape": true,
@@ -3426,6 +3973,13 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2557,
       "storey": null,
       "tag": null,
@@ -3437,6 +3991,7 @@
       "class": "IfcOpeningElement",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "2Qo4oL_8IFauuWqtcpDzQy",
       "hasShape": true,
@@ -3448,6 +4003,13 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2573,
       "storey": null,
       "tag": null,
@@ -3459,6 +4021,7 @@
       "class": "IfcOpeningElement",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "01P4Iio7g8awUAyUKhtF8T",
       "hasShape": true,
@@ -3470,6 +4033,13 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2589,
       "storey": null,
       "tag": null,
@@ -3481,6 +4051,7 @@
       "class": "IfcOpeningElement",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "1inLdq3Ng5BOLbivDnnR2C",
       "hasShape": true,
@@ -3492,6 +4063,13 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2605,
       "storey": null,
       "tag": null,
@@ -3503,6 +4081,7 @@
       "class": "IfcOpeningElement",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "1wXA4Pttg279mfCdIOVzn2",
       "hasShape": true,
@@ -3514,6 +4093,13 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2621,
       "storey": null,
       "tag": null,
@@ -3525,6 +4111,7 @@
       "class": "IfcOpeningElement",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "3pfFs6zdgBf937SmG58iPd",
       "hasShape": true,
@@ -3536,6 +4123,13 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2637,
       "storey": null,
       "tag": null,
@@ -3547,6 +4141,7 @@
       "class": "IfcOpeningElement",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "0IvfYm$dj758w34vRbzllC",
       "hasShape": true,
@@ -3558,6 +4153,13 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2653,
       "storey": null,
       "tag": null,
@@ -3569,6 +4171,7 @@
       "class": "IfcSpace",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000G",
       "hasShape": true,
@@ -3598,6 +4201,13 @@
           "WallCoveringThickness": 0.02
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2668,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": null,
@@ -3609,6 +4219,7 @@
       "class": "IfcSpace",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000H",
       "hasShape": true,
@@ -3638,6 +4249,13 @@
           "WallCoveringThickness": 0.02
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2699,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": null,
@@ -3649,6 +4267,7 @@
       "class": "IfcSpace",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000I",
       "hasShape": true,
@@ -3675,6 +4294,13 @@
           "WallCoveringThickness": 0.02
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2730,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": null,
@@ -3686,6 +4312,7 @@
       "class": "IfcSpace",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000J",
       "hasShape": true,
@@ -3715,6 +4342,13 @@
           "WallCoveringThickness": 0.02
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2758,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": null,
@@ -3726,6 +4360,7 @@
       "class": "IfcSpace",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000K",
       "hasShape": true,
@@ -3755,6 +4390,13 @@
           "WallCoveringThickness": 0.02
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2789,
       "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": null,
@@ -3766,6 +4408,7 @@
       "class": "IfcSpace",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000a",
       "hasShape": true,
@@ -3795,6 +4438,13 @@
           "WallCoveringThickness": 0.02
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2820,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": null,
@@ -3806,6 +4456,7 @@
       "class": "IfcSpace",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000b",
       "hasShape": true,
@@ -3835,6 +4486,13 @@
           "WallCoveringThickness": 0.02
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2851,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": null,
@@ -3846,6 +4504,7 @@
       "class": "IfcSpace",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000c",
       "hasShape": true,
@@ -3875,6 +4534,13 @@
           "WallCoveringThickness": 0.02
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2882,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": null,
@@ -3886,6 +4552,7 @@
       "class": "IfcSpace",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000d",
       "hasShape": true,
@@ -3915,6 +4582,13 @@
           "WallCoveringThickness": 0.02
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2913,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": null,
@@ -3926,6 +4600,7 @@
       "class": "IfcSpace",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000e",
       "hasShape": true,
@@ -3955,6 +4630,13 @@
           "WallCoveringThickness": 0.02
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 2944,
       "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": null,
@@ -3966,6 +4648,7 @@
       "class": "IfcSpatialZone",
       "container": null,
       "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
+      "element": false,
       "elevation": null,
       "globalId": "0mXdHQdmw5Ne$gBLmCHlns",
       "hasShape": true,
@@ -3981,6 +4664,13 @@
           "EmsalDurumu": "DAHIL"
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 3002,
       "storey": null,
       "tag": null,
@@ -3992,6 +4682,7 @@
       "class": "IfcSpatialZone",
       "container": null,
       "description": "Planlı Alanlar İmar Yönetmeliği 22/1: katlar alanına dahil edilmeyen; 5/8: emsale esas alanın %30'u içinde",
+      "element": false,
       "elevation": null,
       "globalId": "0hbb1436Q6sOTvocBpJxs1",
       "hasShape": true,
@@ -4007,6 +4698,13 @@
           "EmsalDurumu": "HARIC"
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 3020,
       "storey": null,
       "tag": null,
@@ -4018,6 +4716,7 @@
       "class": "IfcSpatialZone",
       "container": null,
       "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
+      "element": false,
       "elevation": null,
       "globalId": "2SCjl18iU4R8Q7xqwUZ8F9",
       "hasShape": true,
@@ -4033,6 +4732,13 @@
           "EmsalDurumu": "DAHIL"
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 3065,
       "storey": null,
       "tag": null,
@@ -4044,6 +4750,7 @@
       "class": "IfcSpatialZone",
       "container": null,
       "description": "Planlı Alanlar İmar Yönetmeliği 22/1: katlar alanına dahil edilmeyen; 5/8: emsale esas alanın %30'u içinde",
+      "element": false,
       "elevation": null,
       "globalId": "186KbboPo8JwcEjcsdPcdo",
       "hasShape": true,
@@ -4059,6 +4766,13 @@
           "EmsalDurumu": "HARIC"
         }
       },
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "Body",
+          "type": "SweptSolid"
+        }
+      ],
       "step": 3083,
       "storey": null,
       "tag": null,
@@ -4070,6 +4784,7 @@
       "class": "IfcGrid",
       "container": "1MXjPzdl_8MxUcmMpnIVlT",
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "2eLiQXeqm7sh029p4imVdf",
       "hasShape": true,
@@ -4081,6 +4796,13 @@
       "predefinedType": "RECTANGULAR",
       "quantities": {},
       "sets": {},
+      "shapes": [
+        {
+          "closed": null,
+          "identifier": "FootPrint",
+          "type": "GeometricCurveSet"
+        }
+      ],
       "step": 3115,
       "storey": null,
       "tag": null,
@@ -4092,6 +4814,7 @@
       "class": "IfcWallType",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "2P0w69Wf0HaEM5ritYlrIF",
       "hasShape": false,
@@ -4105,6 +4828,7 @@
       "predefinedType": "STANDARD",
       "quantities": {},
       "sets": {},
+      "shapes": [],
       "step": 3137,
       "storey": null,
       "tag": null,
@@ -4116,6 +4840,7 @@
       "class": "IfcWallType",
       "container": null,
       "description": null,
+      "element": false,
       "elevation": null,
       "globalId": "0mIB95IAHsbN3i0U6VskJq",
       "hasShape": false,
@@ -4129,6 +4854,7 @@
       "predefinedType": "STANDARD",
       "quantities": {},
       "sets": {},
+      "shapes": [],
       "step": 3140,
       "storey": null,
       "tag": null,

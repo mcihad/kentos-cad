@@ -423,7 +423,7 @@ fn screens() {
 /// The section building with B9's elements (docs/adr/8070): a hip roof over its 1. kat with a chimney over the flues
 /// of the hall's west wall on both storeys, an L ramp rising along its east side to ±0.00, and KentOS's library lift,
 /// basin and table on the ground floor. Its snapshot after the commands that draw them.
-fn with_the_missing_elements() -> kentos_commands::DocumentSnapshotV2 {
+pub(crate) fn with_the_missing_elements() -> kentos_commands::DocumentSnapshotV2 {
     use kentos_native_application::{ExecutionContext, registry};
     let mut doc = kentos_domain::Document::from_snapshot_v2(building()).expect("opens");
     let run = |doc: &mut kentos_domain::Document, name: &str, input: serde_json::Value| -> serde_json::Value {

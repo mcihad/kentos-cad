@@ -560,3 +560,85 @@ fn ek9_screens() {
         shot(&mut main, &mut app, App::view, "5-ruhsat-proje-aciklamasi");
     }
 }
+
+/// Gelişim seviyesi (docs/adr/8133), light and dark, `.run/gui-evidence/gelisim-seviyesi-8133/`: Model kalite kontrol
+/// formu's table beside the section building, its general and model-structure rows with KentOS's notes: the 7th
+/// answered from the written file's bodies (every element a solid); then beside the building with its library blocks
+/// (the lift, the basin, the table), whose boxes leave the 7th to the author with what was measured.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib ifc_viewer_tests::lod_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn lod_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/gelisim-seviyesi-8133");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    fn update(app: &mut App, message: Message) {
+        let _ = app.update(message);
+    }
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        for (snapshot, file) in [
+            (building(), "1-kesit-binasi-gecti"),
+            (crate::scene3d_building_tests::with_the_missing_elements(), "2-kitaplik-bloklari-inceleme"),
+        ] {
+            let mut app = open(snapshot);
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::RibbonTab("arch"));
+            // The form's table beside the building, its answers the written file's.
+            let rows = crate::ifc_facts::form_rows(&app.document.as_ref().expect("the building").model).expect("the form");
+            let doc = &mut app.document.as_mut().expect("the building").model;
+            let all = kentos_native_application::sheets_fit::extent_of(doc, doc.entities()).expect("the building's extent");
+            let look = kentos_interaction::table::Look { header: true, height: 0.25, ..Default::default() };
+            let cells = kentos_geometry_core::ops::table::from_rows(rows, true);
+            let geometry =
+                kentos_interaction::table::new_table(doc, &cells, &look, kentos_interaction::Vec2::new(all[2] + 4.0, all[3]), None);
+            let layer_id = doc.layers().active().to_owned();
+            let made = kentos_native_application::create::execute(
+                &mut kentos_native_application::ExecutionContext::new(doc),
+                kentos_commands::EntitiesCreate {
+                    layer_id,
+                    objects: vec![kentos_commands::NewObject {
+                        geometry,
+                        color: None,
+                        line_weight: None,
+                        line_type: None,
+                        line_pattern: None,
+                        attrs: None,
+                        label: None,
+                        label_of: None,
+                        label_scale: None,
+                        symbol: None,
+                        order: None,
+                        transparency: None,
+                    }],
+                    operation: None,
+                    expected_revision: None,
+                },
+            );
+            assert!(matches!(made, kentos_commands::CommandResult::Completed { .. }), "{made:?}");
+            let table = doc.entities().filter(|e| matches!(e, Entity::Table(_))).last().expect("the table");
+            let [x0, y0, x1, y1] = kentos_native_application::sheets_fit::extent_of(doc, std::iter::once(table)).expect("its box");
+            // Its top half (the general rows and the model's structure, the 7th among them), the questions' titles
+            // through KentOS's notes, the bottom panel closed.
+            let large = Size::new(2400.0, 1500.0);
+            let _ = app.update(Message::WindowResized(large));
+            if app.command_expanded {
+                let _ = app.update(Message::CommandHistoryToggled);
+            }
+            let mut wide = Snapshot::new(large).expect("a renderer");
+            wide.settle(&mut app, App::view, &mut update);
+            let bounds = kentos_render_wgpu::Bounds { min_x: x0 + 0.42 * (x1 - x0), min_y: y0 + 0.5 * (y1 - y0), max_x: x1, max_y: y1 };
+            app.viewport.camera.fit(&bounds, 24.0);
+            wide.settle(&mut app, App::view, &mut update);
+            wide.settle(&mut app, App::view, &mut update);
+            let path = out.join(format!("{file}-{name}.png"));
+            wide.render(App::view(&app), &app.theme()).save(&path).expect("writes the picture");
+            println!("{}", path.display());
+        }
+    }
+}

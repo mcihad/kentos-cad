@@ -40,8 +40,9 @@ def tam(f):
     return g
 
 
-#: Formun incelemeye bıraktığı sorular (dosya boyutu, gelişim seviyesi, emsal tablosu).
-INCELEME = [1, 7, 10]
+#: Formun incelemeye bıraktığı sorular (dosya boyutu, emsal tablosu). Gelişim seviyesi (7) kaynağı verilen
+#: modelde gövdelerden cevaplanır (docs/adr/8133).
+INCELEME = [1, 10]
 
 
 def cevaplar(yes=True):
@@ -67,11 +68,12 @@ class Paket(unittest.TestCase):
     def test_cevapsiz_inceleme_ve_hayir_yayini_durdurur(self):
         f = tam(teslim("kesit-binasi-kunye"))
         r = bim.denetle(CIZIM, f, [])
-        self.assertEqual(kodlar(r), ["digital_form_unanswered"] * 3)
+        self.assertEqual(kodlar(r), ["digital_form_unanswered"] * 2)
         self.assertIs(r["sonuclar"][2]["holds"], False)
         r = bim.denetle(CIZIM, f, cevaplar(yes=False))
-        self.assertEqual(kodlar(r), ["digital_form_author_no"] * 3)
-        self.assertEqual({s["no"]: s["cevap"] for s in r["satirlar"]}[7], "Hayır")
+        self.assertEqual(kodlar(r), ["digital_form_author_no"] * 2)
+        self.assertEqual({s["no"]: s["cevap"] for s in r["satirlar"]}[10], "Hayır")
+        self.assertEqual({s["no"]: s["cevap"] for s in r["satirlar"]}[7], "Evet", "gövdelerden")
 
     def test_kaniti_degisen_cevap_yayini_durdurur(self):
         """ADR 8077 §7: satırlar KentOS'un notunu taşır; o nota dayanan cevap geçer, başka nota dayanan durdurur."""
@@ -79,7 +81,7 @@ class Paket(unittest.TestCase):
         satir = {s["no"]: s for s in bim.denetle(CIZIM, f, cevaplar())["satirlar"]}
         dayanakli = [dict(c, basis=satir[c["no"]]["gerekce"]) for c in cevaplar()]
         self.assertEqual(bim.denetle(CIZIM, f, dayanakli)["bulgular"], [])
-        dayanakli[2]["basis"] = "3 zon (3 DAHIL); eski kanıt"
+        dayanakli[-1]["basis"] = "3 zon (3 DAHIL); eski kanıt"
         r = bim.denetle(CIZIM, f, dayanakli)
         self.assertEqual(kodlar(r), ["digital_form_answer_stale"])
         self.assertIs(r["sonuclar"][2]["holds"], False)

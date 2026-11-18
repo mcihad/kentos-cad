@@ -391,6 +391,7 @@ mod tests {
             material: Some("Tuğla".into()),
             psets,
             qtos: Vec::new(),
+            stand_in: false,
         }
     }
 

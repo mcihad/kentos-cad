@@ -32,7 +32,9 @@ pub fn file_facts(bytes: &[u8], name: &str, limits: &super::Limits, cancel: &dyn
 }
 
 impl Model {
-    /// The bodies' facts: `{"bodies": [...], "spaces": [...], "overlaps": [...]}`, each object by its GlobalId.
+    /// The bodies' facts: `{"bodies": [...], "spaces": [...], "overlaps": [...], "notShown": [...]}`, each object by its
+    /// GlobalId; the objects with a shape whose body could not be made with why (the form's 7th question cannot measure
+    /// them, docs/adr/8133).
     pub fn body_facts(&self, bodies: &Bodies) -> Json {
         let schema = header::version(self.summary.family);
         let mut out_bodies = Vec::new();
@@ -74,7 +76,12 @@ impl Model {
                 }));
             }
         }
-        json!({ "bodies": out_bodies, "spaces": space_json, "zones": zone_json, "overlaps": overlaps(self, &spaces) })
+        let not_shown: Vec<Json> = bodies
+            .not_shown
+            .iter()
+            .map(|n| json!({ "globalId": self.objects[n.object].global_id, "reason": n.reason }))
+            .collect();
+        json!({ "bodies": out_bodies, "spaces": space_json, "zones": zone_json, "overlaps": overlaps(self, &spaces), "notShown": not_shown })
     }
 
     /// The storey above object `i`: through its whole, its container, else the structure it is referenced in (a zone,

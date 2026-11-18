@@ -368,6 +368,47 @@ class Sorular(unittest.TestCase):
         self.assertEqual(kanit(f, 6), form.KALDI)
         self.assertIn("TUREF", satir(f, 6)["gerekce"])
 
+    def test_7_gelisim_seviyesi_govdelerden(self):
+        """EK-8 8.1 (docs/adr/8133): kaynağı verilen bölüm binasında 58 yapı elemanının hepsi katı (SweptSolid) gövdeli,
+        geçer; kaynağı verilmeyende ölçülür ama incelemedir. Gövdesi olmayan eleman ve yalnız sınır kutusu kalır;
+        parçaları gövdeli topluluk gövdesiz sayılmaz; kapalı olmayan üçgen ağ, okunamayan gövde ve kitaplık bloğunun
+        kutusu incelemedir; kapalı üçgen ağ katıdır."""
+        f = beklenen(BINA)
+        self.assertEqual(kanit(f, 7), form.GECTI, satir(f, 7)["gerekce"])
+        self.assertIn("58 yapı elemanının hepsi katı gövdeli (SweptSolid 58)", satir(f, 7)["gerekce"])
+        self.assertEqual(kanit(BINA, 7), form.INCELEME)
+        self.assertIn("kaynağı verilmedi", satir(BINA, 7)["gerekce"])
+        duvar = nesne(f, "IfcWall")["globalId"]
+
+        def ile(**degisim):
+            g = copy.deepcopy(f)
+            for sinif, govde in degisim.items():
+                nesne(g, sinif.replace("_", ""))["shapes"] = govde
+            return g
+
+        eksen = [{"identifier": "Axis", "type": "Curve2D", "closed": None}]
+        g = ile(IfcWall=eksen)
+        self.assertEqual((kanit(g, 7), kodlar(g, 7)), (form.KALDI, ["digital_lod_no_body"]))
+        self.assertEqual(satir(g, 7)["bulgular"][0]["globalIds"], [duvar])
+        g = ile(IfcWall=[])
+        nesne(g, "IfcColumn")["parent"] = duvar
+        self.assertEqual(kanit(g, 7), form.GECTI, "parçası gövdeli topluluk")
+        g = ile(IfcWall=[{"identifier": "Body", "type": "BoundingBox", "closed": None}])
+        self.assertEqual((kanit(g, 7), kodlar(g, 7)), (form.KALDI, ["digital_lod_bounding_box"]))
+        g = ile(IfcSlab=[{"identifier": "Body", "type": "Tessellation", "closed": False}])
+        self.assertEqual((kanit(g, 7), kodlar(g, 7)), (form.INCELEME, ["digital_lod_not_solid"]))
+        g = ile(IfcSlab=[{"identifier": "Body", "type": "Tessellation", "closed": True}])
+        self.assertEqual(kanit(g, 7), form.GECTI)
+        g = copy.deepcopy(f)
+        g["bodies"]["notShown"] = [{"globalId": duvar, "reason": "profil okunamadı"}]
+        self.assertEqual((kanit(g, 7), kodlar(g, 7)), (form.INCELEME, ["digital_lod_unread"]))
+        self.assertIn("profil okunamadı", satir(g, 7)["bulgular"][0]["message"])
+        g = copy.deepcopy(f)
+        kapi = nesne(g, "IfcDoor")["globalId"]
+        next(e for e in g["expected"] if e["globalId"] == kapi)["standIn"] = True
+        self.assertEqual((kanit(g, 7), kodlar(g, 7)), (form.INCELEME, ["digital_lod_stand_in"]))
+        self.assertEqual(satir(g, 7)["cevap"], "", "inceleme Evet'e çevrilmez")
+
     def test_8_ve_17_eksik_vekil_ve_yanlis_sinif(self):
         f = beklenen(BINA)
         duvar = nesne(f, "IfcWall")

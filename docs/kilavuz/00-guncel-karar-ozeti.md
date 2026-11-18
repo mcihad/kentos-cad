@@ -277,6 +277,13 @@
     - Yayın penceresinin taslağı Denetle ve Yayınla'da çizime yazılır; çağrıda verilen cevap çizimdekinin önüne geçer.
     - Cevap dayandığı KentOS notunu tutar (`basis`); not değişince cevap eskir, soru yeniden açılır, yayın durur (K59).
     - Bağımsız Python `.kcad` okuyucusu mimari verisi ≥1'i bilmiyor (ADR 8068'den beri): TODOS.md'de ayrı iş.
+  - **EK-9/7 gelişim seviyesi dosyadan (18 Kasım 2026; [ADR 8133](../adr/8133-ek9-development-level-from-the-file.md),
+    K316–K320):**
+    - Olgulara nesnenin `element`'i ve `shapes`'i (gösterim kimliği, türü, eşlenenin türü, yüz setinin `Closed`'ı;
+      `read/shapes.rs`), gövdelere `notShown`. Kural `form.s7`: gövdesiz ya da yalnız `BoundingBox` kalır; katı değil,
+      okunamadı ya da kutu yerine (`standIn`) inceleme; kaynağı verilen dosyada hepsi katıysa geçer, verilmeyende inceleme.
+    - Motorun ağının kapalılığı ölçüt değildir (Boole kesimli ağ kaynaşmaz); dosyanın gösterim türü ölçülür.
+    - Yazıcı: yüzlü gövdenin prizmaları da kapalı yüz seti (`Writer::prism_faces`); gösterim türleri karışmaz.
   - **Mevzuat denetimi başvuru tarihine göre (17 Kasım 2026; [ADR 8078](../adr/8078-regulation-rule-set-by-application-date.md), BIM-13, sıra B15; ilk dilim):**
     - Maddenin hâlini künyenin `basvuru_tarihi`'si seçer (K60): PAİY 34/1 ve 34/8'in 28.7.2018, 11.7.2021, 1.7.2026
       hâlleri; Geçici 3/11 1.7.2026'dan önceki başvuruya eski hâli uygular. Hâller veridir (`mimari_mevzuat/data/surumler.json`).

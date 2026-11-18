@@ -1189,6 +1189,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             material: made_of,
             psets,
             qtos: Vec::new(),
+            stand_in: false,
         });
     }
     // The curtain walls (docs/adr/8070 §7; EK-6 Tablo 6.21, 6.40): each an IfcCurtainWall whose own body is its panels
@@ -1230,6 +1231,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             material: material(grid.panel.clone()),
             psets: Vec::new(),
             qtos: Vec::new(),
+            stand_in: false,
         });
         written.curtain_walls += 1;
         for (i, part) in pieces {
@@ -1258,6 +1260,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 material: material(grid.frames.clone()),
                 psets: Vec::new(),
                 qtos: Vec::new(),
+                stand_in: false,
             });
             written.members += 1;
         }
@@ -1293,6 +1296,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             material: None,
             psets: Vec::new(),
             qtos: Vec::new(),
+            stand_in: false,
         });
         written.railings += 1;
     }
@@ -1442,6 +1446,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                         )],
                     }],
                     qtos: Vec::new(),
+                    stand_in: false,
                 });
                 Some(elements.len() - 1)
             }
@@ -1700,6 +1705,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             material: made_of,
             psets: Vec::new(),
             qtos: Vec::new(),
+            stand_in: false,
         });
         written.chimneys += 1;
         for &i in &members {
@@ -1766,6 +1772,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             material: None,
             psets,
             qtos: Vec::new(),
+            stand_in: true,
         });
         written.fixtures += 1;
     }

@@ -138,11 +138,14 @@ fn the_bim_package_is_checked_from_its_file_and_waits_for_the_author_s_answers()
     let bim = report.bim.as_ref().expect("the package's part");
     assert_eq!(bim.rows.len(), 21);
     let open: Vec<u8> = bim.rows.iter().filter(|r| r.evidence == "inceleme").map(|r| r.no).collect();
-    // The 10th is answered from the file now: its zones storey by storey against the table (docs/adr/8126).
-    assert_eq!(open, [1, 7], "the questions left to the author");
+    // The 10th is answered from the file now: its zones storey by storey against the table (docs/adr/8126); the 7th
+    // from its elements' bodies, all solids written from the drawing (docs/adr/8133).
+    assert_eq!(open, [1], "the questions left to the author");
+    let seventh = bim.rows.iter().find(|r| r.no == 7).expect("row 7");
+    assert_eq!((seventh.evidence.as_str(), seventh.answer.as_str()), ("geçti", "Evet"), "{}", seventh.note);
     assert!(!report.ready);
     let unanswered = report.issues.iter().filter(|i| i.code == "digital_form_unanswered").count();
-    assert_eq!(unanswered, 2);
+    assert_eq!(unanswered, 1);
     // The form's 20th question holds: the building's quantities are the template's (FootPrintArea, docs/adr/8075).
     assert!(!report.issues.iter().any(|i| i.code == "digital_pset_wrong"), "{:?}", report.issues);
     // The author answers; Denetle again: the questions are no finding, the model's missing fields still are.
@@ -167,9 +170,7 @@ fn a_declared_building_s_package_holds_and_is_published() {
     let path = folder("tam");
     permit_publication(&mut app, &path);
     let _ = app.sheet_publish_event(Publish::Bim(true));
-    for no in [1, 7] {
-        let _ = app.sheet_publish_event(Publish::BimAnswer(no, Some(true)));
-    }
+    let _ = app.sheet_publish_event(Publish::BimAnswer(1, Some(true)));
     check(&mut app);
     let report = publication(&app).report.as_ref().expect("the check's report");
     let errors: Vec<(&str, &str)> = report.issues.iter().filter(|i| i.error).map(|i| (i.code.as_str(), i.message.as_str())).collect();

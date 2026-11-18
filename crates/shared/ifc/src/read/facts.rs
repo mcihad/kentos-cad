@@ -62,8 +62,25 @@ impl Model {
         guarded(|| {
             let mut decoder = EntityDecoder::with_arc_index(bytes, self.index.clone());
             let elevations = self.elevations(&mut decoder, schema);
-            let objects: Vec<Json> =
-                (0..self.objects.len()).map(|i| self.object_json(i, &sets[i], &materials[i], &elevations)).collect();
+            let objects: Vec<Json> = (0..self.objects.len())
+                .map(|i| {
+                    let mut o = self.object_json(i, &sets[i], &materials[i], &elevations);
+                    // Its shape's representations and whether it is a building element the level of development is
+                    // read for (docs/adr/8133; EK-9/7): an element, not an opening or a virtual boundary.
+                    let class = &self.objects[i].class;
+                    o["element"] = json!(
+                        schema.is_subtype_of(class, "IfcElement")
+                            && !schema.is_subtype_of(class, "IfcFeatureElement")
+                            && !schema.is_subtype_of(class, "IfcVirtualElement")
+                    );
+                    o["shapes"] = self
+                        .shape_kinds(&mut decoder, schema, i)
+                        .into_iter()
+                        .map(|k| json!({ "identifier": k.identifier, "type": k.kind, "closed": k.closed }))
+                        .collect();
+                    o
+                })
+                .collect();
             Ok(json!({
                 "format": FORMAT,
                 "version": VERSION,

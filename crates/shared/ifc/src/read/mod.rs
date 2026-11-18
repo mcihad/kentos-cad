@@ -35,6 +35,7 @@ mod header;
 mod material;
 mod scan;
 mod sets;
+mod shapes;
 mod units;
 #[cfg(feature = "view")]
 pub mod view;

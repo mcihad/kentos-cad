@@ -189,6 +189,12 @@ KAYIT_YERI = {"IfcPerson": "Mimar (müellif) adı soyadı", "IfcPersonAndOrganiz
 #: Mekânsal yapının sınıfları: kat ve kot denetiminin dışında.
 YAPI = ("IfcProject", "IfcSite", "IfcBuilding", "IfcBuildingStorey", "IfcSpace", "IfcSpatialZone", "IfcZone")
 
+#: EK-8 8.1'in gövdesi (docs/adr/8133): gösterim kimliği ``Body`` (IFC4'ün yedeği ``Body-FallBack``); katı türleri
+#: IFC'nin ``RepresentationType``'larından hacmi kapalı olanlar (süpürülmüş katı, B-rep, Boole sonucu). ``Tessellation``
+#: yüz setleri kapalı diyorsa katıdır; ``BoundingBox`` IFC'nin deyişiyle sınır kutusuyla basit gösterimdir.
+GOVDE = ("Body", "Body-FallBack")
+KATI = ("SweptSolid", "AdvancedSweptSolid", "Brep", "AdvancedBrep", "CSG", "Clipping", "SolidModel")
+
 
 def cevapla(ifc: dict[str, Any], tablo: str | None = None) -> dict[str, Any]:
     """Formun satırları, modelin disiplininin tablosuyla (``tablosu``) ya da ``tablo``: ``{"tablo": "9.1" | "9.2",
@@ -564,7 +570,78 @@ class _Dosya:
             "durumu'nda (±0,00 kotu) verin.", proje)]
 
     def s7(self):
-        return INCELEME, "EK-8'in gelişim seviyesi müellifin 3B incelemesiyle değerlendirilir; KentOS kaydını tutar.", []
+        """Md. 14, EK-8 8.1: ruhsat modeli Detaylı Modelleme (LOD 300) seviyesindedir: varlık şekli, boyutu, konumu ve
+        yönelimiyle net tanımlı, ondan doğrudan ölçülebilir (docs/adr/8133). Her yapı elemanının (açıklık ve sanal sınır
+        dışında) gövde gösterimi ölçülür: var mı (yoksa parçaları taşır mı), yalnız sınır kutusu mu, katı mı, okuyucu
+        çıkarabildi mi. Alfanümerik yarısı (8.2) 9. sorunun, mahallerin kapalılığı 14.'nün. Kaynağın kitaplık blokları
+        gerçek biçimlerinin yerine kutudur: ayrıntıları müellifin. Kaynağı verilmeyen dosyada (başka programın) hepsi
+        katı da olsa ayrıntının ve ölçünün gerçekliği incelemecinindir."""
+        elemanlar = [o for o in self.objects if o.get("element")]
+        if not elemanlar:
+            return INCELEME, "Dosyada yapı elemanı yok; gelişim seviyesi ölçülmedi.", []
+        # Bir eleman topluluğunun (merdiven, giydirme cephe) gövdesini parçaları taşıyabilir.
+        parcali = {o.get("parent") for o in self.objects if o.get("parent")}
+        okunmayan = {n["globalId"]: str(n.get("reason") or "") for n in self.bodies.get("notShown") or []}
+        kutu_yerine = {e["globalId"] for e in self.expected if e.get("standIn")}
+        govdesiz, sinir, yuzey, cikmayan, kutular = [], [], [], [], []
+        turler: dict[str, int] = {}
+        for o in elemanlar:
+            govde = [g for g in o.get("shapes") or [] if g.get("identifier") in GOVDE]
+            if not govde:
+                if o["globalId"] not in parcali:
+                    govdesiz.append(o)
+                continue
+            if {g.get("type") for g in govde} <= {"BoundingBox"}:
+                sinir.append(o)
+                continue
+            for g in govde:
+                turler[str(g.get("type") or "türsüz")] = turler.get(str(g.get("type") or "türsüz"), 0) + 1
+            if not any(g.get("type") in KATI or (g.get("type") == "Tessellation" and g.get("closed") is True) for g in govde):
+                yuzey.append(o)
+            elif o["globalId"] in okunmayan:
+                cikmayan.append(o)
+            elif o["globalId"] in kutu_yerine:
+                kutular.append(o)
+        gids = lambda xs: [o["globalId"] for o in xs]  # noqa: E731
+        bulgular = []
+        if govdesiz:
+            bulgular.append(self.bulgu(
+                "digital_lod_no_body", f"{len(govdesiz)} yapı elemanının gövdesi (Body gösterimi) yok: "
+                f"{', '.join(self.ad(o) for o in govdesiz[:3])}{' …' if len(govdesiz) > 3 else ''}",
+                "Elemanı gövdesiyle, bir katı olarak modelleyin; eksen ya da plan izi gövde değildir.", gids(govdesiz)))
+        if sinir:
+            bulgular.append(self.bulgu(
+                "digital_lod_bounding_box", f"{len(sinir)} elemanın gövdesi yalnız sınır kutusu (BoundingBox)",
+                "Elemanı gerçek biçimiyle modelleyin; sınır kutusu EK-8'in Detaylı Modelleme seviyesi değildir.",
+                gids(sinir)))
+        if govdesiz or sinir:
+            return KALDI, f"{len(govdesiz)} eleman gövdesiz, {len(sinir)} eleman yalnız sınır kutusuyla.", bulgular
+        if yuzey:
+            bulgular.append(self.bulgu(
+                "digital_lod_not_solid", f"{len(yuzey)} elemanın gövdesi katı değil (yüzey ya da açık üçgen ağ)",
+                "Gövdeyi kapalı bir katı olarak verin; yüzey bırakılacaksa yeterliliğini inceleyin.", gids(yuzey)))
+        if cikmayan:
+            nedenler = sorted({okunmayan[o["globalId"]] for o in cikmayan if okunmayan[o["globalId"]]})
+            bulgular.append(self.bulgu(
+                "digital_lod_unread", f"{len(cikmayan)} elemanın gövdesi okunamadı ({'; '.join(nedenler[:2]) or 'nedeni yok'})",
+                "Gövdeyi başka bir okuyucuyla açıp inceleyin; okunamayan gövde ölçülmez.", gids(cikmayan)))
+        if kutular:
+            bulgular.append(self.bulgu(
+                "digital_lod_stand_in", f"{len(kutular)} kitaplık bloğunun gövdesi kutu: yeri ve ölçüsü çizimin, gerçek "
+                "biçimi çizilmedi",
+                "Gerçek biçim ruhsat için gerekiyorsa bloğu biçimiyle çizin; kutu yeterliyse soruyu müellif olarak "
+                "cevaplayın.", gids(kutular)))
+        katilar = ", ".join(f"{t} {n}" for t, n in sorted(turler.items(), key=lambda x: (-x[1], x[0])))
+        n = len(elemanlar)
+        if bulgular:
+            sayilar = [f"{len(x)} {ne}" for x, ne in ((yuzey, "katı değil"), (cikmayan, "okunamadı"),
+                                                    (kutular, "kitaplık bloğu kutu")) if x]
+            return INCELEME, (f"{n} yapı elemanından {', '.join(sayilar)}; öbürleri katı gövdeli; ayrıntının "
+                              "yeterliliği müellifin incelemesi."), bulgular
+        if not self.expected:
+            return INCELEME, (f"{n} yapı elemanının hepsi katı gövdeli ({katilar}); dosyanın kaynağı verilmedi, ayrıntının "
+                              "ve ölçünün gerçekliği incelemecinin."), []
+        return GECTI, f"{n} yapı elemanının hepsi katı gövdeli ({katilar}), çizimden ölçüsünde yazıldı.", []
 
     def s8(self):
         """Md. 12, EK-5 Tablo 5.1: kaynakta beklenen her nesne dosyada; vekil sınıf yok."""

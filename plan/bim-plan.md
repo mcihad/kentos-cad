@@ -112,7 +112,7 @@ kullanılır. Yasal tarihler dış sınırdır; iş sırası bağımlılıkla ku
 | R7 | Zorunlu sınıflar ve alanları; vekil sınıf kullanılmaz | Md. 12; EK-5, EK-6 | ◐ 29 sınıftan 15'i; yangın ve dayanım alanları yok | BIM-07…09; IFC-02, IFC-03 |
 | R8 | Proje bilgileri, kişiler, koordinat sistemi | Md. 13; EK-7 | ◐ künye, mimar, büro, TUREF dilimi var; proje tipi ve açıklaması yok | IFC-02, IFC-05 |
 | R9 | Model, mahal ve varlık adları | Md. 10, 11; EK-5 §5.5 | ◐ kalıp var; iki yorum açık | BIM-01, IFC-02 |
-| R10 | Gelişim seviyesi | Md. 14; EK-8 | ✗ ölçülmüyor, görülemiyor | BIM-06, BIM-10, IFC-06 |
+| R10 | Gelişim seviyesi | Md. 14; EK-8 | ◐ gövdeler dosyadan ölçülüyor (EK-9/7, ADR 8133); ayrıntının yeterliliği müellifin | BIM-06, BIM-10, IFC-06 |
 | R11 | Model kalite kontrol formu | Md. 15; EK-9 | ◐ 21 soru bellekteki modelden | IFC-08, BIM-14 |
 | R12 | Bilgi yönetimi | Md. 4/4; TS EN ISO 19650-1/2 | ◐ teslim kaydı, nesneye bağlı iade gerekçesi ve öncekiyle karşılaştırma (ADR 8099); künye role göre (ADR 8100); ortak veri ortamının durumları yok | BIM-15 |
 | R13 | Tarihe ve koşula bağlı kapsam | Md. 1; Geçici 1–2 | ✓ Ruhsat takımının Dijital teslim kapsamı, Python kuralı (ADR 8063); MCP yok | BIM-02 |
@@ -814,10 +814,12 @@ katmanı, üst döşeme, parselin katmanı), tamamlanınca geçti (ADR 8077 §5)
 MCP'de uçtan uca: ajan durdurulur, `cad.form.answer` ile cevaplar, paket yayımlanır (ADR 8077 §6).
 Cevap dayandığı kanıtı tutar; kanıt değişince eskir, soru yeniden açılır, yayın durur (ADR 8077 §7, K59).
 İlk kabul tuttu: bölüm binasında ve 2+1'de paket, eski pafta paketi durdurur, bağımsız okuyucular hatasız.
+**Yapıldı (18 Kasım 2026, [ADR 8133](../docs/adr/8133-ek9-development-level-from-the-file.md)):** 7. soru, gelişim
+seviyesi, dosyadan: her yapı elemanının gövde gösterimi (var mı, sınır kutusu mu, katı mı, okunabildi mi); kitaplık
+bloklarının kutusu müellife kalır; karışık gövde (eğik kol ve sahanlık) tek 'Tessellation' olarak yazılır.
 **Kalan:** formun kalıcı kaynak türü (çizimdeki EK-9 tablosu bugün başlık satırından tanınıyor; tablo kaynağına yeni tür
-`.kcad`'in sütun biçimini ve bağımsız okuyucuyu ister); Python tipli katmanından ortak durumlar bağımsız `.kcad`
-okuyucusunun mimari verisi 1–10'u bilmemesi yüzünden duruyor (TODOS.md'de ayrı iş); 7. sorunun gelişim seviyesi
-ölçülmüyor.
+`.kcad`'in mimari verisini ve onu okuyan bağımsız okuyucuyu ister); Python tipli katmanından ortak durumlar bağımsız
+`.kcad` okuyucusunun mimari verisini bilmemesi yüzünden duruyor (TODOS.md'de ayrı iş).
 
 **Kullanıcı sonucu:** Tek komut, aynı model revizyonundan mimari modeli, bütün PDF/A paftaları, çizelgeleri ve kontrol
 formunu üretir. Hepsi yazıldıktan sonra dosyadan denetlenir; biri kalırsa hiçbir şey yayımlanmaz. Dayanak Md. 9/1, 15; e-PYS
@@ -994,7 +996,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 | B12 ✓ | Okuma yüzü ve motor denemesi | IFC-07 | Yazılan dosya geri okunur; motor kararı ADR 8061'de (§11; gerçek dünyadan 35 dosya da aynı okunur) |
 | B12b ~ | IFC görüntüleyici | IFC-12 | Dosya kendi penceresinde: ağaç, özellikler, kesit ve kesit yüzü; dışa aktarılan tek tıkla görülür (ilk dilim ADR 8073, kesit yüzü 8131, tutamaklar ve yüzden kesit 8132; gerçek pencerede kabul kaldı) |
 | B13 ~ | Yazılmış dosyadan doğrulama, IDS ve kontrol formu | IFC-08 | 21 sorunun kanıtı dosyadan (ADR 8074; ikinci okuyucu ve IfcTester KentOS'la aynı; öbür disiplinlerin Tablo 9.2'si paket incelemesinde ADR 8114; eşleme pencereden çıktı ve 14 kat hızlandı, bütçesi ADR 8115; beş sonuç ADR 8075'ten beri ruhsat paketinde; Denetim formu son teslim edilen modelden okuyabilir ve çizimin farkını söyler ADR 8116; bulut işi kaldı) |
-| B14 ~ | BIM ruhsat paketi | BIM-14 | Tek komut, tek revizyon, tek paket (ADR 8075; gerçek paket ADR 8076; müellifin cevapları çizimde ve basılan formda ADR 8077; 2+1 de yayımlanıyor, MCP'de uçtan uca, eskiyen cevap durdurur ADR 8077 §7) |
+| B14 ~ | BIM ruhsat paketi | BIM-14 | Tek komut, tek revizyon, tek paket (ADR 8075; gerçek paket ADR 8076; müellifin cevapları çizimde ve basılan formda ADR 8077; 2+1 de yayımlanıyor, MCP'de uçtan uca, eskiyen cevap durdurur ADR 8077 §7; 7. soru gövdelerden ADR 8133) |
 | B15 ~ | Mevzuat denetimlerinin tamamlanması | BIM-13 | Başvuru tarihine göre kural seti (ADR 8078: asansör 34/1 ve 34/8'in hâlleri, eksik veri ve uzman incelemesi, uzman onayı, kaçış yolu kapıları BYKHY 47; ADR 8079: emsalin 22/1-ç, -f, -k, -l sınırları ve koşulları, kat ara toplamı; ADR 8080: merdiven altı 1,80 m; ADR 8081: kompartıman (24/2, 24/6, 24/7); ADR 8082: Ek-3 dayanımları; ADR 8083: kat yüksekliği 28/1-c ve kapılar 39/1 tarihli hâlleriyle; ADR 8084: plan notu katmanı; ADR 8085: bölgeye göre kat yükseklikleri; ADR 8086: katlar arası açıklıklar, 24/4, 24/5; ADR 8087: şaftlar, asansörler, çatılar (25/3, 41/9, 62, Ek-3/B 4 ve 12); ADR 8088: kompartıman IFC zonu; ADR 8089: asma tavan Ek-3/B 11; ADR 8090: taşıyıcı duvar ve kaçış yolu çatısı beyanları; ADR 8091: malzemenin yanıcılık sınıfı, 26/2, 26/4; ADR 8092: bodruma inen asansör 62/4; ADR 8093: çift kanat ve döner kapı 39/1-b, ç; ADR 8094: taşıyıcı sistem, 22/1-m ve 28/1-d; ADR 8095: kalın taş duvarlar 5/8, 20/8-j; ADR 8096: Sivas 22/k; ADR 8097: emsal zonunun cephe köşesi; ADR 8098: planın bina yüksekliği ve kat adedi 5/11; korunumlu şaft, yangın kesici, Broof, kuyu havalandırması, 22/1-j ve 5/8'in bodrum listesi, blok başına bölge kaldı) |
 | B16 ~ | Bilgi yönetimi ve teslim kaydı | BIM-15 | Teslim ve iade kayıtlı (ADR 8099: kayıt, nesneye bağlı iade gerekçesi, öncekiyle karşılaştırma; ADR 8100: künye yalnız nesneleri yazabilene; ilk kabul tamam; ortak veri ortamının durumları ve e-PYS pilotu kaldı) |
 | B17 ⏸ | Büro ve belediye pilotu | BIM-16, IFC-11 | İdarenin yazılı cevabı (17 Kasım 2026: gerçek büro, iki proje ve idarenin cevabı sahibin işi, bekliyor; yazılım hazırlığı: paket raporuna derlemenin commit'i ve eski sürüm dosyalarının kayıp listesi, ikincisi B18 ile) |

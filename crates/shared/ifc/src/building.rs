@@ -246,6 +246,10 @@ pub struct Element {
     pub material: Option<String>,
     pub psets: Vec<Pset>,
     pub qtos: Vec<Qto>,
+    /// Whether its body is a box standing for a form the drawing does not draw (a library block's footprint raised to
+    /// its height, docs/adr/8070, 8133): its place and size are the drawing's, its detail the author's to judge (EK-8,
+    /// EK-9/7). Not written to the file.
+    pub stand_in: bool,
 }
 
 /// An opening through a wall: the wall's index into [`Building::elements`], its footprint through the wall between two
@@ -749,6 +753,61 @@ impl Writer {
         }
     }
 
+    /// A prism as closed sets of indexed faces (docs/adr/8133), for a body that has faces too. Each outer ring with the
+    /// holes it holds (nested as [`Self::items`] nests them, arcs as their polygons, [`flat_rings`]): the top with the
+    /// holes as its voids, the bottom the other way round, the sides outward (an outer ring counterclockwise from above,
+    /// a hole clockwise).
+    fn prism_faces(&mut self, rings: &[Vec<[f64; 2]>], bulges: &[Vec<f64>], bottom: f64, top: f64) -> Vec<usize> {
+        let flat: Vec<Vec<[f64; 2]>> = flat_rings(rings, bulges).into_iter().filter(|r| r.len() >= 3).collect();
+        let turned = |r: &[[f64; 2]], ccw: bool| -> Vec<[f64; 2]> {
+            let twice: f64 = (0..r.len()).map(|i| {
+                let (a, b) = (r[i], r[(i + 1) % r.len()]);
+                a[0] * b[1] - b[0] * a[1]
+            }).sum();
+            if (twice > 0.0) == ccw { r.to_vec() } else { r.iter().rev().copied().collect() }
+        };
+        let mut out = Vec::new();
+        for (outer, holes) in nest(&flat) {
+            let loops: Vec<Vec<[f64; 2]>> =
+                std::iter::once(turned(&flat[outer], true)).chain(holes.iter().map(|&h| turned(&flat[h], false))).collect();
+            // Each loop's corners at the top, then at the bottom.
+            let mut coords: Vec<String> = Vec::new();
+            let mut starts = Vec::new();
+            for l in &loops {
+                starts.push(coords.len());
+                for z in [top, bottom] {
+                    coords.extend(l.iter().map(|p| format!("({},{},{})", real(p[0]), real(p[1]), real(z))));
+                }
+            }
+            let list = self.st.add(format!("IFCCARTESIANPOINTLIST3D(({}),$)", coords.join(",")));
+            let at = |k: usize, i: usize, low: bool| starts[k] + if low { loops[k].len() } else { 0 } + i + 1;
+            let words = |idx: &[usize]| idx.iter().map(usize::to_string).collect::<Vec<_>>().join(",");
+            let mut faces = Vec::new();
+            for low in [false, true] {
+                let ring = |k: usize| -> Vec<usize> {
+                    let idx: Vec<usize> = (0..loops[k].len()).map(|i| at(k, i, low)).collect();
+                    if low { idx.into_iter().rev().collect() } else { idx }
+                };
+                let face = if loops.len() == 1 {
+                    format!("IFCINDEXEDPOLYGONALFACE(({}))", words(&ring(0)))
+                } else {
+                    let inner: Vec<String> = (1..loops.len()).map(|k| format!("({})", words(&ring(k)))).collect();
+                    format!("IFCINDEXEDPOLYGONALFACEWITHVOIDS(({}),({}))", words(&ring(0)), inner.join(","))
+                };
+                faces.push(self.st.add(face));
+            }
+            for (k, l) in loops.iter().enumerate() {
+                for i in 0..l.len() {
+                    let j = (i + 1) % l.len();
+                    let side = [at(k, i, false), at(k, i, true), at(k, j, true), at(k, j, false)];
+                    faces.push(self.st.add(format!("IFCINDEXEDPOLYGONALFACE(({}))", words(&side))));
+                }
+            }
+            out.push(self.st.add(format!("IFCPOLYGONALFACESET(#{list},.T.,({}),$)", Step::refs(&faces))));
+        }
+        out
+    }
+
     /// A product's body: its shapes' items in one representation.
     fn body(&mut self, shapes: &[Shape]) -> Option<usize> {
         self.shape("Body", shapes)
@@ -758,10 +817,16 @@ impl Writer {
     /// 'Reference' in a Reference View).
     fn shape(&mut self, identifier: &str, shapes: &[Shape]) -> Option<usize> {
         let mut items = Vec::new();
-        let mut faces = false;
+        let faces = shapes.iter().any(|s| matches!(s, Shape::Faces { .. }));
         for s in shapes {
-            faces |= matches!(s, Shape::Faces { .. });
-            items.extend(self.items(s));
+            match s {
+                // A body with faces is a tessellation throughout: its prisms closed face sets too, IFC's
+                // representation types not mixing (a ramp's landings beside its sloped runs, docs/adr/8133).
+                Shape::Prism { rings, bulges, bottom, top } if faces => {
+                    items.extend(self.prism_faces(rings, bulges, *bottom, *top));
+                }
+                _ => items.extend(self.items(s)),
+            }
         }
         if items.is_empty() {
             return None;
@@ -1561,6 +1626,7 @@ mod tests {
             material: None,
             psets: vec![],
             qtos: vec![],
+            stand_in: false,
         };
         let b = Building {
             storeys: vec![Storey {
@@ -1663,6 +1729,49 @@ mod tests {
         assert!(f.lines().any(|l| l.contains("IFCRELASSOCIATESMATERIAL(") && l.contains(&format!("({roof}),{set_id})"))));
     }
 
+    /// A body with faces and a prism (a ramp's sloped run beside its landing, docs/adr/8133) is one tessellation: the
+    /// prism a closed face set too, its hole a void of its top and of its bottom, no extrusion left. Read back by the
+    /// engine its volume is the landing's (a 2 m square less a 1 m square hole, 0.5 m high: 1.5 m³) and the faces'
+    /// (a 1 m cube: 1 m³), so every face closes and faces out; the file says its sets are closed.
+    #[cfg(feature = "geometry")]
+    #[test]
+    fn a_body_of_faces_and_a_prism_is_one_tessellation() {
+        let mut b = door_building();
+        b.openings.clear();
+        b.elements.truncate(1);
+        let v = vec![
+            [3.0, 0.0, 0.0], [4.0, 0.0, 0.0], [4.0, 1.0, 0.0], [3.0, 1.0, 0.0],
+            [3.0, 0.0, 1.0], [4.0, 0.0, 1.0], [4.0, 1.0, 1.0], [3.0, 1.0, 1.0],
+        ];
+        let cube = Shape::Faces {
+            vertices: v,
+            faces: vec![vec![0, 3, 2, 1], vec![4, 5, 6, 7], vec![0, 1, 5, 4], vec![1, 2, 6, 5], vec![2, 3, 7, 6], vec![3, 0, 4, 7]],
+        };
+        let landing = Shape::Prism {
+            rings: vec![
+                vec![[0.0, 0.0], [2.0, 0.0], [2.0, 2.0], [0.0, 2.0]],
+                vec![[0.5, 0.5], [1.5, 0.5], [1.5, 1.5], [0.5, 1.5]],
+            ],
+            bulges: Vec::new(),
+            bottom: 0.0,
+            top: 0.5,
+        };
+        b.elements[0].shapes = vec![landing, cube];
+        let f = write(&b);
+        assert!(!f.contains("IFCEXTRUDEDAREASOLID"), "no extrusion in a tessellation");
+        assert!(f.lines().any(|l| l.contains("IFCSHAPEREPRESENTATION(") && l.contains("'Body','Tessellation'")));
+        assert_eq!(f.matches("IFCINDEXEDPOLYGONALFACEWITHVOIDS(").count(), 2, "the landing's top and bottom");
+        let bytes = f.as_bytes();
+        let m = crate::read::read(bytes, &crate::read::Limits::default(), &|| false).expect("reads");
+        let bodies = m.bodies(bytes, &|| false).expect("its bodies");
+        let wall = bodies.bodies.iter().find(|x| m.objects[x.object].class == "IfcWall").expect("the wall's body");
+        let (volume, _) = crate::read::bodies::volume_and_area(wall);
+        assert!((volume.abs() - 2.5).abs() < 1e-6, "{volume}");
+        let facts = m.facts(bytes, "ev.ifc").expect("the facts");
+        let o = facts["objects"].as_array().expect("objects").iter().find(|o| o["class"] == "IfcWall").expect("the wall");
+        assert_eq!(o["shapes"], serde_json::json!([{ "identifier": "Body", "type": "Tessellation", "closed": true }]));
+    }
+
     /// A 5 m wall with a 0.9 m door through it, on one storey.
     fn door_building() -> Building {
         Building {
@@ -1715,6 +1824,7 @@ mod tests {
                         props: vec![("IsExternal".into(), Value::Bool(true))],
                     }],
                     qtos: vec![],
+                    stand_in: false,
                 },
                 Element {
                     class: Class::Door,
@@ -1732,6 +1842,7 @@ mod tests {
                     material: None,
                     psets: vec![],
                     qtos: vec![],
+                    stand_in: false,
                 },
             ],
             openings: vec![Opening {

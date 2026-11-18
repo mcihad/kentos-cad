@@ -83,7 +83,14 @@ impl Planned {
         })?;
         facts["expected"] = kentos_ifc::expected::of(b)
             .iter()
-            .map(|e| json!({ "uid": Uuid::from_u128(e.object).to_string(), "globalId": e.global_id, "class": e.class }))
+            .map(|e| {
+                let mut x = json!({ "uid": Uuid::from_u128(e.object).to_string(), "globalId": e.global_id, "class": e.class });
+                // A library block's box (docs/adr/8133): the form's 7th question leaves its detail to the author.
+                if e.stand_in {
+                    x["standIn"] = json!(true);
+                }
+                x
+            })
             .collect();
         let left: Vec<Value> = self
             .written

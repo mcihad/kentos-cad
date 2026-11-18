@@ -20,40 +20,43 @@ pub struct Expected {
     pub object: u128,
     /// Its IFC class, as STEP spells it (`IFCWALL`).
     pub class: &'static str,
+    /// Whether its body is a box standing for a form the drawing does not draw (a library block's, docs/adr/8133):
+    /// the form's 7th question leaves its detail to the author.
+    pub stand_in: bool,
 }
 
 /// The building's objects with a KentOS id, in the file's order of kinds: the project, the site, the building, the
 /// storeys, the elements, the openings, the spaces, the zones, the groups and the grids.
 pub fn of(b: &Building) -> Vec<Expected> {
     let mut out = Vec::new();
-    let mut put = |id: Option<u128>, object: Option<u128>, class: &'static str| {
+    let mut put = |id: Option<u128>, object: Option<u128>, class: &'static str, stand_in: bool| {
         if let Some(id) = id.filter(|&id| !crate::step::is_derived(id)) {
-            out.push(Expected { global_id: guid(id), object: object.unwrap_or(id), class });
+            out.push(Expected { global_id: guid(id), object: object.unwrap_or(id), class, stand_in });
         }
     };
-    put(b.project.id, None, "IFCPROJECT");
-    put(b.site.id, None, "IFCSITE");
-    put(b.building.id, None, "IFCBUILDING");
+    put(b.project.id, None, "IFCPROJECT", false);
+    put(b.site.id, None, "IFCSITE", false);
+    put(b.building.id, None, "IFCBUILDING", false);
     for s in &b.storeys {
-        put(s.id, None, "IFCBUILDINGSTOREY");
+        put(s.id, None, "IFCBUILDINGSTOREY", false);
     }
     for e in &b.elements {
-        put(e.id, e.object, e.class.entity());
+        put(e.id, e.object, e.class.entity(), e.stand_in);
     }
     for o in &b.openings {
-        put(o.id, None, "IFCOPENINGELEMENT");
+        put(o.id, None, "IFCOPENINGELEMENT", false);
     }
     for s in &b.spaces {
-        put(s.id, None, "IFCSPACE");
+        put(s.id, None, "IFCSPACE", false);
     }
     for z in &b.zones {
-        put(z.id, None, "IFCSPATIALZONE");
+        put(z.id, None, "IFCSPATIALZONE", false);
     }
     for g in &b.groups {
-        put(g.id, None, "IFCZONE");
+        put(g.id, None, "IFCZONE", false);
     }
     for g in &b.grids {
-        put(g.id, None, "IFCGRID");
+        put(g.id, None, "IFCGRID", false);
     }
     out
 }
@@ -80,6 +83,7 @@ mod tests {
             material: None,
             psets: Vec::new(),
             qtos: Vec::new(),
+            stand_in: false,
         }
     }
 
