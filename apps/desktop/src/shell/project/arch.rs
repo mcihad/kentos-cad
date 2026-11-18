@@ -235,6 +235,9 @@ impl ZoningTexts {
         if let Some(l) = t.layout {
             self.layout = Some(l);
         }
+        if let Some(z) = t.zone {
+            self.zone = Some(z);
+        }
         for (key, v) in [
             (kentos_commands::PlanNoteKey::BuildingHeight, t.height),
             (kentos_commands::PlanNoteKey::Storeys, t.storeys),
@@ -261,6 +264,7 @@ impl ZoningTexts {
         t.far.is_none_or(|v| same(&self.far, v) && self.far_source.trim() == t.source)
             && t.coverage.is_none_or(|v| same(&self.coverage, v) && self.coverage_source.trim() == t.source)
             && t.layout.is_none_or(|l| self.layout == Some(l))
+            && t.zone.is_none_or(|z| self.zone == Some(z))
             && note(kentos_commands::PlanNoteKey::BuildingHeight, t.height)
             && note(kentos_commands::PlanNoteKey::Storeys, t.storeys)
     }
@@ -450,9 +454,10 @@ pub(super) fn zoning_view<'a>(
         body = body.push(label::caption(
             "Belediyenin CBS'inden gelen imar planı katmanlarından, parselle kesişimiyle okunur. Bir kesişim tek başına \
              hukuki karar değildir: değerleri imar durum belgesiyle karşılaştırın. Değerlerini al, kararın sayıyla \
-             yazılmış emsalini ve TAKS'ını kaynağıyla (plan, onay günü, karar) ve yapı nizamını yukarıya, bina \
-             yüksekliğini (Hmax) ve kat adedini Plan notları'na yazar; Kaydet onaylar, Vazgeç bırakır. Planı belli \
-             olmayan kararın değeri alınmaz.",
+             yazılmış emsalini ve TAKS'ını kaynağıyla (plan, onay günü, karar), yapı nizamını ve kullanımını (Bölge) \
+             yukarıya, bina yüksekliğini (Hmax) ve kat adedini Plan notları'na yazar; Kaydet onaylar, Vazgeç bırakır. \
+             Planı belli olmayan kararın değeri alınmaz; zemin katında ticaret yapılabilen konut alanının planda kodu \
+             yoktur, elle seçilir.",
         ));
     }
     super::group::<Message>("İmar durumu", body)

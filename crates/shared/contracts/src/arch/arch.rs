@@ -1728,6 +1728,55 @@ impl Zone {
         }
     }
 
+    /// As a sentence says it: “bölge konut alanı”.
+    pub fn word(self) -> &'static str {
+        match self {
+            Zone::Residential => "konut alanı",
+            Zone::ResidentialShops => "zemin katında ticaret yapılabilen konut alanı",
+            Zone::Mixed => "ticaret + konut alanı",
+            Zone::Commercial => "ticaret alanı",
+            Zone::Other => "öbür kullanım",
+        }
+    }
+
+    /// A zoning plan decision's Kullanım as the profile `imar-plani` writes it (its domain `plan-kullanim`) or that
+    /// domain's label, its ends and Turkish case aside (docs/adr/8143): konut a dwelling area (28/1-c), ticaret a commercial
+    /// area (28/1-a), ticaret-konut a mixed one (28/1-b), every other use of the list one 28/1 gives no storey height
+    /// for; none for anything else. The profile has no code for 28/1-ç's ground storey shops: never read from a plan.
+    pub fn from_plan(text: &str) -> Option<Zone> {
+        let fold = |s: &str| {
+            s.chars()
+                .map(|c| match c {
+                    'İ' => 'i',
+                    'I' => 'ı',
+                    c => c,
+                })
+                .collect::<String>()
+                .to_lowercase()
+        };
+        let t = fold(text.trim());
+        const LIST: [(&str, &str, Zone); 17] = [
+            ("konut", "Konut alanı", Zone::Residential),
+            ("ticaret", "Ticaret alanı", Zone::Commercial),
+            ("ticaret-konut", "Ticaret + konut alanı", Zone::Mixed),
+            ("sanayi", "Sanayi alanı", Zone::Other),
+            ("egitim", "Eğitim tesisi alanı", Zone::Other),
+            ("saglik", "Sağlık tesisi alanı", Zone::Other),
+            ("dini", "Dini tesis alanı", Zone::Other),
+            ("sosyal", "Sosyal tesis alanı", Zone::Other),
+            ("kultur", "Kültürel tesis alanı", Zone::Other),
+            ("spor", "Spor alanı", Zone::Other),
+            ("resmi", "Resmî kurum alanı", Zone::Other),
+            ("teknik", "Teknik altyapı alanı", Zone::Other),
+            ("otopark", "Otopark alanı", Zone::Other),
+            ("park", "Park", Zone::Other),
+            ("yesil", "Yeşil alan", Zone::Other),
+            ("meydan", "Meydan", Zone::Other),
+            ("yol", "Yol", Zone::Other),
+        ];
+        LIST.iter().find(|(code, label, _)| t == *code || t == fold(label)).map(|(.., z)| *z)
+    }
+
     /// As the audit facts and the rules write it.
     pub fn name(self) -> &'static str {
         match self {
@@ -3320,6 +3369,18 @@ mod plan_cut_tests {
             assert_eq!(serde_json::to_value(z).unwrap(), z.name());
         }
         assert!(!serde_json::to_string(&ArchSettings::default()).unwrap().contains("zone"));
+    }
+
+    /// Bölge from a plan decision's Kullanım (docs/adr/8143): the profile's codes and labels, nothing else.
+    #[test]
+    fn the_zone_is_read_from_the_plan_s_uses() {
+        let read = |t: &str| Zone::from_plan(t);
+        assert_eq!(
+            (read("konut"), read(" Ticaret "), read("ticaret-konut"), read("TİCARET + KONUT ALANI"), read("egitim")),
+            (Some(Zone::Residential), Some(Zone::Commercial), Some(Zone::Mixed), Some(Zone::Mixed), Some(Zone::Other))
+        );
+        assert_eq!((read("Konut alanı"), read("Park")), (Some(Zone::Residential), Some(Zone::Other)));
+        assert_eq!((read("konut+ticaret"), read("ticari"), read("")), (None, None, None));
     }
 
     /// Yapı nizamı (docs/adr/8141): written by its name, absent when not said; read from a plan decision's code or label

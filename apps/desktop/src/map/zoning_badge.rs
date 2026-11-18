@@ -63,8 +63,9 @@ struct PlanRead {
 
 /// What a zoning plan decision on the parcel gives that İmar durumu and Plan notları keep (docs/adr/8140): its emsal
 /// (KAKS) and TAKS, the plan's building height (Hmax, m) and storey count (KatAdedi), each only when it is written as a
-/// number the field takes; its layout (Nizam, docs/adr/8141) when written as the profile's code or label; and where the
-/// numbers come from: the plan (its id, state when not in force, approval) and the decision.
+/// number the field takes; its layout (Nizam, docs/adr/8141) and its use as Bölge (Kullanım, docs/adr/8143) when written
+/// as the profile's code or label; and where the numbers come from: the plan (its id, state when not in force, approval)
+/// and the decision.
 #[derive(Clone, Debug, PartialEq)]
 pub struct PlanTake {
     /// KararKimlik.
@@ -74,6 +75,7 @@ pub struct PlanTake {
     pub height: Option<f64>,
     pub storeys: Option<f64>,
     pub layout: Option<kentos_commands::BuildingLayout>,
+    pub zone: Option<kentos_commands::Zone>,
     /// At most [`kentos_commands::MAX_ZONING_SOURCE`] characters, one line.
     pub source: String,
 }
@@ -91,6 +93,9 @@ impl PlanTake {
         }
         if let Some(l) = self.layout {
             zoning.push(format!("nizam {}", l.word()));
+        }
+        if let Some(z) = self.zone {
+            zoning.push(format!("bölge {}", z.word()));
         }
         let mut notes: Vec<String> = Vec::new();
         if let Some(v) = self.height {
@@ -185,7 +190,9 @@ fn plan_take(d: &kentos_commands::ParcelDecision) -> Option<PlanTake> {
         .filter(|v| v.fract() == 0.0 && (1.0..=kentos_commands::PLAN_STOREYS_MAX).contains(v));
     let layout =
         d.values.iter().find(|v| v.field == "Nizam").and_then(|v| kentos_commands::BuildingLayout::from_plan(&v.value));
-    if far.is_none() && coverage.is_none() && height.is_none() && storeys.is_none() && layout.is_none() {
+    let zone = d.values.iter().find(|v| v.field == "Kullanim").and_then(|v| kentos_commands::Zone::from_plan(&v.value));
+    if far.is_none() && coverage.is_none() && height.is_none() && storeys.is_none() && layout.is_none() && zone.is_none()
+    {
         return None;
     }
     let mut source = p.id.clone();
@@ -199,7 +206,7 @@ fn plan_take(d: &kentos_commands::ParcelDecision) -> Option<PlanTake> {
     if source.chars().count() > kentos_commands::MAX_ZONING_SOURCE || source.chars().any(char::is_control) {
         return None;
     }
-    Some(PlanTake { decision: d.id.clone(), far, coverage, height, storeys, layout, source })
+    Some(PlanTake { decision: d.id.clone(), far, coverage, height, storeys, layout, zone, source })
 }
 
 /// A decision field's words as İmar durumu says them.

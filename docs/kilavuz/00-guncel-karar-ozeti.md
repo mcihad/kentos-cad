@@ -415,6 +415,9 @@
     ve açıklıklar olgularda (`building.party`). Yeni `bitisik` denetimi: PAİY 39/4 pencere ve kapı yok (nizam yazılmamış
     olsa da), BYKHY 25/1 en az EI 90 (taşıyıcıysa REI 90), 25/2 boşluk yok; kapı ve pencere E 45, kapıda C ve S;
     tutanın kaçınılmazlığı uzman incelemesi. Mimari verisi 29.
+  - **Bölge kararın kullanımından (18 Kasım 2026; [ADR 8143](../adr/8143-zone-from-plan-use.md), K367–K368):**
+    Değerlerini al kararın Kullanım'ını Bölge'ye alır (konut → konut alanı, ticaret → ticaret alanı, ticaret-konut →
+    karma, profilin öbür kullanımları → öbür kullanım); başka yazım okunmaz; 28/1-ç'nin planda kodu yok.
   - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
     PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
     39/1-ç döner kapının yanında normal bina girişi.
