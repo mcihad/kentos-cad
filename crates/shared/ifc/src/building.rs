@@ -505,6 +505,9 @@ pub struct Zone {
     /// Its body under a roof (docs/adr/8123), as its rooms' (docs/adr/8071 §11): its pieces up to the roof's underside;
     /// empty: its prism from its bottom to its top.
     pub body: Vec<Shape>,
+    /// The emsal table's area for its storey and state (docs/adr/8125): what EK-9/10 compares the file's zones with.
+    /// Not written to the file.
+    pub table: Option<f64>,
 }
 
 impl Zone {
@@ -1490,6 +1493,7 @@ mod tests {
                     props: vec![("EmsalDurumu".into(), Value::Label("DAHIL".into()))],
                 }],
                 body: Vec::new(),
+                table: None,
             }],
             groups: vec![Group {
                 id: None,

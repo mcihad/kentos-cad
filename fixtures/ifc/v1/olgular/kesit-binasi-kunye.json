@@ -958,6 +958,32 @@
         "zMax": 5.660000190734863,
         "zMin": 2.999999985694885
       }
+    ],
+    "zones": [
+      {
+        "area": 71.40251289367734,
+        "areaBound": 0.00014183046021571527,
+        "globalId": "0mXdHQdmw5Ne$gBLmCHlns",
+        "storey": "3cw2ZUyjABGvn5xuvDhrKU"
+      },
+      {
+        "area": 24.510004367828515,
+        "areaBound": 0.00003576159819658649,
+        "globalId": "0hbb1436Q6sOTvocBpJxs1",
+        "storey": "3cw2ZUyjABGvn5xuvDhrKU"
+      },
+      {
+        "area": 71.40251289367734,
+        "areaBound": 0.00014183046021571527,
+        "globalId": "2SCjl18iU4R8Q7xqwUZ8F9",
+        "storey": "10W_smdZA4W8WQhK9YjuVJ"
+      },
+      {
+        "area": 24.510004367828515,
+        "areaBound": 0.000036689760901708734,
+        "globalId": "186KbboPo8JwcEjcsdPcdo",
+        "storey": "10W_smdZA4W8WQhK9YjuVJ"
+      }
     ]
   },
   "catalog": {

@@ -17,7 +17,7 @@
 | EK-6 Tablo 6.60 (`TREpys_EmsalOzellikSeti.EmsalDurumu`) | DAHIL, HARIC, DIGER; "DIGER olması durumunda açıklama Attribute: Description bölümüne girilir" | DİĞER dayanaksız yazılmaz; zonun açıklaması dayanaklardır |
 | BIM-08 (plan) | Emsal alanı mahal sınıflamasından türer, "elle düzeltilir" | Mahalin kendi durumu kullanımının ve adının okumasını geçer (K284) |
 | EK-6 Tablo 6.58 (`IfcSpace`) | Ön tanımlı tipler SPACE, PARKING, GFA, INTERNAL, EXTERNAL | Otopark PARKING, dış mahal EXTERNAL, öbürü INTERNAL (K286) |
-| buildingSMART IFC 4.3, `IfcSpaceTypeEnum` | PARKING: araç park yeri, erişim yolu dahil; INTERNAL ve EXTERNAL kullanımdan kalkıyor: yerine `Pset_SpaceCommon.IsExternal` | İkisi de yazılır: tip EK-6 gibi, `IsExternal` IFC 4.3 gibi |
+| buildingSMART IFC 4.3, `IfcSpaceTypeEnum` | PARKING: araç park yeri, erişim yolu dahil; INTERNAL ve EXTERNAL kullanımdan kalkıyor: yerine `Pset_SpaceCommon.IsExternal` | Tip EK-6 gibi yazılır; isteğe bağlı `IsExternal` yazılmaz |
 | IfcOpenShell 0.9.0'ın IFC 4.3 şablonları, `Qto_SpatialZoneBaseQuantities` | Yalnız Length, Width, Height; alan yok | Zonların kat kat karşılaştırması dosyadaki gövdeden ölçülmeli: sonraki dilim (§4) |
 | EK-9 Tablo 9.1 satır 13 (PDF s. 239) | "Mahaller diğer mahallerle örtüşmeyecek şekilde ve doğru katta modellendi mi?" | Döşemesi katının kot aralığında olmayan mahal bulgu (K287) |
 
@@ -34,7 +34,9 @@
   girmez. Modelde kat başına bir `DIGER` zonu, açıklaması "Emsal artışı: <dayanaklar>". Artışın kendisini hesaplamak
   idarenindir: KentOS alanı ve dayanağı söyler.
 - **K286 — Mahalin türü:** adı ya da kullanımı Otopark, Garaj olan PARKING; programdaki kullanımı dış alan olan (balkon,
-  teras, açık alan) EXTERNAL; öbürü INTERNAL. Her mahale `Pset_SpaceCommon.IsExternal` (dış alan evet).
+  teras, açık alan) EXTERNAL; öbürü INTERNAL. EK-6 türü ister; IFC 4.3'ün yerine önerdiği `Pset_SpaceCommon.IsExternal`
+  isteğe bağlıdır ve yazılmaz (ilk yazımda her mahale yazılıyordu; ADR 8126 sırasında bütün IFC fikstürlerini anlamsız
+  bir özellik için değiştireceği görülünce kaldırıldı).
 - **K287 — Doğru katta (EK-9/13):** CAD olgularında mahalin döşemesi (modelin okuduğu: altındaki döşeme, kot farkı) ve
   katının kot aralığı (katın kotundan bir sonraki katın kotuna; en üst katta kotuna yüksekliği eklenerek). Kural
   (`kalite.quality_room_storey`) döşeme aralığın dışındaysa hata der; eşik yoktur (olgular milimetreye yuvarlı). Kademeli

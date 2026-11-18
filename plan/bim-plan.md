@@ -440,7 +440,7 @@ hiçbiri varsayılanla dolmaz. Dayanak EK-6 6.3, 6.7, 6.16, 6.20, 6.25, 6.52, 6.
 **İlk kabul:** bölüm binasında bütün zorunlu yangın alanları dolunca formun 9. sorusu evet. Bir duvar stilinin sınıfı
 silinince o stilin duvarları bulguda. Girilmemiş değer dosyaya boş metin olarak yazılmaz; eksik sayılır.
 
-#### BIM-08 — Mahal, zon ve emsal modeli [~]
+#### BIM-08 — Mahal, zon ve emsal modeli [x]
 
 **Yapıldı (16 Kasım 2026, [ADR 8069](../docs/adr/8069-room-zone-far-model.md)):** balkonların sınırı (PAİY 22/1-l, resmî
 metinden: bağımsız bölüm net alanının %20'si; ADR 8030'un okuması düzeltildi), aşan kısım emsale ve tabloda kendi satırına;
@@ -452,10 +452,12 @@ elle düzeltilen emsal durumu, kot aralığı denetimi. **Yapıldı (18 Kasım 2
 [ADR 8125](../docs/adr/8125-room-emsal-state-type-and-storey.md)):** mahalin kendi emsal durumu (Öznitelikler'de Emsal
 durumu ve Emsal dayanağı; `cad.spaces.edit` `emsal`; `.kcad` mimari verisi 21) ve emsal artışı (DİĞER: dayanağıyla,
 katlar alanına ve %30'a girmeyen kendi toplamı, tabloda satırı, modelde DIGER zonu açıklamasıyla); mahalin türü (otopark
-PARKING, dış alan EXTERNAL, öbürü INTERNAL; her mahalde `Pset_SpaceCommon.IsExternal`); doğru katta (EK-9/13: döşemesi
+PARKING, dış alan EXTERNAL, öbürü INTERNAL); doğru katta (EK-9/13: döşemesi
 katının kot aralığında olmayan mahal Denetim'de); eğik çatı altında kesilmiş mahal hacmi ADR 8071 §11 ve 8123 ile
-yapılmıştı. **Kalan:** katlar arasında yer değiştiren alanın teslim edilen dosyada denetimi (okuyucunun zonu katına
-bağlaması, zonun alanının gövdesinden ölçülmesi, ikinci okuyucu); mevzuat paketinin DİĞER'i okuması.
+yapılmıştı. **Yapıldı (18 Kasım 2026, [ADR 8126](../docs/adr/8126-far-zones-storey-by-storey.md)):** formun 10. sorusu
+zonları dosyada kat kat ve durum durum emsal tablosuyla karşılaştırır (zonun katı başvurusundan, alanı gövdesinin
+izinden, payı float32 sınırından); genel toplam tutsa da yer değiştiren alan ve yanlış durum kalır; teslim edilen model
+de böyle okunur. **Kalan:** ikinci okuyucunun zon izi; mevzuat paketinin DİĞER'i okuması; gerçek pencerede kabul.
 
 **Kullanıcı sonucu:** Emsal ve TAKS tablosu ile modeldeki alanlar aynı çokgenlerden gelir. Her emsal alanı dahil, hariç ya
 da öbürü diye maddesiyle işaretlidir. Bağımsız bölüm ve ortak alan modelde gruptur. Mahalin hacmi kapalıdır ve üstü doğru
@@ -969,7 +971,7 @@ Her satır bir ADR, bir commit, sahibe gönderilen resimler ve bir rapordur. IFC
 |---|---|---|---|
 | B6 ◐ | Binanın 3B görünümü | BIM-06 | Bina 3B'de; tıkla, planda seç; örtüşen mahal kırmızı (ADR 8067); ağaç, özellikler ve kesit görüntüleyicide, model çizimden canlı (ADR 8119); gerçek pencere kaldı |
 | B7 ✓ | Yangın, performans ve malzeme; modelin zorunlu alanları | BIM-07, IFC-02 | Beyan dayanağıyla modelde; eksik alanlar nesneleriyle Denetim'de; 9. soru modelden; yazar gibi doldurulmuş binada zorunlu satır eksiği yok (ADR 8068, 8076); pencerelerde beyan, türetilenin gerekçesi, acil çıkış önerisi, Tag, ad ve soyad, ölçüm anotasyonu (ADR 8124) |
-| B8 ◐ | Mahal, zon ve emsal; mekânsal zonlar ve gruplar | BIM-08, IFC-03 | Emsal tablosu ile model aynı alanlardan (ADR 8069); mahalin kendi emsal durumu ve DİĞER, mahalin türü, doğru katta (ADR 8125); çatıyla kesilen hacim (ADR 8071, 8123); teslim edilen dosyada kat × sınıf denetimi kaldı |
+| B8 ✓ | Mahal, zon ve emsal; mekânsal zonlar ve gruplar | BIM-08, IFC-03 | Emsal tablosu ile model aynı alanlardan (ADR 8069); mahalin kendi emsal durumu ve DİĞER, mahalin türü, doğru katta (ADR 8125); çatıyla kesilen hacim (ADR 8071, 8123); dosyada kat × durum (ADR 8126) |
 | B9 ◐ | Eksik yapı elemanları; eksik sınıflar | BIM-09, IFC-03 | Kayıp listesi boş (ADR 8070; giydirme cephe kapısı, eğik eleman kaldı) |
 | B10 ✓ | Geometri doğruluğu; geometri ve görünüm tanımı | BIM-10, IFC-06 | Eğri eğri, açıklık kesik (ADR 8071) |
 | B11 ✓ | Çok bina; konum, kot ve çok bina | BIM-11, IFC-05 | İki blok, iki model dosyası; yerel sistem haritada; plan kararları kaynağıyla (ADR 8072) |

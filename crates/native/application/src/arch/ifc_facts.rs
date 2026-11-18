@@ -92,6 +92,20 @@ impl Planned {
             .map(|l| json!({ "uid": l.id, "what": l.what, "why": why(l.why) }))
             .collect();
         facts["export"] = json!({ "left": left, "crsWhy": b.crs_why, "northWhy": b.north_why, "memory": memory });
+        // The emsal table the file's zones are held to (docs/adr/8125; EK-9/10): each zone's storey (by its GlobalId),
+        // state and the table's area of its rooms, from the drawing now.
+        facts["emsal"] = b
+            .zones
+            .iter()
+            .filter_map(|z| {
+                let storey = b.storeys.get(z.storey)?.id?;
+                let state = z.psets.iter().flat_map(|p| p.props.iter()).find(|(k, _)| k == "EmsalDurumu").and_then(|(_, v)| match v {
+                    kentos_ifc::building::Value::Label(s) => Some(s.clone()),
+                    _ => None,
+                })?;
+                Some(json!({ "storey": kentos_ifc::step::guid(storey), "state": state, "area": z.table? }))
+            })
+            .collect();
         facts["at"] = json!(self.at);
         Ok(facts)
     }

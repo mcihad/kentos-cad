@@ -231,7 +231,8 @@ fn the_real_rule_stops_what_the_model_lacks_and_publishes_a_declared_building_wh
     assert_eq!(bim.results.iter().map(|r| r.key.as_str()).collect::<Vec<_>>(), ["okunuyor", "sema", "profil", "model_pafta", "idare"]);
     assert_eq!(bim.results.iter().map(|r| r.holds).collect::<Vec<_>>(), [Some(true), Some(true), Some(false), Some(true), None]);
     let codes: Vec<&str> = planned.issues.iter().filter(|i| i.error).map(|i| i.code.as_str()).collect();
-    assert_eq!(codes.iter().filter(|c| **c == "digital_form_unanswered").count(), 3, "{codes:?}");
+    // The 10th is answered from the file (docs/adr/8126): two left to the author.
+    assert_eq!(codes.iter().filter(|c| **c == "digital_form_unanswered").count(), 2, "{codes:?}");
     assert!(codes.contains(&"digital_required_field"), "{codes:?}");
     // A drawing without a system or a north arrow: the model's north is not known, and the finding says what gives it.
     let north = planned.issues.iter().find(|i| i.message.contains("(TrueNorth)")).expect("the context's north");
@@ -382,18 +383,17 @@ fn a_stale_answer_stops_the_package() {
     let first = report(&publish(&mut doc, &path, CallOp::Plan, json!([])));
     let rows = &first.bim.as_ref().expect("the package's part").rows;
     let basis = |no: u8| rows.iter().find(|r| r.no == no).map(|r| r.basis.clone()).expect("the row");
-    assert!(basis(10).contains("zon"), "{}", basis(10));
-    let given: Vec<Value> = [1u8, 7, 10].iter().map(|&no| json!({"no": no, "yes": true, "basis": basis(no)})).collect();
+    let given: Vec<Value> = [1u8, 7].iter().map(|&no| json!({"no": no, "yes": true, "basis": basis(no)})).collect();
     run(&mut doc, "cad.form.answer", json!({"answers": given}));
     let answered = report(&publish(&mut doc, &path, CallOp::Plan, json!([])));
     assert!(answered.ready, "{:?}", answered.issues.iter().filter(|i| i.error).map(|i| &i.code).collect::<Vec<_>>());
     // The evidence it answered is not the form's now: stale.
-    run(&mut doc, "cad.form.answer", json!({"answers": [{"no": 10, "yes": true, "basis": "3 zon (3 DAHIL); eski kanıt"}]}));
+    run(&mut doc, "cad.form.answer", json!({"answers": [{"no": 7, "yes": true, "basis": "eski kanıt"}]}));
     let stale = report(&publish(&mut doc, &path, CallOp::Plan, json!([])));
     assert!(!stale.ready);
     let codes: Vec<&str> = stale.issues.iter().filter(|i| i.error).map(|i| i.code.as_str()).collect();
     assert_eq!(codes, ["digital_form_answer_stale"]);
-    let row = stale.bim.as_ref().expect("the part").rows.iter().find(|r| r.no == 10).expect("row 10");
+    let row = stale.bim.as_ref().expect("the part").rows.iter().find(|r| r.no == 7).expect("row 7");
     assert_eq!(row.answer, "", "the stale answer is not the form's");
     assert!(!path.exists());
 }

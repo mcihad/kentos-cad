@@ -106,3 +106,26 @@ fn the_facts_the_form_is_tried_on_are_current() {
         }
     }
 }
+
+/// Each emsal zone of the section building's file (docs/adr/8125; EK-9/10): its storey, by the structure it is referenced
+/// in, and its body's footprint, with its bound. The building's two storeys each hold a zone counted in.
+#[test]
+fn every_emsal_zone_has_its_storey_and_its_footprint() {
+    let (f, b) = facts_of("kesit-binasi");
+    let storeys: Vec<&str> = f["objects"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|o| o["class"] == "IfcBuildingStorey")
+        .filter_map(|o| o["globalId"].as_str())
+        .collect();
+    let zones = b["zones"].as_array().expect("the zones");
+    assert!(!zones.is_empty());
+    for z in zones {
+        assert!(storeys.contains(&z["storey"].as_str().expect("a storey")), "{z}");
+        let (area, bound) = (z["area"].as_f64().unwrap(), z["areaBound"].as_f64().unwrap());
+        assert!(area > 1.0 && bound > 0.0 && bound < area * 1e-3, "{z}");
+    }
+    let held: std::collections::BTreeSet<&str> = zones.iter().filter_map(|z| z["storey"].as_str()).collect();
+    assert_eq!(held.len(), storeys.len(), "a zone on every storey");
+}

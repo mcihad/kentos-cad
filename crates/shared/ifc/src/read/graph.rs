@@ -205,6 +205,7 @@ pub(super) fn build(
                     predefined: at[6].and_then(|i| e.get(i)).and_then(AttributeValue::as_enum).map(str::to_owned),
                     parent: None,
                     container: None,
+                    reference: None,
                     type_object: None,
                     children: Vec::new(),
                     has_shape: at[7].and_then(|i| e.get(i)).is_some_and(|v| v.as_entity_ref().is_some()),
@@ -341,6 +342,19 @@ fn tree(
             }
             if matches!(pass, Role::Voids | Role::References) {
                 voiding.extend(r.related.iter().copied());
+                // The structure a zone or an element is referenced in (docs/adr/8125): the first, as a fact; the tree
+                // keeps it where it is.
+                if pass == Role::References
+                    && let Some(&up) = r.relating.as_ref().and_then(|s| by_step.get(s))
+                {
+                    for s in &r.related {
+                        if let Some(&c) = by_step.get(s)
+                            && objects[c].reference.is_none()
+                        {
+                            objects[c].reference = Some(up);
+                        }
+                    }
+                }
                 continue;
             }
             let Some(&up) = r.relating.as_ref().and_then(|s| by_step.get(s)) else { continue };

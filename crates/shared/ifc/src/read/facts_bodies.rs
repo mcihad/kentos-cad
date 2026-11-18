@@ -38,6 +38,7 @@ impl Model {
         let mut out_bodies = Vec::new();
         let mut spaces: Vec<(usize, Option<String>, Vec<Area>)> = Vec::new();
         let mut space_json = Vec::new();
+        let mut zone_json = Vec::new();
         for b in &bodies.bodies {
             let o = &self.objects[b.object];
             let (lo, hi) = heights(b);
@@ -58,14 +59,29 @@ impl Model {
                 }));
                 spaces.push((b.object, storey, ground));
             }
+            // A zone's footprint and its storey (docs/adr/8125; EK-9/10): IFC 4.3 gives a zone no area quantity, so its
+            // area is its body's footprint, within twice its outline's length times its float32 bound.
+            if schema.is_subtype_of(&o.class, "IfcSpatialZone") {
+                let storey = self.storey_of_object(b.object).map(|s| self.objects[s].global_id.clone());
+                let ground = union_areas(&footprint(b, lo));
+                let area: f64 = ground.iter().map(net_area).sum();
+                let outline: f64 = ground.iter().flat_map(|a| std::iter::once(&a.outer).chain(&a.holes)).map(ring_length).sum();
+                zone_json.push(json!({
+                    "globalId": o.global_id,
+                    "storey": storey,
+                    "area": area,
+                    "areaBound": 2.0 * outline * b.rounding,
+                }));
+            }
         }
-        json!({ "bodies": out_bodies, "spaces": space_json, "overlaps": overlaps(self, &spaces) })
+        json!({ "bodies": out_bodies, "spaces": space_json, "zones": zone_json, "overlaps": overlaps(self, &spaces) })
     }
 
-    /// The storey above object `i`.
+    /// The storey above object `i`: through its whole, its container, else the structure it is referenced in (a zone,
+    /// docs/adr/8125).
     fn storey_of_object(&self, i: usize) -> Option<usize> {
         let schema = header::version(self.summary.family);
-        let mut at = self.objects.get(i).and_then(|o| o.parent.or(o.container));
+        let mut at = self.objects.get(i).and_then(|o| o.parent.or(o.container).or(o.reference));
         for _ in 0..self.objects.len() {
             let p = at?;
             let o = self.objects.get(p)?;
@@ -76,6 +92,15 @@ impl Model {
         }
         None
     }
+}
+
+/// A ring's length, its last corner back to its first.
+fn ring_length(r: &Ring) -> f64 {
+    let n = r.pts.len();
+    (0..n).map(|i| {
+        let (a, b) = (r.pts[i], r.pts[(i + 1) % n]);
+        (b.x - a.x).hypot(b.y - a.y)
+    }).sum()
 }
 
 /// A body's lowest and highest corner.

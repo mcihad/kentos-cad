@@ -946,7 +946,8 @@ mod tests {
             "levels":[{"id":"zemin","name":"Zemin kat","elevation":0.}],
             "spaceNames":["Mutfak","mutfak"],"spaceUsages":["Konut"],
             "spaceNumberPrefixes":{"zemin":"Z-"},
-            // Declared elsewhere, kept by the form (docs/adr/8068, 8077).
+            // The fire protection class is this form's (docs/adr/8124), read back from its texts as the window starts
+            // them; the form's answers are their own window's (docs/adr/8077).
             "performance":{"fireProtectionClass":{"value":"Konut, düşük tehlike","basis":{"kind":"author"}}},
             "formAnswers":[{"no":1,"yes":true,"note":"Sınır yayımlanmadı"}]
         }))
@@ -1088,7 +1089,7 @@ mod tests {
                 None,
                 "",
                 None,
-                &ZoningTexts::default(),
+                &ZoningTexts::of(Some(&a)),
                 Some(&a)
             )
             .unwrap(),
@@ -1101,7 +1102,7 @@ mod tests {
             None,
             "",
             None,
-            &ZoningTexts::default(),
+            &ZoningTexts::of(Some(&a)),
             Some(&a),
         )
         .unwrap();
@@ -1114,7 +1115,7 @@ mod tests {
             None,
             "",
             None,
-            &ZoningTexts::default(),
+            &ZoningTexts::of(Some(&a)),
             Some(&a),
         )
         .unwrap();
@@ -1130,7 +1131,7 @@ mod tests {
             None,
             "",
             None,
-            &ZoningTexts::default(),
+            &ZoningTexts::of(Some(&a)),
             Some(&a),
         )
         .unwrap();

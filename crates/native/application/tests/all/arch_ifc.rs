@@ -1590,10 +1590,8 @@ fn a_room_s_own_emsal_state_counts_and_an_increase_is_a_diger_zone() {
         .collect();
     assert_eq!(diger.len(), 1);
     assert!(diger[0].description.as_deref().is_some_and(|d| d.contains("Sivas İmar Yönetmeliği 22/k")), "{:?}", diger[0].description);
-    // Every room says whether it is outside, its kind by it.
+    // Every room has its kind (EK-6 Tablo 6.58): the section building's are inside, none a car park.
     for s in &b.spaces {
-        let outside = s.psets.iter().flat_map(|p| p.props.iter()).find(|(k, _)| k == "IsExternal").map(|(_, v)| v.clone());
-        assert!(matches!(outside, Some(Value::Bool(_))), "{}", s.name);
-        assert!(matches!(s.predefined, "INTERNAL" | "EXTERNAL" | "PARKING"), "{}", s.predefined);
+        assert_eq!(s.predefined, "INTERNAL", "{}", s.name);
     }
 }

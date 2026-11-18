@@ -114,7 +114,11 @@ fn the_form_in_the_drawing_is_the_set_s_fr_mkf_sheet_with_its_answers_now() {
     let info = answer("2");
     assert_eq!(info[4], "Hayır");
     assert!(
-        info[5].contains("Künyede eksik: Proje açıklaması (IFC modelinde), Dijital teslim kapsamı › Yapı, Büronun adı"),
+        // Its künye gives no family name apart: the person's names are not written (docs/adr/8124 K279).
+        info[5].contains(
+            "Künyede eksik: Proje açıklaması (IFC modelinde), Dijital teslim kapsamı › Yapı, Mimarın soyadı (IFC modelinde), \
+             Büronun adı"
+        ),
         "{}",
         info[5]
     );

@@ -114,3 +114,16 @@ fn screens() {
         println!("{}", file.display());
     }
 }
+
+/// EK-9/10 on the section building's model written now (docs/adr/8125): every zone's area is the emsal table's for its
+/// storey and state, so the form's 10th row says yes and names no zone.
+#[test]
+fn the_form_s_10th_row_holds_the_zones_to_the_table_storey_by_storey() {
+    let app = app();
+    let doc = &app.document.as_ref().unwrap().model;
+    let rows = crate::ifc_facts::form_rows(doc).expect("the form");
+    let row = rows.iter().find(|r| r.first().is_some_and(|c| c.trim() == "10")).expect("the 10th row");
+    let joined = row.join(" | ");
+    assert!(joined.contains("Evet"), "{joined}");
+    assert!(joined.contains("emsal tablosuyla aynı"), "{joined}");
+}

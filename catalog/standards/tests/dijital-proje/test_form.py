@@ -466,5 +466,57 @@ class Sorular(unittest.TestCase):
         self.assertEqual(satir(f, 21)["bulgular"][0]["uids"], ["u-rampa"])
 
 
+class EmsalZonlari(unittest.TestCase):
+    """EK-9/10, kat kat ve durum durum (docs/adr/8125): elle yazılmış iki katlı olgular."""
+
+    def dosya(self, zonlar, tablo):
+        """``zonlar``: (zon, kat, durum, alan); ``tablo``: (kat, durum, alan)."""
+        nesneler = [{"class": "IfcProject", "globalId": "p"},
+                    {"class": "IfcBuildingStorey", "globalId": "k0", "longName": "Zemin kat"},
+                    {"class": "IfcBuildingStorey", "globalId": "k1", "longName": "1. kat"}]
+        govde = []
+        for gid, kat, durum, alan in zonlar:
+            nesneler.append({"class": "IfcSpatialZone", "globalId": gid,
+                             "sets": {"TREpys_EmsalOzellikSeti": {"EmsalDurumu": durum}}})
+            govde.append({"globalId": gid, "storey": kat, "area": alan, "areaBound": 0.001})
+        return {"objects": nesneler, "bodies": {"zones": govde, "spaces": [], "overlaps": [], "bodies": []},
+                "emsal": [{"storey": k, "state": d, "area": a} for k, d, a in tablo]}
+
+    def s10(self, f):
+        d = form._Dosya(f)
+        return d.s10()
+
+    def test_tablo_yoksa_inceleme(self):
+        f = self.dosya([("z0", "k0", "DAHIL", 100.0)], [])
+        self.assertEqual(self.s10(f)[0], form.INCELEME)
+
+    def test_kat_kat_ayni_alan_gecer(self):
+        f = self.dosya([("z0", "k0", "DAHIL", 100.0), ("z1", "k1", "DAHIL", 90.0), ("z2", "k0", "HARIC", 20.0)],
+                       [("k0", "DAHIL", 100.0), ("k1", "DAHIL", 90.0), ("k0", "HARIC", 20.0)])
+        kanit, _, bulgular = self.s10(f)
+        self.assertEqual(kanit, form.GECTI)
+        self.assertEqual(bulgular, [])
+
+    def test_katlar_arasinda_yer_degistiren_alan_kalir(self):
+        # Genel toplam 190 m² iki tarafta da: zemin kattan 10 m² birinci kata geçmiş.
+        f = self.dosya([("z0", "k0", "DAHIL", 90.0), ("z1", "k1", "DAHIL", 100.0)],
+                       [("k0", "DAHIL", 100.0), ("k1", "DAHIL", 90.0)])
+        kanit, _, bulgular = self.s10(f)
+        self.assertEqual(kanit, form.KALDI)
+        self.assertEqual([b["code"] for b in bulgular], ["digital_emsal_zone_area"] * 2)
+        self.assertIn("Zemin kat, DAHIL: dosyadaki zonlar 90.00 m², emsal tablosunda 100.00 m² (fark -10.00 m²)",
+                      bulgular[0]["message"])
+
+    def test_yanlis_emsal_durumu_kalir(self):
+        f = self.dosya([("z0", "k0", "HARIC", 100.0)], [("k0", "DAHIL", 100.0)])
+        kanit, _, bulgular = self.s10(f)
+        self.assertEqual(kanit, form.KALDI)
+        self.assertEqual(len(bulgular), 2, "DAHIL eksik, HARIC fazla")
+
+    def test_govde_sinirinin_icindeki_fark_ayni_sayilir(self):
+        f = self.dosya([("z0", "k0", "DAHIL", 100.0004)], [("k0", "DAHIL", 100.0)])
+        self.assertEqual(self.s10(f)[0], form.GECTI)
+
+
 if __name__ == "__main__":
     unittest.main()

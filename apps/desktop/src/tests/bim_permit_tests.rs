@@ -138,10 +138,11 @@ fn the_bim_package_is_checked_from_its_file_and_waits_for_the_author_s_answers()
     let bim = report.bim.as_ref().expect("the package's part");
     assert_eq!(bim.rows.len(), 21);
     let open: Vec<u8> = bim.rows.iter().filter(|r| r.evidence == "inceleme").map(|r| r.no).collect();
-    assert_eq!(open, [1, 7, 10], "the questions left to the author");
+    // The 10th is answered from the file now: its zones storey by storey against the table (docs/adr/8126).
+    assert_eq!(open, [1, 7], "the questions left to the author");
     assert!(!report.ready);
     let unanswered = report.issues.iter().filter(|i| i.code == "digital_form_unanswered").count();
-    assert_eq!(unanswered, 3);
+    assert_eq!(unanswered, 2);
     // The form's 20th question holds: the building's quantities are the template's (FootPrintArea, docs/adr/8075).
     assert!(!report.issues.iter().any(|i| i.code == "digital_pset_wrong"), "{:?}", report.issues);
     // The author answers; Denetle again: the questions are no finding, the model's missing fields still are.
@@ -166,7 +167,7 @@ fn a_declared_building_s_package_holds_and_is_published() {
     let path = folder("tam");
     permit_publication(&mut app, &path);
     let _ = app.sheet_publish_event(Publish::Bim(true));
-    for no in [1, 7, 10] {
+    for no in [1, 7] {
         let _ = app.sheet_publish_event(Publish::BimAnswer(no, Some(true)));
     }
     check(&mut app);
@@ -248,7 +249,7 @@ fn screens() {
         let file = out.join(format!("1-bim-paketi-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
-        for no in [1, 7, 10] {
+        for no in [1, 7] {
             let _ = app.sheet_publish_event(Publish::BimAnswer(no, Some(true)));
         }
         let _ = app.sheet_publish_event(Publish::BimNote(1, "Bakanlığın sınırı yayımlanmadı".into()));
@@ -267,7 +268,7 @@ fn screens() {
         let path = folder(&format!("tam-{name}"));
         permit_publication(&mut app, &path);
         let _ = app.sheet_publish_event(Publish::Bim(true));
-        for no in [1, 7, 10] {
+        for no in [1, 7] {
             let _ = app.sheet_publish_event(Publish::BimAnswer(no, Some(true)));
         }
         let _ = app.sheet_publish_event(Publish::BimNote(1, "Bakanlığın sınırı yayımlanmadı".into()));

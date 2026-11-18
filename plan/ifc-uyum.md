@@ -341,8 +341,8 @@ bağımsız okuyucu (IfcOpenShell) bölüm binasının dosyasında 0 bulgu; giyd
 K45) ve dikme ile kayıtları (`IfcMember` MULLION, `IfcRelAggregates`), doğrulayıcıda 0 bulgu; dikme ve kayıt (`IfcMember`
 POST ve USERDEFINED, K46), doğrulayıcıda 0 bulgu; rampalı, giydirme cepheli, asansörlü örnek binada kayıp listesi boş,
 `cad.arch.ifc` yeni sınıfları da sayar (ADR 8070 §9). DIGER durumu 18 Kasım'da: mahalin kendi emsal artışı, dayanağı
-zonun açıklaması ([ADR 8125](../docs/adr/8125-room-emsal-state-type-and-storey.md) K285). **Kalan:** zonların teslim
-edilen dosyada kat kat karşılaştırılması (BIM-08).
+zonun açıklaması ([ADR 8125](../docs/adr/8125-room-emsal-state-type-and-storey.md) K285). Zonlar dosyada kat kat ve
+durum durum emsal tablosuyla ([ADR 8126](../docs/adr/8126-far-zones-storey-by-storey.md)).
 
 **Kullanıcı sonucu:** Modeldeki her yapı nesnesi kendi sınıfıyla dışa gider; emsal alanları ve bağımsız bölümler dosyadadır.
 Nesneleri BIM-08 ve BIM-09'dan gelir.

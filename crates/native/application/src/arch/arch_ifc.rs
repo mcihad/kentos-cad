@@ -112,8 +112,11 @@ fn emsal_areas(doc: &Document) -> Vec<kentos_ifc::arch::EmsalArea> {
                     bases.push(b.clone());
                 }
             }
+            // The table's area of these rooms: their contours' (docs/adr/8125), what EK-9/10 compares the zone with.
+            let table = rooms.iter().filter(|r| r.level == level && r.count == count).map(|r| r.gross).sum::<f64>();
             kentos_ifc::arch::EmsalArea {
                 bases,
+                table: Some(table),
                 moved: part(ZoningLimit::Balcony),
                 storage: part(ZoningLimit::Storage),
                 caretaker: part(ZoningLimit::Caretaker),

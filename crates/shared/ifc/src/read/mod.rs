@@ -274,6 +274,9 @@ pub struct Object {
     pub parent: Option<usize>,
     /// The spatial structure that contains it (`IfcRelContainedInSpatialStructure`).
     pub container: Option<usize>,
+    /// The spatial structure that references it without containing it (`IfcRelReferencedInSpatialStructure`: a zone
+    /// on its storey, docs/adr/8125); the first.
+    pub reference: Option<usize>,
     /// Its type object (`IfcRelDefinesByType`).
     pub type_object: Option<usize>,
     /// Its parts, then what it contains, in the order the relations list them.

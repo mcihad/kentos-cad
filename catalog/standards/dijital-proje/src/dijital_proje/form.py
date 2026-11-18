@@ -171,8 +171,9 @@ KUNYE_YERI = {
     ("IfcProject", "Description"): "Proje açıklaması (IFC modelinde)",
     ("IfcProject", "Pset_ProjectCommon.ProjectType"): "Dijital teslim kapsamı › Yapı",
     ("IfcPerson", "Identification"): "Mimarlar Odası sicil no",
+    # Both names come from the family name the künye gives apart (docs/adr/8124 K279): its box says them both.
     ("IfcPerson", "FamilyName"): "Mimarın soyadı (IFC modelinde)",
-    ("IfcPerson", "GivenName"): "Mimar (müellif) adı soyadı ve Mimarın soyadı (IFC modelinde)",
+    ("IfcPerson", "GivenName"): "Mimarın soyadı (IFC modelinde)",
     ("IfcPersonAndOrganization", "ThePerson"): "Mimar (müellif) adı soyadı",
     ("IfcPersonAndOrganization", "TheOrganization"): "Büronun adı",
     ("IfcOrganization", "Identification"): "Büronun vergi kimlik no",
@@ -632,7 +633,10 @@ class _Dosya:
         return GECTI, "EK-6 ve EK-7'nin zorunlu alanları dosyanın her nesnesinde dolu.", []
 
     def s10(self):
-        """Mahal ve mekânsal zon alanları emsal tablosuyla: zonlar dosyada mı, durumu DAHIL/HARIC/DIGER mi."""
+        """Mahal ve mekânsal zon alanları emsal tablosuyla: zonlar dosyada mı, durumu DAHIL/HARIC/DIGER mi; çizimin
+        tablosu verilmişse (``emsal``, docs/adr/8125) her zonun alanı (gövdesinin izi, ``bodies.zones``) kat kat ve
+        durum durum tablonunkiyle aynı mı. Genel toplamı tutan ama katlar ya da durumlar arasında yer değiştiren alan
+        kalır."""
         zonlar = self.of("IfcSpatialZone")
         if not zonlar:
             return KALDI, "dosyada mekânsal zon yok: mahallerin emsal durumu (DAHIL, HARIC, DIGER) okunamaz", [self.bulgu(
@@ -640,12 +644,49 @@ class _Dosya:
                 "Mahallerin emsal durumunu Mimari › Alan zonlarında verin; dosyayı yeniden yazın.",
                 [p["globalId"] for p in self.of("IfcProject")])]
         durumlar: dict[str, int] = {}
+        durum_of: dict[str, str] = {}
         for z in zonlar:
             # EK-6 Tablo 6.60: the zone's emsal status is its national set's; its object type is the zone's kind.
             durum = str((z.get("sets") or {}).get("TREpys_EmsalOzellikSeti", {}).get("EmsalDurumu") or "durumu yok")
             durumlar[durum] = durumlar.get(durum, 0) + 1
+            durum_of[z["globalId"]] = durum
         ozet = ", ".join(f"{n} {d}" for d, n in sorted(durumlar.items()))
-        return INCELEME, f"{len(zonlar)} zon ({ozet}); alanların emsal hesap tablosuyla karşılaştırılması müellifin.", []
+        tablo = self.ifc.get("emsal") or []
+        govde = {g["globalId"]: g for g in (self.bodies.get("zones") or [])}
+        if not tablo or not govde:
+            return INCELEME, f"{len(zonlar)} zon ({ozet}); alanların emsal hesap tablosuyla karşılaştırılması müellifin.", []
+        # Each storey and state: the file's zones' area (and its bound) against the table's.
+        dosya: dict[tuple[str, str], list[Any]] = {}
+        for z in zonlar:
+            g = govde.get(z["globalId"])
+            if g is None or g.get("storey") is None:
+                continue
+            k = (g["storey"], durum_of[z["globalId"]])
+            d = dosya.setdefault(k, [0.0, 0.0, []])
+            d[0] += float(g.get("area") or 0.0)
+            d[1] += float(g.get("areaBound") or 0.0)
+            d[2].append(z["globalId"])
+        beklenen: dict[tuple[str, str], float] = {}
+        for t in tablo:
+            k = (t["storey"], t["state"])
+            beklenen[k] = beklenen.get(k, 0.0) + float(t["area"])
+        bulgular = []
+        for k in sorted(set(dosya) | set(beklenen)):
+            alan, sinir, gids = dosya.get(k, [0.0, 0.0, []])
+            olmali = beklenen.get(k, 0.0)
+            if abs(alan - olmali) <= sinir + 1e-6:
+                continue
+            kat = self.by_gid.get(k[0], {})
+            ad = kat.get("longName") or kat.get("name") or k[0]
+            bulgular.append(self.bulgu(
+                "digital_emsal_zone_area",
+                f"{ad}, {k[1]}: dosyadaki zonlar {alan:.2f} m², emsal tablosunda {olmali:.2f} m² (fark {alan - olmali:+.2f} m²)",
+                "Emsal zonlarını çizimden yeniden yazın (dosyayı yeniden üretin); çizimde mahallerin katını ve emsal "
+                "durumunu denetleyin.", gids or [k[0]]))
+        if bulgular:
+            return KALDI, (f"{len(bulgular)} kat ve durumda zonların alanı emsal tablosundan farklı; genel toplam tutsa "
+                           "da katlar ve durumlar birbirini telafi etmez"), bulgular
+        return GECTI, f"{len(dosya)} kat ve durumda zonların alanı emsal tablosuyla aynı ({ozet}).", []
 
     def s11(self):
         sayi = {c: len(self.of(c)) for c in ("IfcProject", "IfcSite", "IfcBuilding", "IfcBuildingStorey")}
