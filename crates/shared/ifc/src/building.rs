@@ -405,6 +405,9 @@ pub struct Building {
     pub grids: Vec<Grid>,
     /// The survey points the project measured (docs/adr/8124; EK-7 Tablo 7.9 `IfcAnnotation` SURVEY), in the site.
     pub surveys: Vec<SurveyPoint>,
+    /// Each room's coverings (docs/adr/8127; IFC 4.3 `IfcRelCoversSpaces`): a room by its index into
+    /// [`Building::spaces`], its coverings by theirs into [`Building::elements`].
+    pub covers: Vec<(usize, Vec<usize>)>,
     /// The layered elements' material layer sets (docs/adr/8071 §8): an element (by its index), its set's name and its
     /// layers top down, in place of a single material.
     pub layer_sets: Vec<(usize, String, Vec<Layer>)>,
@@ -1220,6 +1223,16 @@ pub fn write(b: &Building) -> String {
             "IFCRELASSIGNSTOGROUP({g},$,$,$,({}),$,#{z})",
             Step::refs(&members)
         ));
+    }
+    // The rooms' coverings (docs/adr/8127): each room with the coverings that face it, beside their storey's containment.
+    for (s, covers) in &b.covers {
+        let Some(space) = space_ids.get(*s).copied().flatten() else { continue };
+        let list: Vec<usize> = covers.iter().filter_map(|k| products.get(*k).copied()).filter(|&n| n != 0).collect();
+        if list.is_empty() {
+            continue;
+        }
+        let g = w.st.derived("covers", &[space], "");
+        w.st.add(format!("IFCRELCOVERSSPACES({g},$,$,$,#{space},({}))", Step::refs(&list)));
     }
     // The grids (EK-6 Tablo 6.36; docs/adr/8070 §4): each axis its tag and its line, an arc an indexed curve's arc
     // segment; the grid's footprint their lines. A grid on a storey is its storey's, else the building's.

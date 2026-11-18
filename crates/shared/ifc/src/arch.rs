@@ -2386,6 +2386,64 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     for t in &mut types {
         t.members.sort_unstable();
     }
+    // Each room's coverings (docs/adr/8127; IFC 4.3 `IfcRelCoversSpaces`): a covering bound to a room (its outline
+    // the room's, docs/adr/0771 §4) is that room's; one drawn by hand is the room on its storey its inside point stands
+    // in; one in no room covers none.
+    let covers: Vec<(usize, Vec<usize>)> = {
+        use kentos_geometry_core::geom::arrangement::{Area, Ring};
+        let area_of = |rings: &[Vec<[f64; 2]>], bulges: &[Vec<f64>]| -> Vec<Area> {
+            let ring = |i: usize| Ring {
+                pts: rings[i].iter().map(|p| kentos_geometry_core::Vec2 { x: p[0], y: p[1] }).collect(),
+                bulges: bulges.get(i).filter(|b| b.iter().any(|x| *x != 0.0)).cloned(),
+            };
+            if rings.is_empty() {
+                return Vec::new();
+            }
+            vec![Area { outer: ring(0), holes: (1..rings.len()).map(ring).collect() }]
+        };
+        let rooms: Vec<(usize, Vec<Area>)> = spaces.iter().enumerate().map(|(i, sp)| (i, area_of(&sp.rings, &sp.bulges))).collect();
+        let mut out: Vec<(usize, Vec<usize>)> = Vec::new();
+        for (k, el) in elements.iter().enumerate().filter(|(_, el)| el.class == Class::Covering) {
+            let Some(id) = el.id else { continue };
+            let bound = by_uid.values().find(|(bits, _)| *bits == id).and_then(|(_, e)| match e {
+                Entity::Slab(s) => s
+                    .slab
+                    .bound
+                    .as_ref()
+                    .filter(|b| b.source == kentos_contracts::SlabSourceKind::Space)
+                    .and_then(|b| b.space.clone()),
+                _ => None,
+            });
+            let room = match bound {
+                Some(uid) => kentos_contracts::EntityId::parse(&uid)
+                    .map(|u| u128::from_be_bytes(u.0))
+                    .and_then(|bits| spaces.iter().position(|sp| sp.id == Some(bits))),
+                None => {
+                    // Its inside point, from its body's first outline.
+                    let at = el.shapes.iter().find_map(|sh| match sh {
+                        Shape::Prism { rings, bulges, .. } => {
+                            kentos_geometry_core::geom::space::label_at(&area_of(rings, bulges))
+                        }
+                        _ => None,
+                    });
+                    at.and_then(|p| {
+                        rooms.iter().find(|(i, areas)| {
+                            spaces[*i].storey == el.storey
+                                && areas.iter().any(|a| kentos_geometry_core::geom::region::inside_area(a, p))
+                        })
+                    })
+                    .map(|(i, _)| *i)
+                }
+            };
+            if let Some(r) = room {
+                match out.iter_mut().find(|(s, _)| *s == r) {
+                    Some((_, list)) => list.push(k),
+                    None => out.push((r, vec![k])),
+                }
+            }
+        }
+        out
+    };
     let building = Building {
         view: Default::default(),
         // One building's file (docs/adr/8072 §2): its stem its own (EK-2: its code), so its own GlobalIds; the project's
@@ -2472,6 +2530,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         // The project's survey points are the application's to give (docs/adr/8124): the drawing's entities do not hold
         // them.
         surveys: Vec::new(),
+        covers,
         crs,
         crs_why,
         // The y axis turned by the angle: a unit vector in the model's plane.

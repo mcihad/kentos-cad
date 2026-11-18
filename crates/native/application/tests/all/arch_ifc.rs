@@ -819,6 +819,12 @@ fn a_ceiling_from_a_room_and_a_floor_covering_are_ifc_coverings() {
     assert_eq!((f.class, f.predefined, f.name.as_str()), (Class::Covering, "FLOORING", "MM-KPL-Zemin_kaplaması"));
     let text = kentos_ifc::building::write(&b);
     assert_eq!(text.matches("IFCCOVERING(").count(), 2);
+    // The ceiling bound to its room covers it (docs/adr/8127, `IfcRelCoversSpaces`); the floor covering drawn beside
+    // the building stands in no room and covers none.
+    let ceiling_at = b.elements.iter().position(|e| e.id == element(&ceiling).id).expect("the ceiling");
+    let room_at = b.spaces.iter().position(|sp| sp.id.map(|i| kentos_domain::Uuid::from_u128(i).to_string()) == Some(room.clone()));
+    assert_eq!(b.covers, vec![(room_at.expect("the room"), vec![ceiling_at])]);
+    assert_eq!(text.matches("IFCRELCOVERSSPACES(").count(), 1);
     if let Some(path) = std::env::var_os("KENTOS_WRITE_IFC_COVERINGS") {
         std::fs::write(path, &text).expect("the file kept");
     }
