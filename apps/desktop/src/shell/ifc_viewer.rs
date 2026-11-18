@@ -1,6 +1,6 @@
 //! IFC modeli (plan/ifc-uyum.md IFC-12, docs/adr/8061 §4–§5, docs/adr/8073 §5): the application's adapter of the
-//! model viewer (crates/model-view-ui). It opens an IFC file in a window of its own, beside the plan until the user
-//! brings it over the drawing (shell/windows/, docs/adr/8060 §10), reads it on a thread of its own with the reading
+//! model viewer (crates/model-view-ui). It opens an IFC file in a window of its own, always beside the plan
+//! (shell/windows/, docs/adr/8060 §10, 8122), reads it on a thread of its own with the reading
 //! face (`kentos_ifc::read`): the file's summary and objects, their bodies and the openings' volumes, handed to the
 //! viewer as its plain input; the chosen object's details are read from the file when it is chosen. A read still
 //! running gives way to a new one; İptal and the window's close stop it, and what it would have given never shows.
@@ -8,7 +8,7 @@
 //! The viewer and the plan choose together when KentOS wrote the file from the open drawing: an element's GlobalId is
 //! its persistent id (`kentos_ifc::step::guid`), so a choice in either finds the other's object. A file another program
 //! wrote chooses nothing in the plan. The viewer never changes the drawing. Its look is the component's; this file
-//! gives it the drawing area's sky, the numbers' format and, apart, Ana pencereye al.
+//! gives it the drawing area's sky, the numbers' format and the quality the 3D views are drawn at.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -319,10 +319,9 @@ impl App {
     }
 
     /// The viewer, as its host shows it.
-    fn ifc_viewer_layout(&self, apart: bool) -> Element<'_, Message> {
+    fn ifc_viewer_layout(&self) -> Element<'_, Message> {
         let Some(w) = &self.ifc_viewer else { return space().into() };
-        let end = if apart { vec![crate::windows::return_button(SURFACE)] } else { Vec::new() };
-        w.viewer.layout(self.viewer_host(|m| msg(Event::Viewer(m)), end))
+        w.viewer.layout(self.viewer_host(|m| msg(Event::Viewer(m)), Vec::new()))
     }
 
     /// What a viewer's host gives it (IFC modeli's, 3B görünüm's building, docs/adr/8119): the drawing area's sky, the
@@ -359,13 +358,13 @@ impl App {
             return space().into();
         }
         let height = (self.window_size.height - kentos_ui::theme::typography::scaled(200.0)).max(420.0);
-        let viewer = iced::widget::container(self.ifc_viewer_layout(false)).height(height);
+        let viewer = iced::widget::container(self.ifc_viewer_layout()).height(height);
         crate::windows::placed(Frame::new(TITLE).fill(viewer).width(1280.0), SURFACE, false, msg(Event::Viewer(kentos_model_view_ui::Message::Close)))
     }
 
     /// Beside the plan: the whole of its own window.
     pub(crate) fn ifc_viewer_window_view(&self) -> Element<'_, Message> {
-        iced::widget::container(self.ifc_viewer_layout(true))
+        iced::widget::container(self.ifc_viewer_layout())
             .style(|t: &Theme| iced::widget::container::Style {
                 background: Some(iced::Background::Color(kentos_ui::theme::Tokens::of(t).surface)),
                 ..Default::default()
@@ -490,6 +489,11 @@ impl OwnWindow for IfcView {
 
     /// A model is looked at beside the plan, often on another screen.
     fn opens_apart(&self) -> bool {
+        true
+    }
+
+    /// Never over the drawing (docs/adr/8122, the owner's choice of 18 November).
+    fn always_apart(&self) -> bool {
         true
     }
 

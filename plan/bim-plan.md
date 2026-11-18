@@ -384,7 +384,8 @@ faresiyle) kabul, tadilat durumuna göre renk, katlar arası örtüşme, büyük
 Çizim kalitesi ([ADR 8120](../docs/adr/8120-3d-render-quality.md)): kenar yumuşatma, kenar çizgileri ve ortam gölgesi;
 Uygulama ayarlarından Hızlı, Dengeli, Kaliteli. Ölçme ve katlanan bölmeler
 ([ADR 8121](../docs/adr/8121-viewer-measuring-and-folding-panes.md)): uzaklık, açı ve düz yüzün alanı, köşe ve kenar
-yakalamasıyla; yan bölmeler kenar şeridine katlanır.
+yakalamasıyla; yan bölmeler kenar şeridine katlanır. 3B görünüm her zaman ayrı işletim sistemi penceresindedir
+([ADR 8122](../docs/adr/8122-3d-windows-always-apart.md)).
 
 **Kullanıcı sonucu:** Mimar, modelin gövdelerini (dışa aktarılacak olanların aynısını) 3B'de görür. Bir nesneye tıklayınca
 planda seçilir. Katları ayırır, kesit kutusuyla içine bakar. Denetim bulguları 3B'de boyanır. Dayanak Md. 14; EK-9/13–15; Z1.

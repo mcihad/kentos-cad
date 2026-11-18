@@ -7,9 +7,9 @@
 //! and turns it north when pressed (DESIGN.md §8), and the legend folds at the bottom left. Under it, a status bar: the
 //! point clicked and what it is on, how much the scene shows (its triangles and tiles in the tip), the mouse's help.
 //!
-//! Beside the plan it is the whole of an operating-system window, through the windows' contract ([`View3d`],
-//! shell/windows/surface.rs, docs/adr/8060 §10); over the drawing it is a window like the others, its header carrying
-//! Ayrı pencerede aç. The strip, the scene and the bar are the same in both. The sky is the drawing area's own ground (Görünüm › Çizim zemini) a little bluer at the zenith, so
+//! It is always the whole of an operating-system window beside the plan, through the windows' contract ([`View3d`],
+//! shell/windows/surface.rs, docs/adr/8060 §10, 8122): it is never brought over the drawing, so the plan and the model
+//! are never one over the other. The sky is the drawing area's own ground (Görünüm › Çizim zemini) a little bluer at the zenith, so
 //! the model reads as the plan's and its walls stand out from the ground.
 
 use iced::widget::{Row, column, container, row, space, tooltip};
@@ -32,8 +32,8 @@ use crate::windows::{OwnWindow, Surface};
 /// The surface this window is (shell/windows/).
 const SURFACE: Surface = Surface::Scene3d;
 
-/// 3B görünüm as a window of its own (shell/windows/surface.rs): it opens beside the plan until the user brings it
-/// over the drawing; Esc and its close button close it, Tab goes round its fields.
+/// 3B görünüm as a window of its own (shell/windows/surface.rs): it always opens beside the plan (docs/adr/8122); Esc
+/// and its close button close it, Tab goes round its fields.
 pub(crate) struct View3d;
 
 impl OwnWindow for View3d {
@@ -48,6 +48,11 @@ impl OwnWindow for View3d {
 
     /// The model is looked at beside the plan, often on another screen.
     fn opens_apart(&self) -> bool {
+        true
+    }
+
+    /// Never over the drawing (docs/adr/8122, the owner's choice of 18 November).
+    fn always_apart(&self) -> bool {
         true
     }
 
@@ -104,7 +109,7 @@ impl App {
         let (low, high) = if w.building.is_some() { (420.0, 760.0) } else { (300.0, 640.0) };
         let room = (self.window_size.height - typography::scaled(270.0))
             .clamp(typography::scaled(low), typography::scaled(high));
-        let viewer = container(self.scene3d_body(w, false))
+        let viewer = container(self.scene3d_body(w))
             .height(Fill)
             .max_height(if sized { f32::INFINITY } else { room })
             .style(|t: &Theme| container::Style {
@@ -121,7 +126,7 @@ impl App {
         let Some(w) = &self.scene3d_window else {
             return space().into();
         };
-        container(self.scene3d_body(w, true))
+        container(self.scene3d_body(w))
             .width(Fill)
             .height(Fill)
             .style(|t: &Theme| container::Style {
@@ -132,23 +137,16 @@ impl App {
     }
 
     /// What the window holds: a building's viewer, else the road's strip, scene and bar.
-    fn scene3d_body<'a>(&'a self, w: &'a Window, apart: bool) -> Element<'a, Message> {
+    fn scene3d_body<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
         match &w.building {
-            Some(b) => {
-                let mut end = vec![b.storeys_menu()];
-                if apart {
-                    end.push(strip::divider());
-                    end.push(crate::windows::return_button(SURFACE));
-                }
-                b.viewer.layout(self.viewer_host(|m| msg(Event::Viewer(m)), end))
-            }
-            None => column![self.scene3d_strip(w, apart), strip::rule(), self.scene3d_scene(w), self.scene3d_status(w)].into(),
+            Some(b) => b.viewer.layout(self.viewer_host(|m| msg(Event::Viewer(m)), vec![b.storeys_menu()])),
+            None => column![self.scene3d_strip(w), strip::rule(), self.scene3d_scene(w), self.scene3d_status(w)].into(),
         }
     }
 
     /// The road's tool strip: the camera, what shows, then at its end what the window does. A narrow window wraps the
     /// first two groups; the end stays at the right.
-    fn scene3d_strip<'a>(&'a self, w: &'a Window, apart: bool) -> Element<'a, Message> {
+    fn scene3d_strip<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
         let orbit = w.orbit;
         let mut left: Vec<Element<'a, Message>> = vec![
             strip::menu(
@@ -197,15 +195,12 @@ impl App {
             w.see_through,
             msg(Event::SeeThrough),
         ));
-        let mut end = Row::new().spacing(1).align_y(Center).push(strip::labelled(
+        let end = Row::new().spacing(1).align_y(Center).push(strip::labelled(
             crate::icons::from_web(Some("gltfExport")),
             EXPORT,
             "glTF ver: arazi yüzeylerini ve koridorları bir glTF dosyasına yazar.",
             Some(msg(Event::Export)),
         ));
-        if apart {
-            end = end.push(strip::divider()).push(crate::windows::return_button(SURFACE));
-        }
         strip::surface(
             row![Row::with_children(left).spacing(1).align_y(Center).width(Fill).wrap().vertical_spacing(4), end]
                 .spacing(6)

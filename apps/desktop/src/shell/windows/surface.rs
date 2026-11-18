@@ -2,7 +2,8 @@
 //! ([`OwnWindow`]), and what every surface shares, written once here: taking it out of the main window and bringing it
 //! back (the choice kept, another window over the drawing refused with its reason), showing it where it opens, the
 //! header button that moves it, its framing (the whole of its own window, or a dialog over the drawing), its default
-//! keys, and the answers a trace gets from it.
+//! keys, and the answers a trace gets from it. A surface that is always apart (the 3D views, docs/adr/8122) is never
+//! brought over the drawing: no choice is kept for it and nothing offers to.
 //!
 //! A window joins by implementing [`OwnWindow`] for a unit struct in its own module and naming it in
 //! [`Surface::spec`]; nothing else of the windows changes (docs/kilavuz/09-yeni-is-tarifleri.md §9.8).
@@ -31,6 +32,12 @@ pub(crate) trait OwnWindow: Sync {
     /// Whether it opens in a window of its own until the user chooses (a view watched beside the plan) or over the
     /// drawing (a tool run on it).
     fn opens_apart(&self) -> bool {
+        false
+    }
+    /// Whether it only ever opens in a window of its own (a 3D view, docs/adr/8122: over the drawing it would cover what
+    /// it shows, and two places for one view confuse the work): a kept choice is not followed, Ana pencereye al is
+    /// neither shown nor done.
+    fn always_apart(&self) -> bool {
         false
     }
     /// What it is, as a message names it in the accusative (“aracı”, “3B görünümü”).
@@ -108,19 +115,11 @@ pub(crate) fn placed<'a>(frame: Frame<'a, Message>, surface: Surface, apart: boo
     if apart { frame.window() } else { frame.modal(dismiss) }
 }
 
-/// “Ana pencereye al” for a window of its own with no dialog header (a tool strip's end).
-pub(crate) fn return_button<'a>(surface: Surface) -> Element<'a, Message> {
-    crate::style::strip::icon_button(
-        crate::icons::from_web(Some("windowReturn")),
-        &format!("{RETURN}: {}", surface.spec().return_tip()),
-        Some(apart_message(surface, false)),
-    )
-}
-
 impl App {
-    /// Whether `surface` opens in a window of its own: the user's last choice, else its own way.
+    /// Whether `surface` opens in a window of its own: always for a 3D view, else the user's last choice, else its own
+    /// way.
     pub(crate) fn is_apart(&self, surface: Surface) -> bool {
-        self.windows.memory.apart(surface)
+        surface.spec().always_apart() || self.windows.memory.apart(surface)
     }
 
     /// Whether `surface` has its own window now: apart and open.
@@ -150,6 +149,10 @@ impl App {
     /// too. Back over the drawing waits while another window is open there, and says so.
     pub(crate) fn set_apart(&mut self, surface: Surface, apart: bool) {
         let spec = surface.spec();
+        // A 3D view stays in its own window: nothing to keep, nothing to move (docs/adr/8122).
+        if spec.always_apart() {
+            return;
+        }
         if !apart && self.dialog.is_some_and(|d| d != spec.dialog()) {
             self.warn(format!(
                 "Ana pencerede açık bir pencere var: önce onu kapatın, sonra {} ana pencereye alın.",
@@ -186,7 +189,7 @@ impl App {
                 .map(|s| apart_message(s, true)),
             Control::Press(RETURN) => Surface::ALL
                 .into_iter()
-                .find(|&s| self.surface_wanted(s))
+                .find(|&s| self.surface_wanted(s) && !s.spec().always_apart())
                 .map(|s| apart_message(s, false)),
             _ => None,
         }

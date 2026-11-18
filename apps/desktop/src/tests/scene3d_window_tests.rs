@@ -1,12 +1,12 @@
 //! 3B görünüm (scene3d_window.rs, plan/road.md Y12.3d): the window opens on the road project's scene cut into tiles,
 //! its corridors' triangles by role; the camera follows the view buttons, a drag, the wheel, the exaggeration and the
-//! north arrow; it opens beside the plan in a window of its own and comes over the drawing and back (scene3d_view.rs,
-//! docs/adr/8060 §9); and its pictures.
+//! north arrow; it always opens beside the plan in a window of its own and never comes over the drawing
+//! (scene3d_view.rs, docs/adr/8060 §9, 8122); and its pictures.
 
 use iced::keyboard::key::{Named, NativeCode, Physical};
 use iced::keyboard::{Key, Modifiers};
 
-use crate::app::{App, Dialog, Message};
+use crate::app::{App, Message};
 use crate::scene3d_window::{Event as W, TITLE, VIEWS};
 use crate::windows::{Event as Windows, Surface};
 
@@ -101,44 +101,31 @@ fn opened(app: &mut App) -> iced::window::Id {
 }
 
 #[test]
-fn the_window_opens_beside_the_plan_and_comes_over_the_drawing_and_back() {
+fn the_window_always_opens_beside_the_plan_never_over_the_drawing() {
     let mut app = app();
     let main = iced::window::Id::unique();
     app.windows.set_main(main);
+    // A choice kept from before (over the drawing) is not followed: a 3D view is always apart (docs/adr/8122).
+    app.windows.memory.set_apart(Surface::Scene3d, false);
     let _ = app.update(Message::Run("scene3d.view"));
     let id = opened(&mut app);
     // Its own window, named after it; the drawing free; a trace finds it.
     assert_eq!(app.dialog, None);
+    assert!(app.is_apart(Surface::Scene3d));
     assert_eq!(app.window_title(id), "3B görünüm — KentOS CAD");
     assert_eq!(app.dialog_title().as_deref(), Some(TITLE));
     let settings = app.window_settings(Surface::Scene3d);
     assert!(!settings.exit_on_close_request, "its close is the window's Kapat");
     let _ = app.window_view(id);
-    // A trace moves it with the button's own words.
-    assert!(matches!(
-        app.dialog_control(crate::traces::Control::Press("Ana pencereye al")),
-        Ok(Some(Message::Windows(Windows::Apart(Surface::Scene3d, false))))
-    ));
-    // Back over the drawing waits while another window is open there: it stays apart.
-    app.dialog = Some(Dialog::Settings);
+    // Nothing offers to bring it over the drawing, and asking does nothing.
+    assert!(app.dialog_control(crate::traces::Control::Press("Ana pencereye al")).is_err());
     let _ = app.update(Message::Windows(Windows::Apart(Surface::Scene3d, false)));
-    assert!(app.is_apart(Surface::Scene3d) && app.windows.of(Surface::Scene3d).is_some());
-    assert_eq!(app.dialog, Some(Dialog::Settings));
-    app.dialog = None;
-    // Ana pencereye al: over the drawing, its own window gone, the choice kept.
-    let _ = app.update(Message::Windows(Windows::Apart(Surface::Scene3d, false)));
-    assert_eq!(app.dialog, Some(Dialog::Scene3d));
-    assert!(app.windows.of(Surface::Scene3d).is_none());
-    assert!(!app.is_apart(Surface::Scene3d));
-    let _ = app.view();
-    // Esc over the drawing closes it, its scene with it.
-    let _ = app.update(Message::Key(escape()));
     assert_eq!(app.dialog, None);
+    assert!(app.is_apart(Surface::Scene3d) && app.windows.of(Surface::Scene3d).is_some());
+    // Opened again: beside the plan again.
+    let _ = app.update(Message::Windows(Windows::Key(id, escape())));
     assert!(app.scene3d_window.is_none());
-    // Opened again over the drawing, then Ayrı pencerede aç: beside the plan again.
     let _ = app.update(Message::Run("scene3d.view"));
-    assert_eq!(app.dialog, Some(Dialog::Scene3d));
-    let _ = app.update(Message::Windows(Windows::Apart(Surface::Scene3d, true)));
     assert_eq!(app.dialog, None);
     let id = opened(&mut app);
     // Esc in its own window closes it; so does its close button.
@@ -243,24 +230,5 @@ fn screens() {
         }
         assert!(on_lane, "a lane is seen and picked to the millimetre");
         shot(&mut app, "6-secilen-nokta");
-        // Over the drawing: the main window's picture, the same strip, scene and bar in a window of the main one.
-        let _ = app.update(Message::Windows(Windows::Apart(Surface::Scene3d, false)));
-        let mut whole = Snapshot::new(main).expect("a renderer");
-        whole.settle(&mut app, App::view, &mut update);
-        whole.settle(&mut app, App::view, &mut update);
-        let file = out.join(format!("yol-7-ana-pencerede-{name}.png"));
-        whole.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
-        println!("{}", file.display());
-        if name == "acik" {
-            // Full screen there: the scene takes the room, the bar stays at the foot.
-            use kentos_ui::widget::sizable::sizes;
-            sizes::set(TITLE, sizes::Kept { width: 1180.0, height: 700.0, maximized: true });
-            whole.settle(&mut app, App::view, &mut update);
-            whole.settle(&mut app, App::view, &mut update);
-            let file = out.join(format!("yol-8-tam-ekran-{name}.png"));
-            whole.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
-            println!("{}", file.display());
-            sizes::forget(TITLE);
-        }
     }
 }

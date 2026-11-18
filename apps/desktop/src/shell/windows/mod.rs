@@ -27,7 +27,7 @@ use iced::window;
 use iced::{Point, Size};
 
 pub(crate) use memory::Memory;
-pub(crate) use surface::{OwnWindow, apart_button, placed, return_button};
+pub(crate) use surface::{OwnWindow, apart_button, placed};
 
 /// What a secondary window shows: one name per window that can be taken out of the main window.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]

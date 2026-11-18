@@ -654,20 +654,20 @@ Binanın ya da yol projesinin 3B görünümü ([ADR 8067](docs/adr/8067-building
 Pencerenin işi modeli göstermektir: sahne iki ince bandın arasındaki bütün yeri alır, bantlar ana pencerenin kendi
 diliyle çizilir.
 
-- **Yer:** kendiliğinden işletim sisteminin ayrı penceresinde, planın yanında açılır (başka bir ekrana taşınır, ana pencere
-  serbesttir). Araç şeridinin sonundaki “Ana pencereye al” onu çizimin üstüne, başlığında “Ayrı pencerede aç” olan sıradan
-  bir pencereye getirir; seçim hatırlanır. Çizimin üstündeyken şerit, sahne ve durum çubuğu tek çerçevede durur.
+- **Yer:** her zaman işletim sisteminin ayrı penceresinde, planın yanında açılır (başka bir ekrana taşınır, ana pencere
+  serbesttir). Çizimin üstüne alınmaz; “Ana pencereye al” yoktur, önceden saklanmış bir “ana pencerede” seçimi izlenmez
+  ([ADR 8122](docs/adr/8122-3d-windows-always-apart.md)).
 - **Bina:** pencere görüntüleyicinin kendisidir (§7.21): solda ağaç ve arama, sağda özellikler, sahnede kesitin kartı,
   şeridi ve durum çubuğu onunki. Şeridin sağ ucunda “Katlar ▾” (menü açıkken art arda işaretlenen katlar, gizli kat
-  varken “Bütün katları göster”; yüzü “Katlar 1/2” der; ağaçtaki katın gözüyle aynı iştir) ve ayrıyken “Ana pencereye
-  al”. Model çizimden kurulur: dışa aktarımın o an yazacağı IFC bellekte yazılıp okunur. Çizim ya da gösterilen altlıklar
+  varken “Bütün katları göster”; yüzü “Katlar 1/2” der; ağaçtaki katın gözüyle aynı iştir). Model çizimden kurulur:
+  dışa aktarımın o an yazacağı IFC bellekte yazılıp okunur. Çizim ya da gösterilen altlıklar
   değişince yeniden kurulur; bakış, açık dallar, arama, kesit, bölme genişlikleri, gizlenen ve seçilen nesneler yerinde
   kalır. İlk kurulurken bölmelerin yerinde “Çizimin modeli kuruluyor” yazar. Altlık modeller menekşe rengindedir; ağaçta
-  projeleri adlarıyla “(altlık model)” diye durur. Çizimin üstündeyken pencere 1280 px genişliğindedir.
+  projeleri adlarıyla “(altlık model)” diye durur.
 - **Yolun araç şeridi** (`style::strip`, §7.14'teki şeritle aynı): solda kamera (“Görünüş ▾”: dört bakış ve Kuzeye bak;
   yüzü o anki bakışın adı, döndürünce “Görünüş”; “Sığdır”), ince ayraç, “Düşey abartma” alanı ve “Araziyi kes”, “Düz
-  yüzler”, “Arazi saydam” anahtarları. Sağ uçta pencerenin işleri: “glTF ver”, “Ana pencereye al” (ayrıyken). Her düğmenin
-  adı yazar, ayrıntı ipucundadır; açık anahtar vurgu tonludur.
+  yüzler”, “Arazi saydam” anahtarları. Sağ uçta pencerenin işi: “glTF ver”. Her düğmenin adı yazar, ayrıntı ipucundadır;
+  açık anahtar vurgu tonludur.
 - **Sahne** kenardan kenara; zemini çizim alanının zeminidir (Görünüm › Çizim zemini), tepeye doğru o zeminin mavisiyle
   biraz koyulaşır; yüksek karşıtlık zemininde düz siyah. Sağ üstte kuzey oku (§8): kamerayla döner, tıklanınca kamera
   kuzeye bakar; ipucu modelin hangi yandan ve kaç derece yukarıdan görüldüğünü yazar. Sol altta lejant (`Legend`, harita
@@ -693,14 +693,14 @@ diliyle çizilir.
 Bir IFC dosyasının görüntüleyicisi ([ADR 8073](docs/adr/8073-ifc-viewer-first-slice.md), [ADR 8061](docs/adr/8061-ifc-viewer-and-reading-engine.md)
 §5). 3B görünümün dilindedir (§7.20): üstte tek araç şeridi, altta durum çubuğu, aralarında üç bölme.
 
-- **Yer:** kendiliğinden işletim sisteminin ayrı penceresinde açılır (1400 × 860); “Ana pencereye al” onu çizimin üstüne
-  getirir. Başlığı dosyanın adı ve “IFC modeli”.
+- **Yer:** her zaman işletim sisteminin ayrı penceresinde açılır (1400 × 860); çizimin üstüne alınmaz
+  ([ADR 8122](docs/adr/8122-3d-windows-always-apart.md)). Başlığı dosyanın adı ve “IFC modeli”.
 - **Araç şeridi:** kamera (“Görünüş ▾”, “Sığdır”, “Seçime yaklaş”), ince ayraç, görünürlük (“Gizle”, “Yalnız bırak”,
   “Hepsini göster”; seçim yokken ilk ikisi sönük), ayraç, simgeli anahtarlar (“Mahaller”, “Açıklıklar”, “Saydam”; açıkken
   tonlu), ayraç, “Kesit ▾” (yatay, kuzey–güney düşey, doğu–batı düşey, seçilen varken “Seçimin çevresinde kutu”, “Kesiti
   kaldır”). Şerit kesitle uzamaz: düzlemin yeri sahnedeki karttadır. Ardından “Ölç” anahtarı (cetvel simgesi,
-  [ADR 8121](docs/adr/8121-viewer-measuring-and-folding-panes.md)). Sağ uçta ev sahibinin işleri (ayrıyken “Ana pencereye
-  al”). Okunurken yalnız kamera grubu görünür.
+  [ADR 8121](docs/adr/8121-viewer-measuring-and-folding-panes.md)). Sağ uçta ev sahibinin işleri (3B görünümde “Katlar ▾”).
+  Okunurken yalnız kamera grubu görünür.
 - **Sol bölme** (300 px, 12 px yazıda): “Yapı | Sınıf | Gösterilemeyen” (kitin bölmeli düğmesi; gösterilemeyen yokken
   üçüncüsü sönük), altında arama (“Ad, sınıf ya da GlobalId ara”, × temizler), altında kitin ağacı, sanal satırlarla.
   Satırın sağında öğe sayısı ve göz; sayısı olmayan satırda da sayı sütunu durur ki gözler tek sütunda kalsın. Gizli satır

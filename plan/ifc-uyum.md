@@ -652,6 +652,8 @@ klavyeyle kabul; resimler.
   K258–K265):** şeritte Ölç; Uzaklık (eksen bileşenleriyle), Açı, Alan (düz yüzün bütünü); köşe, kenar ortası, kenar,
   yüz yakalaması (f64 kaynak köşeleri); sahnenin sağ altında katlanan kart; yan bölmeler kenar şeridine katlanır.
   Çekirdek `kentos_model_view::measure` (saf, wasm32).
+- **Hep ayrı pencere (18 Kasım 2026, [ADR 8122](../docs/adr/8122-3d-windows-always-apart.md), K266–K268):** 3B görünüm
+  ve IFC modeli her zaman işletim sisteminin ayrı penceresinde açılır; “Ana pencereye al” yok, eski seçim izlenmez.
 - Kalanlar (ADR 8073 §9, 8118 §6): gerçek pencerede kabul; kesit düzlemini yüze tıklayarak kurmak ve sürüklemek, kutunun
   tutamakları, kesilen yüzün kapağı; gösterilemeyen nesnenin kutusu; ilk gövdelerle sahne; seçimde yeniden kurmadan boyama;
   denetim bulgusundan “Modelde göster” (B13 ile); bir değerden “benzerini göster”; bölme genişliklerinin saklanması.

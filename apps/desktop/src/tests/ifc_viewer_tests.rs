@@ -225,8 +225,8 @@ fn the_export_offers_to_view_its_file() {
 }
 
 /// Pictures for the owner (`.run/gui-evidence/ifc-modeli-8073/`): Mimari's Proje panel with IFC modeli; the viewer in
-/// its own window, a wall clicked; a level cut; the plan with the wall chosen; the viewer over the drawing, light and
-/// dark. Drawn on the GPU:
+/// its own window (always: docs/adr/8122), a wall clicked; a level cut; the plan with the wall chosen; light and dark.
+/// Drawn on the GPU:
 ///
 /// ```text
 /// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib ifc_viewer_tests::screens -- --ignored --nocapture
@@ -270,9 +270,6 @@ fn screens() {
             send(&mut app, Event::Viewer(V::Uncut));
             shot(&mut main, &mut app, App::view, "4-plan-secili");
         }
-        let _ = app.update(Message::Windows(crate::windows::Event::Apart(crate::windows::Surface::IfcViewer, false)));
-        shot(&mut main, &mut app, App::view, "5-cizimin-ustunde");
-        let _ = app.update(Message::Windows(crate::windows::Event::Apart(crate::windows::Surface::IfcViewer, true)));
         let _ = std::fs::remove_dir_all(path.parent().expect("its folder"));
     }
 }

@@ -334,8 +334,8 @@ fn choose_the_overlap(app: &mut App) {
 }
 
 /// The building in 3D, wide and light, narrow and dark: the ribbon's place of 3B görünüm, the viewer with its tree and
-/// details (docs/adr/8119) beside the plan and over the drawing, Katlar ▾, the bodies from two sides, a wall clicked and
-/// selected in the plan, the ground storey alone, the overlapping rooms red after Denetle and the finding in Denetim;
+/// details (docs/adr/8119) beside the plan, Katlar ▾, the bodies from two sides, a wall clicked and selected in the
+/// plan, the ground storey alone, the overlapping rooms red after Denetle and the finding in Denetim;
 /// the pictures are the renderer's own (KENTOS_SNAPSHOT_BACKEND=wgpu); `.run/gui-evidence/bina-3b-8067/`:
 ///
 /// ```text
@@ -373,11 +373,6 @@ fn screens() {
         shot(&mut app, "2-kuzeydogu");
         let seen = *app.scene3d_window.as_ref().expect("the window").seen.lock().expect("seen");
         assert!(seen.tiles > 0 && seen.triangles > 0 && seen.waiting == 0, "{seen:?}");
-        // Over the drawing (Ana pencereye al), then beside the plan again: the same viewer in a window of the main one.
-        use crate::windows::{Event as Windows, Surface};
-        let _ = app.update(Message::Windows(Windows::Apart(Surface::Scene3d, false)));
-        shot(&mut app, "2c-cizimin-ustunde");
-        let _ = app.update(Message::Windows(Windows::Apart(Surface::Scene3d, true)));
         if name == "acik" {
             // Katlar ▾ open on the strip (its button at the strip's end, before Ana pencereye al), the 1. kat
             // unticked from it; a click on the strip's empty middle (after Kesit ▾) closes it.
