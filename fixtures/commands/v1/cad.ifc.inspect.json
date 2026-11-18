@@ -59,8 +59,8 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2947,
-       "objects": 91,
+       "records": 2986,
+       "objects": 95,
        "classes": {
         "IfcBeam": 8,
         "IfcBuilding": 1,
@@ -73,9 +73,10 @@
         "IfcSite": 1,
         "IfcSlab": 3,
         "IfcSpace": 10,
-        "IfcSpatialZone": 2,
+        "IfcSpatialZone": 4,
         "IfcStair": 1,
         "IfcWall": 16,
+        "IfcWallType": 2,
         "IfcWindow": 9
        },
        "units": {
@@ -86,12 +87,12 @@
        },
        "storeys": [
         {
-         "globalId": "3ydGVFlwnjBYgl8a9xXv7Y",
+         "globalId": "3cw2ZUyjABGvn5xuvDhrKU",
          "name": "MM-BNK-Zemin_kat",
          "contains": 29
         },
         {
-         "globalId": "1D_k$kjwnjI73rmyPD6rL7",
+         "globalId": "10W_smdZA4W8WQhK9YjuVJ",
          "name": "MM-BNK-1._kat",
          "contains": 29
         }
@@ -122,8 +123,8 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi-kunye.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2979,
-       "objects": 92,
+       "records": 3018,
+       "objects": 96,
        "classes": {
         "IfcActor": 1,
         "IfcBeam": 8,
@@ -137,9 +138,10 @@
         "IfcSite": 1,
         "IfcSlab": 3,
         "IfcSpace": 10,
-        "IfcSpatialZone": 2,
+        "IfcSpatialZone": 4,
         "IfcStair": 1,
         "IfcWall": 16,
+        "IfcWallType": 2,
         "IfcWindow": 9
        },
        "units": {
@@ -150,12 +152,12 @@
        },
        "storeys": [
         {
-         "globalId": "18Kgoo7NOjOvlS9FoCcepG",
+         "globalId": "3cw2ZUyjABGvn5xuvDhrKU",
          "name": "MM-BNK-Zemin_kat",
          "contains": 29
         },
         {
-         "globalId": "2Pi9JH5NOjVU8Yne1UBb0r",
+         "globalId": "10W_smdZA4W8WQhK9YjuVJ",
          "name": "MM-BNK-1._kat",
          "contains": 29
         }
@@ -186,8 +188,8 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/blok-a.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2977,
-       "objects": 93,
+       "records": 3016,
+       "objects": 97,
        "classes": {
         "IfcBeam": 8,
         "IfcBuilding": 1,
@@ -200,9 +202,10 @@
         "IfcSite": 1,
         "IfcSlab": 4,
         "IfcSpace": 10,
-        "IfcSpatialZone": 2,
+        "IfcSpatialZone": 4,
         "IfcStair": 1,
         "IfcWall": 16,
+        "IfcWallType": 2,
         "IfcWindow": 9
        },
        "units": {
@@ -213,17 +216,17 @@
        },
        "storeys": [
         {
-         "globalId": "3fQ87615CRb$eangsDbcj5",
+         "globalId": "0SK23U7C_01xZYjoJTsPfJ",
          "name": "MM-BNK-Zemin_kat",
          "contains": 29
         },
         {
-         "globalId": "0wncda$5CRia1hQ35VAYwg",
+         "globalId": "0KBTV4$66AKhPZQ6VaTpuu",
          "name": "MM-BNK-1._kat",
          "contains": 29
         },
         {
-         "globalId": "2C9583z5CRp8Qo2RKmlV8F",
+         "globalId": "3ZWOi$O1c7axBQWu$oIitl",
          "name": "MM-BNK-Bodrum_kat",
          "contains": 1
         }
@@ -274,7 +277,7 @@
        },
        "storeys": [
         {
-         "globalId": "0arK3$LlsrWO4i0a3pac4_",
+         "globalId": "2EpyptGww5PP04BJ32snu1",
          "name": "MM-BNK-B_zemin_kat",
          "contains": 4
         }
@@ -305,8 +308,8 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/cati-alti-mahal.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2912,
-       "objects": 91,
+       "records": 2969,
+       "objects": 95,
        "classes": {
         "IfcBeam": 8,
         "IfcBuilding": 1,
@@ -320,9 +323,10 @@
         "IfcSite": 1,
         "IfcSlab": 2,
         "IfcSpace": 10,
-        "IfcSpatialZone": 2,
+        "IfcSpatialZone": 4,
         "IfcStair": 1,
         "IfcWall": 16,
+        "IfcWallType": 2,
         "IfcWindow": 9
        },
        "units": {
@@ -333,12 +337,12 @@
        },
        "storeys": [
         {
-         "globalId": "1ffSBbF_0qDLYugzhTx3Wz",
+         "globalId": "3cw2ZUyjABGvn5xuvDhrKU",
          "name": "MM-BNK-Zemin_kat",
          "contains": 29
         },
         {
-         "globalId": "2j7l5Hr_0qEfdv$rkXS2mU",
+         "globalId": "10W_smdZA4W8WQhK9YjuVJ",
          "name": "MM-BNK-1._kat",
          "contains": 29
         }
@@ -369,8 +373,8 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/egimli-doseme.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2996,
-       "objects": 93,
+       "records": 3035,
+       "objects": 97,
        "classes": {
         "IfcBeam": 8,
         "IfcBuilding": 1,
@@ -383,9 +387,10 @@
         "IfcSite": 1,
         "IfcSlab": 4,
         "IfcSpace": 10,
-        "IfcSpatialZone": 2,
+        "IfcSpatialZone": 4,
         "IfcStair": 1,
         "IfcWall": 17,
+        "IfcWallType": 2,
         "IfcWindow": 9
        },
        "units": {
@@ -396,12 +401,12 @@
        },
        "storeys": [
         {
-         "globalId": "1ffSBbF_0qDLYugzhTx3Wz",
+         "globalId": "3cw2ZUyjABGvn5xuvDhrKU",
          "name": "MM-BNK-Zemin_kat",
          "contains": 31
         },
         {
-         "globalId": "0OHzh6H_0q6n9o2bSCM7JO",
+         "globalId": "10W_smdZA4W8WQhK9YjuVJ",
          "name": "MM-BNK-1._kat",
          "contains": 29
         }
@@ -456,12 +461,12 @@
        },
        "storeys": [
         {
-         "globalId": "1PgpDO88klfGdVM9eRowva",
+         "globalId": "3cw2ZUyjABGvn5xuvDhrKU",
          "name": "MM-BNK-Zemin_kat",
          "contains": 9
         },
         {
-         "globalId": "2FFwWIM8klbKORNXVHFzB1",
+         "globalId": "10W_smdZA4W8WQhK9YjuVJ",
          "name": "MM-BNK-1._kat",
          "contains": 9
         }
@@ -516,12 +521,12 @@
        },
        "storeys": [
         {
-         "globalId": "1PgpDO88klfGdVM9eRowva",
+         "globalId": "3cw2ZUyjABGvn5xuvDhrKU",
          "name": "MM-BNK-Zemin_kat",
          "contains": 9
         },
         {
-         "globalId": "2FFwWIM8klbKORNXVHFzB1",
+         "globalId": "10W_smdZA4W8WQhK9YjuVJ",
          "name": "MM-BNK-1._kat",
          "contains": 9
         }
@@ -552,8 +557,8 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/katmanli-cati.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 3096,
-       "objects": 92,
+       "records": 3153,
+       "objects": 96,
        "classes": {
         "IfcBeam": 8,
         "IfcBuilding": 1,
@@ -567,9 +572,10 @@
         "IfcSite": 1,
         "IfcSlab": 3,
         "IfcSpace": 10,
-        "IfcSpatialZone": 2,
+        "IfcSpatialZone": 4,
         "IfcStair": 1,
         "IfcWall": 16,
+        "IfcWallType": 2,
         "IfcWindow": 9
        },
        "units": {
@@ -580,12 +586,12 @@
        },
        "storeys": [
         {
-         "globalId": "1ffSBbF_0qDLYugzhTx3Wz",
+         "globalId": "3cw2ZUyjABGvn5xuvDhrKU",
          "name": "MM-BNK-Zemin_kat",
          "contains": 29
         },
         {
-         "globalId": "2j7l5Hr_0qEfdv$rkXS2mU",
+         "globalId": "10W_smdZA4W8WQhK9YjuVJ",
          "name": "MM-BNK-1._kat",
          "contains": 30
         }
@@ -616,8 +622,8 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/yerel-sistem.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2931,
-       "objects": 91,
+       "records": 2989,
+       "objects": 95,
        "classes": {
         "IfcBeam": 8,
         "IfcBuilding": 1,
@@ -630,9 +636,10 @@
         "IfcSite": 1,
         "IfcSlab": 3,
         "IfcSpace": 10,
-        "IfcSpatialZone": 2,
+        "IfcSpatialZone": 4,
         "IfcStair": 1,
         "IfcWall": 16,
+        "IfcWallType": 2,
         "IfcWindow": 9
        },
        "units": {
@@ -643,12 +650,12 @@
        },
        "storeys": [
         {
-         "globalId": "1ffSBbF_0qDLYugzhTx3Wz",
+         "globalId": "3cw2ZUyjABGvn5xuvDhrKU",
          "name": "MM-BNK-Zemin_kat",
          "contains": 29
         },
         {
-         "globalId": "2j7l5Hr_0qEfdv$rkXS2mU",
+         "globalId": "10W_smdZA4W8WQhK9YjuVJ",
          "name": "MM-BNK-1._kat",
          "contains": 29
         }
@@ -1186,8 +1193,8 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2947,
-       "objects": 91,
+       "records": 2986,
+       "objects": 95,
        "classes": {
         "IfcBeam": 8,
         "IfcBuilding": 1,
@@ -1200,9 +1207,10 @@
         "IfcSite": 1,
         "IfcSlab": 3,
         "IfcSpace": 10,
-        "IfcSpatialZone": 2,
+        "IfcSpatialZone": 4,
         "IfcStair": 1,
         "IfcWall": 16,
+        "IfcWallType": 2,
         "IfcWindow": 9
        },
        "units": {
@@ -1213,12 +1221,12 @@
        },
        "storeys": [
         {
-         "globalId": "3ydGVFlwnjBYgl8a9xXv7Y",
+         "globalId": "3cw2ZUyjABGvn5xuvDhrKU",
          "name": "MM-BNK-Zemin_kat",
          "contains": 29
         },
         {
-         "globalId": "1D_k$kjwnjI73rmyPD6rL7",
+         "globalId": "10W_smdZA4W8WQhK9YjuVJ",
          "name": "MM-BNK-1._kat",
          "contains": 29
         }
@@ -1234,7 +1242,7 @@
         "longName": null,
         "tag": "0192f5a1-4242-7000-8000-000000000001",
         "predefinedType": "STANDARD",
-        "typeName": null,
+        "typeName": "Dış duvar 25",
         "storey": "MM-BNK-Zemin_kat",
         "sets": [
          {
@@ -1348,8 +1356,8 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2947,
-       "objects": 91,
+       "records": 2986,
+       "objects": 95,
        "classes": {
         "IfcBeam": 8,
         "IfcBuilding": 1,
@@ -1362,9 +1370,10 @@
         "IfcSite": 1,
         "IfcSlab": 3,
         "IfcSpace": 10,
-        "IfcSpatialZone": 2,
+        "IfcSpatialZone": 4,
         "IfcStair": 1,
         "IfcWall": 16,
+        "IfcWallType": 2,
         "IfcWindow": 9
        },
        "units": {
@@ -1375,12 +1384,12 @@
        },
        "storeys": [
         {
-         "globalId": "3ydGVFlwnjBYgl8a9xXv7Y",
+         "globalId": "3cw2ZUyjABGvn5xuvDhrKU",
          "name": "MM-BNK-Zemin_kat",
          "contains": 29
         },
         {
-         "globalId": "1D_k$kjwnjI73rmyPD6rL7",
+         "globalId": "10W_smdZA4W8WQhK9YjuVJ",
          "name": "MM-BNK-1._kat",
          "contains": 29
         }
@@ -1524,15 +1533,15 @@
      "op": "execute",
      "input": {
       "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
-      "object": "3ydGVFlwnjBYgl8a9xXv7Y"
+      "object": "3cw2ZUyjABGvn5xuvDhrKU"
      },
      "result": {
       "status": "completed",
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2947,
-       "objects": 91,
+       "records": 2986,
+       "objects": 95,
        "classes": {
         "IfcBeam": 8,
         "IfcBuilding": 1,
@@ -1545,9 +1554,10 @@
         "IfcSite": 1,
         "IfcSlab": 3,
         "IfcSpace": 10,
-        "IfcSpatialZone": 2,
+        "IfcSpatialZone": 4,
         "IfcStair": 1,
         "IfcWall": 16,
+        "IfcWallType": 2,
         "IfcWindow": 9
        },
        "units": {
@@ -1558,19 +1568,19 @@
        },
        "storeys": [
         {
-         "globalId": "3ydGVFlwnjBYgl8a9xXv7Y",
+         "globalId": "3cw2ZUyjABGvn5xuvDhrKU",
          "name": "MM-BNK-Zemin_kat",
          "contains": 29
         },
         {
-         "globalId": "1D_k$kjwnjI73rmyPD6rL7",
+         "globalId": "10W_smdZA4W8WQhK9YjuVJ",
          "name": "MM-BNK-1._kat",
          "contains": 29
         }
        ],
        "findings": [],
        "object": {
-        "globalId": "3ydGVFlwnjBYgl8a9xXv7Y",
+        "globalId": "3cw2ZUyjABGvn5xuvDhrKU",
         "step": 28,
         "class": "IfcBuildingStorey",
         "name": "MM-BNK-Zemin_kat",
@@ -2045,8 +2055,8 @@
       "output": {
        "path": "$fixture:arch/v1/ifc/kesit-binasi.ifc",
        "schema": "IFC4X3_ADD2",
-       "records": 2947,
-       "objects": 91,
+       "records": 2986,
+       "objects": 95,
        "classes": {
         "IfcBeam": 8,
         "IfcBuilding": 1,
@@ -2059,9 +2069,10 @@
         "IfcSite": 1,
         "IfcSlab": 3,
         "IfcSpace": 10,
-        "IfcSpatialZone": 2,
+        "IfcSpatialZone": 4,
         "IfcStair": 1,
         "IfcWall": 16,
+        "IfcWallType": 2,
         "IfcWindow": 9
        },
        "units": {
@@ -2072,12 +2083,12 @@
        },
        "storeys": [
         {
-         "globalId": "3ydGVFlwnjBYgl8a9xXv7Y",
+         "globalId": "3cw2ZUyjABGvn5xuvDhrKU",
          "name": "MM-BNK-Zemin_kat",
          "contains": 29
         },
         {
-         "globalId": "1D_k$kjwnjI73rmyPD6rL7",
+         "globalId": "10W_smdZA4W8WQhK9YjuVJ",
          "name": "MM-BNK-1._kat",
          "contains": 29
         }

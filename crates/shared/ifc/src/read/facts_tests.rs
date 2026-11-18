@@ -35,7 +35,8 @@ fn the_section_building_s_facts_name_every_object_and_its_place() {
     assert_eq!(wall["class"], "IfcWall");
     assert_eq!(wall["sets"]["Pset_WallCommon"]["IsExternal"], true);
     assert_eq!(wall["quantities"]["Qto_WallBaseQuantities"]["Length"], 12.0);
-    assert_eq!(wall["materials"][0], "Tuğla");
+    // The wall's style is its layer set (docs/adr/8105): the association names the set, as the reader reads a set.
+    assert_eq!(wall["materials"][0], "Dış duvar 25");
     let storey = |gid: &Json| objects.iter().find(|o| &o["globalId"] == gid).expect("its storey");
     assert_eq!(storey(&wall["storey"])["class"], "IfcBuildingStorey");
     assert!(storey(&wall["storey"])["elevation"].is_number(), "a storey's elevation");

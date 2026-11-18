@@ -29,7 +29,8 @@ It checks, in fixtures/arch/v1/ifc/kesit-binasi.ifc:
   where the storeys' are the same (EK-6 Tablo 6.7, 6.8; docs/adr/8076 §3–4);
 - a column carries (Pset_ColumnCommon.LoadBearing), a terrace slab is outside and a floor slab is not
   (Pset_SlabCommon.IsExternal);
-- materials (EK-6): walls their core layer's (Tuğla), slabs theirs (Betonarme), columns and beams Betonarme;
+- materials (EK-6): walls their core layer's (Tuğla; a wall style's layer set holds it in the core component's place,
+  docs/adr/8105), slabs theirs (Betonarme), columns and beams Betonarme;
 - the grids (docs/adr/8070 §4) are one rectangular IfcGrid of the building, its U and V axes the definition's lines with
   their names and points; the U stair is a HALF_TURN_STAIR of Betonarme (§2);
 - every element and room gives IfcOpenShell a shape;
@@ -202,17 +203,27 @@ def main() -> int:
         terrace = by_guid[sl.GlobalId].get("role") == "terrace"
         ensure(ue.get_pset(sl, "Pset_SlabCommon", "IsExternal") is terrace, f"{sl.Name}: IsExternal")
 
-    def made_of(o):
+    def made_of(o, place=None):
         m = ue.get_material(o)
+        if m is not None and m.is_a("IfcMaterialLayerSetUsage"):
+            m = m.ForLayerSet
+        if m is not None and m.is_a("IfcMaterialLayerSet"):
+            # A wall style as its layer set (docs/adr/8105): its layers in the drawing's order of components, so the
+            # core component is the layer in its place.
+            layers = list(m.MaterialLayers)
+            if place is None or place >= len(layers) or layers[place].Material is None:
+                return None
+            return layers[place].Material.Name
         return m.Name if m is not None and m.is_a("IfcMaterial") else None
     for cls, want_m in (("IfcWall", None), ("IfcSlab", "Betonarme"), ("IfcColumn", "Betonarme"),
                         ("IfcBeam", "Betonarme")):
         for o in f.by_type(cls):
+            place = None
             if want_m is None:
-                core = min(by_guid[o.GlobalId]["components"],
-                           key=lambda c: (c.get("priority", 3), "thickness" in c))
-                want_m = core["material"]
-            ensure(made_of(o) == want_m, f"{o.Name}: material {made_of(o)}, the drawing {want_m}")
+                components = by_guid[o.GlobalId]["components"]
+                core = min(components, key=lambda c: (c.get("priority", 3), "thickness" in c))
+                want_m, place = core["material"], components.index(core)
+            ensure(made_of(o, place) == want_m, f"{o.Name}: material {made_of(o, place)}, the drawing {want_m}")
             if cls == "IfcWall":
                 want_m = None
 

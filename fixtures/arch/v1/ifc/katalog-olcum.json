@@ -4,8 +4,8 @@
  "files": [
   {
    "file": "fixtures/arch/v1/ifc/kesit-binasi.ifc",
-   "bytes": 123125,
-   "sha256": "9a5bacaa4890443f549aa7429fc6b6148eca80823d9f92bf535c8896abe1c95f",
+   "bytes": 161382,
+   "sha256": "f92b3c3037e3facf0a4397a5b3e1ca37937d22a585f970bb58e58beb2e6a197e",
    "schema": "IFC4X3_ADD2",
    "classes": {
     "IfcBeam": 8,
@@ -14,11 +14,13 @@
     "IfcColumn": 16,
     "IfcDoor": 5,
     "IfcGeometricRepresentationContext": 1,
-    "IfcOpeningElement": 14,
+    "IfcGridAxis": 7,
+    "IfcOpeningElement": 15,
     "IfcProject": 1,
     "IfcSite": 1,
     "IfcSlab": 3,
     "IfcSpace": 10,
+    "IfcSpatialZone": 4,
     "IfcStair": 1,
     "IfcWall": 16,
     "IfcWindow": 9
@@ -120,8 +122,8 @@
     "T6.7/Pset_BuildingCommon.NetPlannedArea": {
      "class": "IfcBuilding",
      "n": 1,
-     "have": 0,
-     "status": "yok",
+     "have": 1,
+     "status": "var",
      "notes": {}
     },
     "T6.7/Pset_BuildingCommon.NumberOfStoreys": {
@@ -155,8 +157,8 @@
     "T6.7/Qto_BuildingBaseQuantities.Height": {
      "class": "IfcBuilding",
      "n": 1,
-     "have": 1,
-     "status": "var",
+     "have": 0,
+     "status": "yok",
      "notes": {}
     },
     "T6.7/Qto_BuildingBaseQuantities.EavesHeight": {
@@ -211,8 +213,8 @@
     "T6.8/Pset_BuildingStoreyCommon.ElevationOfSSLRelative": {
      "class": "IfcBuildingStorey",
      "n": 2,
-     "have": 0,
-     "status": "yok",
+     "have": 2,
+     "status": "var",
      "notes": {}
     },
     "T6.16/PredefinedType": {
@@ -301,25 +303,32 @@
      "status": "yok",
      "notes": {}
     },
+    "T6.36/AxisTag": {
+     "class": "IfcGridAxis",
+     "n": 7,
+     "have": 7,
+     "status": "var",
+     "notes": {}
+    },
     "T6.41/PredefinedType": {
      "class": "IfcOpeningElement",
-     "n": 14,
-     "have": 14,
+     "n": 15,
+     "have": 15,
      "status": "var",
      "notes": {}
     },
     "T6.41/Name": {
      "class": "IfcOpeningElement",
-     "n": 14,
-     "have": 14,
+     "n": 15,
+     "have": 15,
      "status": "var",
      "notes": {}
     },
     "T6.55/ObjectType": {
      "class": "IfcSite",
      "n": 1,
-     "have": 0,
-     "status": "yok",
+     "have": 1,
+     "status": "var",
      "notes": {}
     },
     "T6.55/LongName": {
@@ -502,8 +511,8 @@
     "T6.58/Pset_SpaceCoveringRequirements.FloorCoveringThickness": {
      "class": "IfcSpace",
      "n": 10,
-     "have": 0,
-     "status": "yok",
+     "have": 10,
+     "status": "var",
      "notes": {}
     },
     "T6.58/Pset_SpaceCoveringRequirements.WallCovering": {
@@ -516,8 +525,8 @@
     "T6.58/Pset_SpaceCoveringRequirements.WallCoveringThickness": {
      "class": "IfcSpace",
      "n": 10,
-     "have": 0,
-     "status": "yok",
+     "have": 10,
+     "status": "var",
      "notes": {}
     },
     "T6.58/Pset_SpaceCoveringRequirements.CeilingCovering": {
@@ -530,8 +539,36 @@
     "T6.58/Pset_SpaceCoveringRequirements.CeilingCoveringThickness": {
      "class": "IfcSpace",
      "n": 10,
-     "have": 0,
-     "status": "yok",
+     "have": 10,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.60/Description": {
+     "class": "IfcSpatialZone",
+     "n": 4,
+     "have": 4,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.60/LongName": {
+     "class": "IfcSpatialZone",
+     "n": 4,
+     "have": 4,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.60/Name": {
+     "class": "IfcSpatialZone",
+     "n": 4,
+     "have": 4,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.60/TREpys_EmsalOzellikSeti.EmsalDurumu": {
+     "class": "IfcSpatialZone",
+     "n": 4,
+     "have": 4,
+     "status": "var",
      "notes": {}
     },
     "T6.61/PredefinedType": {
@@ -539,9 +576,7 @@
      "n": 1,
      "have": 1,
      "status": "var",
-     "notes": {
-      "NOTDEFINED": 1
-     }
+     "notes": {}
     },
     "T6.61/Name": {
      "class": "IfcStair",
@@ -560,9 +595,11 @@
     "T6.61/IfcMaterial.Name": {
      "class": "IfcStair",
      "n": 1,
-     "have": 0,
-     "status": "yok",
-     "notes": {}
+     "have": 1,
+     "status": "var",
+     "notes": {
+      "biçim: Betonarme": 1
+     }
     },
     "T6.61/Pset_StairCommon.FireRating": {
      "class": "IfcStair",
@@ -605,7 +642,8 @@
      "have": 16,
      "status": "var",
      "notes": {
-      "biçim: Tuğla": 16
+      "biçim: Dış sıva, Isı yalıtımı, Tuğla, İç sıva": 8,
+      "biçim: Sıva, Tuğla": 8
      }
     },
     "T6.66/Pset_WallCommon.IsExternal": {
@@ -703,8 +741,8 @@
   },
   {
    "file": "fixtures/arch/v1/ifc/kesit-binasi-kunye.ifc",
-   "bytes": 125184,
-   "sha256": "1e0c454301de484b06330ff6c5aa8f0a3b40ef30b657e9d293b531c2162f19c0",
+   "bytes": 163935,
+   "sha256": "c529eb6d781d89e82173cbde337445e82cc785b49a764f2fce0c5796443c5402",
    "schema": "IFC4X3_ADD2",
    "classes": {
     "IfcActorRole": 1,
@@ -714,8 +752,9 @@
     "IfcColumn": 16,
     "IfcDoor": 5,
     "IfcGeometricRepresentationContext": 1,
+    "IfcGridAxis": 7,
     "IfcMapConversion": 1,
-    "IfcOpeningElement": 14,
+    "IfcOpeningElement": 15,
     "IfcOrganization": 1,
     "IfcPerson": 1,
     "IfcPersonAndOrganization": 1,
@@ -724,6 +763,7 @@
     "IfcSite": 1,
     "IfcSlab": 3,
     "IfcSpace": 10,
+    "IfcSpatialZone": 4,
     "IfcStair": 1,
     "IfcWall": 16,
     "IfcWindow": 9
@@ -797,8 +837,8 @@
     "T6.7/Pset_BuildingCommon.ConstructionMethod": {
      "class": "IfcBuilding",
      "n": 1,
-     "have": 0,
-     "status": "yok",
+     "have": 1,
+     "status": "var",
      "notes": {}
     },
     "T6.7/Pset_BuildingCommon.FireProtectionClass": {
@@ -825,8 +865,8 @@
     "T6.7/Pset_BuildingCommon.NetPlannedArea": {
      "class": "IfcBuilding",
      "n": 1,
-     "have": 0,
-     "status": "yok",
+     "have": 1,
+     "status": "var",
      "notes": {}
     },
     "T6.7/Pset_BuildingCommon.NumberOfStoreys": {
@@ -860,8 +900,8 @@
     "T6.7/Qto_BuildingBaseQuantities.Height": {
      "class": "IfcBuilding",
      "n": 1,
-     "have": 1,
-     "status": "var",
+     "have": 0,
+     "status": "yok",
      "notes": {}
     },
     "T6.7/Qto_BuildingBaseQuantities.EavesHeight": {
@@ -916,8 +956,8 @@
     "T6.8/Pset_BuildingStoreyCommon.ElevationOfSSLRelative": {
      "class": "IfcBuildingStorey",
      "n": 2,
-     "have": 0,
-     "status": "yok",
+     "have": 2,
+     "status": "var",
      "notes": {}
     },
     "T6.16/PredefinedType": {
@@ -1006,25 +1046,32 @@
      "status": "yok",
      "notes": {}
     },
+    "T6.36/AxisTag": {
+     "class": "IfcGridAxis",
+     "n": 7,
+     "have": 7,
+     "status": "var",
+     "notes": {}
+    },
     "T6.41/PredefinedType": {
      "class": "IfcOpeningElement",
-     "n": 14,
-     "have": 14,
+     "n": 15,
+     "have": 15,
      "status": "var",
      "notes": {}
     },
     "T6.41/Name": {
      "class": "IfcOpeningElement",
-     "n": 14,
-     "have": 14,
+     "n": 15,
+     "have": 15,
      "status": "var",
      "notes": {}
     },
     "T6.55/ObjectType": {
      "class": "IfcSite",
      "n": 1,
-     "have": 0,
-     "status": "yok",
+     "have": 1,
+     "status": "var",
      "notes": {}
     },
     "T6.55/LongName": {
@@ -1207,8 +1254,8 @@
     "T6.58/Pset_SpaceCoveringRequirements.FloorCoveringThickness": {
      "class": "IfcSpace",
      "n": 10,
-     "have": 0,
-     "status": "yok",
+     "have": 10,
+     "status": "var",
      "notes": {}
     },
     "T6.58/Pset_SpaceCoveringRequirements.WallCovering": {
@@ -1221,8 +1268,8 @@
     "T6.58/Pset_SpaceCoveringRequirements.WallCoveringThickness": {
      "class": "IfcSpace",
      "n": 10,
-     "have": 0,
-     "status": "yok",
+     "have": 10,
+     "status": "var",
      "notes": {}
     },
     "T6.58/Pset_SpaceCoveringRequirements.CeilingCovering": {
@@ -1235,8 +1282,36 @@
     "T6.58/Pset_SpaceCoveringRequirements.CeilingCoveringThickness": {
      "class": "IfcSpace",
      "n": 10,
-     "have": 0,
-     "status": "yok",
+     "have": 10,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.60/Description": {
+     "class": "IfcSpatialZone",
+     "n": 4,
+     "have": 4,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.60/LongName": {
+     "class": "IfcSpatialZone",
+     "n": 4,
+     "have": 4,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.60/Name": {
+     "class": "IfcSpatialZone",
+     "n": 4,
+     "have": 4,
+     "status": "var",
+     "notes": {}
+    },
+    "T6.60/TREpys_EmsalOzellikSeti.EmsalDurumu": {
+     "class": "IfcSpatialZone",
+     "n": 4,
+     "have": 4,
+     "status": "var",
      "notes": {}
     },
     "T6.61/PredefinedType": {
@@ -1244,9 +1319,7 @@
      "n": 1,
      "have": 1,
      "status": "var",
-     "notes": {
-      "NOTDEFINED": 1
-     }
+     "notes": {}
     },
     "T6.61/Name": {
      "class": "IfcStair",
@@ -1265,9 +1338,11 @@
     "T6.61/IfcMaterial.Name": {
      "class": "IfcStair",
      "n": 1,
-     "have": 0,
-     "status": "yok",
-     "notes": {}
+     "have": 1,
+     "status": "var",
+     "notes": {
+      "biçim: Betonarme": 1
+     }
     },
     "T6.61/Pset_StairCommon.FireRating": {
      "class": "IfcStair",
@@ -1310,7 +1385,8 @@
      "have": 16,
      "status": "var",
      "notes": {
-      "biçim: Tuğla": 16
+      "biçim: Dış sıva, Isı yalıtımı, Tuğla, İç sıva": 8,
+      "biçim: Sıva, Tuğla": 8
      }
     },
     "T6.66/Pset_WallCommon.IsExternal": {
@@ -1358,8 +1434,8 @@
     "T7.1/Description": {
      "class": "IfcProject",
      "n": 1,
-     "have": 0,
-     "status": "yok",
+     "have": 1,
+     "status": "var",
      "notes": {}
     },
     "T7.1/Name": {
@@ -1372,8 +1448,8 @@
     "T7.1/Pset_ProjectCommon.ProjectType": {
      "class": "IfcProject",
      "n": 1,
-     "have": 0,
-     "status": "yok",
+     "have": 1,
+     "status": "var",
      "notes": {}
     },
     "T7.2/Identification": {
@@ -1400,8 +1476,8 @@
     "T7.2/Roles": {
      "class": "IfcPerson",
      "n": 1,
-     "have": 0,
-     "status": "yok",
+     "have": 1,
+     "status": "var",
      "notes": {}
     },
     "T7.3/ThePerson": {
@@ -1435,8 +1511,8 @@
     "T7.4/Roles": {
      "class": "IfcOrganization",
      "n": 1,
-     "have": 0,
-     "status": "yok",
+     "have": 1,
+     "status": "var",
      "notes": {}
     },
     "T7.4/Addresses": {
@@ -1582,8 +1658,8 @@
     "T7.8/TrueNorth": {
      "class": "IfcGeometricRepresentationContext",
      "n": 1,
-     "have": 0,
-     "status": "yok",
+     "have": 1,
+     "status": "var",
      "notes": {}
     }
    }

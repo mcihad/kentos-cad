@@ -1,22 +1,6 @@
 {
  "bodies": {
-  "01eURUuefoiO95d5_HQ5GM": {
-   "area": 34.621320343559645,
-   "box": [
-    [
-     19.875,
-     -0.1250000000000003,
-     1.2
-    ],
-    [
-     20.125,
-     5.125,
-     4.2
-    ]
-   ],
-   "volume": 3.7499999999999805
-  },
-  "01eURUuefoiO95d5nqtD0r": {
+  "01eUrYNTrrBhluDCL3MWI0": {
    "area": 41.121320343559645,
    "box": [
     [
@@ -32,7 +16,7 @@
    ],
    "volume": 4.5
   },
-  "01eURUuefoiO95d5qKKyT$": {
+  "01eUrYNTrrBhluDCRPuA7J": {
    "area": 34.62132034355964,
    "box": [
     [
@@ -48,7 +32,7 @@
    ],
    "volume": 3.7500000000000853
   },
-  "01eURUuefoiO95d5uWIelZ": {
+  "01eUrYNTrrBhluDCVxpBsg": {
    "area": 41.121320343559645,
    "box": [
     [
@@ -64,7 +48,23 @@
    ],
    "volume": 4.49999999999999
   },
-  "01eURUuejtz9BsCKQDhJ$0": {
+  "01eUrYNTrrBhluDCYzB1Zi": {
+   "area": 34.621320343559645,
+   "box": [
+    [
+     19.875,
+     -0.1250000000000003,
+     1.2
+    ],
+    [
+     20.125,
+     5.125,
+     4.2
+    ]
+   ],
+   "volume": 3.7499999999999805
+  },
+  "01eUrYNTvqc9Iq7XpIssso": {
    "area": 117.625,
    "box": [
     [
@@ -80,7 +80,7 @@
    ],
    "volume": 81.93749999999991
   },
-  "2D$xXaVlsq$Y7AsgtRhv15": {
+  "3HQLI5f3_A9A2rC6AqnBZR": {
    "area": 117.625,
    "box": [
     [
@@ -106,23 +106,9 @@
  "lengthToSi": 1.0,
  "location": null,
  "objects": {
-  "01eURUuefoiO95d5_HQ5GM": {
+  "01eUrYNTrrBhluDCL3MWI0": {
    "class": "IfcWall",
-   "container": "0arK3$LlsrWO4i0a3pac4_",
-   "description": null,
-   "hasShape": true,
-   "longName": null,
-   "name": "MM-DVR",
-   "objectType": null,
-   "parent": null,
-   "predefined": "STANDARD",
-   "step": 125,
-   "tag": "01a1e6de-e28a-72b1-8245-9c5f91685416",
-   "type": null
-  },
-  "01eURUuefoiO95d5nqtD0r": {
-   "class": "IfcWall",
-   "container": "0arK3$LlsrWO4i0a3pac4_",
+   "container": "2EpyptGww5PP04BJ32snu1",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -131,12 +117,12 @@
    "parent": null,
    "predefined": "STANDARD",
    "step": 50,
-   "tag": "01a1e6de-e28a-72b1-8245-9c5c74dcd035",
+   "tag": "01a1ed62-5ddd-752e-bbf8-34c5435a0480",
    "type": null
   },
-  "01eURUuefoiO95d5qKKyT$": {
+  "01eUrYNTrrBhluDCRPuA7J": {
    "class": "IfcWall",
-   "container": "0arK3$LlsrWO4i0a3pac4_",
+   "container": "2EpyptGww5PP04BJ32snu1",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -145,12 +131,12 @@
    "parent": null,
    "predefined": "STANDARD",
    "step": 75,
-   "tag": "01a1e6de-e28a-72b1-8245-9c5d1453c77f",
+   "tag": "01a1ed62-5ddd-752e-bbf8-34c6d9e0a1d3",
    "type": null
   },
-  "01eURUuefoiO95d5uWIelZ": {
+  "01eUrYNTrrBhluDCVxpBsg": {
    "class": "IfcWall",
-   "container": "0arK3$LlsrWO4i0a3pac4_",
+   "container": "2EpyptGww5PP04BJ32snu1",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -159,10 +145,24 @@
    "parent": null,
    "predefined": "STANDARD",
    "step": 100,
-   "tag": "01a1e6de-e28a-72b1-8245-9c5e204a8be3",
+   "tag": "01a1ed62-5ddd-752e-bbf8-34c7fbccbdaa",
    "type": null
   },
-  "01eURUuejtz9BsCKQDhJ$0": {
+  "01eUrYNTrrBhluDCYzB1Zi": {
+   "class": "IfcWall",
+   "container": "2EpyptGww5PP04BJ32snu1",
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-DVR",
+   "objectType": null,
+   "parent": null,
+   "predefined": "STANDARD",
+   "step": 125,
+   "tag": "01a1ed62-5ddd-752e-bbf8-34c8bd2c18ec",
+   "type": null
+  },
+  "01eUrYNTvqc9Iq7XpIssso": {
    "class": "IfcSpace",
    "container": null,
    "description": null,
@@ -170,7 +170,7 @@
    "longName": "Dükkân",
    "name": "MM-MHL-B01_Dükkân",
    "objectType": null,
-   "parent": "0arK3$LlsrWO4i0a3pac4_",
+   "parent": "2EpyptGww5PP04BJ32snu1",
    "predefined": "INTERNAL",
    "step": 150,
    "tag": null,
@@ -190,20 +190,6 @@
    "tag": null,
    "type": null
   },
-  "0arK3$LlsrWO4i0a3pac4_": {
-   "class": "IfcBuildingStorey",
-   "container": null,
-   "description": null,
-   "hasShape": false,
-   "longName": "B zemin kat",
-   "name": "MM-BNK-B_zemin_kat",
-   "objectType": null,
-   "parent": "2R1m4dnxIpmFWdGeEGxMXO",
-   "predefined": null,
-   "step": 30,
-   "tag": null,
-   "type": null
-  },
   "23IghJHOCOls7W8Env6cDE": {
    "class": "IfcProject",
    "container": null,
@@ -218,17 +204,17 @@
    "tag": null,
    "type": null
   },
-  "2D$xXaVlsq$Y7AsgtRhv15": {
-   "class": "IfcSpatialZone",
+  "2EpyptGww5PP04BJ32snu1": {
+   "class": "IfcBuildingStorey",
    "container": null,
-   "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
-   "hasShape": true,
-   "longName": "B zemin kat emsale dahil alan",
-   "name": "MM-MZN-Emsal_DAHIL_B_zemin_kat",
-   "objectType": "EMSAL",
-   "parent": null,
-   "predefined": "USERDEFINED",
-   "step": 170,
+   "description": null,
+   "hasShape": false,
+   "longName": "B zemin kat",
+   "name": "MM-BNK-B_zemin_kat",
+   "objectType": null,
+   "parent": "2R1m4dnxIpmFWdGeEGxMXO",
+   "predefined": null,
+   "step": 30,
    "tag": null,
    "type": null
   },
@@ -243,6 +229,20 @@
    "parent": "09$UySuLLFzMCtT0aDEeah",
    "predefined": null,
    "step": 19,
+   "tag": null,
+   "type": null
+  },
+  "3HQLI5f3_A9A2rC6AqnBZR": {
+   "class": "IfcSpatialZone",
+   "container": null,
+   "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
+   "hasShape": true,
+   "longName": "B zemin kat emsale dahil alan",
+   "name": "MM-MZN-Emsal_DAHIL_B_zemin_kat",
+   "objectType": "EMSAL",
+   "parent": null,
+   "predefined": "USERDEFINED",
+   "step": 170,
    "tag": null,
    "type": null
   },
@@ -266,34 +266,29 @@
  "records": 204,
  "schema": "IFC4X3_ADD2",
  "sets": {
-  "01eURUuefoiO95d5_HQ5GM": {
+  "01eUrYNTrrBhluDCL3MWI0": {
    "Pset_WallCommon": {
     "IsExternal": true
    },
    "Qto_WallBaseQuantities": {
-    "GrossVolume": 3.75,
+    "GrossVolume": 4.5,
     "Height": 3.0,
-    "Length": 5.0,
-    "NetSideArea": 15.0,
-    "NetVolume": 3.75,
+    "Length": 6.0,
+    "NetSideArea": 18.0,
+    "NetVolume": 4.5,
     "Width": 0.25
    }
   },
-  "01eURUuejtz9BsCKQDhJ$0": {
+  "01eUrYNTvqc9Iq7XpIssso": {
    "Qto_SpaceBaseQuantities": {
     "GrossFloorArea": 27.3125,
     "GrossPerimeter": 21.0,
     "NetFloorArea": 27.3125
    }
   },
-  "0arK3$LlsrWO4i0a3pac4_": {
+  "2EpyptGww5PP04BJ32snu1": {
    "Qto_BuildingStoreyBaseQuantities": {
     "NetFloorArea": 27.3125
-   }
-  },
-  "2D$xXaVlsq$Y7AsgtRhv15": {
-   "TREpys_EmsalOzellikSeti": {
-    "EmsalDurumu": "DAHIL"
    }
   },
   "2R1m4dnxIpmFWdGeEGxMXO": {
@@ -304,6 +299,11 @@
    },
    "Qto_BuildingBaseQuantities": {
     "NetFloorArea": 27.3125
+   }
+  },
+  "3HQLI5f3_A9A2rC6AqnBZR": {
+   "TREpys_EmsalOzellikSeti": {
+    "EmsalDurumu": "DAHIL"
    }
   }
  },

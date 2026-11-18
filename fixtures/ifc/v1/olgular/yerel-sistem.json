@@ -824,8 +824,20 @@
           11.800000190734863,
           8.800000190734863
         ],
-        "globalId": "2Vr6HTaE0qgF0GZuCy7M00",
+        "globalId": "0mXdHQdmw5Ne$gBLmCHlns",
         "rounding": 1.0490417707842425e-6,
+        "zMax": 2.999999985694885,
+        "zMin": -1.4305114870438729e-8
+      },
+      {
+        "box": [
+          4.574999809265137,
+          0.19999980926513672,
+          7.425000190734863,
+          8.800000190734863
+        ],
+        "globalId": "0hbb1436Q6sOTvocBpJxs1",
+        "rounding": 7.808208692949847e-7,
         "zMax": 2.999999985694885,
         "zMin": -1.4305114870438729e-8
       },
@@ -836,8 +848,20 @@
           11.800000190734863,
           8.800000190734863
         ],
-        "globalId": "39Wf5qiE0qv$yWUOncJCwC",
+        "globalId": "2SCjl18iU4R8Q7xqwUZ8F9",
         "rounding": 1.0490417707842425e-6,
+        "zMax": 5.999999866485595,
+        "zMin": 2.999999985694885
+      },
+      {
+        "box": [
+          4.574999809265137,
+          0.19999980926513672,
+          7.425000190734863,
+          8.800000190734863
+        ],
+        "globalId": "186KbboPo8JwcEjcsdPcdo",
+        "rounding": 8.010864291918551e-7,
         "zMax": 5.999999866485595,
         "zMin": 2.999999985694885
       }
@@ -849,7 +873,7 @@
         "closed": true,
         "globalId": "01alMXGa9m08000000000G",
         "rounding": 6.094575155657367e-7,
-        "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+        "storey": "3cw2ZUyjABGvn5xuvDhrKU",
         "zMax": 2.759999976158142,
         "zMin": -1.4305114870438729e-8
       },
@@ -858,7 +882,7 @@
         "closed": true,
         "globalId": "01alMXGa9m08000000000H",
         "rounding": 8.702278364580707e-7,
-        "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+        "storey": "3cw2ZUyjABGvn5xuvDhrKU",
         "zMax": 2.759999976158142,
         "zMin": -1.4305114870438729e-8
       },
@@ -867,7 +891,7 @@
         "closed": true,
         "globalId": "01alMXGa9m08000000000I",
         "rounding": 7.808208692949847e-7,
-        "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+        "storey": "3cw2ZUyjABGvn5xuvDhrKU",
         "zMax": 2.999999985694885,
         "zMin": -1.4305114870438729e-8
       },
@@ -876,7 +900,7 @@
         "closed": true,
         "globalId": "01alMXGa9m08000000000J",
         "rounding": 1.0490417707842425e-6,
-        "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+        "storey": "3cw2ZUyjABGvn5xuvDhrKU",
         "zMax": 2.759999976158142,
         "zMin": -1.4305114870438729e-8
       },
@@ -885,7 +909,7 @@
         "closed": true,
         "globalId": "01alMXGa9m08000000000K",
         "rounding": 1.0490417707842425e-6,
-        "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+        "storey": "3cw2ZUyjABGvn5xuvDhrKU",
         "zMax": 2.759999976158142,
         "zMin": -1.4305114870438729e-8
       },
@@ -894,7 +918,7 @@
         "closed": true,
         "globalId": "01alMXGa9m08000000000a",
         "rounding": 6.094575155657367e-7,
-        "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+        "storey": "10W_smdZA4W8WQhK9YjuVJ",
         "zMax": 5.660000190734863,
         "zMin": 2.999999985694885
       },
@@ -903,7 +927,7 @@
         "closed": true,
         "globalId": "01alMXGa9m08000000000b",
         "rounding": 8.702278364580707e-7,
-        "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+        "storey": "10W_smdZA4W8WQhK9YjuVJ",
         "zMax": 5.660000190734863,
         "zMin": 2.999999985694885
       },
@@ -912,7 +936,7 @@
         "closed": true,
         "globalId": "01alMXGa9m08000000000c",
         "rounding": 7.808208692949847e-7,
-        "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+        "storey": "10W_smdZA4W8WQhK9YjuVJ",
         "zMax": 5.660000190734863,
         "zMin": 2.999999985694885
       },
@@ -921,7 +945,7 @@
         "closed": true,
         "globalId": "01alMXGa9m08000000000d",
         "rounding": 1.0490417707842425e-6,
-        "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+        "storey": "10W_smdZA4W8WQhK9YjuVJ",
         "zMax": 5.660000190734863,
         "zMin": 2.999999985694885
       },
@@ -930,7 +954,7 @@
         "closed": true,
         "globalId": "01alMXGa9m08000000000e",
         "rounding": 1.0490417707842425e-6,
-        "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+        "storey": "10W_smdZA4W8WQhK9YjuVJ",
         "zMax": 5.660000190734863,
         "zMin": 2.999999985694885
       }
@@ -957,7 +981,7 @@
     "IfcWindow": "PNC"
   },
   "file": {
-    "bytes": 156747,
+    "bytes": 161752,
     "extension": "ifc",
     "header": {
       "author": [
@@ -976,7 +1000,7 @@
       "timeStamp": "2026-11-16T12:00:00"
     },
     "name": "yerel-sistem.ifc",
-    "records": 2931,
+    "records": 2989,
     "schema": "IFC4X3_ADD2"
   },
   "findings": [],
@@ -1005,7 +1029,7 @@
       "class": "IfcBuilding",
       "id": "T6.7/Pset_BuildingCommon.BuildingID",
       "missing": [
-        "2HLNtj5_0q48$lOrM5K8qM"
+        "0zexyXuYcAUA8zpOHHVl6X"
       ],
       "of": 1,
       "page": 42,
@@ -1017,7 +1041,7 @@
       "class": "IfcBuilding",
       "id": "T6.7/Pset_BuildingCommon.IsPermanentID",
       "missing": [
-        "2HLNtj5_0q48$lOrM5K8qM"
+        "0zexyXuYcAUA8zpOHHVl6X"
       ],
       "of": 1,
       "page": 42,
@@ -1029,7 +1053,7 @@
       "class": "IfcBuilding",
       "id": "T6.7/Pset_BuildingCommon.ConstructionMethod",
       "missing": [
-        "2HLNtj5_0q48$lOrM5K8qM"
+        "0zexyXuYcAUA8zpOHHVl6X"
       ],
       "of": 1,
       "page": 42,
@@ -1041,7 +1065,7 @@
       "class": "IfcBuilding",
       "id": "T6.7/Pset_BuildingCommon.FireProtectionClass",
       "missing": [
-        "2HLNtj5_0q48$lOrM5K8qM"
+        "0zexyXuYcAUA8zpOHHVl6X"
       ],
       "of": 1,
       "page": 42,
@@ -1053,7 +1077,7 @@
       "class": "IfcBuilding",
       "id": "T6.7/Pset_BuildingCommon.OccupancyType",
       "missing": [
-        "2HLNtj5_0q48$lOrM5K8qM"
+        "0zexyXuYcAUA8zpOHHVl6X"
       ],
       "of": 1,
       "page": 42,
@@ -1065,7 +1089,7 @@
       "class": "IfcBuilding",
       "id": "T6.7/Pset_BuildingCommon.GrossPlannedArea",
       "missing": [
-        "2HLNtj5_0q48$lOrM5K8qM"
+        "0zexyXuYcAUA8zpOHHVl6X"
       ],
       "of": 1,
       "page": 42,
@@ -1077,7 +1101,7 @@
       "class": "IfcBuilding",
       "id": "T6.7/Pset_Address.AddressLines",
       "missing": [
-        "2HLNtj5_0q48$lOrM5K8qM"
+        "0zexyXuYcAUA8zpOHHVl6X"
       ],
       "of": 1,
       "page": 43,
@@ -1089,7 +1113,7 @@
       "class": "IfcBuilding",
       "id": "T6.7/Pset_Address.Town",
       "missing": [
-        "2HLNtj5_0q48$lOrM5K8qM"
+        "0zexyXuYcAUA8zpOHHVl6X"
       ],
       "of": 1,
       "page": 43,
@@ -1101,7 +1125,7 @@
       "class": "IfcBuilding",
       "id": "T6.7/Pset_Address.Region",
       "missing": [
-        "2HLNtj5_0q48$lOrM5K8qM"
+        "0zexyXuYcAUA8zpOHHVl6X"
       ],
       "of": 1,
       "page": 43,
@@ -1111,21 +1135,9 @@
     },
     {
       "class": "IfcBuilding",
-      "id": "T6.7/Qto_BuildingBaseQuantities.EavesHeight",
-      "missing": [
-        "2HLNtj5_0q48$lOrM5K8qM"
-      ],
-      "of": 1,
-      "page": 43,
-      "path": "Qto_BuildingBaseQuantities.EavesHeight",
-      "table": "6.7",
-      "tr": "Saçak Yüksekliği"
-    },
-    {
-      "class": "IfcBuilding",
       "id": "T6.7/Qto_BuildingBaseQuantities.FootPrintArea",
       "missing": [
-        "2HLNtj5_0q48$lOrM5K8qM"
+        "0zexyXuYcAUA8zpOHHVl6X"
       ],
       "of": 1,
       "page": 43,
@@ -1137,7 +1149,7 @@
       "class": "IfcBuilding",
       "id": "T6.7/Qto_BuildingBaseQuantities.GrossFloorArea",
       "missing": [
-        "2HLNtj5_0q48$lOrM5K8qM"
+        "0zexyXuYcAUA8zpOHHVl6X"
       ],
       "of": 1,
       "page": 44,
@@ -1149,26 +1161,13 @@
       "class": "IfcBuilding",
       "id": "T6.7/Pset_Address.PostalBox",
       "missing": [
-        "2HLNtj5_0q48$lOrM5K8qM"
+        "0zexyXuYcAUA8zpOHHVl6X"
       ],
       "of": 1,
       "page": 44,
       "path": "Pset_Address.PostalBox",
       "table": "6.7",
       "tr": "Posta Kutusu"
-    },
-    {
-      "class": "IfcBuildingStorey",
-      "id": "T6.8/Pset_BuildingStoreyCommon.ElevationOfSSLRelative",
-      "missing": [
-        "1ffSBbF_0qDLYugzhTx3Wz",
-        "2j7l5Hr_0qEfdv$rkXS2mU"
-      ],
-      "of": 2,
-      "page": 45,
-      "path": "Pset_BuildingStoreyCommon.ElevationOfSSLRelative",
-      "table": "6.8",
-      "tr": "Taşıyıcı Döşeme Üst Kotu"
     },
     {
       "class": "IfcColumn",
@@ -1231,21 +1230,9 @@
     },
     {
       "class": "IfcSite",
-      "id": "T6.55/ObjectType",
-      "missing": [
-        "3KpgnPh_0q5T4mjjP8r83t"
-      ],
-      "of": 1,
-      "page": 94,
-      "path": "ObjectType",
-      "table": "6.55",
-      "tr": "Nesne Tipi"
-    },
-    {
-      "class": "IfcSite",
       "id": "T6.55/LongName",
       "missing": [
-        "3KpgnPh_0q5T4mjjP8r83t"
+        "2r7SpxLIA578NOaZjYM$R2"
       ],
       "of": 1,
       "page": 94,
@@ -1257,7 +1244,7 @@
       "class": "IfcSite",
       "id": "T6.55/Pset_SiteCommon.FloorAreaRatio",
       "missing": [
-        "3KpgnPh_0q5T4mjjP8r83t"
+        "2r7SpxLIA578NOaZjYM$R2"
       ],
       "of": 1,
       "page": 94,
@@ -1269,7 +1256,7 @@
       "class": "IfcSite",
       "id": "T6.55/Pset_SiteCommon.SiteCoverageRatio",
       "missing": [
-        "3KpgnPh_0q5T4mjjP8r83t"
+        "2r7SpxLIA578NOaZjYM$R2"
       ],
       "of": 1,
       "page": 94,
@@ -1281,7 +1268,7 @@
       "class": "IfcSite",
       "id": "T6.55/Pset_SiteCommon.TotalArea",
       "missing": [
-        "3KpgnPh_0q5T4mjjP8r83t"
+        "2r7SpxLIA578NOaZjYM$R2"
       ],
       "of": 1,
       "page": 94,
@@ -1293,7 +1280,7 @@
       "class": "IfcSite",
       "id": "T6.55/Pset_Address.AddressLines",
       "missing": [
-        "3KpgnPh_0q5T4mjjP8r83t"
+        "2r7SpxLIA578NOaZjYM$R2"
       ],
       "of": 1,
       "page": 94,
@@ -1305,7 +1292,7 @@
       "class": "IfcSite",
       "id": "T6.55/Pset_Address.Town",
       "missing": [
-        "3KpgnPh_0q5T4mjjP8r83t"
+        "2r7SpxLIA578NOaZjYM$R2"
       ],
       "of": 1,
       "page": 95,
@@ -1317,7 +1304,7 @@
       "class": "IfcSite",
       "id": "T6.55/Pset_Address.Region",
       "missing": [
-        "3KpgnPh_0q5T4mjjP8r83t"
+        "2r7SpxLIA578NOaZjYM$R2"
       ],
       "of": 1,
       "page": 95,
@@ -1329,7 +1316,7 @@
       "class": "IfcSite",
       "id": "T6.55/Pset_LandRegistration.LandID",
       "missing": [
-        "3KpgnPh_0q5T4mjjP8r83t"
+        "2r7SpxLIA578NOaZjYM$R2"
       ],
       "of": 1,
       "page": 95,
@@ -1341,7 +1328,7 @@
       "class": "IfcSite",
       "id": "T6.55/Pset_LandRegistration.LandTitleID",
       "missing": [
-        "3KpgnPh_0q5T4mjjP8r83t"
+        "2r7SpxLIA578NOaZjYM$R2"
       ],
       "of": 1,
       "page": 95,
@@ -1353,7 +1340,7 @@
       "class": "IfcSite",
       "id": "T6.55/TREpys_ParselOzellikSeti.TAKS",
       "missing": [
-        "3KpgnPh_0q5T4mjjP8r83t"
+        "2r7SpxLIA578NOaZjYM$R2"
       ],
       "of": 1,
       "page": 95,
@@ -1365,7 +1352,7 @@
       "class": "IfcSite",
       "id": "T6.55/TREpys_ParselOzellikSeti.KAKS",
       "missing": [
-        "3KpgnPh_0q5T4mjjP8r83t"
+        "2r7SpxLIA578NOaZjYM$R2"
       ],
       "of": 1,
       "page": 95,
@@ -1377,7 +1364,7 @@
       "class": "IfcSite",
       "id": "T6.55/TREpys_ParselOzellikSeti.CekmeOn",
       "missing": [
-        "3KpgnPh_0q5T4mjjP8r83t"
+        "2r7SpxLIA578NOaZjYM$R2"
       ],
       "of": 1,
       "page": 95,
@@ -1389,7 +1376,7 @@
       "class": "IfcSite",
       "id": "T6.55/TREpys_ParselOzellikSeti.CekmeYan",
       "missing": [
-        "3KpgnPh_0q5T4mjjP8r83t"
+        "2r7SpxLIA578NOaZjYM$R2"
       ],
       "of": 1,
       "page": 95,
@@ -1401,7 +1388,7 @@
       "class": "IfcSite",
       "id": "T6.55/TREpys_ParselOzellikSeti.CekmeArka",
       "missing": [
-        "3KpgnPh_0q5T4mjjP8r83t"
+        "2r7SpxLIA578NOaZjYM$R2"
       ],
       "of": 1,
       "page": 95,
@@ -1446,18 +1433,6 @@
     },
     {
       "class": "IfcSpace",
-      "id": "T6.58/Pset_SpaceCoveringRequirements.FloorCoveringThickness",
-      "missing": [
-        "01alMXGa9m08000000000c"
-      ],
-      "of": 10,
-      "page": 98,
-      "path": "Pset_SpaceCoveringRequirements.FloorCoveringThickness",
-      "table": "6.58",
-      "tr": "Zemin Kaplama Kalınlığı"
-    },
-    {
-      "class": "IfcSpace",
       "id": "T6.58/Pset_SpaceCoveringRequirements.WallCovering",
       "missing": [
         "01alMXGa9m08000000000G",
@@ -1476,27 +1451,6 @@
       "path": "Pset_SpaceCoveringRequirements.WallCovering",
       "table": "6.58",
       "tr": "Duvar Kaplaması"
-    },
-    {
-      "class": "IfcSpace",
-      "id": "T6.58/Pset_SpaceCoveringRequirements.WallCoveringThickness",
-      "missing": [
-        "01alMXGa9m08000000000G",
-        "01alMXGa9m08000000000H",
-        "01alMXGa9m08000000000I",
-        "01alMXGa9m08000000000J",
-        "01alMXGa9m08000000000K",
-        "01alMXGa9m08000000000a",
-        "01alMXGa9m08000000000b",
-        "01alMXGa9m08000000000c",
-        "01alMXGa9m08000000000d",
-        "01alMXGa9m08000000000e"
-      ],
-      "of": 10,
-      "page": 99,
-      "path": "Pset_SpaceCoveringRequirements.WallCoveringThickness",
-      "table": "6.58",
-      "tr": "Duvar Kaplama Kalınlığı"
     },
     {
       "class": "IfcSpace",
@@ -1574,7 +1528,7 @@
       "class": "IfcProject",
       "id": "T7.1/Description",
       "missing": [
-        "0AOo4Jv_0q1Wril5F_IALK"
+        "1DKKNrJcA1Tuch6OA8kAVI"
       ],
       "of": 1,
       "page": 222,
@@ -1586,7 +1540,7 @@
       "class": "IfcProject",
       "id": "T7.1/Pset_ProjectCommon.ProjectType",
       "missing": [
-        "0AOo4Jv_0q1Wril5F_IALK"
+        "1DKKNrJcA1Tuch6OA8kAVI"
       ],
       "of": 1,
       "page": 222,
@@ -1615,7 +1569,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "0AOo4Jv_0q1Wril5F_IALK",
+      "globalId": "1DKKNrJcA1Tuch6OA8kAVI",
       "hasShape": false,
       "longName": "Kesit binası",
       "materials": [],
@@ -1625,7 +1579,7 @@
       "predefinedType": null,
       "quantities": {},
       "sets": {},
-      "step": 14,
+      "step": 15,
       "storey": null,
       "tag": null,
       "type": null,
@@ -1637,17 +1591,17 @@
       "container": null,
       "description": null,
       "elevation": 1285.4,
-      "globalId": "3KpgnPh_0q5T4mjjP8r83t",
+      "globalId": "2r7SpxLIA578NOaZjYM$R2",
       "hasShape": false,
       "longName": null,
       "materials": [],
       "name": "MM-SAH-Parsel",
-      "objectType": null,
-      "parent": "0AOo4Jv_0q1Wril5F_IALK",
+      "objectType": "Parsel",
+      "parent": "1DKKNrJcA1Tuch6OA8kAVI",
       "predefinedType": null,
       "quantities": {},
       "sets": {},
-      "step": 17,
+      "step": 18,
       "storey": null,
       "tag": null,
       "type": null,
@@ -1659,17 +1613,16 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "2HLNtj5_0q48$lOrM5K8qM",
+      "globalId": "0zexyXuYcAUA8zpOHHVl6X",
       "hasShape": false,
       "longName": "Kesit binası",
       "materials": [],
       "name": "MM-BNA-Kesit_binası",
       "objectType": null,
-      "parent": "3KpgnPh_0q5T4mjjP8r83t",
+      "parent": "2r7SpxLIA578NOaZjYM$R2",
       "predefinedType": null,
       "quantities": {
         "Qto_BuildingBaseQuantities": {
-          "Height": 3.0,
           "NetFloorArea": 191.82500000000005
         }
       },
@@ -1679,7 +1632,7 @@
           "NumberOfStoreys": 2
         }
       },
-      "step": 20,
+      "step": 21,
       "storey": null,
       "tag": null,
       "type": null,
@@ -1691,21 +1644,26 @@
       "container": null,
       "description": null,
       "elevation": 0.0,
-      "globalId": "1ffSBbF_0qDLYugzhTx3Wz",
+      "globalId": "3cw2ZUyjABGvn5xuvDhrKU",
       "hasShape": false,
       "longName": "Zemin kat",
       "materials": [],
       "name": "MM-BNK-Zemin_kat",
       "objectType": null,
-      "parent": "2HLNtj5_0q48$lOrM5K8qM",
+      "parent": "0zexyXuYcAUA8zpOHHVl6X",
       "predefinedType": null,
       "quantities": {
         "Qto_BuildingStoreyBaseQuantities": {
-          "GrossHeight": 3.0,
-          "NetFloorArea": 95.91250000000002
+          "GrossHeight": 3.06,
+          "NetFloorArea": 95.91250000000002,
+          "NetHeight": 2.91
         }
       },
-      "sets": {},
+      "sets": {
+        "Pset_BuildingStoreyCommon": {
+          "ElevationOfSSLRelative": -0.13
+        }
+      },
       "step": 31,
       "storey": null,
       "tag": null,
@@ -1718,22 +1676,27 @@
       "container": null,
       "description": null,
       "elevation": 3.0,
-      "globalId": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "globalId": "10W_smdZA4W8WQhK9YjuVJ",
       "hasShape": false,
       "longName": "1. kat",
       "materials": [],
       "name": "MM-BNK-1._kat",
       "objectType": null,
-      "parent": "2HLNtj5_0q48$lOrM5K8qM",
+      "parent": "0zexyXuYcAUA8zpOHHVl6X",
       "predefinedType": null,
       "quantities": {
         "Qto_BuildingStoreyBaseQuantities": {
-          "GrossHeight": 3.0,
-          "NetFloorArea": 95.91250000000002
+          "GrossHeight": 2.9,
+          "NetFloorArea": 95.91250000000002,
+          "NetHeight": 2.7499999999999996
         }
       },
-      "sets": {},
-      "step": 39,
+      "sets": {
+        "Pset_BuildingStoreyCommon": {
+          "ElevationOfSSLRelative": 2.93
+        }
+      },
+      "step": 43,
       "storey": null,
       "tag": null,
       "type": null,
@@ -1742,14 +1705,14 @@
     },
     {
       "class": "IfcWall",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000001",
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Tuğla"
+        "Dış duvar 25"
       ],
       "name": "MM-DVR-Dış_duvar_25",
       "objectType": null,
@@ -1770,23 +1733,23 @@
           "IsExternal": true
         }
       },
-      "step": 159,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 167,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000001",
-      "type": null,
+      "type": "2P0w69Wf0HaEM5ritYlrIF",
       "typeQuantities": {},
       "typeSets": {}
     },
     {
       "class": "IfcWall",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000002",
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Tuğla"
+        "Dış duvar 25"
       ],
       "name": "MM-DVR-Dış_duvar_25",
       "objectType": null,
@@ -1807,23 +1770,23 @@
           "IsExternal": true
         }
       },
-      "step": 220,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 228,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000002",
-      "type": null,
+      "type": "2P0w69Wf0HaEM5ritYlrIF",
       "typeQuantities": {},
       "typeSets": {}
     },
     {
       "class": "IfcWall",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000003",
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Tuğla"
+        "Dış duvar 25"
       ],
       "name": "MM-DVR-Dış_duvar_25",
       "objectType": null,
@@ -1844,23 +1807,23 @@
           "IsExternal": true
         }
       },
-      "step": 344,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 352,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000003",
-      "type": null,
+      "type": "2P0w69Wf0HaEM5ritYlrIF",
       "typeQuantities": {},
       "typeSets": {}
     },
     {
       "class": "IfcWall",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000004",
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Tuğla"
+        "Dış duvar 25"
       ],
       "name": "MM-DVR-Dış_duvar_25",
       "objectType": null,
@@ -1881,23 +1844,23 @@
           "IsExternal": true
         }
       },
-      "step": 405,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 413,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000004",
-      "type": null,
+      "type": "2P0w69Wf0HaEM5ritYlrIF",
       "typeQuantities": {},
       "typeSets": {}
     },
     {
       "class": "IfcWall",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000005",
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Tuğla"
+        "İç duvar 15"
       ],
       "name": "MM-DVR-İç_duvar_15",
       "objectType": null,
@@ -1918,23 +1881,23 @@
           "IsExternal": false
         }
       },
-      "step": 457,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 465,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000005",
-      "type": null,
+      "type": "0mIB95IAHsbN3i0U6VskJq",
       "typeQuantities": {},
       "typeSets": {}
     },
     {
       "class": "IfcWall",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000006",
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Tuğla"
+        "İç duvar 15"
       ],
       "name": "MM-DVR-İç_duvar_15",
       "objectType": null,
@@ -1955,23 +1918,23 @@
           "IsExternal": false
         }
       },
-      "step": 509,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 517,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000006",
-      "type": null,
+      "type": "0mIB95IAHsbN3i0U6VskJq",
       "typeQuantities": {},
       "typeSets": {}
     },
     {
       "class": "IfcWall",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000007",
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Tuğla"
+        "İç duvar 15"
       ],
       "name": "MM-DVR-İç_duvar_15",
       "objectType": null,
@@ -1992,23 +1955,23 @@
           "IsExternal": false
         }
       },
-      "step": 552,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 560,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000007",
-      "type": null,
+      "type": "0mIB95IAHsbN3i0U6VskJq",
       "typeQuantities": {},
       "typeSets": {}
     },
     {
       "class": "IfcWall",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000008",
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Tuğla"
+        "İç duvar 15"
       ],
       "name": "MM-DVR-İç_duvar_15",
       "objectType": null,
@@ -2029,23 +1992,23 @@
           "IsExternal": false
         }
       },
-      "step": 595,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 603,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000008",
-      "type": null,
+      "type": "0mIB95IAHsbN3i0U6VskJq",
       "typeQuantities": {},
       "typeSets": {}
     },
     {
       "class": "IfcWall",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000L",
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Tuğla"
+        "Dış duvar 25"
       ],
       "name": "MM-DVR-Dış_duvar_25",
       "objectType": null,
@@ -2066,23 +2029,23 @@
           "IsExternal": true
         }
       },
-      "step": 719,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 727,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000015",
-      "type": null,
+      "type": "2P0w69Wf0HaEM5ritYlrIF",
       "typeQuantities": {},
       "typeSets": {}
     },
     {
       "class": "IfcWall",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000M",
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Tuğla"
+        "Dış duvar 25"
       ],
       "name": "MM-DVR-Dış_duvar_25",
       "objectType": null,
@@ -2103,23 +2066,23 @@
           "IsExternal": true
         }
       },
-      "step": 780,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 788,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000016",
-      "type": null,
+      "type": "2P0w69Wf0HaEM5ritYlrIF",
       "typeQuantities": {},
       "typeSets": {}
     },
     {
       "class": "IfcWall",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000N",
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Tuğla"
+        "Dış duvar 25"
       ],
       "name": "MM-DVR-Dış_duvar_25",
       "objectType": null,
@@ -2140,23 +2103,23 @@
           "IsExternal": true
         }
       },
-      "step": 904,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 912,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000017",
-      "type": null,
+      "type": "2P0w69Wf0HaEM5ritYlrIF",
       "typeQuantities": {},
       "typeSets": {}
     },
     {
       "class": "IfcWall",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000O",
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Tuğla"
+        "Dış duvar 25"
       ],
       "name": "MM-DVR-Dış_duvar_25",
       "objectType": null,
@@ -2177,23 +2140,23 @@
           "IsExternal": true
         }
       },
-      "step": 965,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 973,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000018",
-      "type": null,
+      "type": "2P0w69Wf0HaEM5ritYlrIF",
       "typeQuantities": {},
       "typeSets": {}
     },
     {
       "class": "IfcWall",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000P",
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Tuğla"
+        "İç duvar 15"
       ],
       "name": "MM-DVR-İç_duvar_15",
       "objectType": null,
@@ -2214,23 +2177,23 @@
           "IsExternal": false
         }
       },
-      "step": 1017,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1025,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000019",
-      "type": null,
+      "type": "0mIB95IAHsbN3i0U6VskJq",
       "typeQuantities": {},
       "typeSets": {}
     },
     {
       "class": "IfcWall",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000Q",
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Tuğla"
+        "İç duvar 15"
       ],
       "name": "MM-DVR-İç_duvar_15",
       "objectType": null,
@@ -2251,23 +2214,23 @@
           "IsExternal": false
         }
       },
-      "step": 1069,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1077,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000001a",
-      "type": null,
+      "type": "0mIB95IAHsbN3i0U6VskJq",
       "typeQuantities": {},
       "typeSets": {}
     },
     {
       "class": "IfcWall",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000R",
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Tuğla"
+        "İç duvar 15"
       ],
       "name": "MM-DVR-İç_duvar_15",
       "objectType": null,
@@ -2288,23 +2251,23 @@
           "IsExternal": false
         }
       },
-      "step": 1112,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1120,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000001b",
-      "type": null,
+      "type": "0mIB95IAHsbN3i0U6VskJq",
       "typeQuantities": {},
       "typeSets": {}
     },
     {
       "class": "IfcWall",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000S",
       "hasShape": true,
       "longName": null,
       "materials": [
-        "Tuğla"
+        "İç duvar 15"
       ],
       "name": "MM-DVR-İç_duvar_15",
       "objectType": null,
@@ -2325,16 +2288,16 @@
           "IsExternal": false
         }
       },
-      "step": 1155,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1163,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000001c",
-      "type": null,
+      "type": "0mIB95IAHsbN3i0U6VskJq",
       "typeQuantities": {},
       "typeSets": {}
     },
     {
       "class": "IfcSlab",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000f",
@@ -2361,8 +2324,8 @@
           "IsExternal": false
         }
       },
-      "step": 1216,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 1224,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000029",
       "type": null,
       "typeQuantities": {},
@@ -2370,7 +2333,7 @@
     },
     {
       "class": "IfcSlab",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000g",
@@ -2397,8 +2360,8 @@
           "IsExternal": false
         }
       },
-      "step": 1267,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1275,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000002a",
       "type": null,
       "typeQuantities": {},
@@ -2406,7 +2369,7 @@
     },
     {
       "class": "IfcSlab",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000h",
@@ -2433,8 +2396,8 @@
           "IsExternal": true
         }
       },
-      "step": 1336,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1344,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000002b",
       "type": null,
       "typeQuantities": {},
@@ -2442,7 +2405,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000i",
@@ -2468,8 +2431,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1360,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 1368,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-00000000002c",
       "type": null,
       "typeQuantities": {},
@@ -2477,7 +2440,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000j",
@@ -2503,8 +2466,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1383,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 1391,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-00000000002d",
       "type": null,
       "typeQuantities": {},
@@ -2512,7 +2475,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000k",
@@ -2538,8 +2501,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1406,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 1414,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-00000000002e",
       "type": null,
       "typeQuantities": {},
@@ -2547,7 +2510,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000l",
@@ -2573,8 +2536,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1429,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 1437,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-00000000002f",
       "type": null,
       "typeQuantities": {},
@@ -2582,7 +2545,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000m",
@@ -2608,8 +2571,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1452,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 1460,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000030",
       "type": null,
       "typeQuantities": {},
@@ -2617,7 +2580,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000n",
@@ -2643,8 +2606,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1475,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 1483,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000031",
       "type": null,
       "typeQuantities": {},
@@ -2652,7 +2615,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000o",
@@ -2678,8 +2641,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1498,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 1506,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000032",
       "type": null,
       "typeQuantities": {},
@@ -2687,7 +2650,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000p",
@@ -2713,8 +2676,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1521,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 1529,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000033",
       "type": null,
       "typeQuantities": {},
@@ -2722,7 +2685,7 @@
     },
     {
       "class": "IfcBeam",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000q",
@@ -2744,8 +2707,8 @@
         }
       },
       "sets": {},
-      "step": 1544,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 1552,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000034",
       "type": null,
       "typeQuantities": {},
@@ -2753,7 +2716,7 @@
     },
     {
       "class": "IfcBeam",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000r",
@@ -2775,8 +2738,8 @@
         }
       },
       "sets": {},
-      "step": 1564,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 1572,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000035",
       "type": null,
       "typeQuantities": {},
@@ -2784,7 +2747,7 @@
     },
     {
       "class": "IfcBeam",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000s",
@@ -2806,8 +2769,8 @@
         }
       },
       "sets": {},
-      "step": 1584,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 1592,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000036",
       "type": null,
       "typeQuantities": {},
@@ -2815,7 +2778,7 @@
     },
     {
       "class": "IfcBeam",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000t",
@@ -2837,8 +2800,8 @@
         }
       },
       "sets": {},
-      "step": 1604,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 1612,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000037",
       "type": null,
       "typeQuantities": {},
@@ -2846,7 +2809,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000u",
@@ -2872,8 +2835,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1624,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1632,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000038",
       "type": null,
       "typeQuantities": {},
@@ -2881,7 +2844,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000v",
@@ -2907,8 +2870,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1647,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1655,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000039",
       "type": null,
       "typeQuantities": {},
@@ -2916,7 +2879,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000w",
@@ -2942,8 +2905,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1670,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1678,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000003a",
       "type": null,
       "typeQuantities": {},
@@ -2951,7 +2914,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000x",
@@ -2977,8 +2940,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1693,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1701,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000003b",
       "type": null,
       "typeQuantities": {},
@@ -2986,7 +2949,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000y",
@@ -3012,8 +2975,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1716,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1724,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000003c",
       "type": null,
       "typeQuantities": {},
@@ -3021,7 +2984,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000z",
@@ -3047,8 +3010,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1739,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1747,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000003d",
       "type": null,
       "typeQuantities": {},
@@ -3056,7 +3019,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000_",
@@ -3082,8 +3045,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1762,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1770,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000003e",
       "type": null,
       "typeQuantities": {},
@@ -3091,7 +3054,7 @@
     },
     {
       "class": "IfcColumn",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000$",
@@ -3117,8 +3080,8 @@
           "LoadBearing": true
         }
       },
-      "step": 1785,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1793,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-00000000003f",
       "type": null,
       "typeQuantities": {},
@@ -3126,7 +3089,7 @@
     },
     {
       "class": "IfcBeam",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000010",
@@ -3148,8 +3111,8 @@
         }
       },
       "sets": {},
-      "step": 1808,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1816,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000040",
       "type": null,
       "typeQuantities": {},
@@ -3157,7 +3120,7 @@
     },
     {
       "class": "IfcBeam",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000011",
@@ -3179,8 +3142,8 @@
         }
       },
       "sets": {},
-      "step": 1828,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1836,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000041",
       "type": null,
       "typeQuantities": {},
@@ -3188,7 +3151,7 @@
     },
     {
       "class": "IfcBeam",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000012",
@@ -3210,8 +3173,8 @@
         }
       },
       "sets": {},
-      "step": 1848,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1856,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000042",
       "type": null,
       "typeQuantities": {},
@@ -3219,7 +3182,7 @@
     },
     {
       "class": "IfcBeam",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000013",
@@ -3241,8 +3204,8 @@
         }
       },
       "sets": {},
-      "step": 1868,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 1876,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "0192f5a1-4242-7000-8000-000000000043",
       "type": null,
       "typeQuantities": {},
@@ -3250,7 +3213,7 @@
     },
     {
       "class": "IfcStair",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000014",
@@ -3265,8 +3228,8 @@
       "predefinedType": "HALF_TURN_STAIR",
       "quantities": {},
       "sets": {},
-      "step": 2045,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 2053,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "0192f5a1-4242-7000-8000-000000000044",
       "type": null,
       "typeQuantities": {},
@@ -3274,7 +3237,7 @@
     },
     {
       "class": "IfcWindow",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m080000000009",
@@ -3291,8 +3254,8 @@
           "IsExternal": true
         }
       },
-      "step": 2059,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 2067,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "P01",
       "type": null,
       "typeQuantities": {},
@@ -3300,7 +3263,7 @@
     },
     {
       "class": "IfcWindow",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000A",
@@ -3317,8 +3280,8 @@
           "IsExternal": true
         }
       },
-      "step": 2076,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 2084,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "P02",
       "type": null,
       "typeQuantities": {},
@@ -3326,7 +3289,7 @@
     },
     {
       "class": "IfcWindow",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000B",
@@ -3343,8 +3306,8 @@
           "IsExternal": true
         }
       },
-      "step": 2093,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 2101,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "P03",
       "type": null,
       "typeQuantities": {},
@@ -3352,7 +3315,7 @@
     },
     {
       "class": "IfcWindow",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000C",
@@ -3369,8 +3332,8 @@
           "IsExternal": true
         }
       },
-      "step": 2110,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 2118,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "P04",
       "type": null,
       "typeQuantities": {},
@@ -3378,7 +3341,7 @@
     },
     {
       "class": "IfcDoor",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000F",
@@ -3395,8 +3358,8 @@
           "IsExternal": true
         }
       },
-      "step": 2127,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 2135,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "GK01",
       "type": null,
       "typeQuantities": {},
@@ -3404,7 +3367,7 @@
     },
     {
       "class": "IfcDoor",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000D",
@@ -3421,8 +3384,8 @@
           "IsExternal": false
         }
       },
-      "step": 2144,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 2152,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "K01",
       "type": null,
       "typeQuantities": {},
@@ -3430,7 +3393,7 @@
     },
     {
       "class": "IfcDoor",
-      "container": "1ffSBbF_0qDLYugzhTx3Wz",
+      "container": "3cw2ZUyjABGvn5xuvDhrKU",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000E",
@@ -3447,8 +3410,8 @@
           "IsExternal": false
         }
       },
-      "step": 2161,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 2169,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": "K02",
       "type": null,
       "typeQuantities": {},
@@ -3456,7 +3419,7 @@
     },
     {
       "class": "IfcWindow",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000T",
@@ -3473,8 +3436,8 @@
           "IsExternal": true
         }
       },
-      "step": 2178,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 2186,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "P11",
       "type": null,
       "typeQuantities": {},
@@ -3482,7 +3445,7 @@
     },
     {
       "class": "IfcWindow",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000U",
@@ -3499,8 +3462,8 @@
           "IsExternal": true
         }
       },
-      "step": 2195,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 2203,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "P12",
       "type": null,
       "typeQuantities": {},
@@ -3508,7 +3471,7 @@
     },
     {
       "class": "IfcWindow",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000V",
@@ -3525,8 +3488,8 @@
           "IsExternal": true
         }
       },
-      "step": 2212,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 2220,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "P13",
       "type": null,
       "typeQuantities": {},
@@ -3534,7 +3497,7 @@
     },
     {
       "class": "IfcWindow",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000W",
@@ -3551,8 +3514,8 @@
           "IsExternal": true
         }
       },
-      "step": 2229,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 2237,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "P14",
       "type": null,
       "typeQuantities": {},
@@ -3560,7 +3523,7 @@
     },
     {
       "class": "IfcWindow",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000Z",
@@ -3577,8 +3540,8 @@
           "IsExternal": true
         }
       },
-      "step": 2246,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 2254,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "P15",
       "type": null,
       "typeQuantities": {},
@@ -3586,7 +3549,7 @@
     },
     {
       "class": "IfcDoor",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000X",
@@ -3603,8 +3566,8 @@
           "IsExternal": false
         }
       },
-      "step": 2263,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 2271,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "K11",
       "type": null,
       "typeQuantities": {},
@@ -3612,7 +3575,7 @@
     },
     {
       "class": "IfcDoor",
-      "container": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "container": "10W_smdZA4W8WQhK9YjuVJ",
       "description": null,
       "elevation": null,
       "globalId": "01alMXGa9m08000000000Y",
@@ -3629,8 +3592,8 @@
           "IsExternal": false
         }
       },
-      "step": 2280,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 2288,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": "K12",
       "type": null,
       "typeQuantities": {},
@@ -3641,7 +3604,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "2BISC6f_0mFoPujyTtSLkS",
+      "globalId": "3g$poKqug6tg$WH0qGJR6y",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3651,7 +3614,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2297,
+      "step": 2305,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3663,7 +3626,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "30tZV0t_0mBsAqlKKivN$v",
+      "globalId": "3y6Jj3IuY5KRnYR6EU7uma",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3673,7 +3636,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2313,
+      "step": 2321,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3685,7 +3648,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "04LsOjT_0mDAFs4CNmQNFQ",
+      "globalId": "2Gk2Ny1ec8jvw7ghLODisr",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3695,7 +3658,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2329,
+      "step": 2337,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3707,7 +3670,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "02MFGUB_0lqCmStZTjdbed",
+      "globalId": "09s89f7Oc2G9CbwqJ4sRVQ",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3717,7 +3680,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2345,
+      "step": 2353,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3729,7 +3692,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "0g2Ayc1_0lh0DJbR8L0gy0",
+      "globalId": "1rEPUmOeYEsh40hFCAmdP9",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3739,7 +3702,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2361,
+      "step": 2369,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3751,7 +3714,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "2NC0gfl_0ly5Eaqpm2jX5j",
+      "globalId": "1dUb2Aa8Y1wvezBX7a24gJ",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3761,7 +3724,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2377,
+      "step": 2385,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3773,7 +3736,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "3QgJaML_0lzPJc9hp6EWLE",
+      "globalId": "3WcgptfuYBT8xRRg5GgpIu",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3783,7 +3746,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2393,
+      "step": 2401,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3795,7 +3758,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "0GFQtGZ_0lvT4YB3fxhYch",
+      "globalId": "2eXvExoeICWQJaKbhPyW9o",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3805,7 +3768,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2409,
+      "step": 2417,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3817,7 +3780,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "3UfXqqv_0mlKIOYzdBq3Yq",
+      "globalId": "0lPpTEiuI2_R164SjjJnXD",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3827,7 +3790,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2425,
+      "step": 2433,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3839,7 +3802,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "0KEf7l7_0mhO3KaLU1H5qH",
+      "globalId": "2Qo4oL_8IFauuWqtcpDzQy",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3849,7 +3812,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2441,
+      "step": 2449,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3861,7 +3824,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "1Niy1Rj_0mii8LvDX4o53o",
+      "globalId": "01P4Iio7g8awUAyUKhtF8T",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3871,7 +3834,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2457,
+      "step": 2465,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3883,7 +3846,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "34snlVR_0mzn9d8c8oUxDV",
+      "globalId": "1inLdq3Ng5BOLbivDnnR2C",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3893,7 +3856,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2473,
+      "step": 2481,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3905,7 +3868,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "3iYjRdH_0mqacTsTpPu0Wu",
+      "globalId": "1wXA4Pttg279mfCdIOVzn2",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3915,7 +3878,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2489,
+      "step": 2497,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3927,7 +3890,7 @@
       "container": null,
       "description": null,
       "elevation": null,
-      "globalId": "3gZ6JN$_0mRd74fqvN5Ew5",
+      "globalId": "3pfFs6zdgBf937SmG58iPd",
       "hasShape": true,
       "longName": null,
       "materials": [],
@@ -3937,7 +3900,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2505,
+      "step": 2513,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3959,7 +3922,7 @@
       "predefinedType": "OPENING",
       "quantities": {},
       "sets": {},
-      "step": 2521,
+      "step": 2529,
       "storey": null,
       "tag": null,
       "type": null,
@@ -3977,7 +3940,7 @@
       "materials": [],
       "name": "MM-MHL-001_Yatak_odası",
       "objectType": null,
-      "parent": "1ffSBbF_0qDLYugzhTx3Wz",
+      "parent": "3cw2ZUyjABGvn5xuvDhrKU",
       "predefinedType": "INTERNAL",
       "quantities": {
         "Qto_SpaceBaseQuantities": {
@@ -3992,11 +3955,12 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2536,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 2544,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": null,
       "type": null,
       "typeQuantities": {},
@@ -4013,7 +3977,7 @@
       "materials": [],
       "name": "MM-MHL-002_Salon",
       "objectType": null,
-      "parent": "1ffSBbF_0qDLYugzhTx3Wz",
+      "parent": "3cw2ZUyjABGvn5xuvDhrKU",
       "predefinedType": "INTERNAL",
       "quantities": {
         "Qto_SpaceBaseQuantities": {
@@ -4028,11 +3992,12 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2563,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 2572,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": null,
       "type": null,
       "typeQuantities": {},
@@ -4049,7 +4014,7 @@
       "materials": [],
       "name": "MM-MHL-003_Merdiven_holü",
       "objectType": null,
-      "parent": "1ffSBbF_0qDLYugzhTx3Wz",
+      "parent": "3cw2ZUyjABGvn5xuvDhrKU",
       "predefinedType": "INTERNAL",
       "quantities": {
         "Qto_SpaceBaseQuantities": {
@@ -4061,11 +4026,12 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2590,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 2600,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": null,
       "type": null,
       "typeQuantities": {},
@@ -4082,7 +4048,7 @@
       "materials": [],
       "name": "MM-MHL-004_Banyo",
       "objectType": null,
-      "parent": "1ffSBbF_0qDLYugzhTx3Wz",
+      "parent": "3cw2ZUyjABGvn5xuvDhrKU",
       "predefinedType": "INTERNAL",
       "quantities": {
         "Qto_SpaceBaseQuantities": {
@@ -4097,11 +4063,12 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2614,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 2625,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": null,
       "type": null,
       "typeQuantities": {},
@@ -4118,7 +4085,7 @@
       "materials": [],
       "name": "MM-MHL-005_Mutfak",
       "objectType": null,
-      "parent": "1ffSBbF_0qDLYugzhTx3Wz",
+      "parent": "3cw2ZUyjABGvn5xuvDhrKU",
       "predefinedType": "INTERNAL",
       "quantities": {
         "Qto_SpaceBaseQuantities": {
@@ -4133,11 +4100,12 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2641,
-      "storey": "1ffSBbF_0qDLYugzhTx3Wz",
+      "step": 2653,
+      "storey": "3cw2ZUyjABGvn5xuvDhrKU",
       "tag": null,
       "type": null,
       "typeQuantities": {},
@@ -4154,7 +4122,7 @@
       "materials": [],
       "name": "MM-MHL-101_Yatak_odası",
       "objectType": null,
-      "parent": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "parent": "10W_smdZA4W8WQhK9YjuVJ",
       "predefinedType": "INTERNAL",
       "quantities": {
         "Qto_SpaceBaseQuantities": {
@@ -4169,11 +4137,12 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2668,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 2681,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": null,
       "type": null,
       "typeQuantities": {},
@@ -4190,7 +4159,7 @@
       "materials": [],
       "name": "MM-MHL-102_Salon",
       "objectType": null,
-      "parent": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "parent": "10W_smdZA4W8WQhK9YjuVJ",
       "predefinedType": "INTERNAL",
       "quantities": {
         "Qto_SpaceBaseQuantities": {
@@ -4205,11 +4174,12 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2695,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 2709,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": null,
       "type": null,
       "typeQuantities": {},
@@ -4226,7 +4196,7 @@
       "materials": [],
       "name": "MM-MHL-103_Merdiven_holü",
       "objectType": null,
-      "parent": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "parent": "10W_smdZA4W8WQhK9YjuVJ",
       "predefinedType": "INTERNAL",
       "quantities": {
         "Qto_SpaceBaseQuantities": {
@@ -4240,11 +4210,13 @@
       },
       "sets": {
         "Pset_SpaceCoveringRequirements": {
-          "CeilingCoveringThickness": 0.02
+          "CeilingCoveringThickness": 0.02,
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2722,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 2737,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": null,
       "type": null,
       "typeQuantities": {},
@@ -4261,7 +4233,7 @@
       "materials": [],
       "name": "MM-MHL-104_Banyo",
       "objectType": null,
-      "parent": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "parent": "10W_smdZA4W8WQhK9YjuVJ",
       "predefinedType": "INTERNAL",
       "quantities": {
         "Qto_SpaceBaseQuantities": {
@@ -4276,11 +4248,12 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2748,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 2765,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": null,
       "type": null,
       "typeQuantities": {},
@@ -4297,7 +4270,7 @@
       "materials": [],
       "name": "MM-MHL-105_Mutfak",
       "objectType": null,
-      "parent": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "parent": "10W_smdZA4W8WQhK9YjuVJ",
       "predefinedType": "INTERNAL",
       "quantities": {
         "Qto_SpaceBaseQuantities": {
@@ -4312,11 +4285,12 @@
       "sets": {
         "Pset_SpaceCoveringRequirements": {
           "CeilingCoveringThickness": 0.02,
-          "FloorCoveringThickness": 0.02
+          "FloorCoveringThickness": 0.02,
+          "WallCoveringThickness": 0.02
         }
       },
-      "step": 2775,
-      "storey": "2j7l5Hr_0qEfdv$rkXS2mU",
+      "step": 2793,
+      "storey": "10W_smdZA4W8WQhK9YjuVJ",
       "tag": null,
       "type": null,
       "typeQuantities": {},
@@ -4327,7 +4301,7 @@
       "container": null,
       "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
       "elevation": null,
-      "globalId": "2Vr6HTaE0qgF0GZuCy7M00",
+      "globalId": "0mXdHQdmw5Ne$gBLmCHlns",
       "hasShape": true,
       "longName": "Zemin kat emsale dahil alan",
       "materials": [],
@@ -4341,7 +4315,33 @@
           "EmsalDurumu": "DAHIL"
         }
       },
-      "step": 2838,
+      "step": 2848,
+      "storey": null,
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcSpatialZone",
+      "container": null,
+      "description": "Planlı Alanlar İmar Yönetmeliği 22/1: katlar alanına dahil edilmeyen; 5/8: emsale esas alanın %30'u içinde",
+      "elevation": null,
+      "globalId": "0hbb1436Q6sOTvocBpJxs1",
+      "hasShape": true,
+      "longName": "Zemin kat emsal harici alan",
+      "materials": [],
+      "name": "MM-MZN-Emsal_HARIC_Zemin_kat",
+      "objectType": "EMSAL",
+      "parent": null,
+      "predefinedType": "USERDEFINED",
+      "quantities": {},
+      "sets": {
+        "TREpys_EmsalOzellikSeti": {
+          "EmsalDurumu": "HARIC"
+        }
+      },
+      "step": 2866,
       "storey": null,
       "tag": null,
       "type": null,
@@ -4353,7 +4353,7 @@
       "container": null,
       "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
       "elevation": null,
-      "globalId": "39Wf5qiE0qv$yWUOncJCwC",
+      "globalId": "2SCjl18iU4R8Q7xqwUZ8F9",
       "hasShape": true,
       "longName": "1. kat emsale dahil alan",
       "materials": [],
@@ -4367,7 +4367,33 @@
           "EmsalDurumu": "DAHIL"
         }
       },
-      "step": 2892,
+      "step": 2911,
+      "storey": null,
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcSpatialZone",
+      "container": null,
+      "description": "Planlı Alanlar İmar Yönetmeliği 22/1: katlar alanına dahil edilmeyen; 5/8: emsale esas alanın %30'u içinde",
+      "elevation": null,
+      "globalId": "186KbboPo8JwcEjcsdPcdo",
+      "hasShape": true,
+      "longName": "1. kat emsal harici alan",
+      "materials": [],
+      "name": "MM-MZN-Emsal_HARIC_1._kat",
+      "objectType": "EMSAL",
+      "parent": null,
+      "predefinedType": "USERDEFINED",
+      "quantities": {},
+      "sets": {
+        "TREpys_EmsalOzellikSeti": {
+          "EmsalDurumu": "HARIC"
+        }
+      },
+      "step": 2929,
       "storey": null,
       "tag": null,
       "type": null,
@@ -4376,7 +4402,7 @@
     },
     {
       "class": "IfcGrid",
-      "container": "2HLNtj5_0q48$lOrM5K8qM",
+      "container": "0zexyXuYcAUA8zpOHHVl6X",
       "description": null,
       "elevation": null,
       "globalId": "2eLiQXeqm7sh029p4imVdf",
@@ -4389,7 +4415,55 @@
       "predefinedType": "RECTANGULAR",
       "quantities": {},
       "sets": {},
-      "step": 2924,
+      "step": 2961,
+      "storey": null,
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcWallType",
+      "container": null,
+      "description": null,
+      "elevation": null,
+      "globalId": "2P0w69Wf0HaEM5ritYlrIF",
+      "hasShape": false,
+      "longName": null,
+      "materials": [
+        "Dış duvar 25"
+      ],
+      "name": "Dış duvar 25",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": "STANDARD",
+      "quantities": {},
+      "sets": {},
+      "step": 2983,
+      "storey": null,
+      "tag": null,
+      "type": null,
+      "typeQuantities": {},
+      "typeSets": {}
+    },
+    {
+      "class": "IfcWallType",
+      "container": null,
+      "description": null,
+      "elevation": null,
+      "globalId": "0mIB95IAHsbN3i0U6VskJq",
+      "hasShape": false,
+      "longName": null,
+      "materials": [
+        "İç duvar 15"
+      ],
+      "name": "İç duvar 15",
+      "objectType": null,
+      "parent": null,
+      "predefinedType": "STANDARD",
+      "quantities": {},
+      "sets": {},
+      "step": 2986,
       "storey": null,
       "tag": null,
       "type": null,
@@ -4408,11 +4482,11 @@
           "ContextType": "Model",
           "CoordinateSpaceDimension": 3,
           "Precision": 0.00001,
-          "TrueNorth": null,
+          "TrueNorth": "#10",
           "WorldCoordinateSystem": "#9"
         },
         "class": "IfcGeometricRepresentationContext",
-        "step": 10
+        "step": 11
       }
     ],
     "IfcMapConversion": [
@@ -4425,13 +4499,13 @@
           "Northings": 4400612.788481555,
           "OrthogonalHeight": 1285.4,
           "Scale": 1.0,
-          "SourceCRS": "#10",
-          "TargetCRS": "#12",
+          "SourceCRS": "#11",
+          "TargetCRS": "#13",
           "XAxisAbscissa": 0.9170256159134056,
           "XAxisOrdinate": 0.3988283086224435
         },
         "class": "IfcMapConversionScaled",
-        "step": 13
+        "step": 14
       }
     ],
     "IfcProjectedCRS": [
@@ -4446,7 +4520,7 @@
           "VerticalDatum": "Antalya height (EPSG:5775)"
         },
         "class": "IfcProjectedCRS",
-        "step": 12
+        "step": 13
       }
     ]
   },

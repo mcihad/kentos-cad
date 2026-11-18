@@ -890,6 +890,8 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     // Its ±0.00 over the project's (docs/adr/8072 §2): the building stands there, its storeys' elevations over it; the
     // objects keep their places over their storeys (no second offset).
     let zero = scope.as_ref().map_or(0.0, |b| b.zero);
+    // The building a derived storey's or zone's key is within (docs/adr/8117): the program's, none for the whole drawing.
+    let storey_scope = scope.as_ref().map_or_else(String::new, |b| b.id.clone());
     let mut written = Written::default();
     // The storeys, by their level id; a drawing without levels has one, Zemin kat at ±0.00.
     let mut levels = levels;
@@ -905,8 +907,9 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     let mut storeys: Vec<Storey> = levels
         .iter()
         .map(|(level, n, floor, _)| Storey {
-            // Derived from its level (docs/adr/8117): the same storey keeps its GlobalId whatever else changes.
-            id: Some(crate::step::derived_id("storey", level)),
+            // Derived from its building and its level (docs/adr/8117): the same storey keeps its GlobalId whatever else
+            // changes; a level two buildings span is a storey of each.
+            id: Some(crate::step::derived_id("storey", &format!("{storey_scope}|{level}"))),
             name: name("BNK", n),
             long_name: Some(n.clone()),
             elevation: *floor - zero,
@@ -2045,7 +2048,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         .filter(|a| a.rings.iter().any(|r| r.len() >= 3))
         .map(|a| {
             // Derived from the level and how its rooms count (docs/adr/8117).
-            let mut key = format!("{}|{:?}", a.level.as_deref().unwrap_or(""), a.count);
+            let mut key = format!("{storey_scope}|{}|{:?}", a.level.as_deref().unwrap_or(""), a.count);
             while zone_keys.contains(&key) {
                 key.push('+');
             }

@@ -52,13 +52,21 @@ Sonuçları:
 - **K232 — Eski dosyalar:** bu karardan önce yazılmış bir dosyada (katlarının GlobalId'si sürüm 8 değil) türetilen
   parçaların kimliği farklıdır. Teslim edilen model böyleyse Denetim onu çizimle nesne nesne karşılaştırmaz ve bunu söyler
   ("Model, KentOS kalıcı kimlikleri yazmadan önce yazılmış…"). ADR 8116 K225'in zaman damgası kaldırıldı.
-- **K233 — Fixture'lar:** yalnız yazıcının çıktısıyla bayt bayt karşılaştırılan iki dosya yeniden yazıldı
-  (`kesit-binasi-tipli.ifc`, `kesit-binasi-eleman-tipli.ifc`). Fark betikle denetlendi: yalnız GlobalId (358 ve 364 satır).
-  Yeniden yazmada dokuz fixture'ın yazıcının bugünkü çıktısı olmadığı ortaya çıktı (`kesit-binasi`, `-tam`, `-kunye`,
-  `-kompartiman`, `blok-a`, `cati-alti-mahal`, `egimli-doseme`, `katmanli-cati`, `yerel-sistem`). Duvar tipleri (ADR 8105)
-  ve sonraki zonlardan önce yazılmışlar. Olgu, IDS sonucu, form ve okuma başvuruları, inceleme durumları, revizyon çifti ve
-  BCF durumları bu eski dosyalardan hesaplanmış. Bu dilimin farkı olmadığı için olduğu gibi bırakıldılar; tazelenmeleri
-  ayrı adımdır (§6). `blok-b`'nin duvarları sınamada her koşuda yeni kimlik alıyor, onun da tazelenmesi gürültü üretir.
+- **K233 — Dosyanın binası içinde:** her türetilen anahtar dosyanın binasının GlobalId'sini taşır. Kat ve emsal zonu
+  program binasının kimliğini taşır. Bir projenin iki binasının kendi dosyaları (ADR 8072 §2) yalnız proje ve sahayı
+  paylaşır. İlk denemede proje → saha ilişkisi iki blok dosyasında aynı GlobalId'yi aldı; eğri bina denetimi
+  (`curved_ifc_check.py`: "iki dosya yalnız projeyi ve sahayı paylaşır") bunu yakaladı. Aynı kat iki binaya ait olsaydı
+  katlar da çakışırdı.
+- **K234 — Fixture'lar tazelendi:** yeniden yazmada on bir IFC fixture'ının yazıcının bugünkü çıktısı olmadığı ortaya
+  çıktı. Duvar tipleri, katman setleri (ADR 8105), aks ızgarası ve zonlardan önce yazılmışlardı (kesit binası 123 KB, bugün
+  161 KB). Hepsi yeniden yazıldı, bağımlıları bağımsız araçlarla yeniden üretildi: kapısı eksik dosya ve revizyon çifti
+  (IfcOpenShell), okuma, form, inceleme ve BCF yazma başvuruları, IfcTester'ın IDS sonuçları, katalog ölçümü ve KentOS'un
+  olguları. BCF dosyaları her üretimde rastgele konu kimliği aldığı için yeniden yazılmadı. `blok-b`'nin duvarları
+  sınamada her koşuda yeni kimlik alır; dosya her yazımda değişir.
+- **K235 — Tazelemenin bulduğu:** mimari denetim betiği (`arch_ifc_check.py`) duvarın malzemesini düz malzeme olarak
+  arıyordu; ADR 8105'ten beri duvar katman setine bağlı. Betik artık çekirdek bileşenin yerindeki katmanın malzemesini
+  okur (katmanlar çizimin bileşen sırasıyla yazılır, ADR 8071 §8). Olgu sınamasında da duvarın ilk malzemesi katman
+  setinin adıdır ("Dış duvar 25"), okuyucunun belgelediği gibi.
 
 ## §4. Uygulama
 
@@ -74,14 +82,15 @@ Sonuçları:
 - **Kalıcılık** (`arch_ifc::a_drawing_written_another_day_keeps_every_global_id`): giydirme cephe ve kitaplıktan asansör
   eklenmiş kesit binası iki ayrı günde yazılınca bütün GlobalId'ler aynı ve tekil. Uzakta bir duvara kapı eklenince önceki
   bütün GlobalId'ler yerinde.
-- **Bağımsız okuyucu:** IfcOpenShell 0.9.0'ın doğrulayıcısı (şema ve EXPRESS kuralları) yeniden yazılan iki dosyada 0 bulgu
-  verdi; 430 ve 442 kök nesne, iki kez geçen GlobalId yok. `ifc_types_check.py` (her stil bir IfcWallType, her eleman tipi
-  sınıfının tipi) uyuyor.
-- Uygulamanın bütün sınamaları, kentos-ifc'nin sınamaları, Denetim'in teslim modeli sınamaları.
+- **Bağımsız okuyucular, tazelenen dosyalarda:** IfcOpenShell 0.9.0'ın doğrulayıcısı (şema ve EXPRESS kuralları) bütün
+  yazıcı dosyalarında 0 bulgu verdi. İki tipli dosyada 430 ve 442 kök nesne var, iki kez geçen GlobalId yok. Mimari, eğri
+  bina (blok A + B dahil) ve tip denetimleri uyuyor. IfcTester beş dosyada KentOS'un kuralıyla satır satır aynı (0 ayrışan).
+  IDS denetimi tutarlı. Kapısı eksik dosyada IfcOpenShell doğrulayıcısı temiz; BCF'deki taşınan duvar aynı duvarı
+  gösteriyor.
+- **Sınamalar:** dijital-proje 98 ve mimari-mevzuat 49 Python sınaması (form IfcOpenShell başvurusuyla); kentos-ifc,
+  uygulamanın bütün sınamaları, başsız katman ve masaüstünün IFC öbekleri.
 
 ## §6. Sıradaki adımlar
 
-- Dokuz eskimiş fixture'ın ve bağımlılarının tazelenmesi; her farkın açıklanması ve bağımsız başvuruların IfcOpenShell ve
-  IfcTester'la yeniden üretilmesi.
 - Yol hizalaması dosyasının (`alignment.rs`) kimlikleri hâlâ "dosya | zaman" ve sırayla üretiliyor.
 - Plan §7'nin kalan sınamaları: kopya yeni kimlik alır; bölme, birleştirme, silip geri alma.

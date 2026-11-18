@@ -320,7 +320,7 @@
    ],
    "volume": 1.1115872099516777
   },
-  "0CESgV88kjh95W253AK3e4": {
+  "0mXdHQdmw5Ne$gBLmCHlns": {
    "area": 211.3411477750135,
    "box": [
     [
@@ -336,7 +336,7 @@
    ],
    "volume": 179.57620259443485
   },
-  "3_LH3im8kjbunQkasyG6g0": {
+  "2SCjl18iU4R8Q7xqwUZ8F9": {
    "area": 202.04995829187362,
    "box": [
     [
@@ -362,23 +362,9 @@
  "lengthToSi": 1.0,
  "location": null,
  "objects": {
-  "0$u382g8kltjUjxoA2ToaF": {
-   "class": "IfcBuilding",
-   "container": null,
-   "description": null,
-   "hasShape": false,
-   "longName": "Eğri cepheli bina",
-   "name": "MM-BNA-Eğri_cepheli_bina",
-   "objectType": null,
-   "parent": "3yPmEM48klsPPicw6_ypKk",
-   "predefined": null,
-   "step": 18,
-   "tag": null,
-   "type": null
-  },
   "01alMXW75m080000000001": {
    "class": "IfcWall",
-   "container": "1PgpDO88klfGdVM9eRowva",
+   "container": "3cw2ZUyjABGvn5xuvDhrKU",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -392,7 +378,7 @@
   },
   "01alMXW75m080000000002": {
    "class": "IfcWall",
-   "container": "1PgpDO88klfGdVM9eRowva",
+   "container": "3cw2ZUyjABGvn5xuvDhrKU",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -406,7 +392,7 @@
   },
   "01alMXW75m080000000003": {
    "class": "IfcWall",
-   "container": "1PgpDO88klfGdVM9eRowva",
+   "container": "3cw2ZUyjABGvn5xuvDhrKU",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -420,7 +406,7 @@
   },
   "01alMXW75m080000000004": {
    "class": "IfcWall",
-   "container": "1PgpDO88klfGdVM9eRowva",
+   "container": "3cw2ZUyjABGvn5xuvDhrKU",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -434,7 +420,7 @@
   },
   "01alMXW75m080000000005": {
    "class": "IfcWindow",
-   "container": "1PgpDO88klfGdVM9eRowva",
+   "container": "3cw2ZUyjABGvn5xuvDhrKU",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -448,7 +434,7 @@
   },
   "01alMXW75m080000000006": {
    "class": "IfcDoor",
-   "container": "1PgpDO88klfGdVM9eRowva",
+   "container": "3cw2ZUyjABGvn5xuvDhrKU",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -462,7 +448,7 @@
   },
   "01alMXW75m080000000007": {
    "class": "IfcWindow",
-   "container": "1PgpDO88klfGdVM9eRowva",
+   "container": "3cw2ZUyjABGvn5xuvDhrKU",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -482,7 +468,7 @@
    "longName": "Salon",
    "name": "MM-MHL-001_Salon",
    "objectType": null,
-   "parent": "1PgpDO88klfGdVM9eRowva",
+   "parent": "3cw2ZUyjABGvn5xuvDhrKU",
    "predefined": "INTERNAL",
    "step": 791,
    "tag": null,
@@ -490,7 +476,7 @@
   },
   "01alMXW75m080000000009": {
    "class": "IfcWall",
-   "container": "2FFwWIM8klbKORNXVHFzB1",
+   "container": "10W_smdZA4W8WQhK9YjuVJ",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -504,7 +490,7 @@
   },
   "01alMXW75m08000000000A": {
    "class": "IfcWall",
-   "container": "2FFwWIM8klbKORNXVHFzB1",
+   "container": "10W_smdZA4W8WQhK9YjuVJ",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -518,7 +504,7 @@
   },
   "01alMXW75m08000000000B": {
    "class": "IfcWall",
-   "container": "2FFwWIM8klbKORNXVHFzB1",
+   "container": "10W_smdZA4W8WQhK9YjuVJ",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -532,7 +518,7 @@
   },
   "01alMXW75m08000000000C": {
    "class": "IfcWall",
-   "container": "2FFwWIM8klbKORNXVHFzB1",
+   "container": "10W_smdZA4W8WQhK9YjuVJ",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -546,7 +532,7 @@
   },
   "01alMXW75m08000000000D": {
    "class": "IfcWindow",
-   "container": "2FFwWIM8klbKORNXVHFzB1",
+   "container": "10W_smdZA4W8WQhK9YjuVJ",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -560,7 +546,7 @@
   },
   "01alMXW75m08000000000E": {
    "class": "IfcDoor",
-   "container": "2FFwWIM8klbKORNXVHFzB1",
+   "container": "10W_smdZA4W8WQhK9YjuVJ",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -574,7 +560,7 @@
   },
   "01alMXW75m08000000000F": {
    "class": "IfcWindow",
-   "container": "2FFwWIM8klbKORNXVHFzB1",
+   "container": "10W_smdZA4W8WQhK9YjuVJ",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -594,7 +580,7 @@
    "longName": "Salon",
    "name": "MM-MHL-101_Salon",
    "objectType": null,
-   "parent": "2FFwWIM8klbKORNXVHFzB1",
+   "parent": "10W_smdZA4W8WQhK9YjuVJ",
    "predefined": "INTERNAL",
    "step": 814,
    "tag": null,
@@ -602,7 +588,7 @@
   },
   "01alMXW75m08000000000H": {
    "class": "IfcSlab",
-   "container": "1PgpDO88klfGdVM9eRowva",
+   "container": "3cw2ZUyjABGvn5xuvDhrKU",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -616,7 +602,7 @@
   },
   "01alMXW75m08000000000I": {
    "class": "IfcSlab",
-   "container": "2FFwWIM8klbKORNXVHFzB1",
+   "container": "10W_smdZA4W8WQhK9YjuVJ",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -630,7 +616,7 @@
   },
   "01alMXW75m08000000000J": {
    "class": "IfcSlab",
-   "container": "2FFwWIM8klbKORNXVHFzB1",
+   "container": "10W_smdZA4W8WQhK9YjuVJ",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -644,7 +630,7 @@
   },
   "01alMXW75m08000000000K": {
    "class": "IfcStair",
-   "container": "1PgpDO88klfGdVM9eRowva",
+   "container": "3cw2ZUyjABGvn5xuvDhrKU",
    "description": null,
    "hasShape": true,
    "longName": null,
@@ -656,77 +642,7 @@
    "tag": "0192f5a1-8071-7000-8000-000000000014",
    "type": null
   },
-  "0CESgV88kjh95W253AK3e4": {
-   "class": "IfcSpatialZone",
-   "container": null,
-   "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
-   "hasShape": true,
-   "longName": "Zemin kat emsale dahil alan",
-   "name": "MM-MZN-Emsal_DAHIL_Zemin_kat",
-   "objectType": "EMSAL",
-   "parent": null,
-   "predefined": "USERDEFINED",
-   "step": 837,
-   "tag": null,
-   "type": null
-  },
-  "17oPM7C8kko5KdfNe89Qjw": {
-   "class": "IfcOpeningElement",
-   "container": null,
-   "description": null,
-   "hasShape": true,
-   "longName": null,
-   "name": "MM-ACL-P11",
-   "objectType": null,
-   "parent": null,
-   "predefined": "OPENING",
-   "step": 734,
-   "tag": null,
-   "type": null
-  },
-  "1PgpDO88klfGdVM9eRowva": {
-   "class": "IfcBuildingStorey",
-   "container": null,
-   "description": null,
-   "hasShape": false,
-   "longName": "Zemin kat",
-   "name": "MM-BNK-Zemin_kat",
-   "objectType": null,
-   "parent": "0$u382g8kltjUjxoA2ToaF",
-   "predefined": null,
-   "step": 28,
-   "tag": null,
-   "type": null
-  },
-  "2FFwWIM8klbKORNXVHFzB1": {
-   "class": "IfcBuildingStorey",
-   "container": null,
-   "description": null,
-   "hasShape": false,
-   "longName": "1. kat",
-   "name": "MM-BNK-1._kat",
-   "objectType": null,
-   "parent": "0$u382g8kltjUjxoA2ToaF",
-   "predefined": null,
-   "step": 40,
-   "tag": null,
-   "type": null
-  },
-  "2P9tscA8kkufjkHltPkMxV": {
-   "class": "IfcOpeningElement",
-   "container": null,
-   "description": null,
-   "hasShape": true,
-   "longName": null,
-   "name": "MM-ACL-P02",
-   "objectType": null,
-   "parent": null,
-   "predefined": "OPENING",
-   "step": 718,
-   "tag": null,
-   "type": null
-  },
-  "2b3SL9G8kkayYQOd9a$YIm": {
+  "06q309LYo8yOW6n20ng$Cb": {
    "class": "IfcOpeningElement",
    "container": null,
    "description": null,
@@ -740,7 +656,35 @@
    "tag": null,
    "type": null
   },
-  "2mz0piM8kkHFN6VURmGjg1": {
+  "0mXdHQdmw5Ne$gBLmCHlns": {
+   "class": "IfcSpatialZone",
+   "container": null,
+   "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
+   "hasShape": true,
+   "longName": "Zemin kat emsale dahil alan",
+   "name": "MM-MZN-Emsal_DAHIL_Zemin_kat",
+   "objectType": "EMSAL",
+   "parent": null,
+   "predefined": "USERDEFINED",
+   "step": 837,
+   "tag": null,
+   "type": null
+  },
+  "10W_smdZA4W8WQhK9YjuVJ": {
+   "class": "IfcBuildingStorey",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": "1. kat",
+   "name": "MM-BNK-1._kat",
+   "objectType": null,
+   "parent": "1KAc$EuDg67PT96KsT$m3K",
+   "predefined": null,
+   "step": 40,
+   "tag": null,
+   "type": null
+  },
+  "1CJYTdoog0H9TLig1gVTqa": {
    "class": "IfcOpeningElement",
    "container": null,
    "description": null,
@@ -754,7 +698,77 @@
    "tag": null,
    "type": null
   },
-  "2uxTKfU8klr5KhI23xRq5D": {
+  "1KAc$EuDg67PT96KsT$m3K": {
+   "class": "IfcBuilding",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": "Eğri cepheli bina",
+   "name": "MM-BNA-Eğri_cepheli_bina",
+   "objectType": null,
+   "parent": "1yMlg4lwYBmBlcTA9lLNeP",
+   "predefined": null,
+   "step": 18,
+   "tag": null,
+   "type": null
+  },
+  "1Q3MwDdIgDCguPCO6HE0ZQ": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-P02",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 718,
+   "tag": null,
+   "type": null
+  },
+  "1oCKLGcoo5YwNXXSvtbB6K": {
+   "class": "IfcOpeningElement",
+   "container": null,
+   "description": null,
+   "hasShape": true,
+   "longName": null,
+   "name": "MM-ACL-K11",
+   "objectType": null,
+   "parent": null,
+   "predefined": "OPENING",
+   "step": 750,
+   "tag": null,
+   "type": null
+  },
+  "1yMlg4lwYBmBlcTA9lLNeP": {
+   "class": "IfcSite",
+   "container": null,
+   "description": null,
+   "hasShape": false,
+   "longName": null,
+   "name": "MM-SAH-Parsel",
+   "objectType": "Parsel",
+   "parent": "2VEE6eANU7Y8zUXh5jRq5f",
+   "predefined": null,
+   "step": 15,
+   "tag": null,
+   "type": null
+  },
+  "2SCjl18iU4R8Q7xqwUZ8F9": {
+   "class": "IfcSpatialZone",
+   "container": null,
+   "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
+   "hasShape": true,
+   "longName": "1. kat emsale dahil alan",
+   "name": "MM-MZN-Emsal_DAHIL_1._kat",
+   "objectType": "EMSAL",
+   "parent": null,
+   "predefined": "USERDEFINED",
+   "step": 855,
+   "tag": null,
+   "type": null
+  },
+  "2VEE6eANU7Y8zUXh5jRq5f": {
    "class": "IfcProject",
    "container": null,
    "description": null,
@@ -768,7 +782,7 @@
    "tag": null,
    "type": null
   },
-  "3Ek$9WO8kkqjUgJ7kFBPCy": {
+  "3WxH8WXYg3gRbwyF8abHwr": {
    "class": "IfcOpeningElement",
    "container": null,
    "description": null,
@@ -782,17 +796,17 @@
    "tag": null,
    "type": null
   },
-  "3_LH3im8kjbunQkasyG6g0": {
-   "class": "IfcSpatialZone",
+  "3cw2ZUyjABGvn5xuvDhrKU": {
+   "class": "IfcBuildingStorey",
    "container": null,
-   "description": "Planlı Alanlar İmar Yönetmeliği 4/1-şş, 21: katlar alanına dahil",
-   "hasShape": true,
-   "longName": "1. kat emsale dahil alan",
-   "name": "MM-MZN-Emsal_DAHIL_1._kat",
-   "objectType": "EMSAL",
-   "parent": null,
-   "predefined": "USERDEFINED",
-   "step": 855,
+   "description": null,
+   "hasShape": false,
+   "longName": "Zemin kat",
+   "name": "MM-BNK-Zemin_kat",
+   "objectType": null,
+   "parent": "1KAc$EuDg67PT96KsT$m3K",
+   "predefined": null,
+   "step": 28,
    "tag": null,
    "type": null
   },
@@ -810,31 +824,17 @@
    "tag": null,
    "type": null
   },
-  "3sQwreE8kkhWxX0$OsaUWL": {
+  "3v4EZZX2oC0h53HJyAySTl": {
    "class": "IfcOpeningElement",
    "container": null,
    "description": null,
    "hasShape": true,
    "longName": null,
-   "name": "MM-ACL-K11",
+   "name": "MM-ACL-P11",
    "objectType": null,
    "parent": null,
    "predefined": "OPENING",
-   "step": 750,
-   "tag": null,
-   "type": null
-  },
-  "3yPmEM48klsPPicw6_ypKk": {
-   "class": "IfcSite",
-   "container": null,
-   "description": null,
-   "hasShape": false,
-   "longName": null,
-   "name": "MM-SAH-Parsel",
-   "objectType": "Parsel",
-   "parent": "2uxTKfU8klr5KhI23xRq5D",
-   "predefined": null,
-   "step": 15,
+   "step": 734,
    "tag": null,
    "type": null
   }
@@ -844,15 +844,6 @@
  "records": 863,
  "schema": "IFC4X3_ADD2",
  "sets": {
-  "0$u382g8kltjUjxoA2ToaF": {
-   "Pset_BuildingCommon": {
-    "NetPlannedArea": 137.75390209544568,
-    "NumberOfStoreys": 2
-   },
-   "Qto_BuildingBaseQuantities": {
-    "NetFloorArea": 137.75390209544568
-   }
-  },
   "01alMXW75m080000000001": {
    "Pset_WallCommon": {
     "IsExternal": true
@@ -901,19 +892,28 @@
     "Width": 0.2
    }
   },
-  "0CESgV88kjh95W253AK3e4": {
+  "0mXdHQdmw5Ne$gBLmCHlns": {
    "TREpys_EmsalOzellikSeti": {
     "EmsalDurumu": "DAHIL"
    }
   },
-  "1PgpDO88klfGdVM9eRowva": {
+  "10W_smdZA4W8WQhK9YjuVJ": {
    "Pset_BuildingStoreyCommon": {
-    "ElevationOfSSLRelative": -0.05
+    "ElevationOfSSLRelative": 3.35
    },
    "Qto_BuildingStoreyBaseQuantities": {
-    "GrossHeight": 3.4,
+    "GrossHeight": 3.0500000000000003,
     "NetFloorArea": 68.87695104772284,
-    "NetHeight": 3.25
+    "NetHeight": 2.9
+   }
+  },
+  "1KAc$EuDg67PT96KsT$m3K": {
+   "Pset_BuildingCommon": {
+    "NetPlannedArea": 137.75390209544568,
+    "NumberOfStoreys": 2
+   },
+   "Qto_BuildingBaseQuantities": {
+    "NetFloorArea": 137.75390209544568
    }
   }
  },

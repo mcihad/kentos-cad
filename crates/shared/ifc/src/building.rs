@@ -838,6 +838,8 @@ impl Writer {
 /// The file: KentOS's building as IFC 4.3.
 pub fn write(b: &Building) -> String {
     let mut st = Step::new(format!("{}|{}", b.file, b.stamp));
+    // The derived parts' keys within this building (docs/adr/8117): its own file shares only the project and the site.
+    st.scope = b.building.id.map(crate::step::guid).unwrap_or_default();
     let length = st.add("IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.)");
     let area = st.add("IFCSIUNIT(*,.AREAUNIT.,$,.SQUARE_METRE.)");
     let volume = st.add("IFCSIUNIT(*,.VOLUMEUNIT.,$,.CUBIC_METRE.)");

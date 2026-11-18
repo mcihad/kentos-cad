@@ -19,47 +19,40 @@
     "01alMXGa9m080000000013"
    ],
    "T6.7/Pset_BuildingCommon.BuildingID": [
-    "2HLNtj5_0q48$lOrM5K8qM"
+    "0zexyXuYcAUA8zpOHHVl6X"
    ],
    "T6.7/Pset_BuildingCommon.IsPermanentID": [
-    "2HLNtj5_0q48$lOrM5K8qM"
+    "0zexyXuYcAUA8zpOHHVl6X"
    ],
    "T6.7/Pset_BuildingCommon.ConstructionMethod": [
-    "2HLNtj5_0q48$lOrM5K8qM"
+    "0zexyXuYcAUA8zpOHHVl6X"
    ],
    "T6.7/Pset_BuildingCommon.FireProtectionClass": [
-    "2HLNtj5_0q48$lOrM5K8qM"
+    "0zexyXuYcAUA8zpOHHVl6X"
    ],
    "T6.7/Pset_BuildingCommon.OccupancyType": [
-    "2HLNtj5_0q48$lOrM5K8qM"
+    "0zexyXuYcAUA8zpOHHVl6X"
    ],
    "T6.7/Pset_BuildingCommon.GrossPlannedArea": [
-    "2HLNtj5_0q48$lOrM5K8qM"
+    "0zexyXuYcAUA8zpOHHVl6X"
    ],
    "T6.7/Pset_Address.AddressLines": [
-    "2HLNtj5_0q48$lOrM5K8qM"
+    "0zexyXuYcAUA8zpOHHVl6X"
    ],
    "T6.7/Pset_Address.Town": [
-    "2HLNtj5_0q48$lOrM5K8qM"
+    "0zexyXuYcAUA8zpOHHVl6X"
    ],
    "T6.7/Pset_Address.Region": [
-    "2HLNtj5_0q48$lOrM5K8qM"
+    "0zexyXuYcAUA8zpOHHVl6X"
    ],
    "T6.7/Pset_Address.PostalBox": [
-    "2HLNtj5_0q48$lOrM5K8qM"
-   ],
-   "T6.7/Qto_BuildingBaseQuantities.EavesHeight": [
-    "2HLNtj5_0q48$lOrM5K8qM"
+    "0zexyXuYcAUA8zpOHHVl6X"
    ],
    "T6.7/Qto_BuildingBaseQuantities.FootPrintArea": [
-    "2HLNtj5_0q48$lOrM5K8qM"
+    "0zexyXuYcAUA8zpOHHVl6X"
    ],
    "T6.7/Qto_BuildingBaseQuantities.GrossFloorArea": [
-    "2HLNtj5_0q48$lOrM5K8qM"
-   ],
-   "T6.8/Pset_BuildingStoreyCommon.ElevationOfSSLRelative": [
-    "1ffSBbF_0qDLYugzhTx3Wz",
-    "2j7l5Hr_0qEfdv$rkXS2mU"
+    "0zexyXuYcAUA8zpOHHVl6X"
    ],
    "T6.16/Pset_ColumnCommon.FireRating": [
     "01alMXGa9m08000000000$",
@@ -93,50 +86,47 @@
     "01alMXGa9m08000000000X",
     "01alMXGa9m08000000000Y"
    ],
-   "T6.55/ObjectType": [
-    "3KpgnPh_0q5T4mjjP8r83t"
-   ],
    "T6.55/LongName": [
-    "3KpgnPh_0q5T4mjjP8r83t"
+    "2r7SpxLIA578NOaZjYM$R2"
    ],
    "T6.55/Pset_SiteCommon.FloorAreaRatio": [
-    "3KpgnPh_0q5T4mjjP8r83t"
+    "2r7SpxLIA578NOaZjYM$R2"
    ],
    "T6.55/Pset_SiteCommon.SiteCoverageRatio": [
-    "3KpgnPh_0q5T4mjjP8r83t"
+    "2r7SpxLIA578NOaZjYM$R2"
    ],
    "T6.55/Pset_SiteCommon.TotalArea": [
-    "3KpgnPh_0q5T4mjjP8r83t"
+    "2r7SpxLIA578NOaZjYM$R2"
    ],
    "T6.55/Pset_Address.AddressLines": [
-    "3KpgnPh_0q5T4mjjP8r83t"
+    "2r7SpxLIA578NOaZjYM$R2"
    ],
    "T6.55/Pset_Address.Town": [
-    "3KpgnPh_0q5T4mjjP8r83t"
+    "2r7SpxLIA578NOaZjYM$R2"
    ],
    "T6.55/Pset_Address.Region": [
-    "3KpgnPh_0q5T4mjjP8r83t"
+    "2r7SpxLIA578NOaZjYM$R2"
    ],
    "T6.55/Pset_LandRegistration.LandID": [
-    "3KpgnPh_0q5T4mjjP8r83t"
+    "2r7SpxLIA578NOaZjYM$R2"
    ],
    "T6.55/Pset_LandRegistration.LandTitleID": [
-    "3KpgnPh_0q5T4mjjP8r83t"
+    "2r7SpxLIA578NOaZjYM$R2"
    ],
    "T6.55/TREpys_ParselOzellikSeti.TAKS": [
-    "3KpgnPh_0q5T4mjjP8r83t"
+    "2r7SpxLIA578NOaZjYM$R2"
    ],
    "T6.55/TREpys_ParselOzellikSeti.KAKS": [
-    "3KpgnPh_0q5T4mjjP8r83t"
+    "2r7SpxLIA578NOaZjYM$R2"
    ],
    "T6.55/TREpys_ParselOzellikSeti.CekmeOn": [
-    "3KpgnPh_0q5T4mjjP8r83t"
+    "2r7SpxLIA578NOaZjYM$R2"
    ],
    "T6.55/TREpys_ParselOzellikSeti.CekmeYan": [
-    "3KpgnPh_0q5T4mjjP8r83t"
+    "2r7SpxLIA578NOaZjYM$R2"
    ],
    "T6.55/TREpys_ParselOzellikSeti.CekmeArka": [
-    "3KpgnPh_0q5T4mjjP8r83t"
+    "2r7SpxLIA578NOaZjYM$R2"
    ],
    "T6.56/Pset_SlabCommon.FireRating": [
     "01alMXGa9m08000000000f",
@@ -155,22 +145,7 @@
     "01alMXGa9m08000000000d",
     "01alMXGa9m08000000000e"
    ],
-   "T6.58/Pset_SpaceCoveringRequirements.FloorCoveringThickness": [
-    "01alMXGa9m08000000000c"
-   ],
    "T6.58/Pset_SpaceCoveringRequirements.WallCovering": [
-    "01alMXGa9m08000000000G",
-    "01alMXGa9m08000000000H",
-    "01alMXGa9m08000000000I",
-    "01alMXGa9m08000000000J",
-    "01alMXGa9m08000000000K",
-    "01alMXGa9m08000000000a",
-    "01alMXGa9m08000000000b",
-    "01alMXGa9m08000000000c",
-    "01alMXGa9m08000000000d",
-    "01alMXGa9m08000000000e"
-   ],
-   "T6.58/Pset_SpaceCoveringRequirements.WallCoveringThickness": [
     "01alMXGa9m08000000000G",
     "01alMXGa9m08000000000H",
     "01alMXGa9m08000000000I",
@@ -219,24 +194,27 @@
     "01alMXGa9m08000000000S"
    ],
    "T7.1/Description": [
-    "0AOo4Jv_0q1Wril5F_IALK"
+    "1DKKNrJcA1Tuch6OA8kAVI"
    ],
    "T7.1/Pset_ProjectCommon.ProjectType": [
-    "0AOo4Jv_0q1Wril5F_IALK"
+    "1DKKNrJcA1Tuch6OA8kAVI"
    ]
   },
-  "records": {
-   "T7.8/TrueNorth": [
-    "#10"
-   ]
-  }
+  "records": {}
  },
  "checker": "IfcTester 0.9.0, IfcOpenShell 0.9.0.post1",
  "same": {
-  "gaps": 44,
-  "records": 1
+  "gaps": 39,
+  "records": 0
  },
  "differ": {},
  "apart": {},
- "conditional": {}
+ "conditional": {
+  "T6.7/Qto_BuildingBaseQuantities.Height": [
+   "0zexyXuYcAUA8zpOHHVl6X"
+  ],
+  "T6.7/Qto_BuildingBaseQuantities.EavesHeight": [
+   "0zexyXuYcAUA8zpOHHVl6X"
+  ]
+ }
 }

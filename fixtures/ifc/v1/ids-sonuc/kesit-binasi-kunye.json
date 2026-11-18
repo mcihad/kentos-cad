@@ -14,22 +14,22 @@
     "01alMXGa9m080000000013"
    ],
    "T6.7/Pset_BuildingCommon.FireProtectionClass": [
-    "1m0cUvzNOjFjCIt7Sp$k6f"
+    "1MXjPzdl_8MxUcmMpnIVlT"
    ],
    "T6.7/Pset_BuildingCommon.OccupancyType": [
-    "1m0cUvzNOjFjCIt7Sp$k6f"
+    "1MXjPzdl_8MxUcmMpnIVlT"
    ],
    "T6.7/Pset_BuildingCommon.GrossPlannedArea": [
-    "1m0cUvzNOjFjCIt7Sp$k6f"
+    "1MXjPzdl_8MxUcmMpnIVlT"
    ],
    "T6.7/Pset_Address.PostalBox": [
-    "1m0cUvzNOjFjCIt7Sp$k6f"
+    "1MXjPzdl_8MxUcmMpnIVlT"
    ],
    "T6.7/Qto_BuildingBaseQuantities.FootPrintArea": [
-    "1m0cUvzNOjFjCIt7Sp$k6f"
+    "1MXjPzdl_8MxUcmMpnIVlT"
    ],
    "T6.7/Qto_BuildingBaseQuantities.GrossFloorArea": [
-    "1m0cUvzNOjFjCIt7Sp$k6f"
+    "1MXjPzdl_8MxUcmMpnIVlT"
    ],
    "T6.16/Pset_ColumnCommon.FireRating": [
     "01alMXGa9m08000000000$",
@@ -64,28 +64,28 @@
     "01alMXGa9m08000000000Y"
    ],
    "T6.55/Pset_SiteCommon.FloorAreaRatio": [
-    "0Uf7_Q$NOj98pCElDYQnv4"
+    "0kQKAGaiwENOauEk1Abttm"
    ],
    "T6.55/Pset_SiteCommon.SiteCoverageRatio": [
-    "0Uf7_Q$NOj98pCElDYQnv4"
+    "0kQKAGaiwENOauEk1Abttm"
    ],
    "T6.55/Pset_SiteCommon.TotalArea": [
-    "0Uf7_Q$NOj98pCElDYQnv4"
+    "0kQKAGaiwENOauEk1Abttm"
    ],
    "T6.55/TREpys_ParselOzellikSeti.TAKS": [
-    "0Uf7_Q$NOj98pCElDYQnv4"
+    "0kQKAGaiwENOauEk1Abttm"
    ],
    "T6.55/TREpys_ParselOzellikSeti.KAKS": [
-    "0Uf7_Q$NOj98pCElDYQnv4"
+    "0kQKAGaiwENOauEk1Abttm"
    ],
    "T6.55/TREpys_ParselOzellikSeti.CekmeOn": [
-    "0Uf7_Q$NOj98pCElDYQnv4"
+    "0kQKAGaiwENOauEk1Abttm"
    ],
    "T6.55/TREpys_ParselOzellikSeti.CekmeYan": [
-    "0Uf7_Q$NOj98pCElDYQnv4"
+    "0kQKAGaiwENOauEk1Abttm"
    ],
    "T6.55/TREpys_ParselOzellikSeti.CekmeArka": [
-    "0Uf7_Q$NOj98pCElDYQnv4"
+    "0kQKAGaiwENOauEk1Abttm"
    ],
    "T6.56/Pset_SlabCommon.FireRating": [
     "01alMXGa9m08000000000f",
@@ -164,10 +164,10 @@
  "apart": {},
  "conditional": {
   "T6.7/Qto_BuildingBaseQuantities.Height": [
-   "1m0cUvzNOjFjCIt7Sp$k6f"
+   "1MXjPzdl_8MxUcmMpnIVlT"
   ],
   "T6.7/Qto_BuildingBaseQuantities.EavesHeight": [
-   "1m0cUvzNOjFjCIt7Sp$k6f"
+   "1MXjPzdl_8MxUcmMpnIVlT"
   ]
  }
 }

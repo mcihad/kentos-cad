@@ -118,6 +118,9 @@ pub(crate) struct Step {
     roots: std::collections::HashMap<usize, String>,
     /// The derived keys given: one asked again (two parts of the same role and owners) takes a mark more.
     keys: std::collections::HashSet<String>,
+    /// The building the file is (its GlobalId): in every derived key, so two buildings' own files of one project share
+    /// no part but their project and site (docs/adr/8072 §2, 8117).
+    pub(crate) scope: String,
 }
 
 impl Step {
@@ -128,6 +131,7 @@ impl Step {
             ids: 0,
             roots: std::collections::HashMap::new(),
             keys: std::collections::HashSet::new(),
+            scope: String::new(),
         }
     }
     pub(crate) fn add(&mut self, body: impl Into<String>) -> usize {
@@ -143,7 +147,7 @@ impl Step {
     /// A derived part's GlobalId (quoted): its `role`, the GlobalIds of its `owners` (by instance number) and `name`.
     /// An owner without one is named by its number; a key already given takes a `+` more, so no two parts share one.
     pub(crate) fn derived(&mut self, role: &str, owners: &[usize], name: &str) -> String {
-        let mut key = String::new();
+        let mut key = format!("{}|", self.scope);
         for o in owners {
             match self.roots.get(o) {
                 Some(g) => key.push_str(g),
