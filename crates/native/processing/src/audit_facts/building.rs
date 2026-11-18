@@ -26,8 +26,8 @@
 //!   separates each two rooms of a storey (`Document::separations`): walls and openings with their declared fire classes
 //!   (`arch_performance::fire_rating_of`: its own, else its type's), and the open stretches; the project's sprinklers.
 //! - **Ek-3's elements** (docs/adr/8082): the frame's columns and beams, the walls (exterior or not), the floors
-//!   (`Document::fire_elements`) with their declared classes; the building's height as the fire rules measure it and
-//!   its basements' depth.
+//!   (`Document::fire_elements`) with their declared classes and a wall's or a slab's declared fire stop role
+//!   (docs/adr/8136); the building's height as the fire rules measure it and its basements' depth.
 //! - **Storeys and doors as 28/1-c and 39/1 read them** (docs/adr/8083): each storey's height floor to floor (its own,
 //!   else up to the storey over it) and its bedrooms (`kind_of`); the program's common areas; each door's net clear
 //!   width (`OpeningSizes::clear`) and height (its head over its sill), what stands on its two sides (a room by its
@@ -39,7 +39,8 @@
 //!   no shaft, stairs) and each room's being an escape stair's.
 //! - **Shafts, elevators' doors, roofs** (docs/adr/8087): each elevator's or service shaft's enclosure
 //!   (`Document::shaft_enclosures`) with its walls' and openings' declared classes, its area, the shaft through the
-//!   storeys it belongs to and a lift shaft's declared vent (docs/adr/8135); a door's being an elevator's (a side
+//!   storeys it belongs to, a lift shaft's declared vent (docs/adr/8135) and a shaft's declared protected role
+//!   (docs/adr/8136); a door's being an elevator's (a side
 //!   in an elevator's shaft) and opening onto a passage (a corridor, a hall, an entrance, a lobby, a landing, a stair's
 //!   room); the structure's height (`fire_audit::heights`); roofs and terraces among Ek-3's elements.
 //! - **Coverings** (docs/adr/8091): each covering's IFC type, material and the material's declared reaction class.
@@ -295,7 +296,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
 /// Ek-3's elements with their declared classes, and the building's height as the fire rules measure it (docs/adr/8082).
 #[cfg(feature = "mod-arch")]
 fn elements(doc: &Document) -> (Vec<ElementFacts>, (f64, f64)) {
-    use kentos_native_application::arch_performance::{exit_of, fire_rating_of, load_bearing_of};
+    use kentos_native_application::arch_performance::{exit_of, fire_rating_of, fire_stop_of, load_bearing_of};
     let by_uid: std::collections::HashMap<String, &Entity> =
         doc.entities_with_uids().map(|(u, e)| (u.to_string(), e)).collect();
     let elements = doc
@@ -312,6 +313,8 @@ fn elements(doc: &Document) -> (Vec<ElementFacts>, (f64, f64)) {
                 .then(|| by_uid.get(&x.uid).and_then(|e| load_bearing_of(e)).map(|b| b.bearing))
                 .flatten(),
             escape: x.kind == "roof" && by_uid.get(&x.uid).and_then(|e| exit_of(e)).is_some_and(|d| d.exit),
+            // A wall's or a slab's declared fire stop role (docs/adr/8136).
+            fire_stop: by_uid.get(&x.uid).and_then(|e| fire_stop_of(e)).is_some_and(|f| f.fire_stop),
             uid: x.uid,
             kind: x.kind.to_owned(),
             level: x.level,
@@ -455,6 +458,10 @@ fn shaft_facts(doc: &Document, names: &std::collections::HashMap<String, String>
             length,
         }
     };
+    // A shaft's declared protected role (docs/adr/8136), as its room holds it.
+    let protected = |uid: &str| {
+        by_uid.get(uid).and_then(|e| kentos_native_application::arch_performance::protected_of(e)).map(|p| p.protected)
+    };
     // A lift shaft's declared vent (docs/adr/8135), as its room holds it.
     let vent = |uid: &str| {
         let v = by_uid.get(uid)?.arch_info()?.shaft_vent.as_ref()?;
@@ -471,6 +478,7 @@ fn shaft_facts(doc: &Document, names: &std::collections::HashMap<String, String>
             open: x.open,
             area: x.area,
             vent: if x.kind == "elevator" { vent(&x.uid) } else { None },
+            protected: protected(&x.uid),
             stack: x.stack,
             uid: x.uid,
         })

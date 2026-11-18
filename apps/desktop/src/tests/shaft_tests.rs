@@ -346,6 +346,147 @@ fn a_lift_shaft_s_vent_is_declared_once_for_the_shaft_in_oznitelikler() {
     assert!(panel(&app).iter().all(|r| r.0 != "Baca alanı"));
 }
 
+/// Ek-3/B 8 and 10 (docs/adr/8136): Tesisat şaftı declared protected in Öznitelikler asks REI 120 of its four walls
+/// (missing data while they declare nothing; held when they are REI 120); the wall at x = 12 between Ofis and Hol
+/// declared a fire stop asks EI 30, and E 30 is not enough. Hol is no shaft: no Korunumlu row; a column has no
+/// Yangın kesici row.
+#[test]
+fn a_protected_shaft_and_a_fire_stop_are_declared_in_oznitelikler() {
+    use crate::properties::Event;
+    let (mut app, walls, _) = office();
+    let service = room(&app, "Tesisat şaftı", "k00");
+    let slot_of = |app: &App, uid: &str| {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        doc.slot_of(uid.parse().expect("a uid")).expect("its slot")
+    };
+    let panel = |app: &App| -> Vec<(String, String)> {
+        let doc = app.document.as_ref().expect("open");
+        app.properties_panel(doc).sections.into_iter().flat_map(|s| s.rows).map(|r| (r.label.to_string(), r.value)).collect()
+    };
+    let row = |app: &App, label: &str| {
+        let rows = panel(app);
+        let at = rows.iter().position(|r| r.0 == label).unwrap_or_else(|| panic!("no {label} row: {rows:#?}"));
+        (rows[at].1.clone(), rows.get(at + 1).map(|r| r.1.clone()).unwrap_or_default())
+    };
+    let shaft = slot_of(&app, &service);
+    app.selection.set(vec![shaft]);
+    assert_eq!(row(&app, "Korunumlu").0, "Bilinmiyor");
+    let _ = app.update(Message::Properties(Event::Protected(shaft, Some(true))));
+    let (said, note) = row(&app, "Korunumlu");
+    assert_eq!((said.as_str(), note.as_str()), ("Evet", "Ek-3/B 8: duvarları en az REI 120; bir katta beyan yeter."));
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let facts = kentos_processing::audit_facts::building::measure(doc).normalized();
+    let measured = facts.shafts.iter().find(|s| s.uid == service).expect("the service shaft");
+    assert_eq!(measured.protected, Some(true));
+    let ek3 = |app: &App, words: &str| -> Vec<(Option<kentos_commands::ArchAuditState>, String)> {
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        audited
+            .findings
+            .iter()
+            .filter(|f| f.code == "bykhy_element_resistance" && f.message.contains(words))
+            .map(|f| (f.state, f.message.clone()))
+            .collect()
+    };
+    checked(&mut app);
+    let found = ek3(&app, "Ek-3/B 8");
+    assert_eq!(found.len(), 1, "{found:#?}");
+    assert_eq!(found[0].0, Some(kentos_commands::ArchAuditState::MissingData));
+    assert!(
+        found[0]
+            .1
+            .starts_with("Zemin kat: 4 duvarın yangın sınıfı beyan edilmemiş; Ek-3/B 8 korunumlu şaft (her yüzü) en az REI 120"),
+        "{}",
+        found[0].1
+    );
+    declare(&mut app, &[&walls[1], &walls[5], &walls[6], &walls[7]], "REI 120");
+    checked(&mut app);
+    assert!(ek3(&app, "Ek-3/B 8").is_empty());
+    // The wall between Ofis and Hol, a fire stop: E 30 lacks I.
+    let partition = slot_of(&app, &walls[4]);
+    app.selection.set(vec![partition]);
+    assert_eq!(row(&app, "Yangın kesici").0, "Bilinmiyor");
+    let _ = app.update(Message::Properties(Event::FireStop(partition, Some(true))));
+    assert_eq!(row(&app, "Yangın kesici"), ("Evet".to_owned(), "Ek-3/B 10: en az EI 30, her yüzü.".to_owned()));
+    declare(&mut app, &[&walls[4]], "E 30");
+    checked(&mut app);
+    let found = ek3(&app, "Ek-3/B 10");
+    assert_eq!(found.len(), 1, "{found:#?}");
+    assert!(found[0].1.contains("1 duvar E 30; Ek-3/B 10 yangın kesici (her yüzü) en az EI 30 ister"), "{}", found[0].1);
+    declare(&mut app, &[&walls[4]], "EI 30");
+    checked(&mut app);
+    assert!(ek3(&app, "Ek-3/B 10").is_empty());
+    // Not declared again: the row says so, the facts carry nothing.
+    let _ = app.update(Message::Properties(Event::FireStop(partition, None)));
+    assert_eq!(row(&app, "Yangın kesici").0, "Bilinmiyor");
+    let hol = slot_of(&app, &room(&app, "Hol", "k00"));
+    app.selection.set(vec![hol]);
+    assert!(panel(&app).iter().all(|r| r.0 != "Korunumlu"));
+}
+
+/// Öznitelikler of Tesisat şaftı declared protected and of the partition declared a fire stop, and Denetim with Ek-3/B
+/// 8's finding chosen, light and dark; `.run/gui-evidence/korunumlu-saft-8136/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib shaft_tests::roles_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn roles_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::{Input, Snapshot};
+
+    use crate::properties::Event;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/korunumlu-saft-8136");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 1180.0), "acik"), ("dark", Size::new(1280.0, 1100.0), "koyu")] {
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let (mut app, walls, _) = office();
+        let slot_of = |app: &App, uid: &str| {
+            let doc = &app.document.as_ref().expect("a drawing").model;
+            doc.slot_of(uid.parse().expect("a uid")).expect("its slot")
+        };
+        let _ = app.update(Message::ActiveLevel(Some("k00".into())));
+        let _ = app.update(Message::LevelView(kentos_interaction::level_view::LevelView::Active));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::RibbonTab("arch"));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        snapshot.settle(&mut app, App::view, &mut update);
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        // `scroll`: the properties panel scrolled down this many steps (the wall's roles are under its geometry).
+        let mut shot = |app: &mut App, file: &str, scroll: Option<f32>| {
+            snapshot.settle(app, App::view, &mut update);
+            if let Some(down) = scroll {
+                let at = iced::Point::new(size.width - 150.0, size.height - 250.0);
+                snapshot.input(app, App::view, &mut update, Input::Scroll(at, -down));
+                snapshot.settle(app, App::view, &mut update);
+            }
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let shaft = slot_of(&app, &room(&app, "Tesisat şaftı", "k00"));
+        app.selection.set(vec![shaft]);
+        let _ = app.update(Message::Properties(Event::Protected(shaft, Some(true))));
+        shot(&mut app, "1-korunumlu-saft", None);
+        let partition = slot_of(&app, &walls[4]);
+        app.selection.set(vec![partition]);
+        let _ = app.update(Message::Properties(Event::FireStop(partition, Some(true))));
+        declare(&mut app, &[&walls[4]], "E 30");
+        shot(&mut app, "2-yangin-kesici", Some(3.0));
+        app.selection.set(Vec::new());
+        checked(&mut app);
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        app.arch.arch_audit.selected =
+            audited.findings.iter().position(|f| f.code == "bykhy_element_resistance" && f.message.contains("Ek-3/B 8"));
+        shot(&mut app, "3-denetim", None);
+    }
+}
+
 /// Öznitelikler of 1. kat's lift shaft room with its vent typed, and Denetim with 62/4's finding chosen, light and dark;
 /// `.run/gui-evidence/kuyu-havalandirmasi-8135/`:
 ///

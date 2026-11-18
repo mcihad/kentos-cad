@@ -142,6 +142,10 @@ pub enum Event {
     External(Slot, Option<bool>),
     /// A lift shaft room's Basınçlandırılır (docs/adr/8135): its vent's area stays.
     ShaftPressurized(Slot, bool),
+    /// A shaft room's Korunumlu (docs/adr/8136): evet, hayır, or not declared (none).
+    Protected(Slot, Option<bool>),
+    /// A wall's or a slab's Yangın kesici (docs/adr/8136): evet, hayır, or not declared (none).
+    FireStop(Slot, Option<bool>),
     /// A tag's frame or leader (docs/adr/0344 §5), through `cad.tags.edit`.
     Tag(Slot, kentos_commands::TagChange),
     /// A view mark's side or target (docs/adr/0345 §5), through `cad.viewmarks.edit`.

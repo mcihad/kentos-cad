@@ -909,6 +909,8 @@ __all__ = [
     "DeclaredCrs",
     "DeclaredExit",
     "DeclaredExternal",
+    "DeclaredFireStop",
+    "DeclaredProtected",
     "DeclaredShaftVent",
     "DeclaredVertical",
     "DecodeError",

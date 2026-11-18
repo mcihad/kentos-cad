@@ -3,6 +3,8 @@ import type { Declared } from "./Declared";
 import type { DeclaredBearing } from "./DeclaredBearing";
 import type { DeclaredExit } from "./DeclaredExit";
 import type { DeclaredExternal } from "./DeclaredExternal";
+import type { DeclaredFireStop } from "./DeclaredFireStop";
+import type { DeclaredProtected } from "./DeclaredProtected";
 import type { DeclaredShaftVent } from "./DeclaredShaftVent";
 
 /**
@@ -18,4 +20,13 @@ external?: DeclaredExternal | null,
  * A lift shaft room's ventilation and smoke vent or pressurisation (docs/adr/8135, BYKHY 62/4), said for the
  * whole shaft; null: unknown again.
  */
-shaftVent?: DeclaredShaftVent | null, } | { "kind": "exits", yes: Array<string>, no: Array<string>, } | { "kind": "wallStyle", style: string, fireRating: Declared | null, } | { "kind": "openingType", type: string, fireRating: Declared | null, } | { "kind": "material", material: string, strength?: string | null, reaction?: Declared | null, roofClass?: Declared | null, } | { "kind": "building", fireProtectionClass: Declared | null, };
+shaftVent?: DeclaredShaftVent | null, 
+/**
+ * A shaft room's protected role (docs/adr/8136, BYKHY Ek-3/B 8), said for the whole shaft; null: not declared
+ * again.
+ */
+protected?: DeclaredProtected | null, 
+/**
+ * A wall's or a slab's fire stop role (docs/adr/8136, BYKHY 4/pp, Ek-3/B 10); null: not declared again.
+ */
+fireStop?: DeclaredFireStop | null, } | { "kind": "exits", yes: Array<string>, no: Array<string>, } | { "kind": "wallStyle", style: string, fireRating: Declared | null, } | { "kind": "openingType", type: string, fireRating: Declared | null, } | { "kind": "material", material: string, strength?: string | null, reaction?: Declared | null, roofClass?: Declared | null, } | { "kind": "building", fireProtectionClass: Declared | null, };

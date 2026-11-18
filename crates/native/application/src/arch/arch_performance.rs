@@ -98,6 +98,46 @@ pub fn shaft_vent_of(e: &Entity) -> Option<&kentos_commands::DeclaredShaftVent> 
     e.arch_info()?.shaft_vent.as_ref()
 }
 
+/// Whether `e` takes a protected shaft declaration (docs/adr/8136, BYKHY Ek-3/B 8): a void room that is a shaft (a lift's,
+/// a service shaft, an air shaft, a flue; `room_names::shaft`), not a light well, which is open to the sky: the shafts
+/// whose enclosure the drawing reads (`Document::shaft_enclosures`).
+pub fn protected_rated(e: &Entity) -> bool {
+    use kentos_domain::room_names::{ShaftKind, shaft, shaft_of};
+    match e {
+        Entity::Space(s) if s.space.void => {
+            let (name, usage) = (s.space.name.as_deref(), s.space.usage.as_deref());
+            shaft(name, usage) && shaft_of(name, usage) != Some(ShaftKind::LightWell)
+        }
+        _ => false,
+    }
+}
+
+/// A shaft room's declared protected role (docs/adr/8136); none: not declared on this room.
+pub fn protected_of(e: &Entity) -> Option<&kentos_commands::DeclaredProtected> {
+    if !protected_rated(e) {
+        return None;
+    }
+    e.arch_info()?.protected.as_ref()
+}
+
+/// Whether `e` takes a fire stop declaration (docs/adr/8136; BYKHY 4/pp: a horizontal or vertical element): a wall or a
+/// floor's or a terrace's slab, no covering; Ek-3 reads these (`Document::fire_elements`).
+pub fn fire_stop_rated(e: &Entity) -> bool {
+    match e {
+        Entity::Wall(_) => true,
+        Entity::Slab(s) => s.slab.covering.is_none() && s.slab.role != kentos_commands::SlabRole::Balcony,
+        _ => false,
+    }
+}
+
+/// A wall's or a slab's declared fire stop role (docs/adr/8136); none: not declared.
+pub fn fire_stop_of(e: &Entity) -> Option<&kentos_commands::DeclaredFireStop> {
+    if !fire_stop_rated(e) {
+        return None;
+    }
+    e.arch_info()?.fire_stop.as_ref()
+}
+
 /// A wall's or a slab's declared exterior role; none: the drawing's.
 pub fn external_of(e: &Entity) -> Option<&kentos_commands::DeclaredExternal> {
     if !external_rated(e) {
@@ -179,7 +219,16 @@ fn no_class(e: &Entity) -> String {
 fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>), Stop> {
     let settings = doc.settings();
     let work = match &input.operation {
-        PerformanceOperation::Objects { uids, fire_rating, exit, load_bearing, external, shaft_vent } => {
+        PerformanceOperation::Objects {
+            uids,
+            fire_rating,
+            exit,
+            load_bearing,
+            external,
+            shaft_vent,
+            protected,
+            fire_stop,
+        } => {
             checks::uids(uids, "Yangın bilgisi verilecek nesne verilmedi.")?;
             let found = checks::named(doc, uids)?;
             for (at, _, e, _) in &found {
@@ -230,12 +279,44 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                         &format!("uids[{at}]"),
                     ));
                 }
+                if protected.is_some() && !protected_rated(e) {
+                    return Err(fail(
+                        codes::FIELD_NOT_FOR_KIND,
+                        format!(
+                            "“{}” nesnesinin korunumlu olduğu beyan edilmez: bu beyan şaft olan boşluk mahalin (asansör \
+                             kuyusu, tesisat şaftı, hava bacası; ışıklık değil) özelliğidir.",
+                            e.kind()
+                        ),
+                        &format!("uids[{at}]"),
+                    ));
+                }
+                if fire_stop.is_some() && !fire_stop_rated(e) {
+                    return Err(fail(
+                        codes::FIELD_NOT_FOR_KIND,
+                        format!(
+                            "“{}” nesnesinin yangın kesici olduğu beyan edilmez: yangın kesici duvar ya da döşemedir \
+                             (balkon ve kaplama değil).",
+                            e.kind()
+                        ),
+                        &format!("uids[{at}]"),
+                    ));
+                }
             }
-            if fire_rating.is_none() && exit.is_none() && load_bearing.is_none() && external.is_none() && shaft_vent.is_none() {
+            let given = [
+                fire_rating.is_some(),
+                exit.is_some(),
+                load_bearing.is_some(),
+                external.is_some(),
+                shaft_vent.is_some(),
+                protected.is_some(),
+                fire_stop.is_some(),
+            ];
+            if !given.contains(&true) {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    "Ne yangın dayanım sınıfı ne acil çıkış ne taşıyıcılık ne dışarıda ne kuyu havalandırması verildi: \
-                     fireRating, exit, loadBearing, external ya da shaftVent verin (null kaldırır)."
+                    "Ne yangın dayanım sınıfı ne acil çıkış ne taşıyıcılık ne dışarıda ne kuyu havalandırması ne \
+                     korunumlu şaft ne yangın kesici verildi: fireRating, exit, loadBearing, external, shaftVent, \
+                     protected ya da fireStop verin (null kaldırır)."
                         .into(),
                     "operation",
                 ));
@@ -262,6 +343,16 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                 && let Some((why, field)) = x.problem()
             {
                 return Err(fail(codes::INVALID_DECLARED, why, &format!("operation.shaftVent.{field}")));
+            }
+            if let Some(Some(x)) = protected
+                && let Some(why) = x.basis.problem()
+            {
+                return Err(fail(codes::INVALID_DECLARED, why, "operation.protected.basis"));
+            }
+            if let Some(Some(x)) = fire_stop
+                && let Some(why) = x.basis.problem()
+            {
+                return Err(fail(codes::INVALID_DECLARED, why, "operation.fireStop.basis"));
             }
             checks::revision(doc, input.expected_revision.as_deref())?;
             let layers = doc.layers();
@@ -302,6 +393,12 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                             }
                             if let Some(v) = shaft_vent {
                                 a.shaft_vent.clone_from(v);
+                            }
+                            if let Some(v) = protected {
+                                a.protected.clone_from(v);
+                            }
+                            if let Some(v) = fire_stop {
+                                a.fire_stop.clone_from(v);
                             }
                         }
                     }

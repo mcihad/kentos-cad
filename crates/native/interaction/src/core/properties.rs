@@ -209,6 +209,8 @@ pub fn edit_performance(
             load_bearing,
             external,
             shaft_vent: None,
+            protected: None,
+            fire_stop: None,
         },
         expected_revision: None,
     };
@@ -233,6 +235,39 @@ pub fn edit_shaft_vent(
             load_bearing: None,
             external: None,
             shaft_vent: Some(vent),
+            protected: None,
+            fire_stop: None,
+        },
+        expected_revision: None,
+    };
+    said(kentos_native_application::arch_performance::execute(&mut ExecutionContext::new(doc), input))
+}
+
+/// Korunumlu of a shaft room and Yangın kesici of a wall or a slab (docs/adr/8136; BYKHY Ek-3/B 8, 10): through
+/// `cad.arch.performance`, one step “Yangın ve performans”, the author's statement; a field absent stays, an inner none
+/// takes the declaration away. What to say.
+pub fn edit_roles(
+    doc: &mut Document,
+    slot: Slot,
+    protected: Option<Option<bool>>,
+    fire_stop: Option<Option<bool>>,
+) -> Vec<String> {
+    let Some(uid) = doc.uid(slot) else {
+        return Vec::new();
+    };
+    let author = || kentos_commands::DeclaredBasis::Author;
+    let input = kentos_commands::ArchPerformance {
+        operation: kentos_commands::PerformanceOperation::Objects {
+            uids: vec![uid.to_string()],
+            fire_rating: None,
+            exit: None,
+            load_bearing: None,
+            external: None,
+            shaft_vent: None,
+            protected: protected
+                .map(|v| v.map(|protected| kentos_commands::DeclaredProtected { protected, basis: author() })),
+            fire_stop: fire_stop
+                .map(|v| v.map(|fire_stop| kentos_commands::DeclaredFireStop { fire_stop, basis: author() })),
         },
         expected_revision: None,
     };

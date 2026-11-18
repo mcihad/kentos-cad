@@ -10,9 +10,11 @@ The rules (ADR 8068 §2):
 - objects: `fireRating` on a wall, slab, column, beam, roof, railing, stair, ramp or opening; `exit` on a door, a stair
   or a roof (an escape route, ADR 8090); `loadBearing` on a wall that is no curtain wall (ADR 8090) or a column that is
   no post (ADR 8124); `external` on a wall or a slab that is no covering (ADR 8124); `shaftVent` on a room that is a
-  lift shaft, named Asansör and not its lobby (hol, önü, lobi, sahanlık, bekleme; ADR 8135); else field_not_for_kind
-  at the object (in the input's order, the class asked first, then the exit, the bearing, the exterior, the shaft's
-  vent). None given: nothing_to_set. A field absent stays; null takes the object's own away. A shaft's vent: an area
+  lift shaft, named Asansör and not its lobby (hol, önü, lobi, sahanlık, bekleme; ADR 8135); `protected` on a void
+  room that is a shaft (a lift's, an air shaft, a word beginning ŞAFT, BACA or TESİSAT) but a light well (ışıklık,
+  aydınlık; ADR 8136); `fireStop` on a wall or a slab that is no covering and no balcony (ADR 8136); else
+  field_not_for_kind at the object (in the input's order, the class asked first, then the exit, the bearing, the
+  exterior, the shaft's vent, the protected shaft, the fire stop). None given: nothing_to_set. A field absent stays; null takes the object's own away. A shaft's vent: an area
   over 0 and at most 100 m², or pressurized, or both; neither or a bad area invalid_declared at
   operation.shaftVent.area, then its basis at operation.shaftVent.basis; pressurized false is not kept.
 - exits (ADR 8124): the doors and stairs of `yes` are exits, those of `no` not, each the author's statement; none at all
@@ -67,6 +69,8 @@ WALL, DOOR, WINDOW, COLUMN, STAIR, ROOM, GRID, LOCKED, BARE, ROOF = range(1, 11)
 SLAB, POST, LOCKED_DOOR = range(11, 14)
 # Added by `with_shaft` for a lift shaft's vent (ADR 8135): the shaft (a void named Asansör) and its lobby.
 SHAFT, LOBBY = range(14, 16)
+# Added by `with_service` for the protected shafts and fire stops (ADR 8136): a service shaft, a light well, a balcony.
+SERVICE, LIGHT_WELL, BALCONY = range(16, 19)
 OPENINGS = {DOOR, WINDOW}
 
 STYLE = {"id": "dis-duvar", "name": "Dış duvar", "components": [
@@ -157,6 +161,27 @@ def shaft_vent_rated(e):
     words = [w for t in (e.get("name"), e.get("usage")) if t for w in re.split(r"[^0-9A-Za-z]+", fold(t)) if w]
     has = lambda p: any(w.startswith(p) for w in words)  # noqa: E731
     return has("ASANSOR") and not any(has(p) for p in ("HOL", "ONU", "LOBI", "SAHANLIK", "BEKLEME"))
+
+
+def is_shaft(e):
+    """A shaft's room (ADR 8136): a word beginning ASANSOR (not its lobby's), HAVA with BACA, HAVALANDIRMA, SAFT, BACA or
+    TESISAT; a light well's (ISIKLIK, AYDINLIK) is a shaft open to the sky. (shaft, light well)"""
+    import re
+    words = [w for t in (e.get("name"), e.get("usage")) if t for w in re.split(r"[^0-9A-Za-z]+", fold(t)) if w]
+    has = lambda p: any(w.startswith(p) for w in words)  # noqa: E731
+    lift = has("ASANSOR") and not any(has(p) for p in ("HOL", "ONU", "LOBI", "SAHANLIK", "BEKLEME"))
+    light = not lift and (has("ISIKLIK") or has("AYDINLIK"))
+    named = lift or light or (has("HAVA") and has("BACA")) or has("HAVALANDIRMA")
+    return named or has("SAFT") or has("BACA") or has("TESISAT"), light
+
+
+def protected_rated(e):
+    shaft, light = is_shaft(e) if e["kind"] == "space" else (False, False)
+    return e["kind"] == "space" and e.get("void", False) and shaft and not light
+
+
+def fire_stop_rated(e):
+    return e["kind"] == "wall" or (e["kind"] == "slab" and not e.get("covering") and e.get("role") != "balcony")
 
 
 def vent_bad(v):
@@ -295,7 +320,12 @@ def run(d, inp):
                 return refusal("field_not_for_kind", f"uids[{i}]"), d
             if "shaftVent" in op and not shaft_vent_rated(e):
                 return refusal("field_not_for_kind", f"uids[{i}]"), d
-        if not any(k in op for k in ("fireRating", "exit", "loadBearing", "external", "shaftVent")):
+            if "protected" in op and not protected_rated(e):
+                return refusal("field_not_for_kind", f"uids[{i}]"), d
+            if "fireStop" in op and not fire_stop_rated(e):
+                return refusal("field_not_for_kind", f"uids[{i}]"), d
+        if not any(k in op for k in ("fireRating", "exit", "loadBearing", "external", "shaftVent", "protected",
+                                     "fireStop")):
             return refusal("nothing_to_set", "operation"), d
         if op.get("fireRating") is not None and declared_bad(op["fireRating"]):
             return refusal("invalid_declared", "operation.fireRating"), d
@@ -307,6 +337,10 @@ def run(d, inp):
             return refusal("invalid_declared", "operation.external.basis"), d
         if op.get("shaftVent") is not None and vent_bad(op["shaftVent"]):
             return refusal("invalid_declared", f"operation.shaftVent.{vent_bad(op['shaftVent'])}"), d
+        if op.get("protected") is not None and basis_bad(op["protected"]["basis"]):
+            return refusal("invalid_declared", "operation.protected.basis"), d
+        if op.get("fireStop") is not None and basis_bad(op["fireStop"]["basis"]):
+            return refusal("invalid_declared", "operation.fireStop.basis"), d
         r = revision_refusal(inp)
         if r:
             return r, d
@@ -315,7 +349,7 @@ def run(d, inp):
                 return refusal("layer_locked", f"uids[{i}]"), d
         for _, e in found:
             target = e if e["kind"] == "opening" else e.setdefault("arch", {})
-            for key in ("fireRating", "exit", "loadBearing", "external", "shaftVent"):
+            for key in ("fireRating", "exit", "loadBearing", "external", "shaftVent", "protected", "fireStop"):
                 if key in op:
                     value = op[key]
                     if key == "shaftVent" and value is not None and not value.get("pressurized", True):
@@ -616,6 +650,46 @@ def cases():
     case("Kuyu havalandırmasının belgesi adsız",
          refused(objects([U(SHAFT)], shaftVent=vent(area=0.12, basis={"kind": "document", "name": ""})), setup=sh),
          setup=sh)
+    # A protected shaft and a fire stop (ADR 8136, BYKHY Ek-3/B 8 and 10).
+    sv = with_service(with_more(with_shaft(d)))
+    role = lambda key, yes, basis=None: {key: yes, "basis": basis or {"kind": "author"}}  # noqa: E731
+    case("Tesisat şaftı korunumlu, müellif beyanıyla",
+         written(objects([U(SERVICE)], protected=role("protected", True)), setup=sv), setup=sv)
+    case("Asansör kuyusu korunumlu değil, yangın raporuyla",
+         written(objects([U(SHAFT)], protected=role("protected", False, {"kind": "document", "name": "Yangın raporu"})),
+                 setup=sv), setup=sv)
+    case("Null korunumlu beyanını kaldırır",
+         written(objects([U(SERVICE)], protected=None), setup=declared_roles(sv)), setup=declared_roles(sv))
+    case("Işıklığa korunumlu: gökyüzüne açık, şaft gibi kapanmaz",
+         refused(objects([U(LIGHT_WELL)], protected=role("protected", True)), setup=sv), setup=sv)
+    case("Odaya korunumlu: şaft değil", refused(objects([U(SERVICE), U(ROOM)], protected=role("protected", True)),
+                                               setup=sv), setup=sv)
+    case("Asansör holüne korunumlu: hol şaft değil",
+         refused(objects([U(LOBBY)], protected=role("protected", True)), setup=sv), setup=sv)
+    case("Korunumlu beyanının belgesi adsız",
+         refused(objects([U(SERVICE)], protected=role("protected", True, {"kind": "document", "name": " "})), setup=sv),
+         setup=sv)
+    case("Duvar yangın kesici, müellif beyanıyla",
+         written(objects([U(WALL)], fireStop=role("fireStop", True)), setup=sv), setup=sv)
+    case("Döşeme yangın kesici, belgesiyle",
+         written(objects([U(SLAB)], fireStop=role("fireStop", True, {"kind": "document", "name": "Yangın raporu",
+                                                                      "date": "2026-11-18"})), setup=sv), setup=sv)
+    case("Yangın kesici değil demek de yazılır",
+         written(objects([U(WALL), U(SLAB)], fireStop=role("fireStop", False)), setup=sv), setup=sv)
+    case("Null yangın kesici beyanını kaldırır",
+         written(objects([U(BARE)], fireStop=None), setup=declared_roles(sv)), setup=declared_roles(sv))
+    case("Sınıf ve yangın kesici birlikte",
+         written(objects([U(BARE)], fireRating=author("EI 60"), fireStop=role("fireStop", True)), setup=sv), setup=sv)
+    case("Balkon döşemesine yangın kesici",
+         refused(objects([U(BALCONY)], fireStop=role("fireStop", True)), setup=sv), setup=sv)
+    case("Kolona yangın kesici", refused(objects([U(COLUMN)], fireStop=role("fireStop", True)), setup=sv), setup=sv)
+    case("Kapıya yangın kesici: duvarı gibidir",
+         refused(objects([U(DOOR)], fireStop=role("fireStop", True)), setup=sv), setup=sv)
+    case("Kilitli katmandaki duvara yangın kesici",
+         refused(objects([U(LOCKED)], fireStop=role("fireStop", True)), setup=sv), setup=sv)
+    case("Yangın kesicinin belgesi adsız",
+         refused(objects([U(WALL)], fireStop=role("fireStop", True, {"kind": "document", "name": ""})), setup=sv),
+         setup=sv)
     # Acil çıkışlar: the escape routes' suggestion confirmed (ADR 8124).
     case("Önerileri yaz: kapı ve merdiven evet, ikinci kapı hayır",
          written({"kind": "exits", "yes": [U(STAIR), U(DOOR)], "no": [U(LOCKED_DOOR)]}, setup=unlocked(more)),
@@ -714,6 +788,37 @@ def with_shaft(d):
     }
     d["entities"] += [more[i] for i in sorted(more)]
     d["uids"] += [U(i) for i in sorted(more)]
+    return d
+
+
+def with_service(d):
+    """The drawing with a service shaft (a void named Tesisat şaftı), a light well (a void named Işıklık) and a balcony's
+    slab (ADR 8136)."""
+    d = copy.deepcopy(d)
+    more = {
+        SERVICE: {"kind": "space", **base(SERVICE, "mimari"),
+                  "parts": [{"outer": {"pts": [P(64, 0), P(65, 0), P(65, 1.5), P(64, 1.5)]}}], "name": "Tesisat şaftı",
+                  "void": True},
+        LIGHT_WELL: {"kind": "space", **base(LIGHT_WELL, "mimari"),
+                     "parts": [{"outer": {"pts": [P(66, 0), P(68, 0), P(68, 2), P(66, 2)]}}], "name": "Işıklık",
+                     "void": True},
+        BALCONY: {"kind": "slab", **base(BALCONY, "mimari"),
+                  "parts": [{"outer": {"pts": [P(70, 0), P(72, 0), P(72, 1.2), P(70, 1.2)]}}], "thickness": 0.15,
+                  "role": "balcony"},
+    }
+    d["entities"] += [more[i] for i in sorted(more)]
+    d["uids"] += [U(i) for i in sorted(more)]
+    return d
+
+
+def declared_roles(d):
+    """The service shaft protected and the bare wall a fire stop, each the author's statement."""
+    d = copy.deepcopy(d)
+    for e in d["entities"]:
+        if e["id"] == SERVICE:
+            e["arch"] = {"protected": {"protected": True, "basis": {"kind": "author"}}}
+        if e["id"] == BARE:
+            e["arch"] = {"fireStop": {"fireStop": True, "basis": {"kind": "author"}}}
     return d
 
 

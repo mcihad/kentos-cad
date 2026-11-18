@@ -164,6 +164,24 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
         .map(|(v, label)| pick(label.into(), v == x.void, set(SpaceChange { void: Some(v), ..Default::default() }), None))
         .collect();
     geo.push(Row::text("Döşeme boşluğu", void_words).editor(select(void_words.into(), voids)));
+    // Korunumlu (docs/adr/8136, BYKHY Ek-3/B 8): a shaft's declared protected role, said on one of its storeys for the
+    // whole shaft.
+    if kentos_native_application::arch_performance::protected_rated(e) {
+        let now = kentos_native_application::arch_performance::protected_of(e).map(|x| x.protected);
+        let said = match now {
+            Some(true) => "Evet",
+            Some(false) => "Hayır",
+            None => "Bilinmiyor",
+        };
+        let items = [(Some(true), "Evet"), (Some(false), "Hayır"), (None, "Bilinmiyor")]
+            .into_iter()
+            .map(|(v, label)| pick(label.into(), now == v, Message::Properties(Event::Protected(slot, v)), None))
+            .collect();
+        geo.push(Row::text("Korunumlu", said).editor(select(said.into(), items)));
+        if now == Some(true) {
+            geo.push(Row::note("Ek-3/B 8: duvarları en az REI 120; bir katta beyan yeter."));
+        }
+    }
     // Kuyu havalandırması (docs/adr/8135, BYKHY 62/4): a lift shaft's ventilation and smoke vent or its pressurisation,
     // declared on one of its storeys for the whole shaft.
     if kentos_native_application::arch_performance::shaft_vent_rated(e) {

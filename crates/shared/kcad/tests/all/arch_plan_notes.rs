@@ -99,6 +99,44 @@ fn a_lift_shaft_s_vent_round_trips_under_arch_data_24() {
     assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the vent reads back");
 }
 
+/// Architecture data 25 (docs/adr/8136): a shaft room's protected role and a wall's fire stop role are written with
+/// `modules.arch = 25` and read back.
+#[test]
+fn a_protected_shaft_and_a_fire_stop_round_trip_under_arch_data_25() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_fire_stops(&doc));
+    for e in doc.entities.iter_mut() {
+        match e {
+            kentos_contracts::Entity::Space(s) if s.space.arch.protected.is_none() => {
+                s.space.name = Some("Tesisat şaftı".into());
+                s.space.void = true;
+                s.space.arch.protected = Some(kentos_contracts::DeclaredProtected {
+                    protected: true,
+                    basis: kentos_contracts::DeclaredBasis::Author,
+                });
+                break;
+            }
+            _ => {}
+        }
+    }
+    let wall = doc
+        .entities
+        .iter_mut()
+        .find_map(|e| match e {
+            kentos_contracts::Entity::Wall(w) => Some(w),
+            _ => None,
+        })
+        .expect("a wall");
+    wall.wall.arch.fire_stop = Some(kentos_contracts::DeclaredFireStop {
+        fire_stop: true,
+        basis: kentos_contracts::DeclaredBasis::Document { name: "Yangın raporu".into(), date: None },
+    });
+    assert!(kentos_kcad::uses_fire_stops(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_FIRE_STOPS);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the roles read back");
+}
+
 /// Architecture data 23 (docs/adr/8134): a material's roof covering class is written with `modules.arch = 23` and read
 /// back.
 #[test]

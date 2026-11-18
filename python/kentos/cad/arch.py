@@ -144,13 +144,14 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     kapı yüksekliği 2,10 m paiy_door_height_below, net temiz genişlik bina girişinde
     1,50, bağımsız bölüm girişinde 1,00, öbür kapılarda 0,90 m, 13.8.2025'e kadar balkon
     ve tuvalet kapısında 0,80 paiy_door_width_below, 39/1) ve yapı elemanlarının
-    dayanımı da (BYKHY Ek-3/B, Ek-3/C: taşıyıcı sistemin kolon ve kirişi R, döşemeler
-    REI, dış duvarlar ve kompartıman duvarları EI, korunumlu yangın merdiveni yuvası REI
-    120, teras döşemesi REI, çatı EI, kullanım sınıfına, yağmurlamaya, bina yüksekliğine
-    ve bodrum derinliğine göre; beyan edilen sınıf yetmezse ya da yoksa kat ve eleman
-    türü başına bykhy_element_resistance, yağmurlamasız konut dışı bina 30,50 m'yi
-    aşarsa bykhy_height_not_permitted) ve şaftlarla asansörler de (yüksek binada tesisat
-    şaftı ve bacanın duvarı en az EI 120, kapağı en az E 90 ve duman sızdırmaz
+    dayanımı da (BYKHY Ek-3/B, Ek-3/C: korunumlu beyanlı şaftın duvarları REI 120,
+    yangın kesici beyanlı duvar ve döşeme EI 30, taşıyıcı sistemin kolon ve kirişi R,
+    döşemeler REI, dış duvarlar ve kompartıman duvarları EI, korunumlu yangın merdiveni
+    yuvası REI 120, teras döşemesi REI, çatı EI, kullanım sınıfına, yağmurlamaya, bina
+    yüksekliğine ve bodrum derinliğine göre; beyan edilen sınıf yetmezse ya da yoksa kat
+    ve eleman türü başına bykhy_element_resistance, yağmurlamasız konut dışı bina 30,50
+    m'yi aşarsa bykhy_height_not_permitted) ve şaftlarla asansörler de (yüksek binada
+    tesisat şaftı ve bacanın duvarı en az EI 120, kapağı en az E 90 ve duman sızdırmaz
     bykhy_shaft_resistance, 25/3; tesisat şaftının kapağı kaçış merdivenine ya da yangın
     güvenlik holüne açılırsa bykhy_shaft_cover_stair, 41/9; asansör kuyusu en az EI 60
     bykhy_elevator_shaft, 62/2; asansör kuyusunda en az 0,1 m² olmak üzere kuyu alanının
@@ -408,13 +409,14 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         kapı yüksekliği 2,10 m paiy_door_height_below, net temiz genişlik bina girişinde
         1,50, bağımsız bölüm girişinde 1,00, öbür kapılarda 0,90 m, 13.8.2025'e kadar balkon
         ve tuvalet kapısında 0,80 paiy_door_width_below, 39/1) ve yapı elemanlarının
-        dayanımı da (BYKHY Ek-3/B, Ek-3/C: taşıyıcı sistemin kolon ve kirişi R, döşemeler
-        REI, dış duvarlar ve kompartıman duvarları EI, korunumlu yangın merdiveni yuvası REI
-        120, teras döşemesi REI, çatı EI, kullanım sınıfına, yağmurlamaya, bina yüksekliğine
-        ve bodrum derinliğine göre; beyan edilen sınıf yetmezse ya da yoksa kat ve eleman
-        türü başına bykhy_element_resistance, yağmurlamasız konut dışı bina 30,50 m'yi
-        aşarsa bykhy_height_not_permitted) ve şaftlarla asansörler de (yüksek binada tesisat
-        şaftı ve bacanın duvarı en az EI 120, kapağı en az E 90 ve duman sızdırmaz
+        dayanımı da (BYKHY Ek-3/B, Ek-3/C: korunumlu beyanlı şaftın duvarları REI 120,
+        yangın kesici beyanlı duvar ve döşeme EI 30, taşıyıcı sistemin kolon ve kirişi R,
+        döşemeler REI, dış duvarlar ve kompartıman duvarları EI, korunumlu yangın merdiveni
+        yuvası REI 120, teras döşemesi REI, çatı EI, kullanım sınıfına, yağmurlamaya, bina
+        yüksekliğine ve bodrum derinliğine göre; beyan edilen sınıf yetmezse ya da yoksa kat
+        ve eleman türü başına bykhy_element_resistance, yağmurlamasız konut dışı bina 30,50
+        m'yi aşarsa bykhy_height_not_permitted) ve şaftlarla asansörler de (yüksek binada
+        tesisat şaftı ve bacanın duvarı en az EI 120, kapağı en az E 90 ve duman sızdırmaz
         bykhy_shaft_resistance, 25/3; tesisat şaftının kapağı kaçış merdivenine ya da yangın
         güvenlik holüne açılırsa bykhy_shaft_cover_stair, 41/9; asansör kuyusu en az EI 60
         bykhy_elevator_shaft, 62/2; asansör kuyusunda en az 0,1 m² olmak üzere kuyu alanının
@@ -1241,20 +1243,28 @@ class _ArchPerformance(LocalCommand[ArchPerformance, ArchPerformanceDone, ArchPe
     ve kolon, dikme değil: kolon beyan yoksa çerçevenin kolonu olarak taşıyıcıdır) ve
     dışarıda olduğunu (external: external ve basis; duvar ve kaplama olmayan döşeme:
     çizimin okumasını, katın dış çizgisindeki duvarın, balkon ve teras döşemesinin
-    dışarıda olduğunu değiştirir; kapı ve pencere duvarı gibidir) verir; verilmeyen alan
-    kalır, null nesnenin kendi değerini kaldırır (duvar stilinin, kapı tipinin değerini,
-    çizimin okumasını taşır), hiçbiri yoksa nothing_to_set. exits kaçış yollarının
-    önerisi onaylanınca yes'teki kapıları ve merdivenleri acil çıkış, no'dakileri değil
-    diye müellif beyanıyla tek adımda yazar; ikisi de boşsa no_entities, bir nesne
-    ikisinde birden uid_in_both_lists, kapı ve merdivenden başkası field_not_for_kind.
-    wallStyle duvar stilinin (style: kimlik ya da ad, yoksa style_not_found),
-    openingType kapı ve pencere tipinin (type, yoksa opening_type_not_found) yangın
-    dayanım sınıfını verir; kendi değeri olmayan duvarlar ve açıklıklar onu taşır.
-    material malzemenin dayanım sınıfını (strength: C25, S355; harf, rakam ve / . , -
-    ile en çok 16, değilse invalid_strength; modelde Ad_Dayanım yazılır) ve TS EN
-    13501-1 yanıcılık sınıfını (reaction: A1, A2-s1,d0, B-s2,d0, E-d2, Bfl-s1; okunmazsa
-    invalid_declared operation.reaction.value) verir, verilmeyen kalır, null kaldırır,
-    ikisi de yoksa nothing_to_set; building binanın yangın koruma sınıfını
+    dışarıda olduğunu değiştirir; kapı ve pencere duvarı gibidir) ve asansör kuyusunun
+    havalandırmasını (shaftVent: area m², pressurized ve basis; adı Asansör olan mahal,
+    holü değil; bütün kuyu için bir katında; ne alan ne basınçlandırma, 0'dan büyük
+    olmayan ya da 100 m²'yi aşan alan invalid_declared operation.shaftVent.area) ve
+    şaftın korunumlu olduğunu (protected: protected ve basis; şaft olan boşluk mahal —
+    asansör kuyusu, tesisat şaftı, baca —, ışıklık değil; bütün şaft için bir katında)
+    ve yangın kesici olduğunu (fireStop: fireStop ve basis; duvar ve balkon ya da
+    kaplama olmayan döşeme) verir; verilmeyen alan kalır, null nesnenin kendi değerini
+    kaldırır (duvar stilinin, kapı tipinin değerini, çizimin okumasını taşır), hiçbiri
+    yoksa nothing_to_set. exits kaçış yollarının önerisi onaylanınca yes'teki kapıları
+    ve merdivenleri acil çıkış, no'dakileri değil diye müellif beyanıyla tek adımda
+    yazar; ikisi de boşsa no_entities, bir nesne ikisinde birden uid_in_both_lists, kapı
+    ve merdivenden başkası field_not_for_kind. wallStyle duvar stilinin (style: kimlik
+    ya da ad, yoksa style_not_found), openingType kapı ve pencere tipinin (type, yoksa
+    opening_type_not_found) yangın dayanım sınıfını verir; kendi değeri olmayan duvarlar
+    ve açıklıklar onu taşır. material malzemenin dayanım sınıfını (strength: C25, S355;
+    harf, rakam ve / . , - ile en çok 16, değilse invalid_strength; modelde Ad_Dayanım
+    yazılır) ve TS EN 13501-1 yanıcılık sınıfını (reaction: A1, A2-s1,d0, B-s2,d0, E-d2,
+    Bfl-s1; okunmazsa invalid_declared operation.reaction.value) ve çatı kaplaması
+    olarak TS EN 13501-5 dış yangın sınıfını (roofClass: BROOF, BROOF(t1) … FROOF(t4);
+    okunmazsa invalid_declared operation.roofClass.value) verir, verilmeyen kalır, null
+    kaldırır, ikisi de yoksa nothing_to_set; building binanın yangın koruma sınıfını
     (fireProtectionClass). Beyan value ve basis'tir: basis kind author (müellif beyanı)
     ya da document (name, isteğe bağlı date YYYY-AA-GG); boş, 64 karakterden uzun, satır
     sonlu değer ya da adsız belge, gün olmayan tarih invalid_declared. Varsayılan
@@ -1293,29 +1303,37 @@ class _ArchPerformance(LocalCommand[ArchPerformance, ArchPerformanceDone, ArchPe
         kolon beyan yoksa çerçevenin kolonu olarak taşıyıcıdır) ve dışarıda olduğunu
         (external: external ve basis; duvar ve kaplama olmayan döşeme: çizimin okumasını,
         katın dış çizgisindeki duvarın, balkon ve teras döşemesinin dışarıda olduğunu
-        değiştirir; kapı ve pencere duvarı gibidir) verir; verilmeyen alan kalır, null
-        nesnenin kendi değerini kaldırır (duvar stilinin, kapı tipinin değerini, çizimin
-        okumasını taşır), hiçbiri yoksa nothing_to_set. exits kaçış yollarının önerisi
-        onaylanınca yes'teki kapıları ve merdivenleri acil çıkış, no'dakileri değil diye
-        müellif beyanıyla tek adımda yazar; ikisi de boşsa no_entities, bir nesne ikisinde
-        birden uid_in_both_lists, kapı ve merdivenden başkası field_not_for_kind. wallStyle
-        duvar stilinin (style: kimlik ya da ad, yoksa style_not_found), openingType kapı ve
-        pencere tipinin (type, yoksa opening_type_not_found) yangın dayanım sınıfını verir;
-        kendi değeri olmayan duvarlar ve açıklıklar onu taşır. material malzemenin dayanım
-        sınıfını (strength: C25, S355; harf, rakam ve / . , - ile en çok 16, değilse
-        invalid_strength; modelde Ad_Dayanım yazılır) ve TS EN 13501-1 yanıcılık sınıfını
-        (reaction: A1, A2-s1,d0, B-s2,d0, E-d2, Bfl-s1; okunmazsa invalid_declared
-        operation.reaction.value) verir, verilmeyen kalır, null kaldırır, ikisi de yoksa
-        nothing_to_set; building binanın yangın koruma sınıfını (fireProtectionClass). Beyan
-        value ve basis'tir: basis kind author (müellif beyanı) ya da document (name, isteğe
-        bağlı date YYYY-AA-GG); boş, 64 karakterden uzun, satır sonlu değer ya da adsız
-        belge, gün olmayan tarih invalid_declared. Varsayılan yoktur: null değeri kaldırır,
-        eksik sayılır; boş metin yazılmaz. Kilitli katmandaki nesne layer_locked ile bütün
-        çağrıyı reddeder. Tek geri alma adımı “Yangın ve performans”; çizimin geometrisi
-        değişmez. Çıktı değeri şimdi taşıyan nesneler (kendi değeri, ya da tipin değeri
-        kendi değeri olmayan duvar ve açıklıklarda; malzemede ve binada boş) çizimin
-        sırasıyla ve sürüm. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir
-        şey yazılmaz, sonuç conflict olur.
+        değiştirir; kapı ve pencere duvarı gibidir) ve asansör kuyusunun havalandırmasını
+        (shaftVent: area m², pressurized ve basis; adı Asansör olan mahal, holü değil; bütün
+        kuyu için bir katında; ne alan ne basınçlandırma, 0'dan büyük olmayan ya da 100
+        m²'yi aşan alan invalid_declared operation.shaftVent.area) ve şaftın korunumlu
+        olduğunu (protected: protected ve basis; şaft olan boşluk mahal — asansör kuyusu,
+        tesisat şaftı, baca —, ışıklık değil; bütün şaft için bir katında) ve yangın kesici
+        olduğunu (fireStop: fireStop ve basis; duvar ve balkon ya da kaplama olmayan döşeme)
+        verir; verilmeyen alan kalır, null nesnenin kendi değerini kaldırır (duvar stilinin,
+        kapı tipinin değerini, çizimin okumasını taşır), hiçbiri yoksa nothing_to_set. exits
+        kaçış yollarının önerisi onaylanınca yes'teki kapıları ve merdivenleri acil çıkış,
+        no'dakileri değil diye müellif beyanıyla tek adımda yazar; ikisi de boşsa
+        no_entities, bir nesne ikisinde birden uid_in_both_lists, kapı ve merdivenden
+        başkası field_not_for_kind. wallStyle duvar stilinin (style: kimlik ya da ad, yoksa
+        style_not_found), openingType kapı ve pencere tipinin (type, yoksa
+        opening_type_not_found) yangın dayanım sınıfını verir; kendi değeri olmayan duvarlar
+        ve açıklıklar onu taşır. material malzemenin dayanım sınıfını (strength: C25, S355;
+        harf, rakam ve / . , - ile en çok 16, değilse invalid_strength; modelde Ad_Dayanım
+        yazılır) ve TS EN 13501-1 yanıcılık sınıfını (reaction: A1, A2-s1,d0, B-s2,d0, E-d2,
+        Bfl-s1; okunmazsa invalid_declared operation.reaction.value) ve çatı kaplaması
+        olarak TS EN 13501-5 dış yangın sınıfını (roofClass: BROOF, BROOF(t1) … FROOF(t4);
+        okunmazsa invalid_declared operation.roofClass.value) verir, verilmeyen kalır, null
+        kaldırır, ikisi de yoksa nothing_to_set; building binanın yangın koruma sınıfını
+        (fireProtectionClass). Beyan value ve basis'tir: basis kind author (müellif beyanı)
+        ya da document (name, isteğe bağlı date YYYY-AA-GG); boş, 64 karakterden uzun, satır
+        sonlu değer ya da adsız belge, gün olmayan tarih invalid_declared. Varsayılan
+        yoktur: null değeri kaldırır, eksik sayılır; boş metin yazılmaz. Kilitli katmandaki
+        nesne layer_locked ile bütün çağrıyı reddeder. Tek geri alma adımı “Yangın ve
+        performans”; çizimin geometrisi değişmez. Çıktı değeri şimdi taşıyan nesneler (kendi
+        değeri, ya da tipin değeri kendi değeri olmayan duvar ve açıklıklarda; malzemede ve
+        binada boş) çizimin sırasıyla ve sürüm. expectedRevision verilmişse ve çizim o
+        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

@@ -1,7 +1,7 @@
 {
   "format": "kentos.regulationCases",
   "version": 1,
-  "about": "Yapı elemanlarının yangına dayanım sürelerinin bağımsız durumları (docs/adr/8082): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik Ek-3/B ve Ek-3/C'nin tablolarından (PDF'in 91. ve 93. sayfaları; Ek-3/C RG 9.9.2009/27344) elle çıkarıldı; kuralın kodundan üretilmedi. Çatı ve teras durumları docs/adr/8087'den (Ek-3/B 4-b, 4-c), asma tavanınkiler docs/adr/8089'dan (Ek-3/B 11), beyan edilen taşıyıcılık ve kaçış yolu rolleriyle olanlar docs/adr/8090'dan (Ek-3/B 2, 4-a, 5, 6–7, Ek-3/C not 3). Olgular KentOS'un ölçüsüdür (building.elements, height, basementDepth, separations).",
+  "about": "Yapı elemanlarının yangına dayanım sürelerinin bağımsız durumları (docs/adr/8082): beklenen her sonuç Binaların Yangından Korunması Hakkında Yönetmelik Ek-3/B ve Ek-3/C'nin tablolarından (PDF'in 91. ve 93. sayfaları; Ek-3/C RG 9.9.2009/27344) elle çıkarıldı; kuralın kodundan üretilmedi. Çatı ve teras durumları docs/adr/8087'den (Ek-3/B 4-b, 4-c), asma tavanınkiler docs/adr/8089'dan (Ek-3/B 11), beyan edilen taşıyıcılık ve kaçış yolu rolleriyle olanlar docs/adr/8090'dan (Ek-3/B 2, 4-a, 5, 6–7, Ek-3/C not 3), korunumlu şaft ve yangın kesici beyanlarıyla olanlar docs/adr/8136'dan (Ek-3/B 8, 10). Olgular KentOS'un ölçüsüdür (building.elements, shafts, height, basementDepth, separations).",
   "cases": [
     {
       "id": "apartman-tamam",
@@ -2896,6 +2896,1913 @@
           "BYKHY Ek-3": [
             "expertReview",
             null
+          ]
+        }
+      }
+    },
+    {
+      "id": "korunumlu-saft-tamam",
+      "neden": "1. katta korunumlu beyan edilmiş tesisat şaftının dört duvarı REI 120: Ek-3/B 8 korunumlu şaft REI 120 → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000101",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000102",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000103",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000104",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0,
+        "shafts": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000100",
+            "level": "k01",
+            "name": "Tesisat şaftı",
+            "kind": "service",
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000101",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000102",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000103",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000104",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              }
+            ],
+            "openings": [],
+            "open": 0.0,
+            "area": 1.5,
+            "stack": "00000000-0000-4000-8000-000000000100",
+            "protected": true
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY Ek-3": [
+            "passed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "korunumlu-saft-ei",
+      "neden": "Korunumlu şaftın duvarları EI 120: Ek-3/B 8 REI ister, R yok → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000111",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "EI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000112",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "EI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000113",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "EI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000114",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "EI 120"
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0,
+        "shafts": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000110",
+            "level": "k01",
+            "name": "Tesisat şaftı",
+            "kind": "service",
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000111",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "EI 120"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000112",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "EI 120"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000113",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "EI 120"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000114",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "EI 120"
+              }
+            ],
+            "openings": [],
+            "open": 0.0,
+            "area": 1.5,
+            "stack": "00000000-0000-4000-8000-000000000110",
+            "protected": true
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "1. kat: 4 duvar EI 120",
+              "Ek-3/B 8 korunumlu şaft (her yüzü)",
+              "en az REI 120"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "korunumlu-saft-beyansiz",
+      "neden": "Korunumlu şaftın duvarlarının sınıfı beyan edilmemiş → eksik veri.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000121",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000122",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000123",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000124",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0,
+        "shafts": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000120",
+            "level": "k01",
+            "name": "Tesisat şaftı",
+            "kind": "service",
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000121",
+                "kind": "wall",
+                "length": 1.2
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000122",
+                "kind": "wall",
+                "length": 1.2
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000123",
+                "kind": "wall",
+                "length": 1.2
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000124",
+                "kind": "wall",
+                "length": 1.2
+              }
+            ],
+            "openings": [],
+            "open": 0.0,
+            "area": 1.5,
+            "stack": "00000000-0000-4000-8000-000000000120",
+            "protected": true
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "state": "missingData",
+            "has": [
+              "1. kat: 4 duvarın yangın sınıfı beyan edilmemiş",
+              "en az REI 120"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "missingData",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "korunumlu-saft-acik",
+      "neden": "Korunumlu şaftın üç duvarı REI 120, bir yanı 0,80 m açık: korunumlu şaft kapalıdır → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000131",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000132",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000133",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0,
+        "shafts": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000130",
+            "level": "k01",
+            "name": "Tesisat şaftı",
+            "kind": "service",
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000131",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000132",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000133",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              }
+            ],
+            "openings": [],
+            "open": 0.8,
+            "area": 1.5,
+            "stack": "00000000-0000-4000-8000-000000000130",
+            "protected": true
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "1. kat: korunumlu “Tesisat şaftı” şaftının 0.80 m'si açık",
+              "Ek-3/B 8"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "korunumlu-saft-duvarsiz",
+      "neden": "Korunumlu şaft yalnız mahal olarak çizilmiş, çevresinde duvar yok → eksik veri.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [],
+        "height": 12.0,
+        "basementDepth": 3.0,
+        "shafts": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000140",
+            "level": "k01",
+            "name": "Tesisat şaftı",
+            "kind": "service",
+            "walls": [],
+            "openings": [],
+            "open": 0.0,
+            "area": 1.5,
+            "stack": "00000000-0000-4000-8000-000000000140",
+            "protected": true
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "state": "missingData",
+            "has": [
+              "çevresinde duvar çizilmemiş",
+              "REI 120"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "missingData",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "korunumlu-katlarca",
+      "neden": "Zemin kattan 1. kata tek şaft; korunumlu beyanı yalnız 1. katın mahalinde: bütün şaft korunumludur, zemin katın REI 60 duvarları da REI 120 ister → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000151",
+            "kind": "wall",
+            "level": "k00",
+            "loadBearing": false,
+            "fireRating": "REI 60"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000152",
+            "kind": "wall",
+            "level": "k00",
+            "loadBearing": false,
+            "fireRating": "REI 60"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000153",
+            "kind": "wall",
+            "level": "k00",
+            "loadBearing": false,
+            "fireRating": "REI 60"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000154",
+            "kind": "wall",
+            "level": "k00",
+            "loadBearing": false,
+            "fireRating": "REI 60"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000155",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000156",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000157",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000158",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0,
+        "shafts": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000150",
+            "level": "k00",
+            "name": "Tesisat şaftı",
+            "kind": "service",
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000151",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 60"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000152",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 60"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000153",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 60"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000154",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 60"
+              }
+            ],
+            "openings": [],
+            "open": 0.0,
+            "area": 1.5,
+            "stack": "00000000-0000-4000-8000-000000000150"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000154",
+            "level": "k01",
+            "name": "Tesisat şaftı",
+            "kind": "service",
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000155",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000156",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000157",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000158",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              }
+            ],
+            "openings": [],
+            "open": 0.0,
+            "area": 1.5,
+            "stack": "00000000-0000-4000-8000-000000000150",
+            "protected": true
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "Zemin kat: 4 duvar REI 60",
+              "Ek-3/B 8",
+              "en az REI 120"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "korunumlu-farkli-beyan",
+      "neden": "Tek şaftın zemin katında korunumlu Evet, 1. katında Hayır: hangisi geçer belli değil → uzman incelemesi.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000161",
+            "kind": "wall",
+            "level": "k00",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000162",
+            "kind": "wall",
+            "level": "k00",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000163",
+            "kind": "wall",
+            "level": "k00",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000164",
+            "kind": "wall",
+            "level": "k00",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000165",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000166",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000167",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000168",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireRating": "REI 120"
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0,
+        "shafts": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000160",
+            "level": "k00",
+            "name": "Tesisat şaftı",
+            "kind": "service",
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000161",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000162",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000163",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000164",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              }
+            ],
+            "openings": [],
+            "open": 0.0,
+            "area": 1.5,
+            "stack": "00000000-0000-4000-8000-000000000160",
+            "protected": true
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000164",
+            "level": "k01",
+            "name": "Tesisat şaftı",
+            "kind": "service",
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000165",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000166",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000167",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000168",
+                "kind": "wall",
+                "length": 1.2,
+                "fireRating": "REI 120"
+              }
+            ],
+            "openings": [],
+            "open": 0.0,
+            "area": 1.5,
+            "stack": "00000000-0000-4000-8000-000000000160",
+            "protected": false
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "state": "expertReview",
+            "has": [
+              "korunumlu beyanı farklı",
+              "REI 120"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "expertReview",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "korunumlu-degil",
+      "neden": "Şaft korunumlu değil beyanlı, duvarları taşıyıcı olmayan iç duvar, sınıfsız: Ek-3/B 8 okunmaz, başka satır da istemez → kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000171",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000172",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000173",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000174",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0,
+        "shafts": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000170",
+            "level": "k01",
+            "name": "Tesisat şaftı",
+            "kind": "service",
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000171",
+                "kind": "wall",
+                "length": 1.2
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000172",
+                "kind": "wall",
+                "length": 1.2
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000173",
+                "kind": "wall",
+                "length": 1.2
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000174",
+                "kind": "wall",
+                "length": 1.2
+              }
+            ],
+            "openings": [],
+            "open": 0.0,
+            "area": 1.5,
+            "stack": "00000000-0000-4000-8000-000000000170",
+            "protected": false
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY Ek-3": [
+            "outOfScope",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "korunumlu-beyansiz-saft",
+      "neden": "Şaftın korunumlu olduğu beyan edilmemiş: yönetmelik korunumlu şaftı tanımlamaz, beyansız şaft korunumlu sayılmaz → kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000181",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000182",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000183",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000184",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0,
+        "shafts": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000180",
+            "level": "k01",
+            "name": "Tesisat şaftı",
+            "kind": "service",
+            "walls": [
+              {
+                "uid": "00000000-0000-4000-8000-000000000181",
+                "kind": "wall",
+                "length": 1.2
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000182",
+                "kind": "wall",
+                "length": 1.2
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000183",
+                "kind": "wall",
+                "length": 1.2
+              },
+              {
+                "uid": "00000000-0000-4000-8000-000000000184",
+                "kind": "wall",
+                "length": 1.2
+              }
+            ],
+            "openings": [],
+            "open": 0.0,
+            "area": 1.5,
+            "stack": "00000000-0000-4000-8000-000000000180"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY Ek-3": [
+            "outOfScope",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "yangin-kesici-tamam",
+      "neden": "1. katta yangın kesici beyanlı bölme duvar EI 30: Ek-3/B 10 EI 30 → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000190",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireStop": true,
+            "fireRating": "EI 30"
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY Ek-3": [
+            "passed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "yangin-kesici-e",
+      "neden": "Yangın kesici duvar E 30: Ek-3/B 10 E ve I ister → kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000191",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireStop": true,
+            "fireRating": "E 30"
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "1. kat: 1 duvar E 30",
+              "Ek-3/B 10 yangın kesici (her yüzü)",
+              "en az EI 30"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "yangin-kesici-beyansiz",
+      "neden": "Yangın kesici duvarın sınıfı beyan edilmemiş → eksik veri.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000192",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": false,
+            "fireStop": true
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "state": "missingData",
+            "has": [
+              "1 duvarın yangın sınıfı beyan edilmemiş",
+              "Ek-3/B 10",
+              "EI 30"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "missingData",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "yangin-kesici-tasiyici-r",
+      "neden": "Taşıyıcı iç duvar R 60 (Ek-3/B 2, 12 m apartman: R 60 tutar) aynı zamanda yangın kesici: Ek-3/B 10 E ve I de ister, R 60'ta yok → kalır, bulgu 10'un.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000193",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": true,
+            "fireStop": true,
+            "fireRating": "R 60"
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "bykhy_element_resistance",
+            "has": [
+              "1. kat: 1 duvar R 60",
+              "Ek-3/B 10 yangın kesici",
+              "en az EI 30"
+            ]
+          }
+        ],
+        "rules": {
+          "BYKHY Ek-3": [
+            "failed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "yangin-kesici-tasiyici-rei",
+      "neden": "Taşıyıcı ve yangın kesici iç duvar REI 60: R 60 da EI 30 da tutar → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000194",
+            "kind": "wall",
+            "level": "k01",
+            "loadBearing": true,
+            "fireStop": true,
+            "fireRating": "REI 60"
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY Ek-3": [
+            "passed",
+            "9.9.2009"
+          ]
+        }
+      }
+    },
+    {
+      "id": "yangin-kesici-doseme",
+      "neden": "1. katın döşemesi yangın kesici, REI 60: kendi satırı (Ek-3/B 3, Ek-3/C 60) REI 60 ister, EI 30'u da karşılar → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "b01",
+            "name": "Bodrum kat",
+            "elevation": -3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 0,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 0,
+            "elevators": 0
+          }
+        ],
+        "units": 8,
+        "dwellings": 8,
+        "elements": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000195",
+            "kind": "slab",
+            "level": "k01",
+            "fireStop": true,
+            "fireRating": "REI 60"
+          }
+        ],
+        "height": 12.0,
+        "basementDepth": 3.0
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "BYKHY Ek-3": [
+            "passed",
+            "9.9.2009"
           ]
         }
       }

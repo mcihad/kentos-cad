@@ -832,6 +832,8 @@ impl App {
                     .then_some(kentos_commands::DeclaredShaftVent { area, pressurized: on, basis });
                 properties::edit_shaft_vent(model, slot, vent)
             }
+            Event::Protected(slot, v) => properties::edit_roles(model, slot, Some(v), None),
+            Event::FireStop(slot, v) => properties::edit_roles(model, slot, None, Some(v)),
             Event::Levels(slots, level) => properties::assign_level(model, &slots, &level),
             Event::Tag(slot, change) => properties::edit_tag(model, slot, change),
             Event::ViewMark(slot, op) => properties::edit_viewmark(model, slot, op),

@@ -6,6 +6,8 @@ import type { Declared } from "./Declared";
 import type { DeclaredBearing } from "./DeclaredBearing";
 import type { DeclaredExit } from "./DeclaredExit";
 import type { DeclaredExternal } from "./DeclaredExternal";
+import type { DeclaredFireStop } from "./DeclaredFireStop";
+import type { DeclaredProtected } from "./DeclaredProtected";
 import type { DeclaredShaftVent } from "./DeclaredShaftVent";
 import type { TypeLink } from "./TypeLink";
 
@@ -39,6 +41,15 @@ external?: DeclaredExternal,
  * the whole shaft; absent: unknown (missing).
  */
 shaftVent?: DeclaredShaftVent, 
+/**
+ * A shaft room's declared protected role (docs/adr/8136, BYKHY Ek-3/B 8), said for the whole shaft; absent: not
+ * declared (a shaft is protected only when said so).
+ */
+protected?: DeclaredProtected, 
+/**
+ * A wall's or a slab's declared fire stop role (docs/adr/8136, BYKHY 4/pp, Ek-3/B 10); absent: not declared.
+ */
+fireStop?: DeclaredFireStop, 
 /**
  * The project's element type it follows (docs/adr/8106; `.kcad` Mimari data 19): a column's, beam's, slab's,
  * roof's, railing's or stair's, the version it took and the fields it keeps its own value of. Absent: none.

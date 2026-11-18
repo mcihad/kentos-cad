@@ -629,6 +629,15 @@ pub struct ArchInfo {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub shaft_vent: Option<crate::DeclaredShaftVent>,
+    /// A shaft room's declared protected role (docs/adr/8136, BYKHY Ek-3/B 8), said for the whole shaft; absent: not
+    /// declared (a shaft is protected only when said so).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub protected: Option<crate::DeclaredProtected>,
+    /// A wall's or a slab's declared fire stop role (docs/adr/8136, BYKHY 4/pp, Ek-3/B 10); absent: not declared.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fire_stop: Option<crate::DeclaredFireStop>,
     /// The project's element type it follows (docs/adr/8106; `.kcad` Mimari data 19): a column's, beam's, slab's,
     /// roof's, railing's or stair's, the version it took and the fields it keeps its own value of. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]

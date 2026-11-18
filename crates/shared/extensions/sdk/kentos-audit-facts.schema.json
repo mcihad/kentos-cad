@@ -952,6 +952,10 @@
             "null"
           ]
         },
+        "fireStop": {
+          "description": "A wall or a slab declared a fire stop (docs/adr/8136, BYKHY 4/pp, Ek-3/B 10).",
+          "type": "boolean"
+        },
         "frame": {
           "type": "boolean"
         },
@@ -1889,7 +1893,7 @@
       "type": "object"
     },
     "ShaftFacts": {
-      "description": "A shaft and what encloses it (docs/adr/8087): its persistent id, storey and name, `elevator` (an elevator's shaft) or\n`service` (a service shaft, a flue, an air shaft), the walls and openings met round it with their declared classes and\nlengths, and the length with neither, m. Its outline's area (m²), the shaft through the storeys it belongs to (its\nlowest room's persistent id) and a lift shaft's declared vent (docs/adr/8135; BYKHY 62/4).",
+      "description": "A shaft and what encloses it (docs/adr/8087): its persistent id, storey and name, `elevator` (an elevator's shaft) or\n`service` (a service shaft, a flue, an air shaft), the walls and openings met round it with their declared classes and\nlengths, and the length with neither, m. Its outline's area (m²), the shaft through the storeys it belongs to (its\nlowest room's persistent id) and a lift shaft's declared vent (docs/adr/8135; BYKHY 62/4); its declared protected role\n(docs/adr/8136; Ek-3/B 8), none when not declared.",
       "properties": {
         "area": {
           "default": 0.0,
@@ -1917,6 +1921,12 @@
             "$ref": "#/$defs/SeparatingElement"
           },
           "type": "array"
+        },
+        "protected": {
+          "type": [
+            "boolean",
+            "null"
+          ]
         },
         "stack": {
           "type": "string"

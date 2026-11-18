@@ -145,7 +145,8 @@ pub struct ExemptCap {
 /// A shaft and what encloses it (docs/adr/8087): its persistent id, storey and name, `elevator` (an elevator's shaft) or
 /// `service` (a service shaft, a flue, an air shaft), the walls and openings met round it with their declared classes and
 /// lengths, and the length with neither, m. Its outline's area (m²), the shaft through the storeys it belongs to (its
-/// lowest room's persistent id) and a lift shaft's declared vent (docs/adr/8135; BYKHY 62/4).
+/// lowest room's persistent id) and a lift shaft's declared vent (docs/adr/8135; BYKHY 62/4); its declared protected role
+/// (docs/adr/8136; Ek-3/B 8), none when not declared.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -163,6 +164,8 @@ pub struct ShaftFacts {
     pub stack: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub vent: Option<ShaftVentFacts>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protected: Option<bool>,
 }
 
 /// A lift shaft's declared ventilation and smoke vent (its free area, m²) or its pressurisation (docs/adr/8135).
@@ -209,6 +212,9 @@ pub struct ElementFacts {
     /// A roof declared an escape route (docs/adr/8090, Ek-3/B 4-a).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub escape: bool,
+    /// A wall or a slab declared a fire stop (docs/adr/8136, BYKHY 4/pp, Ek-3/B 10).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub fire_stop: bool,
 }
 
 /// A covering (docs/adr/8091): its persistent id, storey, IFC 4.3 type (`CEILING` a suspended ceiling, `FLOORING` a

@@ -54,7 +54,8 @@ key: string, check: ArchAuditCheck,
  * (docs/adr/8080), the fire compartments' (across storeys through galleries and stairs, docs/adr/8086)
  * `bykhy_hazard_room_separation`, `bykhy_compartment_storeys_over` (24/4), `bykhy_atrium` (24/5), `bykhy_compartment_area_over` and
  * `bykhy_compartment_opening` (docs/adr/8081), the elements' declared classes against Ek-3
- * `bykhy_element_resistance` and `bykhy_height_not_permitted` (docs/adr/8082; roofs and terraces, docs/adr/8087),
+ * `bykhy_element_resistance` and `bykhy_height_not_permitted` (docs/adr/8082; roofs and terraces, docs/adr/8087;
+ * protected shafts and fire stops, docs/adr/8136),
  * the shafts' and elevators' `bykhy_shaft_resistance` (25/3), `bykhy_shaft_cover_stair` (41/9),
  * `bykhy_elevator_shaft` (62/2), a lift shaft's vent or pressurisation `bykhy_elevator_shaft_vent` (62/4;
  * docs/adr/8135), `bykhy_elevator_door_room` (62/4), `bykhy_elevator_door_stair` (62/6) and

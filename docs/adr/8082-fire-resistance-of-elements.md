@@ -108,7 +108,7 @@ Tablolar yönetmeliğin PDF'inin 91. (Ek-3/A, Ek-3/B) ve 93. (Ek-3/C) sayfaları
 - **Korunumlu şaftlar** (REI 120), **asma tavan** ve **yangın kesici** (EI 30), **asansör kat kapıları** (E 30/60, yapı
   yüksekliği 51,50 m): kat kapıları ve yüksek binanın şaftları (25/3) [ADR 8087](8087-shafts-elevators-roofs.md)'de
   yapıldı; asma tavan [ADR 8089](8089-suspended-ceiling-fire-resistance.md)'da; korunumlu şaft beyanı ve yangın kesici
-  kaldı.
+  [ADR 8136](8136-protected-shafts-and-fire-stops.md)'da.
 - **Taşıyıcı duvar** (Ek-3/B 2): duvarın taşıyıcı olduğu beyanı modelde yok; not (3)'ün uzman incelemesini de kapatır.
   [ADR 8090](8090-declared-load-bearing-and-escape-roof.md)'da yapıldı (4-a'nın kaçış yolu çatısıyla birlikte).
 - **Dükkânla üstündeki kat arası** (3-b): mahallerin kullanımından.

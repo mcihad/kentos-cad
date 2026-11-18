@@ -251,6 +251,33 @@ pub struct DeclaredExternal {
     pub basis: DeclaredBasis,
 }
 
+/// A shaft room's declared protected (korunumlu) role and its basis (docs/adr/8136; BYKHY Ek-3/B 8: "Korunumlu Şaftlar"
+/// REI 120, each side): the regulation does not define a protected shaft, the designer says which is. One of the
+/// shaft's rooms says it for the whole shaft through the storeys.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DeclaredProtected {
+    /// Evet: the shaft is protected; hayır: it is not.
+    pub protected: bool,
+    pub basis: DeclaredBasis,
+}
+
+/// A wall's or a slab's declared fire stop (yangın kesici) role and its basis (docs/adr/8136; BYKHY 4/pp: an element,
+/// horizontal or vertical, stopping fire and smoke spreading for a set time; Ek-3/B 10: EI 30, each side).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DeclaredFireStop {
+    /// Evet: it is a fire stop; hayır: it is not.
+    pub fire_stop: bool,
+    pub basis: DeclaredBasis,
+}
+
 /// The building's declared particulars for the fire regulation (EK-6 Tablo 6.7): its fire protection class. The
 /// construction action (`ConstructionMethod`: new construction, addition, renovation) is the künye's building kind,
 /// worked out where it is written.

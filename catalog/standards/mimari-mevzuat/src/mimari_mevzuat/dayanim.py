@@ -1,5 +1,5 @@
 """Yapı elemanlarının yangına dayanım süreleri: Binaların Yangından Korunması Hakkında Yönetmelik Ek-3/B ve Ek-3/C
-(23, 24/1, 26/1, 29/7; docs/adr/8082, 8087, 8089, 8090).
+(23, 24/1, 26/1, 29/7; docs/adr/8082, 8087, 8089, 8090, 8136).
 
 Ek-3/C binanın kullanım sınıfına, yağmurlamasına ve elemanın yerine göre dakikayı verir: bodrum katlarda bodrumların
 derinliğine (10 m'den fazla, az), giriş ve üst katlarda bina yüksekliğine (5, 21,50, 30,50 m'den az; 30,50'den fazla).
@@ -17,6 +17,12 @@ Ek-3/B elemanın neyi taşıması gerektiğini söyler. Bu kural müellifin beya
 - **Çatı** (4): döşeme görevi yapan çatı (teras döşemesi) REI, dıştan yangına maruz çatı EI, Ek-3/C kadar (katının
   sütunuyla). Kaçış yolu olan çatı bölümü (4-a) çizimde okunmaz. Asansör kat kapıları (12) şaft kuralındadır (``kuyular``,
   62/7).
+- **Korunumlu şaft** (8, docs/adr/8136): korunumlu olduğu beyan edilen şaftın (yönetmelik tanımlamaz, müellif söyler)
+  duvarları REI 120, her yüzü; şaftın bir katındaki beyan katlarca bütün şafta geçer (olguların ``stack``'i). Katlarında
+  Evet ve Hayır birlikteyse uzman incelemesi; çevresinde duvar çizilmemişse eksik veri, açık yeri varsa kaldı.
+  Kapağının süresi bu satırda yok (yüksek binanınki 25/3'te, ``kuyular``).
+- **Yangın kesici** (10, docs/adr/8136; 4/pp): yangın kesici olduğu beyan edilen duvar ya da döşeme EI 30, her yüzü;
+  kendi satırı E ve I ile en az 30 istiyorsa o yeter, istemiyorsa (yalnız R, ya da daha az) ayrıca okunur.
 - **Asma tavan** (11): EI 30, alt taraftan; Ek-3/C'den bağımsız (docs/adr/8089).
 - **Beyan edilen roller** (docs/adr/8090): taşıyıcı duvar (2) R, Ek-3/C kadar (dış, kompartıman ve korunumlu merdiven
   duvarı kendi satırıyla, taşıyıcıysa R'si de); taşıyıcı olmayan dış duvarda not (3) 120'yi 90'a indirir (uzman
@@ -26,9 +32,10 @@ Ek-3/B elemanın neyi taşıması gerektiğini söyler. Bu kural müellifin beya
 Beyan yoksa eksik veri, okunmuyorsa eksik veri; yetmiyorsa kaldı. Bulgular kat, eleman türü ve sorun başına birdir.
 Sınırda (bina yüksekliği tam 30,50 m, bodrum derinliği tam 10 m) tablonun iki sütunu da tutmaz: uzman incelemesi.
 
-**Okunan olgular** (``facts.building``): elemanlar (``elements``: tür, kat, beyan, taşıyıcı sistemden mi, dış duvar mı),
-katlar, ayrımlar ve mahaller (kompartıman ve yangın merdiveni duvarları), bina yüksekliği, bodrum derinliği,
-kullanım, konut sayısı, yağmurlama.
+**Okunan olgular** (``facts.building``): elemanlar (``elements``: tür, kat, beyan, taşıyıcı sistemden mi, dış duvar mı,
+yangın kesici mi), katlar, ayrımlar ve mahaller (kompartıman ve yangın merdiveni duvarları), şaftlar (``shafts``:
+korunumlu beyanı, katlarca hangi şaft, çevresindeki duvarlar, açık boy), bina yüksekliği, bodrum derinliği, kullanım,
+konut sayısı, yağmurlama.
 """
 
 from __future__ import annotations
@@ -42,6 +49,9 @@ from .kompartiman import ayiriyor
 from .yangin_sinifi import okuma
 
 MADDELER = [("BYKHY", "Ek-3")]
+
+#: Bir şaftın çevresindeki açık yer bundan kısaysa sayılmaz (çizimin köşe gürültüsü; ``kuyular`` da böyle), m.
+_ACIK = 0.05
 
 _TUR = {"column": ("kolon", "kolonun"), "beam": ("kiriş", "kirişin"), "wall": ("duvar", "duvarın"),
         "slab": ("döşeme", "döşemenin"), "roof": ("çatı", "çatının"), "terrace": ("teras döşemesi", "teras döşemesinin"),
@@ -190,7 +200,8 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
         return {"rule": "BYKHY Ek-3", "title": hal.baslik, "version": hal.etiket, "gazette": hal.rg, "state": durum,
                 "note": not_}
 
-    if not elemanlar and not bina.get("separations"):
+    korunumlu_saft = any(s.get("protected") for s in bina.get("shafts") or [])
+    if not elemanlar and not bina.get("separations") and not korunumlu_saft:
         return y.Sonuc([], [satir(y.KAPSAM_DISI, "kolon, kiriş, duvar, döşeme, çatı ya da asma tavan yok")])
     sinif_, neden = _sinif_satiri(bina, hal)
     if sinif_ is None:
@@ -300,14 +311,69 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
                     harf = "REI" if w["uid"] in tasiyici else "EI"
                     istekler[w["uid"]] = (harf, max(dk, onceki[1] if onceki else 0),
                                           f"Ek-3/B 6–7 kompartıman duvarı en az {harf} 60; Ek-3/C {adi}, {soz}", None)
+    # Korunumlu şaft (8, docs/adr/8136): beyan katlarca bütün şafta geçer; duvarları REI 120, her yüzü.
+    yiginlar: dict[str, list[dict[str, Any]]] = {}
+    for s in bina.get("shafts") or []:
+        yiginlar.setdefault(s.get("stack") or s["uid"], []).append(s)
+    saft_duvarlari: dict[str, dict[str, Any]] = {}
+    for yigin, uyeler in yiginlar.items():
+        beyanlar = {s.get("protected") for s in uyeler if s.get("protected") is not None}
+        if True not in beyanlar:
+            continue
+        ad = uyeler[0].get("name") or "Şaft"
+        if False in beyanlar:
+            bulgular.append({"code": "bykhy_element_resistance", "state": y.UZMAN,
+                             "message": f"“{ad}”: şaftın katlarında korunumlu beyanı farklı (Evet ve Hayır); Ek-3/B 8 "
+                                        f"korunumlu şaftın duvarlarını en az REI 120 ister — BYKHY Ek-3",
+                             "repair": "Şaftın korunumlu olup olmadığını katlarından birinde ya da hepsinde aynı "
+                                       "beyan edin (Öznitelikler › Korunumlu).",
+                             "uids": sorted(s["uid"] for s in uyeler), "rule": hal.kural(),
+                             "_iz": f"{yigin}:korunumlu-farklı"})
+            continue
+        for s in uyeler:
+            yerde = kat_adi.get(s.get("level") or "", "Katsız")
+            if not s.get("walls") and not s.get("openings"):
+                bulgular.append({"code": "bykhy_element_resistance", "state": y.EKSIK_VERI,
+                                 "message": f"{yerde}: korunumlu “{ad}” şaftının çevresinde duvar çizilmemiş; Ek-3/B 8 "
+                                            f"duvarlarını en az REI 120 ister — BYKHY Ek-3",
+                                 "repair": "Şaftın duvarlarını çizin ve en az REI 120 beyan edin.", "uids": [s["uid"]],
+                                 "rule": hal.kural(), "_iz": f"{s['uid']}:korunumlu-duvarsız"})
+                continue
+            if float(s.get("open") or 0) > _ACIK:
+                acik = float(s["open"])
+                bulgular.append({"code": "bykhy_element_resistance",
+                                 "message": f"{yerde}: korunumlu “{ad}” şaftının {acik:.2f} m'si açık (duvar yok); "
+                                            f"Ek-3/B 8 korunumlu şaftı en az REI 120 duvarla kapalı ister — BYKHY Ek-3",
+                                 "repair": "Şaftın açık yerine en az REI 120 duvar çizin.", "uids": [s["uid"]],
+                                 "rule": hal.kural(), "_iz": f"{s['uid']}:korunumlu-açık"})
+            for w in s.get("walls") or []:
+                onceki = istekler.get(w["uid"])
+                istekler[w["uid"]] = ("REI", max(120, onceki[1] if onceki else 0),
+                                      "Ek-3/B 8 korunumlu şaft (her yüzü)", None)
+                saft_duvarlari.setdefault(w["uid"], {"uid": w["uid"], "kind": "wall", "level": s.get("level"),
+                                                     "fireRating": w.get("fireRating")})
+    # Yangın kesici (10, docs/adr/8136): EI 30, her yüzü. Elemanın kendi satırı E ve I ile en az 30 istiyorsa o yeter;
+    # istemiyorsa (yalnız R ya da daha az) ayrıca okunur.
+    ikinci: dict[str, tuple[str, int, str, int | None]] = {}
+    for e in elemanlar:
+        if not e.get("fireStop"):
+            continue
+        istek = ("EI", 30, "Ek-3/B 10 yangın kesici (her yüzü)", None)
+        onceki = istekler.get(e["uid"])
+        if onceki is None:
+            istekler[e["uid"]] = istek
+        elif not ("E" in onceki[0] and "I" in onceki[0] and onceki[1] >= 30):
+            ikinci[e["uid"]] = istek
     # Karşılaştırma: kat, tür ve sorun başına bir bulgu.
     turu = {e["uid"]: e for e in elemanlar}
+    for uid, e in saft_duvarlari.items():
+        turu.setdefault(uid, e)
     for a in bina.get("separations") or []:
         for w in a.get("walls") or []:
             turu.setdefault(w["uid"], {"uid": w["uid"], "kind": "wall", "level": a.get("level"),
                                        "fireRating": w.get("fireRating")})
     gruplar: dict[tuple, list[str]] = {}
-    for uid, (harf, dk, gerekce, uzman_siniri) in istekler.items():
+    for uid, (harf, dk, gerekce, uzman_siniri) in list(istekler.items()) + list(ikinci.items()):
         e = turu.get(uid)
         if e is None:
             continue
@@ -354,9 +420,9 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
     elif kaldi:
         durum = satir(y.KALDI, f"{len(kaldi)} eleman grubu Ek-3'ün süresini tutmuyor ({adi})")
     elif any(b.get("state") == y.EKSIK_VERI for b in bulgular):
-        durum = satir(y.EKSIK_VERI, f"elemanların yangın sınıfı beyan edilmemiş ({adi})")
+        durum = satir(y.EKSIK_VERI, f"elemanların yangın sınıfı beyan edilmemiş ya da çizimde eksik ({adi})")
     elif bulgular:
-        durum = satir(y.UZMAN, "taşıyıcı olup olmadığı ya da tablonun sınırı uzman incelemesi")
+        durum = satir(y.UZMAN, "taşıyıcılık, tablonun sınırı ya da şaftın korunumlu beyanı uzman incelemesi")
     elif not istekler:
         durum = satir(y.KAPSAM_DISI, "Ek-3'ün süre istediği eleman yok (taşıyıcı sistem, döşeme, çatı, asma tavan, dış "
                                      "ya da kompartıman duvarı)")

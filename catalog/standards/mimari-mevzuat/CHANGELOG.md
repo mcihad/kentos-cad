@@ -1,5 +1,14 @@
 # Değişiklikler
 
+## 0.29.0 — 18 Kasım 2026
+
+- Korunumlu şaft ve yangın kesici (`dayanim`; docs/adr/8136): BYKHY Ek-3/B 8, korunumlu olduğu beyan edilen şaftın
+  (yönetmelik tanımlamaz, müellif söyler; olguların yeni `shafts[].protected`'ı) duvarları REI 120, her yüzü; şaftın
+  bir katındaki beyan katlarca bütün şafta geçer, katlarında Evet ve Hayır birlikteyse uzman incelemesi, çevresinde duvar
+  çizilmemişse eksik veri, açık yeri varsa kaldı. Ek-3/B 10, yangın kesici beyan edilen duvar ya da döşeme (olguların
+  yeni `elements[].fireStop`'u) EI 30, her yüzü: kendi satırı E ve I ile en az 30 istiyorsa o yeter, istemiyorsa (yalnız R)
+  ayrıca okunur. Bulgu kodu `bykhy_element_resistance`. Ek-3'ün metnine yangın kesici ve asma tavan satırları eklendi.
+
 ## 0.28.0 — 18 Kasım 2026
 
 - Asansör kuyusunun havalandırması (`kuyular`; docs/adr/8135): BYKHY 62/4'ün ilk cümlesi (19.12.2007), asansör

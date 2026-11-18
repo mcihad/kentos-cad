@@ -17014,7 +17014,8 @@ class ArchAuditFinding(_Model):
             (docs/adr/8080), the fire compartments' (across storeys through galleries and stairs, docs/adr/8086)
             `bykhy_hazard_room_separation`, `bykhy_compartment_storeys_over` (24/4), `bykhy_atrium` (24/5), `bykhy_compartment_area_over` and
             `bykhy_compartment_opening` (docs/adr/8081), the elements' declared classes against Ek-3
-            `bykhy_element_resistance` and `bykhy_height_not_permitted` (docs/adr/8082; roofs and terraces, docs/adr/8087),
+            `bykhy_element_resistance` and `bykhy_height_not_permitted` (docs/adr/8082; roofs and terraces, docs/adr/8087;
+            protected shafts and fire stops, docs/adr/8136),
             the shafts' and elevators' `bykhy_shaft_resistance` (25/3), `bykhy_shaft_cover_stair` (41/9),
             `bykhy_elevator_shaft` (62/2), a lift shaft's vent or pressurisation `bykhy_elevator_shaft_vent` (62/4;
             docs/adr/8135), `bykhy_elevator_door_room` (62/4), `bykhy_elevator_door_stair` (62/6) and
@@ -17468,8 +17469,11 @@ class ArchInfo(_Model):
             on its storey's outline, a balcony's or a terrace's slab); absent: the drawing's.
         fire_rating: Its own fire resistance class (docs/adr/8068, EK-6 `FireRating`), over its type's (a wall style's); absent: its
             type's, else none (missing).
+        fire_stop: A wall's or a slab's declared fire stop role (docs/adr/8136, BYKHY 4/pp, Ek-3/B 10); absent: not declared.
         load_bearing: A wall's load-bearing role (docs/adr/8090, EK-6 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2); absent: unknown
             (missing).
+        protected: A shaft room's declared protected role (docs/adr/8136, BYKHY Ek-3/B 8), said for the whole shaft; absent: not
+            declared (a shaft is protected only when said so).
         shaft_vent: A lift shaft room's declared ventilation and smoke vent or pressurisation (docs/adr/8135, BYKHY 62/4), said for
             the whole shaft; absent: unknown (missing).
     """
@@ -17478,9 +17482,11 @@ class ArchInfo(_Model):
     exit: DeclaredExit | None | Unset = UNSET
     external: DeclaredExternal | None | Unset = UNSET
     fire_rating: Declared | None | Unset = UNSET
+    fire_stop: DeclaredFireStop | None | Unset = UNSET
     level: str | None | Unset = UNSET
     load_bearing: DeclaredBearing | None | Unset = UNSET
     phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
+    protected: DeclaredProtected | None | Unset = UNSET
     shaft_vent: DeclaredShaftVent | None | Unset = UNSET
     status: ArchStatus | ArchStatusName | None | Unset = UNSET
 
@@ -17496,12 +17502,16 @@ class ArchInfo(_Model):
             out["external"] = None if self.external is None else self.external.to_json()
         if self.fire_rating is not UNSET:
             out["fireRating"] = None if self.fire_rating is None else self.fire_rating.to_json()
+        if self.fire_stop is not UNSET:
+            out["fireStop"] = None if self.fire_stop is None else self.fire_stop.to_json()
         if self.level is not UNSET:
             out["level"] = self.level
         if self.load_bearing is not UNSET:
             out["loadBearing"] = None if self.load_bearing is None else self.load_bearing.to_json()
         if self.phase is not UNSET:
             out["phase"] = None if self.phase is None else _enum_out(self.phase)
+        if self.protected is not UNSET:
+            out["protected"] = None if self.protected is None else self.protected.to_json()
         if self.shaft_vent is not UNSET:
             out["shaftVent"] = None if self.shaft_vent is None else self.shaft_vent.to_json()
         if self.status is not UNSET:
@@ -17516,9 +17526,11 @@ class ArchInfo(_Model):
             exit=UNSET if "exit" not in data else None if data["exit"] is None else DeclaredExit.from_json(data["exit"]),
             external=UNSET if "external" not in data else None if data["external"] is None else DeclaredExternal.from_json(data["external"]),
             fire_rating=UNSET if "fireRating" not in data else None if data["fireRating"] is None else Declared.from_json(data["fireRating"]),
+            fire_stop=UNSET if "fireStop" not in data else None if data["fireStop"] is None else DeclaredFireStop.from_json(data["fireStop"]),
             level=data.get("level", UNSET),
             load_bearing=UNSET if "loadBearing" not in data else None if data["loadBearing"] is None else DeclaredBearing.from_json(data["loadBearing"]),
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
+            protected=UNSET if "protected" not in data else None if data["protected"] is None else DeclaredProtected.from_json(data["protected"]),
             shaft_vent=UNSET if "shaftVent" not in data else None if data["shaftVent"] is None else DeclaredShaftVent.from_json(data["shaftVent"]),
             status=UNSET if "status" not in data else None if data["status"] is None else _enum_in(ArchStatus, data["status"]),
         )
@@ -31594,6 +31606,55 @@ class DeclaredExternal(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> DeclaredExternal:
         return cls(
             external=data["external"],
+            basis=DeclaredBasis.from_json(data["basis"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeclaredFireStop(_Model):
+    """A wall's or a slab's declared fire stop (yangın kesici) role and its basis (docs/adr/8136; BYKHY 4/pp: an element,
+    horizontal or vertical, stopping fire and smoke spreading for a set time; Ek-3/B 10: EI 30, each side).
+    Attributes:
+        fire_stop: Evet: it is a fire stop; hayır: it is not.
+    """
+    fire_stop: bool
+    basis: DeclaredBasis
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["fireStop"] = self.fire_stop
+        out["basis"] = self.basis.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeclaredFireStop:
+        return cls(
+            fire_stop=data["fireStop"],
+            basis=DeclaredBasis.from_json(data["basis"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeclaredProtected(_Model):
+    """A shaft room's declared protected (korunumlu) role and its basis (docs/adr/8136; BYKHY Ek-3/B 8: "Korunumlu Şaftlar"
+    REI 120, each side): the regulation does not define a protected shaft, the designer says which is. One of the
+    shaft's rooms says it for the whole shaft through the storeys.
+    Attributes:
+        protected: Evet: the shaft is protected; hayır: it is not.
+    """
+    protected: bool
+    basis: DeclaredBasis
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["protected"] = self.protected
+        out["basis"] = self.basis.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeclaredProtected:
+        return cls(
+            protected=data["protected"],
             basis=DeclaredBasis.from_json(data["basis"]),
         )
 
@@ -139346,12 +139407,16 @@ class SlopePavementEdge(PavementEdge):
 @dataclass(kw_only=True, slots=True)
 class ObjectsPerformanceOperation(PerformanceOperation):
     """Nesneler: the objects' own fire resistance class (walls, slabs, columns, beams, roofs, railings, stairs, ramps,
-    doors, windows), exit role (doors, stairs; a roof as an escape route, BYKHY Ek-3/B 4-a) and load-bearing role
-    (walls but curtain walls, Ek-3/B 2; docs/adr/8090). A field absent stays; null takes the object's own away (a wall
-    then carries its style's class, a door its type's).
+    doors, windows), exit role (doors, stairs; a roof as an escape route, BYKHY Ek-3/B 4-a), load-bearing role
+    (walls but curtain walls, Ek-3/B 2; docs/adr/8090), exterior role (docs/adr/8124), a lift shaft's vent
+    (docs/adr/8135), a shaft's protected role and a wall's or a slab's fire stop role (docs/adr/8136). A field absent
+    stays; null takes the object's own away (a wall then carries its style's class, a door its type's).
     Attributes:
         external: A wall's or a slab's exterior role (docs/adr/8124, EK-6 `IsExternal`): over what the drawing says; null: the
             drawing's again.
+        fire_stop: A wall's or a slab's fire stop role (docs/adr/8136, BYKHY 4/pp, Ek-3/B 10); null: not declared again.
+        protected: A shaft room's protected role (docs/adr/8136, BYKHY Ek-3/B 8), said for the whole shaft; null: not declared
+            again.
         shaft_vent: A lift shaft room's ventilation and smoke vent or pressurisation (docs/adr/8135, BYKHY 62/4), said for the
             whole shaft; null: unknown again.
     """
@@ -139360,7 +139425,9 @@ class ObjectsPerformanceOperation(PerformanceOperation):
     exit: DeclaredExit | None | Unset = UNSET
     external: DeclaredExternal | None | Unset = UNSET
     fire_rating: Declared | None | Unset = UNSET
+    fire_stop: DeclaredFireStop | None | Unset = UNSET
     load_bearing: DeclaredBearing | None | Unset = UNSET
+    protected: DeclaredProtected | None | Unset = UNSET
     shaft_vent: DeclaredShaftVent | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -139372,8 +139439,12 @@ class ObjectsPerformanceOperation(PerformanceOperation):
             out["external"] = None if self.external is None else self.external.to_json()
         if self.fire_rating is not UNSET:
             out["fireRating"] = None if self.fire_rating is None else self.fire_rating.to_json()
+        if self.fire_stop is not UNSET:
+            out["fireStop"] = None if self.fire_stop is None else self.fire_stop.to_json()
         if self.load_bearing is not UNSET:
             out["loadBearing"] = None if self.load_bearing is None else self.load_bearing.to_json()
+        if self.protected is not UNSET:
+            out["protected"] = None if self.protected is None else self.protected.to_json()
         if self.shaft_vent is not UNSET:
             out["shaftVent"] = None if self.shaft_vent is None else self.shaft_vent.to_json()
         return out
@@ -139385,7 +139456,9 @@ class ObjectsPerformanceOperation(PerformanceOperation):
             exit=UNSET if "exit" not in data else None if data["exit"] is None else DeclaredExit.from_json(data["exit"]),
             external=UNSET if "external" not in data else None if data["external"] is None else DeclaredExternal.from_json(data["external"]),
             fire_rating=UNSET if "fireRating" not in data else None if data["fireRating"] is None else Declared.from_json(data["fireRating"]),
+            fire_stop=UNSET if "fireStop" not in data else None if data["fireStop"] is None else DeclaredFireStop.from_json(data["fireStop"]),
             load_bearing=UNSET if "loadBearing" not in data else None if data["loadBearing"] is None else DeclaredBearing.from_json(data["loadBearing"]),
+            protected=UNSET if "protected" not in data else None if data["protected"] is None else DeclaredProtected.from_json(data["protected"]),
             shaft_vent=UNSET if "shaftVent" not in data else None if data["shaftVent"] is None else DeclaredShaftVent.from_json(data["shaftVent"]),
         )
 
@@ -146486,6 +146559,8 @@ __all__ = [
     "DeclaredCrs",
     "DeclaredExit",
     "DeclaredExternal",
+    "DeclaredFireStop",
+    "DeclaredProtected",
     "DeclaredShaftVent",
     "DeclaredVertical",
     "DecurveCurveEdit",

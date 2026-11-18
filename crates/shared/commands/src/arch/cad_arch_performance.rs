@@ -13,7 +13,9 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
-use crate::{Declared, DeclaredBearing, DeclaredExit, DeclaredExternal, DeclaredShaftVent};
+use crate::{
+    Declared, DeclaredBearing, DeclaredExit, DeclaredExternal, DeclaredFireStop, DeclaredProtected, DeclaredShaftVent,
+};
 
 /// The command's name.
 pub const CAD_ARCH_PERFORMANCE: &str = "cad.arch.performance";
@@ -28,9 +30,10 @@ pub const CAD_ARCH_PERFORMANCE_VERSION: u32 = 1;
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum PerformanceOperation {
     /// Nesneler: the objects' own fire resistance class (walls, slabs, columns, beams, roofs, railings, stairs, ramps,
-    /// doors, windows), exit role (doors, stairs; a roof as an escape route, BYKHY Ek-3/B 4-a) and load-bearing role
-    /// (walls but curtain walls, Ek-3/B 2; docs/adr/8090). A field absent stays; null takes the object's own away (a wall
-    /// then carries its style's class, a door its type's).
+    /// doors, windows), exit role (doors, stairs; a roof as an escape route, BYKHY Ek-3/B 4-a), load-bearing role
+    /// (walls but curtain walls, Ek-3/B 2; docs/adr/8090), exterior role (docs/adr/8124), a lift shaft's vent
+    /// (docs/adr/8135), a shaft's protected role and a wall's or a slab's fire stop role (docs/adr/8136). A field absent
+    /// stays; null takes the object's own away (a wall then carries its style's class, a door its type's).
     #[serde(rename_all = "camelCase")]
     Objects {
         #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
@@ -79,6 +82,25 @@ pub enum PerformanceOperation {
         #[cfg_attr(feature = "ts", ts(as = "Option<Option<DeclaredShaftVent>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<DeclaredShaftVent>"))]
         shaft_vent: Option<Option<DeclaredShaftVent>>,
+        /// A shaft room's protected role (docs/adr/8136, BYKHY Ek-3/B 8), said for the whole shaft; null: not declared
+        /// again.
+        #[serde(
+            default,
+            with = "crate::cad_properties::nullable",
+            skip_serializing_if = "Option::is_none"
+        )]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Option<DeclaredProtected>>", optional))]
+        #[cfg_attr(feature = "schema", schemars(with = "Option<DeclaredProtected>"))]
+        protected: Option<Option<DeclaredProtected>>,
+        /// A wall's or a slab's fire stop role (docs/adr/8136, BYKHY 4/pp, Ek-3/B 10); null: not declared again.
+        #[serde(
+            default,
+            with = "crate::cad_properties::nullable",
+            skip_serializing_if = "Option::is_none"
+        )]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Option<DeclaredFireStop>>", optional))]
+        #[cfg_attr(feature = "schema", schemars(with = "Option<DeclaredFireStop>"))]
+        fire_stop: Option<Option<DeclaredFireStop>>,
     },
     /// Acil çıkışlar (docs/adr/8124): the doors and stairs whose emergency exit role is written at once, the escape
     /// routes' suggestion the author confirmed: those in `yes` are exits, those in `no` are not; each the author's

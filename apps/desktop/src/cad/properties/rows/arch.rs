@@ -122,8 +122,8 @@ fn railings_row(
 /// its storey's outline, a column of the frame carrying) is said with why, and the object's own declaration changes it.
 pub(crate) fn performance_rows(doc: &Document, slot: Slot, e: &Entity, locked: bool) -> Vec<Row> {
     use kentos_native_application::arch_performance::{
-        Carried, exit_of, exit_rated, external_of, external_rated, fire_rating_of, fire_rated, load_bearing_of,
-        load_bearing_rated,
+        Carried, exit_of, exit_rated, external_of, external_rated, fire_rating_of, fire_rated, fire_stop_of,
+        fire_stop_rated, load_bearing_of, load_bearing_rated,
     };
     if !fire_rated(e) {
         return Vec::new();
@@ -198,6 +198,23 @@ pub(crate) fn performance_rows(doc: &Document, slot: Slot, e: &Entity, locked: b
         } else {
             rows.push(Row::text("Dışarıda", yes_no(r.value)));
             rows.push(Row::note(&format!("Kendiliğinden: {}.", r.why)));
+        }
+    }
+    // Yangın kesici (docs/adr/8136; BYKHY 4/pp): a wall's or a slab's declared role; Ek-3/B 10 asks EI 30 of it.
+    if fire_stop_rated(e) {
+        let now = fire_stop_of(e).map(|x| x.fire_stop);
+        let words = match now {
+            Some(true) => "Evet",
+            Some(false) => "Hayır",
+            None => "Bilinmiyor",
+        };
+        let items = [(Some(true), "Evet"), (Some(false), "Hayır"), (None, "Bilinmiyor")]
+            .into_iter()
+            .map(|(v, label)| pick(label.to_owned(), now == v, Message::Properties(Event::FireStop(slot, v)), None))
+            .collect();
+        rows.push(Row::text("Yangın kesici", words).editor((!locked).then(|| select(words.to_owned(), items))));
+        if now == Some(true) {
+            rows.push(Row::note("Ek-3/B 10: en az EI 30, her yüzü."));
         }
     }
     rows

@@ -85,7 +85,8 @@ Yönetmeliğin metni derlenmiş resmî metinden (pdftotext; ADR 8081'in kopyası
   basınçlandırılmaz demek yazılmaz, null kaldırır; hole, odaya, duvara `field_not_for_kind`; kuyuya yangın sınıfı
   önce okunur; ne alan ne basınçlandırma, 0, 120 m², basınçlandırılsa da −0,1, adsız belge `invalid_declared`.
   Beklenenler `scripts/fixtures/arch_performance_cases.py`'nin ADR'den yazılmış kurallarından.
-- **`.kcad`:** `a_lift_shaft_s_vent_round_trips_under_arch_data_24` (yazılır, okunur; 23'ün okuyucusu reddeder).
+- **`.kcad`:** `a_lift_shaft_s_vent_round_trips_under_arch_data_24` (yazılır, okunur). Mimari verisi 24'ten küçük diyen
+  dosyadaki beyanı `decode` reddeder; bu ret sınamayla denenmedi.
 - **Olgular:** `fixtures/audit-facts/v1/mimari.json` yeniden yazıldı; fark yalnız asansör boşluğunun alanı (6.365 m² =
   1.90 × 3.35, duvar boyları 1.70 ve 3.15'in köşeleriyle) ve yığını (kendisi). SDK'nın Python sınamaları (mimari ve proje
   olguları) geçer.
