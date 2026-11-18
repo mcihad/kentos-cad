@@ -165,6 +165,10 @@ pub enum Event {
     BuildingZero(usize, String),
     /// A building's own Bölge chosen; none: the project's (docs/adr/8144).
     BuildingZone(usize, Option<kentos_commands::Zone>),
+    /// A building's own structural system chosen; none: the project's (docs/adr/8145).
+    BuildingStructure(usize, Option<kentos_commands::StructuralSystem>),
+    /// Its traditional architectural elements switched (cut stone masonry only).
+    BuildingTraditional(usize, bool),
     SharedBuilding(String, String),
     AddWing(usize),
     RemoveWing(usize, usize),
@@ -447,6 +451,21 @@ impl App {
             Event::BuildingZone(i, zone) => {
                 if let Some(b) = w.buildings.get_mut(i) {
                     b.zone = zone;
+                }
+            }
+            // A system other than cut stone masonry keeps no traditional elements (docs/adr/8094).
+            Event::BuildingStructure(i, system) => {
+                if let Some(b) = w.buildings.get_mut(i) {
+                    let kept = b.structure.is_some_and(|x| x.traditional);
+                    b.structure = system.map(|system| kentos_commands::BuildingStructure {
+                        system,
+                        traditional: kept && system == kentos_commands::StructuralSystem::CutStoneMasonry,
+                    });
+                }
+            }
+            Event::BuildingTraditional(i, on) => {
+                if let Some(x) = w.buildings.get_mut(i).and_then(|b| b.structure.as_mut()) {
+                    x.traditional = on;
                 }
             }
             Event::SharedBuilding(level, building) => {

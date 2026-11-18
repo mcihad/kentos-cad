@@ -299,8 +299,8 @@ impl Document {
         let arch = self.settings().arch.as_ref().unwrap_or(&empty);
         let program = &arch.program;
         let buried = buried_levels(arch);
-        // A traditional cut stone masonry building's taşlık, dış sofa and eyvan are out (22/1-m, docs/adr/8094).
-        let traditional_building = arch.traditional_cut_stone();
+        // A traditional cut stone masonry building's taşlık, dış sofa and eyvan are out (22/1-m, docs/adr/8094): the
+        // room's building's own declaration, else the project's (docs/adr/8145).
         // The places under stairs lower than 1.80 m are out of a unit's net area (4/1-ğ-3, docs/adr/8080).
         let unders = self.under_stairs();
         let mut search = SpaceSearch::new(self);
@@ -326,7 +326,7 @@ impl Document {
             let indoor = !x.void && !outdoor;
             let caretaker = indoor && names("KAPICI", &own, &theirs);
             let library = indoor && room_names::has(&own, "KUTUPHANE");
-            let traditional = traditional_building && !x.void && says_traditional(&own);
+            let traditional = !x.void && arch.traditional_cut_stone_on(x.arch.level.as_deref()) && says_traditional(&own);
             let storage_of = group
                 .filter(|g| g.kind == kentos_contracts::UnitKind::Annex)
                 .and_then(|g| g.annex_of.clone())
@@ -390,7 +390,12 @@ impl Document {
         let mut shapes: Vec<Vec<Area>> = vec![Vec::new(); rooms.len()];
         // A traditional cut stone masonry building's stone walls' parts within each room's contour (docs/adr/8095):
         // the exterior walls' and the interior walls', halved where two contours meet as the gross is.
-        let stone = if traditional_building { masonry::walls(self) } else { Default::default() };
+        // Only a traditional building's walls (docs/adr/8145): a wall on a storey of another building is not read.
+        let stone = if arch.any_traditional_cut_stone() {
+            masonry::walls(self, &|level| arch.traditional_cut_stone_on(level))
+        } else {
+            Default::default()
+        };
         let mut outer_part = vec![0.0; rooms.len()];
         let mut inner_part = vec![0.0; rooms.len()];
         let levels: std::collections::BTreeSet<Option<String>> =

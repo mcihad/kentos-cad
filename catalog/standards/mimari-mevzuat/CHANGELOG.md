@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 0.35.0 — 18 Kasım 2026
+
+- Binanın kendi taşıyıcı sistemi (docs/adr/8145): olguların katları binasının kendi sistemini (`structuralSystem`,
+  `traditional`) taşır. `kat_yuksekligi` bir binası kendi sistemini söylüyorsa da katları binalarına ayırır (28/1-d bina
+  bina). `emsal`: 22/1-m her binanın taşlık, dış sofa ve eyvanını kendi kat sayısıyla okur; kalın taş duvarların (5/8,
+  20/8-j) toplamı bina bina ayrılmadığından birden çok geleneksel binanın biri 3 katı aşıyorsa uzman incelemesi. Kat
+  yüksekliği 47, emsal 41 (birer yeni) bağımsız durum.
+
 ## 0.34.0 — 18 Kasım 2026
 
 - Binanın kendi bölgesi (`kat_yuksekligi`; docs/adr/8144): olguların katları binasını (`building`) ve binasının kendi

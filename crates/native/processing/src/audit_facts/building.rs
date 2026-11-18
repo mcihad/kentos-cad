@@ -90,6 +90,12 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             // Its building and that building's own Bölge (docs/adr/8072, 8144).
             building: program.building_of_level(&l.id).map(|b| b.id.clone()),
             zone: program.building_of_level(&l.id).and_then(|b| b.zone).map(|z| z.name().to_owned()),
+            // And that building's own structural system (docs/adr/8145).
+            structural_system: program
+                .building_of_level(&l.id)
+                .and_then(|b| b.structure)
+                .map(|x| x.system.name().to_owned()),
+            traditional: program.building_of_level(&l.id).and_then(|b| b.structure).is_some_and(|x| x.traditional),
             ..StoreyHolds::default()
         })
         .collect();
@@ -283,7 +289,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
         layout: arch.layout.map(|l| l.name().to_owned()),
         structural_system: arch.structure.map(|s| s.system.name().to_owned()),
         traditional: arch.structure.is_some_and(|s| s.traditional),
-        masonry: arch.traditional_cut_stone().then(|| MasonryFacts {
+        masonry: arch.any_traditional_cut_stone().then(|| MasonryFacts {
             walls: counted.masonry,
             footprint: counted.masonry_footprint,
             thick: counted.masonry_walls.clone(),

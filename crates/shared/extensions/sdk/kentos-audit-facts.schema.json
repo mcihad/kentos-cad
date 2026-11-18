@@ -2286,11 +2286,22 @@
           "description": "An escape stair's room stands on it: the stair serves it (BYKHY 47/3 counts them).",
           "type": "boolean"
         },
+        "structuralSystem": {
+          "description": "Its building's own structural system (docs/adr/8145), as the facts' `structuralSystem`; none: the project's.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "technical": {
           "description": "Technical rooms on it, whatever their group: a heat centre, a boiler room, an electricity room, a water tank, a\nclimate plant, a generator room, a pump or a transformer room, by their name or use.",
           "format": "uint32",
           "minimum": 0,
           "type": "integer"
+        },
+        "traditional": {
+          "description": "Its building's own declaration of traditional architectural elements (with `structural_system`).",
+          "type": "boolean"
         },
         "units": {
           "description": "Rooms of an independent unit on it.",

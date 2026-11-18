@@ -2453,6 +2453,215 @@
       }
     },
     {
+      "id": "iki-blok-taslik",
+      "neden": "İki geleneksel kesme taş yığma blok (docs/adr/8145; her biri kendi beyanıyla), 22/1-m'nin 31.12.2022 hâli: A bloğu zemin dahil 2 kat, zemin katındaki taşlık yeri tutar, bahçeyle bağlantısı okunmaz → uzman incelemesi; B bloğu zemin dahil 4 kat, zemin katındaki eyvan 22/1-m'nin 3 katı geçmeyen binasında değil → kalır. Her blok kendi katlarıyla; satır kaldı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "a0",
+            "name": "a0",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000301",
+              "00000000-0000-4000-8000-000000000302"
+            ],
+            "height": 3.0,
+            "building": "a",
+            "structuralSystem": "cutStoneMasonry",
+            "traditional": true
+          },
+          {
+            "level": "a1",
+            "name": "a1",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000303"
+            ],
+            "height": 3.0,
+            "building": "a",
+            "structuralSystem": "cutStoneMasonry",
+            "traditional": true
+          },
+          {
+            "level": "b0",
+            "name": "b0",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000311"
+            ],
+            "height": 3.0,
+            "building": "b",
+            "structuralSystem": "cutStoneMasonry",
+            "traditional": true
+          },
+          {
+            "level": "b1",
+            "name": "b1",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000312"
+            ],
+            "height": 3.0,
+            "building": "b",
+            "structuralSystem": "cutStoneMasonry",
+            "traditional": true
+          },
+          {
+            "level": "b2",
+            "name": "b2",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000313"
+            ],
+            "height": 3.0,
+            "building": "b",
+            "structuralSystem": "cutStoneMasonry",
+            "traditional": true
+          },
+          {
+            "level": "b3",
+            "name": "b3",
+            "elevation": 9.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000314"
+            ],
+            "height": 3.0,
+            "building": "b",
+            "structuralSystem": "cutStoneMasonry",
+            "traditional": true
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "limits": [
+          {
+            "limit": "traditional",
+            "rooms": [
+              "00000000-0000-4000-8000-000000000301",
+              "00000000-0000-4000-8000-000000000311"
+            ],
+            "area": 30.0,
+            "allowed": 30.0,
+            "over": 0.0
+          }
+        ],
+        "spaces": [
+          {
+            "uid": "00000000-0000-4000-8000-000000000301",
+            "level": "a0",
+            "name": "Taşlık",
+            "area": 18.0
+          },
+          {
+            "uid": "00000000-0000-4000-8000-000000000311",
+            "level": "b0",
+            "name": "Eyvan",
+            "area": 12.0
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_traditional_not_exempt",
+            "state": "expertReview",
+            "has": [
+              "18.00 m²",
+              "bahçeyle bağlantısı"
+            ]
+          },
+          {
+            "code": "paiy_traditional_not_exempt",
+            "has": [
+              "12.00 m²",
+              "zemin dahil 4 katlı"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 22/1-ç": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-f": [
+            "outOfScope",
+            "23.1.2021"
+          ],
+          "PAİY 22/1-k": [
+            "outOfScope",
+            "25.7.2019"
+          ],
+          "PAİY 22/1-l": [
+            "outOfScope",
+            "11.7.2021"
+          ],
+          "PAİY 22/1-m": [
+            "failed",
+            "31.12.2022"
+          ]
+        }
+      }
+    },
+    {
       "id": "taslik-dort-kat",
       "neden": "Taşlık emsal harici sayılmış ama bina zemin dahil 4 katlı: 22/1-m zemin dahil 3 katı geçmeyen binayı okur → kalır.",
       "permit": {

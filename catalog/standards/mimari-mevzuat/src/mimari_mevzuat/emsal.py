@@ -83,6 +83,38 @@ def _sinirlar(bina: dict[str, Any], ad: str) -> list[dict[str, Any]]:
     return [s for s in bina.get("limits") or [] if s.get("limit") == ad]
 
 
+def _binalar(bina: dict[str, Any]) -> list[dict[str, Any]]:
+    """Bir binası kendi taşıyıcı sistemini söylüyorsa (docs/adr/8145; katın ``structuralSystem``'ı) her binanın görüşü:
+    katları, taşıyıcı sistemi (kendininki, yoksa projeninki) ve sınırların o binanın mahalleri (alanları mahallerinden);
+    söylemiyorsa yalnız bina."""
+    katlar = bina.get("storeys") or []
+    if not any(k.get("structuralSystem") for k in katlar):
+        return [bina]
+    alanlar = {m["uid"]: float(m.get("area") or 0.0) for m in bina.get("spaces") or []}
+    gruplar: dict[Any, list[dict[str, Any]]] = {}
+    for k in katlar:
+        gruplar.setdefault(k.get("building"), []).append(k)
+    out = []
+    for grup in gruplar.values():
+        mahaller = {u for k in grup for u in k.get("rooms") or []}
+        sinirlar = []
+        for s in bina.get("limits") or []:
+            burada = [u for u in s.get("rooms") or [] if u in mahaller]
+            if burada:
+                sinirlar.append(dict(s, rooms=burada, area=sum(alanlar.get(u, 0.0) for u in burada)
+                                     if len(burada) < len(s.get("rooms") or []) else s.get("area")))
+        kendi = next((k for k in grup if k.get("structuralSystem")), None)
+        yapi = ({"structuralSystem": kendi["structuralSystem"], "traditional": bool(kendi.get("traditional"))}
+                if kendi else {})
+        out.append(dict(bina, storeys=grup, limits=sinirlar, **yapi))
+    return out
+
+
+def _geleneksel_mi(bina: dict[str, Any]) -> bool:
+    """Proje ya da bir binası geleneksel kesme taş yığma diye beyan ediliyor mu (docs/adr/8094, 8145)."""
+    return any(kat_yuksekligi.geleneksel(b) for b in _binalar(bina))
+
+
 def kapici(bina: dict[str, Any], hal: y.Hal) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """22/1-ç: emsal harici sayılan kapıcı dairesi 44/1'e göre zorunlu mu."""
     sinirlar = _sinirlar(bina, "caretaker")
@@ -265,7 +297,7 @@ _ADLAR = {"22/1-ç": "caretaker", "22/1-f": "library", "22/1-k": "storage", "22/
 def duvarlar(bina: dict[str, Any], gun: date) -> y.Sonuc:
     """20/8-j ve 5/8: geleneksel kesme taş yığma binanın kalın taş duvarlarının payı, tablonun saydığı gibi."""
     m = bina.get("masonry")
-    if not kat_yuksekligi.geleneksel(bina) or m is None:
+    if not _geleneksel_mi(bina) or m is None:
         return y.Sonuc([], [])
     duvar, taban = float(m.get("walls") or 0.0), float(m.get("footprint") or 0.0)
     kalin, beyansiz = list(m.get("thick") or []), list(m.get("undeclared") or [])
@@ -287,10 +319,22 @@ def duvarlar(bina: dict[str, Any], gun: date) -> y.Sonuc:
         not_ = "12,50 cm'den kalın taşıyıcı taş duvar yok"
         durum = y.EKSIK_VERI if beyansiz else y.KAPSAM_DISI
         return y.Sonuc(bulgular, [_satir(h20, durum, not_), _satir(h58, durum, not_)])
-    n = len(kat_yuksekligi.ustteki(bina))
+    # Geleneksel binaların zemin dahil kat sayıları (docs/adr/8145): duvarların toplamı bina bina ayrılmaz.
+    sayilar = sorted({len(kat_yuksekligi.ustteki(b)) for b in _binalar(bina) if kat_yuksekligi.geleneksel(b)})
+    n = sayilar[-1] if sayilar else 0
     en_cok = int(y.haller("PAİY", "20/8-j")[-1].anahtar["storeys"])
     onarim = ("Duvarların kalın kısmını emsale dahil sayın: taşıyıcı sistem beyanını (Proje ayarları › Mimari › Taşıyıcı "
               "sistem) binanın gerçek durumuna getirin.")
+    if n > en_cok and sayilar[0] <= en_cok:
+        bulgular.append(_bulgu(
+            "paiy_masonry_walls_not_exempt",
+            f"Taş duvarların kalın kısmı emsal harici ({_m2(duvar)} m²) sayılmış; geleneksel binalardan biri zemin dahil "
+            f"{n} katlı, öbürü {sayilar[0]}: 20/8-j ve 5/8 zemin dahil {en_cok} katı geçmeyen binayı okur, duvarlar bina "
+            f"bina ayrılmıyor — {h58.kisa()}",
+            "Çok katlı geleneksel binanın duvarlarını uzman incelesin; uygunsa uzman onayıyla işaretleyin.",
+            h58.kural(), kalin[:20], "binalar", y.UZMAN))
+        not_ = f"geleneksel binalar zemin dahil {sayilar[0]} ve {n} katlı; duvarlar bina bina uzman incelemesi"
+        return y.Sonuc(bulgular, [_satir(h20, y.UZMAN, not_), _satir(h58, y.UZMAN, not_)])
     if n > en_cok:
         bulgular.append(_bulgu(
             "paiy_masonry_walls_not_exempt",
@@ -345,7 +389,7 @@ def sivas_duvarlar(bina: dict[str, Any], gun: date) -> y.Sonuc:
     """Sivas 22/k: kalın taş duvarlar %30'un içinde; tablonun %30'un içinde saydığıyla birlikte sınırı aşıyor mu."""
     m = bina.get("masonry")
     h = y.hal("Sivas", "22/k", gun)
-    if bina.get("local") != "sivas" or not kat_yuksekligi.geleneksel(bina) or m is None or h is None:
+    if bina.get("local") != "sivas" or not _geleneksel_mi(bina) or m is None or h is None:
         return y.Sonuc([], [])
     duvar, kalin = float(m.get("walls") or 0.0), list(m.get("thick") or [])
     if duvar <= 0:
@@ -404,8 +448,9 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
         b, s = denetim(bina, hal)
         bulgular += b
         satirlar.append(s)
-    # 22/1-m yalnız geleneksel kesme taş yığma diye beyan edilen binada (docs/adr/8094).
-    if kat_yuksekligi.geleneksel(bina) or _sinirlar(bina, "traditional"):
+    # 22/1-m yalnız geleneksel kesme taş yığma diye beyan edilen binada (docs/adr/8094); bir binası kendi taşıyıcı
+    # sistemini söylüyorsa bina bina (docs/adr/8145): her binanın mahalleri kendi kat sayısıyla.
+    if _geleneksel_mi(bina) or _sinirlar(bina, "traditional"):
         hal = y.hal("PAİY", "22/1-m", gun)
         if hal is None:
             uids = sorted({u for s in _sinirlar(bina, "traditional") for u in s["rooms"]})
@@ -414,9 +459,18 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
                 bulgular.append(b)
                 satirlar.append(s)
         else:
-            b, s = geleneksel(bina, hal)
-            bulgular += b
-            satirlar.append(s)
+            parcalar = [geleneksel(b, hal) for b in _binalar(bina)
+                        if kat_yuksekligi.geleneksel(b) or _sinirlar(b, "traditional")]
+            for b, _ in parcalar:
+                bulgular += b
+            if len(parcalar) == 1:
+                satirlar.append(parcalar[0][1])
+            elif parcalar:
+                for r in y.birlesik([y.Sonuc(b, [s]) for b, s in parcalar]):
+                    r.pop("sayilar")
+                    r["note"] = " · ".join(dict.fromkeys(s["note"] for _, s in parcalar
+                                                         if s["state"] == r["state"] and s["note"]))
+                    satirlar.append(r)
     # Kalın taş duvarlar (docs/adr/8095) ve Sivas'ın 22/k'si (docs/adr/8096).
     d = duvarlar(bina, gun)
     k = sivas_duvarlar(bina, gun)

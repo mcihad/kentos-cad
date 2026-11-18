@@ -422,6 +422,10 @@
     Binalar'da Bölge (yoksa projeninki; mimari verisi 30); katın bölgesi binasınınki (`zone_on`). Olgularda katın
     `building`'i ve `zone`'u; `kat_yuksekligi` bir binası kendi bölgesini söylüyorsa katları binalarına ayırır, her biri
     kendi bendiyle (28/1-d'nin kat sayısı binanınki), satırlar birleşir.
+  - **Binanın kendi taşıyıcı sistemi (18 Kasım 2026; [ADR 8145](../adr/8145-structure-per-building.md), K371–K373):**
+    Bina programı › Binalar'da Taşıyıcı sistem ve geleneksel öğeler (mimari verisi 31); emsal tablosu 22/1-m'nin
+    mahallerini ve kalın taş duvarları yalnız geleneksel binaların katlarında sayar; 28/1-d ve 22/1-m bina bina; kalın
+    duvarların toplamı bina bina ayrılmaz: birden çok geleneksel binanın biri 3 katı aşıyorsa uzman incelemesi.
   - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
     PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
     39/1-ç döner kapının yanında normal bina girişi.

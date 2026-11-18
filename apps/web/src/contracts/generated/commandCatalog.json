@@ -194770,6 +194770,17 @@
         "name": {
           "type": "string"
         },
+        "structure": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BuildingStructure"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its own structural system and traditional elements (docs/adr/8145; `.kcad` Mimari data 31): a block built\notherwise than the others, PAİY 22/1-m, 28/1-d, 5/8 and 20/8-j read its storeys by it. None: the project's\n(Proje ayarları › Mimari › Taşıyıcı sistem)."
+        },
         "usage": {
           "description": "What it is used for (Kullanım türü; EK-6 Tablo 6.7 `OccupancyType`), as the project writes it.",
           "type": [

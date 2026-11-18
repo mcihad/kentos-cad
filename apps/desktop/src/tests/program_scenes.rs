@@ -362,6 +362,9 @@ fn blocks(app: &mut App) {
     ev(app, Event::BuildingZero(0, "0".into()));
     // A Blok stands on a commercial decision (docs/adr/8144): its own Bölge.
     ev(app, Event::BuildingZone(0, Some(kentos_commands::Zone::Commercial)));
+    // B Blok is built of cut stone with traditional elements (docs/adr/8145): its own structural system.
+    ev(app, Event::BuildingStructure(1, Some(kentos_commands::StructuralSystem::CutStoneMasonry)));
+    ev(app, Event::BuildingTraditional(1, true));
     ev(app, Event::BuildingCode(1, "B1".into()));
     ev(app, Event::BuildingUsage(1, "Ticaret".into()));
     ev(app, Event::BuildingZero(1, "1,20".into()));
@@ -369,6 +372,12 @@ fn blocks(app: &mut App) {
     ev(app, Event::Save);
     fit(app, -0.5, -0.5, UP + 5.5, 10.0);
     window(app, Tab::Buildings);
+}
+
+/// B Blok chosen in Binalar (docs/adr/8145): its own structural system, cut stone masonry with traditional elements.
+fn blocks_structure(app: &mut App) {
+    blocks(app);
+    let _ = app.update(Message::Arch(arch::Event::Program(Event::ChooseBuilding(1))));
 }
 
 /// Metraj on A Blok (docs/adr/8072 §4): the storeys it counts, the shared ground floor among them; its choice in the
@@ -487,6 +496,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("bina-programi-birlestir", merge),
         ("bina-pay-binalar", share_buildings),
         ("bina-ortak-kat", blocks),
+        ("bina-tasiyici-sistem", blocks_structure),
         ("bina-metraj", blocks_quantities),
         ("bina-ruhsat", blocks_permit),
         ("bina-pay-bolumler", share_units),
@@ -598,6 +608,10 @@ mod tests {
         let storeys: Vec<(&str, Option<&str>, Option<&str>)> =
             facts.storeys.iter().map(|s| (s.level.as_str(), s.building.as_deref(), s.zone.as_deref())).collect();
         assert!(storeys.contains(&("kat-1", Some("a"), Some("commercial"))), "{storeys:?}");
+        // B Blok's own structural system (docs/adr/8145); its storeys read by it, A Blok's by the project's.
+        let own = program.buildings[1].structure.expect("B Blok's system");
+        assert!(own.traditional_cut_stone(), "{own:?}");
+        assert!(!mimari.traditional_cut_stone_on(Some("kat-1")) && mimari.any_traditional_cut_stone());
         let _ = app.update(Message::Arch(arch::Event::Program(Event::BuildingCode(1, "00".into()))));
         let _ = app.update(Message::Arch(arch::Event::Program(Event::Save)));
         let kept = app.document.as_ref().expect("a drawing").model.program();

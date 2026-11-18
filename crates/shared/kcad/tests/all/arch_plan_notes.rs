@@ -202,6 +202,31 @@ fn a_building_s_zone_round_trips_under_arch_data_30() {
     assert!(e.message.contains("sürüm 30'dan önce yok"), "{e}");
 }
 
+/// Architecture data 31 (docs/adr/8145): a program building's own structural system is written with `modules.arch = 31`
+/// and read back; the same file saying 30 is refused.
+#[test]
+fn a_building_s_structure_round_trips_under_arch_data_31() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_building_structures(&doc));
+    let arch = doc.settings.arch.get_or_insert_with(Default::default);
+    arch.program.buildings.push(kentos_contracts::ProgramBuilding {
+        id: "a".into(),
+        name: "A Blok".into(),
+        structure: Some(kentos_contracts::BuildingStructure {
+            system: kentos_contracts::StructuralSystem::CutStoneMasonry,
+            traditional: true,
+        }),
+        ..Default::default()
+    });
+    assert!(kentos_kcad::uses_building_structures(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_BUILDING_STRUCTURES);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the structure reads back");
+    let e = kentos_kcad::decode(&saying_arch(&bytes, 31, 30)).expect_err("refused");
+    assert_eq!(e.code, kentos_kcad::Code::UnknownField, "{e}");
+    assert!(e.message.contains("sürüm 31'den önce yok"), "{e}");
+}
+
 /// `bytes` with `modules.arch` saying `to` instead of `from` (CBOR: the text "arch", then 0x18 and the version), the
 /// SHA-256 trailer made again: a file an older KentOS would have written, holding newer data.
 fn saying_arch(bytes: &[u8], from: u8, to: u8) -> Vec<u8> {

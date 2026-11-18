@@ -397,6 +397,14 @@ def building_edit_cases():
     # A building's own Bölge (docs/adr/8144): written by its name.
     pz = changed(lambda p: p["buildings"][0].update(zone="commercial"))
     edit("Binanın kendi bölgesi yazılır (ADR 8144)", {"program": pz}, pz)
+    # A building's own structural system (docs/adr/8145): written as given; traditional elements only of cut stone.
+    ps = changed(lambda p: p["buildings"][0].update(structure={"system": "cutStoneMasonry", "traditional": True}))
+    edit("Binanın kendi taşıyıcı sistemi yazılır (ADR 8145)", {"program": ps}, ps)
+    edit("Betonarme binada geleneksel öğeler yazılmaz", {"program": changed(lambda p: p["buildings"][0].update(
+        structure={"system": "reinforcedConcrete", "traditional": True}))},
+         result=refusal("invalid_program", "Geleneksel mimari öğeler yalnız kesme taş yığma binada okunur; taşıyıcı sistem "
+                        "Betonarme. Taşıyıcı sistemi Kesme taş yığma seçin ya da geleneksel mimari öğeleri kaldırın.",
+                        "program.buildings[0].structure.traditional"))
     edit("Kullanılmayan kanat kaldırılır", {"program": changed(lambda p: p["buildings"][0].update(wings=[
         {"id": "a-dogu", "name": "Doğu kanadı"}]))},
          changed(lambda p: p["buildings"][0].update(wings=[{"id": "a-dogu", "name": "Doğu kanadı"}])),

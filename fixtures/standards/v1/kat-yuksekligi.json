@@ -3035,6 +3035,125 @@
    }
   },
   {
+   "id": "iki-blok-geleneksel-betonarme",
+   "neden": "İki blok (docs/adr/8145), konut alanı, 2.7.2026: A bloğunun kendi taşıyıcı sistemi geleneksel kesme taş yığma (zemin dahil 2 kat; 28/1-d 4,50 m → 4,40 m'lik iki kat geçer); B bloğu projenin betonarmesi (iki katlı, 28/1-c'nin 12.8.2023 hâli 4,00 m → 4,40 m'lik zemin kat kalır, 3,80 m'lik 1. kat tutar).",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "a0",
+      "name": "A Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000030"
+      ],
+      "height": 4.4,
+      "building": "a",
+      "structuralSystem": "cutStoneMasonry",
+      "traditional": true
+     },
+     {
+      "level": "a1",
+      "name": "A 1. kat",
+      "elevation": 4.4,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000031"
+      ],
+      "height": 4.4,
+      "building": "a",
+      "structuralSystem": "cutStoneMasonry",
+      "traditional": true
+     },
+     {
+      "level": "b0",
+      "name": "B Zemin kat",
+      "elevation": 0.0,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000032"
+      ],
+      "height": 4.4,
+      "building": "b"
+     },
+     {
+      "level": "b1",
+      "name": "B 1. kat",
+      "elevation": 4.4,
+      "units": 1,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 1,
+      "bedrooms": 1,
+      "dwellingRooms": 1,
+      "elevators": 0,
+      "rooms": [
+       "00000000-0000-4000-8000-000000000033"
+      ],
+      "height": 3.8,
+      "building": "b"
+     }
+    ],
+    "units": 1,
+    "dwellings": 1,
+    "commons": 0,
+    "structuralSystem": "reinforcedConcrete",
+    "traditional": false,
+    "zone": "residential"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "paiy_storey_height_over",
+      "has": [
+       "“B Zemin kat” kat yüksekliği 4.40 m > 4.00 m"
+      ]
+     }
+    ],
+    "rules": {
+     "PAİY 28/1-d": [
+      "passed",
+      "9.10.2021"
+     ],
+     "PAİY 28/1-c": [
+      "failed",
+      "12.8.2023"
+     ]
+    }
+   }
+  },
+  {
    "id": "geleneksel-460",
    "neden": "Aynı bina, 1. kat 4,60 m: 28/1-d'nin 4,50 m'sini aşar, kalır; zemin 4,40 geçer.",
    "permit": {

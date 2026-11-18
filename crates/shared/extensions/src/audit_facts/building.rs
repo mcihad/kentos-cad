@@ -559,6 +559,12 @@ pub struct StoreyHolds {
     /// Its building's own Bölge (docs/adr/8144), as the facts' `zone`; none: the project's (the building facts' `zone`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zone: Option<String>,
+    /// Its building's own structural system (docs/adr/8145), as the facts' `structuralSystem`; none: the project's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub structural_system: Option<String>,
+    /// Its building's own declaration of traditional architectural elements (with `structural_system`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub traditional: bool,
     /// It is a mezzanine (its name says Asma kat): part of the ground storey it stands in (PAİY 4/1-d, 28/1-a, b, ç's
     /// “asma katlı zemin kat”; docs/adr/8085).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]

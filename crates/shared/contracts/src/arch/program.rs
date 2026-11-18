@@ -127,6 +127,12 @@ pub struct ProgramBuilding {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub zone: Option<crate::Zone>,
+    /// Its own structural system and traditional elements (docs/adr/8145; `.kcad` Mimari data 31): a block built
+    /// otherwise than the others, PAİY 22/1-m, 28/1-d, 5/8 and 20/8-j read its storeys by it. None: the project's
+    /// (Proje ayarları › Mimari › Taşıyıcı sistem).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub structure: Option<crate::BuildingStructure>,
 }
 
 /// Whether a storey's name says it is the ground storey: “Zemin” in any case (Turkish İ lower-cases to i and a dot; the
@@ -384,6 +390,11 @@ impl BuildingProgram {
         self.buildings.iter().any(|b| b.zone.is_some())
     }
 
+    /// Whether a building says its own structural system (Mimari data 31, docs/adr/8145).
+    pub fn has_building_structures(&self) -> bool {
+        self.buildings.iter().any(|b| b.structure.is_some())
+    }
+
     /// The building a level is a storey of (docs/adr/8072 §1): the one building that spans it, else the one its shared
     /// entry names; none when no building or several without a choice span it.
     pub fn building_of_level(&self, level: &str) -> Option<&ProgramBuilding> {
@@ -546,6 +557,10 @@ impl BuildingProgram {
             ids.push(&b.id);
             if let Some(p) = levels_problem(&b.levels, &format!("buildings[{i}].levels")) {
                 return Some(p);
+            }
+            // Its own structural system (docs/adr/8145): traditional elements only of cut stone masonry.
+            if let Some((path, why)) = b.structure.as_ref().and_then(crate::BuildingStructure::problem) {
+                return Some((format!("buildings[{i}].{path}"), why));
             }
             // Its code, use and ±0.00 (docs/adr/8072 §1; EK-2 §2.3).
             if let Some(c) = &b.code {

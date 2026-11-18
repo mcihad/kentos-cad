@@ -63,5 +63,5 @@ projenin katlarıyla sayılıyordu.
 ## §6. Kalanlar
 
 - **Binanın kendi taşıyıcı sistemi** (8094 §6): emsal tablosunun geleneksel binası (22/1-m, 5/8, 20/8-j) ve 28/1-d bina
-  bina; bir sonraki dilim.
+  bina; bir sonraki dilim — yapıldı: ADR [8145](8145-structure-per-building.md).
 - Öbür bina bina kurallar (otopark, sığınak, asansör) bugün bütün projenindir.

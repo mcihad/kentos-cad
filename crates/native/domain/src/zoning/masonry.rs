@@ -61,8 +61,8 @@ pub(super) struct Walls {
     pub undeclared: Vec<String>,
 }
 
-/// The project's walls (a traditional cut stone masonry building's).
-pub(super) fn walls(doc: &Document) -> Walls {
+/// The project's walls on the storeys `traditional` keeps (a traditional cut stone masonry building's, docs/adr/8145).
+pub(super) fn walls(doc: &Document, traditional: &dyn Fn(Option<&str>) -> bool) -> Walls {
     let exterior: std::collections::BTreeSet<String> = doc
         .fire_elements()
         .into_iter()
@@ -73,6 +73,9 @@ pub(super) fn walls(doc: &Document) -> Walls {
     for (uid, e) in doc.entities_with_uids() {
         let Entity::Wall(w) = e else { continue };
         if w.wall.curtain.is_some() {
+            continue;
+        }
+        if !traditional(e.own_level()) {
             continue;
         }
         let Shape::Wall { pts, bulges, wall: spec } = kentos_formats::walls::core_wall(&w.wall) else { continue };

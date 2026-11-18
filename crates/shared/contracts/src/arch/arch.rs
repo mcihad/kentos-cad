@@ -2603,6 +2603,26 @@ impl ArchSettings {
         self.program.building_of_level(level).and_then(|b| b.zone).or(self.zone)
     }
 
+    /// The structural system a level's storeys are read by (docs/adr/8145): its building's own, else the project's.
+    pub fn structure_on(&self, level: &str) -> Option<BuildingStructure> {
+        self.program.building_of_level(level).and_then(|b| b.structure).or(self.structure)
+    }
+
+    /// Whether a level's storey is of a traditional cut stone masonry building (docs/adr/8094, 8145): its building's own
+    /// declaration, else the project's; a room on no level, the project's.
+    pub fn traditional_cut_stone_on(&self, level: Option<&str>) -> bool {
+        match level {
+            Some(l) => self.structure_on(l).is_some_and(|s| s.traditional_cut_stone()),
+            None => self.traditional_cut_stone(),
+        }
+    }
+
+    /// Whether any building is traditional cut stone masonry: the project, or a program building of its own.
+    pub fn any_traditional_cut_stone(&self) -> bool {
+        self.traditional_cut_stone()
+            || self.program.buildings.iter().any(|b| b.structure.is_some_and(|s| s.traditional_cut_stone()))
+    }
+
     /// Whether it keeps a delivery record (Mimari data 17, docs/adr/8099).
     pub fn has_deliveries(&self) -> bool {
         !self.deliveries.is_empty()

@@ -272,6 +272,31 @@ impl App {
             })
             .help("Bloklar planın farklı kullanımlı kararlarında duruyorsa: binanın katları kendi bölgesiyle okunur \
                    (Planlı Alanlar İmar Yönetmeliği 28/1). Projeninki: Proje ayarları › Mimari › İmar durumu.")
+            .field("Taşıyıcı sistem", {
+                // Its own structural system (docs/adr/8145): the project's unless the block is built otherwise.
+                let choices: Vec<(Option<kentos_commands::StructuralSystem>, &'static str)> =
+                    std::iter::once((None, "Projeninki"))
+                        .chain(kentos_commands::StructuralSystem::ALL.into_iter().map(|x| (Some(x), x.label())))
+                        .collect();
+                let at = choices.iter().position(|(x, _)| *x == b.structure.map(|x| x.system));
+                let pick = Select::new(choices.iter().map(|(_, l)| Choice::new(*l)), at, move |k| {
+                    let system =
+                        std::iter::once(None).chain(kentos_commands::StructuralSystem::ALL.into_iter().map(Some)).nth(k);
+                    msg(Event::BuildingStructure(i, system.flatten()))
+                })
+                .searchable(false);
+                let mut col = Column::new().spacing(6).push(container(pick).width(scaled(330.0)));
+                if let Some(x) = b.structure.filter(|x| x.system == kentos_commands::StructuralSystem::CutStoneMasonry) {
+                    col = col.push(
+                        kentos_ui::widget::Switch::new(x.traditional, move |on| msg(Event::BuildingTraditional(i, on)))
+                            .label("Geleneksel mimari öğeler barındırıyor"),
+                    );
+                }
+                col
+            })
+            .help("Blok öbürlerinden başka türlü yapılıyorsa: geleneksel kesme taş yığma bloğun katları 28/1-d, taşlık, \
+                   dış sofa ve eyvanı 22/1-m, kalın taş duvarları 5/8 ve 20/8-j ile kendi kat sayısıyla okunur. \
+                   Projeninki: Proje ayarları › Mimari › Taşıyıcı sistem.")
             .field("Katları", self.level_checks(&b.levels, move |l| msg(Event::BuildingLevel(i, l))))
             .help("Boşsa her katta olabilir.")
             .field(

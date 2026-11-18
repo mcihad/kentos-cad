@@ -233,13 +233,13 @@ def parcalar(bina: dict[str, Any], madde: str | None) -> list[dict[str, Any]]:
 
 def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Sonuc:
     """Projenin kat yüksekliği bulguları: her kat bölgenin bendinin başvuru günündeki hâliyle ve kendi plan notuyla; gün
-    yoksa her kat her hâlle denenmiş (``yururluk.parcalarla``). Bir binası kendi bölgesini söylüyorsa (docs/adr/8144;
-    katın ``zone``'u) her binanın katları kendi bölgesiyle ayrı denetlenir (28/1-d'nin kat sayısı da binanınkidir);
-    aynı maddenin satırları birleşir."""
+    yoksa her kat her hâlle denenmiş (``yururluk.parcalarla``). Bir binası kendi bölgesini (docs/adr/8144; katın
+    ``zone``'u) ya da taşıyıcı sistemini (docs/adr/8145; ``structuralSystem``, ``traditional``) söylüyorsa her binanın
+    katları kendininkiyle ayrı denetlenir (28/1-d'nin kat sayısı da binanınkidir); aynı maddenin satırları birleşir."""
     bina = facts.get("building") or {}
     if not bina.get("storeys"):
         return y.Sonuc([], [])
-    if not any(k.get("zone") for k in bina["storeys"]):
+    if not any(k.get("zone") or k.get("structuralSystem") for k in bina["storeys"]):
         return _bina(bina, gun, neden)
     gruplar: dict[Any, list[dict[str, Any]]] = {}
     for k in bina["storeys"]:
@@ -247,7 +247,10 @@ def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Son
     sonuclar = []
     for katlar in gruplar.values():
         zone = next((k["zone"] for k in katlar if k.get("zone")), None) or bina.get("zone")
-        sonuclar.append(_bina(dict(bina, storeys=katlar, zone=zone), gun, neden))
+        kendi = next((k for k in katlar if k.get("structuralSystem")), None)
+        yapi = ({"structuralSystem": kendi["structuralSystem"], "traditional": bool(kendi.get("traditional"))}
+                if kendi else {})
+        sonuclar.append(_bina(dict(bina, storeys=katlar, zone=zone, **yapi), gun, neden))
     satirlar = []
     for r in y.birlesik(sonuclar):
         r.pop("sayilar")
