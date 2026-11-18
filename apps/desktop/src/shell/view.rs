@@ -276,6 +276,7 @@ impl App {
             Asking::Recovery => self.recovery_dialog(),
             Asking::SignIn => self.sign_in_view(),
             Asking::Catalog => self.catalog_view(),
+            Asking::Portal => self.portal_view(),
             Asking::Share => self.share_view(),
             Asking::Upload => self.upload_view(),
             Asking::Conflicts => self.conflicts_view(),

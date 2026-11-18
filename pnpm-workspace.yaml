@@ -1,3 +1,4 @@
-# pnpm workspace: the web app is a package of its own; the Rust side is the Cargo workspace.
+# pnpm workspace: the web app and the cloud portal are packages of their own; the Rust side is the Cargo workspace.
 packages:
   - apps/web
+  - apps/portal

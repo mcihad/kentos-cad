@@ -48,6 +48,7 @@
 //! | `share_plan.rs` | what the share window says and offers (fixtures/cloud/v1/share.json) |
 //! | `local_time.rs` | the device's local time for the lists' dates |
 //! | `words.rs` | the interface's words: roles, lists, states, times |
+//! | `portal/` | Portal dosyaları: the cloud portal's dossiers, their steps, packages and messages (docs/adr/9001) |
 
 mod account;
 pub(crate) mod actions;
@@ -85,6 +86,8 @@ mod live;
 pub mod local_time;
 mod opening;
 pub mod plan;
+// Portal dosyaları (docs/adr/9001).
+pub mod portal;
 pub mod revisions;
 #[cfg(test)]
 mod revisions_tests;
@@ -452,6 +455,8 @@ pub enum Event {
     Share(share::Event),
     /// The catalog's project forms (catalog_forms.rs).
     Form(catalog_forms::Event),
+    /// Portal dosyaları (portal/).
+    Portal(portal::Event),
 }
 
 /// The cloud's part of the app.
@@ -517,6 +522,10 @@ pub struct CloudState {
     pub archived_by_me: bool,
     /// Projeyi paylaş, over the catalog or alone (share.rs).
     pub share: Option<share::Share>,
+    /// Portal dosyaları, while it is open or set aside for a project opening from it (portal/).
+    pub portal: Option<portal::Portal>,
+    /// Where Portal dosyaları was when it closed: it opens there again.
+    pub portal_memory: portal::Memory,
     /// The open file project's last save here: its drawing, revision and when (cells.rs).
     pub file_saved: Option<(u64, String, i64)>,
     /// Why the open file project's last save failed: its drawing, what the
@@ -554,6 +563,7 @@ impl CloudState {
                     || c.jobs.waits()
             })
             || self.share.as_ref().is_some_and(|s| s.search_at.is_some())
+            || self.portal.as_ref().is_some_and(|p| p.search_at.is_some())
     }
 
     /// The connection, when signed in.
@@ -742,6 +752,7 @@ impl App {
             | Event::Trashed { .. } => self.actions_event(event),
             Event::Share(event) => self.share_event(event),
             Event::Form(event) => self.project_form_event(event),
+            Event::Portal(event) => self.portal_event(event),
             Event::Left { leave, result } => self.left(leave, result),
             Event::Probed(result) => self.probed(result),
             Event::Close => {
@@ -785,6 +796,14 @@ impl App {
                     return Task::none();
                 }
                 self.open_catalog()
+            }
+            // Portal dosyaları: the account's dossiers on the cloud portal (portal/, docs/adr/9001).
+            "cloud.portal" => {
+                if self.cloud.signed_in().is_none() {
+                    self.open_sign_in(Some(account::Next::Portal));
+                    return Task::none();
+                }
+                self.open_portal()
             }
             "cloud.upload" | "cloud.uploadFile" => {
                 // Buluta dosya olarak kaydet: the same window, on file storage (the web's).
@@ -886,6 +905,7 @@ impl App {
             history,
             jobs,
             self.share_tick(now),
+            self.portal_tick(now),
             self.live_tick(now),
             self.file_tick(now),
             self.probe_tick(now),
@@ -956,6 +976,8 @@ impl App {
                 self.arch.arch_template = None
             }
             Some(Dialog::SignIn) => self.cloud.sign_in = None,
+            // Its question first, then the window, keeping where it was (portal/).
+            Some(Dialog::Portal) => self.close_portal(),
             Some(Dialog::Catalog) if self.cloud.share.is_some() => {
                 // The share window over the catalog goes first, its question before it.
                 if let Some(s) = self.cloud.share.as_mut().filter(|s| s.asking.is_some()) {

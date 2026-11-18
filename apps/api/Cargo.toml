@@ -24,9 +24,10 @@ kentos-extensions = { path = "../../crates/shared/extensions" }
 kentos-python-env = { path = "../../crates/native/python-env" }
 axum = { workspace = true }
 http-body = { workspace = true }
-tokio = { workspace = true }
+tokio = { workspace = true, features = ["process"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+futures-util = { workspace = true }
 sqlx = { workspace = true }
 uuid = { workspace = true }
 tower = { workspace = true }
@@ -36,6 +37,8 @@ tracing-subscriber = { workspace = true }
 jsonwebtoken = { workspace = true }
 reqwest = { workspace = true }
 time = { workspace = true }
+# The webhook's HMAC-SHA256 signature of a notification (docs/adr/9000 §17).
+sha2 = { workspace = true }
 
 # The job's process group ended at its budget, the rule's Python with it (docs/adr/8057 §58).
 [target.'cfg(unix)'.dependencies]
@@ -56,3 +59,6 @@ kentos-domain = { path = "../../crates/native/domain" }
 # The desktop's coordinate engine and registry, which the server's job must agree with to the bit (docs/adr/0631 §6).
 kentos-geometry-core = { path = "../../crates/shared/geometry-core" }
 kentos-project = { path = "../../crates/native/project" }
+# The API's description (docs/api/openapi.json): the contracts' JSON Schemas, generated and checked in a test.
+schemars = { workspace = true }
+kentos-contracts = { path = "../../crates/shared/contracts", default-features = false, features = ["schema"] }

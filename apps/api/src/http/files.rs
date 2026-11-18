@@ -260,6 +260,18 @@ pub(crate) fn kcad_headers(h: &mut HeaderMap, sha256: &str, revision: &str, name
     if let Ok(v) = HeaderValue::from_str(revision) {
         h.insert("x-kentos-revision", v);
     }
+    if let Some(v) = attachment(name) {
+        h.insert(header::CONTENT_DISPOSITION, v);
+    }
+}
+
+/// `Content-Disposition` of a download named `name` (non-ASCII names in the RFC 5987 form).
+pub(crate) fn attachment(name: &str) -> Option<HeaderValue> {
+    disposition("attachment", name)
+}
+
+/// `Content-Disposition` of `kind` (`attachment` or `inline`) for a file named `name`.
+pub(crate) fn disposition(kind: &str, name: &str) -> Option<HeaderValue> {
     let ascii: String = name
         .chars()
         .map(|c| {
@@ -280,16 +292,15 @@ pub(crate) fn kcad_headers(h: &mut HeaderMap, sha256: &str, revision: &str, name
             }
         })
         .collect();
-    if let Ok(v) = HeaderValue::from_str(&format!(
-        "attachment; filename=\"{ascii}\"; filename*=UTF-8''{encoded}"
-    )) {
-        h.insert(header::CONTENT_DISPOSITION, v);
-    }
+    HeaderValue::from_str(&format!(
+        "{kind}; filename=\"{ascii}\"; filename*=UTF-8''{encoded}"
+    ))
+    .ok()
 }
 
 /// A file read in parts as a response body.
 pub(crate) struct FileBody {
-    file: tokio::fs::File,
+    file: tokio::io::Take<tokio::fs::File>,
     buffer: Vec<u8>,
 }
 
@@ -297,8 +308,14 @@ impl FileBody {
     const PART: usize = 64 * 1024;
 
     pub(crate) fn new(file: tokio::fs::File) -> Self {
+        Self::part(file, u64::MAX)
+    }
+
+    /// At most `len` bytes from where the file stands.
+    pub(crate) fn part(file: tokio::fs::File, len: u64) -> Self {
+        use tokio::io::AsyncReadExt as _;
         Self {
-            file,
+            file: file.take(len),
             buffer: vec![0; Self::PART],
         }
     }

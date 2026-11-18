@@ -700,7 +700,7 @@ impl App {
 }
 
 /// A file name without what file systems refuse (the web's `safe`).
-fn safe_name(name: &str) -> String {
+pub(super) fn safe_name(name: &str) -> String {
     let cleaned: String = name
         .chars()
         .map(|c| {
@@ -720,7 +720,7 @@ fn safe_name(name: &str) -> String {
 }
 
 /// Writes the file whole or not at all: a temporary file beside it, then renamed.
-fn write_file(path: &std::path::Path, bytes: &[u8]) -> std::io::Result<()> {
+pub(super) fn write_file(path: &std::path::Path, bytes: &[u8]) -> std::io::Result<()> {
     use std::io::Write;
     let dir = path.parent().unwrap_or(std::path::Path::new("."));
     let name = path

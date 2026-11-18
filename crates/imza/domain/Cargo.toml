@@ -1,0 +1,26 @@
+[package]
+name = "kentos-imza-domain"
+description = "KentOS İmza: Batch → Package → File, üç durum makinesi ve tel sözleşmesi (docs/adr/9002)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure data: the KentOS server takes the wire types from here too, so nothing but serde and the error taxonomy.
+[dependencies]
+kentos-imza-core = { path = "../core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "deny"
+unimplemented = "deny"

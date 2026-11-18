@@ -35,7 +35,13 @@ use uuid::Uuid;
 use crate::failure::ApiFailure;
 use crate::runtime::run;
 
+// E-signing a dossier's files from the desktop (docs/adr/9002 §7).
+mod esign;
 mod extension_catalog;
+// The cloud portal's dossiers (docs/adr/9000 §5–8, docs/adr/9001).
+mod portal;
+
+pub use portal::DossierQuery;
 
 /// How long an ordinary request may take (the web's too).
 const TIMEOUT: Duration = Duration::from_secs(30);

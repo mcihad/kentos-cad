@@ -1,0 +1,45 @@
+[package]
+name = "kentos-imza-security"
+description = "KentOS İmza: Ed25519 imzalı istek doğrulaması, replay kapısı, özet kontrolü; sunucu için zarf üretimi (docs/adr/9002)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[features]
+# The issuing side (docs/adr/9002 §5): only the KentOS server signs envelopes. The agent, the local service and the
+# desktop hold the public key alone and never build this code.
+issue = ["dep:getrandom"]
+
+[dependencies]
+base64 = { workspace = true }
+ed25519-dalek = { workspace = true }
+getrandom = { workspace = true, optional = true }
+hex = { workspace = true }
+kentos-imza-core = { path = "../core" }
+kentos-imza-domain = { path = "../domain" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true }
+
+[dev-dependencies]
+ed25519-dalek = { workspace = true }
+
+# The real-window acceptance's stand-in for the server (scripts/usage/real/imza.sh): a key pair and a signed request.
+[[example]]
+name = "deneme_zarfi"
+required-features = ["issue"]
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "deny"
+unimplemented = "deny"

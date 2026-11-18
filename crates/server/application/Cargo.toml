@@ -16,6 +16,8 @@ kentos-postgres = { path = "../postgres" }
 # File projects (docs/adr/0031): uploads are verified as KCAD v2 with the shared codec,
 # hashed with SHA-256 and written to the object store with tokio's file system calls.
 kentos-kcad = { path = "../../shared/kcad" }
+# The scan of an uploaded file (docs/adr/9000 §14): an archive's names are read with the shared zip reader.
+kentos-zip = { path = "../../shared/zip" }
 # The sheet template library (docs/sheet/design.md §13): a template is read and checked as a
 # device reads it, and the commands' types are the ones the web and the desktop send.
 kentos-sheet = { path = "../../shared/sheet", default-features = false }
@@ -24,6 +26,11 @@ kentos-sheet = { path = "../../shared/sheet", default-features = false }
 kentos-forms = { path = "../../shared/forms" }
 kentos-expression = { path = "../../shared/expression" }
 kentos-project = { path = "../../native/project" }
+# E-signing a dossier's files (docs/adr/9004): the signing service's wire types, the server's side of its signed
+# requests (Ed25519, feature `issue`) and the check of a delivery against the server's own request.
+kentos-imza-domain = { path = "../../imza/domain" }
+kentos-imza-security = { path = "../../imza/security", features = ["issue"] }
+kentos-imza-signature = { path = "../../imza/signature" }
 sha2 = { workspace = true }
 tokio = { workspace = true, features = ["fs", "io-util"] }
 serde = { workspace = true }
@@ -34,6 +41,8 @@ time = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true }
+# A software test card signs in the tests as the signing service would (tests/portal_signing.rs); tests only.
+kentos-imza-signature = { path = "../../imza/signature", features = ["mock-token"] }
 # The contracts' JSON Schema feature; the command catalog (tests/catalog.rs) is built in kentos-commands (docs/adr/0540).
 kentos-contracts = { path = "../../shared/contracts", default-features = false, features = ["schema"] }
 kentos-commands = { path = "../../shared/commands", default-features = false, features = ["schema"] }

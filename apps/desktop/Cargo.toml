@@ -62,6 +62,14 @@ kentos-geopackage = { path = "../../crates/native/geopackage" }
 kentos-cloud = { path = "../../crates/native/cloud" }
 # Asistan (docs/adr/8056 §4): the user's own AI agents and their providers; its own runtime, awaited on Iced's executor.
 kentos-agent = { path = "../../crates/native/agent" }
+# KentOS İmza (docs/adr/9002 §7): the portal window signs a package's files with the e-signature card in this process,
+# with the same signing window as the PIN agent; the envelope, the engine and the wire types are the shared crates'.
+kentos-imza-core = { path = "../../crates/imza/core" }
+kentos-imza-domain = { path = "../../crates/imza/domain" }
+kentos-imza-pkcs11 = { path = "../../crates/imza/pkcs11" }
+kentos-imza-security = { path = "../../crates/imza/security" }
+kentos-imza-signature = { path = "../../crates/imza/signature" }
+kentos-imza-ui = { path = "../../crates/imza/ui" }
 # Eklentiler (docs/adr/8057 §3): the .kek packages' inspector and catalog, and the user's extension registry.
 kentos-extensions = { path = "../../crates/shared/extensions" }
 kentos-extension-host = { path = "../../crates/native/extension-host" }
@@ -125,7 +133,15 @@ kentos-digital-project = { path = "../../crates/shared/digital-project" }
 # The IFC viewer reads files through the reading face and its engine (docs/adr/8061 §11, docs/adr/8073 §5).
 kentos-ifc = { path = "../../crates/shared/ifc", features = ["view"] }
 
+[features]
+# The e-signature's software test card and in-process test server for demos and the real-window acceptance
+# (docs/adr/9002 §6): KENTOS_IMZA_DENEME_KARTI=1 and KENTOS_IMZA_DENEME_SUNUCU=1 pick them. Never in a release build.
+esign-mock = ["kentos-imza-signature/mock-token", "kentos-imza-security/issue"]
+
 [dev-dependencies]
+# Tests sign with the software card against the in-process test server.
+kentos-imza-signature = { path = "../../crates/imza/signature", features = ["mock-token"] }
+kentos-imza-security = { path = "../../crates/imza/security", features = ["issue"] }
 # App boot and font-sensitive widget tests share a reentrant test-only guard.
 parking_lot = "=0.12.5"
 # Inflating the PDF's streams in the acceptance test's own reader (the plotter's tests/support/files.rs).

@@ -1,0 +1,33 @@
+[package]
+name = "kentos-imza-pkcs11"
+description = "KentOS İmza: PKCS#11 ile kart ve sertifika keşfi, kimliği doğrulanmış oturumda imzalama (docs/adr/9002)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+cryptoki = { workspace = true }
+hex = { workspace = true }
+kentos-imza-core = { path = "../core" }
+kentos-imza-domain = { path = "../domain" }
+kentos-imza-signature = { path = "../signature" }
+tracing = { workspace = true }
+
+[dev-dependencies]
+# The real card test signs a batch through the same engine and checks it the way the server does.
+kentos-imza-security = { path = "../security", features = ["issue"] }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "deny"
+unimplemented = "deny"

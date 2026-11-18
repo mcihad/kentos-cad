@@ -172,6 +172,45 @@ dependencies = [
 ]
 
 [[package]]
+name = "asn1-rs"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7f43a50ac4fdca5df8e885c21b835997f0a1cdee65494a6847694a98652d9d8"
+dependencies = [
+ "asn1-rs-derive",
+ "asn1-rs-impl",
+ "displaydoc",
+ "nom",
+ "num-traits",
+ "rusticata-macros",
+ "thiserror 2.0.21",
+ "time",
+]
+
+[[package]]
+name = "asn1-rs-derive"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3109e49b1e4909e9db6515a30c633684d68cdeaa252f215214cb4fa1a5bfee2c"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+ "synstructure 0.13.2",
+]
+
+[[package]]
+name = "asn1-rs-impl"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b18050c2cd6fe86c3a76584ef5e0baf286d038cda203eb6223df2cc413565f7"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
 name = "async-broadcast"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1004,6 +1043,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "cryptoki"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "625cf4599c43d69a16996ce2573fc80745a0b0300c962f0bfa11d55b6cab2b2d"
+dependencies = [
+ "bitflags 2.13.2",
+ "cryptoki-sys",
+ "libloading",
+ "log",
+ "secrecy",
+]
+
+[[package]]
+name = "cryptoki-sys"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1fd850498411e4057f1cba79e6e2bc7cbe960544c1046ab46d4685c403a1121"
+dependencies = [
+ "libloading",
+]
+
+[[package]]
 name = "ctor"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1075,6 +1136,20 @@ dependencies = [
  "const-oid",
  "pem-rfc7468",
  "zeroize",
+]
+
+[[package]]
+name = "der-parser"
+version = "10.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "07da5016415d5a3c4dd39b11ed26f915f52fc4e0dc197d87908bc916e51bc1a6"
+dependencies = [
+ "asn1-rs",
+ "displaydoc",
+ "nom",
+ "num-bigint",
+ "num-traits",
+ "rusticata-macros",
 ]
 
 [[package]]
@@ -2737,6 +2812,7 @@ name = "kentos-api"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "futures-util",
  "http-body",
  "jsonwebtoken",
  "kentos-application",
@@ -2753,6 +2829,7 @@ dependencies = [
  "kentos-zip",
  "libc",
  "reqwest",
+ "schemars",
  "serde",
  "serde_json",
  "sha2 0.10.9",
@@ -2776,10 +2853,14 @@ dependencies = [
  "kentos-formats",
  "kentos-forms",
  "kentos-geometry-core",
+ "kentos-imza-domain",
+ "kentos-imza-security",
+ "kentos-imza-signature",
  "kentos-kcad",
  "kentos-postgres",
  "kentos-project",
  "kentos-sheet",
+ "kentos-zip",
  "serde",
  "serde_json",
  "sha2 0.10.9",
@@ -2809,6 +2890,7 @@ dependencies = [
  "bytes",
  "kentos-contracts",
  "kentos-domain",
+ "kentos-imza-domain",
  "kentos-kcad",
  "kentos-services",
  "kentos-sheet",
@@ -2868,6 +2950,12 @@ dependencies = [
  "kentos-geopackage",
  "kentos-headless",
  "kentos-ifc",
+ "kentos-imza-core",
+ "kentos-imza-domain",
+ "kentos-imza-pkcs11",
+ "kentos-imza-security",
+ "kentos-imza-signature",
+ "kentos-imza-ui",
  "kentos-interaction",
  "kentos-kcad",
  "kentos-launch",
@@ -3117,6 +3205,154 @@ dependencies = [
  "rustc-hash 2.1.3",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "kentos-imza-agent"
+version = "0.1.0"
+dependencies = [
+ "futures-util",
+ "iced",
+ "kentos-imza-domain",
+ "kentos-imza-ui",
+ "kentos-ui",
+ "reqwest",
+ "serde_json",
+ "tokio",
+ "tokio-tungstenite",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "kentos-imza-api"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "base64 0.22.1",
+ "ed25519-dalek",
+ "futures-util",
+ "hex",
+ "kentos-imza-audit",
+ "kentos-imza-core",
+ "kentos-imza-domain",
+ "kentos-imza-security",
+ "kentos-imza-signature",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tokio",
+ "tokio-tungstenite",
+ "tower-http 0.7.1",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "kentos-imza-audit"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "kentos-imza-core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "kentos-imza-domain"
+version = "0.1.0"
+dependencies = [
+ "kentos-imza-core",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "kentos-imza-pkcs11"
+version = "0.1.0"
+dependencies = [
+ "cryptoki",
+ "hex",
+ "kentos-imza-core",
+ "kentos-imza-domain",
+ "kentos-imza-security",
+ "kentos-imza-signature",
+ "serde_json",
+ "sha2 0.10.9",
+ "tracing",
+]
+
+[[package]]
+name = "kentos-imza-security"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "ed25519-dalek",
+ "getrandom 0.3.4",
+ "hex",
+ "kentos-imza-core",
+ "kentos-imza-domain",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror 2.0.21",
+ "time",
+]
+
+[[package]]
+name = "kentos-imza-service"
+version = "0.1.0"
+dependencies = [
+ "kentos-imza-api",
+ "kentos-imza-pkcs11",
+ "kentos-imza-security",
+ "kentos-imza-signature",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "kentos-imza-signature"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "hex",
+ "kentos-imza-core",
+ "kentos-imza-domain",
+ "kentos-imza-security",
+ "p256",
+ "p384",
+ "rsa",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "time",
+ "uuid",
+ "x509-parser",
+]
+
+[[package]]
+name = "kentos-imza-ui"
+version = "0.1.0"
+dependencies = [
+ "iced",
+ "kentos-imza-domain",
+ "kentos-ui",
+ "serde_json",
+ "time",
 ]
 
 [[package]]
@@ -4657,6 +4893,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "oid-registry"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "12f40cff3dde1b6087cc5d5f5d4d65712f34016a03ed60e9c08dcc392736b5b7"
+dependencies = [
+ "asn1-rs",
+]
+
+[[package]]
 name = "once_cell"
 version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5614,6 +5859,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "rusticata-macros"
+version = "4.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "faf0c4a6ece9950b9abdb62b1cfcf2a68b3b67a10ba445b3bb85be2a293d0632"
+dependencies = [
+ "nom",
+]
+
+[[package]]
 name = "rustix"
 version = "0.38.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5843,6 +6097,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4ae55de56877481d112a559bbc12667635fdaf5e005712fd4e2b2fa50ffc884"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "secrecy"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e891af845473308773346dc847b2c23ee78fe442e0472ac50e22a18a93d3ae5a"
+dependencies = [
+ "zeroize",
 ]
 
 [[package]]
@@ -6593,6 +6856,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0bf256ce5efdfa370213c1dabab5935a12e49f2c58d15e9eac2870d3b4f27263"
 dependencies = [
  "futures-core",
+]
+
+[[package]]
+name = "synstructure"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "728a70f3dbaf5bab7f0c4b1ac8d7ae5ea60a4b5549c8a5914361c99147a709d2"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
 ]
 
 [[package]]
@@ -8058,6 +8332,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea6fc2961e4ef194dcbfe56bb845534d0dc8098940c7e5c012a258bfec6701bd"
 
 [[package]]
+name = "x509-parser"
+version = "0.18.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d43b0f71ce057da06bc0851b23ee24f3f86190b07203dd8f567d0b706a185202"
+dependencies = [
+ "asn1-rs",
+ "data-encoding",
+ "der-parser",
+ "lazy_static",
+ "nom",
+ "oid-registry",
+ "rusticata-macros",
+ "thiserror 2.0.21",
+ "time",
+]
+
+[[package]]
 name = "xcursor"
 version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8120,7 +8411,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 3.0.6",
- "synstructure",
+ "synstructure 0.14.0",
 ]
 
 [[package]]
@@ -8237,7 +8528,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 3.0.6",
- "synstructure",
+ "synstructure 0.14.0",
 ]
 
 [[package]]

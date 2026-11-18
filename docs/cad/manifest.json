@@ -258,6 +258,39 @@
    "tests": 0
   },
   {
+   "id": "arch.bcfIssues",
+   "kind": "command",
+   "title": "BCF sorunları",
+   "level": "semantic",
+   "via": [
+    "cad.bcf.read"
+   ],
+   "operation": null,
+   "python": "kentos.cad.bcf.read",
+   "mcp": "cad.bcf.read",
+   "note": "Oku cad.bcf.read'e gider; Çizimde seç, KentOS'un yazdığı GlobalId'lerin çizimdeki nesnelerini seçer, çizimi değiştirmez (ADR 8103).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.deliveries",
+   "kind": "command",
+   "title": "Teslim kaydı",
+   "level": "semantic",
+   "via": [
+    "cad.delivery.edit",
+    "cad.review.notes.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.delivery.edit, kentos.cad.review.notes.edit",
+   "mcp": "cad.delivery.edit, cad.review.notes.edit",
+   "note": "Teslim ekle, Cevabı yaz ve Kaydı sil cad.delivery.edit'e, Seçilenlere bağla cad.review.notes.edit'e gider; Öncekiyle karşılaştır iki yayın klasörünü okur (delivery_compare: yayin.json, kaynaklar/cizim.kcad) ve yazmaz (ADR 8099).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.digitalRules",
    "kind": "command",
    "title": "Dijital proje kuralları",
@@ -267,6 +300,69 @@
    "python": null,
    "mcp": null,
    "note": "Dijital proje kuralları penceresi yönetmeliğin kural kataloğunu (kentos-digital-project, kentos-ifc) okur; çizime ve projeye dokunmaz. Python ve MCP için salt okuyan sorgu komutu sonraki iştir (ADR 8062 §9).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.elementSameType",
+   "kind": "command",
+   "title": "Aynı tiptekileri seç",
+   "level": "host",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Seçili elemanın tipini izleyen elemanları seçer; çizimi değiştirmez (ADR 8106).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.elementTypeFrom",
+   "kind": "command",
+   "title": "Tipe çevir",
+   "level": "semantic",
+   "via": [
+    "cad.elementtypes.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.elementtypes.edit",
+   "mcp": "cad.elementtypes.edit",
+   "note": "Seçili elemanın değerleri define (from) ile yeni tipin olur, eleman aynı adımda onu izler (ADR 8106).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.elementTypes",
+   "kind": "command",
+   "title": "Eleman tipleri",
+   "level": "semantic",
+   "via": [
+    "cad.elementtypes.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.elementtypes.edit",
+   "mcp": "cad.elementtypes.edit",
+   "note": "Yeni tip, Seçili elemandan, Uygula, Sil ve Öznitelikler'in Tip listesi, Tipten ayır, Tipe uygula, Tipe döndür, Tipi yeniden uygula cad.elementtypes.edit'e gider; Uygula'dan önceki satır onun planıdır (ADR 8106).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.ifcCompare",
+   "kind": "command",
+   "title": "IFC revizyonlarını karşılaştır",
+   "level": "semantic",
+   "via": [
+    "cad.ifc.compare",
+    "cad.bcf.write"
+   ],
+   "operation": null,
+   "python": "kentos.cad.ifc.compare, kentos.cad.bcf.write",
+   "mcp": "cad.ifc.compare, cad.bcf.write",
+   "note": "Karşılaştır cad.ifc.compare'e gider (okur, yazmaz); İşaretlileri BCF'ye yaz işaretlenen satırları cad.bcf.write ile yeni revizyonun dosyasına bağlı sorunlar olarak yazar (ADR 8103).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -676,6 +772,23 @@
    "tests": 0
   },
   {
+   "id": "arch.reviewPackage",
+   "kind": "command",
+   "title": "Gelen paketi incele",
+   "level": "semantic",
+   "via": [
+    "file.review.package",
+    "cad.bcf.write"
+   ],
+   "operation": null,
+   "python": "kentos.cad.file.review.package, kentos.cad.bcf.write",
+   "mcp": "file.review.package, cad.bcf.write",
+   "note": "İncele file.review.package'a gider (dosyaları okur, yazmaz); İade notu yaz hata bulgularını cad.bcf.write ile paketin modeline bağlı sorunlar olarak, yanına da yazı olarak yazar; Modelde göster IFC görüntüleyicide bulgunun nesnelerini seçer (ADR 8104).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.revisionList",
    "kind": "command",
    "title": "Revizyon listesi",
@@ -783,6 +896,23 @@
    "python": "kentos.cad.templates.apply",
    "mcp": "cad.templates.apply",
    "note": "Şablonun adı komuta verilir; eklenenler komutun hesabı (ADR 0346 §1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.underlays",
+   "kind": "command",
+   "title": "Altlık modeller",
+   "level": "semantic",
+   "via": [
+    "cad.underlay.edit",
+    "cad.underlay.check"
+   ],
+   "operation": null,
+   "python": "kentos.cad.underlay.edit, kentos.cad.underlay.check",
+   "mcp": "cad.underlay.edit, cad.underlay.check",
+   "note": "Ekle, Başlangıç noktasına yerleştir, Uygula, Yeniden oku ve Kaldır cad.underlay.edit'e, Denetle cad.underlay.check'e gider (okur, yazmaz); planın ve 3B görünümün gövdeleri dosyadan okunur, çizime yazılmaz (ADR 8101, 8102).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -1743,6 +1873,20 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "cloud.portal",
+   "kind": "command",
+   "title": "Portal dosyaları…",
+   "level": "host",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "cloud.rename",

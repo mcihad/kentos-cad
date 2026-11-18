@@ -20,16 +20,17 @@ use axum::http::request::Parts;
 use axum::http::{HeaderMap, HeaderValue, header};
 use axum::response::{IntoResponse, Redirect, Response};
 use kentos_application::identity::{self, Actor};
-use kentos_application::{AppError, tenancy};
-use kentos_contracts::{AuthConfig, LoginRequest, Me, OidcLoginInfo, SignInMethod, UserView};
+use kentos_application::{AppError, api_keys, tenancy};
+use kentos_contracts::{AuthConfig, LoginRequest, Me, OidcLoginInfo, SignInMethod, TokenScope, UserView};
 
 use super::AppState;
 use super::error::{Body, Failure, request_id};
 
 pub const SESSION_COOKIE: &str = "kentos_session";
 pub const CLIENT_HEADER: &str = "x-kentos-client";
-/// The programs that send [`CLIENT_HEADER`]: the web app, the desktop app, the Python SDK and the MCP server.
-pub const CLIENTS: [&str; 4] = ["web", "desktop", "python", "mcp"];
+/// The programs that send [`CLIENT_HEADER`]: the web app, the desktop app, the Python SDK, the MCP server and a mobile
+/// app (with a cookie; a program with a bearer token needs no header, docs/adr/9000 §12).
+pub const CLIENTS: [&str; 5] = ["web", "desktop", "python", "mcp", "mobile"];
 
 pub fn cookie(headers: &HeaderMap, name: &str) -> Option<String> {
     headers
@@ -43,7 +44,7 @@ pub fn cookie(headers: &HeaderMap, name: &str) -> Option<String> {
         })
 }
 
-fn bearer(headers: &HeaderMap) -> Option<&str> {
+pub(crate) fn bearer(headers: &HeaderMap) -> Option<&str> {
     headers
         .get(header::AUTHORIZATION)?
         .to_str()
@@ -94,6 +95,28 @@ impl FromRequestParts<AppState> for Caller {
         let fail = |e: AppError| Failure::with(e, &parts.headers);
         let db = state.db().map_err(fail)?;
         if let Some(token) = bearer(&parts.headers) {
+            // A program's session or a personal access token (docs/adr/9000 §12); anything else is OpenID's.
+            if token.starts_with(api_keys::SESSION_PREFIX) {
+                return match api_keys::bearer_actor(db, token).await.map_err(fail)? {
+                    Some(actor) => Ok(Caller(actor)),
+                    None => Err(fail(AppError::Unauthenticated(
+                        "Oturumunuz sona erdi ya da kapatıldı; yeniden oturum açın.".into(),
+                    ))),
+                };
+            }
+            if token.starts_with(api_keys::TOKEN_PREFIX) {
+                let Some((actor, scope)) = api_keys::token_actor(db, token).await.map_err(fail)? else {
+                    return Err(fail(AppError::Unauthenticated(
+                        "Erişim anahtarı geçersiz, süresi dolmuş ya da silinmiş.".into(),
+                    )));
+                };
+                if scope == TokenScope::Read && !parts.method.is_safe() {
+                    return Err(fail(AppError::forbidden(
+                        "Bu erişim anahtarı yalnız okur; değişiklik için okuyup yazan bir anahtar kullanın.",
+                    )));
+                }
+                return Ok(Caller(actor));
+            }
             let Some(oidc) = &state.oidc else {
                 return Err(fail(AppError::Unauthenticated(
                     "Bu sunucu erişim anahtarı kabul etmiyor (OpenID yapılandırılmamış).".into(),
@@ -212,6 +235,15 @@ pub async fn logout(
     headers: HeaderMap,
 ) -> Result<Response, Failure> {
     let fail = |e: AppError| Failure::with(e, &headers);
+    // A program signs out its own session; no cookie, no header needed.
+    if let Some(token) = bearer(&headers)
+        && token.starts_with(api_keys::SESSION_PREFIX)
+    {
+        api_keys::close_bearer_session(state.db().map_err(fail)?, token)
+            .await
+            .map_err(fail)?;
+        return Ok(axum::http::StatusCode::NO_CONTENT.into_response());
+    }
     check_client_header(&axum::http::Method::POST, &headers).map_err(fail)?;
     if let Some(token) = cookie(&headers, SESSION_COOKIE) {
         identity::close_session(state.db().map_err(fail)?, &token)

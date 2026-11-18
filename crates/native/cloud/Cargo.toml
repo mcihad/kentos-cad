@@ -13,6 +13,8 @@ publish.workspace = true
 # for the server, and the contracts, the codec and the document are ours.
 [dependencies]
 kentos-contracts = { path = "../../shared/contracts", default-features = false }
+# The signed result the desktop delivers after e-signing (docs/adr/9002 §7): the signing service's wire type.
+kentos-imza-domain = { path = "../../imza/domain" }
 # The project file, .kcad v2: a file project's revisions (docs/adr/0031).
 kentos-kcad = { path = "../../shared/kcad" }
 # The drawing document an opened project becomes, and whose changes a database project sends.

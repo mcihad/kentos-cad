@@ -1,6 +1,18 @@
 //! The HTTP API (CLAUDE.md §14): routes, shared state and the middleware
 //! every request passes (request id, trace, panic guard, timeout, body limit).
 
+// Programs signing in with bearer tokens; an account's sessions and tokens (docs/adr/9000 §12).
+pub mod access;
+pub mod attachments;
+pub mod download;
+pub mod openapi;
+pub mod uploads;
+#[cfg(test)]
+mod access_tests;
+#[cfg(test)]
+mod cloud_files_tests;
+#[cfg(test)]
+mod delivery_tests;
 #[cfg(test)]
 mod addresses_tests;
 pub mod auth;
@@ -31,12 +43,15 @@ pub mod invitations;
 #[cfg(test)]
 mod invitations_tests;
 pub mod limit;
+pub mod signup_guard;
 #[cfg(test)]
 mod native_tests;
 #[cfg(test)]
 mod networks_tests;
 #[cfg(test)]
 mod people_tests;
+// The cloud portal (docs/adr/9000).
+pub mod portal;
 pub mod projects;
 #[cfg(test)]
 mod temporal_tests;
@@ -58,7 +73,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use axum::http::StatusCode;
-use axum::routing::{get, post, put};
+use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use kentos_application::AppError;
 use kentos_contracts::{CONTRACTS_VERSION, Health};
@@ -87,7 +102,11 @@ pub struct AppState {
     pub database: Option<Db>,
     pub oidc: Option<Arc<Oidc>>,
     pub hub: Hub,
+    /// Notifications as they happen (docs/adr/9000 §23).
+    pub notices: crate::hub::Notices,
     pub logins: Arc<limit::LoginLimiter>,
+    /// The sign-up's ticket, hidden field and limits per address (docs/adr/9000 §20).
+    pub signups: Arc<signup_guard::SignupGuard>,
     /// The object store of file projects (docs/adr/0031).
     pub blobs: kentos_application::blobs::Blobs,
     /// The map services' proxy (docs/adr/0208 §13); `None`: off.
@@ -139,9 +158,17 @@ pub fn router(state: AppState) -> Router {
         .layer(RequestBodyLimitLayer::new(BODY_LIMIT));
     let api = Router::new()
         .route("/v1/health", get(health))
+        // The API described for programs and AI agents (docs/api).
+        .route("/v1/openapi.json", get(openapi::spec))
+        .route("/v1/llms.txt", get(openapi::llms))
         .route("/v1/auth/config", get(auth::config))
         .route("/v1/auth/login", post(auth::login))
         .route("/v1/auth/logout", post(auth::logout))
+        .route("/v1/auth/token", post(access::token))
+        .route("/v1/me/sessions", get(access::sessions))
+        .route("/v1/me/sessions/{id}", delete(access::end_session))
+        .route("/v1/me/tokens", get(access::tokens).post(access::create_token))
+        .route("/v1/me/tokens/{id}", delete(access::revoke_token))
         .route("/v1/auth/oidc/start", get(auth::oidc_start))
         .route("/v1/auth/oidc/callback", get(auth::oidc_callback))
         .route("/v1/me", get(auth::me))
@@ -264,6 +291,22 @@ pub fn router(state: AppState) -> Router {
             "/v1/extension-catalogs/{catalog}/revocations",
             get(extension_catalog::list_revocations),
         )
+        // Files in the cloud (docs/adr/9000 §13-§15): attachments, pictures and the account's uploads.
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/attachments",
+            get(attachments::list).post(attachments::add),
+        )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/attachments/{attachment}",
+            get(attachments::download).delete(attachments::remove),
+        )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/preview.svg",
+            get(attachments::project_preview),
+        )
+        .route("/v1/uploads", post(uploads::begin))
+        // The cloud portal (docs/adr/9000).
+        .merge(portal::routes())
         .layer(middleware);
     // An upload's bytes are larger and slower than any other request: their
     // route has its own limit (the largest file) and timeout.
@@ -335,8 +378,43 @@ pub fn router(state: AppState) -> Router {
             get(extension_catalog::sbom),
         )
         .layer(package_layers);
+    // A dossier's file (docs/adr/9000 §7): the same, under the largest file a dossier takes.
+    let dossier_layers = ServiceBuilder::new()
+        .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
+        .layer(TraceLayer::new_for_http().make_span_with(|req: &axum::http::Request<_>| {
+            let rid = req.headers().get("x-request-id").and_then(|v| v.to_str().ok()).unwrap_or("-");
+            tracing::info_span!("dosya eki", method = %req.method(), path = %req.uri().path(), request_id = %rid)
+        }))
+        .layer(PropagateRequestIdLayer::x_request_id())
+        .layer(CatchPanicLayer::new())
+        .layer(TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, UPLOAD_TIMEOUT))
+        .layer(RequestBodyLimitLayer::new(
+            usize::try_from(kentos_application::portal::files::MAX_FILE_BYTES).unwrap_or(usize::MAX),
+        ));
+    let dossier_files = portal::upload_routes().layer(dossier_layers);
+    // An upload's part (docs/adr/9000 §13): one part at most per request; asking and giving up share its path.
+    let part_layers = ServiceBuilder::new()
+        .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
+        .layer(TraceLayer::new_for_http().make_span_with(|req: &axum::http::Request<_>| {
+            let rid = req.headers().get("x-request-id").and_then(|v| v.to_str().ok()).unwrap_or("-");
+            tracing::info_span!("yükleme parçası", method = %req.method(), path = %req.uri().path(), request_id = %rid)
+        }))
+        .layer(PropagateRequestIdLayer::x_request_id())
+        .layer(CatchPanicLayer::new())
+        .layer(TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, UPLOAD_TIMEOUT))
+        .layer(RequestBodyLimitLayer::new(
+            usize::try_from(kentos_application::uploads::PART_MAX).unwrap_or(usize::MAX),
+        ));
+    let parts = Router::new()
+        .route(
+            "/v1/uploads/{id}",
+            put(uploads::receive).get(uploads::view).delete(uploads::cancel),
+        )
+        .layer(part_layers);
     api.merge(uploads)
         .merge(inputs)
         .merge(packages)
+        .merge(dossier_files)
+        .merge(parts)
         .with_state(state)
 }

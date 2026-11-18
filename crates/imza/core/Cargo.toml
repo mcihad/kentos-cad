@@ -1,0 +1,28 @@
+[package]
+name = "kentos-imza-core"
+description = "KentOS İmza: hata taksonomisi (KSI-*), teknik ve kullanıcı iletisi, tekrar denenebilirlik (docs/adr/9002)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+
+# The e-signature crates keep the strictness they were written with (docs/adr/9002 §4): no unsafe code, and no
+# unwrap/expect/panic outside tests: in a signing service a panic is a user who thinks they signed while the process died.
+[lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "deny"
+unimplemented = "deny"

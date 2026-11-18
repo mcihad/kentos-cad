@@ -460,6 +460,51 @@ pub async fn restore_project(
     Ok(name)
 }
 
+/// Makes the account a platform administrator of the portal (docs/adr/9000 §3), or no longer one; recorded.
+pub async fn set_platform_admin(owner: &PgPool, who: &str, on: bool) -> AppResult<Uuid> {
+    let user = user_id(owner, who).await?;
+    let mut tx = owner.begin().await?;
+    let changed = if on {
+        sqlx::query(
+            "insert into kentos.platform_admin (user_id) values ($1) on conflict do nothing",
+        )
+        .bind(user)
+        .execute(&mut *tx)
+        .await?
+        .rows_affected()
+    } else {
+        sqlx::query("delete from kentos.platform_admin where user_id = $1")
+            .bind(user)
+            .execute(&mut *tx)
+            .await?
+            .rows_affected()
+    };
+    if changed > 0 {
+        sqlx::query(
+            "insert into kentos.platform_event (actor_name, action, target_kind, target_id, target_label)
+             select 'kentosd', $2, 'user', id, display_name from kentos.app_user where id = $1",
+        )
+        .bind(user)
+        .bind(if on { "user.platform_admin" } else { "user.platform_admin_removed" })
+        .execute(&mut *tx)
+        .await?;
+    }
+    tx.commit().await?;
+    Ok(user)
+}
+
+/// The platform administrators: sign-in name (or id) and name.
+pub async fn platform_admins(owner: &PgPool) -> AppResult<Vec<(String, String)>> {
+    Ok(sqlx::query_as(
+        "select coalesce(c.login, u.id::text), u.display_name
+           from kentos.platform_admin a join kentos.app_user u on u.id = a.user_id
+           left join kentos.local_credential c on c.user_id = u.id
+          order by u.display_name",
+    )
+    .fetch_all(owner)
+    .await?)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

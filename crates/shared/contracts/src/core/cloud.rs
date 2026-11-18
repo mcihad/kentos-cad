@@ -99,6 +99,8 @@ pub enum SignInMethod {
     Oidc,
     /// An API client with an OpenID access token (no browser session).
     Bearer,
+    /// A program with one of the account's personal access tokens (docs/adr/9000 §12).
+    Token,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

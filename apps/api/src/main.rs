@@ -10,6 +10,7 @@
 mod audit_env;
 mod cli;
 mod config;
+mod delivery;
 mod extension_catalog;
 mod http;
 mod hub;
@@ -72,6 +73,23 @@ async fn prune_events(db: Db, keep: Duration) {
 /// the objects of projects removed for good.
 const CLEAN_FIRST: Duration = Duration::from_secs(120);
 const CLEAN_EVERY: Duration = Duration::from_secs(3600);
+
+/// The portal's periodic destruction of personal data (docs/adr/9000 §21): every day, the first an hour after start
+/// (KVKK's regulation asks for at most six months between two). Each run is in `kentos.retention_run`.
+async fn retention_sweep(db: Db, blobs: Blobs) {
+    let mut every = tokio::time::interval_at(
+        tokio::time::Instant::now() + Duration::from_secs(3600),
+        Duration::from_secs(24 * 3600),
+    );
+    every.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+    loop {
+        every.tick().await;
+        match kentos_application::portal::retention::sweep(&db, &blobs).await {
+            Ok(files) => tracing::info!(silinen_dosya = files, "kişisel verilerin periyodik imhası çalıştı"),
+            Err(e) => tracing::warn!(error = ?e, "periyodik imha çalışamadı; ertesi gün yeniden denenecek"),
+        }
+    }
+}
 
 async fn clean_store(db: Db, blobs: Blobs, job_retention: Duration) {
     let mut every =
@@ -197,11 +215,27 @@ async fn serve(config: Config) -> Result<(), String> {
     let proxy = http::proxy::Proxy::new(http::proxy::Reach::parse(config.proxy_allow.as_deref())?)?;
     let catalog = extension_catalog(&config, database.as_ref(), &blobs)?;
     if let Some(db) = &database {
+        // The religious holidays the legal deadlines are counted over (docs/adr/9000 §19); the fixed ones are code.
+        if let Err(e) = kentos_application::portal::holidays::load(db).await {
+            tracing::warn!("Tatil takvimi okunamadı; yalnız sabit tatiller ve hafta sonu sayılır: {e}");
+        }
         tokio::spawn(prune_events(db.clone(), config.event_retention));
         tokio::spawn(purge_trash(db.clone()));
         tokio::spawn(clean_store(db.clone(), blobs.clone(), config.job_retention));
+        // The periodic destruction of personal data past its period (docs/adr/9000 §21): daily.
+        tokio::spawn(retention_sweep(db.clone(), blobs.clone()));
+        // Notifications by e-mail and SMS (docs/adr/9000 §17), when the server is set up to send them.
+        if let Some(delivery) = config.delivery.clone() {
+            tokio::spawn(delivery.run(db.clone()));
+        }
         let audits = audit_source(&config, catalog.as_ref());
         spawn_workers(db, &blobs, config.workers, config.job_limits, audits);
+    }
+    let signups_per_hour = config.signups_per_hour;
+    let notices = hub::Notices::default();
+    if let Some(db) = &database {
+        // Notifications as they happen (docs/adr/9000 §23): the database's signal relayed to the open streams.
+        tokio::spawn(hub::listen(db.clone(), notices.clone()));
     }
     let state = AppState {
         config: Arc::new(config),
@@ -209,6 +243,8 @@ async fn serve(config: Config) -> Result<(), String> {
         oidc,
         hub: hub::Hub::default(),
         logins: Default::default(),
+        signups: Arc::new(http::signup_guard::SignupGuard::new(signups_per_hour)),
+        notices: notices.clone(),
         blobs,
         proxy: Some(Arc::new(proxy)),
         // Off unless the setting opens it (docs/adr/8059 §13): its routes answer 404 then.
@@ -218,7 +254,8 @@ async fn serve(config: Config) -> Result<(), String> {
         .await
         .map_err(|e| format!("KentOS API {addr} adresini açamadı: {e}"))?;
     println!("KentOS API: http://{addr}/v1/health");
-    axum::serve(listener, http::router(state))
+    // The connection's address reaches the handlers (the sign-up's limit per address, docs/adr/9000 §20).
+    axum::serve(listener, http::router(state).into_make_service_with_connect_info::<SocketAddr>())
         .with_graceful_shutdown(shutdown())
         .await
         .map_err(|e| format!("KentOS API durdu: {e}"))

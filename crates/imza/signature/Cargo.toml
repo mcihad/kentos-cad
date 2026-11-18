@@ -1,0 +1,44 @@
+[package]
+name = "kentos-imza-signature"
+description = "KentOS İmza: sağlayıcı soyutlaması, kart soyutlaması ve imza motoru, yerel doğrulama, X.509, sunucunun teslim doğrulaması (docs/adr/9002)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[features]
+# A software card for tests and demo sessions (docs/adr/9002 §6): real ECDSA with publicly known keys and self-made
+# certificates marked "gerçek değil". Off by default; the KentOS server never enables it.
+mock-token = []
+
+# No PKCS#11 and no interface here, so the KentOS server can verify deliveries with this crate alone.
+[dependencies]
+base64 = { workspace = true }
+hex = { workspace = true }
+kentos-imza-core = { path = "../core" }
+kentos-imza-domain = { path = "../domain" }
+p256 = { workspace = true }
+p384 = { workspace = true }
+rsa = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+time = { workspace = true }
+uuid = { workspace = true }
+x509-parser = { workspace = true }
+
+[dev-dependencies]
+# The end-to-end test signs envelopes as the server does.
+kentos-imza-security = { path = "../security", features = ["issue"] }
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "deny"
+unimplemented = "deny"

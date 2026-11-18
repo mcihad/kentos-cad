@@ -26,3 +26,9 @@ kurum dışından biri yalnız o projeyi gören misafir olur, kurum misafiri kap
 Kişisel ve kurumsal sahiplik, davet, paylaşım ve izin iptali TODOS.md §12'dedir.
 RLS/pool context ve runtime/admin rolleri test edilir. İndirilmiş kopyanın
 geri alınabileceğini veya görüntüleme izninin DRM sağladığını iddia etmeyin.
+
+**Bulut portalı (bulut-portal dalı, [ADR 9000](../adr/9000-cloud-portal.md)):** platform yöneticisi
+(`kentosd platform-admin`), belediyeler ve meslek mensupları (mimar, harita ve inşaat mühendisi…) aynı sunucuda
+çalışır. Belediye ile meslek mensubu arasındaki her iş bir dosyadır: meslek mensubunun başvurusu ya da belediyenin proje
+aktarımı. Meslek mensubunun işlemleri hiçbir zaman kurum kapsamı taşımaz; yalnız aralarındaki dosyayı görür. Yönetim
+işlemleri, çağıranı denetleyen `security definer` işlevlerinden geçer. Plan: [plan/bulut.md](../../plan/bulut.md).

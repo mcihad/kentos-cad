@@ -203,6 +203,26 @@ pub mod heights;
 pub mod road;
 #[path = "core/document.rs"]
 pub mod document;
+// Programs signing in with bearer tokens (docs/adr/9000 §12).
+#[path = "core/access_keys.rs"]
+pub mod access_keys;
+#[path = "core/cloud_files.rs"]
+pub mod cloud_files;
+#[path = "core/notification_settings.rs"]
+pub mod notification_settings;
+#[path = "core/fees.rs"]
+pub mod fees;
+#[path = "core/signing.rs"]
+pub mod signing;
+#[path = "core/retention.rs"]
+pub mod retention;
+#[path = "core/statistics.rs"]
+pub mod statistics;
+// The cloud portal (docs/adr/9000): accounts, catalog, organisations and platform administration; dossiers.
+#[path = "core/dossier.rs"]
+pub mod dossier;
+#[path = "core/portal.rs"]
+pub mod portal;
 #[path = "core/encoding.rs"]
 pub mod encoding;
 #[path = "core/entity.rs"]
@@ -427,6 +447,15 @@ pub use crs::*;
 pub use heights::*;
 pub use road::*;
 pub use document::*;
+pub use access_keys::*;
+pub use cloud_files::*;
+pub use notification_settings::*;
+pub use fees::*;
+pub use signing::*;
+pub use retention::*;
+pub use statistics::*;
+pub use dossier::*;
+pub use portal::*;
 pub use entity::*;
 pub use entity_merge::*;
 pub use fields::*;

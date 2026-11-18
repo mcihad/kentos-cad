@@ -90,6 +90,11 @@ impl Blobs {
         format!("job-inputs/{tenant}/{project}/{input}-{sha256}")
     }
 
+    /// A portal dossier's file (docs/adr/9000 §7): written once and never changed; removed with its dossier's draft.
+    pub fn dossier_key(dossier: Uuid, file: Uuid) -> String {
+        format!("dossiers/{dossier}/{file}")
+    }
+
     /// An extension package's bytes (docs/adr/8059 §13), by the hex of its content digest: written once, never
     /// changed, shared by every release of that content.
     pub fn extension_package_key(digest_hex: &str) -> String {
@@ -333,7 +338,7 @@ impl Blobs {
 
     /// Removes everything of a project removed for good.
     pub async fn remove_project(&self, tenant: Uuid, project: Uuid) -> io::Result<()> {
-        for kind in ["uploads", "revisions", "checkpoints", "jobs"] {
+        for kind in ["uploads", "revisions", "checkpoints", "jobs", "attachments", "previews"] {
             let dir = self
                 .root
                 .join(kind)
@@ -355,7 +360,7 @@ impl Blobs {
     pub async fn projects(&self, settled: Duration) -> io::Result<Vec<(Uuid, Uuid)>> {
         let mut found = Vec::new();
         let now = SystemTime::now();
-        for kind in ["revisions", "checkpoints", "jobs"] {
+        for kind in ["revisions", "checkpoints", "jobs", "attachments", "previews"] {
             let Ok(mut tenants) = tokio::fs::read_dir(self.root.join(kind)).await else {
                 continue;
             };

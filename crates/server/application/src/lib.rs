@@ -7,6 +7,8 @@
 
 pub mod access;
 pub mod admin;
+pub mod attachments;
+pub mod api_keys;
 pub mod audit_catalog;
 pub mod backup;
 pub mod blobs;
@@ -33,16 +35,21 @@ pub mod jobs;
 mod journal;
 pub mod lifecycle;
 pub mod listing;
+pub mod notification_delivery;
 pub mod people;
+pub mod portal;
+pub mod preview;
 pub mod processing_job;
 pub mod projects;
 pub mod restore;
+pub mod scan;
 pub mod sharing;
 // The sheet template library (docs/sheet/design.md §13).
 pub mod sheet_templates;
 pub mod snapshot;
 pub mod tenancy;
 pub mod upload_parts;
+pub mod uploads;
 
 pub use error::{AppError, AppResult};
 

@@ -55,7 +55,7 @@ pub(crate) fn verifying() -> &'static Semaphore {
 }
 
 /// The project's storage mode, newest file revision and data revision.
-async fn file_state(
+pub(crate) async fn file_state(
     tx: &mut Transaction<'static, Postgres>,
     access: &ProjectAccess,
 ) -> AppResult<(ProjectStorage, i64, i64)> {
@@ -753,6 +753,8 @@ pub async fn cleanup(
             break;
         }
     }
+    // The accounts' own uploads (uploads.rs) nobody took.
+    done.expired += crate::uploads::expire(db, blobs).await?;
     done.swept = blobs.sweep_uploads(lifetime * 2).await?;
     let stored = blobs.projects(settled).await?;
     if !stored.is_empty() {

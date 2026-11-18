@@ -79,7 +79,7 @@ pub async fn open_session(db: &Db, user: Uuid, method: SignInMethod) -> AppResul
     let method = match method {
         SignInMethod::Local => "local",
         SignInMethod::Oidc => "oidc",
-        SignInMethod::Bearer => {
+        SignInMethod::Bearer | SignInMethod::Token => {
             return Err(AppError::invalid("Erişim anahtarıyla oturum açılmaz."));
         }
     };

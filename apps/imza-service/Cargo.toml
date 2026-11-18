@@ -1,0 +1,37 @@
+[package]
+name = "kentos-imza-service"
+description = "KentOS İmza servisi: portalın tarayıcıdan geldiği yolun yerel köprüsü, yalnız geri döngüde; pencere açmaz (docs/adr/9002)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "kentos-imza-service"
+path = "src/main.rs"
+
+[features]
+# The software card for demos and the real-window acceptance (docs/adr/9002 §6): KENTOS_IMZA_DENEME_KARTI=1 picks it.
+# Never in a release build.
+mock-token = ["kentos-imza-signature/mock-token"]
+
+[dependencies]
+kentos-imza-api = { path = "../../crates/imza/api" }
+kentos-imza-pkcs11 = { path = "../../crates/imza/pkcs11" }
+kentos-imza-security = { path = "../../crates/imza/security" }
+kentos-imza-signature = { path = "../../crates/imza/signature" }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "deny"
+unimplemented = "deny"

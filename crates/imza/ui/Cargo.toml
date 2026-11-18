@@ -1,0 +1,31 @@
+[package]
+name = "kentos-imza-ui"
+description = "KentOS İmza: imza penceresi (belgeler, sertifika seçimi, maskeli PIN, ilerleme, sonuç), KentOS UI ile; ajan ve masaüstü kullanır (docs/adr/9002)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# The window never talks to the card: it hands its action to the host (the agent or the desktop).
+[dependencies]
+iced = { workspace = true }
+kentos-imza-domain = { path = "../domain" }
+kentos-ui = { path = "../../ui", default-features = false, features = ["fonts"] }
+serde_json = { workspace = true }
+time = { workspace = true }
+
+[dev-dependencies]
+# The window's pictures drawn without opening a window (crates/ui's headless renderer).
+kentos-ui = { path = "../../ui", default-features = false, features = ["fonts", "snapshot"] }
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "deny"
+unimplemented = "deny"
