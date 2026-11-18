@@ -674,8 +674,12 @@ klavyeyle kabul; resimler.
   kestiği kapalı, saydam olmayan gövdeler düzlemde doldurulur (çekirdek `kentos_model_view::caps`, wasm32): halkalar,
   kutunun kırpması, delikler; tek koyu renk “Kesit yüzü”, lejantta; komşu kapaklar çatlaksız. Kesilen yüz örnek başına
   kesilir (`sample_mask`; gölgelendirici sözleşmesi 4). Kaydırıcı bırakılınca hesaplanır (115 200 üçgende 20–26 ms).
-- Kalanlar (ADR 8073 §9, 8118 §6, 8131 §6): gerçek pencerede kabul; kesit düzlemini yüze tıklayarak kurmak ve sürüklemek,
-  kutunun tutamakları; çok büyük modelde kapağı iş parçacığı dışında hesaplamak; gösterilemeyen nesnenin kutusu; ilk gövdelerle sahne; seçimde yeniden kurmadan boyama;
+- **Kesitin tutamakları (18 Kasım 2026, [ADR 8132](../docs/adr/8132-section-handles-in-the-viewer.md), K311–K315):**
+  Kesit ▾ › Yüzden kesit: tıklanan yüze paralel düzlem 1 mm önde (eksene yatık yüz o eksenin düzlemi; öbürü “Yüze paralel
+  kesit”, kartta Derinlik); düzlemin ortasında kesilen yana bakan ok, kutunun yüzlerinde altı ok; ok sürüklenince düzlem
+  ya da kutunun yüzü işaretçiyi izler (`kentos_model_view::section`, `handles.rs`).
+- Kalanlar (ADR 8073 §9, 8118 §6, 8131 §6, 8132 §6): gerçek pencerede kabul; düzlemi ve kutuyu döndürmek, ince adım; çok
+  büyük modelde kapağı iş parçacığı dışında hesaplamak; gösterilemeyen nesnenin kutusu; ilk gövdelerle sahne; seçimde yeniden kurmadan boyama;
   denetim bulgusundan “Modelde göster” (B13 ile); bir değerden “benzerini göster”; bölme genişliklerinin saklanması.
 
 ## 11. Örnekler ve regresyon

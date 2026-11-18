@@ -1,7 +1,8 @@
 //! The model viewer (docs/adr/8061 §3–§5, docs/adr/8073 §2): a model's objects in a tree by structure or by class,
 //! its bodies in the 3D scene, the chosen object's details; hide, isolate, show all; the spaces and the openings on and
-//! off, everything see-through; a section plane or a box about the chosen objects; the views of every 3D view; the
-//! measuring (measuring.rs, docs/adr/8121); the side panes folded to their rails for a wider scene.
+//! off, everything see-through; a section plane (along an axis or parallel to a clicked face) or a box about the chosen
+//! objects, moved by its handles in the scene (docs/adr/8132); the views of every 3D view; the measuring (measuring.rs,
+//! docs/adr/8121); the side panes folded to their rails for a wider scene.
 //!
 //! It knows its host only through its messages (docs/adr/8061 §4): the host gives it the model ([`Viewer::load`]),
 //! the reading's progress, the chosen object's details and the objects to choose or paint as found; it tells the host
@@ -13,7 +14,7 @@ use std::fmt;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 
-use kentos_model_view::section::{self, Cut, Section};
+use kentos_model_view::section::{self, Cut, Handle, Section};
 use kentos_model_view::{Details, Input, OrbitCamera, PARTS, Row, TreeMode, View, parts};
 use kentos_render_scene3d::Style;
 use kentos_scene3d::{Camera, Exaggeration, Viewport};
@@ -81,8 +82,10 @@ pub enum Message {
     Cut(Cut),
     /// A section box about the chosen object.
     Boxed,
+    /// Yüzden kesit: the next click on a face makes a plane parallel to it (docs/adr/8132); again: not.
+    FromFace,
     Uncut,
-    /// The section plane's place along its axis.
+    /// The section plane's place along its axis (a face's plane: its depth).
     At(f64),
     /// The section plane let go: its cut faces filled again (docs/adr/8131).
     AtDone,
@@ -142,6 +145,10 @@ pub struct Viewer {
     /// Whether the section plane is being dragged: its cut faces wait for its release (docs/adr/8131), the scene not
     /// made again at each step.
     cutting: bool,
+    /// Whether the next click makes a plane parallel to the face it meets (docs/adr/8132), and the section's handle
+    /// being dragged in the scene.
+    pub facing: bool,
+    pub gripped: Option<usize>,
     pub picked: Option<Picked>,
     /// What the host says of the model for the status bar (its schema), as (words, tip).
     pub facts: Vec<(String, String)>,
@@ -187,6 +194,8 @@ impl Viewer {
             see_through: false,
             section: Section::None,
             cutting: false,
+            facing: false,
+            gripped: None,
             picked: None,
             facts: Vec::new(),
             query: String::new(),
@@ -255,11 +264,8 @@ impl Viewer {
         self.details = None;
         self.picked = None;
         // A plane kept inside the model's span as it is now.
-        if let Section::Plane { cut, at, .. } = self.section
-            && let Some((lo, hi)) = self.span(cut)
-            && let Section::Plane { at: now, .. } = &mut self.section
-        {
-            *now = at.clamp(lo, hi);
+        if let (Some(at), Some((lo, hi))) = (self.section.place(), self.range()) {
+            self.section.set_place(at.clamp(lo, hi));
         }
         self.rebuild();
         chosen
@@ -350,6 +356,19 @@ impl Viewer {
         (!b.is_empty()).then(|| (b.min[k], b.max[k]))
     }
 
+    /// The places the section's plane takes across what shows (a face's plane: its depths); none for a box or none.
+    pub fn range(&self) -> Option<(f64, f64)> {
+        self.section.range(&self.view.as_ref()?.bounds())
+    }
+
+    /// The section's handles in the scene (docs/adr/8132); none while a click is to measure or to pick a face.
+    pub fn handles(&self) -> Vec<Handle> {
+        match self.view.as_ref() {
+            Some(v) if !self.facing && !self.measuring.on => self.section.handles(&v.bounds()),
+            _ => Vec::new(),
+        }
+    }
+
     pub fn update(&mut self, message: Message) -> Option<Out> {
         match message {
             Message::Gesture(g) => return self.gesture(g),
@@ -407,6 +426,7 @@ impl Viewer {
             Message::SeeThrough => self.see_through = !self.see_through,
             Message::Cut(cut) => {
                 let (lo, hi) = self.span(cut)?;
+                self.facing = false;
                 self.section = Section::Plane { cut, at: (lo + hi) / 2.0, flip: false };
                 self.rebuild();
             }
@@ -414,19 +434,31 @@ impl Viewer {
                 let v = self.view.as_ref()?;
                 let b = v.bounds_under(v.selected()?);
                 if !b.is_empty() {
+                    self.facing = false;
                     self.section = Section::Box(section::about(&b));
                     self.rebuild();
                 }
             }
+            // A click on a face is to make the plane: not to measure.
+            Message::FromFace => {
+                self.facing = !self.facing;
+                if self.facing {
+                    self.measuring.on = false;
+                    self.measuring.points.clear();
+                    self.measuring.hover = None;
+                }
+            }
             Message::Uncut => {
                 self.section = Section::None;
+                self.facing = false;
                 self.cutting = false;
+                self.gripped = None;
                 self.rebuild();
             }
             // Dragged: the cut faces go at the first step and come back at the release (docs/adr/8131).
             Message::At(at) => {
-                if let Section::Plane { at: now, .. } = &mut self.section {
-                    *now = at;
+                if self.section.place().is_some() {
+                    self.section.set_place(at);
                     if !self.cutting {
                         self.cutting = true;
                         self.rebuild();
@@ -438,7 +470,7 @@ impl Viewer {
                 self.rebuild();
             }
             Message::Flip => {
-                if let Section::Plane { flip, .. } = &mut self.section {
+                if let Section::Plane { flip, .. } | Section::Face { flip, .. } = &mut self.section {
                     *flip = !*flip;
                     self.rebuild();
                 }
@@ -454,6 +486,7 @@ impl Viewer {
             Message::Pane(Side::Tree) => self.tree_open = !self.tree_open,
             Message::Pane(Side::Details) => self.details_open = !self.details_open,
             Message::Measure => {
+                self.facing = false;
                 let m = &mut self.measuring;
                 m.on = !m.on;
                 m.points.clear();
@@ -464,6 +497,7 @@ impl Viewer {
                 }
             }
             Message::Tool(tool) => {
+                self.facing = false;
                 let m = &mut self.measuring;
                 m.tool = tool;
                 m.points.clear();
@@ -516,6 +550,25 @@ impl Viewer {
             }
             // While measuring a click gives a point; nothing is chosen.
             Gesture::Pick(x, y, width, height) if self.measuring.on => self.measure_click(x, y, width, height),
+            // Yüzden kesit: the face clicked gives the plane (docs/adr/8132).
+            Gesture::Pick(x, y, width, height) if self.facing => self.face_click(x, y, width, height),
+            // A section's handle dragged: its plane or its box's face follows; the cut faces wait for the release.
+            Gesture::Handle(i, along) => {
+                let b = self.view.as_ref()?.bounds();
+                self.section.moved(i, along, &b);
+                self.gripped = Some(i);
+                if !self.cutting {
+                    self.cutting = true;
+                    self.rebuild();
+                }
+            }
+            Gesture::HandleDone(_) => {
+                self.gripped = None;
+                if self.cutting {
+                    self.cutting = false;
+                    self.rebuild();
+                }
+            }
             Gesture::Size(width, height) => {
                 if width > 0.0 && height > 0.0 {
                     self.aspect = f64::from(width) / f64::from(height);
@@ -546,6 +599,29 @@ impl Viewer {
             }
         }
         None
+    }
+
+    /// Yüzden kesit's click (docs/adr/8132): the plane parallel to the face it meets (what a section cuts away is not
+    /// met), a hair in front of it, the side behind kept; a click on nothing waits for a face.
+    fn face_click(&mut self, x: f32, y: f32, width: f32, height: f32) {
+        let vp = Viewport { width: f64::from(width), height: f64::from(height) };
+        let camera = self.camera();
+        let Some(p) = self.scene.pick_cut(&camera, &vp, &Exaggeration::NONE, f64::from(x), f64::from(y), &self.planes()) else {
+            return;
+        };
+        let Some(s) = self.scene.meshes().get(p.mesh) else { return };
+        let corner = |i: u32| s.vertices.get(i as usize).copied();
+        let Some((a, b, c)) = s.triangles.get(p.triangle).and_then(|t| Some((corner(t[0])?, corner(t[1])?, corner(t[2])?))) else {
+            return;
+        };
+        let Some(bounds) = self.view.as_ref().map(View::bounds) else { return };
+        let made = section::normal_of(a, b, c).and_then(|n| Section::from_face(p.point, n, camera.eye, &bounds));
+        if let Some(made) = made {
+            self.section = made;
+            self.facing = false;
+            self.cutting = false;
+            self.rebuild();
+        }
     }
 
     /// An object chosen (none: nothing), the point clicked forgotten; the host is told.
@@ -783,6 +859,53 @@ mod tests {
         assert!(b.min[0] < 3.0 && b.max[0] > 4.0 && b.min[0] > 1.0, "{b:?}");
         let _ = v.update(Message::Uncut);
         assert!(v.planes().is_empty());
+    }
+
+    /// Yüzden kesit and the handles (docs/adr/8132): after Yüzden kesit a click on the first cube's top makes a level
+    /// cut a millimetre over it (nothing chosen), its handle at the model's middle pointing up; dragged half a metre
+    /// down it cuts both cubes, their caps waiting till it is let go. With no section, a click on the second cube's
+    /// north face (seen from the north-east) makes an east–west cut a millimetre north of it, the south kept. A box
+    /// about the chosen cube has six
+    /// handles; its east one dragged a metre out takes the box's east face with it. Ölç and Yüzden kesit take turns.
+    #[test]
+    fn a_click_on_a_face_makes_a_plane_and_its_handles_drag_the_section() {
+        use kentos_model_view::section::FACE_GAP;
+        let mut v = loaded();
+        let capped = |v: &Viewer| v.scene().meshes().iter().filter(|m| m.part == parts::CAP).count();
+        let _ = v.update(Message::FromFace);
+        assert!(v.facing && v.handles().is_empty());
+        assert_eq!(click_at(&mut v, [0.5, 0.5, 1.0]), None, "nothing chosen");
+        assert!(!v.facing);
+        let Section::Plane { cut: Cut::Level, at, flip: false } = v.section else { panic!("a level cut: {:?}", v.section) };
+        assert!((at - (1.0 + FACE_GAP)).abs() < 1e-9, "{at}");
+        assert_eq!(v.handles(), vec![Handle { at: [2.0, 0.5, at], dir: [0.0, 0.0, 1.0] }]);
+        assert_eq!(capped(&v), 0, "a millimetre over the top: nothing cut");
+        let _ = v.update(Message::Gesture(Gesture::Handle(0, -0.5)));
+        assert!((v.section.place().expect("a plane") - (0.5 + FACE_GAP)).abs() < 1e-12);
+        assert_eq!((v.gripped, capped(&v)), (Some(0), 0), "the caps wait while it is dragged");
+        let _ = v.update(Message::Gesture(Gesture::HandleDone(0)));
+        assert_eq!((v.gripped, capped(&v)), (None, 2), "both cubes cut and filled");
+        let _ = v.update(Message::Uncut);
+        let _ = v.update(Message::FromFace);
+        assert_eq!(click_at(&mut v, [3.5, 1.0, 0.5]), None);
+        let Section::Plane { cut: Cut::EastWest, at, flip: false } = v.section else { panic!("the south kept: {:?}", v.section) };
+        assert!((at - (1.0 + FACE_GAP)).abs() < 1e-9, "{at}");
+        // Ölç ends Yüzden kesit, and Yüzden kesit Ölç.
+        let _ = v.update(Message::FromFace);
+        let _ = v.update(Message::Measure);
+        assert!(v.measuring.on && !v.facing);
+        let _ = v.update(Message::FromFace);
+        assert!(v.facing && !v.measuring.on);
+        let _ = v.update(Message::FromFace);
+        // A box about the second cube, its east face dragged a metre out.
+        assert!(matches!(click_at(&mut v, [3.5, 0.5, 1.0]), Some(Out::Chosen(Some((3, _))))));
+        let _ = v.update(Message::Boxed);
+        let Section::Box(before) = v.section else { panic!("a box") };
+        assert_eq!(v.handles().len(), 6);
+        let _ = v.update(Message::Gesture(Gesture::Handle(1, 1.0)));
+        let _ = v.update(Message::Gesture(Gesture::HandleDone(1)));
+        let Section::Box(after) = v.section else { panic!("a box") };
+        assert!((after.max[0] - before.max[0] - 1.0).abs() < 1e-12 && after.min == before.min);
     }
 
     /// Kesit yüzü (docs/adr/8131): a level cut through both cubes fills each cut with a dark cap of its object; while

@@ -2,7 +2,8 @@
 //! origins (`kentos_scene3d::chunk`), selected each frame by the screen-space error and drawn by the shared renderer
 //! (`kentos_render_scene3d`) through Iced's shader widget, a clicked point ringed over it. Every 3D view draws with it:
 //! the building's and the road's (the application's 3B görünüm) and the IFC viewer's. It knows no host: a drag, a right
-//! drag (or Shift), the wheel and a click come back as [`Gesture`]s through the host's function. Each view draws at the
+//! drag (or Shift), the wheel, a click and a section's handle dragged (handles.rs, docs/adr/8132) come back as
+//! [`Gesture`]s through the host's function. Each view draws at the
 //! quality the host asks (docs/adr/8120): into its own targets, four samples a pixel, its bodies' edges and, at the
 //! highest, the ambient light's occlusion, then laid over the window.
 
@@ -14,6 +15,7 @@ use std::sync::{Arc, Mutex};
 use iced::widget::{canvas, shader, stack};
 use iced::{Color, Element, Fill, Rectangle, Theme, mouse, wgpu};
 pub use kentos_render_scene3d::Quality;
+use kentos_model_view::section::Handle;
 use kentos_render_scene3d::{Frame as Scene3dFrame, Scene3dRenderer, Style};
 use kentos_scene3d::{Aabb, Camera, Chunked, Content, Exaggeration, Limits, Settings, SourceMesh, Viewport, chunk, select};
 use kentos_ui::theme::Tokens;
@@ -183,6 +185,11 @@ pub enum Gesture {
     Size(f32, f32),
     /// Where the pointer is over the view (none: it left it) of a size, while the host asks (measuring, docs/adr/8121).
     Hover(Option<(f32, f32)>, f32, f32),
+    /// A section's handle (its place among the view's handles) dragged this far along its arrow, metres
+    /// (docs/adr/8132).
+    Handle(usize, f64),
+    /// The handle let go.
+    HandleDone(usize),
 }
 
 /// What the scene draws over itself besides the clicked point (docs/adr/8121): a measurement's lines, points and
@@ -216,13 +223,19 @@ pub struct SceneView {
     /// The measurements drawn over the scene, and whether the pointer's moves come back as [`Gesture::Hover`].
     pub marks: Vec<Mark>,
     pub hover: bool,
+    /// A section's handles (docs/adr/8132), and the one being dragged.
+    pub handles: Vec<Handle>,
+    pub active: Option<usize>,
     pub seen: Arc<Mutex<Seen>>,
     pub pending: Arc<AtomicBool>,
 }
 
 /// The scene drawn and its gestures sent through `on`.
 pub fn view<'a, M: Clone + 'a>(v: SceneView, on: impl Fn(Gesture) -> M + 'a) -> Element<'a, M> {
-    let marker = canvas(Marker { camera: v.camera, point: v.marked, marks: v.marks }).width(Fill).height(Fill);
+    let handles = Arc::new(v.handles);
+    let marker = canvas(Marker { camera: v.camera, point: v.marked, marks: v.marks, handles: handles.clone(), active: v.active })
+        .width(Fill)
+        .height(Fill);
     let program = Program {
         scene: v.scene,
         camera: v.camera,
@@ -236,6 +249,7 @@ pub fn view<'a, M: Clone + 'a>(v: SceneView, on: impl Fn(Gesture) -> M + 'a) -> 
         seen: v.seen,
         pending: v.pending,
         hover: v.hover,
+        handles,
         on: Box::new(on),
     };
     stack![shader(program).width(Fill).height(Fill), marker].into()
@@ -256,17 +270,19 @@ struct Program<'a, M> {
     seen: Arc<Mutex<Seen>>,
     pending: Arc<AtomicBool>,
     hover: bool,
+    handles: Arc<Vec<Handle>>,
     on: Box<dyn Fn(Gesture) -> M + 'a>,
 }
 
-/// A drag in progress (where, whether it pans), the view's key in the pipeline, the size last told and the pointer's
-/// place last told (none: outside).
+/// A drag in progress (where, whether it pans), the view's key in the pipeline, the size last told, the pointer's
+/// place last told (none: outside) and the handle under it.
 pub struct State {
     view: u64,
     drag: Option<Press>,
     shift: bool,
     size: (f32, f32),
     over: Option<(f32, f32)>,
+    hot: Option<usize>,
 }
 
 #[derive(Clone, Copy)]
@@ -275,6 +291,8 @@ struct Press {
     pan: bool,
     down: iced::Point,
     moved: bool,
+    /// The section's handle it took (docs/adr/8132): its drag moves the plane, not the camera.
+    handle: Option<usize>,
 }
 
 /// A press that moves less than this (logical pixels) is a click: it picks.
@@ -288,7 +306,7 @@ static RETIRED: Mutex<Vec<u64>> = Mutex::new(Vec::new());
 
 impl Default for State {
     fn default() -> Self {
-        State { view: NEXT_VIEW.fetch_add(1, Ordering::Relaxed), drag: None, shift: false, size: (0.0, 0.0), over: None }
+        State { view: NEXT_VIEW.fetch_add(1, Ordering::Relaxed), drag: None, shift: false, size: (0.0, 0.0), over: None, hot: None }
     }
 }
 
@@ -323,20 +341,29 @@ impl<M> shader::Program<M> for Program<'_, M> {
             }
             iced::Event::Mouse(mouse::Event::ButtonPressed(b @ (mouse::Button::Left | mouse::Button::Right))) => {
                 let at = cursor.position_in(bounds)?;
-                state.drag = Some(Press { last: at, pan: *b == mouse::Button::Right || state.shift, down: at, moved: false });
+                // A left press on a section's handle takes it (docs/adr/8132).
+                let handle = (*b == mouse::Button::Left).then(|| self.handle_at(bounds, at)).flatten();
+                state.drag = Some(Press { last: at, pan: *b == mouse::Button::Right || state.shift, down: at, moved: false, handle });
                 Some(shader::Action::capture())
             }
             iced::Event::Mouse(mouse::Event::ButtonReleased(_)) => {
                 let p = state.drag.take()?;
+                if let Some(i) = p.handle {
+                    return Some(shader::Action::publish((self.on)(Gesture::HandleDone(i))).and_capture());
+                }
                 if p.moved || p.pan {
                     return Some(shader::Action::capture());
                 }
                 Some(shader::Action::publish((self.on)(Gesture::Pick(p.down.x, p.down.y, bounds.width, bounds.height))).and_capture())
             }
             iced::Event::Mouse(mouse::Event::CursorMoved { position }) if state.drag.is_none() => {
+                // Over a section's handle or off it: drawn again, lit or not (the marks' layer reads the pointer).
+                let hot = cursor.position_in(bounds).and_then(|p| self.handle_at(bounds, p));
+                let relit = hot != state.hot;
+                state.hot = hot;
                 // While the host measures: the pointer's place when it moved a pixel, and once when it left.
                 if !self.hover {
-                    return None;
+                    return relit.then(shader::Action::request_redraw);
                 }
                 let at = cursor.position_in(bounds).map(|p| (p.x, p.y));
                 let moved = match (at, state.over) {
@@ -365,7 +392,16 @@ impl<M> shader::Program<M> for Program<'_, M> {
                 let (dx, dy) = (at.x - p.last.x, at.y - p.last.y);
                 p.last = at;
                 state.drag = Some(p);
-                let g = if p.pan { Gesture::Pan(dx, dy) } else { Gesture::Orbit(dx, dy) };
+                let g = match p.handle {
+                    // The handle's plane follows the pointer along its arrow.
+                    Some(i) => {
+                        let vp = Viewport { width: f64::from(bounds.width), height: f64::from(bounds.height) };
+                        let Some(h) = self.handles.get(i) else { return Some(shader::Action::capture()) };
+                        Gesture::Handle(i, crate::handles::along(h, &self.camera, &vp, dx, dy))
+                    }
+                    None if p.pan => Gesture::Pan(dx, dy),
+                    None => Gesture::Orbit(dx, dy),
+                };
                 Some(shader::Action::publish((self.on)(g)).and_capture())
             }
             iced::Event::Mouse(mouse::Event::WheelScrolled { delta }) => {
@@ -400,9 +436,21 @@ impl<M> shader::Program<M> for Program<'_, M> {
     fn mouse_interaction(&self, state: &State, bounds: Rectangle, cursor: mouse::Cursor) -> mouse::Interaction {
         match state.drag {
             Some(_) => mouse::Interaction::Grabbing,
+            None if cursor.position_in(bounds).and_then(|p| self.handle_at(bounds, p)).is_some() => mouse::Interaction::Pointer,
             None if cursor.is_over(bounds) => mouse::Interaction::Grab,
             None => mouse::Interaction::default(),
         }
+    }
+}
+
+impl<M> Program<'_, M> {
+    /// The section's handle at a place of the view (docs/adr/8132).
+    fn handle_at(&self, bounds: Rectangle, at: iced::Point) -> Option<usize> {
+        if self.handles.is_empty() {
+            return None;
+        }
+        let vp = Viewport { width: f64::from(bounds.width), height: f64::from(bounds.height) };
+        crate::handles::at(&self.handles, &self.camera, &vp, at)
     }
 }
 
@@ -534,22 +582,25 @@ impl shader::Primitive for Frame3d {
     }
 }
 
-/// The point picked, ringed where the camera shows it, and the measurements' marks (docs/adr/8121): their lines in the
+/// The point picked, ringed where the camera shows it, the measurements' marks (docs/adr/8121): their lines in the
 /// accent colour (faint ones thinner and dashed), their points white-ringed dots, the pointer's snap its symbol and its
-/// name, their values on plates of the field's colour.
+/// name, their values on plates of the field's colour; and under them a section's handles (docs/adr/8132), the one
+/// being dragged or under the pointer lit.
 struct Marker {
     camera: Camera,
     point: Option<[f64; 3]>,
     marks: Vec<Mark>,
+    handles: Arc<Vec<Handle>>,
+    active: Option<usize>,
 }
 
 impl<M> canvas::Program<M> for Marker {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &iced::Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(&self, _: &(), renderer: &iced::Renderer, theme: &Theme, bounds: Rectangle, cursor: mouse::Cursor) -> Vec<canvas::Geometry> {
         use iced::widget::canvas::{Frame, LineDash, Path, Stroke, Text};
         use kentos_model_view::measure::Snap;
-        if self.point.is_none() && self.marks.is_empty() {
+        if self.point.is_none() && self.marks.is_empty() && self.handles.is_empty() {
             return Vec::new();
         }
         let vp = Viewport { width: f64::from(bounds.width), height: f64::from(bounds.height) };
@@ -557,6 +608,9 @@ impl<M> canvas::Program<M> for Marker {
         let mut frame = Frame::new(renderer, bounds.size());
         let t = Tokens::of(theme);
         let accent = t.accent;
+        // A section's handles under the marks; the one dragged, else the one under the pointer, lit.
+        let hot = self.active.or_else(|| cursor.position_in(bounds).and_then(|p| crate::handles::at(&self.handles, &self.camera, &vp, p)));
+        crate::handles::draw(&mut frame, &self.handles, &self.camera, &vp, hot, &t);
         // Lines first, then points, then the values over them.
         for m in &self.marks {
             if let Mark::Line { a, b, faint } = m

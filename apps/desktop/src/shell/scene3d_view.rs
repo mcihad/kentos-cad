@@ -223,6 +223,8 @@ impl App {
             quality: self.scene3d_quality(),
             marks: Vec::new(),
             hover: false,
+            handles: Vec::new(),
+            active: None,
             planes: Vec::new(),
             marked: w.picked.as_ref().map(|p| w.exaggeration().shown(p.point)),
             seen: w.seen.clone(),
@@ -305,6 +307,8 @@ fn gesture(g: Gesture) -> Message {
         Gesture::Size(width, height) => Event::Sized(width, height),
         // The road measures nothing yet: its scene never asks for the pointer's moves.
         Gesture::Hover(_, width, height) => Event::Sized(width, height),
+        // A section's handles are a building's viewer's (the road's scene has none).
+        g @ (Gesture::Handle(..) | Gesture::HandleDone(_)) => Event::Viewer(kentos_model_view_ui::Message::Gesture(g)),
     })
 }
 

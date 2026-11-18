@@ -338,6 +338,117 @@ fn cap_screens() {
     }
 }
 
+/// Kesitin tutamakları (docs/adr/8132), light and dark, `.run/gui-evidence/kesit-tutamaklari-8132/`: the section
+/// building's file cut level at a little over half its height, the handle dragged 60 cm down (lit, the cut faces
+/// waiting) and let go (filled); a box about a chosen wall, its east handle dragged 1.5 m out; Yüzden kesit waiting for
+/// its click; the curved building's file, a click on its arc wall's outer face (turned off the axes) making a plane
+/// parallel to it, its handle dragged 2.5 m in.
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib ifc_viewer_tests::handle_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn handle_screens() {
+    use iced::Size;
+    use kentos_model_view::{Cut, Section};
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kesit-tutamaklari-8132");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    let curved = || -> kentos_commands::DocumentSnapshotV2 {
+        kentos_kcad::decode(include_bytes!("../../../../fixtures/arch/v1/curved-building.kcad")).expect("decodes")
+    };
+    let gesture = |app: &mut App, g: Gesture| send(app, Event::Viewer(V::Gesture(g)));
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        let mut apart = Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
+        let mut shot = |app: &mut App, file: &str| {
+            apart.settle(app, App::ifc_viewer_shown, &mut update);
+            apart.settle(app, App::ifc_viewer_shown, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            apart.render(App::ifc_viewer_shown(app), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        let themed = |snapshot: kentos_commands::DocumentSnapshotV2| {
+            let mut app = open(snapshot);
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(Size::new(1440.0, 900.0)));
+            app
+        };
+        let mut app = themed(building());
+        let path = exported(&mut app, &format!("tutamak-{name}"));
+        opened(&mut app, path.clone());
+        send(&mut app, Event::Viewer(V::Cut(Cut::Level)));
+        let (lo, hi) = app.ifc_viewer.as_ref().and_then(|w| w.viewer.span(Cut::Level)).expect("a span");
+        send(&mut app, Event::Viewer(V::At(lo + (hi - lo) * 0.55)));
+        send(&mut app, Event::Viewer(V::AtDone));
+        gesture(&mut app, Gesture::Handle(0, -0.6));
+        shot(&mut app, "1-yatay-kesit-surukleniyor");
+        gesture(&mut app, Gesture::HandleDone(0));
+        shot(&mut app, "2-yatay-kesit-birakildi");
+        click_a_wall(&mut app);
+        send(&mut app, Event::Viewer(V::Boxed));
+        send(&mut app, Event::Viewer(V::Focus));
+        gesture(&mut app, Gesture::Handle(1, 1.5));
+        gesture(&mut app, Gesture::HandleDone(1));
+        shot(&mut app, "3-kutu-tutamaklari");
+        send(&mut app, Event::Viewer(V::Uncut));
+        send(&mut app, Event::Viewer(V::View(0)));
+        send(&mut app, Event::Viewer(V::FromFace));
+        shot(&mut app, "4-yuzden-kesit-bekliyor");
+        let _ = std::fs::remove_dir_all(path.parent().expect("its folder"));
+
+        let mut app = themed(curved());
+        let path = exported(&mut app, &format!("egri-{name}"));
+        opened(&mut app, path.clone());
+        send(&mut app, Event::Viewer(V::FromFace));
+        // A wall face turned off the axes (between a sixth and a third of a right angle) that faces the camera.
+        let vp = Viewport { width: 1000.0, height: 700.0 };
+        let candidates: Vec<[f64; 3]> = {
+            let w = app.ifc_viewer.as_ref().expect("the viewer");
+            let eye = w.viewer.camera().eye;
+            w.viewer
+                .scene()
+                .meshes()
+                .iter()
+                .filter(|m| m.part == 0)
+                .flat_map(|m| m.triangles.iter().map(move |t| t.map(|i| m.vertices[i as usize])))
+                .filter_map(|[a, b, c]| {
+                    let n = kentos_model_view::section::normal_of(a, b, c)?;
+                    let middle = [(a[0] + b[0] + c[0]) / 3.0, (a[1] + b[1] + c[1]) / 3.0, (a[2] + b[2] + c[2]) / 3.0];
+                    let towards = (0..3).map(|k| n[k] * (eye[k] - middle[k])).sum::<f64>();
+                    let turned = n[2].abs() < 0.05 && n[0].abs() > 0.25 && n[1].abs() > 0.5;
+                    (turned && towards > 0.0).then_some(middle)
+                })
+                .collect()
+        };
+        assert!(!candidates.is_empty(), "the arc wall's faces");
+        // A click may meet another face in front: Yüzden kesit again, the next face.
+        for middle in candidates.iter().take(200) {
+            let viewer = &app.ifc_viewer.as_ref().expect("the viewer").viewer;
+            let (cam, facing) = (viewer.camera(), viewer.facing);
+            let Some((x, y, _)) = cam.project(*middle, &vp) else { continue };
+            if !facing {
+                send(&mut app, Event::Viewer(V::FromFace));
+            }
+            gesture(&mut app, Gesture::Pick(x as f32, y as f32, 1000.0, 700.0));
+            if matches!(app.ifc_viewer.as_ref().expect("the viewer").viewer.section, Section::Face { .. }) {
+                break;
+            }
+        }
+        let section = app.ifc_viewer.as_ref().expect("the viewer").viewer.section;
+        assert!(matches!(section, Section::Face { .. }), "a plane parallel to the arc wall: {section:?}");
+        gesture(&mut app, Gesture::Handle(0, -2.5));
+        gesture(&mut app, Gesture::HandleDone(0));
+        shot(&mut app, "5-yuze-paralel-kesit");
+        let _ = std::fs::remove_dir_all(path.parent().expect("its folder"));
+    }
+}
+
 /// EK-9 from the written file (docs/adr/8074), light and dark; `.run/gui-evidence/ek9-dosyadan-8074/`: Denetim's
 /// Mevzuat group with the form's findings, the project's information first; IFC modeli painting the walls the fire
 /// rating finding names; the form's table in the drawing, its answers the file's; Ruhsat takımı with the project's

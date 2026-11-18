@@ -234,6 +234,11 @@
       Çizicide `Style { color, cut }`: kesilmeyen parça alfa + 2 ile gider; kesilen yüz örnek başına kesilir
       (`keptSamples`, `sample_mask`, `edge.w` örnek sayısı; sözleşme sürüm 4). Kapaklar kaydırıcı bırakılınca
       (`Message::AtDone`); sürüklerken yalnız kırpma.
+    - Kesitin tutamakları ([ADR 8132](../adr/8132-section-handles-in-the-viewer.md), 18 Kasım 2026): `Section::Face`
+      (tıklanan nokta, yüzün normali, derinlik), `Section::from_face` (1 mm önde, `FACE_GAP`; eksene yatık yüz o
+      eksenin düzlemi), `handles`/`moved` (düzlemin bir, kutunun altı oku; kutu en az 1 cm). Bileşende `handles.rs`
+      (ekrandaki ok, vuruş, piksel → metre), `Gesture::Handle`/`HandleDone`, `Message::FromFace`; ölçerken ve yüz
+      beklerken ok yok. Görünümdür: komut, Python, MCP yok.
     - Araştırma: [not](../research/2026-11-15-ifc-goruntuleyici.md). Ölçümler:
       [docs/perf/ifc-okuma-denemesi-2026-11-16.md](../perf/ifc-okuma-denemesi-2026-11-16.md).
   - **EK-9 yazılmış dosyadan (16 Kasım 2026; [ADR 8074](../adr/8074-ek9-from-the-written-file.md), IFC-08, sıra B13; ilk

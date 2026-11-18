@@ -200,12 +200,12 @@ impl Viewer {
             Message::SeeThrough,
         ));
         out.push(strip::divider());
-        let section = self.section;
+        let (section, facing) = (self.section, self.facing);
         out.push(strip::menu(
             Icon::Layers,
             "Kesit",
-            "Kesit: bir düzlemle ya da seçimin çevresindeki kutuyla modelin içine bakar. Kesilen yüzler kapatılmaz.",
-            move || section_menu(section, chosen),
+            "Kesit: bir düzlemle ya da seçimin çevresindeki kutuyla modelin içine bakar; kesilen gövdeler koyu dolgulu. Düzlem bir yüze paralel de kurulur; sahnedeki okundan sürüklenir.",
+            move || section_menu(section, facing, chosen),
         ));
         out.push(strip::toggle(
             Some(Icon::Ruler),
@@ -218,35 +218,41 @@ impl Viewer {
     }
 
     /// While something cuts the model: the section's card over the scene's top left, its name and ×, and for a plane
-    /// its axis, its place (a slider and the value with its unit) and Öbür yanı.
+    /// its axis (a face's plane: its depth behind the face), its place (a slider and the value with its unit) and Öbür
+    /// yanı; while Yüzden kesit waits for its click, what to click (docs/adr/8132).
     fn section_card<'a, M>(&'a self, host: &Host<'a, M>) -> Option<Element<'a, Message>> {
+        let place = |axis: &'a str, at: f64, flip: bool| -> Option<Element<'a, Message>> {
+            let (lo, hi) = self.range()?;
+            let place = column![
+                row![
+                    label::body(axis).style(muted),
+                    slider(lo..=hi, at.clamp(lo, hi), Message::At)
+                        .on_release(Message::AtDone)
+                        .step((hi - lo) / 1000.0)
+                        .style(kentos_ui::style::field::slider)
+                        .width(Fill),
+                    label::mono(format!("{} m", (host.coordinate)(at))),
+                ]
+                .spacing(10)
+                .align_y(Center),
+                strip::toggle(None, "Öbür yanı", "Öbür yanı: düzlemin öbür yanını gösterir.", flip, Message::Flip),
+            ]
+            .spacing(6);
+            Some(place.into())
+        };
         let (title, place): (&str, Option<Element<'a, Message>>) = match self.section {
+            _ if self.facing => ("Yüzden kesit", Some(label::body("Düzlemin paralel olacağı yüze tıklayın.").style(muted).into())),
             Section::None => return None,
             Section::Box(_) => ("Seçimin çevresinde kutu", None),
             Section::Plane { cut, at, flip } => {
-                let (lo, hi) = self.span(cut)?;
                 let (title, axis) = match cut {
                     Cut::Level => ("Yatay kesit", "Kot"),
                     Cut::NorthSouth => ("Kuzey–güney düşey kesiti", host.east),
                     Cut::EastWest => ("Doğu–batı düşey kesiti", host.north),
                 };
-                let place = column![
-                    row![
-                        label::body(axis).style(muted),
-                        slider(lo..=hi, at.clamp(lo, hi), Message::At)
-                            .on_release(Message::AtDone)
-                            .step((hi - lo) / 1000.0)
-                            .style(kentos_ui::style::field::slider)
-                            .width(Fill),
-                        label::mono(format!("{} m", (host.coordinate)(at))),
-                    ]
-                    .spacing(10)
-                    .align_y(Center),
-                    strip::toggle(None, "Öbür yanı", "Öbür yanı: düzlemin öbür yanını gösterir.", flip, Message::Flip),
-                ]
-                .spacing(6);
-                (title, Some(place.into()))
+                (title, Some(place(axis, at, flip)?))
             }
+            Section::Face { depth, flip, .. } => ("Yüze paralel kesit", Some(place("Derinlik", depth, flip)?)),
         };
         let head = row![
             label::strong(title),
@@ -279,6 +285,8 @@ impl Viewer {
             marked: self.picked.as_ref().filter(|_| !self.measuring.on).map(|p| p.point),
             marks: self.marks(&|v| written(host, v)),
             hover: self.measuring.on,
+            handles: self.handles(),
+            active: self.gripped,
             seen: self.seen.clone(),
             pending: self.pending.clone(),
         };
@@ -413,6 +421,10 @@ impl Viewer {
     fn status<'a, M>(&'a self, host: &Host<'a, M>) -> Element<'a, Message> {
         let mut bar = StatusBar::new();
         bar = match &self.picked {
+            // Yüzden kesit waits for its click (docs/adr/8132): what to click before the point clicked last.
+            _ if self.facing && self.stage == Stage::Shown => {
+                bar.push(Readout::new(label::body("Bir yüze tıklayın: kesit o yüze paralel kurulur.").style(muted)).icon(Icon::Crosshair))
+            }
             Some(p) => {
                 let at = format!(
                     "{} {}   {} {}   Z {}",
@@ -455,7 +467,7 @@ impl Viewer {
         }
         bar.separator()
             .push(Readout::new(label::body("Fare")).icon(Icon::Help).tip(Tip::new("Fareyle gezinme").body(
-                "Sürükleyin: döndürür. Sağ tuşla ya da Shift ile sürükleyin: kaydırır. Tekerlek: yaklaştırır, uzaklaştırır. Tıklayın: nesneyi seçer.",
+                "Sürükleyin: döndürür. Sağ tuşla ya da Shift ile sürükleyin: kaydırır. Tekerlek: yaklaştırır, uzaklaştırır. Tıklayın: nesneyi seçer. Kesitin okunu sürükleyin: düzlemi ya da kutunun yüzünü kaydırır.",
             )))
             .into()
     }
@@ -478,13 +490,14 @@ fn reading<'a>(phase: &'a str, done: usize, total: usize) -> Element<'a, Message
     .into()
 }
 
-/// The section's menu: the three planes, the box about the chosen object, and none.
-fn section_menu(section: Section, chosen: bool) -> Menu<Message> {
-    let plane = |c: Cut| matches!(section, Section::Plane { cut, .. } if cut == c);
+/// The section's menu: the three planes, a plane parallel to a clicked face, the box about the chosen object, and none.
+fn section_menu(section: Section, facing: bool, chosen: bool) -> Menu<Message> {
+    let plane = |c: Cut| !facing && matches!(section, Section::Plane { cut, .. } if cut == c);
     let mut m = Menu::new()
         .radio("Yatay kesit", plane(Cut::Level), Message::Cut(Cut::Level))
         .radio("Kuzey–güney düşey kesiti", plane(Cut::NorthSouth), Message::Cut(Cut::NorthSouth))
-        .radio("Doğu–batı düşey kesiti", plane(Cut::EastWest), Message::Cut(Cut::EastWest));
+        .radio("Doğu–batı düşey kesiti", plane(Cut::EastWest), Message::Cut(Cut::EastWest))
+        .radio("Yüzden kesit", facing || matches!(section, Section::Face { .. }), Message::FromFace);
     if chosen {
         m = m.radio("Seçimin çevresinde kutu", matches!(section, Section::Box(_)), Message::Boxed);
     }
