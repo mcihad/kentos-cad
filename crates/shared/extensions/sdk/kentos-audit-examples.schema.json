@@ -803,6 +803,13 @@
           "format": "double",
           "type": "number"
         },
+        "layout": {
+          "description": "The building's layout the plan sets, as the project says it (yapı nizamı, docs/adr/8141): `detached`, `attached`,\n`block`, `twin`; absent: not said. PAİY 5/6 reads the TAKS a plan does not give by it.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "outside": {
           "description": "Emsal harici apart from the 30 % (5/8's own list: fire stairs and their halls, a shelter …).",
           "format": "double",

@@ -9,8 +9,9 @@
 - **26/2:** döşeme kaplamaları (IFC türü FLOORING) en az normal alevlenici, yüksek binada (4/ccc: bina yüksekliği 21,50
   m'den ya da yapı yüksekliği 30,50 m'den fazla) en az zor alevlenici malzemeden.
 - **26/4:** ayrık nizamda müstakil konutlar dışındaki binaların tavan kaplamaları ve asma tavanları (IFC türü CEILING) en
-  az zor alevlenici malzemeden. Binanın nizamı çizimde yok: tek konutlu binada (başka bölümü olmayan) tutmayan tavan
-  uzman incelemesidir.
+  az zor alevlenici malzemeden. Müstakil konut tek konutlu, başka bölümü olmayan binadır; nizamı projenin yapı nizamıdır
+  (``building.layout``, docs/adr/8141): ayrık nizamdaki müstakil konutta madde kapsam dışı, başka nizamda uygulanır;
+  nizam yazılmamışsa tek konutlu binada tutmayan tavan uzman incelemesidir.
 - **Ek-2/Ç:** malzemenin beyan edilen TS EN 13501-1 sınıfı (`materials[].reaction`) yanıcılık özelliğine çevrilir: hiç
   yanmaz, zor yanıcı, zor alevlenici, normal alevlenici, kolay alevlenici. Döşeme kaplamasının sınıfı döşeme tablosundan
   (``fl``), öbürlerininki öbür tablodan; sınıf önce tam yazımıyla, yoksa harfiyle eşlenir (harfin en zayıf satırı).
@@ -23,7 +24,7 @@ Malzemesi yoksa, malzemenin sınıfı beyan edilmemişse ya da öbür tablonun s
 
 **Okunan olgular** (``facts.building``): kaplamalar (``coverings``: tür, kat, malzeme, malzemenin sınıfı), mahallerin
 kaplamaları (``spaces[].finishes``: kısım, ad, malzeme, sınıfı), mahallerin kişi yükü (``rooms``), katlar, bina ve yapı
-yüksekliği, konut ve bölüm sayısı.
+yüksekliği, konut ve bölüm sayısı, yapı nizamı (``layout``).
 """
 
 from __future__ import annotations
@@ -242,10 +243,14 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
             b, r = _denetle(bina, hal, tur, en_az, "döşeme kaplaması", "bykhy_floor_covering_reaction", None)
         else:
             konut, bolum = int(bina.get("dwellings") or 0), int(bina.get("units") or 0)
-            # Tek konutlu bina ayrık nizamda müstakil konut olabilir: nizam çizimde yok.
-            uzman = ("tek konutlu bina: ayrık nizamda müstakil konutsa 26/4 uygulanmaz, binanın nizamı çizimde yok"
-                     if konut == 1 and bolum == 1 else None)
-            b, r = _denetle(bina, hal, tur, hal.anahtar["least"], "tavan kaplaması", "bykhy_ceiling_reaction", uzman)
+            mustakil, nizam = konut == 1 and bolum == 1, bina.get("layout")
+            if mustakil and nizam == "detached":
+                b, r = [], _satir(hal, y.KAPSAM_DISI, "ayrık nizamda müstakil konut: 26/4 uygulanmaz")
+            else:
+                # Tek konutlu bina ayrık nizamda müstakil konut olabilir: nizamı yazılmamışsa uzman bakar.
+                uzman = ("tek konutlu bina: ayrık nizamda müstakil konutsa 26/4 uygulanmaz, yapı nizamı yazılmamış "
+                         "(Proje ayarları › Mimari › İmar durumu)" if mustakil and nizam is None else None)
+                b, r = _denetle(bina, hal, tur, hal.anahtar["least"], "tavan kaplaması", "bykhy_ceiling_reaction", uzman)
         bulgular += b
         satirlar.append(r)
     return y.Sonuc(bulgular, satirlar)

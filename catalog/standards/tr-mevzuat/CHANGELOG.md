@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 0.8.0
+
+- **`imar-durumu`**: TAKS verilmeyen parselde PAİY 5/6 yapı nizamıyla okunur (olguların `zoning.layout`'u; projenin
+  İmar durumu'ndaki Yapı nizamı, 4/1-pppp): ayrık, blok ya da ikiz nizamda (ikiz blok sayılır) %40'ı aşan TAKS hata,
+  bitişik nizamda %60'ı aşan hata. Nizam yazılmamışsa eskisi gibi: %60'ı aşan hata, %40 ile %60 arası uyarı; uyarı
+  nizamın nereye yazılacağını ve planın nizam belirlemediği yerde ayrık nizamın uygulandığını (8/5) söyler. İki yeni
+  örnek; kural en çok on örnek taşır: 0.7.0'ın kaynaklı TAKS örneği çıktı (kaynaklı emsal örneği aynı yolu gösterir).
+
 ## 0.7.0
 
 - **`imar-durumu`**: İmar durumu emsalin ya da TAKS'ın nereden okunduğunu söylüyorsa (imar durum belgesi ya da alındığı

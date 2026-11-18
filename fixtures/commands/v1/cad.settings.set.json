@@ -10422,6 +10422,140 @@
       ]
     },
     {
+      "name": "Mimari: yapı nizamı attached (ADR 8141)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "layout": "attached"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "arch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ],
+                "layout": "attached"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mimari: yapı nizamı twin (ADR 8141)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "layout": "twin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "arch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ],
+                "layout": "twin"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "emsalin kaynağı var, emsal yok",
       "steps": [
         {

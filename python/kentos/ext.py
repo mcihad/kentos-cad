@@ -1370,7 +1370,8 @@ class UnitFacts:
 @dataclass(frozen=True)
 class ZoningFacts:
     """İmar durumu (``far`` emsal, ``coverage`` TAKS; None: not given) and the areas against it, m²; where the emsal and
-    the TAKS are read from (``far_source``, ``coverage_source``; None: not said); see factsSchema."""
+    the TAKS are read from (``far_source``, ``coverage_source``; None: not said); the building's layout (``layout``:
+    detached, attached, block, twin; None: not said); see factsSchema."""
 
     parcel: float
     far: float | None
@@ -1384,6 +1385,7 @@ class ZoningFacts:
     footprint: float
     far_source: str | None = None
     coverage_source: str | None = None
+    layout: str | None = None
 
 
 def _zoning(raw: Any) -> ZoningFacts | None:
@@ -1394,6 +1396,7 @@ def _zoning(raw: Any) -> ZoningFacts | None:
         float(raw.get("floors") or 0.0), float(raw.get("included") or 0.0), float(raw.get("exempt") or 0.0),
         float(raw.get("outside") or 0.0), _maybe_float(raw.get("cap")), float(raw.get("over") or 0.0),
         float(raw.get("footprint") or 0.0), _maybe_str(raw.get("farSource")), _maybe_str(raw.get("coverageSource")),
+        _maybe_str(raw.get("layout")),
     )
 
 

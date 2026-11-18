@@ -124,6 +124,13 @@
           "format": "double",
           "type": "number"
         },
+        "layout": {
+          "description": "The building's layout as the project says it (yapı nizamı, docs/adr/8141): `detached`, `attached`, `block`,\n`twin` (blok nizam to the regulation, PAİY 4/1-pppp-3); absent: not said.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "limits": {
           "description": "The uses Planlı Alanlar İmar Yönetmeliği 22/1 lets out of katlar alanı only up to a limit, as Emsal ve TAKS\ntablosu counts them (docs/adr/8079): a unit's balconies, its storage annexes, the caretaker flats, the library.",
           "items": {
@@ -2569,6 +2576,13 @@
           "description": "The rooms counted in (emsale dahil).",
           "format": "double",
           "type": "number"
+        },
+        "layout": {
+          "description": "The building's layout the plan sets, as the project says it (yapı nizamı, docs/adr/8141): `detached`, `attached`,\n`block`, `twin`; absent: not said. PAİY 5/6 reads the TAKS a plan does not give by it.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "outside": {
           "description": "Emsal harici apart from the 30 % (5/8's own list: fire stairs and their halls, a shelter …).",

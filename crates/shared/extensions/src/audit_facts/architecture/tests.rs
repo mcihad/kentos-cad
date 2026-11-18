@@ -128,8 +128,9 @@ fn facts() -> ArchitectureFacts {
             cap: Some(135.0),
             over: 36.123_456,
             footprint: 125.000_04,
-            far_source: Some("UIP-1 Merkez uygulama imar planı (onay 2024-05-14), karar K1".into()),
+            far_source: Some("UIP-1, onay 2024-05-14, karar K1".into()),
             coverage_source: None,
+            layout: Some("detached".into()),
         }),
     }
 }

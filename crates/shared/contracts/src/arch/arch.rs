@@ -1570,6 +1570,12 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub zone: Option<Zone>,
+    /// Yapı nizamı (docs/adr/8141; `.kcad` Mimari data 28): the building's layout the plan sets (PAİY 4/1-pppp), as
+    /// PAİY 5/6 reads the TAKS and BYKHY 26/4 and 28/3 their scope by it. Absent: not said (where the plan sets none,
+    /// ayrık applies, PAİY 8/5: the architect says so).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layout: Option<BuildingLayout>,
     /// Taşıyıcı sistem (docs/adr/8094; `.kcad` Mimari data 15): the building's structural system as the project
     /// declares it and whether it holds traditional architectural elements; Planlı Alanlar İmar Yönetmeliği 22/1-m and
     /// 28/1-d read a traditional cut stone masonry building of up to three storeys. Absent: not said.
@@ -1731,6 +1737,87 @@ impl Zone {
             Zone::Commercial => "commercial",
             Zone::Other => "other",
         }
+    }
+}
+
+/// Yapı nizamı (docs/adr/8141; Planlı Alanlar İmar Yönetmeliği 4/1-pppp): ayrık, bitişik or blok, as the plan sets it;
+/// ikiz (attached on one side, detached on the other) as the plan writes it, which the regulation reads as blok.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum BuildingLayout {
+    /// Ayrık nizam (4/1-pppp-1): attached to no building on a neighbouring parcel.
+    Detached,
+    /// Bitişik nizam (4/1-pppp-2): attached to one or more buildings on neighbouring parcels.
+    Attached,
+    /// Blok nizam (4/1-pppp-3): a mass of set length, depth and height on its parcel or across parcels, with gardens.
+    Block,
+    /// İkiz nizam: attached on one side, detached on the other; blok nizam to the regulation (4/1-pppp-3).
+    Twin,
+}
+
+impl BuildingLayout {
+    pub const ALL: [BuildingLayout; 4] =
+        [BuildingLayout::Detached, BuildingLayout::Attached, BuildingLayout::Block, BuildingLayout::Twin];
+
+    /// As the form and a finding name it.
+    pub fn label(self) -> &'static str {
+        match self {
+            BuildingLayout::Detached => "Ayrık",
+            BuildingLayout::Attached => "Bitişik",
+            BuildingLayout::Block => "Blok",
+            BuildingLayout::Twin => "İkiz",
+        }
+    }
+
+    /// As a sentence says it: “nizam ayrık”.
+    pub fn word(self) -> &'static str {
+        match self {
+            BuildingLayout::Detached => "ayrık",
+            BuildingLayout::Attached => "bitişik",
+            BuildingLayout::Block => "blok",
+            BuildingLayout::Twin => "ikiz",
+        }
+    }
+
+    /// As the audit facts and the rules write it.
+    pub fn name(self) -> &'static str {
+        match self {
+            BuildingLayout::Detached => "detached",
+            BuildingLayout::Attached => "attached",
+            BuildingLayout::Block => "block",
+            BuildingLayout::Twin => "twin",
+        }
+    }
+
+    /// A zoning plan decision's Nizam as the profile `imar-plani` writes it (its domain `yapi-nizami`: A, I, B, BL) or
+    /// that domain's label (Ayrık, İkiz, Bitişik, Blok), its ends and case aside; none for anything else ("A-3" is not
+    /// read as ayrık: KentOS does not guess a plan's writing).
+    pub fn from_plan(text: &str) -> Option<BuildingLayout> {
+        // Turkish case: İ is i's capital, I is ı's.
+        let fold = |s: &str| {
+            s.chars()
+                .map(|c| match c {
+                    'İ' => 'i',
+                    'I' => 'ı',
+                    c => c,
+                })
+                .collect::<String>()
+                .to_lowercase()
+        };
+        let t = text.trim();
+        let folded = fold(t);
+        BuildingLayout::ALL.into_iter().find(|l| {
+            let code = match l {
+                BuildingLayout::Detached => "A",
+                BuildingLayout::Attached => "B",
+                BuildingLayout::Block => "BL",
+                BuildingLayout::Twin => "I",
+            };
+            t.eq_ignore_ascii_case(code) || folded == fold(l.label())
+        })
     }
 }
 
@@ -2430,6 +2517,11 @@ impl ArchSettings {
     /// Whether it says the parcel's area's use (Mimari data 12, docs/adr/8085).
     pub fn has_zone(&self) -> bool {
         self.zone.is_some()
+    }
+
+    /// Whether it says the building's layout (Mimari data 28, docs/adr/8141).
+    pub fn has_layout(&self) -> bool {
+        self.layout.is_some()
     }
 
     /// Whether it keeps a delivery record (Mimari data 17, docs/adr/8099).
@@ -3203,6 +3295,34 @@ mod plan_cut_tests {
             assert_eq!(serde_json::to_value(z).unwrap(), z.name());
         }
         assert!(!serde_json::to_string(&ArchSettings::default()).unwrap().contains("zone"));
+    }
+
+    /// Yapı nizamı (docs/adr/8141): written by its name, absent when not said; read from a plan decision's code or label
+    /// only.
+    #[test]
+    fn the_layout_is_written_by_its_name_and_read_from_the_plan_s_codes() {
+        let a = ArchSettings { layout: Some(BuildingLayout::Twin), ..Default::default() };
+        let json = serde_json::to_value(&a).unwrap();
+        assert_eq!(json["layout"], "twin");
+        assert_eq!(serde_json::from_value::<ArchSettings>(json).unwrap(), a);
+        for l in BuildingLayout::ALL {
+            assert_eq!(serde_json::to_value(l).unwrap(), l.name());
+        }
+        assert!(!serde_json::to_string(&ArchSettings::default()).unwrap().contains("layout"));
+        let read = |t: &str| BuildingLayout::from_plan(t);
+        assert_eq!(
+            (read("A"), read(" bl "), read("I"), read("b"), read("BİTİŞİK"), read("İKİZ")),
+            (
+                Some(BuildingLayout::Detached),
+                Some(BuildingLayout::Block),
+                Some(BuildingLayout::Twin),
+                Some(BuildingLayout::Attached),
+                Some(BuildingLayout::Attached),
+                Some(BuildingLayout::Twin)
+            )
+        );
+        assert_eq!((read("AYRIK"), read("Blok")), (Some(BuildingLayout::Detached), Some(BuildingLayout::Block)));
+        assert_eq!((read("A-3"), read("ayrık nizam"), read("")), (None, None, None));
     }
 
     /// Taşıyıcı sistem (docs/adr/8094): written by its name, traditional only when said and only of cut stone masonry.

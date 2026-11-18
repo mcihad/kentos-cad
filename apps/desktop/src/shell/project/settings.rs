@@ -290,6 +290,8 @@ pub enum Event {
     ArchLocalRules(Option<kentos_commands::LocalRules>),
     /// İmar durumu's Bölge chosen (docs/adr/8085).
     ArchZone(Option<kentos_commands::Zone>),
+    /// İmar durumu's Yapı nizamı chosen (docs/adr/8141).
+    ArchLayout(Option<kentos_commands::BuildingLayout>),
     /// Yangın güvenliği's sprinkler system switched (docs/adr/8035).
     ArchSprinklers(bool),
     /// Taşıyıcı sistem chosen (docs/adr/8094).
@@ -665,6 +667,7 @@ impl App {
             Event::ArchLines(lines) => s.arch_lines = lines,
             Event::ArchLocalRules(rules) => s.arch_zoning.local = rules,
             Event::ArchZone(zone) => s.arch_zoning.zone = zone,
+            Event::ArchLayout(layout) => s.arch_zoning.layout = layout,
             Event::ArchSprinklers(on) => s.arch_zoning.sprinklers = on,
             Event::ArchStructure(system) => {
                 // Traditional elements stay only with cut stone masonry (docs/adr/8094).
@@ -1182,6 +1185,7 @@ impl App {
                     |f, t| event(Event::ArchZoning(f, t)),
                     |r| event(Event::ArchLocalRules(r)),
                     |z| event(Event::ArchZone(z)),
+                    |l| event(Event::ArchLayout(l)),
                     crate::zoning_badge::summary(doc),
                     crate::zoning_badge::plan_lines(doc),
                     crate::zoning_badge::plan_takes(doc),

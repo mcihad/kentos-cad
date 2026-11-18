@@ -386,7 +386,7 @@ class UnitFacts:
 
 @dataclass(frozen=True)
 class ZoningFacts:
-    """İmar durumu (``far`` emsal, ``coverage`` TAKS; None: not given) and the areas against it, m²; where the emsal and the TAKS are read from (``far_source``, ``coverage_source``; None: not said); see factsSchema."""
+    """İmar durumu (``far`` emsal, ``coverage`` TAKS; None: not given) and the areas against it, m²; where the emsal and the TAKS are read from (``far_source``, ``coverage_source``; None: not said); the building's layout (``layout``: detached, attached, block, twin; None: not said); see factsSchema."""
     parcel: float
     far: float | None
     coverage: float | None
@@ -399,6 +399,7 @@ class ZoningFacts:
     footprint: float
     far_source: str | None = None
     coverage_source: str | None = None
+    layout: str | None = None
 
 
 @dataclass(frozen=True)

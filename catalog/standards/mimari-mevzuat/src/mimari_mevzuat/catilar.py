@@ -4,12 +4,14 @@
   kaplamalarının altındaki yüzey (kaplama tahtası) ve yalıtım (su ve ısı yalıtımı) en az zor alevlenici. Kaplama yanmaz
   malzemedense üzerine uygulandığı yüzey en az normal alevlenici olabilir.
 - **28/3-b:** yüksek binada (4/ccc: bina yüksekliği 21,50 m'den ya da yapı yüksekliği 30,50 m'den fazla) ve bitişik nizamda
-  çatı taşıyıcı sistemi (mertek) ve çatı kaplaması yanmaz malzemeden. Binanın nizamı çizimde yok: yüksek olmayan binada
-  yanmaz olmayan çatı uzman incelemesidir (bitişik nizamdaysa kalır).
-- **28/3-a (docs/adr/8139):** yüksek binada (ve bitişik nizamda) çatının oturduğu döşeme yatay yangın kesici niteliğinde:
-  çatının altında, üstü katının üstünde döşeme olmalı ve sınıfı en az EI 30 (Ek-3/B 10, yangın kesici). Yüksek binada
-  döşeme çizilmemişse ya da sınıfı beyan edilmemişse eksik veri, az ise kaldı; yüksek olmayan binada tutmayan çatı uzman
-  incelemesi (nizam çizimde yok). Döşemenin kendi Ek-3/B 3 dayanımı ``dayanim``'dadır.
+  çatı taşıyıcı sistemi (mertek) ve çatı kaplaması yanmaz malzemeden.
+- **28/3-a (docs/adr/8139):** yüksek binada ve bitişik nizamda çatının oturduğu döşeme yatay yangın kesici niteliğinde:
+  çatının altında, üstü katının üstünde döşeme olmalı ve sınıfı en az EI 30 (Ek-3/B 10, yangın kesici). Döşeme
+  çizilmemişse ya da sınıfı beyan edilmemişse eksik veri, az ise kaldı. Döşemenin kendi Ek-3/B 3 dayanımı
+  ``dayanim``'dadır.
+- **Nizam (docs/adr/8141):** projenin yapı nizamı (``building.layout``). Yüksek olmayan binada bitişik nizamda 28/3
+  yüksek binadaki gibi uygulanır; ayrık, blok ya da ikiz nizamda kapsam dışıdır. Nizam yazılmamışsa yüksek olmayan
+  binada tutmayan çatı uzman incelemesidir (bitişik nizamdaysa kalır).
 - **Yanmaz:** yönetmelik tanımlamaz; Ek-2/Ç'nin hiç yanmaz (A1) satırı yanmazdır. Zor yanıcı (A2-s1,d0) yanmaz sayılıp
   sayılmayacağı yazılı değil: sonucu ona bağlı çatı uzman incelemesidir.
 - **Ek-2/Ç:** katmanın malzemesinin TS EN 13501-1 sınıfı yanıcılık özelliğine ``kaplamalar.ozellik`` ile çevrilir (döşeme
@@ -19,7 +21,7 @@ Malzemesi yoksa ya da sınıfı beyan edilmemişse eksik veri; yetmiyorsa kaldı
 
 **Okunan olgular** (``facts.building``): çatılar (``roofs``: kat, katmanlar üstten alta, her birinin türü, malzemesi,
 malzemenin yanıcılık ve dış yangın sınıfı, oturduğu döşemeler), elemanlar (``elements``: döşemelerin sınıfı), katlar,
-bina ve yapı yüksekliği.
+bina ve yapı yüksekliği, yapı nizamı (``layout``).
 """
 
 from __future__ import annotations
@@ -28,6 +30,12 @@ from datetime import date
 from typing import Any
 
 from . import yururluk as y
+
+#: Yapı nizamının adı, olguların yazdığından (docs/adr/8141).
+NIZAM = {"detached": "ayrık", "attached": "bitişik", "block": "blok", "twin": "ikiz (blok sayılır)"}
+
+#: Nizamı yazılmamış yüksek olmayan binanın uzman incelemesinin sözü.
+_NIZAMSIZ = "bina yüksek değil, bitişik nizamdaysa {ne}; yapı nizamı yazılmamış (Proje ayarları › Mimari › İmar durumu)"
 from .kaplamalar import ozellik
 from .yangin_sinifi import okuma
 
@@ -152,13 +160,15 @@ def _madde_2(bina: dict[str, Any], hal: y.Hal) -> tuple[list[dict[str, Any]], di
                            "çatı kaplaması ya da altındaki katmanlar yetmiyor")
 
 
-def _oturdugu(bina: dict[str, Any], cati: dict[str, Any], hal: y.Hal, yuksek: bool, yer: str) -> dict[str, Any] | None:
-    """28/3-a (docs/adr/8139): çatının oturduğu döşeme yatay yangın kesici, en az EI 30; tutuyorsa yok."""
+def _oturdugu(bina: dict[str, Any], cati: dict[str, Any], hal: y.Hal, uygulanir: bool, kim: str, yer: str
+              ) -> dict[str, Any] | None:
+    """28/3-a (docs/adr/8139): çatının oturduğu döşeme yatay yangın kesici, en az EI 30; tutuyorsa yok. ``uygulanir``
+    yanlışsa (yüksek olmayan bina, nizamı yazılmamış) tutmayan uzman incelemesidir."""
     dk = int(hal.anahtar["seat"])
     siniflar = {e["uid"]: e.get("fireRating") for e in bina.get("elements") or []}
     oturdugu = list(cati.get("seat") or [])
     if not oturdugu:
-        neden, durum = "altında, katının üstünde döşeme çizilmemiş", y.EKSIK_VERI if yuksek else y.UZMAN
+        neden, durum = "altında, katının üstünde döşeme çizilmemiş", y.EKSIK_VERI if uygulanir else y.UZMAN
     else:
         okunan = [(u, siniflar.get(u), okuma(siniflar.get(u))) for u in oturdugu]
         az = [(u, b) for u, b, o in okunan if o is not None and not ("E" in o["harf"] and "I" in o["harf"]
@@ -166,14 +176,13 @@ def _oturdugu(bina: dict[str, Any], cati: dict[str, Any], hal: y.Hal, yuksek: bo
         yok = [u for u, b, o in okunan if o is None]
         if az:
             neden = "oturduğu döşeme " + ", ".join(b for _, b in az) + f", en az EI {dk} değil"
-            durum = None if yuksek else y.UZMAN
+            durum = None if uygulanir else y.UZMAN
         elif yok:
-            neden, durum = "oturduğu döşemenin yangın sınıfı beyan edilmemiş", y.EKSIK_VERI if yuksek else y.UZMAN
+            neden, durum = "oturduğu döşemenin yangın sınıfı beyan edilmemiş", y.EKSIK_VERI if uygulanir else y.UZMAN
         else:
             return None
     if durum == y.UZMAN:
-        neden += "; bina yüksek değil, bitişik nizamdaysa 28/3-a uygulanır, nizam çizimde yok"
-    kim = "yüksek binada" if yuksek else "bitişik nizamda"
+        neden += "; " + _NIZAMSIZ.format(ne="28/3-a uygulanır")
     return _bulgu(hal, "bykhy_roof_seat_fire_stop",
                   f"{yer}: çatının {neden}; 28/3-a {kim} çatının oturduğu döşemeyi yatay yangın kesici (en az EI {dk}) "
                   f"ister", f"Çatının altına, katının üstüne döşeme çizin ve sınıfını en az EI {dk} beyan edin "
@@ -188,9 +197,15 @@ def _madde_3(bina: dict[str, Any], hal: y.Hal) -> tuple[list[dict[str, Any]], di
     if not catilar:
         return [], _satir(hal, y.KAPSAM_DISI, "çatı yok")
     yuksek = _yuksek(bina, hal)
+    nizam = bina.get("layout")
+    if not yuksek and nizam is not None and nizam != "attached":
+        return [], _satir(hal, y.KAPSAM_DISI, f"bina yüksek değil, yapı nizamı {NIZAM.get(nizam, nizam)}: 28/3 yüksek "
+                                              "binada ve bitişik nizamda uygulanır")
+    uygulanir = yuksek or nizam == "attached"
+    kim = "yüksek binada" if yuksek else "bitişik nizamda"
     bulgular = []
     for cati in catilar:
-        b = _oturdugu(bina, cati, hal, yuksek, _yer(bina, cati))
+        b = _oturdugu(bina, cati, hal, uygulanir, kim, _yer(bina, cati))
         if b is not None:
             bulgular.append(b)
     onarim = ("Çatının kaplamasını ve taşıyıcısını hiç yanmaz (A1) malzemeden seçin ya da malzemenin TS EN 13501-1 "
@@ -207,27 +222,26 @@ def _madde_3(bina: dict[str, Any], hal: y.Hal) -> tuple[list[dict[str, Any]], di
             if k == "hic_yanmaz":
                 continue
             if k is None:
-                if yuksek:
+                if uygulanir:
                     sorunlar.append((f"{ad} katmanının {sorun}", y.EKSIK_VERI))
                 continue
             ileti = f"{ad} “{katman['material']}” {katman['reaction']}, {_ad(tablo, k)}"
             if k == "zor_yanici":
                 sorunlar.append((f"{ileti}: zor yanıcının yanmaz sayılıp sayılmadığı yönetmelikte yazılı değil", y.UZMAN))
-            elif yuksek:
+            elif uygulanir:
                 sorunlar.append((ileti, None))
             else:
-                sorunlar.append((f"{ileti}: bina yüksek değil, bitişik nizamdaysa kalır; nizam çizimde yok", y.UZMAN))
+                sorunlar.append((f"{ileti}: " + _NIZAMSIZ.format(ne="kalır"), y.UZMAN))
         if not sorunlar:
             continue
         durum = (None if any(d is None for _, d in sorunlar) else
                  y.EKSIK_VERI if any(d == y.EKSIK_VERI for _, d in sorunlar) else y.UZMAN)
         neden = "; ".join(s for s, _ in sorunlar)
-        kim = "yüksek binada" if yuksek else "bitişik nizamda"
         bulgular.append(_bulgu(hal, "bykhy_roof_noncombustible", f"{yer}: çatının {neden}; 28/3-b {kim} çatının taşıyıcı "
                                "sistemini ve kaplamasını yanmaz ister", onarim, uid, durum, f"{uid}:28/3"))
-    if not yuksek and not bulgular:
-        return [], _satir(hal, y.KAPSAM_DISI, "bina yüksek değil; bitişik nizamda da uygulanır, çatılar hiç yanmaz ve "
-                                              "döşemeye oturuyor")
+    if not uygulanir and not bulgular:
+        return [], _satir(hal, y.KAPSAM_DISI, "bina yüksek değil, yapı nizamı yazılmamış; bitişik nizamda da uygulanır, "
+                                              "çatılar hiç yanmaz ve döşemeye oturuyor")
     return bulgular, _ozet(hal, bulgular, f"{len(catilar)} çatının taşıyıcısı ve kaplaması hiç yanmaz, oturduğu döşeme "
                                           f"en az EI {hal.anahtar['seat']}",
                            "çatının oturduğu döşeme, taşıyıcısı ya da kaplaması 28/3'ü tutmuyor")
@@ -239,7 +253,7 @@ def _ozet(hal: y.Hal, bulgular: list[dict[str, Any]], tamam: str, kalan: str) ->
     if any(b.get("state") == y.EKSIK_VERI for b in bulgular):
         return _satir(hal, y.EKSIK_VERI, "katmanların ya da oturduğu döşemenin malzemesi, sınıfı okunmuyor")
     if bulgular:
-        return _satir(hal, y.UZMAN, "yanmazlık ya da binanın nizamı uzman incelemesi")
+        return _satir(hal, y.UZMAN, "yanmazlık ya da yapı nizamı uzman incelemesi")
     return _satir(hal, y.GECTI, tamam)
 
 

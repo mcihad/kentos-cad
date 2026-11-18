@@ -135,19 +135,41 @@ fn the_zoning_s_sources_round_trip_under_arch_data_27() {
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
     assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the sources read back");
 
-    // `modules` says `arch` 26 (CBOR: the text "arch", then 0x18 and the version), the trailer made again.
-    let mut older = bytes.clone();
+    // `modules` says `arch` 26.
+    let e = kentos_kcad::decode(&saying_arch(&bytes, 27, 26)).expect_err("refused");
+    assert_eq!(e.code, kentos_kcad::Code::UnknownField, "{e}");
+    assert!(e.message.contains("sürüm 27'den önce yok"), "{e}");
+}
+
+/// Architecture data 28 (docs/adr/8141): the building's layout is written with `modules.arch = 28` and read back; the
+/// same file saying 27 is refused.
+#[test]
+fn the_layout_round_trips_under_arch_data_28() {
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_layout(&doc));
+    doc.settings.arch.get_or_insert_with(Default::default).layout = Some(kentos_contracts::BuildingLayout::Attached);
+    assert!(kentos_kcad::uses_layout(&doc));
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_LAYOUT);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the layout reads back");
+    let e = kentos_kcad::decode(&saying_arch(&bytes, 28, 27)).expect_err("refused");
+    assert_eq!(e.code, kentos_kcad::Code::UnknownField, "{e}");
+    assert!(e.message.contains("sürüm 28'den önce yok"), "{e}");
+}
+
+/// `bytes` with `modules.arch` saying `to` instead of `from` (CBOR: the text "arch", then 0x18 and the version), the
+/// SHA-256 trailer made again: a file an older KentOS would have written, holding newer data.
+fn saying_arch(bytes: &[u8], from: u8, to: u8) -> Vec<u8> {
+    let mut older = bytes.to_vec();
     let at = older
         .windows(7)
-        .position(|w| w == [0x64, b'a', b'r', b'c', b'h', 0x18, 27])
-        .expect("modules.arch = 27");
-    older[at + 6] = 26;
+        .position(|w| w == [0x64, b'a', b'r', b'c', b'h', 0x18, from])
+        .expect("modules.arch");
+    older[at + 6] = to;
     let body = older.len() - 32;
     let hash = <sha2::Sha256 as sha2::Digest>::digest(&older[..body]);
     older[body..].copy_from_slice(&hash);
-    let e = kentos_kcad::decode(&older).expect_err("refused");
-    assert_eq!(e.code, kentos_kcad::Code::UnknownField, "{e}");
-    assert!(e.message.contains("sürüm 27'den önce yok"), "{e}");
+    older
 }
 
 /// A plain wall style of its own (one 20 cm brick component).

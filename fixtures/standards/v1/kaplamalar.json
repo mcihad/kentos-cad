@@ -862,7 +862,7 @@
   },
   {
    "id": "tavan-ev-uzman",
-   "neden": "Tek konutlu ev, asma tavan D-s2,d0: ayrık nizamda müstakil konutsa 26/4 uygulanmaz, nizam çizimde yok → uzman incelemesi.",
+   "neden": "Tek konutlu ev, asma tavan D-s2,d0: ayrık nizamda müstakil konutsa 26/4 uygulanmaz, yapı nizamı yazılmamış → uzman incelemesi.",
    "permit": {
     "particulars": {
      "basvuru_tarihi": "02.07.2026"
@@ -915,7 +915,8 @@
       "code": "bykhy_ceiling_reaction",
       "state": "expertReview",
       "has": [
-       "ayrık nizamda müstakil konutsa"
+       "ayrık nizamda müstakil konutsa",
+       "yapı nizamı yazılmamış"
       ]
      }
     ],
@@ -930,6 +931,299 @@
      ],
      "BYKHY 26/4": [
       "expertReview",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tavan-ev-ayrik",
+   "neden": "Tek konutlu ev ayrık nizamda (müstakil konut), ahşap lambri D-s2,d0: 26/4 ayrık nizamdaki müstakil konutu dışarıda bırakır → kapsam dışı, bulgu yok (ADR 8141).",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 1,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000013",
+      "level": "k01",
+      "predefined": "CEILING",
+      "material": "Ahşap lambri",
+      "reaction": "D-s2,d0"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "layout": "detached"
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tavan-ev-bitisik",
+   "neden": "Tek konutlu ev bitişik nizamda, ahşap lambri D-s2,d0 (normal alevlenici): 26/4 en az zor alevlenici ister → kalır (ADR 8141).",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 1,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000013",
+      "level": "k01",
+      "predefined": "CEILING",
+      "material": "Ahşap lambri",
+      "reaction": "D-s2,d0"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "layout": "attached"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_ceiling_reaction",
+      "has": [
+       "D-s2,d0"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tavan-ev-ikiz",
+   "neden": "Tek konutlu ev ikiz nizamda (yönetmelik blok sayar, ayrık değil), ahşap lambri D-s2,d0 → 26/4 uygulanır, kalır (ADR 8141).",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 1,
+    "dwellings": 1,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000013",
+      "level": "k01",
+      "predefined": "CEILING",
+      "material": "Ahşap lambri",
+      "reaction": "D-s2,d0"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "layout": "twin"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_ceiling_reaction",
+      "has": [
+       "D-s2,d0"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "tavan-apartman-ayrik",
+   "neden": "8 daireli apartman ayrık nizamda, ahşap lambri D-s2,d0: müstakil konut değil → 26/4 uygulanır, kalır (ADR 8141).",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "units": 8,
+    "dwellings": 8,
+    "coverings": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000013",
+      "level": "k01",
+      "predefined": "CEILING",
+      "material": "Ahşap lambri",
+      "reaction": "D-s2,d0"
+     }
+    ],
+    "height": 12.0,
+    "structureHeight": 12.0,
+    "layout": "detached"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_ceiling_reaction",
+      "has": [
+       "D-s2,d0"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 20/3": [
+      "outOfScope",
+      "9.7.2015"
+     ],
+     "BYKHY 26/2": [
+      "outOfScope",
+      "9.9.2009"
+     ],
+     "BYKHY 26/4": [
+      "failed",
       "9.9.2009"
      ]
     }

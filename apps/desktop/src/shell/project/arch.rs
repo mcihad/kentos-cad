@@ -105,6 +105,8 @@ pub struct ZoningTexts {
     pub plan_notes: Vec<super::plan_notes::Note>,
     /// Bölge: the parcel's area's use in the plan (docs/adr/8085).
     pub zone: Option<kentos_commands::Zone>,
+    /// Yapı nizamı: the building's layout the plan sets (docs/adr/8141).
+    pub layout: Option<kentos_commands::BuildingLayout>,
     /// Taşıyıcı sistem: the building's structural system and its traditional elements (docs/adr/8094).
     pub structure: Option<kentos_commands::BuildingStructure>,
     /// Yangın güvenliği: the building's fire protection class and its basis as typed (docs/adr/8068, 8124).
@@ -123,6 +125,21 @@ fn structure_choices() -> Vec<(Option<kentos_commands::StructuralSystem>, &'stat
 fn zone_choices() -> Vec<(Option<kentos_commands::Zone>, &'static str)> {
     std::iter::once((None, "Yazılmamış (konut projesinde konut alanı sayılır)"))
         .chain(kentos_commands::Zone::ALL.into_iter().map(|z| (Some(z), z.label())))
+        .collect()
+}
+
+/// Yapı nizamı's choices (docs/adr/8141): not said, or the plan's layout.
+fn layout_choices() -> Vec<(Option<kentos_commands::BuildingLayout>, &'static str)> {
+    std::iter::once((None, "Yazılmamış (plan belirlemiyorsa ayrık uygulanır)"))
+        .chain(kentos_commands::BuildingLayout::ALL.into_iter().map(|l| {
+            (
+                Some(l),
+                match l {
+                    kentos_commands::BuildingLayout::Twin => "İkiz (blok sayılır)",
+                    other => other.label(),
+                },
+            )
+        }))
         .collect()
 }
 
@@ -170,6 +187,7 @@ impl ZoningTexts {
             sprinklers: arch.is_some_and(|a| a.sprinklers),
             plan_notes: super::plan_notes::rows(arch.map_or(&[][..], |a| a.plan_notes.as_slice())),
             zone: arch.and_then(|a| a.zone),
+            layout: arch.and_then(|a| a.layout),
             structure: arch.and_then(|a| a.structure),
             fire_class: fire().map(|d| d.value.clone()).unwrap_or_default(),
             fire_basis: fire().map(|d| d.basis.field()).unwrap_or_default(),
@@ -214,6 +232,9 @@ impl ZoningTexts {
             self.coverage = text(v);
             self.coverage_source.clone_from(&t.source);
         }
+        if let Some(l) = t.layout {
+            self.layout = Some(l);
+        }
         for (key, v) in [
             (kentos_commands::PlanNoteKey::BuildingHeight, t.height),
             (kentos_commands::PlanNoteKey::Storeys, t.storeys),
@@ -239,6 +260,7 @@ impl ZoningTexts {
         };
         t.far.is_none_or(|v| same(&self.far, v) && self.far_source.trim() == t.source)
             && t.coverage.is_none_or(|v| same(&self.coverage, v) && self.coverage_source.trim() == t.source)
+            && t.layout.is_none_or(|l| self.layout == Some(l))
             && note(kentos_commands::PlanNoteKey::BuildingHeight, t.height)
             && note(kentos_commands::PlanNoteKey::Storeys, t.storeys)
     }
@@ -287,6 +309,7 @@ pub(super) fn zoning_view<'a>(
     on: impl Fn(ZoningField, String) -> Message + Copy + 'a,
     on_local: impl Fn(Option<kentos_commands::LocalRules>) -> Message + 'a,
     on_zone: impl Fn(Option<kentos_commands::Zone>) -> Message + 'a,
+    on_layout: impl Fn(Option<kentos_commands::BuildingLayout>) -> Message + 'a,
     summary: Vec<(String, String, bool)>,
     plan: Vec<(String, bool)>,
     takes: Vec<(usize, crate::zoning_badge::PlanTake)>,
@@ -359,6 +382,22 @@ pub(super) fn zoning_view<'a>(
             .spacing(8)
             .align_y(Center)
         })
+        .push({
+            let layouts = layout_choices();
+            let at = layouts.iter().position(|(l, _)| *l == t.layout);
+            row![
+                container(label::body("Yapı nizamı")).width(typography::scaled(140.0)),
+                container(
+                    Select::new(layouts.iter().map(|(_, l)| Choice::new(*l)), at, move |i| {
+                        on_layout(layout_choices().get(i).and_then(|(l, _)| *l))
+                    })
+                    .searchable(false)
+                )
+                .width(typography::scaled(330.0)),
+            ]
+            .spacing(8)
+            .align_y(Center)
+        })
         .push(label::caption(
             "İmar durumundan. Emsal, emsale dahil mahallerin brüt alanının (katlar alanı) parsel alanına oranıdır; \
              emsal harici mahaller (otopark, sığınak, kazan dairesi, balkon …) parselin emsal alanının %30'unu \
@@ -369,8 +408,11 @@ pub(super) fn zoning_view<'a>(
              yönetmeliği seçilince Denetim › Mevzuat belediyenin değerlerini de okur: sıkı olan bağlar, ölçünün \
              belediyeye uyup Planlı Alanlar İmar Yönetmeliği'ne uymadığı yer çelişki olarak söylenir (idare karar \
              verir). Bölge, parselin planda ayrıldığı kullanımdır: Denetim › Mevzuat kat yüksekliklerini ona göre okur \
-             (Planlı Alanlar İmar Yönetmeliği 28/1). Planın notunun değiştirdiği değerler aşağıda, Plan notları'na \
-             yazılır. KentOS bir onay vermez.",
+             (Planlı Alanlar İmar Yönetmeliği 28/1). Yapı nizamı planın ayrık, bitişik, blok ya da ikiz nizamıdır (ikiz \
+             blok sayılır, 4/1-pppp): Denetim › Mevzuat TAKS verilmeyen parselin %40 ya da %60 sınırını (5/6), tavan \
+             kaplamasını ve çatıyı (Binaların Yangından Korunması Hakkında Yönetmelik 26/4, 28/3) ona göre okur; plan \
+             nizam belirlemiyorsa ayrık nizam uygulanır (8/5). Planın notunun değiştirdiği değerler aşağıda, Plan \
+             notları'na yazılır. KentOS bir onay vermez.",
         ));
     for (words, value, over) in summary {
         body = body.push(
@@ -408,8 +450,9 @@ pub(super) fn zoning_view<'a>(
         body = body.push(label::caption(
             "Belediyenin CBS'inden gelen imar planı katmanlarından, parselle kesişimiyle okunur. Bir kesişim tek başına \
              hukuki karar değildir: değerleri imar durum belgesiyle karşılaştırın. Değerlerini al, kararın sayıyla \
-             yazılmış emsalini ve TAKS'ını kaynağıyla (plan, onay günü, karar) yukarıya, bina yüksekliğini (Hmax) ve kat \
-             adedini Plan notları'na yazar; Kaydet onaylar, Vazgeç bırakır. Planı belli olmayan kararın değeri alınmaz.",
+             yazılmış emsalini ve TAKS'ını kaynağıyla (plan, onay günü, karar) ve yapı nizamını yukarıya, bina \
+             yüksekliğini (Hmax) ve kat adedini Plan notları'na yazar; Kaydet onaylar, Vazgeç bırakır. Planı belli \
+             olmayan kararın değeri alınmaz.",
         ));
     }
     super::group::<Message>("İmar durumu", body)
@@ -621,6 +664,8 @@ pub fn read(
     // The parcel's plan notes (docs/adr/8084) and its area's use (docs/adr/8085).
     let plan_notes = super::plan_notes::read(&zoning.plan_notes)?;
     let zone = zoning.zone;
+    // The building's layout (docs/adr/8141).
+    let layout = zoning.layout;
     let performance = zoning.performance()?;
     // The building's structural system (docs/adr/8094).
     let structure = zoning.structure;
@@ -692,6 +737,7 @@ pub fn read(
         sprinklers,
         plan_notes,
         zone,
+        layout,
         structure,
         // The building's fire protection class (docs/adr/8068, 8124): this form's Yangın güvenliği.
         performance,

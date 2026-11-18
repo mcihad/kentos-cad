@@ -63,8 +63,8 @@ struct PlanRead {
 
 /// What a zoning plan decision on the parcel gives that İmar durumu and Plan notları keep (docs/adr/8140): its emsal
 /// (KAKS) and TAKS, the plan's building height (Hmax, m) and storey count (KatAdedi), each only when it is written as a
-/// number the field takes; and where they come from: the plan (its id and name, state, approval and basis) and the
-/// decision.
+/// number the field takes; its layout (Nizam, docs/adr/8141) when written as the profile's code or label; and where the
+/// numbers come from: the plan (its id, state when not in force, approval) and the decision.
 #[derive(Clone, Debug, PartialEq)]
 pub struct PlanTake {
     /// KararKimlik.
@@ -73,13 +73,14 @@ pub struct PlanTake {
     pub coverage: Option<f64>,
     pub height: Option<f64>,
     pub storeys: Option<f64>,
+    pub layout: Option<kentos_commands::BuildingLayout>,
     /// At most [`kentos_commands::MAX_ZONING_SOURCE`] characters, one line.
     pub source: String,
 }
 
 impl PlanTake {
-    /// What it writes where, in the form's words: “Emsal 1,20 ve TAKS 0,40 İmar durumu'na, kat adedi 3 Plan
-    /// notları'na.”; `held` says where they are: “… İmar durumu'nda, … Plan notları'nda.”.
+    /// What it writes where, in the form's words: “Emsal 1,20, TAKS 0,40 ve nizam ayrık İmar durumu'na, kat adedi 3
+    /// Plan notları'na.”; `held` says where they are: “… İmar durumu'nda, … Plan notları'nda.”.
     pub fn words(&self, held: bool) -> String {
         let mut zoning: Vec<String> = Vec::new();
         if let Some(v) = self.far {
@@ -87,6 +88,9 @@ impl PlanTake {
         }
         if let Some(v) = self.coverage {
             zoning.push(format!("TAKS {}", n2(v)));
+        }
+        if let Some(l) = self.layout {
+            zoning.push(format!("nizam {}", l.word()));
         }
         let mut notes: Vec<String> = Vec::new();
         if let Some(v) = self.height {
@@ -100,12 +104,18 @@ impl PlanTake {
         } else {
             ("İmar durumu'na", "Plan notları'na")
         };
+        // “a, b ve c”.
+        let listed = |items: &[String]| match items.split_last() {
+            Some((last, [])) => last.clone(),
+            Some((last, rest)) => format!("{} ve {last}", rest.join(", ")),
+            None => String::new(),
+        };
         let mut parts: Vec<String> = Vec::new();
         if !zoning.is_empty() {
-            parts.push(format!("{} {to_zoning}", zoning.join(" ve ")));
+            parts.push(format!("{} {to_zoning}", listed(&zoning)));
         }
         if !notes.is_empty() {
-            parts.push(format!("{} {to_notes}", notes.join(" ve ")));
+            parts.push(format!("{} {to_notes}", listed(&notes)));
         }
         let mut out = parts.join(", ");
         if let Some(first) = out.chars().next() {
@@ -173,7 +183,9 @@ fn plan_take(d: &kentos_commands::ParcelDecision) -> Option<PlanTake> {
     let height = value("Hmax").filter(|v| *v > 0.0 && *v <= kentos_commands::PLAN_BUILDING_HEIGHT_MAX);
     let storeys = value("KatAdedi")
         .filter(|v| v.fract() == 0.0 && (1.0..=kentos_commands::PLAN_STOREYS_MAX).contains(v));
-    if far.is_none() && coverage.is_none() && height.is_none() && storeys.is_none() {
+    let layout =
+        d.values.iter().find(|v| v.field == "Nizam").and_then(|v| kentos_commands::BuildingLayout::from_plan(&v.value));
+    if far.is_none() && coverage.is_none() && height.is_none() && storeys.is_none() && layout.is_none() {
         return None;
     }
     let mut source = p.id.clone();
@@ -187,7 +199,7 @@ fn plan_take(d: &kentos_commands::ParcelDecision) -> Option<PlanTake> {
     if source.chars().count() > kentos_commands::MAX_ZONING_SOURCE || source.chars().any(char::is_control) {
         return None;
     }
-    Some(PlanTake { decision: d.id.clone(), far, coverage, height, storeys, source })
+    Some(PlanTake { decision: d.id.clone(), far, coverage, height, storeys, layout, source })
 }
 
 /// A decision field's words as İmar durumu says them.

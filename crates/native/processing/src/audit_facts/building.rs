@@ -276,6 +276,7 @@ pub fn measure(doc: &Document) -> BuildingFacts {
             .map(|n| PlanNoteFacts { key: n.key.name().to_owned(), value: n.value, source: n.source.clone() })
             .collect(),
         zone: arch.zone.map(|z| z.name().to_owned()),
+        layout: arch.layout.map(|l| l.name().to_owned()),
         structural_system: arch.structure.map(|s| s.system.name().to_owned()),
         traditional: arch.structure.is_some_and(|s| s.traditional),
         masonry: arch.traditional_cut_stone().then(|| MasonryFacts {

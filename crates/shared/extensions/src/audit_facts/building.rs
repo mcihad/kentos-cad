@@ -45,6 +45,10 @@ pub struct BuildingFacts {
     /// `residentialShops`, `mixed`, `commercial`, `other`; absent: not said.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zone: Option<String>,
+    /// The building's layout as the project says it (yapı nizamı, docs/adr/8141): `detached`, `attached`, `block`,
+    /// `twin` (blok nizam to the regulation, PAİY 4/1-pppp-3); absent: not said.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub layout: Option<String>,
     /// The building's structural system as the project declares it (docs/adr/8094): `reinforcedConcrete`, `steel`,
     /// `masonry`, `cutStoneMasonry`, `timber`, `composite`; absent: not said.
     #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -66,7 +66,7 @@ EMPTY = {"units": 0, "common": 0, "annexes": 0, "other": 0, "technical": 0, "inh
 SEAT = "REI 60"
 
 
-def building(roofs, height=6.0, structure=8.5, seat=SEAT):
+def building(roofs, height=6.0, structure=8.5, seat=SEAT, layout=None):
     out = {
         "storeys": [dict(level=level, name=name, elevation=z, **EMPTY) for level, name, z in
                     (("k00", "Zemin kat", 0.0), ("k01", "1. kat", 3.0))],
@@ -84,16 +84,19 @@ def building(roofs, height=6.0, structure=8.5, seat=SEAT):
             r["seat"] = [slab["uid"]]
         if not out["elements"]:
             del out["elements"]
+    # The building's layout (ADR 8141): detached, attached, block, twin; none, not said.
+    if layout:
+        out["layout"] = layout
     return out
 
 
-def case(id_, why, roofs, findings, r2, r3, height=6.0, structure=8.5, day="02.07.2026", seat=SEAT):
+def case(id_, why, roofs, findings, r2, r3, height=6.0, structure=8.5, day="02.07.2026", seat=SEAT, layout=None):
     version = V
     return {
         "id": id_,
         "neden": why,
         "permit": {"particulars": {"basvuru_tarihi": day}},
-        "building": building(roofs, height, structure, seat),
+        "building": building(roofs, height, structure, seat, layout),
         "expect": {"findings": findings, "rules": {"BYKHY 28/2": [r2, version], "BYKHY 28/3": [r3, version]}},
     }
 
@@ -186,12 +189,37 @@ def cases():
              height=24.0, structure=27.0, seat=""),
         case("yuksek-doseme-ei30", "Yüksek binada oturduğu döşeme tam EI 30, kaplama ve mertek hiç yanmaz → 28/3 geçer.",
              [[TILE, OSB_B, STEEL]], [], PASSED, PASSED, height=24.0, structure=27.0, seat="EI 30"),
-        case("alcak-doseme-yok", "6 m'lik binada çatının altında döşeme yok: bitişik nizamdaysa 28/3-a uygulanır, nizam "
-             "çizimde yok → uzman incelemesi.",
+        case("alcak-doseme-yok", "6 m'lik binada çatının altında döşeme yok: bitişik nizamdaysa 28/3-a uygulanır, yapı "
+             "nizamı yazılmamış → uzman incelemesi.",
              [[TILE, OSB_B, STEEL]], [f(SEATED, EXPERT, ["nizam"])], PASSED, EXPERT, seat=None),
         case("alcak-doseme-r60", "6 m'lik binada oturduğu döşeme R 60 (E ve I yok): bitişik nizamdaysa kalır → uzman "
              "incelemesi.",
              [[TILE, OSB_B, STEEL]], [f(SEATED, EXPERT, ["R 60"])], PASSED, EXPERT, seat="R 60"),
+        # The building's layout (ADR 8141): 28/3 in a building that is not high only in bitişik nizam.
+        case("alcak-bitisik-doseme-yok", "6 m'lik bina bitişik nizamda: 28/3-a uygulanır, çatının altında döşeme yok → eksik "
+             "veri.",
+             [[TILE, OSB_B, STEEL]], [f(SEATED, MISSING, ["döşeme çizilmemiş", "bitişik nizamda"])], PASSED, MISSING,
+             seat=None, layout="attached"),
+        case("alcak-bitisik-doseme-r60", "Bitişik nizamda 6 m'lik binada oturduğu döşeme R 60 (E ve I yok) → kalır.",
+             [[TILE, OSB_B, STEEL]], [f(SEATED, has=["R 60", "bitişik nizamda"])], PASSED, FAILED, seat="R 60",
+             layout="attached"),
+        case("alcak-bitisik-ahsap-mertek", "Bitişik nizamda 6 m'lik binada çam mertek D: 28/3-b yanmaz ister → kalır.",
+             [[TILE, OSB_B, PINE_RAFTERS]], [f(NONC, has=["bitişik nizamda", "mertek"])], PASSED, FAILED,
+             layout="attached"),
+        case("alcak-bitisik-tam", "Bitişik nizamda 6 m'lik bina: kaplama ve mertek hiç yanmaz, REI 60 döşemeye oturuyor → "
+             "28/3 geçer.",
+             [[TILE, OSB_B, STEEL]], [], PASSED, PASSED, layout="attached"),
+        case("alcak-ayrik", "Ayrık nizamda 6 m'lik bina; çam mertek, altında döşeme yok: 28/3 yüksek binada ve bitişik "
+             "nizamda uygulanır → kapsam dışı, bulgu yok.",
+             [[TILE, OSB_B, PINE_RAFTERS]], [], PASSED, OUT_OF, seat=None, layout="detached"),
+        case("alcak-blok", "Blok nizamda 6 m'lik bina, çam mertek → 28/3 kapsam dışı.",
+             [[TILE, OSB_B, PINE_RAFTERS]], [], PASSED, OUT_OF, layout="block"),
+        case("alcak-ikiz", "İkiz nizam (yönetmelik blok sayar), 6 m'lik bina, çam mertek → 28/3 kapsam dışı.",
+             [[TILE, OSB_B, PINE_RAFTERS]], [], PASSED, OUT_OF, layout="twin"),
+        case("yuksek-ayrik-doseme-yok", "24 m'lik yüksek bina ayrık nizamda: 28/3 yüksekliğiyle uygulanır, çatının altında "
+             "döşeme yok → eksik veri.",
+             [[TILE, OSB_B, STEEL]], [f(SEATED, MISSING, ["yüksek binada"])], PASSED, MISSING, height=24.0,
+             structure=27.0, seat=None, layout="detached"),
     ]
     # An application before 9.9.2009: the articles' text is not in the rule set.
     old = case("eski-basvuru", "Başvuru 1.6.2009: 28/2 ve 28/3'ün kural setindeki ilk hâli (9.9.2009) sonra → iki madde "

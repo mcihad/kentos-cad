@@ -125021,6 +125021,17 @@
           },
           "type": "array"
         },
+        "layout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BuildingLayout"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Yapı nizamı (docs/adr/8141; `.kcad` Mimari data 28): the building's layout the plan sets (PAİY 4/1-pppp), as\nPAİY 5/6 reads the TAKS and BYKHY 26/4 and 28/3 their scope by it. Absent: not said (where the plan sets none,\nayrık applies, PAİY 8/5: the architect says so)."
+        },
         "levelView": {
           "anyOf": [
             {
@@ -130547,6 +130558,31 @@
         {
           "const": "second",
           "description": "The second.",
+          "type": "string"
+        }
+      ]
+    },
+    "BuildingLayout": {
+      "description": "Yapı nizamı (docs/adr/8141; Planlı Alanlar İmar Yönetmeliği 4/1-pppp): ayrık, bitişik or blok, as the plan sets it;\nikiz (attached on one side, detached on the other) as the plan writes it, which the regulation reads as blok.",
+      "oneOf": [
+        {
+          "const": "detached",
+          "description": "Ayrık nizam (4/1-pppp-1): attached to no building on a neighbouring parcel.",
+          "type": "string"
+        },
+        {
+          "const": "attached",
+          "description": "Bitişik nizam (4/1-pppp-2): attached to one or more buildings on neighbouring parcels.",
+          "type": "string"
+        },
+        {
+          "const": "block",
+          "description": "Blok nizam (4/1-pppp-3): a mass of set length, depth and height on its parcel or across parcels, with gardens.",
+          "type": "string"
+        },
+        {
+          "const": "twin",
+          "description": "İkiz nizam: attached on one side, detached on the other; blok nizam to the regulation (4/1-pppp-3).",
           "type": "string"
         }
       ]

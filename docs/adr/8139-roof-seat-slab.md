@@ -61,6 +61,6 @@ döşemenin kendi Ek-3/B dayanımına bırakılmıştı. Ama altında döşeme �
 
 ## §6. Kalanlar
 
-- Bitişik nizam: binanın nizamı İmar durumu'na yazılırsa yüksek olmayan binanın uzman incelemesi kalkar.
+- Bitişik nizam: binanın nizamı İmar durumu'na yazılırsa yüksek olmayan binanın uzman incelemesi kalkar — yapıldı: ADR [8141](8141-building-layout-nizam.md) (Proje ayarları › Mimari › İmar durumu › Yapı nizamı).
 - 28/4 (orman alanları, 21/5): binanın orman alanında olduğu çizimde yok.
 - Eğimli döşemeye oturan çatı (çatı katı): eğimli döşeme bugün oturduğu döşeme sayılmaz.

@@ -280,6 +280,11 @@ def cases():
         "coverageSource": "İmar durum belgesi 12.3.2025/1234"}}
     out.append({"name": "Mimari: imar durumunda emsalin ve TAKS'ın kaynağı (ADR 8140)",
                 "steps": [step("execute", {"arch": sourced}, done(["arch"]), {**FLAGS, "settings": {"arch": sourced}})]})
+    # The building's layout (docs/adr/8141): written by its name; ikiz is the plan's own choice (blok to the regulation).
+    for layout in ("attached", "twin"):
+        laid = {"levels": levels, "layout": layout}
+        out.append({"name": f"Mimari: yapı nizamı {layout} (ADR 8141)",
+                    "steps": [step("execute", {"arch": laid}, done(["arch"]), {**FLAGS, "settings": {"arch": laid}})]})
     out.append(refused("emsalin kaynağı var, emsal yok",
                        {"arch": {"levels": levels, "zoning": {"parcelArea": 900, "coverage": 0.4,
                                                              "farSource": "UIP-1, karar K1"}}},

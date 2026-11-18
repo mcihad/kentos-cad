@@ -1154,6 +1154,25 @@ BreakLineName = Literal["dimension", "first", "second"]
 """The names of :class:`BreakLine`, for a plain string."""
 
 
+class BuildingLayout(_StrEnum):
+    """Yapı nizamı (docs/adr/8141; Planlı Alanlar İmar Yönetmeliği 4/1-pppp): ayrık, bitişik or blok, as the plan sets it;
+    ikiz (attached on one side, detached on the other) as the plan writes it, which the regulation reads as blok.
+
+    - ``detached``: Ayrık nizam (4/1-pppp-1): attached to no building on a neighbouring parcel.
+    - ``attached``: Bitişik nizam (4/1-pppp-2): attached to one or more buildings on neighbouring parcels.
+    - ``block``: Blok nizam (4/1-pppp-3): a mass of set length, depth and height on its parcel or across parcels, with gardens.
+    - ``twin``: İkiz nizam: attached on one side, detached on the other; blok nizam to the regulation (4/1-pppp-3).
+    """
+    DETACHED = "detached"
+    ATTACHED = "attached"
+    BLOCK = "block"
+    TWIN = "twin"
+
+
+BuildingLayoutName = Literal["detached", "attached", "block", "twin"]
+"""The names of :class:`BuildingLayout`, for a plain string."""
+
+
 class BuildingSectionLeft(_StrEnum):
     """Why something of the model is not in the section, or only in part.
 
@@ -17919,6 +17938,9 @@ class ArchSettings(_Model):
         form_answers: Kontrol formunun cevapları (docs/adr/8077; arch data 1): the author's answers to the model quality control form's
             questions KentOS leaves to them (EK-9 Tablo 9.1: the file size, the development level, the area tables), each
             with its note, by question; the printed form and the BIM package read them. Empty: none given.
+        layout: Yapı nizamı (docs/adr/8141; `.kcad` Mimari data 28): the building's layout the plan sets (PAİY 4/1-pppp), as
+            PAİY 5/6 reads the TAKS and BYKHY 26/4 and 28/3 their scope by it. Absent: not said (where the plan sets none,
+            ayrık applies, PAİY 8/5: the architect says so).
         level_view: Kat görünümü when the drawing was saved (docs/adr/0720 §1), the one it opens with; absent: Bütün katlar.
         line_groups: How the plan's lines are weighted (docs/adr/8013, KCAD 218): `byScale` takes the line group of the scale the
             plan is drawn at (TS 88-23 / ISO 128-23 Tablo 2: 1:200 0.25, 1:100 0.35, 1:50 0.5, 1:20 0.7 mm for the wide
@@ -17963,6 +17985,7 @@ class ArchSettings(_Model):
     detail: WallDetail | WallDetailName | None | Unset = UNSET
     element_types: list[ElementType] | Unset = UNSET
     form_answers: list[FormAnswer] | Unset = UNSET
+    layout: BuildingLayout | BuildingLayoutName | None | Unset = UNSET
     level_view: LevelView | LevelViewName | None | Unset = UNSET
     levels: list[ArchLevel] | Unset = UNSET
     line_groups: LineGroups | LineGroupsName | None | Unset = UNSET
@@ -18003,6 +18026,8 @@ class ArchSettings(_Model):
             out["elementTypes"] = [e0.to_json() for e0 in self.element_types]
         if self.form_answers is not UNSET:
             out["formAnswers"] = [e0.to_json() for e0 in self.form_answers]
+        if self.layout is not UNSET:
+            out["layout"] = None if self.layout is None else _enum_out(self.layout)
         if self.level_view is not UNSET:
             out["levelView"] = None if self.level_view is None else _enum_out(self.level_view)
         if self.levels is not UNSET:
@@ -18061,6 +18086,7 @@ class ArchSettings(_Model):
             detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
             element_types=[ElementType.from_json(e0) for e0 in data["elementTypes"]] if "elementTypes" in data else UNSET,
             form_answers=[FormAnswer.from_json(e0) for e0 in data["formAnswers"]] if "formAnswers" in data else UNSET,
+            layout=UNSET if "layout" not in data else None if data["layout"] is None else _enum_in(BuildingLayout, data["layout"]),
             level_view=UNSET if "levelView" not in data else None if data["levelView"] is None else _enum_in(LevelView, data["levelView"]),
             levels=[ArchLevel.from_json(e0) for e0 in data["levels"]] if "levels" in data else UNSET,
             line_groups=UNSET if "lineGroups" not in data else None if data["lineGroups"] is None else _enum_in(LineGroups, data["lineGroups"]),
@@ -146205,6 +146231,8 @@ __all__ = [
     "BreakLineName",
     "BreaksSectionStations",
     "BreaksTableEdit",
+    "BuildingLayout",
+    "BuildingLayoutName",
     "BuildingPerformance",
     "BuildingPerformanceOperation",
     "BuildingProgram",

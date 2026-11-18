@@ -3,6 +3,7 @@ import type { ArchAuditException } from "./ArchAuditException";
 import type { ArchLevel } from "./ArchLevel";
 import type { ArchMaterial } from "./ArchMaterial";
 import type { ArchModule } from "./ArchModule";
+import type { BuildingLayout } from "./BuildingLayout";
 import type { BuildingPerformance } from "./BuildingPerformance";
 import type { BuildingProgram } from "./BuildingProgram";
 import type { BuildingStructure } from "./BuildingStructure";
@@ -141,6 +142,12 @@ planNotes?: Array<PlanNote>,
  * storey's height by it (a, b, c, ç). Absent: not said; a dwelling's project is read in a dwelling area.
  */
 zone?: Zone, 
+/**
+ * Yapı nizamı (docs/adr/8141; `.kcad` Mimari data 28): the building's layout the plan sets (PAİY 4/1-pppp), as
+ * PAİY 5/6 reads the TAKS and BYKHY 26/4 and 28/3 their scope by it. Absent: not said (where the plan sets none,
+ * ayrık applies, PAİY 8/5: the architect says so).
+ */
+layout?: BuildingLayout, 
 /**
  * Taşıyıcı sistem (docs/adr/8094; `.kcad` Mimari data 15): the building's structural system as the project
  * declares it and whether it holds traditional architectural elements; Planlı Alanlar İmar Yönetmeliği 22/1-m and

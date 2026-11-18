@@ -108,7 +108,8 @@ başına hukuki karar olmadığı için değerlerin kendiliğinden yazılması d
 
 - **Nizam:** kararın Nizam'ı (A, BL, ayrık, bitişik) İmar durumu'nda yok. Yazılırsa 5/6'nın %40'ı (TAKS verilmeyen ayrık ve
   blok nizam), 26/4 (ayrık nizamda müstakil konut) ve 28/3 (bitişik nizam) uzman incelemesinden çıkar (ADR 8134, 8138,
-  8139 §6); değer kararından aynı düğmeyle alınabilir.
+  8139 §6); değer kararından aynı düğmeyle alınabilir — yapıldı: ADR [8141](8141-building-layout-nizam.md) (Yapı nizamı;
+  Değerlerini al Nizam'ı da alır).
 - **Çekme mesafeleri:** OnCekme, YanCekme, ArkaCekme vaziyet planının kenarlarına (ADR 8032) aynı onayla alınabilir.
 - **Planın onay günü:** kaynağın onay günü başvuru gününden sonraysa uyarı (ADR 8084 §6).
 - **Web:** İmar durumu'nun kaynak satırları ve Değerlerini al (TODOS.md §0.2).

@@ -5,10 +5,13 @@
 //! holds (a hiç yanmaz covering lets its boarding be normal alevlenici); 28/3 is expert review (pine rafters in a
 //! building that is not high: they fail in attached order, which the drawing does not say). Tiles of CROOF(t3) fail
 //! 28/2. The roof sits on 1. kat's REI 60 slab (28/3-a, docs/adr/8139). An eight-storey tower's roof (24 m: a high
-//! building) without a slab under it is missing data for 28/3-a, on an E 30 slab it fails, on EI 60 it holds.
+//! building) without a slab under it is missing data for 28/3-a, on an E 30 slab it fails, on EI 60 it holds. The
+//! building's layout said in İmar durumu (docs/adr/8141): in bitişik nizam the pine rafters fail, in ayrık 28/3 is out of
+//! scope.
 //!
 //! ```text
 //! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib roof_fire_tests::screens -- --ignored --nocapture
+//! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib roof_fire_tests::layout_screens -- --ignored --nocapture
 //! ```
 
 use kentos_commands::{ArchAuditOutcome as O, ArchAuditState as S};
@@ -222,6 +225,50 @@ fn a_roof_s_covering_and_layers_are_read_by_28_2_and_28_3() {
     );
 }
 
+/// Proje ayarları › Mimari › İmar durumu's Yapı nizamı chosen and saved.
+fn laid(app: &mut App, layout: Option<kentos_commands::BuildingLayout>) {
+    use crate::project::{SettingsEvent, settings_message};
+    let _ = app.update(Message::Run("file.settings"));
+    let _ = app.update(settings_message(SettingsEvent::Section(crate::project::settings::Section::Arch)));
+    let _ = app.update(settings_message(SettingsEvent::ArchLayout(layout)));
+    let _ = app.update(settings_message(SettingsEvent::Save));
+    assert!(app.project.is_none(), "saved");
+}
+
+/// The building's layout (docs/adr/8141): the pine rafters of a building that is not high are expert review while the
+/// layout is not said; in bitişik nizam 28/3 reads them as in a high building (they fail), in ayrık nizam 28/3 is out of
+/// scope. The facts carry the layout.
+#[test]
+fn the_building_s_layout_decides_28_3_in_a_building_that_is_not_high() {
+    use kentos_commands::BuildingLayout::{Attached, Detached};
+    let mut app = building();
+    declared(&mut app, "Kil kiremit", Some("A1"), Some("BROOF(t1)"));
+    declared(&mut app, "Çam", Some("D-s2,d0"), None);
+    declared(&mut app, "Taş yünü", Some("A1"), None);
+    checked(&mut app);
+    let (_, third, found) = said(&app);
+    assert_eq!(third, Some(O::ExpertReview), "{found:#?}");
+    assert!(found[0].2.contains("yapı nizamı yazılmamış"), "{found:#?}");
+
+    laid(&mut app, Some(Attached));
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    assert_eq!(doc.settings().arch.as_ref().and_then(|a| a.layout), Some(Attached));
+    let facts = kentos_processing::audit_facts::building::measure(doc).normalized();
+    assert_eq!(facts.layout.as_deref(), Some("attached"));
+    checked(&mut app);
+    let (second, third, found) = said(&app);
+    assert_eq!((second, third), (Some(O::Passed), Some(O::Failed)), "{found:#?}");
+    assert_eq!(found.len(), 1, "{found:#?}");
+    assert_eq!((found[0].0.as_str(), found[0].1), ("bykhy_roof_noncombustible", None));
+    assert!(found[0].2.contains("28/3-b bitişik nizamda"), "{found:#?}");
+
+    laid(&mut app, Some(Detached));
+    checked(&mut app);
+    let (_, third, found) = said(&app);
+    assert_eq!(third, Some(O::OutOfScope), "{found:#?}");
+    assert!(found.is_empty(), "{found:#?}");
+}
+
 /// 28/3-a (docs/adr/8139): the tower's roof has no slab under it (missing data); a slab drawn under it, its top at 7. kat's
 /// top, is its seat in the facts; declared E 30 it fails (no I), EI 60 it holds.
 #[test]
@@ -291,6 +338,59 @@ fn seat_screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-cati-dosemesi-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+/// The building's layout (docs/adr/8141): Proje ayarları › Mimari › İmar durumu with Yapı nizamı Bitişik, and Denetim's
+/// 28/3 finding in bitişik nizam; light and dark; `.run/gui-evidence/yapi-nizami-8141/`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn layout_screens() {
+    use crate::project::{SettingsEvent, settings_message};
+    use iced::Size;
+    use kentos_ui::snapshot::{Input, Snapshot};
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yapi-nizami-8141");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    // KENTOS_SCROLLS="layout=20" moves the settings picture without building again.
+    let back = std::env::var("KENTOS_SCROLLS")
+        .ok()
+        .and_then(|v| v.split(',').find_map(|p| p.strip_prefix("layout=").and_then(|n| n.parse::<f32>().ok())))
+        .unwrap_or(11.0);
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")] {
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let mut app = building();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        declared(&mut app, "Kil kiremit", Some("A1"), Some("BROOF(t1)"));
+        declared(&mut app, "Çam", Some("D-s2,d0"), None);
+        declared(&mut app, "Taş yünü", Some("A1"), None);
+        let _ = app.update(Message::Run("file.settings"));
+        let _ = app.update(settings_message(SettingsEvent::Section(crate::project::settings::Section::Arch)));
+        let _ = app.update(settings_message(SettingsEvent::ArchLayout(Some(kentos_commands::BuildingLayout::Attached))));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        snapshot.settle(&mut app, App::view, &mut update);
+        let at = iced::Point::new(size.width * 0.55, size.height * 0.5);
+        snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, -60.0));
+        snapshot.settle(&mut app, App::view, &mut update);
+        snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, back));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-imar-durumu-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        let _ = app.update(settings_message(SettingsEvent::Save));
+        checked(&mut app);
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        app.arch.arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_roof_noncombustible");
+        snapshot.settle(&mut app, App::view, &mut update);
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("2-denetim-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
     }

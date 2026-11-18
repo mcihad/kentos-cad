@@ -401,6 +401,14 @@
     Plan notları'na kaynağıyla (plan, onay, karar); yalnız sayıyla yazılmış, alanın sınırındaki değer, planı belli
     kararın. Form dolar, Kaydet onaylar (`cad.settings.set`), Vazgeç bırakır. Emsalin ve TAKS'ın kaynağı projede
     (`zoning.farSource`, `coverageSource`; mimari verisi 27) ve olgularda; `tr.kentos.mevzuat` 0.7.0'ın bulgusu anar.
+    Okumaların önbelleği açılan çizimin oturumu ve kuşağıyladır (adresi bütün çizimlerde aynı).
+  - **Yapı nizamı (18 Kasım 2026; [ADR 8141](../adr/8141-building-layout-nizam.md), K355–K360):** İmar durumu'nda
+    Bölge'nin altında "Yapı nizamı" (Ayrık, Bitişik, Blok, İkiz; yazılmamışı ayrık sayılmaz, 8/5 müellifin seçimi; mimari
+    verisi 28); Değerlerini al Nizam'ın profil kodunu (A, I, B, BL) ya da etiketini alır, "A-3" gibi yazımı almaz.
+    Olgularda `building.layout`, `zoning.layout`. PAİY 5/6: ayrık, blok, ikiz %40, bitişik %60 (`tr.kentos.mevzuat`
+    0.8.0); BYKHY 26/4 ayrık nizamdaki müstakil konutta kapsam dışı, 28/3 yüksek olmayan binada bitişik nizamda
+    uygulanır, öbür nizamlarda kapsam dışı (`tr.kentos.mimari-mevzuat` 0.32.0). Nizamsız proje eskisi gibi uzman
+    incelemesi ya da uyarı.
   - **Çift kanat ve döner kapı (17 Kasım 2026; [ADR 8093](../adr/8093-double-door-leaf-revolving-door.md), K127–K128):**
     PAİY 39/1-b bina girişinde bir kanat 1,00 m (ilk kanadın tek başına net geçişi; ikincisi genişse uzman incelemesi);
     39/1-ç döner kapının yanında normal bina girişi.

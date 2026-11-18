@@ -1,5 +1,14 @@
 # Değişiklikler
 
+## 0.32.0 — 18 Kasım 2026
+
+- Yapı nizamı (docs/adr/8141): olguların yeni `building.layout`'u (projenin İmar durumu'ndaki Yapı nizamı: `detached`,
+  `attached`, `block`, `twin`; PAİY 4/1-pppp, ikiz blok sayılır). `catilar`: yüksek olmayan binada bitişik nizamda 28/3
+  (a ve b) yüksek binadaki gibi uygulanır (eksik veri, kaldı), ayrık, blok ya da ikiz nizamda kapsam dışı; nizam
+  yazılmamışsa eskisi gibi uzman incelemesi, sözü nizamın nereye yazılacağını söyler. `kaplamalar`: 26/4 ayrık nizamdaki
+  müstakil konutta kapsam dışı, başka nizamdaki tek konutlu binada uygulanır; nizamsız tek konutlu binada uzman
+  incelemesi. Çatılar 37 (8 yeni), kaplamalar 34 (4 yeni) bağımsız durum.
+
 ## 0.31.0 — 18 Kasım 2026
 
 - Çatının oturduğu döşeme (`catilar`; docs/adr/8139): BYKHY 28/3-a, yüksek binada (ve bitişik nizamda) çatının oturduğu

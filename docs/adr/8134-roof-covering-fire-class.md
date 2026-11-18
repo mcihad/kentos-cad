@@ -91,5 +91,5 @@ Yönetmeliğin metni derlenmiş resmî metinden (pdftotext; ADR 8081'in kopyası
   olduğu olgularda yok ([ADR 8139](8139-roof-seat-slab.md)'da yapıldı: olguların `roofs[].seat`'i).
 - **28/4:** binanın orman alanında (21/5) olduğu beyanı gelince.
 - **Bitişik nizam:** projenin nizamı İmar durumu'na yazılırsa 28/3 yüksek olmayan binada da kesinleşir (ADR 8091 §6'nın
-  26/4'ü de).
+  26/4'ü de) — yapıldı: ADR [8141](8141-building-layout-nizam.md).
 - **Yanmaz:** zor yanıcının yanmaz sayılıp sayılmadığı için bakanlığın yorumu ya da sahibin kararı gelince.

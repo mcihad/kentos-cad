@@ -43,6 +43,10 @@ pub struct ZoningFacts {
     /// Where its TAKS is read from, when it says.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub coverage_source: Option<String>,
+    /// The building's layout the plan sets, as the project says it (yapı nizamı, docs/adr/8141): `detached`, `attached`,
+    /// `block`, `twin`; absent: not said. PAİY 5/6 reads the TAKS a plan does not give by it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub layout: Option<String>,
 }
 
 impl ZoningFacts {

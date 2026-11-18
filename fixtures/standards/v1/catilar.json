@@ -2407,7 +2407,7 @@
   },
   {
    "id": "alcak-doseme-yok",
-   "neden": "6 m'lik binada çatının altında döşeme yok: bitişik nizamdaysa 28/3-a uygulanır, nizam çizimde yok → uzman incelemesi.",
+   "neden": "6 m'lik binada çatının altında döşeme yok: bitişik nizamdaysa 28/3-a uygulanır, yapı nizamı yazılmamış → uzman incelemesi.",
    "permit": {
     "particulars": {
      "basvuru_tarihi": "02.07.2026"
@@ -2579,6 +2579,710 @@
      ],
      "BYKHY 28/3": [
       "expertReview",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "alcak-bitisik-doseme-yok",
+   "neden": "6 m'lik bina bitişik nizamda: 28/3-a uygulanır, çatının altında döşeme yok → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 8.5,
+    "roofs": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k01",
+      "layers": [
+       {
+        "kind": "covering",
+        "material": "Kil kiremit",
+        "reaction": "A1",
+        "roofClass": "BROOF(t1)"
+       },
+       {
+        "kind": "boarding",
+        "material": "OSB",
+        "reaction": "B-s1,d0"
+       },
+       {
+        "kind": "rafters",
+        "material": "Çelik",
+        "reaction": "A1"
+       }
+      ]
+     }
+    ],
+    "layout": "attached"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_roof_seat_fire_stop",
+      "state": "missingData",
+      "has": [
+       "döşeme çizilmemiş",
+       "bitişik nizamda"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 28/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 28/3": [
+      "missingData",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "alcak-bitisik-doseme-r60",
+   "neden": "Bitişik nizamda 6 m'lik binada oturduğu döşeme R 60 (E ve I yok) → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 8.5,
+    "roofs": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k01",
+      "layers": [
+       {
+        "kind": "covering",
+        "material": "Kil kiremit",
+        "reaction": "A1",
+        "roofClass": "BROOF(t1)"
+       },
+       {
+        "kind": "boarding",
+        "material": "OSB",
+        "reaction": "B-s1,d0"
+       },
+       {
+        "kind": "rafters",
+        "material": "Çelik",
+        "reaction": "A1"
+       }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
+      ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "R 60"
+     }
+    ],
+    "layout": "attached"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_roof_seat_fire_stop",
+      "has": [
+       "R 60",
+       "bitişik nizamda"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 28/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 28/3": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "alcak-bitisik-ahsap-mertek",
+   "neden": "Bitişik nizamda 6 m'lik binada çam mertek D: 28/3-b yanmaz ister → kalır.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 8.5,
+    "roofs": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k01",
+      "layers": [
+       {
+        "kind": "covering",
+        "material": "Kil kiremit",
+        "reaction": "A1",
+        "roofClass": "BROOF(t1)"
+       },
+       {
+        "kind": "boarding",
+        "material": "OSB",
+        "reaction": "B-s1,d0"
+       },
+       {
+        "kind": "rafters",
+        "material": "Çam mertek",
+        "reaction": "D-s2,d0"
+       }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
+      ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
+     }
+    ],
+    "layout": "attached"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_roof_noncombustible",
+      "has": [
+       "bitişik nizamda",
+       "mertek"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 28/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 28/3": [
+      "failed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "alcak-bitisik-tam",
+   "neden": "Bitişik nizamda 6 m'lik bina: kaplama ve mertek hiç yanmaz, REI 60 döşemeye oturuyor → 28/3 geçer.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 8.5,
+    "roofs": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k01",
+      "layers": [
+       {
+        "kind": "covering",
+        "material": "Kil kiremit",
+        "reaction": "A1",
+        "roofClass": "BROOF(t1)"
+       },
+       {
+        "kind": "boarding",
+        "material": "OSB",
+        "reaction": "B-s1,d0"
+       },
+       {
+        "kind": "rafters",
+        "material": "Çelik",
+        "reaction": "A1"
+       }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
+      ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
+     }
+    ],
+    "layout": "attached"
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 28/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 28/3": [
+      "passed",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "alcak-ayrik",
+   "neden": "Ayrık nizamda 6 m'lik bina; çam mertek, altında döşeme yok: 28/3 yüksek binada ve bitişik nizamda uygulanır → kapsam dışı, bulgu yok.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 8.5,
+    "roofs": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k01",
+      "layers": [
+       {
+        "kind": "covering",
+        "material": "Kil kiremit",
+        "reaction": "A1",
+        "roofClass": "BROOF(t1)"
+       },
+       {
+        "kind": "boarding",
+        "material": "OSB",
+        "reaction": "B-s1,d0"
+       },
+       {
+        "kind": "rafters",
+        "material": "Çam mertek",
+        "reaction": "D-s2,d0"
+       }
+      ]
+     }
+    ],
+    "layout": "detached"
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 28/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 28/3": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "alcak-blok",
+   "neden": "Blok nizamda 6 m'lik bina, çam mertek → 28/3 kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 8.5,
+    "roofs": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k01",
+      "layers": [
+       {
+        "kind": "covering",
+        "material": "Kil kiremit",
+        "reaction": "A1",
+        "roofClass": "BROOF(t1)"
+       },
+       {
+        "kind": "boarding",
+        "material": "OSB",
+        "reaction": "B-s1,d0"
+       },
+       {
+        "kind": "rafters",
+        "material": "Çam mertek",
+        "reaction": "D-s2,d0"
+       }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
+      ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
+     }
+    ],
+    "layout": "block"
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 28/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 28/3": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "alcak-ikiz",
+   "neden": "İkiz nizam (yönetmelik blok sayar), 6 m'lik bina, çam mertek → 28/3 kapsam dışı.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 6.0,
+    "structureHeight": 8.5,
+    "roofs": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k01",
+      "layers": [
+       {
+        "kind": "covering",
+        "material": "Kil kiremit",
+        "reaction": "A1",
+        "roofClass": "BROOF(t1)"
+       },
+       {
+        "kind": "boarding",
+        "material": "OSB",
+        "reaction": "B-s1,d0"
+       },
+       {
+        "kind": "rafters",
+        "material": "Çam mertek",
+        "reaction": "D-s2,d0"
+       }
+      ],
+      "seat": [
+       "00000000-0000-4000-8000-000000000101"
+      ]
+     }
+    ],
+    "elements": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000101",
+      "kind": "slab",
+      "level": "k01",
+      "fireRating": "REI 60"
+     }
+    ],
+    "layout": "twin"
+   },
+   "expect": {
+    "findings": [],
+    "rules": {
+     "BYKHY 28/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 28/3": [
+      "outOfScope",
+      "9.9.2009"
+     ]
+    }
+   }
+  },
+  {
+   "id": "yuksek-ayrik-doseme-yok",
+   "neden": "24 m'lik yüksek bina ayrık nizamda: 28/3 yüksekliğiyle uygulanır, çatının altında döşeme yok → eksik veri.",
+   "permit": {
+    "particulars": {
+     "basvuru_tarihi": "02.07.2026"
+    }
+   },
+   "building": {
+    "storeys": [
+     {
+      "level": "k00",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     },
+     {
+      "level": "k01",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "units": 0,
+      "common": 0,
+      "annexes": 0,
+      "other": 0,
+      "technical": 0,
+      "inhabited": 0,
+      "elevators": 0
+     }
+    ],
+    "height": 24.0,
+    "structureHeight": 27.0,
+    "roofs": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "level": "k01",
+      "layers": [
+       {
+        "kind": "covering",
+        "material": "Kil kiremit",
+        "reaction": "A1",
+        "roofClass": "BROOF(t1)"
+       },
+       {
+        "kind": "boarding",
+        "material": "OSB",
+        "reaction": "B-s1,d0"
+       },
+       {
+        "kind": "rafters",
+        "material": "Çelik",
+        "reaction": "A1"
+       }
+      ]
+     }
+    ],
+    "layout": "detached"
+   },
+   "expect": {
+    "findings": [
+     {
+      "code": "bykhy_roof_seat_fire_stop",
+      "state": "missingData",
+      "has": [
+       "yüksek binada"
+      ]
+     }
+    ],
+    "rules": {
+     "BYKHY 28/2": [
+      "passed",
+      "9.9.2009"
+     ],
+     "BYKHY 28/3": [
+      "missingData",
       "9.9.2009"
      ]
     }

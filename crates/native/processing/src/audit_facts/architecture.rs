@@ -163,6 +163,8 @@ pub(super) fn measure(
     let typed = doc.settings().arch.as_ref().and_then(|a| a.zoning.as_ref());
     let far_source = typed.and_then(|z| z.far_source.clone());
     let coverage_source = typed.and_then(|z| z.coverage_source.clone());
+    // And the building's layout (docs/adr/8141), which 5/6 reads the TAKS by.
+    let layout = doc.settings().arch.as_ref().and_then(|a| a.layout).map(|l| l.name().to_owned());
     let zoning = doc.zoning_report().map(|z| ZoningFacts {
         parcel: z.parcel,
         far: z.far_limit,
@@ -176,6 +178,7 @@ pub(super) fn measure(
         footprint: z.footprint,
         far_source,
         coverage_source,
+        layout,
     });
     Ok(Some(ArchitectureFacts {
         levels,

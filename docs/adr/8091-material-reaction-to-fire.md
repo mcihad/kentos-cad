@@ -80,4 +80,4 @@ kuralı).
   kaplamasının malzemesi modelde yok ([ADR 8138](8138-room-finish-coverings.md)'de yapıldı: kaplamanın adı malzemedir,
   20/3, 26/2, 26/4; 36 ve 41'in bugünkü metninde kaplamanın yanıcılığı yok).
 - **Isı yalıtımı (26/3, 27):** katmanın malzemesinin sınıfı katman katman okunabilir; cephe kuralı ayrı dilim.
-- **Nizam:** projenin nizamı İmar durumu'na yazılırsa 26/4'ün tek konutlu binası kesinleşir.
+- **Nizam:** projenin nizamı İmar durumu'na yazılırsa 26/4'ün tek konutlu binası kesinleşir — yapıldı: ADR [8141](8141-building-layout-nizam.md) (Proje ayarları › Mimari › İmar durumu › Yapı nizamı).

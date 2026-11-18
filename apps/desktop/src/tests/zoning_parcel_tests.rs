@@ -71,6 +71,7 @@ const K2: &str = "UIP-1, onay 2024-05-14, karar K2";
 /// over them with its building height; Vazgeç writes nothing, Kaydet writes them through `cad.settings.set`.
 #[test]
 fn a_decision_s_values_are_taken_with_their_source_and_saved_by_kaydet() {
+    use kentos_commands::BuildingLayout::{Block, Detached};
     use kentos_commands::PlanNoteKey::{BuildingHeight, Storeys};
     let mut app = opened();
     let (lines, takes) = {
@@ -81,13 +82,19 @@ fn a_decision_s_values_are_taken_with_their_source_and_saved_by_kaydet() {
     let (after, k1) = takes[0].clone();
     assert_eq!(lines[after].0, "Plan notu 2: Çatı katı yapılamaz.", "K1's button after its notes");
     assert_eq!((k1.far, k1.coverage, k1.height, k1.storeys), (Some(1.2), Some(0.4), None, Some(3.0)));
+    // Nizam “A”, the profile's code (docs/adr/8141).
+    assert_eq!(k1.layout, Some(Detached));
     assert_eq!(k1.source, K1);
-    assert_eq!(k1.words(false), "Emsal 1,20 ve TAKS 0,40 İmar durumu'na, kat adedi 3 Plan notları'na.");
+    assert_eq!(k1.words(false), "Emsal 1,20, TAKS 0,40 ve nizam ayrık İmar durumu'na, kat adedi 3 Plan notları'na.");
     let (after, k2) = takes[1].clone();
     assert_eq!(lines[after].0, "Plan notu 1: Bodrum katlar emsale dahil değildir.");
     // “2,00” is read as 2 as the conflicts read it; Kullanım, Nizam and the setbacks are never taken.
     assert_eq!((k2.far, k2.coverage, k2.height, k2.storeys), (Some(2.0), Some(0.5), Some(15.5), None));
-    assert_eq!(k2.words(false), "Emsal 2,00 ve TAKS 0,50 İmar durumu'na, bina yüksekliği 15,50 m Plan notları'na.");
+    assert_eq!(k2.layout, Some(Block));
+    assert_eq!(
+        k2.words(false),
+        "Emsal 2,00, TAKS 0,50 ve nizam blok İmar durumu'na, bina yüksekliği 15,50 m Plan notları'na."
+    );
     // The typed emsal and TAKS are K1's, but no source says so: K1's are not held yet.
     assert!(!form(&app).holds(&k1));
 
@@ -95,6 +102,7 @@ fn a_decision_s_values_are_taken_with_their_source_and_saved_by_kaydet() {
     let f = form(&app);
     assert_eq!((f.far.as_str(), f.far_source.as_str()), ("1.2", K1));
     assert_eq!((f.coverage.as_str(), f.coverage_source.as_str()), ("0.4", K1));
+    assert_eq!(f.layout, Some(Detached));
     assert_eq!(notes(&app), [(Storeys, "3".to_owned(), K1.to_owned())]);
     assert!(form(&app).holds(&k1) && !form(&app).holds(&k2), "K1's button is spent, K2's is not");
     // Not saved: the project is as it was.
@@ -105,6 +113,7 @@ fn a_decision_s_values_are_taken_with_their_source_and_saved_by_kaydet() {
     let f = form(&app);
     assert_eq!((f.far.as_str(), f.far_source.as_str()), ("2", K2));
     assert_eq!((f.coverage.as_str(), f.coverage_source.as_str()), ("0.5", K2));
+    assert_eq!(f.layout, Some(Block));
     // K1's storey count stays with its source; K2's height takes a row of its own.
     assert_eq!(
         notes(&app),
@@ -118,7 +127,7 @@ fn a_decision_s_values_are_taken_with_their_source_and_saved_by_kaydet() {
     let arch = saved(&app);
     let z = arch.zoning.clone().expect("İmar durumu");
     assert_eq!((z.far, z.far_source), (Some(1.2), None), "Vazgeç writes nothing");
-    assert!(arch.plan_notes.is_empty());
+    assert!(arch.plan_notes.is_empty() && arch.layout.is_none());
 
     // Again, and Kaydet writes them through `cad.settings.set`.
     let _ = app.update(Message::Run("file.settings"));
@@ -131,6 +140,7 @@ fn a_decision_s_values_are_taken_with_their_source_and_saved_by_kaydet() {
     let z = arch.zoning.clone().expect("İmar durumu");
     assert_eq!((z.parcel_area, z.far, z.coverage), (900.0, Some(2.0), Some(0.5)));
     assert_eq!((z.far_source.as_deref(), z.coverage_source.as_deref()), (Some(K2), Some(K2)));
+    assert_eq!(arch.layout, Some(Block));
     let written: Vec<_> = arch.plan_notes.iter().map(|n| (n.key, n.value, n.source.as_str())).collect();
     assert_eq!(written, [(Storeys, 3.0, K1), (BuildingHeight, 15.5, K2)]);
     // The plan decisions read the saved emsal: K1 says otherwise, in the warning colour.
@@ -139,8 +149,8 @@ fn a_decision_s_values_are_taken_with_their_source_and_saved_by_kaydet() {
 }
 
 /// A decision without its plan, or that writes no number a field takes, gives nothing to take; a value out of its
-/// field's bounds (a TAKS written as a percentage, a storey count with words) is not taken; a plan not in force says its
-/// state in the source (docs/adr/8140).
+/// field's bounds (a TAKS written as a percentage, a storey count with words) is not taken, nor a Nizam not the profile's
+/// code (“A-3”, docs/adr/8141); a plan not in force says its state in the source (docs/adr/8140).
 #[test]
 fn only_numbers_a_field_takes_from_a_decision_with_its_plan_are_offered() {
     let app = opened();
@@ -155,6 +165,8 @@ fn only_numbers_a_field_takes_from_a_decision_with_its_plan_are_offered() {
                     attrs.insert("TAKS".into(), "40".into());
                     attrs.insert("KatAdedi".into(), "Z+3".into());
                     attrs.insert("KAKS".into(), "serbest".into());
+                    // Not the profile's code: not read as ayrık (docs/adr/8141).
+                    attrs.insert("Nizam".into(), "A-3".into());
                 }
                 Some("K2") => {
                     attrs.insert("Plan".into(), plan.into());
@@ -170,6 +182,7 @@ fn only_numbers_a_field_takes_from_a_decision_with_its_plan_are_offered() {
     assert_eq!(takes.len(), 1, "K1 gives nothing: {takes:#?}");
     assert_eq!(takes[0].source, "UIP-2 (askida), karar K2");
     assert_eq!((takes[0].far, takes[0].coverage, takes[0].height), (Some(2.0), Some(0.5), Some(15.5)));
+    assert_eq!(takes[0].layout, Some(kentos_commands::BuildingLayout::Block));
     // A plan not drawn: its source could not be said.
     let none = with("UIP-9");
     assert!(none.is_empty(), "{none:#?}");

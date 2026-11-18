@@ -168,6 +168,7 @@ fn the_parcels_zoning_is_read_as_the_emsal_and_taks_table_reads_it() {
     );
     let mut s = plan();
     let arch = s.settings.arch.get_or_insert_with(Default::default);
+    arch.layout = Some(kentos_commands::BuildingLayout::Attached);
     arch.zoning = Some(kentos_commands::Zoning {
         parcel_area: 300.0,
         far: Some(1.5),
@@ -191,6 +192,8 @@ fn the_parcels_zoning_is_read_as_the_emsal_and_taks_table_reads_it() {
         (z.far_source.as_deref(), z.coverage_source.as_deref()),
         (Some("İmar durum belgesi 12.3.2025/1234"), None)
     );
+    // So does the building's layout (docs/adr/8141), which 5/6 reads the TAKS by.
+    assert_eq!(z.layout.as_deref(), Some("attached"));
     let near = |a: f64, b: f64| (a - b).abs() < 1e-4;
     assert!(
         near(z.floors, report.floors) && near(z.footprint, report.footprint),

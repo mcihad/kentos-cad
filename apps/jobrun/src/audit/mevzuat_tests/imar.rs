@@ -61,6 +61,18 @@ fn the_emsal_and_taks_are_read_against_the_zoning() {
     );
     let found = findings(&python, RULE, zoned(Some(1.5), None, 400.0, 150.0));
     assert_eq!(said(&found), [(Severity::Warning, None)]);
+    // The building's layout said (docs/adr/8141): ayrık, blok or ikiz binds the 40 %, bitişik the 60 %.
+    let laid = |layout: &str| {
+        let mut f = zoned(Some(1.5), None, 400.0, 150.0);
+        f["project"]["architecture"]["zoning"]["layout"] = json!(layout);
+        f
+    };
+    for layout in ["detached", "block", "twin"] {
+        let found = findings(&python, RULE, laid(layout));
+        assert_eq!(said(&found), [(Severity::Error, None)], "{layout}");
+        assert!(says(&found[0], &["5/6'ya göre %40'ı geçemez"]), "{}", found[0].message);
+    }
+    assert!(findings(&python, RULE, laid("attached")).is_empty());
     // The sample building as drawn writes no İmar durumu: nothing said.
     assert!(findings(&python, RULE, facts(|_| {})).is_empty());
 }

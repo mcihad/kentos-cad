@@ -516,6 +516,8 @@ __all__ = [
     "BreakLineName",
     "BreaksSectionStations",
     "BreaksTableEdit",
+    "BuildingLayout",
+    "BuildingLayoutName",
     "BuildingPerformance",
     "BuildingPerformanceOperation",
     "BuildingProgram",
