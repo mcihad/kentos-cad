@@ -1,6 +1,7 @@
 //! Kesit (docs/adr/8061 §5 "Kesit", docs/adr/8073 §3): a plane across the model, one side of it kept, or a box about
-//! the chosen objects. It gives the half-spaces the renderer clips with (what is cut away is not drawn, the cut faces
-//! are not capped) and the part of a ray that is kept, so a click never meets what is cut away. The planes are in the
+//! the chosen objects. It gives the half-spaces the renderer clips with (what is cut away is not drawn; the cut faces
+//! are filled by [`crate::caps`], docs/adr/8131) and the part of a ray that is kept, so a click never meets what is cut
+//! away. The planes are in the
 //! source's space; [`shown`] takes one into the shown space of a vertical exaggeration.
 
 use kentos_scene3d::{Aabb, Exaggeration};

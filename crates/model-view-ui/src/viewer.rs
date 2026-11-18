@@ -84,6 +84,8 @@ pub enum Message {
     Uncut,
     /// The section plane's place along its axis.
     At(f64),
+    /// The section plane let go: its cut faces filled again (docs/adr/8131).
+    AtDone,
     /// The section plane keeps its other side.
     Flip,
     /// A details group folded or opened, by its title.
@@ -137,6 +139,9 @@ pub struct Viewer {
     pub legend: bool,
     pub see_through: bool,
     pub section: Section,
+    /// Whether the section plane is being dragged: its cut faces wait for its release (docs/adr/8131), the scene not
+    /// made again at each step.
+    cutting: bool,
     pub picked: Option<Picked>,
     /// What the host says of the model for the status bar (its schema), as (words, tip).
     pub facts: Vec<(String, String)>,
@@ -181,6 +186,7 @@ impl Viewer {
             legend: true,
             see_through: false,
             section: Section::None,
+            cutting: false,
             picked: None,
             facts: Vec::new(),
             query: String::new(),
@@ -316,7 +322,8 @@ impl Viewer {
                 .enumerate()
                 .map(|(k, (_, c))| {
                     let a = if self.see_through && !keep.contains(&(k as u32)) { c[3].min(0.3) } else { c[3] };
-                    Style { color: [c[0], c[1], c[2], a] }
+                    // A section's caps are cut where they are made (docs/adr/8131).
+                    Style { color: [c[0], c[1], c[2], a], cut: k as u32 != parts::CAP }
                 })
                 .collect(),
         )
@@ -325,6 +332,15 @@ impl Viewer {
     /// The section's planes in the shown space.
     pub fn planes(&self) -> Vec<[f64; 4]> {
         self.section.planes().into_iter().map(|p| section::shown(p, &Exaggeration::NONE)).collect()
+    }
+
+    /// The legend's parts: those of what shows, and while a section cuts the face its caps wear (docs/adr/8131).
+    pub fn swatches(&self) -> Vec<(&'static str, [f32; 4])> {
+        let mut out = self.view.as_ref().map_or_else(Vec::new, View::legend);
+        if !out.is_empty() && !self.section.planes().is_empty() {
+            out.push(PARTS[parts::CAP as usize]);
+        }
+        out
     }
 
     /// The span along `cut`'s axis a section plane moves in: the box of what shows.
@@ -392,23 +408,39 @@ impl Viewer {
             Message::Cut(cut) => {
                 let (lo, hi) = self.span(cut)?;
                 self.section = Section::Plane { cut, at: (lo + hi) / 2.0, flip: false };
+                self.rebuild();
             }
             Message::Boxed => {
                 let v = self.view.as_ref()?;
                 let b = v.bounds_under(v.selected()?);
                 if !b.is_empty() {
                     self.section = Section::Box(section::about(&b));
+                    self.rebuild();
                 }
             }
-            Message::Uncut => self.section = Section::None,
+            Message::Uncut => {
+                self.section = Section::None;
+                self.cutting = false;
+                self.rebuild();
+            }
+            // Dragged: the cut faces go at the first step and come back at the release (docs/adr/8131).
             Message::At(at) => {
                 if let Section::Plane { at: now, .. } = &mut self.section {
                     *now = at;
+                    if !self.cutting {
+                        self.cutting = true;
+                        self.rebuild();
+                    }
                 }
+            }
+            Message::AtDone => {
+                self.cutting = false;
+                self.rebuild();
             }
             Message::Flip => {
                 if let Section::Plane { flip, .. } = &mut self.section {
                     *flip = !*flip;
+                    self.rebuild();
                 }
             }
             Message::Fold(title) => {
@@ -538,8 +570,15 @@ impl Viewer {
     fn rebuild(&mut self) {
         let Some(v) = &self.view else { return };
         let keys = &v.input().objects;
-        let sources: Vec<Source> = v
-            .sources()
+        let mut shown = v.sources();
+        // A section's cut faces filled (docs/adr/8131): its planes in the sources' own space; not while it is dragged.
+        let planes = self.section.planes();
+        if !planes.is_empty() && !self.cutting {
+            let opaque = |p: u32| PARTS.get(p as usize).is_some_and(|(_, c)| c[3] >= 1.0);
+            let caps = kentos_model_view::caps::caps(&shown, &planes, parts::CAP, opaque);
+            shown.extend(caps);
+        }
+        let sources: Vec<Source> = shown
             .into_iter()
             .map(|s| Source {
                 part: s.part,
@@ -547,7 +586,8 @@ impl Viewer {
                 owner: Some(keys[s.object].key.clone()),
                 vertices: s.vertices,
                 triangles: s.triangles,
-                smooth: false,
+                // A cap is one flat fill: shaded smooth, its normals all alike, it has no edge lines over it.
+                smooth: s.part == parts::CAP,
                 through: s.through,
             })
             .collect();
@@ -743,6 +783,31 @@ mod tests {
         assert!(b.min[0] < 3.0 && b.max[0] > 4.0 && b.min[0] > 1.0, "{b:?}");
         let _ = v.update(Message::Uncut);
         assert!(v.planes().is_empty());
+    }
+
+    /// Kesit yüzü (docs/adr/8131): a level cut through both cubes fills each cut with a dark cap of its object; while
+    /// the plane is dragged the caps wait, and come back when it is let go; none once the section is gone.
+    #[test]
+    fn a_section_fills_what_it_cuts_and_waits_while_dragged() {
+        let mut v = loaded();
+        let capped = |v: &Viewer| -> Vec<Option<String>> {
+            v.scene().meshes().iter().filter(|m| m.part == parts::CAP).map(|m| m.owner.clone()).collect()
+        };
+        let cap = PARTS[parts::CAP as usize].0;
+        assert!(!v.swatches().iter().any(|(name, _)| *name == cap));
+        let _ = v.update(Message::Cut(Cut::Level));
+        assert_eq!(v.swatches().last().map(|(name, _)| *name), Some(cap), "the legend names the caps' face");
+        let owners = capped(&v);
+        assert_eq!(owners.len(), 2, "{owners:?}");
+        assert!(owners.iter().all(|o| o.as_deref().is_some_and(|k| k.starts_with("duvar"))), "{owners:?}");
+        let _ = v.update(Message::At(0.25));
+        assert!(capped(&v).is_empty(), "not while dragged");
+        let _ = v.update(Message::At(0.3));
+        let _ = v.update(Message::AtDone);
+        assert_eq!(capped(&v).len(), 2, "back when let go");
+        let _ = v.update(Message::Uncut);
+        assert!(capped(&v).is_empty());
+        assert!(!v.swatches().iter().any(|(name, _)| *name == cap));
     }
 }
 

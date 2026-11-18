@@ -8,7 +8,8 @@
 //!   the scene's source meshes in their parts' colours ([`PARTS`]), the chosen one and the found ones painted over
 //!   their category's.
 //! - [`OrbitCamera`]: the camera about a point (orbit, pan, dolly, fit, the four views), the 3D views' one.
-//! - [`Section`]: a plane across the model or a box about the chosen objects; the planes the renderer clips with.
+//! - [`Section`]: a plane across the model or a box about the chosen objects; the planes the renderer clips with, and
+//!   [`caps`]: the cut faces filled (docs/adr/8131).
 //! - [`Details`]: the chosen object's named values, as the source writes them, for the properties panel.
 //! - [`measure`]: a point snapped to a body's corner, an edge's middle, an edge or its face; a distance and its
 //!   components, an angle, a face's area (docs/adr/8121).
@@ -16,6 +17,7 @@
 //! Pure: no window, GPU, file, clock or thread; native and wasm32.
 
 pub mod camera;
+pub mod caps;
 pub mod details;
 pub mod input;
 pub mod measure;

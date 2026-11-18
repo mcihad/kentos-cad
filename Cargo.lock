@@ -3450,6 +3450,7 @@ dependencies = [
 name = "kentos-model-view"
 version = "0.1.0"
 dependencies = [
+ "kentos-geometry-core",
  "kentos-scene3d",
 ]
 

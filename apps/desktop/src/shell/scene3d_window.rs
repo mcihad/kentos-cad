@@ -271,7 +271,7 @@ impl Window {
             PARTS
                 .iter()
                 .enumerate()
-                .map(|(k, (_, c))| Style { color: [c[0], c[1], c[2], if k == 0 && self.see_through { 0.45 } else { 1.0 }] })
+                .map(|(k, (_, c))| Style::of([c[0], c[1], c[2], if k == 0 && self.see_through { 0.45 } else { 1.0 }]))
                 .collect(),
         )
     }

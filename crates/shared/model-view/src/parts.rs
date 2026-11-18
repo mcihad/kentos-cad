@@ -8,7 +8,7 @@ use crate::input::Category;
 pub type Part = u32;
 
 /// The parts: their names (the legend's words) and colours.
-pub const PARTS: [(&str, [f32; 4]); 19] = [
+pub const PARTS: [(&str, [f32; 4]); 20] = [
     ("Duvar", [0.80, 0.78, 0.74, 1.0]),
     ("Döşeme", [0.60, 0.61, 0.64, 1.0]),
     ("Kolon", [0.52, 0.55, 0.60, 1.0]),
@@ -31,6 +31,8 @@ pub const PARTS: [(&str, [f32; 4]); 19] = [
     ("Altlık model", [0.56, 0.42, 0.80, 0.55]),
     // A spatial zone (docs/adr/8123): pale green, its rooms' pale blue under it stays readable.
     ("Zon", [0.30, 0.66, 0.50, 0.12]),
+    // A section's cut faces (docs/adr/8131): dark, as a drawn section fills what its line cuts.
+    ("Kesit yüzü", [0.22, 0.23, 0.26, 1.0]),
 ];
 
 pub const SPACE: Part = 9;
@@ -41,6 +43,8 @@ pub const FOUND_SPACE: Part = 14;
 pub const OPENING: Part = 16;
 pub const UNDERLAY: Part = 17;
 pub const ZONE: Part = 18;
+/// A section's cut faces (docs/adr/8131).
+pub const CAP: Part = 19;
 
 /// A category's part.
 pub fn of(category: Category) -> Part {

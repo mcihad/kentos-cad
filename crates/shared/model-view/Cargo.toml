@@ -11,3 +11,5 @@ publish.workspace = true
 # file). It knows no IFC name: the adapter gives each object its category.
 [dependencies]
 kentos-scene3d = { path = "../scene3d" }
+# The shared ear-clipper for a section's caps (docs/adr/8131); pure and wasm32 as this core.
+kentos-geometry-core = { path = "../geometry-core" }

@@ -1,8 +1,8 @@
 {
   "format": "kentos.wgsl-layout",
-  "version": 3,
+  "version": 4,
   "module": "scene3d",
-  "description": "KentOS's 3D scene (docs/adr/0910 §4–§5, plan/3d.md D1): triangle meshes in tiles with a depth32float buffer, reversed (cleared to 0, compare greater); one draw per tile and per part range, the tile's origin minus the eye (float64 on the host, float32 here) at a dynamic offset; the parts' colours in a storage buffer, premultiplied on output. Version 2: each vertex carries its normal, signed 8-bit (zero: flat, the face's normal from derivatives). The opaque pipeline writes depth; the see-through one tests it without writing and blends premultiplied alpha. Version 3 (docs/adr/8120): the View's `edge` block and the bodies' edges, lines over the faces drawn a hair nearer, testing depth without writing it; a view drawn at the quality's samples into its own target, then laid over the window by the composite, darkened by the ambient light's occlusion when asked. At the highest quality the faces also write their veil (meshVeiledFs: a see-through face's alpha, the most over a pixel) to a second target, which lifts the occlusion under glass.",
+  "description": "KentOS's 3D scene (docs/adr/0910 §4–§5, plan/3d.md D1): triangle meshes in tiles with a depth32float buffer, reversed (cleared to 0, compare greater); one draw per tile and per part range, the tile's origin minus the eye (float64 on the host, float32 here) at a dynamic offset; the parts' colours in a storage buffer, premultiplied on output. Version 2: each vertex carries its normal, signed 8-bit (zero: flat, the face's normal from derivatives). The opaque pipeline writes depth; the see-through one tests it without writing and blends premultiplied alpha. Version 3 (docs/adr/8120): the View's `edge` block and the bodies' edges, lines over the faces drawn a hair nearer, testing depth without writing it; a view drawn at the quality's samples into its own target, then laid over the window by the composite, darkened by the ambient light's occlusion when asked. At the highest quality the faces also write their veil (meshVeiledFs: a see-through face's alpha, the most over a pixel) to a second target, which lifts the occlusion under glass. Version 4 (docs/adr/8131): a section's caps, parts no plane cuts, their style's alpha raised by 2 (the vertex stage reads the styles too, to draw a cap as much nearer as an edge is); the View's `edge.w` is the samples a pixel, and a cut face writes the samples its planes keep (`@builtin(sample_mask)`), each plane's distance carried from the pixel's middle to the standard pattern's places by the derivatives.",
   "sources": [
     "scene3d/mesh.wgsl"
   ],
@@ -26,6 +26,7 @@
           "name": "styles",
           "type": "read-only-storage",
           "visibility": [
+            "vertex",
             "fragment"
           ]
         }

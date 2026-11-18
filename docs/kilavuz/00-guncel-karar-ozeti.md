@@ -228,6 +228,12 @@
     - Zon çatının altında ([ADR 8123](../adr/8123-far-zone-under-the-roof.md), 18 Kasım 2026): mahalleri çatıya
       yükselen katın emsal zonu `under_roof::pieces` ile kesilir (`Zone::body`); görüntüleyicide `Category::Zone`,
       kendiliğinden gizli (`View::zones`, “Zonlar”), gövde sayılmaz.
+    - Kesit yüzü ([ADR 8131](../adr/8131-section-caps-in-the-viewer.md), 18 Kasım 2026): saf çekirdek
+      `kentos_model_view::caps` kesilen kapalı, saydam olmayan gövdeyi düzlemde doldurur (halka, kutunun kırpması,
+      tek-çift delik, çatlaksız komşular); parça `parts::CAP` “Kesit yüzü”, düzlemin kesilen yanına `LIFT` (0,5 mm).
+      Çizicide `Style { color, cut }`: kesilmeyen parça alfa + 2 ile gider; kesilen yüz örnek başına kesilir
+      (`keptSamples`, `sample_mask`, `edge.w` örnek sayısı; sözleşme sürüm 4). Kapaklar kaydırıcı bırakılınca
+      (`Message::AtDone`); sürüklerken yalnız kırpma.
     - Araştırma: [not](../research/2026-11-15-ifc-goruntuleyici.md). Ölçümler:
       [docs/perf/ifc-okuma-denemesi-2026-11-16.md](../perf/ifc-okuma-denemesi-2026-11-16.md).
   - **EK-9 yazılmış dosyadan (16 Kasım 2026; [ADR 8074](../adr/8074-ek9-from-the-written-file.md), IFC-08, sıra B13; ilk

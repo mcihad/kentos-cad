@@ -273,10 +273,67 @@ fn screens() {
             send(&mut app, Event::Viewer(V::Cut(kentos_model_view::Cut::Level)));
             let (lo, hi) = app.ifc_viewer.as_ref().and_then(|w| w.viewer.span(kentos_model_view::Cut::Level)).expect("a span");
             send(&mut app, Event::Viewer(V::At(lo + (hi - lo) * 0.3)));
+            send(&mut app, Event::Viewer(V::AtDone));
             shot(&mut apart, &mut app, App::ifc_viewer_shown, "3-yatay-kesit");
             send(&mut app, Event::Viewer(V::Uncut));
             shot(&mut main, &mut app, App::view, "4-plan-secili");
         }
+        let _ = std::fs::remove_dir_all(path.parent().expect("its folder"));
+    }
+}
+
+/// Kesit yüzü (docs/adr/8131), light and dark: the section building's file in IFC modeli cut level at a third of its
+/// height (its walls, columns and the stair cut filled dark), cut north–south through its middle (also at the fastest
+/// quality), and boxed about a chosen wall. `.run/gui-evidence/kesit-kapagi-8131/`:
+///
+/// ```text
+/// KENTOS_SNAPSHOT_BACKEND=wgpu RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib ifc_viewer_tests::cap_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn cap_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kesit-kapagi-8131");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
+        let mut app = open(building());
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(Size::new(1440.0, 900.0)));
+        let path = exported(&mut app, &format!("kapak-{name}"));
+        let mut apart = Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
+        let mut shot = |app: &mut App, file: &str| {
+            apart.settle(app, App::ifc_viewer_shown, &mut update);
+            apart.settle(app, App::ifc_viewer_shown, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            apart.render(App::ifc_viewer_shown(app), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        opened(&mut app, path.clone());
+        for (cut, share, file) in [
+            (kentos_model_view::Cut::Level, 0.3, "1-yatay-kesit"),
+            (kentos_model_view::Cut::NorthSouth, 0.5, "2-kuzey-guney-kesiti"),
+        ] {
+            send(&mut app, Event::Viewer(V::Cut(cut)));
+            let (lo, hi) = app.ifc_viewer.as_ref().and_then(|w| w.viewer.span(cut)).expect("a span");
+            send(&mut app, Event::Viewer(V::At(lo + (hi - lo) * share)));
+            send(&mut app, Event::Viewer(V::AtDone));
+            shot(&mut app, file);
+        }
+        // The fastest quality, one sample a pixel: the same caps, their edges unsmoothed.
+        let _ = app.settings.choose(&[("graphics.scene3dQuality", serde_json::Value::from("fast"))]);
+        app.apply_settings();
+        shot(&mut app, "2-kuzey-guney-kesiti-hizli");
+        let _ = app.settings.choose(&[("graphics.scene3dQuality", serde_json::Value::from("high"))]);
+        app.apply_settings();
+        click_a_wall(&mut app);
+        send(&mut app, Event::Viewer(V::Boxed));
+        shot(&mut app, "3-kutu");
         let _ = std::fs::remove_dir_all(path.parent().expect("its folder"));
     }
 }

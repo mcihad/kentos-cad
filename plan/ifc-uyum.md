@@ -670,8 +670,12 @@ klavyeyle kabul; resimler.
 - **Zon çatının altında (18 Kasım 2026, [ADR 8123](../docs/adr/8123-far-zone-under-the-roof.md), K269–K271):** sahibin
   çiziminde çatıdan taşan saydam kutu emsal zonuydu; mahalleri çatıya yükselen katın zonu aynı yüzlerle kesilir.
   Görüntüleyicide zon ayrı kategoridir, kendiliğinden gizli, “Zonlar” anahtarıyla görünür.
-- Kalanlar (ADR 8073 §9, 8118 §6): gerçek pencerede kabul; kesit düzlemini yüze tıklayarak kurmak ve sürüklemek, kutunun
-  tutamakları, kesilen yüzün kapağı; gösterilemeyen nesnenin kutusu; ilk gövdelerle sahne; seçimde yeniden kurmadan boyama;
+- **Kesit yüzü (18 Kasım 2026, [ADR 8131](../docs/adr/8131-section-caps-in-the-viewer.md), K306–K310):** kesitin
+  kestiği kapalı, saydam olmayan gövdeler düzlemde doldurulur (çekirdek `kentos_model_view::caps`, wasm32): halkalar,
+  kutunun kırpması, delikler; tek koyu renk “Kesit yüzü”, lejantta; komşu kapaklar çatlaksız. Kesilen yüz örnek başına
+  kesilir (`sample_mask`; gölgelendirici sözleşmesi 4). Kaydırıcı bırakılınca hesaplanır (115 200 üçgende 20–26 ms).
+- Kalanlar (ADR 8073 §9, 8118 §6, 8131 §6): gerçek pencerede kabul; kesit düzlemini yüze tıklayarak kurmak ve sürüklemek,
+  kutunun tutamakları; çok büyük modelde kapağı iş parçacığı dışında hesaplamak; gösterilemeyen nesnenin kutusu; ilk gövdelerle sahne; seçimde yeniden kurmadan boyama;
   denetim bulgusundan “Modelde göster” (B13 ile); bir değerden “benzerini göster”; bölme genişliklerinin saklanması.
 
 ## 11. Örnekler ve regresyon

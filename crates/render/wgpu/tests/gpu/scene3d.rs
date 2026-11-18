@@ -10,6 +10,8 @@
 //! - An upload budget of one content a frame leaves the second content waiting a frame.
 //! - A section's plane at TM coordinates cuts a 100 m square where the camera projects the plane's line, within one
 //!   pixel; a box keeps only its inside; with no plane nothing is cut.
+//! - At four samples a pixel a cut ends at the samples (docs/adr/8131): the column the plane crosses keeps the samples
+//!   on its kept side, and a part whose style is not cut (a section's cap) is drawn whole.
 //!
 //! Also `scene3d_timing`: a 4 million triangle terrain at TM coordinates drawn through the selection, every frame.
 
@@ -36,9 +38,9 @@ fn contents(meshes: &[(u32, Mesh)], first: u64) -> Vec<Content> {
 }
 
 const STYLES: [Style; 3] = [
-    Style { color: [0.9, 0.1, 0.1, 1.0] },
-    Style { color: [0.1, 0.8, 0.2, 1.0] },
-    Style { color: [0.1, 0.2, 0.9, 1.0] },
+    Style::of([0.9, 0.1, 0.1, 1.0]),
+    Style::of([0.1, 0.8, 0.2, 1.0]),
+    Style::of([0.1, 0.2, 0.9, 1.0]),
 ];
 
 /// Draws `draws` through `camera` into a width × height target cleared white, read back as RGBA.
@@ -282,8 +284,16 @@ fn block(at: [f64; 3], side: [f64; 3]) -> Mesh {
 }
 
 /// Draws `draws` at the renderer's quality into its own targets laid over a width × height target cleared white,
-/// read back as RGBA; every face its style's colour (the light's ambient share whole).
-fn draw_offscreen(gpu: &Gpu, r: &mut Scene3dRenderer, camera: &Camera, draws: &[&Content], styles: &[Style], size: (u32, u32)) -> Vec<u8> {
+/// read back as RGBA; every face its style's colour (the light's ambient share whole), cut by the section's `clip`.
+fn draw_offscreen(
+    gpu: &Gpu,
+    r: &mut Scene3dRenderer,
+    camera: &Camera,
+    draws: &[&Content],
+    styles: &[Style],
+    size: (u32, u32),
+    clip: &[[f64; 4]],
+) -> Vec<u8> {
     let (width, height) = size;
     let texture = gpu.device.create_texture(&wgpu::TextureDescriptor {
         label: Some("scene3d output"),
@@ -307,7 +317,7 @@ fn draw_offscreen(gpu: &Gpu, r: &mut Scene3dRenderer, camera: &Camera, draws: &[
         ambient: 1.0,
         sky: 0.0,
         fill: 0.0,
-        clip: &[],
+        clip,
     };
     r.prepare(&gpu.device, &gpu.queue, &frame);
     r.place(&gpu.queue, [0.0, 0.0, 1.0, 1.0]);
@@ -373,7 +383,7 @@ fn keep(px: &[u8], size: (u32, u32), name: &str) {
 pub(crate) fn the_qualities_draw_edges_smooth_outlines_and_occlusion(gpu: &mut Gpu) {
     let size = (256u32, 256u32);
     let vp = Viewport { width: 256.0, height: 256.0 };
-    let styles = [Style { color: [0.9, 0.9, 0.9, 1.0] }, Style { color: [0.7, 0.7, 0.7, 1.0] }];
+    let styles = [Style::of([0.9, 0.9, 0.9, 1.0]), Style::of([0.7, 0.7, 0.7, 1.0])];
     let c = contents(&[(0, block([0.0, 0.0, 0.0], [1.0, 1.0, 1.0])), (1, block([-1.5, -1.5, -0.1], [4.0, 4.0, 0.1]))], 60);
     let draws: Vec<&Content> = c.iter().collect();
     let camera = Camera::orbit([0.5, 0.5, 0.3], 30.0, 32.0, 4.2, Projection::Perspective { fov_y: 40f64.to_radians(), near: 0.05 });
@@ -397,11 +407,11 @@ pub(crate) fn the_qualities_draw_edges_smooth_outlines_and_occlusion(gpu: &mut G
         (dark, between)
     };
     let mut fast = Scene3dRenderer::with_quality(&gpu.device, FORMAT, Quality::Fast);
-    let px = draw_offscreen(gpu, &mut fast, &camera, &draws, &styles, size);
+    let px = draw_offscreen(gpu, &mut fast, &camera, &draws, &styles, size, &[]);
     keep(&px, size, "hizli");
     assert_eq!(count(&px), (0, 0), "Hızlı: the faces alone, one sample a pixel");
     let mut balanced = Scene3dRenderer::with_quality(&gpu.device, FORMAT, Quality::Balanced);
-    let px = draw_offscreen(gpu, &mut balanced, &camera, &draws, &styles, size);
+    let px = draw_offscreen(gpu, &mut balanced, &camera, &draws, &styles, size, &[]);
     keep(&px, size, "dengeli");
     let (dark, between) = count(&px);
     assert!(dark > 150, "Dengeli: the box's edges drawn ({dark} dark pixels)");
@@ -412,7 +422,7 @@ pub(crate) fn the_qualities_draw_edges_smooth_outlines_and_occlusion(gpu: &mut G
     let grey = |v: u8| v.abs_diff(slab_grey) <= 1;
     assert!(grey(value(&px, near)) && grey(value(&px, far)), "Dengeli: no occlusion ({}, {})", value(&px, near), value(&px, far));
     let mut high = Scene3dRenderer::with_quality(&gpu.device, FORMAT, Quality::High);
-    let px = draw_offscreen(gpu, &mut high, &camera, &draws, &styles, size);
+    let px = draw_offscreen(gpu, &mut high, &camera, &draws, &styles, size, &[]);
     keep(&px, size, "kaliteli");
     let (near, far) = (value(&px, near), value(&px, far));
     assert!(grey(far) && near + 12 < far, "Kaliteli: the foot occluded ({near}), the slab away not ({far})");
@@ -465,7 +475,7 @@ pub(crate) fn timing(gpu: &mut Gpu) {
     let cam = Camera::orbit([E + 1000.0, N + 380.0, 1225.0], 235.0, 24.0, 820.0, Projection::Perspective { fov_y: 40f64.to_radians(), near: 0.5 });
     let s = select(&c.hierarchy, &cam, &vp, &Exaggeration { factor: 4.0, datum: 1200.0 }, Settings { max_screen_error: 16.0 }, |_| true);
     let draws: Vec<&Content> = s.draw.iter().filter_map(|&i| c.hierarchy.tiles[i as usize].content).map(|cr| by_id[&cr.id]).collect();
-    let terrain = [Style { color: [0.47, 0.55, 0.33, 1.0] }];
+    let terrain = [Style::of([0.47, 0.55, 0.33, 1.0])];
     let (px, _) = draw_lit(gpu, &mut r, &cam, Exaggeration { factor: 4.0, datum: 1200.0 }, &draws, size, (&terrain, [-0.45, -0.35, 0.82], 0.35));
     let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.run/gui-evidence/yol-3b-cizici.png");
     let _ = std::fs::create_dir_all(out.parent().expect("a folder"));
@@ -490,4 +500,46 @@ pub(crate) fn timing(gpu: &mut Gpu) {
         frames[29].2.tiles,
         frames[29].2.triangles
     );
+}
+
+/// A section's cut at its samples (docs/adr/8131): an 8 m square seen from above, 256 pixels across (3.125 cm a
+/// pixel), cut by a north–south plane a quarter of a pixel east of the middle of pixel column 128, the west kept.
+/// Hızlı keeps that column whole (its one sample, the pixel's middle, is kept) and the next one not at all; Dengeli
+/// keeps three of the column's four samples (the standard pattern's places 3/8, 7/8, 1/8, 5/8 across the pixel, the
+/// plane at 3/4), so it is three quarters grey, not a whole pixel past the plane or short of it. A part whose style is
+/// not cut (a cap) east of the plane is drawn whole.
+pub(crate) fn a_cut_ends_at_its_samples_and_a_cap_is_not_cut(gpu: &mut Gpu) {
+    let size = (256u32, 256u32);
+    let pixel = 8.0 / 256.0;
+    let (cut_at, cap_from) = (0.75 * pixel, 1.0);
+    let styles = [Style::of([0.5, 0.5, 0.5, 1.0]), Style { color: [0.2, 0.2, 0.2, 1.0], cut: false }];
+    let c = contents(&[(0, square(-2.0, -2.0, 4.0, 0.0)), (1, square(cap_from, -0.5, 0.5, 0.1))], 80);
+    let draws: Vec<&Content> = c.iter().collect();
+    let camera = Camera {
+        eye: [0.0, 0.0, 10.0],
+        target: [0.0, 0.0, 0.0],
+        up: [0.0, 1.0, 0.0],
+        projection: Projection::Orthographic { height: 8.0, depth: 40.0 },
+    };
+    let west = [[-1.0, 0.0, 0.0, cut_at]];
+    let value = |px: &[u8], x: usize, y: usize| px[(y * 256 + x) * 4];
+    let grey = (0.5f64 * 255.0).round() as u8;
+    let near = |v: u8, want: u8| v.abs_diff(want) <= 2;
+    let mut fast = Scene3dRenderer::with_quality(&gpu.device, FORMAT, Quality::Fast);
+    let px = draw_offscreen(gpu, &mut fast, &camera, &draws, &styles, size, &west);
+    assert!(near(value(&px, 127, 100), grey) && near(value(&px, 128, 100), grey), "Hızlı: the column whose middle is kept is kept whole");
+    assert_eq!(value(&px, 129, 100), 255, "Hızlı: the next column cut");
+    let mut balanced = Scene3dRenderer::with_quality(&gpu.device, FORMAT, Quality::Balanced);
+    let px = draw_offscreen(gpu, &mut balanced, &camera, &draws, &styles, size, &west);
+    let three_quarters = (0.75 * 127.5f64 + 0.25 * 255.0).round() as u8;
+    assert!(near(value(&px, 127, 100), grey), "Dengeli: west of the plane kept ({})", value(&px, 127, 100));
+    assert!(
+        near(value(&px, 128, 100), three_quarters),
+        "Dengeli: three of the column's four samples kept ({}, want {three_quarters})",
+        value(&px, 128, 100)
+    );
+    assert_eq!(value(&px, 129, 100), 255, "Dengeli: the next column cut");
+    // The cap's square, x 1 to 1.5 (pixels 160 to 176), y −0.5 to 0 (rows 128 to 144): east of the plane, drawn.
+    let dark = (0.2f64 * 255.0).round() as u8;
+    assert!(near(value(&px, 168, 136), dark), "a cap's part is not cut ({})", value(&px, 168, 136));
 }

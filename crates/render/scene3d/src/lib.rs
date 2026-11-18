@@ -14,7 +14,9 @@
 //!   the camera and only then made float32 (SCENE-PREC-05, 08). The view block holds the projection times the
 //!   rotation (no translation), the light, the exaggeration and the section's planes (docs/adr/8073 §3): each taken
 //!   relative to the eye in f64 (its constant the eye's distance from it), so a fragment on the side a plane cuts away
-//!   is discarded with small numbers only. The cut faces are not capped.
+//!   is left out with small numbers only, sample by sample (the quality's samples a pixel reach the shader with the
+//!   view, so a cut face ends where its cap begins). A part whose style is not cut (a section's caps, docs/adr/8131)
+//!   is drawn whole: its style reaches the shader with its alpha raised by 2.
 //! - Opaque ranges first, nearest tile first (early depth rejection), writing depth; the see-through ranges (a part
 //!   whose style has alpha below 1) after, farthest first, testing depth without writing it, premultiplied, biased a
 //!   hair nearer so that one lying on an opaque face covers it evenly.
@@ -99,10 +101,25 @@ struct Vertex {
     n: [i8; 4],
 }
 
-/// A part's look: its colour, linear RGB and alpha (below 1: drawn see-through).
+/// A part's look: its colour, linear RGB and alpha (below 1: drawn see-through), and whether a section's planes cut it
+/// (false: a section's own caps, docs/adr/8131, cut where they are made, drawn whole in front of what the planes cut).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Style {
     pub color: [f32; 4],
+    pub cut: bool,
+}
+
+impl Style {
+    /// A part's look a section cuts.
+    pub const fn of(color: [f32; 4]) -> Style {
+        Style { color, cut: true }
+    }
+
+    /// As the shader reads it: a part no plane cuts has its alpha raised by 2.
+    fn gpu(self) -> [f32; 4] {
+        let [r, g, b, a] = self.color;
+        [r, g, b, if self.cut { a } else { a + 2.0 }]
+    }
 }
 
 /// What a frame draws: the camera and its view, the tiles' contents (resident ones are drawn, the others are uploaded
@@ -259,7 +276,9 @@ impl Scene3dRenderer {
                 },
                 wgpu::BindGroupLayoutEntry {
                     binding: 1,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    // The vertex stage reads whether a part is cut: a section's cap is drawn nearer, as edges are
+                    // (docs/adr/8131).
+                    visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Storage { read_only: true },
                         has_dynamic_offset: false,
@@ -565,7 +584,7 @@ impl Scene3dRenderer {
             clip: frame.camera.rotation_projection(aspect).to_f32(),
             light: [light[0] as f32, light[1] as f32, light[2] as f32, frame.ambient],
             look: [frame.exaggeration.factor as f32, used as f32, frame.sky, frame.fill],
-            edge: [if perspective { 1.0 } else { 0.0 }, EDGE_NEAR, EDGE_DARK, 0.0],
+            edge: [if perspective { 1.0 } else { 0.0 }, EDGE_NEAR, EDGE_DARK, self.quality.samples() as f32],
             planes,
         };
         queue.write_buffer(&self.view, 0, bytemuck::bytes_of(&block));
@@ -590,7 +609,7 @@ impl Scene3dRenderer {
             self.styles = styles_buffer(device, self.styles_capacity);
             self.view_bind = Self::view_bind(device, &self.view_layout, &self.view, &self.styles);
         }
-        let colors: Vec<[f32; 4]> = frame.styles.iter().map(|s| s.color).collect();
+        let colors: Vec<[f32; 4]> = frame.styles.iter().map(|s| s.gpu()).collect();
         if !colors.is_empty() {
             queue.write_buffer(&self.styles, 0, bytemuck::cast_slice(&colors));
         }

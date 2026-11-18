@@ -234,6 +234,7 @@ impl Viewer {
                     row![
                         label::body(axis).style(muted),
                         slider(lo..=hi, at.clamp(lo, hi), Message::At)
+                            .on_release(Message::AtDone)
                             .step((hi - lo) / 1000.0)
                             .style(kentos_ui::style::field::slider)
                             .width(Fill),
@@ -281,7 +282,7 @@ impl Viewer {
             seen: self.seen.clone(),
             pending: self.pending.clone(),
         };
-        let swatches = self.view().map_or_else(Vec::new, |v| v.legend());
+        let swatches = self.swatches();
         look::framed(
             scene::view(view, Message::Gesture),
             look::compass(&self.orbit, Message::North),
