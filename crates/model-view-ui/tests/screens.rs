@@ -35,6 +35,10 @@ impl Window {
             end: Vec::new(),
             sky: look::sky(t.window, Some(t.accent)),
             coordinate: Box::new(|v| format!("{v:.3}")),
+            measure: Box::new(|v, unit| match look::digits(unit, 3, 2) {
+                Some(d) => format!("{v:.d$}"),
+                None => look::plain(v),
+            }),
             east: "Y",
             north: "X",
         })
@@ -95,7 +99,7 @@ fn screens() {
     for (mode, tag) in [(Mode::Light, "acik"), (Mode::Dark, "koyu")] {
         let mut w = opened(building, mode);
         // A click in the scene's middle: the scene is what the two panels leave of the window under the strip.
-        let scene = Size::new(1400.0 - 280.0 - 300.0 - 2.0, 860.0 - 62.0);
+        let scene = Size::new(1400.0 - 300.0 - 300.0 - 2.0 * kentos_ui::widget::sash::THICKNESS, 860.0 - 62.0);
         w.update(Message::Gesture(Gesture::Pick(scene.width * 0.62, scene.height * 0.55, scene.width, scene.height)));
         assert!(w.viewer.view().and_then(|v| v.selected()).is_some(), "the click chose something");
         shot(&mut w, &format!("kesit-binasi-tiklanan-{tag}"));
@@ -114,6 +118,23 @@ fn screens() {
     w.update(Message::Boxed);
     w.update(Message::Panel(Panel::Class));
     shot(&mut w, "kesit-binasi-kat-kutusu");
+
+    // The tree's search (docs/adr/8118): the columns, their class beside them; the tree widened by its edge; one of
+    // them chosen, the section's card for a north–south plane. Light and dark.
+    for (mode, tag) in [(Mode::Light, "acik"), (Mode::Dark, "koyu")] {
+        let mut w = opened(building, mode);
+        w.update(Message::Search("kolon".into()));
+        let found = w.viewer.found();
+        assert_eq!(found.len(), 16, "the section building's columns");
+        w.update(Message::TreeWidth(Some(360.0)));
+        w.update(Message::Choose(Some(found[0])));
+        w.update(Message::Cut(Cut::NorthSouth));
+        shot(&mut w, &format!("kesit-binasi-arama-{tag}"));
+    }
+    // Turkish letters fold: “iç” finds the interior walls written “İç_duvar”.
+    let mut w = opened(building, Mode::Light);
+    w.update(Message::Search("iç duvar".into()));
+    assert!(!w.viewer.found().is_empty(), "İç_duvar by “iç duvar”");
 
     let mut w = opened("fixtures/ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc", Mode::Light);
     w.update(Message::Spaces);

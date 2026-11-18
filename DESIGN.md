@@ -684,20 +684,31 @@ Bir IFC dosyasının görüntüleyicisi ([ADR 8073](docs/adr/8073-ifc-viewer-fir
 - **Yer:** kendiliğinden işletim sisteminin ayrı penceresinde açılır (1400 × 860); “Ana pencereye al” onu çizimin üstüne
   getirir. Başlığı dosyanın adı ve “IFC modeli”.
 - **Araç şeridi:** kamera (“Görünüş ▾”, “Sığdır”, “Seçime yaklaş”), ince ayraç, görünürlük (“Gizle”, “Yalnız bırak”,
-  “Hepsini göster”; seçim yokken ilk ikisi sönük), ayraç, anahtarlar (“Mahaller”, “Açıklıklar”, “Saydam”), ayraç, “Kesit ▾”
-  (yatay, kuzey–güney düşey, doğu–batı düşey, seçilen varken “Seçimin çevresinde kutu”, “Kesiti kaldır”). Düzlem keserken
-  yanında ekseninin adı (Kot ya da projenin doğu ve kuzey adları), kaydırıcı, değeri eş aralıklı yazıyla ve “Öbür yanı”.
-  Sağ uçta ev sahibinin işleri (ayrıyken “Ana pencereye al”). Okunurken yalnız kamera grubu görünür.
-- **Sol bölme** (280 px, 12 px yazıda): “Yapı | Sınıf | Gösterilemeyen” (kitin bölmeli düğmesi; gösterilemeyen yokken
-  üçüncüsü sönük), altında kitin ağacı, sanal satırlarla. Satırın sağında öğe sayısı ve göz; sayısı olmayan satırda da
-  sayı sütunu durur ki gözler tek sütunda kalsın. Gizli satır sönük, seçili satır vurgu zemininde. Açılışta proje, saha ve
-  bina açık, katlar kapalı. Modelde tıklanan nesnenin dalları açılır.
+  “Hepsini göster”; seçim yokken ilk ikisi sönük), ayraç, simgeli anahtarlar (“Mahaller”, “Açıklıklar”, “Saydam”; açıkken
+  tonlu), ayraç, “Kesit ▾” (yatay, kuzey–güney düşey, doğu–batı düşey, seçilen varken “Seçimin çevresinde kutu”, “Kesiti
+  kaldır”). Şerit kesitle uzamaz: düzlemin yeri sahnedeki karttadır. Sağ uçta ev sahibinin işleri (ayrıyken “Ana pencereye
+  al”). Okunurken yalnız kamera grubu görünür.
+- **Sol bölme** (300 px, 12 px yazıda): “Yapı | Sınıf | Gösterilemeyen” (kitin bölmeli düğmesi; gösterilemeyen yokken
+  üçüncüsü sönük), altında arama (“Ad, sınıf ya da GlobalId ara”, × temizler), altında kitin ağacı, sanal satırlarla.
+  Satırın sağında öğe sayısı ve göz; sayısı olmayan satırda da sayı sütunu durur ki gözler tek sütunda kalsın. Gizli satır
+  sönük, seçili satır vurgu zemininde. Açılışta proje, saha ve bina açık, katlar kapalı. Modelde tıklanan nesnenin dalları
+  açılır. Arama doluyken ağacın yerinde bulunanlar durur: her sözcük adda, sınıfta ya da GlobalId'de (büyük küçük harf ve
+  noktalı noktasız i ayrılmaz: “iç” “İç_duvar”ı bulur); satırda adı ve sönük katı (katı yoksa sınıfı); basılan seçilir;
+  bulunamazsa ne yazılacağını söyler.
+- **Bölmeler** kenarlarından sürüklenir (kitin tutamağı; sol 200–560, sağ 240–600 px); çift tık varsayılan genişliği
+  geri getirir.
 - **Orta:** sahne §7.20'deki gibi (gök, kuzey oku, lejant, seçilen noktanın halkası). Parça renkleri kategorinindir;
-  seçilen turuncu, bulgulu kırmızı; mahal, mekân bölgesi ve açıklık saydam hacimdir ve tıklama içlerinden geçer.
+  seçilen turuncu, bulgulu kırmızı; mahal, mekân bölgesi ve açıklık saydam hacimdir ve tıklama içlerinden geçer. Bir şey
+  keserken sol üstte kesitin kartı (330 px, lejantın çerçevesi): adı (“Yatay kesit”, “Kuzey–güney düşey kesiti”, “Doğu–batı
+  düşey kesiti”, “Seçimin çevresinde kutu”) ve × (“Kesiti kaldır”); düzlemde altında ekseninin adı (Kot ya da projenin doğu
+  ve kuzey adları), kaydırıcı ve değeri birimiyle eş aralıklı yazıda, altında “Öbür yanı”. Kartın üstünde sürüklemek modeli
+  döndürmez.
 - **Sağ bölme** (300 px): “Özellikler” başlığı, altında kitin özellik tablosu (`PropertySheet`): ilk grup “Nesne” (sınıf,
   GlobalId, ad, açıklama, nesne türü, uzun ad, etiket, ön tanımlı tür, tip, kat, malzeme, kayıt), sonra setler dosyadaki
-  sırasıyla, tipten gelenin başlığı “(tipten)” ile; başlık grubu daraltır. Değer dosyadaki gibi yazılır, sayı eş aralıklı,
-  birim sönük sağda. Seçim yokken boş durum ne yapılacağını söyler.
+  sırasıyla, tipten gelenin başlığı “(tipten)” ile; başlık grubu daraltır. Metin değer dosyadaki gibi yazılır. Ölçü
+  projenin basamaklarıyla yazılır: uzunluk ve hacim uzunluğunkiyle, alan alanınkiyle, birimi dosyanınki (çevrilmez); dosyadaki
+  tam değer, gösterilenden farklıysa ipucunda (“Dosyadaki değer”); birimsiz sayı gereken basamakla (en çok altı, sondaki
+  sıfırlar yok). Sayı eş aralıklı, birim sönük sağda. Seçim yokken boş durum ne yapılacağını söyler.
 - **Durum çubuğu:** solda seçilen noktanın nesnesi ve koordinatları (projenin eksen adlarıyla), seçim yokken tıklamanın
   ne yaptığı sönük; sağda “70/70 gövde” (üçgen ve karo sayısı ipucunda; açıklık hacmi gövde sayılmaz), gösterilemeyen varken
   uyarı renginde “1 gösterilemeyen”, okuma bulgusu varken sayısı, şema adı (ipucunda yazan program ve birim), “Fare”.

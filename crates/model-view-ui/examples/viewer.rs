@@ -111,6 +111,10 @@ impl App {
             end: Vec::new(),
             sky: look::sky(t.window, Some(t.accent)),
             coordinate: Box::new(|v| format!("{v:.3}")),
+            measure: Box::new(|v, unit| match look::digits(unit, 3, 2) {
+                Some(d) => format!("{v:.d$}"),
+                None => look::plain(v),
+            }),
             east: "Y",
             north: "X",
         })

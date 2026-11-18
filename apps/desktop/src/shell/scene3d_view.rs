@@ -233,6 +233,7 @@ impl App {
             scene::view(view, gesture),
             look::compass(&w.orbit, msg(Event::North)),
             look::legend(&swatches, w.legend, msg(Event::Legend)),
+            None,
             sky(self.canvas()),
         )
     }

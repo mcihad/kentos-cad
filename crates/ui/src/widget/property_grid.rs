@@ -384,6 +384,43 @@ impl<'a, Message: 'a> From<PropertySheet<'a, Message>> for Element<'a, Message> 
     }
 }
 
+/// Salt okunur ölçü: sayı gösterildiği gibi (`shown`, ör. projenin basamaklarıyla) eş aralıklı, ardından soluk birim;
+/// kaynağın yazdığı değer (`exact`) gösterilenden farklıysa ipucunda tam olarak okunur (`source`: değerin nereden
+/// geldiği, ör. “Dosyadaki değer”).
+pub fn measured<'a, Message: 'a>(
+    shown: String,
+    exact: &str,
+    unit: Option<String>,
+    source: &str,
+) -> Element<'a, Message> {
+    let mut content = row![
+        container(
+            Elided::new(shown.clone())
+                .size(typography::body())
+                .font(typography::mono())
+                .width(Fill)
+        )
+        .padding([0.0, metrics::cell_pad()])
+        .width(Fill)
+    ]
+    .align_y(Center);
+    if let Some(unit) = unit {
+        content = content.push(
+            container(label::caption(unit).style(style::text::muted))
+                .padding([0.0, metrics::cell_end()]),
+        );
+    }
+    if exact.trim() == shown {
+        return Cell::flat(whole(content, &shown)).into();
+    }
+    Cell::flat(tip(
+        content,
+        Tip::new(source).body(exact.trim().to_owned()),
+        iced::widget::tooltip::Position::Bottom,
+    ))
+    .into()
+}
+
 /// Salt okunur değer: panelin üstünde düz yazı, sayıysa eş aralıklı; ardından soluk birim.
 pub fn value<'a, Message: 'a>(
     text: impl IntoFragment<'a>,

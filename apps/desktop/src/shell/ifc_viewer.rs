@@ -317,11 +317,20 @@ impl App {
         let Some(w) = &self.ifc_viewer else { return space().into() };
         let f = self.format();
         let end = if apart { vec![crate::windows::return_button(SURFACE)] } else { Vec::new() };
+        // A measured value with the project's decimals by its unit, in the file's unit (not converted).
+        let (length, area) = self.document.as_ref().map_or((3, 2), |d| {
+            let s = d.model.settings();
+            (s.length_decimals as usize, s.area_decimals as usize)
+        });
         w.viewer.layout(Host {
             to: |m| msg(Event::Viewer(m)),
             end,
             sky: crate::scene3d_window::sky(self.canvas()),
             coordinate: Box::new(move |v| f.coord(v)),
+            measure: Box::new(move |v, unit| match kentos_model_view_ui::look::digits(unit, length, area) {
+                Some(d) => kentos_interaction::fixed(v, d),
+                None => kentos_model_view_ui::look::plain(v),
+            }),
             east: f.east_label(),
             north: f.north_label(),
         })

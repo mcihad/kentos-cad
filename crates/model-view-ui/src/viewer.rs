@@ -77,6 +77,11 @@ pub enum Message {
     Flip,
     /// A details group folded or opened, by its title.
     Fold(String),
+    /// The tree's search: the objects whose name, class or GlobalId hold these words (empty: the tree again).
+    Search(String),
+    /// A side panel dragged to a width (the tree's, the details'); none: its default width again (a double click).
+    TreeWidth(Option<f32>),
+    DetailsWidth(Option<f32>),
     Cancel,
     Close,
 }
@@ -111,6 +116,11 @@ pub struct Viewer {
     pub picked: Option<Picked>,
     /// What the host says of the model for the status bar (its schema), as (words, tip).
     pub facts: Vec<(String, String)>,
+    /// The tree's search words; empty: the tree.
+    pub query: String,
+    /// The side panels' widths as dragged; none: their default.
+    pub tree_width: Option<f32>,
+    pub details_width: Option<f32>,
     pub seen: Arc<Mutex<Seen>>,
     pub(crate) pending: Arc<AtomicBool>,
 }
@@ -140,6 +150,9 @@ impl Viewer {
             section: Section::None,
             picked: None,
             facts: Vec::new(),
+            query: String::new(),
+            tree_width: None,
+            details_width: None,
             seen: Arc::default(),
             pending: Arc::default(),
         }
@@ -330,10 +343,30 @@ impl Viewer {
                     self.folded.insert(title);
                 }
             }
+            Message::Search(words) => self.query = words,
+            Message::TreeWidth(w) => self.tree_width = w,
+            Message::DetailsWidth(w) => self.details_width = w,
             Message::Cancel => return Some(Out::Cancel),
             Message::Close => return Some(Out::Close),
         }
         None
+    }
+
+    /// The objects the search finds: every word of it in the object's name, class or GlobalId, letters' case and
+    /// Turkish dotted and dotless i alike; in the file's order.
+    pub fn found(&self) -> Vec<usize> {
+        let words: Vec<String> = fold(&self.query).split_whitespace().map(str::to_owned).collect();
+        let Some(v) = self.view.as_ref().filter(|_| !words.is_empty()) else { return Vec::new() };
+        v.input()
+            .objects
+            .iter()
+            .enumerate()
+            .filter(|(_, o)| {
+                let hay = fold(&format!("{} {} {}", o.label, o.class, o.key));
+                words.iter().all(|w| hay.contains(w.as_str()))
+            })
+            .map(|(i, _)| i)
+            .collect()
     }
 
     fn gesture(&mut self, g: Gesture) -> Option<Out> {
@@ -542,4 +575,10 @@ mod tests {
         let _ = v.update(Message::Uncut);
         assert!(v.planes().is_empty());
     }
+}
+
+/// `s` as the search compares it: lower case, a dotted capital I's dot dropped and the dotless i a dotted one, so “iç”
+/// finds “İç_duvar” and “IFCWALL” finds “IfcWall”.
+fn fold(s: &str) -> String {
+    s.to_lowercase().replace('\u{0307}', "").replace('ı', "i")
 }

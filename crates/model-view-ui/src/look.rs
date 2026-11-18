@@ -1,6 +1,8 @@
 //! The 3D views' look around the scene (DESIGN.md §7.20, docs/adr/8073 §2): the sky the scene stands on, the north
 //! arrow at the top right that turns with the camera and turns it north when pressed, the legend that folds at the
-//! bottom left, and the views' menu. The building's and the road's 3B görünüm and the IFC viewer wear the same.
+//! bottom left, a card at the top left while a view has one (the IFC viewer's section, docs/adr/8118), and the views'
+//! menu. The building's and the road's 3B görünüm and the IFC viewer wear the same. A measured value's digits by its
+//! unit, for a host that writes its numbers ([`digits`], [`plain`]).
 
 use iced::widget::{container, mouse_area, stack, tooltip};
 use iced::{Background, Color, Element, Fill, Gradient, Radians, Theme, gradient, mouse};
@@ -85,15 +87,52 @@ pub fn view_name(orbit: &OrbitCamera) -> &'static str {
     orbit.preset().map_or("Görünüş", |i| VIEWS[i].0)
 }
 
-/// The scene on its sky, the north arrow at its top right and the legend at its bottom left.
-pub fn framed<'a, M: 'a>(scene: Element<'a, M>, compass: Element<'a, M>, legend: Element<'a, M>, sky: Background) -> Element<'a, M> {
-    container(stack![
+/// The scene on its sky, the north arrow at its top right, the legend at its bottom left and a view's card (none: no
+/// card) at its top left.
+pub fn framed<'a, M: Clone + 'a>(
+    scene: Element<'a, M>,
+    compass: Element<'a, M>,
+    legend: Element<'a, M>,
+    card: Option<Element<'a, M>>,
+    sky: Background,
+) -> Element<'a, M> {
+    let mut layers = stack![
         scene,
         container(compass).align_right(Fill).align_top(Fill).padding(10),
         container(legend).align_left(Fill).align_bottom(Fill).padding(10),
-    ])
+    ];
+    if let Some(card) = card {
+        // It takes the pointer over itself: a drag on its slider does not turn the model.
+        layers = layers.push(
+            container(mouse_area(card).interaction(mouse::Interaction::Idle)).align_left(Fill).align_top(Fill).padding(10),
+        );
+    }
+    container(layers)
     .width(Fill)
     .height(Fill)
     .style(move |_: &Theme| container::Style { background: Some(sky), ..container::Style::default() })
     .into()
+}
+
+/// The units of length a file's values come in; a volume's are these cubed, an area's squared.
+const LENGTHS: [&str; 6] = ["m", "mm", "cm", "km", "ft", "in"];
+
+/// The decimals a measured value of `unit` is written with: a length or a volume the host's `length`, an area its
+/// `area`; none for a number without a unit of length (a count, a ratio, an angle), written with [`plain`].
+pub fn digits(unit: Option<&str>, length: usize, area: usize) -> Option<usize> {
+    let u = unit?.trim();
+    if u.ends_with('²') {
+        Some(area)
+    } else if u.ends_with('³') || LENGTHS.contains(&u) {
+        Some(length)
+    } else {
+        None
+    }
+}
+
+/// A number with the digits it needs, six at most and no trailing zeros: `21.6` for a file's `21.599999999999998`.
+pub fn plain(v: f64) -> String {
+    let t = format!("{v:.6}");
+    let t = t.trim_end_matches('0').trim_end_matches('.');
+    if t == "-0" { "0".to_owned() } else { t.to_owned() }
 }

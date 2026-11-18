@@ -637,9 +637,12 @@ klavyeyle kabul; resimler.
   - `cad.ifc.inspect`: katalog, 37 bağımsız durum (IfcOpenShell'den), Python, MCP (salt okunur).
   - İlk kabulün maddeleri ADR 8073 §8'de: gerçek pencerede kabul dışında hepsi sağlandı; wasm32 derlemesi ve tek pencere
     örneği yeşil.
-- Kalanlar (ADR 8073 §9): gerçek pencerede kabul; kesit düzlemini yüze tıklayarak kurmak ve sürüklemek, kutunun
+- **Yerleşim (18 Kasım 2026, [ADR 8118](../docs/adr/8118-ifc-viewer-layout-refinement.md), K236–K241):** kesitin kartı
+  sahnenin sol üstünde (şerit kesitle uzamaz); ağacın üstünde arama (ad, sınıf, GlobalId; Türkçe i katlaması; bulunanlar
+  katıyla); yan bölmeler sürüklenir; ölçüler projenin basamaklarıyla, dosyadaki değer ipucunda; anahtarlar simgeli.
+- Kalanlar (ADR 8073 §9, 8118 §6): gerçek pencerede kabul; kesit düzlemini yüze tıklayarak kurmak ve sürüklemek, kutunun
   tutamakları, kesilen yüzün kapağı; gösterilemeyen nesnenin kutusu; ilk gövdelerle sahne; seçimde yeniden kurmadan boyama;
-  denetim bulgusundan “Modelde göster” (B13 ile).
+  denetim bulgusundan “Modelde göster” (B13 ile); bir değerden “benzerini göster”; bölme genişliklerinin saklanması.
 
 ## 11. Örnekler ve regresyon
 
