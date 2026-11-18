@@ -187,15 +187,16 @@ pub fn edit_arch(doc: &mut Document, slot: Slot, operation: kentos_commands::Arc
     said(kentos_native_application::arch_edit::execute(&mut ExecutionContext::new(doc), input))
 }
 
-/// Yangın dayanımı, Acil çıkış (a roof's Kaçış yolu) and a wall's Taşıyıcı of one object (docs/adr/8068, 8090):
-/// through `cad.arch.performance`, one step “Yangın ve performans”; a field absent stays, an inner none takes the
-/// object's own away. What to say.
+/// Yangın dayanımı, Acil çıkış (a roof's Kaçış yolu), a wall's or a column's Taşıyıcı and a wall's or a slab's
+/// Dışarıda of one object (docs/adr/8068, 8090, 8124): through `cad.arch.performance`, one step “Yangın ve performans”;
+/// a field absent stays, an inner none takes the object's own away. What to say.
 pub fn edit_performance(
     doc: &mut Document,
     slot: Slot,
     fire_rating: Option<Option<kentos_commands::Declared>>,
     exit: Option<Option<kentos_commands::DeclaredExit>>,
     load_bearing: Option<Option<kentos_commands::DeclaredBearing>>,
+    external: Option<Option<kentos_commands::DeclaredExternal>>,
 ) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
@@ -206,6 +207,7 @@ pub fn edit_performance(
             fire_rating,
             exit,
             load_bearing,
+            external,
         },
         expected_revision: None,
     };

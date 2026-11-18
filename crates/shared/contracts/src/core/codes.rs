@@ -2780,6 +2780,8 @@ codes! {
     NOT_ARCH_ELEMENT = "not_arch_element", Failed, false, "Nesne aks, kolon, kiriş, merdiven, rampa, çatı ya da korkuluk değil.";
     /// A field the object's kind does not have.
     FIELD_NOT_FOR_KIND = "field_not_for_kind", Failed, false, "Verilen alan bu nesnenin türünde yok (örneğin aksın genişliği, kolonun etiketi dışında kolonun rıhtı).";
+    /// An object in both of a command's yes and no lists (`cad.arch.performance` `exits`, docs/adr/8124).
+    UID_IN_BOTH_LISTS = "uid_in_both_lists", Failed, false, "Bir nesne hem evet hem hayır listesinde verildi; her nesne yalnız birinde olur.";
     /// Objects of more than one kind where one is asked.
     MIXED_KINDS = "mixed_kinds", Failed, false, "Nesneler tek türden olmalı: numaralanacaklar ya akslar ya kolonlar, parçaları birleştirilecekler ya alanlar ya çizgiler ya noktalar.";
     /// Risers that do not fit the stair's walking line.

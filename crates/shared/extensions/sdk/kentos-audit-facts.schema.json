@@ -337,6 +337,48 @@
       ],
       "type": "object"
     },
+    "CadExit": {
+      "description": "A door or a stair (docs/adr/8124): its declared emergency exit role (`FireExit`, the door's or the stair's own; none:\nnot declared) and why the escape routes take it as a storey exit (`outside`: a door out on a storey at or below\n±0.00; `intoStair`: a door into an escape stair's room; `openStair`: an open stair in a room no dwelling unit owns;\n`stairRoom`: a stair in an escape stair's room; none: the routes do not take it).",
+      "properties": {
+        "declared": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "`door` or `stair`.",
+          "type": "string"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "Its name as the drawing gives it: a door's mark (K1), else none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "route": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "kind"
+      ],
+      "type": "object"
+    },
     "CadFacts": {
       "description": "The drawing's CAD facts.",
       "properties": {
@@ -367,6 +409,13 @@
           "description": "The typefaces the dimensions write their values in, each with how many dimensions, by name.",
           "items": {
             "$ref": "#/$defs/FontUse"
+          },
+          "type": "array"
+        },
+        "exits": {
+          "description": "Every door and stair with its declared emergency exit role and what the escape routes take it as (docs/adr/8124;\nthe model's `FireExit`): a mismatch is the author's to look at; written only when there is one.",
+          "items": {
+            "$ref": "#/$defs/CadExit"
           },
           "type": "array"
         },

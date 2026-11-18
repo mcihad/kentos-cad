@@ -7,7 +7,7 @@ başlaması çizimde düzeltilecek bir kusur değildir.
 
 from kentos import ext
 
-from . import ek34, kalite, kapsam, turetim, zorunlu
+from . import cikis, ek34, kalite, kapsam, turetim, zorunlu
 
 
 @ext.audit("kapsam")
@@ -87,4 +87,18 @@ def zorunlu_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     for b in zorunlu.denetle({"cad": facts.project.cad}):
         nesne = b["uids"][0] if b["uids"] else None
         bulgular.append(ext.AuditFinding(message=f"{b['message']} [{b['cite']}]", severity=b["severity"], feature_id=nesne))
+    return bulgular
+
+
+@ext.audit("cikis")
+def cikis_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
+    """Acil çıkış beyanı ve kaçış yolları (EK-6 Tablo 6.25 ve 6.61 FireExit): yolların önerisi ve uyuşmayan beyan."""
+    bulgular = []
+    for b in cikis.denetle({"cad": facts.project.cad}):
+        fix = None
+        if b["fix"]:
+            fix = ext.SemanticFix(title=b["fix"]["label"], command=b["fix"]["command"], args=b["fix"]["input"])
+        nesne = b["uids"][0] if b["uids"] else None
+        bulgular.append(ext.AuditFinding(message=f"{b['message']} [{b['cite']}]", severity=b["severity"],
+                                         feature_id=nesne, fix=fix))
     return bulgular

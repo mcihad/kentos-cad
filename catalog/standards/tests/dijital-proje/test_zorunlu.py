@@ -40,7 +40,7 @@ class Zorunlu(unittest.TestCase):
                    "6.7", 42)]}})
         self.assertEqual(b[0]["uids"], [])
         self.assertTrue(b[0]["message"].startswith("Bina: Yangın Koruma Sınıfı"))
-        self.assertIn("Mimari ayarları", b[0]["repair"])
+        self.assertIn("Proje ayarları › Mimari › Yangın güvenliği", b[0]["repair"])
 
     def test_ek7_tablosu_ek7_der(self):
         b = zorunlu.denetle({"cad": {"modelGaps": [

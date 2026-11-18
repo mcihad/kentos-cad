@@ -115,13 +115,15 @@ fn railings_row(
     Row::text("Korkuluk", words).editor(edit(select(words.to_owned(), items)))
 }
 
-/// Yangın dayanımı, a door's or a stair's Acil çıkış, a roof's Kaçış yolu and a wall's Taşıyıcı (docs/adr/8068, 8090),
-/// written by `cad.arch.performance`: the field holds the object's own class (empty takes it away); a note says the
-/// class it carries from its wall style or its type, or that none is declared (missing in the model), and the basis of
-/// its own.
+/// Yangın dayanımı and its Dayanak belgesi, a door's or a stair's Acil çıkış, a roof's Kaçış yolu, a wall's or a column's
+/// Taşıyıcı and Dışarıda (docs/adr/8068, 8090, 8124), written by `cad.arch.performance`: the field holds the object's own
+/// class (empty takes it away); a note says the class it carries from its wall style or its type, or that none is
+/// declared (missing in the model), and the basis of its own. What the model says without being told (a wall outside on
+/// its storey's outline, a column of the frame carrying) is said with why, and the object's own declaration changes it.
 pub(crate) fn performance_rows(doc: &Document, slot: Slot, e: &Entity, locked: bool) -> Vec<Row> {
     use kentos_native_application::arch_performance::{
-        Carried, exit_of, exit_rated, fire_rating_of, fire_rated, load_bearing_of, load_bearing_rated,
+        Carried, exit_of, exit_rated, external_of, external_rated, fire_rating_of, fire_rated, load_bearing_of,
+        load_bearing_rated,
     };
     if !fire_rated(e) {
         return Vec::new();
@@ -130,12 +132,24 @@ pub(crate) fn performance_rows(doc: &Document, slot: Slot, e: &Entity, locked: b
     let own = carried.filter(|(_, c)| *c == Carried::Own).map(|(d, _)| d);
     let mut rows = vec![Row::text("Yangın dayanımı", own.map_or_else(String::new, |d| d.value.clone()))
         .editor((!locked).then_some(Editor::Text(Field::Arch(slot, ArchField::FireRating))))];
-    rows.push(Row::note(&match carried {
-        Some((d, Carried::Own)) => format!("Dayanak: {}", d.basis.words()),
-        Some((d, Carried::Type)) if matches!(e, Entity::Wall(_)) => format!("Duvar stilinden: {}", d.value),
-        Some((d, Carried::Type)) => format!("Tipinden: {}", d.value),
-        None => "Yok: modelde eksik (TS EN 13501-2: REI 120, EI 60).".to_owned(),
-    }));
+    match carried {
+        // Its own class's basis, typed as one line: a document's name and day; empty, the author's statement.
+        Some((d, Carried::Own)) => {
+            rows.push(
+                Row::text("Dayanak belgesi", d.basis.field())
+                    .editor((!locked).then_some(Editor::Text(Field::Arch(slot, ArchField::FireBasis)))),
+            );
+            // The field shows a document; empty, it is the author's statement, which the note says.
+            if d.basis == kentos_commands::DeclaredBasis::Author {
+                rows.push(Row::note("Boş: müellif beyanı. Belgeyse adı ve günü: Rapor 41 (2026-02-28)."));
+            }
+        }
+        Some((d, Carried::Type)) if matches!(e, Entity::Wall(_)) => {
+            rows.push(Row::note(&format!("Duvar stilinden: {}", d.value)));
+        }
+        Some((d, Carried::Type)) => rows.push(Row::note(&format!("Tipinden: {}", d.value))),
+        None => rows.push(Row::note("Yok: modelde eksik (TS EN 13501-2: REI 120, EI 60).")),
+    }
     if exit_rated(e) {
         let now = exit_of(e).map(|x| x.exit);
         let words = match now {
@@ -151,20 +165,52 @@ pub(crate) fn performance_rows(doc: &Document, slot: Slot, e: &Entity, locked: b
         let label = if matches!(e, Entity::Roof(_)) { "Kaçış yolu" } else { "Acil çıkış" };
         rows.push(Row::text(label, words).editor((!locked).then(|| select(words.to_owned(), items))));
     }
+    let yes_no = |v: bool| if v { "Evet" } else { "Hayır" };
     if load_bearing_rated(e) {
         let now = load_bearing_of(e).map(|x| x.bearing);
-        let words = match now {
-            Some(true) => "Evet",
-            Some(false) => "Hayır",
-            None => "Bilinmiyor",
-        };
-        let items = [(Some(true), "Evet"), (Some(false), "Hayır"), (None, "Bilinmiyor")]
+        // A column carries as the frame's unless declared (docs/adr/8124); a wall's is unknown until declared.
+        let read = kentos_domain::Document::bearing_reading(e);
+        let unset = read.as_ref().map_or_else(|| "Bilinmiyor".to_owned(), |r| format!("Kendiliğinden ({})", yes_no(r.value)));
+        let words = now.map_or_else(|| unset.clone(), |v| yes_no(v).to_owned());
+        let items = [(Some(true), "Evet".to_owned()), (Some(false), "Hayır".to_owned()), (None, unset)]
             .into_iter()
-            .map(|(v, label)| pick(label.to_owned(), now == v, Message::Properties(Event::LoadBearing(slot, v)), None))
+            .map(|(v, label)| pick(label, now == v, Message::Properties(Event::LoadBearing(slot, v)), None))
             .collect();
-        rows.push(Row::text("Taşıyıcı", words).editor((!locked).then(|| select(words.to_owned(), items))));
+        rows.push(Row::text("Taşıyıcı", &words).editor((!locked).then(|| select(words.clone(), items))));
+        if let Some(r) = read {
+            let read_as = if r.value { "taşıyıcı" } else { "taşıyıcı değil" };
+            rows.push(Row::note(&reading_note(r.value, r.why, now, read_as)));
+        }
+    }
+    // Dışarıda: a wall's or a slab's is changed on it; a door's or a window's is its wall's, a roof always outside.
+    let uid = doc.model.uid(slot).map(|u| u.to_string()).unwrap_or_default();
+    if let Some(r) = doc.model.outside_reading(&uid, e) {
+        if external_rated(e) {
+            let now = external_of(e).map(|x| x.external);
+            let unset = format!("Kendiliğinden ({})", yes_no(r.value));
+            let words = now.map_or_else(|| unset.clone(), |v| yes_no(v).to_owned());
+            let items = [(Some(true), "Evet".to_owned()), (Some(false), "Hayır".to_owned()), (None, unset)]
+                .into_iter()
+                .map(|(v, label)| pick(label, now == v, Message::Properties(Event::External(slot, v)), None))
+                .collect();
+            rows.push(Row::text("Dışarıda", &words).editor((!locked).then(|| select(words.clone(), items))));
+            rows.push(Row::note(&reading_note(r.value, r.why, now, if r.value { "dışarıda" } else { "içeride" })));
+        } else {
+            rows.push(Row::text("Dışarıda", yes_no(r.value)));
+            rows.push(Row::note(&format!("Kendiliğinden: {}.", r.why)));
+        }
     }
     rows
+}
+
+/// The note under a reading: why the drawing reads it so; declared, whether the drawing reads it the same (`read_as`:
+/// the drawing's reading in a word or two, a panel's note being two lines).
+fn reading_note(read: bool, why: &str, own: Option<bool>, read_as: &str) -> String {
+    match own {
+        None => format!("Kendiliğinden: {why}."),
+        Some(v) if v == read => "Beyan edildi; çizim de öyle okuyor.".to_owned(),
+        Some(_) => format!("Beyan geçer; çizimde {read_as}."),
+    }
 }
 
 /// Kat and Tadilat durumu, as a wall's and a space's.

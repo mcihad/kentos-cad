@@ -136,18 +136,18 @@ düzeltildi. Bir alan "verisi çizimde olduğunda" yazılıyorsa örnekte yoksa 
 | Bina | kimlik, kalıcı kimlik değil, kat sayısı, adres, net kat alanı | ✓ | künye | — |
 | | kullanım, planlanan brüt alan, taban alanı, brüt kat alanı | ◐ verisi çizimde olduğunda; künyeli bölüm binasında yazılmadı | program, imar durumu | IFC-02 |
 | | `Pset_Address.PostalBox` | ✓ künyenin kutusu (ADR 8076 K56) | künye | IFC-02 |
-| | yapım yöntemi, yangın koruma sınıfı, planlanan net alan | ✗ | künye (BIM-07) | IFC-02 |
+| | yapım yöntemi, yangın koruma sınıfı, planlanan net alan | ✓ yapım eylemi künyeden, sınıf Proje ayarları › Mimari'de, net alan mahallerden (ADR 8068, 8124) | — | IFC-02 |
 | | yükseklik | ✓ katların brüt yüksekliği, yalnız eşitken (ADR 8076 K55) | bina yüksekliği | IFC-02 |
 | | saçak yüksekliği (`EavesHeight`) | ✓ tanımı net kat yüksekliği, yalnız eşitken (ADR 8076 K55) | döşeme katmanları | IFC-02 |
 | Saha | uzun ad, ±0.00'ın kotu, emsal, TAKS, adres, ada/parsel, tapu, `TREpys_ParselOzellikSeti` | ✓ | künye, imar durumu, vaziyet planı | — |
 | | nesne tipi | ✓ Parsel (ADR 8076 K52) | katalog (B1) | IFC-02 |
 | | parsel alanı, `Pset_SiteCommon.TotalArea` | ✓ (ADR 8076 K53) | imar durumu | IFC-02 |
 | Proje | adı (proje kodu) | ✓ | künye | — |
-| | açıklama; `Pset_ProjectCommon.ProjectType` | ✗ | künye | IFC-02 |
-| Kişi, kuruluş, rol | sicil, ad, soyad, vergi no, adres, rol | ✓ (ADR 8047 §7) | ad ve soyad ayrı alanlardan (bugün son kelimeden ayrılıyor) | IFC-02 |
+| | açıklama; `Pset_ProjectCommon.ProjectType` | ✓ (ADR 8074 §3) | — | IFC-02 |
+| Kişi, kuruluş, rol | sicil, ad, soyad, vergi no, adres, rol | ✓ (ADR 8047 §7); soyadı künyenin kendi alanından (ADR 8124 K279) | — | IFC-02 |
 | | `IfcPerson.Roles`, `IfcOrganization.Roles`, `IfcActorRole.UserDefinedRole` | ✗ (rol yalnız kişi-kuruluşta) | künye | IFC-02 |
 | Gösterim bağlamı (EK-7 7.8) | `TrueNorth` | ✓ sistemin meridyeninden, yoksa kuzey okundan (ADR 8076 K58) | kuzey oku, projenin kuzeyi | IFC-02 |
-| Ölçüm anotasyonu (EK-7 7.9) | `IfcAnnotation`: `Name`, `Description`, `PredefinedType = SURVEY` | ✗ | Ölçüm ve vaziyet bilgisi. Uygulanabilirlik B1’de kaynak ve kurum profiliyle belirlenir | IFC-02 |
+| Ölçüm anotasyonu (EK-7 7.9) | `IfcAnnotation`: `Name`, `Description`, `PredefinedType = SURVEY` | ✓ kabul edilmiş ölçüm noktası varken, kaynağıyla (ADR 8124 K282) | ölçüm çizgileri ve alanları | IFC-02 |
 | Koordinat sistemi | TUREF dilimi, datum, projeksiyon, dönüşüm | ✓ (ADR 8047 §8; yerel sistem döndürülüp ölçeklenerek ADR 8072 §3) | `TrueNorth`; kontrol noktalarının projede saklanması | IFC-05 |
 
 **Değer durumları.** Bilinmiyor, uygulanmaz, hayır, sıfır ve eksik ayrıdır. Boş metinle yazılmış bir özellik gerekli bilgiyi
@@ -292,7 +292,7 @@ ile aynı dilimdir.
 **İlk kabul:** her satırın sayfası var; bilerek yanlış yazılan bir özellik adı şema karşılaştırmasında düşer; ölçüm raporu
 ADR'de.
 
-#### IFC-02 — Zorunlu alanların tamamlanması [~]
+#### IFC-02 — Zorunlu alanların tamamlanması [x]
 
 **Yapıldı (16 Kasım 2026, [ADR 8068](../docs/adr/8068-fire-performance-material-declarations.md)):** `kentos_ifc::required`
 katalogdaki EK-6 ve EK-7 zorunlu satırlarını yazılacak modelle karşılaştırır (öznitelik, özellik ve miktar seti, malzeme;
@@ -307,8 +307,14 @@ zorunlu ölçüde, ikinci okuyucuda ve IDS'in sözünde (K55); künyenin posta k
 duvar yüzünün kaplamasından (K57); bağlamın gerçek kuzeyi projenin sisteminden, yoksa kuzey okundan (K58); kullanım türü
 program yoksa künyeden. Yazar gibi doldurulmuş künyeli kesit binasında zorunlu satırlardan eksik yok; IfcOpenShell 0
 bulgu, IfcTester ile ayrışma yok; gerçek BIM paketi gerçek kuralla yayımlanıyor (ADR 8076 §5).
-**Kalan:** `Tag` politikası, kişinin adı ve soyadı ayrı alanlardan, EK-7 Tablo 7.9 ölçüm anotasyonu; baskın kotu olmayan
-katın ve çatı altındaki son katın koşulu; duvardan ayrı çizilmiş mahalin duvar kaplaması (ADR 8076 §7).
+**Yapıldı (18 Kasım 2026, [ADR 8124](../docs/adr/8124-b7-remaining-declarations-and-ifc-fields.md)):** `Tag` elemanın
+numarası (kapı ve pencerenin numarası, kolonun ve kirişin etiketi), yoksa tipinin doğrama kodu, yoksa kimliği (K278);
+mimarın soyadı künyede ayrı alan, adı soyadından soyadı başta ya da sonda çıkınca kalan, bulunmazsa ikisi de yazılmaz
+(K279); EK-7 Tablo 7.9 projede kabul edilmiş ölçüm noktası varken uygulanır: sahada `IfcAnnotation` SURVEY, adı işareti,
+açıklaması kaynağı, kotu ±0,00'a göre (K282); baskın kotu olmayan katın kotu ve çatı altındaki katın yükseklikleri
+sorulmaz, binanın yükseklikleri koşulla ayrılır (K280); eğri duvarın yüzü mahalin yay kenarından okunur (K281).
+**Sınır:** IDS dosyası "girilmeyebilir" koşulunu söyleyemez (IfcTester o katta eksik der); duvardan ayrı çizilmiş mahal
+duvar kaplaması almaz, onarımı mahali duvarlarından bulmaktır; ölçüm çizgileri ve alanları yok.
 
 **Kullanıcı sonucu:** Yazılan her sınıf, yönetmeliğin o sınıf için istediği bütün alanları taşır; taşıyamadığını nesnesiyle
 söyler. Verisi BIM-07 ve BIM-08'den gelir.

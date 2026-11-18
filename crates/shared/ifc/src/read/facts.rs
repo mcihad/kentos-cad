@@ -237,6 +237,8 @@ impl Model {
                     props,
                     quantities,
                     elevation: elevations.contains_key(&i),
+                    // A file read says no reason to leave a row out.
+                    unentered: Vec::new(),
                 };
                 (required::entity_class(&o.class), carrier)
             })

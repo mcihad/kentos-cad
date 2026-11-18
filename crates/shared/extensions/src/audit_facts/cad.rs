@@ -47,6 +47,31 @@ pub struct CadFacts {
     /// `kentos_ifc::required`), in the catalog's order; written only when there is one.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub model_gaps: Vec<CadModelGap>,
+    /// Every door and stair with its declared emergency exit role and what the escape routes take it as (docs/adr/8124;
+    /// the model's `FireExit`): a mismatch is the author's to look at; written only when there is one.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub exits: Vec<CadExit>,
+}
+
+/// A door or a stair (docs/adr/8124): its declared emergency exit role (`FireExit`, the door's or the stair's own; none:
+/// not declared) and why the escape routes take it as a storey exit (`outside`: a door out on a storey at or below
+/// ±0.00; `intoStair`: a door into an escape stair's room; `openStair`: an open stair in a room no dwelling unit owns;
+/// `stairRoom`: a stair in an escape stair's room; none: the routes do not take it).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct CadExit {
+    pub uid: String,
+    /// `door` or `stair`.
+    pub kind: String,
+    pub level: Option<String>,
+    /// Its name as the drawing gives it: a door's mark (K1), else none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub declared: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub route: Option<String>,
 }
 
 /// A mandatory row of the model some objects of its class do not carry: the class (`IfcWall`) and its Turkish name, the
@@ -231,6 +256,8 @@ impl CadFacts {
             g.missing.dedup();
             g.missing.truncate(MOST_SHOWN);
         }
+        // The doors and stairs by their ids: the drawing's order is no fact (docs/adr/8124).
+        self.exits.sort_by(|a, b| a.uid.cmp(&b.uid));
         let cut = [
             self.layers.len(),
             self.blocks.len(),
@@ -240,6 +267,7 @@ impl CadFacts {
             self.broken.len(),
             self.room_overlaps.len(),
             self.model_gaps.len(),
+            self.exits.len(),
         ]
         .iter()
         .any(|n| *n > MOST_ITEMS);
@@ -251,6 +279,7 @@ impl CadFacts {
         self.broken.truncate(MOST_ITEMS);
         self.room_overlaps.truncate(MOST_ITEMS);
         self.model_gaps.truncate(MOST_ITEMS);
+        self.exits.truncate(MOST_ITEMS);
         (self, cut)
     }
 }
@@ -284,6 +313,7 @@ mod tests {
                 CadRoomOverlap { a: "r3".into(), b: "r4".into(), area: 0.000_04, at: [0.0, 0.0] },
             ],
             model_gaps: vec![],
+            exits: vec![],
         };
         let (n, cut) = facts.normalized();
         assert!(!cut);

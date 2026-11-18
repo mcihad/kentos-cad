@@ -6,7 +6,8 @@ zorunlu satır) bakar.
 - ``model_required`` — Md. 12/1, 13; EK-6, EK-7; EK-9 Tablo 9.1 satır 9: "zorunlu öznitelikler ve özellikler tanımlandı
   mı?" Eksik her satır bir hatadır; hiçbiri varsayılanla doldurulmaz, boş metin değer sayılmaz. Onarımı alanına göre
   söylenir: yangın dayanım sınıfı ve acil çıkış Öznitelikler'de (duvar stilinin, kapı ve pencere tipinin sınıfı
-  nesnelerine geçer), malzemenin dayanımı Malzemeler'de, binanın yangın koruma sınıfı Mimari ayarları'nda.
+  nesnelerine geçer), malzemenin dayanımı Malzemeler'de, binanın yangın koruma sınıfı Proje ayarları › Mimari'de,
+  mimarın adı ve soyadı künyede (docs/adr/8124).
 """
 
 from __future__ import annotations
@@ -19,11 +20,17 @@ RG = "RG 5.8.2026/33331"
 _ONARIM = (
     (".FireRating", "Öznitelikler › Yangın dayanımı'nı yazın (TS EN 13501-2: REI 120, EI 60); duvar stilinin, kapı ve "
                     "pencere tipinin sınıfını stil ve tip pencerelerinde verirseniz kendi sınıfı olmayan nesneleri taşır."),
-    (".FireExit", "Öznitelikler › Acil çıkış'ı seçin: evet ya da hayır; kaçış yollarının geçtiği kapılar ve merdivenler "
-                  "adaydır."),
+    (".FireExit", "Öznitelikler › Acil çıkış'ı seçin: evet ya da hayır. Denetim'deki acil çıkış önerisi kaçış yollarının "
+                  "çıkış saydığı kapıları ve merdivenleri gösterir ve hepsini tek adımda yazar."),
+    (".WallCoveringThickness", "Mahalin kenarları duvarların yüzlerinde değil ya da yüzlerin kaplaması yok: mahali "
+                               "duvarlarından yeniden bulun (Mahal aracı) ve duvar stilinin iç yüzüne sıva ya da kaplama "
+                               "katmanı verin."),
+    ("FamilyName", "Ruhsat takımı › Künye › Müellif'te mimarın soyadını ayrıca yazın: model adı ve soyadı ayrı ister."),
+    ("GivenName", "Ruhsat takımı › Künye › Müellif'te mimarın soyadını ayrıca yazın: adı, adı soyadından soyadı çıkınca "
+                  "kalandır."),
     ("IfcMaterial.Name", "Nesnenin malzemesini verin; dayanımını Malzemeler penceresinde yazın (Beton_C25, Çelik_S355)."),
-    ("Pset_BuildingCommon.FireProtectionClass", "Binanın yangın koruma sınıfını Mimari ayarları › Yangın ve performans'ta "
-                                                "yazın."),
+    ("Pset_BuildingCommon.FireProtectionClass", "Binanın yangın koruma sınıfını Proje ayarları › Mimari › Yangın "
+                                                "güvenliği'nde yazın."),
     ("Pset_BuildingCommon.ConstructionMethod", "Ruhsat takımı › Dijital teslim kapsamı'nda yapı türünü seçin (yeni, "
                                                "ilave, tadilat)."),
     ("PredefinedType", "Nesnenin ön tanımlı tipi yazılmıyor; tipi olan bir nesneyle (merdivende kol biçimi, çatıda biçim) "

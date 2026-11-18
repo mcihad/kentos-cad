@@ -277,7 +277,7 @@ fn made_for(doc: &Document, stamp: &str, application: &str, scope: Option<&Scope
     let mut search = kentos_domain::space_follow::SpaceSearch::new(doc);
     let mut net_area = |room: &kentos_commands::SpaceFields| search.net_area(room);
     let wall_style_name = |style: Option<&str>| doc.wall_style_name(style);
-    let (b, written) = kentos_ifc::arch::building(Input {
+    let (mut b, written) = kentos_ifc::arch::building(Input {
         title: doc.name(),
         stamp,
         application,
@@ -381,7 +381,49 @@ fn made_for(doc: &Document, stamp: &str, application: &str, scope: Option<&Scope
         // Its north, the drawing's (docs/adr/8076 §6): the plan's up turned by this angle.
         north: crate::north::model_north(doc),
     });
+    b.surveys = surveys(doc);
     (b, written, curved, unplaced)
+}
+
+/// The project's accepted survey points (docs/adr/8124; EK-7 Tablo 7.9 `IfcAnnotation` SURVEY): each at its point
+/// object's place in the drawing, its height its accepted result's over ±0.00's absolute elevation; its name its mark,
+/// its description its source. A point without a height, or a project whose ±0.00 is of unknown height, gives none:
+/// its height is not guessed. A project with no survey has none: the class is then not in the model and Tablo 7.9 is
+/// not asked.
+pub fn surveys(doc: &Document) -> Vec<kentos_ifc::building::SurveyPoint> {
+    let Some(survey) = doc.settings().map_survey.as_ref() else {
+        return Vec::new();
+    };
+    let Some(datum) = doc.settings().arch.as_ref().and_then(|a| a.site.as_ref()).and_then(|s| s.datum) else {
+        return Vec::new();
+    };
+    survey
+        .points
+        .iter()
+        .filter_map(|p| {
+            let id = kentos_domain::Uuid::from_bytes(p.uid.0);
+            let kentos_commands::Entity::Point(o) = doc.get(doc.slot_of(id)?)? else {
+                return None;
+            };
+            let z = p.result.z?;
+            let solutions = if p.result.solutions.is_empty() {
+                String::new()
+            } else {
+                format!(", çözümler {}", p.result.solutions.join(", "))
+            };
+            Some(kentos_ifc::building::SurveyPoint {
+                id: id.as_u128(),
+                name: p.mark.clone(),
+                description: format!(
+                    "Ölçüm noktası {}, sonucun sürümü {}: {}{solutions}",
+                    p.id,
+                    p.result.revision,
+                    p.result.method.title()
+                ),
+                at: [o.p.x, o.p.y, z - datum],
+            })
+        })
+        .collect()
 }
 
 /// The program's building a unit belongs to, by the unit's number.
@@ -481,6 +523,7 @@ pub fn particulars(doc: &Document) -> Particulars {
         parcel: get("parsel"),
         title_deed: get("tapu_kaydi"),
         architect: get("mimar"),
+        architect_family: get("mimar_soyadi"),
         architect_title: get("mimar_unvan"),
         registration: get("sicil_no"),
         office: get("buro_adi"),

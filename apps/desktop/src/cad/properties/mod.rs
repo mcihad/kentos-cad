@@ -135,8 +135,11 @@ pub enum Event {
     /// A door's or a stair's emergency exit role, a roof's as an escape route (docs/adr/8068, 8090): yes, no, or unknown
     /// (none).
     Exit(Slot, Option<bool>),
-    /// A wall's Taşıyıcı (docs/adr/8090): evet, hayır, or unknown.
+    /// A wall's Taşıyıcı (docs/adr/8090): evet, hayır, or unknown; a column's (docs/adr/8124): evet, hayır, or the
+    /// drawing's reading (none).
     LoadBearing(Slot, Option<bool>),
+    /// A wall's or a slab's Dışarıda (docs/adr/8124): evet, hayır, or the drawing's reading (none).
+    External(Slot, Option<bool>),
     /// A tag's frame or leader (docs/adr/0344 §5), through `cad.tags.edit`.
     Tag(Slot, kentos_commands::TagChange),
     /// A view mark's side or target (docs/adr/0345 §5), through `cad.viewmarks.edit`.
@@ -202,6 +205,8 @@ pub enum Event {
 pub enum ArchField {
     /// Its own fire resistance class (docs/adr/8068); empty takes it away.
     FireRating,
+    /// Its own class's basis (docs/adr/8124): a document's name and day in brackets; empty, the author's statement.
+    FireBasis,
     Label,
     Tag,
     Type,

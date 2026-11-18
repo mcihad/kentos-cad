@@ -1225,26 +1225,33 @@ class _ArchPerformance(LocalCommand[ArchPerformance, ArchPerformanceDone, ArchPe
     objects nesnelerin kendi yangın dayanım sınıfını (fireRating: duvar, döşeme, kolon,
     kiriş, çatı, korkuluk, merdiven, rampa, kapı, pencere; mahal, aks, blok ve çizgide
     field_not_for_kind) ve acil çıkış rolünü (exit: kapı, merdiven ve kaçış yolu olan
-    çatı) ve taşıyıcılığını (loadBearing: bearing ve basis; yalnız duvar, giydirme cephe
-    değil) verir; verilmeyen alan kalır, null nesnenin kendi değerini kaldırır (duvar
-    stilinin, kapı tipinin değerini taşır), hiçbiri yoksa nothing_to_set. wallStyle
-    duvar stilinin (style: kimlik ya da ad, yoksa style_not_found), openingType kapı ve
-    pencere tipinin (type, yoksa opening_type_not_found) yangın dayanım sınıfını verir;
-    kendi değeri olmayan duvarlar ve açıklıklar onu taşır. material malzemenin dayanım
-    sınıfını (strength: C25, S355; harf, rakam ve / . , - ile en çok 16, değilse
-    invalid_strength; modelde Ad_Dayanım yazılır) ve TS EN 13501-1 yanıcılık sınıfını
-    (reaction: A1, A2-s1,d0, B-s2,d0, E-d2, Bfl-s1; okunmazsa invalid_declared
-    operation.reaction.value) verir, verilmeyen kalır, null kaldırır, ikisi de yoksa
-    nothing_to_set; building binanın yangın koruma sınıfını (fireProtectionClass). Beyan
-    value ve basis'tir: basis kind author (müellif beyanı) ya da document (name, isteğe
-    bağlı date YYYY-AA-GG); boş, 64 karakterden uzun, satır sonlu değer ya da adsız
-    belge, gün olmayan tarih invalid_declared. Varsayılan yoktur: null değeri kaldırır,
-    eksik sayılır; boş metin yazılmaz. Kilitli katmandaki nesne layer_locked ile bütün
-    çağrıyı reddeder. Tek geri alma adımı “Yangın ve performans”; çizimin geometrisi
-    değişmez. Çıktı değeri şimdi taşıyan nesneler (kendi değeri, ya da tipin değeri
-    kendi değeri olmayan duvar ve açıklıklarda; malzemede ve binada boş) çizimin
-    sırasıyla ve sürüm. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir
-    şey yazılmaz, sonuç conflict olur.
+    çatı) ve taşıyıcılığını (loadBearing: bearing ve basis; duvar, giydirme cephe değil,
+    ve kolon, dikme değil: kolon beyan yoksa çerçevenin kolonu olarak taşıyıcıdır) ve
+    dışarıda olduğunu (external: external ve basis; duvar ve kaplama olmayan döşeme:
+    çizimin okumasını, katın dış çizgisindeki duvarın, balkon ve teras döşemesinin
+    dışarıda olduğunu değiştirir; kapı ve pencere duvarı gibidir) verir; verilmeyen alan
+    kalır, null nesnenin kendi değerini kaldırır (duvar stilinin, kapı tipinin değerini,
+    çizimin okumasını taşır), hiçbiri yoksa nothing_to_set. exits kaçış yollarının
+    önerisi onaylanınca yes'teki kapıları ve merdivenleri acil çıkış, no'dakileri değil
+    diye müellif beyanıyla tek adımda yazar; ikisi de boşsa no_entities, bir nesne
+    ikisinde birden uid_in_both_lists, kapı ve merdivenden başkası field_not_for_kind.
+    wallStyle duvar stilinin (style: kimlik ya da ad, yoksa style_not_found),
+    openingType kapı ve pencere tipinin (type, yoksa opening_type_not_found) yangın
+    dayanım sınıfını verir; kendi değeri olmayan duvarlar ve açıklıklar onu taşır.
+    material malzemenin dayanım sınıfını (strength: C25, S355; harf, rakam ve / . , -
+    ile en çok 16, değilse invalid_strength; modelde Ad_Dayanım yazılır) ve TS EN
+    13501-1 yanıcılık sınıfını (reaction: A1, A2-s1,d0, B-s2,d0, E-d2, Bfl-s1; okunmazsa
+    invalid_declared operation.reaction.value) verir, verilmeyen kalır, null kaldırır,
+    ikisi de yoksa nothing_to_set; building binanın yangın koruma sınıfını
+    (fireProtectionClass). Beyan value ve basis'tir: basis kind author (müellif beyanı)
+    ya da document (name, isteğe bağlı date YYYY-AA-GG); boş, 64 karakterden uzun, satır
+    sonlu değer ya da adsız belge, gün olmayan tarih invalid_declared. Varsayılan
+    yoktur: null değeri kaldırır, eksik sayılır; boş metin yazılmaz. Kilitli katmandaki
+    nesne layer_locked ile bütün çağrıyı reddeder. Tek geri alma adımı “Yangın ve
+    performans”; çizimin geometrisi değişmez. Çıktı değeri şimdi taşıyan nesneler (kendi
+    değeri, ya da tipin değeri kendi değeri olmayan duvar ve açıklıklarda; malzemede ve
+    binada boş) çizimin sırasıyla ve sürüm. expectedRevision verilmişse ve çizim o
+    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.arch.performance"
@@ -1270,13 +1277,20 @@ class _ArchPerformance(LocalCommand[ArchPerformance, ArchPerformanceDone, ArchPe
         yangın dayanım sınıfını (fireRating: duvar, döşeme, kolon, kiriş, çatı, korkuluk,
         merdiven, rampa, kapı, pencere; mahal, aks, blok ve çizgide field_not_for_kind) ve
         acil çıkış rolünü (exit: kapı, merdiven ve kaçış yolu olan çatı) ve taşıyıcılığını
-        (loadBearing: bearing ve basis; yalnız duvar, giydirme cephe değil) verir;
-        verilmeyen alan kalır, null nesnenin kendi değerini kaldırır (duvar stilinin, kapı
-        tipinin değerini taşır), hiçbiri yoksa nothing_to_set. wallStyle duvar stilinin
-        (style: kimlik ya da ad, yoksa style_not_found), openingType kapı ve pencere tipinin
-        (type, yoksa opening_type_not_found) yangın dayanım sınıfını verir; kendi değeri
-        olmayan duvarlar ve açıklıklar onu taşır. material malzemenin dayanım sınıfını
-        (strength: C25, S355; harf, rakam ve / . , - ile en çok 16, değilse
+        (loadBearing: bearing ve basis; duvar, giydirme cephe değil, ve kolon, dikme değil:
+        kolon beyan yoksa çerçevenin kolonu olarak taşıyıcıdır) ve dışarıda olduğunu
+        (external: external ve basis; duvar ve kaplama olmayan döşeme: çizimin okumasını,
+        katın dış çizgisindeki duvarın, balkon ve teras döşemesinin dışarıda olduğunu
+        değiştirir; kapı ve pencere duvarı gibidir) verir; verilmeyen alan kalır, null
+        nesnenin kendi değerini kaldırır (duvar stilinin, kapı tipinin değerini, çizimin
+        okumasını taşır), hiçbiri yoksa nothing_to_set. exits kaçış yollarının önerisi
+        onaylanınca yes'teki kapıları ve merdivenleri acil çıkış, no'dakileri değil diye
+        müellif beyanıyla tek adımda yazar; ikisi de boşsa no_entities, bir nesne ikisinde
+        birden uid_in_both_lists, kapı ve merdivenden başkası field_not_for_kind. wallStyle
+        duvar stilinin (style: kimlik ya da ad, yoksa style_not_found), openingType kapı ve
+        pencere tipinin (type, yoksa opening_type_not_found) yangın dayanım sınıfını verir;
+        kendi değeri olmayan duvarlar ve açıklıklar onu taşır. material malzemenin dayanım
+        sınıfını (strength: C25, S355; harf, rakam ve / . , - ile en çok 16, değilse
         invalid_strength; modelde Ad_Dayanım yazılır) ve TS EN 13501-1 yanıcılık sınıfını
         (reaction: A1, A2-s1,d0, B-s2,d0, E-d2, Bfl-s1; okunmazsa invalid_declared
         operation.reaction.value) verir, verilmeyen kalır, null kaldırır, ikisi de yoksa

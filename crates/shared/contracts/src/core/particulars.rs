@@ -13,11 +13,12 @@ use crate::{ProjectSettings, ProjectSheets, VariableKind, VariableValue};
 
 /// The künye's variables that name or identify people, by the names the permit set gives them
 /// (`kentos_sheet::permit::PARTICULARS`).
-pub const PERSONAL_PARTICULARS: [&str; 13] = [
+pub const PERSONAL_PARTICULARS: [&str; 14] = [
     "yapi_sahibi",
     "tapu_kaydi",
     "muteahhit",
     "mimar",
+    "mimar_soyadi",
     "sicil_no",
     "btb_no",
     "buro_adi",

@@ -81,6 +81,7 @@ pub mod zoning;
 pub mod under_stair;
 pub mod separations;
 pub mod fire_elements;
+pub mod derived_roles;
 pub mod vertical_links;
 pub mod site;
 pub mod escape;

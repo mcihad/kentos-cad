@@ -48,6 +48,9 @@ pub struct Carrier<'a> {
     /// Its quantities: (set, name, its number when it has one).
     pub quantities: Vec<(&'a str, &'a str, Option<f64>)>,
     pub elevation: bool,
+    /// The rows it may leave out (docs/adr/8124; EK-6 Tablo 6.8: a storey's varying level, its heights under a roof): not
+    /// asked of it; a storey's height in it says the building's height is not constant.
+    pub unentered: Vec<&'a str>,
 }
 
 /// A mandatory row some objects do not carry: the row, those objects (indices into the list asked about) and how many
@@ -133,6 +136,11 @@ const CONSTANT: [(&str, &str); 2] = [("Height", "GrossHeight"), ("EavesHeight", 
 /// Whether the storeys' own heights of `name` differ: then the building has no constant height, and its row is not
 /// asked. Storeys without one say nothing either way.
 fn not_constant(objects: &[(String, Carrier<'_>)], name: &str) -> bool {
+    // A storey under a roof has no constant height (docs/adr/8124).
+    let storeys = objects.iter().filter(|(c, _)| c.eq_ignore_ascii_case("IfcBuildingStorey"));
+    if storeys.clone().any(|(_, o)| o.unentered.contains(&name)) {
+        return true;
+    }
     let known: Vec<f64> = objects
         .iter()
         .filter(|(c, _)| c.eq_ignore_ascii_case("IfcBuildingStorey"))
@@ -162,6 +170,7 @@ fn objects(b: &Building) -> Vec<(String, Carrier<'_>)> {
                 props: props(&e.psets),
                 quantities: quantities(&e.qtos),
                 elevation: false,
+                unentered: Vec::new(),
             },
         ));
     }
@@ -180,6 +189,7 @@ fn objects(b: &Building) -> Vec<(String, Carrier<'_>)> {
                 props: props(&s.psets),
                 quantities: quantities(&s.qtos),
                 elevation: false,
+                unentered: Vec::new(),
             },
         ));
     }
@@ -198,6 +208,7 @@ fn objects(b: &Building) -> Vec<(String, Carrier<'_>)> {
                 props: props(&s.psets),
                 quantities: quantities(&s.qtos),
                 elevation: true,
+                unentered: s.unentered.iter().map(|(row, _)| *row).collect(),
             },
         ));
     }
@@ -216,6 +227,7 @@ fn objects(b: &Building) -> Vec<(String, Carrier<'_>)> {
                 props: props(&z.psets),
                 quantities: Vec::new(),
                 elevation: false,
+                unentered: Vec::new(),
             },
         ));
     }
@@ -234,6 +246,7 @@ fn objects(b: &Building) -> Vec<(String, Carrier<'_>)> {
                 props: props(&g.psets),
                 quantities: Vec::new(),
                 elevation: false,
+                unentered: Vec::new(),
             },
         ));
     }
@@ -253,6 +266,7 @@ fn objects(b: &Building) -> Vec<(String, Carrier<'_>)> {
                 props: Vec::new(),
                 quantities: Vec::new(),
                 elevation: false,
+                unentered: Vec::new(),
             },
         ));
     }
@@ -275,6 +289,7 @@ fn objects(b: &Building) -> Vec<(String, Carrier<'_>)> {
                 props: props(&p.psets),
                 quantities: quantities(&p.qtos),
                 elevation,
+                unentered: Vec::new(),
             },
         ));
     }
@@ -310,6 +325,10 @@ pub fn missing(objects: &[(String, Carrier<'_>)]) -> Vec<Missing> {
         let mut lacking = Vec::new();
         let mut judged = false;
         for &i in &of {
+            // A row Tablo 6.8 lets this object leave out (docs/adr/8124).
+            if objects[i].1.unentered.contains(&r.name.as_str()) {
+                continue;
+            }
             match objects[i].1.carries(r) {
                 Some(true) => judged = true,
                 Some(false) => {
@@ -415,6 +434,7 @@ mod tests {
             elevation: 0.0,
             psets: Vec::new(),
             qtos: vec![Qto { name: "Qto_BuildingStoreyBaseQuantities".into(), quantities }],
+            unentered: Vec::new(),
         }
     }
 
@@ -439,5 +459,25 @@ mod tests {
             quantities: vec![("Height".into(), Value::Length(3.0)), ("EavesHeight".into(), Value::Length(2.85))],
         }];
         assert!(!asked(&b, "Height") && !asked(&b, "EavesHeight"));
+    }
+
+    /// Tablo 6.8 lets a storey whose level varies leave its level out, and one whose rooms rise to a roof its heights;
+    /// the building then has no constant height either (docs/adr/8124).
+    #[test]
+    fn a_storey_s_varying_level_and_its_height_under_a_roof_are_not_asked() {
+        let level_asked = |b: &Building| {
+            gaps(b).iter().any(|g| g.class == "IfcBuildingStorey" && g.path == "Pset_BuildingStoreyCommon.ElevationOfSSLRelative")
+        };
+        let building_asked = |b: &Building| {
+            gaps(b).iter().any(|g| g.class == "IfcBuilding" && g.path == "Qto_BuildingBaseQuantities.Height")
+        };
+        let mut b = Building { storeys: vec![storey(Some(3.0), Some(2.85)), storey(None, None)], ..Building::default() };
+        assert!(level_asked(&b), "neither storey's level written");
+        assert!(building_asked(&b), "one known height asks the building's");
+        b.storeys[0].unentered.push(("ElevationOfSSLRelative", "taşıyıcı döşemenin kotu değişiyor"));
+        b.storeys[1].unentered.push(("ElevationOfSSLRelative", "taşıyıcı döşemenin kotu değişiyor"));
+        assert!(!level_asked(&b), "both levels vary");
+        b.storeys[1].unentered.push(("GrossHeight", "mahalleri çatının altına yükseliyor"));
+        assert!(!building_asked(&b), "the storey under the roof has no constant height");
     }
 }

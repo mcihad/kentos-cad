@@ -305,8 +305,9 @@ pub struct Particulars {
     pub block: Option<String>,
     pub parcel: Option<String>,
     pub title_deed: Option<String>,
-    /// Mimar (adı soyadı), unvanı, Mimarlar Odası sicil no.
+    /// Mimar (adı soyadı), soyadı apart (docs/adr/8124), unvanı, Mimarlar Odası sicil no.
     pub architect: Option<String>,
+    pub architect_family: Option<String>,
     pub architect_title: Option<String>,
     pub registration: Option<String>,
     /// Büronun adı, vergi kimlik no, adresi.
@@ -353,18 +354,15 @@ impl Particulars {
         })
     }
 
-    /// The architect (EK-7 Tablo 7.2–7.5): their family name the last word of their name, their given name the words
-    /// before it; their registration number their identification; their office, when it has a name.
+    /// The architect (EK-7 Tablo 7.2–7.5): their family name as the künye gives it apart, their given name their name's
+    /// other words (docs/adr/8124: [`Particulars::names`]); their registration number their identification; their
+    /// office, when it has a name.
     pub fn architect(&self) -> Option<Actor> {
         let whole = self.architect.as_deref()?;
-        let words: Vec<&str> = whole.split_whitespace().collect();
-        let (given, family) = match words.split_last() {
-            Some((last, rest)) if !rest.is_empty() => {
-                (Some(rest.join(" ")), Some((*last).to_owned()))
-            }
-            Some((last, _)) => (None, Some((*last).to_owned())),
-            None => return None,
-        };
+        if whole.split_whitespace().next().is_none() {
+            return None;
+        }
+        let (given, family) = self.names().unwrap_or((None, None));
         let organization = self.office.as_ref().map(|name| Organization {
             identification: self.office_tax_number.clone(),
             name: name.clone(),
@@ -382,6 +380,29 @@ impl Particulars {
             role: "ARCHITECT",
             role_description: self.architect_title.clone(),
         })
+    }
+
+    /// The architect's given and family names (docs/adr/8124; EK-7 Tablo 7.2, whose note says a family name may stand
+    /// first or last): the family name the künye's own field, found at the start or the end of the whole name (case
+    /// aside); the given name the words left. None without a family name or when the name does not hold it at either
+    /// end: no guess is written.
+    pub fn names(&self) -> Option<(Option<String>, Option<String>)> {
+        let whole: Vec<&str> = self.architect.as_deref()?.split_whitespace().collect();
+        let family: Vec<&str> = self.architect_family.as_deref()?.split_whitespace().collect();
+        if family.is_empty() || family.len() > whole.len() {
+            return None;
+        }
+        let same = |a: &[&str], b: &[&str]| a.iter().zip(b).all(|(x, y)| x.to_lowercase() == y.to_lowercase());
+        let n = family.len();
+        let given = if same(&whole[whole.len() - n..], &family) {
+            &whole[..whole.len() - n]
+        } else if same(&whole[..n], &family) {
+            &whole[n..]
+        } else {
+            return None;
+        };
+        let given = (!given.is_empty()).then(|| given.join(" "));
+        Some((given, Some(family.join(" "))))
     }
 
     /// The project's type (EK-7 Tablo 7.1 `Pset_ProjectCommon.ProjectType`, IFC 4.3's `PEnum_ProjectType`) from the
@@ -805,6 +826,17 @@ fn give(psets: &mut Vec<Pset>, set: &str, key: &str, value: Value) {
     }
 }
 
+/// An element's own number as the drawing gives it (docs/adr/8124; EK-6 `Tag`, "a serial or position number"): a
+/// column's or a beam's tag (S1, K101); none for one without, whose Tag is then its id.
+fn tag_of(e: &Entity) -> Option<String> {
+    let own = match e {
+        Entity::Column(c) => c.column.tag.as_deref(),
+        Entity::Beam(b) => b.beam.tag.as_deref(),
+        _ => None,
+    };
+    own.map(str::trim).filter(|t| !t.is_empty()).map(str::to_owned)
+}
+
 /// The common property set EK-6 asks a class's fire resistance class in.
 fn common_set(class: Class) -> Option<&'static str> {
     Some(match class {
@@ -915,6 +947,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             elevation: *floor - zero,
             psets: Vec::new(),
             qtos: Vec::new(),
+            unentered: Vec::new(),
         })
         .collect();
     written.storeys = storeys.len();
@@ -1049,17 +1082,23 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         // (Tablo 6.52), a column carries (Tablo 6.16: KentOS's column is the frame's, Betonarme unless said).
         let psets = match e {
             Entity::Slab(s) if s.slab.covering.is_none() => {
-                let mut props = vec![("IsExternal".into(), Value::Bool(s.slab.role != SlabRole::Floor))];
+                // Its declared exterior role over its role's reading (docs/adr/8124: a floor over open air).
+                let outside = s.slab.arch.external.as_ref().map_or(s.slab.role != SlabRole::Floor, |x| x.external);
+                let mut props = vec![("IsExternal".into(), Value::Bool(outside))];
                 // A sloped slab's pitch (EK-6 Tablo 6.123's PitchAngle; docs/adr/8071 §6), radians.
                 if let Some(sl) = s.slab.slope {
                     props.push(("PitchAngle".into(), Value::PlaneAngle(sl.grade().abs().atan())));
                 }
                 vec![Pset { name: "Pset_SlabCommon".into(), props }]
             }
-            // A post carries nothing of the frame's that the drawing knows: no LoadBearing (docs/adr/8070 §8).
-            Entity::Column(_) if member.is_none() => vec![Pset {
+            // A post carries nothing of the frame's that the drawing knows: no LoadBearing (docs/adr/8070 §8). A column
+            // declared not to carry says so (docs/adr/8124).
+            Entity::Column(c) if member.is_none() => vec![Pset {
                 name: "Pset_ColumnCommon".into(),
-                props: vec![("LoadBearing".into(), Value::Bool(true))],
+                props: vec![(
+                    "LoadBearing".into(),
+                    Value::Bool(c.column.arch.load_bearing.as_ref().is_none_or(|b| b.bearing)),
+                )],
             }],
             Entity::Roof(_) => vec![Pset {
                 name: "Pset_RoofCommon".into(),
@@ -1094,7 +1133,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             object: None,
             name: name(class.code(), &words),
             description: None,
-            tag: Some(owner.clone()),
+            tag: Some(tag_of(e).unwrap_or_else(|| owner.clone())),
             predefined,
             object_type,
             part_of: None,
@@ -1213,6 +1252,16 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             }
         }
     }
+    // A wall's declared exterior role over the drawing's reading (docs/adr/8124; a curtain wall's too): its doors,
+    // windows and frames follow it.
+    for (owner, &k) in &index {
+        if let Some(&(_, e @ Entity::Wall(_))) = by_uid.get(owner)
+            && let Some(x) = e.arch_info().and_then(|a| a.external.as_ref())
+            && matches!(elements[k].class, Class::Wall | Class::CurtainWall)
+        {
+            exterior[k] = x.external;
+        }
+    }
     // A curtain wall's frames are as outside as it is.
     for k in 0..elements.len() {
         if let Some(whole) = elements[k].part_of {
@@ -1253,6 +1302,13 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         let ring: Vec<[f64; 2]> = gap.ring.iter().map(|p| pt(*p)).collect();
         let (bottom, top) = (gap.sill - floor, gap.head - floor);
         let mark = o.opening.number.clone();
+        // Its Tag (docs/adr/8124): its number, else its type's joinery code, else its id.
+        let code = o
+            .opening
+            .style
+            .as_deref()
+            .and_then(|id| arch.and_then(|a| a.opening_types.iter().find(|t| t.id == id)))
+            .and_then(|t| t.code.clone());
         let filler = match gap.form {
             OpeningForm::Door | OpeningForm::Window => {
                 let door = gap.form == OpeningForm::Door;
@@ -1272,7 +1328,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                     object: None,
                     name: name(class.code(), &words),
                     description: None,
-                    tag: Some(mark.clone().unwrap_or_else(|| owner.clone())),
+                    tag: Some(mark.clone().or_else(|| code.clone()).unwrap_or_else(|| owner.clone())),
                     predefined: if door { "DOOR" } else { "WINDOW" },
                     object_type: None,
                     part_of: None,
@@ -1817,11 +1873,27 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     // its underside): what more than half its rooms' area stands on and under (docs/adr/8076 §3). None where the level
     // varies with none prominent (Tablo 6.8: "bu özellik girilmeyebilir").
     let mut storey_heights: Vec<(Option<f64>, Option<f64>)> = Vec::new();
-    for (storey, v) in storeys.iter_mut().zip(&votes) {
+    for (storey_at, (storey, v)) in storeys.iter_mut().zip(&votes).enumerate() {
         let total: f64 = v.iter().map(|x| x.weight).sum();
         let ssl = prominent(v.iter().map(|x| (x.ssl, x.weight)), total);
         let gross = prominent(v.iter().map(|x| (x.gross, x.weight)), total);
         let net = prominent(v.iter().map(|x| (x.net, x.weight)), total);
+        // What Tablo 6.8 lets go unentered (docs/adr/8124): a level that varies (two known ones, none prominent); the
+        // heights of a storey whose rooms rise to a roof's underside, which are not constant.
+        let mut known: Vec<f64> = v.iter().filter_map(|x| x.ssl).collect();
+        known.sort_by(f64::total_cmp);
+        known.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
+        if ssl.is_none() && known.len() > 1 {
+            storey.unentered.push(("ElevationOfSSLRelative", "taşıyıcı döşemenin kotu değişiyor, baskın kot yok"));
+        }
+        if storey_roofs.contains_key(&storey_at) {
+            if gross.is_none() {
+                storey.unentered.push(("GrossHeight", "mahalleri çatının altına yükseliyor: yükseklik sabit değil"));
+            }
+            if net.is_none() {
+                storey.unentered.push(("NetHeight", "mahalleri çatının altına yükseliyor: yükseklik sabit değil"));
+            }
+        }
         if let Some(l) = ssl {
             storey.psets.push(Pset {
                 name: "Pset_BuildingStoreyCommon".into(),
@@ -2374,6 +2446,9 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         zones,
         groups: group_list,
         grids,
+        // The project's survey points are the application's to give (docs/adr/8124): the drawing's entities do not hold
+        // them.
+        surveys: Vec::new(),
         crs,
         crs_why,
         // The y axis turned by the angle: a unit vector in the model's plane.
@@ -2446,5 +2521,27 @@ mod tests {
             ..OpeningBuild::default()
         };
         assert_eq!(filler_ring(&place(), Some(&deep), false, &through), through);
+    }
+
+    /// The family name the künye gives apart, at the end or the start of the whole name (docs/adr/8124); no guess.
+    #[test]
+    fn the_architect_s_names_come_from_the_family_name_given_apart() {
+        let k = |whole: &str, family: Option<&str>| Particulars {
+            architect: Some(whole.to_owned()),
+            architect_family: family.map(str::to_owned),
+            ..Particulars::default()
+        };
+        let names = |p: Particulars| p.names().map(|(g, f)| (g.unwrap_or_default(), f.unwrap_or_default()));
+        assert_eq!(names(k("Ayşe Nur Yılmaz", Some("Yılmaz"))), Some(("Ayşe Nur".into(), "Yılmaz".into())));
+        // Two words of family name, and one written first.
+        assert_eq!(names(k("Ali Rıza Kara Demir", Some("Kara Demir"))), Some(("Ali Rıza".into(), "Kara Demir".into())));
+        assert_eq!(names(k("Yılmaz Ayşe", Some("yılmaz"))), Some(("Ayşe".into(), "yılmaz".into())));
+        // None given, or one the name does not hold at either end: nothing written for either name.
+        assert_eq!(names(k("Ayşe Nur Yılmaz", None)), None);
+        assert_eq!(names(k("Ayşe Nur Yılmaz", Some("Nur"))), None);
+        let none = k("Ayşe Nur Yılmaz", None).architect().expect("an actor");
+        assert_eq!((none.given, none.family), (None, None));
+        let both = k("Ayşe Nur Yılmaz", Some("Yılmaz")).architect().expect("an actor");
+        assert_eq!((both.given.as_deref(), both.family.as_deref()), (Some("Ayşe Nur"), Some("Yılmaz")));
     }
 }

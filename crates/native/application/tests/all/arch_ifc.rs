@@ -176,7 +176,7 @@ fn a_wall_s_declared_load_bearing_role_is_its_common_set_s() {
 }
 
 /// The künye a permit set writes into the drawing's variables (docs/adr/8037), as an office fills it.
-const KUNYE: [(&str, &str); 17] = [
+const KUNYE: [(&str, &str); 18] = [
     ("proje_kodu", "260123"),
     ("bina_kodu", "00"),
     ("revizyon_no", "000"),
@@ -187,6 +187,7 @@ const KUNYE: [(&str, &str); 17] = [
     ("parsel", "5"),
     ("tapu_kaydi", "12/345"),
     ("mimar", "Ayşe Nur Yılmaz"),
+    ("mimar_soyadi", "Yılmaz"),
     ("mimar_unvan", "Y. Mimar"),
     ("sicil_no", "41234"),
     ("buro_adi", "Örnek Mimarlık"),
@@ -1374,4 +1375,170 @@ fn a_drawing_written_another_day_keeps_every_global_id() {
     let lost: Vec<&String> = before.iter().filter(|g| !after.contains(g)).collect();
     assert!(lost.is_empty(), "GlobalIds the door's change took away: {lost:?}");
     assert!(after.len() > before.len());
+}
+
+/// What the drawing says without being told is changed on the element (docs/adr/8124): a wall declared inside writes
+/// `IsExternal` false and its doors and windows follow it; a slab declared outside writes true; a column declared not to
+/// carry writes `LoadBearing` false. Undeclared, the drawing's reading stands.
+#[test]
+fn a_declared_reading_is_written_over_the_drawing_s() {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    let mut doc = building();
+    let prop = |b: &kentos_ifc::building::Building, id: u128, set: &str, key: &str| {
+        b.elements
+            .iter()
+            .find(|e| e.id == Some(id))
+            .and_then(|e| e.psets.iter().filter(|p| p.name == set).flat_map(|p| p.props.iter()).find(|(n, _)| n == key))
+            .map(|(_, v)| v.clone())
+    };
+    let (before, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
+    // An outer wall with an opening in it, a floor slab and a column of the frame.
+    let hosts: std::collections::BTreeSet<String> = doc
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Opening(o) if o.opening.form == OpeningForm::Window => Some(o.opening.host.clone()),
+            _ => None,
+        })
+        .collect();
+    let wall = doc
+        .entities_with_uids()
+        .find(|(u, e)| {
+            matches!(e, Entity::Wall(_))
+                && hosts.contains(&u.to_string())
+                && prop(&before, u.as_u128(), "Pset_WallCommon", "IsExternal") == Some(Value::Bool(true))
+        })
+        .map(|(u, _)| u)
+        .expect("an outer wall with a window");
+    let window = doc
+        .entities_with_uids()
+        .find(|(_, e)| matches!(e, Entity::Opening(o) if o.opening.host == wall.to_string() && o.opening.form == OpeningForm::Window))
+        .map(|(u, _)| u.as_u128())
+        .expect("its window");
+    let slab = doc
+        .entities_with_uids()
+        .find(|(_, e)| matches!(e, Entity::Slab(s) if s.slab.covering.is_none() && s.slab.role == kentos_commands::SlabRole::Floor))
+        .map(|(u, _)| u)
+        .expect("a floor slab");
+    let column = doc
+        .entities_with_uids()
+        .find(|(_, e)| matches!(e, Entity::Column(c) if c.column.member.is_none()))
+        .map(|(u, _)| u)
+        .expect("a column");
+    assert_eq!(prop(&before, window, "Pset_WindowCommon", "IsExternal"), Some(Value::Bool(true)));
+    assert_eq!(prop(&before, slab.as_u128(), "Pset_SlabCommon", "IsExternal"), Some(Value::Bool(false)));
+    assert_eq!(prop(&before, column.as_u128(), "Pset_ColumnCommon", "LoadBearing"), Some(Value::Bool(true)));
+    let run = |doc: &mut Document, op: serde_json::Value| {
+        let answer = registry::run(&mut ExecutionContext::new(doc), "cad.arch.performance", CallOp::Execute,
+            serde_json::json!({"operation": op})).unwrap();
+        assert_eq!(answer["status"], "completed", "{answer}");
+    };
+    let author = serde_json::json!({"kind": "author"});
+    run(&mut doc, serde_json::json!({"kind": "objects", "uids": [wall.to_string()], "external": {"external": false, "basis": author}}));
+    run(&mut doc, serde_json::json!({"kind": "objects", "uids": [slab.to_string()], "external": {"external": true, "basis": author}}));
+    run(&mut doc, serde_json::json!({"kind": "objects", "uids": [column.to_string()], "loadBearing": {"bearing": false, "basis": author}}));
+    let (after, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
+    assert_eq!(prop(&after, wall.as_u128(), "Pset_WallCommon", "IsExternal"), Some(Value::Bool(false)));
+    assert_eq!(prop(&after, window, "Pset_WindowCommon", "IsExternal"), Some(Value::Bool(false)), "the window follows its wall");
+    assert_eq!(prop(&after, slab.as_u128(), "Pset_SlabCommon", "IsExternal"), Some(Value::Bool(true)));
+    assert_eq!(prop(&after, column.as_u128(), "Pset_ColumnCommon", "LoadBearing"), Some(Value::Bool(false)));
+    // The fire rules read the same: the wall is no exterior wall, the column no frame's; every wall reads as the model
+    // did before (the framed storey's outer walls on the outline, docs/adr/8124).
+    let read_before: Vec<(String, bool)> = before
+        .elements
+        .iter()
+        .filter(|e| e.class == Class::Wall)
+        .filter_map(|e| {
+            let id = kentos_domain::Uuid::from_u128(e.id?);
+            let v = prop(&before, e.id?, "Pset_WallCommon", "IsExternal")?;
+            Some((id.to_string(), v == Value::Bool(true)))
+        })
+        .collect();
+    let fire = doc.fire_elements();
+    let of = |u: kentos_domain::Uuid| fire.iter().find(|f| f.uid == u.to_string()).expect("a fire element").clone();
+    assert_eq!((of(wall).exterior, of(wall).outline), (false, true), "declared inside, read on the outline");
+    for (u, outside) in &read_before {
+        assert_eq!(fire.iter().find(|f| &f.uid == u).map(|f| f.outline), Some(*outside), "{u}");
+    }
+    assert!(!of(column).frame);
+    // And the property panel's reading says why.
+    let read = doc.outside_reading(&wall.to_string(), doc.get(doc.slot_of(wall).unwrap()).unwrap()).unwrap();
+    assert_eq!((read.value, read.why), (true, "katın dış çizgisinde olduğu için dışarıda"));
+}
+
+/// The IFC Tag (docs/adr/8124): an element's own number (a door's mark, a column's tag), else its type's joinery code,
+/// else its id.
+#[test]
+fn an_element_s_tag_is_its_number_else_its_type_s_code_else_its_id() {
+    let mut doc = building();
+    let column = doc
+        .entities_with_uids()
+        .find(|(_, e)| matches!(e, Entity::Column(c) if c.column.member.is_none()))
+        .map(|(u, _)| u)
+        .expect("a column");
+    let slot = doc.slot_of(column).unwrap();
+    let mut e = doc.get(slot).unwrap().clone();
+    if let Entity::Column(c) = &mut e {
+        c.column.tag = Some("S1".into());
+    }
+    assert!(doc.update(slot, e), "the column tagged");
+    let (b, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
+    let tag = |id: u128| b.elements.iter().find(|e| e.id == Some(id)).and_then(|e| e.tag.clone());
+    assert_eq!(tag(column.as_u128()).as_deref(), Some("S1"));
+    let wall = doc.entities_with_uids().find(|(_, e)| matches!(e, Entity::Wall(_))).map(|(u, _)| u).unwrap();
+    assert_eq!(tag(wall.as_u128()), Some(wall.to_string()), "a wall without a number: its id");
+    for (u, e) in doc.entities_with_uids() {
+        let Entity::Opening(o) = e else { continue };
+        if !matches!(o.opening.form, OpeningForm::Door | OpeningForm::Window) {
+            continue;
+        }
+        let code = o
+            .opening
+            .style
+            .as_deref()
+            .and_then(|id| doc.settings().arch.as_ref()?.opening_types.iter().find(|t| t.id == id)?.code.clone());
+        let want = o.opening.number.clone().or(code).unwrap_or_else(|| u.to_string());
+        assert_eq!(tag(u.as_u128()), Some(want), "{u}");
+    }
+}
+
+/// The project's accepted survey points are survey annotations in the site (docs/adr/8124; EK-7 Tablo 7.9): named by
+/// their mark, their source said, their height over ±0.00; without ±0.00's height none is written.
+#[test]
+fn an_accepted_survey_point_is_a_survey_annotation_of_the_site() {
+    let mut snap: DocumentSnapshotV2 = kentos_kcad::decode(include_bytes!(
+        "../../../../../fixtures/arch/v1/section-building.kcad"
+    ))
+    .unwrap();
+    let uid = "0192f5a1-8124-7000-8000-000000000001";
+    let id = snap.entities.iter().map(|e| e.base().id).max().unwrap_or(0) + 1;
+    let layer = snap.entities[0].base().layer_id.clone();
+    snap.entities.push(
+        serde_json::from_value(serde_json::json!({"kind": "point", "id": id, "layerId": layer, "attrs": {},
+            "p": {"x": -3.0, "y": -4.0}, "z": 1285.10}))
+        .unwrap(),
+    );
+    snap.uids.push(kentos_commands::EntityId::parse(uid).unwrap());
+    snap.settings.map_survey = Some(
+        serde_json::from_value(serde_json::json!({"points": [{"id": "kn-1", "mark": "P1",
+            "uid": uid, "result": {"revision": 1, "solutions": ["sc-1"], "method": "single", "lat": 39.75, "lon": 37.02,
+            "height": 1320.0, "srid": 5254, "antenna": [], "x": 412345.0, "y": 4401234.0, "z": 1285.10,
+            "chain": "complete"}}]}))
+        .unwrap(),
+    );
+    let doc = Document::from_snapshot_v2(snap.clone()).unwrap();
+    assert!(arch_ifc::surveys(&doc).is_empty(), "±0.00 of unknown height: the height is not guessed");
+    snap.settings.arch.get_or_insert_with(Default::default).site.get_or_insert_with(Default::default).datum = Some(1285.40);
+    let doc = Document::from_snapshot_v2(snap).unwrap();
+    let (b, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
+    assert_eq!(b.surveys.len(), 1);
+    let s = &b.surveys[0];
+    assert_eq!(s.name, "P1");
+    assert!(s.description.contains("kn-1") && s.description.contains("Tek çözüm") && s.description.contains("sc-1"));
+    assert!((s.at[2] - -0.30).abs() < 1e-9 && s.at[0] == -3.0 && s.at[1] == -4.0, "{:?}", s.at);
+    let text = kentos_ifc::building::write(&b);
+    assert_eq!(text.matches("IFCANNOTATION(").count(), 1);
+    assert!(text.contains("'P1','Ölçüm noktası kn-1") || text.contains("'P1','\\X2\\"), "its name and source");
+    assert!(text.contains(".SURVEY.)"));
+    assert!(text.contains("'Annotation','Point'"));
 }

@@ -86,7 +86,7 @@ mod tests {
     #[test]
     fn an_object_is_named_by_its_global_id_and_the_object_it_shows() {
         let roof = 0x0123_4567_89ab_cdef_0123_4567_89ab_cdef_u128;
-        let storey = Storey { id: Some(8), name: String::new(), long_name: None, elevation: 0.0, psets: Vec::new(), qtos: Vec::new() };
+        let storey = Storey { id: Some(8), name: String::new(), long_name: None, elevation: 0.0, psets: Vec::new(), qtos: Vec::new(), unentered: Vec::new() };
         let b = Building {
             project: Place { id: Some(7), ..Place::default() },
             storeys: vec![storey],

@@ -920,6 +920,10 @@
       "label": "Mimar (müellif) adı soyadı"
     },
     {
+      "name": "mimar_soyadi",
+      "label": "Mimarın soyadı (IFC modelinde)"
+    },
+    {
       "name": "mimar_unvan",
       "label": "Mimarın unvanı"
     },

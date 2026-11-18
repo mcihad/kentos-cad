@@ -12392,6 +12392,7 @@ class PerformanceOperation(_Union):
     One of:
 
     - :class:`ObjectsPerformanceOperation` (``kind: objects``)
+    - :class:`ExitsPerformanceOperation` (``kind: exits``)
     - :class:`WallStylePerformanceOperation` (``kind: wallStyle``)
     - :class:`OpeningTypePerformanceOperation` (``kind: openingType``)
     - :class:`MaterialPerformanceOperation` (``kind: material``)
@@ -17459,6 +17460,8 @@ class ArchInfo(_Model):
             roof's, railing's or stair's, the version it took and the fields it keeps its own value of. Absent: none.
         exit: A stair's emergency exit role (docs/adr/8068, EK-6 `FireExit`), or a roof's as an escape route (docs/adr/8090,
             BYKHY Ek-3/B 4-a); absent: unknown (missing).
+        external: A wall's or a slab's declared exterior role (docs/adr/8124, EK-6 `IsExternal`), over what the drawing says (a wall
+            on its storey's outline, a balcony's or a terrace's slab); absent: the drawing's.
         fire_rating: Its own fire resistance class (docs/adr/8068, EK-6 `FireRating`), over its type's (a wall style's); absent: its
             type's, else none (missing).
         load_bearing: A wall's load-bearing role (docs/adr/8090, EK-6 `Pset_WallCommon.LoadBearing`, BYKHY Ek-3/B 2); absent: unknown
@@ -17467,6 +17470,7 @@ class ArchInfo(_Model):
     discipline: ArchDiscipline | ArchDisciplineName | None | Unset = UNSET
     element_type: TypeLink | None | Unset = UNSET
     exit: DeclaredExit | None | Unset = UNSET
+    external: DeclaredExternal | None | Unset = UNSET
     fire_rating: Declared | None | Unset = UNSET
     level: str | None | Unset = UNSET
     load_bearing: DeclaredBearing | None | Unset = UNSET
@@ -17481,6 +17485,8 @@ class ArchInfo(_Model):
             out["elementType"] = None if self.element_type is None else self.element_type.to_json()
         if self.exit is not UNSET:
             out["exit"] = None if self.exit is None else self.exit.to_json()
+        if self.external is not UNSET:
+            out["external"] = None if self.external is None else self.external.to_json()
         if self.fire_rating is not UNSET:
             out["fireRating"] = None if self.fire_rating is None else self.fire_rating.to_json()
         if self.level is not UNSET:
@@ -17499,6 +17505,7 @@ class ArchInfo(_Model):
             discipline=UNSET if "discipline" not in data else None if data["discipline"] is None else _enum_in(ArchDiscipline, data["discipline"]),
             element_type=UNSET if "elementType" not in data else None if data["elementType"] is None else TypeLink.from_json(data["elementType"]),
             exit=UNSET if "exit" not in data else None if data["exit"] is None else DeclaredExit.from_json(data["exit"]),
+            external=UNSET if "external" not in data else None if data["external"] is None else DeclaredExternal.from_json(data["external"]),
             fire_rating=UNSET if "fireRating" not in data else None if data["fireRating"] is None else Declared.from_json(data["fireRating"]),
             level=data.get("level", UNSET),
             load_bearing=UNSET if "loadBearing" not in data else None if data["loadBearing"] is None else DeclaredBearing.from_json(data["loadBearing"]),
@@ -17641,8 +17648,9 @@ class ArchPerformance(_Model):
     """Input of `cad.arch.performance` v1.
 
     Refusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `field_not_for_kind` (a class on a room,
-    a grid, a line …; an exit role on anything but a door, a stair or a roof; a load-bearing role on anything but a wall
-    that is no curtain wall), `nothing_to_set` (an objects' or a material's operation that gives no field), `style_not_found`,
+    a grid, a line …; an exit role on anything but a door, a stair or a roof, in `exits` a door or a stair; a load-bearing
+    role on anything but a wall that is no curtain wall or a column that is no post; an exterior role on anything but a
+    wall or a slab that is no covering), `uid_in_both_lists` (`exits`), `nothing_to_set` (an objects' or a material's operation that gives no field), `style_not_found`,
     `opening_type_not_found`, `material_not_found`, `invalid_declared`, `invalid_strength`, `invalid_revision`,
     `revision_conflict`, `layer_locked` (an object named on a locked layer: nothing is written).
     """
@@ -31539,6 +31547,30 @@ class DeclaredExit(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> DeclaredExit:
         return cls(
             exit=data["exit"],
+            basis=DeclaredBasis.from_json(data["basis"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeclaredExternal(_Model):
+    """A declared exterior role and its basis (docs/adr/8124; EK-6 `IsExternal` of a wall, a slab): what changes the
+    drawing's own reading, a wall on its storey's outline or a balcony's or a terrace's slab being outside.
+    Attributes:
+        external: Evet: it faces the outside (an outer wall, a slab over open air); hayır: it does not.
+    """
+    external: bool
+    basis: DeclaredBasis
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["external"] = self.external
+        out["basis"] = self.basis.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeclaredExternal:
+        return cls(
+            external=data["external"],
             basis=DeclaredBasis.from_json(data["basis"]),
         )
 
@@ -139223,10 +139255,14 @@ class ObjectsPerformanceOperation(PerformanceOperation):
     doors, windows), exit role (doors, stairs; a roof as an escape route, BYKHY Ek-3/B 4-a) and load-bearing role
     (walls but curtain walls, Ek-3/B 2; docs/adr/8090). A field absent stays; null takes the object's own away (a wall
     then carries its style's class, a door its type's).
+    Attributes:
+        external: A wall's or a slab's exterior role (docs/adr/8124, EK-6 `IsExternal`): over what the drawing says; null: the
+            drawing's again.
     """
     TAG_VALUE: ClassVar[str] = "objects"
     uids: list[str]
     exit: DeclaredExit | None | Unset = UNSET
+    external: DeclaredExternal | None | Unset = UNSET
     fire_rating: Declared | None | Unset = UNSET
     load_bearing: DeclaredBearing | None | Unset = UNSET
 
@@ -139235,6 +139271,8 @@ class ObjectsPerformanceOperation(PerformanceOperation):
         out["uids"] = list(self.uids)
         if self.exit is not UNSET:
             out["exit"] = None if self.exit is None else self.exit.to_json()
+        if self.external is not UNSET:
+            out["external"] = None if self.external is None else self.external.to_json()
         if self.fire_rating is not UNSET:
             out["fireRating"] = None if self.fire_rating is None else self.fire_rating.to_json()
         if self.load_bearing is not UNSET:
@@ -139246,8 +139284,33 @@ class ObjectsPerformanceOperation(PerformanceOperation):
         return cls(
             uids=list(data["uids"]),
             exit=UNSET if "exit" not in data else None if data["exit"] is None else DeclaredExit.from_json(data["exit"]),
+            external=UNSET if "external" not in data else None if data["external"] is None else DeclaredExternal.from_json(data["external"]),
             fire_rating=UNSET if "fireRating" not in data else None if data["fireRating"] is None else Declared.from_json(data["fireRating"]),
             load_bearing=UNSET if "loadBearing" not in data else None if data["loadBearing"] is None else DeclaredBearing.from_json(data["loadBearing"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExitsPerformanceOperation(PerformanceOperation):
+    """Acil çıkışlar (docs/adr/8124): the doors and stairs whose emergency exit role is written at once, the escape
+    routes' suggestion the author confirmed: those in `yes` are exits, those in `no` are not; each the author's
+    statement. A uid in both, none at all or one that is no door or stair is refused.
+    """
+    TAG_VALUE: ClassVar[str] = "exits"
+    no: list[str] = field(default_factory=list)
+    yes: list[str] = field(default_factory=list)
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "exits"}
+        out["no"] = list(self.no)
+        out["yes"] = list(self.yes)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExitsPerformanceOperation:
+        return cls(
+            no=list(data["no"]) if "no" in data else list(),
+            yes=list(data["yes"]) if "yes" in data else list(),
         )
 
 
@@ -145328,7 +145391,7 @@ _PARTITION_EXTENT: dict[str, type[PartitionExtent]] = {"source": SourcePartition
 _PAVEMENT_EDGE: dict[str, type[PavementEdge]] = {"vertical": VerticalPavementEdge, "slope": SlopePavementEdge}
 
 
-_PERFORMANCE_OPERATION: dict[str, type[PerformanceOperation]] = {"objects": ObjectsPerformanceOperation, "wallStyle": WallStylePerformanceOperation, "openingType": OpeningTypePerformanceOperation, "material": MaterialPerformanceOperation, "building": BuildingPerformanceOperation}
+_PERFORMANCE_OPERATION: dict[str, type[PerformanceOperation]] = {"objects": ObjectsPerformanceOperation, "exits": ExitsPerformanceOperation, "wallStyle": WallStylePerformanceOperation, "openingType": OpeningTypePerformanceOperation, "material": MaterialPerformanceOperation, "building": BuildingPerformanceOperation}
 
 
 _PERPENDICULAR_REFERENCE: dict[str, type[PerpendicularReference]] = {"line": LinePerpendicularReference, "circle": CirclePerpendicularReference}
@@ -146312,6 +146375,7 @@ __all__ = [
     "DeclaredBearing",
     "DeclaredCrs",
     "DeclaredExit",
+    "DeclaredExternal",
     "DeclaredVertical",
     "DecurveCurveEdit",
     "DefineElementTypesOperation",
@@ -146675,6 +146739,7 @@ __all__ = [
     "ExchangeState",
     "ExchangeStateName",
     "ExcludeMapSurveyOperation",
+    "ExitsPerformanceOperation",
     "ExplodeDensity",
     "ExportAtlas",
     "ExportBlock",

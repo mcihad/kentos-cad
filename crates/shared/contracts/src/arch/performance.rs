@@ -51,6 +51,39 @@ impl DeclaredBasis {
         }
     }
 
+    /// A basis as one line gives it (docs/adr/8124: Öznitelikler, the type and the settings windows), the way
+    /// [`DeclaredBasis::words`] writes it: empty or “müellif beyanı” the author's statement; else a document's name, its
+    /// day after it in brackets when given (`Test raporu 41 (2026-02-28)`). What is wrong with it, refused.
+    pub fn read(text: &str) -> Result<DeclaredBasis, String> {
+        let t = text.trim();
+        if t.is_empty() || t.to_lowercase() == "müellif beyanı" {
+            return Ok(DeclaredBasis::Author);
+        }
+        // A day in brackets at its end: `(YYYY-AA-GG)`; brackets holding other words are the name's.
+        let dated = t.strip_suffix(')').and_then(|r| r.rsplit_once('(')).filter(|(_, d)| {
+            let b = d.trim().as_bytes();
+            b.len() == 10 && b[4] == b'-' && b[7] == b'-'
+        });
+        let basis = match dated {
+            Some((name, day)) => {
+                DeclaredBasis::Document { name: name.trim().to_owned(), date: Some(day.trim().to_owned()) }
+            }
+            None => DeclaredBasis::Document { name: t.to_owned(), date: None },
+        };
+        match basis.problem() {
+            Some(why) => Err(why),
+            None => Ok(basis),
+        }
+    }
+
+    /// Its line as a field shows it: empty for the author's statement, else [`DeclaredBasis::words`].
+    pub fn field(&self) -> String {
+        match self {
+            DeclaredBasis::Author => String::new(),
+            _ => self.words(),
+        }
+    }
+
     /// What is wrong with it: a document without a name, a name too long, a date that is no day.
     pub fn problem(&self) -> Option<String> {
         let DeclaredBasis::Document { name, date } = self else { return None };
@@ -153,6 +186,19 @@ pub struct DeclaredExit {
 pub struct DeclaredBearing {
     /// Evet: it carries the structure's loads (a load-bearing wall); hayır: it does not (a partition).
     pub bearing: bool,
+    pub basis: DeclaredBasis,
+}
+
+/// A declared exterior role and its basis (docs/adr/8124; EK-6 `IsExternal` of a wall, a slab): what changes the
+/// drawing's own reading, a wall on its storey's outline or a balcony's or a terrace's slab being outside.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DeclaredExternal {
+    /// Evet: it faces the outside (an outer wall, a slab over open air); hayır: it does not.
+    pub external: bool,
     pub basis: DeclaredBasis,
 }
 
@@ -266,6 +312,28 @@ mod tests {
         assert!(doc("  ", None).problem("x").unwrap().contains("adı boş"));
         assert_eq!(doc("Rapor", Some("2026-01-05")).basis.words(), "Rapor (2026-01-05)");
         assert_eq!(DeclaredBasis::Author.words(), "müellif beyanı");
+    }
+
+    /// One line reads back as its words write it (docs/adr/8124); a bad day or name is refused.
+    #[test]
+    fn a_basis_reads_from_one_line() {
+        assert_eq!(DeclaredBasis::read("").unwrap(), DeclaredBasis::Author);
+        assert_eq!(DeclaredBasis::read("  Müellif beyanı ").unwrap(), DeclaredBasis::Author);
+        let doc = DeclaredBasis::read("Test raporu 41 (2026-02-28)").unwrap();
+        assert_eq!(
+            doc,
+            DeclaredBasis::Document { name: "Test raporu 41".into(), date: Some("2026-02-28".into()) }
+        );
+        assert_eq!(DeclaredBasis::read(&doc.words()).unwrap(), doc);
+        assert_eq!(doc.field(), "Test raporu 41 (2026-02-28)");
+        assert_eq!(DeclaredBasis::Author.field(), "");
+        // Brackets of other words are the name's.
+        assert_eq!(
+            DeclaredBasis::read("Ürün beyanı (ek A)").unwrap(),
+            DeclaredBasis::Document { name: "Ürün beyanı (ek A)".into(), date: None }
+        );
+        assert!(DeclaredBasis::read("Rapor (2025-02-29)").unwrap_err().contains("bir gün değil"));
+        assert!(DeclaredBasis::read("(2026-01-05)").unwrap_err().contains("adı boş"));
     }
 
     #[test]

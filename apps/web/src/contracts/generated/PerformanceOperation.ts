@@ -2,8 +2,14 @@
 import type { Declared } from "./Declared";
 import type { DeclaredBearing } from "./DeclaredBearing";
 import type { DeclaredExit } from "./DeclaredExit";
+import type { DeclaredExternal } from "./DeclaredExternal";
 
 /**
  * What `cad.arch.performance` declares.
  */
-export type PerformanceOperation = { "kind": "objects", uids: Array<string>, fireRating?: Declared | null, exit?: DeclaredExit | null, loadBearing?: DeclaredBearing | null, } | { "kind": "wallStyle", style: string, fireRating: Declared | null, } | { "kind": "openingType", type: string, fireRating: Declared | null, } | { "kind": "material", material: string, strength?: string | null, reaction?: Declared | null, } | { "kind": "building", fireProtectionClass: Declared | null, };
+export type PerformanceOperation = { "kind": "objects", uids: Array<string>, fireRating?: Declared | null, exit?: DeclaredExit | null, loadBearing?: DeclaredBearing | null, 
+/**
+ * A wall's or a slab's exterior role (docs/adr/8124, EK-6 `IsExternal`): over what the drawing says; null: the
+ * drawing's again.
+ */
+external?: DeclaredExternal | null, } | { "kind": "exits", yes: Array<string>, no: Array<string>, } | { "kind": "wallStyle", style: string, fireRating: Declared | null, } | { "kind": "openingType", type: string, fireRating: Declared | null, } | { "kind": "material", material: string, strength?: string | null, reaction?: Declared | null, } | { "kind": "building", fireProtectionClass: Declared | null, };

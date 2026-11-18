@@ -714,6 +714,9 @@ mod ifc_viewer_tests;
 #[path = "tests/performance_tests.rs"]
 mod performance_tests;
 #[cfg(test)]
+#[path = "tests/declared_readings_tests.rs"]
+mod declared_readings_tests;
+#[cfg(test)]
 #[path = "tests/zones_tests.rs"]
 mod zones_tests;
 #[cfg(test)]

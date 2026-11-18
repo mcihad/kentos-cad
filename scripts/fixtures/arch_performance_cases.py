@@ -8,9 +8,14 @@ type and two materials (Tuğla, Betonarme).
 
 The rules (ADR 8068 §2):
 - objects: `fireRating` on a wall, slab, column, beam, roof, railing, stair, ramp or opening; `exit` on a door, a stair
-  or a roof (an escape route, ADR 8090); `loadBearing` on a wall that is no curtain wall (ADR 8090); else
-  field_not_for_kind at the object (in the input's order, the class asked first, then the exit, then the bearing). None
-  given: nothing_to_set. A field absent stays; null takes the object's own away.
+  or a roof (an escape route, ADR 8090); `loadBearing` on a wall that is no curtain wall (ADR 8090) or a column that is
+  no post (ADR 8124); `external` on a wall or a slab that is no covering (ADR 8124); else field_not_for_kind at the
+  object (in the input's order, the class asked first, then the exit, the bearing, the exterior). None given:
+  nothing_to_set. A field absent stays; null takes the object's own away.
+- exits (ADR 8124): the doors and stairs of `yes` are exits, those of `no` not, each the author's statement; none at all
+  no_entities, a uid in both uid_in_both_lists (at operation.no[i]), then the uids as objects (entity_not_found at
+  uids[i] of yes then no), anything but a door or a stair field_not_for_kind (at operation.yes[i] or operation.no[i]),
+  the revision, a locked layer (layer_locked at the same place).
 - wallStyle / openingType / material: by id, else by name (case aside); none: style_not_found, opening_type_not_found,
   material_not_found. A class null: none. A strength: letters, digits and / . , - , at most 16 (invalid_strength). A
   material's `strength` and `reaction` (ADR 8091): absent stays, null takes it away, neither given nothing_to_set; a
@@ -53,6 +58,8 @@ def base(id, layer_id):
 
 
 WALL, DOOR, WINDOW, COLUMN, STAIR, ROOM, GRID, LOCKED, BARE, ROOF = range(1, 11)
+# Added by `with_more` for the readings and exits (ADR 8124): a floor slab, a post, a door on the locked layer.
+SLAB, POST, LOCKED_DOOR = range(11, 14)
 OPENINGS = {DOOR, WINDOW}
 
 STYLE = {"id": "dis-duvar", "name": "Dış duvar", "components": [
@@ -118,8 +125,17 @@ def exit_rated(e):
 
 
 def load_bearing_rated(e):
-    # A wall's load-bearing role (ADR 8090, Ek-3/B 2): not a curtain wall's.
-    return e["kind"] == "wall" and not e.get("curtain")
+    # A wall's load-bearing role (ADR 8090, Ek-3/B 2): not a curtain wall's; a column's that is no post (ADR 8124).
+    return (e["kind"] == "wall" and not e.get("curtain")) or (e["kind"] == "column" and not e.get("member"))
+
+
+def external_rated(e):
+    # A wall's or a slab's declared exterior role (ADR 8124): not a covering's.
+    return e["kind"] == "wall" or (e["kind"] == "slab" and not e.get("covering"))
+
+
+def is_door_or_stair(e):
+    return e["kind"] == "stair" or (e["kind"] == "opening" and e["form"] == "door")
 
 
 def is_day(s):
@@ -232,7 +248,9 @@ def run(d, inp):
                 return refusal("field_not_for_kind", f"uids[{i}]"), d
             if "loadBearing" in op and not load_bearing_rated(e):
                 return refusal("field_not_for_kind", f"uids[{i}]"), d
-        if "fireRating" not in op and "exit" not in op and "loadBearing" not in op:
+            if "external" in op and not external_rated(e):
+                return refusal("field_not_for_kind", f"uids[{i}]"), d
+        if not any(k in op for k in ("fireRating", "exit", "loadBearing", "external")):
             return refusal("nothing_to_set", "operation"), d
         if op.get("fireRating") is not None and declared_bad(op["fireRating"]):
             return refusal("invalid_declared", "operation.fireRating"), d
@@ -240,6 +258,8 @@ def run(d, inp):
             return refusal("invalid_declared", "operation.exit.basis"), d
         if op.get("loadBearing") is not None and basis_bad(op["loadBearing"]["basis"]):
             return refusal("invalid_declared", "operation.loadBearing.basis"), d
+        if op.get("external") is not None and basis_bad(op["external"]["basis"]):
+            return refusal("invalid_declared", "operation.external.basis"), d
         r = revision_refusal(inp)
         if r:
             return r, d
@@ -248,11 +268,48 @@ def run(d, inp):
                 return refusal("layer_locked", f"uids[{i}]"), d
         for _, e in found:
             target = e if e["kind"] == "opening" else e.setdefault("arch", {})
-            for key in ("fireRating", "exit", "loadBearing"):
+            for key in ("fireRating", "exit", "loadBearing", "external"):
                 if key in op:
                     put(target, key, op[key])
             if e["kind"] != "opening" and not e["arch"]:
                 del e["arch"]
+        order = {e["id"]: k for k, e in enumerate(d["entities"])}
+        out = [uid_of[e["id"]] for _, e in sorted(found, key=lambda x: order[x[1]["id"]])]
+    elif kind == "exits":
+        yes, no = op.get("yes", []), op.get("no", [])
+        both = yes + no
+        place = lambda i: f"operation.yes[{i}]" if i < len(yes) else f"operation.no[{i - len(yes)}]"  # noqa: E731
+        if not both:
+            return refusal("no_entities", "uids"), d
+        for i, u in enumerate(both):
+            if not (len(u) == 36 and u == u.lower() and u.count("-") == 4):
+                return refusal("invalid_uid", f"uids[{i}]"), d
+        for i, u in enumerate(no):
+            if u in yes:
+                return refusal("uid_in_both_lists", f"operation.no[{i}]"), d
+        seen, found = set(), []
+        for i, u in enumerate(both):
+            if u in seen:
+                continue
+            seen.add(u)
+            if u not in id_of:
+                return refusal("entity_not_found", f"uids[{i}]"), d
+            found.append((i, by_id[id_of[u]]))
+        for i, e in found:
+            if not is_door_or_stair(e):
+                return refusal("field_not_for_kind", place(i)), d
+        r = revision_refusal(inp)
+        if r:
+            return r, d
+        for i, e in found:
+            if e["layerId"] in locked_layers:
+                return refusal("layer_locked", place(i)), d
+        for _, e in found:
+            role = exit_(uid_of[e["id"]] in yes)
+            if e["kind"] == "opening":
+                e["exit"] = role
+            else:
+                e.setdefault("arch", {})["exit"] = role
         order = {e["id"]: k for k, e in enumerate(d["entities"])}
         out = [uid_of[e["id"]] for _, e in sorted(found, key=lambda x: order[x[1]["id"]])]
     elif kind in ("wallStyle", "openingType"):
@@ -445,14 +502,50 @@ def cases():
          written(objects([U(BARE)], fireRating=author("EI 60"), loadBearing=bearing(False))))
     case("Null duvarın taşıyıcılığını kaldırır", written(objects([U(WALL)], loadBearing=None), setup=bearing_wall(d)),
          setup=bearing_wall(d))
-    case("Kolona taşıyıcılık: yalnız duvar", refused(objects([U(COLUMN)], loadBearing=bearing(True))))
+    # A column of the frame carries unless declared not to (ADR 8124; was refused under ADR 8090).
+    case("Kolon taşıyıcı değil: beyan çerçevenin okumasını değiştirir",
+         written(objects([U(COLUMN)], loadBearing=bearing(False))))
     case("Kapıya taşıyıcılık", refused(objects([U(DOOR)], loadBearing=bearing(True))))
     case("Taşıyıcılığın belgesi adsız",
          refused(objects([U(WALL)], loadBearing=bearing(True, {"kind": "document", "name": " "}))))
     case("Kilitli katmandaki duvara taşıyıcılık", refused(objects([U(LOCKED)], loadBearing=bearing(True))))
     case("Çatı kaçış yolu", written(objects([U(ROOF)], exit=exit_(True))))
     case("Çatıya sınıf ve kaçış yolu birlikte", written(objects([U(ROOF)], fireRating=author("REI 30"), exit=exit_(True))))
-    case("Çatıya taşıyıcılık: yalnız duvar", refused(objects([U(ROOF)], loadBearing=bearing(True))))
+    case("Çatıya taşıyıcılık: duvar ve kolon", refused(objects([U(ROOF)], loadBearing=bearing(True))))
+    # The drawing's readings changed on the object (ADR 8124): a wall's and a slab's exterior role, a post's bearing.
+    more = with_more(d)
+    case("Duvar içeride: beyan dış çizginin okumasını değiştirir",
+         written(objects([U(WALL)], external={"external": False, "basis": {"kind": "author"}}), setup=more), setup=more)
+    case("Döşeme dışarıda, ısı yalıtım projesiyle",
+         written(objects([U(SLAB)], external={"external": True, "basis": {"kind": "document", "name": "Isı yalıtım projesi",
+                                                                         "date": "2026-11-18"}}), setup=more),
+         setup=more)
+    case("Null döşemenin beyanını kaldırır: çizimin okuması",
+         written(objects([U(SLAB)], external=None), setup=outside_slab(more)), setup=outside_slab(more))
+    case("Kapıya dışarıda: duvarı gibidir", refused(objects([U(DOOR)], external={"external": True, "basis": {"kind": "author"}}),
+                                                  setup=more), setup=more)
+    case("Çatıya dışarıda: çatı hep dışarıda",
+         refused(objects([U(ROOF)], external={"external": False, "basis": {"kind": "author"}}), setup=more), setup=more)
+    case("Dikmeye taşıyıcılık: çerçevenin kolonu değil",
+         refused(objects([U(POST)], loadBearing=bearing(True)), setup=more), setup=more)
+    case("Dışarıda beyanının belgesi adsız",
+         refused(objects([U(WALL)], external={"external": True, "basis": {"kind": "document", "name": ""}}), setup=more),
+         setup=more)
+    # Acil çıkışlar: the escape routes' suggestion confirmed (ADR 8124).
+    case("Önerileri yaz: kapı ve merdiven evet, ikinci kapı hayır",
+         written({"kind": "exits", "yes": [U(STAIR), U(DOOR)], "no": [U(LOCKED_DOOR)]}, setup=unlocked(more)),
+         setup=unlocked(more))
+    case("Yalnız hayır listesi", written({"kind": "exits", "no": [U(DOOR)]}, setup=more), setup=more)
+    case("Beyanı değiştirir: hayır olan merdiven evet",
+         written({"kind": "exits", "yes": [U(STAIR)]}, setup=stair_no(more)), setup=stair_no(more))
+    case("Hiç nesne yok", refused({"kind": "exits", "yes": [], "no": []}, setup=more), setup=more)
+    case("Aynı kapı iki listede", refused({"kind": "exits", "yes": [U(DOOR)], "no": [U(STAIR), U(DOOR)]}, setup=more),
+         setup=more)
+    case("Pencere çıkış olmaz", refused({"kind": "exits", "yes": [U(DOOR)], "no": [U(WINDOW)]}, setup=more), setup=more)
+    case("Çatı kaçış yoludur, acil çıkış listesine girmez", refused({"kind": "exits", "yes": [U(ROOF)]}, setup=more),
+         setup=more)
+    case("Kilitli katmandaki kapı", refused({"kind": "exits", "no": [U(DOOR), U(LOCKED_DOOR)]}, setup=more), setup=more)
+    case("Olmayan kapı", refused({"kind": "exits", "yes": [U(99)]}, setup=more), setup=more)
     case("Betonarmenin dayanımı C30", written({"kind": "material", "material": "betonarme", "strength": "C30"}))
     case("Malzeme adıyla, C30/37", written({"kind": "material", "material": "tuğla", "strength": "C30/37"}))
     case("Dayanım kaldırılır",
@@ -488,6 +581,46 @@ def cases():
     case("Eski sürüm: hiçbir şey yazılmaz",
          refused({"kind": "material", "material": "betonarme", "strength": "C30"}, expectedRevision="9999"))
     return out
+
+
+def with_more(d):
+    """The drawing with a floor slab, a post and a door on the locked layer (ADR 8124)."""
+    d = copy.deepcopy(d)
+    more = {
+        SLAB: {"kind": "slab", **base(SLAB, "mimari"),
+               "parts": [{"outer": {"pts": [P(50, 0), P(54, 0), P(54, 3), P(50, 3)]}}], "thickness": 0.15},
+        POST: {"kind": "column", **base(POST, "mimari"), "at": P(22, 0), "width": 0.1, "depth": 0.1,
+               "member": {"predefined": "POST"}},
+        LOCKED_DOOR: {"kind": "opening", **base(LOCKED_DOOR, "kilitli"), "host": U(LOCKED), "at": 1.5, "width": 0.9,
+                      "form": "door", "head": 2.1,
+                      "place": [P(1.05, 10.125), P(1.05, 9.875), P(1.95, 10.125), P(1.95, 9.875)]},
+    }
+    d["entities"] += [more[i] for i in sorted(more)]
+    d["uids"] += [U(i) for i in sorted(more)]
+    return d
+
+
+def outside_slab(d):
+    d = copy.deepcopy(d)
+    for e in d["entities"]:
+        if e["id"] == SLAB:
+            e["arch"] = {"external": {"external": True, "basis": {"kind": "author"}}}
+    return d
+
+
+def unlocked(d):
+    d = copy.deepcopy(d)
+    for l in d["layers"]:
+        l["locked"] = False
+    return d
+
+
+def stair_no(d):
+    d = copy.deepcopy(d)
+    for e in d["entities"]:
+        if e["id"] == STAIR:
+            e["arch"] = {"exit": exit_(False)}
+    return d
 
 
 def bearing_wall(d):

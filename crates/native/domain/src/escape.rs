@@ -94,6 +94,49 @@ pub struct DoorEscape {
     pub into_stair: bool,
 }
 
+/// Why the routes take a door or a stair as a storey exit (docs/adr/8124): the suggestion of its emergency exit role.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ExitWhy {
+    /// A door to the outside on a storey at or below ±0.00: the building's final exit.
+    Outside,
+    /// A door into an escape stair's room: its storey's exit.
+    IntoStair,
+    /// An open stair standing in a room no dwelling unit owns.
+    OpenStair,
+    /// A stair in an escape stair's room.
+    StairRoom,
+}
+
+impl ExitWhy {
+    /// Its words, as Acil çıkışlar and the audit say it.
+    pub fn words(self) -> &'static str {
+        match self {
+            ExitWhy::Outside => "dışarıya açılan kapı (binanın son çıkışı)",
+            ExitWhy::IntoStair => "kaçış merdiveninin mahaline açılan kapı (kat çıkışı)",
+            ExitWhy::OpenStair => "ortak mahalde duran açık merdiven (kat çıkışı)",
+            ExitWhy::StairRoom => "kaçış merdiveninin mahalindeki merdiven",
+        }
+    }
+
+    /// Its key in the audit's facts.
+    pub fn key(self) -> &'static str {
+        match self {
+            ExitWhy::Outside => "outside",
+            ExitWhy::IntoStair => "intoStair",
+            ExitWhy::OpenStair => "openStair",
+            ExitWhy::StairRoom => "stairRoom",
+        }
+    }
+}
+
+/// A door or a stair the routes take as a storey exit: its persistent id, its storey and why.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ExitBy {
+    pub uid: String,
+    pub level: Option<String>,
+    pub why: ExitWhy,
+}
+
 /// The storeys' escape routes.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Escape {
@@ -101,6 +144,8 @@ pub struct Escape {
     pub doors: Vec<DoorEscape>,
     /// Each storey's exits, counted.
     pub exits: BTreeMap<Option<String>, usize>,
+    /// The doors and stairs the routes take as exits, each once, in the order found (docs/adr/8124).
+    pub exits_by: Vec<ExitBy>,
 }
 
 pub use crate::room_names::{dwelling_nature, stair_name};
@@ -487,10 +532,24 @@ pub fn escape(doc: &Document) -> Escape {
                 .ok()
                 .and_then(|u| doc.slot_of(u))
                 .unwrap_or(Slot(0));
+            // A door, not a gap without a sill: its exit role is asked (docs/adr/8124).
+            let is_door = doc.get(door).is_some_and(|e| {
+                matches!(e, Entity::Opening(o) if o.opening.form == kentos_contracts::OpeningForm::Door)
+            });
             // The building's final exit: a passage to the outside at or below ±0.00.
             match (n1, n2) {
-                (Some(x), None) | (None, Some(x)) if ground => groups.push(vec![x]),
+                (Some(x), None) | (None, Some(x)) if ground => {
+                    groups.push(vec![x]);
+                    if is_door {
+                        out.exits_by.push(ExitBy { uid: p.uid.clone(), level: level.clone(), why: ExitWhy::Outside });
+                    }
+                }
                 _ => {}
+            }
+            // A door into an escape stair's room from a room that is none: its storey's exit.
+            let stair_side = |n: Option<usize>| n.is_some_and(|k| rooms[g.room[k]].stair);
+            if is_door && stair_side(n1) != stair_side(n2) && !(ground && (n1.is_none() || n2.is_none())) {
+                out.exits_by.push(ExitBy { uid: p.uid.clone(), level: level.clone(), why: ExitWhy::IntoStair });
             }
             // A unit's entrance: one side its room, the other side not.
             for (inner, outer) in [(n1, n2), (n2, n1)] {
@@ -530,7 +589,7 @@ pub fn escape(doc: &Document) -> Escape {
             }
         }
         // Open stairs: a stair's foot on its storey, its head on the one above, in a room no dwelling unit owns.
-        for e in doc.entities() {
+        for (uid, e) in doc.entities_with_uids() {
             let Entity::Stair(st) = e else { continue };
             let pts = &st.stair.pts;
             let (Some(foot), Some(head)) = (pts.first(), pts.last()) else {
@@ -542,12 +601,17 @@ pub fn escape(doc: &Document) -> Escape {
                     continue;
                 }
                 let at = V::new(p.x, p.y);
-                if let Some(r) = room_at(&level, at)
-                    && !rooms[r].dwelling
-                    && !rooms[r].stair
-                {
-                    let k = g.node(at, r);
-                    groups.push(vec![k]);
+                match room_at(&level, at) {
+                    Some(r) if !rooms[r].dwelling && !rooms[r].stair => {
+                        let k = g.node(at, r);
+                        groups.push(vec![k]);
+                        out.exits_by.push(ExitBy { uid: uid.to_string(), level: own.clone(), why: ExitWhy::OpenStair });
+                    }
+                    // A stair standing in an escape stair's room is that exit's.
+                    Some(r) if rooms[r].stair && on == own => {
+                        out.exits_by.push(ExitBy { uid: uid.to_string(), level: own.clone(), why: ExitWhy::StairRoom });
+                    }
+                    _ => {}
                 }
             }
         }
@@ -729,6 +793,9 @@ pub fn escape(doc: &Document) -> Escape {
             });
         }
     }
+    // Each door and stair once: an open stair's head stands on the storey above its foot.
+    let mut seen = BTreeSet::new();
+    out.exits_by.retain(|x| seen.insert(x.uid.clone()));
     out
 }
 

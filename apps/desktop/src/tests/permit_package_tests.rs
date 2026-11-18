@@ -12,7 +12,7 @@ use crate::exchange::sheet_publish::Event as Publish;
 use kentos_commands::Entity;
 
 /// The particulars a set asks without defaults, given.
-const PARTICULARS: [(&str, &str); 11] = [
+const PARTICULARS: [(&str, &str); 12] = [
     ("il", "Sivas"),
     ("ilce", "Merkez"),
     ("mahalle", "Yenişehir"),
@@ -21,6 +21,7 @@ const PARTICULARS: [(&str, &str); 11] = [
     ("yapi_sahibi", "Ayşe Demir"),
     ("tasiyici_sistem", "Betonarme karkas"),
     ("mimar", "Deniz Kaya"),
+    ("mimar_soyadi", "Kaya"),
     ("sicil_no", "12345"),
     ("btb_no", "6789"),
     ("buro_adres", "İstasyon Cad. 1, Sivas"),

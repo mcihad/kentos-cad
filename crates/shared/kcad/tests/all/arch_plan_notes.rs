@@ -179,3 +179,31 @@ fn an_element_type_and_its_column_round_trip_under_arch_data_19() {
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
     assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the type and the link read back");
 }
+
+/// Architecture data 20 (docs/adr/8124): a wall's and a slab's declared exterior role and a column's declared
+/// load-bearing role are written with `modules.arch = 20` and read back.
+#[test]
+fn the_declared_readings_round_trip_under_arch_data_20() {
+    use kentos_contracts::{DeclaredBasis, DeclaredBearing, DeclaredExternal, Entity};
+    let mut doc = sample();
+    assert!(!kentos_kcad::uses_declared_readings(&doc));
+    // A wall's own load-bearing role is architecture data 13's, not 20's.
+    let wall = doc.entities.iter_mut().find_map(|e| match e {
+        Entity::Wall(w) => Some(w),
+        _ => None,
+    });
+    wall.expect("a wall").wall.arch.load_bearing = Some(DeclaredBearing { bearing: true, basis: DeclaredBasis::Author });
+    assert!(!kentos_kcad::uses_declared_readings(&doc));
+    let column = doc.entities.iter_mut().find(|e| matches!(e, Entity::Column(_))).expect("the building has a column");
+    column.arch_info_mut().expect("a column's").load_bearing =
+        Some(DeclaredBearing { bearing: false, basis: DeclaredBasis::Author });
+    assert!(kentos_kcad::uses_declared_readings(&doc));
+    let slab = doc.entities.iter_mut().find(|e| matches!(e, Entity::Slab(_))).expect("the building has a slab");
+    slab.arch_info_mut().expect("a slab's").external = Some(DeclaredExternal {
+        external: true,
+        basis: DeclaredBasis::Document { name: "Isı yalıtım projesi".into(), date: Some("2026-11-18".into()) },
+    });
+    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_DECLARED_READINGS);
+    let bytes = kentos_kcad::encode(&doc).expect("encodes");
+    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the roles read back");
+}

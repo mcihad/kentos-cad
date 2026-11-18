@@ -100,6 +100,7 @@ pub const GROUPS: [(&str, &[&str]); 5] = [
         "Müellif",
         &[
             "mimar",
+            "mimar_soyadi",
             "mimar_unvan",
             "sicil_no",
             "btb_no",

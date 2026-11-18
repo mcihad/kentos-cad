@@ -5,6 +5,7 @@ import type { ArchStatus } from "./ArchStatus";
 import type { Declared } from "./Declared";
 import type { DeclaredBearing } from "./DeclaredBearing";
 import type { DeclaredExit } from "./DeclaredExit";
+import type { DeclaredExternal } from "./DeclaredExternal";
 import type { TypeLink } from "./TypeLink";
 
 /**
@@ -27,6 +28,11 @@ exit?: DeclaredExit,
  * (missing).
  */
 loadBearing?: DeclaredBearing, 
+/**
+ * A wall's or a slab's declared exterior role (docs/adr/8124, EK-6 `IsExternal`), over what the drawing says (a wall
+ * on its storey's outline, a balcony's or a terrace's slab); absent: the drawing's.
+ */
+external?: DeclaredExternal, 
 /**
  * The project's element type it follows (docs/adr/8106; `.kcad` Mimari data 19): a column's, beam's, slab's,
  * roof's, railing's or stair's, the version it took and the fields it keeps its own value of. Absent: none.

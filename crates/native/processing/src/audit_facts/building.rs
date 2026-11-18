@@ -304,8 +304,11 @@ fn elements(doc: &Document) -> (Vec<ElementFacts>, (f64, f64)) {
                 .get(&x.uid)
                 .and_then(|e| fire_rating_of(doc.settings(), e))
                 .map(|(d, _)| d.value.clone()),
-            // The author's roles (docs/adr/8090): a wall's load-bearing, a roof's escape route.
-            load_bearing: by_uid.get(&x.uid).and_then(|e| load_bearing_of(e)).map(|b| b.bearing),
+            // The author's roles (docs/adr/8090): a wall's load-bearing, a roof's escape route. A column's declared
+            // role is its `frame` (docs/adr/8124).
+            load_bearing: (x.kind == "wall")
+                .then(|| by_uid.get(&x.uid).and_then(|e| load_bearing_of(e)).map(|b| b.bearing))
+                .flatten(),
             escape: x.kind == "roof" && by_uid.get(&x.uid).and_then(|e| exit_of(e)).is_some_and(|d| d.exit),
             uid: x.uid,
             kind: x.kind.to_owned(),

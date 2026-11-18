@@ -1,5 +1,13 @@
 # Değişiklikler
 
+## 0.12.0 — 18 Kasım 2026
+
+- Acil çıkış beyanı ve kaçış yolları (docs/adr/8124): `cikis.denetle(olgular)` her kapı ve merdivenin acil çıkış
+  beyanını (EK-6 Tablo 6.25 ve 6.61 `FireExit`) KentOS'un kaçış yollarının onu kat çıkışı sayıp saymadığıyla
+  (`cad.exits`) karşılaştırır. Beyanı olmayanlar için tek bilgi bulgusu: yolların önerisi, adaylar adıyla; düzeltmesi
+  önerinin hepsini `cad.arch.performance` `exits` ile tek adımda yazar. Beyan yolla uyuşmuyorsa uyarı, düzeltmesi
+  önerinin yönünde. Masaüstünün Denetim sekmesi (`mimari.denetle`) ve eklenti denetimi (`cikis`) aynı kuralı çağırır.
+
 ## 0.11.0 — 18 Kasım 2026
 
 - EK-9 Tablo 9.2, öbür disiplinlerin formu (docs/adr/8114): `form.tablosu(ifc)` modelin disiplinini dosyanın adının EK-2

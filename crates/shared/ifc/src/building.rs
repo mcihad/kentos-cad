@@ -308,6 +308,21 @@ pub struct Storey {
     pub elevation: f64,
     pub psets: Vec<Pset>,
     pub qtos: Vec<Qto>,
+    /// The rows it may leave out and why (docs/adr/8124; EK-6 Tablo 6.8): `ElevationOfSSLRelative` where its structural
+    /// slab level varies with none prominent; `GrossHeight` and `NetHeight` where its rooms rise to a roof's underside
+    /// (its height is not constant). Not written to the file.
+    pub unentered: Vec<(&'static str, &'static str)>,
+}
+
+/// A survey point (docs/adr/8124; EK-7 Tablo 7.9, IFC 4.3 `IfcAnnotationTypeEnum.SURVEY`: "survey points, survey
+/// lines or survey areas"): its id, its name (its mark), its source in words (the measurement it was accepted from) and
+/// its place in the site's axes, over ±0.00.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct SurveyPoint {
+    pub id: u128,
+    pub name: String,
+    pub description: String,
+    pub at: [f64; 3],
 }
 
 /// A postal address (`IfcPostalAddress`).
@@ -388,6 +403,8 @@ pub struct Building {
     pub groups: Vec<Group>,
     /// The grids (EK-6 Tablo 6.36's axes, docs/adr/8070 §4).
     pub grids: Vec<Grid>,
+    /// The survey points the project measured (docs/adr/8124; EK-7 Tablo 7.9 `IfcAnnotation` SURVEY), in the site.
+    pub surveys: Vec<SurveyPoint>,
     /// The layered elements' material layer sets (docs/adr/8071 §8): an element (by its index), its set's name and its
     /// layers top down, in place of a single material.
     pub layer_sets: Vec<(usize, String, Vec<Layer>)>,
@@ -1281,6 +1298,28 @@ pub fn write(b: &Building) -> String {
             Step::refs(&in_building)
         ));
     }
+    // The survey points (docs/adr/8124; EK-7 Tablo 7.9): each an `IfcAnnotation` SURVEY in the site, a point; its name
+    // its mark, its description its source.
+    if !b.surveys.is_empty() {
+        let context = w.st.add(format!(
+            "IFCGEOMETRICREPRESENTATIONSUBCONTEXT('Annotation','Model',*,*,*,*,#{model},$,.MODEL_VIEW.,$)"
+        ));
+        let mut points = Vec::new();
+        for s in &b.surveys {
+            let place = w.placement(Some(site_place), 0.0);
+            let p = w.point3(s.at);
+            let rep = w.st.add(format!("IFCSHAPEREPRESENTATION(#{context},'Annotation','Point',(#{p}))"));
+            let shape = w.st.add(format!("IFCPRODUCTDEFINITIONSHAPE($,$,(#{rep}))"));
+            let g = w.id(Some(s.id));
+            points.push(w.st.add(format!(
+                "IFCANNOTATION({g},$,{},{},$,#{place},#{shape},.SURVEY.)",
+                text(&s.name),
+                text(&s.description)
+            )));
+        }
+        let g = w.st.derived("contained", &[site], "survey");
+        w.st.add(format!("IFCRELCONTAINEDINSPATIALSTRUCTURE({g},$,$,$,({}),#{site})", Step::refs(&points)));
+    }
     let mut material_ids: Vec<(String, usize)> = Vec::new();
     for (name, list) in &materials {
         let m = w.st.add(format!("IFCMATERIAL({},$,$)", text(name)));
@@ -1432,6 +1471,7 @@ mod tests {
                 elevation: 0.0,
                 psets: vec![],
                 qtos: vec![],
+                unentered: vec![],
             }],
             spaces: vec![room],
             zones: vec![Zone {
@@ -1513,6 +1553,7 @@ mod tests {
                 elevation: 0.0,
                 psets: vec![],
                 qtos: vec![],
+                unentered: vec![],
             }],
             elements: vec![wall],
             ..Building::default()
@@ -1630,6 +1671,7 @@ mod tests {
                 elevation: 0.0,
                 psets: vec![],
                 qtos: vec![],
+                unentered: vec![],
             }],
             elements: vec![
                 Element {

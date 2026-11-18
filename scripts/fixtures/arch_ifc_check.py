@@ -50,7 +50,7 @@ import section_building as sb  # noqa: E402
 FILE = ROOT / "fixtures/arch/v1/ifc/kesit-binasi.ifc"
 # The künye of the second file (the permit set's particulars, docs/adr/8037), as the application test gives it.
 KUNYE = {"proje_kodu": "260123", "bina_kodu": "00", "revizyon_no": "000", "il": "Sivas", "ilce": "Merkez",
-         "mahalle": "Esentepe", "ada": "1234", "parsel": "5", "tapu_kaydi": "12/345", "mimar": "Ayşe Nur Yılmaz",
+         "mahalle": "Esentepe", "ada": "1234", "parsel": "5", "tapu_kaydi": "12/345", "mimar": "Ayşe Nur Yılmaz", "mimar_soyadi": "Yılmaz",
          "mimar_unvan": "Y. Mimar", "sicil_no": "41234", "buro_adi": "Örnek Mimarlık", "vergi_no": "1234567890",
          "buro_adres": "Atatürk Cad. No:1 Sivas"}
 # The second file's system (EK-7 Tablo 7.6–7.7): TUREF's zone of Sivas, Antalya heights, ±0.00's elevation.
@@ -240,7 +240,9 @@ def main() -> int:
         ensure(who.is_a("IfcPersonAndOrganization"), f"actor {who.is_a()}")
         if who.is_a("IfcPersonAndOrganization"):
             person, org = who.ThePerson, who.TheOrganization
-            given, family = k["mimar"].rsplit(" ", 1)
+            # The family name the künye gives apart (docs/adr/8124), the given name the words left.
+            family = k["mimar_soyadi"]
+            given = k["mimar"].removesuffix(" " + family)
             ensure((person.Identification, person.GivenName, person.FamilyName) == (k["sicil_no"], given, family),
                    f"person {person}")
             ensure((org.Name, org.Identification) == (k["buro_adi"], k["vergi_no"]), f"organization {org}")

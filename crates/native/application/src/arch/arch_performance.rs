@@ -49,17 +49,41 @@ pub fn exit_rated(e: &Entity) -> bool {
     }
 }
 
-/// Whether `e` takes a load-bearing role (docs/adr/8090, BYKHY Ek-3/B 2): a wall that is no curtain wall.
+/// Whether `e` takes a load-bearing role: a wall that is no curtain wall (docs/adr/8090, BYKHY Ek-3/B 2), a column
+/// that is no post (docs/adr/8124: the frame's column carries unless declared not to).
 pub fn load_bearing_rated(e: &Entity) -> bool {
-    matches!(e, Entity::Wall(w) if w.wall.curtain.is_none())
+    match e {
+        Entity::Wall(w) => w.wall.curtain.is_none(),
+        Entity::Column(c) => c.column.member.is_none(),
+        _ => false,
+    }
 }
 
-/// A wall's declared load-bearing role; none: unknown.
+/// A wall's or a column's declared load-bearing role; none: not declared (a wall's unknown, a column's the frame's).
 pub fn load_bearing_of(e: &Entity) -> Option<&kentos_commands::DeclaredBearing> {
     match e {
         Entity::Wall(w) => w.wall.arch.load_bearing.as_ref(),
+        Entity::Column(c) => c.column.arch.load_bearing.as_ref(),
         _ => None,
     }
+}
+
+/// Whether `e` takes a declared exterior role (docs/adr/8124, EK-6 `IsExternal`): a wall (a curtain wall too) or a slab
+/// that is no covering; a door or a window is as its wall, a roof always outside.
+pub fn external_rated(e: &Entity) -> bool {
+    match e {
+        Entity::Wall(_) => true,
+        Entity::Slab(s) => s.slab.covering.is_none(),
+        _ => false,
+    }
+}
+
+/// A wall's or a slab's declared exterior role; none: the drawing's.
+pub fn external_of(e: &Entity) -> Option<&kentos_commands::DeclaredExternal> {
+    if !external_rated(e) {
+        return None;
+    }
+    e.arch_info().and_then(|a| a.external.as_ref())
 }
 
 /// Where an object's class comes from.
@@ -135,7 +159,7 @@ fn no_class(e: &Entity) -> String {
 fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>), Stop> {
     let settings = doc.settings();
     let work = match &input.operation {
-        PerformanceOperation::Objects { uids, fire_rating, exit, load_bearing } => {
+        PerformanceOperation::Objects { uids, fire_rating, exit, load_bearing, external } => {
             checks::uids(uids, "Yangın bilgisi verilecek nesne verilmedi.")?;
             let found = checks::named(doc, uids)?;
             for (at, _, e, _) in &found {
@@ -157,19 +181,30 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                     return Err(fail(
                         codes::FIELD_NOT_FOR_KIND,
                         format!(
-                            "“{}” nesnesinin taşıyıcılık rolü verilmez: taşıyıcılık duvarın özelliğidir (giydirme cephe \
-                             değil).",
+                            "“{}” nesnesinin taşıyıcılık rolü verilmez: taşıyıcılık duvarın (giydirme cephe değil) ve \
+                             kolonun (dikme değil) özelliğidir.",
+                            e.kind()
+                        ),
+                        &format!("uids[{at}]"),
+                    ));
+                }
+                if external.is_some() && !external_rated(e) {
+                    return Err(fail(
+                        codes::FIELD_NOT_FOR_KIND,
+                        format!(
+                            "“{}” nesnesinin dışarıda olduğu beyan edilmez: bu beyan duvarın ve döşemenin (kaplama \
+                             değil) özelliğidir; kapı ve pencere duvarı gibidir, çatı hep dışarıdadır.",
                             e.kind()
                         ),
                         &format!("uids[{at}]"),
                     ));
                 }
             }
-            if fire_rating.is_none() && exit.is_none() && load_bearing.is_none() {
+            if fire_rating.is_none() && exit.is_none() && load_bearing.is_none() && external.is_none() {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    "Ne yangın dayanım sınıfı ne acil çıkış ne taşıyıcılık verildi: fireRating, exit ya da loadBearing \
-                     verin (null kaldırır)."
+                    "Ne yangın dayanım sınıfı ne acil çıkış ne taşıyıcılık ne dışarıda verildi: fireRating, exit, \
+                     loadBearing ya da external verin (null kaldırır)."
                         .into(),
                     "operation",
                 ));
@@ -186,6 +221,11 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                 && let Some(why) = x.basis.problem()
             {
                 return Err(fail(codes::INVALID_DECLARED, why, "operation.loadBearing.basis"));
+            }
+            if let Some(Some(x)) = external
+                && let Some(why) = x.basis.problem()
+            {
+                return Err(fail(codes::INVALID_DECLARED, why, "operation.external.basis"));
             }
             checks::revision(doc, input.expected_revision.as_deref())?;
             let layers = doc.layers();
@@ -220,6 +260,9 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                             }
                             if let Some(v) = load_bearing {
                                 a.load_bearing.clone_from(v);
+                            }
+                            if let Some(v) = external {
+                                a.external.clone_from(v);
                             }
                         }
                     }
@@ -332,6 +375,65 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                 }
             }
             (Work::Settings(Box::new(next)), Vec::new())
+        }
+        PerformanceOperation::Exits { yes, no } => {
+            // Acil çıkışlar (docs/adr/8124): the suggestion the author confirmed, the author's statement each.
+            let all: Vec<String> = yes.iter().chain(no).cloned().collect();
+            checks::uids(&all, "Acil çıkış rolü yazılacak kapı ya da merdiven verilmedi.")?;
+            if let Some((at, u)) = no.iter().enumerate().find(|(_, u)| yes.contains(u)) {
+                return Err(fail(
+                    codes::UID_IN_BOTH_LISTS,
+                    format!("“{u}” hem evet hem hayır listesinde; her kapı ya da merdiven yalnız birinde olur."),
+                    &format!("operation.no[{at}]"),
+                ));
+            }
+            let found = checks::named(doc, &all)?;
+            for (at, _, e, _) in &found {
+                let door_or_stair = exit_rated(e) && !matches!(e, Entity::Roof(_));
+                if !door_or_stair {
+                    let place = if *at < yes.len() { format!("operation.yes[{at}]") } else { format!("operation.no[{}]", at - yes.len()) };
+                    return Err(fail(
+                        codes::FIELD_NOT_FOR_KIND,
+                        format!("“{}” nesnesinin acil çıkış rolü olmaz: acil çıkış kapının ve merdivenin özelliğidir.", e.kind()),
+                        &place,
+                    ));
+                }
+            }
+            checks::revision(doc, input.expected_revision.as_deref())?;
+            let layers = doc.layers();
+            if let Some((at, _, e, _)) = found.iter().find(|(_, _, e, _)| layers.is_locked(&e.base().layer_id)) {
+                let id = &e.base().layer_id;
+                let name = layers.get(id).map_or(id.as_str(), |n| n.name.as_str());
+                let place = if *at < yes.len() { format!("operation.yes[{at}]") } else { format!("operation.no[{}]", at - yes.len()) };
+                return Err(fail(
+                    codes::LAYER_LOCKED,
+                    format!("“{name}” katmanı kilitli; üzerindeki kapının ya da merdivenin acil çıkış rolü değişmez. Kilidi Katmanlar panelinden açın."),
+                    &place,
+                ));
+            }
+            let mut changes = Vec::new();
+            for (_, slot, e, uid) in &found {
+                let role = Some(kentos_commands::DeclaredExit {
+                    exit: yes.contains(uid),
+                    basis: kentos_commands::DeclaredBasis::Author,
+                });
+                let mut next = (*e).clone();
+                match &mut next {
+                    Entity::Opening(o) => o.opening.exit = role,
+                    other => {
+                        if let Some(a) = other.arch_info_mut() {
+                            a.exit = role;
+                        }
+                    }
+                }
+                if next != **e {
+                    changes.push((*slot, next));
+                }
+            }
+            let mut named: Vec<(u64, String)> =
+                found.iter().map(|(_, slot, _, uid)| (doc.place(*slot).unwrap_or(u64::MAX), (*uid).clone())).collect();
+            named.sort();
+            (Work::Objects(changes), named.into_iter().map(|(_, u)| u).collect())
         }
         PerformanceOperation::Building { fire_protection_class } => {
             declared(fire_protection_class.as_ref(), "binanın yangın koruma sınıfı", "operation.fireProtectionClass")?;

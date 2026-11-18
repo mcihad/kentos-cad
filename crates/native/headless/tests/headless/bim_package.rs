@@ -152,6 +152,7 @@ fn permit_drawing_of(mut snap: kentos_commands::DocumentSnapshotV2, declared: bo
         ("ada", "1234"),
         ("parsel", "5"),
         ("mimar", "Ayşe Nur Yılmaz"),
+        ("mimar_soyadi", "Yılmaz"),
         ("sicil_no", "41234"),
         ("buro_adi", "Örnek Mimarlık"),
         ("vergi_no", "1234567890"),

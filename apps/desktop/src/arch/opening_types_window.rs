@@ -4,7 +4,9 @@
 //! (how many openings follow, how many keep their own value, how many are left on a locked layer, which refuse it).
 //! Yeni tip ▾ starts a door, window, opening, niche or flue type from KentOS's first of that form, or copies the chosen
 //! type; Sil leaves its openings with their values; Kitaplıktan al and Kitaplığa yaz carry
-//! the office's types as a `kentos.opening-types` file. Every write is one undo step. Aynı tiptekileri seç
+//! the office's types as a `kentos.opening-types` file. Every write is one undo step; the type's fire resistance class
+//! and its basis (docs/adr/8124) are declarations written by `cad.arch.performance`, their own step “Yangın ve
+//! performans”. Aynı tiptekileri seç
 //! (`arch.openingSameType`) and the selection's Tipten ayır, Tipe uygula and Tipe döndür live here too.
 
 use crate::arch;
@@ -112,6 +114,11 @@ pub struct Window {
     /// Its frame and leaves and its U value as typed (docs/adr/8038).
     pub material: String,
     pub u_value: String,
+    /// Its fire resistance class and that class's basis as typed (docs/adr/8124); empty: none, the author's statement.
+    pub fire: String,
+    pub fire_basis: String,
+    /// The declaration's refusal, said before Uygula.
+    pub declared: Option<String>,
     pub typed: Vec<(OpeningTypeField, String)>,
     /// What the change typed would do; its refusal's words when refused.
     pub preview: Option<Result<OpeningTypesEdited, String>>,
@@ -130,6 +137,9 @@ pub enum Event {
     /// Kasa ve kanat, U değeri (docs/adr/8038).
     Material(String),
     UValue(String),
+    /// Yangın dayanım sınıfı, Dayanak belgesi (docs/adr/8124).
+    Fire(String),
+    FireBasis(String),
     /// Yeni tip ▾: a type of this form from KentOS's first of it; none: a copy of the chosen type.
     New(Option<OpeningForm>),
     Remove,
@@ -548,8 +558,43 @@ impl App {
                 }
             }),
         };
+        let declared = self.opening_types_chosen().and_then(|t| {
+            let w = self.arch.opening_types.as_ref()?;
+            let doc = self.document.as_ref()?;
+            match declared_of(w, &t)? {
+                Err(why) => Some(why),
+                Ok(operation) => {
+                    let input = kentos_commands::ArchPerformance { operation, expected_revision: None };
+                    match kentos_native_application::arch_performance::plan_in(&doc.model, &input) {
+                        CommandResult::Failed { error }
+                        | CommandResult::Conflict { error }
+                        | CommandResult::NeedsInput { error } => Some(error.message),
+                        _ => None,
+                    }
+                }
+            }
+        });
         if let Some(w) = self.arch.opening_types.as_mut() {
             w.preview = preview;
+            w.declared = declared;
+        }
+    }
+
+    /// `cad.arch.performance` over the drawing (docs/adr/8124): the type's fire resistance class, one step “Yangın ve
+    /// performans”; whether it was written, the refusal said.
+    fn opening_types_declare(&mut self, operation: kentos_commands::PerformanceOperation) -> bool {
+        let Some(doc) = self.document.as_mut() else { return false };
+        let input = kentos_commands::ArchPerformance { operation, expected_revision: None };
+        match kentos_native_application::arch_performance::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            input,
+        ) {
+            CommandResult::Completed { .. } => true,
+            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                self.warn(error.message);
+                false
+            }
+            _ => false,
         }
     }
 
@@ -629,6 +674,18 @@ impl App {
                 }
                 self.opening_types_preview();
             }
+            Event::Fire(t) => {
+                if let Some(w) = self.arch.opening_types.as_mut() {
+                    w.fire = t;
+                }
+                self.opening_types_preview();
+            }
+            Event::FireBasis(t) => {
+                if let Some(w) = self.arch.opening_types.as_mut() {
+                    w.fire_basis = t;
+                }
+                self.opening_types_preview();
+            }
             Event::SizeBy(by) => {
                 if let Some(w) = self.arch.opening_types.as_mut() {
                     w.size_by = by;
@@ -695,6 +752,17 @@ impl App {
                         self.warn(why);
                         return Task::none();
                     }
+                    None => {}
+                }
+                // Its fire resistance class (docs/adr/8124): its own step, “Yangın ve performans”.
+                let declared = self.arch.opening_types.as_ref().and_then(|w| declared_of(w, &t));
+                match declared {
+                    Some(Ok(operation)) => {
+                        if self.opening_types_declare(operation) {
+                            self.say(Level::Success, format!("{}: yangın dayanım sınıfı yazıldı.", t.name));
+                        }
+                    }
+                    Some(Err(why)) => self.warn(why),
                     None => {}
                 }
                 self.opening_types_read(Some(t.id));
@@ -833,9 +901,9 @@ impl App {
     fn opening_types_unapplied(&self) -> bool {
         self.arch.opening_types.as_ref().is_some_and(|w| {
             self.opening_type_change().is_some()
-                || w.uses
-                    .get(w.chosen)
-                    .is_some_and(|u| !w.name.trim().is_empty() && w.name.trim() != u.kind.name)
+                || w.uses.get(w.chosen).is_some_and(|u| {
+                    (!w.name.trim().is_empty() && w.name.trim() != u.kind.name) || declared_of(w, &u.kind).is_some()
+                })
         })
     }
 
@@ -1054,6 +1122,11 @@ impl App {
                 Some(hint.unwrap_or_else(|| "W/m²K".to_owned())),
             ));
         }
+        // Its fire resistance class (docs/adr/8124): the openings without their own carry it; its basis one line.
+        let fire = kentos_ui::widget::text_field("Yok", &w.fire).on_input(|t| msg(Event::Fire(t)));
+        cells.push(words::field("Yangın dayanım sınıfı", fire, Some("TS EN 13501-2: EI 60, EI2 60-S200C5".into())));
+        let basis = kentos_ui::widget::text_field("Müellif beyanı", &w.fire_basis).on_input(|t| msg(Event::FireBasis(t)));
+        cells.push(words::field("Dayanak belgesi", basis, Some("Belgenin adı (2026-02-28); boş: müellif beyanı".into())));
         for (field, text) in &w.typed {
             let field = *field;
             let input = kentos_ui::widget::text_field("Yok", text)
@@ -1115,6 +1188,9 @@ impl App {
                     w.uses.get(w.chosen).map_or(0, |u| u.count)
                 ),
             )),
+        }
+        if let Some(why) = &w.declared {
+            summary.push(words::text_line(Kind::Warn, why.clone()));
         }
         // What the change does first, the values below it, scrolled.
         let note = label::caption(format!(
@@ -1239,9 +1315,26 @@ fn fill(w: &mut Window, t: &OpeningType, f: &Format) {
             .trim_end_matches('.')
             .replace('.', ",")
     });
+    w.fire = t.fire_rating.as_ref().map(|d| d.value.clone()).unwrap_or_default();
+    w.fire_basis = t.fire_rating.as_ref().map(|d| d.basis.field()).unwrap_or_default();
+    w.declared = None;
     w.typed.clear();
     refit(w, t, f);
     w.preview = None;
+}
+
+/// The type's fire resistance class as typed against its own (docs/adr/8124): the operation that writes it, none when
+/// it is as it was; the words when the basis does not read.
+fn declared_of(w: &Window, t: &OpeningType) -> Option<Result<kentos_commands::PerformanceOperation, String>> {
+    let value = w.fire.trim();
+    let basis = match kentos_commands::DeclaredBasis::read(&w.fire_basis) {
+        Ok(b) => b,
+        Err(why) => return Some(Err(why)),
+    };
+    let now = (!value.is_empty()).then(|| kentos_commands::Declared { value: value.to_owned(), basis });
+    (now != t.fire_rating).then(|| {
+        Ok(kentos_commands::PerformanceOperation::OpeningType { opening_type: t.id.clone(), fire_rating: now })
+    })
 }
 
 /// The fields `t` takes moving as the window's operation: those already typed kept, the others `t`'s own.

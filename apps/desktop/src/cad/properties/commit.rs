@@ -266,6 +266,13 @@ pub(super) fn commit_elevation(
     properties::set_elevations(model, slots, change)
 }
 
+/// The object's own fire resistance class (docs/adr/8068), not its type's; none without one.
+fn own_fire_rating(model: &kentos_domain::Document, slot: kentos_domain::Slot) -> Option<kentos_commands::Declared> {
+    use kentos_native_application::arch_performance::{Carried, fire_rating_of};
+    let e = model.get(slot)?;
+    fire_rating_of(model.settings(), e).filter(|(_, c)| *c == Carried::Own).map(|(d, _)| d.clone())
+}
+
 /// A cell's text into the drawing, as the web's editors take it; what they
 /// do not take changes nothing. What to say: the command's refusal.
 pub(super) fn commit(
@@ -744,8 +751,24 @@ pub(super) fn commit(
         }
         Field::Arch(slot, ArchField::FireRating) => {
             let t = kentos_interaction::js_trim(text);
-            let fire = (!t.is_empty()).then(|| kentos_commands::Declared::author(t));
-            return properties::edit_performance(model, *slot, Some(fire), None, None);
+            // The basis it had stays (docs/adr/8124): Dayanak belgesi changes it.
+            let basis = own_fire_rating(model, *slot).map_or(kentos_commands::DeclaredBasis::Author, |d| d.basis);
+            let fire = (!t.is_empty()).then(|| kentos_commands::Declared { value: t.to_owned(), basis });
+            return properties::edit_performance(model, *slot, Some(fire), None, None, None);
+        }
+        Field::Arch(slot, ArchField::FireBasis) => {
+            let Some(own) = own_fire_rating(model, *slot) else {
+                return vec!["Dayanak belgesi nesnenin kendi yangın dayanımınındır: önce Yangın dayanımı'nı yazın.".into()];
+            };
+            let basis = match kentos_commands::DeclaredBasis::read(text) {
+                Ok(b) => b,
+                Err(why) => return vec![why],
+            };
+            if basis == own.basis {
+                return Vec::new();
+            }
+            let fire = Some(kentos_commands::Declared { value: own.value, basis });
+            return properties::edit_performance(model, *slot, Some(fire), None, None, None);
         }
         Field::Arch(slot, which @ (ArchField::MarkNumber | ArchField::MarkSize)) => {
             use kentos_commands::{ViewMarkChange, ViewMarksOperation};
@@ -1134,6 +1157,7 @@ pub(super) fn commit(
                 | ArchField::MarkSize
                 | ArchField::RoofSlope
                 | ArchField::FireRating
+                | ArchField::FireBasis
                 | ArchField::RoofPart(_)
                 | ArchField::RoofThickness
                 | ArchField::RoofLayer(_)

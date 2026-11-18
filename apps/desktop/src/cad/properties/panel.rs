@@ -799,6 +799,7 @@ impl App {
                 None,
                 Some(v.map(|exit| kentos_commands::DeclaredExit { exit, basis: kentos_commands::DeclaredBasis::Author })),
                 None,
+                None,
             ),
             Event::LoadBearing(slot, v) => properties::edit_performance(
                 model,
@@ -807,6 +808,18 @@ impl App {
                 None,
                 Some(v.map(|bearing| kentos_commands::DeclaredBearing {
                     bearing,
+                    basis: kentos_commands::DeclaredBasis::Author,
+                })),
+                None,
+            ),
+            Event::External(slot, v) => properties::edit_performance(
+                model,
+                slot,
+                None,
+                None,
+                None,
+                Some(v.map(|external| kentos_commands::DeclaredExternal {
+                    external,
                     basis: kentos_commands::DeclaredBasis::Author,
                 })),
             ),

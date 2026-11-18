@@ -5,7 +5,9 @@ import type { PerformanceOperation } from "./PerformanceOperation";
  * Input of `cad.arch.performance` v1.
  *
  * Refusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `field_not_for_kind` (a class on a room,
- * a grid, a line …; an exit role on anything but a door or a stair), `nothing_to_set`, `style_not_found`,
+ * a grid, a line …; an exit role on anything but a door, a stair or a roof, in `exits` a door or a stair; a load-bearing
+ * role on anything but a wall that is no curtain wall or a column that is no post; an exterior role on anything but a
+ * wall or a slab that is no covering), `uid_in_both_lists` (`exits`), `nothing_to_set` (an objects' or a material's operation that gives no field), `style_not_found`,
  * `opening_type_not_found`, `material_not_found`, `invalid_declared`, `invalid_strength`, `invalid_revision`,
  * `revision_conflict`, `layer_locked` (an object named on a locked layer: nothing is written).
  */

@@ -75,13 +75,18 @@
       eski karoyu çizmez.
     - Örtüşen mahal EK-9/13: ortak alan Rust olgusu (`cad.roomOverlaps`), eşik Python kuralında (`kalite`, 0,01 m²).
       Kalan: gerçek pencerede kabul, kesit kutusu, tadilat rengi.
-  - **B7 büyük ölçüde yapıldı (16 Kasım 2026; [ADR 8068](../adr/8068-fire-performance-material-declarations.md); BIM-07 ve IFC-02 `[~]`):**
+  - **B7 yapıldı (16–18 Kasım 2026; [ADR 8068](../adr/8068-fire-performance-material-declarations.md), [8076](../adr/8076-ifc-mandatory-fields-complete.md), [8124](../adr/8124-b7-remaining-declarations-and-ifc-fields.md); BIM-07 ve IFC-02 `[x]`):**
     - Beyan dayanağıyla (müellif ya da belge), varsayılansız: nesnenin, duvar stilinin, kapı-pencere tipinin yangın
       dayanım sınıfı; kapının ve merdivenin acil çıkışı; malzemenin dayanımı; binanın yangın koruma sınıfı. Tek komut
       `cad.arch.performance`; `.kcad` mimari verisi 1 (`modules.arch`).
     - EK-6 Tablo 6.7'nin `ConstructionMethod`'u inşaat eyleminin türüdür (yeni, ilave, tadilat): künyeden yazılır.
     - Modelin eksik zorunlu alanları `kentos_ifc::required` ile ölçülür, `zorunlu` kuralı nesneleriyle bildirir; EK-9/9
-      modelden. Kalan: IFC-02'nin saha, kat, kaplama, merdiven, proje satırları; pencere alanları; acil çıkış önerisi.
+      modelden.
+    - ADR 8124: kapı-pencere tipinin ve binanın sınıfı kendi pencerelerinde, dayanak tek satır ("Belge (2026-02-28)");
+      Öznitelikler türetileni gerekçesiyle söyler ("katın dış çizgisinde olduğu için dışarıda") ve beyan onu değiştirir
+      (`arch.external`, kolonun taşıyıcılığı; mimari verisi 20). Acil çıkış önerisi kaçış yollarından, Denetim'de tek
+      düzeltmeyle (`exits`). Tag: numara, tipin kodu, kimlik. Soyadı künyede ayrı alan, tahmin yok. Ölçüm anotasyonu
+      kabul edilmiş ölçüm noktasından. Ek-3'ün dış duvarı çerçeveli katta yüzün ortasından okunur. Kalan: gerçek pencere.
   - **B8 kısmen yapıldı (16 Kasım 2026; [ADR 8069](../adr/8069-room-zone-far-model.md); BIM-08 ve IFC-03 `[~]`):**
     - Balkonların bağımsız bölüm net alanının %20'sini aşan kısmı emsale girer (PAİY 22/1-l; ADR 8030'un "katlar alanının
       %20'si" okuması düzeltildi); tabloda kendi satırı.

@@ -15,6 +15,8 @@
 //! - **Rooms that overlap** (docs/adr/8067, EK-9 Tablo 9.1/13): two rooms of one storey (or both on none) whose drawn
 //!   areas share ground, with how much (the geometry core's overlay of the two areas) and where. The rule decides how
 //!   much is too much; rooms on other storeys are not compared (a room through two storeys is one storey's).
+//! - **Exits** (docs/adr/8124): every door and stair, its declared emergency exit role and why the escape routes
+//!   (`kentos_domain::escape`, docs/adr/8035) take it as a storey exit, if they do; the rule suggests and compares.
 
 use std::collections::BTreeMap;
 
@@ -22,7 +24,8 @@ use kentos_commands::{DrawingFont, Entity};
 use kentos_domain::Document;
 use kentos_domain::arch_values::core_areas;
 use kentos_extensions::audit_facts::cad::{
-    CadBlock, CadBroken, CadDerived, CadFacts, CadGrid, CadLayer, CadModelGap, CadRoom, CadRoomOverlap, FontUse,
+    CadBlock, CadBroken, CadDerived, CadExit, CadFacts, CadGrid, CadLayer, CadModelGap, CadRoom, CadRoomOverlap,
+    FontUse,
 };
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geom::arrangement::Area;
@@ -145,7 +148,50 @@ pub fn measure(doc: &Document) -> CadFacts {
         broken,
         room_overlaps: overlaps(&grounds),
         model_gaps: model_gaps(doc),
+        exits: exits(doc),
     }
+}
+
+/// Every door and stair, its declared exit role and what the escape routes take it as (docs/adr/8124).
+#[cfg(feature = "mod-arch")]
+fn exits(doc: &Document) -> Vec<CadExit> {
+    use kentos_commands::OpeningForm;
+    use kentos_native_application::arch_performance::exit_of;
+    let by: std::collections::HashMap<String, kentos_domain::escape::ExitWhy> =
+        kentos_domain::escape::escape(doc).exits_by.into_iter().map(|x| (x.uid, x.why)).collect();
+    doc.entities_with_uids()
+        .filter_map(|(uid, e)| {
+            let (kind, name) = match e {
+                Entity::Opening(o) if o.opening.form == OpeningForm::Door => ("door", o.opening.number.clone()),
+                Entity::Stair(_) => ("stair", None),
+                _ => return None,
+            };
+            let uid = uid.to_string();
+            // A door stands on its wall's storey.
+            let level = match e {
+                Entity::Opening(o) => kentos_domain::Uuid::parse_str(&o.opening.host)
+                    .ok()
+                    .and_then(|u| doc.get(doc.slot_of(u)?))
+                    .and_then(|w| w.own_level())
+                    .map(str::to_owned),
+                _ => e.own_level().map(str::to_owned),
+            };
+            Some(CadExit {
+                kind: kind.to_owned(),
+                level,
+                name,
+                declared: exit_of(e).map(|x| x.exit),
+                route: by.get(&uid).map(|w| w.key().to_owned()),
+                uid,
+            })
+        })
+        .collect()
+}
+
+/// Without Mimari there are no exit roles to read.
+#[cfg(not(feature = "mod-arch"))]
+fn exits(_: &Document) -> Vec<CadExit> {
+    Vec::new()
 }
 
 /// EK-6's and EK-7's mandatory rows the model `cad.arch.ifc` writes does not carry (docs/adr/8068): none for a drawing

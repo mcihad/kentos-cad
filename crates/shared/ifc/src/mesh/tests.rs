@@ -38,8 +38,8 @@ fn volume(m: &Mesh) -> f64 {
 
 fn building() -> Building {
     let storeys = vec![
-        Storey { id: None, name: "Zemin".into(), long_name: None, elevation: 0.0, psets: vec![], qtos: vec![] },
-        Storey { id: None, name: "1. kat".into(), long_name: None, elevation: 3.0, psets: vec![], qtos: vec![] },
+        Storey { id: None, name: "Zemin".into(), long_name: None, elevation: 0.0, psets: vec![], qtos: vec![], unentered: vec![] },
+        Storey { id: None, name: "1. kat".into(), long_name: None, elevation: 3.0, psets: vec![], qtos: vec![], unentered: vec![] },
     ];
     // A 5 × 0.25 m wall 3 m high on the first floor, a 1 m window from 0.90 to 2.10 through it.
     let wall = element(Class::Wall, vec![Shape::Prism { rings: vec![rect(0.0, 0.0, 5.0, 0.25)], bulges: vec![], bottom: 0.0, top: 3.0 }], 1);
@@ -157,7 +157,7 @@ fn a_curved_prism_is_a_closed_mesh_of_its_flattened_arcs() {
         0,
     );
     let b = Building {
-        storeys: vec![Storey { id: None, name: "Zemin".into(), long_name: None, elevation: 0.0, psets: vec![], qtos: vec![] }],
+        storeys: vec![Storey { id: None, name: "Zemin".into(), long_name: None, elevation: 0.0, psets: vec![], qtos: vec![], unentered: vec![] }],
         elements: vec![wall],
         ..Default::default()
     };

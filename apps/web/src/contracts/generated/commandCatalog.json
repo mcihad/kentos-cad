@@ -28829,7 +28829,7 @@
       "id": "cad.arch.performance",
       "version": 1,
       "title": "Yangın ve performans",
-      "summary": "Yangın yönetmeliği ve dijital proje modeli için müellifin beyanını yazar (Dijital Proje Yön. EK-6): operation.kind objects nesnelerin kendi yangın dayanım sınıfını (fireRating: duvar, döşeme, kolon, kiriş, çatı, korkuluk, merdiven, rampa, kapı, pencere; mahal, aks, blok ve çizgide field_not_for_kind) ve acil çıkış rolünü (exit: kapı, merdiven ve kaçış yolu olan çatı) ve taşıyıcılığını (loadBearing: bearing ve basis; yalnız duvar, giydirme cephe değil) verir; verilmeyen alan kalır, null nesnenin kendi değerini kaldırır (duvar stilinin, kapı tipinin değerini taşır), hiçbiri yoksa nothing_to_set. wallStyle duvar stilinin (style: kimlik ya da ad, yoksa style_not_found), openingType kapı ve pencere tipinin (type, yoksa opening_type_not_found) yangın dayanım sınıfını verir; kendi değeri olmayan duvarlar ve açıklıklar onu taşır. material malzemenin dayanım sınıfını (strength: C25, S355; harf, rakam ve / . , - ile en çok 16, değilse invalid_strength; modelde Ad_Dayanım yazılır) ve TS EN 13501-1 yanıcılık sınıfını (reaction: A1, A2-s1,d0, B-s2,d0, E-d2, Bfl-s1; okunmazsa invalid_declared operation.reaction.value) verir, verilmeyen kalır, null kaldırır, ikisi de yoksa nothing_to_set; building binanın yangın koruma sınıfını (fireProtectionClass). Beyan value ve basis'tir: basis kind author (müellif beyanı) ya da document (name, isteğe bağlı date YYYY-AA-GG); boş, 64 karakterden uzun, satır sonlu değer ya da adsız belge, gün olmayan tarih invalid_declared. Varsayılan yoktur: null değeri kaldırır, eksik sayılır; boş metin yazılmaz. Kilitli katmandaki nesne layer_locked ile bütün çağrıyı reddeder. Tek geri alma adımı “Yangın ve performans”; çizimin geometrisi değişmez. Çıktı değeri şimdi taşıyan nesneler (kendi değeri, ya da tipin değeri kendi değeri olmayan duvar ve açıklıklarda; malzemede ve binada boş) çizimin sırasıyla ve sürüm. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Yangın yönetmeliği ve dijital proje modeli için müellifin beyanını yazar (Dijital Proje Yön. EK-6): operation.kind objects nesnelerin kendi yangın dayanım sınıfını (fireRating: duvar, döşeme, kolon, kiriş, çatı, korkuluk, merdiven, rampa, kapı, pencere; mahal, aks, blok ve çizgide field_not_for_kind) ve acil çıkış rolünü (exit: kapı, merdiven ve kaçış yolu olan çatı) ve taşıyıcılığını (loadBearing: bearing ve basis; duvar, giydirme cephe değil, ve kolon, dikme değil: kolon beyan yoksa çerçevenin kolonu olarak taşıyıcıdır) ve dışarıda olduğunu (external: external ve basis; duvar ve kaplama olmayan döşeme: çizimin okumasını, katın dış çizgisindeki duvarın, balkon ve teras döşemesinin dışarıda olduğunu değiştirir; kapı ve pencere duvarı gibidir) verir; verilmeyen alan kalır, null nesnenin kendi değerini kaldırır (duvar stilinin, kapı tipinin değerini, çizimin okumasını taşır), hiçbiri yoksa nothing_to_set. exits kaçış yollarının önerisi onaylanınca yes'teki kapıları ve merdivenleri acil çıkış, no'dakileri değil diye müellif beyanıyla tek adımda yazar; ikisi de boşsa no_entities, bir nesne ikisinde birden uid_in_both_lists, kapı ve merdivenden başkası field_not_for_kind. wallStyle duvar stilinin (style: kimlik ya da ad, yoksa style_not_found), openingType kapı ve pencere tipinin (type, yoksa opening_type_not_found) yangın dayanım sınıfını verir; kendi değeri olmayan duvarlar ve açıklıklar onu taşır. material malzemenin dayanım sınıfını (strength: C25, S355; harf, rakam ve / . , - ile en çok 16, değilse invalid_strength; modelde Ad_Dayanım yazılır) ve TS EN 13501-1 yanıcılık sınıfını (reaction: A1, A2-s1,d0, B-s2,d0, E-d2, Bfl-s1; okunmazsa invalid_declared operation.reaction.value) verir, verilmeyen kalır, null kaldırır, ikisi de yoksa nothing_to_set; building binanın yangın koruma sınıfını (fireProtectionClass). Beyan value ve basis'tir: basis kind author (müellif beyanı) ya da document (name, isteğe bağlı date YYYY-AA-GG); boş, 64 karakterden uzun, satır sonlu değer ya da adsız belge, gün olmayan tarih invalid_declared. Varsayılan yoktur: null değeri kaldırır, eksik sayılır; boş metin yazılmaz. Kilitli katmandaki nesne layer_locked ile bütün çağrıyı reddeder. Tek geri alma adımı “Yangın ve performans”; çizimin geometrisi değişmez. Çıktı değeri şimdi taşıyan nesneler (kendi değeri, ya da tipin değeri kendi değeri olmayan duvar ve açıklıklarda; malzemede ve binada boş) çizimin sırasıyla ve sürüm. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -28845,7 +28845,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.arch.performance` v1.\n\nRefusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `field_not_for_kind` (a class on a room,\na grid, a line …; an exit role on anything but a door, a stair or a roof; a load-bearing role on anything but a wall\nthat is no curtain wall), `nothing_to_set` (an objects' or a material's operation that gives no field), `style_not_found`,\n`opening_type_not_found`, `material_not_found`, `invalid_declared`, `invalid_strength`, `invalid_revision`,\n`revision_conflict`, `layer_locked` (an object named on a locked layer: nothing is written).",
+        "description": "Input of `cad.arch.performance` v1.\n\nRefusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `field_not_for_kind` (a class on a room,\na grid, a line …; an exit role on anything but a door, a stair or a roof, in `exits` a door or a stair; a load-bearing\nrole on anything but a wall that is no curtain wall or a column that is no post; an exterior role on anything but a\nwall or a slab that is no covering), `uid_in_both_lists` (`exits`), `nothing_to_set` (an objects' or a material's operation that gives no field), `style_not_found`,\n`opening_type_not_found`, `material_not_found`, `invalid_declared`, `invalid_strength`, `invalid_revision`,\n`revision_conflict`, `layer_locked` (an object named on a locked layer: nothing is written).",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -28946,6 +28946,21 @@
         ]
       },
       "examples": [
+        {
+          "title": "Kaçış yollarının önerisi: giriş kapısı ve merdiven acil çıkış, oda kapısı değil",
+          "input": {
+            "operation": {
+              "kind": "exits",
+              "no": [
+                "0192f5a1-8068-7000-8000-00000000000d"
+              ],
+              "yes": [
+                "0192f5a1-8068-7000-8000-000000000002",
+                "0192f5a1-8068-7000-8000-000000000005"
+              ]
+            }
+          }
+        },
         {
           "title": "Duvar stiline REI 120, müellif beyanıyla",
           "input": {
@@ -118530,6 +118545,12 @@
       "meaning": "Verilen alan bu nesnenin türünde yok (örneğin aksın genişliği, kolonun etiketi dışında kolonun rıhtı)."
     },
     {
+      "code": "uid_in_both_lists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bir nesne hem evet hem hayır listesinde verildi; her nesne yalnız birinde olur."
+    },
+    {
       "code": "mixed_kinds",
       "kind": "failed",
       "retryable": false,
@@ -124165,6 +124186,17 @@
             }
           ],
           "description": "A stair's emergency exit role (docs/adr/8068, EK-6 `FireExit`), or a roof's as an escape route (docs/adr/8090,\nBYKHY Ek-3/B 4-a); absent: unknown (missing)."
+        },
+        "external": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeclaredExternal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A wall's or a slab's declared exterior role (docs/adr/8124, EK-6 `IsExternal`), over what the drawing says (a wall\non its storey's outline, a balcony's or a terrace's slab); absent: the drawing's."
         },
         "fireRating": {
           "anyOf": [
@@ -141039,6 +141071,24 @@
       },
       "required": [
         "exit",
+        "basis"
+      ],
+      "type": "object"
+    },
+    "DeclaredExternal": {
+      "additionalProperties": false,
+      "description": "A declared exterior role and its basis (docs/adr/8124; EK-6 `IsExternal` of a wall, a slab): what changes the\ndrawing's own reading, a wall on its storey's outline or a balcony's or a terrace's slab being outside.",
+      "properties": {
+        "basis": {
+          "$ref": "#/$defs/DeclaredBasis"
+        },
+        "external": {
+          "description": "Evet: it faces the outside (an outer wall, a slab over open air); hayır: it does not.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "external",
         "basis"
       ],
       "type": "object"
@@ -189556,6 +189606,17 @@
                 }
               ]
             },
+            "external": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DeclaredExternal"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "A wall's or a slab's exterior role (docs/adr/8124, EK-6 `IsExternal`): over what the drawing says; null: the\ndrawing's again."
+            },
             "fireRating": {
               "anyOf": [
                 {
@@ -189591,6 +189652,35 @@
           "required": [
             "kind",
             "uids"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Acil çıkışlar (docs/adr/8124): the doors and stairs whose emergency exit role is written at once, the escape\nroutes' suggestion the author confirmed: those in `yes` are exits, those in `no` are not; each the author's\nstatement. A uid in both, none at all or one that is no door or stair is refused.",
+          "properties": {
+            "kind": {
+              "const": "exits",
+              "type": "string"
+            },
+            "no": {
+              "default": [],
+              "items": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "yes": {
+              "default": [],
+              "items": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind"
           ],
           "type": "object"
         },

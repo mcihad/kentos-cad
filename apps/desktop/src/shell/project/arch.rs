@@ -104,6 +104,9 @@ pub struct ZoningTexts {
     pub zone: Option<kentos_commands::Zone>,
     /// Taşıyıcı sistem: the building's structural system and its traditional elements (docs/adr/8094).
     pub structure: Option<kentos_commands::BuildingStructure>,
+    /// Yangın güvenliği: the building's fire protection class and its basis as typed (docs/adr/8068, 8124).
+    pub fire_class: String,
+    pub fire_basis: String,
 }
 
 /// Taşıyıcı sistem's choices (docs/adr/8094): not said, or a system.
@@ -136,12 +139,16 @@ pub enum ZoningField {
     Far,
     Coverage,
     Datum,
+    /// The building's fire protection class, its basis (docs/adr/8124).
+    FireClass,
+    FireBasis,
 }
 
 impl ZoningTexts {
     /// The project's zoning as the form shows it.
     pub fn of(arch: Option<&ArchSettings>) -> Self {
         let z = arch.and_then(|a| a.zoning);
+        let fire = || arch.and_then(|a| a.performance.as_ref()).and_then(|p| p.fire_protection_class.as_ref());
         let t = |v: Option<f64>| {
             v.map(kentos_processing::text::js_number)
                 .unwrap_or_default()
@@ -156,6 +163,8 @@ impl ZoningTexts {
             plan_notes: super::plan_notes::rows(arch.map_or(&[][..], |a| a.plan_notes.as_slice())),
             zone: arch.and_then(|a| a.zone),
             structure: arch.and_then(|a| a.structure),
+            fire_class: fire().map(|d| d.value.clone()).unwrap_or_default(),
+            fire_basis: fire().map(|d| d.basis.field()).unwrap_or_default(),
         }
     }
 
@@ -165,7 +174,26 @@ impl ZoningTexts {
             ZoningField::Far => self.far = text,
             ZoningField::Coverage => self.coverage = text,
             ZoningField::Datum => self.datum = text,
+            ZoningField::FireClass => self.fire_class = text,
+            ZoningField::FireBasis => self.fire_basis = text,
         }
+    }
+
+    /// The building's fire protection class typed (docs/adr/8124), its basis one line: none when the class is empty.
+    pub fn performance(&self) -> Result<Option<kentos_commands::BuildingPerformance>, String> {
+        let value = self.fire_class.trim();
+        if value.is_empty() {
+            if !self.fire_basis.trim().is_empty() {
+                return Err("Dayanak belgesi binanın yangın koruma sınıfınındır: önce sınıfı yazın.".into());
+            }
+            return Ok(None);
+        }
+        let basis = kentos_commands::DeclaredBasis::read(&self.fire_basis)?;
+        let class = kentos_commands::Declared { value: value.to_owned(), basis };
+        if let Some(why) = class.problem("binanın yangın koruma sınıfı") {
+            return Err(why);
+        }
+        Ok(Some(kentos_commands::BuildingPerformance { fire_protection_class: Some(class) }))
     }
 
     /// The zoning typed: none when all three are empty; the parcel's area when any is given.
@@ -282,19 +310,39 @@ pub(super) fn zoning_view<'a>(
     super::group::<Message>("İmar durumu", body)
 }
 
-/// Yangın güvenliği (docs/adr/8035): whether the building has a sprinkler system, the fire regulation's escape
-/// distances read by it.
+/// Yangın güvenliği (docs/adr/8035, 8124): whether the building has a sprinkler system, the fire regulation's escape
+/// distances read by it; the building's fire protection class and its basis, which the model carries.
 pub(super) fn fire_view<'a>(
     t: &'a ZoningTexts,
     on: impl Fn(bool) -> Message + 'a,
+    on_text: impl Fn(ZoningField, String) -> Message + Copy + 'a,
 ) -> Element<'a, Message> {
+    let line = |name: &'static str, holder: &'static str, value: &'a str, wrong: bool, f: ZoningField| {
+        row![
+            container(label::body(name)).width(typography::scaled(140.0)),
+            container(field(holder, value, wrong, move |v| on_text(f, v))).width(typography::scaled(330.0)),
+        ]
+        .spacing(8)
+        .align_y(Center)
+    };
+    let basis_wrong = kentos_commands::DeclaredBasis::read(&t.fire_basis).is_err();
     let body = Column::new()
         .spacing(6)
         .push(kentos_ui::widget::Switch::new(t.sprinklers, on).label("Yağmurlama (sprinkler) sistemi var"))
+        .push(line("Yangın koruma sınıfı", "Yok", &t.fire_class, false, ZoningField::FireClass))
+        .push(line(
+            "Dayanak belgesi",
+            "Müellif beyanı",
+            &t.fire_basis,
+            basis_wrong,
+            ZoningField::FireBasis,
+        ))
         .push(label::caption(
             "Denetim › Mevzuat kaçış uzaklıklarını Binaların Yangından Korunması Hakkında Yönetmelik'e göre ölçer: \
              en uzak nokta duvardan 40 cm içeride alınır (32/6), sınırlar Ek-5/B'den ve konutta 48/2'den gelir \
-             (yağmurlamalı binada daha uzun). Korunumlu merdiven, yangın kapısı ve güvenlik holü çizimden okunmaz.",
+             (yağmurlamalı binada daha uzun). Korunumlu merdiven, yangın kapısı ve güvenlik holü çizimden okunmaz. \
+             Yangın koruma sınıfı binanın modelinde yazılır; müellifin beyanıdır, dayanağı bir belgeyse adını ve gününü \
+             yazın: Rapor 41 (2026-02-28).",
         ));
     super::group::<Message>("Yangın güvenliği", body)
 }
@@ -468,6 +516,7 @@ pub fn read(
     // The parcel's plan notes (docs/adr/8084) and its area's use (docs/adr/8085).
     let plan_notes = super::plan_notes::read(&zoning.plan_notes)?;
     let zone = zoning.zone;
+    let performance = zoning.performance()?;
     // The building's structural system (docs/adr/8094).
     let structure = zoning.structure;
     let site = {
@@ -539,9 +588,9 @@ pub fn read(
         plan_notes,
         zone,
         structure,
-        // The building's fire protection class (docs/adr/8068) and the form's answers (docs/adr/8077) are their own
-        // windows': kept as the project has them.
-        performance: choices.and_then(|a| a.performance.clone()),
+        // The building's fire protection class (docs/adr/8068, 8124): this form's Yangın güvenliği.
+        performance,
+        // The form's answers (docs/adr/8077) are their own window's: kept as the project has them.
         form_answers: choices.map_or_else(Vec::new, |a| a.form_answers.clone()),
         // So is the delivery record (docs/adr/8099).
         deliveries: choices.map_or_else(Vec::new, |a| a.deliveries.clone()),

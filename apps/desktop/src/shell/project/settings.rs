@@ -1181,7 +1181,11 @@ impl App {
                     |i, e| event(Event::ArchPlanNote(i, e)),
                     event(Event::AddPlanNote),
                 ),
-                super::arch::fire_view(&s.arch_zoning, |on| event(Event::ArchSprinklers(on))),
+                super::arch::fire_view(
+                    &s.arch_zoning,
+                    |on| event(Event::ArchSprinklers(on)),
+                    |f, t| event(Event::ArchZoning(f, t)),
+                ),
                 super::arch::structure_view(
                     &s.arch_zoning,
                     |x| event(Event::ArchStructure(x)),
