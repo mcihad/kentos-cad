@@ -106,6 +106,7 @@ mod view_twist;
 mod wipeouts;
 mod wall_chain_escape;
 mod wall_rectangle;
+mod wall_restyle;
 mod architecture_settings;
 mod wall_dimensions;
 mod wall_display;

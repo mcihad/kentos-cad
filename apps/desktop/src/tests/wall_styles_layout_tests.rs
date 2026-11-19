@@ -304,3 +304,43 @@ fn wide_standard_wall_styles_keeps_its_natural_size_and_cancel_keeps_the_model()
         before
     );
 }
+
+#[test]
+fn width_keeps_decimal_input_focused_and_rejects_invalid_drafts_on_save() {
+    let _guard = crate::appearance::tests::TYPOGRAPHY.lock();
+    let _restore = RestoreTypography;
+    let mut app = open(Size::new(1280., 800.), 14, false);
+    let before = app.saved_wall_styles();
+    let id = app
+        .arch
+        .wall_styles
+        .as_ref()
+        .unwrap()
+        .chosen
+        .clone()
+        .unwrap();
+    for input in ["0", "0,", "0,2", "0,28", "0,28x"] {
+        let _ = app.wall_styles_event(Event::Width(input.into()));
+        let draft = app.arch.wall_styles.as_ref().unwrap();
+        assert_eq!(draft.width_typed, input);
+        assert!(!draft.show_problem);
+        assert_eq!(app.saved_wall_styles(), before);
+    }
+    let _ = app.wall_styles_event(Event::Save);
+    assert!(app.arch.wall_styles.as_ref().unwrap().show_problem);
+    assert_eq!(app.saved_wall_styles(), before);
+    let _ = app.wall_styles_event(Event::Choose(None));
+    let _ = app.wall_styles_event(Event::Choose(Some(id.clone())));
+    assert_eq!(app.arch.wall_styles.as_ref().unwrap().width_typed, "0,28x");
+    let _ = app.wall_styles_event(Event::Width("0,28".into()));
+    let _ = app.wall_styles_event(Event::Save);
+    assert!(app.arch.wall_styles.is_none());
+    assert_eq!(
+        app.saved_wall_styles()
+            .iter()
+            .find(|s| s.id == id)
+            .unwrap()
+            .width,
+        Some(0.28)
+    );
+}

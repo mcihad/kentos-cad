@@ -58,7 +58,7 @@ impl Answerer {
 
 /// The connections open now, to end with the link.
 #[cfg(unix)]
-type Open = Arc<std::sync::Mutex<Vec<std::os::unix::net::UnixStream>>>;
+type Open = Arc<std::sync::Mutex<std::collections::HashMap<u64, std::os::unix::net::UnixStream>>>;
 #[cfg(not(unix))]
 type Open = Arc<std::sync::Mutex<Vec<()>>>;
 
@@ -75,7 +75,7 @@ impl Drop for Link {
         self.stop.store(true, Ordering::SeqCst);
         #[cfg(unix)]
         if let Ok(streams) = self.open.lock() {
-            for s in streams.iter() {
+            for s in streams.values() {
                 let _ = s.shutdown(std::net::Shutdown::Both);
             }
         }
@@ -196,6 +196,24 @@ impl Link {
     }
 }
 
+/// Owned by the reader. Also dropped if its thread cannot be started.
+#[cfg(unix)]
+struct Connection {
+    id: u64,
+    open: Open,
+    heard: channel::UnboundedSender<Heard>,
+}
+
+#[cfg(unix)]
+impl Drop for Connection {
+    fn drop(&mut self) {
+        if let Ok(mut streams) = self.open.lock() {
+            streams.remove(&self.id);
+        }
+        let _ = self.heard.unbounded_send(Heard::Closed(self.id));
+    }
+}
+
 #[cfg(unix)]
 fn accept(
     listener: std::os::unix::net::UnixListener,
@@ -212,9 +230,18 @@ fn accept(
                 let (Ok(writer), Ok(kept)) = (stream.try_clone(), stream.try_clone()) else {
                     continue;
                 };
-                if let Ok(mut streams) = open.lock() {
-                    streams.push(kept);
+                {
+                    let Ok(mut streams) = open.lock() else { return };
+                    if stop.load(Ordering::SeqCst) {
+                        return;
+                    }
+                    streams.insert(id, kept);
                 }
+                let connection = Connection {
+                    id,
+                    open: open.clone(),
+                    heard: heard.clone(),
+                };
                 let (answers, lines) = mpsc::channel::<String>();
                 if heard
                     .unbounded_send(Heard::Connected(id, Answerer(answers)))
@@ -222,24 +249,7 @@ fn accept(
                 {
                     return;
                 }
-                let out = heard.clone();
-                let _ = std::thread::Builder::new()
-                    .name("kentos-ajan-oku".into())
-                    .spawn(move || {
-                        for line in BufReader::new(stream).lines() {
-                            let Ok(line) = line else { break };
-                            if line.trim().is_empty() {
-                                continue;
-                            }
-                            let request = serde_json::from_str::<Value>(&line)
-                                .unwrap_or_else(|_| serde_json::json!({ "garbled": line }));
-                            if out.unbounded_send(Heard::Request(id, request)).is_err() {
-                                return;
-                            }
-                        }
-                        let _ = out.unbounded_send(Heard::Closed(id));
-                    });
-                let _ = std::thread::Builder::new()
+                if std::thread::Builder::new()
                     .name("kentos-ajan-yaz".into())
                     .spawn(move || {
                         let mut writer = writer;
@@ -250,6 +260,28 @@ fn accept(
                                 .and_then(|()| writer.flush())
                                 .is_err()
                             {
+                                let _ = writer.shutdown(std::net::Shutdown::Both);
+                                return;
+                            }
+                        }
+                    })
+                    .is_err()
+                {
+                    continue;
+                }
+                let out = heard.clone();
+                let _ = std::thread::Builder::new()
+                    .name("kentos-ajan-oku".into())
+                    .spawn(move || {
+                        let _connection = connection;
+                        for line in BufReader::new(stream).lines() {
+                            let Ok(line) = line else { break };
+                            if line.trim().is_empty() {
+                                continue;
+                            }
+                            let request = serde_json::from_str::<Value>(&line)
+                                .unwrap_or_else(|_| serde_json::json!({ "garbled": line }));
+                            if out.unbounded_send(Heard::Request(id, request)).is_err() {
                                 return;
                             }
                         }
@@ -263,5 +295,49 @@ fn accept(
                 return;
             }
         }
+    }
+}
+
+#[cfg(all(test, unix))]
+mod tests {
+    use super::*;
+    use iced::futures::{StreamExt, executor::block_on};
+    use std::os::unix::net::{UnixListener, UnixStream};
+
+    #[test]
+    fn disconnected_clients_release_only_their_own_socket() {
+        let path = std::env::temp_dir().join(format!(
+            "kentos-link-{}.sock",
+            kentos_domain::Uuid::now_v7()
+        ));
+        let listener = UnixListener::bind(&path).unwrap();
+        listener.set_nonblocking(true).unwrap();
+        let link = Link {
+            path: path.clone(),
+            stop: Arc::default(),
+            open: Arc::default(),
+        };
+        let (tx, mut rx) = channel::unbounded();
+        let kept = UnixStream::connect(&path).unwrap();
+        let (stop, open) = (link.stop.clone(), link.open.clone());
+        let thread = std::thread::spawn(move || accept(listener, &stop, &open, &tx));
+        let Some(Heard::Connected(kept_id, _kept_writer)) = block_on(rx.next()) else {
+            panic!("first connection")
+        };
+        for _ in 0..4 {
+            let short = UnixStream::connect(&path).unwrap();
+            let Some(Heard::Connected(id, _writer)) = block_on(rx.next()) else {
+                panic!("short connection")
+            };
+            drop(short);
+            assert!(matches!(block_on(rx.next()), Some(Heard::Closed(closed)) if closed == id));
+            let active = link.open.lock().unwrap();
+            assert_eq!(active.len(), 1);
+            assert!(active.contains_key(&kept_id));
+        }
+        drop(link);
+        drop(kept);
+        thread.join().unwrap();
+        assert!(!path.exists());
     }
 }

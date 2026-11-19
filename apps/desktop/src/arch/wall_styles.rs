@@ -67,6 +67,9 @@ pub struct Window {
     /// The number fields as typed: the width, then each component's by its place.
     typed: HashMap<(usize, Field), String>,
     width_typed: String,
+    /// Keep unparseable drafts when the user switches to another style.
+    invalid_widths: HashMap<String, String>,
+    show_problem: bool,
     /// Yangın dayanımı as typed (docs/adr/8068); the draft keeps it trimmed, empty none.
     fire_typed: String,
     usage: HashMap<String, usize>,
@@ -90,6 +93,7 @@ pub enum Event {
     RemoveDropped,
     Name(String),
     Width(String),
+    CheckWidth,
     /// Yangın dayanımı typed (docs/adr/8068): a KentOS style is taken into the project's table to keep it.
     FireRating(String),
     /// Taşıyıcı chosen (docs/adr/8137): evet, hayır or not declared; a KentOS style is taken into the project's table.
@@ -160,6 +164,12 @@ impl Window {
     }
 
     fn problem(&self) -> Option<String> {
+        if let Some(style) = self.styles.iter().find(|s| self.invalid_widths.contains_key(&s.id)) {
+            return Some(format!(
+                "“{}” için kalınlığı metre cinsinden sayı olarak girin",
+                style.name
+            ));
+        }
         wall_styles_problem(&self.styles)
     }
 
@@ -190,7 +200,8 @@ impl Window {
         let Some((s, _)) = self.shown_style() else {
             return;
         };
-        let (width, comps) = (shown(s.width), s.components.clone());
+        let width = self.invalid_widths.get(&s.id).cloned().unwrap_or_else(|| shown(s.width));
+        let comps = s.components.clone();
         let fire = s.fire_rating.as_ref().map_or_else(String::new, |d| d.value.clone());
         self.width_typed = width;
         self.fire_typed = fire;
@@ -267,6 +278,8 @@ impl App {
             chosen,
             typed: HashMap::new(),
             width_typed: String::new(),
+            invalid_widths: HashMap::new(),
+            show_problem: true,
             fire_typed: String::new(),
             usage,
             asking: None,
@@ -282,7 +295,10 @@ impl App {
         self.arch
             .wall_styles
             .as_ref()
-            .is_some_and(|w| w.styles != self.saved_wall_styles())
+            .is_some_and(|w| {
+                w.styles != self.saved_wall_styles()
+                    || w.styles.iter().any(|s| w.invalid_widths.contains_key(&s.id))
+            })
     }
 
     /// Kaydet: each style removed, made or changed through `cad.styles.edit`, in one undo step.
@@ -291,6 +307,10 @@ impl App {
             return;
         };
         if w.problem().is_some() {
+            if let Some(window) = self.arch.wall_styles.as_mut() {
+                window.show_problem = true;
+                window.closing = false;
+            }
             return;
         }
         let saved = self.saved_wall_styles();
@@ -418,6 +438,7 @@ impl App {
         let Some(w) = self.arch.wall_styles.as_mut() else {
             return Task::none();
         };
+        w.show_problem = !matches!(event, Event::Width(_));
         match event {
             Event::Choose(id) => {
                 w.chosen = id;
@@ -485,12 +506,22 @@ impl App {
                 }
             }
             Event::Width(typed) => {
-                let value = number(&typed);
-                w.width_typed = typed;
-                if let (Ok(v), Some(s)) = (value, w.own()) {
-                    s.width = v;
+                if let Some(id) = w.chosen.clone() {
+                    match number(&typed) {
+                        Ok(value) => {
+                            w.invalid_widths.remove(&id);
+                            if let Some(style) = w.own() {
+                                style.width = value;
+                            }
+                        }
+                        Err(()) => {
+                            w.invalid_widths.insert(id, typed.clone());
+                        }
+                    }
                 }
+                w.width_typed = typed;
             }
+            Event::CheckWidth => {}
             Event::FireRating(typed) => {
                 let value = typed.trim().to_owned();
                 w.fire_typed = typed;
@@ -714,22 +745,20 @@ impl App {
             .width(Fill)
             .push(form)
             .push(words::field("Kesit (ayrıntılı)", preview, None));
-        let mut body = Column::new().spacing(12);
-        let problem = w.problem();
-        if let Some(p) = &problem {
-            body = body.push(words::summary(vec![words::text_line(
-                Line::Warn,
-                format!("Duvar stilleri: {p}."),
-            )]));
-        }
-        let body = body.push(row![side, main].spacing(16));
+        // The form stays the first child of the scroll area throughout an edit:
+        // inserting an error above it replaced the focused text widget on the first zero.
+        let body = row![side, main].spacing(16);
+        let problem = w.show_problem.then(|| w.problem()).flatten();
         let can_save = problem.is_none() && self.wall_styles_changed();
-        let window = Frame_::new(TITLE)
+        let mut dialog = Frame_::new(TITLE)
             .scroll(body)
             .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
             .action(words::primary(SAVE, can_save.then(|| msg(Event::Save))))
-            .width(860.0)
-            .modal(msg(Event::Close));
+            .width(860.0);
+        if let Some(p) = problem {
+            dialog = dialog.status(words::text_line(Line::Warn, p));
+        }
+        let window = dialog.modal(msg(Event::Close));
         if w.closing {
             use crate::unsaved_close::Answer;
             let question = kentos_ui::widget::unsaved(
@@ -773,7 +802,8 @@ impl App {
         let fixed = kentos_commands::fixed_width(&s.components);
         let width = kentos_ui::widget::text_field("", &w.width_typed)
             .on_input(|t| msg(Event::Width(t)))
-            .style(style::field::validated(number(&w.width_typed).is_err()));
+            .on_submit(msg(Event::CheckWidth))
+            .style(style::field::validated(w.show_problem && number(&w.width_typed).is_err()));
         let width_hint = match fixed {
             Some(f) => format!("Bileşenlerin toplamı: {}", format.length(f)),
             None => format!("Yeni duvarın; şimdi {}", format.length(s.new_width())),
@@ -812,7 +842,7 @@ impl App {
         let top = row![
             container(words::field("Ad", name, None)).width(Fill),
             // A wall's width is its Kalınlık, as the tool, its panel and Öznitelikler say (docs/adr/8003).
-            container(words::field("Kalınlık", width, Some(width_hint))).width(Fill),
+            container(words::field("Kalınlık (m)", width, Some(width_hint))).width(Fill),
             container(words::field("Şematik dolgu", fill, None)).width(Fill),
             container(words::field(
                 "Yangın dayanımı",

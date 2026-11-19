@@ -96,6 +96,8 @@ pub struct WallEditTool {
     end: Option<(Slot, Option<WallEnd>)>,
     /// Stili değiştir: every wall of the style, or the one clicked.
     all: bool,
+    /// The exact command reviewed in the prompt, guarded by the revision it was planned on.
+    style_plan: Option<(WallsEdit, String)>,
     hover: Option<(Slot, Vec2)>,
     /// The walls picked, ringed: the target dashed, the gathered and the chosen end's wall solid, the end's square;
     /// drawn again after each event (`see`).
@@ -112,7 +114,8 @@ impl WallEditTool {
             target: None,
             gathered: Vec::new(),
             end: None,
-            all: true,
+            all: false,
+            style_plan: None,
             hover: None,
             drawn: Preview::default(),
             offer: Vec::new(),
@@ -286,38 +289,54 @@ impl WallEditTool {
         );
     }
 
-    fn give_style(&mut self, to: &str, cx: &mut Context<'_>) {
+    fn review_style(&mut self, to: &str, cx: &mut Context<'_>) {
+        self.style_plan = None;
         let Some(slot) = self.target else { return };
         let Some(Entity::Wall(w)) = cx.doc.get(slot) else {
             return;
         };
+        let current_width = w.wall.width;
         let Some(from) = w.wall.style.clone() else {
             cx.say(
                 Level::Warn,
-                "Duvarın stili yok; stilsiz duvara Öznitelikler'den stil verin.",
+                "Duvarın stili yok; stilli bir duvara tıklayın.",
             );
             return;
         };
         let uids = if self.all {
             Vec::new()
         } else {
-            Self::uid(cx, slot).into_iter().collect()
+            let Some(uid) = Self::uid(cx, slot) else {
+                return;
+            };
+            vec![uid]
         };
-        if let Some(done) = self.run(
+        let input = WallsEdit {
             uids,
-            WallsOperation::ReplaceStyle {
+            operation: WallsOperation::ReplaceStyle {
                 from,
                 to: to.to_owned(),
                 keep: None,
             },
-            cx,
-        ) {
-            cx.say(
-                Level::Success,
-                format!("{}: {} duvar.", self.action.label(), done.walls.len()),
-            );
-            self.target = None;
-        }
+            expected_revision: Some(cx.doc.revision().to_string()),
+        };
+        let result = walls_edit::plan(&ExecutionContext::new(cx.doc), &input);
+        let Some(plan) = points::written(result, cx) else {
+            return;
+        };
+        let Some((style, _)) = kentos_native_application::walls::find_style(cx.doc, to) else {
+            return;
+        };
+        let format = cx.format();
+        let width = match kentos_commands::fixed_width(&style.components) {
+            Some(width) => format!("kalınlık {}", format.length(width)),
+            None => format!(
+                "kalınlık korunur (seçilen: {})",
+                format.length(current_width)
+            ),
+        };
+        let review = format!("{} · {} duvar · {width}", style.name, plan.walls.len());
+        self.style_plan = Some((input, review));
     }
 }
 
@@ -345,6 +364,12 @@ impl Tool for WallEditTool {
             Action::Join => prompt
                 .note(format!("{} duvar", self.gathered.len()))
                 .option("Birleştir", "Enter"),
+            Action::Restyle if let Some((_, review)) = &self.style_plan => {
+                Prompt::new(self.action.label(), review.clone())
+                    .option("Uygula", "Enter")
+                    .option("Stil", "S")
+                    .toggle("Tümü", "T", self.all)
+            }
             Action::Restyle if self.target.is_some() => {
                 prompt.option("Stil", "S").toggle("Tümü", "T", self.all)
             }
@@ -475,7 +500,10 @@ impl Tool for WallEditTool {
                     cx.say(Level::Success, said);
                 }
             }
-            Action::Restyle => self.target = Some(slot),
+            Action::Restyle => {
+                self.style_plan = None;
+                self.target = Some(slot);
+            }
             Action::Joins => self.end = Some((slot, Self::end_near(cx, slot, p.raw))),
         }
         self.see(cx);
@@ -510,7 +538,7 @@ impl Tool for WallEditTool {
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
         if self.action == Action::Restyle && key == "S" {
-            self.give_style(typed, cx);
+            self.review_style(typed, cx);
             self.see(cx);
             return true;
         }
@@ -519,6 +547,19 @@ impl Tool for WallEditTool {
 
     /// Enter: Birleştir joins what it gathered; the others leave.
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
+        if let Some((input, _)) = self.style_plan.take() {
+            let result = walls_edit::execute(&mut ExecutionContext::new(cx.doc), input);
+            if let Some(done) = points::written(result, cx) {
+                cx.say(
+                    Level::Success,
+                    format!("Stili değiştir: {} duvar.", done.walls.len()),
+                );
+                self.target = None;
+                self.all = false;
+            }
+            self.see(cx);
+            return Flow::Stay;
+        }
         if self.action == Action::Join && self.gathered.len() >= 2 {
             let uids: Vec<String> = self
                 .gathered
@@ -544,6 +585,7 @@ impl Tool for WallEditTool {
     /// Esc: the gathered walls, the target or the chosen end go first.
     fn cancel(&mut self, cx: &mut Context<'_>) -> bool {
         if !self.gathered.is_empty() || self.target.is_some() || self.end.is_some() {
+            self.style_plan = None;
             self.gathered.clear();
             self.target = None;
             self.end = None;
@@ -554,6 +596,7 @@ impl Tool for WallEditTool {
     }
 
     fn undo_step(&mut self, cx: &mut Context<'_>) -> bool {
+        self.style_plan = None;
         let took = self.gathered.pop().is_some()
             || (self.action.targets() && self.target.take().is_some());
         if took {
@@ -584,10 +627,15 @@ impl WallEditTool {
         match self.action {
             Action::Restyle if key == "T" => {
                 self.all = !self.all;
+                if let Some((input, _)) = self.style_plan.take()
+                    && let WallsOperation::ReplaceStyle { to, .. } = input.operation
+                {
+                    self.review_style(&to, cx);
+                }
                 true
             }
             Action::Restyle if self.target.is_some() && !key.is_empty() && key != "S" => {
-                self.give_style(js_trim(text), cx);
+                self.review_style(js_trim(text), cx);
                 true
             }
             Action::Joins => {
