@@ -140,3 +140,35 @@ sahnedeki poligonu seçemiyoruz, seçmeye uygun”.
 - Gerçek pencerede: Parsel sınırı'ndaki alan üzerine gelince vurgulandı ve tıklayınca alındı (“1 seçili”). Pencere “1
   kapalı alan; seçili nesneler” dedi. Çalıştır “1 nesneye 4 kenar uzunluğu yazıldı.” dedi; üst kenarda “306.505” okundu.
 - **Web:** ertelendi (ADR 0228; TODOS.md §0.2).
+
+## Güncelleme 2 (19 Kasım 2026): saklı tür daraltması seçimi engellemez
+
+**Sahibin sorusu (ilk düzeltmeden sonra):** “Kenar uzunluklarını yaz ProcessingTool halen çalışmıyor neden?”
+
+**Sahibinin kendi oturumunda bulundu:**
+
+- `islemler.json` aracın son değerlerinde `input: {scope: layer, layerId: cizim, kinds: ["line"]}` tutuyordu. Bu, eski bir
+  oturumda tür çiplerinden yalnız Çizgi'nin bırakılmasıydı.
+- Daraltma her açılışta geri geliyordu. Kapsamda nesne yokken çipler gizliydi, yani daraltma görünmüyordu.
+- Sahneden seç türleri bu daraltmadan alıyordu. Pencere “Uygun nesneler: kapalı alan, çoklu çizgi, çizgi” derken alan
+  tıklanınca alınmıyordu, Katman kapsamı da “uygun nesne yok” diyordu.
+- Bir kez çip tıklanınca araç poligon için kalıcı olarak bozuluyordu.
+
+**Karar:**
+
+- **Son değerler geri gelir, tür daraltması gelmez.** Daraltma o an kapsamdakileri süzer. Sonraki açılışta gizli bir süzgeç
+  olarak kalmaz (`without_kind_narrowing`). Bir modelin adımı ve toplu çalıştırmanın satırı verilen değerleri korur.
+- **Sahneden seç aracın kendi türlerini alır**, pencerenin “Uygun nesneler”ini. Seçilen nesneler alanındır: kapsam Seçili
+  olur, daraltma kalkar. İki ya da daha çok tür seçilirse çipler onları yeniden süzer.
+- **Daraltma her zaman görünür.** Kapsamda olmayan türleri çipte 0 sayısıyla gösterilir. Kapsamda hiç nesne yokken aracın
+  türleri de gösterilir; tek tıkla geri alınır.
+
+**Doğrulama:**
+
+- `processing::tests::a_remembered_kind_narrowing_does_not_come_back`: saklı Parsel + Çizgi açılışta yalnız Parsel kalır,
+  parsel sayılır.
+- `processing::tests::a_remembered_kind_narrowing_does_not_refuse_a_picked_area`.
+- Gerçek pencerede, sahibin `islemler.json`'ının ve çiziminin kopyasıyla, yalıtılmış bir ev dizininde:
+  - pencere “1 kapalı alan; “Çizim” katmanında” dedi;
+  - Çalıştır “1 nesneye 4 kenar uzunluğu yazıldı.” dedi;
+  - Sahneden seç alanı aldı.

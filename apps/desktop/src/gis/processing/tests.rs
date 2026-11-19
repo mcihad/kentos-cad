@@ -502,6 +502,67 @@ fn input_objects_are_picked_from_another_layer_with_otomatik_secim_off() {
     assert_eq!(window.inputs.get("input").map(|f| f.count), Some(1));
 }
 
+/// A kind narrowing chosen with the chips outlives the program (islemler.json) and was hidden while nothing was in
+/// scope: Çizgi alone refused the polygon the window called eligible (the owner, 19 November 2026). Sahneden seç takes
+/// the tool's own kinds, and the objects picked are the field's, the narrowing gone.
+#[test]
+fn a_remembered_kind_narrowing_does_not_refuse_a_picked_area() {
+    use crate::selecting::tests::{click, objects};
+    use iced::keyboard::key::Named;
+
+    let mut app = objects();
+    let _ = app.update(Message::Run("processing.run.annotation.edgeLengths"));
+    event(
+        &mut app,
+        Event::Value(
+            "input".into(),
+            json!({ "scope": "selection", "kinds": ["line"] }),
+        ),
+    );
+    event(&mut app, Event::PickObjects("input".into()));
+    click(&mut app, -18.0, 9.0);
+    assert_eq!(
+        app.selection.ids(),
+        &[Slot(4)],
+        "the parcel, though Çizgi alone was chosen"
+    );
+    key(&mut app, Named::Enter);
+    let window = app.gis.processing.dialog.as_ref().expect("back");
+    assert_eq!(
+        window.values.get("input"),
+        Some(&json!({ "scope": "selection" }))
+    );
+    assert_eq!(window.inputs.get("input").map(|f| f.count), Some(1));
+}
+
+/// The last values come back, a kind narrowing not: Kenar uzunluklarını yaz remembered Katman Parsel with Çizgi alone,
+/// and the window said the layer held no eligible object though its parcel was there (the owner's islemler.json, 19
+/// November 2026).
+#[test]
+fn a_remembered_kind_narrowing_does_not_come_back() {
+    use crate::selecting::tests::objects;
+
+    let mut app = objects();
+    let mut last = kentos_processing::Values::new();
+    last.insert(
+        "input".into(),
+        json!({ "scope": "layer", "layerId": "parsel", "kinds": ["line"] }),
+    );
+    last.insert("decimals".into(), json!(2.0));
+    app.gis
+        .processing
+        .memory
+        .remember("annotation.edgeLengths", &last);
+    let _ = app.update(Message::Run("processing.run.annotation.edgeLengths"));
+    let window = app.gis.processing.dialog.as_ref().expect("open");
+    assert_eq!(
+        window.values.get("input"),
+        Some(&json!({ "scope": "layer", "layerId": "parsel" }))
+    );
+    assert_eq!(window.values.get("decimals"), Some(&json!(2.0)), "the rest comes back");
+    assert_eq!(window.inputs.get("input").map(|f| f.count), Some(1), "the parcel");
+}
+
 #[test]
 fn an_alias_on_the_command_line_opens_the_tool_and_last_values_come_back() {
     let mut app = app_with_parcels();

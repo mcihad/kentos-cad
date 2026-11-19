@@ -353,6 +353,8 @@ impl App {
                 ViewChange::InfoCard(card) => self.info_card = card,
                 // Konumdan adres's place: its address looked for after the update (address/).
                 ViewChange::AddressAt(p) => self.gis.address.wanted.push(p),
+                // Otomatik seçim off left other layers' objects out: a notice offers to turn it on (layer_types.rs).
+                ViewChange::LayerLeftOut => self.offer_auto_select(),
                 // Çizimden: the point goes to the window that asked, which opens again (calc/).
                 ViewChange::Picked(p) => {
                     if !self.processing_picked(p)

@@ -238,8 +238,24 @@ fn features<'a>(
         .spacing(6)
         .align_y(Center),
     );
-    // Kind chips: only when there is a choice (two or more kinds in scope), or to undo one.
-    let present = found.map(|f| f.by_kind.as_slice()).unwrap_or_default();
+    // Kind chips: only when there is a choice (two or more kinds in scope), or to undo one. A narrowing is always seen:
+    // its kinds with none in scope show with 0, and with nothing in scope the tool's kinds show too, so a click undoes
+    // it. Hidden, Çizgi alone refused the polygon the window called eligible (the owner, 19 November 2026).
+    let in_scope = found.map(|f| f.by_kind.as_slice()).unwrap_or_default();
+    let mut shown: Vec<(String, usize)> = in_scope.to_vec();
+    if let Some(chosen) = &value.kinds {
+        let taken: &[String] = if in_scope.is_empty() {
+            kinds.unwrap_or_default()
+        } else {
+            &[]
+        };
+        for k in chosen.iter().chain(taken) {
+            if !shown.iter().any(|(s, _)| s == k) {
+                shown.push((k.clone(), 0));
+            }
+        }
+    }
+    let present = shown.as_slice();
     if present.len() >= 2 || (value.kinds.is_some() && !present.is_empty()) {
         let on = |k: &str| {
             value

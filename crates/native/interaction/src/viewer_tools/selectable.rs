@@ -13,7 +13,7 @@ use kentos_native_application::entities_select::{self, Selected};
 use crate::Vec2;
 use crate::data_search::kind_name;
 use crate::log::Level;
-use crate::tool::Context;
+use crate::tool::{Context, ViewChange};
 
 /// The kinds the filter can hold, in its menu's order (the web's `FILTER_KINDS`).
 pub const KINDS: [&str; 30] = [
@@ -85,10 +85,12 @@ pub fn on_selected_layer(doc: &Document, e: &Entity) -> bool {
     only_layer(doc).is_none_or(|layer| e.base().layer_id == layer)
 }
 
-/// Says that Otomatik seçim, off, left `n` objects of other layers out of a selection; nothing when none.
+/// Says that Otomatik seçim, off, left `n` objects of other layers out of a selection, and tells the host, which
+/// offers to turn it on; nothing when none.
 pub fn say_layer_left(cx: &mut Context<'_>, n: usize) {
     if let Some(words) = layer_left_words(cx.doc, n) {
         cx.say(Level::Info, words);
+        cx.view_changes.push(ViewChange::LayerLeftOut);
     }
 }
 
@@ -247,6 +249,7 @@ pub fn candidates(cx: &mut Context<'_>, at: Vec2) -> Vec<Slot> {
         // The click fell on another layer's object while Otomatik seçim is off (docs/adr/0622 §5).
         let words = other_layer_words(cx.doc);
         cx.say(Level::Info, words);
+        cx.view_changes.push(ViewChange::LayerLeftOut);
     }
     if cx.draft.select_kinds.is_none() {
         return all;

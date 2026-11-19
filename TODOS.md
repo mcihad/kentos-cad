@@ -2452,7 +2452,11 @@ Liste:
 - [ ] Sahneden seç'in nesneleri her görünen katmandan (ADR 0088'in 19 Kasım 2026 güncellemesi, ADR 0622 §5): web'in İşlemler
   (`apps/web/src/ui/processing/`), Kenar eşleme, tablo ve ifade önizlemesi pencerelerindeki nesne seçicisi Otomatik seçim
   kapalıyken de alanın türlerini her görünen katmandan alsın (seçim süzgeci geçerli); hiçbir şey almayan tıklama nedenini
-  söylesin (süzgeç, alanın almadığı tür, formun katmanı).
+  söylesin (süzgeç, alanın almadığı tür, formun katmanı). Aynı günün eşleri:
+  - İşlemler'in son değerlerinden tür daraltması geri gelmesin; Sahneden seç aracın türlerini alsın; daraltma çipi her zaman
+    görünsün (ADR 0088 güncellemesi 2).
+  - Otomatik seçim kapanınca ve başka katmandaki nesne seçilmeyince düğmeli bildirim çıksın (ADR 0622 §5).
+  - Web'in `keymap.ts`'i macOS'ta Option ile yazılan simgeyi yazı saysın (ADR 0018 güncellemesi).
 
 ## 1. Koddan doğrulanan mevcut durum
 

@@ -134,6 +134,10 @@ fn a_windows_selection_pick_keeps_to_the_active_layer_and_says_why() {
             "Tıklanan nesne başka katmanda. Otomatik seçim kapalıyken yalnız etkin katmanın (“Çizim”) nesneleri seçilir: katmanı etkin yapın ya da Otomatik seçim'i açın."
         )
     );
+    assert!(
+        matches!(b.views.last(), Some(kentos_interaction::ViewChange::LayerLeftOut)),
+        "the host offers to turn Otomatik seçim on"
+    );
     b.drag([-30.0, 0.0], [-6.0, 20.0]);
     assert!(b.selected().is_empty());
 }

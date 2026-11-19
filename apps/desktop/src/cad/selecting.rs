@@ -309,6 +309,53 @@ pub(crate) mod tests {
         assert_eq!(app.snap, None, "the marker goes with the command");
     }
 
+    /// Otomatik seçim turned off (docs/adr/0622 §5), perhaps by a stray click on the status bar: a notice says what is
+    /// left to select and turns it back on (Geri aç). A click on another layer's object then selects nothing and a
+    /// notice offers Otomatik seçimi aç, whose click selects again (the owner, 19 November 2026: once it went wrong
+    /// nothing could be selected, and only a cut status line said why).
+    #[test]
+    fn otomatik_secim_off_says_why_and_its_notice_turns_it_on() {
+        let mut app = objects();
+        app.toasts.clear();
+        let _ = app.update(Message::Run("edit.autoSelect"));
+        assert!(!app.auto_select_on());
+        let (title, body, action) = {
+            let (_, toast, _) = app.toasts.iter().last().expect("a notice");
+            let action = toast.action_of().map(|(label, m)| (label.to_owned(), m.clone()));
+            (toast.title().to_owned(), toast.description().map(str::to_owned), action)
+        };
+        assert_eq!(title, "Otomatik seçim kapandı");
+        assert_eq!(
+            body.as_deref(),
+            Some(
+                "Yalnız etkin katmanın (“Çizim”) nesneleri seçilir. Bu katmanda 3 nesne var; başka katmanlardaki 4 \
+                 nesne seçilemez."
+            )
+        );
+        let (label, back) = action.expect("Geri aç");
+        assert_eq!(label, "Geri aç");
+        let _ = app.update(back);
+        assert!(app.auto_select_on(), "Geri aç turns it on");
+
+        let _ = app.update(Message::Run("edit.autoSelect"));
+        app.toasts.clear();
+        // The parcel is on Parsel, Çizim is active.
+        click(&mut app, -18.0, 9.0);
+        assert!(selected(&app).is_empty());
+        let (title, action) = {
+            let (_, toast, _) = app.toasts.iter().last().expect("a notice");
+            let action = toast.action_of().map(|(label, m)| (label.to_owned(), m.clone()));
+            (toast.title().to_owned(), action)
+        };
+        assert_eq!(title, "Başka katmandaki nesne seçilmedi");
+        let (label, on) = action.expect("Otomatik seçimi aç");
+        assert_eq!(label, "Otomatik seçimi aç");
+        let _ = app.update(on);
+        assert!(app.auto_select_on());
+        click(&mut app, -18.0, 9.0);
+        assert_eq!(selected(&app), [4]);
+    }
+
     #[test]
     fn the_store_follows_what_the_app_does_to_the_drawing() {
         let mut app = objects();

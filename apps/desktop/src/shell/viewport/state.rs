@@ -807,6 +807,7 @@ impl Viewport {
             | ViewChange::Command(_)
             | ViewChange::InfoCard(_)
             | ViewChange::AddressAt(_)
+            | ViewChange::LayerLeftOut
             | ViewChange::PlaceTable(..) => {}
             // Görünümü döndür: the view turns about its middle (docs/adr/0285 §2).
             ViewChange::Twist(t) => self.camera.twist = kentos_render_wgpu::normal_twist(t),

@@ -10,7 +10,7 @@ use kentos_commands::{
 };
 use kentos_native_application::{ExecutionContext, settings_set};
 use kentos_ui::icon::Icon;
-use kentos_ui::widget::Menu;
+use kentos_ui::widget::{Menu, Toast};
 
 use crate::app::{App, Message};
 use kentos_interaction::Level;
@@ -218,17 +218,69 @@ impl App {
         let said = if on {
             "Otomatik seçim açık: tıklama ve kutu bütün görünen katmanların nesnelerini seçer.".to_owned()
         } else {
-            let active = self.document.as_ref().map_or_else(String::new, |d| {
-                let layers = d.model.layers();
-                layers
-                    .get(layers.active())
-                    .map_or_else(String::new, |n| n.name.clone())
-            });
+            let active = self.active_layer_name();
             format!(
                 "Otomatik seçim kapalı: yalnız etkin katmanın (“{active}”) nesneleri seçilir. Başka katmanın nesnesi için o katmanı etkin yapın."
             )
         };
         self.say(Level::Success, said);
+        if !on {
+            // Turned off, perhaps by a stray click on the status bar's cell: what is left to select, and the way back.
+            // In a Mimari drawing, whose objects sit on their tools' layers, nothing is (19 November 2026).
+            let active = self.active_layer_name();
+            let toast = Toast::info("Otomatik seçim kapandı")
+                .body(format!(
+                    "Yalnız etkin katmanın (“{active}”) nesneleri seçilir. {}",
+                    self.reach_words()
+                ))
+                .action("Geri aç", Message::Run("edit.autoSelect"))
+                .duration(ACTION_NOTICE);
+            self.toast(toast);
+        }
+    }
+
+    /// A selection left other layers' objects out while Otomatik seçim is off (`ViewChange::LayerLeftOut`,
+    /// docs/adr/0622 §5): a notice says why where it is seen, the status line having cut it, and turns Otomatik seçim
+    /// on with one click; the same notice again counts up (toasts.rs).
+    pub(crate) fn offer_auto_select(&mut self) {
+        let active = self.active_layer_name();
+        let toast = Toast::info("Başka katmandaki nesne seçilmedi")
+            .body(format!(
+                "Otomatik seçim kapalı: yalnız etkin katmanın (“{active}”) nesneleri seçilir. Ya o katmanı \
+                 etkin yapın ya da otomatik seçimi açın."
+            ))
+            .action("Otomatik seçimi aç", Message::Run("edit.autoSelect"))
+            .duration(ACTION_NOTICE);
+        self.toast(toast);
+    }
+
+    /// The active layer's name; empty without a drawing.
+    fn active_layer_name(&self) -> String {
+        self.document.as_ref().map_or_else(String::new, |d| {
+            let layers = d.model.layers();
+            layers.get(layers.active()).map_or_else(String::new, |n| n.name.clone())
+        })
+    }
+
+    /// What Otomatik seçim, off, leaves to select: the active layer's objects and the others' (every object counted).
+    fn reach_words(&self) -> String {
+        let Some(doc) = self.document.as_ref() else {
+            return String::new();
+        };
+        let active = doc.model.layers().active();
+        let (mut here, mut other) = (0usize, 0usize);
+        for e in doc.model.entities() {
+            if e.base().layer_id == active {
+                here += 1;
+            } else {
+                other += 1;
+            }
+        }
+        match (here, other) {
+            (_, 0) => String::new(),
+            (0, n) => format!("Bu katmanda nesne yok; başka katmanlardaki {n} nesne seçilemez."),
+            (h, n) => format!("Bu katmanda {h} nesne var; başka katmanlardaki {n} nesne seçilemez."),
+        }
     }
 
     /// Whether Otomatik seçim is on in the open drawing (the ribbon's and the status bar's check).
@@ -238,6 +290,10 @@ impl App {
             .is_some_and(|d| d.model.settings().auto_select())
     }
 }
+
+/// How long a notice whose button turns Otomatik seçim on stays: a warning's 8 s, not a notice's 5 s, so that it is
+/// read and its button reached (the cursor over it stops the time too).
+const ACTION_NOTICE: std::time::Duration = std::time::Duration::from_secs(8);
 
 /// A new layer's name by its type.
 fn new_name(geometry: LayerGeometry) -> &'static str {

@@ -10,7 +10,8 @@
 //! their letters (CLAUDE.md §4.6); other keys follow their position; what
 //! goes into a field is the text. A symbol typed with AltGr is text, never a
 //! chord: Windows reports AltGr as Ctrl+Alt (Ctrl+Alt with a letter or a
-//! digit stays a chord, Ctrl+Alt+N).
+//! digit stays a chord, Ctrl+Alt+N), and macOS's Option, its third level's
+//! key, as Alt (Turkish Q's @ is ⌥Q).
 
 use iced::keyboard::key::{Named, Physical};
 use iced::keyboard::{self, Key, Modifiers};
@@ -96,11 +97,20 @@ impl KeyPress {
         (chars.next().is_none() && !c.is_control()).then_some(c)
     }
 
-    /// A symbol typed with AltGr, which Windows reports as Ctrl+Alt: text, not a chord.
+    /// A symbol typed with the key that picks a keyboard's third level: AltGr, which Windows reports as Ctrl+Alt, or
+    /// macOS's Option, which is Alt alone there (Turkish Q's @ is ⌥Q, its # ⌥3). Text, not a chord: on a Mac with
+    /// Turkish Q, ⌥Q was Alt+Q, Menülerde ara opened and “@12,0” went into its box. A letter or a digit stays a chord
+    /// (Ctrl+Alt+N; ⌥Q on a US layout types œ and is still Alt+Q).
     pub fn is_altgr_text(&self) -> bool {
-        self.modifiers.control()
-            && self.modifiers.alt()
-            && self.character().is_some_and(|c| !c.is_alphanumeric())
+        self.third_level_text(cfg!(target_os = "macos"))
+    }
+
+    /// [`Self::is_altgr_text`] on macOS (`mac`) or elsewhere, both platforms' rules testable on either.
+    fn third_level_text(&self, mac: bool) -> bool {
+        let m = self.modifiers;
+        let altgr = m.control() && m.alt();
+        let option = mac && m.alt() && !m.control() && !m.logo();
+        (altgr || option) && self.character().is_some_and(|c| !c.is_alphanumeric())
     }
 
     /// Ctrl, Alt or the logo key held, and not for AltGr text.
@@ -436,6 +446,36 @@ mod tests {
             Some("\u{e}"),
         );
         assert_eq!(chord(&new).as_deref(), Some("Ctrl+Alt+N"));
+    }
+
+    /// macOS's Option is the third level's key (Turkish Q's @ is ⌥Q, # ⌥3): the symbol it types is text that starts a
+    /// value, not Alt+Q's Menülerde ara (the owner's Mac, 19 November 2026: “@12,0” went into the search box).
+    /// Elsewhere Alt alone types nothing, so the rule is macOS's.
+    #[test]
+    fn option_symbols_are_text_on_macos() {
+        let at = press(ch("@"), Code::KeyQ, Modifiers::ALT, Some("@"));
+        assert!(at.third_level_text(true));
+        assert!(!at.third_level_text(false), "Alt alone types no symbol off macOS");
+        let hash = press(ch("#"), Code::Digit3, Modifiers::ALT, Some("#"));
+        assert!(hash.third_level_text(true));
+        // ⌥Q on a US layout types œ, a letter: still Alt+Q.
+        let oe = press(ch("œ"), Code::KeyQ, Modifiers::ALT, Some("œ"));
+        assert!(!oe.third_level_text(true));
+        // ⌥⌘ and ⌃⌥ with a symbol: ⌘ makes a chord; Ctrl+Alt is AltGr's rule everywhere.
+        let cmd = press(ch("@"), Code::KeyQ, Modifiers::ALT | Modifiers::LOGO, Some("@"));
+        assert!(!cmd.third_level_text(true));
+        // Alt with a key that types nothing (Alt+Up, Alt+Enter) stays a chord.
+        let up = press(Key::Named(Named::ArrowUp), Code::ArrowUp, Modifiers::ALT, None);
+        assert!(!up.third_level_text(true));
+        assert_eq!(chord(&up).as_deref(), Some("Alt+Up"));
+        if cfg!(target_os = "macos") {
+            assert_eq!(chord(&at), None);
+            assert_eq!(value_start(&at), Some('@'));
+            assert_eq!(typed(&at), Some("@"));
+            assert_eq!(chord(&oe).as_deref(), Some("Alt+Q"));
+        } else {
+            assert_eq!(chord(&at).as_deref(), Some("Alt+Q"));
+        }
     }
 
     #[test]

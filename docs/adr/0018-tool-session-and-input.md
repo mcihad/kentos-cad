@@ -144,3 +144,31 @@ Komut yokken `+` ve `-` görünümü 1,5 kat yakınlaştırır ve uzaklaştırı
 
    `Tool.undoStep`, `tools/drawTools.ts`, `edit.undo`; izler `polygon-keys`.
 4. **Uzunluk ve açı için şimdilik tek alan kalır.** Tab değeri korur, odağı taşımaz. İki alan gerekirse `UX-08` ile yeniden açılır.
+
+## Güncelleme (19 Kasım 2026): macOS'ta Option ile yazılan simge yazıdır
+
+**Gerçek pencerede görüldü (macOS, Türkçe Q PC düzeni):** “@” Option+Q ile yazılır. KentOS bunu Alt+Q, yani Menülerde
+ara (`view.commandSearch`) saydı. Duvar ikinci noktayı beklerken “@12,0” yazılınca menü araması açıldı ve “12,0” onun
+kutusuna gitti; göreli nokta yazılamıyordu.
+
+**Karar:** Option, macOS'ta klavyenin üçüncü düzeyinin tuşudur, Windows'un AltGr'si gibi. Option tek başına ya da Shift'le
+basılıp harf ya da rakam olmayan bir simge yazıyorsa bu yazıdır, kısayol değildir (`KeyPress::is_altgr_text`):
+
+- değer başlatır;
+- komut satırına gider.
+
+Kurallar:
+
+- Harf yazan Option (ABD düzeninde ⌥Q'nun “œ”'si) kısayol kalır: Alt+Q.
+- Ctrl ile ⌘ birlikte basıldığında kısayol kalır.
+- Yazı üretmeyen tuşlar kısayol kalır (Alt+Up, Alt+Enter).
+- Windows ve Linux'ta Alt tek başına yazı üretmez; kural değişmez.
+
+**Doğrulama:**
+
+- `keys::tests::option_symbols_are_text_on_macos`.
+- `option_contract_tests::option_q_types_the_at_of_a_relative_point_on_a_mac`: Duvar bekliyor, ⌥Q “@” ile değer alanını
+  açar.
+- Gerçek pencerede: Option+Q ile “@12,0” yazıldı; duvar 12 m çizildi ve ardından göreli noktalarla kapandı.
+
+**Web:** ertelendi (ADR 0228; TODOS.md §0.2).

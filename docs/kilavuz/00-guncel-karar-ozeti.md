@@ -22,6 +22,12 @@
   Otomatik seçim kapalıyken (CBS projesinin kendi ayarı) pencerelerin alanlarına alınan nesneler etkin katmanla sınırlanmaz:
   İşlemler'in girdileri, Tablo ekle, ifade önizlemesi, yazı alanının nesnesi, Kenar eşleme'nin sınırı. Seçim süzgeci geçerli
   kalır. Çizimden seç (ADR 8006) bir seçimdir, sınırlı kalır. Hiçbir şey almayan tıklama nedenini söyler.
+  Aynı gün:
+  - İşlemler'in son değerlerinden tür daraltması geri gelmez (ADR 0088 güncellemesi 2: saklı “yalnız Çizgi” poligonu
+    kalıcı olarak reddediyordu).
+  - Otomatik seçim kapanınca ve başka katmandaki nesne seçilmeyince düğmeli bildirim çıkar; düğmenin yeni bir ikonu var
+    (ADR 0622 §5).
+  - macOS'ta Option ile yazılan simge yazıdır, kısayol değildir (ADR 0018 güncellemesi). Türkçe Q'da “@” ⌥Q'dur.
 
 - **BIM yönetmeliği ve IFC uyum planı (15 Kasım 2026; [plan/bim-plan.md](../../plan/bim-plan.md), [plan/ifc-uyum.md](../../plan/ifc-uyum.md), dal `codex/bim-ifc-uyum`).**
   - **Bu tur plandır;** uygulama kodu değişmedi. Paket numaraları (BIM-01…20, IFC-01…12) TODOS.md §18 ile aynıdır; o bölümün

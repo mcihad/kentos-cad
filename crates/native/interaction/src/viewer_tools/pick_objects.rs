@@ -158,6 +158,7 @@ impl PickObjects {
         } else if !selectable::entity_allowed(cx.draft.select_kinds, e) {
             format!("Seçim süzgeci tıklanan nesneyi ({kind}) dışarıda bıraktı.")
         } else if self.selects && !selectable::on_selected_layer(cx.doc, e) {
+            cx.view_changes.push(ViewChange::LayerLeftOut);
             selectable::other_layer_words(cx.doc)
         } else {
             format!("{}: tıklanan nesne ({kind}) bu alana alınmaz.", self.field)

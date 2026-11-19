@@ -418,7 +418,13 @@ impl App {
         };
         let explicit = values.is_some();
         self.gis.processing.batch = None;
-        let stored = values.or_else(|| self.gis.processing.memory.last_values(&tool.id).cloned());
+        // The last values come back, a kind narrowing not: the chips narrow what was in scope then, and brought
+        // back unseen, Çizgi alone refused the polygon on Çizim the window called eligible (the owner, 19 November
+        // 2026). Values given (a model's step, a batch row) stay as they are.
+        let stored = values.or_else(|| {
+            let last = self.gis.processing.memory.last_values(&tool.id).cloned();
+            last.map(without_kind_narrowing)
+        });
         let mut window =
             ToolDialog::new(tool, stored.as_ref(), explicit, &Defaults::of(&doc.model));
         window.reread_files();
@@ -1172,16 +1178,13 @@ impl App {
             self.gis.processing.dialog = Some(window);
             return;
         };
-        // The kinds the field takes, narrowed to the kinds chosen with its chips.
-        let taken: Option<Vec<String>> = match &def.kind {
+        // The tool's own kinds, the window's Uygun nesneler: a pick chooses each object by hand, so a narrowing chosen
+        // with the kind chips does not refuse what the window calls eligible. Remembered in islemler.json and hidden
+        // while nothing was in scope, Çizgi alone refused the polygon (the owner, 19 November 2026).
+        let kinds: Option<Vec<String>> = match &def.kind {
             kentos_processing::ParamKind::Features { kinds, .. } => kinds.clone(),
             _ => None,
         };
-        let chosen = kentos_processing::values::FeaturesValue::read(
-            window.values.get(&name).unwrap_or(&Value::Null),
-        )
-        .and_then(|v| v.kinds);
-        let kinds = chosen.or(taken);
         let label = def.label.clone();
         self.say(Level::Command, format!("{}: {label}", window.tool.label));
         let before: Vec<Slot> = self.selection.ids().to_vec();
@@ -1254,16 +1257,9 @@ impl App {
             return false;
         };
         if keep && !self.selection.is_empty() {
-            // Its kinds stay as they were chosen; the scope is the selection.
-            let mut value = json!({ "scope": "selection" });
-            if let Some(kinds) = window
-                .values
-                .get(&name)
-                .and_then(|v| v.get("kinds"))
-                .cloned()
-            {
-                value["kinds"] = kinds;
-            }
+            // The objects picked are the field's: the scope is the selection and a kind narrowing goes; the chips
+            // narrow the picked objects again when they hold two kinds or more.
+            let value = json!({ "scope": "selection" });
             window.values.insert(name.clone(), value);
             window.touch(&name);
             self.say(
@@ -1278,4 +1274,16 @@ impl App {
         self.refresh_processing();
         true
     }
+}
+
+/// Values without the kind narrowing of their features fields (a scope's `kinds`), the rest as it was.
+fn without_kind_narrowing(mut values: Values) -> Values {
+    for value in values.values_mut() {
+        if let Some(o) = value.as_object_mut()
+            && o.contains_key("scope")
+        {
+            o.remove("kinds");
+        }
+    }
+    values
 }

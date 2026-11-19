@@ -158,6 +158,10 @@ pub enum ViewChange {
     /// The shape an extension's map tool asked for ([`crate::capture::Capture`], plan/eklenti.md ADIM 19), or none
     /// when the user left without one.
     Captured(Option<crate::capture::Shape>),
+    /// A selecting step left objects of other layers out while Otomatik seçim is off (docs/adr/0622 §5): the host
+    /// says so where it is seen and offers to turn Otomatik seçim on. In a Mimari drawing every object sits on its
+    /// tool's layer, so with it off a click selected nothing and only a cut status line said why (19 November 2026).
+    LayerLeftOut,
 }
 
 /// Where a text field opens and how its text will look: its start, height in

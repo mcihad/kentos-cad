@@ -274,6 +274,18 @@ fn wall_chain() -> App {
     app
 }
 
+/// macOS's Option is its keyboard's third level: Turkish Q's @ is ⌥Q, reported as Alt with “@”. While the wall waits
+/// for its next corner it starts a typed point, not Alt+Q's Menülerde ara (the owner's Mac, 19 November 2026: “@12,0”
+/// went into the search box and the wall waited on).
+#[cfg(target_os = "macos")]
+#[test]
+fn option_q_types_the_at_of_a_relative_point_on_a_mac() {
+    let mut app = wall_chain();
+    press(&mut app, "@", Code::KeyQ, Modifiers::ALT);
+    assert_eq!((app.session.tool_id(), app.session.point_count()), ("wall", 2));
+    assert_eq!(app.field.as_ref().map(|f| f.text.as_str()), Some("@"));
+}
+
 /// Shift+E is the duvar's Kalınlık, as a plain e is (docs/adr/8003); it started Uzat, dropping the wall (plan G2).
 #[test]
 fn a_shifted_letter_is_the_running_commands_option() {

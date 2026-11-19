@@ -253,6 +253,17 @@ Nesneden katman okuyan adımlar seçim değildir; bütün görünen katmanlardan
   nesnesi, yazıya eklenen alanın nesnesi, Kenar eşleme'nin sınırı (19 Kasım 2026, ADR 0088 güncellemesi). Pencerenin üzerinde
   çalışacağı seçimi alan Çizimden seç (ADR 8006) bir seçimdir, etkin katmanla sınırlıdır.
 
+**Kapalıyken söylenir (19 Kasım 2026):** Mimari çizimde her nesne kendi aracının katmanındadır. Otomatik seçim kapanınca
+(durum çubuğuna yanlışlıkla bir tık da kapatır) hiçbir şey seçilemiyordu. Nedeni yalnız kesilmiş durum satırındaydı.
+
+- Kapanınca bir bildirim çıkar: “Otomatik seçim kapandı”. Bildirim neyin seçilebileceğini sayıyla söyler (“Bu katmanda 3
+  nesne var; başka katmanlardaki 4 nesne seçilemez.”) ve **Geri aç** düğmesini taşır.
+- Bir tık ya da kutu başka katmanın nesnesini dışarıda bırakırsa “Başka katmandaki nesne seçilmedi” bildirimi çıkar ve
+  **Otomatik seçimi aç** düğmesini taşır. Aynı bildirim üst üste yığılmaz, sayılır.
+- Düğmeli bildirim 8 saniye kalır (uyarı kadar), imleç üstündeyken süre durur.
+- Araç tarafı `ViewChange::LayerLeftOut`'tur.
+- Durum çubuğundaki ve şeritteki düğmenin kendi ikonu vardır: katmanların önünde bir ok.
+
 Ayar `edit.autoSelect` ("Otomatik seçim") ile açılıp kapanır ve `cad.settings.set`'in `autoSelect`'iyle yazılır. Çizimi
 kaydedilmemiş yapar ama geri alma adımı değildir. Yeri:
 
