@@ -296,6 +296,17 @@ def cases():
                            {"key": "eavesMost", "value": 6, "source": "UİP 12.3.2019, plan notu 12"}]}},
                        "invalid_arch", "“Saçak genişliği (en çok)” plan notunun değeri 0 ile 5 m arasında olmalı.",
                        "arch.planNotes.0.value"))
+    # The plan's projections and basements (docs/adr/8162): a projection 0 to 5 m, basements a whole number 0 to 20.
+    mass = {"levels": levels, "planNotes": [
+        {"key": "projectionMost", "value": 1.0, "source": "UİP 12.3.2019, plan notu 9"},
+        {"key": "basementsMost", "value": 2, "source": "UİP 12.3.2019, plan notu 9"}]}
+    out.append({"name": "Mimari: planın çıkma ve bodrum notları (ADR 8162)",
+                "steps": [step("execute", {"arch": mass}, done(["arch"]), {**FLAGS, "settings": {"arch": mass}})]})
+    out.append(refused("bodrum kat adedi tam sayı değil",
+                       {"arch": {"levels": levels, "planNotes": [
+                           {"key": "basementsMost", "value": 1.5, "source": "UİP 12.3.2019, plan notu 9"}]}},
+                       "invalid_arch", "“Bodrum kat adedi (en çok)” plan notunun değeri 0 ile 20 arasında bir tam sayı "
+                       "olmalı.", "arch.planNotes.0.value"))
     # Where İmar durumu's emsal and TAKS are read from (docs/adr/8140): kept as given; a source without its value, empty,
     # or longer than a plan note's (200 characters) is refused at its field.
     sourced = {"levels": levels, "zoning": {

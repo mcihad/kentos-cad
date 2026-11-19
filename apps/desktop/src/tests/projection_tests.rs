@@ -220,3 +220,84 @@ fn site_screens() {
         println!("{}", file.display());
     }
 }
+
+/// The plan's notes typed in Plan notları (docs/adr/8162): `notes` as (measure, value), then Kaydet.
+pub(crate) fn plan_notes(app: &mut App, notes: &[(kentos_commands::PlanNoteKey, &str)]) {
+    use crate::project::plan_notes::Edit;
+    use crate::project::settings::Section;
+    use crate::project::{SettingsEvent, settings_message};
+    let _ = app.update(Message::Run("file.settings"));
+    let _ = app.update(settings_message(SettingsEvent::Section(Section::Arch)));
+    for (i, (key, value)) in notes.iter().enumerate() {
+        let _ = app.update(settings_message(SettingsEvent::AddPlanNote));
+        for e in [Edit::Key(*key), Edit::Value((*value).into()), Edit::Source("UİP 12.3.2019, plan notu 9".into())] {
+            let _ = app.update(settings_message(SettingsEvent::ArchPlanNote(i, e)));
+        }
+    }
+    let _ = app.update(settings_message(SettingsEvent::Save));
+    assert!(app.project.is_none(), "saved");
+}
+
+/// The plan's projection note (docs/adr/8162): the Balkon 2 m past the setback line fails 41/1's 1.50 m and holds a
+/// note of 2.50 m (41 may be changed by a plan); a note of 0 m fails a 1.20 m Balkon on the note.
+#[test]
+fn the_plan_s_projection_note_comes_before_41_1() {
+    let (mut app, _) = scene(2.0);
+    plan_notes(&mut app, &[(kentos_commands::PlanNoteKey::ProjectionMost, "2,50")]);
+    checked(&mut app);
+    let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+    let row = |rule: &str| set.rules.iter().find(|r| r.rule == rule).map(|r| r.state);
+    assert_eq!((row("PAİY 41/1"), row("Plan notu: çıkma")), (Some(O::Passed), Some(O::Passed)));
+    let (mut app, _) = scene(1.2);
+    plan_notes(&mut app, &[(kentos_commands::PlanNoteKey::ProjectionMost, "0")]);
+    checked(&mut app);
+    let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+    let over: Vec<&str> =
+        audited.findings.iter().filter(|f| f.code == "paiy_projection_over").map(|f| f.message.as_str()).collect();
+    assert_eq!(over.len(), 1, "{over:?}");
+    assert!(over[0].contains("en çok 0.00 m — Plan notu (UİP 12.3.2019, plan notu 9)"), "{}", over[0]);
+}
+
+/// Plan notları with the plan's projection and basement notes, light and dark; `.run/gui-evidence/cikma-bodrum-8162/`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn notes_screens() {
+    use crate::project::plan_notes::Edit;
+    use crate::project::settings::Section;
+    use crate::project::{SettingsEvent, settings_message};
+    use iced::Size;
+    use kentos_commands::PlanNoteKey;
+    use kentos_ui::snapshot::{Input, Snapshot};
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/cikma-bodrum-8162");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let sizes = [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")];
+    for (theme, size, name) in sizes {
+        let (mut app, _) = scene(2.0);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("file.settings"));
+        let _ = app.update(settings_message(SettingsEvent::Section(Section::Arch)));
+        let notes = [(PlanNoteKey::ProjectionMost, "2,50"), (PlanNoteKey::BasementsMost, "2")];
+        for (i, (key, value)) in notes.into_iter().enumerate() {
+            let _ = app.update(settings_message(SettingsEvent::AddPlanNote));
+            for e in [Edit::Key(key), Edit::Value(value.into()), Edit::Source("UİP 12.3.2019, plan notu 9".into())] {
+                let _ = app.update(settings_message(SettingsEvent::ArchPlanNote(i, e)));
+            }
+        }
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let at = iced::Point::new(size.width * 0.55, size.height * 0.5);
+        snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, -60.0));
+        snapshot.settle(&mut app, App::view, &mut update);
+        snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, 5.0));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-cikma-bodrum-notlari-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

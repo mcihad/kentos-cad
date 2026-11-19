@@ -23,7 +23,7 @@ geçemez", "saçak 1,20 m" diyen planın binası PAİY'nin ve Sivas'ın değerle
 | PAİY 42/1 | "Uygulama imar planında belirlenmemiş ise 1.00 metreyi geçmeyen saçak yapılabilir" | Planın saçak notu 1,00 m'nin yerine (K412) |
 | PAİY 40/2 | Çatı eğimleri malzeme, yöre ve iklimle "ilgili idarenin tasvibi ile tayin edilir" | PAİY eğim sınırı koymaz; planın eğim notu Sivas'sız da okunur (K413) |
 | PAİY 40/4 | Mahya yüksekliği 5,00 m'yi geçmez | Planın mahya notu 5,00 m'nin yerine (K412) |
-| PAİY 69/2 | Birinci, ikinci, altıncı–dokuzuncu bölümler, geçici maddeler ve 19, 20 planla değiştirilemez | 40 ve 42 Dördüncü Bölümde: plan değiştirebilir, gevşetebilir de (K412) |
+| PAİY 69/2 | Birinci, ikinci, altıncı–dokuzuncu bölümler, geçici maddeler ve 19, 20 planla değiştirilemez | 40 ve 42 Beşinci Bölümde (Yapılara İlişkin Hükümler): plan değiştirebilir, gevşetebilir de (K412) |
 | PAİY 69/3 | İdarenin imar yönetmeliği planda aksine hüküm yoksa uygulanır | Planın notu Sivas 40/5-g'nin de önünde (K412) |
 
 ## §3. Karar

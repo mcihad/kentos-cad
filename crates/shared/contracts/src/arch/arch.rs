@@ -1886,7 +1886,7 @@ pub enum LocalRules {
 /// What a plan note gives a value for (docs/adr/8084): a measure a rule of the regulation reads, the plan's value
 /// coming before the regulations' where PAİY lets a plan say more (69/2–3; 28/1: “uygulama imar planında daha fazla
 /// belirlenmemiş ise”; 4/1-yyy: “İmar planlarında aksine bir hüküm bulunmaması halinde”, docs/adr/8158; 42/1 and the
-/// roof's ridge and slope, docs/adr/8160), or the plan's
+/// roof's ridge and slope, docs/adr/8160; 41/1's projections and the basements, docs/adr/8162), or the plan's
 /// own limit PAİY points to (5/11: “uygulama imar planında … gösterilen kat adedi veya bina yüksekliği aşılamaz”,
 /// docs/adr/8098).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1920,10 +1920,14 @@ pub enum PlanNoteKey {
     /// Saçak genişliği, en çok (42/1; docs/adr/8160): a roof's overhang over its walls at most, m (PAİY's 1.00:
     /// “Uygulama imar planında belirlenmemiş ise”).
     EavesMost,
+    /// Çıkma, en çok (41/1; docs/adr/8162): a projection past the setback line at most, m (PAİY's 1.50; 0: none).
+    ProjectionMost,
+    /// Bodrum kat adedi, en çok (docs/adr/8162): a building's storeys under its ground storey, a whole number.
+    BasementsMost,
 }
 
 impl PlanNoteKey {
-    pub const ALL: [PlanNoteKey; 9] = [
+    pub const ALL: [PlanNoteKey; 11] = [
         PlanNoteKey::GroundStoreyHeight,
         PlanNoteKey::StoreyHeight,
         PlanNoteKey::BuildingHeight,
@@ -1933,6 +1937,8 @@ impl PlanNoteKey {
         PlanNoteKey::RidgeMost,
         PlanNoteKey::RoofSlopeMost,
         PlanNoteKey::EavesMost,
+        PlanNoteKey::ProjectionMost,
+        PlanNoteKey::BasementsMost,
     ];
 
     /// As the form and a finding name it.
@@ -1947,6 +1953,8 @@ impl PlanNoteKey {
             PlanNoteKey::RidgeMost => "Mahya yüksekliği (en çok)",
             PlanNoteKey::RoofSlopeMost => "Çatı eğimi (en çok)",
             PlanNoteKey::EavesMost => "Saçak genişliği (en çok)",
+            PlanNoteKey::ProjectionMost => "Çıkma (en çok)",
+            PlanNoteKey::BasementsMost => "Bodrum kat adedi (en çok)",
         }
     }
 
@@ -1962,13 +1970,15 @@ impl PlanNoteKey {
             PlanNoteKey::RidgeMost => "ridgeMost",
             PlanNoteKey::RoofSlopeMost => "roofSlopeMost",
             PlanNoteKey::EavesMost => "eavesMost",
+            PlanNoteKey::ProjectionMost => "projectionMost",
+            PlanNoteKey::BasementsMost => "basementsMost",
         }
     }
 
     /// The value's unit as the form writes it: metres, storeys for the storey count, per cent for a roof's slope.
     pub fn unit(self) -> &'static str {
         match self {
-            PlanNoteKey::Storeys => "kat",
+            PlanNoteKey::Storeys | PlanNoteKey::BasementsMost => "kat",
             PlanNoteKey::RoofSlopeMost => "%",
             _ => "m",
         }
@@ -1988,6 +1998,11 @@ impl PlanNoteKey {
     /// Whether a note of it is about the roof (docs/adr/8160): its ridge, its slope or its eaves.
     pub fn is_roof(self) -> bool {
         matches!(self, PlanNoteKey::RidgeMost | PlanNoteKey::RoofSlopeMost | PlanNoteKey::EavesMost)
+    }
+
+    /// Whether a note of it is about the projections or the basements (docs/adr/8162).
+    pub fn is_mass(self) -> bool {
+        matches!(self, PlanNoteKey::ProjectionMost | PlanNoteKey::BasementsMost)
     }
 }
 
@@ -2025,7 +2040,8 @@ impl PlanNote {
     /// What is wrong with a project's plan notes: the field and the words. A storey's height finite, over 0 and at most
     /// 20 m, a building height up to 1000 m, a storey count a whole number from 1 to 200, a subasman within 10 m of
     /// ±0.00 and its least not above its most, a ridge over 0 and at most 20 m, a roof's slope over 0 and at most 200 %,
-    /// eaves from 0 to 5 m; its source said (at most 200 characters); one note for each measure.
+    /// eaves and a projection from 0 to 5 m, basements a whole number from 0 to 20; its source said (at most 200
+    /// characters); one note for each measure.
     pub fn list_problem(notes: &[PlanNote]) -> Option<(String, String)> {
         if notes.len() > PLAN_NOTES_MAX {
             return Some(("planNotes".into(), format!("En çok {PLAN_NOTES_MAX} plan notu verilebilir.")));
@@ -2052,8 +2068,13 @@ impl PlanNote {
                     && n.value > 0.0
                     && n.value <= PLAN_ROOF_SLOPE_MAX))
                     .then_some("sıfırdan büyük, en çok %200"),
-                PlanNoteKey::EavesMost => (!(n.value.is_finite() && (0.0..=5.0).contains(&n.value)))
-                    .then_some("0 ile 5 m arasında"),
+                PlanNoteKey::EavesMost | PlanNoteKey::ProjectionMost => {
+                    (!(n.value.is_finite() && (0.0..=5.0).contains(&n.value))).then_some("0 ile 5 m arasında")
+                }
+                PlanNoteKey::BasementsMost => (!(n.value.is_finite()
+                    && n.value.fract() == 0.0
+                    && (0.0..=20.0).contains(&n.value)))
+                    .then_some("0 ile 20 arasında bir tam sayı"),
             };
             if let Some(what) = wrong {
                 return Some((
@@ -2672,6 +2693,11 @@ impl ArchSettings {
     /// Whether a plan note gives the plan's roof ridge, slope or eaves (Mimari data 33, docs/adr/8160).
     pub fn has_plan_roof(&self) -> bool {
         self.plan_notes.iter().any(|n| n.key.is_roof())
+    }
+
+    /// Whether a plan note gives the plan's projection or basement limit (Mimari data 34, docs/adr/8162).
+    pub fn has_plan_mass(&self) -> bool {
+        self.plan_notes.iter().any(|n| n.key.is_mass())
     }
 
     /// Whether it says the parcel's area's use (Mimari data 12, docs/adr/8085).

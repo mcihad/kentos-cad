@@ -457,6 +457,9 @@
   - **Kurallarda binanın kendi ±0,00'ı (19 Kasım 2026; [ADR 8154](../adr/8154-rules-by-building-zero.md), K397–K398):**
     `katman.kot` (kot eksi binanın sıfırı) ±0,00'la yapılan karşılaştırmalarda; planın kat adedi en çok katlı binanın,
     bina yüksekliği kendi sıfırından.
+  - **Planın çıkma ve bodrum notları (19 Kasım 2026; [ADR 8162](../adr/8162-plan-projection-basement-notes.md),
+    K417–K419):** Çıkma (en çok; 41/1'in 1,50 m'si yerine, 0: çıkma yok; sınıra 3,00 m ve komşuya 2,00 m 41/1'in) ve
+    Bodrum kat adedi (en çok; bina bina zemin katın altındaki katlar) plan notları; `.kcad` Mimari verisi 34.
   - **Saçağın parsel sınırı (19 Kasım 2026; [ADR 8161](../adr/8161-eaves-within-the-parcel.md), K415–K416):** PAİY 42/2;
     saçak çizgisinin vaziyet planının parselinden taşan parçasının sınırdan en uzak köşesi (`roofs[].form.outside`);
     satır yalnız vaziyet planıyla.

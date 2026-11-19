@@ -988,7 +988,7 @@ pub const SCHEMA_WITH_TOOL_LAYERS: u32 = 255;
 /// raised). A file with a newer one, an unknown module or an extension's data is refused before its document is read,
 /// as written by a newer KentOS (docs/adr/8054 §10).
 pub const MODULE_VERSIONS: [(&str, &str, u16); 4] = [
-    ("arch", "mimari", ARCH_WITH_PLAN_ROOF),
+    ("arch", "mimari", ARCH_WITH_PLAN_MASS),
     ("gis", "CBS", GIS_WITH_EXTENSION_DERIVATIONS),
     ("map", "harita", 0),
     ("road", "yol", 0),
@@ -1246,6 +1246,16 @@ pub fn uses_roof_classes(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     doc.settings.arch.as_ref().is_some_and(|a| a.materials.iter().any(|m| m.roof_class.is_some()))
 }
 
+/// Architecture data version 34 (docs/adr/8162): a plan note giving the plan's projection or basement limit
+/// (`settings.arch.planNotes[]` of `projectionMost`, `basementsMost`). Version 34 holds versions 1–33's data too. The
+/// document schema stays as it is.
+pub const ARCH_WITH_PLAN_MASS: u16 = 34;
+
+/// Whether `doc` holds architecture data 34 ([`ARCH_WITH_PLAN_MASS`]).
+pub fn uses_plan_mass(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
+    doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_plan_mass)
+}
+
 /// Architecture data version 33 (docs/adr/8160): a plan note giving the plan's roof ridge, slope or eaves
 /// (`settings.arch.planNotes[]` of `ridgeMost`, `roofSlopeMost`, `eavesMost`). Version 33 holds versions 1–32's data
 /// too. The document schema stays as it is.
@@ -1343,7 +1353,8 @@ pub fn uses_shaft_vents(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     doc.entities.iter().any(|e| e.arch_info().is_some_and(|a| a.shaft_vent.is_some()))
 }
 
-/// The architecture data version `doc` needs: 33 for a plan note of the roof, 32 for one of the subasman, 31 for a
+/// The architecture data version `doc` needs: 34 for a plan note of the projections or basements, 33 for one of the
+/// roof, 32 for one of the subasman, 31 for a
 /// building's own structural
 /// system, 30 for a building's own
 /// Bölge, 29 for a party edge, 28 for the building's
@@ -1361,7 +1372,9 @@ pub fn uses_shaft_vents(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
 /// schedule, 5 for a covering, 4 for a post, a rail or a column's own height, 3 for a curtain wall, 2 for a block's
 /// building element, 1 for the performance declarations, else 0 (not raised).
 pub fn arch_version(doc: &kentos_contracts::DocumentSnapshotV2) -> u16 {
-    if uses_plan_roof(doc) {
+    if uses_plan_mass(doc) {
+        ARCH_WITH_PLAN_MASS
+    } else if uses_plan_roof(doc) {
         ARCH_WITH_PLAN_ROOF
     } else if uses_plan_plinth(doc) {
         ARCH_WITH_PLAN_PLINTH

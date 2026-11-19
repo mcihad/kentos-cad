@@ -86,7 +86,8 @@
 - **Başka konular:** bina yüksekliği ve kat adedi — yapıldı: ADR [8098](8098-plan-building-height-and-storeys.md) (5/11;
   CBS kararlarının `Hmax`'ı ve `KatAdedi`'yle bağ ve 34/1'in "uygulama imar planına göre kat adedi" orada §6); çatı
   eğimi, mahya ve saçak (40, 42; Rust'taki kurallar taşınınca — kurallar ADR [8159](8159-roof-rules-in-the-package.md)'da
-  pakete taşındı, notlar ADR [8160](8160-plan-roof-notes.md)'da), bodrumun kullanımı, çıkmalar; subasman kotu (4/1-yyy'nin
+  pakete taşındı, notlar ADR [8160](8160-plan-roof-notes.md)'da), bodrumun kullanımı, çıkmalar (çıkma ve bodrum kat
+  adedi notları ADR [8162](8162-plan-projection-basement-notes.md)'de); subasman kotu (4/1-yyy'nin
   aksine hükmü) — yapıldı: ADR [8158](8158-plan-subasman-notes.md).
 - **Plan kararlarının değerleri:** ADR 8072 §5'in kararları (KAKS, TAKS, KatAdedi, Hmax) kaynağıyla İmar durumu'na ya da
   plan notlarına bir onayla alınsın — yapıldı: ADR [8140](8140-plan-decision-values-into-zoning.md).

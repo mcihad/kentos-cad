@@ -384,3 +384,27 @@ fn plinth_screens() {
         println!("{}", file.display());
     }
 }
+
+/// The plan's basement note (docs/adr/8162): the house with two basements under it (−3.80 and −7.60) fails a note of
+/// one and holds one of two.
+#[test]
+fn the_plan_s_basement_note_counts_the_storeys_under_the_ground_storey() {
+    for (most, outcome) in [("1", O::Failed), ("2", O::Passed)] {
+        let mut app = raised(0.0);
+        let doc = &mut app.document.as_mut().expect("a drawing").model;
+        let mut settings = doc.settings().clone();
+        let levels = &mut settings.arch.as_mut().expect("the storeys").levels;
+        for (id, name, elevation) in [("b1", "1. bodrum kat", -3.8), ("b2", "2. bodrum kat", -7.6)] {
+            levels.push(kentos_commands::ArchLevel { id: id.into(), name: name.into(), elevation, height: Some(3.8) });
+        }
+        doc.set_settings(settings);
+        crate::projection_tests::plan_notes(&mut app, &[(PlanNoteKey::BasementsMost, most)]);
+        checked(&mut app);
+        let set = app.arch.arch_audit.rule_set.as_ref().expect("the rule set");
+        let row = set.rules.iter().find(|r| r.rule == "Plan notu: bodrum kat adedi").map(|r| r.state);
+        assert_eq!(row, Some(outcome), "{:#?}", set.rules);
+        let audited = app.arch.arch_audit.audited.as_ref().expect("checked");
+        let said = audited.findings.iter().any(|f| f.code == "paiy_basement_count_over" && f.message.contains("2 > 1"));
+        assert_eq!(said, outcome == O::Failed);
+    }
+}

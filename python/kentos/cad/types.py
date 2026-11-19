@@ -6034,7 +6034,7 @@ class PlanNoteKey(_StrEnum):
     """What a plan note gives a value for (docs/adr/8084): a measure a rule of the regulation reads, the plan's value
     coming before the regulations' where PAİY lets a plan say more (69/2–3; 28/1: “uygulama imar planında daha fazla
     belirlenmemiş ise”; 4/1-yyy: “İmar planlarında aksine bir hüküm bulunmaması halinde”, docs/adr/8158; 42/1 and the
-    roof's ridge and slope, docs/adr/8160), or the plan's
+    roof's ridge and slope, docs/adr/8160; 41/1's projections and the basements, docs/adr/8162), or the plan's
     own limit PAİY points to (5/11: “uygulama imar planında … gösterilen kat adedi veya bina yüksekliği aşılamaz”,
     docs/adr/8098).
 
@@ -6047,6 +6047,8 @@ class PlanNoteKey(_StrEnum):
     - ``ridgeMost``: Mahya yüksekliği, en çok (40/4; docs/adr/8160): a sloping roof's ridge over the saçak seviyesi at most, m
     - ``roofSlopeMost``: Çatı eğimi, en çok (40/2; docs/adr/8160): a roof's edges' slope at most, per cent (PAİY leaves it to the
     - ``eavesMost``: Saçak genişliği, en çok (42/1; docs/adr/8160): a roof's overhang over its walls at most, m (PAİY's 1.00:
+    - ``projectionMost``: Çıkma, en çok (41/1; docs/adr/8162): a projection past the setback line at most, m (PAİY's 1.50; 0: none).
+    - ``basementsMost``: Bodrum kat adedi, en çok (docs/adr/8162): a building's storeys under its ground storey, a whole number.
     """
     GROUND_STOREY_HEIGHT = "groundStoreyHeight"
     STOREY_HEIGHT = "storeyHeight"
@@ -6057,9 +6059,11 @@ class PlanNoteKey(_StrEnum):
     RIDGE_MOST = "ridgeMost"
     ROOF_SLOPE_MOST = "roofSlopeMost"
     EAVES_MOST = "eavesMost"
+    PROJECTION_MOST = "projectionMost"
+    BASEMENTS_MOST = "basementsMost"
 
 
-PlanNoteKeyName = Literal["groundStoreyHeight", "storeyHeight", "buildingHeight", "storeys", "plinthMost", "plinthLeast", "ridgeMost", "roofSlopeMost", "eavesMost"]
+PlanNoteKeyName = Literal["groundStoreyHeight", "storeyHeight", "buildingHeight", "storeys", "plinthMost", "plinthLeast", "ridgeMost", "roofSlopeMost", "eavesMost", "projectionMost", "basementsMost"]
 """The names of :class:`PlanNoteKey`, for a plain string."""
 
 
@@ -96935,7 +96939,8 @@ class SettingsSet(_Model):
       metres over 0 and at most 1000, `storeys` a whole number from 1 to 200; docs/adr/8158: `plinthMost`,
       `plinthLeast` the subasman's metres over ±0.00, −10 to 10, the least not above the most; docs/adr/8160:
       `ridgeMost` metres over 0 and at most 20, `roofSlopeMost` per cent over 0 and at most 200, `eavesMost` metres 0 to
-      5; `source` where the note stands, one note a key); `zone` the parcel's area's use in the plan the storey heights are read by (docs/adr/8085:
+      5; docs/adr/8162: `projectionMost` metres 0 to 5, `basementsMost` a whole number 0 to 20; `source` where the note
+      stands, one note a key); `zone` the parcel's area's use in the plan the storey heights are read by (docs/adr/8085:
       `residential`, `residentialShops`, `mixed`, `commercial`, `other`); `structure` the building's structural system
       (docs/adr/8094: `system` `reinforcedConcrete`, `steel`, `masonry`, `cutStoneMasonry`, `timber`, `composite`;
       `traditional` only with `cutStoneMasonry`);

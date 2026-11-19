@@ -1073,6 +1073,332 @@
           "Plan notu: bina yüksekliği": "failed"
         }
       }
+    },
+    {
+      "id": "bodrum-icinde",
+      "neden": "Planın notu bodrum kat adedi en çok 2; binada 2 bodrum (−3,00 ve −6,00) → geçer.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000003"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "b01",
+            "name": "1. bodrum kat",
+            "elevation": -3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000901"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "b02",
+            "name": "2. bodrum kat",
+            "elevation": -6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000902"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "basementsMost",
+            "value": 2,
+            "source": "UİP 12.3.2019, plan notu 9"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "Plan notu: bodrum kat adedi": "passed"
+        }
+      }
+    },
+    {
+      "id": "bodrum-asiyor",
+      "neden": "Planın notu en çok 1; binada 2 bodrum → kalır, bulgu en alttaki bodrumu (−6,00) gösterir.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000003"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "b01",
+            "name": "1. bodrum kat",
+            "elevation": -3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000901"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "b02",
+            "name": "2. bodrum kat",
+            "elevation": -6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000902"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "basementsMost",
+            "value": 1,
+            "source": "UİP 12.3.2019, plan notu 9"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_basement_count_over",
+            "has": [
+              "Bodrum kat adedi 2 > 1 (zemin katın altındaki katlar)",
+              "Plan notu (UİP 12.3.2019, plan notu 9)"
+            ]
+          }
+        ],
+        "rules": {
+          "Plan notu: bodrum kat adedi": "failed"
+        }
+      }
+    },
+    {
+      "id": "bodrum-yok",
+      "neden": "Planın notu en çok 0 (bodrum yapılamaz); binada bodrum yok → satır kapsam dışı.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000001"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000002"
+            ],
+            "height": 3.0
+          },
+          {
+            "level": "k02",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "bedrooms": 1,
+            "dwellingRooms": 1,
+            "elevators": 0,
+            "rooms": [
+              "00000000-0000-4000-8000-000000000003"
+            ],
+            "height": 3.0
+          }
+        ],
+        "units": 1,
+        "dwellings": 1,
+        "planNotes": [
+          {
+            "key": "basementsMost",
+            "value": 0,
+            "source": "UİP 12.3.2019, plan notu 9"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "Plan notu: bodrum kat adedi": "outOfScope"
+        }
+      }
     }
   ]
 }

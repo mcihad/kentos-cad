@@ -40,7 +40,8 @@ class BagimsizDurumlar(unittest.TestCase):
                     self.assertEqual(b.get("state"), e.get("state"), b["message"])
                     for parca in e.get("has", []):
                         self.assertIn(parca, b["message"])
-                    self.assertTrue(b["uids"] and b["repair"] and b["rule"].startswith(("BYKHY ", "PAİY ")))
+                    madde = b["rule"].startswith(("BYKHY ", "PAİY ", "Plan notu · "))
+                    self.assertTrue(b["uids"] and b["repair"] and madde, b)
             satirlar = {s["rule"]: [s["state"], s["version"]] for s in sonuc.satirlar}
             with self.subTest(durum=durum["id"], ne="satırlar"):
                 self.assertEqual(satirlar, durum["expect"]["rules"], durum["neden"])

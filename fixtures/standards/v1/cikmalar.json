@@ -1,7 +1,7 @@
 {
   "format": "kentos.regulationCases",
   "version": 1,
-  "about": "Çıkmaların bağımsız durumları (docs/adr/8152): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 41/1 ve 41/2'nin (RG 3.7.2017/30113; (b)-5 RG 30.9.2017/30196 ile mülga) metninden elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.projections: mahal, kat, açık mı, alanı, katın kotu, alt kotu, kenarlar: türü, istenen bahçe mesafesi, en yakın uzaklık); durumlar sınırları sınar, ölçümün kendisini Rust'ın sınamaları sınar.",
+  "about": "Çıkmaların bağımsız durumları (docs/adr/8152): beklenen her sonuç Planlı Alanlar İmar Yönetmeliği 41/1 ve 41/2'nin (RG 3.7.2017/30113; (b)-5 RG 30.9.2017/30196 ile mülga) metninden elle çıkarıldı; kuralın kodundan üretilmedi. Olgular KentOS'un ölçüsüdür (building.projections: mahal, kat, açık mı, alanı, katın kotu, alt kotu, kenarlar: türü, istenen bahçe mesafesi, en yakın uzaklık); durumlar sınırları sınar, ölçümün kendisini Rust'ın sınamaları sınar. Planın çıkma notunun durumları (docs/adr/8162): projectionMost 41/1'in 1,50 m'sinin yerine; beklenenler elle.",
   "cases": [
     {
       "id": "balkon-on-120",
@@ -1074,6 +1074,212 @@
           "PAİY 41/2": [
             "outOfScope",
             "1.10.2017"
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan-cikma-gevsek",
+      "neden": "Planın çıkma notu 2,50 m (41 Beşinci Bölümde: planla değiştirilebilir, 69/2 saymaz): ön bahçede 2,00 m taşan balkon notun içinde → geçer; 41/1'in öbür ölçüleri tutuyor.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "projections": [
+          {
+            "room": "00000000-0000-4000-8000-000000000601",
+            "level": "k01",
+            "area": 8.0,
+            "floor": 3.0,
+            "edges": [
+              {
+                "edge": 1,
+                "kind": "front",
+                "required": 5.0,
+                "distance": 3.0
+              },
+              {
+                "edge": 2,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 4.0
+              },
+              {
+                "edge": 3,
+                "kind": "back",
+                "required": 3.0,
+                "distance": 12.0
+              },
+              {
+                "edge": 4,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 6.0
+              }
+            ],
+            "open": true,
+            "underside": 2.85
+          }
+        ],
+        "planNotes": [
+          {
+            "key": "projectionMost",
+            "value": 2.5,
+            "source": "UİP 12.3.2019, plan notu 9"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [],
+        "rules": {
+          "PAİY 41/1": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 41/2": [
+            "passed",
+            "1.10.2017"
+          ],
+          "Plan notu: çıkma": [
+            "passed",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "id": "plan-cikma-yok",
+      "neden": "Planın çıkma notu 0 m (çıkma yapılamaz): ön bahçede 1,20 m taşan balkon → planın notundan kalır.",
+      "permit": {
+        "particulars": {
+          "basvuru_tarihi": "02.07.2026"
+        }
+      },
+      "building": {
+        "storeys": [
+          {
+            "level": "k00",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          },
+          {
+            "level": "k01",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "units": 1,
+            "common": 0,
+            "annexes": 0,
+            "other": 0,
+            "technical": 0,
+            "inhabited": 1,
+            "elevators": 0
+          }
+        ],
+        "units": 2,
+        "dwellings": 2,
+        "projections": [
+          {
+            "room": "00000000-0000-4000-8000-000000000601",
+            "level": "k01",
+            "area": 4.8,
+            "floor": 3.0,
+            "edges": [
+              {
+                "edge": 1,
+                "kind": "front",
+                "required": 5.0,
+                "distance": 3.8
+              },
+              {
+                "edge": 2,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 4.0
+              },
+              {
+                "edge": 3,
+                "kind": "back",
+                "required": 3.0,
+                "distance": 12.0
+              },
+              {
+                "edge": 4,
+                "kind": "side",
+                "required": 3.0,
+                "distance": 6.0
+              }
+            ],
+            "open": true,
+            "underside": 2.85
+          }
+        ],
+        "planNotes": [
+          {
+            "key": "projectionMost",
+            "value": 0.0,
+            "source": "UİP 12.3.2019, plan notu 9"
+          }
+        ]
+      },
+      "expect": {
+        "findings": [
+          {
+            "code": "paiy_projection_over",
+            "has": [
+              "yapı yaklaşma sınırından 1.20 m taşıyor, en çok 0.00 m",
+              "Plan notu (UİP 12.3.2019, plan notu 9)"
+            ]
+          }
+        ],
+        "rules": {
+          "PAİY 41/1": [
+            "passed",
+            "1.10.2017"
+          ],
+          "PAİY 41/2": [
+            "passed",
+            "1.10.2017"
+          ],
+          "Plan notu: çıkma": [
+            "failed",
+            null
           ]
         }
       }

@@ -48,29 +48,36 @@ def _ne(c: dict[str, Any], katlar: dict[str, str]) -> str:
     return f"{kat}: {'açık' if c.get('open') else 'kapalı'} çıkma ({c['area']:.2f} m²)"
 
 
-def tasma(c: dict[str, Any], hal: y.Hal) -> list[str]:
-    """41/1'e göre çıkmanın aşan kenarları, her biri sözüyle; tutuyorsa boş."""
-    en_cok, uzak, komsu = float(hal.anahtar["over"]), float(hal.anahtar["clear"]), float(hal.anahtar["party"])
-    out = []
+def tasma(c: dict[str, Any], hal: y.Hal, plan: float | None = None) -> list[tuple[str, bool, bool]]:
+    """41/1'e göre çıkmanın aşan kenarları: her biri sözüyle, nedenlerinden biri planın notundan mı (docs/adr/8162:
+    planın çıkma notu ``plan`` 1,50 m'nin yerine) ve biri yönetmelikten mi; tutuyorsa boş."""
+    uzak, komsu = float(hal.anahtar["clear"]), float(hal.anahtar["party"])
+    en_cok = plan if plan is not None else float(hal.anahtar["over"])
+    out: list[tuple[str, bool, bool]] = []
     for e in c.get("edges") or []:
         tur, istenen, uzaklik = e["kind"], float(e["required"]), float(e["distance"])
         icinde = uzaklik < istenen - 1e-9
         tasan = istenen - uzaklik
         if tur == "front" and icinde and tasan > en_cok + 1e-9:
-            out.append(f"{e['edge']}. kenar (ön bahçe): yapı yaklaşma sınırından {_m(tasan)} taşıyor, en çok "
-                       f"{_m(en_cok)}")
+            out.append((f"{e['edge']}. kenar (ön bahçe): yapı yaklaşma sınırından {_m(tasan)} taşıyor, en çok "
+                        f"{_m(en_cok)}", plan is not None, plan is None))
         elif tur in _YAN and icinde and (tasan > en_cok + 1e-9 or uzaklik < uzak - 1e-9):
-            neden = []
+            neden, plandan, yonetmelikten = [], False, False
             if tasan > en_cok + 1e-9:
                 neden.append(f"bahçe mesafesinden {_m(tasan)} taşıyor, en çok {_m(en_cok)}")
+                plandan, yonetmelikten = plan is not None, plan is None
             if uzaklik < uzak - 1e-9:
                 neden.append(f"parsel sınırına {_m(uzaklik)}, en az {_m(uzak)}")
-            out.append(f"{e['edge']}. kenar ({'arka' if tur == 'back' else 'yan' if tur == 'side' else 'kamusal alan'} "
-                       f"bahçe): " + ", ".join(neden))
+                yonetmelikten = True
+            out.append((f"{e['edge']}. kenar ({_yan(tur)} bahçe): " + ", ".join(neden), plandan, yonetmelikten))
         elif tur == "party" and c.get("open") and uzaklik < komsu - 1e-9:
-            out.append(f"{e['edge']}. kenar (bitişik komşu): açık çıkma komşu sınırına {_m(uzaklik)}, en az "
-                       f"{_m(komsu)}")
+            out.append((f"{e['edge']}. kenar (bitişik komşu): açık çıkma komşu sınırına {_m(uzaklik)}, en az "
+                        f"{_m(komsu)}", False, True))
     return out
+
+
+def _yan(tur: str) -> str:
+    return "arka" if tur == "back" else "yan" if tur == "side" else "kamusal alan"
 
 
 def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
@@ -83,20 +90,36 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
         not_ = "zemin katın dışına taşan çıkma yok (ya da vaziyet planı yok)"
         return y.Sonuc([], [_satir(h1, y.KAPSAM_DISI, not_), _satir(h2, y.KAPSAM_DISI, not_)])
     katlar = {k["level"]: k.get("name") or k["level"] for k in bina.get("storeys") or []}
+    # Planın çıkma notu (docs/adr/8162): taşmanın 1,50 m'sinin yerine (0: çıkma yok); sınıra ve komşuya uzaklık 41/1'in.
+    not_ = next((n for n in bina.get("planNotes") or [] if n["key"] == "projectionMost"), None)
+    plan = katman.PlanNotu(float(not_["value"]), not_["source"]) if not_ else None
     bulgular: list[dict[str, Any]] = []
-    kalan1 = 0
+    kalan1 = kalan_plan = 0
     for c in cikmalar:
-        asanlar = tasma(c, h1)
-        if asanlar:
-            kalan1 += 1
-            bulgular.append({
-                "code": "paiy_projection_over",
-                "message": f"{_ne(c, katlar)}: " + "; ".join(asanlar) + f" — {h1.kisa()}",
-                "repair": "Çıkmayı kısaltın ya da yapı yaklaşma sınırına çekin: yol cephesinde en çok 1,50 m, yan ve arka "
-                          "bahçede en çok 1,50 m ve parsel sınırına en az 3,00 m.",
-                "uids": [c["room"]], "rule": h1.kural(), "_iz": f"41/1:{c['room']}"})
+        asanlar = tasma(c, h1, plan.deger if plan else None)
+        if not asanlar:
+            continue
+        plandan = any(p for _, p, _ in asanlar)
+        yonetmelikten = any(r for _, _, r in asanlar)
+        kalan1 += bool(yonetmelikten)
+        kalan_plan += bool(plandan)
+        kaynak = "; ".join(([plan.kisa()] if plandan and plan else []) + ([h1.kisa()] if yonetmelikten else []))
+        bulgular.append({
+            "code": "paiy_projection_over",
+            "message": f"{_ne(c, katlar)}: " + "; ".join(s for s, _, _ in asanlar) + f" — {kaynak}",
+            "repair": ("Çıkmayı planın notuna kısaltın; yan ve arka bahçede parsel sınırına en az 3,00 m." if plandan
+                       else "Çıkmayı kısaltın ya da yapı yaklaşma sınırına çekin: yol cephesinde en çok 1,50 m, yan ve "
+                            "arka bahçede en çok 1,50 m ve parsel sınırına en az 3,00 m."),
+            "uids": [c["room"]], "rule": plan.kural() if plandan and plan and not yonetmelikten else h1.kural(),
+            "_iz": f"41/1:{c['room']}"})
     satir1 = (_satir(h1, y.KALDI, f"{kalan1} çıkma bahçe mesafesinden fazla taşıyor") if kalan1
               else _satir(h1, y.GECTI, f"{len(cikmalar)} çıkma, hepsi sınırlar içinde"))
+    satir_plan = None
+    if not_:
+        satir_plan = {"rule": "Plan notu: çıkma", "title": "Çıkma (en çok)", "version": None, "gazette": not_["source"],
+                      "state": y.KALDI if kalan_plan else y.GECTI,
+                      "note": (f"{kalan_plan} çıkma planın {_m(plan.deger)}'sinden fazla taşıyor" if kalan_plan
+                               else f"{len(cikmalar)} çıkma planın {_m(plan.deger)}'si içinde")}
     en_az = float(h2.anahtar["height"])
     kalan2, eksik2 = 0, 0
     for c in cikmalar:
@@ -130,7 +153,7 @@ def kural(bina: dict[str, Any], gun: date) -> y.Sonuc:
         satir2 = _satir(h2, y.EKSIK_VERI, f"{eksik2} çıkmanın altında döşeme yok")
     else:
         satir2 = _satir(h2, y.GECTI, f"{len(cikmalar)} çıkmanın altı en az {_m(en_az)}")
-    return y.Sonuc(bulgular, [satir1, satir2])
+    return y.Sonuc(bulgular, [satir1, satir2] + ([satir_plan] if satir_plan else []))
 
 
 def kontrol(facts: dict[str, Any], gun: date | None, neden: str | None) -> y.Sonuc:

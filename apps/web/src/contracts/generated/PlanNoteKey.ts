@@ -4,8 +4,8 @@
  * What a plan note gives a value for (docs/adr/8084): a measure a rule of the regulation reads, the plan's value
  * coming before the regulations' where PAİY lets a plan say more (69/2–3; 28/1: “uygulama imar planında daha fazla
  * belirlenmemiş ise”; 4/1-yyy: “İmar planlarında aksine bir hüküm bulunmaması halinde”, docs/adr/8158; 42/1 and the
- * roof's ridge and slope, docs/adr/8160), or the plan's
+ * roof's ridge and slope, docs/adr/8160; 41/1's projections and the basements, docs/adr/8162), or the plan's
  * own limit PAİY points to (5/11: “uygulama imar planında … gösterilen kat adedi veya bina yüksekliği aşılamaz”,
  * docs/adr/8098).
  */
-export type PlanNoteKey = "groundStoreyHeight" | "storeyHeight" | "buildingHeight" | "storeys" | "plinthMost" | "plinthLeast" | "ridgeMost" | "roofSlopeMost" | "eavesMost";
+export type PlanNoteKey = "groundStoreyHeight" | "storeyHeight" | "buildingHeight" | "storeys" | "plinthMost" | "plinthLeast" | "ridgeMost" | "roofSlopeMost" | "eavesMost" | "projectionMost" | "basementsMost";

@@ -129,7 +129,8 @@ def kat_yuksekligi_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
 def bina_yuksekligi_denetimi(facts: ext.GisAuditFacts) -> list[ext.AuditFinding]:
     """Bina yüksekliği ve kat adedi (PAİY 5/11): parselin plan notunun değerleri; planın yalnız birini verdiği
     durumda öbürüne tahvili (9/1-c)."""
-    return _bulgular(facts, ("paiy_building_height_", "paiy_storey_count_", "paiy_height_storeys_"))
+    return _bulgular(facts, ("paiy_building_height_", "paiy_storey_count_", "paiy_height_storeys_",
+                             "paiy_basement_count_"))
 
 
 @ext.audit("kapi-olculeri")

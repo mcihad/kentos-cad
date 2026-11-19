@@ -1,5 +1,12 @@
 # Değişiklikler
 
+## 0.49.0 — 19 Kasım 2026
+
+- Planın çıkma ve bodrum notları (docs/adr/8162): `cikmalar` planın `projectionMost` notunu 41/1'in taşma ölçüsünün
+  (1,50 m) yerine okur (0: çıkma yapılamaz; 41 Beşinci Bölümde, planla değiştirilebilir), sınıra 3,00 m ve komşuya
+  2,00 m 41/1'in kalır; notun satırı "Plan notu: çıkma". `bina_yuksekligi` planın `basementsMost` notuyla her binanın
+  zemin katının altındaki katlarını sayar (`paiy_basement_count_over`). 5 yeni bağımsız durum (çıkma 2, bodrum 3).
+
 ## 0.48.0 — 19 Kasım 2026
 
 - Saçağın parsel sınırı (`cati_olculeri`; docs/adr/8161): PAİY 42/2 "Saçaklar parsel sınırlarını aşamaz". Olguların

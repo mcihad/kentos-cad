@@ -10650,6 +10650,152 @@
       ]
     },
     {
+      "name": "Mimari: planın çıkma ve bodrum notları (ADR 8162)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "planNotes": [
+                {
+                  "key": "projectionMost",
+                  "value": 1.0,
+                  "source": "UİP 12.3.2019, plan notu 9"
+                },
+                {
+                  "key": "basementsMost",
+                  "value": 2,
+                  "source": "UİP 12.3.2019, plan notu 9"
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "arch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ],
+                "planNotes": [
+                  {
+                    "key": "projectionMost",
+                    "value": 1.0,
+                    "source": "UİP 12.3.2019, plan notu 9"
+                  },
+                  {
+                    "key": "basementsMost",
+                    "value": 2,
+                    "source": "UİP 12.3.2019, plan notu 9"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "bodrum kat adedi tam sayı değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "planNotes": [
+                {
+                  "key": "basementsMost",
+                  "value": 1.5,
+                  "source": "UİP 12.3.2019, plan notu 9"
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch",
+              "message": "“Bodrum kat adedi (en çok)” plan notunun değeri 0 ile 20 arasında bir tam sayı olmalı.",
+              "path": "arch.planNotes.0.value"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Mimari: imar durumunda emsalin ve TAKS'ın kaynağı (ADR 8140)",
       "steps": [
         {
